@@ -3,37 +3,9 @@
  */
 
 (function() {
-    function getUsers() {
-        try {
-            return JSON.parse('[]') || [];
-        } catch {
-            return [];
-        }
-    }
-
-    function reconcileUserSession(user, users) {
-        if (!user) return null;
-
-        const sameIdentityUsers = (users || []).filter((candidate) => {
-            if (user.id && candidate.id && String(candidate.id) === String(user.id)) return true;
-            if (user.phone && candidate.phone && String(candidate.phone) === String(user.phone)) return true;
-            return false;
-        });
-
-        if (!sameIdentityUsers.length) return user;
-
-        const preferredUser = sameIdentityUsers.find((candidate) => !candidate.is_temporary) || sameIdentityUsers[0];
-        return { ...preferredUser, ...user, is_temporary: Boolean(preferredUser.is_temporary) };
-    }
-
     function getCurrentUser() {
         try {
-            const rawUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-            const user = reconcileUserSession(rawUser, getUsers());
-            if (user && JSON.stringify(user) !== JSON.stringify(rawUser)) {
-                localStorage.setItem('pawpal_current_user', JSON.stringify(user));
-            }
-            return user;
+            return JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
         } catch {
             return null;
         }
@@ -97,42 +69,68 @@
     ];
 
     function renderNotifications() {
-        return mockNotifications.map(n => `
-            <div class="notification-item ${n.isRead ? '' : 'notification-item--unread'}">
-                <div class="notification-item__icon">
-                    ${n.icon}
+        if (!mockNotifications || !mockNotifications.length) {
+            return `
+                <div style="padding: 24px; text-align: center; color: #4F7A65; font-size: 13.5px;">
+                    Bạn không có thông báo mới nào.
                 </div>
+            `;
+        }
+        return mockNotifications.map(n => `
+            <a href="${n.url || '#'}" class="notification-item ${n.isRead ? '' : 'notification-item--unread'}">
                 <div class="notification-item__content">
                     <p class="notification-item__title">${n.title}</p>
                     <span class="notification-item__time">${n.time}</span>
-                    <a href="${n.url}" class="notification-item__link">View full notification</a>
                 </div>
                 ${!n.isRead ? '<div class="notification-item__dot"></div>' : ''}
-            </div>
+            </a>
         `).join('');
     }
 
     window.updateCartBadge = async function() {
         let totalItems = 0;
+        let hasLocalCart = false;
+        try {
+            const rawCart = localStorage.getItem('pawpal_cart');
+            if (rawCart !== null) {
+                hasLocalCart = true;
+                const cartList = JSON.parse(rawCart);
+                if (Array.isArray(cartList)) {
+                    totalItems = cartList.length;
+                }
+            }
+        } catch(e) {}
+
         const currentUser = (typeof window.getCurrentUser === 'function')
             ? window.getCurrentUser()
             : (function() { try { return JSON.parse(localStorage.getItem('pawpal_current_user')) || null; } catch { return null; }})();
             
-        if (currentUser && currentUser.id && window.API && window.API.getUserCart) {
+        if (!hasLocalCart && currentUser && currentUser.id && window.API && window.API.getUserCart) {
             try {
                 const cart = await window.API.getUserCart(currentUser.id);
-                totalItems = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
+                if (Array.isArray(cart)) {
+                    totalItems = cart.length;
+                }
             } catch (e) {
                 console.error("Failed to update cart badge", e);
             }
         }
         
         // Badge trên desktop header
-        const cartBadge = document.querySelector('.cart-badge');
-        if (cartBadge) {
-            cartBadge.textContent = totalItems;
-            if(totalItems > 0) { cartBadge.classList.add('d-flex'); cartBadge.classList.remove('d-none'); } else { cartBadge.classList.add('d-none'); cartBadge.classList.remove('d-flex'); }
-        }
+        const cartBadges = document.querySelectorAll('.cart-badge');
+        cartBadges.forEach(badge => {
+            if (totalItems > 0) {
+                badge.textContent = totalItems > 99 ? '99+' : totalItems;
+                badge.style.display = 'flex';
+                badge.classList.add('d-flex');
+                badge.classList.remove('d-none');
+            } else {
+                badge.textContent = '0';
+                badge.style.display = 'none';
+                badge.classList.add('d-none');
+                badge.classList.remove('d-flex');
+            }
+        });
         
         // Badge trên mobile nav drawer
         const cartBadgeMobile = document.querySelector('.cart-badge-mobile');
@@ -234,9 +232,9 @@
         }
     }
 
-    async function updateHeaderAuth() {
+    function updateHeaderAuth() {
         const isGuestLookupPage = window.location.pathname.includes('/return-guest/');
-        const user = isGuestLookupPage ? null : await resolveUserDisplayName(getCurrentUser());
+        const user = isGuestLookupPage ? null : getCurrentUser();
         const authActions = document.querySelector('.auth-actions');
         const lookupBtn = document.querySelector('.lookup-btn');
         const lookupDivider = document.querySelector('.lookup-divider');
@@ -271,6 +269,16 @@
             // Thay bằng: Giỏ hàng + Avatar + Tên + Dropdown
             const userName = String(user.name || user.full_name || '').trim() || user.phone || 'Khách hàng';
             const userInitial = userName.charAt(0).toUpperCase();
+
+            // Cập nhật tên nền từ Supabase nếu cần
+            resolveUserDisplayName(user).then((resolved) => {
+                if (resolved && resolved.name && resolved.name !== userName) {
+                    const nameEl = document.querySelector('.user-name');
+                    if (nameEl) nameEl.textContent = resolved.name;
+                    const infoNameEl = document.querySelector('.user-info-name');
+                    if (infoNameEl) infoNameEl.textContent = resolved.name;
+                }
+            }).catch(() => {});
             
             authActions.innerHTML = `
                 <div class="notification-menu-wrapper me-3">
@@ -286,12 +294,11 @@
                             <span>Thông báo</span>
                             <button class="btn-mark-all-read" id="btnMarkAllRead">Đọc tất cả</button>
                         </div>
-                        <div class="dropdown-divider"></div>
                         <div class="notification-list" id="headerNotificationList">
                             ${renderNotifications()}
                         </div>
                         <div class="notification-dropdown-footer">
-                            <a href="#">See all</a>
+                            <a href="${root}pages/user/#notifications" id="btnSeeAllNotis">Xem tất cả</a>
                         </div>
                     </div>
                 </div>
@@ -321,74 +328,16 @@
                             </div>
                         </div>
                         <div class="dropdown-divider"></div>
-                        <a href="${root}pages/user/#profile" class="dropdown-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
-                            Tài khoản của tôi
-                        </a>
-                        <a href="${root}pages/user/#pets" class="dropdown-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2c1.2 0 2.2 1 2.2 2.2S13.2 6.4 12 6.4 9.8 5.4 9.8 4.2 10.8 2 12 2z"/>
-                                <path d="M5 7.5c1 0 1.8.8 1.8 1.8S6 11 5 11s-1.8-.8-1.8-1.8S4 7.5 5 7.5z"/>
-                                <path d="M19 7.5c1 0 1.8.8 1.8 1.8S20 11 19 11s-1.8-.8-1.8-1.8S18 7.5 19 7.5z"/>
-                                <path d="M7.5 12.5c0-2 1.8-3.6 4.5-3.6s4.5 1.6 4.5 3.6c0 2.8-2 5.5-4.5 7.5-2.5-2-4.5-4.7-4.5-7.5z"/>
-                            </svg>
-                            Hồ sơ bé cưng
-                        </a>
-                        <a href="${root}pages/user/#bookings" class="dropdown-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                <line x1="16" y1="2" x2="16" y2="6"></line>
-                                <line x1="8" y1="2" x2="8" y2="6"></line>
-                                <line x1="3" y1="10" x2="21" y2="10"></line>
-                            </svg>
-                            Lịch hẹn của bé
-                        </a>
-                        <a href="${root}pages/user/#orders" class="dropdown-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                                <line x1="3" y1="6" x2="21" y2="6"></line>
-                                <path d="M16 10a4 4 0 0 1-8 0"></path>
-                            </svg>
-                            Đơn hàng của bé
-                        </a>
-                        <a href="${root}pages/user/#wishlist" class="dropdown-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                            </svg>
-                            Yêu thích
-                        </a>
-                        <a href="${root}pages/user/#diary" class="dropdown-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                            </svg>
-                            Nhật ký chăm sóc
-                        </a>
-                        <a href="${root}pages/user/#loyalty" class="dropdown-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                            </svg>
-                            Paw Points
-                        </a>
-                        <a href="${root}pages/user/#settings" class="dropdown-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="3"></circle>
-                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.92 0 1.71.57 2 1.39.06.19.1.4.1.61a2 2 0 0 1-2 2h-.09c-.65 0-1.24.39-1.51 1z"></path>
-                            </svg>
-                            Cài đặt
-                        </a>
+                        <a href="${root}pages/user/#profile" class="dropdown-item">Tài khoản của tôi</a>
+                        <a href="${root}pages/user/#pets" class="dropdown-item">Hồ sơ bé cưng</a>
+                        <a href="${root}pages/user/#bookings" class="dropdown-item">Lịch hẹn của bé</a>
+                        <a href="${root}pages/user/#orders" class="dropdown-item">Đơn hàng của bé</a>
+                        <a href="${root}pages/user/#wishlist" class="dropdown-item">Yêu thích</a>
+                        <a href="${root}pages/user/#diary" class="dropdown-item">Nhật ký chăm sóc</a>
+                        <a href="${root}pages/user/#loyalty" class="dropdown-item">Paw Points</a>
+                        <a href="${root}pages/user/#settings" class="dropdown-item">Cài đặt</a>
                         <div class="dropdown-divider"></div>
-                        <button class="dropdown-item dropdown-item-danger" id="btnLogout">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                <polyline points="16 17 21 12 16 7"></polyline>
-                                <line x1="21" y1="12" x2="9" y2="12"></line>
-                            </svg>
-                            Đăng xuất
-                        </button>
+                        <button class="dropdown-item dropdown-item-danger" id="btnLogout">Đăng xuất</button>
                     </div>
                 </div>
             `;
@@ -405,11 +354,39 @@
             
         } else if (user && user.is_temporary) {
             if (primaryNavigation) primaryNavigation.classList.add('nav-auth-temp');
-            // Tài khoản tạm: hiển thị như chưa đăng nhập (không show badge/nút kích hoạt)
             if (lookupBtn) lookupBtn.classList.remove('d-none');
             if (lookupDivider) lookupDivider.classList.remove('d-none');
 
             authActions.innerHTML = `
+                <div class="notification-menu-wrapper me-3">
+                    <button class="notification-btn position-relative" id="headerNotificationBtn" title="Thông báo">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span class="notification-badge" id="notificationBadge">${mockNotifications.filter(n => !n.isRead).length}</span>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-dropdown-header">
+                            <span>Thông báo</span>
+                            <button class="btn-mark-all-read" id="btnMarkAllRead">Đọc tất cả</button>
+                        </div>
+                        <div class="notification-list" id="headerNotificationList">
+                            ${renderNotifications()}
+                        </div>
+                        <div class="notification-dropdown-footer">
+                            <a href="${root}pages/user/#notifications" id="btnSeeAllNotis">Xem tất cả</a>
+                        </div>
+                    </div>
+                </div>
+                <a href="${root}pages/shop/cart/cart.html" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-badge">0</span>
+                </a>
                 <a href="${root}pages/public/login/login.html" class="login-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -427,17 +404,43 @@
             setMobileGroupVisibility(mobileTempOnly, true);
             syncMobileAuthLinks('temp');
             setupMobileAccountToggle();
-
-            setupLogoutButtons();
+            setupUserDropdown();
             
         } else {
             if (primaryNavigation) primaryNavigation.classList.add('nav-auth-guest');
-            // Chưa đăng nhập: Giữ nguyên UI mặc định
             if (lookupBtn) lookupBtn.classList.remove('d-none');
             if (lookupDivider) lookupDivider.classList.remove('d-none');
             
-            // Khôi phục nút Đăng nhập / Đăng ký cho guest (ẩn giỏ hàng theo yêu cầu)
             authActions.innerHTML = `
+                <div class="notification-menu-wrapper me-3">
+                    <button class="notification-btn position-relative" id="headerNotificationBtn" title="Thông báo">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span class="notification-badge" id="notificationBadge">${mockNotifications.filter(n => !n.isRead).length}</span>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-dropdown-header">
+                            <span>Thông báo</span>
+                            <button class="btn-mark-all-read" id="btnMarkAllRead">Đọc tất cả</button>
+                        </div>
+                        <div class="notification-list" id="headerNotificationList">
+                            ${renderNotifications()}
+                        </div>
+                        <div class="notification-dropdown-footer">
+                            <a href="${root}pages/user/#notifications" id="btnSeeAllNotis">Xem tất cả</a>
+                        </div>
+                    </div>
+                </div>
+                <a href="${root}pages/shop/cart/cart.html" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-badge">0</span>
+                </a>
                 <a href="${root}pages/public/login/login.html" class="login-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -455,6 +458,7 @@
             setMobileGroupVisibility(mobileTempOnly, false);
             syncMobileAuthLinks('guest');
             setupMobileAccountToggle();
+            setupUserDropdown();
         }
 
         // Thực thi cập nhật số lượng badge tức thì
@@ -482,6 +486,39 @@
                 notiDropdown.classList.toggle('show');
                 if (dropdown) dropdown.classList.remove('show');
             });
+
+            const btnMarkAll = notiDropdown.querySelector('#btnMarkAllRead');
+            if (btnMarkAll) {
+                btnMarkAll.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mockNotifications.forEach(n => n.isRead = true);
+                    const list = document.getElementById('headerNotificationList');
+                    if (list) list.innerHTML = renderNotifications();
+                    const badge = document.getElementById('notificationBadge');
+                    if (badge) {
+                        badge.style.display = 'none';
+                        badge.textContent = '0';
+                    }
+                    try {
+                        const notis = JSON.parse(localStorage.getItem('pawpal_notifications') || '[]');
+                        if (Array.isArray(notis)) {
+                            notis.forEach(n => n.read = true);
+                            localStorage.setItem('pawpal_notifications', JSON.stringify(notis));
+                            document.dispatchEvent(new CustomEvent('notifications_updated'));
+                        }
+                    } catch(err) {}
+                });
+            }
+            const btnSeeAll = notiDropdown.querySelector('#btnSeeAllNotis');
+            if (btnSeeAll) {
+                btnSeeAll.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    notiDropdown.classList.remove('show');
+                    openAllNotificationsModal();
+                });
+            }
         }
         
         // Đóng dropdown khi click ra ngoài (ngoại trừ dropdown)
@@ -496,6 +533,324 @@
         
         setupLogoutButtons();
     }
+
+    // -------------------------------------------------------------
+    // POPUP MODAL TRUNG TÂM THÔNG BÁO (MODAL THEO CHUẨN AGENTS.MD)
+    // -------------------------------------------------------------
+    function formatNotiTime(timeStr) {
+        if (!timeStr) return '';
+        const date = new Date(timeStr);
+        if (isNaN(date.getTime())) return timeStr;
+        const diffMs = Date.now() - date.getTime();
+        const diffMin = Math.floor(diffMs / 60000);
+        if (diffMin < 1) return 'Vừa xong';
+        if (diffMin < 60) return `${diffMin} phút trước`;
+        const diffHour = Math.floor(diffMin / 60);
+        if (diffHour < 24) return `${diffHour} giờ trước`;
+        const diffDay = Math.floor(diffHour / 24);
+        if (diffDay < 7) return `${diffDay} ngày trước`;
+        const hours = String(date.getHours()).padStart(2, '0');
+        const mins = String(date.getMinutes()).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const y = date.getFullYear();
+        return `${hours}:${mins} • ${d}/${m}/${y}`;
+    }
+
+    function getNotiCategoryName(noti) {
+        const type = String(noti.type || '').toLowerCase();
+        const title = String(noti.title || '').toLowerCase();
+        if (type === 'service' || title.includes('dịch vụ') || title.includes('spa') || title.includes('lịch') || title.includes('khám')) return 'Dịch vụ';
+        if (type === 'order' || title.includes('đơn hàng') || title.includes('giao')) return 'Đơn hàng';
+        if (type === 'promo' || title.includes('khuyến mãi') || title.includes('giảm giá') || title.includes('voucher') || title.includes('pawpoint')) return 'Ưu đãi';
+        return 'Thông báo';
+    }
+
+    function openAllNotificationsModal(initialNoti = null) {
+        let overlay = document.getElementById('pawpalAllNotiModalOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'pawpalAllNotiModalOverlay';
+            overlay.className = 'pawpal-noti-modal-overlay';
+            overlay.innerHTML = `
+                <div class="pawpal-noti-modal-card pawpal-noti-modal-2col" role="dialog" aria-modal="true">
+                    <div class="pawpal-noti-modal-header" id="notiModalHeader">
+                        <div>
+                            <h3 class="pawpal-noti-modal-title" id="notiModalMainTitle">Trung tâm thông báo</h3>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn-modal-mark-all" id="btnModalMarkAllRead">Đọc tất cả</button>
+                            <button type="button" class="btn-close-noti-modal" id="btnCloseNotiModal">&times;</button>
+                        </div>
+                    </div>
+                    
+                    <div class="pawpal-noti-modal-split-body">
+                        <!-- Cột Trái: Tabs Lọc & Danh Sách Thông Báo -->
+                        <div class="pawpal-noti-left-col">
+                            <div class="pawpal-noti-modal-tabs" id="notiModalTabs">
+                                <button type="button" class="noti-tab-btn active" data-tab="all">Tất cả</button>
+                                <span class="noti-tab-divider">|</span>
+                                <button type="button" class="noti-tab-btn" data-tab="unread">Chưa đọc</button>
+                                <span class="noti-tab-divider">|</span>
+                                <button type="button" class="noti-tab-btn" data-tab="service">Dịch vụ</button>
+                                <span class="noti-tab-divider">|</span>
+                                <button type="button" class="noti-tab-btn" data-tab="order">Đơn hàng</button>
+                            </div>
+                            <div class="pawpal-noti-items-scroll" id="notiModalListBody">
+                                <!-- Danh sách thông báo -->
+                            </div>
+                        </div>
+
+                        <!-- Cột Phải: Khung Chi Tiết Thông Báo -->
+                        <div class="pawpal-noti-right-col" id="notiModalDetailPane">
+                            <!-- Chi tiết thông báo đang chọn -->
+                        </div>
+                    </div>
+
+                    <div class="pawpal-noti-modal-footer" id="notiModalFooter">
+                        <button type="button" class="btn-modal-close-action" id="btnFooterCloseNotiModal">Đóng</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            // Gắn sự kiện đóng
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeNotiModal();
+            });
+            overlay.querySelector('#btnCloseNotiModal').addEventListener('click', closeNotiModal);
+            overlay.querySelector('#btnFooterCloseNotiModal').addEventListener('click', closeNotiModal);
+
+            // Đánh dấu đã đọc tất cả
+            overlay.querySelector('#btnModalMarkAllRead').addEventListener('click', () => {
+                mockNotifications.forEach(n => n.isRead = true);
+                try {
+                    const notis = JSON.parse(localStorage.getItem('pawpal_notifications') || '[]');
+                    if (Array.isArray(notis)) {
+                        notis.forEach(n => n.read = true);
+                        localStorage.setItem('pawpal_notifications', JSON.stringify(notis));
+                        document.dispatchEvent(new CustomEvent('notifications_updated'));
+                    }
+                } catch(e) {}
+                const badge = document.getElementById('notificationBadge');
+                if (badge) {
+                    badge.style.display = 'none';
+                    badge.textContent = '0';
+                }
+                const headerList = document.getElementById('headerNotificationList');
+                if (headerList) headerList.innerHTML = renderNotifications();
+                renderModalNotiList('all');
+            });
+
+            // Tabs chuyển đổi
+            overlay.querySelectorAll('.noti-tab-btn').forEach(tabBtn => {
+                tabBtn.addEventListener('click', () => {
+                    overlay.querySelectorAll('.noti-tab-btn').forEach(b => b.classList.remove('active'));
+                    tabBtn.classList.add('active');
+                    renderModalNotiList(tabBtn.dataset.tab);
+                });
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && overlay.classList.contains('show')) {
+                    closeNotiModal();
+                }
+            });
+        }
+
+        function closeNotiModal() {
+            overlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        let currentSelectedNotiId = null;
+
+        function renderDetailPane(noti) {
+            const detailPane = overlay.querySelector('#notiModalDetailPane');
+            if (!detailPane) return;
+
+            if (!noti) {
+                detailPane.innerHTML = `
+                    <div class="pawpal-noti-detail-empty">
+                        <p class="pawpal-noti-detail-empty-title">Chi tiết thông báo</p>
+                        <p class="pawpal-noti-detail-empty-desc">Chọn một thông báo từ danh sách bên trái để xem nội dung đầy đủ.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Đánh dấu đã đọc
+            noti.isRead = true;
+            const matched = mockNotifications.find(x => String(x.id) === String(noti.id));
+            if (matched) matched.isRead = true;
+            try {
+                const notis = JSON.parse(localStorage.getItem('pawpal_notifications') || '[]');
+                if (Array.isArray(notis)) {
+                    const found = notis.find(x => String(x.id) === String(noti.id));
+                    if (found) found.read = true;
+                    localStorage.setItem('pawpal_notifications', JSON.stringify(notis));
+                    document.dispatchEvent(new CustomEvent('notifications_updated'));
+                }
+            } catch(e) {}
+
+            // Cập nhật giao diện thẻ bên trái
+            const activeCard = overlay.querySelector(`.pawpal-noti-modal-item[data-id="${noti.id}"]`);
+            if (activeCard) {
+                activeCard.classList.remove('unread');
+                activeCard.classList.add('selected');
+                const dot = activeCard.querySelector('.pawpal-noti-unread-dot');
+                if (dot) dot.remove();
+            }
+
+            const category = getNotiCategoryName(noti);
+            const formattedTime = formatNotiTime(noti.time);
+            const root = getRootPath();
+            
+            // Xử lý link đích nếu có
+            let actionText = '';
+            let targetUrl = noti.url || '#';
+            if (category === 'Dịch vụ') {
+                actionText = 'Xem lịch hẹn của bé';
+                if (!noti.url || noti.url === '#') targetUrl = `${root}pages/user/#bookings`;
+            } else if (category === 'Đơn hàng') {
+                actionText = 'Xem đơn hàng của bé';
+                if (!noti.url || noti.url === '#') targetUrl = `${root}pages/user/#orders`;
+            } else if (category === 'Ưu đãi') {
+                actionText = 'Xem ưu đãi Paw Points';
+                if (!noti.url || noti.url === '#') targetUrl = `${root}pages/user/#loyalty`;
+            } else if (noti.url && noti.url !== '#' && noti.url !== '') {
+                actionText = 'Đến trang liên kết';
+            }
+
+            detailPane.innerHTML = `
+                <div class="pawpal-noti-detail-pane-content">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="pawpal-noti-category-badge">${category}</span>
+                        <span class="pawpal-noti-detail-time">${formattedTime}</span>
+                    </div>
+                    <h4 class="pawpal-noti-detail-title">${noti.title}</h4>
+                    <div class="pawpal-noti-detail-content">
+                        ${noti.content || 'Không có nội dung chi tiết cho thông báo này.'}
+                    </div>
+                    ${actionText ? `
+                        <div class="pawpal-noti-detail-action mt-4">
+                            <a href="${targetUrl}" class="btn-noti-action-cta" id="btnNotiDetailCTA">${actionText}</a>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            detailPane.querySelector('#btnNotiDetailCTA')?.addEventListener('click', (e) => {
+                const href = e.currentTarget.getAttribute('href');
+                if (href && href !== '#' && href !== '') {
+                    closeNotiModal();
+                    if (window.location.pathname.includes('/pages/user/') && href.includes('#')) {
+                        const targetHash = href.substring(href.indexOf('#'));
+                        window.location.hash = targetHash;
+                        if (typeof window.handleHashRouting === 'function') {
+                            window.handleHashRouting();
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderModalNotiList(filterType = 'all', targetNotiId = null) {
+            const listContainer = overlay.querySelector('#notiModalListBody');
+
+            let items = [];
+            try {
+                const stored = JSON.parse(localStorage.getItem('pawpal_notifications') || '[]');
+                if (Array.isArray(stored) && stored.length > 0) {
+                    items = stored.map(s => ({
+                        id: s.id,
+                        title: s.title,
+                        content: s.content || s.message,
+                        time: s.time,
+                        isRead: Boolean(s.read),
+                        type: s.type || 'info',
+                        url: s.link || '#'
+                    }));
+                }
+            } catch(e) {}
+
+            if (!items.length) {
+                items = mockNotifications;
+            }
+
+            let filtered = items;
+            if (filterType === 'unread') {
+                filtered = items.filter(n => !n.isRead);
+            } else if (filterType === 'service') {
+                filtered = items.filter(n => n.type === 'service' || (n.title || '').toLowerCase().includes('dịch vụ') || (n.title || '').toLowerCase().includes('spa') || (n.title || '').toLowerCase().includes('lịch'));
+            } else if (filterType === 'order') {
+                filtered = items.filter(n => n.type === 'order' || (n.title || '').toLowerCase().includes('đơn hàng'));
+            }
+
+            if (!filtered.length) {
+                listContainer.innerHTML = `
+                    <div class="pawpal-noti-empty">
+                        Không có thông báo nào trong mục này.
+                    </div>
+                `;
+                renderDetailPane(null);
+                return;
+            }
+
+            // Chọn thông báo mục tiêu hoặc thông báo đầu tiên
+            let selectedItem = null;
+            if (targetNotiId) {
+                selectedItem = filtered.find(x => String(x.id) === String(targetNotiId));
+            }
+            if (!selectedItem && filtered.length > 0) {
+                selectedItem = filtered[0];
+            }
+            currentSelectedNotiId = selectedItem ? selectedItem.id : null;
+
+            listContainer.innerHTML = filtered.map(n => {
+                const category = getNotiCategoryName(n);
+                const displayTime = formatNotiTime(n.time);
+                const isSelected = selectedItem && String(selectedItem.id) === String(n.id);
+                return `
+                    <div class="pawpal-noti-modal-item ${n.isRead ? '' : 'unread'} ${isSelected ? 'selected' : ''}" data-id="${n.id}">
+                        ${!n.isRead ? '<span class="pawpal-noti-unread-dot"></span>' : ''}
+                        <div class="pawpal-noti-modal-item-content">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <span class="pawpal-noti-category-badge">${category}</span>
+                                <span class="pawpal-noti-modal-item-time">${displayTime}</span>
+                            </div>
+                            <div class="pawpal-noti-modal-item-title">${n.title}</div>
+                            <div class="pawpal-noti-modal-item-text">${n.content || ''}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Gắn sự kiện click cho từng item
+            listContainer.querySelectorAll('.pawpal-noti-modal-item').forEach(itemEl => {
+                itemEl.addEventListener('click', () => {
+                    const id = itemEl.dataset.id;
+                    const notiObj = items.find(x => String(x.id) === String(id));
+                    if (notiObj) {
+                        listContainer.querySelectorAll('.pawpal-noti-modal-item').forEach(el => el.classList.remove('selected'));
+                        itemEl.classList.add('selected');
+                        currentSelectedNotiId = id;
+                        renderDetailPane(notiObj);
+                    }
+                });
+            });
+
+            // Hiển thị chi tiết của item được chọn vào cột phải
+            renderDetailPane(selectedItem);
+        }
+
+        const initialId = initialNoti ? initialNoti.id : null;
+        renderModalNotiList('all', initialId);
+        overlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    window.openAllNotificationsModal = openAllNotificationsModal;
 
     function setupMobileAccountToggle() {
         const accountGroup = document.querySelector('.mobile-account-group');
@@ -767,12 +1122,21 @@
         initMobileNavigation();
     }
     
-    // Lắng nghe thay đổi trạng thái đăng nhập và cấu hình cập nhật
+    // Lắng nghe thay đổi trạng thái đăng nhập, giỏ hàng và cấu hình cập nhật
     document.addEventListener('auth_state_changed', updateHeaderAuth);
+    document.addEventListener('cart_updated', () => {
+        if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
+    });
     window.addEventListener('pawpal_settings_updated', renderDynamicTopBarNotice);
     window.addEventListener('storage', (e) => {
         if (e.key === 'pawpal_settings_notices') {
             renderDynamicTopBarNotice();
         }
+        if (e.key === 'pawpal_cart') {
+            if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
+        }
+    });
+    window.addEventListener('focus', () => {
+        if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
     });
 })();

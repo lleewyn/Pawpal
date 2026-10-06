@@ -734,11 +734,12 @@ function reorder(orderId) {
         }
     });
 
-    if (window.saveCart) window.saveCart(cart); else if (window.saveCart) window.saveCart(cart); else localStorage.setItem('pawpal_cart', JSON.stringify(cart));
-
-    const badge = document.querySelector('.cart-count, .cart-badge');
-    if (badge) {
-        badge.textContent = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+    if (window.saveCart) window.saveCart(cart); else localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+    if (typeof window.updateCartBadge === 'function') {
+        window.updateCartBadge();
+    } else {
+        const badge = document.querySelector('.cart-count, .cart-badge');
+        if (badge) badge.textContent = cart.length;
     }
 
     showOrdersToast(`Đã thêm các sản phẩm của đơn hàng ${orderId} vào giỏ hàng.`, 'success');
@@ -924,27 +925,43 @@ function saveOrderToLocalStorage(order) {
 }
 
 function getStatusLabel(status) {
+    const s = String(status || '').toLowerCase().trim();
     const labels = {
-        placed:          'Chờ xử lý',
-        pending:         'Chờ thanh toán',
-        pending_payment: 'Chờ thanh toán',
-        confirmed:       'Đang chuẩn bị',
-        preparing:       'Đang chuẩn bị',
-        shipping:        'Đang giao',
-        delivered:       'Đã giao hàng',
-        completed:       'Hoàn thành',
-        cancelled:       'Đã hủy',
-        return_pending:  'Chờ duyệt đổi trả',
-        return_approved: 'Đổi trả được duyệt',
-        refunded:        'Đã hoàn tiền'
+        cho_thanh_toan:      'Chờ thanh toán',
+        cho_xac_nhan:        'Chờ xác nhận',
+        da_xac_nhan:         'Đang chuẩn bị',
+        dang_chuan_bi:       'Đang chuẩn bị',
+        dang_giao:           'Đang giao',
+        da_giao:             'Đã giao hàng',
+        da_hoan_tat:         'Hoàn thành',
+        da_huy:              'Đã hủy',
+        thanh_toan_that_bai: 'Thanh toán thất bại',
+        placed:              'Chờ xác nhận',
+        pending:             'Chờ thanh toán',
+        pending_payment:     'Chờ thanh toán',
+        confirmed:           'Đang chuẩn bị',
+        preparing:           'Đang chuẩn bị',
+        shipping:            'Đang giao',
+        delivered:           'Đã giao hàng',
+        completed:           'Hoàn thành',
+        cancelled:           'Đã hủy',
+        return_pending:      'Chờ duyệt đổi trả',
+        return_approved:     'Đổi trả được duyệt',
+        refunded:            'Đã hoàn tiền'
     };
-    return labels[status] || status;
+    return labels[s] || status || 'Chờ xử lý';
 }
 
 function normalizeOrderStatus(status) {
-    if (status === 'pending') return 'pending_payment';
-    if (status === 'confirmed') return 'preparing';
-    return status;
+    const s = String(status || '').toLowerCase().trim();
+    if (s === 'cho_thanh_toan' || s === 'pending') return 'pending_payment';
+    if (s === 'cho_xac_nhan' || s === 'placed') return 'placed';
+    if (s === 'da_xac_nhan' || s === 'confirmed' || s === 'dang_chuan_bi') return 'preparing';
+    if (s === 'dang_giao' || s === 'shipping') return 'shipping';
+    if (s === 'da_giao' || s === 'delivered') return 'delivered';
+    if (s === 'da_hoan_tat' || s === 'completed') return 'completed';
+    if (s === 'da_huy' || s === 'cancelled' || s === 'thanh_toan_that_bai') return 'cancelled';
+    return s || 'placed';
 }
 
 function getPaymentMethodLabel(method) {

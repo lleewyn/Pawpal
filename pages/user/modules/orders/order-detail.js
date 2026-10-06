@@ -114,15 +114,31 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
 }
 
 function mapOrderStatus(status) {
-    return {
-        'PENDING':   'placed',
-        'CONFIRMED': 'confirmed',
-        'PREPARING': 'preparing',
-        'SHIPPING':  'shipping',
-        'DELIVERED': 'delivered',
-        'COMPLETED': 'completed',
-        'CANCELLED': 'cancelled',
-    }[status] || 'placed';
+    if (!status) return 'placed';
+    const s = String(status).toLowerCase().trim();
+    const mapping = {
+        'cho_thanh_toan':      'pending_payment',
+        'cho_xac_nhan':        'placed',
+        'da_xac_nhan':         'confirmed',
+        'dang_chuan_bi':       'preparing',
+        'dang_giao':           'shipping',
+        'da_giao':             'delivered',
+        'da_hoan_tat':         'completed',
+        'da_huy':              'cancelled',
+        'thanh_toan_that_bai': 'cancelled',
+        'pending':             'placed',
+        'pending_payment':     'pending_payment',
+        'confirmed':           'confirmed',
+        'packing':             'preparing',
+        'preparing':           'preparing',
+        'shipping':            'shipping',
+        'shipped':             'shipping',
+        'delivered':           'delivered',
+        'completed':           'completed',
+        'cancelled':           'cancelled',
+        'returned':            'cancelled',
+    };
+    return mapping[s] || 'placed';
 }
 
 function normalizeImageUrl(url) {
@@ -1565,12 +1581,16 @@ function showPawPalToast(message, type = 'info') {
 }
 
 function updateCartBadgeCount() {
+    if (typeof window.updateCartBadge === 'function') {
+        window.updateCartBadge();
+        return;
+    }
     const cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
-    const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+    const totalItems = cart.length;
     const badge = document.querySelector('.cart-count, .cart-badge');
     if (badge) {
         badge.textContent = totalItems;
-        badge.classList.remove('d-none');
+        if (totalItems > 0) badge.classList.remove('d-none');
     }
 }
 
@@ -1623,21 +1643,31 @@ function formatDate(dateString) {
 }
 
 function getStatusLabel(status) {
+    const s = String(status || '').toLowerCase().trim();
     const labels = {
-        'placed':          'Chờ xử lý',
-        'pending':         'Chờ thanh toán',
-        'pending_payment': 'Chờ thanh toán',
-        'confirmed':       'Đã xác nhận',
-        'preparing':       'Đang chuẩn bị',
-        'shipping':        'Đang giao',
-        'delivered':       'Đã giao hàng',
-        'completed':       'Hoàn thành',
-        'cancelled':       'Đã hủy',
-        'return_pending':  'Chờ duyệt đổi trả',
-        'return_approved': 'Đổi trả được duyệt',
-        'refunded':        'Đã hoàn tiền'
+        'cho_thanh_toan':      'Chờ thanh toán',
+        'cho_xac_nhan':        'Chờ xác nhận',
+        'da_xac_nhan':         'Đã xác nhận',
+        'dang_chuan_bi':       'Đang chuẩn bị',
+        'dang_giao':           'Đang giao',
+        'da_giao':             'Đã giao hàng',
+        'da_hoan_tat':         'Hoàn thành',
+        'da_huy':              'Đã hủy',
+        'thanh_toan_that_bai': 'Thanh toán thất bại',
+        'placed':              'Chờ xác nhận',
+        'pending':             'Chờ thanh toán',
+        'pending_payment':     'Chờ thanh toán',
+        'confirmed':           'Đã xác nhận',
+        'preparing':           'Đang chuẩn bị',
+        'shipping':            'Đang giao',
+        'delivered':           'Đã giao hàng',
+        'completed':           'Hoàn thành',
+        'cancelled':           'Đã hủy',
+        'return_pending':      'Chờ duyệt đổi trả',
+        'return_approved':     'Đổi trả được duyệt',
+        'refunded':            'Đã hoàn tiền'
     };
-    return labels[status] || status;
+    return labels[s] || status || 'Chờ xử lý';
 }
 
 window.reorder = reorder;

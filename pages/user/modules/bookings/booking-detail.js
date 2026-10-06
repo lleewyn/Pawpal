@@ -4,7 +4,25 @@ import { statusLabels, formatDate, formatPrice } from './bookings.js';
 
 
 function mapBookingStatus(status) {
-    return { 'PENDING': 'pending', 'CONFIRMED': 'confirmed', 'COMPLETED': 'completed', 'CANCELLED': 'cancelled', 'NO_SHOW': 'cancelled' }[status] || 'pending';
+    if (!status) return 'pending';
+    const s = String(status).toLowerCase().trim();
+    const mapping = {
+        'dang_giu_cho':   'pending',
+        'cho_xac_nhan':   'pending',
+        'da_xac_nhan':    'confirmed',
+        'da_check_in':    'confirmed',
+        'dang_thuc_hien': 'in-progress',
+        'da_hoan_tat':    'completed',
+        'da_huy':         'cancelled',
+        'da_het_han':     'cancelled',
+        'vang_mat':       'cancelled',
+        'pending':        'pending',
+        'confirmed':      'confirmed',
+        'completed':      'completed',
+        'cancelled':      'cancelled',
+        'no_show':        'cancelled'
+    };
+    return mapping[s] || 'pending';
 }
 
 function getBookingPrice(priceMatrix, petSpecies) {
@@ -18,7 +36,7 @@ async function cancelBookingOnSupabase(booking) {
     if (!db || !booking?._supabaseId) return;
     try {
         await db.from('appointment')
-            .update({ appointment_status: 'CANCELLED' })
+            .update({ appointment_status: 'da_huy' })
             .eq('id', booking._supabaseId);
         console.log('[BookingDetail] Cancel synced to Supabase');
     } catch (err) {
@@ -35,7 +53,7 @@ async function rescheduleBookingOnSupabase(booking) {
             .update({
                 appointment_date:   booking.date,
                 appointment_time:   serviceCategory === 'hotel' ? null : (booking.timeStart || booking.time) + ':00',
-                appointment_status: 'PENDING',
+                appointment_status: 'cho_xac_nhan',
                 change_count:       booking.changeCount || 0,
             })
             .eq('id', booking._supabaseId);

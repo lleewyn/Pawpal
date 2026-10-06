@@ -1457,7 +1457,7 @@ async function handleCheckout() {
                 await window.API.saveUserCart(checkoutState.user?.id || checkoutState.user?.phone || null, []);
             }
         }
-        window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${orderData.orderId}`;
+        window.location.href = `/payment-success?orderId=${orderData.orderId}`;
     } else if (checkoutState.selectedPayment === 'vnpay') {
         localStorage.removeItem('pawpal_cart_unselected_backup');
         localStorage.removeItem('pawpal_applied_voucher_code');
@@ -1492,7 +1492,7 @@ async function handleCheckout() {
             console.warn('[Checkout] Không thể kết nối API VNPAY thật, chuyển sang giao diện giả lập:', err);
         }
 
-        window.location.href = `/pages/shop/vnpay-sandbox/vnpay-sandbox.html?orderId=${orderData.orderId}&amount=${orderData.pricing.grandTotal}`;
+        window.location.href = `/vnpay-sandbox?orderId=${orderData.orderId}&amount=${orderData.pricing.grandTotal}`;
     } else if (['momo', 'zalopay', 'vietqr'].includes(checkoutState.selectedPayment)) {
         showQRPaymentModal(orderData);
     } else {
@@ -1508,7 +1508,7 @@ async function handleCheckout() {
                 await window.API.saveUserCart(checkoutState.user?.id || checkoutState.user?.phone || null, []);
             }
         }
-        window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${orderData.orderId}`;
+        window.location.href = `/payment-success?orderId=${orderData.orderId}`;
     }
 }
 
@@ -1717,7 +1717,7 @@ function hideQRPaymentModal() {
 
         showToast(`Đơn hàng #${qrPaymentState.orderData.orderId} đang ở trạng thái "Chờ thanh toán" (thời hạn 15 phút). Bạn có thể tiếp tục thanh toán trong mục Đơn hàng của tôi.`, 'info');
         setTimeout(() => {
-            window.location.href = `/pages/user/orders/orders.html?status=pending_payment`;
+            window.location.href = `/pages/user/#orders?status=pending_payment`;
         }, 1500);
     }
 }
@@ -1746,7 +1746,7 @@ function handleQRExpired() {
     setTimeout(() => {
         document.getElementById('qr-backdrop').classList.remove('show');
         document.getElementById('payment-qr-modal').classList.remove('show');
-        window.location.href = `/pages/user/orders/orders.html?status=cancelled`;
+        window.location.href = `/pages/user/#orders?status=cancelled`;
     }, 2500);
 }
 
@@ -1794,7 +1794,7 @@ function verifyPaymentSimulation() {
                 }
                 
                 setTimeout(() => {
-                    window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${qrPaymentState.orderData.orderId}`;
+                    window.location.href = `/payment-success?orderId=${qrPaymentState.orderData.orderId}`;
                 }, 1500);
             } else {
                 statusMsg.className = 'payment-status-message show error';

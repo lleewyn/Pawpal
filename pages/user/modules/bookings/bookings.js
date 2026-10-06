@@ -10,7 +10,7 @@ async function cancelOnSupabase(bookingId) {
         const booking = allBookings.find(b => String(b.id) === String(bookingId) || String(b._id) === String(bookingId));
         const supabaseId = booking?._supabaseId;
         if (supabaseId) {
-            await db.from('appointment').update({ appointment_status: 'CANCELLED' }).eq('id', supabaseId);
+            await db.from('appointment').update({ appointment_status: 'da_huy' }).eq('id', supabaseId);
         }
     } catch (err) {
         console.warn('[Bookings] cancelOnSupabase error:', err.message);
@@ -27,7 +27,7 @@ async function rescheduleOnSupabase(bookingId, date, time) {
             await db.from('appointment').update({
                 appointment_date: date,
                 appointment_time: time + ':00',
-                appointment_status: 'PENDING',
+                appointment_status: 'cho_xac_nhan',
             }).eq('id', supabaseId);
         }
     } catch (err) {
@@ -36,6 +36,15 @@ async function rescheduleOnSupabase(bookingId, date, time) {
 }
 
 export const statusLabels = {
+    dang_giu_cho:  'Đang giữ chỗ',
+    cho_xac_nhan:  'Chờ xác nhận',
+    da_xac_nhan:   'Đã xác nhận',
+    da_check_in:   'Đã tiếp nhận',
+    dang_thuc_hien:'Đang thực hiện',
+    da_hoan_tat:   'Hoàn thành',
+    da_huy:        'Đã hủy',
+    da_het_han:    'Đã hết hạn',
+    vang_mat:      'Vắng mặt',
     pending:       'Chờ xác nhận',
     upcoming:      'Đã xác nhận',
     confirmed:     'Đã xác nhận',
@@ -46,12 +55,12 @@ export const statusLabels = {
 };
 
 const statusAliases = {
-    pending: ['pending'],
-    confirmed: ['confirmed', 'upcoming'],
-    accepted: ['accepted'],
-    'in-progress': ['in-progress'],
-    completed: ['completed'],
-    cancelled: ['cancelled']
+    pending: ['pending', 'cho_xac_nhan', 'dang_giu_cho'],
+    confirmed: ['confirmed', 'upcoming', 'da_xac_nhan'],
+    accepted: ['accepted', 'da_check_in'],
+    'in-progress': ['in-progress', 'dang_thuc_hien'],
+    completed: ['completed', 'da_hoan_tat'],
+    cancelled: ['cancelled', 'da_huy', 'da_het_han', 'vang_mat']
 };
 
 let allBookings = [];

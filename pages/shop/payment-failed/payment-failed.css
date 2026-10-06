@@ -49,9 +49,9 @@
 
 /* Info Card */
 .info-card {
-  background: var(--color-bg-white);
-  border: var(--border-card);
-  border-radius: var(--card-border-radius);
+  background: var(--color-bg-white, #ffffff);
+  border: 1px solid var(--color-border, #ECF2EE);
+  border-radius: 9px;
   padding: var(--space-lg);
   margin-bottom: var(--space-md);
 }
@@ -61,7 +61,7 @@
   font-size: var(--fs-h3);
   font-weight: 600;
   margin-bottom: var(--space-md);
-  color: var(--color-text-dark);
+  color: var(--color-primary-dark, #236B48);
 }
 
 /* Info Rows */
@@ -76,7 +76,7 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: var(--space-sm) 0;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border, #ECF2EE);
 }
 
 .info-row:last-child {
@@ -84,14 +84,14 @@
 }
 
 .info-label {
-  color: var(--color-text-light);
+  color: var(--color-text-light, #4F7A65);
   font-size: var(--fs-body);
   flex-shrink: 0;
   width: 180px;
 }
 
 .info-value {
-  color: var(--color-text-dark);
+  color: var(--color-text-dark, #203A2C);
   font-weight: 500;
   text-align: right;
   flex: 1;
@@ -106,15 +106,18 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  border-radius: var(--border-radius-pill);
-  font-size: var(--fs-small);
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 9px !important;
+  border: none !important;
+  font-size: 12px;
   font-weight: 600;
+  line-height: 1;
 }
 
 .status-failed {
-  background: var(--color-danger-light);
-  color: var(--color-danger);
+  background: #F7DCDC !important;
+  color: #8F2424 !important;
 }
 
 .ui-bg-box-8 {

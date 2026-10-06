@@ -222,6 +222,24 @@
             console.warn('[Settings] Error loading stored config:', e);
         }
 
+        async function persistSystemConfig(configObj) {
+            try {
+                localStorage.setItem('pawpal_settings_system_config', JSON.stringify(configObj));
+                const client = getSupabaseClient();
+                if (client) {
+                    await client.from('pawpal_setting').upsert({
+                        setting_key: 'system_config',
+                        setting_value: JSON.stringify(configObj),
+                        setting_type: 'json',
+                        description: 'Toàn bộ cấu hình hệ thống quản trị PawPal',
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'setting_key' });
+                }
+            } catch (err) {
+                console.warn('[Settings] persistSystemConfig failed:', err);
+            }
+        }
+
         async function loadSettingsModuleData() {
             try {
                 const client = getSupabaseClient();
@@ -235,13 +253,15 @@
                     vouchersRes,
                     blogsRes,
                     notifsRes,
-                    auditsRes
+                    auditsRes,
+                    settingsRes
                 ] = await Promise.all([
                     client.from('banner').select('*').order('created_at', { ascending: false }),
                     client.from('voucher').select('*').order('created_at', { ascending: false }),
                     client.from('blog_post').select('*').order('created_at', { ascending: false }),
                     client.from('notification').select('*').order('sent_at', { ascending: false }),
-                    client.from('audit_log').select('*').order('created_at', { ascending: false }).limit(20)
+                    client.from('audit_log').select('*').order('created_at', { ascending: false }).limit(20),
+                    client.from('pawpal_setting').select('*')
                 ]);
 
                 const banners = bannersRes.data || [];
@@ -249,6 +269,15 @@
                 const blogs = blogsRes.data || [];
                 const notifs = notifsRes.data || [];
                 const audits = auditsRes.data || [];
+                const settingsData = settingsRes.data || [];
+
+                if (settingsData.length > 0) {
+                    settingsData.forEach(row => {
+                        if (row.setting_key === 'system_config' && row.setting_value) {
+                            try { systemConfig = JSON.parse(row.setting_value); } catch {}
+                        }
+                    });
+                }
 
                 // 1. Map Banners (Database column: title, image_url, link, button_text, start_date, end_date, status)
                 bannersList = banners.map(b => {
@@ -1371,9 +1400,7 @@
                             pointValueVnd: parsedVal,
                             registerBonus: parseInt(regPts, 10)
                         };
-                        try {
-                            localStorage.setItem('pawpal_settings_system_config', JSON.stringify(systemConfig));
-                        } catch (e) {}
+                        await persistSystemConfig(systemConfig);
 
                         await logSystemAudit('UPDATE', 'pawpoints', `Cập nhật PawPoints: 1 điểm = ${parsedVal.toLocaleString('vi-VN')} VNĐ, Thưởng đăng ký +${regPts} điểm`);
                         await loadSettingsModuleData();
@@ -1552,9 +1579,7 @@
                             facebookUrl: fb
                         };
 
-                        try {
-                            localStorage.setItem('pawpal_settings_system_config', JSON.stringify(systemConfig));
-                        } catch (e) {}
+                        await persistSystemConfig(systemConfig);
 
                         if (storeModal) storeModal.style.display = 'none';
 
@@ -1637,9 +1662,7 @@
                             vnpay: { enabled: vnpayEn, name: 'Cổng thanh toán VNPay', tmnCode: 'PAWPALVN' }
                         };
 
-                        try {
-                            localStorage.setItem('pawpal_settings_system_config', JSON.stringify(systemConfig));
-                        } catch (e) {}
+                        await persistSystemConfig(systemConfig);
 
                         if (paymentModal) paymentModal.style.display = 'none';
 
@@ -1720,9 +1743,7 @@
                             apiKey: apiKey
                         };
 
-                        try {
-                            localStorage.setItem('pawpal_settings_system_config', JSON.stringify(systemConfig));
-                        } catch (e) {}
+                        await persistSystemConfig(systemConfig);
 
                         if (shippingModal) shippingModal.style.display = 'none';
 
@@ -1827,9 +1848,7 @@
                             timeSlots: systemConfig.bookingPolicy?.timeSlots || ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00']
                         };
 
-                        try {
-                            localStorage.setItem('pawpal_settings_system_config', JSON.stringify(systemConfig));
-                        } catch (e) {}
+                        await persistSystemConfig(systemConfig);
 
                         if (bookingPolicyModal) bookingPolicyModal.style.display = 'none';
 

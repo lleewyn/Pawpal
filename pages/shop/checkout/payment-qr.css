@@ -35,8 +35,8 @@
     transform: translate(-50%, -50%) scale(0.95);
     width: 90%;
     max-width: 420px;
-    background: var(--color-bg-white);
-    border-radius: var(--card-border-radius);
+    background: var(--color-bg-white, #ffffff);
+    border-radius: 9px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     z-index: 1050;
     padding: 0;
@@ -243,12 +243,12 @@
 .qr-modal-footer button {
     flex: 1;
     padding: 10px 16px;
-    border: 1px solid var(--color-border);
-    background: var(--color-bg-white);
-    color: var(--color-text-dark);
-    border-radius: 6px;
+    border: 1px solid var(--color-border, #ECF2EE);
+    background: var(--color-bg-white, #ffffff);
+    color: var(--color-text-dark, #203A2C);
+    border-radius: 9px;
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 600;
     transition: all 0.2s ease;
 }
 

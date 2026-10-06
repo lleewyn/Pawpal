@@ -566,15 +566,26 @@ async function syncPetDiaryFromSupabase(pet) {
 }
 
 function mapAppointmentStatus(status) {
+    const s = String(status || '').toLowerCase().trim();
     const map = {
-        'PENDING': 'Chờ xác nhận',
-        'CONFIRMED': 'Đã xác nhận',
-        'COMPLETED': 'Hoàn thành',
-        'CANCELLED': 'Đã hủy',
-        'NO_SHOW': 'Đã hủy',
-        'IN_PROGRESS': 'Đang thực hiện'
+        'dang_giu_cho':   'Đang giữ chỗ',
+        'cho_xac_nhan':   'Chờ xác nhận',
+        'da_xac_nhan':    'Đã xác nhận',
+        'da_check_in':    'Đã tiếp nhận',
+        'dang_thuc_hien': 'Đang thực hiện',
+        'da_hoan_tat':    'Hoàn thành',
+        'da_huy':         'Đã hủy',
+        'da_het_han':     'Đã hết hạn',
+        'vang_mat':       'Vắng mặt',
+        'pending':        'Chờ xác nhận',
+        'confirmed':      'Đã xác nhận',
+        'completed':      'Hoàn thành',
+        'cancelled':      'Đã hủy',
+        'no_show':        'Vắng mặt',
+        'in_progress':    'Đang thực hiện',
+        'in-progress':    'Đang thực hiện'
     };
-    return map[status] || status || 'Đang thực hiện';
+    return map[s] || status || 'Đang thực hiện';
 }
 
 function getAdminBookings() {

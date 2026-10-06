@@ -1,578 +1,599 @@
-STT	Thực thể	Mô tả thực thể	Thuộc tính	Mô tả
-1	customer	Lưu thông tin tài khoản đăng nhập và trạng thái sử dụng hệ thống của khách hàng	id	Mã định danh khách hàng
-			email	Email đăng ký tài khoản
-			password_hash	Mật khẩu đã mã hóa
-			account_status	Trạng thái tài khoản
-			is_temporary	Trạng thái tài khoản khách hàng 
-			phone_main	Số điện thoại đăng ký tài khoản
-			registered_at	Thời điểm đăng ký tài khoản
-			note	ghi chú đặc điểm khách hàng chỉ nội bộ thấy
-			created_at	Thời điểm tạo dữ liệu
-			updated_at	Thời điểm cập nhật dữ liệu
-2	customer_profile	Lưu thông tin hồ sơ cá nhân của khách hàng	id	Mã định danh hồ sơ
-			customer_id	Khách hàng sở hữu hồ sơ
-			full_name	Họ và tên khách hàng
-			date_of_birth	Ngày sinh
-			gender	Giới tính
-			created_at	Thời điểm tạo hồ sơ
-			updated_at	Thời điểm cập nhật hồ sơ
-3	customer_membership	Lưu thông tin hạng thành viên và điểm thưởng của khách hàng	id	Mã định danh thông tin thành viên
-			customer_id	Khách hàng sở hữu thông tin thành viên
-			membership_tier_id	Hạng thành viên hiện tại
-			total_paw_points	Tổng số Paw Points hiện có
-			created_at	Thời điểm tạo dữ liệu
-			updated_at	Thời điểm cập nhật dữ liệu
-4	customer_address	Lưu nhiều địa chỉ giao hàng, đón trả thú cưng hoặc địa chỉ đặt hộ của khách hàng	id	Mã định danh địa chỉ
-			customer_id	Khách hàng sở hữu địa chỉ
-			receiver_name	Tên người nhận
-				
-				
-			receiver_phone	Số điện thoại người nhận
-			province	Tỉnh hoặc thành phố
-			street_address	Địa chỉ chi tiết
-			postal_code	Mã bưu chính nếu có
-			is_default	Xác định địa chỉ mặc định
-			created_at	Thời điểm tạo địa chỉ
-				
-			updated_at	Thời điểm cập nhật địa chỉ
-				
-5	customer_phone	Lưu nhiều số điện thoại liên hệ của khách hàng, người thân hoặc người nhận thay	id	Mã định danh số điện thoại
-			customer_id	Khách hàng sở hữu số điện thoại
-			phone_number	Số điện thoại
-			is_verified	Trạng thái xác thực OTP
-				
-			created_at	Thời điểm thêm số điện thoại
-			updated_at	Thời điểm cập nhật số điện thoại
-6	pet_profile	Lưu hồ sơ định danh Pet ID, tên thú cưng, giống loài, giới tính, ngày sinh và trạng thái hoạt động	id	Mã định danh thú cưng
-			customer_id	Chủ sở hữu thú cưng
-			pet_code	Mã Pet ID hiển thị trong hệ thống
-				
-				
-			pet_name	Tên thú cưng
-			avatar_url	Ảnh đại diện thú cưng
-			species	Loài thú cưng
-			breed	Giống thú cưng
-			gender	Giới tính
-				
-				
-			date_of_birth	Ngày sinh
-			color	Màu lông
-			routine	Sở thích và thói quen sinh hoạt
-			weight	Cân nặng tại thời điểm cập nhật
-			vaccination_history	Thông tin tiêm phòng
-			allergy	Thông tin dị ứng
-			status	Trạng thái hoạt động của hồ sơ thú cưng
-			created_at	Thời điểm tạo hồ sơ
-			updated_at	Thời điểm cập nhật hồ sơ
-7	service	Lưu danh mục các dịch vụ thuộc các nhóm Grooming & Spa, Pet Hotel và Pet Taxi	id	Mã định danh dịch vụ
-				
-			hotel_room_type	Loại phòng (Luxury, Standard,..)
-			service_code	Mã dịch vụ
-			service_name	Tên dịch vụ
-			service_category	Nhóm dịch vụ gồm Grooming & Spa, Pet Hotel hoặc Pet Taxi
-			description	Mô tả dịch vụ
-			estimated_duration	Thời gian thực hiện dự kiến
-			thumbnail_url	Hình ảnh đại diện dịch vụ
-			status	Trạng thái hoạt động
-			rating	Điểm đánh giá
-			review_count	Số lượt xem nhận xét
-			benefits	Công dụng
-				
-			checklist	Danh sách việc làm
-			amenities	Tiện nghi sẵn có
-			groomer_level	Mức độ tay nghề của người thực hiện dịch vụ
-			pet_type	Loại thú cưng đáp ứng được
-			images	Hình ảnh minh họa
-			created_at	Thời điểm tạo dịch vụ
-			updated_at	Thời điểm cập nhật dịch vụ
-8	service_price_matrix	Lưu bảng giá của từng dịch vụ theo loài thú cưng, cân nặng hoặc điều kiện áp dụng	id	Mã định danh bảng giá
-			service_id	Dịch vụ áp dụng
-			weight_from	Cân nặng tối thiểu
-			weight_to	Cân nặng tối đa
-			unit_price	Giá dịch vụ
-			effective_from	Ngày bắt đầu áp dụng
-			effective_to	Ngày kết thúc áp dụng nếu có
-			status	Trạng thái áp dụng
-			created_at	Thời điểm tạo bảng giá
-			updated_at	Thời điểm cập nhật bảng giá
-9	appointment	Lưu phiếu đặt lịch dịch vụ của khách hàng cho từng thú cưng	id	Mã định danh lịch hẹn
-			appointment_code	Mã lịch hẹn hiển thị
-			customer_id	Khách hàng đặt lịch
-			pet_id	Thú cưng sử dụng dịch vụ
-			service_id	Dịch vụ đã đặt
-			staff_id	Nhân viên được phân công thực hiện dịch vụ
-			support_ticket_id	Phiếu yêu cầu liên quan
-			appointment_date	Ngày sử dụng dịch vụ
-			appointment_time	Giờ hẹn
-			Check_in_time	Giờ check-in
-			Check_out_time	Giờ check-out
-			note	Ghi chú của khách hàng
-			change_count	Số lần thay đổi thông tin lịch hẹn
-			appointment_status	Trạng thái lịch hẹn
-			payment_status	Trạng thái thanh toán
-			total_price	Tổng thành tiền
-			created_at	Thời điểm tạo lịch hẹn
-			updated_at	Thời điểm cập nhật lịch hẹn
-10	care_log	Lưu toàn bộ timeline chăm sóc trong quá trình thực hiện dịch vụ	id	Mã định danh Care Log
-			appointment_id	Lịch hẹn liên quan
-			pet_id	Thú cưng được chăm sóc
-			care_action_id	Hoạt động chăm sóc liên quan
-			description	Nội dung chăm sóc
-			health_status	Tình trạng sức khỏe tại thời điểm cập nhật
-			recorded_at	Thời điểm ghi nhận
-			created_at	Thời điểm tạo dữ liệu
-			updated_at	Thời điểm cập nhật dữ liệu
-11	care_log_media	Lưu ảnh và video minh chứng được cập nhật vào Care Log	id	Mã định danh tệp phương tiện
-			care_log_id	Care Log liên quan
-			media_type	Loại tệp gồm hình ảnh hoặc video
-			media_url	Đường dẫn lưu trữ tệp
-			file_name	Tên tệp
-			file_size	Kích thước tệp
-			staff_id	Nhân viên thực hiện cập nhật
-			uploaded_at	Thời điểm tải tệp lên
-			created_at	Thời điểm tạo dữ liệu
-12	care_action	Lưu danh mục các mốc chăm sóc như Tắm, Sấy, Cho ăn, Nghỉ ngơi	id	Mã định danh hoạt động chăm sóc
-			service_id	Dịch vụ tương ứng
-			action_name	Tên hoạt động chăm sóc
-			service_category	Nhóm dịch vụ áp dụng gồm Grooming & Spa, Pet Hotel hoặc Pet Taxi
-			display_order	Thứ tự hiển thị
-			estimated_duration	Thời gian thực hiện dự kiến
-			is_active	Trạng thái sử dụng
-			created_at	Thời điểm tạo dữ liệu
-			updated_at	Thời điểm cập nhật dữ liệu
-13	cart	Lưu giỏ hàng hiện tại của khách trước khi tạo đơn hàng	id	Mã định danh giỏ hàng
-			customer_id	Khách hàng sở hữu giỏ hàng
-			cart_status	Trạng thái giỏ hàng
-			total_quantity	Tổng số lượng sản phẩm trong giỏ
-			total_amount	Tổng giá trị tạm tính của giỏ hàng
-			created_at	Thời điểm tạo giỏ hàng
-			updated_at	Thời điểm cập nhật giỏ hàng
-14	cart_item	Lưu danh sách sản phẩm được thêm vào giỏ hàng	id	Mã định danh sản phẩm trong giỏ hàng
-			cart_id	Giỏ hàng chứa sản phẩm
-			product_variant_id	Sản phẩm được thêm vào
-			quantity	Số lượng sản phẩm
-			unit_price	Đơn giá tại thời điểm thêm vào giỏ
-			subtotal	Thành tiền của sản phẩm trong giỏ
-			created_at	Thời điểm thêm sản phẩm
-			updated_at	Thời điểm cập nhật sản phẩm
-15	wishlist	Lưu danh sách sản phẩm yêu thích của khách hàng	id	Mã định danh danh sách yêu thích
-			customer_id	Khách hàng sở hữu danh sách
-			created_at	Thời điểm tạo danh sách
-			updated_at	Thời điểm cập nhật danh sách
-16	wishlist_item	Lưu các sản phẩm cụ thể nằm trong Wishlist	id	Mã định danh sản phẩm yêu thích
-			wishlist_id	Danh sách yêu thích chứa sản phẩm
-			product_id	Sản phẩm yêu thích
-			service_id	Dịch vụ yêu thích
-			added_at	Thời điểm thêm vào danh sách
-17	sales_order	Lưu đơn hàng mua sắm trên website hoặc tại cửa hàng	id	Mã định danh đơn hàng
-			order_code	Mã đơn hàng
-			customer_id	Khách hàng đặt hàng
-			shipping_address_id	Địa chỉ giao hàng
-			delivery_id	Hình thức giao hàng
-			shipping_provider_id	Đơn vị vận chuyển
-			tracking_code	Mã vận đơn của đơn hàng.
-			shipped_at	Thời điểm bàn giao cho đơn vị vận chuyển.
-			delivered_at	Thời điểm giao thành công.
-			order_status	Trạng thái xử lý đơn hàng
-			payment_status	Trạng thái thanh toán
-			total_amount	Tổng số tiền thanh toán
-			note	Ghi chú của khách hàng
-			created_at	Thời điểm tạo đơn hàng
-			updated_at	Thời điểm cập nhật đơn hàng
-18	sales_order_detail	Lưu chi tiết sản phẩm, số lượng và đơn giá trong từng đơn hàng	id	Mã định danh chi tiết đơn hàng
-			order_id	Đơn hàng chứa sản phẩm
-			product_variant_id	Sản phẩm được đặt mua
-			quantity	Số lượng sản phẩm
-			unit_price	Đơn giá sản phẩm
-			discount_amount	Giá trị giảm giá của sản phẩm
-			subtotal	Thành tiền của sản phẩm
-19	payment	Lưu lịch sử thanh toán, phương thức thanh toán và trạng thái giao dịch	id	Mã định danh giao dịch thanh toán
-			payment_code	Mã giao dịch thanh toán
-			customer_id	Khách hàng thực hiện thanh toán
-			appointment_id	Lịch hẹn được thanh toán nếu có
-			order_id	Đơn hàng được thanh toán nếu có
-			voucher_id	Voucher được áp dụng nếu có
-			payment_method_id	Phương thức thanh toán
-			parent_payment_id	Giao dịch gốc nếu đây là hoàn tiền
-			transaction_type	PAYMENT, REFUND
-			payment_type	Loại thanh toán gồm mua sắm hoặc đặt lịch
-			amount	Số tiền thanh toán
-			paw_points_used	Số Paw Points đã sử dụng
-			paw_points_earned	Số Paw Points được cộng sau giao dịch
-			transaction_status	Trạng thái giao dịch
-			created_at	Thời điểm tạo giao dịch
-			updated_at	Thời điểm cập nhật trạng thái
-20	payment_method_config	Lưu thông tin các loại phương thức thanh toán khả dụng	id	Mã phương thức thanh toán
-			name	Tên phương thức
-			short_name	Tên viết tắt
-			description	Mô tả phương thức
-			icon	Nhãn minh họa
-			fee	Phí thanh toán
-			available	Có sẵn dàng phục vụ thanh toán
-			requires_info	Thông tin yêu cầu
-			redirect_url	Đường dẫn kết nối cổng thanh toán
-			bank_info	Thông tin ngân hàng
-			created_at	Thời điểm tạo giao dịch
-21	membership_tier	Lưu cấu hình các hạng thành viên như Bạc, Vàng, Kim Cương	id	Mã định danh hạng thành viên
-			tier_name	Tên hạng thành viên
-			minimum_expenditure	Số tiền chi tiêu tối thiểu để đạt hạng
-			discount_percent	Phần trăm ưu đãi của hạng thành viên
-			description	Mô tả quyền lợi của hạng thành viên
-			is_active	Trạng thái áp dụng
-			created_at	Thời điểm tạo dữ liệu
-			updated_at	Thời điểm cập nhật dữ liệu
-22	reward_rule	Lưu quy tắc cộng hoặc trừ Paw Points theo từng sự kiện như đăng ký, đặt lịch, mua hàng, đánh giá hoặc chương trình khuyến mãi	id	Mã định danh quy tắc
-			rule_name	Tên quy tắc
-			reward_type	Loại phần thưởng như Paw Points hoặc Voucher
-			trigger_event	Loại nghiệp vụ phát sinh điểm như đăng ký, mua sắm, đặt lịch, đánh giá hoặc chỉnh sửa thủ công
-			reward_value	Giá trị điểm thưởng hoặc voucher
-			description	Mô tả quy tắc
-			is_active	Trạng thái áp dụng
-			created_at	Thời điểm tạo dữ liệu
-			updated_at	Thời điểm cập nhật dữ liệu
-23	paw_point_transaction	Lưu toàn bộ lịch sử cộng, trừ và quy đổi Paw Point	id	Mã định danh giao dịch điểm thưởng
-			customer_id	Khách hàng phát sinh giao dịch
-			payment_id	Giao dịch thanh toán liên quan nếu có
-			review_id	Đánh giá liên quan nếu có
-			reward_rule_id	Quy tắc cộng hoặc trừ điểm được áp dụng
-			points	Số Paw Points cộng hoặc trừ
-			balance_after	Tổng số Paw Points sau giao dịch
-			description	Nội dung giao dịch điểm thưởng
-			created_at	Thời điểm phát sinh giao dịch
-24	voucher	Lưu danh mục voucher có thể phát hành hoặc quy đổi bằng điểm thưởng	id	Mã định danh voucher
-			voucher_code	Mã voucher
-			voucher_name	Tên voucher
-			discount_value	Giá trị giảm giá
-			minimum_order_amount	Giá trị đơn hàng tối thiểu để áp dụng
-			required_points	Số Paw Points cần để đổi voucher
-			start_date	Ngày bắt đầu hiệu lực
-			end_date	Ngày hết hiệu lực
-			is_active	Trạng thái sử dụng
-			type	Loại hình khuyến mãi
-			description	Mô tả nội dung khuyến mãi
-			applicable_for	Đối tượng dịch vụ hoặc sản phẩm được áp dụng
-			usage_count	Số lượng đã dùng
-			max_usage	Lượt dùng tối đa
-			created_at	Thời điểm tạo dữ liệu
-			updated_at	Thời điểm cập nhật dữ liệu
-25	customer_voucher	Lưu danh sách voucher mà khách hàng đang sở hữu hoặc đã sử dụng	id	Mã định danh voucher của khách hàng
-			customer_id	Khách hàng sở hữu voucher
-			voucher_id	Voucher được cấp
-			acquired_method	Hình thức nhận voucher như Đổi điểm hoặc Khuyến mãi
-			voucher_status	Trạng thái voucher
-			acquired_at	Thời điểm nhận voucher
-			used_at	Thời điểm sử dụng voucher
-			expired_at	Thời điểm hết hiệu lực
-26	promotion	Lưu các chương trình khuyến mãi đang áp dụng	id	Mã định danh chương trình
-			promotion_name	Tên chương trình
-			description	Mô tả chương trình
-			discount_type	Loại ưu đãi
-			discount_value	Giá trị ưu đãi
-			start_date	Ngày bắt đầu
-			end_date	Ngày kết thúc
-			minimum_order_value	Giá trị đơn hàng tối thiểu
-			status	Trạng thái chương trình
-			created_at	Thời điểm tạo
-			updated_at	Thời điểm cập nhật
-27	support_ticket	Lưu các yêu cầu hỗ trợ từ khách hàng	id	PK
-			ticket_code	Mã TK-000123
-			customer_id	FK khách hàng
-			order_id	FK đơn hàng (nullable)
-			appointment_id	FK lịch hẹn (nullable)
-			channel	CHATBOT, WEB, PHONE, FACEBOOK, ZALO, EMAIL
-			category	ORDER, APPOINTMENT, PAYMENT, PRODUCT, PET_CARE...
-			subject	Tiêu đề
-			description	Nội dung ban đầu
-			priority	LOW, MEDIUM, HIGH, URGENT
-			status	OPEN, PROCESSING, WAITING_CUSTOMER, RESOLVED, CLOSED
-			assigned_staff_id	Nhân viên CSKH phụ trách
-			first_response_at	Thời điểm phản hồi đầu tiên
-			closed_at	Thời điểm đóng
-			rating	Điểm hài lòng
-			rating_comment	Nhận xét sau xử lý
-			created_at	Tạo ticket
-			updated_at	Cập nhật
-28	support_ticket_message 	Lưu trữ nội sung trao đổi hỗ trợ khách hàng	id	Mã định danh đoạn hội thoại
-			ticket_id	Yêu cầu hỗ trợ liên quan
-			sender_type	Đối tượng gửi tin nhắn
-			agent_name	Tên người liên quan
-			content	Nội dung tin nhắn
-			attachment_url	Ảnh/video đính kèm
-			is_internal	Ghi chú nội bộ hay gửi khách
-			created_at	Thời gian gửi
-29	promotion_product	Lưu danh sách sản phẩm được áp dụng trong chương trình khuyến mãi	id	Mã định danh bản ghi áp dụng khuyến mãi
-			promotion_id	Chương trình khuyến mãi được áp dụng
-			product_variant_id	Sản phẩm được áp dụng khuyến mãi
-30	promotion_service	Lưu danh sách dịch vụ được áp dụng trong chương trình khuyến mãi	id	Mã định danh bản ghi áp dụng khuyến mãi
-			promotion_id	Chương trình khuyến mãi được áp dụng
-			service_id	Dịch vụ được áp dụng khuyến mãi
-31	staff	Lưu thông tin tài khoản nhân viên, lễ tân, chuyên môn, CSKH và quản lý	id	Mã định danh nhân viên
-			full_name	Họ và tên nhân viên
-			phone_number	Số điện thoại liên hệ
-			role	Vai trò gồm chủ admin, lễ tân, nhân viên chăm sóc
-			specialization	Chuyên môn hoặc bộ phận làm việc
-			hire_date	Ngày bắt đầu làm việc
-			created_at	Thời điểm tạo dữ liệu
-			updated_at	Thời điểm cập nhật dữ liệu
-32	staff_schedule	Lưu lịch làm việc, ca trực và thời gian hoạt động của nhân viên	id	Mã định danh lịch làm việc
-			staff_id	Nhân viên được phân công
-			work_date	Ngày làm việc
-			shift	Ca làm việc sáng, trưa, chiều, tối
-			start_time	Thời gian bắt đầu ca
-			end_time	Thời gian kết thúc ca
-			availability_status	Trạng thái ca làm việc
-			reason	Lý do không đi làm
-			created_at	Thời điểm tạo lịch
-			updated_at	Thời điểm cập nhật lịch
-33	product	Lưu danh mục sản phẩm kinh doanh tại cửa hàng và website	id	Mã định danh sản phẩm
-			category_id	Nhóm sản phẩm
-			product_name	Tên sản phẩm
-			brand_name	Tên thương hiệu
-			unit	Đơn vị tính
-			target_pet	Loài động vật sử dụng
-			min_price	Giá bán tối thiểu
-			description	Mô tả thành phần nguyên liệu
-			slug	Đường dẫn trang chi tiết sản phẩm
-			status	Trạng thái kinh doanh
-			created_at	Thời điểm tạo sản phẩm
-			updated_at	Thời điểm cập nhật sản phẩm
-34	product_category	Lưu danh mục nhóm sản phẩm	id	Mã định danh nhóm sản phẩm
-			category_name	Tên nhóm sản phẩm
-			description	Mô tả nhóm sản phẩm
-			status	Trạng thái sử dụng
-			created_at	Thời điểm tạo nhóm
-			updated_at	Thời điểm cập nhật nhóm
-35	inventory	Lưu số lượng tồn kho hiện tại của từng sản phẩm	id	Mã định danh tồn kho
-			product_variant_id	Sản phẩm được quản lý tồn kho
-			quantity_in_stock	Số lượng tồn hiện tại
-			minimum_stock	Mức tồn tối thiểu
-			quantity_reserved	Số lượng sản phẩm đang bị giữ
-			last_updated_at	Thời điểm cập nhật tồn kho gần nhất
-36	inventory_transaction	Lưu lịch sử nhập kho, xuất kho và điều chỉnh tồn kho	id	Mã định danh giao dịch kho
-			purchase_order_id	Phiếu nhập liên quan nếu có
-			product_variant_id	Sản phẩm được ghi nhận thay đổi tồn kho
-			transaction_type	Loại thay đổi như nhập kho, xuất kho
-			quantity	Số lượng thay đổi
-			stock_before	Tồn kho trước khi cập nhật
-			stock_after	Tồn kho sau khi cập nhật
-			note	Ghi chú điều chỉnh
-			staff_id	Nhân viên thực hiện
-			created_at	Thời điểm phát sinh giao dịch
-37	supplier	Lưu thông tin nhà cung cấp sản phẩm	id	Mã định danh nhà cung cấp
-			supplier_name	Tên nhà cung cấp
-			contact_person	Người liên hệ
-			phone_number	Số điện thoại
-			email	Email liên hệ
-			address	Địa chỉ
-			status	Trạng thái hợp tác
-			created_at	Thời điểm tạo
-			updated_at	Thời điểm cập nhật
-38	purchase_order	Lưu phiếu nhập hàng từ nhà cung cấp	id	Mã định danh phiếu nhập
-			supplier_id	Nhà cung cấp
-			order_number	Mã phiếu nhập
-			order_date	Ngày lập phiếu
-			expected_date	Ngày dự kiến nhận hàng
-			total_amount	Tổng giá trị phiếu nhập
-			order_status	Trạng thái phiếu nhập
-			note	Ghi chú
-			created_at	Thời điểm tạo
-			updated_at	Thời điểm cập nhật
-39	purchase_order_detail	Lưu chi tiết từng sản phẩm trong phiếu nhập hàng	id	Mã định danh chi tiết phiếu nhập
-			purchase_order_id	Phiếu nhập liên quan
-			product_variant_id	Sản phẩm nhập
-			quantity	Số lượng nhập
-			unit_price	Đơn giá nhập
-			subtotal	Thành tiền
-			received_quantity	Số lượng đã nhận thực tế
-40	blog_post	Lưu bài viết chia sẻ kiến thức và tin tức trên website	id	Mã định danh bài viết
-			category_id	Danh mục bài viết
-			title	Tiêu đề bài viết
-			slug	Đường dẫn thân thiện của bài viết
-			summary	Tóm tắt nội dung
-			content	Nội dung chi tiết
-			thumbnail_url	Ảnh đại diện bài viết
-			author_id	Nhân viên tạo bài viết
-			publish_at	Thời điểm xuất bản
-			status	Trạng thái bài viết
-			view_count	Số lượt xem
-			created_at	Thời điểm tạo
-			updated_at	Thời điểm cập nhật
-41	blog_category	Lưu danh mục bài viết	id	Mã định danh danh mục
-			category_name	Tên danh mục
-			description	Mô tả danh mục
-			display_order	Thứ tự hiển thị
-			status	Trạng thái sử dụng
-			created_at	Thời điểm tạo
-			updated_at	Thời điểm cập nhật
-42	review_response	Lưu phản hồi của Admin đối với đánh giá của khách hàng	id	Mã định danh phản hồi
-			review_id	Đánh giá được phản hồi
-			staff_id	Nhân viên phản hồi
-			response_content	Nội dung phản hồi
-			created_at	Thời điểm phản hồi
-			updated_at	Thời điểm chỉnh sửa
-43	audit_log	Lưu lịch sử thao tác quan trọng của nhân viên nhằm phục vụ kiểm tra và truy vết hệ thống	id	Mã định danh nhật ký
-			staff_id	Nhân viên thực hiện thao tác
-			action	Hành động thực hiện
-			entity_name	Tên thực thể bị tác động
-			description	Mô tả thao tác
-			created_at	Thời điểm phát sinh thao tác
-44	review	Lưu đánh giá của khách hàng cho sản phẩm hoặc dịch vụ	id	Mã định danh đánh giá
-			customer_id	Khách hàng thực hiện đánh giá
-			appointment_id	Lịch hẹn liên quan nếu đánh giá dịch vụ
-			sales_order_id	Đơn hàng liên quan nếu đánh giá sản phẩm
-			product_id	Sản phẩm liên quan
-			service_id	Dịch vụ liên quan
-			review_type	Loại đánh giá liên quan đến dịch vụ hoặc sản phẩm
-			rating	Điểm đánh giá từ 1 đến 5 sao
-			review_content	Nội dung đánh giá
-			image_urls	Danh sách hình ảnh minh họa
-			review_status	Trạng thái hiển thị hoặc kiểm duyệt
-			created_at	Thời điểm tạo đánh giá
-			updated_at	Thời điểm cập nhật đánh giá
-45	return_request	Lưu yêu cầu đổi trả sản phẩm và thông tin hậu mãi	id	Mã định danh yêu cầu đổi trả
-			sales_order_id	Đơn hàng yêu cầu đổi trả
-			customer_id	Khách hàng gửi yêu cầu
-			refund_payment_id	Giao dịch hoàn tiền thực tế, giúp đối chiếu chứng từ thanh toán.
-			resolution_type	Hình thức xử lý cuối cùng (đổi/trả sản phẩm, hoàn tiền, từ chối).
-			refund_amount	Số tiền hoàn lại cho khách (một phần hoặc toàn bộ)
-			resolved_by	Nhân viên/Admin chịu trách nhiệm chốt kết quả xử lý yêu cầu đổi/trả.
-			reason	Lý do đổi trả
-			return_type	Hình thức đổi trả
-			description	Nội dung chi tiết
-			evidence_images	Hình ảnh minh chứng
-			request_status	Trạng thái xử lý
-			created_at	Thời điểm tạo yêu cầu
-			updated_at	Thời điểm cập nhật yêu cầu
-46	return_request_detail	Lưu chi tiết sản phẩm được đổi trả	id	Mã định danh chi tiết yêu cầu đổi trả
-			return_request_id	Đơn hàng được đổi trả
-			product_variant_id	Sản phẩm được đổi trả
-			quantity	Số lượng đổi trả
-			unit_price	Đơn giá tiền mua sản phẩm
-47	notification	Lưu thông báo gửi đến khách hàng từ hệ thống	id	Mã định danh thông báo
-			customer_id	Khách hàng nhận thông báo
-			notification_type	Loại thông báo
-			title	Tiêu đề thông báo
-			content	Nội dung thông báo
-			related_entity_type	Loại đối tượng liên quan như đặt lịch dịch vụ, mua sắm, thanh toán
-			is_read	Trạng thái đã đọc
-			sent_at	Thời điểm gửi thông báo
-			read_at	Thời điểm khách hàng đọc
-48	delivery_option_config	Lưu thông tin các hình thức giao hàng	id	Mã hình thức giao hàng
-			name	Tên hình thức giao hàng
-			description	Mô tả hình thức giao hàng
-			fee	Phí giao hàng
-			estimated_days	Thòi gian vận chuyển
-			icon	Nhãn minh họa
-			available	Có sẵn sàng phục vụ
-			created_at	Thời điểm khởi tạo
-	shipping_provider	Lưu danh sách các đơn vị vận chuyển mà PawPal sử dụng để giao đơn hàng, giúp Admin quản lý đối tác giao hàng và liên kết với từng đơn hàng.	id	Mã định danh đơn vị vận chuyển.
-			provider_name	Tên đơn vị vận chuyển (GHN, GHTK, J&T Express, Viettel Post...).
-			provider_code	Mã viết tắt của đơn vị vận chuyển.
-			logo_url	Logo hiển thị trên giao diện.
-			contact_phone	Số hotline của đơn vị vận chuyển.
-			tracking_url	Mẫu đường dẫn tra cứu vận đơn.
-			status	Trạng thái hoạt động
-			created_at	Thời điểm tạo dữ liệu.
-			updated_at	Thời điểm cập nhật dữ liệu.
-	product_variant_media		id	PK
-			product_variant_id	FK → product_variant
-			image_url	URL ảnh
-			display_order	Thứ tự hiển thị
-			is_thumbnail	Ảnh đại diện
-			created_at	Thời điểm tạo dữ liệu.
-			updated_at	Thời điểm cập nhật dữ liệu.
-STT	THỰC THỂ	MÔ TẢ	THUỘC TÍNH	MÔ TẢ
-1	service_addon	Lưu danh sách các dịch vụ bổ sung đi kèm dịch vụ chính (Spa, Hotel, Taxi), bao gồm giá, thời lượng và trạng thái áp dụng.	id	Mã định danh dịch vụ thêm
-			service_id	Mã dịch vụ chính đi kèm (Spa/Hotel/Taxi)
-			addon_name	Tên dịch vụ thêm (cắt móng, nhuộm lông,...)
-			description	Mô tả chi tiết dịch vụ
-			price	Giá tiền dịch vụ thêm
-			estimated_duration	Thời lượng thực hiện dự kiến (phút)
-			is_required	Đánh dấu bắt buộc chọn hay không (true/false)
-			status	Trạng thái dịch vụ (đang bán/tạm ngưng)
-			created_at	Ngày giờ tạo
-			updated_at	Ngày giờ cập nhật mới nhất
-2	hotel_room_type	Lưu thông tin các phòng Pet Hotel như số phòng, loại phòng, sức chứa, giá theo ngày và trạng thái sử dụng	id	Mã định danh phòng/loại phòng
-			room_number	Số phòng hoặc mã phòng cụ thể
-			room_type	Loại phòng (VIP, Standard, Deluxe,...)
-			capacity	Sức chứa tối đa (số lượng thú cưng)
-			daily_price	Giá thuê phòng theo ngày
-			description	Mô tả tiện nghi trong phòng
-			status	Trạng thái phòng (trống/có khách/bảo trì)
-			created_at	Ngày giờ tạo
-			updated_at	Ngày giờ cập nhật mới nhất
-3	taxi_price_rule	Lưu các quy tắc tính giá dịch vụ Pet Taxi theo khoảng cách, cân nặng và thời gian hiệu lực của bảng giá.	id	Mã định danh quy tắc tính giá
-			distance_from	Khoảng cách bắt đầu (km)
-			distance_to	Khoảng cách kết thúc (km)
-			weight_from	Cân nặng thú cưng tối thiểu (kg)
-			weight_to	Cân nặng thú cưng tối đa (kg)
-			base_price	Giá cước cơ bản
-			surcharge	Phụ phí cộng thêm
-			effective_from	Ngày giờ bắt đầu áp dụng bảng giá
-			effective_to	Ngày giờ kết thúc/hết hạn áp dụng
-			status	Trạng thái quy tắc (đang áp dụng/hết hạn)
-			created_at	Ngày giờ tạo
-			updated_at	Ngày giờ cập nhật mới nhất
-4	product_variant	Lưu từng phiên bản cụ thể của một sản phẩm theo màu sắc, kích thước, kiểu dáng, SKU và giá bán riêng.	id	Mã định danh biến thể sản phẩm
-			product_id	Mã sản phẩm gốc
-			color_id	Mã màu sắc áp dụng (liên kết variant_color)
-			size_id	Mã kích thước áp dụng (liên kết variant_size)
-			flavor_id	Mã hương vị áp dụng (liên kết variant_flavor)
-			sku_variant	Mã quản lý kho riêng cho từng biến thể (SKU)
-			cost_price	Giá vốn nhập vào
-			sale_price	Giá bán thực tế
-			compare_at_price	Giá gốc / Giá gạch đi để hiển thị giảm giá
-			image_url	Link ảnh riêng của biến thể
-			weight	Trọng lượng sản phẩm (dùng tính phí vận chuyển)
-			barcode	Mã vạch barcode/EAN
-			status	Trạng thái kinh doanh (đang bán/ngừng bán)
-			created_at	Ngày giờ tạo
-			updated_at	Ngày giờ cập nhật mới nhất
-5	variant_size	Lưu định dạng kích thước sản phẩm	id	Mã định danh kích thước
-			size_name	Tên kích thước (S, M, L, XL,...)
-			display_order	Thứ tự hiển thị trên giao diện
-			is_active	Bật/Tắt kích thước (true/false)
-			created_at	Ngày giờ tạo
-			updated_at	Ngày giờ cập nhật mới nhất
-6	variant_color	Lưu định dạng màu sắc sản phẩm	id	Mã định danh màu sắc
-			color_name	Tên màu (Đỏ, Xanh, Vàng,...)
-			hex_code	Mã màu Hex hiển thị trên web (vd: #FF0000)
-			display_order	Thứ tự hiển thị trên giao diện
-			is_active	Bật/Tắt màu sắc (true/false)
-			created_at	Ngày giờ tạo
-			updated_at	Ngày giờ cập nhật mới nhất
-7	stock_reservation	Lưu thông tin giữ trước số lượng tồn kho của từng biến thể sản phẩm trong quá trình khách hàng Checkout.	id	Mã định danh lượt giữ kho
-			product_variant_id	Mã biến thể sản phẩm được giữ
-			customer_id	Mã khách hàng thực hiện giữ hàng
-			cart_id	Mã giỏ hàng liên quan
-			quantity	Số lượng sản phẩm giữ trước trong kho
-			reserved_at	Ngày giờ bắt đầu giữ
-			expires_at	Ngày giờ hết hạn giữ (tự động nhả tồn kho)
-			status	Trạng thái giữ hàng (chờ thanh toán/đã hoàn tất/đã hết hạn)
-			created_at	Ngày giờ tạo
-			updated_at	Ngày giờ cập nhật mới nhất
-8	banner	Lưu thông tin Banner quảng bá hiển thị trên website, gồm hình ảnh, tiêu đề, liên kết và thời gian hiển thị.	id	Mã định danh banner
-			image_url	Đường dẫn hình ảnh banner
-			title	Tiêu đề hiển thị trên banner
-			description	Đoạn mô tả ngắn/khuyến mãi trên banner
-			link	Đường dẫn chuyển hướng khi bấm vào banner
-			button_text	Chữ hiển thị trên nút bấm (CTA)
-			display_order	Thứ tự ưu tiên hiển thị banner
-			start_date	Ngày giờ bắt đầu hiển thị
-			end_date	Ngày giờ kết thúc/hết hạn hiển thị
-			is_active	Bật/Tắt hiển thị banner (true/false)
-			created_at	Ngày giờ tạo
-			updated_at	Ngày giờ cập nhật mới nhất
-9	pawpal_setting	Lưu các cấu hình chung của website như hotline, popup, top-bar và các thiết lập hệ thống khác.	id	Mã định danh cấu hình
-			setting_key	Mã/Khóa định danh thiết lập (vd: site_hotline, top_bar_text)
-			setting_value	Giá trị của thiết lập tương ứng
-			setting_type	Kiểu dữ liệu của giá trị (string, boolean, json, number)
-			description	Giải thích tác dụng của cấu hình này
-			created_at	Ngày giờ tạo
-			updated_at	Ngày giờ cập nhật mới nhất
-10	variant_flavor	Lưu danh mục hương vị hoặc mùi hương dùng chung cho các biến thể sản phẩm.	id	Mã định danh hương vị
-			flavor_name	Tên hương vị/mùi hương (Gà, Bò, Cá hồi,...)
-			display_order	Thứ tự hiển thị trên giao diện
-			is_active	Bật/Tắt hương vị (true/false)
-			created_at	Ngày giờ tạo
-			updated_at	Ngày giờ cập nhật mới nhất
+STT	THỰC THỂ	MÔ TẢ	THUỘC TÍNH	Ý NGHĨA THUỘC TÍNH	KIỂU DỮ LIỆU	ENUM	GIÁ TRỊ CỦA ENUM	KHÓA	NULL	UNIQUE
+1	customer	Lưu thông tin tài khoản đăng nhập và trạng thái sử dụng hệ thống của khách hàng	id	Mã định danh khách hàng	uuid	NO		PK	NO	NO
+			email	Email đăng ký hoặc liên hệ	text	NO			NO	YES
+			password_hash	Mật khẩu đã mã hóa	text	NO			YES	NO
+			account_status	Trạng thái tài khoản	text	YES	dang_hoat_dong, tam_khoa, da_khoa		NO	NO
+			is_temporary	Cho biết tài khoản có phải tài khoản tạm thời hay không	boolean	NO			NO	NO
+			phone_main	Số điện thoại chính của khách hàng	text	NO			NO	YES
+			registered_at	Thời điểm khách hàng đăng ký	timestamptz	NO			NO	NO
+			note	Ghi chú nội bộ về khách hàng	text	NO			YES	NO
+			created_at	Thời điểm tạo tài khoản	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật tài khoản gần nhất	timestamptz	NO			NO	NO
+2	customer_profile	Lưu thông tin hồ sơ cá nhân của khách hàng	id	Mã định danh hồ sơ	uuid	NO		PK	NO	NO
+			customer_id	Khách hàng sở hữu hồ sơ	uuid	NO		FK	NO	YES
+			full_name	Họ tên khách hàng	text	NO			NO	NO
+			date_of_birth	Ngày sinh khách hàng	date	NO			YES	NO
+			gender	Giới tính khách hàng	text	YES	nam, nu, khac		YES	NO
+			created_at	Thời điểm tạo hồ sơ	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật hồ sơ gần nhất	timestamptz	NO			NO	NO
+3	customer_membership	Lưu thông tin hạng thành viên và điểm thưởng của khách hàng	id	Mã định danh bản ghi	uuid	NO		PK	NO	NO
+			customer_id	Khách hàng sở hữu hạng thành viên	uuid	NO		FK	NO	YES
+			membership_tier_id	Hạng thành viên hiện tại của khách hàng	uuid	NO		FK	NO	NO
+			total_paw_points	Số Paw Points khách hàng đang có	integer	NO			NO	NO
+			created_at	Thời điểm tạo hồ sơ thành viên	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật điểm hoặc hạng gần nhất	timestamptz	NO			NO	NO
+4	customer_address	Lưu nhiều địa chỉ giao hàng, đón trả thú cưng hoặc địa chỉ đặt hộ của khách hàng	id	Mã định danh địa chỉ	uuid	NO		PK	NO	NO
+			customer_id	Khách hàng sở hữu địa chỉ	uuid	NO		FK	NO	NO
+			receiver_name	Tên người nhận tại địa chỉ	text	NO			NO	NO
+			receiver_phone	Số điện thoại người nhận	text	NO			NO	NO
+			province	Tỉnh hoặc thành phố của địa chỉ	text	NO			NO	NO
+			street_address	Địa chỉ chi tiết	text	NO			NO	NO
+			postal_code	Mã bưu chính	text	NO			YES	NO
+			is_default	Cho biết đây có phải địa chỉ mặc định hay không	boolean	NO			NO	NO
+			created_at	Thời điểm tạo địa chỉ	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật địa chỉ gần nhất	timestamptz	NO			NO	NO
+5	customer_phone	Lưu nhiều số điện thoại liên hệ của khách hàng, người thân hoặc người nhận thay	id	Mã định danh số điện thoại	uuid	NO		PK	NO	NO
+			customer_id	Khách hàng sở hữu số điện thoại	uuid	NO		FK	NO	NO
+			phone_number	Số điện thoại liên hệ	text	NO			NO	NO
+			is_verified	Cho biết số điện thoại đã xác minh hay chưa	boolean	NO			NO	NO
+			created_at	Thời điểm thêm số điện thoại	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật số điện thoại gần nhất	timestamptz	NO			NO	NO
+6	membership_tier	Lưu cấu hình các hạng thành viên như Bạc, Vàng, Kim Cương	id	Mã định danh hạng thành viên	uuid	NO		PK	NO	NO
+			tier_name	Tên hạng thành viên	text	NO			NO	YES
+			minimum_expenditure	Mức chi tiêu tối thiểu để đạt hạng	numeric(12,2)	NO			NO	NO
+			discount_percent	Tỷ lệ giảm giá của hạng	numeric(5,2)	NO			NO	NO
+			description	Quyền lợi của hạng thành viên	text	NO			YES	NO
+			is_active	Hạng thành viên có đang áp dụng hay không	boolean	NO			NO	NO
+			created_at	Thời điểm tạo hạng	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật hạng gần nhất	timestamptz	NO			NO	NO
+7	reward_rule	Lưu quy tắc cộng hoặc trừ Paw Points theo từng sự kiện như đăng ký, đặt lịch, mua hàng, đánh giá hoặc chương trình khuyến mãi	id	Mã định danh quy tắc	uuid	NO		PK	NO	NO
+			rule_name	Tên quy tắc thưởng	text	NO			NO	YES
+			reward_type	Loại phần thưởng	text	YES	paw_points, voucher		NO	NO
+			trigger_event	Sự kiện làm phát sinh phần thưởng	text	YES	dang_ky, mua_hang, dat_lich, danh_gia, khuyen_mai, dieu_chinh_thu_cong		NO	NO
+			reward_value	Giá trị phần thưởng	integer	NO			NO	NO
+			description	Mô tả cách áp dụng quy tắc	text	NO			YES	NO
+			is_active	Quy tắc có đang áp dụng hay không	boolean	NO			NO	NO
+			created_at	Thời điểm tạo quy tắc	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật quy tắc gần nhất	timestamptz	NO			NO	NO
+8	paw_point_transaction	Lưu toàn bộ lịch sử cộng, trừ và quy đổi Paw Point	id	Mã định danh giao dịch điểm	uuid	NO		PK	NO	NO
+			customer_id	Khách hàng phát sinh giao dịch điểm	uuid	NO		FK	NO	NO
+			payment_id	Giao dịch thanh toán liên quan	uuid	NO		FK	YES	NO
+			review_id	Đánh giá làm phát sinh điểm	uuid	NO		FK	YES	NO
+			reward_rule_id	Quy tắc tạo giao dịch điểm	uuid	NO		FK	YES	NO
+			points	Số điểm cộng hoặc trừ	integer	NO			NO	NO
+			balance_after	Số điểm còn lại sau giao dịch	integer	NO			NO	NO
+			description	Lý do phát sinh giao dịch điểm	text	NO			YES	NO
+			created_at	Thời điểm phát sinh giao dịch	timestamptz	NO			NO	NO
+9	voucher	Lưu danh mục voucher có thể phát hành hoặc	id	Mã định danh voucher	uuid	NO		PK	NO	NO
+			voucher_code	Mã voucher khách hàng nhập khi sử dụng	text	NO			NO	YES
+			voucher_name	Tên voucher	text	NO			NO	NO
+			discount_value	Giá trị giảm giá	numeric(12,2)	NO			NO	NO
+			minimum_order_amount	Giá trị đơn tối thiểu để dùng voucher	numeric(12,2)	NO			NO	NO
+			required_points	Số Paw Points cần để đổi voucher	integer	NO			YES	NO
+			start_date	Ngày bắt đầu áp dụng voucher	date	NO			NO	NO
+			end_date	Ngày kết thúc áp dụng voucher	date	NO			NO	NO
+			is_active	Voucher có đang được kích hoạt hay không	boolean	NO			NO	NO
+			type	Cách tính mức giảm	text	YES	giam_gia_theo_phan_tram, giam_gia_co_dinh		NO	NO
+			description	Điều kiện hoặc nội dung voucher	text	NO			YES	NO
+			applicable_for	Đối tượng được áp dụng voucher	text	YES	san_pham, dich_vu, san_pham_va_dich_vu		NO	NO
+			usage_count	Số lần voucher đã được sử dụng	integer	NO			NO	NO
+			max_usage	Số lần voucher được phép sử dụng	integer	NO			YES	NO
+			created_at	Thời điểm tạo voucher	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật voucher gần nhất	timestamptz	NO			NO	NO
+10	customer_voucher	Lưu danh sách voucher mà khách hàng đang sở hữu hoặc đã sử dụng	id	Mã định danh bản ghi	uuid	NO		PK	NO	NO
+			customer_id	Khách hàng sở hữu voucher	uuid	NO		FK	NO	NO
+			voucher_id	Voucher được khách hàng nhận	uuid	NO		FK	NO	NO
+			acquired_method	Cách khách hàng nhận voucher	text	YES	doi_diem, khuyen_mai, tang		NO	NO
+			voucher_status	Tình trạng sử dụng voucher	text	YES	chua_su_dung, da_su_dung, da_het_han, da_huy		NO	NO
+			acquired_at	Thời điểm khách hàng nhận voucher	timestamptz	NO			NO	NO
+			used_at	Thời điểm voucher được sử dụng	timestamptz	NO			YES	NO
+			expired_at	Thời điểm voucher hết hạn	timestamptz	NO			YES	NO
+11	pet_profile	Lưu hồ sơ định danh Pet ID, tên thú cưng, giống loài, giới tính, ngày sinh và trạng thái hoạt động	id	Mã định danh hồ sơ thú cưng	uuid	NO		PK	NO	NO
+			customer_id	Chủ sở hữu thú cưng	uuid	NO		FK	NO	NO
+			pet_code	Mã Pet ID của thú cưng	text	NO			NO	YES
+			pet_name	Tên thú cưng	text	NO			NO	NO
+			avatar_url	Ảnh đại diện của thú cưng	text	NO			YES	NO
+			species	Loài thú cưng	text	YES	cho, meo, tho, hamster, thu_nho, khac		NO	NO
+			breed	Giống thú cưng	text	NO			YES	NO
+			gender	Giới tính thú cưng	text	YES	nam, nu, khac		YES	NO
+			date_of_birth	Ngày sinh thú cưng	date	NO			YES	NO
+			color	Màu lông thú cưng	text	NO			YES	NO
+			routine	Thói quen và sở thích của thú cưng	text	NO			YES	NO
+			weight	Cân nặng hiện tại của thú cưng	numeric(6,2)	NO			YES	NO
+			vaccination_history	Lịch sử tiêm phòng của thú cưng	text	NO			YES	NO
+			allergy	Thông tin dị ứng cần lưu ý khi chăm sóc	text	NO			YES	NO
+			status	Trạng thái hồ sơ thú cưng	text	YES	dang_hoat_dong, tam_ngung, da_an		NO	NO
+			created_at	Thời điểm tạo hồ sơ thú cưng	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật hồ sơ gần nhất	timestamptz	NO			NO	NO
+12	service	Lưu danh mục các dịch vụ thuộc các nhóm Grooming & Spa, Pet Hotel và Pet Taxi	id	Mã định danh dịch vụ	uuid	NO		PK	NO	NO
+			service_code	Mã dịch vụ	text	NO			NO	YES
+			service_name	Tên dịch vụ	text	NO			NO	NO
+			service_category	Nhóm dịch vụ	text	YES	grooming_spa, pet_hotel, pet_taxi		NO	NO
+			description	Mô tả dịch vụ	text	NO			YES	NO
+			estimated_duration	Thời gian thực hiện dự kiến, tính bằng phút	integer	NO			NO	NO
+			thumbnail_url	Ảnh đại diện của dịch vụ	text	NO			YES	NO
+			status	Trạng thái cung cấp dịch vụ	text	YES	dang_hoat_dong, tam_ngung, ngung_cung_cap		NO	NO
+			rating	Điểm đánh giá trung bình của dịch vụ	numeric(3,2)	NO			NO	NO
+			review_count	Số lượt đánh giá dịch vụ	integer	NO			NO	NO
+			benefits	Lợi ích của dịch vụ	jsonb	NO			YES	NO
+			checklist	Các bước thực hiện dịch vụ	jsonb	NO			YES	NO
+			amenities	Tiện ích đi kèm dịch vụ	jsonb	NO			YES	NO
+			groomer_level	Yêu cầu tay nghề thực hiện dịch vụ	text	YES	co_ban, trung_cap, nang_cao, chuyen_gia		YES	NO
+			pet_type	Loại thú cưng dịch vụ hỗ trợ	text	YES	cho, meo, tho, hamster, thu_nho, khac		NO	NO
+			images	Danh sách ảnh của dịch vụ	text[]	NO			YES	NO
+			created_at	Thời điểm tạo dịch vụ	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật dịch vụ gần nhất	timestamptz	NO			NO	NO
+13	service_addon	Lưu danh sách các dịch vụ bổ sung đi kèm dịch vụ chính (Spa, Hotel, Taxi), bao gồm giá, thời lượng và trạng thái áp dụng.	id	Mã định danh dịch vụ bổ sung	uuid	NO		PK	NO	NO
+			service_id	Dịch vụ chính áp dụng addon	uuid	NO		FK	NO	NO
+			addon_name	Tên dịch vụ bổ sung	text	NO			NO	NO
+			description	Mô tả dịch vụ bổ sung	text	NO			YES	NO
+			price	Giá dịch vụ bổ sung	numeric(12,2)	NO			NO	NO
+			estimated_duration	Thời gian thực hiện dự kiến, tính bằng phút	integer	NO			NO	NO
+			is_required	Cho biết addon có bắt buộc hay không	boolean	NO			NO	NO
+			status	Trạng thái cung cấp addon	text	YES	dang_hoat_dong, tam_ngung, ngung_cung_cap		NO	NO
+			created_at	Thời điểm tạo addon	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật addon gần nhất	timestamptz	NO			NO	NO
+14	hotel_room	Phòng vật lý thực tế tại cơ sở lưu trú, thuộc một loại phòng cụ thể và được quản lý theo số phòng và trạng thái sử dụng.	id	Mã định danh phòng	uuid	NO		PK	NO	NO
+			room_number	Số hoặc mã phòng thực tế	text	NO			NO	YES
+			room_type_id	Loại phòng của phòng thực tế	uuid	NO		FK	NO	NO
+			status	Trạng thái sử dụng của phòng	text	YES	trong, dang_dat, dang_su_dung, bao_tri, ngung_su_dung		NO	NO
+			description	Ghi chú riêng của phòng	text	NO			YES	NO
+			created_at	Thời điểm tạo phòng	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật phòng gần nhất	timestamptz	NO			NO	NO
+15	hotel_room_type	Loại phòng khách sạn dành cho thú cưng, lưu thông tin cấu hình và mức giá dùng chung cho các phòng cùng loại.	id	Mã định danh loại phòng	uuid	NO		PK	NO	NO
+			room_type	Tên loại phòng	text	NO			NO	YES
+			capacity	Sức chứa tối đa của loại phòng	integer	NO			NO	NO
+			daily_price	Giá thuê phòng theo ngày	numeric(12,2)	NO			NO	NO
+			description	Mô tả loại phòng	text	NO			YES	NO
+			amenities	Tiện ích của loại phòng	text[]	NO			YES	NO
+			status	Trạng thái cung cấp loại phòng	text	YES	dang_hoat_dong, tam_ngung, ngung_cung_cap		NO	NO
+			created_at	Thời điểm tạo loại phòng	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật loại phòng gần nhất	timestamptz	NO			NO	NO
+16	service_price_matrix	Lưu bảng giá của từng dịch vụ theo loài thú cưng, cân nặng hoặc điều kiện áp dụng	id	Mã định danh bảng giá	uuid	NO		PK	NO	NO
+			service_id	Dịch vụ áp dụng bảng giá	uuid	NO		FK	NO	NO
+			weight_from	Mức cân nặng tối thiểu của khoảng giá	numeric(10,2)	NO			NO	NO
+			weight_to	Mức cân nặng tối đa của khoảng giá	numeric(10,2)	NO			NO	NO
+			unit_price	Giá dịch vụ theo khoảng điều kiện	numeric(12,2)	NO			NO	NO
+			effective_from	Thời điểm bắt đầu áp dụng giá	timestamptz	NO			NO	NO
+			effective_to	Thời điểm kết thúc áp dụng giá	timestamptz	NO			YES	NO
+			status	Trạng thái bảng giá	text	YES	dang_ap_dung, het_han, tam_ngung		NO	NO
+			created_at	Thời điểm tạo bảng giá	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật bảng giá gần nhất	timestamptz	NO			NO	NO
+17	taxi_price_rule	Lưu các quy tắc tính giá dịch vụ Pet Taxi theo khoảng cách, cân nặng và thời gian hiệu lực của bảng giá.	id	Mã định danh quy tắc giá	uuid	NO		PK	NO	NO
+			distance_from	Mức khoảng cách tối thiểu của quy tắc	numeric(10,2)	NO			NO	NO
+			distance_to	Mức khoảng cách tối đa của quy tắc	numeric(10,2)	NO			NO	NO
+			weight_from	Mức cân nặng tối thiểu của quy tắc	numeric(10,2)	NO			NO	NO
+			weight_to	Mức cân nặng tối đa của quy tắc	numeric(10,2)	NO			NO	NO
+			base_price	Giá cơ bản của chuyến taxi	numeric(12,2)	NO			NO	NO
+			surcharge	Phụ phí của quy tắc giá	numeric(12,2)	NO			NO	NO
+			effective_from	Thời điểm bắt đầu áp dụng quy tắc	timestamptz	NO			NO	NO
+			effective_to	Thời điểm kết thúc áp dụng quy tắc	timestamptz	NO			YES	NO
+			status	Trạng thái quy tắc giá	text	YES	dang_ap_dung, het_han, tam_ngung		NO	NO
+			created_at	Thời điểm tạo quy tắc	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật quy tắc gần nhất	timestamptz	NO			NO	NO
+18	appointment	Lưu phiếu đặt lịch dịch vụ của khách hàng cho từng thú cưng	id	Mã định danh lịch hẹn	uuid	NO		PK	NO	NO
+			appointment_code	Mã lịch hẹn hiển thị	text	NO			NO	YES
+			customer_id	Khách hàng đặt lịch	uuid	NO		FK	NO	NO
+			pet_id	Thú cưng sử dụng dịch vụ	uuid	NO		FK	NO	NO
+			service_id	Dịch vụ được đặt	uuid	NO		FK	NO	NO
+			staff_id	Nhân viên được phân công	uuid	NO		FK	YES	NO
+			support_ticket_id	Yêu cầu hỗ trợ liên quan	uuid	NO		FK	YES	NO
+			appointment_date	Ngày thực hiện dịch vụ	date	NO			NO	NO
+			appointment_time	Giờ bắt đầu dự kiến	time	NO			NO	NO
+			hold_expires_at	Thời điểm hết hạn giữ chỗ (15 phút)	timestamptz	NO			YES	NO
+			check_in_time	Thời điểm khách đưa thú cưng đến	timestamp?	NO			YES	NO
+			check_out_time	Thời điểm hoàn tất bàn giao thú cưng	timestamp?	NO			YES	NO
+			note	Ghi chú của khách hàng khi đặt lịch	text	NO			YES	NO
+			change_count	Số lần khách đổi lịch	integer	NO			NO	NO
+			appointment_status	Trạng thái lịch hẹn	text	YES	dang_giu_cho, cho_xac_nhan, da_xac_nhan, da_check_in, dang_thuc_hien, da_hoan_tat, da_huy, da_het_han, vang_mat		NO	NO
+			payment_status	Trạng thái thanh toán của lịch hẹn	text	YES	chua_thanh_toan, da_thanh_toan_mot_phan, da_thanh_toan, thanh_toan_that_bai, da_hoan_tien		NO	NO
+			total_price	Tổng tiền của lịch hẹn	numeric(12,2)	NO			NO	NO
+			created_at	Thời điểm tạo lịch hẹn	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật lịch hẹn gần nhất	timestamptz	NO			NO	NO
+19	care_log	Lưu toàn bộ timeline chăm sóc trong quá trình thực hiện dịch vụ	id	Mã định danh Care Log	uuid	NO		PK	NO	NO
+			appointment_id	Lịch hẹn phát sinh Care Log	uuid	NO		FK	NO	NO
+			pet_id	Thú cưng được chăm sóc	uuid	NO		FK	NO	NO
+			care_action_id	Mốc chăm sóc được ghi nhận	uuid	NO		FK	NO	NO
+			description	Nội dung nhân viên ghi nhận	text	NO			YES	NO
+			health_status	Tình trạng thú cưng khi ghi nhận	text	NO			YES	NO
+			recorded_at	Thời điểm ghi nhận Care Log	timestamptz	NO			NO	NO
+			created_at	Thời điểm tạo Care Log	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật Care Log gần nhất	timestamptz	NO			NO	NO
+20	care_log_media	Lưu ảnh và video minh chứng được cập nhật vào Care Log	id	Mã định danh media	uuid	NO		PK	NO	NO
+			care_log_id	Care Log chứa media	uuid	NO		FK	NO	NO
+			media_type	Loại media	text	YES	hinh_anh, video		NO	NO
+			media_url	Đường dẫn file media	text	NO			NO	NO
+			file_name	Tên file media	text	NO			NO	NO
+			file_size	Dung lượng file tính bằng byte	bigint	NO			NO	NO
+			staff_id	Nhân viên tải media lên	uuid	NO		FK	NO	NO
+			uploaded_at	Thời điểm tải media lên	timestamptz	NO			NO	NO
+			created_at	Thời điểm tạo bản ghi media	timestamptz	NO			NO	NO
+21	care_action	Lưu danh mục các mốc chăm sóc như Tắm,	id	Mã định danh hoạt động chăm sóc	uuid	NO		PK	NO	NO
+			service_id	Dịch vụ áp dụng hoạt động chăm sóc	uuid	NO		FK	NO	NO
+			action_name	Tên mốc chăm sóc	text	NO			NO	NO
+			service_category	Nhóm dịch vụ áp dụng	text	YES	grooming_spa, pet_hotel, pet_taxi		NO	NO
+			display_order	Thứ tự hiển thị mốc chăm sóc	integer	NO			NO	NO
+			estimated_duration	Thời gian thực hiện dự kiến, tính bằng phút	integer	NO			NO	NO
+			is_active	Mốc chăm sóc có đang được sử dụng hay không	boolean	NO			NO	NO
+			created_at	Thời điểm tạo mốc chăm sóc	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật mốc chăm sóc gần nhất	timestamptz	NO			NO	NO
+22	supplier	Lưu thông tin nhà cung cấp sản phẩm	id	Mã định danh nhà cung cấp trong PawPal.	uuid	NO		PK	NO	NO
+			supplier_name	Tên nhà cung cấp sản phẩm mà PawPal hợp tác.	text	NO			NO	YES
+			contact_person	Người phụ trách liên hệ phía nhà cung cấp.	text	NO			NO	NO
+			phone_number	Số điện thoại liên hệ chính với nhà cung cấp.	text	NO			NO	NO
+			email	Email dùng để liên hệ hoặc nhận chứng từ từ nhà cung cấp.	text	NO			YES	NO
+			address	Địa chỉ giao dịch hoặc nhận hàng của nhà cung cấp.	text	NO			YES	NO
+			status	Trạng thái hợp tác hiện tại với nhà cung cấp.	text	YES	dang_hop_tac, tam_ngung, ngung_hop_tac		NO	NO
+			created_at	Thời điểm tạo hồ sơ nhà cung cấp.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật hồ sơ nhà cung cấp gần nhất.	timestamptz	NO			NO	NO
+23	purchase_order	Lưu phiếu nhập hàng từ nhà cung cấp	id	Mã định danh phiếu nhập hàng.	uuid	NO		PK	NO	NO
+			supplier_id	Nhà cung cấp thực hiện giao lô hàng này.	uuid	NO		FK	NO	NO
+			order_number	Mã phiếu nhập dùng để tra cứu và đối soát.	text	NO			NO	YES
+			order_date	Ngày PawPal tạo hoặc ghi nhận phiếu nhập.	date	NO			NO	NO
+			expected_date	Ngày dự kiến nhận hàng từ nhà cung cấp.	date	NO			NO	NO
+			total_amount	Tổng giá trị hàng hóa của phiếu nhập.	numeric(12,2)	NO			NO	NO
+			order_status	Trạng thái xử lý phiếu nhập.	text	YES	nhap, da_xac_nhan, dang_nhan_hang, da_nhan_du, da_huy		NO	NO
+			note	Ghi chú thêm về phiếu nhập hoặc lô hàng.	text	NO			YES	NO
+			created_at	Thời điểm tạo phiếu nhập.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật phiếu nhập gần nhất.	timestamptz	NO			NO	NO
+24	purchase_order_detail	Lưu chi tiết từng sản phẩm trong phiếu nhập hàng	id	Mã định danh dòng chi tiết phiếu nhập.	uuid	NO		PK	NO	NO
+			purchase_order_id	Phiếu nhập chứa sản phẩm này.	uuid	NO		FK	NO	NO
+			product_variant_id	Biến thể sản phẩm thực tế được nhập vào kho.	uuid	NO		FK	NO	NO
+			quantity	Số lượng sản phẩm được đặt nhập theo phiếu.	integer	NO			NO	NO
+			unit_price	Giá nhập trên mỗi đơn vị sản phẩm.	numeric(12,2)	NO			NO	NO
+			subtotal	Thành tiền của dòng nhập = quantity × unit_price.	numeric(12,2)	NO			NO	NO
+			received_quantity	Số lượng thực tế đã nhận vào kho.	integer	NO			NO	NO
+25	product	Lưu danh mục sản phẩm kinh	id	Mã định danh sản phẩm gốc, dùng để gom các biến thể cùng một sản phẩm.	uuid	NO		PK	NO	NO
+			category_id	Nhóm sản phẩm mà sản phẩm thuộc về.	uuid	NO		FK	NO	NO
+			product_name	Tên sản phẩm hiển thị cho khách hàng.	text	NO			NO	NO
+			brand_name	Tên thương hiệu của sản phẩm.	text	NO			YES	NO
+			unit	Đơn vị bán cơ bản của sản phẩm.	text	NO			NO	NO
+			target_pet	Loài thú cưng mà sản phẩm hướng đến.	text	NO			NO	NO
+			min_price	Giá thấp nhất trong các biến thể của sản phẩm.	numeric(12,2)	NO			YES	NO
+			description	Mô tả sản phẩm, thành phần hoặc thông tin sử dụng.	text	NO			YES	NO
+			slug	Đường dẫn định danh trang chi tiết sản phẩm.	text	NO			NO	YES
+			status	Trạng thái kinh doanh của sản phẩm.	text	YES	dang_ban, tam_ngung, ngung_ban		NO	NO
+			created_at	Thời điểm tạo sản phẩm.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật sản phẩm gần nhất.	timestamptz	NO			NO	NO
+26	product_category	Lưu danh mục nhóm sản phẩm	id	Mã định danh danh mục sản phẩm.	uuid	NO		PK	NO	NO
+			category_name	Tên danh mục sản phẩm hiển thị trong quản trị và website.	text	NO			NO	YES
+			description	Mô tả phạm vi hoặc nội dung của danh mục.	text	NO			YES	NO
+			status	Trạng thái sử dụng của danh mục.	text	YES	dang_hoat_dong, tam_ngung		NO	NO
+			created_at	Thời điểm tạo danh mục.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật danh mục gần nhất.	timestamptz	NO			NO	NO
+27	product_variant	Lưu từng phiên bản cụ thể của một sản phẩm theo màu sắc, kích thước, kiểu dáng, SKU và giá bán riêng.	id	Mã định danh biến thể sản phẩm.	uuid	NO		PK	NO	NO
+			product_id	Sản phẩm gốc chứa biến thể này.	uuid	NO		FK	NO	NO
+			color_id	Màu sắc của biến thể nếu sản phẩm có phân loại màu.	uuid	NO		FK	YES	NO
+			size_id	Kích thước hoặc quy cách của biến thể.	uuid	NO		FK	YES	NO
+			flavor_id	Hương vị của biến thể nếu sản phẩm có phân loại hương vị.	uuid	NO		FK	YES	NO
+			sku_variant	Mã SKU duy nhất dùng để bán hàng và quản lý tồn kho cho đúng biến thể.	text	NO			NO	YES
+			cost_price	Giá vốn của biến thể tại thời điểm quản lý sản phẩm.	numeric(12,2)	NO			NO	NO
+			sale_price	Giá bán hiện tại của biến thể.	numeric(12,2)	NO			NO	NO
+			compare_at_price	Giá niêm yết dùng để so sánh với sale_price khi hiển thị khuyến mãi.	numeric(12,2)	NO			YES	NO
+			weight	Khối lượng/quy cách của biến thể phục vụ hiển thị và nghiệp vụ bán hàng.	numeric(10,2)	NO			YES	NO
+			barcode	Mã vạch của biến thể dùng cho bán hàng và kiểm kho.	text	NO			YES	YES
+			status	Trạng thái kinh doanh của biến thể.	text	YES	dang_ban, tam_ngung, ngung_ban		NO	NO
+			created_at	Thời điểm tạo biến thể.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật biến thể gần nhất.	timestamptz	NO			NO	NO
+28	product_variant_media		id	Mã định danh bản ghi hình ảnh biến thể.	uuid	NO		PK	NO	NO
+			product_variant_id	Biến thể sản phẩm sở hữu hình ảnh này.	uuid	NO		FK	NO	NO
+			image_url	Đường dẫn đến file hình ảnh biến thể được lưu trữ.	text	NO			NO	NO
+			display_order	Thứ tự hình ảnh khi hiển thị trên trang sản phẩm.	integer	NO			NO	NO
+			is_thumbnail	Xác định hình ảnh đại diện của biến thể.	boolean	NO			NO	NO
+			created_at	Thời điểm tạo bản ghi hình ảnh.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật bản ghi hình ảnh gần nhất.	timestamptz	NO			NO	NO
+29	variant_flavor	Lưu danh mục hương vị hoặc mùi hương dùng chung cho các biến thể sản phẩm.	id	Mã định danh hương vị.	uuid	NO		PK	NO	NO
+			flavor_name	Tên hương vị sản phẩm như gà, bò, cá hồi.	text	NO			NO	YES
+			display_order	Thứ tự hiển thị hương vị trên giao diện chọn biến thể.	integer	NO			NO	NO
+			is_active	Cho biết hương vị còn được phép sử dụng cho biến thể mới hay không.	boolean	NO			NO	NO
+			created_at	Thời điểm tạo hương vị.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật hương vị gần nhất.	timestamptz	NO			NO	NO
+30	variant_size	Lưu định dạng kích thước sản phẩm	id	Mã định danh kích thước/quy cách.	uuid	NO		PK	NO	NO
+			size_name	Tên kích thước hoặc quy cách như S, M, L, 200g, 500g.	text	NO			NO	YES
+			display_order	Thứ tự hiển thị kích thước/quy cách trên giao diện.	integer	NO			NO	NO
+			is_active	Cho biết kích thước/quy cách còn được phép sử dụng cho biến thể mới hay không.	boolean	NO			NO	NO
+			created_at	Thời điểm tạo kích thước/quy cách.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật kích thước/quy cách gần nhất.	timestamptz	NO			NO	NO
+31	variant_color	Lưu định dạng màu sắc sản phẩm	id	Mã định danh màu sắc.	uuid	NO		PK	NO	NO
+			color_name	Tên màu hiển thị cho khách hàng.	text	NO			NO	YES
+			hex_code	Mã màu dùng để hiển thị swatch màu trên website.	text	NO			NO	NO
+			display_order	Thứ tự hiển thị màu trên giao diện.	integer	NO			NO	NO
+			is_active	Cho biết màu còn được phép sử dụng cho biến thể mới hay không.	boolean	NO			NO	NO
+			created_at	Thời điểm tạo màu.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật màu gần nhất.	timestamptz	NO			NO	NO
+32	cart	Lưu giỏ hàng hiện tại của khách trước khi tạo đơn hàng	id	Mã định danh giỏ hàng.	uuid	NO		PK	NO	NO
+			customer_id	Khách hàng sở hữu giỏ hàng.	uuid	NO		FK	NO	NO
+			cart_status	Trạng thái vòng đời của giỏ hàng.	text	YES	dang_hoat_dong, da_chuyen_thanh_don, da_huy, da_het_han		NO	NO
+			total_quantity	Tổng số lượng sản phẩm trong giỏ hàng.	integer	NO			NO	NO
+			total_amount	Tổng tiền hiện tại của các sản phẩm trong giỏ.	numeric(12,2)	NO			NO	NO
+			created_at	Thời điểm tạo giỏ hàng.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật giỏ hàng gần nhất.	timestamptz	NO			NO	NO
+33	cart_item	Lưu danh sách sản phẩm được thêm vào giỏ hàng	id	Mã định danh dòng sản phẩm trong giỏ.	uuid	NO		PK	NO	NO
+			cart_id	Giỏ hàng chứa sản phẩm này.	uuid	NO		FK	NO	NO
+			product_variant_id	Biến thể sản phẩm khách đang mua.	uuid	NO		FK	NO	NO
+			quantity	Số lượng biến thể được chọn trong giỏ.	integer	NO			NO	NO
+			unit_price	Giá bán của biến thể tại thời điểm được thêm/cập nhật vào giỏ.	numeric(12,2)	NO			NO	NO
+			subtotal	Thành tiền của dòng sản phẩm = quantity × unit_price.	numeric(12,2)	NO			NO	NO
+			created_at	Thời điểm thêm sản phẩm vào giỏ.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật dòng sản phẩm trong giỏ.	timestamptz	NO			NO	NO
+34	wishlist	Lưu danh sách sản phẩm yêu thích của khách hàng	id	Mã định danh danh sách yêu thích.	uuid	NO		PK	NO	NO
+			customer_id	Khách hàng sở hữu danh sách yêu thích.	uuid	NO		FK	NO	YES
+			created_at	Thời điểm tạo danh sách yêu thích.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật danh sách yêu thích gần nhất.	timestamptz	NO			NO	NO
+35	wishlist_item	Lưu các sản phẩm cụ thể nằm trong Wishlist	id	Mã định danh dòng yêu thích.	uuid	NO		PK	NO	NO
+			wishlist_id	Danh sách yêu thích chứa mục này.	uuid	NO		FK	NO	NO
+			product_id	Sản phẩm được khách hàng yêu thích.	uuid	NO		FK	YES	NO
+			service_id	Dịch vụ được khách hàng yêu thích.	uuid	NO		FK	YES	NO
+			added_at	Thời điểm khách hàng thêm sản phẩm/dịch vụ vào Wishlist.	timestamptz	NO			NO	NO
+36	sales_order	Lưu đơn hàng mua sắm trên website hoặc tại cửa hàng	id	Mã định danh đơn hàng.	uuid	NO		PK	NO	NO
+			order_code	Mã đơn hàng hiển thị cho khách và Admin.	text	NO			NO	YES
+			customer_id	Khách hàng sở hữu đơn hàng.	uuid	NO		FK	NO	NO
+			shipping_address_id	Địa chỉ nhận hàng được sử dụng cho đơn.	uuid	NO		FK	YES	NO
+			delivery_id	Hình thức giao hàng được áp dụng cho đơn.	uuid	NO		FK	YES	NO
+			shipping_provider_id	Đơn vị vận chuyển thực tế phụ trách đơn.	uuid	NO		FK	YES	NO
+			tracking_code	Mã vận đơn do đơn vị vận chuyển cung cấp.	text	NO			YES	YES
+			shipped_at	Thời điểm đơn được bàn giao cho đơn vị vận chuyển.	timestamptz	NO			YES	NO
+			delivered_at	Thời điểm đơn được xác nhận giao thành công.	timestamptz	NO			YES	NO
+			order_status	Trạng thái xử lý đơn hàng.	text	YES	cho_thanh_toan, cho_xac_nhan, da_xac_nhan, dang_chuan_bi, dang_giao, da_giao, da_hoan_tat, da_huy, thanh_toan_that_bai		NO	NO
+			payment_status	Trạng thái thanh toán hiện tại của đơn hàng.	text	YES	chua_thanh_toan, da_thanh_toan_mot_phan, da_thanh_toan, thanh_toan_that_bai, da_hoan_tien		NO	NO
+			total_amount	Tổng giá trị phải thu của đơn hàng sau khi áp dụng giảm giá theo nghiệp vụ.	numeric(12,2)	NO			NO	NO
+			note	Ghi chú khách hàng gửi khi đặt đơn.	text	NO			YES	NO
+			created_at	Thời điểm tạo đơn hàng.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật đơn hàng gần nhất.	timestamptz	NO			NO	NO
+37	sales_order_detail	Lưu chi tiết sản phẩm, số lượng và đơn giá trong từng đơn hàng	id	Mã định danh dòng chi tiết đơn hàng.	uuid	NO		PK	NO	NO
+			order_id	Đơn hàng chứa dòng sản phẩm này.	uuid	NO		FK	NO	NO
+			product_variant_id	Biến thể SKU thực tế khách mua.	uuid	NO		FK	NO	NO
+			quantity	Số lượng SKU được mua trong dòng đơn.	integer	NO			NO	NO
+			unit_price	Đơn giá SKU tại thời điểm chốt đơn.	numeric(12,2)	NO			NO	NO
+			discount_amount	Số tiền giảm trực tiếp trên dòng sản phẩm.	numeric(12,2)	NO			NO	NO
+			subtotal	Thành tiền của dòng sản phẩm sau khi áp dụng giảm giá.	numeric(12,2)	NO			NO	NO
+38	stock_reservation	Lưu thông tin giữ trước số lượng tồn kho của từng biến thể sản phẩm	id	Mã định danh lượt giữ hàng.	uuid	NO		PK	NO	NO
+			product_variant_id	Biến thể SKU đang được giữ tồn kho.	uuid	NO		FK	NO	NO
+			customer_id	Khách hàng yêu cầu giữ tồn kho.	uuid	NO		FK	YES	NO
+			cart_id	Giỏ hàng tạo ra lượt giữ tồn kho.	uuid	NO		FK	NO	NO
+			quantity	Số lượng SKU được giữ tạm.	integer	NO			NO	NO
+			reserved_at	Thời điểm hệ thống bắt đầu giữ hàng.	timestamptz	NO			NO	NO
+			expires_at	Thời điểm reservation hết hiệu lực nếu khách không hoàn tất giao dịch.	timestamptz	NO			NO	NO
+			status	Trạng thái của lượt giữ hàng.	text	YES	dang_giu, da_hoan_tat, da_het_han, da_huy		NO	NO
+			created_at	Thời điểm tạo reservation.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật reservation gần nhất.	timestamptz	NO			NO	NO
+39	inventory	Lưu số lượng tồn kho hiện tại của từng sản phẩm	id	Mã định danh bản ghi tồn kho.	uuid	NO		PK	NO	NO
+			product_variant_id	Biến thể SKU được quản lý tồn kho.	uuid	NO		FK	NO	YES
+			quantity_in_stock	Số lượng thực tế đang có trong kho.	integer	NO			NO	NO
+			minimum_stock	Mức tồn kho tối thiểu để phát cảnh báo sắp hết hàng.	integer	NO			NO	NO
+			quantity_reserved	Số lượng đang được giữ cho các giỏ/đơn chưa hoàn tất.	integer	NO			NO	NO
+			last_updated_at	Thời điểm số liệu tồn kho được cập nhật gần nhất.	timestamptz	NO			NO	NO
+40	inventory_transaction	Lưu lịch sử nhập kho, xuất kho và điều chỉnh tồn kho	id	Mã định danh giao dịch kho.	uuid	NO		PK	NO	NO
+			purchase_order_id	Phiếu nhập hàng liên quan nếu giao dịch phát sinh từ nhập hàng.	uuid	NO		FK	YES	NO
+			product_variant_id	Biến thể SKU phát sinh thay đổi tồn kho.	uuid	NO		FK	NO	NO
+			transaction_type	Loại thay đổi tồn kho.	text	YES	nhap_kho, xuat_kho, dieu_chinh_tang, dieu_chinh_giam, hoan_kho		NO	NO
+			quantity	Số lượng tồn kho thay đổi trong giao dịch.	integer	NO			NO	NO
+			stock_before	Số lượng tồn kho trước giao dịch.	integer	NO			NO	NO
+			stock_after	Số lượng tồn kho sau giao dịch.	integer	NO			NO	NO
+			note	Lý do hoặc ghi chú về giao dịch điều chỉnh kho.	text	NO			YES	NO
+			staff_id	Nhân viên thực hiện hoặc xác nhận giao dịch kho.	uuid	NO		FK	NO	NO
+			created_at	Thời điểm phát sinh giao dịch kho.	timestamptz	NO			NO	NO
+41	payment	Lưu lịch sử thanh toán, phương thức thanh toán và trạng thái giao dịch	id	Mã định danh giao dịch thanh toán.	uuid	NO		PK	NO	NO
+			payment_code	Mã giao dịch thanh toán dùng để đối soát.	text	NO			NO	YES
+			customer_id	Khách hàng thực hiện thanh toán.	uuid	NO		FK	NO	NO
+			appointment_id	Lịch hẹn được thanh toán nếu payment_type là dat_lich.	uuid	NO		FK	YES	NO
+			order_id	Đơn hàng được thanh toán nếu payment_type là mua_hang.	uuid	NO		FK	YES	NO
+			voucher_id	Voucher được áp dụng cho giao dịch nếu có.	uuid	NO		FK	YES	NO
+			payment_method_config_id	Phương thức thanh toán được sử dụng.	uuid	NO		FK	NO	NO
+			payment_type	Loại giao dịch thanh toán.	text	YES	mua_hang, dat_lich		NO	NO
+			amount	Số tiền thực tế của giao dịch thanh toán.	numeric(12,2)	NO			NO	NO
+			paw_points_used	Số Paw Points khách sử dụng để thanh toán/giảm giá.	integer	NO			NO	NO
+			paw_points_earned	Số Paw Points khách được cộng từ giao dịch.	integer	NO			NO	NO
+			transaction_status	Trạng thái xử lý giao dịch thanh toán.	text	YES	cho_xu_ly, dang_xu_ly, thanh_cong, that_bai, da_huy, da_hoan_tien		NO	NO
+			created_at	Thời điểm tạo giao dịch thanh toán.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật giao dịch thanh toán gần nhất.	timestamptz	NO			NO	NO
+42	payment_method_config	Lưu thông tin các loại phương thức thanh toán khả dụng	id	Mã định danh phương thức thanh toán.	uuid	NO		PK	NO	NO
+			name	Tên phương thức thanh toán hiển thị cho khách.	text	NO			NO	YES
+			short_name	Tên viết tắt dùng trong giao diện/quản trị.	text	NO			NO	YES
+			description	Mô tả cách thức hoặc điều kiện sử dụng phương thức.	text	NO			YES	NO
+			icon	Thông tin nhận diện icon hiển thị cho phương thức thanh toán.	text	NO			YES	NO
+			fee	Phí cố định áp dụng cho phương thức thanh toán nếu có.	numeric(12,2)	NO			NO	NO
+			available	Cho biết phương thức hiện có được phép sử dụng hay không.	boolean	NO			NO	NO
+			requires_info	Thông tin bổ sung cần thu thập khi khách chọn phương thức.	jsonb	NO			YES	NO
+			redirect_url	URL chuyển khách sang cổng thanh toán nếu phương thức yêu cầu.	text	NO			YES	NO
+			bank_info	Thông tin tài khoản ngân hàng dùng cho chuyển khoản.	jsonb	NO			YES	NO
+			created_at	Thời điểm tạo cấu hình phương thức.	timestamptz	NO			NO	NO
+43	delivery_option_config	Lưu thông tin các hình thức giao hàng	id	Mã định danh hình thức giao hàng.	uuid	NO		PK	NO	NO
+			name	Tên hình thức giao hàng hiển thị cho khách.	text	NO			NO	YES
+			description	Mô tả phạm vi hoặc điều kiện của hình thức giao hàng.	text	NO			YES	NO
+			fee	Phí giao hàng cơ bản của hình thức.	numeric(12,2)	NO			NO	NO
+			estimated_days	Số ngày dự kiến giao hàng.	integer	NO			NO	NO
+			icon	Thông tin nhận diện icon của hình thức giao hàng.	text	NO			YES	NO
+			available	Cho biết hình thức giao hàng có đang được phép chọn hay không.	boolean	NO			NO	NO
+			created_at	Thời điểm tạo cấu hình giao hàng.	timestamptz	NO			NO	NO
+44	shipping_provider	Lưu danh sách các đơn vị vận chuyển mà PawPal sử dụng để giao đơn hàng, giúp Admin quản lý đối tác giao hàng và liên	id	Mã định danh đơn vị vận chuyển.	uuid	NO		PK	NO	NO
+			provider_name	Tên đơn vị vận chuyển mà PawPal hợp tác.	text	NO			NO	YES
+			provider_code	Mã định danh ngắn của đơn vị vận chuyển trong hệ thống.	text	NO			NO	YES
+			logo_url	Đường dẫn logo của đơn vị vận chuyển.	text	NO			YES	NO
+			contact_phone	Số điện thoại liên hệ của đơn vị vận chuyển.	text	NO			YES	NO
+			tracking_url	Mẫu URL dùng để tra cứu vận đơn.	text	NO			YES	NO
+			status	Trạng thái hợp tác/sử dụng đơn vị vận chuyển.	text	YES	dang_hoat_dong, tam_ngung, ngung_hop_tac		NO	NO
+			created_at	Thời điểm tạo đơn vị vận chuyển.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật thông tin đơn vị vận chuyển gần nhất.	timestamptz	NO			NO	NO
+45	review	Lưu đánh giá của khách hàng cho sản phẩm hoặc dịch vụ	id	Mã định danh đánh giá.	uuid	NO		PK	NO	NO
+			customer_id	Khách hàng thực hiện đánh giá.	uuid	NO		FK	NO	NO
+			appointment_id	Lịch hẹn làm cơ sở cho đánh giá dịch vụ.	uuid	NO		FK	YES	NO
+			sales_order_id	Đơn hàng làm cơ sở cho đánh giá sản phẩm.	uuid	NO		FK	YES	NO
+			product_id	Sản phẩm được đánh giá.	uuid	NO		FK	YES	NO
+			service_id	Dịch vụ được đánh giá.	uuid	NO		FK	YES	NO
+			review_type	Loại đối tượng được khách hàng đánh giá.	text	YES	san_pham, dich_vu		NO	NO
+			rating	Số sao khách hàng chấm cho sản phẩm/dịch vụ.	numeric(2,1)	NO			NO	NO
+			review_content	Nội dung nhận xét của khách hàng.	text	NO			YES	NO
+			image_urls	Danh sách URL hình ảnh khách gửi kèm đánh giá.	text[]	NO			YES	NO
+			review_status	Trạng thái kiểm duyệt và hiển thị đánh giá.	text	YES	cho_duyet, da_duyet, an, tu_choi		NO	NO
+			created_at	Thời điểm khách tạo đánh giá.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật đánh giá gần nhất.	timestamptz	NO			NO	NO
+46	review_response	Lưu phản hồi của Admin đối với đánh giá của khách hàng	id	Mã định danh phản hồi đánh giá.	uuid	NO		PK	NO	NO
+			review_id	Đánh giá được Admin phản hồi.	uuid	NO		FK	NO	YES
+			staff_id	Nhân viên/Admin thực hiện phản hồi.	uuid	NO		FK	NO	NO
+			response_content	Nội dung phản hồi của Admin đối với khách hàng.	text	NO			NO	NO
+			created_at	Thời điểm tạo phản hồi.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật phản hồi gần nhất.	timestamptz	NO			NO	NO
+47	support_ticket	Lưu các yêu cầu hỗ trợ, khiếu nại, tranh chấp và yêu cầu xử lý phát sinh từ khách hàng trong quá trình sử dụng dịch vụ/mua hàng. Đây là thực thể trung tâm để theo dõi toàn bộ vụ việc từ lúc tiếp nhận đến khi giải quyết và đóng yêu cầu.	id	Mã định danh yêu cầu hỗ trợ.	uuid	NO		PK	NO	NO
+			ticket_code	Mã yêu cầu hỗ trợ/khiếu nại dùng để khách hàng và Admin tra cứu.	text	NO			NO	YES
+			customer_id	Khách hàng tạo yêu cầu hỗ trợ.	uuid	NO		FK	NO	NO
+			order_id	Đơn hàng liên quan đến yêu cầu nếu có.	uuid	NO		FK	YES	NO
+			appointment_id	Lịch hẹn liên quan đến yêu cầu nếu có.	uuid	NO		FK	YES	NO
+			channel	Kênh khách hàng sử dụng để gửi yêu cầu.	text	YES	chatbot, web, dien_thoai, facebook, zalo, email		NO	NO
+			category	Loại vấn đề hoặc yêu cầu cần xử lý.	text	YES	don_hang, lich_hen, thanh_toan, san_pham, chat_luong_dich_vu, hoan_tien, boi_thuong, cham_soc_thu_cung, khac		NO	NO
+			subject	Tiêu đề ngắn giúp Admin nhận diện nội dung ticket.	text	NO			NO	NO
+			description	Nội dung ban đầu khách hàng cung cấp về vấn đề cần hỗ trợ.	text	NO			NO	NO
+			priority	Mức độ ưu tiên xử lý ticket.	text	YES	thap, trung_binh, cao, khan_cap		NO	NO
+			status	Trạng thái xử lý hiện tại của ticket.	text	YES	mo, dang_xu_ly, cho_khach_hang, da_giai_quyet, da_dong, tu_choi		NO	NO
+			requested_resolution	Phương án xử lý mà khách hàng đề nghị.	text	YES	hoan_tien, hoan_tien_mot_phan, doi_san_pham, thuc_hien_lai_dich_vu, boi_thuong, tu_choi, khac		YES	NO
+			requested_amount	Số tiền khách hàng đề nghị hoàn/bồi thường nếu có.	numeric(12,2)	NO			YES	NO
+			assigned_staff_id	Nhân viên đang được phân công xử lý ticket.	uuid	NO		FK	YES	NO
+			first_response_at	Thời điểm PawPal gửi phản hồi đầu tiên cho khách hàng.	timestamptz	NO			YES	NO
+			investigation_note	Ghi chú nội bộ về quá trình xác minh vụ việc và bằng chứng.	text	NO			YES	NO
+			resolution_type	Kết quả xử lý cuối cùng của ticket.	text	YES	hoan_tien, hoan_tien_mot_phan, doi_san_pham, thuc_hien_lai_dich_vu, boi_thuong, tu_choi, khac		YES	NO
+			resolution_note	Ghi chú giải thích phương án xử lý cuối cùng.	text	NO			YES	NO
+			approved_amount	Số tiền được PawPal phê duyệt hoàn/bồi thường.	numeric(12,2)	NO			YES	NO
+			resolved_by	Nhân viên thực hiện hoặc phê duyệt kết quả xử lý.	uuid	NO		FK	YES	NO
+			resolved_at	Thời điểm ticket được xác định là đã giải quyết.	timestamptz	NO			YES	NO
+			closed_at	Thời điểm ticket chính thức đóng.	timestamptz	NO			YES	NO
+			rating	Điểm khách hàng đánh giá chất lượng xử lý ticket.	numeric(2,1)	NO			YES	NO
+			rating_comment	Nhận xét của khách hàng về quá trình hỗ trợ.	text	NO			YES	NO
+			created_at	Thời điểm tạo ticket.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật ticket gần nhất.	timestamptz	NO			NO	NO
+48	support_ticket_message	Lưu toàn bộ nội dung trao đổi, phản hồi, bằng chứng và ghi chú trong quá trình xử lý một support ticket.	id	Mã định danh tin nhắn/ghi nhận trao đổi.	uuid	NO		PK	NO	NO
+			ticket_id	Ticket chứa nội dung trao đổi này.	uuid	NO		FK	NO	NO
+			sender_type	Loại người gửi nội dung.	text	YES	khach_hang, nhan_vien, he_thong		NO	NO
+			sender_id	Định danh người gửi tương ứng với sender_type.	uuid	NO		FK	YES	NO
+			content	Nội dung tin nhắn, phản hồi hoặc ghi chú được lưu trong ticket.	text	NO			NO	NO
+			attachment_urls	Danh sách đường dẫn file/hình ảnh bằng chứng đính kèm.	text[]	NO			YES	NO
+			is_internal	Xác định nội dung chỉ dành cho nội bộ hay được hiển thị cho khách.	boolean	NO			NO	NO
+			created_at	Thời điểm ghi nhận nội dung trao đổi.	timestamptz	NO			NO	NO
+49	return_request	Lưu yêu cầu đổi trả sản phẩm và thông tin hậu mãi	id	Mã định danh yêu cầu đổi trả.	uuid	NO		PK	NO	NO
+			sales_order_id	Đơn hàng phát sinh yêu cầu đổi trả.	uuid	NO		FK	NO	NO
+			customer_id	Khách hàng gửi yêu cầu đổi trả.	uuid	NO		FK	NO	NO
+			refund_transaction_id	Giao dịch hoàn tiền thực tế liên quan đến yêu cầu nếu có.	uuid	NO		FK	YES	NO
+			resolution_type	Kết quả xử lý cuối cùng của yêu cầu đổi trả.	text	YES	hoan_tien, hoan_tien_mot_phan, doi_san_pham, thuc_hien_lai_dich_vu, boi_thuong, tu_choi, khac		YES	NO
+			refund_amount	Số tiền dự kiến/được hoàn cho yêu cầu đổi trả.	numeric(12,2)	NO			YES	NO
+			resolved_by	Nhân viên/Admin chốt kết quả yêu cầu đổi trả.	uuid	NO		FK	YES	NO
+			reason	Lý do khách hàng yêu cầu đổi/trả.	text	NO			NO	NO
+			return_type	Loại yêu cầu đổi/trả của khách hàng.	text	YES	doi_san_pham, tra_san_pham, hoan_tien		NO	NO
+			description	Thông tin chi tiết bổ sung về tình trạng hoặc yêu cầu đổi trả.	text	NO			YES	NO
+			evidence_images	Danh sách hình ảnh minh chứng cho yêu cầu đổi/trả.	text[]	NO			YES	NO
+			request_status	Trạng thái xử lý yêu cầu đổi trả.	text	YES	cho_xu_ly, dang_xu_ly, da_duyet, da_hoan_tat, da_tu_choi, da_huy		NO	NO
+			created_at	Thời điểm tạo yêu cầu đổi trả.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật yêu cầu gần nhất.	timestamptz	NO			NO	NO
+50	return_request_detail	Lưu chi tiết sản phẩm được đổi trả	id	Mã định danh dòng chi tiết đổi trả.	uuid	NO		PK	NO	NO
+			return_request_id	Yêu cầu đổi trả chứa sản phẩm này.	uuid	NO		FK	NO	NO
+			product_variant_id	Biến thể SKU được đổi/trả.	uuid	NO		FK	NO	NO
+			quantity	Số lượng SKU được yêu cầu đổi/trả.	integer	NO			NO	NO
+			unit_price	Đơn giá SKU được snapshot tại thời điểm phát sinh yêu cầu đổi/trả.	numeric(12,2)	NO			NO	NO
+51	refund_transaction	Lưu giao dịch hoàn tiền hoặc bồi thường thực tế phát sinh từ một support ticket đã được phê duyệt xử lý. Đây là thực thể ghi nhận dòng tiền, tách biệt với quá trình tiếp nhận và xử lý khiếu nại.	id	Mã định danh giao dịch hoàn tiền/bồi thường.	uuid	NO		PK	NO	NO
+			refund_code	Mã giao dịch hoàn tiền dùng để tra cứu và đối soát.	text	NO			NO	YES
+			ticket_id	Ticket làm cơ sở phát sinh giao dịch hoàn/bồi thường.	uuid	NO		FK	NO	NO
+			payment_id	Giao dịch thanh toán ban đầu liên quan đến khoản hoàn tiền.	uuid	NO		FK	YES	NO
+			refund_type	Loại hoàn tiền hoặc bồi thường.	text	YES	hoan_tien_toan_bo, hoan_tien_mot_phan, boi_thuong		NO	NO
+			requested_amount	Số tiền khách yêu cầu hoàn/bồi thường.	numeric(12,2)	NO			YES	NO
+			approved_amount	Số tiền được PawPal phê duyệt.	numeric(12,2)	NO			NO	NO
+			refunded_amount	Số tiền thực tế đã hoàn/bồi thường thành công.	numeric(12,2)	NO			NO	NO
+			refund_method	Phương thức hoàn tiền/bồi thường.	text	YES	phuong_thuc_thanh_toan_ban_dau, chuyen_khoan_ngan_hang, paw_points, khac		NO	NO
+			refund_status	Trạng thái xử lý giao dịch hoàn tiền.	text	YES	cho_xu_ly, dang_xu_ly, da_hoan_tat, that_bai, da_huy		NO	NO
+			gateway_transaction_id	Mã giao dịch từ cổng thanh toán liên quan đến hoàn tiền.	text	NO			YES	NO
+			note	Ghi chú bổ sung về giao dịch hoàn tiền/bồi thường.	text	NO			YES	NO
+			processed_by	Nhân viên thực hiện giao dịch hoàn tiền/bồi thường.	uuid	NO		FK	YES	NO
+			processed_at	Thời điểm nhân viên/hệ thống bắt đầu xử lý hoàn tiền.	timestamptz	NO			YES	NO
+			completed_at	Thời điểm giao dịch hoàn tiền hoàn tất thành công.	timestamptz	NO			YES	NO
+			created_at	Thời điểm tạo giao dịch hoàn tiền.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật giao dịch hoàn tiền gần nhất.	timestamptz	NO			NO	NO
+52	staff	Lưu thông tin tài khoản nhân viên, lễ tân, chuyên môn, CSKH và quản lý	id	Mã định danh nhân viên.	uuid	NO		PK	NO	NO
+			full_name	Họ tên nhân viên hiển thị trong hệ thống quản trị.	text	NO			NO	NO
+			phone_number	Số điện thoại liên hệ của nhân viên.	text	NO			NO	YES
+			role	Vai trò và quyền nghiệp vụ của nhân viên.	text	YES	chu_he_thong, quan_tri_vien, le_tan, cham_soc_thu_cung, cham_soc_khach_hang, quan_ly		NO	NO
+			specialization	Chuyên môn hoặc lĩnh vực phụ trách của nhân viên.	text	NO			YES	NO
+			hire_date	Ngày nhân viên bắt đầu làm việc tại PawPal.	date	NO			NO	NO
+			created_at	Thời điểm tạo hồ sơ nhân viên.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật hồ sơ nhân viên gần nhất.	timestamptz	NO			NO	NO
+53	staff_schedule	Lưu lịch làm việc, ca trực và thời gian hoạt động của nhân viên	id	Mã định danh lịch làm việc.	uuid	NO		PK	NO	NO
+			staff_id	Nhân viên được xếp lịch.	uuid	NO		FK	NO	NO
+			work_date	Ngày nhân viên được xếp lịch.	date	NO			NO	NO
+			shift	Tên/mã ca làm việc của nhân viên.	text	NO			NO	NO
+			start_time	Thời điểm bắt đầu ca làm việc.	time	NO			NO	NO
+			end_time	Thời điểm kết thúc ca làm việc.	time	NO			NO	NO
+			availability_status	Trạng thái đi làm hoặc khả dụng của nhân viên trong ca.	text	YES	co_san, nghi_phep, nghi_om, vang_mat, khong_duoc_xep_ca		NO	NO
+			reason	Lý do nghỉ/vắng hoặc không được xếp ca.	text	NO			YES	NO
+			created_at	Thời điểm tạo lịch làm việc.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật lịch làm việc gần nhất.	timestamptz	NO			NO	NO
+54	promotion	Lưu các chương trình khuyến mãi đang áp dụng	id	Mã định danh duy nhất của chương trình.	uuid	NO		PK	NO	NO
+			promotion_name	Tên chương trình khuyến mãi hiển thị trên hệ thống.	text	NO			NO	YES
+			description	Mô tả nội dung và điều kiện của chương trình.	text	NO			YES	NO
+			discount_type	Cách tính mức giảm giá của chương trình.	text	YES	phan_tram, so_tien_co_dinh		NO	NO
+			discount_value	Mức giảm theo phần trăm hoặc số tiền cố định.	numeric(12,2)	NO			NO	NO
+			start_date	Ngày bắt đầu chương trình khuyến mãi.	date	NO			NO	NO
+			end_date	Ngày kết thúc chương trình khuyến mãi.	date	NO			NO	NO
+			minimum_order_value	Giá trị đơn hàng tối thiểu để được hưởng khuyến mãi.	numeric(12,2)	NO			NO	NO
+			status	Trạng thái vận hành của chương trình.	text	YES	nhap, dang_ap_dung, het_han, tam_dung, da_huy		NO	NO
+			created_at	Thời điểm tạo chương trình.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật chương trình gần nhất.	timestamptz	NO			NO	NO
+55	promotion_product	Lưu danh sách sản phẩm được áp dụng trong chương trình khuyến mãi	id	Mã định danh bản ghi áp dụng khuyến mãi cho sản phẩm.	uuid	NO		PK	NO	NO
+			promotion_id	Chương trình khuyến mãi được áp dụng.	uuid	NO		FK	NO	NO
+			product_variant_id	Biến thể sản phẩm cụ thể được hưởng khuyến mãi.	uuid	NO		FK	NO	NO
+56	promotion_service	Lưu danh sách dịch vụ được áp dụng trong chương trình khuyến mãi	id	Mã định danh bản ghi áp dụng khuyến mãi cho dịch vụ.	uuid	NO		PK	NO	NO
+			promotion_id	Chương trình khuyến mãi được áp dụng.	uuid	NO		FK	NO	NO
+			service_id	Dịch vụ được hưởng khuyến mãi.	uuid	NO		FK	NO	NO
+57	banner	Lưu thông tin Banner quảng bá hiển thị trên website, gồm hình ảnh, tiêu đề, liên kết và thời gian hiển thị.	id	Mã định danh duy nhất của banner.	uuid	NO		PK	NO	NO
+			image_url	Hình ảnh banner được hiển thị trên website.	text	NO			NO	NO
+			title	Tiêu đề chính hiển thị trên banner.	text	NO			NO	NO
+			description	Mô tả hoặc thông điệp khuyến mãi trên banner.	text	NO			YES	NO
+			link	Đường dẫn đến trang đích khi khách hàng bấm banner.	text	NO			YES	NO
+			button_text	Nội dung nút kêu gọi hành động trên banner.	text	NO			YES	NO
+			display_order	Thứ tự banner trong khu vực hiển thị.	integer	NO			NO	NO
+			start_date	Ngày bắt đầu hiển thị banner.	date	NO			NO	NO
+			end_date	Ngày kết thúc hiển thị banner.	date	NO			NO	NO
+			status	Trạng thái hiển thị của banner.	text	YES	dang_hien_thi, tam_an, het_han		NO	NO
+			created_at	Thời điểm tạo banner.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật banner gần nhất.	timestamptz	NO			NO	NO
+58	blog_post	Lưu bài viết chia sẻ kiến thức và tin tức trên website	id	Mã định danh duy nhất của bài viết.	uuid	NO		PK	NO	NO
+			category_id	Danh mục bài viết mà bài viết thuộc về.	uuid	NO		FK	NO	NO
+			title	Tiêu đề bài viết hiển thị trên website.	text	NO			NO	NO
+			slug	Đường dẫn thân thiện dùng để truy cập bài viết.	text	NO			NO	YES
+			summary	Phần tóm tắt ngắn dùng ở danh sách bài viết.	text	NO			YES	NO
+			content	Nội dung đầy đủ của bài viết.	text	NO			NO	NO
+			thumbnail_url	Hình ảnh đại diện của bài viết.	text	NO			YES	NO
+			author_id	Nhân viên chịu trách nhiệm biên soạn hoặc đăng bài.	uuid	NO		FK	NO	NO
+			publish_at	Thời điểm bài viết được công khai trên website.	timestamptz	NO			YES	NO
+			status	Trạng thái xuất bản của bài viết.	text	YES	nhap, da_len_lich, da_xuat_ban, da_an		NO	NO
+			view_count	Số lượt xem bài viết.	integer	NO			NO	NO
+			created_at	Thời điểm tạo bài viết.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật bài viết gần nhất.	timestamptz	NO			NO	NO
+59	blog_category	Lưu danh mục bài viết	id	Mã định danh duy nhất của danh mục.	uuid	NO		PK	NO	NO
+			category_name	Tên danh mục bài viết.	text	NO			NO	YES
+			description	Mô tả phạm vi nội dung của danh mục.	text	NO			YES	NO
+			display_order	Thứ tự hiển thị danh mục trên website.	integer	NO			NO	NO
+			status	Trạng thái sử dụng của danh mục.	text	YES	dang_kha_dung, tam_ngung		NO	NO
+			created_at	Thời điểm tạo danh mục.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật danh mục gần nhất.	timestamptz	NO			NO	NO
+60	notification	Lưu các thông báo gửi đến khách hàng về trạng thái đơn hàng, lịch hẹn, yêu cầu hỗ trợ và giao dịch hoàn tiền; các FK liên quan giúp xác định chính xác đối tượng mà thông báo dẫn đến.	id	Mã định danh duy nhất của thông báo.	uuid	NO		PK	NO	NO
+			customer_id	Khách hàng nhận thông báo.	uuid	NO		FK	NO	NO
+			notification_type	Loại sự kiện tạo ra thông báo.	text	YES	don_hang_moi, don_hang_da_xac_nhan, don_hang_da_giao_van, don_hang_da_giao, lich_hen_da_xac_nhan, lich_hen_da_thay_doi, cap_nhat_yeu_cau_ho_tro, hoan_tien_thanh_cong, hoan_tien_that_bai		NO	NO
+			title	Tiêu đề ngắn hiển thị trong danh sách thông báo.	text	NO			NO	NO
+			content	Nội dung chi tiết giúp khách hàng hiểu sự kiện đã xảy ra.	text	NO			NO	NO
+			sales_order_id	Đơn hàng liên quan đến thông báo.	uuid	NO		FK	YES	NO
+			appointment_id	Lịch hẹn liên quan đến thông báo.	uuid	NO		FK	YES	NO
+			support_ticket_id	Yêu cầu hỗ trợ liên quan đến thông báo.	uuid	NO		FK	YES	NO
+			refund_transaction_id	Giao dịch hoàn tiền liên quan đến thông báo.	uuid	NO		FK	YES	NO
+			is_read	Cho biết khách hàng đã đọc thông báo hay chưa.	boolean	NO			NO	NO
+			sent_at	Thời điểm thông báo được gửi/ghi nhận thành công.	timestamptz	NO			NO	NO
+			read_at	Thời điểm khách hàng đọc thông báo.	timestamptz	NO			YES	NO
+61	pawpal_setting	Lưu các cấu hình chung của website như hotline, popup, top-bar và các thiết lập hệ thống khác.	id	Mã định danh duy nhất của cấu hình.	uuid	NO		PK	NO	NO
+			setting_key	Mã khóa duy nhất dùng để truy xuất cấu hình trong hệ thống.	text	NO			NO	YES
+			setting_value	Giá trị cấu hình được lưu theo kiểu dữ liệu đã khai báo.	text	NO			NO	NO
+			setting_type	Kiểu dữ liệu thực tế của setting_value.	text	YES	chuoi, so, boolean, json		NO	NO
+			description	Giải thích mục đích và phạm vi sử dụng của cấu hình.	text	NO			YES	NO
+			created_at	Thời điểm tạo cấu hình.	timestamptz	NO			NO	NO
+			updated_at	Thời điểm cập nhật cấu hình gần nhất.	timestamptz	NO			NO	NO
+62	audit_log	Lưu lịch sử thao tác quan trọng của nhân viên nhằm phục vụ kiểm tra và truy vết hệ thống	id	Mã định danh duy nhất của bản ghi audit.	uuid	NO		PK	NO	NO
+			staff_id	Nhân viên thực hiện thao tác.	uuid	NO		FK	NO	NO
+			action	Loại hành động đã thực hiện, ví dụ tạo, cập nhật, xóa hoặc duyệt.	text	NO			NO	NO
+			entity_name	Tên thực thể bị tác động.	text	NO			NO	NO
+			entity_id	Mã bản ghi cụ thể bị tác động.	uuid	NO			NO	NO
+			description	Mô tả chi tiết thao tác và thay đổi quan trọng.	text	NO			YES	NO
+			created_at	Thời điểm thao tác được ghi nhận vào audit log.	timestamptz	NO			NO	NO

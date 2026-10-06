@@ -366,11 +366,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             setupVoucherEvents();
             setupSelectAllEvent();
-        setupCheckoutEvent();
-        loadPersistedVoucher();
-        renderAvailableVouchers();
-        renderMyVouchers();
-        renderCart();
+            setupCheckoutEvent();
+            loadPersistedVoucher();
+            renderAvailableVouchers();
+            renderMyVouchers();
+            renderCart();
+            await saveCart();
+            if (typeof window.updateCartBadge === 'function') {
+                window.updateCartBadge();
+            }
         } catch (error) {
             console.error(' Lỗi khởi tạo giỏ hàng:', error);
         }
@@ -783,12 +787,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         if (cartCountHeader) {
-            cartCountHeader.textContent = cart.reduce((sum, item) => sum + getItemQuantity(item), 0);
+            cartCountHeader.textContent = cart.length;
         }
 
         const cartSelectCount = document.getElementById('cart-select-count');
         if (cartSelectCount) {
-            cartSelectCount.textContent = selectedCount;
+            cartSelectCount.textContent = selectedIds.size;
         }
 
         cartSubtotal.textContent = formatPrice(subtotal);
@@ -900,6 +904,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const currentUser = getCurrentUser();
         if (currentUser && currentUser.id && window.API && typeof window.API.saveUserCart === 'function') {
             await window.API.saveUserCart(currentUser.id, cart);
+        }
+        document.dispatchEvent(new CustomEvent('cart_updated'));
+        if (typeof window.updateCartBadge === 'function') {
+            window.updateCartBadge();
         }
     }
 

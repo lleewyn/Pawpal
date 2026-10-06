@@ -80,23 +80,6 @@ export const API = {
     async initData() {
     },
 
-    async getUserCart(userOrId) {
-        try {
-            return JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
-        } catch {
-            return [];
-        }
-    },
-
-    async saveUserCart(userOrId, cartItems) {
-        try {
-            localStorage.setItem('pawpal_cart', JSON.stringify(cartItems || []));
-            return true;
-        } catch {
-            return false;
-        }
-    },
-
     async getUserPets(userOrId) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !userOrId) return [];
@@ -158,10 +141,16 @@ export const API = {
 
             const mapAppointmentStatus = (status) => {
                 if (!status) return 'upcoming';
-                const s = status.toUpperCase();
-                if (s === 'PENDING' || s === 'CONFIRMED') return 'upcoming';
-                if (s === 'COMPLETED' || s === 'DONE') return 'completed';
-                if (s === 'CANCELLED') return 'cancelled';
+                const s = String(status).toLowerCase().trim();
+                if (['dang_giu_cho', 'tam_giu'].includes(s)) return 'pending';
+                if (['cho_xac_nhan', 'pending'].includes(s)) return 'pending';
+                if (['da_xac_nhan', 'confirmed', 'upcoming'].includes(s)) return 'confirmed';
+                if (['da_check_in', 'accepted'].includes(s)) return 'accepted';
+                if (['dang_thuc_hien', 'in_progress', 'in-progress'].includes(s)) return 'in-progress';
+                if (['da_hoan_tat', 'completed', 'done'].includes(s)) return 'completed';
+                if (['da_huy', 'cancelled'].includes(s)) return 'cancelled';
+                if (['da_het_han', 'expired'].includes(s)) return 'cancelled';
+                if (['vang_mat', 'no_show'].includes(s)) return 'cancelled';
                 return 'upcoming';
             };
 
@@ -207,6 +196,10 @@ export const API = {
         }
     },
 
+    async getUserAppointments(userOrId) {
+        return this.getUserBookings(userOrId);
+    },
+
     async getUserOrders(userOrId) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !userOrId) return [];
@@ -241,18 +234,31 @@ export const API = {
             };
 
             const mapOrderStatus = (status) => {
-                return {
-                    'PENDING':   'placed',
-                    'CONFIRMED': 'preparing',
-                    'PACKING':   'preparing',
-                    'PREPARING': 'preparing',
-                    'SHIPPING':  'shipping',
-                    'SHIPPED':   'shipping',
-                    'DELIVERED': 'delivered',
-                    'COMPLETED': 'completed',
-                    'CANCELLED': 'cancelled',
-                    'RETURNED':  'cancelled',
-                }[status] || 'placed';
+                if (!status) return 'placed';
+                const s = String(status).toLowerCase().trim();
+                const mapping = {
+                    'cho_thanh_toan':      'pending_payment',
+                    'cho_xac_nhan':        'placed',
+                    'da_xac_nhan':         'preparing',
+                    'dang_chuan_bi':       'preparing',
+                    'dang_giao':           'shipping',
+                    'da_giao':             'delivered',
+                    'da_hoan_tat':         'completed',
+                    'da_huy':              'cancelled',
+                    'thanh_toan_that_bai': 'cancelled',
+                    'pending':             'placed',
+                    'pending_payment':     'pending_payment',
+                    'confirmed':           'preparing',
+                    'packing':             'preparing',
+                    'preparing':           'preparing',
+                    'shipping':            'shipping',
+                    'shipped':             'shipping',
+                    'delivered':           'delivered',
+                    'completed':           'completed',
+                    'cancelled':           'cancelled',
+                    'returned':            'cancelled',
+                };
+                return mapping[s] || 'placed';
             };
 
             const orders = (data || []).map(o => {
@@ -405,9 +411,17 @@ export const API = {
     },
 
     async saveUserCart(userId, cartItems) {
-        if (!userId) return { success: false };
+        try {
+            localStorage.setItem('pawpal_cart', JSON.stringify(cartItems || []));
+            document.dispatchEvent(new CustomEvent('cart_updated'));
+            if (typeof window.updateCartBadge === 'function') {
+                window.updateCartBadge();
+            }
+        } catch(e) {}
+
+        if (!userId) return { success: true };
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) return { success: false };
+        if (!db) return { success: true };
 
         try {
             const cart = await this.getOrCreateCart(userId);
@@ -649,27 +663,32 @@ export const API = {
                 }
             }
 
+            const paymentMethodStr = String(orderData.payment?.method || 'cod').toLowerCase();
+            const isPaid = orderData.payment?.status === 'paid' || orderData.payment?.status === 'PAID';
+            
+            const initialOrderStatus = paymentMethodStr === 'cod' ? 'cho_xac_nhan' : (isPaid ? 'cho_xac_nhan' : 'cho_thanh_toan');
+            const initialPaymentStatus = isPaid ? 'da_thanh_toan' : 'chua_thanh_toan';
+
             const salesOrder = {
                 order_code: orderData.orderId,
                 customer_id: customerId,
                 shipping_address_id: shippingAddressId,
-                order_status: 'PENDING',
-                payment_status: (orderData.payment?.status || 'PENDING').toUpperCase(),
+                order_status: initialOrderStatus,
+                payment_status: initialPaymentStatus,
                 total_amount: orderData.pricing?.grandTotal || 0,
             };
 
             const { data: newOrder, error: orderError } = await db.from('sales_order').insert(salesOrder).select('id').single();
             if (orderError) throw orderError;
 
-            const paymentMethodStr = String(orderData.payment?.method || 'cod').toUpperCase();
             const paymentCode = 'PAY-' + Date.now();
             const paymentInsert = {
                 payment_code: paymentCode,
                 order_id: newOrder.id,
-                payment_type: 'PRODUCT',
+                payment_type: 'mua_hang',
                 payment_method_id: paymentMethodStr,
                 amount: orderData.pricing?.grandTotal || orderData.pricing?.total || 0,
-                transaction_status: (orderData.payment?.status || 'PENDING').toUpperCase()
+                transaction_status: isPaid ? 'thanh_cong' : 'cho_xu_ly'
             };
             const { error: payError } = await db.from('payment').insert(paymentInsert);
             if (payError) console.error('[API] Failed to insert payment:', payError);
@@ -701,7 +720,18 @@ export const API = {
         }
 
         try {
-            const normalizedStatus = String(paymentStatus || '').toUpperCase();
+            const rawStatus = String(paymentStatus || '').toLowerCase().trim();
+            const normalizedStatus = {
+                'paid': 'da_thanh_toan',
+                'da_thanh_toan': 'da_thanh_toan',
+                'failed': 'thanh_toan_that_bai',
+                'thanh_toan_that_bai': 'thanh_toan_that_bai',
+                'pending': 'chua_thanh_toan',
+                'chua_thanh_toan': 'chua_thanh_toan',
+                'refunded': 'da_hoan_tien',
+                'da_hoan_tien': 'da_hoan_tien'
+            }[rawStatus] || rawStatus;
+
             const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
 
             let query = db.from('sales_order').update({
@@ -717,8 +747,9 @@ export const API = {
             if (error) throw error;
 
             if (data && data.id) {
+                const transStatus = normalizedStatus === 'da_thanh_toan' ? 'thanh_cong' : (normalizedStatus === 'thanh_toan_that_bai' ? 'that_bai' : 'dang_xu_ly');
                 await db.from('payment').update({
-                    transaction_status: normalizedStatus,
+                    transaction_status: transStatus,
                     updated_at: new Date().toISOString()
                 }).eq('order_id', data.id);
             }
@@ -737,7 +768,17 @@ export const API = {
         }
 
         try {
-            const normalizedStatus = String(orderStatus || '').toUpperCase();
+            const rawStatus = String(orderStatus || '').toLowerCase().trim();
+            const normalizedStatus = {
+                'placed': 'cho_xac_nhan',
+                'confirmed': 'da_xac_nhan',
+                'preparing': 'dang_chuan_bi',
+                'shipping': 'dang_giao',
+                'delivered': 'da_giao',
+                'completed': 'da_hoan_tat',
+                'cancelled': 'da_huy',
+            }[rawStatus] || rawStatus;
+
             const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
 
             let query = db.from('sales_order').update({
@@ -880,6 +921,867 @@ export const API = {
             console.error('[API] getPaymentMethods failed:', err);
             const res = await fetch('/data/payment-methods.json');
             return await res.json().catch(() => []);
+        }
+    },
+
+    /* ==========================================================================
+       GIAI ĐOẠN 2: CƠ CHẾ GIỮ CHỖ 15 PHÚT (SLOT HOLD)
+       ========================================================================== */
+    async releaseExpiredHoldSlots() {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return;
+        try {
+            const now = new Date().toISOString();
+            await db.from('appointment')
+                .update({ appointment_status: 'da_het_han' })
+                .eq('appointment_status', 'dang_giu_cho')
+                .lt('hold_expires_at', now);
+        } catch (e) {
+            console.warn('[API] releaseExpiredHoldSlots error:', e);
+        }
+    },
+
+    async checkSlotAvailability(serviceId, date, time, staffId = null) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return { available: true };
+        try {
+            await this.releaseExpiredHoldSlots();
+            const now = new Date().toISOString();
+
+            let query = db.from('appointment')
+                .select('id, appointment_status, hold_expires_at')
+                .eq('appointment_date', date)
+                .eq('appointment_time', time.length === 5 ? time + ':00' : time)
+                .not('appointment_status', 'in', '("da_huy","da_het_han")');
+
+            if (serviceId) query = query.eq('service_id', serviceId);
+            if (staffId) query = query.eq('staff_id', staffId);
+
+            const { data, error } = await query;
+            if (error) throw error;
+
+            const activeHold = (data || []).find(row => {
+                if (row.appointment_status === 'dang_giu_cho') {
+                    return row.hold_expires_at && row.hold_expires_at > now;
+                }
+                return ['cho_xac_nhan', 'da_xac_nhan', 'da_check_in', 'dang_thuc_hien'].includes(row.appointment_status);
+            });
+
+            return { available: !activeHold, conflictBooking: activeHold || null };
+        } catch (err) {
+            console.warn('[API] checkSlotAvailability failed:', err);
+            return { available: true };
+        }
+    },
+
+    async holdAppointmentSlot({ customerId, petId, serviceId, staffId, date, time, totalPrice = 0, note = '' }) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return { success: false, error: 'No DB connection' };
+        try {
+            const check = await this.checkSlotAvailability(serviceId, date, time, staffId);
+            if (!check.available) {
+                return { success: false, error: 'Khung giờ này vừa có người giữ chỗ hoặc đã được đặt. Vui lòng chọn giờ khác.' };
+            }
+
+            const holdExpiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+            const appointmentCode = 'APT-' + Math.floor(100000 + Math.random() * 900000);
+
+            const insertPayload = {
+                appointment_code: appointmentCode,
+                customer_id: customerId,
+                pet_id: petId,
+                service_id: serviceId,
+                staff_id: staffId || null,
+                appointment_date: date,
+                appointment_time: time.length === 5 ? time + ':00' : time,
+                hold_expires_at: holdExpiresAt,
+                appointment_status: 'dang_giu_cho',
+                payment_status: 'chua_thanh_toan',
+                total_price: totalPrice,
+                note: note,
+                change_count: 0
+            };
+
+            const { data, error } = await db.from('appointment').insert([insertPayload]).select('*').single();
+            if (error) throw error;
+
+            return { success: true, booking: data, expiresAt: holdExpiresAt };
+        } catch (err) {
+            console.error('[API] holdAppointmentSlot failed:', err);
+            return { success: false, error: err.message };
+        }
+    },
+
+    async confirmHeldSlot(appointmentId, isDepositPaid = false) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return { success: false };
+        try {
+            const newStatus = isDepositPaid ? 'da_xac_nhan' : 'cho_xac_nhan';
+            const payStatus = isDepositPaid ? 'da_thanh_toan_mot_phan' : 'chua_thanh_toan';
+
+            const { data, error } = await db.from('appointment')
+                .update({
+                    appointment_status: newStatus,
+                    payment_status: payStatus,
+                    hold_expires_at: null,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', appointmentId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (err) {
+            console.error('[API] confirmHeldSlot failed:', err);
+            return { success: false, error: err.message };
+        }
+    },
+
+    /* ==========================================================================
+       GIAI ĐOẠN 2: CƠ CHẾ GIỮ TỒN KHO 15 PHÚT (STOCK RESERVATION)
+       ========================================================================== */
+    async releaseExpiredStockReservations() {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return;
+        try {
+            const now = new Date().toISOString();
+            await db.from('stock_reservation')
+                .update({ status: 'da_het_han', updated_at: now })
+                .eq('status', 'dang_giu')
+                .lt('expires_at', now);
+        } catch (e) {
+            // bỏ qua nếu bảng chưa tạo
+        }
+    },
+
+    async getAvailableStock(productVariantId) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return 99;
+        try {
+            await this.releaseExpiredStockReservations();
+            const { data: inv } = await db.from('inventory').select('quantity_in_stock').eq('product_variant_id', productVariantId).maybeSingle();
+            const totalStock = inv?.quantity_in_stock || 0;
+
+            const now = new Date().toISOString();
+            const { data: res } = await db.from('stock_reservation')
+                .select('quantity')
+                .eq('product_variant_id', productVariantId)
+                .eq('status', 'dang_giu')
+                .gt('expires_at', now);
+
+            const reservedQty = (res || []).reduce((sum, r) => sum + Number(r.quantity || 0), 0);
+            return Math.max(0, totalStock - reservedQty);
+        } catch (err) {
+            return 99;
+        }
+    },
+
+    async reserveStock(cartId, customerId, items) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !items?.length) return { success: true };
+        try {
+            const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+            const rows = items.map(it => ({
+                product_variant_id: it.variantId || it.id,
+                customer_id: customerId,
+                cart_id: cartId,
+                quantity: it.quantity || it.qty || 1,
+                reserved_at: new Date().toISOString(),
+                expires_at: expiresAt,
+                status: 'dang_giu'
+            }));
+
+            await db.from('stock_reservation').insert(rows);
+            return { success: true, expiresAt };
+        } catch (err) {
+            console.warn('[API] reserveStock skipped or failed:', err.message);
+            return { success: true };
+        }
+    },
+
+    /* ==========================================================================
+       GIAI ĐOẠN 2: CARE LOG & CARE LOG MEDIA
+       ========================================================================== */
+    async getPetCareLogs(petId, appointmentId = null) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !petId) return [];
+        try {
+            let query = db.from('care_log')
+                .select(`
+                    id, description, health_status, recorded_at, created_at,
+                    care_log_media ( id, media_type, media_url, file_name ),
+                    care_action ( action_name, service_category )
+                `)
+                .eq('pet_id', petId)
+                .order('recorded_at', { ascending: false });
+
+            if (appointmentId) query = query.eq('appointment_id', appointmentId);
+
+            const { data, error } = await query;
+            if (error) throw error;
+            return data || [];
+        } catch (err) {
+            console.warn('[API] getPetCareLogs failed:', err.message);
+            return [];
+        }
+    },
+
+    async addCareLogEntry({ appointmentId, petId, careActionId, description, healthStatus, mediaUrls = [], staffId = null }) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return { success: false };
+        try {
+            const logPayload = {
+                appointment_id: appointmentId,
+                pet_id: petId,
+                care_action_id: careActionId || null,
+                description,
+                health_status: healthStatus || 'bình thường',
+                recorded_at: new Date().toISOString()
+            };
+
+            const { data: newLog, error } = await db.from('care_log').insert([logPayload]).select().single();
+            if (error) throw error;
+
+            if (mediaUrls.length > 0 && newLog?.id) {
+                const mediaRows = mediaUrls.map(url => ({
+                    care_log_id: newLog.id,
+                    media_type: url.match(/\.(mp4|mov|avi)$/i) ? 'video' : 'hinh_anh',
+                    media_url: url,
+                    staff_id: staffId,
+                    uploaded_at: new Date().toISOString()
+                }));
+                await db.from('care_log_media').insert(mediaRows);
+            }
+
+            return { success: true, data: newLog };
+        } catch (err) {
+            console.error('[API] addCareLogEntry error:', err);
+            return { success: false, error: err.message };
+        }
+    },
+
+    /* ==========================================================================
+       GIAI ĐOẠN 2: REVIEW RESPONSE (PHẢN HỒI ĐÁNH GIÁ CỦA ADMIN)
+       ========================================================================== */
+    async getReviewResponses(reviewId) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !reviewId) return [];
+        try {
+            const { data, error } = await db.from('review_response')
+                .select('*, staff(full_name)')
+                .eq('review_id', reviewId)
+                .order('created_at', { ascending: true });
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            return [];
+        }
+    },
+
+    async addReviewResponse(reviewId, staffId, responseContent) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return { success: false };
+        try {
+            const payload = {
+                review_id: reviewId,
+                staff_id: staffId,
+                response_content: responseContent,
+                created_at: new Date().toISOString()
+            };
+            const { data, error } = await db.from('review_response').insert([payload]).select().single();
+            if (error) throw error;
+            return { success: true, data };
+        } catch (err) {
+            console.error('[API] addReviewResponse failed:', err);
+            return { success: false, error: err.message };
+        }
+    },
+
+    /* ==========================================================================
+       GIAI ĐOẠN 3: CẤU HÌNH HỆ THỐNG ĐỘNG (PAWPAL_SETTING)
+       ========================================================================== */
+    async getSetting(key, fallback = null) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !key) return fallback;
+        try {
+            const { data, error } = await db.from('pawpal_setting')
+                .select('setting_value, setting_type')
+                .eq('setting_key', key)
+                .maybeSingle();
+
+            if (error || !data) return fallback;
+            const val = data.setting_value;
+            if (data.setting_type === 'json') {
+                try { return JSON.parse(val); } catch { return val; }
+            }
+            if (data.setting_type === 'so' || data.setting_type === 'number') return Number(val);
+            if (data.setting_type === 'boolean') return val === 'true' || val === '1';
+            return val;
+        } catch (e) {
+            return fallback;
+        }
+    },
+
+    async getAllSettings() {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return {};
+        try {
+            const { data, error } = await db.from('pawpal_setting').select('*');
+            if (error) throw error;
+            const map = {};
+            (data || []).forEach(row => {
+                let val = row.setting_value;
+                if (row.setting_type === 'json') {
+                    try { val = JSON.parse(val); } catch {}
+                } else if (row.setting_type === 'so' || row.setting_type === 'number') {
+                    val = Number(val);
+                } else if (row.setting_type === 'boolean') {
+                    val = val === 'true' || val === '1';
+                }
+                map[row.setting_key] = val;
+            });
+            return map;
+        } catch (e) {
+            return {};
+        }
+    },
+
+    async updateSetting(key, value, type = 'chuoi', description = '') {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !key) return { success: false };
+        try {
+            const strVal = typeof value === 'object' ? JSON.stringify(value) : String(value);
+            const payload = {
+                setting_key: key,
+                setting_value: strVal,
+                setting_type: type,
+                description,
+                updated_at: new Date().toISOString()
+            };
+            const { data, error } = await db.from('pawpal_setting')
+                .upsert(payload, { onConflict: 'setting_key' })
+                .select()
+                .single();
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (e) {
+            console.error('[API] updateSetting error:', e);
+            return { success: false, error: e.message };
+        }
+    },
+
+    /* ==========================================================================
+       GIAI ĐOẠN 3: QUẢN LÝ PHÒNG VẬT LÝ HOTEL (HOTEL_ROOM & HOTEL_ROOM_TYPE)
+       ========================================================================== */
+    async getHotelRooms(status = null) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return [];
+        try {
+            let query = db.from('hotel_room')
+                .select('*, hotel_room_type(room_type, capacity, daily_price, amenities)')
+                .order('room_number', { ascending: true });
+
+            if (status) query = query.eq('status', status);
+            const { data, error } = await query;
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            console.warn('[API] getHotelRooms error:', e);
+            return [];
+        }
+    },
+
+    async updateHotelRoomStatus(roomId, status, description = null) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !roomId) return { success: false };
+        try {
+            const payload = {
+                status,
+                updated_at: new Date().toISOString()
+            };
+            if (description !== null) payload.description = description;
+
+            const { data, error } = await db.from('hotel_room').update(payload).eq('id', roomId).select().single();
+            if (error) throw error;
+            return { success: true, data };
+        } catch (e) {
+            return { success: false, error: e.message };
+        }
+    },
+
+    /* ==========================================================================
+       GIAI ĐOẠN 3: BẢNG GIÁ VÀ TÍNH CƯỚC PET TAXI (TAXI_PRICE_RULE)
+       ========================================================================== */
+    async getTaxiPriceRules() {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return [];
+        try {
+            const { data, error } = await db.from('taxi_price_rule')
+                .select('*')
+                .eq('status', 'dang_ap_dung')
+                .order('distance_from', { ascending: true });
+
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            return [];
+        }
+    },
+
+    async calculateTaxiFare(distanceKm, petWeightKg = 5) {
+        try {
+            const rules = await this.getTaxiPriceRules();
+            if (!rules.length) {
+                // Fallback default formula: 50,000đ base (0-3km) + 12,000đ/km tiếp theo
+                const base = 50000;
+                const extraKm = Math.max(0, distanceKm - 3);
+                const surchargeWeight = petWeightKg > 10 ? (petWeightKg - 10) * 5000 : 0;
+                return base + (extraKm * 12000) + surchargeWeight;
+            }
+
+            const match = rules.find(r => 
+                distanceKm >= Number(r.distance_from) && 
+                (r.distance_to === null || distanceKm <= Number(r.distance_to)) &&
+                petWeightKg >= Number(r.weight_from || 0) &&
+                (r.weight_to === null || petWeightKg <= Number(r.weight_to))
+            );
+
+            if (match) {
+                return Number(match.base_price || 0) + Number(match.surcharge || 0);
+            }
+
+            return Number(rules[0].base_price || 60000);
+        } catch (e) {
+            return 50000;
+        }
+    },
+
+    /* ==========================================================================
+       GIAI ĐOẠN 3: ĐỐI TÁC GIAO VẬN VÀ PHƯƠNG THỨC THANH TOÁN (LIVE SUPABASE)
+       ========================================================================== */
+    async getShippingProviders() {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return [];
+        try {
+            const { data, error } = await db.from('shipping_provider')
+                .select('*')
+                .eq('status', 'dang_hoat_dong')
+                .order('provider_name', { ascending: true });
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            return [];
+        }
+    },
+
+    async getDeliveryOptions() {
+        try {
+            const providers = await this.getShippingProviders();
+            if (providers && providers.length > 0) {
+                return providers.map(p => ({
+                    id: p.provider_code || p.id,
+                    name: p.provider_name,
+                    price: Number(p.base_fee || 30000),
+                    estimatedTime: p.estimated_days ? `${p.estimated_days} ngày` : '2-3 ngày',
+                    description: p.note || 'Giao hàng tiêu chuẩn toàn quốc'
+                }));
+            }
+        } catch (e) {}
+
+        // Dynamic fallback from settings or standard options
+        return [
+            { id: 'standard', name: 'Giao hàng tiêu chuẩn', price: 30000, estimatedTime: '2-3 ngày', description: 'Giao hàng tiết kiệm toàn quốc' },
+            { id: 'express', name: 'Giao hàng hỏa tốc 2H', price: 50000, estimatedTime: '2 giờ', description: 'Áp dụng nội thành TP.HCM' }
+        ];
+    },
+
+    async getPaymentMethods() {
+        try {
+            const config = await this.getSetting('payment_gateways', null);
+            if (config && typeof config === 'object') {
+                const methods = [];
+                if (config.cod_enabled !== false) {
+                    methods.push({ id: 'cod', name: 'Thanh toán khi nhận hàng (COD)', description: 'Thanh toán bằng tiền mặt khi shipper giao hàng', icon: 'cash' });
+                }
+                if (config.vnpay_enabled !== false) {
+                    methods.push({ id: 'vnpay', name: 'Thanh toán qua VNPAY-QR', description: 'Thẻ ATM, Visa/Mastercard hoặc ứng dụng Ngân hàng', icon: 'vnpay' });
+                }
+                if (config.bank_transfer_enabled) {
+                    methods.push({ id: 'bank_transfer', name: 'Chuyển khoản Ngân hàng', description: 'Chuyển khoản trực tiếp vào tài khoản ngân hàng Pawpal', icon: 'bank' });
+                }
+                if (methods.length > 0) return methods;
+            }
+        } catch (e) {}
+
+        return [
+            { id: 'cod', name: 'Thanh toán khi nhận hàng (COD)', description: 'Thanh toán tiền mặt khi nhận hàng', icon: 'cash' },
+            { id: 'vnpay', name: 'Cổng thanh toán VNPAY-QR / Thẻ', description: 'Hỗ trợ thẻ ATM, Visa, Mastercard, VNPAY-QR', icon: 'vnpay' }
+        ];
+    },
+
+    /* ==========================================================================
+       GIAI ĐOẠN 4: QUẢN LÝ KHO VẬN 2 LỚP & BIẾN ĐỘNG KHO (INVENTORY_TRANSACTION)
+       ========================================================================== */
+    async getInventoryLevels() {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return [];
+        try {
+            const { data, error } = await db.from('inventory')
+                .select('*, product_variant(id, sku, variant_name, price, product(id, product_name, category_id))')
+                .order('last_updated_at', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            console.warn('[API] getInventoryLevels error:', e);
+            return [];
+        }
+    },
+
+    async recordInventoryTransaction({ productVariantId, purchaseOrderId = null, transactionType, quantity, staffId = null, note = '' }) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !productVariantId || !transactionType || !quantity) return { success: false, message: 'Thiếu dữ liệu kho' };
+
+        try {
+            // 1. Lấy tồn kho hiện tại
+            const { data: currentInv, error: invErr } = await db.from('inventory')
+                .select('*')
+                .eq('product_variant_id', productVariantId)
+                .maybeSingle();
+
+            if (invErr) throw invErr;
+
+            const stockBefore = currentInv ? Number(currentInv.quantity_in_stock || 0) : 0;
+            let stockAfter = stockBefore;
+
+            if (transactionType === 'nhap_kho' || transactionType === 'dieu_chinh_tang' || transactionType === 'hoan_kho') {
+                stockAfter = stockBefore + Number(quantity);
+            } else if (transactionType === 'xuat_kho' || transactionType === 'dieu_chinh_giam') {
+                stockAfter = Math.max(0, stockBefore - Number(quantity));
+            }
+
+            // 2. Cập nhật bảng inventory
+            const now = new Date().toISOString();
+            if (currentInv) {
+                await db.from('inventory').update({
+                    quantity_in_stock: stockAfter,
+                    last_updated_at: now
+                }).eq('id', currentInv.id);
+            } else {
+                await db.from('inventory').insert([{
+                    product_variant_id: productVariantId,
+                    quantity_in_stock: stockAfter,
+                    minimum_stock: 5,
+                    quantity_reserved: 0,
+                    last_updated_at: now
+                }]);
+            }
+
+            // 3. Ghi log lịch sử biến động kho
+            const { data: txData, error: txErr } = await db.from('inventory_transaction').insert([{
+                product_variant_id: productVariantId,
+                purchase_order_id: purchaseOrderId,
+                transaction_type: transactionType,
+                quantity: Number(quantity),
+                stock_before: stockBefore,
+                stock_after: stockAfter,
+                note,
+                staff_id: staffId,
+                created_at: now
+            }]).select().single();
+
+            if (txErr) throw txErr;
+            return { success: true, data: txData, stockBefore, stockAfter };
+        } catch (e) {
+            console.error('[API] recordInventoryTransaction error:', e);
+            return { success: false, error: e.message };
+        }
+    },
+
+    /* ==========================================================================
+       GIAI ĐOẠN 4: ĐỔI TRẢ HÀNG & HẬU MÃI RMA (RETURN_REQUEST & RETURN_DETAIL)
+       ========================================================================== */
+    async getReturnRequests({ customerId = null, orderId = null, status = null } = {}) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return [];
+        try {
+            let query = db.from('return_request')
+                .select('*, return_request_detail(*, product_variant(id, sku, variant_name, price)), customer(id, phone_main, customer_profile(full_name))')
+                .order('created_at', { ascending: false });
+
+            if (customerId) query = query.eq('customer_id', customerId);
+            if (orderId) query = query.eq('sales_order_id', orderId);
+            if (status) query = query.eq('request_status', status);
+
+            const { data, error } = await query;
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            console.warn('[API] getReturnRequests error:', e);
+            return [];
+        }
+    },
+
+    async createReturnRequest({ salesOrderId, customerId, returnType = 'doi_san_pham', reason, description = '', evidenceImages = [], items = [] }) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !salesOrderId || !customerId || !reason) return { success: false, message: 'Thiếu thông tin yêu cầu đổi trả' };
+
+        try {
+            const now = new Date().toISOString();
+            // 1. Tạo bản ghi return_request
+            const { data: request, error: reqErr } = await db.from('return_request').insert([{
+                sales_order_id: salesOrderId,
+                customer_id: customerId,
+                return_type: returnType,
+                reason,
+                description,
+                evidence_images: evidenceImages,
+                request_status: 'cho_xu_ly',
+                created_at: now,
+                updated_at: now
+            }]).select().single();
+
+            if (reqErr) throw reqErr;
+
+            // 2. Tạo các dòng chi tiết return_request_detail nếu có
+            if (items && items.length > 0) {
+                const details = items.map(item => ({
+                    return_request_id: request.id,
+                    product_variant_id: item.productVariantId,
+                    quantity: Number(item.quantity || 1),
+                    unit_price: Number(item.unitPrice || 0)
+                }));
+                const { error: detErr } = await db.from('return_request_detail').insert(details);
+                if (detErr) console.warn('[API] return_request_detail insert warning:', detErr);
+            }
+
+            // 3. Tự động gửi thông báo hệ thống cho khách hàng
+            await this.createSystemNotification({
+                customerId,
+                type: 'cap_nhat_yeu_cau_ho_tro',
+                title: 'Yêu cầu đổi trả đã được tiếp nhận',
+                content: `Yêu cầu ${returnType === 'doi_san_pham' ? 'đổi sản phẩm' : 'trả hàng/hoàn tiền'} cho đơn hàng đã được gửi thành công và đang chờ chuyên viên xử lý.`,
+                orderId: salesOrderId
+            });
+
+            return { success: true, data: request };
+        } catch (e) {
+            console.error('[API] createReturnRequest error:', e);
+            return { success: false, error: e.message };
+        }
+    },
+
+    async updateReturnRequestStatus(requestId, { requestStatus, resolutionType = null, refundAmount = 0, resolvedBy = null, restockItems = false }) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !requestId) return { success: false };
+
+        try {
+            const now = new Date().toISOString();
+            const payload = {
+                request_status: requestStatus,
+                updated_at: now
+            };
+            if (resolutionType) payload.resolution_type = resolutionType;
+            if (refundAmount > 0) payload.refund_amount = refundAmount;
+            if (resolvedBy) payload.resolved_by = resolvedBy;
+
+            const { data: updatedReq, error } = await db.from('return_request')
+                .update(payload)
+                .eq('id', requestId)
+                .select('*, return_request_detail(*)')
+                .single();
+
+            if (error) throw error;
+
+            // Nếu chấp nhận hoàn kho (restock), tự động ghi nhận inventory_transaction
+            if (restockItems && updatedReq.return_request_detail?.length > 0) {
+                for (const item of updatedReq.return_request_detail) {
+                    if (item.product_variant_id && item.quantity > 0) {
+                        await this.recordInventoryTransaction({
+                            productVariantId: item.product_variant_id,
+                            transactionType: 'hoan_kho',
+                            quantity: item.quantity,
+                            staffId: resolvedBy,
+                            note: `Hoàn kho từ yêu cầu đổi trả RMA #${requestId.substring(0, 8)}`
+                        });
+                    }
+                }
+            }
+
+            return { success: true, data: updatedReq };
+        } catch (e) {
+            console.error('[API] updateReturnRequestStatus error:', e);
+            return { success: false, error: e.message };
+        }
+    },
+
+    /* ==========================================================================
+       GIAI ĐOẠN 4: HỖ TRỢ KHÁCH HÀNG & KHIẾU NẠI (SUPPORT_TICKET & TICKET_MESSAGE)
+       ========================================================================== */
+    async getSupportTickets({ customerId = null, status = null, priority = null } = {}) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return [];
+        try {
+            let query = db.from('support_ticket')
+                .select('*, support_ticket_message(*), customer(id, phone_main, customer_profile(full_name))')
+                .order('created_at', { ascending: false });
+
+            if (customerId) query = query.eq('customer_id', customerId);
+            if (status) query = query.eq('status', status);
+            if (priority) query = query.eq('priority', priority);
+
+            const { data, error } = await query;
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            console.warn('[API] getSupportTickets error:', e);
+            return [];
+        }
+    },
+
+    async createSupportTicket({ customerId, orderId = null, appointmentId = null, channel = 'web', category = 'khac', subject, description, priority = 'trung_binh', requestedResolution = null, requestedAmount = null }) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !customerId || !subject || !description) return { success: false, message: 'Thiếu thông tin ticket' };
+
+        try {
+            const ticketCode = `TK-${Date.now().toString(36).toUpperCase().slice(-6)}`;
+            const now = new Date().toISOString();
+
+            const { data, error } = await db.from('support_ticket').insert([{
+                ticket_code: ticketCode,
+                customer_id: customerId,
+                order_id: orderId,
+                appointment_id: appointmentId,
+                channel,
+                category,
+                subject,
+                description,
+                priority,
+                status: 'mo',
+                requested_resolution: requestedResolution,
+                requested_amount: requestedAmount,
+                created_at: now,
+                updated_at: now
+            }]).select().single();
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (e) {
+            console.error('[API] createSupportTicket error:', e);
+            return { success: false, error: e.message };
+        }
+    },
+
+    async addTicketMessage({ ticketId, senderType = 'khach_hang', senderId = null, content, attachmentUrls = [], isInternal = false }) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !ticketId || !content) return { success: false };
+
+        try {
+            const now = new Date().toISOString();
+            const { data, error } = await db.from('support_ticket_message').insert([{
+                ticket_id: ticketId,
+                sender_type: senderType,
+                sender_id: senderId,
+                content,
+                attachment_urls: attachmentUrls,
+                is_internal: isInternal,
+                created_at: now
+            }]).select().single();
+
+            if (error) throw error;
+
+            // Cập nhật updated_at cho ticket
+            await db.from('support_ticket').update({ updated_at: now }).eq('id', ticketId);
+
+            return { success: true, data };
+        } catch (e) {
+            console.error('[API] addTicketMessage error:', e);
+            return { success: false, error: e.message };
+        }
+    },
+
+    /* ==========================================================================
+       GIAI ĐOẠN 4: THÔNG BÁO HỆ THỐNG & TRUY VẾT NHẬT KÝ (NOTIFICATION & AUDIT_LOG)
+       ========================================================================== */
+    async getUserNotifications(customerId, limit = 20) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !customerId) return [];
+        try {
+            const { data, error } = await db.from('notification')
+                .select('*')
+                .eq('customer_id', customerId)
+                .order('sent_at', { ascending: false })
+                .limit(limit);
+
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            return [];
+        }
+    },
+
+    async markNotificationAsRead(notificationId) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !notificationId) return { success: false };
+        try {
+            const { data, error } = await db.from('notification')
+                .update({ is_read: true, read_at: new Date().toISOString() })
+                .eq('id', notificationId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (e) {
+            return { success: false, error: e.message };
+        }
+    },
+
+    async createSystemNotification({ customerId, type = 'don_hang_moi', title, content, orderId = null, appointmentId = null, ticketId = null, refundId = null }) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !customerId || !title || !content) return { success: false };
+        try {
+            const { data, error } = await db.from('notification').insert([{
+                customer_id: customerId,
+                notification_type: type,
+                title,
+                content,
+                sales_order_id: orderId,
+                appointment_id: appointmentId,
+                support_ticket_id: ticketId,
+                refund_transaction_id: refundId,
+                is_read: false,
+                sent_at: new Date().toISOString()
+            }]).select().single();
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (e) {
+            console.warn('[API] createSystemNotification warning:', e);
+            return { success: false };
+        }
+    },
+
+    async recordAuditLog({ staffId, action, entityName, entityId, description = '' }) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !action || !entityName || !entityId) return { success: false };
+        try {
+            const { data, error } = await db.from('audit_log').insert([{
+                staff_id: staffId,
+                action,
+                entity_name: entityName,
+                entity_id: entityId,
+                description,
+                created_at: new Date().toISOString()
+            }]).select().single();
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (e) {
+            console.warn('[API] recordAuditLog warning:', e);
+            return { success: false };
         }
     }
 };

@@ -125,7 +125,7 @@ function startVNPAYTimer() {
             if (timerEl) timerEl.textContent = '00:00';
             alert('Thời hạn giao dịch VNPAY đã kết thúc. Đơn hàng đã tự động hủy.');
             expireCurrentOrder();
-            window.location.href = '/pages/user/orders/orders.html?status=cancelled';
+            window.location.href = '/pages/user/#orders?status=cancelled';
         } else {
             const sec = Math.floor(diff / 1000);
             const m = Math.floor(sec / 60);
@@ -308,7 +308,7 @@ function handlePaymentSuccess(responseCode = '00') {
 
         if (resultOverlay) resultOverlay.classList.remove('d-none');
 
-        const returnUrl = `/pages/shop/payment-success/payment-success.html?orderId=${vnpayState.orderId}&vnp_ResponseCode=${responseCode}&vnp_TransactionNo=${transactionNo}`;
+        const returnUrl = `/payment-success?orderId=${vnpayState.orderId}&vnp_ResponseCode=${responseCode}&vnp_TransactionNo=${transactionNo}`;
 
         if (btnReturn) {
             btnReturn.onclick = () => {
@@ -353,7 +353,7 @@ function handlePaymentFailed(responseCode = '51', errorMsg = 'Tài khoản khôn
         if (btnReturn) {
             btnReturn.textContent = 'Thử lại / Quay về danh sách đơn';
             btnReturn.onclick = () => {
-                window.location.href = `/pages/user/orders/orders.html?status=pending_payment`;
+                window.location.href = `/pages/user/#orders?status=pending_payment`;
             };
         }
     }, 1200);
@@ -429,7 +429,7 @@ function finalizeOrderPayment(orderId, paymentStatus, orderStatus, transactionNo
 function handleCancelPayment() {
     const isConfirmed = confirm('Bạn có muốn hủy giao dịch VNPAY? Đơn hàng vẫn được lưu ở trạng thái "Chờ thanh toán" (thời hạn 15 phút) tại mục Đơn hàng của bạn.');
     if (isConfirmed) {
-        window.location.href = '/pages/user/orders/orders.html?status=pending_payment';
+        window.location.href = '/pages/user/#orders?status=pending_payment';
     }
 }
 

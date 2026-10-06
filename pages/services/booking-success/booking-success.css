@@ -50,9 +50,9 @@
 }
 
 .booking-code-box {
-    background: var(--color-primary-light);
-    border: 1px dashed var(--color-primary);
-    border-radius: 12px;
+    background: var(--color-primary-light, #EEF5F1);
+    border: 1px dashed var(--color-primary, #236B48);
+    border-radius: 9px;
     padding: 16px;
     margin-bottom: 32px;
     display: inline-block;
@@ -63,7 +63,7 @@
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: var(--color-text-light);
+    color: var(--color-text-light, #4F7A65);
     font-weight: 700;
     display: block;
     margin-bottom: 4px;
@@ -72,14 +72,14 @@
 .booking-code-val {
     font-size: 1.6rem;
     font-weight: 800;
-    color: var(--color-primary);
+    color: var(--color-primary, #236B48);
     font-family: monospace;
 }
 
 .password-setup-card {
     background: #fdfaf6;
     border: 1px solid rgba(229, 169, 60, 0.25);
-    border-radius: 18px;
+    border-radius: 9px;
     padding: 24px;
     margin-top: 20px;
     margin-bottom: 30px;

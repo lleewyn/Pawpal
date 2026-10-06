@@ -814,12 +814,16 @@ async function addProductToCart(product, quantity) {
 }
 
 async function updateCartBadge() {
+    if (typeof window.updateCartBadge === 'function') {
+        window.updateCartBadge();
+        return;
+    }
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     let cart = [];
     if (window.API && typeof window.API.getUserCart === 'function') {
         cart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
     }
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const totalItems = cart.length;
     
     const cartBadge = document.querySelector('.cart-badge');
     if (cartBadge) {

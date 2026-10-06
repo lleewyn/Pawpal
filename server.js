@@ -37,13 +37,24 @@ const legacyRedirectMap = {
     '/pages/services/booking-success/booking-success.html': '/booking-success',
     '/pages/services/booking-success/booking-success': '/booking-success',
     '/booking-success/booking-success.html': '/booking-success',
-    '/booking-success.html': '/booking-success'
+    '/booking-success.html': '/booking-success',
+    '/pages/shop/payment-success/payment-success.html': '/payment-success',
+    '/pages/shop/payment-success/payment-success': '/payment-success',
+    '/pages/shop/payment-success.html': '/payment-success',
+    '/payment-success.html': '/payment-success',
+    '/pages/shop/payment-failed/payment-failed.html': '/payment-failed',
+    '/pages/shop/payment-failed/payment-failed': '/payment-failed',
+    '/payment-failed.html': '/payment-failed',
+    '/pages/shop/vnpay-sandbox/vnpay-sandbox.html': '/vnpay-sandbox',
+    '/pages/shop/vnpay-sandbox/vnpay-sandbox': '/vnpay-sandbox',
+    '/vnpay-sandbox.html': '/vnpay-sandbox'
 };
 
 app.use((req, res, next) => {
     const cleanPath = req.path.toLowerCase();
     if (legacyRedirectMap[cleanPath]) {
-        return res.redirect(301, legacyRedirectMap[cleanPath]);
+        const queryString = req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '';
+        return res.redirect(301, legacyRedirectMap[cleanPath] + queryString);
     }
     next();
 });
@@ -69,6 +80,15 @@ app.get('/booking-success.html', (req, res) => res.sendFile(path.join(__dirname,
 app.get('/booking-success/booking-success.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/booking-success/booking-success.html')));
 app.get('/booking-success.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/booking-success/booking-success.css')));
 app.get('/booking-success.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/booking-success/booking-success.js')));
+app.get('/payment-success', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/payment-success/payment-success.html')));
+app.get('/payment-success.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/payment-success/payment-success.css')));
+app.get('/payment-success.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/payment-success/payment-success.js')));
+app.get('/payment-failed', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/payment-failed/payment-failed.html')));
+app.get('/payment-failed.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/payment-failed/payment-failed.css')));
+app.get('/payment-failed.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/payment-failed/payment-failed.js')));
+app.get('/vnpay-sandbox', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/vnpay-sandbox/vnpay-sandbox.html')));
+app.get('/vnpay-sandbox.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/vnpay-sandbox/vnpay-sandbox.css')));
+app.get('/vnpay-sandbox.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/vnpay-sandbox/vnpay-sandbox.js')));
 app.get('/about', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/about/about.html')));
 app.get('/about.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/about/about.css')));
 app.get('/contact', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/contact/contact.html')));
