@@ -659,16 +659,23 @@
             switchSubtab('tab-pet-profile');
         }
 
-        // Lưu Ghi chú kỹ thuật Groomer
+        // Lưu Ghi chú kỹ thuật Groomer trực tiếp vào Supabase
         const btnSaveGroomerNotes = document.getElementById('btnSaveGroomerNotes');
         if (btnSaveGroomerNotes) {
-            btnSaveGroomerNotes.addEventListener('click', () => {
+            btnSaveGroomerNotes.addEventListener('click', async () => {
                 const currentPetId = sessionStorage.getItem('pawpal_admin_pet_id') || 'PET-001';
                 const pet = petsData[currentPetId];
                 const notesVal = document.getElementById('petGroomerNotes')?.value || '';
                 if (pet) {
+                    try {
+                        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                        if (client && pet.rawId) {
+                            await client.from('pet_profile').update({ routine: notesVal }).eq('id', pet.rawId);
+                        }
+                    } catch (gErr) {
+                        console.error('Supabase update groomer notes error:', gErr);
+                    }
                     pet.groomerNotes = notesVal;
-                    persistPetsData();
                     showToast(`Đã lưu ghi chú kỹ thuật Groomer cho bé ${pet.name}!`);
                 }
             });
@@ -791,7 +798,7 @@
         }
 
         // Bắt sự kiện thao tác trên dropdown pet
-        petGlobalActionDropdown.addEventListener('click', (e) => {
+        petGlobalActionDropdown.addEventListener('click', async (e) => {
             const item = e.target.closest('.dropdown-item');
             if (!item) return;
             e.stopPropagation();
@@ -830,17 +837,31 @@
                     message: `Bạn có chắc muốn lưu trữ hồ sơ của bé cưng ${pet.name || petId}?`,
                     confirmText: 'Lưu trữ',
                     isDanger: true,
-                    onConfirm: () => {
-                        pet.status = 'Lưu trữ';
-                        persistPetsData();
+                    onConfirm: async () => {
+                        try {
+                            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                            if (client && pet.rawId) {
+                                await client.from('pet_profile').update({ status: 'INACTIVE' }).eq('id', pet.rawId);
+                            }
+                        } catch (aErr) {
+                            console.error('Supabase archive error:', aErr);
+                        }
+                        await loadPetsModuleData();
                         renderPetsTable();
                         updatePetKPIs();
                         showToast(`Đã lưu trữ hồ sơ bé cưng ${pet.name}!`, 'success');
                     }
                 });
             } else if (action === 'restore') {
-                pet.status = 'Đang nuôi';
-                persistPetsData();
+                try {
+                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (client && pet.rawId) {
+                        await client.from('pet_profile').update({ status: 'ACTIVE' }).eq('id', pet.rawId);
+                    }
+                } catch (rErr) {
+                    console.error('Supabase restore error:', rErr);
+                }
+                await loadPetsModuleData();
                 renderPetsTable();
                 updatePetKPIs();
                 showToast(`Đã khôi phục hoạt động cho bé cưng ${pet.name}!`);
@@ -1167,9 +1188,16 @@
                         message: `Bạn có chắc muốn lưu trữ hồ sơ của bé cưng ${pet.name || petId}?`,
                         confirmText: 'Lưu trữ',
                         isDanger: true,
-                        onConfirm: () => {
-                            pet.status = 'Lưu trữ';
-                            persistPetsData();
+                        onConfirm: async () => {
+                            try {
+                                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                                if (client && pet.rawId) {
+                                    await client.from('pet_profile').update({ status: 'INACTIVE' }).eq('id', pet.rawId);
+                                }
+                            } catch (aErr) {
+                                console.error('Supabase archive error:', aErr);
+                            }
+                            await loadPetsModuleData();
                             renderPetsTable();
                             updatePetKPIs();
                             showToast(`Đã lưu trữ hồ sơ bé cưng ${pet.name}!`, 'success');
@@ -1183,11 +1211,20 @@
                 const petId = btnRestore.getAttribute('data-id');
                 const pet = petsData[petId];
                 if (pet) {
-                    pet.status = 'Đang nuôi';
-                    persistPetsData();
-                    renderPetsTable();
-                    updatePetKPIs();
-                    showToast(`Đã khôi phục hoạt động cho bé cưng ${pet.name}!`);
+                    (async () => {
+                        try {
+                            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                            if (client && pet.rawId) {
+                                await client.from('pet_profile').update({ status: 'ACTIVE' }).eq('id', pet.rawId);
+                            }
+                        } catch (rErr) {
+                            console.error('Supabase restore error:', rErr);
+                        }
+                        await loadPetsModuleData();
+                        renderPetsTable();
+                        updatePetKPIs();
+                        showToast(`Đã khôi phục hoạt động cho bé cưng ${pet.name}!`);
+                    })();
                 }
             }
         });
@@ -1261,41 +1298,35 @@
 
         const btnSubmitWeigh = document.getElementById('btnSubmitWeigh');
         if (btnSubmitWeigh) {
-            btnSubmitWeigh.addEventListener('click', () => {
+            btnSubmitWeigh.addEventListener('click', async () => {
                 const newKg = parseFloat(weighNewWeightInput?.value || '8.5');
                 const pet = petsData[currentWeighingPetId];
                 if (!pet) return;
 
-                const tierStr = updatePriceMatrix(newKg);
-                pet.weight = `${newKg} kg`;
-                pet.weightNum = newKg;
-
-                // Thêm 1 dòng vào lịch sử cân nặng
-                const now = new Date();
-                const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()}`;
-                if (!pet.weightHistory) pet.weightHistory = [];
-                pet.weightHistory.unshift({
-                    date: dateStr,
-                    weight: `${newKg} kg`,
-                    tier: `Phân khúc ${tierStr}`,
-                    by: 'Lễ tân quầy'
-                });
-
-                // Cập nhật DOM Drawer
-                if (document.getElementById('drawerPetWeightHeadline')) {
-                    document.getElementById('drawerPetWeightHeadline').textContent = `${newKg} kg`;
+                try {
+                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (client && pet.rawId) {
+                        const { error: wErr } = await client.from('pet_profile').update({ weight: newKg }).eq('id', pet.rawId);
+                        if (wErr) {
+                            console.error('Supabase update weight error:', wErr);
+                            showToast('Lỗi cập nhật cân nặng: ' + wErr.message, 'danger');
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Weight update error:', err);
                 }
-                if (document.getElementById('profilePetWeight')) {
-                    document.getElementById('profilePetWeight').textContent = `${newKg} kg`;
-                }
-                renderPetSubtabs(pet);
 
-                // Cập nhật Database và Render lại bảng danh sách
-                persistPetsData();
+                await loadPetsModuleData();
                 renderPetsTable();
                 updatePetKPIs();
 
-                showToast(`Đã lưu cân nặng mới (${newKg} kg) cho bé ${pet.name} và cập nhật lịch sử!`);
+                const updatedPet = petsData[currentWeighingPetId];
+                if (updatedPet) {
+                    renderPetSubtabs(updatedPet);
+                }
+
+                showToast(`Đã lưu cân nặng mới (${newKg} kg) cho bé ${pet.name}!`);
                 if (modalWeighPet) modalWeighPet.classList.remove('open');
             });
         }
@@ -1339,7 +1370,7 @@
 
         const btnSubmitEditPet = document.getElementById('btnSubmitEditPetProfile');
         if (btnSubmitEditPet) {
-            btnSubmitEditPet.addEventListener('click', () => {
+            btnSubmitEditPet.addEventListener('click', async () => {
                 const pet = petsData[currentEditingPetCode];
                 if (!pet) return;
 
@@ -1356,33 +1387,51 @@
                 const notes = document.getElementById('editPetNotes')?.value || '';
                 const ownerCustId = document.getElementById('editPetOwner')?.value || pet.custId;
 
-                const speciesNameMap = { 'dog': 'Chó', 'cat': 'Mèo', 'rabbit': 'Thỏ', 'other': 'Khác' };
-                const speciesBreedStr = `${speciesNameMap[species] || 'Chó'} ${breed}`;
+                let dbStatus = 'ACTIVE';
+                if (status === 'Lưu trú Hotel' || status === 'HOTEL') dbStatus = 'HOTEL';
+                else if (status === 'Lưu trữ' || status === 'INACTIVE' || status === 'ARCHIVED') dbStatus = 'INACTIVE';
 
-                // Cập nhật Database
-                pet.name = name;
-                pet.species = species;
-                pet.breed = breed;
-                pet.speciesBreed = speciesBreedStr;
-                pet.gender = gender;
-                pet.weight = `${weight} kg`;
-                pet.weightNum = weight;
-                pet.dobRaw = dob;
-                pet.dob = dob ? `${dob.split('-')[2]}/${dob.split('-')[1]}/${dob.split('-')[0]}` : pet.dob;
-                pet.color = color;
-                pet.status = status;
-                pet.alert = alertText;
-                pet.allergy = allergy;
-                pet.notes = notes;
-                pet.custId = ownerCustId;
+                try {
+                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (client && pet.rawId) {
+                        const updatePayload = {
+                            pet_name: name,
+                            species: species,
+                            breed: breed,
+                            gender: gender === 'Cái' ? 'FEMALE' : 'MALE',
+                            date_of_birth: dob || null,
+                            weight: weight,
+                            color: color,
+                            routine: notes || (alertText ? `Lưu ý: ${alertText}` : 'Bé ngoan, hợp tác khi làm dịch vụ.'),
+                            allergy: allergy,
+                            status: dbStatus
+                        };
+                        if (ownerCustId && customersData[ownerCustId]) {
+                            updatePayload.customer_id = ownerCustId;
+                        }
 
-                // Cập nhật lại Drawer
-                openPetProfile(currentEditingPetCode);
+                        const { error: updErr } = await client.from('pet_profile').update(updatePayload).eq('id', pet.rawId);
+                        if (updErr) {
+                            console.error('Supabase update pet error:', updErr);
+                            showToast('Lỗi cập nhật CSDL: ' + updErr.message, 'danger');
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Edit pet exception:', err);
+                    showToast('Lỗi cập nhật hồ sơ: ' + err.message, 'danger');
+                    return;
+                }
 
-                // Cập nhật Database và Render lại bảng
-                persistPetsData();
+                // Tải lại dữ liệu trực tiếp từ Supabase
+                await loadPetsModuleData();
                 renderPetsTable();
                 updatePetKPIs();
+
+                // Cập nhật lại Drawer
+                if (petsData[currentEditingPetCode]) {
+                    openPetProfile(currentEditingPetCode);
+                }
 
                 showToast(`Đã cập nhật thành công hồ sơ của bé ${name}!`);
                 if (modalEditPet) modalEditPet.classList.remove('open');
