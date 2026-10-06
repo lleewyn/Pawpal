@@ -154,94 +154,234 @@
         let mockRoster = {};
         let mockLeaveSwapRequests = [];
 
+        // Helper ánh xạ vai trò và vị trí chuẩn hóa
+        function mapDbRoleToStaffRole(dbRole, specialization = '') {
+            const r = (dbRole || '').toUpperCase();
+            const s = (specialization || '').toLowerCase();
+            if (r === 'ADMIN') return 'Admin';
+            if (r === 'VET' || s.includes('bác sĩ') || s.includes('thú y')) return 'Veterinarian';
+            if (r === 'DRIVER' || s.includes('tài xế') || s.includes('taxi')) return 'Driver';
+            if (r === 'RECEPTIONIST' || s.includes('lễ tân')) return 'Receptionist';
+            if (r === 'CSKH' || s.includes('cskh') || s.includes('chăm sóc khách')) return 'CSKH';
+            if (s.includes('bảo mẫu') || s.includes('hotel') || s.includes('lưu trú')) return 'Caregiver';
+            if (r === 'PET_CARE' || s.includes('groom') || s.includes('spa') || s.includes('tắm') || s.includes('cắt tỉa')) return 'Groomer';
+            return 'Groomer';
+        }
+
+        function mapDbRoleToPosition(dbRole, specialization) {
+            if (specialization) return specialization;
+            const role = mapDbRoleToStaffRole(dbRole, specialization);
+            if (role === 'Admin') return 'Quản trị viên';
+            if (role === 'Groomer') return 'Kỹ thuật viên Grooming';
+            if (role === 'Veterinarian') return 'Bác sĩ thú y';
+            if (role === 'Driver') return 'Tài xế Taxi Pet';
+            if (role === 'Caregiver') return 'Bảo mẫu Pet Hotel';
+            if (role === 'Receptionist') return 'Lễ tân tiếp đón';
+            if (role === 'CSKH') return 'Chuyên viên CSKH';
+            return 'Kỹ thuật viên Grooming';
+        }
+
         // Hàm nạp dữ liệu từ Supabase hoặc /data/staff.json / localStorage
         async function loadStaffModuleData() {
-            let hasLoaded = false;
+            // 1. Nạp baseline từ /data/staff.json hoặc localStorage trước để có khung thuộc tính phong phú
+            try {
+                const res = await fetch('/data/staff.json?v=' + Date.now());
+                if (res.ok) {
+                    const data = await res.json();
+                    mockStaff = data.staff || [];
+                    mockAssessments = data.assessments || [];
+                    mockRoster = data.roster || {};
+                    mockLeaveSwapRequests = data.leaveRequests || [];
+                }
+            } catch (err) {
+                console.warn('Không thể nạp baseline từ /data/staff.json:', err);
+                try {
+                    const savedStaff = localStorage.getItem('pawpal_staff_data');
+                    const savedAss = localStorage.getItem('pawpal_staff_assessments');
+                    const savedRos = localStorage.getItem('pawpal_staff_roster');
+                    const savedReq = localStorage.getItem('pawpal_staff_leave_requests');
+                    if (savedStaff) mockStaff = JSON.parse(savedStaff) || [];
+                    if (savedAss) mockAssessments = JSON.parse(savedAss) || [];
+                    if (savedRos) mockRoster = JSON.parse(savedRos) || {};
+                    if (savedReq) mockLeaveSwapRequests = JSON.parse(savedReq) || [];
+                } catch(e) {}
+            }
 
-            // 1. Thử nạp trực tiếp từ Supabase
+            // 2. Thử nạp trực tiếp từ Supabase và ánh xạ dữ liệu thời gian thực
             try {
                 const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                 if (client) {
+                    // A. Nạp bảng staff
                     const { data: staffData, error: staffErr } = await client
                         .from('staff')
                         .select('*')
                         .order('created_at', { ascending: true });
 
                     if (!staffErr && Array.isArray(staffData) && staffData.length > 0) {
-                        mockStaff = staffData.map(s => {
-                            const initials = (s.full_name || 'NV').split(' ').map(n => n[0]).slice(-2).join('').toUpperCase();
-                            return {
-                                id: s.employee_code || s.id || `EMP-${s.id.slice(0, 4)}`,
-                                rawId: s.id,
-                                name: s.full_name || 'Nhân viên PawPal',
-                                initials: initials,
-                                role: s.role || 'Kỹ thuật viên Grooming',
-                                department: s.department || 'Dịch vụ Spa và Grooming',
-                                status: s.status === 'locked' ? 'Bị khóa' : (s.status === 'leave' ? 'Nghỉ phép' : 'Đang làm việc'),
-                                phone: s.phone || '0901234567',
-                                email: s.email || 'staff@pawpal.vn',
-                                joinDate: s.created_at ? new Date(s.created_at).toLocaleDateString('vi-VN') : '01/01/2026',
-                                kpiScore: s.kpi_score || 92,
-                                kpiRating: s.kpi_rating || 'Xuất sắc',
-                                monthlyRevenue: s.monthly_revenue || 18500000,
-                                completedTasks: s.completed_tasks || 64,
-                                rating: s.rating || 4.9,
-                                reviewCount: s.review_count || 48,
-                                skills: s.skills || ['Cắt tỉa tạo kiểu', 'Tắm spa massage', 'Vệ sinh tai móng'],
-                                bio: s.bio || 'Chuyên viên chăm sóc thú cưng tận tâm và giàu kinh nghiệm.'
-                            };
+                        staffData.forEach((s, idx) => {
+                            const dbPhone = s.phone_number || s.phone || '';
+                            const dbName = s.full_name || '';
+                            // Tìm bản ghi tương ứng trong mockStaff để kế thừa đánh giá và chứng chỉ nếu có
+                            let existing = mockStaff.find(st => st.rawId === s.id || (dbPhone && st.phone === dbPhone) || (dbName && st.name.toLowerCase() === dbName.toLowerCase()));
+
+                            const formattedRole = mapDbRoleToStaffRole(s.role, s.specialization);
+                            const formattedPosition = mapDbRoleToPosition(s.role, s.specialization);
+                            const joinDateFormatted = s.hire_date 
+                                ? new Date(s.hire_date).toLocaleDateString('vi-VN') 
+                                : (s.created_at ? new Date(s.created_at).toLocaleDateString('vi-VN') : '01/01/2026');
+
+                            if (existing) {
+                                existing.rawId = s.id;
+                                existing.name = s.full_name || existing.name;
+                                existing.phone = dbPhone || existing.phone;
+                                existing.role = formattedRole;
+                                existing.position = formattedPosition;
+                                if (s.specialization) existing.specialties = [s.specialization];
+                                if (s.hire_date) existing.join_date = joinDateFormatted;
+                                if (s.status) {
+                                    existing.status = s.status === 'locked' ? 'RESIGNED' : (s.status === 'leave' ? 'LEAVE' : (s.status === 'pause' ? 'PAUSE' : 'ACTIVE'));
+                                }
+                            } else {
+                                const newId = `EMP-0${String(mockStaff.length + 1).padStart(2, '0')}`;
+                                const newStaffItem = {
+                                    id: newId,
+                                    rawId: s.id,
+                                    name: s.full_name || 'Nhân viên PawPal',
+                                    position: formattedPosition,
+                                    role: formattedRole,
+                                    phone: dbPhone || '0901234567',
+                                    email: s.email || `${newId.toLowerCase()}@pawpal.vn`,
+                                    shift: 'MORNING',
+                                    status: s.status === 'leave' ? 'LEAVE' : (s.status === 'pause' ? 'PAUSE' : (s.status === 'locked' ? 'RESIGNED' : 'ACTIVE')),
+                                    join_date: joinDateFormatted,
+                                    dob: '1998-01-01',
+                                    address: 'Hồ Chí Minh',
+                                    branch_id: 'BRANCH-Q1',
+                                    branch_name: 'Chi nhánh Quận 1',
+                                    avatar: `/assets/images/staff/emp-00${(idx % 6) + 1}.jpg`,
+                                    bio: s.specialization ? `Chuyên viên ${s.specialization} tại PawPal.` : 'Chuyên viên chăm sóc thú cưng tận tâm và giàu kinh nghiệm.',
+                                    is_bookable: true,
+                                    specialties: s.specialization ? [s.specialization] : ['Chăm sóc thú cưng', 'Spa và Grooming'],
+                                    skillScore: 88,
+                                    skillResult: 'PASS',
+                                    skillExam: 'Đạt (88đ)',
+                                    serviceLocked: false,
+                                    note: s.specialization || '',
+                                    customer_rating: {
+                                        avg_score: 5.0,
+                                        total_reviews: 24
+                                    },
+                                    requested_count: 8,
+                                    zero_complaint_rate: '100%',
+                                    customer_reviews: [],
+                                    complaint_count: 0
+                                };
+                                mockStaff.push(newStaffItem);
+                            }
                         });
-                        hasLoaded = true;
-                        saveStaffDataToStorage();
                     }
+
+                    // B. Nạp bảng staff_schedule (Lịch trực và phân ca)
+                    const { data: schedData, error: schedErr } = await client
+                        .from('staff_schedule')
+                        .select('*')
+                        .order('work_date', { ascending: true });
+
+                    if (!schedErr && Array.isArray(schedData) && schedData.length > 0) {
+                        schedData.forEach(sch => {
+                            const wDate = sch.work_date;
+                            if (!wDate) return;
+                            if (!mockRoster[wDate]) mockRoster[wDate] = {};
+                            const st = mockStaff.find(s => s.rawId === sch.staff_id || s.id === sch.staff_id);
+                            const staffKey = st ? st.id : sch.staff_id;
+                            let shiftVal = sch.shift || 'MORNING';
+                            if (sch.schedule_status === 'LEAVE') shiftVal = 'LEAVE';
+                            else if (sch.schedule_status === 'CANCELLED') shiftVal = 'PAUSE';
+
+                            if (!mockRoster[wDate][staffKey]) mockRoster[wDate][staffKey] = [];
+                            if (!mockRoster[wDate][staffKey].includes(shiftVal)) {
+                                mockRoster[wDate][staffKey].push(shiftVal);
+                            }
+                        });
+                    }
+
+                    // C. Nạp appointment thời gian thực để đồng bộ Bàn làm việc (Workstations)
+                    try {
+                        const { data: liveAppts } = await client
+                            .from('appointment')
+                            .select('*, customer:customer_id(full_name), pet:pet_id(pet_name, species), service:service_id(service_name), staff:staff_id(full_name, specialization, role)')
+                            .in('appointment_status', ['IN_PROGRESS', 'CONFIRMED'])
+                            .order('appointment_time', { ascending: true })
+                            .limit(6);
+
+                        if (Array.isArray(liveAppts) && liveAppts.length > 0) {
+                            liveAppts.forEach((app, index) => {
+                                if (index < mockWorkstations.length) {
+                                    const ws = mockWorkstations[index];
+                                    const staffObj = app.staff || {};
+                                    const staffName = staffObj.full_name || (mockStaff[index % mockStaff.length]?.name || 'Kỹ thuật viên PawPal');
+                                    const matchedStaff = mockStaff.find(s => s.name === staffName || s.rawId === app.staff_id);
+
+                                    ws.status = app.appointment_status === 'IN_PROGRESS' ? 'IN_SERVICE' : 'IDLE';
+                                    ws.staffId = matchedStaff ? matchedStaff.id : `EMP-00${index + 1}`;
+                                    ws.staffName = staffName;
+                                    ws.staffPos = staffObj.specialization || (matchedStaff ? matchedStaff.position : 'Kỹ thuật viên Grooming');
+                                    ws.bookingId = app.appointment_code || `BK-${app.id.slice(0, 4)}`;
+                                    ws.customerName = app.customer?.full_name || 'Khách hàng PawPal';
+                                    const petSpecies = app.pet?.species ? ` (${app.pet.species})` : '';
+                                    ws.petName = (app.pet?.pet_name || 'Bé cưng') + petSpecies;
+                                    ws.serviceName = app.service?.service_name || 'Dịch vụ Spa và Grooming';
+                                    ws.startTime = app.appointment_time ? app.appointment_time.slice(0, 5) : '14:00';
+                                    ws.estEndTime = addMinutesToTime(ws.startTime, 90);
+                                }
+                            });
+                        }
+                    } catch (eApp) {
+                        console.warn('Lỗi nạp Live Appointment Workstations:', eApp);
+                    }
+
+                    // D. Nạp review để đồng bộ CSAT thực tế cho Kỹ thuật viên
+                    try {
+                        const { data: revData } = await client
+                            .from('review')
+                            .select('*, customer:customer_id(full_name), service:service_id(service_name)')
+                            .eq('review_type', 'SERVICE')
+                            .order('created_at', { ascending: false })
+                            .limit(15);
+
+                        if (Array.isArray(revData) && revData.length > 0) {
+                            const groomers = mockStaff.filter(s => s.role === 'Groomer' || s.role === 'Caregiver');
+                            revData.forEach((rv, rIdx) => {
+                                const targetGroomer = groomers[rIdx % groomers.length];
+                                if (targetGroomer) {
+                                    if (!targetGroomer.customer_reviews) targetGroomer.customer_reviews = [];
+                                    const revDate = rv.created_at ? new Date(rv.created_at).toLocaleDateString('vi-VN') : '28/09/2026';
+                                    const isDuplicate = targetGroomer.customer_reviews.some(r => r.comment === rv.review_content);
+                                    if (!isDuplicate && rv.review_content) {
+                                        targetGroomer.customer_reviews.unshift({
+                                            date: revDate,
+                                            customer_name: rv.customer?.full_name || 'Khách hàng thân thiết',
+                                            pet_name: 'Bé cưng',
+                                            service_name: rv.service?.service_name || 'Dịch vụ Spa và Grooming',
+                                            rating: rv.rating || 5,
+                                            is_requested: rIdx % 2 === 0,
+                                            comment: rv.review_content
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    } catch (eRev) {
+                        console.warn('Lỗi nạp Review CSAT:', eRev);
+                    }
+
+                    saveStaffDataToStorage();
+                    saveRosterToStorage();
+                    saveAssessmentsToStorage();
+                    saveLeaveRequestsToStorage();
                 }
             } catch (err) {
                 console.warn('Lỗi kết nối Supabase Staff:', err);
-            }
-
-            // Fallback nếu chưa có hoặc offline
-            if (!hasLoaded || mockStaff.length === 0) {
-                try {
-                    const savedStaff = localStorage.getItem('pawpal_staff_data');
-                    const savedAss = localStorage.getItem('pawpal_staff_assessments');
-                    const savedRos = localStorage.getItem('pawpal_staff_roster');
-                    const savedReq = localStorage.getItem('pawpal_staff_leave_requests');
-
-                    if (savedStaff && savedAss && savedRos) {
-                        const parsedStaff = JSON.parse(savedStaff);
-                        if (Array.isArray(parsedStaff) && parsedStaff.length > 0) {
-                            // Kiểm tra nếu dữ liệu cũ chưa có customer_reviews thì nạp lại từ json
-                            if (parsedStaff[1] && parsedStaff[1].customer_reviews) {
-                                mockStaff = parsedStaff;
-                                mockAssessments = JSON.parse(savedAss) || [];
-                                mockRoster = JSON.parse(savedRos) || {};
-                                mockLeaveSwapRequests = savedReq ? JSON.parse(savedReq) : [];
-                                hasLoaded = true;
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.warn('Lỗi đọc pawpal_staff_data từ localStorage:', e);
-                }
-            }
-
-            if (!hasLoaded || mockStaff.length === 0) {
-                try {
-                    const res = await fetch('/data/staff.json?v=' + Date.now());
-                    if (res.ok) {
-                        const data = await res.json();
-                        mockStaff = data.staff || [];
-                        mockAssessments = data.assessments || [];
-                        mockRoster = data.roster || {};
-                        mockLeaveSwapRequests = data.leaveRequests || [];
-                        saveStaffDataToStorage();
-                        saveAssessmentDataToStorage();
-                        saveRosterDataToStorage();
-                        saveLeaveRequestsDataToStorage();
-                    }
-                } catch (err) {
-                    console.error('Không thể nạp dữ liệu từ /data/staff.json:', err);
-                }
             }
         }
 
