@@ -178,8 +178,29 @@ function updateServicesFilterCount() {
 
 let currentWishlistServiceIds = [];
 
+function renderServicesSkeletons(count = 6) {
+    const grid = document.getElementById('servicesGrid');
+    if (!grid) return;
+    grid.innerHTML = Array(count).fill(0).map(() => `
+        <div class="service-card skeleton-service-card" style="background:#fff; border:1px solid #ECF2EE; border-radius:9px; overflow:hidden; padding:0; pointer-events:none;">
+            <div class="pawpal-skeleton service-skeleton-img" style="width:100%; height:180px; border-radius:0 !important;"></div>
+            <div class="service-skeleton-content" style="padding:16px;">
+                <div class="pawpal-skeleton mb-2" style="width:35%; height:12px;"></div>
+                <div class="pawpal-skeleton mb-2" style="width:75%; height:18px;"></div>
+                <div class="pawpal-skeleton mb-3" style="width:90%; height:14px;"></div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="pawpal-skeleton" style="width:45%; height:16px;"></div>
+                    <div class="pawpal-skeleton" style="width:30%; height:14px;"></div>
+                </div>
+                <div class="pawpal-skeleton" style="width:100%; height:38px; border-radius:9px;"></div>
+            </div>
+        </div>
+    `).join('');
+}
+
 async function initServicesPage() {
     console.log('=== SERVICES PAGE LOADING ===');
+    renderServicesSkeletons(6);
     initResponsiveServicesSidebar();
     initServicesFilterControls();
     initServicesAccordions();
@@ -334,6 +355,8 @@ function renderServices() {
     const paginatedServices = filteredServices.slice(startIndex, endIndex);
     const likedServiceIds = currentWishlistServiceIds;
 
+    grid.style.opacity = '0.35';
+    grid.style.transition = 'opacity 140ms ease';
     grid.innerHTML = paginatedServices.map(service => {
         let displayCategory = 'Dịch vụ';
         if (service.category === 'spa') displayCategory = 'Spa và Làm đẹp';
@@ -404,6 +427,10 @@ function renderServices() {
             </div>
         `;
     }).join('');
+
+    requestAnimationFrame(() => {
+        grid.style.opacity = '1';
+    });
 
     const cards = grid.querySelectorAll('.service-card');
     if (cards.length > 0 && typeof gsap !== 'undefined') {

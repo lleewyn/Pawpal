@@ -382,6 +382,8 @@ function renderArticlesFeed() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentItems = filteredBlogs.slice(startIndex, startIndex + itemsPerPage);
 
+    grid.style.opacity = '0.35';
+    grid.style.transition = 'opacity 140ms ease';
     grid.innerHTML = currentItems.map(blog => {
         const url = `/pages/public/blog-detail/blog-detail.html?slug=${encodeURIComponent(blog.slug)}`;
         return `
@@ -406,6 +408,10 @@ function renderArticlesFeed() {
             </article>
         `;
     }).join('');
+
+    requestAnimationFrame(() => {
+        grid.style.opacity = '1';
+    });
 
     renderPagination(totalPages);
 }

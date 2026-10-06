@@ -549,9 +549,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        const skeleton = document.getElementById('cart-loading-skeleton');
+        if (skeleton) skeleton.classList.add('d-none');
         cartEmptyState.classList.add('d-none');
         cartContentRow.classList.remove('d-none');
 
+        cartItemsList.style.opacity = '0.35';
+        cartItemsList.style.transition = 'opacity 140ms ease';
         cartItemsList.innerHTML = '';
         
         cartItemsData.forEach(item => {
@@ -755,6 +759,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             cartItemsList.appendChild(row);
         });
 
+        requestAnimationFrame(() => {
+            cartItemsList.style.opacity = '1';
+        });
+
         if (selectAllItems) {
             selectAllItems.checked = selectedIds.size === cart.length;
         }
@@ -829,6 +837,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function showEmptyState() {
+        const skeleton = document.getElementById('cart-loading-skeleton');
+        if (skeleton) skeleton.classList.add('d-none');
         cartContentRow.classList.add('d-none');
         cartEmptyState.classList.remove('d-none');
         if (typeof window.updateCartBadge === 'function') {

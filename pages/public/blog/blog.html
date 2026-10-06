@@ -20,6 +20,7 @@
     <script src="/scripts/shared/data-loader.js" defer></script>
     <script src="/components/header/header.js" defer></script>
     <script src="/scripts/shared/components.js" defer></script>
+    <script src="/scripts/shared/spa-router.js" defer></script>
     <script type="module" src="/scripts/shared/main.js"></script>
     <script type="module" src="/scripts/shared/auth.js"></script>
     <script type="module" src="/pages/public/blog/blog.js"></script>
@@ -261,8 +262,32 @@
 
                 <!-- Editorial Bento Spotlight (1 Main Feature + 2 Editors' Picks) -->
                 <div class="hero-bento-grid" id="blogHeroBentoGrid">
-                    <!-- Loaded dynamically by JS -->
-                    <div class="bento-loading-placeholder">Đang tải tiêu điểm cẩm nang...</div>
+                    <div class="bento-skeleton-wrapper">
+                        <div class="bento-skeleton-hero">
+                            <div class="pawpal-skeleton mb-2" style="width: 25%; height: 16px;"></div>
+                            <div class="pawpal-skeleton mb-2" style="width: 75%; height: 26px;"></div>
+                            <div class="pawpal-skeleton mb-3" style="width: 85%; height: 16px;"></div>
+                            <div class="pawpal-skeleton" style="width: 35%; height: 20px;"></div>
+                        </div>
+                        <div class="bento-skeleton-stack">
+                            <div class="bento-skeleton-mini">
+                                <div class="pawpal-skeleton" style="width: 90px; height: 80px; flex-shrink: 0; border-radius: 6px !important;"></div>
+                                <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+                                    <div class="pawpal-skeleton" style="width: 40%; height: 12px;"></div>
+                                    <div class="pawpal-skeleton" style="width: 85%; height: 16px;"></div>
+                                    <div class="pawpal-skeleton" style="width: 60%; height: 12px;"></div>
+                                </div>
+                            </div>
+                            <div class="bento-skeleton-mini">
+                                <div class="pawpal-skeleton" style="width: 90px; height: 80px; flex-shrink: 0; border-radius: 6px !important;"></div>
+                                <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+                                    <div class="pawpal-skeleton" style="width: 45%; height: 12px;"></div>
+                                    <div class="pawpal-skeleton" style="width: 80%; height: 16px;"></div>
+                                    <div class="pawpal-skeleton" style="width: 55%; height: 12px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -308,7 +333,38 @@
 
                         <!-- Main Grid of Cards -->
                         <div class="articles-card-grid" id="articlesCardGrid">
-                            <!-- Populated dynamically by JS -->
+                            <div class="blog-card skeleton-blog-card">
+                                <div class="blog-skeleton-thumb pawpal-skeleton"></div>
+                                <div class="blog-skeleton-body">
+                                    <div class="pawpal-skeleton" style="width: 35%; height: 12px;"></div>
+                                    <div class="pawpal-skeleton" style="width: 85%; height: 18px;"></div>
+                                    <div class="pawpal-skeleton" style="width: 70%; height: 14px;"></div>
+                                </div>
+                            </div>
+                            <div class="blog-card skeleton-blog-card">
+                                <div class="blog-skeleton-thumb pawpal-skeleton"></div>
+                                <div class="blog-skeleton-body">
+                                    <div class="pawpal-skeleton" style="width: 40%; height: 12px;"></div>
+                                    <div class="pawpal-skeleton" style="width: 80%; height: 18px;"></div>
+                                    <div class="pawpal-skeleton" style="width: 65%; height: 14px;"></div>
+                                </div>
+                            </div>
+                            <div class="blog-card skeleton-blog-card">
+                                <div class="blog-skeleton-thumb pawpal-skeleton"></div>
+                                <div class="blog-skeleton-body">
+                                    <div class="pawpal-skeleton" style="width: 30%; height: 12px;"></div>
+                                    <div class="pawpal-skeleton" style="width: 90%; height: 18px;"></div>
+                                    <div class="pawpal-skeleton" style="width: 60%; height: 14px;"></div>
+                                </div>
+                            </div>
+                            <div class="blog-card skeleton-blog-card">
+                                <div class="blog-skeleton-thumb pawpal-skeleton"></div>
+                                <div class="blog-skeleton-body">
+                                    <div class="pawpal-skeleton" style="width: 45%; height: 12px;"></div>
+                                    <div class="pawpal-skeleton" style="width: 75%; height: 18px;"></div>
+                                    <div class="pawpal-skeleton" style="width: 70%; height: 14px;"></div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Empty State -->

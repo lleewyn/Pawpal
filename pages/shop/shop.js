@@ -502,8 +502,31 @@ function initResponsiveCategorySection() {
 }
 
 
+function renderShopSkeletons(count = 8) {
+    const grid = document.getElementById('productsGrid');
+    const resultCount = document.getElementById('resultCount');
+    const emptyState = document.getElementById('emptyState');
+    if (!grid) return;
+    if (emptyState) emptyState.classList.add('d-none');
+    grid.classList.remove('d-none');
+    if (resultCount) resultCount.textContent = 'Đang tải sản phẩm...';
+
+    grid.innerHTML = Array(count).fill(0).map(() => `
+        <div class="product-card skeleton-card">
+            <div class="skeleton-thumb pawpal-skeleton"></div>
+            <div class="skeleton-body">
+                <div class="skeleton-line pawpal-skeleton" style="width: 35%; height: 12px;"></div>
+                <div class="skeleton-line pawpal-skeleton" style="width: 85%; height: 18px;"></div>
+                <div class="skeleton-line pawpal-skeleton" style="width: 50%; height: 16px;"></div>
+                <div class="skeleton-line pawpal-skeleton" style="width: 100%; height: 38px; border-radius: 9px; margin-top: 6px;"></div>
+            </div>
+        </div>
+    `).join('');
+}
+
 async function initShop() {
     console.log('=== SHOP PAGE LOADING ===');
+    renderShopSkeletons(8);
     
     try {
         console.log('Loading products from DataLoader...');
@@ -955,7 +978,12 @@ function renderProducts() {
         }
         grid.classList.remove('d-none');
         emptyState.classList.add('d-none');
+        grid.style.opacity = '0.35';
+        grid.style.transition = 'opacity 140ms ease';
         grid.innerHTML = paginatedProducts.map(product => createProductCardHTML(product)).join('');
+        requestAnimationFrame(() => {
+            grid.style.opacity = '1';
+        });
         
         grid.querySelectorAll('.product-wishlist-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {

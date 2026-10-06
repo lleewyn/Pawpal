@@ -17,6 +17,7 @@
     <script src="/scripts/shared/data-loader.js" defer></script>
     <script src="/components/header/header.js" defer></script>
     <script src="/scripts/shared/components.js" defer></script>
+    <script src="/scripts/shared/spa-router.js" defer></script>
     <script type="module" src="/scripts/shared/main.js"></script>
     <script type="module" src="/pages/shop/cart/cart.js"></script>
 </head>
@@ -253,6 +254,52 @@
                 <div class="step">
                     <div class="step-indicator">3</div>
                     <span class="step-label">Hoàn tất</span>
+                </div>
+            </div>
+
+            <!-- Khung Skeleton Shimmer hiển thị tức thì khi tải giỏ hàng -->
+            <div id="cart-loading-skeleton" class="cart-grid-layout">
+                <div class="cart-left-col">
+                    <div class="pawpal-skeleton mb-3" style="width: 280px; height: 32px;"></div>
+                    <div class="cart-card">
+                        <div class="cart-card-header d-flex justify-content-between align-items-center mb-3">
+                            <div class="pawpal-skeleton" style="width: 140px; height: 20px;"></div>
+                            <div class="pawpal-skeleton" style="width: 80px; height: 20px;"></div>
+                        </div>
+                        <div class="cart-item-skeleton">
+                            <div class="pawpal-skeleton" style="width: 18px; height: 18px; border-radius: 4px !important;"></div>
+                            <div class="pawpal-skeleton cart-skeleton-thumb"></div>
+                            <div class="cart-skeleton-info">
+                                <div class="pawpal-skeleton" style="width: 70%; height: 16px;"></div>
+                                <div class="pawpal-skeleton" style="width: 35%; height: 13px;"></div>
+                            </div>
+                            <div class="pawpal-skeleton d-none d-md-block" style="width: 80px; height: 16px;"></div>
+                            <div class="pawpal-skeleton d-none d-md-block" style="width: 90px; height: 32px; border-radius: 6px !important;"></div>
+                            <div class="pawpal-skeleton d-none d-md-block" style="width: 90px; height: 18px;"></div>
+                        </div>
+                        <div class="cart-item-skeleton">
+                            <div class="pawpal-skeleton" style="width: 18px; height: 18px; border-radius: 4px !important;"></div>
+                            <div class="pawpal-skeleton cart-skeleton-thumb"></div>
+                            <div class="cart-skeleton-info">
+                                <div class="pawpal-skeleton" style="width: 60%; height: 16px;"></div>
+                                <div class="pawpal-skeleton" style="width: 30%; height: 13px;"></div>
+                            </div>
+                            <div class="pawpal-skeleton d-none d-md-block" style="width: 85px; height: 16px;"></div>
+                            <div class="pawpal-skeleton d-none d-md-block" style="width: 90px; height: 32px; border-radius: 6px !important;"></div>
+                            <div class="pawpal-skeleton d-none d-md-block" style="width: 90px; height: 18px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cart-right-col">
+                    <div class="cart-summary-footer-card">
+                        <div class="pawpal-skeleton mb-3" style="width: 160px; height: 22px;"></div>
+                        <div class="d-flex flex-column gap-3 mb-4">
+                            <div class="d-flex justify-content-between"><div class="pawpal-skeleton" style="width: 40%; height: 16px;"></div><div class="pawpal-skeleton" style="width: 30%; height: 16px;"></div></div>
+                            <div class="d-flex justify-content-between"><div class="pawpal-skeleton" style="width: 45%; height: 16px;"></div><div class="pawpal-skeleton" style="width: 25%; height: 16px;"></div></div>
+                            <div class="d-flex justify-content-between"><div class="pawpal-skeleton" style="width: 50%; height: 20px;"></div><div class="pawpal-skeleton" style="width: 35%; height: 20px;"></div></div>
+                        </div>
+                        <div class="pawpal-skeleton" style="width: 100%; height: 46px; border-radius: 9px !important;"></div>
+                    </div>
                 </div>
             </div>
 

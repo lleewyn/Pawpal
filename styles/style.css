@@ -2744,3 +2744,279 @@ input:checked + .switch-slider:before {
         transform: translateY(0);
     }
 }
+
+/* ========================================================
+   GLOBAL SKELETON LOADING SHIMMER & PROGRESS BAR SYSTEM
+   (Chuẩn PawPal Design Tokens: Bo góc 9px & Xanh Forest #236B48)
+   ======================================================== */
+@keyframes pawpalShimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes pawpalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.pawpal-skeleton {
+    background: linear-gradient(90deg, #EEF5F1 25%, #F7FAF8 50%, #EEF5F1 75%) !important;
+    background-size: 200% 100% !important;
+    animation: pawpalShimmer 1.5s infinite linear !important;
+    border-radius: 9px !important;
+    border: none !important;
+    display: block;
+}
+
+/* Khung thẻ Skeleton Sản phẩm */
+.product-card.skeleton-card {
+    background: #FFFFFF !important;
+    border: 1px solid #ECF2EE !important;
+    border-radius: 9px !important;
+    overflow: hidden;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    animation: pawpalFadeIn 0.2s ease-out;
+}
+
+.product-card.skeleton-card .skeleton-thumb {
+    width: 100%;
+    height: 220px;
+    border-radius: 0 !important;
+}
+
+.product-card.skeleton-card .skeleton-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.product-card.skeleton-card .skeleton-line {
+    border-radius: 6px !important;
+}
+
+/* Khung thẻ Skeleton Dịch vụ */
+.service-card.skeleton-service-card {
+    background: #FFFFFF !important;
+    border: 1px solid #ECF2EE !important;
+    border-radius: 9px !important;
+    overflow: hidden;
+    padding: 0 !important;
+    pointer-events: none;
+    animation: pawpalFadeIn 0.2s ease-out;
+}
+
+.service-card.skeleton-service-card .service-skeleton-img {
+    width: 100%;
+    height: 180px;
+    border-radius: 0 !important;
+}
+
+.service-card.skeleton-service-card .service-skeleton-content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Thanh tiến trình chuyển trang mỏng trên đỉnh màn hình (Top Progress Bar) */
+#pawpal-top-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    background-color: #236B48;
+    z-index: 999999;
+    pointer-events: none;
+    transition: width 0.22s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.2s ease;
+    opacity: 0;
+}
+#pawpal-top-progress-bar.loading {
+    opacity: 1;
+}
+
+/* Khung thẻ Skeleton Bài viết Blog */
+.blog-card.skeleton-blog-card {
+    background: #FFFFFF !important;
+    border: 1px solid #ECF2EE !important;
+    border-radius: 9px !important;
+    overflow: hidden;
+    padding: 0 !important;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    animation: pawpalFadeIn 0.2s ease-out;
+}
+
+.blog-card.skeleton-blog-card .blog-skeleton-thumb {
+    width: 100%;
+    height: 190px;
+    border-radius: 0 !important;
+}
+
+.blog-card.skeleton-blog-card .blog-skeleton-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Khung Bento Skeleton Tiêu điểm Blog */
+.bento-skeleton-wrapper {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 20px;
+    width: 100%;
+}
+@media (max-width: 991px) {
+    .bento-skeleton-wrapper {
+        grid-template-columns: 1fr;
+    }
+}
+
+.bento-skeleton-hero {
+    background: #FFFFFF;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    min-height: 360px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.bento-skeleton-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.bento-skeleton-mini {
+    background: #FFFFFF;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 14px;
+    display: flex;
+    gap: 14px;
+    min-height: 110px;
+    align-items: center;
+}
+
+/* Khung Skeleton Dòng sản phẩm Giỏ hàng */
+.cart-item-skeleton {
+    background: #FFFFFF !important;
+    border: 1px solid #ECF2EE !important;
+    border-radius: 9px !important;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    pointer-events: none;
+    animation: pawpalFadeIn 0.2s ease-out;
+}
+
+.cart-skeleton-thumb {
+    width: 72px;
+    height: 72px;
+    flex-shrink: 0;
+    border-radius: 8px !important;
+}
+
+.cart-skeleton-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ========================================================
+   GLOBAL DEFENSIVE LAYOUT (Triệt tiêu FOUC & vỡ hình ảnh)
+   ======================================================== */
+.category-card-icon-wrapper {
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    min-height: 56px !important;
+    max-width: 56px !important;
+    max-height: 56px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #eef5f1;
+}
+
+.category-card-image {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 56px !important;
+    max-height: 56px !important;
+    object-fit: cover !important;
+    border-radius: 50% !important;
+    display: block !important;
+}
+
+.category-grid {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 16px !important;
+}
+
+@media (max-width: 991px) {
+    .category-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+@media (max-width: 576px) {
+    .category-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+.hero-video-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.hero-video-bg iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    pointer-events: none;
+}
+
+.hero-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-visual-frame img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.about-hero {
+    position: relative;
+    overflow: hidden;
+}
