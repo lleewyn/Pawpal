@@ -2746,21 +2746,6 @@
             });
         }
 
-        // Lưu Ghi chú KTV Groomer
-        const btnSaveGroomer = document.getElementById('btnSaveGroomerNotes');
-        if (btnSaveGroomer) {
-            btnSaveGroomer.addEventListener('click', () => {
-                const currentPetId = sessionStorage.getItem('pawpal_admin_pet_id') || 'PET-001';
-                const pet = petsData[currentPetId];
-                if (pet) {
-                    const notesEl = document.getElementById('petGroomerNotes');
-                    pet.groomerNotes = notesEl ? notesEl.value : '';
-                    persistPetsData();
-                    showToast(`Đã lưu ghi chú kỹ thuật Groomer cho bé ${pet.name}!`);
-                }
-            });
-        }
-
         document.querySelectorAll('.btn-quick-carelog').forEach(btn => {
             btn.addEventListener('click', () => {
                 switchSubtab('tab-pet-carelog');
@@ -2811,35 +2796,58 @@
             }
         });
 
-        function showToast(msg) {
-            let toast = document.getElementById('adminGlobalToast');
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.id = 'adminGlobalToast';
-                toast.style.cssText = `
-                    position: fixed;
-                    bottom: 24px;
-                    right: 24px;
-                    background-color: #236B48;
-                    color: #FFFFFF;
-                    padding: 12px 20px;
-                    border-radius: 9px;
-                    font-size: 13.5px;
-                    font-weight: 500;
-                    box-shadow: 0 8px 24px rgba(26, 43, 35, 0.2);
-                    z-index: 9999;
-                    display: none;
-                `;
-                document.body.appendChild(toast);
+        // ====================================================================
+        // 14. THIẾT LẬP SUPABASE REALTIME CHANNEL CHO PHÂN HỆ THÚ CƯNG
+        // ====================================================================
+        function setupPetsRealtimeSubscription() {
+            try {
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client && typeof client.channel === 'function') {
+                    client.channel('pawpal-pets-realtime-channel')
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_profile' }, async (payload) => {
+                            console.log('Realtime Supabase Pet Profile updated:', payload);
+                            await loadPetsModuleData();
+                            renderPetsTable();
+                            updatePetKPIs();
+                            const currentOpenId = sessionStorage.getItem('pawpal_admin_pet_id');
+                            if (currentOpenId && petsData[currentOpenId]) {
+                                renderPetSubtabs(petsData[currentOpenId]);
+                            }
+                        })
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'care_log' }, async (payload) => {
+                            console.log('Realtime Supabase Care Log updated:', payload);
+                            await loadPetsModuleData();
+                            const currentOpenId = sessionStorage.getItem('pawpal_admin_pet_id');
+                            if (currentOpenId && petsData[currentOpenId]) {
+                                renderPetSubtabs(petsData[currentOpenId]);
+                            }
+                        })
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment' }, async (payload) => {
+                            console.log('Realtime Supabase Appointment updated in Pets:', payload);
+                            await loadPetsModuleData();
+                            const currentOpenId = sessionStorage.getItem('pawpal_admin_pet_id');
+                            if (currentOpenId && petsData[currentOpenId]) {
+                                renderPetSubtabs(petsData[currentOpenId]);
+                            }
+                        })
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'customer' }, async (payload) => {
+                            console.log('Realtime Supabase Customer updated in Pets:', payload);
+                            await loadPetsModuleData();
+                            renderPetsTable();
+                        })
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_profile' }, async (payload) => {
+                            console.log('Realtime Supabase Customer Profile updated in Pets:', payload);
+                            await loadPetsModuleData();
+                            renderPetsTable();
+                        })
+                        .subscribe();
+                }
+            } catch (err) {
+                console.warn('Không thể khởi tạo Supabase Realtime cho Pets:', err);
             }
-            toast.textContent = msg;
-            toast.style.display = 'block';
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
         }
 
-        // 14. Khôi phục trạng thái Subtab khi F5 / Reload trang
+        // 15. Khôi phục trạng thái Subtab khi F5 / Reload trang
         const savedSubtab = sessionStorage.getItem('pawpal_admin_pet_subtab');
         const hash = window.location.hash.replace('#', '');
         
@@ -2868,6 +2876,9 @@
             sessionStorage.setItem('pawpal_admin_pet_id', initPetId);
             sessionStorage.setItem('pawpal_admin_pet_name', petsData[initPetId].name);
         }
+
+        // Kích hoạt lắng nghe Realtime
+        setupPetsRealtimeSubscription();
     }
 
     if (document.readyState === 'loading') {
