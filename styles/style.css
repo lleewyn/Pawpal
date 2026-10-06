@@ -137,6 +137,8 @@ input[type="password"]::-ms-clear {
 html {
     scroll-padding-top: 90px;
     overscroll-behavior-y: none;
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
 }
 
 html.lenis, html.lenis body { height: auto; }

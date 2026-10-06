@@ -32,7 +32,221 @@
 
 <body>
 
-    <div id="site-header" class="ui-bg-box-12"></div>
+    <header class="main-header" id="mainHeader">
+
+        <!-- Thanh thông báo -->
+        <div class="notification-bar">
+            <div class="notification-content">
+                <span> Ưu đãi đặc biệt: Giảm ngay 10% cho lần trải nghiệm Spa và Hotel đầu tiên của bé! Code:
+                    <strong>PAWFIRST10</strong></span>
+            </div>
+        </div>
+
+        <nav class="navbar navbar-expand-custom p-0" data-bs-theme="light">
+            <div class="header-container">
+
+                <!-- Bên trái: Logo + Tìm kiếm -->
+                <div class="header-left">
+                    <a href="/" class="navbar-brand logo">
+                        <img src="/assets/images/logo/Logo_pawpal.png" alt="PawPal">
+                    </a>
+                    <div class="search-bar">
+                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" placeholder="Tìm kiếm...">
+                    </div>
+                </div>
+
+                <!-- Nút đóng/mở Mobile -->
+                <button class="navbar-toggler mobile-nav-toggle" type="button"
+                    id="mobileNavToggle"
+                    aria-controls="primaryNavigation" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                        <line x1="4" y1="12" x2="20" y2="12"></line>
+                        <line x1="4" y1="6" x2="20" y2="6"></line>
+                        <line x1="4" y1="18" x2="20" y2="18"></line>
+                    </svg>
+                </button>
+
+                <div class="nav-menu" id="primaryNavigation">
+
+                    <!-- Nav links — mx-auto căn giữa trong collapse -->
+                    <ul class="navbar-nav mx-auto">
+                        <li class="nav-item"><a href="/" class="nav-link">Trang chủ</a></li>
+                        
+                        <li class="nav-item dropdown">
+                            <a href="/services" class="nav-link dropdown-toggle">Dịch vụ<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ui-spacing-3"><polyline points="6 9 12 15 18 9"></polyline></svg></a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item fw-bold" href="/services">Tất cả dịch vụ</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/services?category=spa">Tắm và Cắt tỉa</a></li>
+                                <li><a class="dropdown-item" href="/services?category=hotel">Khách sạn thú cưng</a></li>
+                                <li><a class="dropdown-item" href="/services?category=taxi">Đưa rước thú cưng</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-primary fw-bold" href="/booking">Đặt lịch ngay</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a href="/shop" class="nav-link dropdown-toggle">Cửa hàng<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ui-spacing-3"><polyline points="6 9 12 15 18 9"></polyline></svg></a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item fw-bold" href="/shop">Tất cả sản phẩm</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/shop?category=food">Thức ăn và Dinh dưỡng</a></li>
+                                <li><a class="dropdown-item" href="/shop?category=care">Chăm sóc và Vệ sinh</a></li>
+                                <li><a class="dropdown-item" href="/shop?category=toys">Đồ chơi và Phụ kiện</a></li>
+                                <li><a class="dropdown-item" href="/shop?category=other">Khác</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item"><a href="/about" class="nav-link">Về chúng tôi</a></li>
+                        
+                        <li class="nav-item dropdown">
+                            <a href="/blog" class="nav-link dropdown-toggle">Cẩm nang<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ui-spacing-3"><polyline points="6 9 12 15 18 9"></polyline></svg></a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item fw-bold" href="/blog">Tất cả bài viết</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/blog?category=dog">Chăm sóc chó</a></li>
+                                <li><a class="dropdown-item" href="/blog?category=cat">Chăm sóc mèo</a></li>
+                                <li><a class="dropdown-item" href="/blog?category=tips">Mẹo vặt và Đời sống</a></li>
+                                <li><a class="dropdown-item" href="/blog?category=events">Sự kiện và Khuyến mãi</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a href="/contact" class="nav-link">Liên hệ</a></li>
+                        
+                        <!-- Chỉ Mobile - Chung -->
+                        <li class="nav-item mobile-drawer-only mobile-cta-item">
+                            <a href="/booking" class="nav-link nav-link-cta-mobile">Đặt lịch ngay</a>
+                        </li>
+                        
+                        <!-- Chỉ Mobile - Khách -->
+                        <li class="nav-item mobile-drawer-only mobile-guest-only">
+                            <a href="/return-guest" class="nav-link">Tra đơn hàng / lịch</a>
+                        </li>
+                        <li class="nav-item mobile-drawer-only mobile-guest-only">
+                            <a href="/login" class="nav-link">Đăng nhập</a>
+                        </li>
+                        <li class="nav-item mobile-drawer-only mobile-guest-only">
+                            <a href="/login#register" class="nav-link nav-link-cta-mobile">Đăng ký</a>
+                        </li>
+
+                        <!-- Chỉ Mobile - Đã đăng nhập -->
+                        <li class="nav-item mobile-drawer-only mobile-user-only mobile-account-group d-none" >
+                            <button type="button" class="nav-link mobile-account-toggle" aria-expanded="false">
+                                <span>Tài khoản của tôi</span>
+                                <svg class="mobile-account-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" width="2">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                            <div class="mobile-account-submenu">
+                                <a href="/pages/user/#profile" class="nav-link mobile-account-child">Hồ sơ cá nhân</a>
+                                <a href="/pages/user/#pets" class="nav-link mobile-account-child">Hồ sơ bé cưng</a>
+                                <a href="/pages/user/#bookings" class="nav-link mobile-account-child">Lịch hẹn của tôi</a>
+                                <a href="/pages/user/#orders" class="nav-link mobile-account-child">Đơn hàng của tôi</a>
+                                <a href="/pages/user/#wishlist" class="nav-link mobile-account-child">Yêu thích</a>
+                                <a href="/pages/user/#diary" class="nav-link mobile-account-child">Nhật ký chăm sóc</a>
+                                <a href="/pages/user/#loyalty" class="nav-link mobile-account-child">Paw Points</a>
+                                <a href="/pages/user/#settings" class="nav-link mobile-account-child">Cài đặt</a>
+                                <a href="/cart" class="nav-link mobile-account-child">
+                                    Giỏ hàng của tôi <span class="cart-badge-mobile cart-badge-mobile-custom" ></span>
+                                </a>
+                            </div>
+                        </li>
+                        <li class="nav-item mobile-drawer-only mobile-user-only mobile-logout-separate d-none" >
+                            <a href="#" class="nav-link mobile-logout-btn text-danger-custom" >Đăng xuất</a>
+                        </li>
+
+                        <!-- Chỉ Mobile - Tài khoản tạm thời -->
+                        <li class="nav-item mobile-drawer-only mobile-temp-only mobile-temp-item-padding" >
+                            <div class="temp-account-warning temp-account-warning-custom" >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <span>Tài khoản tạm</span>
+                            </div>
+                        </li>
+                        <li class="nav-item mobile-drawer-only mobile-temp-only d-none" >
+                            <a href="/pages/public/login/login.html?action=setup-password" class="nav-link nav-link-cta-mobile">Kích hoạt tài khoản</a>
+                        </li>
+                        <li class="nav-item mobile-drawer-only mobile-temp-only d-none" >
+                            <a href="#" class="nav-link mobile-logout-btn text-danger-custom" >Đăng xuất</a>
+                        </li>
+                    </ul>
+
+                </div>
+
+                <!-- Hành động Desktop - ngoài collapse, ngang hàng với logo -->
+                <div class="header-actions" id="headerActionsDesktop">
+
+                    <!-- Dòng chia cách -->
+                    <span class="header-divider lookup-divider"></span>
+
+                    <!-- Tra đơn hàng / lịch -->
+                    <a href="/return-guest" class="lookup-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <span>Tra đơn hàng / lịch</span>
+                    </a>
+
+                    <!-- Dòng chia cách -->
+                    <span class="header-divider"></span>
+
+                    <!-- Đặt lịch CTA -->
+                    <a href="/booking" class="btn-header-cta">Đặt lịch</a>
+
+                    <div class="auth-actions d-flex align-items-center">
+                        <a href="/cart" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            <span class="cart-badge">0</span>
+                        </a>
+                        <a href="/login" class="login-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span>Đăng nhập</span>
+                        </a>
+                        <a href="/login#register" class="btn-signup">Đăng ký</a>
+                    </div>
+
+                </div>
+            </div>
+            <script>
+                (function() {
+                    try {
+                        var u = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+                        if (u && !u.is_temporary) {
+                            var auth = document.querySelector('.main-header .auth-actions');
+                            if (auth && !auth.querySelector('#userDropdown')) {
+                                var name = String(u.name || u.full_name || '').trim() || u.phone || 'Khách hàng';
+                                var init = name.charAt(0).toUpperCase();
+                                auth.innerHTML = '<div class="notification-menu-wrapper me-3"><button class="notification-btn position-relative" id="headerNotificationBtn" title="Thông báo" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg><span class="notification-badge" id="notificationBadge" style="display:none">0</span></button><div class="notification-dropdown" id="notificationDropdown"><div class="notification-dropdown-header"><span>Thông báo</span><button class="btn-mark-all-read" id="btnMarkAllRead" type="button">Đọc tất cả</button></div><div class="notification-list" id="headerNotificationList"></div><div class="notification-dropdown-footer"><a href="/pages/user/#notifications" id="btnSeeAllNotis">Xem tất cả</a></div></div></div><a href="/cart" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg><span class="cart-badge">0</span></a><div class="user-menu-wrapper"><button class="user-menu-toggle" id="userMenuToggle"><div class="user-avatar">' + init + '</div><span class="user-name">' + name + '</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div class="user-dropdown" id="userDropdown"><div class="dropdown-header"><div class="user-avatar-large">' + init + '</div><div class="user-info"><div class="user-info-name">' + name + '</div><div class="user-info-phone">' + (u.phone || '') + '</div><div class="user-info-points">' + (u.points || 0) + ' Paw Points</div></div></div><div class="dropdown-divider"></div><a href="/pages/user/#profile" class="dropdown-item">Tài khoản của tôi</a><a href="/pages/user/#pets" class="dropdown-item">Hồ sơ bé cưng</a><a href="/pages/user/#bookings" class="dropdown-item">Lịch hẹn của bé</a><a href="/pages/user/#orders" class="dropdown-item">Đơn hàng của bé</a><a href="/pages/user/#wishlist" class="dropdown-item">Yêu thích</a><a href="/pages/user/#diary" class="dropdown-item">Nhật ký chăm sóc</a><a href="/pages/user/#loyalty" class="dropdown-item">Paw Points</a><a href="/pages/user/#settings" class="dropdown-item">Cài đặt</a><div class="dropdown-divider"></div><button class="dropdown-item dropdown-item-danger" id="btnLogout">Đăng xuất</button></div></div>';
+                            }
+                            var lk = document.querySelector('.main-header .lookup-btn');
+                            if (lk) lk.classList.add('d-none');
+                            var ld = document.querySelector('.main-header .lookup-divider');
+                            if (ld) ld.classList.add('d-none');
+                        }
+                    } catch(e) {}
+                })();
+            </script>
+        </nav>
+    </header>
     <main class="shop-page"> 
         <section class="shop-by-category-section">
             <div class="container-xl">

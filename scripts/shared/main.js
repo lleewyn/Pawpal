@@ -17,8 +17,8 @@ function initApp() {
     if (typeof initServicesGrid === 'function') initServicesGrid();
     if (typeof initFab === 'function') initFab();
     
-    if (typeof initActiveNav === 'function') setTimeout(initActiveNav, 50);
-    if (typeof initMobileNavigation === 'function') setTimeout(initMobileNavigation, 50);
+    if (typeof initActiveNav === 'function') initActiveNav();
+    if (typeof initMobileNavigation === 'function') initMobileNavigation();
 }
 
 document.addEventListener('headerInjected', function () {
@@ -65,8 +65,6 @@ function initActiveNav() {
     links.forEach(link => {
         link.classList.remove('active');
         link.removeAttribute('aria-current');
-        link.style.color = '';
-        link.style.fontWeight = '';
     });
 
     if (currentPath.includes('/pages/user/') || currentPath.includes('/user/')) {
@@ -101,8 +99,6 @@ function initActiveNav() {
     if (matched) {
         matched.classList.add('active');
         matched.setAttribute('aria-current', 'page');
-        matched.style.color = 'var(--color-accent)';
-        matched.style.fontWeight = '700';
     }
 }
 
