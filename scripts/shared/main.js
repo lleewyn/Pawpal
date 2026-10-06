@@ -101,6 +101,7 @@ function initActiveNav() {
         matched.setAttribute('aria-current', 'page');
     }
 }
+window.initActiveNav = initActiveNav;
 
 function initMobileNavigation() {
     const toggleBtn = document.getElementById('mobileNavToggle');

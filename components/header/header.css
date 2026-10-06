@@ -479,6 +479,16 @@
     padding: 6px 10px;
     white-space: nowrap;
     text-decoration: none;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.nav-menu a:focus,
+.nav-menu .nav-link:focus,
+.nav-menu a:focus-visible,
+.nav-menu .nav-link:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 .nav-menu a:hover,

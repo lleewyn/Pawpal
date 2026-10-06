@@ -177,6 +177,7 @@
             if (pushState) {
                 window.history.pushState({}, '', targetUrl.href);
             }
+            updateActiveNav(targetUrl.pathname);
 
             // Cuộn lên đầu trang
             window.scrollTo({ top: 0, behavior: 'instant' });
@@ -219,8 +220,10 @@
                 });
             });
 
+            // Cập nhật lại thanh điều hướng Active Nav chuẩn xác
+            updateActiveNav(targetUrl.pathname);
+
             // Kích hoạt lại các module
-            if (typeof window.initActiveNav === 'function') window.initActiveNav();
             if (typeof window.initApp === 'function') window.initApp();
             if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
             if (typeof window.updateNotificationBadge === 'function') window.updateNotificationBadge();
@@ -289,5 +292,51 @@
         } catch (err) {}
     }, { passive: true });
 
+    function updateActiveNav(targetPath) {
+        const nav = document.getElementById('primaryNavigation') || document.querySelector('.main-header .navbar-nav');
+        if (!nav) return;
+
+        const path = (targetPath || window.location.pathname).toLowerCase();
+        const links = nav.querySelectorAll('a.nav-link');
+
+        links.forEach(link => {
+            link.classList.remove('active');
+            link.removeAttribute('aria-current');
+            if (typeof link.blur === 'function') link.blur();
+        });
+
+        if (path.includes('/pages/user/') || path.includes('/user/')) return;
+
+        let matched = null;
+        if (path === '/' || path === '/landing' || path.endsWith('/index.html') || path === '') {
+            matched = nav.querySelector('a.nav-link[href="/"]') || nav.querySelector('a.nav-link[href*="landing"]');
+        } else if (path.startsWith('/services') || path.includes('service-detail') || path.startsWith('/booking')) {
+            matched = nav.querySelector('a.nav-link[href="/services"]') || nav.querySelector('a.nav-link[href*="services"]');
+        } else if (path.startsWith('/shop') || path.includes('product-detail') || path.startsWith('/cart') || path.startsWith('/checkout')) {
+            matched = nav.querySelector('a.nav-link[href="/shop"]') || nav.querySelector('a.nav-link[href*="shop"]');
+        } else if (path.startsWith('/blog') || path.includes('cam-nang')) {
+            matched = nav.querySelector('a.nav-link[href="/blog"]') || nav.querySelector('a.nav-link[href*="blog"]');
+        } else if (path.startsWith('/contact') || path.includes('lien-he')) {
+            matched = nav.querySelector('a.nav-link[href="/contact"]') || nav.querySelector('a.nav-link[href*="contact"]');
+        } else if (path.startsWith('/about') || path.includes('ve-chung-toi')) {
+            matched = nav.querySelector('a.nav-link[href="/about"]') || nav.querySelector('a.nav-link[href*="about"]');
+        }
+
+        if (matched) {
+            matched.classList.add('active');
+            matched.setAttribute('aria-current', 'page');
+        }
+    }
+
+    // Tự động khởi tạo active nav khi load trang
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            updateActiveNav(window.location.pathname);
+        });
+    } else {
+        updateActiveNav(window.location.pathname);
+    }
+
+    window.initActiveNav = updateActiveNav;
     window.spaNavigateTo = spaNavigateTo;
 })();
