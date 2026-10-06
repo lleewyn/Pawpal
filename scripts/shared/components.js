@@ -86,12 +86,6 @@
             supportScript.defer = true;
             document.head.appendChild(supportScript);
         }
-        if (!document.querySelector('script[src*="spa-router.js"]')) {
-            var spaScript = document.createElement('script');
-            spaScript.src = rootPath + 'scripts/shared/spa-router.js';
-            spaScript.defer = true;
-            document.head.appendChild(spaScript);
-        }
     }
 
     function ensureFabJS() {
@@ -105,6 +99,17 @@
     }
 
     function injectComponent(targetId, componentPath) {
+        if (targetId === 'site-header') {
+            var existingHeader = document.getElementById('mainHeader') || document.querySelector('.main-header');
+            if (existingHeader) {
+                ensureHeaderAuth();
+                document.dispatchEvent(new CustomEvent('headerInjected'));
+                if (typeof initActiveNav === 'function') initActiveNav();
+                if (typeof initMobileNavigation === 'function') initMobileNavigation();
+                return;
+            }
+        }
+
         var el = document.getElementById(targetId);
         if (!el) {
             return;
