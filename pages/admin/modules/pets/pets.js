@@ -1465,9 +1465,9 @@
             });
         }
 
-        // Lưu tạo nhanh chủ nuôi
+        // Lưu tạo nhanh chủ nuôi trực tiếp vào Supabase Live Database
         if (btnSubmitQuickAddOwner) {
-            btnSubmitQuickAddOwner.addEventListener('click', () => {
+            btnSubmitQuickAddOwner.addEventListener('click', async () => {
                 const name = document.getElementById('quickOwnerName')?.value.trim();
                 const phone = document.getElementById('quickOwnerPhone')?.value.trim();
                 const tier = document.getElementById('quickOwnerTier')?.value || 'Khách mới';
@@ -1478,22 +1478,46 @@
                     return;
                 }
 
-                const newCustId = 'CUST-' + String(Object.keys(customersData).length + 1).padStart(3, '0');
-                customersData[newCustId] = {
-                    id: newCustId,
-                    name: name,
-                    phone: phone,
-                    tier: tier,
-                    address: address
-                };
-                persistCustomersData();
+                try {
+                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (client) {
+                        const { data: newCust, error: custErr } = await client.from('customer').insert({
+                            phone_main: phone,
+                            email: '',
+                            account_status: 'ACTIVE'
+                        }).select().single();
 
-                // Tự động điền vào ô chọn chủ nuôi của form tiếp nhận
-                if (newPetOwnerHidden) newPetOwnerHidden.value = newCustId;
-                if (newPetOwnerInput) newPetOwnerInput.value = `${name} - ${phone} (Hạng ${tier})`;
+                        if (custErr) {
+                            console.error('Supabase create customer error:', custErr);
+                            showToast('Lỗi tạo chủ nuôi: ' + custErr.message, 'danger');
+                            return;
+                        }
 
-                if (modalQuickAddOwner) modalQuickAddOwner.classList.remove('open');
-                showToast(`Đã tạo nhanh khách hàng ${name} (${newCustId}) thành công!`);
+                        if (newCust) {
+                            await client.from('customer_profile').insert({
+                                customer_id: newCust.id,
+                                full_name: name
+                            });
+
+                            customersData[newCust.id] = {
+                                id: newCust.id,
+                                name: name,
+                                phone: phone,
+                                tier: tier,
+                                address: address
+                            };
+
+                            if (newPetOwnerHidden) newPetOwnerHidden.value = newCust.id;
+                            if (newPetOwnerInput) newPetOwnerInput.value = `${name} - ${phone} (Hạng ${tier})`;
+
+                            if (modalQuickAddOwner) modalQuickAddOwner.classList.remove('open');
+                            showToast(`Đã tạo nhanh khách hàng ${name} thành công!`);
+                        }
+                    }
+                } catch (err) {
+                    console.error('Create quick owner exception:', err);
+                    showToast('Lỗi khi lưu khách hàng vào CSDL: ' + err.message, 'danger');
+                }
             });
         }
 
@@ -1595,13 +1619,17 @@
             }
         }
 
-        // Submit form tiếp nhận bé mới
+        // Submit form tiếp nhận bé mới trực tiếp vào Supabase
         const btnSubmitAddPet = document.getElementById('btnSubmitAddPet');
         if (btnSubmitAddPet) {
-            btnSubmitAddPet.addEventListener('click', () => {
+            btnSubmitAddPet.addEventListener('click', async () => {
                 const name = document.getElementById('newPetName')?.value.trim() || 'Bé Mới';
-                const ownerCustId = newPetOwnerHidden?.value || 'CUST-001';
-                const cust = customersData[ownerCustId] || { name: 'Khách hàng', phone: '0900000000' };
+                let ownerCustId = newPetOwnerHidden?.value;
+                if (!ownerCustId || !customersData[ownerCustId]) {
+                    const firstCustId = Object.keys(customersData)[0];
+                    ownerCustId = firstCustId || null;
+                }
+
                 const species = document.getElementById('newPetSpecies')?.value || 'dog';
                 const breed = document.getElementById('newPetBreed')?.value.trim() || 'Corgi';
                 const gender = document.getElementById('newPetGender')?.value === 'female' ? 'Cái' : 'Đực';
@@ -1615,46 +1643,61 @@
                 const speciesNameMap = { 'dog': 'Chó', 'cat': 'Mèo', 'rabbit': 'Thỏ', 'other': 'Khác' };
                 const speciesBreedStr = `${speciesNameMap[species] || 'Chó'} ${breed}`;
 
-                const newPetObj = {
-                    name: name,
-                    code: newPetId,
-                    species: species,
-                    speciesBreed: speciesBreedStr,
-                    breed: breed,
-                    gender: gender,
-                    weight: `${weight} kg`,
-                    weightNum: weight,
-                    dob: dob,
-                    dobRaw: dob,
-                    color: color,
-                    allergy: allergy,
-                    notes: 'Tiếp nhận mới tại quầy.',
-                    alert: alertText,
-                    ownerName: cust.name,
-                    ownerPhone: cust.phone,
-                    custId: ownerCustId,
-                    avatar: species === 'cat' ? '/assets/images/publics/catcute5.jpg' : '/assets/images/publics/dogcute3.jpg',
-                    status: 'Đang nuôi',
-                    vaccinated: true,
-                    isHotel: false,
-                    weightHistory: [{ date: 'Hôm nay', weight: `${weight} kg`, tier: 'Cân tiếp nhận quầy', by: 'Lễ tân' }],
-                    vaccines: [],
-                    carelogs: [],
-                    history: []
-                };
+                try {
+                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (client) {
+                        const insertPayload = {
+                            customer_id: ownerCustId,
+                            pet_code: newPetId,
+                            pet_name: name,
+                            species: species,
+                            breed: breed,
+                            gender: gender === 'Cái' ? 'FEMALE' : 'MALE',
+                            date_of_birth: dob || null,
+                            weight: weight,
+                            color: color,
+                            routine: alertText ? `Lưu ý: ${alertText}` : (allergy && allergy !== 'Không' ? `Dị ứng: ${allergy}` : 'Tiếp nhận mới tại quầy.'),
+                            allergy: allergy,
+                            vaccination_history: 'Đã tiêm phòng định kỳ',
+                            avatar_url: species === 'cat' ? '/assets/images/publics/catcute5.jpg' : '/assets/images/publics/dogcute3.jpg',
+                            status: 'ACTIVE'
+                        };
 
-                petsData[newPetId] = newPetObj;
-                persistPetsData();
-                renderPetsTable();
-                updatePetKPIs();
+                        const { data: createdPet, error: petErr } = await client.from('pet_profile').insert(insertPayload).select().single();
+                        if (petErr) {
+                            console.error('Supabase insert pet error:', petErr);
+                            showToast('Lỗi lưu bé cưng vào CSDL: ' + petErr.message, 'danger');
+                            return;
+                        }
 
-                showToast(`Tiếp nhận bé ${name} (${newPetId}) thành công!`);
-                if (modalAddPet) modalAddPet.classList.remove('open');
+                        // Tải lại dữ liệu thực tế từ Supabase
+                        await loadPetsModuleData();
+                        renderPetsTable();
+                        updatePetKPIs();
 
-                // Mở ngay xem trước thẻ in nhiệt 80mm
-                setTimeout(() => {
-                    openCollarTagPreview(newPetObj);
-                }, 300);
+                        const savedPetObj = petsData[newPetId] || {
+                            name: name,
+                            code: newPetId,
+                            speciesBreed: speciesBreedStr,
+                            weight: `${weight} kg`,
+                            gender: gender,
+                            ownerName: customersData[ownerCustId]?.name || 'Khách hàng',
+                            ownerPhone: customersData[ownerCustId]?.phone || '0900000000',
+                            alert: alertText
+                        };
+
+                        showToast(`Tiếp nhận bé ${name} (${newPetId}) thành công!`);
+                        if (modalAddPet) modalAddPet.classList.remove('open');
+
+                        // Mở xem trước thẻ in nhiệt 80mm
+                        setTimeout(() => {
+                            openCollarTagPreview(savedPetObj);
+                        }, 300);
+                    }
+                } catch (err) {
+                    console.error('Add pet exception:', err);
+                    showToast('Lỗi khi tiếp nhận bé cưng: ' + err.message, 'danger');
+                }
             });
         }
 
@@ -2552,10 +2595,10 @@
             });
         }
 
-        // Hoàn thiện và Gửi sang ứng dụng Sen
+        // Hoàn thiện và Gửi sang ứng dụng Sen (Lưu trực tiếp vào bảng care_log trên Supabase)
         const btnCompleteAndSend = document.getElementById('btnCompleteAndSendCareLog');
         if (btnCompleteAndSend) {
-            btnCompleteAndSend.addEventListener('click', () => {
+            btnCompleteAndSend.addEventListener('click', async () => {
                 const wbBadge = document.getElementById('wbStatusBadge');
                 if (wbBadge) {
                     wbBadge.textContent = 'Hoàn thiện';
@@ -2579,6 +2622,21 @@
                     const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
                     const beforeSrc = document.getElementById('wbBeforeImgPreview')?.src || pet.avatar;
                     const afterSrc = document.getElementById('wbAfterImgPreview')?.src || pet.avatar;
+                    const ownerMsg = document.getElementById('wbOwnerMessage')?.value || 'Bé rất ngoan và hoàn thành tốt dịch vụ!';
+
+                    try {
+                        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                        if (client && pet.rawId) {
+                            await client.from('care_log').insert({
+                                pet_id: pet.rawId,
+                                description: 'Tắm sấy toàn diện và Vệ sinh 4 mục',
+                                health_status: '4/4 mục đạt chuẩn. ' + ownerMsg,
+                                recorded_at: now.toISOString()
+                            });
+                        }
+                    } catch (clErr) {
+                        console.error('Supabase insert care_log error:', clErr);
+                    }
 
                     const newCareLog = {
                         time: timeStr,
@@ -2593,7 +2651,6 @@
 
                     if (!pet.carelogs) pet.carelogs = [];
                     pet.carelogs.unshift(newCareLog);
-                    persistPetsData();
 
                     // Đồng bộ phiên làm việc sang pawpal_pet_tracker_logs trong localStorage
                     try {
@@ -2618,7 +2675,7 @@
                                 anal: document.getElementById('chkAnal')?.checked !== false,
                                 skin: document.getElementById('chkSkin')?.checked !== false
                             },
-                            ownerMessage: document.getElementById('wbOwnerMessage')?.value || 'Bé rất ngoan và hoàn thành tốt dịch vụ!'
+                            ownerMessage: ownerMsg
                         };
                         
                         if (!trackerLogs[pId].sessions) trackerLogs[pId].sessions = [];
