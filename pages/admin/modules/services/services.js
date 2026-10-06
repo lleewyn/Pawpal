@@ -2343,7 +2343,7 @@
         }
 
         if (formCreate) {
-            formCreate.addEventListener('submit', (e) => {
+            formCreate.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const newId = 'BKG-' + (1000 + bookingsData.length + 1);
                 const customer = document.getElementById('newBookingCustomer').value;
@@ -2432,7 +2432,7 @@
                 const preset = activeBookingPreset;
                 const newBooking = Object.assign({
                     id: newId,
-                    userId: 'USER-001',
+                    userId: (preset && preset.userId) ? preset.userId : 'USER-001',
                     customerName: customer,
                     phone: phone,
                     petId: (preset && preset.petId) ? preset.petId : 'PET-001',
@@ -2460,6 +2460,29 @@
                     customerNote: note,
                     timeline: initialTimeline
                 }, extraProps);
+
+                // Ghi nhận trực tiếp vào Supabase appointment
+                const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (db) {
+                    try {
+                        const { data: insertedApp, error: appErr } = await db.from('appointment').insert([{
+                            appointment_code: newId,
+                            appointment_date: date,
+                            appointment_time: time.length === 5 ? time + ':00' : time,
+                            appointment_status: 'PENDING',
+                            payment_status: 'UNPAID',
+                            total_price: calculatedPrice,
+                            note: note || '',
+                            service_id: matchedSvc?.dbId || null
+                        }]).select();
+
+                        if (!appErr && insertedApp && insertedApp[0]) {
+                            newBooking.dbId = insertedApp[0].id;
+                        }
+                    } catch(err) {
+                        console.warn('Lỗi ghi Supabase appointment:', err);
+                    }
+                }
 
                 bookingsData.unshift(newBooking);
                 persistData();
@@ -2571,7 +2594,7 @@
         if (btnCancelService) btnCancelService.addEventListener('click', closeServiceModal);
 
         if (formService) {
-            formService.addEventListener('submit', (e) => {
+            formService.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const hiddenCode = document.getElementById('editServiceCodeHidden').value;
                 const id = document.getElementById('formServiceId').value;
@@ -2587,48 +2610,105 @@
                 const p5To10 = document.getElementById('formPrice5To10').value || '200.000';
                 const p10To20 = document.getElementById('formPrice10To20').value || '250.000';
                 const pOver20 = document.getElementById('formPriceOver20').value || '300.000';
+                const parseVnd = (str) => parseInt(String(str).replace(/[^\d]/g, ''), 10) || 120000;
+
+                const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
 
                 if (hiddenCode) {
-                    // Chỉnh sửa
+                    // Chỉnh sửa dịch vụ
                     const existing = servicesData.find(s => s.code === hiddenCode);
                     if (existing) {
                         existing.name = name;
                         existing.petType = petType;
                         existing.duration = duration;
                         existing.desc = desc;
+                        existing.description = desc;
                         existing.staffLevel = staffLevel;
                         existing.status = status;
                         existing.commission = commission;
                         existing.priceFrom = pUnder5;
                         existing.prices = { under5: pUnder5, to10: p5To10, to20: p10To20, over20: pOver20 };
                         existing.steps = [...currentEditingServiceSteps];
+
+                        if (db && existing.dbId) {
+                            try {
+                                await db.from('service').update({
+                                    service_name: name,
+                                    description: desc,
+                                    estimated_duration: parseInt(duration) || 60,
+                                    status: status === 'Đang phục vụ' ? 'ACTIVE' : 'INACTIVE',
+                                    pet_type: petType,
+                                    checklist: currentEditingServiceSteps,
+                                    groomer_level: staffLevel
+                                }).eq('id', existing.dbId);
+                            } catch(err) {
+                                console.warn('Lỗi cập nhật Supabase service:', err);
+                            }
+                        }
                     }
                 } else {
-                    // Thêm mới
+                    // Thêm dịch vụ mới
                     const newSvc = {
                         code: id,
+                        id: id,
                         group: group,
+                        category: group,
                         categoryName: group === 'spa' ? 'Spa và Grooming' : (group === 'hotel' ? 'Pet Hotel' : 'Pet Taxi'),
                         name: name,
                         petType: petType,
                         duration: duration,
                         rating: 5.0,
-                        reviews: 1,
+                        reviews: 0,
                         commission: commission,
                         priceFrom: pUnder5,
                         prices: { under5: pUnder5, to10: p5To10, to20: p10To20, over20: pOver20 },
                         desc: desc,
+                        description: desc,
                         staffLevel: staffLevel,
                         status: status,
                         steps: [...currentEditingServiceSteps],
+                        checklist: [...currentEditingServiceSteps],
                         image: '/assets/images/services/spa/process/spa01.webp'
                     };
+
+                    if (db) {
+                        try {
+                            const catCode = group === 'hotel' ? 'PET_HOTEL' : (group === 'taxi' ? 'PET_TAXI' : 'SPA_GROOMING');
+                            const { data: insertedSvc, error: svcErr } = await db.from('service').insert([{
+                                service_code: id,
+                                service_name: name,
+                                service_category: catCode,
+                                description: desc,
+                                estimated_duration: parseInt(duration) || 60,
+                                status: status === 'Đang phục vụ' ? 'ACTIVE' : 'INACTIVE',
+                                pet_type: petType,
+                                checklist: currentEditingServiceSteps,
+                                groomer_level: staffLevel,
+                                thumbnail_url: '/assets/images/services/spa/process/spa01.webp'
+                            }]).select();
+
+                            if (!svcErr && insertedSvc && insertedSvc[0]) {
+                                const svcDbId = insertedSvc[0].id;
+                                newSvc.dbId = svcDbId;
+                                await db.from('service_price_matrix').insert([
+                                    { service_id: svcDbId, weight_from: 0, weight_to: 5, unit_price: parseVnd(pUnder5), status: 'ACTIVE' },
+                                    { service_id: svcDbId, weight_from: 5, weight_to: 10, unit_price: parseVnd(p5To10), status: 'ACTIVE' },
+                                    { service_id: svcDbId, weight_from: 10, weight_to: 20, unit_price: parseVnd(p10To20), status: 'ACTIVE' },
+                                    { service_id: svcDbId, weight_from: 20, weight_to: 99, unit_price: parseVnd(pOver20), status: 'ACTIVE' }
+                                ]);
+                            }
+                        } catch(err) {
+                            console.warn('Lỗi ghi Supabase service & price matrix:', err);
+                        }
+                    }
+
                     servicesData.unshift(newSvc);
                 }
 
                 persistData();
                 closeServiceModal();
                 renderCatalogTable();
+                showToast(`Đã lưu thông tin dịch vụ ${name} thành công!`);
             });
         }
 
@@ -2726,7 +2806,7 @@
         // Thêm bước Care-Log nhanh trong chi tiết
         const btnSubmitCarelog = document.getElementById('btnSubmitCarelogStep');
         if (btnSubmitCarelog) {
-            btnSubmitCarelog.addEventListener('click', () => {
+            btnSubmitCarelog.addEventListener('click', async () => {
                 const titleInput = document.getElementById('newLogStepTitle');
                 const staffInput = document.getElementById('newLogStepStaff');
                 const noteInput = document.getElementById('newLogStepNote');
@@ -2738,15 +2818,44 @@
 
                 const booking = bookingsData.find(b => b.id === selectedBookingId);
                 if (booking) {
-                    booking.timeline = booking.timeline || [];
-                    booking.timeline.push({
+                    const stepItem = {
                         time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
                         title: titleInput.value.trim(),
                         desc: noteInput.value.trim() || 'Đã hoàn thành bước chăm sóc',
                         done: true,
                         staff: staffInput.value.trim() || booking.staff || 'KTV',
                         images: [...currentCarelogStepImages]
-                    });
+                    };
+
+                    booking.timeline = booking.timeline || [];
+                    booking.timeline.push(stepItem);
+
+                    // Ghi nhận trực tiếp vào Supabase care_log
+                    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (db && booking.dbId) {
+                        try {
+                            const { data: insertedLog, error: logErr } = await db.from('care_log').insert([{
+                                appointment_id: booking.dbId,
+                                description: `${titleInput.value.trim()}: ${noteInput.value.trim()}`,
+                                health_status: 'NORMAL',
+                                recorded_at: new Date().toISOString()
+                            }]).select();
+
+                            if (!logErr && insertedLog && insertedLog[0] && currentCarelogStepImages.length > 0) {
+                                const logDbId = insertedLog[0].id;
+                                const mediaRows = currentCarelogStepImages.map(img => ({
+                                    care_log_id: logDbId,
+                                    media_type: 'IMAGE',
+                                    media_url: img,
+                                    file_name: 'carelog_photo.jpg'
+                                }));
+                                await db.from('care_log_media').insert(mediaRows);
+                            }
+                        } catch(err) {
+                            console.warn('Lỗi ghi Supabase care_log:', err);
+                        }
+                    }
+
                     persistData();
                     renderBookingDetail(booking.id);
                     titleInput.value = '';
