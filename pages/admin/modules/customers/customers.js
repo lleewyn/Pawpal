@@ -1,6 +1,6 @@
 // customers.js - Phân hệ Quản lý Khách hàng Pawpal-er
 (function() {
-    function initCustomersModule() {
+    async function initCustomersModule() {
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
         const moduleTitleEl = document.getElementById('headerModuleTitle');
@@ -120,564 +120,253 @@
         });
 
         // ====================================================================
-        // DATA STORE MÔ PHỎNG CHI TIẾT THEO TỪNG KHÁCH HÀNG (CÁ NHÂN, PET, ĐƠN, LỊCH, KHIẾU NẠI)
+        // DATA STORE 100% TRỰC TIẾP TỪ SUPABASE LIVE DATABASE (ZERO JSON MOCK)
         // ====================================================================
-        const defaultCustomerDatabase = {
-            'CUST-001': {
-                id: 'CUST-001',
-                name: 'Nguyễn Văn An',
-                phone: '0912345678',
-                email: 'an.nguyen@email.com',
-                gender: 'Nam',
-                dob: '15/08/1992',
-                tier: 'GOLD',
-                tierName: 'Vàng',
-                tierBadgeClass: 'badge-tier-gold',
-                points: 1250,
-                status: 'ACTIVE',
-                authStatus: 'Đã kích hoạt',
-                note: 'Khách hàng thân thiết từ 2024. Rất yêu quý bé Lu (Poodle). Khách yêu cầu thợ cắt tỉa nhẹ nhàng, không xịt nước hoa nồng.',
-                emergencyAlert: 'Khách hàng đang có vé khiếu nại mức độ Cao chưa giải quyết (Mã: TK-008 - Bé Lu bị trầy móng chân). Cần giải quyết dứt điểm trước khi nhận giao dịch mới!',
-                addresses: [
-                    { address: '120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP.HCM', isDefault: true },
-                    { address: 'Toà nhà Bitexco, 2 Hải Triều, Bến Nghé, Quận 1, TP.HCM', isDefault: false }
-                ],
-                pets: [
-                    {
-                        id: 'PET-001',
-                        name: 'Bé Lu',
-                        species: 'Chó',
-                        breed: 'Poodle',
-                        weight: '4.5',
-                        vaccine: 'Sổ theo dõi tiêm phòng định kỳ đầy đủ (Chủ xuất trình tháng 8/2026)',
-                        alertNote: 'Cảnh báo: Dị ứng phấn hoa'
-                    },
-                    {
-                        id: 'PET-011',
-                        name: 'Bé Miu',
-                        species: 'Mèo',
-                        breed: 'Mèo Anh lông ngắn',
-                        weight: '3.2',
-                        vaccine: 'Đầy đủ sổ tiêm',
-                        alertNote: 'Bình thường'
-                    }
-                ],
-                orders: [
-                    { id: 'ORD-8921', date: '25/09/2026', total: '450.000 đ', payment: 'Đã thanh toán', status: 'Đang giao', statusClass: 'badge-info' }
-                ],
-                bookings: [
-                    { id: 'AP-201', date: '27/09/2026 09:00', service: 'Spa Grooming và Cắt tỉa tạo kiểu', staff: 'Trần Hoàng (Thợ bậc 2)', status: 'Đang thực hiện', statusClass: 'badge-warning' }
-                ],
-                complaints: [
-                    { id: 'TK-008', date: '27/09/2026 10:15', issue: 'Bé Lu bị trầy móng sau buổi cắt tỉa', level: 'Cao', status: 'Đang xử lý', statusClass: 'badge-warning' }
-                ]
-            },
-            'CUST-002': {
-                id: 'CUST-002',
-                name: 'Lê Thị Bình',
-                phone: '0987654321',
-                email: 'binh.le@email.com',
-                gender: 'Nữ',
-                dob: '20/11/1995',
-                tier: 'SILVER',
-                tierName: 'Bạc',
-                tierBadgeClass: 'badge-tier-silver',
-                points: 420,
-                status: 'ACTIVE',
-                authStatus: 'Đã kích hoạt',
-                note: 'Khách cẩn thận, bé Miu rất nhát người lạ nên ưu tiên nhân viên nữ chăm sóc.',
-                emergencyAlert: null,
-                addresses: [
-                    { address: '45 Lê Duẩn, Phường Bến Nghé, Quận 1, TP.HCM', isDefault: true }
-                ],
-                pets: [
-                    {
-                        id: 'PET-002',
-                        name: 'Bé Miu',
-                        species: 'Mèo',
-                        breed: 'Mèo Anh lông ngắn',
-                        weight: '3.8',
-                        vaccine: 'Đã tiêm phòng 4 bệnh mèo mũi nhắc lại 2026',
-                        alertNote: 'Dị ứng sữa tắm hoa hồng'
-                    }
-                ],
-                orders: [
-                    { id: 'ORD-8920', date: '25/09/2026', total: '420.000 đ', payment: 'Đã thanh toán', status: 'Hoàn tất', statusClass: 'badge-success' }
-                ],
-                bookings: [
-                    { id: 'AP-198', date: '24/09/2026 14:00', service: 'Tắm vệ sinh và cạo lông đệm chân', staff: 'Nguyễn Thị Hoa', status: 'Hoàn tất', statusClass: 'badge-success' }
-                ],
-                complaints: []
-            },
-            'CUST-003': {
-                id: 'CUST-003',
-                name: 'Trần Khách Vãng Lai',
-                phone: '0933221100',
-                email: 'Chưa cập nhật',
-                gender: 'Nam',
-                dob: '01/01/1990',
-                tier: 'BRONZE',
-                tierName: 'Đồng',
-                tierBadgeClass: 'badge-neutral',
-                points: 0,
-                status: 'TEMP',
-                authStatus: 'Chưa kích hoạt',
-                note: 'Khách ghé mua phụ kiện tại quầy, chưa tải app Pawpal.',
-                emergencyAlert: null,
-                addresses: [
-                    { address: 'Tiếp nhận trực tiếp tại quầy Pawpal Pet Center', isDefault: true }
-                ],
-                pets: [
-                    {
-                        id: 'PET-003',
-                        name: 'Bé Bông',
-                        species: 'Chó',
-                        breed: 'Corgi',
-                        weight: '6.2',
-                        vaccine: 'Chưa cập nhật',
-                        alertNote: 'Bình thường'
-                    }
-                ],
-                orders: [],
-                bookings: [],
-                complaints: []
-            },
-            'CUST-004': {
-                id: 'CUST-004',
-                name: 'Phạm Văn Vi Phạm',
-                phone: '0944556677',
-                email: 'pham.vipham@email.com',
-                gender: 'Nam',
-                dob: '12/03/1988',
-                tier: 'BRONZE',
-                tierName: 'Đồng',
-                tierBadgeClass: 'badge-neutral',
-                points: 50,
-                status: 'LOCKED',
-                authStatus: 'Tài khoản bị khóa',
-                note: 'Tạm khóa do có tranh chấp thanh toán đơn hàng.',
-                emergencyAlert: 'Tài khoản đang bị tạm khóa quản trị do tranh chấp thanh toán. Không thực hiện giao dịch ghi nợ!',
-                addresses: [
-                    { address: '88 Nguyễn Trãi, Phường 3, Quận 5, TP.HCM', isDefault: true }
-                ],
-                pets: [],
-                orders: [
-                    { id: 'ORD-8810', date: '10/09/2026', total: '1.250.000 đ', payment: 'Tranh chấp', status: 'Tạm giữ', statusClass: 'badge-warning' }
-                ],
-                bookings: [],
-                complaints: []
-            },
-            'CUST-005': {
-                id: 'CUST-005',
-                name: 'Hoàng Minh Tuấn',
-                phone: '0903112233',
-                email: 'tuan.hoang@email.com',
-                gender: 'Nam',
-                dob: '05/06/1985',
-                tier: 'GOLD',
-                tierName: 'Vàng',
-                tierBadgeClass: 'badge-tier-gold',
-                points: 1100,
-                status: 'ACTIVE',
-                authStatus: 'Đã kích hoạt',
-                note: 'Thường đặt gửi Pet Hotel phòng VIP vào cuối tuần.',
-                emergencyAlert: null,
-                addresses: [
-                    { address: '15 Thảo Điền, Phường Thảo Điền, TP. Thủ Đức', isDefault: true }
-                ],
-                pets: [
-                    {
-                        id: 'PET-005',
-                        name: 'Bé Max',
-                        species: 'Chó',
-                        breed: 'Golden Retriever',
-                        weight: '28.0',
-                        vaccine: 'Đầy đủ sổ tiêm dại và 7 bệnh',
-                        alertNote: 'Thân thiện, ham ăn'
-                    }
-                ],
-                orders: [
-                    { id: 'ORD-8902', date: '22/09/2026', total: '850.000 đ', payment: 'Đã thanh toán', status: 'Hoàn tất', statusClass: 'badge-success' }
-                ],
-                bookings: [
-                    { id: 'AP-180', date: '20/09/2026 10:00', service: 'Khách sạn thú cưng Room VIP', staff: 'Lê Văn Nam', status: 'Hoàn tất', statusClass: 'badge-success' }
-                ],
-                complaints: []
-            },
-            'CUST-007': {
-                id: 'CUST-007',
-                name: 'Vũ Đức Thắng',
-                phone: '0977889900',
-                email: 'thang.vu@email.com',
-                gender: 'Nam',
-                dob: '18/09/1982',
-                tier: 'DIAMOND',
-                tierName: 'Kim Cương',
-                tierBadgeClass: 'badge-tier-diamond',
-                points: 3420,
-                status: 'ACTIVE',
-                authStatus: 'Đã kích hoạt',
-                note: 'Khách hàng VIP Kim Cương. Thường xuyên sử dụng Pet Taxi đưa đón tận nơi.',
-                emergencyAlert: 'Khách hàng VIP đang có vé khiếu nại dịch vụ (Mã: TK-015 - Bé cưng bị trầy nhẹ sau spa). Quản lý cần theo dõi sát sao!',
-                addresses: [
-                    { address: 'Khu biệt thự Chateau, Phú Mỹ Hưng, Quận 7, TP.HCM', isDefault: true }
-                ],
-                pets: [
-                    {
-                        id: 'PET-007',
-                        name: 'Bé Sam',
-                        species: 'Chó',
-                        breed: 'Samoyed',
-                        weight: '22.5',
-                        vaccine: 'Đầy đủ tiêm phòng',
-                        alertNote: 'Lông dày, cần sấy khô kỹ'
-                    },
-                    {
-                        id: 'PET-012',
-                        name: 'Bé Corgi',
-                        species: 'Chó',
-                        breed: 'Corgi',
-                        weight: '11.0',
-                        vaccine: 'Đầy đủ tiêm phòng',
-                        alertNote: 'Thân thiện'
-                    },
-                    {
-                        id: 'PET-013',
-                        name: 'Bé Mochi',
-                        species: 'Chó',
-                        breed: 'Phốc sóc',
-                        weight: '2.8',
-                        vaccine: 'Đầy đủ tiêm phòng',
-                        alertNote: 'Bình thường'
-                    }
-                ],
-                orders: [
-                    { id: 'ORD-8930', date: '26/09/2026', total: '2.150.000 đ', payment: 'Đã thanh toán', status: 'Hoàn tất', statusClass: 'badge-success' }
-                ],
-                bookings: [
-                    { id: 'AP-210', date: '26/09/2026 15:30', service: 'Spa phục hồi da lông chuyên sâu', staff: 'Nguyễn Văn Hải', status: 'Hoàn tất', statusClass: 'badge-success' }
-                ],
-                complaints: [
-                    { id: 'TK-015', date: '27/09/2026 08:30', issue: 'Thú cưng bị trầy nhẹ sau spa', level: 'Cao', status: 'Đang xử lý', statusClass: 'badge-warning' }
-                ]
-            },
-            'CUST-006': {
-                id: 'CUST-006',
-                name: 'Đỗ Thị Mai',
-                phone: '0918445566',
-                email: 'mai.dothi@email.com',
-                gender: 'Nữ',
-                dob: '24/04/1993',
-                tier: 'SILVER',
-                tierName: 'Bạc',
-                tierBadgeClass: 'badge-tier-silver',
-                points: 380,
-                status: 'ACTIVE',
-                authStatus: 'Đã kích hoạt',
-                note: 'Khách hàng thường xuyên đặt dịch vụ tắm sấy và tỉa lông cho bé Bơ.',
-                emergencyAlert: null,
-                addresses: [
-                    { address: '280 Hai Bà Trưng, Phường Tân Định, Quận 1, TP.HCM', isDefault: true }
-                ],
-                pets: [
-                    {
-                        id: 'PET-006',
-                        name: 'Bé Bơ',
-                        species: 'Chó',
-                        breed: 'Poodle',
-                        weight: '3.6',
-                        vaccine: 'Đầy đủ sổ tiêm định kỳ',
-                        alertNote: 'Ngoan, dễ chăm sóc'
-                    }
-                ],
-                orders: [
-                    { id: 'ORD-8890', date: '21/09/2026', total: '380.000 đ', payment: 'Đã thanh toán', status: 'Hoàn tất', statusClass: 'badge-success' }
-                ],
-                bookings: [
-                    { id: 'AP-175', date: '21/09/2026 11:00', service: 'Tắm vệ sinh và cạo lông đệm chân', staff: 'Nguyễn Thị Hoa', status: 'Hoàn tất', statusClass: 'badge-success' }
-                ],
-                complaints: []
-            },
-            'CUST-008': {
-                id: 'CUST-008',
-                name: 'Bùi Thu Trang',
-                phone: '0938776655',
-                email: 'trang.bui@email.com',
-                gender: 'Nữ',
-                dob: '10/12/1996',
-                tier: 'BRONZE',
-                tierName: 'Đồng',
-                tierBadgeClass: 'badge-neutral',
-                points: 80,
-                status: 'ACTIVE',
-                authStatus: 'Đã kích hoạt',
-                note: 'Khách hàng mới đăng ký tài khoản app, quan tâm các sản phẩm pate dinh dưỡng.',
-                emergencyAlert: null,
-                addresses: [
-                    { address: '56 Hoàng Diệu, Phường 12, Quận 4, TP.HCM', isDefault: true }
-                ],
-                pets: [
-                    {
-                        id: 'PET-008',
-                        name: 'Bé Kem',
-                        species: 'Mèo',
-                        breed: 'Mèo Ba Tư',
-                        weight: '4.1',
-                        vaccine: 'Đã tiêm 3 mũi',
-                        alertNote: 'Lông dài, dễ rụng'
-                    }
-                ],
-                orders: [
-                    { id: 'ORD-8865', date: '18/09/2026', total: '290.000 đ', payment: 'Đã thanh toán', status: 'Hoàn tất', statusClass: 'badge-success' }
-                ],
-                bookings: [],
-                complaints: []
-            },
-            'CUST-009': {
-                id: 'CUST-009',
-                name: 'Ngô Gia Bảo',
-                phone: '0909123890',
-                email: 'bao.ngo@email.com',
-                gender: 'Nam',
-                dob: '08/07/1991',
-                tier: 'SILVER',
-                tierName: 'Bạc',
-                tierBadgeClass: 'badge-tier-silver',
-                points: 510,
-                status: 'ACTIVE',
-                authStatus: 'Đã kích hoạt',
-                note: 'Khách hàng yêu cầu kiểm tra kỹ da và lông trước khi tắm sấy.',
-                emergencyAlert: null,
-                addresses: [
-                    { address: '184 Nam Kỳ Khởi Nghĩa, Phường 6, Quận 3, TP.HCM', isDefault: true }
-                ],
-                pets: [
-                    {
-                        id: 'PET-009',
-                        name: 'Bé Shin',
-                        species: 'Chó',
-                        breed: 'Shiba Inu',
-                        weight: '9.8',
-                        vaccine: 'Đầy đủ',
-                        alertNote: 'Năng động, hơi bướng'
-                    }
-                ],
-                orders: [
-                    { id: 'ORD-8850', date: '16/09/2026', total: '620.000 đ', payment: 'Đã thanh toán', status: 'Hoàn tất', statusClass: 'badge-success' }
-                ],
-                bookings: [
-                    { id: 'AP-160', date: '15/09/2026 14:00', service: 'Combo tắm sấy và sục ozone', staff: 'Trần Hoàng', status: 'Hoàn tất', statusClass: 'badge-success' }
-                ],
-                complaints: []
-            },
-            'CUST-010': {
-                id: 'CUST-010',
-                name: 'Đặng Thùy Linh',
-                phone: '0945678123',
-                email: 'linh.dang@email.com',
-                gender: 'Nữ',
-                dob: '30/03/1994',
-                tier: 'GOLD',
-                tierName: 'Vàng',
-                tierBadgeClass: 'badge-tier-gold',
-                points: 950,
-                status: 'ACTIVE',
-                authStatus: 'Đã kích hoạt',
-                note: 'Khách hàng thân thiết, thường tích điểm đổi quà phụ kiện cho bé Mầm.',
-                emergencyAlert: null,
-                addresses: [
-                    { address: '72 Lê Thánh Tôn, Phường Bến Nghé, Quận 1, TP.HCM', isDefault: true }
-                ],
-                pets: [
-                    {
-                        id: 'PET-010',
-                        name: 'Bé Mầm',
-                        species: 'Chó',
-                        breed: 'Pug',
-                        weight: '7.5',
-                        vaccine: 'Đầy đủ sổ tiêm',
-                        alertNote: 'Dễ thở dốc khi trời nóng'
-                    }
-                ],
-                orders: [
-                    { id: 'ORD-8915', date: '24/09/2026', total: '780.000 đ', payment: 'Đã thanh toán', status: 'Hoàn tất', statusClass: 'badge-success' }
-                ],
-                bookings: [
-                    { id: 'AP-192', date: '23/09/2026 09:30', service: 'Cắt tỉa tạo kiểu theo yêu cầu', staff: 'Nguyễn Văn Hải', status: 'Hoàn tất', statusClass: 'badge-success' }
-                ],
-                complaints: []
-            }
-        };
+        let customerDatabase = {};
+        let pawpointHistory = [];
 
-        async function fetchJsonSafely(url) {
+        async function loadCustomersModuleData() {
             try {
-                const res = await fetch(url + '?v=' + Date.now());
-                if (res.ok) return await res.json();
-            } catch (e) {
-                console.warn(`[customers] fetch ${url} failed:`, e);
-            }
-            return null;
-        }
-
-        function getCustomersData() {
-            const saved = sessionStorage.getItem('pawpal_admin_customers_data') || localStorage.getItem('pawpal_admin_customers_data');
-            if (saved) {
-                try {
-                    return JSON.parse(saved);
-                } catch (e) {
-                    console.error('Lỗi phân tích cú pháp pawpal_admin_customers_data:', e);
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!client) {
+                    console.warn('[Customers] Supabase client not initialized.');
+                    return;
                 }
-            }
-            return JSON.parse(JSON.stringify(defaultCustomerDatabase));
-        }
 
-        let customerDatabase = getCustomersData();
+                // Nạp song song toàn bộ các thực thể liên quan đến Khách hàng
+                const [
+                    custRes,
+                    profRes,
+                    memRes,
+                    addrRes,
+                    petsRes,
+                    ordersRes,
+                    apptsRes,
+                    ticketsRes,
+                    pointsTxRes
+                ] = await Promise.all([
+                    client.from('customer').select('*').order('created_at', { ascending: false }),
+                    client.from('customer_profile').select('*'),
+                    client.from('customer_membership').select('*'),
+                    client.from('customer_address').select('*'),
+                    client.from('pet_profile').select('*'),
+                    client.from('sales_order').select('*').order('created_at', { ascending: false }),
+                    client.from('appointment').select('*, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false }),
+                    client.from('support_ticket').select('*').order('created_at', { ascending: false }),
+                    client.from('paw_point_transaction').select('*').order('created_at', { ascending: false })
+                ]);
 
-        function persistCustomersData() {
-            sessionStorage.setItem('pawpal_admin_customers_data', JSON.stringify(customerDatabase));
-            localStorage.setItem('pawpal_admin_customers_data', JSON.stringify(customerDatabase));
-        }
+                const profMap = {};
+                if (Array.isArray(profRes.data)) {
+                    profRes.data.forEach(p => { profMap[p.customer_id] = p; });
+                }
 
-        async function syncCustomerDatabaseFromSources() {
-            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (db) {
-                try {
-                    console.log('[Customers] Đang nạp danh sách khách hàng từ Supabase...');
-                    const { data: dbCustomers, error: custErr } = await db
-                        .from('customer')
-                        .select('id, email, phone_main, account_status, is_temporary, registered_at, note, customer_profile(id, full_name, gender, date_of_birth), customer_membership(total_paw_points, membership_tier_id), customer_address(*), pet_profile(*)');
+                const memMap = {};
+                if (Array.isArray(memRes.data)) {
+                    memRes.data.forEach(m => { memMap[m.customer_id] = m; });
+                }
 
-                    if (!custErr && Array.isArray(dbCustomers) && dbCustomers.length > 0) {
-                        const freshDb = {};
-                        dbCustomers.forEach((c, idx) => {
-                            const custKey = `CUST-${String(idx + 1).padStart(3, '0')}`;
-                            const prof = c.customer_profile || {};
-                            const mem = c.customer_membership || {};
-                            const points = mem.total_paw_points || 0;
-                            
-                            let tier = 'BRONZE';
-                            let tierName = 'Đồng';
-                            let tierBadge = 'badge-neutral';
-                            if (points >= 3000) { tier = 'DIAMOND'; tierName = 'Kim Cương'; tierBadge = 'badge-tier-diamond'; }
-                            else if (points >= 1000) { tier = 'GOLD'; tierName = 'Vàng'; tierBadge = 'badge-tier-gold'; }
-                            else if (points >= 300) { tier = 'SILVER'; tierName = 'Bạc'; tierBadge = 'badge-tier-silver'; }
-
-                            const pets = (c.pet_profile || []).map((p, pIdx) => ({
-                                id: p.pet_code || `PET-${String(pIdx + 1).padStart(3, '0')}`,
-                                dbId: p.id,
-                                name: p.pet_name || 'Bé cưng',
-                                species: p.species === 'cat' ? 'Mèo' : (p.species === 'dog' ? 'Chó' : 'Thú cưng'),
-                                breed: p.breed || 'Chưa rõ',
-                                weight: p.weight ? String(p.weight) : '4.0',
-                                vaccine: p.vaccination_history || 'Đầy đủ tiêm phòng',
-                                alertNote: p.allergy || (p.routine ? p.routine : 'Bình thường')
-                            }));
-
-                            const addresses = (c.customer_address || []).map(a => ({
-                                address: [a.street_address, a.province].filter(Boolean).join(', ') || 'Chưa cập nhật địa chỉ',
-                                isDefault: !!a.is_default
-                            }));
-                            if (addresses.length === 0) {
-                                addresses.push({ address: 'Tiếp nhận trực tiếp tại quầy PawPal', isDefault: true });
-                            }
-
-                            freshDb[custKey] = {
-                                id: custKey,
-                                dbId: c.id,
-                                name: prof.full_name || ('Khách hàng ' + (c.phone_main || '')),
-                                phone: c.phone_main || '—',
-                                email: c.email || 'Chưa cập nhật',
-                                gender: prof.gender || 'Chưa rõ',
-                                dob: prof.date_of_birth ? prof.date_of_birth.split('-').reverse().join('/') : 'Chưa cập nhật',
-                                tier,
-                                tierName,
-                                tierBadgeClass: tierBadge,
-                                points,
-                                status: c.account_status === 'LOCKED' ? 'LOCKED' : (c.is_temporary ? 'TEMP' : 'ACTIVE'),
-                                authStatus: c.account_status === 'LOCKED' ? 'Tài khoản bị khóa' : (c.is_temporary ? 'Chưa kích hoạt' : 'Đã kích hoạt'),
-                                note: c.note || '',
-                                emergencyAlert: null,
-                                addresses,
-                                pets,
-                                orders: [],
-                                bookings: [],
-                                complaints: []
-                            };
+                const addrMap = {};
+                if (Array.isArray(addrRes.data)) {
+                    addrRes.data.forEach(a => {
+                        if (!addrMap[a.customer_id]) addrMap[a.customer_id] = [];
+                        const street = a.street_address || '';
+                        const prov = a.province || '';
+                        const fullAddr = [street, prov].filter(Boolean).join(', ') || 'Chưa cập nhật địa chỉ';
+                        addrMap[a.customer_id].push({
+                            rawId: a.id,
+                            address: fullAddr,
+                            receiverName: a.receiver_name || '',
+                            receiverPhone: a.receiver_phone || '',
+                            isDefault: !!a.is_default
                         });
-
-                        customerDatabase = freshDb;
-                        persistCustomersData();
-                        renderCustomersTable();
-                        updateCustomerKPIs();
-                        renderComplaintBar();
-                        console.log(`[Customers] Đã nạp ${Object.keys(customerDatabase).length} khách hàng từ Supabase thành công ✓`);
-                        return;
-                    }
-                } catch (err) {
-                    console.warn('[Customers] Không thể nạp từ Supabase, chuyển sang cache cục bộ:', err);
-                }
-            }
-
-            try {
-                const fetched = await fetchJsonSafely('/data/customers.json');
-                if (fetched && typeof fetched === 'object') {
-                    Object.entries(fetched).forEach(([k, v]) => {
-                        if (!customerDatabase[k]) {
-                            customerDatabase[k] = v;
-                        }
                     });
                 }
 
-                // Đồng bộ từ pawpal_users_db nếu có tài khoản mới đăng ký phía User
-                const rawUsers = localStorage.getItem('pawpal_users_db');
-                if (rawUsers) {
-                    const localUsers = JSON.parse(rawUsers);
-                    if (Array.isArray(localUsers)) {
-                        localUsers.forEach(u => {
-                            const uPhone = u.phone || u.phoneNumber;
-                            if (uPhone) {
-                                const cleanPhone = String(uPhone).replace(/[^0-9]/g, '').trim();
-                                const exists = Object.values(customerDatabase).some(c => c.phone && String(c.phone).replace(/[^0-9]/g, '').trim() === cleanPhone);
-                                if (!exists) {
-                                    const newId = u.id || `CUST-${String(Object.keys(customerDatabase).length + 1).padStart(3, '0')}`;
-                                    customerDatabase[newId] = {
-                                        id: newId,
-                                        name: u.name || u.fullName || 'Khách hàng ' + uPhone,
-                                        phone: uPhone,
-                                        email: u.email || 'Chưa cập nhật',
-                                        gender: u.gender || 'Khác',
-                                        dob: u.dob || u.birthday || 'Chưa cập nhật',
-                                        tier: u.membershipTier === 'Vàng' ? 'GOLD' : (u.membershipTier === 'Bạc' ? 'SILVER' : (u.membershipTier === 'Kim Cương' ? 'DIAMOND' : 'BRONZE')),
-                                        tierName: u.membershipTier || 'Đồng',
-                                        tierBadgeClass: u.membershipTier === 'Vàng' ? 'badge-tier-gold' : (u.membershipTier === 'Bạc' ? 'badge-tier-silver' : (u.membershipTier === 'Kim Cương' ? 'badge-tier-diamond' : 'badge-neutral')),
-                                        points: u.points || u.pawPoints || 0,
-                                        status: u.isLocked ? 'LOCKED' : (u.is_temporary ? 'TEMP' : 'ACTIVE'),
-                                        authStatus: u.is_temporary ? 'Chưa kích hoạt' : 'Đã kích hoạt',
-                                        note: u.note || 'Tài khoản đăng ký trực tuyến qua Sen App.',
-                                        emergencyAlert: null,
-                                        addresses: u.addresses || (u.address ? [{ address: u.address, isDefault: true, label: 'Nhà riêng' }] : [{ address: 'Tiếp nhận trực tiếp tại quầy', isDefault: true, label: 'Tại quầy' }]),
-                                        pets: u.pets || [],
-                                        orders: [],
-                                        bookings: [],
-                                        complaints: []
-                                    };
-                                }
-                            }
+                const petsMap = {};
+                if (Array.isArray(petsRes.data)) {
+                    petsRes.data.forEach((p, idx) => {
+                        if (!petsMap[p.customer_id]) petsMap[p.customer_id] = [];
+                        const specName = p.species === 'cat' ? 'Mèo' : (p.species === 'dog' ? 'Chó' : (p.species === 'rabbit' ? 'Thỏ' : 'Thú cưng'));
+                        petsMap[p.customer_id].push({
+                            id: p.pet_code || `PET-${String(idx + 1).padStart(3, '0')}`,
+                            dbId: p.id,
+                            name: p.pet_name || 'Bé cưng',
+                            species: specName,
+                            breed: p.breed || 'Chưa cập nhật',
+                            weight: p.weight ? String(p.weight) : '4.0',
+                            vaccine: p.vaccination_history || 'Đầy đủ sổ tiêm',
+                            alertNote: p.allergy && p.allergy !== 'Không' ? `Cảnh báo dị ứng: ${p.allergy}` : (p.routine || 'Bình thường')
                         });
-                    }
+                    });
                 }
 
-                persistCustomersData();
-                renderCustomersTable();
-                updateCustomerKPIs();
-                renderComplaintBar();
-            } catch (e) {
-                console.warn('[customers] syncCustomerDatabaseFromSources error:', e);
+                const ordersMap = {};
+                if (Array.isArray(ordersRes.data)) {
+                    ordersRes.data.forEach(o => {
+                        if (!ordersMap[o.customer_id]) ordersMap[o.customer_id] = [];
+                        const dateStr = o.created_at ? new Date(o.created_at).toLocaleDateString('vi-VN') : '25/09/2026';
+                        const totalStr = o.total_amount ? Number(o.total_amount).toLocaleString('vi-VN') + ' đ' : '0 đ';
+                        let st = 'Hoàn tất';
+                        let stClass = 'badge-success';
+                        if (o.order_status === 'PENDING' || o.order_status === 'PROCESSING') {
+                            st = 'Đang giao';
+                            stClass = 'badge-info';
+                        } else if (o.order_status === 'CANCELLED') {
+                            st = 'Đã hủy';
+                            stClass = 'badge-danger';
+                        }
+                        ordersMap[o.customer_id].push({
+                            id: o.order_code || `ORD-${o.id.slice(0, 4)}`,
+                            rawId: o.id,
+                            date: dateStr,
+                            total: totalStr,
+                            payment: o.payment_status === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán',
+                            status: st,
+                            statusClass: stClass
+                        });
+                    });
+                }
+
+                const apptsMap = {};
+                if (Array.isArray(apptsRes.data)) {
+                    apptsRes.data.forEach(app => {
+                        if (!apptsMap[app.customer_id]) apptsMap[app.customer_id] = [];
+                        const sName = app.service?.service_name || 'Dịch vụ Spa & Grooming';
+                        const staffName = app.staff?.full_name || 'KTV PawPal';
+                        const appDate = app.appointment_date ? new Date(app.appointment_date).toLocaleDateString('vi-VN') : '25/09/2026';
+                        const appTime = app.appointment_time ? app.appointment_time.slice(0, 5) : '09:00';
+                        let st = 'Chờ xác nhận';
+                        let stClass = 'badge-warning';
+                        if (app.appointment_status === 'COMPLETED') { st = 'Hoàn tất'; stClass = 'badge-success'; }
+                        else if (app.appointment_status === 'CONFIRMED' || app.appointment_status === 'IN_PROGRESS') { st = 'Đang thực hiện'; stClass = 'badge-info'; }
+                        else if (app.appointment_status === 'CANCELLED') { st = 'Đã hủy'; stClass = 'badge-danger'; }
+
+                        apptsMap[app.customer_id].push({
+                            id: app.appointment_code || `AP-${app.id.slice(0, 4)}`,
+                            rawId: app.id,
+                            date: `${appDate} ${appTime}`,
+                            service: sName,
+                            staff: staffName,
+                            status: st,
+                            statusClass: stClass
+                        });
+                    });
+                }
+
+                const complaintsMap = {};
+                if (Array.isArray(ticketsRes.data)) {
+                    ticketsRes.data.forEach(t => {
+                        const uId = t.user_id;
+                        if (!uId) return;
+                        if (!complaintsMap[uId]) complaintsMap[uId] = [];
+                        const tDate = t.created_at ? new Date(t.created_at).toLocaleDateString('vi-VN') : '27/09/2026';
+                        let st = 'Đang xử lý';
+                        let stClass = 'badge-warning';
+                        if (t.status === 'RESOLVED' || t.status === 'CLOSED') { st = 'Đã giải quyết'; stClass = 'badge-success'; }
+                        complaintsMap[uId].push({
+                            id: `TK-${t.id.slice(0, 4)}`,
+                            rawId: t.id,
+                            date: tDate,
+                            issue: t.title || 'Phản ánh chất lượng dịch vụ',
+                            level: t.priority === 'HIGH' ? 'Cao' : (t.priority === 'URGENT' ? 'Khẩn cấp' : 'Trung bình'),
+                            status: st,
+                            statusClass: stClass
+                        });
+                    });
+                }
+
+                const freshDb = {};
+                if (Array.isArray(custRes.data) && custRes.data.length > 0) {
+                    custRes.data.forEach((c, idx) => {
+                        const custKey = `CUST-${String(idx + 1).padStart(3, '0')}`;
+                        const prof = profMap[c.id] || {};
+                        const mem = memMap[c.id] || {};
+                        const points = mem.total_paw_points || 0;
+
+                        let tier = 'BRONZE';
+                        let tierName = 'Đồng';
+                        let tierBadge = 'badge-neutral';
+                        if (points >= 3000) { tier = 'DIAMOND'; tierName = 'Kim Cương'; tierBadge = 'badge-tier-diamond'; }
+                        else if (points >= 1000) { tier = 'GOLD'; tierName = 'Vàng'; tierBadge = 'badge-tier-gold'; }
+                        else if (points >= 300) { tier = 'SILVER'; tierName = 'Bạc'; tierBadge = 'badge-tier-silver'; }
+
+                        const addrs = addrMap[c.id] || [];
+                        if (addrs.length === 0) {
+                            addrs.push({ address: 'Tiếp nhận trực tiếp tại quầy PawPal Pet Center', isDefault: true });
+                        }
+
+                        const cPets = petsMap[c.id] || [];
+                        const cOrders = ordersMap[c.id] || [];
+                        const cAppts = apptsMap[c.id] || [];
+                        const cComplaints = complaintsMap[c.id] || [];
+
+                        let emergency = null;
+                        const pendingComp = cComplaints.find(comp => comp.status === 'Đang xử lý');
+                        if (pendingComp) {
+                            emergency = `Khách hàng đang có phản ánh mức độ ${pendingComp.level} (${pendingComp.issue}). Cần giải quyết trước khi nhận giao dịch mới!`;
+                        }
+
+                        let isLocked = c.account_status === 'LOCKED';
+                        let isTemp = c.is_temporary;
+
+                        freshDb[custKey] = {
+                            id: custKey,
+                            dbId: c.id,
+                            name: prof.full_name || ('Khách hàng ' + (c.phone_main || '')),
+                            phone: c.phone_main || '—',
+                            email: c.email || 'Chưa cập nhật',
+                            gender: (prof.gender === 'FEMALE' || prof.gender === 'Nữ') ? 'Nữ' : ((prof.gender === 'MALE' || prof.gender === 'Nam') ? 'Nam' : 'Khác'),
+                            dob: prof.date_of_birth ? new Date(prof.date_of_birth).toLocaleDateString('vi-VN') : 'Chưa cập nhật',
+                            dobRaw: prof.date_of_birth || '',
+                            tier,
+                            tierName,
+                            tierBadgeClass: tierBadge,
+                            points,
+                            status: isLocked ? 'LOCKED' : (isTemp ? 'TEMP' : 'ACTIVE'),
+                            authStatus: isLocked ? 'Tài khoản bị khóa' : (isTemp ? 'Chưa kích hoạt' : 'Đã kích hoạt'),
+                            note: c.note || 'Khách hàng PawPal Pet Center.',
+                            emergencyAlert: emergency,
+                            addresses: addrs,
+                            pets: cPets,
+                            orders: cOrders,
+                            bookings: cAppts,
+                            complaints: cComplaints
+                        };
+                    });
+                }
+
+                customerDatabase = freshDb;
+
+                // Nạp lịch sử giao dịch điểm Pawpoint từ Supabase
+                if (Array.isArray(pointsTxRes.data) && pointsTxRes.data.length > 0) {
+                    pawpointHistory = pointsTxRes.data.map(pt => {
+                        const cObj = Object.values(customerDatabase).find(c => c.dbId === pt.customer_id) || {};
+                        const tTime = pt.created_at ? new Date(pt.created_at).toLocaleString('vi-VN') : '25/09/2026';
+                        const ptsNum = Number(pt.points) || 0;
+                        return {
+                            id: `PWH-${pt.id.slice(0, 4)}`,
+                            rawId: pt.id,
+                            time: tTime,
+                            custId: cObj.id || 'CUST-001',
+                            custName: cObj.name || 'Khách hàng',
+                            phone: cObj.phone || '—',
+                            type: ptsNum >= 0 ? 'ADD' : 'SUB',
+                            points: Math.abs(ptsNum),
+                            balance: pt.balance_after || cObj.points || 0,
+                            reason: pt.description || 'Giao dịch điểm Pawpoint'
+                        };
+                    });
+                } else {
+                    pawpointHistory = [];
+                }
+            } catch (err) {
+                console.error('[Customers] Lỗi nạp dữ liệu từ Supabase:', err);
             }
         }
 
         // ====================================================================
-        // CƠ CHẾ ĐÁNH GIÁ VÀ THĂNG HẠNG THÀNH VIÊN TỰ ĐỘNG (AUTOMATIC TIER PROGRESSION)
+        // CƠ CHẾ ĐÁNH GIÁ VÀ THĂNG HẠNG THÀNH VIÊN TỰ ĐỘNG
         // ====================================================================
         function evaluateCustomerTier(cust) {
             if (!cust) return { changed: false };
@@ -709,72 +398,6 @@
                 return { changed: true, oldTier, oldTierName, newTier, newTierName };
             }
             return { changed: false };
-        }
-
-        // ====================================================================
-        // DATA STORE VÀ PERSISTENCE CHO LỊCH SỬ BIẾN ĐỘNG ĐIỂM PAWPOINT
-        // ====================================================================
-        const defaultPawpointHistory = [
-            {
-                id: 'PWH-001',
-                time: '27/09/2026 10:30',
-                custId: 'CUST-001',
-                custName: 'Nguyễn Văn An',
-                phone: '0912345678',
-                type: 'ADD',
-                points: 50,
-                balance: 1250,
-                reason: 'Bù sự cố dịch vụ theo Ticket TK-008'
-            },
-            {
-                id: 'PWH-002',
-                time: '25/09/2026 14:20',
-                custId: 'CUST-002',
-                custName: 'Lê Thị Bình',
-                phone: '0987654321',
-                type: 'ADD',
-                points: 45,
-                balance: 420,
-                reason: 'Tích điểm đơn hàng ORD-8920'
-            },
-            {
-                id: 'PWH-003',
-                time: '24/09/2026 16:00',
-                custId: 'CUST-005',
-                custName: 'Hoàng Kim Long',
-                phone: '0966778899',
-                type: 'ADD',
-                points: 215,
-                balance: 2450,
-                reason: 'Tích điểm đơn hàng ORD-8930'
-            },
-            {
-                id: 'PWH-004',
-                time: '20/09/2026 11:15',
-                custId: 'CUST-006',
-                custName: 'Đỗ Thị Mai',
-                phone: '0918445566',
-                type: 'SUB',
-                points: 100,
-                balance: 380,
-                reason: 'Khách đổi quà tặng trực tiếp tại quầy'
-            }
-        ];
-
-        function getPawpointHistory() {
-            try {
-                const saved = sessionStorage.getItem('pawpal_admin_pawpoint_history');
-                if (saved) return JSON.parse(saved);
-            } catch (e) {}
-            return JSON.parse(JSON.stringify(defaultPawpointHistory));
-        }
-
-        const pawpointHistory = getPawpointHistory();
-
-        function persistPawpointHistory() {
-            try {
-                sessionStorage.setItem('pawpal_admin_pawpoint_history', JSON.stringify(pawpointHistory));
-            } catch (e) {}
         }
 
         function renderPawpointHistory() {
@@ -2458,24 +2081,33 @@
         });
 
         // 16. THANH THÔNG BÁO KHÁCH HÀNG CÓ KHIẾU NẠI (DẢI MỎNG ALERT TONE, THUẦN CHỮ)
-        const complaintCustomers = [
-            { id: 'CUST-001', name: 'Nguyễn Văn An', ticket: 'TK-008', reason: 'Chưa nhận quà tặng hạng Vàng' },
-            { id: 'CUST-007', name: 'Vũ Đức Thắng', ticket: 'TK-015', reason: 'Thú cưng bị trầy nhẹ sau spa' }
-        ];
-
         function renderComplaintBar() {
             const container = document.getElementById('custComplaintItemsContainer');
             const bar = document.getElementById('custComplaintAlertBar');
             if (!container) return;
 
-            if (complaintCustomers.length === 0) {
+            const activeComplaints = [];
+            Object.values(customerDatabase).forEach(cust => {
+                if (cust.complaints && cust.complaints.length > 0) {
+                    cust.complaints.filter(tc => tc.status === 'Đang xử lý').forEach(tc => {
+                        activeComplaints.push({
+                            id: cust.id,
+                            name: cust.name,
+                            ticket: tc.id,
+                            reason: tc.issue
+                        });
+                    });
+                }
+            });
+
+            if (activeComplaints.length === 0) {
                 if (bar) bar.style.display = 'none';
                 return;
             }
 
             if (bar) bar.style.display = 'flex';
 
-            container.innerHTML = complaintCustomers.map(item => `
+            container.innerHTML = activeComplaints.map(item => `
                 <div class="complaint-item-tag" data-id="${item.id}" title="Xem hồ sơ ${item.name} (${item.ticket})">
                     <span class="tag-ticket">${item.ticket}</span>
                     <span class="tag-cust">${item.name}</span>
@@ -2494,7 +2126,13 @@
             });
         }
 
-        renderComplaintBar();
+        function persistCustomersData() {
+            // Placeholder cho đồng bộ local cache nếu cần
+        }
+
+        function persistPawpointHistory() {
+            // Placeholder cho đồng bộ local cache nếu cần
+        }
 
         // 17. Bộ lọc bảng và tương tác thẻ KPI 1 chạm
         const filterStatusSelect = document.getElementById('custFilterStatus');
@@ -2708,11 +2346,14 @@
             pawpointFilterType.addEventListener('change', renderPawpointHistory);
         }
 
-        // Khởi tạo render bảng, 5 thẻ KPI và lịch sử Pawpoint
+        // Nạp 100% dữ liệu từ Supabase Live Database
+        await loadCustomersModuleData();
+
+        // Khởi tạo render bảng, 5 thẻ KPI, dải khiếu nại và lịch sử Pawpoint
         renderCustomersTable();
         updateCustomerKPIs();
+        renderComplaintBar();
         renderPawpointHistory();
-        syncCustomerDatabaseFromSources();
 
         // 18. KHỞI TẠO VÀ KHÔI PHỤC TRẠNG THÁI KHI F5 / RELOAD
         const hashSubtab = window.location.hash ? window.location.hash.replace('#', '') : null;
@@ -2728,7 +2369,8 @@
             }
         }
 
-        const savedCustId = sessionStorage.getItem('pawpal_admin_customer_id') || 'CUST-001';
+        const firstCustId = Object.keys(customerDatabase)[0] || 'CUST-001';
+        const savedCustId = sessionStorage.getItem('pawpal_admin_customer_id') || firstCustId;
         renderDrawerCustomerProfile(savedCustId);
 
         if (initialSubtab !== 'tab-list') {
