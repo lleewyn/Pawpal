@@ -1492,42 +1492,49 @@
         // ---------------------------------------------------------
         // 8. XỬ LÝ 1-CHẠM NHẬN TICKET (QUICK ASSIGN)
         // ---------------------------------------------------------
-        function handleQuickAssign(ticketId, ticketType) {
-            let targetTicket = null;
-            if (ticketType === 'service') {
-                targetTicket = serviceComplaints.find(i => i.id === ticketId);
-            } else {
-                targetTicket = orderComplaints.find(i => i.id === ticketId);
+        async function handleQuickAssign(ticketId, ticketType) {
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                showToast('Chưa khởi tạo kết nối Supabase.', 'danger');
+                return;
             }
 
-            if (!targetTicket) return;
+            try {
+                // Update trạng thái sang processing trên Supabase
+                await client.from('support_ticket').update({
+                    status: 'processing',
+                    updated_at: new Date().toISOString()
+                }).eq('id', ticketId);
 
-            targetTicket.staffAssigned = 'Lê Lệ Quyên';
-            if (targetTicket.status === 'new') {
-                targetTicket.status = 'processing';
+                // Insert tin nhắn tiếp nhận của CSKH
+                await client.from('support_ticket_message').insert({
+                    ticket_id: ticketId,
+                    sender_type: 'cskh',
+                    agent_name: 'Lê Lệ Quyên',
+                    content: 'Đã nhận phụ trách trực tiếp xử lý khiếu nại này theo cam kết SLA.',
+                    created_at: new Date().toISOString()
+                });
+
+                await loadComplaintsModuleData();
+
+                updateComplaintsKpis();
+                renderComplaintsAlertBar();
+                if (ticketType === 'service') renderServiceComplaintsTable();
+                else renderOrderComplaintsTable();
+
+                const updated = (ticketType === 'service' ? serviceComplaints : orderComplaints).find(i => i.id === ticketId);
+                if (updated) {
+                    if (currentActiveTicket && currentActiveTicket.id === ticketId) {
+                        renderTicketDetail(updated);
+                    }
+                    syncTicketToUserPortal(updated);
+                }
+
+                showToast(`Đã nhận xử lý Ticket ${ticketId.substring(0, 8)}... thành công! Người phụ trách: Lê Lệ Quyên (CSKH).`, 'success');
+            } catch (err) {
+                console.error('[Complaints] Lỗi khi nhận xử lý ticket:', err);
+                showToast('Lỗi khi nhận xử lý: ' + err.message, 'danger');
             }
-
-            targetTicket.timeline.unshift({
-                time: 'Vừa xong',
-                author: 'Lê Lệ Quyên (CSKH)',
-                title: 'Tiếp nhận xử lý Ticket',
-                desc: 'Đã nhận phụ trách trực tiếp xử lý khiếu nại này theo cam kết SLA.',
-                isInternal: true
-            });
-
-            updateComplaintsKpis();
-            renderComplaintsAlertBar();
-            if (ticketType === 'service') renderServiceComplaintsTable();
-            else renderOrderComplaintsTable();
-
-            saveComplaintsState();
-            syncTicketToUserPortal(targetTicket);
-
-            if (currentActiveTicket && currentActiveTicket.id === ticketId) {
-                renderTicketDetail(targetTicket);
-            }
-
-            showToast(`Đã nhận xử lý Ticket ${ticketId} thành công! Người phụ trách: Lê Lệ Quyên (CSKH).`, 'success');
         }
 
         // ---------------------------------------------------------
@@ -1613,31 +1620,48 @@
             handleQuickAssign(id, type);
         });
 
-        document.getElementById('menuActionCloseTicket')?.addEventListener('click', () => {
+        document.getElementById('menuActionCloseTicket')?.addEventListener('click', async () => {
             const dropdown = document.getElementById('complaintsActionDropdown');
             const id = dropdown.getAttribute('data-current-id');
             const type = dropdown.getAttribute('data-current-type');
             dropdown.style.display = 'none';
 
-            let t = type === 'service' ? serviceComplaints.find(i => i.id === id) : orderComplaints.find(i => i.id === id);
-            if (t) {
-                t.status = 'closed';
-                t.slaStatus = 'DONE';
-                t.slaRemainingText = 'Đã đóng';
-                t.timeline.unshift({
-                    time: 'Vừa xong',
-                    author: 'Lê Lệ Quyên (Admin)',
-                    title: 'Đóng Ticket',
-                    desc: 'Đã hoàn tất quy trình xử lý và chính thức đóng ticket.',
-                    isInternal: true
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                showToast('Chưa khởi tạo kết nối Supabase.', 'danger');
+                return;
+            }
+
+            try {
+                await client.from('support_ticket').update({
+                    status: 'completed',
+                    updated_at: new Date().toISOString()
+                }).eq('id', id);
+
+                await client.from('support_ticket_message').insert({
+                    ticket_id: id,
+                    sender_type: 'cskh',
+                    agent_name: 'Lê Lệ Quyên',
+                    content: 'Đã hoàn tất quy trình xử lý và chính thức đóng ticket.',
+                    created_at: new Date().toISOString()
                 });
+
+                await loadComplaintsModuleData();
+
                 updateComplaintsKpis();
                 renderComplaintsAlertBar();
                 if (type === 'service') renderServiceComplaintsTable();
                 else renderOrderComplaintsTable();
-                saveComplaintsState();
-                syncTicketToUserPortal(t);
-                showToast(`Ticket ${id} đã được đóng hoàn tất.`, 'success');
+
+                const updated = (type === 'service' ? serviceComplaints : orderComplaints).find(i => i.id === id);
+                if (updated && currentActiveTicket && currentActiveTicket.id === id) {
+                    renderTicketDetail(updated);
+                }
+
+                showToast(`Ticket ${id.substring(0, 8)}... đã được đóng hoàn tất trên Supabase.`, 'success');
+            } catch (err) {
+                console.error('[Complaints] Lỗi đóng ticket:', err);
+                showToast('Lỗi khi đóng ticket: ' + err.message, 'danger');
             }
         });
 
@@ -2090,13 +2114,20 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
 
         selectResolveOpt?.addEventListener('change', updateResolveModalSubgroups);
 
-        document.getElementById('btnConfirmResolveTicket')?.addEventListener('click', () => {
+        document.getElementById('btnConfirmResolveTicket')?.addEventListener('click', async () => {
             if (!currentActiveTicket) return;
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                showToast('Chưa khởi tạo kết nối Supabase.', 'danger');
+                return;
+            }
+
             const val = selectResolveOpt ? selectResolveOpt.value : 'explain';
             const note = document.getElementById('inputResolveNote')?.value.trim() || 'Đã thỏa thuận thống nhất phương án xử lý thỏa đáng với khách hàng.';
 
             let resolutionObj = null;
             let newStatus = 'resolved';
+            let dbStatus = 'completed';
             let timelineTitle = 'Áp dụng phương án giải quyết';
             let timelineDesc = note;
 
@@ -2120,6 +2151,7 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                     updatedAt: 'Vừa xong'
                 };
                 newStatus = 'waiting_return';
+                dbStatus = 'processing';
                 timelineTitle = `Phát hành mã đổi trả ${rmaCode}`;
                 timelineDesc = `Đã cấp mã RMA đổi trả (${val === 'rma_exchange' ? 'Đổi mới: ' + replItem : 'Hoàn tiền: ' + Number(refAmt).toLocaleString('vi-VN') + 'đ'}). Hình thức thu hồi: ${pickup}. Kho nhận: ${wh}. Ghi chú: "${note}".`;
             } else if (val === 'redo_service') {
@@ -2137,6 +2169,7 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                     updatedAt: 'Vừa xong'
                 };
                 newStatus = 'processing';
+                dbStatus = 'processing';
                 timelineTitle = `Tạo lịch hẹn dịch vụ bù (${redoId})`;
                 timelineDesc = `Đã tạo lịch hẹn chăm sóc bù miễn phí 100% vào lúc ${redoTime}. KTV tiếp nhận: ${redoStaff}. Ghi chú: "${note}".`;
             } else if (val === 'reward_voucher') {
@@ -2152,14 +2185,25 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                     updatedAt: 'Vừa xong'
                 };
                 newStatus = 'resolved';
+                dbStatus = 'completed';
                 timelineTitle = `Bồi hoàn +${pts} Pawpoint và tặng Voucher ${vch}`;
                 timelineDesc = `Đã cộng trực tiếp ${pts} Pawpoint vào tài khoản khách hàng và phát hành mã voucher ${vch}. Ghi chú: "${note}".`;
 
+                // Cộng điểm Pawpoint vào Supabase
                 try {
-                    const key = 'pawpoint_reward_' + currentActiveTicket.phone;
-                    const curr = parseInt(sessionStorage.getItem(key) || '0');
-                    sessionStorage.setItem(key, (curr + pts).toString());
-                } catch (e) {}
+                    const cust = cachedCustomers.find(c => c.phone === currentActiveTicket.phone || c.id === currentActiveTicket.user_id);
+                    if (cust) {
+                        await client.from('paw_point_transaction').insert({
+                            customer_id: cust.id,
+                            points: pts,
+                            transaction_type: 'earn',
+                            description: `Bồi hoàn khiếu nại ${currentActiveTicket.id}`,
+                            created_at: new Date().toISOString()
+                        });
+                    }
+                } catch (e) {
+                    console.warn('[Complaints] Lỗi cộng Pawpoint Supabase:', e);
+                }
             } else if (val === 'refund') {
                 const refAmt = document.getElementById('inputResolveRefundAmount')?.value.trim() || '250000';
                 const refMethod = document.getElementById('selectResolveRefundMethod')?.value || 'Chuyển khoản trực tiếp';
@@ -2173,6 +2217,7 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                     updatedAt: 'Vừa xong'
                 };
                 newStatus = 'resolved';
+                dbStatus = 'completed';
                 timelineTitle = `Hoàn tiền bồi thường ${Number(refAmt).toLocaleString('vi-VN')}đ`;
                 timelineDesc = `Hình thức: ${refMethod}. Ghi chú: "${note}".`;
             } else if (val === 'reject') {
@@ -2183,6 +2228,7 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                     updatedAt: 'Vừa xong'
                 };
                 newStatus = 'closed';
+                dbStatus = 'closed';
                 timelineTitle = 'Từ chối giải quyết khiếu nại';
                 timelineDesc = `Lý do từ chối: "${note}".`;
             } else {
@@ -2193,52 +2239,60 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                     updatedAt: 'Vừa xong'
                 };
                 newStatus = 'resolved';
+                dbStatus = 'completed';
                 timelineTitle = 'Giải thích và chăm sóc khách hàng';
                 timelineDesc = note;
             }
 
-            currentActiveTicket.resolution = resolutionObj;
-            currentActiveTicket.status = newStatus;
-            if (newStatus === 'resolved' || newStatus === 'closed') {
-                currentActiveTicket.slaStatus = 'DONE';
-                currentActiveTicket.slaRemainingText = newStatus === 'resolved' ? 'Đã giải quyết' : 'Đã đóng';
-            }
-
-            currentActiveTicket.timeline.unshift({
-                time: 'Vừa xong',
-                author: 'Lê Lệ Quyên (Admin)',
-                title: timelineTitle,
-                desc: timelineDesc,
-                isInternal: false
-            });
-
-            resolveModal.classList.remove('active');
-            updateComplaintsKpis();
-            renderComplaintsAlertBar();
-            if (currentTicketType === 'service') renderServiceComplaintsTable();
-            else renderOrderComplaintsTable();
-            renderTicketDetail(currentActiveTicket);
-            saveComplaintsState();
-            syncTicketToUserPortal(currentActiveTicket);
-
-            // Ghi nhận cờ giải quyết cho Chatbot CSKH nắm bắt vòng lặp đóng
             try {
-                sessionStorage.setItem('pawpal_ticket_resolved_' + currentActiveTicket.id, JSON.stringify({
-                    id: currentActiveTicket.id,
-                    status: newStatus,
-                    typeName: resolutionObj.typeName,
-                    note: resolutionObj.note,
-                    customerName: currentActiveTicket.customerName,
-                    resolvedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                }));
-            } catch (e) {}
+                // Update support_ticket trên Supabase
+                await client.from('support_ticket').update({
+                    status: dbStatus,
+                    rating_comment: note,
+                    updated_at: new Date().toISOString()
+                }).eq('id', currentActiveTicket.id);
 
-            showToast(`Đã áp dụng phương án "${resolutionObj.typeName}" cho Ticket ${currentActiveTicket.id} thành công!`, 'success');
+                // Insert message vào support_ticket_message
+                await client.from('support_ticket_message').insert({
+                    ticket_id: currentActiveTicket.id,
+                    sender_type: 'cskh',
+                    agent_name: 'Lê Lệ Quyên',
+                    content: `${timelineTitle}: ${timelineDesc}`,
+                    created_at: new Date().toISOString()
+                });
+
+                await loadComplaintsModuleData();
+
+                resolveModal.classList.remove('active');
+                updateComplaintsKpis();
+                renderComplaintsAlertBar();
+                if (currentTicketType === 'service') renderServiceComplaintsTable();
+                else renderOrderComplaintsTable();
+
+                const updated = (currentTicketType === 'service' ? serviceComplaints : orderComplaints).find(i => i.id === currentActiveTicket.id);
+                if (updated) {
+                    currentActiveTicket = updated;
+                    currentActiveTicket.resolution = resolutionObj;
+                    renderTicketDetail(currentActiveTicket);
+                    syncTicketToUserPortal(currentActiveTicket);
+                }
+
+                showToast(`Đã áp dụng phương án "${resolutionObj.typeName}" cho Ticket thành công!`, 'success');
+            } catch (err) {
+                console.error('[Complaints] Lỗi giải quyết ticket:', err);
+                showToast('Lỗi áp dụng phương án: ' + err.message, 'danger');
+            }
         });
 
         // Nút cập nhật tiến độ RMA (Phase 3)
-        document.getElementById('btnAdvanceRmaStep')?.addEventListener('click', () => {
+        document.getElementById('btnAdvanceRmaStep')?.addEventListener('click', async () => {
             if (!currentActiveTicket || !currentActiveTicket.resolution) return;
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                showToast('Chưa khởi tạo kết nối Supabase.', 'danger');
+                return;
+            }
+
             const res = currentActiveTicket.resolution;
             let currentStep = res.rmaStep || 2;
 
@@ -2258,26 +2312,43 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                     stepDesc = res.type === 'rma_exchange'
                         ? `Đã xuất kho và bàn giao bưu tá sản phẩm đổi mới "${res.replacementItem || 'sản phẩm'}" gửi tới khách hàng. Ticket chuyển sang Đã giải quyết.`
                         : `Đã thực hiện lệnh hoàn tiền ${Number(res.refundAmount || 0).toLocaleString('vi-VN')}đ tới tài khoản khách hàng. Ticket chuyển sang Đã giải quyết.`;
-                    currentActiveTicket.status = 'resolved';
-                    currentActiveTicket.slaStatus = 'DONE';
-                    currentActiveTicket.slaRemainingText = 'Đã giải quyết';
                 }
 
-                currentActiveTicket.timeline.unshift({
-                    time: 'Vừa xong',
-                    author: 'Lê Lệ Quyên (Admin)',
-                    title: stepTitle,
-                    desc: stepDesc,
-                    isInternal: false
-                });
+                try {
+                    if (currentStep === 4) {
+                        await client.from('support_ticket').update({
+                            status: 'completed',
+                            updated_at: new Date().toISOString()
+                        }).eq('id', currentActiveTicket.id);
+                    }
 
-                updateComplaintsKpis();
-                renderComplaintsAlertBar();
-                if (currentTicketType === 'service') renderServiceComplaintsTable();
-                else renderOrderComplaintsTable();
-                renderTicketDetail(currentActiveTicket);
+                    await client.from('support_ticket_message').insert({
+                        ticket_id: currentActiveTicket.id,
+                        sender_type: 'cskh',
+                        agent_name: 'Lê Lệ Quyên',
+                        content: `${stepTitle}: ${stepDesc}`,
+                        created_at: new Date().toISOString()
+                    });
 
-                showToast(`Đã cập nhật tiến độ RMA sang Bước ${currentStep}: ${stepTitle}!`, 'success');
+                    await loadComplaintsModuleData();
+
+                    updateComplaintsKpis();
+                    renderComplaintsAlertBar();
+                    if (currentTicketType === 'service') renderServiceComplaintsTable();
+                    else renderOrderComplaintsTable();
+
+                    const updated = (currentTicketType === 'service' ? serviceComplaints : orderComplaints).find(i => i.id === currentActiveTicket.id);
+                    if (updated) {
+                        currentActiveTicket = updated;
+                        currentActiveTicket.resolution = res;
+                        renderTicketDetail(currentActiveTicket);
+                    }
+
+                    showToast(`Đã cập nhật tiến độ RMA sang Bước ${currentStep} thành công!`, 'success');
+                } catch (err) {
+                    console.error('[Complaints] Lỗi cập nhật RMA:', err);
+                    showToast('Lỗi cập nhật RMA: ' + err.message, 'danger');
+                }
             } else {
                 showToast('Quy trình đổi trả RMA này đã hoàn tất trọn vẹn.', 'info');
             }
@@ -2343,34 +2414,51 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
         document.getElementById('btnCancelAssignHandler')?.addEventListener('click', () => assignModal.classList.remove('active'));
         document.getElementById('btnDismissAssignHandler')?.addEventListener('click', () => assignModal.classList.remove('active'));
 
-        document.getElementById('btnConfirmAssignHandler')?.addEventListener('click', () => {
+        document.getElementById('btnConfirmAssignHandler')?.addEventListener('click', async () => {
             if (!currentActiveTicket) return;
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                showToast('Chưa khởi tạo kết nối Supabase.', 'danger');
+                return;
+            }
+
             const newStaff = document.getElementById('selectAssignStaff')?.value || 'Lê Lệ Quyên';
             const note = document.getElementById('inputAssignNote')?.value.trim() || 'Bàn giao phụ trách xử lý tiếp theo cam kết SLA.';
 
-            currentActiveTicket.staffAssigned = newStaff;
-            if (currentActiveTicket.status === 'new') {
-                currentActiveTicket.status = 'processing';
+            try {
+                await client.from('support_ticket').update({
+                    status: 'processing',
+                    updated_at: new Date().toISOString()
+                }).eq('id', currentActiveTicket.id);
+
+                await client.from('support_ticket_message').insert({
+                    ticket_id: currentActiveTicket.id,
+                    sender_type: 'cskh',
+                    agent_name: newStaff,
+                    content: `Chuyển giao người phụ trách cho: ${newStaff}. Ghi chú: "${note}".`,
+                    created_at: new Date().toISOString()
+                });
+
+                await loadComplaintsModuleData();
+
+                assignModal.classList.remove('active');
+                updateComplaintsKpis();
+                renderComplaintsAlertBar();
+                if (currentTicketType === 'service') renderServiceComplaintsTable();
+                else renderOrderComplaintsTable();
+
+                const updated = (currentTicketType === 'service' ? serviceComplaints : orderComplaints).find(i => i.id === currentActiveTicket.id);
+                if (updated) {
+                    currentActiveTicket = updated;
+                    renderTicketDetail(currentActiveTicket);
+                    syncTicketToUserPortal(currentActiveTicket);
+                }
+
+                showToast(`Đã chuyển người phụ trách cho "${newStaff}" thành công!`, 'success');
+            } catch (err) {
+                console.error('[Complaints] Lỗi chuyển người phụ trách:', err);
+                showToast('Lỗi chuyển giao: ' + err.message, 'danger');
             }
-
-            currentActiveTicket.timeline.unshift({
-                time: 'Vừa xong',
-                author: 'Lê Lệ Quyên (Admin)',
-                title: 'Chuyển giao người phụ trách Ticket',
-                desc: `Đã phân công lại người phụ trách cho: ${newStaff}. Ghi chú dặn dò: "${note}".`,
-                isInternal: true
-            });
-
-            assignModal.classList.remove('active');
-            updateComplaintsKpis();
-            renderComplaintsAlertBar();
-            if (currentTicketType === 'service') renderServiceComplaintsTable();
-            else renderOrderComplaintsTable();
-            renderTicketDetail(currentActiveTicket);
-            saveComplaintsState();
-            syncTicketToUserPortal(currentActiveTicket);
-
-            showToast(`Đã chuyển người phụ trách Ticket ${currentActiveTicket.id} cho "${newStaff}" thành công!`, 'success');
         });
 
         // ---------------------------------------------------------
@@ -2390,8 +2478,14 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
         document.getElementById('btnCancelRequestInfo')?.addEventListener('click', () => requestInfoModal.classList.remove('active'));
         document.getElementById('btnDismissRequestInfo')?.addEventListener('click', () => requestInfoModal.classList.remove('active'));
 
-        document.getElementById('btnSendRequestInfo')?.addEventListener('click', () => {
+        document.getElementById('btnSendRequestInfo')?.addEventListener('click', async () => {
             if (!currentActiveTicket) return;
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                showToast('Chưa khởi tạo kết nối Supabase.', 'danger');
+                return;
+            }
+
             const channelSelect = document.getElementById('selectRequestChannel');
             const channelVal = channelSelect ? channelSelect.value : 'zalo';
             const channelLabel = channelVal === 'zalo' ? 'Tin nhắn Zalo OA' : (channelVal === 'sms' ? 'Tin nhắn SMS Brandname' : (channelVal === 'call' ? 'Cuộc gọi điện thoại' : 'Email thông báo'));
@@ -2402,49 +2496,85 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                 return;
             }
 
-            currentActiveTicket.status = 'waiting_customer';
+            try {
+                await client.from('support_ticket').update({
+                    status: 'processing',
+                    updated_at: new Date().toISOString()
+                }).eq('id', currentActiveTicket.id);
 
-            currentActiveTicket.timeline.unshift({
-                time: 'Vừa xong',
-                author: 'Lê Lệ Quyên (CSKH)',
-                title: `Gửi yêu cầu bổ sung thông tin qua ${channelLabel}`,
-                desc: `Đã gửi thông báo cho khách hàng ${currentActiveTicket.customerName} (${currentActiveTicket.phone}). Nội dung: "${msg}". Trạng thái chuyển sang Chờ phản hồi khách hàng.`,
-                isInternal: false
-            });
+                await client.from('support_ticket_message').insert({
+                    ticket_id: currentActiveTicket.id,
+                    sender_type: 'cskh',
+                    agent_name: 'Lê Lệ Quyên',
+                    content: `Gửi yêu cầu bổ sung thông tin qua ${channelLabel}: "${msg}"`,
+                    created_at: new Date().toISOString()
+                });
 
-            requestInfoModal.classList.remove('active');
-            updateComplaintsKpis();
-            renderComplaintsAlertBar();
-            if (currentTicketType === 'service') renderServiceComplaintsTable();
-            else renderOrderComplaintsTable();
-            renderTicketDetail(currentActiveTicket);
-            saveComplaintsState();
-            syncTicketToUserPortal(currentActiveTicket);
+                await loadComplaintsModuleData();
 
-            showToast(`Đã gửi yêu cầu bổ sung thông tin đến khách hàng qua kênh ${channelLabel} thành công!`, 'success');
+                requestInfoModal.classList.remove('active');
+                updateComplaintsKpis();
+                renderComplaintsAlertBar();
+                if (currentTicketType === 'service') renderServiceComplaintsTable();
+                else renderOrderComplaintsTable();
+
+                const updated = (currentTicketType === 'service' ? serviceComplaints : orderComplaints).find(i => i.id === currentActiveTicket.id);
+                if (updated) {
+                    currentActiveTicket = updated;
+                    renderTicketDetail(currentActiveTicket);
+                    syncTicketToUserPortal(currentActiveTicket);
+                }
+
+                showToast(`Đã gửi yêu cầu bổ sung thông tin qua kênh ${channelLabel} thành công!`, 'success');
+            } catch (err) {
+                console.error('[Complaints] Lỗi gửi yêu cầu thông tin:', err);
+                showToast('Lỗi gửi yêu cầu: ' + err.message, 'danger');
+            }
         });
 
         // Gửi phản hồi / ghi chú vào Timeline
-        document.getElementById('btnSubmitReply')?.addEventListener('click', () => {
+        document.getElementById('btnSubmitReply')?.addEventListener('click', async () => {
             const txt = document.getElementById('replyContentInput');
             if (!txt || !txt.value.trim()) {
                 showToast('Vui lòng nhập nội dung ghi nhận.', 'warning');
                 return;
             }
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                showToast('Chưa khởi tạo kết nối Supabase.', 'danger');
+                return;
+            }
+
             const isInternal = document.querySelector('input[name="replyType"]:checked')?.value === 'internal';
-            if (currentActiveTicket) {
-                currentActiveTicket.timeline.unshift({
-                    time: 'Vừa xong',
-                    author: 'Lê Lệ Quyên (Admin)',
-                    title: isInternal ? 'Ghi chú nội bộ' : 'Phản hồi cho khách hàng',
-                    desc: txt.value.trim(),
-                    isInternal: isInternal
+            const contentText = txt.value.trim();
+
+            try {
+                await client.from('support_ticket_message').insert({
+                    ticket_id: currentActiveTicket.id,
+                    sender_type: 'cskh',
+                    agent_name: 'Lê Lệ Quyên',
+                    content: (isInternal ? '[Nội bộ] ' : '') + contentText,
+                    created_at: new Date().toISOString()
                 });
+
+                await client.from('support_ticket').update({
+                    updated_at: new Date().toISOString()
+                }).eq('id', currentActiveTicket.id);
+
                 txt.value = '';
-                renderTicketDetail(currentActiveTicket);
-                saveComplaintsState();
-                syncTicketToUserPortal(currentActiveTicket);
-                showToast('Đã cập nhật Timeline thành công!', 'success');
+                await loadComplaintsModuleData();
+
+                const updated = (currentTicketType === 'service' ? serviceComplaints : orderComplaints).find(i => i.id === currentActiveTicket.id);
+                if (updated) {
+                    currentActiveTicket = updated;
+                    renderTicketDetail(currentActiveTicket);
+                    syncTicketToUserPortal(currentActiveTicket);
+                }
+
+                showToast('Đã lưu phản hồi vào hệ thống Supabase thành công!', 'success');
+            } catch (err) {
+                console.error('[Complaints] Lỗi gửi phản hồi:', err);
+                showToast('Lỗi gửi phản hồi: ' + err.message, 'danger');
             }
         });
 
