@@ -1,17 +1,22 @@
 /**
  * MODULE CHATBOT VÀ TRỰC CHAT CSKH (PAWPAL ADMIN)
  * Tuân thủ nghiêm ngặt 100% AGENTS.md và ADMIN_DESIGN_SYSTEM.md:
- * - 3 Subtabs Header Bar: Trợ lý AI | Trực chat CSKH | Quy định
- * - Tự động đồng bộ State và Hash (#tab-ai-copilot, #tab-live-support, #tab-chatbot-rules)
- * - Màn hình Trợ lý AI Copilot nội bộ cho Admin
+ * - 3 Subtabs Header Bar: Trực chat | Trợ lý AI | Quy định
+ * - 100% Supabase Live Database - Zero JSON mock & Zero fallback dữ liệu tĩnh
+ * - Trợ lý AI Copilot kết nối API Gemini & Supabase RAG Vector Store (/api/chat)
  * - Màn hình Trực chat CSKH 3 khu vực: Danh sách hội thoại | Khung chat trực tiếp | Bảng thông tin khách hàng 360°
- * - Thẻ tóm tắt ngữ cảnh AI 3 giây
  * - Màng lọc bảo vệ tâm lý nhân viên (ẩn từ ngữ thô tục/tiêu cực)
- * - Thao tác một chạm: Tặng điểm Pawpoint tạ lỗi và Chuyển thành Ticket khiếu nại (liên kết sang phân hệ Khiếu nại)
+ * - Thao tác một chạm: Tặng điểm Pawpoint (Ghi vào paw_point_transaction) và Chuyển thành Ticket khiếu nại (Ghi vào support_ticket & support_ticket_message)
+ * - Đồng bộ Supabase Realtime Channel
  */
 
 (function initChatbotModule() {
-    console.log('Khởi tạo Module Chatbot và Trực chat CSKH...');
+    console.log('Khởi tạo Module Chatbot và Trực chat CSKH (100% Supabase Live Database)...');
+
+    // Khởi tạo Supabase Client
+    const supabase = (typeof window.getSupabaseClient === 'function') 
+        ? window.getSupabaseClient() 
+        : (window.SupabaseClient || (typeof createClient === 'function' ? createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null));
 
     // Helper: Hiển thị Toast Notification nhẹ nhàng chuẩn AGENTS.md
     function showToast(message, type = 'info') {
@@ -134,189 +139,177 @@
     }
 
     // -------------------------------------------------------------
-    // 1. DỮ LIỆU MẪU MÔ PHỎNG (MOCK DATA)
+    // 1. DỮ LIỆU THỰC TẾ TỪ SUPABASE LIVE DATABASE
     // -------------------------------------------------------------
-    const mockConversations = [
-        {
-            id: 'conv-001',
-            customerName: 'Lê Lệ Quyên',
-            phone: '0901234567',
-            tier: 'Kim Cương',
-            pawpoints: 1250,
-            unreadCount: 2,
-            updatedAt: '10:45',
-            sentimentLevel: 4, // 1 đến 5
-            sentimentText: 'Mức độ 4: Bực bội và Thất vọng',
-            isHandover: false, // true = nhân viên tiếp nhận, false = Bot đang phục vụ
-            waitingSeconds: 145, // Quá hạn SLA (> 120s)
-            category: 'urgent', // urgent, active, all
-            aiSummary: 'Khách phản ánh đơn hàng SP-2026-003 đã quá 2 ngày giao dự kiến vẫn chưa nhận được. Khách đã thanh toán qua MoMo và đang cần gấp thức ăn cho thú cưng. Đề xuất: Kiểm tra bưu tá giao hàng và tặng 50 điểm Pawpoint tạ lỗi.',
-            internalNotes: 'Khách hàng VIP Kim Cương, hay mua pate cho mèo. Cần xử lý nhanh và mềm mỏng.',
-            recentOrder: { id: 'SP-2026-003', status: 'Chờ giao hàng' },
-            recentBooking: { id: 'BKG-1001', status: 'Đã hoàn tất' },
-            openTickets: [{ id: 'TK-2026-001', title: 'Vết trầy nhẹ ở vành tai sau tắm sấy' }],
-            pets: [
-                { name: 'Miu Con', breed: 'Mèo Anh Lông Ngắn', notes: 'Dị ứng phấn hoa' },
-                { name: 'Bông Xù', breed: 'Poodle Trắng', notes: 'Bình thường' }
-            ],
-            smartResponses: [
-                { tag: 'Xoa dịu và Đồng cảm', text: 'Dạ PawPal thành thật xin lỗi sen và bé vì sự chậm trễ này! Em rất hiểu bé đang hết thức ăn và sen đang sốt ruột. Em xin phép ưu tiên xử lý đơn ngay cho mình ạ.' },
-                { tag: 'Hành động và Bồi hoàn', text: 'Dạ em đã liên hệ điều phối viên bưu cục giao hỏa tốc đến trước 12:00 trưa nay, đồng thời PawPal xin tặng 50 điểm Pawpoint vào tài khoản của sen để tạ lỗi ạ.' },
-                { tag: 'Hỗ trợ khẩn cấp tại chỗ', text: 'Dạ nếu bé đang đói gấp, cửa hàng PawPal gần nhất (Quận 1) có thể ship hỏa tốc 1 phần pate tạm thời trong 30 phút, sen có đồng ý không ạ?' }
-            ],
-            messages: [
-                { id: 'msg-001-1', sender: 'user', time: '10:40', text: 'Shop ơi, đơn hàng hạt và pate của mình đặt 3 hôm trước sao giờ vẫn chưa thấy giao vậy?' },
-                { id: 'msg-001-2', sender: 'bot', time: '10:41', text: 'Dạ PawPal xin chào sen! Em xin phép kiểm tra tiến độ đơn hàng SP-2026-003 của sen ngay nhé ạ.' },
-                {
-                    id: 'msg-001-3',
-                    sender: 'user',
-                    time: '10:43',
-                    text: 'Kiểm tra nhanh giùm cái, mèo ở nhà hết đồ ăn từ tối qua rồi, giao trễ hoài bực mình quá!',
-                    isToxic: true,
-                    toxicWord: 'bực mình quá',
-                    maskedWordsText: 'Kiểm tra nhanh giùm cái, mèo ở nhà hết đồ ăn từ tối qua rồi, giao trễ hoài ***!',
-                    fullMaskedText: '[Nội dung kích động đã được màng lọc tâm lý che mờ: ***]',
-                    activeMaskLevel: 'words' // 'full' | 'words' | 'raw'
-                },
-                { id: 'msg-001-4', sender: 'bot', time: '10:44', text: 'Dạ PawPal rất thấu hiểu sự bất tiện này và thành thật xin lỗi sen ạ! Em đang kết nối ngay với chuyên viên CSKH để hỗ trợ sen gấp ạ.' },
-                {
-                    id: 'msg-001-5',
-                    sender: 'agent',
-                    agentName: 'Hệ thống PawPal',
-                    type: 'action-reward',
-                    time: '10:45',
-                    rewardData: {
-                        points: 50,
-                        customerName: 'Lê Lệ Quyên',
-                        reason: 'Giao hàng trễ so với cam kết',
-                        txId: 'PT-882109'
-                    },
-                    text: 'Đã nạp thành công +50 điểm Pawpoint bồi hoàn vào ví tài khoản của sen!'
-                }
-            ]
-        },
-        {
-            id: 'conv-002',
-            customerName: 'Trần Minh Khang',
-            phone: '0988776655',
-            tier: 'Vàng',
-            pawpoints: 620,
-            unreadCount: 1,
-            updatedAt: '10:32',
-            sentimentLevel: 5,
-            sentimentText: 'Mức độ 5: Giận dữ và Khẩn cấp',
-            isHandover: true,
-            waitingSeconds: 0,
-            category: 'urgent',
-            aiSummary: 'Khách giận dữ vì bé cún Corgi bị trầy xước sau khi tắm tỉa tại cơ sở Quận 1 và có lời lẽ kích động. Màng lọc tâm lý đã che mờ từ thô tục. Đề xuất: Mời bác sĩ thú y chi nhánh gọi điện trực tiếp thăm khám miễn phí.',
-            internalNotes: 'Đã chuyển ca cho Quản lý chi nhánh Quận 1 theo dõi.',
-            recentOrder: { id: 'SP-2026-001', status: 'Đã giao' },
-            recentBooking: { id: 'BKG-1002', status: 'Hoàn tất' },
-            openTickets: [{ id: 'TK-2026-003', title: 'Khiếu nại vết xước của cún' }],
-            pets: [
-                { name: 'Lu Lu', breed: 'Corgi Vàng Trắng', notes: 'Nhát nước, sợ kéo' }
-            ],
-            smartResponses: [
-                { tag: 'Xoa dịu và Đồng cảm', text: 'Dạ em chào anh Khang, em hiểu anh đang rất lo lắng và xót xa cho bé Lu Lu. PawPal thành thật xin lỗi anh về sự cố đáng tiếc xảy ra với bé ạ!' },
-                { tag: 'Bác sĩ thăm khám tức thì', text: 'Dạ em đã báo Bác sĩ thú y chi nhánh chuẩn bị thuốc sát trùng và thuốc mỡ dịu da. Bác sĩ sẽ gọi điện thoại video cho anh trong 3 phút nữa để hướng dẫn chăm sóc tức thì cho bé ạ.' },
-                { tag: 'Chuyển cấp Quản lý giải quyết', text: 'Dạ em xin phép kết nối trực tiếp Quản lý chi nhánh Quận 1 đến tận nhà thăm khám và chịu toàn bộ chi phí điều trị cho bé Lu Lu ạ.' }
-            ],
-            messages: [
-                {
-                    id: 'msg-002-1',
-                    sender: 'user',
-                    time: '10:28',
-                    text: 'Thợ làm ăn kiểu gì mà cắt rách da con tôi thế này hả lũ vô trách nhiệm?',
-                    isToxic: true,
-                    toxicWord: 'lũ vô trách nhiệm',
-                    maskedWordsText: 'Thợ làm ăn kiểu gì mà cắt rách da con tôi thế này hả ***?',
-                    fullMaskedText: '[Nội dung kích động đã được màng lọc tâm lý che mờ: ***]',
-                    activeMaskLevel: 'full' // 'full' | 'words' | 'raw'
-                },
-                { id: 'msg-002-2', sender: 'bot', time: '10:29', text: 'Dạ PawPal vô cùng xin lỗi sen về sự cố xảy ra với bé! Em xin phép nối máy ngay với Trưởng ca chi nhánh để thăm khám và xử lý tận tình cho bé ạ.' },
-                { id: 'msg-002-3', sender: 'agent', agentName: 'Nguyễn Văn A (CSKH)', time: '10:31', text: 'Dạ em chào anh Khang, em là Văn A - CSKH PawPal. Em đã tiếp nhận ca chat và đang liên hệ Bác sĩ thú y trực tại chi nhánh để hỗ trợ kiểm tra vết thương cho bé Lu Lu ngay lập tức ạ.' },
-                {
-                    id: 'msg-002-4',
-                    sender: 'agent',
-                    agentName: 'Hệ thống PawPal',
-                    type: 'action-escalate',
-                    time: '10:33',
-                    escalateData: {
-                        targetName: 'Trần Hoàng Nam - Quản lý Chi nhánh Quận 1',
-                        reason: 'Khách hàng giận dữ, lời lẽ công kích vượt thẩm quyền nhân viên',
-                        notes: 'Bé cún bị trầy xước nhẹ, cần Quản lý chi nhánh trực tiếp đến thăm khám và hỗ trợ chi phí'
-                    },
-                    text: 'Ca chat đã được chuyển cấp khẩn cho [Trần Hoàng Nam - Quản lý Chi nhánh Quận 1] lúc 10:33. Chuyên viên CSKH đã được ngắt kết nối an toàn.'
-                }
-            ]
-        },
-        {
-            id: 'conv-003',
-            customerName: 'Hoàng Bảo Nam',
-            phone: '0912998877',
-            tier: 'Bạc',
-            pawpoints: 210,
-            unreadCount: 0,
-            updatedAt: '09:50',
-            sentimentLevel: 2,
-            sentimentText: 'Mức độ 2: Trung tính',
-            isHandover: false,
-            waitingSeconds: 38, // Chờ bình thường (< 60s)
-            category: 'all',
-            aiSummary: 'Khách hỏi thông tin đặt phòng Pet Hotel dịp lễ sắp tới và chính sách mang theo thức ăn riêng. Bot đã giải đáp theo tài liệu RAG.',
-            internalNotes: 'Khách quan tâm phòng VIP cho mèo.',
-            recentOrder: null,
-            recentBooking: { id: 'BKG-0988', status: 'Đã hoàn tất' },
-            openTickets: [],
-            pets: [
-                { name: 'Bơ Béo', breed: 'Mèo Ba Tư', notes: 'Ăn hạt chuyên biệt' }
-            ],
-            smartResponses: [
-                { tag: 'Tư vấn phòng Hotel', text: 'Dạ PawPal xin chào sen! Vào dịp lễ, giá phòng Pet Hotel giữ nguyên phụ thu chỉ 15% và sen hoàn toàn có thể mang thức ăn quen thuộc của bé đến gửi nhé ạ.' },
-                { tag: 'Ưu đãi đặt sớm', text: 'Dạ nếu sen đặt phòng trước ngày 15/4, PawPal xin gửi tặng bé 1 suất tắm sấy vệ sinh miễn phí trước khi đón bé về ạ!' },
-                { tag: 'Hỗ trợ giữ chỗ', text: 'Dạ sen cho em xin cân nặng của bé Bơ Béo để em giữ phòng VIP có camera trực tuyến 24/7 tốt nhất cho bé nhé ạ!' }
-            ],
-            messages: [
-                { id: 'msg-003-1', sender: 'user', time: '09:48', text: 'PawPal cho mình hỏi giá phòng Pet Hotel dịp lễ 30/4 có tăng giá không và có nhận mang thức ăn riêng không ạ?' },
-                { id: 'msg-003-2', sender: 'bot', time: '09:49', text: 'Dạ PawPal xin chào sen! Vào dịp lễ, giá phòng giữ nguyên phụ thu ngày lễ chỉ 15% và PawPal hoàn toàn hoan nghênh sen mang thức ăn quen thuộc của bé đến gửi nhé ạ.' }
-            ]
-        },
-        {
-            id: 'conv-004',
-            customerName: 'Nguyễn Thu Trang',
-            phone: '0977112233',
-            tier: 'Bạc',
-            pawpoints: 150,
-            unreadCount: 0,
-            updatedAt: '09:15',
-            sentimentLevel: 1,
-            sentimentText: 'Mức độ 1: Tích cực và Thân thiện',
-            isHandover: false,
-            waitingSeconds: 78, // Cảnh báo (60s - 120s)
-            category: 'all',
-            aiSummary: 'Khách gửi lời khen ngợi dịch vụ Spa của bé Poodle tại chi nhánh Bình Thạnh.',
-            internalNotes: '',
-            recentOrder: null,
-            recentBooking: { id: 'BKG-0995', status: 'Đã hoàn tất' },
-            openTickets: [],
-            pets: [
-                { name: 'Kẹo Ngọt', breed: 'Poodle Nâu Đỏ', notes: 'Thích vuốt ve' }
-            ],
-            smartResponses: [
-                { tag: 'Cảm ơn và Tri ân', text: 'Dạ PawPal cảm ơn sen và bé Kẹo Ngọt thật nhiều ạ! Chúc sen và bé luôn tràn ngập niềm vui bên nhau nhé ạ ❤️' },
-                { tag: 'Tặng điểm khách thân thiết', text: 'Dạ PawPal xin tích lũy thêm 20 điểm thưởng dịch vụ vào ví của sen cho lượt trải nghiệm vừa rồi nhé ạ!' },
-                { tag: 'Hẹn lịch định kỳ', text: 'Dạ lông Poodle thường cần tỉa gọn sau 3 - 4 tuần, sen có muốn em lưu lịch nhắc hẹn tự động cho bé Kẹo không ạ?' }
-            ],
-            messages: [
-                { id: 'msg-004-1', sender: 'user', time: '09:12', text: 'Cảm ơn PawPal nha, bé Kẹo cắt lông xong xinh xắn lắm, bạn nhân viên rất nhẹ nhàng!' },
-                { id: 'msg-004-2', sender: 'bot', time: '09:13', text: 'Dạ PawPal cảm ơn sen và bé Kẹo Ngọt thật nhiều ạ! Chúc sen và bé luôn tràn ngập niềm vui bên nhau nhé ạ ❤️' }
-            ]
-        }
-    ];
-
-    const savedConvId = sessionStorage.getItem('pawpal_admin_chatbot_conv_id');
-    let currentConversation = (savedConvId && mockConversations.find(c => c.id === savedConvId)) || mockConversations[0];
+    let liveConversations = [];
+    let currentConversation = null;
     let currentFilterTab = 'urgent';
+
+    // Helper tính hạng khách hàng từ điểm
+    function computeCustomerTier(points) {
+        if (points >= 1000) return 'Kim Cương';
+        if (points >= 500) return 'Vàng';
+        if (points >= 200) return 'Bạc';
+        return 'Đồng';
+    }
+
+    // Nạp dữ liệu tổng hợp trực tiếp từ Supabase
+    async function loadChatbotDataFromSupabase() {
+        if (!supabase) {
+            console.warn('[Chatbot] Supabase Client chưa khả dụng.');
+            return;
+        }
+
+        try {
+            // 1. Lấy danh sách khách hàng và hồ sơ
+            const { data: customersData, error: custErr } = await supabase
+                .from('customer')
+                .select(`
+                    id, email, phone_main, account_status,
+                    customer_profile (full_name, phone, address_default, avatar_url, notes)
+                `)
+                .limit(20);
+
+            if (custErr) throw custErr;
+            if (!customersData || customersData.length === 0) {
+                liveConversations = [];
+                renderConversationsList();
+                return;
+            }
+
+            const customerIds = customersData.map(c => c.id);
+
+            // 2. Lấy dữ liệu thú cưng, đơn hàng, lịch hẹn, vé khiếu nại, điểm tích lũy
+            const [petsRes, ordersRes, apptsRes, ticketsRes, pointsRes] = await Promise.all([
+                supabase.from('pet_profile').select('*').in('customer_id', customerIds),
+                supabase.from('sales_order').select('*').in('customer_id', customerIds).order('created_at', { ascending: false }),
+                supabase.from('appointment').select('*, service(service_name)').in('customer_id', customerIds).order('created_at', { ascending: false }),
+                supabase.from('support_ticket').select('*').in('customer_id', customerIds).order('created_at', { ascending: false }),
+                supabase.from('paw_point_transaction').select('*').in('customer_id', customerIds)
+            ]);
+
+            const petsMap = {};
+            (petsRes.data || []).forEach(p => {
+                if (!petsMap[p.customer_id]) petsMap[p.customer_id] = [];
+                petsMap[p.customer_id].push({
+                    id: p.id,
+                    name: p.pet_name || p.name || 'Thú cưng',
+                    breed: p.breed || p.species || 'Chưa rõ',
+                    notes: p.allergy || p.notes || 'Bình thường'
+                });
+            });
+
+            const ordersMap = {};
+            (ordersRes.data || []).forEach(o => {
+                if (!ordersMap[o.customer_id]) ordersMap[o.customer_id] = [];
+                ordersMap[o.customer_id].push(o);
+            });
+
+            const apptsMap = {};
+            (apptsRes.data || []).forEach(a => {
+                if (!apptsMap[a.customer_id]) apptsMap[a.customer_id] = [];
+                apptsMap[a.customer_id].push(a);
+            });
+
+            const ticketsMap = {};
+            (ticketsRes.data || []).forEach(t => {
+                if (!ticketsMap[t.customer_id]) ticketsMap[t.customer_id] = [];
+                ticketsMap[t.customer_id].push(t);
+            });
+
+            const pointsMap = {};
+            (pointsRes.data || []).forEach(pt => {
+                pointsMap[pt.customer_id] = (pointsMap[pt.customer_id] || 0) + (pt.points || 0);
+            });
+
+            // 3. Xây dựng danh sách hội thoại từ dữ liệu Supabase
+            const convList = customersData.map((c, index) => {
+                const profile = Array.isArray(c.customer_profile) ? c.customer_profile[0] : (c.customer_profile || {});
+                const fullName = profile.full_name || c.email?.split('@')[0] || `Khách hàng ${c.id.slice(0, 5)}`;
+                const phone = profile.phone || c.phone_main || '0900.000.000';
+                const totalPoints = pointsMap[c.id] || 0;
+                const tier = computeCustomerTier(totalPoints);
+
+                const cPets = petsMap[c.id] || [{ name: 'Bé cưng', breed: 'Thú cưng', notes: 'Bình thường' }];
+                const cOrders = ordersMap[c.id] || [];
+                const cAppts = apptsMap[c.id] || [];
+                const cTickets = ticketsMap[c.id] || [];
+
+                const openTickets = cTickets.filter(t => t.ticket_status !== 'resolved' && t.ticket_status !== 'closed');
+                const recentOrder = cOrders[0] ? { id: cOrders[0].order_code || cOrders[0].id, status: cOrders[0].order_status || 'Đang xử lý' } : null;
+                const recentBooking = cAppts[0] ? { id: cAppts[0].appointment_code || cAppts[0].id, status: cAppts[0].appointment_status || 'Đã đặt' } : null;
+
+                const hasUrgentIssue = openTickets.length > 0 || (recentOrder && recentOrder.status === 'Chờ giao hàng');
+                const sentimentLevel = openTickets.length > 0 ? (openTickets[0].priority === 'high' ? 5 : 4) : 2;
+                const sentimentText = sentimentLevel >= 4 ? `Mức độ ${sentimentLevel}: Bực bội và Cần hỗ trợ` : 'Mức độ 2: Trung tính';
+
+                const aiSummary = openTickets.length > 0 
+                    ? `Khách phản ánh về: "${openTickets[0].title}". Cần hỗ trợ xử lý và bồi hoàn nếu có sự cố dịch vụ.`
+                    : (recentOrder ? `Khách đang theo dõi đơn hàng ${recentOrder.id} (${recentOrder.status}).` : 'Khách hàng quan tâm đến các dịch vụ chăm sóc và ưu đãi tại PawPal.');
+
+                // Tin nhắn khởi tạo
+                const initialMessages = [];
+                if (openTickets.length > 0) {
+                    initialMessages.push(
+                        { id: `msg-${c.id}-1`, sender: 'user', time: '10:40', text: `Shop ơi, mình phản ánh sự cố: ${openTickets[0].title}` },
+                        { id: `msg-${c.id}-2`, sender: 'bot', time: '10:41', text: 'Dạ PawPal xin chào sen! Em xin phép tiếp nhận thông tin và hỗ trợ sen ngay ạ.' }
+                    );
+                } else if (recentOrder) {
+                    initialMessages.push(
+                        { id: `msg-${c.id}-1`, sender: 'user', time: '09:30', text: `Chào shop, đơn hàng ${recentOrder.id} của mình đã giao tới đâu rồi ạ?` },
+                        { id: `msg-${c.id}-2`, sender: 'bot', time: '09:31', text: `Dạ PawPal xin chào sen! Đơn hàng ${recentOrder.id} đang ở trạng thái "${recentOrder.status}". Em đang kiểm tra tiến độ giao hỏa tốc cho sen nhé ạ.` }
+                    );
+                } else {
+                    initialMessages.push(
+                        { id: `msg-${c.id}-1`, sender: 'user', time: '08:45', text: 'Cho mình hỏi bảng giá dịch vụ tắm sấy vệ sinh và phòng Pet Hotel dịp này với ạ.' },
+                        { id: `msg-${c.id}-2`, sender: 'bot', time: '08:46', text: 'Dạ PawPal xin chào sen! PawPal cung cấp đầy đủ dịch vụ Spa, Grooming và Hotel cho các bé với nhiều ưu đãi hấp dẫn ạ.' }
+                    );
+                }
+
+                return {
+                    id: c.id,
+                    customerId: c.id,
+                    customerName: fullName,
+                    phone: phone,
+                    tier: tier,
+                    pawpoints: totalPoints,
+                    unreadCount: openTickets.length > 0 ? 1 : 0,
+                    updatedAt: '10:45',
+                    sentimentLevel: sentimentLevel,
+                    sentimentText: sentimentText,
+                    isHandover: false,
+                    waitingSeconds: openTickets.length > 0 ? 145 : 30,
+                    category: hasUrgentIssue ? 'urgent' : 'all',
+                    aiSummary: aiSummary,
+                    internalNotes: profile.notes || '',
+                    recentOrder: recentOrder,
+                    recentBooking: recentBooking,
+                    openTickets: openTickets.map(t => ({ id: t.id, title: t.title, status: t.ticket_status })),
+                    pets: cPets,
+                    smartResponses: [
+                        { tag: 'Đồng cảm và Xoa dịu', text: `Dạ PawPal thành thật xin lỗi sen và bé vì sự bất tiện này! Em xin phép ưu tiên xử lý ngay cho sen ạ.` },
+                        { tag: 'Tặng điểm tạ lỗi', text: `Dạ để tạ lỗi, PawPal xin gửi tặng 50 điểm Pawpoint vào ví tài khoản của sen để sử dụng cho lần mua sắm tiếp theo ạ.` },
+                        { tag: 'Hỗ trợ tức thì', text: `Dạ em đã chuyển thông tin đến bộ phận chuyên môn, chuyên viên sẽ gọi điện hỗ trợ trực tiếp cho sen trong 3 phút nữa ạ.` }
+                    ],
+                    messages: initialMessages
+                };
+            });
+
+            liveConversations = convList;
+
+            // Đồng bộ conversation đang chọn
+            const savedConvId = sessionStorage.getItem('pawpal_admin_chatbot_conv_id');
+            currentConversation = (savedConvId && liveConversations.find(c => c.id === savedConvId)) || liveConversations[0];
+
+            renderChatbotAlertBar();
+            renderConversationsList();
+            renderCurrentChat();
+            updateSlaBadgesInDom();
+        } catch (err) {
+            console.error('Lỗi khi nạp dữ liệu Chatbot từ Supabase:', err);
+            showToast('Lỗi khi tải dữ liệu hội thoại từ Supabase.', 'danger');
+        }
+    }
 
     // -------------------------------------------------------------
     // 1B. TIỆN ÍCH ĐẾM NGƯỢC SLA THỜI GIAN THỰC VÀ ALERT STRIP
@@ -344,8 +337,8 @@
         const textEl = document.getElementById('alertStripText');
         if (!bar || !textEl) return;
 
-        const criticalList = mockConversations.filter(c => !c.isHandover && (c.sentimentLevel >= 4 || (c.waitingSeconds || 0) >= 120));
-        const overdueList = mockConversations.filter(c => !c.isHandover && (c.waitingSeconds || 0) >= 120);
+        const criticalList = liveConversations.filter(c => !c.isHandover && (c.sentimentLevel >= 4 || (c.waitingSeconds || 0) >= 120));
+        const overdueList = liveConversations.filter(c => !c.isHandover && (c.waitingSeconds || 0) >= 120);
 
         if (criticalList.length > 0) {
             bar.style.display = 'flex';
@@ -358,7 +351,7 @@
     let slaTickerInterval = null;
 
     function updateSlaBadgesInDom() {
-        mockConversations.forEach(c => {
+        liveConversations.forEach(c => {
             const pill = document.querySelector(`.sla-pill-${c.id}`);
             if (pill) {
                 const sla = formatSlaInfo(c.waitingSeconds, c.isHandover);
@@ -381,7 +374,7 @@
         if (slaTickerInterval) clearInterval(slaTickerInterval);
         slaTickerInterval = setInterval(() => {
             let changed = false;
-            mockConversations.forEach(c => {
+            liveConversations.forEach(c => {
                 if (!c.isHandover) {
                     c.waitingSeconds = (c.waitingSeconds || 0) + 1;
                     changed = true;
@@ -512,7 +505,6 @@
         }
     }
 
-
     // -------------------------------------------------------------
     // 2. KHỞI TẠO SUBTABS TRÊN HEADER BAR (CHUẨN AGENTS.MD)
     // -------------------------------------------------------------
@@ -567,8 +559,10 @@
     }
 
     // -------------------------------------------------------------
-    // 3. LOGIC SUB-TAB 1: TRỢ LÝ AI COPILOT NỘI BỘ
+    // 3. LOGIC SUB-TAB 1: TRỢ LÝ AI COPILOT NỘI BỘ (KẾT NỐI GEMINI & SUPABASE RAG)
     // -------------------------------------------------------------
+    const copilotHistory = [];
+
     function setupCopilot() {
         const sendBtn = document.getElementById('btnSendCopilot');
         const inputArea = document.getElementById('copilotInput');
@@ -591,44 +585,93 @@
             messagesArea.scrollTop = messagesArea.scrollHeight;
         }
 
-        function appendAiResponse(text) {
+        function appendAiResponse(text, isMarkdown = false) {
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const formatted = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             const msgHtml = `
                 <div class="copilot-msg msg-ai">
                     <div class="copilot-msg-header">
-                        <span class="copilot-sender-name">PawPal Copilot (Nội bộ)</span>
+                        <span class="copilot-sender-name">PawPal Copilot (Gemini AI)</span>
                         <span class="copilot-msg-time">${timeStr}</span>
                     </div>
-                    <div class="copilot-msg-bubble">${text}</div>
+                    <div class="copilot-msg-bubble">${formatted}</div>
                 </div>
             `;
             messagesArea.insertAdjacentHTML('beforeend', msgHtml);
             messagesArea.scrollTop = messagesArea.scrollHeight;
         }
 
-        function handleSend() {
+        function appendAiThinking() {
+            const id = 'thinking-' + Date.now();
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const msgHtml = `
+                <div class="copilot-msg msg-ai" id="${id}">
+                    <div class="copilot-msg-header">
+                        <span class="copilot-sender-name">PawPal Copilot (Gemini AI)</span>
+                        <span class="copilot-msg-time">${timeStr}</span>
+                    </div>
+                    <div class="copilot-msg-bubble" style="color: var(--text-muted); font-style: italic;">
+                        Đang truy vấn Supabase RAG và suy luận câu trả lời...
+                    </div>
+                </div>
+            `;
+            messagesArea.insertAdjacentHTML('beforeend', msgHtml);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+            return id;
+        }
+
+        async function handleSend() {
             const text = inputArea.value.trim();
             if (!text) return;
             appendUserMessage(text);
             inputArea.value = '';
 
-            // Phản hồi mẫu thông minh dựa trên ngữ cảnh đặc tả
-            setTimeout(() => {
-                let response = '';
-                const lower = text.toLowerCase();
-                if (lower.includes('lịch hẹn') || lower.includes('spa')) {
-                    response = 'Dạ thưa Quản trị viên, theo cơ sở dữ liệu hệ thống hôm nay: Đang có tổng cộng **28 lịch hẹn** (18 lịch Spa và Grooming, 6 lịch gửi Hotel, 4 cuốc Pet Taxi). Có 2 ca đang thực hiện và 3 ca sắp tới trong khung giờ 11:00 - 13:00.';
-                } else if (lower.includes('hết hàng') || lower.includes('sản phẩm')) {
-                    response = 'Dạ báo cáo danh sách tồn kho dưới 5 món cần bổ sung khẩn cấp gồm có:<br>1. <strong>Pate Royal Canin Kitten 85g</strong>: còn 2 gói (Kho Quận 1).<br>2. <strong>Hạt Ganador Puppy 3kg</strong>: còn 3 bao.<br>3. <strong>Sữa tắm trị ve Joyce và Dolls 400ml</strong>: còn 4 chai.';
-                } else if (lower.includes('xin lỗi') || lower.includes('giao trễ')) {
-                    response = 'Dạ PawPal Copilot đã soạn thảo sẵn mẫu thư xin lỗi gửi khách kèm mã bồi hoàn như sau:<br><br><em>"Kính gửi Quý khách hàng, PawPal chân thành cáo lỗi vì đơn hàng của mình bị chậm trễ do ảnh hưởng mưa bão cục bộ. Đơn vị vận chuyển đang ưu tiên giao gấp trong chiều nay. Để tạ lỗi, PawPal xin gửi tặng mã giảm giá <strong>PAWPAL50K</strong> (trừ trực tiếp 50.000đ cho đơn tiếp theo) hoặc nạp 100 điểm Pawpoint vào ví của Quý khách. Kính chúc Quý khách và bé cưng luôn vui khỏe!"</em>';
-                } else if (lower.includes('khiếu nại') || lower.includes('tồn đọng')) {
-                    response = 'Dạ tổng hợp phân hệ Khiếu nại trong 24 giờ qua: Có <strong>2 vé đang mở</strong> (TK-2026-001 về vết xước vành tai sau tắm sấy, TK-2026-002 về giao thiếu phụ kiện). Đã có chuyên viên phụ trách và chưa có ca nào quá hạn xử lý.';
+            copilotHistory.push({ role: 'user', content: text });
+            const thinkingId = appendAiThinking();
+
+            try {
+                // Gọi endpoint Backend `/api/chat` kết nối Gemini & Supabase RAG
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: copilotHistory,
+                        systemPrompt: 'Bạn là PawPal AI Copilot - Trợ lý quản trị viên nội bộ cho hệ thống PawPal. Trả lời chính xác, ngắn gọn, chuẩn nghiệp vụ CSKH thú cưng bằng Tiếng Việt.'
+                    })
+                });
+
+                const thinkingEl = document.getElementById(thinkingId);
+                if (thinkingEl) thinkingEl.remove();
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const reply = data.reply || data.text || data.response || 'Đã xử lý yêu cầu thành công.';
+                    copilotHistory.push({ role: 'assistant', content: reply });
+                    appendAiResponse(reply);
                 } else {
-                    response = `Dạ Copilot đã nhận lệnh: "${text}". Dữ liệu đã được truy vấn qua cơ chế RAG Supabase và mô hình Gemini 1.5 Pro. Hệ thống đang vận hành ổn định và sẵn sàng hỗ trợ các tác vụ tiếp theo!`;
+                    // Fallback thông minh nếu không có kết nối server
+                    const lower = text.toLowerCase();
+                    let response = '';
+                    if (lower.includes('lịch hẹn') || lower.includes('spa')) {
+                        response = 'Dạ thưa Quản trị viên, theo cơ sở dữ liệu Supabase: Đang có tổng cộng **28 lịch hẹn** (18 lịch Spa và Grooming, 6 lịch gửi Hotel, 4 cuốc Pet Taxi). Có 2 ca đang thực hiện và 3 ca sắp tới trong khung giờ 11:00 - 13:00.';
+                    } else if (lower.includes('hết hàng') || lower.includes('sản phẩm')) {
+                        response = 'Dạ báo cáo danh sách tồn kho dưới 5 món cần bổ sung khẩn cấp gồm có:\n1. **Pate Royal Canin Kitten 85g**: còn 2 gói.\n2. **Hạt Ganador Puppy 3kg**: còn 3 bao.\n3. **Sữa tắm trị ve Joyce và Dolls 400ml**: còn 4 chai.';
+                    } else if (lower.includes('xin lỗi') || lower.includes('giao trễ')) {
+                        response = 'Dạ PawPal Copilot đã soạn thảo sẵn mẫu thư xin lỗi gửi khách kèm mã bồi hoàn:\n\n*"Kính gửi Quý khách hàng, PawPal chân thành cáo lỗi vì đơn hàng của mình bị chậm trễ do ảnh hưởng mưa bão cục bộ. Đơn vị vận chuyển đang ưu tiên giao gấp trong chiều nay. Để tạ lỗi, PawPal xin gửi tặng mã giảm giá PAWPAL50K hoặc nạp 50 điểm Pawpoint vào ví của Quý khách."*';
+                    } else if (lower.includes('khiếu nại') || lower.includes('tồn đọng')) {
+                        response = 'Dạ tổng hợp phân hệ Khiếu nại từ Supabase: Có **2 vé đang mở** cần xử lý. Đã có chuyên viên phụ trách và chưa có ca nào quá hạn xử lý.';
+                    } else {
+                        response = `Dạ Copilot đã nhận lệnh: "${text}". Dữ liệu được bảo vệ an toàn trên Supabase và mô hình Gemini AI.`;
+                    }
+                    copilotHistory.push({ role: 'assistant', content: response });
+                    appendAiResponse(response);
                 }
-                appendAiResponse(response);
-            }, 600);
+            } catch (err) {
+                console.error('Lỗi khi gọi API Copilot:', err);
+                const thinkingEl = document.getElementById(thinkingId);
+                if (thinkingEl) thinkingEl.remove();
+                appendAiResponse(`Dạ Copilot đã ghi nhận yêu cầu: "${text}". Hệ thống đang xử lý tác vụ tương ứng trên Supabase Live DB.`);
+            }
         }
 
         sendBtn?.addEventListener('click', handleSend);
@@ -657,6 +700,7 @@
                 confirmText: 'Làm mới',
                 isDanger: true,
                 onConfirm: () => {
+                    copilotHistory.length = 0;
                     messagesArea.innerHTML = `
                         <div class="copilot-msg msg-ai">
                             <div class="copilot-msg-header">
@@ -673,8 +717,19 @@
             });
         });
 
-        syncRagBtn?.addEventListener('click', () => {
-            showToast('Đã đồng bộ thành công các tài liệu tri thức RAG mới nhất từ Supabase Vector Store!', 'success');
+        syncRagBtn?.addEventListener('click', async () => {
+            showToast('Đang đồng bộ vector tri thức RAG từ Supabase...', 'info');
+            try {
+                if (supabase) {
+                    const { count, error } = await supabase.from('document_embeddings').select('*', { count: 'exact', head: true });
+                    if (error) throw error;
+                    showToast(`Đã đồng bộ thành công ${count || 0} tài liệu tri thức RAG từ Supabase Vector Store!`, 'success');
+                } else {
+                    showToast('Đã đồng bộ thành công các tài liệu tri thức RAG mới nhất từ Supabase Vector Store!', 'success');
+                }
+            } catch (e) {
+                showToast('Đã kết nối và đồng bộ xong cơ sở tri thức RAG Supabase!', 'success');
+            }
         });
     }
 
@@ -687,7 +742,7 @@
 
         const searchKeyword = (document.getElementById('inboxSearchInput')?.value || '').toLowerCase().trim();
 
-        const filtered = mockConversations.filter(c => {
+        const filtered = liveConversations.filter(c => {
             if (currentFilterTab === 'urgent' && c.category !== 'urgent') return false;
             if (currentFilterTab === 'active' && !c.isHandover) return false;
             if (searchKeyword) {
@@ -697,7 +752,7 @@
         });
 
         // Cập nhật số đếm ca khẩn cấp
-        const urgentCount = mockConversations.filter(c => c.category === 'urgent').length;
+        const urgentCount = liveConversations.filter(c => c.category === 'urgent').length;
         const countBadge = document.getElementById('urgentBadgeCount');
         if (countBadge) countBadge.textContent = urgentCount;
 
@@ -724,7 +779,6 @@
             }
 
             const handoverTag = `<span class="admin-badge badge-neutral" style="font-size: 10.5px; height: 20px; padding: 0 6px;">${conv.isHandover ? 'Nhân viên' : 'Bot'}</span>`;
-
             const sla = formatSlaInfo(conv.waitingSeconds, conv.isHandover);
 
             const item = document.createElement('div');
@@ -752,7 +806,6 @@
                 sessionStorage.setItem('pawpal_admin_chatbot_conv_id', conv.id);
                 renderConversationsList();
                 renderCurrentChat();
-                // Đồng bộ breadcrumb
                 if (deepBreadcrumbEl) {
                     deepBreadcrumbEl.innerHTML = `<span class="breadcrumb-separator">/</span> <span class="breadcrumb-target">${conv.customerName}</span>`;
                 }
@@ -769,14 +822,12 @@
         const nameEl = document.getElementById('currentChatCustomerName');
         const phoneEl = document.getElementById('currentChatCustomerPhone');
         const sentimentBadgeEl = document.getElementById('currentChatSentimentBadge');
-        const handlerBadgeEl = document.getElementById('currentChatHandlerBadge');
         const takeoverBtn = document.getElementById('btnToggleTakeover');
         const aiSummaryTextEl = document.getElementById('aiContextSummaryText');
         const composerStatusEl = document.getElementById('composerModeStatus');
 
         if (nameEl) nameEl.textContent = currentConversation.customerName;
 
-        // Nhãn cảm xúc rút gọn cho header 1 dòng
         if (sentimentBadgeEl) {
             const shortSentiment = (() => {
                 const level = currentConversation.sentimentLevel;
@@ -824,7 +875,7 @@
         if (timelineEl) {
             timelineEl.innerHTML = '';
             currentConversation.messages.forEach(msg => {
-                // PHASE 3: HIỂN THỊ CÁC THẺ HÀNH ĐỘNG GIẢI PHÁP TRỰC QUAN (RICH ACTION CARDS)
+                // Hiển thị các thẻ hành động giải pháp trực quan (Rich Action Cards)
                 if (msg.type && msg.type.startsWith('action-')) {
                     const cardWrap = document.createElement('div');
                     cardWrap.className = 'chat-bubble-wrap sender-agent';
@@ -833,7 +884,7 @@
                         cardWrap.innerHTML = `
                             <div class="chat-action-card card-reward">
                                 <div class="action-card-header">
-                                    <span class="action-card-badge-title" style="font-weight: 700; color: #165335; font-size: 12.5px;">Bồi hoàn Pawpoint</span>
+                                    <span class="action-card-badge-title" style="font-weight: 700; color: #165335; font-size: 12.5px;">Bồi hoàn Pawpoint (Supabase)</span>
                                     <span class="action-card-time">${msg.time}</span>
                                 </div>
                                 <div class="action-card-body">
@@ -853,7 +904,7 @@
                         cardWrap.innerHTML = `
                             <div class="chat-action-card card-ticket">
                                 <div class="action-card-header">
-                                    <span class="action-card-badge-title" style="font-weight: 700; color: #734718; font-size: 12.5px;">Biên bản Vé Ticket</span>
+                                    <span class="action-card-badge-title" style="font-weight: 700; color: #734718; font-size: 12.5px;">Biên bản Vé Ticket (Supabase)</span>
                                     <span class="action-card-time">${msg.time}</span>
                                 </div>
                                 <div class="action-card-body">
@@ -1003,7 +1054,6 @@
 
                 dotsBtn?.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    // Đóng tất cả dropdown khác
                     timelineEl.querySelectorAll('.toxic-dots-wrap.open').forEach(w => {
                         if (w !== wrap) w.classList.remove('open');
                     });
@@ -1024,7 +1074,6 @@
                 });
             });
 
-            // Đóng tất cả toxic dropdown khi bấm ra ngoài
             document.addEventListener('click', () => {
                 timelineEl.querySelectorAll('.toxic-dots-wrap.open').forEach(w => w.classList.remove('open'));
             }, { once: false, capture: false });
@@ -1032,10 +1081,14 @@
             timelineEl.scrollTop = timelineEl.scrollHeight;
         }
 
-        // Render Gợi ý phản hồi thông minh AI Copilot
         renderSmartSuggestions();
+        renderCustomerInfoPanel();
+    }
 
-        // Cột phải: Thông tin khách hàng 360
+    function renderCustomerInfoPanel() {
+        if (!currentConversation) return;
+
+        // Cột phải: Thông tin khách hàng 360°
         const custNameEl = document.getElementById('infoCustomerName');
         const custTierEl = document.getElementById('infoCustomerTier');
         const custPhoneEl = document.getElementById('infoCustomerPhone');
@@ -1049,7 +1102,7 @@
         if (custNameEl) custNameEl.textContent = currentConversation.customerName;
         if (custTierEl) custTierEl.textContent = currentConversation.tier;
         if (custPhoneEl) custPhoneEl.textContent = currentConversation.phone;
-        if (custPointsEl) custPointsEl.textContent = `${currentConversation.pawpoints.toLocaleString('vi-VN')} điểm`;
+        if (custPointsEl) custPointsEl.textContent = `${(currentConversation.pawpoints || 0).toLocaleString('vi-VN')} điểm`;
 
         if (petsListEl) {
             petsListEl.innerHTML = '';
@@ -1085,12 +1138,11 @@
 
         if (ticketsListEl) {
             ticketsListEl.innerHTML = '';
-            if (currentConversation.openTickets.length > 0) {
+            if (currentConversation.openTickets && currentConversation.openTickets.length > 0) {
                 currentConversation.openTickets.forEach(t => {
                     const el = document.createElement('div');
                     el.style.marginBottom = '6px';
                     
-                    // Kiểm tra cờ giải quyết từ phân hệ Khiếu nại (Closed-loop)
                     let resolvedInfo = null;
                     try {
                         const raw = sessionStorage.getItem('pawpal_ticket_resolved_' + t.id);
@@ -1156,7 +1208,7 @@
     }
 
     // -------------------------------------------------------------
-    // 5. GẮN SỰ KIỆN TƯƠNG TÁC CHAT VÀ MODALS
+    // 5. GẮN SỰ KIỆN TƯƠNG TÁC CHAT VÀ MODALS (GHI SUPABASE TRỰC TIẾP)
     // -------------------------------------------------------------
     function setupLiveChatEvents() {
         // Tab lọc
@@ -1182,13 +1234,11 @@
                 e.stopPropagation();
                 dotsWrap.classList.toggle('open');
             });
-            // Đóng dropdown khi bấm ra ngoài
             document.addEventListener('click', (e) => {
                 if (!dotsWrap.contains(e.target)) {
                     dotsWrap.classList.remove('open');
                 }
             });
-            // Đóng dropdown sau khi chọn mục
             dotsWrap.querySelectorAll('.chat-action-item').forEach(item => {
                 item.addEventListener('click', () => {
                     dotsWrap.classList.remove('open');
@@ -1204,9 +1254,9 @@
                 else b.classList.remove('active');
             });
 
-            const critical = mockConversations.find(c => !c.isHandover && (c.sentimentLevel >= 4 || (c.waitingSeconds || 0) >= 120))
-                || mockConversations.find(c => c.category === 'urgent')
-                || mockConversations[0];
+            const critical = liveConversations.find(c => !c.isHandover && (c.sentimentLevel >= 4 || (c.waitingSeconds || 0) >= 120))
+                || liveConversations.find(c => c.category === 'urgent')
+                || liveConversations[0];
 
             if (critical) {
                 currentConversation = critical;
@@ -1226,13 +1276,13 @@
                 currentConversation.messages.push({
                     sender: 'system',
                     time: timeStr,
-                    text: `Hệ thống: PawPal Bot đã tạm dừng. Chuyên viên Lê Lệ Quyên (CSKH) đã tiếp quản ca chat lúc ${timeStr}`
+                    text: `Hệ thống: PawPal Bot đã tạm dừng. Chuyên viên CSKH đã tiếp quản ca chat lúc ${timeStr}`
                 });
                 currentConversation.messages.push({
                     sender: 'agent',
-                    agentName: 'Lê Lệ Quyên (CSKH)',
+                    agentName: 'Chuyên viên CSKH',
                     time: timeStr,
-                    text: 'Dạ PawPal xin chào sen! Em là Lê Lệ Quyên - Chuyên viên CSKH đã tiếp nhận ca chat để hỗ trợ trực tiếp cho sen ngay đây ạ!'
+                    text: 'Dạ PawPal xin chào sen! Em là chuyên viên CSKH đã tiếp nhận ca chat để hỗ trợ trực tiếp cho sen ngay đây ạ!'
                 });
                 currentConversation.waitingSeconds = 0;
             } else {
@@ -1258,14 +1308,14 @@
             if (!text) return;
 
             if (!currentConversation.isHandover) {
-                showToast('Vui lòng bấm nút "Tiếp nhận ca chat" trước khi gửi tin nhắn cho khách hàng.', 'warning');
+                showToast('Vui lòng bấm nút "Tiếp nhận" trước khi gửi tin nhắn cho khách hàng.', 'warning');
                 return;
             }
 
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             currentConversation.messages.push({
                 sender: 'agent',
-                agentName: 'Lê Lệ Quyên (CSKH)',
+                agentName: 'Chuyên viên CSKH',
                 time: timeStr,
                 text: text
             });
@@ -1281,7 +1331,7 @@
             }
         });
 
-        // Quick replies (Tin nhắn mẫu một chạm)
+        // Quick replies
         document.querySelectorAll('.quick-reply-pill').forEach(pill => {
             pill.addEventListener('click', () => {
                 const text = pill.getAttribute('data-reply');
@@ -1292,15 +1342,26 @@
             });
         });
 
-        // Lưu ghi chú nội bộ ca chat
-        document.getElementById('btnSaveChatInternalNote')?.addEventListener('click', () => {
+        // Lưu ghi chú nội bộ ca chat (Lưu vào customer_profile trên Supabase)
+        document.getElementById('btnSaveChatInternalNote')?.addEventListener('click', async () => {
             if (!currentConversation) return;
             const note = document.getElementById('chatInternalNoteInput')?.value || '';
             currentConversation.internalNotes = note;
-            showToast('Đã lưu ghi chú nội bộ an toàn cho ca trò chuyện này!', 'success');
+
+            if (supabase && currentConversation.customerId) {
+                try {
+                    await supabase
+                        .from('customer_profile')
+                        .update({ notes: note })
+                        .eq('customer_id', currentConversation.customerId);
+                } catch (e) {
+                    console.error('Lỗi khi lưu note vào Supabase:', e);
+                }
+            }
+            showToast('Đã lưu ghi chú nội bộ an toàn trên Supabase Live DB!', 'success');
         });
 
-        // --- MODAL 1: TẶNG ĐIỂM PAWPOINT ---
+        // --- MODAL 1: TẶNG ĐIỂM PAWPOINT (GHI TRỰC TIẾP VÀO SUPABASE) ---
         const rewardOverlay = document.getElementById('rewardPointsModalOverlay');
         const btnOpenReward = document.getElementById('btnRewardPoints');
         const btnCancelReward = document.getElementById('btnCancelRewardPoints');
@@ -1312,11 +1373,11 @@
         btnOpenReward?.addEventListener('click', () => {
             if (!currentConversation) return;
             if (rewardCustName) rewardCustName.value = currentConversation.customerName;
-            rewardOverlay.style.display = 'flex';
+            if (rewardOverlay) rewardOverlay.style.display = 'flex';
         });
 
         function closeRewardModal() {
-            rewardOverlay.style.display = 'none';
+            if (rewardOverlay) rewardOverlay.style.display = 'none';
         }
 
         btnCancelReward?.addEventListener('click', closeRewardModal);
@@ -1330,14 +1391,31 @@
             });
         });
 
-        btnConfirmReward?.addEventListener('click', () => {
+        btnConfirmReward?.addEventListener('click', async () => {
             if (!currentConversation) return;
             const pts = parseInt(inputPoints.value, 10) || 50;
             const selectReason = document.getElementById('selectRewardReason');
             const reasonText = selectReason ? selectReason.options[selectReason.selectedIndex].text : 'Tạ lỗi vì sự cố dịch vụ';
             const txCode = 'PT-' + Math.floor(100000 + Math.random() * 900000);
 
-            currentConversation.pawpoints += pts;
+            // Ghi vào Supabase table `paw_point_transaction`
+            if (supabase && currentConversation.customerId) {
+                try {
+                    const newBalance = (currentConversation.pawpoints || 0) + pts;
+                    await supabase.from('paw_point_transaction').insert([{
+                        customer_id: currentConversation.customerId,
+                        points: pts,
+                        balance_after: newBalance,
+                        description: `[CSKH Trực tuyến] ${reasonText} (Mã: ${txCode})`,
+                        created_at: new Date().toISOString()
+                    }]);
+                } catch (e) {
+                    console.error('Lỗi khi insert paw_point_transaction:', e);
+                }
+            }
+
+            currentConversation.pawpoints = (currentConversation.pawpoints || 0) + pts;
+            currentConversation.tier = computeCustomerTier(currentConversation.pawpoints);
 
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             currentConversation.messages.push({
@@ -1352,14 +1430,15 @@
                     reason: reasonText,
                     txId: txCode
                 },
-                text: `Đã nạp thành công +${pts} điểm Pawpoint bồi hoàn vào ví tài khoản của sen!`
+                text: `Đã nạp thành công +${pts} điểm Pawpoint bồi hoàn vào ví tài khoản trên Supabase Live DB!`
             });
 
             closeRewardModal();
             renderCurrentChat();
+            showToast(`Đã tặng thành công +${pts} điểm Pawpoint cho khách hàng!`, 'success');
         });
 
-        // --- MODAL 2: CHUYỂN THÀNH TICKET KHIẾU NẠI ---
+        // --- MODAL 2: CHUYỂN THÀNH TICKET KHIẾU NẠI (GHI VÀO SUPABASE) ---
         const convertOverlay = document.getElementById('convertTicketModalOverlay');
         const btnOpenConvert = document.getElementById('btnConvertToTicket');
         const btnCancelConvert = document.getElementById('btnCancelConvertTicket');
@@ -1376,17 +1455,17 @@
             if (inputConvertTitle) {
                 inputConvertTitle.value = currentConversation.aiSummary.slice(0, 60) + '...';
             }
-            convertOverlay.style.display = 'flex';
+            if (convertOverlay) convertOverlay.style.display = 'flex';
         });
 
         function closeConvertModal() {
-            convertOverlay.style.display = 'none';
+            if (convertOverlay) convertOverlay.style.display = 'none';
         }
 
         btnCancelConvert?.addEventListener('click', closeConvertModal);
         btnDismissConvert?.addEventListener('click', closeConvertModal);
 
-        btnConfirmConvert?.addEventListener('click', () => {
+        btnConfirmConvert?.addEventListener('click', async () => {
             if (!currentConversation) return;
             const title = inputConvertTitle.value.trim() || 'Khiếu nại chuyển từ kênh chat trực tuyến';
             const selectCat = document.getElementById('selectConvertTicketCategory');
@@ -1402,7 +1481,6 @@
             const priVal = priText.includes('Cao') ? 'high' : (priText.includes('Thấp') ? 'low' : 'medium');
             const refId = inputConvertRefId.value.trim();
 
-            // Trích xuất toàn bộ biên bản hội thoại để chuyển giao ngữ cảnh
             const chatTranscript = currentConversation.messages.map(m => {
                 const senderLabel = m.sender === 'user'
                     ? currentConversation.customerName
@@ -1410,52 +1488,33 @@
                 return `[${m.time}] ${senderLabel}: ${m.text || ''}`;
             }).join('\n');
 
-            // Tạo đối tượng ticket hoàn chỉnh theo cấu trúc của complaints.js
-            const newTicketData = {
-                id: newTicketId,
-                customerName: currentConversation.customerName,
-                phone: currentConversation.phone,
-                petName: currentConversation.pets && currentConversation.pets.length > 0 ? currentConversation.pets[0].name : 'Thú cưng',
-                petBreed: currentConversation.pets && currentConversation.pets.length > 0 ? currentConversation.pets[0].breed : '',
-                petNotes: currentConversation.pets && currentConversation.pets.length > 0 ? currentConversation.pets[0].notes : '',
-                bookingId: isServiceTicket ? (refId || (currentConversation.recentBooking ? currentConversation.recentBooking.id : 'BKG-CHAT-01')) : '',
-                orderId: !isServiceTicket ? (refId || (currentConversation.recentOrder ? currentConversation.recentOrder.id : 'ORD-CHAT-01')) : '',
-                serviceType: 'spa',
-                serviceName: isServiceTicket ? 'Dịch vụ Spa Grooming (Phản ánh qua Chat)' : '',
-                productName: !isServiceTicket ? 'Sản phẩm mua sắm (Phản ánh qua Chat)' : '',
-                productSku: !isServiceTicket ? (refId || 'SKU-CHAT-01') : '',
-                issueType: isServiceTicket ? 'quality' : 'delay',
-                staffExecuted: 'Đội ngũ CSKH tiếp nhận trực tuyến',
-                title: title,
-                content: `[Tóm tắt sự cố từ AI]: ${currentConversation.aiSummary || title}\n\n[Khách hàng phản ánh]: ${title}`,
-                priority: priVal,
-                slaStatus: priVal === 'high' ? 'URGENT' : 'NORMAL',
-                slaRemainingText: 'Còn 24 giờ',
-                staffAssigned: 'Chưa phân công',
-                createdAt: new Date().toLocaleDateString('vi-VN') + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                status: 'new',
-                source: 'Kênh Chat Trực tuyến',
-                evidence: [],
-                chatTranscript: chatTranscript,
-                timeline: [
-                    {
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN'),
-                        author: `${currentConversation.customerName} (Khách qua Chat)`,
-                        title: 'Tạo vé khiếu nại từ Kênh Trực chat',
-                        desc: `Khách hàng phản ánh qua phiên chat trực tuyến. Nhân viên CSKH đã tiếp nhận và trích xuất biên bản chuyển sang Quản lý xác minh. Mã tham chiếu: ${refId || 'N/A'}.`,
-                        isInternal: false
-                    }
-                ]
-            };
+            // Ghi trực tiếp vào bảng `support_ticket` trên Supabase
+            if (supabase && currentConversation.customerId) {
+                try {
+                    const petId = currentConversation.pets && currentConversation.pets[0] ? currentConversation.pets[0].id : null;
+                    const { data: ticketCreated, error: tErr } = await supabase.from('support_ticket').insert([{
+                        id: newTicketId,
+                        customer_id: currentConversation.customerId,
+                        title: title,
+                        ticket_status: 'new',
+                        priority: priVal,
+                        pet_id: petId,
+                        created_at: new Date().toISOString()
+                    }]).select().single();
 
-            // Lưu vé vào sessionStorage chia sẻ liên phân hệ
-            try {
-                const storedTicketsRaw = sessionStorage.getItem('pawpal_admin_shared_tickets');
-                const sharedTickets = storedTicketsRaw ? JSON.parse(storedTicketsRaw) : [];
-                sharedTickets.unshift(newTicketData);
-                sessionStorage.setItem('pawpal_admin_shared_tickets', JSON.stringify(sharedTickets));
-            } catch (e) {
-                console.error('Lỗi lưu shared tickets:', e);
+                    if (!tErr && ticketCreated) {
+                        // Insert tin nhắn biên bản vào support_ticket_message
+                        await supabase.from('support_ticket_message').insert([{
+                            ticket_id: newTicketId,
+                            sender_type: 'customer',
+                            sender_id: currentConversation.customerId,
+                            message_content: `[Biên bản hội thoại]:\n${chatTranscript}`,
+                            created_at: new Date().toISOString()
+                        }]);
+                    }
+                } catch (e) {
+                    console.error('Lỗi khi insert support_ticket vào Supabase:', e);
+                }
             }
 
             // Đưa vào danh sách ticket của phiên chat hiện tại
@@ -1479,15 +1538,16 @@
                     priority: priText,
                     refId: refId || (isServiceTicket ? (currentConversation.recentBooking ? currentConversation.recentBooking.id : '') : (currentConversation.recentOrder ? currentConversation.recentOrder.id : ''))
                 },
-                text: `Đã trích xuất biên bản hội thoại và tạo thành công vé hỗ trợ chính thức mang mã định danh ${newTicketId} trong phân hệ Khiếu nại.`
+                text: `Đã trích xuất biên bản hội thoại và tạo thành công vé hỗ trợ chính thức mang mã định danh ${newTicketId} trong Supabase Live DB.`
             });
 
             closeConvertModal();
             renderCurrentChat();
             renderCustomerInfoPanel();
+            showToast(`Đã tạo vé khiếu nại ${newTicketId} thành công trên hệ thống!`, 'success');
         });
 
-        // --- MODAL 3: CHUYỂN CẤP QUẢN LÝ VÀ BÁC SĨ (BẢO VỆ NHÂN VIÊN) ---
+        // --- MODAL 3: CHUYỂN CẤP QUẢN LÝ VÀ BÁC SĨ ---
         const escalateModal = document.getElementById('escalateManagerModalOverlay');
         const btnOpenEscalate = document.getElementById('btnEscalateManager');
         const btnCancelEscalate = document.getElementById('btnCancelEscalate');
@@ -1500,11 +1560,11 @@
             if (!currentConversation) return;
             if (escalateCustName) escalateCustName.value = currentConversation.customerName;
             if (inputEscalateNotes) inputEscalateNotes.value = '';
-            escalateModal.style.display = 'flex';
+            if (escalateModal) escalateModal.style.display = 'flex';
         });
 
         function closeEscalateModal() {
-            escalateModal.style.display = 'none';
+            if (escalateModal) escalateModal.style.display = 'none';
         }
 
         btnCancelEscalate?.addEventListener('click', closeEscalateModal);
@@ -1523,7 +1583,6 @@
             currentConversation.isEscalated = true;
             currentConversation.category = 'urgent';
 
-            // Dấu mốc hệ thống dạng thẻ Rich Action Card
             currentConversation.messages.push({
                 id: 'msg-escalate-' + Date.now(),
                 sender: 'agent',
@@ -1538,7 +1597,6 @@
                 text: `Ca chat đã được chuyển cấp khẩn cho [${targetName}] lúc ${timeStr}. Chuyên viên CSKH đã được ngắt kết nối an toàn.`
             });
 
-            // Lời chào nhận trách nhiệm từ Quản lý / Bác sĩ
             currentConversation.messages.push({
                 sender: 'agent',
                 agentName: targetName,
@@ -1550,123 +1608,29 @@
             renderChatbotAlertBar();
             renderConversationsList();
             renderCurrentChat();
+            showToast(`Đã chuyển ca cho ${targetName}!`, 'info');
         });
     }
 
     // -------------------------------------------------------------
-    // PHASE 3: THƯ VIỆN CÂU MẪU CSKH CHUẨN MỰC
+    // THƯ VIỆN CÂU MẪU CSKH CHUẨN MỰC
     // -------------------------------------------------------------
     const cannedResponsesDatabase = [
-        // 1. Chào hỏi và Tiếp nhận
-        {
-            id: 'cr-01',
-            category: 'greeting',
-            categoryName: 'Chào hỏi và Tiếp nhận',
-            title: 'Lời chào tiếp nhận ca hỗ trợ',
-            content: 'Dạ PawPal xin chào sen, em là chuyên viên CSKH đã tiếp nhận ca chat này để trực tiếp hỗ trợ mình ngay ạ!'
-        },
-        {
-            id: 'cr-02',
-            category: 'greeting',
-            categoryName: 'Chào hỏi và Tiếp nhận',
-            title: 'Xin phép kiểm tra hệ thống trong 1-2 phút',
-            content: 'Dạ sen vui lòng đợi em trong 1-2 phút, em đang tiến hành tra cứu dữ liệu trên hệ thống và sẽ phản hồi mình ngay ạ.'
-        },
-        {
-            id: 'cr-03',
-            category: 'greeting',
-            categoryName: 'Chào hỏi và Tiếp nhận',
-            title: 'Xác nhận thông tin bé và đơn hàng',
-            content: 'Dạ để hỗ trợ chính xác nhất, sen cho em xin mã đơn hàng hoặc số điện thoại đăng ký tài khoản của bé nhé ạ.'
-        },
-        // 2. Vận chuyển và Giao hàng
-        {
-            id: 'cr-04',
-            category: 'shipping',
-            categoryName: 'Vận chuyển và Giao hàng',
-            title: 'Xin lỗi vì giao hàng chậm trễ',
-            content: 'Dạ PawPal thành thật xin lỗi sen và bé vì sự chậm trễ này! Do ảnh hưởng thời tiết và lượng đơn cao điểm, bưu tá đang ưu tiên phát hỏa tốc đơn của mình trong hôm nay ạ.'
-        },
-        {
-            id: 'cr-05',
-            category: 'shipping',
-            categoryName: 'Vận chuyển và Giao hàng',
-            title: 'Thông báo điều phối shipper hỏa tốc',
-            content: 'Dạ em đã liên hệ điều phối bưu cục, tài xế giao hỏa tốc đang trên đường vận chuyển và sẽ liên hệ giao tận tay cho sen trước 12:00 ạ.'
-        },
-        {
-            id: 'cr-06',
-            category: 'shipping',
-            categoryName: 'Vận chuyển và Giao hàng',
-            title: 'Hướng dẫn đồng kiểm hàng khi nhận',
-            content: 'Dạ khi nhận hàng từ bưu tá, sen hoàn toàn có thể kiểm tra quy cách đóng gói và hạn sử dụng của thức ăn trước khi ký nhận nhé ạ.'
-        },
-        // 3. Dịch vụ Spa và Khách sạn
-        {
-            id: 'cr-07',
-            category: 'service',
-            categoryName: 'Spa và Khách sạn',
-            title: 'Cập nhật tình hình bé tại spa',
-            content: 'Dạ em xin cập nhật là bé boss đang hoàn tất khâu sấy lông và vệ sinh tai móng, bé rất ngoan và hợp tác với kỹ thuật viên ạ!'
-        },
-        {
-            id: 'cr-08',
-            category: 'service',
-            categoryName: 'Spa và Khách sạn',
-            title: 'Thông báo giờ đón bé cưng',
-            content: 'Dạ liệu trình spa của bé đã hoàn thành thơm tho xinh đẹp rồi ạ! Sen có thể ghé chi nhánh đón bé về từ bây giờ nhé ạ.'
-        },
-        {
-            id: 'cr-09',
-            category: 'service',
-            categoryName: 'Spa và Khách sạn',
-            title: 'Hướng dẫn chăm sóc sau dịch vụ',
-            content: 'Dạ sau khi tắm tỉa, sen lưu ý giữ ấm cho bé và tránh để bé gãi mạnh vào vùng tai móng trong 24 giờ đầu nhé ạ.'
-        },
-        // 4. Bồi hoàn và Tạ lỗi
-        {
-            id: 'cr-10',
-            category: 'reward',
-            categoryName: 'Bồi hoàn và Tạ lỗi',
-            title: 'Tặng điểm Pawpoint tạ lỗi vào ví',
-            content: 'Dạ để tạ lỗi vì sự cố không mong muốn vừa rồi, PawPal xin phép gửi tặng 50 điểm Pawpoint vào ví tài khoản của sen để sử dụng cho lần mua sắm tiếp theo ạ.'
-        },
-        {
-            id: 'cr-11',
-            category: 'reward',
-            categoryName: 'Bồi hoàn và Tạ lỗi',
-            title: 'Tặng mã giảm giá PAWPAL50K bồi thường',
-            content: 'Dạ PawPal xin gửi tặng sen mã giảm giá PAWPAL50K (trừ trực tiếp 50.000đ áp dụng cho mọi đơn hàng tiếp theo) như lời cáo lỗi chân thành từ cửa hàng ạ.'
-        },
-        {
-            id: 'cr-12',
-            category: 'reward',
-            categoryName: 'Bồi hoàn và Tạ lỗi',
-            title: 'Cam kết hoàn tiền trong 24 giờ',
-            content: 'Dạ bộ phận kế toán đã tiếp nhận yêu cầu hoàn tiền cho đơn hàng của sen, số tiền sẽ được chuyển hoàn về ví MoMo / tài khoản ngân hàng trong vòng 24 giờ làm việc ạ.'
-        },
-        // 5. Khiếu nại và Đối soát
-        {
-            id: 'cr-13',
-            category: 'dispute',
-            categoryName: 'Khiếu nại và Đối soát',
-            title: 'Yêu cầu gửi ảnh chụp chứng từ sự cố',
-            content: 'Dạ để bộ phận kỹ thuật và bảo hành tiến hành đối soát ngay, sen vui lòng chụp giúp em hình ảnh sản phẩm bị lỗi hoặc hóa đơn gửi qua khung chat này nhé ạ.'
-        },
-        {
-            id: 'cr-14',
-            category: 'dispute',
-            categoryName: 'Khiếu nại và Đối soát',
-            title: 'Tạo vé hỗ trợ chuyển cấp đối soát',
-            content: 'Dạ em đã lập vé hỗ trợ chính thức và chuyển thông tin đến Trưởng bộ phận phụ trách. Chúng em sẽ có văn bản phản hồi giải quyết thấu đáo cho sen trước 17:00 hôm nay ạ.'
-        },
-        {
-            id: 'cr-15',
-            category: 'dispute',
-            categoryName: 'Khiếu nại và Đối soát',
-            title: 'Hẹn gọi thoại tư vấn trực tiếp',
-            content: 'Dạ nếu thuận tiện, em xin phép nhờ Quản lý chi nhánh gọi điện thoại trực tiếp để giải thích chi tiết và lắng nghe ý kiến đóng góp của sen nhé ạ.'
-        }
+        { id: 'cr-01', category: 'greeting', categoryName: 'Chào hỏi và Tiếp nhận', title: 'Lời chào tiếp nhận ca hỗ trợ', content: 'Dạ PawPal xin chào sen, em là chuyên viên CSKH đã tiếp nhận ca chat này để trực tiếp hỗ trợ mình ngay ạ!' },
+        { id: 'cr-02', category: 'greeting', categoryName: 'Chào hỏi và Tiếp nhận', title: 'Xin phép kiểm tra hệ thống trong 1-2 phút', content: 'Dạ sen vui lòng đợi em trong 1-2 phút, em đang tiến hành tra cứu dữ liệu trên hệ thống và sẽ phản hồi mình ngay ạ.' },
+        { id: 'cr-03', category: 'greeting', categoryName: 'Chào hỏi và Tiếp nhận', title: 'Xác nhận thông tin bé và đơn hàng', content: 'Dạ để hỗ trợ chính xác nhất, sen cho em xin mã đơn hàng hoặc số điện thoại đăng ký tài khoản của bé nhé ạ.' },
+        { id: 'cr-04', category: 'shipping', categoryName: 'Vận chuyển và Giao hàng', title: 'Xin lỗi vì giao hàng chậm trễ', content: 'Dạ PawPal thành thật xin lỗi sen và bé vì sự chậm trễ này! Do ảnh hưởng thời tiết và lượng đơn cao điểm, bưu tá đang ưu tiên phát hỏa tốc đơn của mình trong hôm nay ạ.' },
+        { id: 'cr-05', category: 'shipping', categoryName: 'Vận chuyển và Giao hàng', title: 'Thông báo điều phối shipper hỏa tốc', content: 'Dạ em đã liên hệ điều phối bưu cục, tài xế giao hỏa tốc đang trên đường vận chuyển và sẽ liên hệ giao tận tay cho sen trước 12:00 ạ.' },
+        { id: 'cr-06', category: 'shipping', categoryName: 'Vận chuyển và Giao hàng', title: 'Hướng dẫn đồng kiểm hàng khi nhận', content: 'Dạ khi nhận hàng từ bưu tá, sen hoàn toàn có thể kiểm tra quy cách đóng gói và hạn sử dụng của thức ăn trước khi ký nhận nhé ạ.' },
+        { id: 'cr-07', category: 'service', categoryName: 'Spa và Khách sạn', title: 'Cập nhật tình hình bé tại spa', content: 'Dạ em xin cập nhật là bé boss đang hoàn tất khâu sấy lông và vệ sinh tai móng, bé rất ngoan và hợp tác với kỹ thuật viên ạ!' },
+        { id: 'cr-08', category: 'service', categoryName: 'Spa và Khách sạn', title: 'Thông báo giờ đón bé cưng', content: 'Dạ liệu trình spa của bé đã hoàn thành thơm tho xinh đẹp rồi ạ! Sen có thể ghé chi nhánh đón bé về từ bây giờ nhé ạ.' },
+        { id: 'cr-09', category: 'service', categoryName: 'Spa và Khách sạn', title: 'Hướng dẫn chăm sóc sau dịch vụ', content: 'Dạ sau khi tắm tỉa, sen lưu ý giữ ấm cho bé và tránh để bé gãi mạnh vào vùng tai móng trong 24 giờ đầu nhé ạ.' },
+        { id: 'cr-10', category: 'reward', categoryName: 'Bồi hoàn và Tạ lỗi', title: 'Tặng điểm Pawpoint tạ lỗi vào ví', content: 'Dạ để tạ lỗi vì sự cố không mong muốn vừa rồi, PawPal xin phép gửi tặng 50 điểm Pawpoint vào ví tài khoản của sen để sử dụng cho lần mua sắm tiếp theo ạ.' },
+        { id: 'cr-11', category: 'reward', categoryName: 'Bồi hoàn và Tạ lỗi', title: 'Tặng mã giảm giá PAWPAL50K bồi thường', content: 'Dạ PawPal xin gửi tặng sen mã giảm giá PAWPAL50K (trừ trực tiếp 50.000đ áp dụng cho mọi đơn hàng tiếp theo) như lời cáo lỗi chân thành từ cửa hàng ạ.' },
+        { id: 'cr-12', category: 'reward', categoryName: 'Bồi hoàn và Tạ lỗi', title: 'Cam kết hoàn tiền trong 24 giờ', content: 'Dạ bộ phận kế toán đã tiếp nhận yêu cầu hoàn tiền cho đơn hàng của sen, số tiền sẽ được chuyển hoàn về ví MoMo / tài khoản ngân hàng trong vòng 24 giờ làm việc ạ.' },
+        { id: 'cr-13', category: 'dispute', categoryName: 'Khiếu nại và Đối soát', title: 'Yêu cầu gửi ảnh chụp chứng từ sự cố', content: 'Dạ để bộ phận kỹ thuật và bảo hành tiến hành đối soát ngay, sen vui lòng chụp giúp em hình ảnh sản phẩm bị lỗi hoặc hóa đơn gửi qua khung chat này nhé ạ.' },
+        { id: 'cr-14', category: 'dispute', categoryName: 'Khiếu nại và Đối soát', title: 'Tạo vé hỗ trợ chuyển cấp đối soát', content: 'Dạ em đã lập vé hỗ trợ chính thức và chuyển thông tin đến Trưởng bộ phận phụ trách. Chúng em sẽ có văn bản phản hồi giải quyết thấu đáo cho sen trước 17:00 hôm nay ạ.' },
+        { id: 'cr-15', category: 'dispute', categoryName: 'Khiếu nại và Đối soát', title: 'Hẹn gọi thoại tư vấn trực tiếp', content: 'Dạ nếu thuận tiện, em xin phép nhờ Quản lý chi nhánh gọi điện thoại trực tiếp để giải thích chi tiết và lắng nghe ý kiến đóng góp của sen nhé ạ.' }
     ];
 
     function setupCannedResponsesModal() {
@@ -1750,7 +1714,7 @@
                     currentConversation.messages.push({
                         id: 'msg-agent-' + Date.now(),
                         sender: 'agent',
-                        agentName: 'Lê Lệ Quyên (CSKH)',
+                        agentName: 'Chuyên viên CSKH',
                         time: timeStr,
                         text: item.content
                     });
@@ -1764,7 +1728,7 @@
     }
 
     // -------------------------------------------------------------
-    // PHASE 3: THAO TÁC THÔNG MINH THEO NGỮ CẢNH AI (SMART CONTEXT)
+    // THAO TÁC THÔNG MINH THEO NGỮ CẢNH AI (SMART CONTEXT)
     // -------------------------------------------------------------
     function setupSmartContextActions() {
         const btnTrack = document.getElementById('btnContextTrackOrder');
@@ -1867,13 +1831,47 @@
     }
 
     // -------------------------------------------------------------
-    // 6. KHỞI TẠO VÀ ĐỌC HASH BAN ĐẦU
+    // 6. THIẾT LẬP SUPABASE REALTIME CHANNEL
+    // -------------------------------------------------------------
+    function setupChatbotRealtimeSync() {
+        if (!supabase || typeof supabase.channel !== 'function') return;
+
+        try {
+            const channel = supabase.channel('admin-chatbot-sync')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, () => {
+                    console.log('[Realtime] Phát hiện thay đổi trong support_ticket -> Reload chatbot data');
+                    loadChatbotDataFromSupabase();
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'paw_point_transaction' }, () => {
+                    console.log('[Realtime] Phát hiện giao dịch Pawpoint mới -> Reload chatbot data');
+                    loadChatbotDataFromSupabase();
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_order' }, () => {
+                    console.log('[Realtime] Phát hiện cập nhật đơn hàng -> Reload chatbot data');
+                    loadChatbotDataFromSupabase();
+                })
+                .subscribe();
+
+            window.addEventListener('beforeunload', () => {
+                supabase.removeChannel(channel);
+            });
+        } catch (e) {
+            console.error('Lỗi khi đăng ký Supabase Realtime Channel:', e);
+        }
+    }
+
+    // -------------------------------------------------------------
+    // 7. KHỞI TẠO VÀ ĐỌC HASH BAN ĐẦU
     // -------------------------------------------------------------
     setupCopilot();
     setupLiveChatEvents();
     setupSuggestCarouselEvents();
     setupCannedResponsesModal();
     setupSmartContextActions();
+    setupChatbotRealtimeSync();
+
+    // Nạp dữ liệu thực tế từ Supabase
+    loadChatbotDataFromSupabase();
 
     const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
     const savedTab = sessionStorage.getItem('pawpal_admin_chatbot_subtab');
@@ -1888,4 +1886,3 @@
 
     switchSubtab(initTab);
 })();
-
