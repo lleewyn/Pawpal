@@ -30,6 +30,7 @@
 .main-header {
     background-color: var(--color-bg-light);
     color: var(--color-text-dark);
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -471,18 +472,23 @@
     gap: 8px;
 }
 
-.nav-menu a {
+.nav-menu a,
+.nav-menu .nav-link {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-weight: 500;
-    font-size: 0.9rem;
+    font-size: 15px;
     color: var(--color-text-dark);
     opacity: 0.85;
     position: relative;
     padding: 6px 10px;
     white-space: nowrap;
+    text-decoration: none;
 }
 
 .nav-menu a:hover,
-.nav-menu a.active {
+.nav-menu a.active,
+.nav-menu .nav-link:hover,
+.nav-menu .nav-link.active {
     opacity: 1;
     color: var(--color-accent);
 }
@@ -698,17 +704,18 @@
         gap: 0 8px;
     }
     .search-bar {
-        width: 140px;
+        width: 180px;
     }
-    .nav-menu a {
-        padding: 6px 6px;
-        font-size: 0.85rem;
+    .nav-menu a,
+    .nav-menu .nav-link {
+        padding: 6px 8px;
+        font-size: 15px;
     }
     .nav-menu ul {
         gap: 4px;
     }
     .header-actions {
-        gap: 6px;
+        gap: 8px;
     }
     .lookup-btn span {
         display: none !important;
@@ -720,12 +727,12 @@
         display: none !important;
     }
     .btn-signup {
-        padding: 6px 12px;
-        font-size: 0.8rem;
+        padding: 6px 14px;
+        font-size: 0.85rem;
     }
     .btn-header-cta {
-        padding: 6px 12px;
-        font-size: 0.8rem;
+        padding: 6px 14px;
+        font-size: 0.85rem;
     }
 }
 
