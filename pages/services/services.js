@@ -249,6 +249,8 @@ async function initServicesPage() {
     }
 }
 
+window.initServicesPage = initServicesPage;
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initServicesPage);
 } else {

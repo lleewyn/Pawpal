@@ -16,9 +16,7 @@
         '/pages/public/about/about.css',
         '/pages/public/contact/contact.css',
         '/pages/public/blog/blog.css',
-        '/pages/shop/cart/cart.css',
-        '/components/ui/reviews.css',
-        '/components/ui/review-form.css'
+        '/pages/shop/cart/cart.css'
     ];
 
     // Nạp trước tất cả Stylesheet để khi chuyển trang là có sẵn CSS ngay, 0% FOUC
@@ -182,10 +180,10 @@
             // Cuộn lên đầu trang
             window.scrollTo({ top: 0, behavior: 'instant' });
 
-            // Tìm script page-specific (không phải shared)
-            // Bao gồm cả landing.js nằm trong head của index.html
-            const pageScripts = Array.from(doc.querySelectorAll('body script[src], head script[src*="landing.js"]')).filter(function(s) {
+            // Tìm tất cả script page-specific (không phải shared) trong cả head và body
+            const pageScripts = Array.from(doc.querySelectorAll('script[src]')).filter(function(s) {
                 const rawSrc = s.getAttribute('src') || '';
+                if (!rawSrc) return false;
                 if (isSharedScript(rawSrc)) return false;
                 return true;
             });
@@ -210,6 +208,21 @@
                 inline.textContent = s.textContent;
                 document.body.appendChild(inline);
             });
+
+            // Kích hoạt hàm khởi tạo dữ liệu của trang tương ứng
+            try {
+                if (targetUrl.pathname.includes('/shop') && typeof window.initShop === 'function') {
+                    window.initShop();
+                } else if (targetUrl.pathname.includes('/services') && typeof window.initServicesPage === 'function') {
+                    window.initServicesPage();
+                } else if (targetUrl.pathname.includes('/blog') && typeof window.initBlog === 'function') {
+                    window.initBlog();
+                } else if (targetUrl.pathname.includes('/cart') && typeof window.initCart === 'function') {
+                    window.initCart();
+                }
+            } catch (initErr) {
+                console.warn('[spa-router] Page init function error:', initErr);
+            }
 
             // Khôi phục hiển thị dứt khoát không chớp giật
             requestAnimationFrame(function() {

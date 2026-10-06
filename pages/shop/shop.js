@@ -617,6 +617,8 @@ async function initShop() {
     }
 }
 
+window.initShop = initShop;
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initShop);
 } else {

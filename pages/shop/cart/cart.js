@@ -1,5 +1,5 @@
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initCartPage() {
     if (!window.DataLoader) {
         console.error(' DataLoader không tìm thấy');
         return;
@@ -1135,5 +1135,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
-    await initCart();
-});
+        await initCart();
+    }
+
+    window.initCart = initCartPage;
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCartPage);
+    } else {
+        initCartPage();
+    }

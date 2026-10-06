@@ -571,7 +571,13 @@ function initEventListeners() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+window.initBlog = function() {
     loadAndPrepareBlogs();
     initEventListeners();
-});
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.initBlog);
+} else {
+    window.initBlog();
+}
