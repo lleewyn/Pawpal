@@ -4524,6 +4524,23 @@
         // Đồng bộ dữ liệu mới nhất từ Supabase
         syncOrdersAndProductsFromSupabase();
 
+        // Đăng ký Supabase Realtime để đồng bộ đơn hàng tức thời
+        try {
+            const rtClient = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (rtClient && rtClient.channel) {
+                rtClient.channel('admin_orders_realtime')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_order' }, () => {
+                        syncOrdersAndProductsFromSupabase();
+                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => {
+                        syncOrdersAndProductsFromSupabase();
+                    })
+                    .subscribe();
+            }
+        } catch (errRt) {
+            console.warn('Realtime subscription error:', errRt);
+        }
+
         // Khôi phục subtab từ hash hoặc sessionStorage
         const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
         const savedSubtab = sessionStorage.getItem('pawpal_admin_order_subtab');
