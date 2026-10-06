@@ -7,23 +7,23 @@
         <div class="customers-kpi-grid">
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="ALL" title="Xem tất cả khách hàng">
                 <span class="kpi-label">Tổng khách</span>
-                <span class="kpi-val" id="custStatTotal">—</span>
+                <span class="kpi-val" id="custStatTotal"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="MEMBER" title="Lọc khách hàng thành viên">
                 <span class="kpi-label">Thành viên</span>
-                <span class="kpi-val text-success" id="custStatMember">—</span>
+                <span class="kpi-val text-success" id="custStatMember"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="TEMP" title="Lọc khách vãng lai">
                 <span class="kpi-label">Vãng lai</span>
-                <span class="kpi-val text-warning" id="custStatGuest">—</span>
+                <span class="kpi-val text-warning" id="custStatGuest"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="LOCKED" title="Lọc tài khoản bị khóa">
                 <span class="kpi-label">Bị khóa</span>
-                <span class="kpi-val text-neutral" id="custStatLocked">—</span>
+                <span class="kpi-val text-neutral" id="custStatLocked"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="COMPLAINT" title="Lọc khách hàng đang có khiếu nại">
                 <span class="kpi-label">Có khiếu nại</span>
-                <span class="kpi-val text-danger" id="custStatComplaint">—</span>
+                <span class="kpi-val text-danger" id="custStatComplaint"><span class="skeleton-kpi"></span></span>
             </div>
         </div>
 
@@ -96,7 +96,46 @@
                     </tr>
                 </thead>
                 <tbody id="customerTableTbody">
-                    <tr><td colspan="8" style="text-align: center; padding: 36px 16px; color: var(--text-muted); font-size: 13px;">Đang tải dữ liệu khách hàng từ máy chủ...</td></tr>
+                    <tr class="skeleton-row">
+                        <td><span class="skeleton-text" style="width: 75px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 140px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 95px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 110px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 80px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 45px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 70px;"></span></td>
+                        <td style="text-align: center;"><span class="skeleton-text" style="width: 20px;"></span></td>
+                    </tr>
+                    <tr class="skeleton-row">
+                        <td><span class="skeleton-text" style="width: 70px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 120px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 95px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 90px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 80px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 45px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 70px;"></span></td>
+                        <td style="text-align: center;"><span class="skeleton-text" style="width: 20px;"></span></td>
+                    </tr>
+                    <tr class="skeleton-row">
+                        <td><span class="skeleton-text" style="width: 75px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 150px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 95px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 130px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 80px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 45px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 70px;"></span></td>
+                        <td style="text-align: center;"><span class="skeleton-text" style="width: 20px;"></span></td>
+                    </tr>
+                    <tr class="skeleton-row">
+                        <td><span class="skeleton-text" style="width: 72px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 110px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 95px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 85px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 80px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 45px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 70px;"></span></td>
+                        <td style="text-align: center;"><span class="skeleton-text" style="width: 20px;"></span></td>
+                    </tr>
                 </tbody>
             </table>
             </div>

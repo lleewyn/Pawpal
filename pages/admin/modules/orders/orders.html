@@ -9,27 +9,27 @@
         <div class="orders-kpi-grid">
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Tổng đơn hôm nay</span>
-                <span class="kpi-val" id="statTotalOrders">—</span>
+                <span class="kpi-val" id="statTotalOrders"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Chờ xác nhận</span>
-                <span class="kpi-val text-warning" id="statPendingOrders">—</span>
+                <span class="kpi-val text-warning" id="statPendingOrders"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Đang chuẩn bị</span>
-                <span class="kpi-val" id="statPreparingOrders" style="color: #3730A3;">—</span>
+                <span class="kpi-val" id="statPreparingOrders" style="color: #3730A3;"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Đang giao hàng</span>
-                <span class="kpi-val" id="statShippingOrders" style="color: #0369A1;">—</span>
+                <span class="kpi-val" id="statShippingOrders" style="color: #0369A1;"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Đã hoàn tất</span>
-                <span class="kpi-val text-success" id="statCompletedOrders">—</span>
+                <span class="kpi-val text-success" id="statCompletedOrders"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Đổi trả và Hủy</span>
-                <span class="kpi-val text-danger" id="statCancelledOrders">—</span>
+                <span class="kpi-val text-danger" id="statCancelledOrders"><span class="skeleton-kpi"></span></span>
             </div>
         </div>
 
@@ -136,7 +136,42 @@
                         </tr>
                     </thead>
                     <tbody id="ordersTableBody">
-                        <tr><td colspan="10" style="text-align: center; padding: 36px 16px; color: var(--text-muted); font-size: 13px;">Đang tải danh sách đơn hàng từ máy chủ...</td></tr>
+                        <tr class="skeleton-row">
+                            <td style="text-align: center;"><span class="skeleton-text" style="width: 16px; height: 16px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 85px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 120px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 140px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 90px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 75px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 80px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 70px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 50px;"></span></td>
+                            <td style="text-align: center;"><span class="skeleton-text" style="width: 20px;"></span></td>
+                        </tr>
+                        <tr class="skeleton-row">
+                            <td style="text-align: center;"><span class="skeleton-text" style="width: 16px; height: 16px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 80px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 135px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 110px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 85px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 75px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 80px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 70px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 50px;"></span></td>
+                            <td style="text-align: center;"><span class="skeleton-text" style="width: 20px;"></span></td>
+                        </tr>
+                        <tr class="skeleton-row">
+                            <td style="text-align: center;"><span class="skeleton-text" style="width: 16px; height: 16px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 90px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 110px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 160px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 95px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 75px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 80px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 70px;"></span></td>
+                            <td><span class="skeleton-text" style="width: 50px;"></span></td>
+                            <td style="text-align: center;"><span class="skeleton-text" style="width: 20px;"></span></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
