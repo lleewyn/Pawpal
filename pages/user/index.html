@@ -175,129 +175,45 @@
                     </ul>
                 </div>
 
-                <!-- Bên phải: Actions -->
-                <div class="header-right">
-                    <a href="/booking" class="btn btn-primary-custom d-none d-lg-inline-flex align-items-center">Đặt lịch</a>
+                <!-- Hành động Desktop - ngoài collapse, ngang hàng với logo -->
+                <div class="header-actions" id="headerActionsDesktop">
+                    <!-- Dòng chia cách -->
+                    <span class="header-divider lookup-divider"></span>
 
-                    <!-- Khách vãng lai -->
-                    <div class="header-actions guest-actions">
-                        <a href="/return-guest" class="btn btn-link nav-link px-2 d-none d-md-inline-block text-secondary-custom"  title="Tra cứu đơn hàng hoặc lịch hẹn nhanh">Tra cứu đơn</a>
-                        <a href="/login" class="btn btn-outline-custom">Đăng nhập</a>
-                    </div>
+                    <!-- Tra đơn hàng / lịch -->
+                    <a href="/return-guest" class="lookup-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <span>Tra đơn hàng / lịch</span>
+                    </a>
 
-                    <!-- Người dùng đã đăng nhập -->
-                    <div class="header-actions user-actions d-none">
-                        <!-- Thông báo (Chỉ user thật) -->
-                        <div class="notification-dropdown">
-                            <button class="icon-btn position-relative" id="notificationBtn" aria-expanded="false" title="Thông báo">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                                </svg>
-                                <span class="badge position-absolute top-0 start-100 translate-middle rounded-pill bg-danger d-none" id="notificationBadge">0</span>
-                            </button>
-                            <div class="notification-menu dropdown-menu-custom">
-                                <div class="notification-header">
-                                    <h6 class="m-0">Thông báo</h6>
-                                    <button class="mark-all-read btn btn-sm btn-link p-0 text-decoration-none">Đã đọc tất cả</button>
-                                </div>
-                                <div class="notification-list" id="notificationList">
-                                    <div class="text-center py-4 text-muted"><small>Không có thông báo mới</small></div>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- Dòng chia cách -->
+                    <span class="header-divider"></span>
 
-                        <!-- Giỏ hàng -->
-                        <a href="/cart" class="icon-btn position-relative" title="Giỏ hàng">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <!-- Đặt lịch CTA -->
+                    <a href="/booking" class="btn-header-cta">Đặt lịch</a>
+
+                    <div class="auth-actions d-flex align-items-center">
+                        <a href="/cart" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="9" cy="21" r="1"></circle>
                                 <circle cx="20" cy="21" r="1"></circle>
                                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                             </svg>
-                            <span class="badge position-absolute top-0 start-100 translate-middle rounded-pill bg-danger d-none cart-badge" id="cartBadge">0</span>
+                            <span class="cart-badge">0</span>
                         </a>
-
-                        <!-- Dropdown Menu tài khoản -->
-                        <div class="user-dropdown">
-                            <button class="user-btn d-flex align-items-center gap-2" id="userMenuBtn" aria-expanded="false">
-                                <div class="user-avatar" id="headerUserAvatar">U</div>
-                                <span class="user-name d-none d-md-inline" id="headerUserName">Khách</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </button>
-                            <div class="user-menu dropdown-menu-custom" id="userMenuDropdown">
-                                <div class="user-menu-header">
-                                    <div class="user-avatar-large" id="dropdownUserAvatar">U</div>
-                                    <div class="user-info">
-                                        <div class="fw-bold" id="dropdownUserName">Tên khách hàng</div>
-                                        <small class="text-muted" id="dropdownUserEmail">email@example.com</small>
-                                        <div class="loyalty-badge-sm mt-1" id="dropdownLoyaltyBadge">
-                                            <span class="badge bg-light text-dark">Thành viên Mới</span>
-                                            <small class="ms-1 text-primary"><span id="dropdownPawPoints">0</span> pts</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="user-menu-divider"></div>
-                                <a href="/pages/user/#profile" class="user-menu-item">
-                                    <span>Hồ sơ cá nhân</span>
-                                </a>
-                                <a href="/pages/user/#pets" class="user-menu-item">
-                                    <span>Hồ sơ bé cưng</span>
-                                </a>
-                                <a href="/pages/user/#bookings" class="user-menu-item">
-                                    <span>Lịch hẹn của tôi</span>
-                                </a>
-                                <a href="/pages/user/#orders" class="user-menu-item">
-                                    <span>Đơn hàng của tôi</span>
-                                </a>
-                                <a href="/pages/user/#wishlist" class="user-menu-item">
-                                    <span>Yêu thích</span>
-                                </a>
-                                <a href="/pages/user/#diary" class="user-menu-item">
-                                    <span>Nhật ký chăm sóc</span>
-                                </a>
-                                <a href="/pages/user/#loyalty" class="user-menu-item">
-                                    <span>Paw Points & Ưu đãi</span>
-                                </a>
-                                <a href="/pages/user/#settings" class="user-menu-item">
-                                    <span>Cài đặt</span>
-                                </a>
-                                <div class="user-menu-divider"></div>
-                                <a href="#" class="user-menu-item text-danger" id="logoutBtn">
-                                    <span>Đăng xuất</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tài khoản tạm thời (Temp User) -->
-                    <div class="header-actions temp-user-actions d-none">
-                        <a href="/cart" class="icon-btn position-relative" title="Giỏ hàng">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        <a href="/login" class="login-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="9" cy="21" r="1"></circle>
-                                <circle cx="20" cy="21" r="1"></circle>
-                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
                             </svg>
-                            <span class="badge position-absolute top-0 start-100 translate-middle rounded-pill bg-danger d-none cart-badge" id="tempCartBadge">0</span>
+                            <span>Đăng nhập</span>
                         </a>
-
-                        <div class="temp-user-badge d-flex align-items-center gap-2">
-                            <span class="badge bg-warning text-dark px-2 py-1">Tài khoản tạm</span>
-                            <span class="user-name d-none d-md-inline" id="tempUserName">Khách</span>
-                            <a href="/login#register" class="btn btn-sm btn-outline-primary ms-1" title="Đăng ký tài khoản chính thức để tích điểm">Nâng cấp</a>
-                            <button class="btn btn-sm btn-link text-danger p-0 ms-1" id="tempLogoutBtn" title="Đăng xuất">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                    <polyline points="16 17 21 12 16 7"></polyline>
-                                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                                </svg>
-                            </button>
-                        </div>
+                        <a href="/login#register" class="btn-signup">Đăng ký</a>
                     </div>
                 </div>
             </div>
