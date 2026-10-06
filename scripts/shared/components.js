@@ -96,61 +96,69 @@
     }
 
     function injectComponent(targetId, componentPath) {
-        console.log('[components.js] injectComponent', targetId, componentPath);
         var el = document.getElementById(targetId);
         if (!el) {
-            console.warn('[components.js] missing target:', targetId);
             return;
         }
 
         var cacheKey = 'pawpal_component_' + targetId;
         var isSidebar = targetId === 'user-sidebar';
-        var cached = (targetId !== 'site-header' && targetId !== 'site-fab' && targetId !== 'site-footer' && !isSidebar) ? sessionStorage.getItem(cacheKey) : null;
+        
+        // Đọc từ cache để hiển thị tức thì (0ms latency, triệt tiêu 100% hiện tượng chớp nháy)
+        var cached = null;
+        try {
+            cached = sessionStorage.getItem(cacheKey) || localStorage.getItem(cacheKey);
+        } catch(e) {}
+
         if (cached) {
-            el.outerHTML = cached;
-            if (targetId === 'site-header') {
-                ensureHeaderAuth();
-                document.dispatchEvent(new CustomEvent('headerInjected'));
-                if (typeof initActiveNav === 'function') initActiveNav();
-                if (typeof initMobileNavigation === 'function') initMobileNavigation();
-            }
-            if (targetId === 'site-footer') {
-                document.dispatchEvent(new CustomEvent('footerInjected'));
-            }
-            if (targetId === 'site-fab') {
-                ensureFabJS();
-                document.dispatchEvent(new CustomEvent('footerInjected'));
+            if (isSidebar) {
+                el.innerHTML = cached;
+                executeSidebarScripts();
+                initLucideIcons();
+                document.dispatchEvent(new CustomEvent('sidebarInjected'));
+            } else {
+                el.outerHTML = cached;
+                if (targetId === 'site-header') {
+                    ensureHeaderAuth();
+                    document.dispatchEvent(new CustomEvent('headerInjected'));
+                    if (typeof initActiveNav === 'function') initActiveNav();
+                    if (typeof initMobileNavigation === 'function') initMobileNavigation();
+                }
+                if (targetId === 'site-footer') {
+                    document.dispatchEvent(new CustomEvent('footerInjected'));
+                }
+                if (targetId === 'site-fab') {
+                    ensureFabJS();
+                    document.dispatchEvent(new CustomEvent('footerInjected'));
+                }
             }
             return;
         }
 
-        var url = componentPath + '?v=' + Date.now();
-        fetch(url, { cache: 'no-store' })
+        fetch(componentPath)
             .then(function (res) {
-                if (!res.ok) throw new Error('HTTP ' + res.status + ' — Cannot load ' + url);
+                if (!res.ok) throw new Error('HTTP ' + res.status + ' — Cannot load ' + componentPath);
                 return res.text();
             })
             .then(function (html) {
                 var cleanedHtml = cleanInjectedHtml(html);
-                console.log('[components.js] injected', targetId);
+                try {
+                    sessionStorage.setItem(cacheKey, cleanedHtml);
+                    localStorage.setItem(cacheKey, cleanedHtml);
+                } catch(e) {}
+
+                var currentEl = document.getElementById(targetId);
+                if (!currentEl) return;
 
                 if (isSidebar) {
-                    el.innerHTML = cleanedHtml;
-                    el.querySelectorAll('script').forEach(function(oldScript) {
-                        var newScript = document.createElement('script');
-                        Array.from(oldScript.attributes).forEach(function(attr) {
-                            newScript.setAttribute(attr.name, attr.value);
-                        });
-                        newScript.textContent = oldScript.textContent;
-                        oldScript.parentNode.replaceChild(newScript, oldScript);
-                    });
+                    currentEl.innerHTML = cleanedHtml;
+                    executeSidebarScripts();
                     initLucideIcons();
                     document.dispatchEvent(new CustomEvent('sidebarInjected'));
                     return;
                 }
 
-                try { sessionStorage.setItem(cacheKey, cleanedHtml); } catch(e) {}
-                el.outerHTML = cleanedHtml;
+                currentEl.outerHTML = cleanedHtml;
                 if (targetId === 'site-header') {
                     ensureHeaderAuth();
                     document.dispatchEvent(new CustomEvent('headerInjected'));
