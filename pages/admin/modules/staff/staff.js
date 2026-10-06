@@ -3517,6 +3517,41 @@
                 ? savedSubtab 
                 : 'tab-staff-list';
 
+        // Thiết lập kênh Supabase Realtime cho phân hệ Nhân sự (Giai đoạn 4)
+        function setupStaffRealtimeSubscription() {
+            try {
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client && typeof client.channel === 'function') {
+                    client.channel('pawpal-staff-realtime-channel')
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'staff' }, async (payload) => {
+                            console.log('Realtime Supabase Staff updated:', payload);
+                            await loadStaffModuleData();
+                            updateKpiCounters();
+                            renderStaffAlertBar();
+                            renderStaffList();
+                            if (selectedStaffId) {
+                                renderStaffProfile(selectedStaffId);
+                            }
+                        })
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_schedule' }, async (payload) => {
+                            console.log('Realtime Supabase Staff Schedule updated:', payload);
+                            await loadStaffModuleData();
+                            renderScheduleTable();
+                            renderStaffAlertBar();
+                            updatePendingRequestsCounters();
+                        })
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment' }, async (payload) => {
+                            console.log('Realtime Supabase Appointment updated in Staff:', payload);
+                            await loadStaffModuleData();
+                            renderLiveWorkstations();
+                        })
+                        .subscribe();
+                }
+            } catch (err) {
+                console.warn('Không thể khởi tạo Supabase Realtime cho Staff:', err);
+            }
+        }
+
         // Đồng bộ trạng thái khóa từ localStorage nếu có
         mockStaff.forEach(s => {
             try {
@@ -3525,6 +3560,7 @@
             } catch(e) {}
         });
 
+        setupStaffRealtimeSubscription();
         switchSubtab(initialSubtab);
     }
 
