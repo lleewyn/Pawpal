@@ -337,8 +337,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             products = await window.DataLoader.loadProducts();
             
-            const fetchedCart = await window.API.getUserCart(currentUser.id);
-            const localCart = restoreCartFromBackup(fetchedCart);
+            let fetchedCart = [];
+            if (window.API && typeof window.API.getUserCart === 'function') {
+                fetchedCart = await window.API.getUserCart(currentUser.id);
+            } else {
+                fetchedCart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+            }
+            const localCart = restoreCartFromBackup(fetchedCart || []);
             cart = localCart.map(normalizeCartItem);
             
             cart.forEach(item => {

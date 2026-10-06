@@ -80,6 +80,23 @@ export const API = {
     async initData() {
     },
 
+    async getUserCart(userOrId) {
+        try {
+            return JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+        } catch {
+            return [];
+        }
+    },
+
+    async saveUserCart(userOrId, cartItems) {
+        try {
+            localStorage.setItem('pawpal_cart', JSON.stringify(cartItems || []));
+            return true;
+        } catch {
+            return false;
+        }
+    },
+
     async getUserPets(userOrId) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !userOrId) return [];
