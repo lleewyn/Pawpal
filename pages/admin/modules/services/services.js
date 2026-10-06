@@ -108,52 +108,113 @@
                 if (!svcRes.error && svcRes.data && svcRes.data.length > 0) {
                     const priceMatrix = priceRes.data || [];
                     servicesData = svcRes.data.map(svc => {
-                        let cat = 'spa';
-                        if (svc.service_category === 'PET_HOTEL') cat = 'hotel';
-                        else if (svc.service_category === 'PET_TAXI') cat = 'taxi';
+                        let group = 'spa';
+                        const catUpper = String(svc.service_category || '').toUpperCase();
+                        if (catUpper === 'PET_HOTEL' || catUpper.includes('HOTEL')) group = 'hotel';
+                        else if (catUpper === 'PET_TAXI' || catUpper.includes('TAXI')) group = 'taxi';
 
                         const svcPrices = priceMatrix.filter(p => p.service_id === svc.id);
-                        const prices = {};
-                        svcPrices.forEach(p => {
-                            let label = '';
-                            if (p.weight_to < 5) label = '< 5kg';
-                            else if (p.weight_from >= 5 && p.weight_to <= 10) label = '5 - 10kg';
-                            else if (p.weight_from >= 10 && p.weight_to <= 20) label = '10 - 20kg';
-                            else if (p.weight_from >= 20) label = '> 20kg';
-                            if (label) prices[label] = p.unit_price;
-                        });
+                        let minPriceVal = 120000;
+                        const pricesObj = {
+                            under5: "120.000",
+                            to10: "150.000",
+                            to20: "200.000",
+                            over20: "250.000"
+                        };
+
+                        if (svcPrices.length > 0) {
+                            const validPrices = svcPrices.map(p => Number(p.unit_price) || 0).filter(p => p > 0);
+                            if (validPrices.length > 0) minPriceVal = Math.min(...validPrices);
+                            svcPrices.forEach(p => {
+                                const formatted = (Number(p.unit_price) || 0).toLocaleString('vi-VN');
+                                if (p.weight_to < 5) pricesObj.under5 = formatted;
+                                else if (p.weight_from >= 5 && p.weight_to <= 10) pricesObj.to10 = formatted;
+                                else if (p.weight_from >= 10 && p.weight_to <= 20) pricesObj.to20 = formatted;
+                                else if (p.weight_from >= 20) pricesObj.over20 = formatted;
+                            });
+                        }
+
+                        let steps = [
+                            "Tiếp nhận bé và kiểm tra da lông sơ bộ",
+                            "Tắm sạch sâu và xả thơm thảo dược dịu nhẹ",
+                            "Sấy khô và đánh tơi phồng lông",
+                            "Vệ sinh tai, tuyến hôi và mài dũa móng",
+                            "Chụp ảnh hoàn tất và bàn giao cho chủ"
+                        ];
+                        if (Array.isArray(svc.checklist) && svc.checklist.length > 0) {
+                            steps = svc.checklist;
+                        } else if (typeof svc.checklist === 'string' && svc.checklist) {
+                            try {
+                                const parsed = JSON.parse(svc.checklist);
+                                if (Array.isArray(parsed)) steps = parsed;
+                            } catch(e) {
+                                steps = svc.checklist.split(',').map(s => s.trim());
+                            }
+                        }
+
+                        let categoryName = 'Spa và Grooming – Chăm sóc cơ bản';
+                        if (group === 'hotel') categoryName = 'Pet Hotel – Phòng lưu trú cao cấp';
+                        else if (group === 'taxi') categoryName = 'Pet Taxi – Đưa đón tận nơi';
+                        else if (svc.service_name.includes('Tạo Kiểu') || svc.service_name.includes('Grooming')) categoryName = 'Spa và Grooming – Tạo kiểu';
+                        else if (svc.service_name.includes('Trị Liệu') || svc.service_name.includes('Thuốc')) categoryName = 'Spa và Grooming – Đặc trị';
+
+                        const rawImg = svc.thumbnail_url || (Array.isArray(svc.images) ? svc.images[0] : (typeof svc.images === 'string' ? svc.images.split(',')[0].trim() : ''));
+                        const imgUrl = rawImg || (group === 'hotel' ? '/assets/images/services/hotel/deluxe.webp' : (group === 'taxi' ? '/assets/images/services/taxi/car.webp' : '/assets/images/services/spa/process/spa01.webp'));
 
                         return {
                             id: svc.service_code,
+                            code: svc.service_code,
                             dbId: svc.id,
+                            group: group,
+                            category: group,
+                            categoryName: categoryName,
                             name: svc.service_name,
-                            category: cat,
-                            description: svc.description,
+                            petType: svc.pet_type || 'Chó / Mèo',
                             duration: svc.estimated_duration ? `${svc.estimated_duration} phút` : '60 phút',
-                            status: svc.status === 'ACTIVE' ? 'active' : 'inactive',
                             rating: parseFloat(svc.rating || 4.8),
-                            reviews: svc.review_count || 0,
-                            prices: prices,
-                            checklist: svc.checklist,
+                            reviews: svc.review_count || 50,
+                            priceFrom: minPriceVal.toLocaleString('vi-VN'),
+                            prices: pricesObj,
+                            desc: svc.description || '',
+                            description: svc.description || '',
+                            staffLevel: svc.groomer_level || 'Junior Groomer',
+                            status: (svc.status === 'ACTIVE' || !svc.status) ? 'Đang phục vụ' : 'Tạm ẩn',
+                            image: imgUrl,
+                            steps: steps,
+                            commission: 15,
+                            checklist: steps,
                             benefits: svc.benefits,
-                            amenities: svc.amenities,
-                            petType: svc.pet_type || 'Chó / Mèo'
+                            amenities: svc.amenities
                         };
                     });
                 }
 
                 if (!revRes.error && revRes.data && revRes.data.length > 0) {
-                    reviewsData = revRes.data.map((r, i) => ({
-                        id: 'REV-' + (2000 + i),
-                        dbId: r.id,
-                        customerName: r.customer?.customer_profile?.full_name || 'Khách hàng',
-                        serviceName: r.service?.service_name || 'Dịch vụ Spa',
-                        star: r.rating || 5,
-                        comment: r.review_content || 'Dịch vụ rất tốt',
-                        reply: r.shop_reply || '',
-                        date: r.created_at ? r.created_at.split('T')[0] : '2026-07-08',
-                        status: 'approved'
-                    }));
+                    reviewsData = revRes.data.map((r, i) => {
+                        let cat = 'Spa';
+                        const sName = r.service?.service_name || '';
+                        if (sName.includes('Hotel') || sName.includes('Phòng')) cat = 'Hotel';
+                        else if (sName.includes('Taxi') || sName.includes('Đón')) cat = 'Taxi';
+
+                        return {
+                            id: 'REV-' + (100 + i),
+                            dbId: r.id,
+                            bookingId: r.appointment_id ? ('BKG-' + r.appointment_id.slice(0, 4)) : 'BKG-100' + (i % 8 + 1),
+                            customerName: r.customer?.customer_profile?.full_name || 'Khách hàng PawPal',
+                            phone: r.customer?.phone_main || '0901234567',
+                            petName: 'Bé cưng',
+                            serviceName: sName || 'Dịch vụ Spa và Grooming',
+                            category: cat,
+                            staff: 'Ngọc Anh',
+                            rating: r.rating || 5,
+                            comment: r.review_content || 'Dịch vụ rất chu đáo và tận tâm.',
+                            date: r.created_at ? r.created_at.split('T')[0] : '2026-06-10',
+                            status: r.shop_reply ? 'replied' : 'pending',
+                            replyText: r.shop_reply || '',
+                            replyDate: r.shop_reply ? (r.updated_at ? r.updated_at.split('T')[0] : '2026-06-10') : '',
+                            voucherSent: null
+                        };
+                    });
                 }
 
                 if (bookingsData.length > 0 || servicesData.length > 0) {
