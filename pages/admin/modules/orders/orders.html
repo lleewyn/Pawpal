@@ -9,27 +9,27 @@
         <div class="orders-kpi-grid">
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Tổng đơn hôm nay</span>
-                <span class="kpi-val" id="statTotalOrders">48</span>
+                <span class="kpi-val" id="statTotalOrders">—</span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Chờ xác nhận</span>
-                <span class="kpi-val text-warning" id="statPendingOrders">6</span>
+                <span class="kpi-val text-warning" id="statPendingOrders">—</span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Đang chuẩn bị</span>
-                <span class="kpi-val" id="statPreparingOrders" style="color: #3730A3;">12</span>
+                <span class="kpi-val" id="statPreparingOrders" style="color: #3730A3;">—</span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Đang giao hàng</span>
-                <span class="kpi-val" id="statShippingOrders" style="color: #0369A1;">18</span>
+                <span class="kpi-val" id="statShippingOrders" style="color: #0369A1;">—</span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Đã hoàn tất</span>
-                <span class="kpi-val text-success" id="statCompletedOrders">10</span>
+                <span class="kpi-val text-success" id="statCompletedOrders">—</span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Đổi trả và Hủy</span>
-                <span class="kpi-val text-danger" id="statCancelledOrders">2</span>
+                <span class="kpi-val text-danger" id="statCancelledOrders">—</span>
             </div>
         </div>
 
@@ -136,7 +136,7 @@
                         </tr>
                     </thead>
                     <tbody id="ordersTableBody">
-                        <!-- Nạp động từ orders.js -->
+                        <tr><td colspan="10" style="text-align: center; padding: 36px 16px; color: var(--text-muted); font-size: 13px;">Đang tải danh sách đơn hàng từ máy chủ...</td></tr>
                     </tbody>
                 </table>
             </div>

@@ -8,27 +8,27 @@
         <div class="services-kpi-grid">
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="ALL" title="Xem tất cả lịch hẹn">
                 <span class="kpi-label">Tổng lịch hôm nay</span>
-                <span class="kpi-val" id="statTotalBookings">8</span>
+                <span class="kpi-val" id="statTotalBookings">—</span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="pending" title="Lọc lịch chờ xác nhận">
                 <span class="kpi-label">Chờ xác nhận</span>
-                <span class="kpi-val text-warning" id="statPendingBookings">1</span>
+                <span class="kpi-val text-warning" id="statPendingBookings">—</span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="upcoming" title="Lọc 3 lịch hẹn sắp tới trong 60 phút">
                 <span class="kpi-label">Sắp tới trong 60p</span>
-                <span class="kpi-val text-urgent-amber" id="statUpcomingBookings">3</span>
+                <span class="kpi-val text-urgent-amber" id="statUpcomingBookings">—</span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="in_progress" title="Lọc lịch đang thực hiện">
                 <span class="kpi-label">Đang thực hiện</span>
-                <span class="kpi-val" id="statInProgressBookings" style="color: #0369A1;">1</span>
+                <span class="kpi-val" id="statInProgressBookings" style="color: #0369A1;">—</span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="completed" title="Lọc lịch hoàn thành">
                 <span class="kpi-label">Hoàn thành</span>
-                <span class="kpi-val text-success" id="statCompletedBookings">2</span>
+                <span class="kpi-val text-success" id="statCompletedBookings">—</span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="cancelled" title="Lọc lịch yêu cầu đổi và hủy">
                 <span class="kpi-label">Yêu cầu đổi và Hủy</span>
-                <span class="kpi-val text-danger" id="statCancelledBookings">1</span>
+                <span class="kpi-val text-danger" id="statCancelledBookings">—</span>
             </div>
         </div>
 
@@ -120,7 +120,7 @@
                         </tr>
                     </thead>
                     <tbody id="servicesBookingTableBody">
-                        <!-- Nạp động từ services.js -->
+                        <tr><td colspan="10" style="text-align: center; padding: 36px 16px; color: var(--text-muted); font-size: 13px;">Đang tải danh sách lịch hẹn từ máy chủ...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -449,19 +449,19 @@
         <div class="services-kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
             <div class="admin-card kpi-card kpi-card-clickable" data-review-filter="ALL">
                 <span class="kpi-label">Điểm đánh giá trung bình</span>
-                <span class="kpi-val" id="statAvgRating" style="color: #B45309;">4.8 ★</span>
+                <span class="kpi-val" id="statAvgRating" style="color: #B45309;">—</span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-review-filter="ALL">
                 <span class="kpi-label">Tổng lượt đánh giá</span>
-                <span class="kpi-val" id="statTotalReviews">4</span>
+                <span class="kpi-val" id="statTotalReviews">—</span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-review-filter="pending">
                 <span class="kpi-label">Chưa phản hồi</span>
-                <span class="kpi-val text-warning" id="statPendingReviews">2</span>
+                <span class="kpi-val text-warning" id="statPendingReviews">—</span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-review-filter="low_rating">
                 <span class="kpi-label">Cảnh báo (1-3 sao)</span>
-                <span class="kpi-val text-danger" id="statLowRatingReviews">1</span>
+                <span class="kpi-val text-danger" id="statLowRatingReviews">—</span>
             </div>
         </div>
 

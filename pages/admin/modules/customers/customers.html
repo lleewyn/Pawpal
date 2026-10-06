@@ -7,23 +7,23 @@
         <div class="customers-kpi-grid">
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="ALL" title="Xem tất cả khách hàng">
                 <span class="kpi-label">Tổng khách</span>
-                <span class="kpi-val" id="custStatTotal">1.248</span>
+                <span class="kpi-val" id="custStatTotal">—</span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="MEMBER" title="Lọc khách hàng thành viên">
                 <span class="kpi-label">Thành viên</span>
-                <span class="kpi-val text-success" id="custStatMember">982</span>
+                <span class="kpi-val text-success" id="custStatMember">—</span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="TEMP" title="Lọc khách vãng lai">
                 <span class="kpi-label">Vãng lai</span>
-                <span class="kpi-val text-warning" id="custStatGuest">251</span>
+                <span class="kpi-val text-warning" id="custStatGuest">—</span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="LOCKED" title="Lọc tài khoản bị khóa">
                 <span class="kpi-label">Bị khóa</span>
-                <span class="kpi-val text-neutral" id="custStatLocked">15</span>
+                <span class="kpi-val text-neutral" id="custStatLocked">—</span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="COMPLAINT" title="Lọc khách hàng đang có khiếu nại">
                 <span class="kpi-label">Có khiếu nại</span>
-                <span class="kpi-val text-danger" id="custStatComplaint">4</span>
+                <span class="kpi-val text-danger" id="custStatComplaint">—</span>
             </div>
         </div>
 
@@ -96,7 +96,7 @@
                     </tr>
                 </thead>
                 <tbody id="customerTableTbody">
-                    <!-- Render động 100% qua renderCustomersTable() -->
+                    <tr><td colspan="8" style="text-align: center; padding: 36px 16px; color: var(--text-muted); font-size: 13px;">Đang tải dữ liệu khách hàng từ máy chủ...</td></tr>
                 </tbody>
             </table>
             </div>
