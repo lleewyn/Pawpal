@@ -150,3 +150,16 @@
     * *Tiến trình / Thông tin (Đang thực hiện, Đang giao, Đã xác nhận, Tạm nghỉ)*: Nền xô thơm / xanh phấn nhẹ `#DCEAF2`, chữ `#20495E`.
 * **Số đếm cảnh báo trên Tab con (`.tab-badge-count`)**:
   - Khi có đơn hàng, lịch hẹn hoặc khiếu nại đang chờ xử lý, hiển thị con số màu đỏ đặt ở **góc trên bên phải** của tên tab (dạng pill mini `color: #DC2626; background: #FEE2E2; border-radius: 9px; position: absolute; top: -7px; right: -9px;`) để người quản trị nhận diện ngay tức thì.
+
+---
+
+## 6. QUY TẮC DỮ LIỆU THỰC & CẤM TUYỆT ĐỐI SỬ DỤNG JSON (PURE SUPABASE LIVE DATABASE - ZERO JSON MOCK)
+
+* **Cấm 100% sử dụng và nạp dữ liệu từ file `.json`**:
+  - Tuyệt đối KHÔNG đọc, nạp, import hay fetch bất kỳ file `.json` nào (`/data/staff.json`, `services.json`, `orders.json`, `customers.json`, `pets.json`, `vouchers.json`...) trong toàn bộ hệ thống Admin.
+  - Toàn bộ các phân hệ (Dashboard, Khách hàng, Thú cưng, Dịch vụ, Bán hàng, Nhân sự, Đánh giá, Báo cáo...) BẮT BUỘC kết nối, nạp dữ liệu, tạo mới, chỉnh sửa, khóa và xóa (CRUD) **100% trực tiếp từ Cơ sở dữ liệu Supabase Live Database**.
+* **Tuyệt đối không Fallback về JSON hay chèn Mock Data tĩnh**:
+  - Khi CSDL chưa có dữ liệu hoặc danh sách trả về rỗng, giao diện hiển thị đúng trạng thái trống (Empty State) sạch sẽ và trang nhã, tuyệt đối không tự ý fallback về file `.json` hay tự ý tạo các mảng mock tĩnh chứa tên giả.
+* **Đồng bộ thời gian thực (Supabase Realtime Channel)**:
+  - Mọi thao tác thêm/sửa/xóa đều được ghi trực tiếp vào các bảng Supabase tương ứng (`staff`, `staff_schedule`, `appointment`, `customer`, `pet`, `service`, `orders`, `order_items`, `review`, `audit_log`...) và tự động lắng nghe Realtime Channel để cập nhật giao diện tức thì.
+
