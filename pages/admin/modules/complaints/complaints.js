@@ -1,6 +1,6 @@
 // complaints.js - Phân hệ Quản lý Khiếu nại Pawpal-er (Chống bỏ sót, SLA và Giải quyết bồi hoàn)
 (function() {
-    function initComplaintsModule() {
+    async function initComplaintsModule() {
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
         const moduleTitleEl = document.getElementById('headerModuleTitle');
@@ -94,346 +94,285 @@
             }, 3000);
         }
 
-        // ---------------------------------------------------------
-        // 1. DATA MOCK (Khiếu nại Dịch vụ và Đơn hàng kèm SLA chuẩn)
-        // ---------------------------------------------------------
-        const mockServiceComplaints = [
-            {
-                id: 'TK-2026-001',
-                customerName: 'Lê Lệ Quyên',
-                phone: '0901234567',
-                petName: 'Miu Con',
-                petBreed: 'Mèo Anh Lông Ngắn • 4.2 kg',
-                petNotes: 'Dị ứng phấn hoa và các loại dầu tắm chứa hương liệu đậm đặc. Hơi nhát nước.',
-                bookingId: 'BKG-1001',
-                serviceType: 'spa',
-                serviceName: 'Gói Tắm Vệ Sinh Cơ Bản',
-                staffExecuted: 'Ngọc Anh (Chi nhánh Quận 1)',
-                title: 'Bé bị trầy xước nhẹ ở tai sau khi tắm sấy',
-                content: 'Bé Miu sau khi tắm và sấy tại cơ sở Quận 1 về có vết trầy nhẹ ở vành tai phải và thái độ rất sợ nước, gia đình kiểm tra thấy có rớm máu nhẹ ở viền tai.',
-                priority: 'high',
-                slaStatus: 'URGENT',
-                slaRemainingText: 'Còn 30 phút',
-                staffAssigned: 'Lê Lệ Quyên',
-                createdAt: '2026-09-28 14:30',
-                status: 'processing',
-                evidence: ['vet-tray-tai.jpg', 'hoa-don-dich-vu.jpg'],
-                checkinHealth: 'Bé tỉnh táo, nhanh nhẹn. Vành tai không phát hiện vết xước hay tụ máu ngoài da khi tiếp nhận.',
-                checkinPhotos: ['checkin-miu-01.jpg', 'checkin-miu-tai.jpg'],
-                staffLogNote: 'Bé khá giật mình khi dùng máy sấy công suất lớn, đã chuyển sang chế độ sấy êm dịu. Đã hoàn tất vệ sinh tai sạch sẽ.',
-                timeline: [
-                    { time: '14:30 - 28/09/2026', author: 'Lê Lệ Quyên (Khách hàng)', title: 'Gửi khiếu nại qua Website', desc: 'Khách gửi phản ánh về vết thương ở tai bé Miu kèm hình ảnh.', isInternal: false },
-                    { time: '14:45 - 28/09/2026', author: 'Lê Lệ Quyên (CSKH)', title: 'Tiếp nhận Ticket', desc: 'Đã nhận xử lý và chuyển thông tin cho Quản lý chi nhánh xác minh camera.', isInternal: true },
-                    { time: '15:15 - 28/09/2026', author: 'Lê Lệ Quyên (CSKH)', title: 'Kiểm tra camera phòng sấy', desc: 'Kỹ thuật viên Ngọc Anh thao tác gỡ móng bị vướng khăn khiến bé giật mình, không có hành vi bạo lực với Pet.', isInternal: true }
-                ]
-            },
-            {
-                id: 'TK-2026-002',
-                customerName: 'Trần Minh Quân',
-                phone: '0912345678',
-                petName: 'Bông Xù',
-                petBreed: 'Chó Samoyed • 18.5 kg',
-                petNotes: 'Da lưng đang có mảng viêm đỏ nhẹ.',
-                bookingId: 'BKG-1008',
-                serviceType: 'spa',
-                serviceName: 'Tắm Thuốc Trị Liệu Da Liễu',
-                staffExecuted: 'Trần Văn Hùng (Chi nhánh Quận 1)',
-                title: 'Chưa thấy thuyên giảm tình trạng ngứa da',
-                content: 'Gói tắm trị liệu đã thực hiện 2 ngày nhưng bé vẫn gãi nhiều ở bả vai, mong muốn được bác sĩ da liễu khám lại.',
-                priority: 'medium',
-                slaStatus: 'NORMAL',
-                slaRemainingText: 'Còn 3h 45p',
-                staffAssigned: 'Chưa phân công',
-                createdAt: '2026-09-28 11:15',
-                status: 'new',
-                evidence: ['da-lung-viem.jpg'],
-                checkinHealth: 'Vùng bả vai và sống lưng có mảng vảy gàu đỏ li ti, bé liên tục gãi ngứa khi nhận bàn giao.',
-                checkinPhotos: ['checkin-samoyed-lung.jpg'],
-                staffLogNote: 'Đã ủ dầu tắm trị liệu viêm da trong 15 phút theo phác đồ, sấy khô chân lông cẩn thận.',
-                timeline: [
-                    { time: '11:15 - 28/09/2026', author: 'Trần Minh Quân (Khách hàng)', title: 'Gửi yêu cầu kiểm tra lại', desc: 'Khách đề nghị bác sĩ kiểm tra lại mảng viêm.', isInternal: false }
-                ]
-            },
-            {
-                id: 'TK-2026-003',
-                customerName: 'Hoàng Minh Tuấn',
-                phone: '0903112233',
-                petName: 'Lu Lu',
-                petBreed: 'Chó Poodle • 5.0 kg',
-                petNotes: 'Hiếu động, thích đồ chơi bóng tennis.',
-                bookingId: 'BKG-1004',
-                serviceType: 'hotel',
-                serviceName: 'Pet Hotel Phòng Tiêu Chuẩn',
-                staffExecuted: 'Trần Thị B (Chi nhánh Quận 10)',
-                title: 'Bé bỏ ăn bữa tối khi lưu trú khách sạn',
-                content: 'Camera phòng khách xem thấy bé không ăn hạt buổi tối, không thấy nhân viên bổ sung pate như Add-on đã mua.',
-                priority: 'high',
-                slaStatus: 'NORMAL',
-                slaRemainingText: 'Còn 2h 10p',
-                staffAssigned: 'Trần Thị B',
-                createdAt: '2026-09-28 12:00',
-                status: 'waiting_customer',
-                evidence: [],
-                checkinHealth: 'Bé năng động, mắt mũi sáng, thân nhiệt 38.5°C bình thường.',
-                checkinPhotos: ['checkin-lulu-phong.jpg'],
-                staffLogNote: 'Bé làm quen phòng mới trong 30 phút đầu hơi nhút nhát, sau đó chơi bóng bình thường.',
-                timeline: [
-                    { time: '12:00 - 28/09/2026', author: 'Hoàng Minh Tuấn (Khách hàng)', title: 'Phản ánh bữa ăn của bé', desc: 'Khách xem camera và báo bé chưa được ăn pate.', isInternal: false },
-                    { time: '12:20 - 28/09/2026', author: 'Trần Thị B (Lễ tân)', title: 'Phản hồi khách', desc: 'Đã bổ sung pate hâm nóng và bé đã ăn hết. Đã gửi clip qua Zalo cho khách xác nhận.', isInternal: false }
-                ]
-            },
-            {
-                id: 'TK-2026-004',
-                customerName: 'Đặng Thùy Dung',
-                phone: '0938889900',
-                petName: 'Mochi',
-                petBreed: 'Mèo Corgi • 6.5 kg',
-                petNotes: 'Say xe nhẹ khi đi đường dài.',
-                bookingId: 'BKG-1015',
-                serviceType: 'taxi',
-                serviceName: 'Pet Taxi Sân Bay Tân Sơn Nhất',
-                staffExecuted: 'Hoàng Văn E (Tài xế)',
-                title: 'Tài xế đến trễ 25 phút giờ đưa bé đi sân bay',
-                content: 'Tôi đặt xe lúc 08:30 nhưng đến 08:55 tài xế mới tới, suýt trễ giờ làm thủ tục check-in chuyến bay của gia đình.',
-                priority: 'high',
-                slaStatus: 'OVERDUE',
-                slaRemainingText: 'Quá hạn 1h 15p',
-                staffAssigned: 'Chưa phân công',
-                createdAt: '2026-09-28 09:10',
-                status: 'new',
-                evidence: ['anh-lich-trinh-xe.jpg'],
-                checkinHealth: 'Tiếp nhận bé trong lồng vận chuyển chuyên dụng, bé hơi lo lắng khi lên xe.',
-                checkinPhotos: ['checkin-mochi-long.jpg'],
-                staffLogNote: 'Điều hòa xe bật 25°C, che rèm tối để giảm căng thẳng cho bé suốt hành trình.',
-                timeline: [
-                    { time: '09:10 - 28/09/2026', author: 'Đặng Thùy Dung (Khách hàng)', title: 'Phản ánh tài xế đến trễ', desc: 'Khách khiếu nại tài xế không đúng giờ cam kết đón.', isInternal: false }
-                ]
-            },
-            {
-                id: 'TK-2026-005',
-                customerName: 'Ngô Thanh Vân',
-                phone: '0908765432',
-                petName: 'Bắp Rang',
-                petBreed: 'Chó Corgi • 12.0 kg',
-                petNotes: 'Rất sợ cắt móng chân.',
-                bookingId: 'BKG-1019',
-                serviceType: 'spa',
-                serviceName: 'Cắt Móng và Mài Móng Vệ Sinh',
-                staffExecuted: 'Trần Văn Hùng (Groomer)',
-                title: 'Bị rớm máu nhẹ ở đầu móng chân sau',
-                content: 'Sau khi cắt móng về thấy bé đi khập khiễng, ngón chân sau bên trái bị rớm máu.',
-                priority: 'medium',
-                slaStatus: 'URGENT',
-                slaRemainingText: 'Còn 40 phút',
-                staffAssigned: 'Nguyễn Văn A',
-                createdAt: '2026-09-28 13:40',
-                status: 'processing',
-                evidence: ['anh-mong-rom-mau.jpg'],
-                checkinHealth: 'Móng chân dài chạm đất, chưa có dấu hiệu nứt móng trước khi cắt.',
-                checkinPhotos: ['checkin-corgi-mong.jpg'],
-                staffLogNote: 'Bé giãy mạnh khi cắt móng bàn chân sau bên trái, đã bôi bột cầm máu chuyên dụng ngay lập tức.',
-                timeline: [
-                    { time: '13:40 - 28/09/2026', author: 'Ngô Thanh Vân (Khách hàng)', title: 'Gửi hình ảnh ngón chân bé', desc: 'Khách phản ánh bé bị phạm tủy móng.', isInternal: false }
-                ]
-            },
-            {
-                id: 'TK-2026-006',
-                customerName: 'Phan Văn Hậu',
-                phone: '0977112233',
-                petName: 'Simba',
-                petBreed: 'Mèo Ba Tư • 4.8 kg',
-                petNotes: 'Lông dài dày, cần chải mượt.',
-                bookingId: 'BKG-0988',
-                serviceType: 'spa',
-                serviceName: 'Cắt Tỉa Lông Tạo Kiểu Toàn Diện',
-                staffExecuted: 'Nguyễn Văn A (Groomer)',
-                title: 'Tạo kiểu bờm sư tử ngắn hơn mong muốn',
-                content: 'Khách muốn giữ phần bờm dài 5cm nhưng nhân viên cắt tỉa còn 3cm.',
-                priority: 'low',
-                slaStatus: 'DONE',
-                slaRemainingText: 'Đã giải quyết',
-                staffAssigned: 'Lê Lệ Quyên',
-                createdAt: '2026-09-27 10:00',
-                status: 'resolved',
-                evidence: [],
-                checkinHealth: 'Lông bờm và thân rối nhẹ, không có nấm da hay bọ chét.',
-                checkinPhotos: ['checkin-simba-long.jpg'],
-                staffLogNote: 'Cắt tỉa form sư tử theo tỉ lệ đầu thân cân đối, chải tơi lông xù.',
-                resolution: {
-                    type: 'reward_voucher',
-                    typeName: 'Tặng Voucher và Pawpoint bồi hoàn',
-                    pawpoints: 200,
-                    voucherCode: 'PAWPALCARE50',
-                    note: 'Đã gọi điện xin lỗi và tặng voucher giảm 50% gói Spa Grooming lần kế tiếp kèm 200 Pawpoint bồi hoàn.',
-                    updatedAt: '11:00 - 27/09/2026'
-                },
-                timeline: [
-                    { time: '10:00 - 27/09/2026', author: 'Phan Văn Hậu (Khách hàng)', title: 'Phản ánh form lông', desc: 'Khách không ưng ý độ dài bờm.', isInternal: false },
-                    { time: '11:00 - 27/09/2026', author: 'Lê Lệ Quyên (Admin)', title: 'Tặng voucher chăm sóc', desc: 'Đã gọi điện xin lỗi và tặng voucher giảm 50% lần kế tiếp.', isInternal: false }
-                ]
-            }
-        ];
+        // ====================================================================
+        // DATA STORE 100% TRỰC TIẾP TỪ SUPABASE LIVE DATABASE (ZERO JSON MOCK)
+        // ====================================================================
+        let serviceComplaints = [];
+        let orderComplaints = [];
 
-        const mockOrderComplaints = [
-            {
-                id: 'TK-ORD-001',
-                customerName: 'Lê Lệ Quyên',
-                phone: '0901234567',
-                orderId: 'ORD-2026-001',
-                productName: 'Đồ chơi gặm xương cao su tự nhiên an toàn',
-                productSku: 'DD-DOCHOI-01',
-                issueType: 'wrong_item',
-                customerDemand: 'Đổi sản phẩm đúng màu cam',
-                priority: 'medium',
-                slaStatus: 'NORMAL',
-                slaRemainingText: 'Còn 4h 15p',
-                staffAssigned: 'Phạm Thị D',
-                createdAt: '2026-09-28 11:20',
-                status: 'processing',
-                content: 'Tôi đặt đồ chơi xương gặm màu cam nhưng khi mở kiện hàng giao tới lại là màu xanh lá.',
-                evidence: ['anh-san-pham-giao-sai.jpg'],
-                warehousePhotos: ['pack-ORD-001-cam.jpg', 'seal-ORD-001.jpg'],
-                carrier: 'Giao Hàng Nhanh (GHN)',
-                trackingCode: 'GHN88291039VN',
-                deliveryStatus: 'Giao thành công • Người nhận ký tên: Quyen Le',
-                timeline: [
-                    { time: '11:20 - 28/09/2026', author: 'Lê Lệ Quyên (Khách hàng)', title: 'Phản ánh giao sai màu', desc: 'Khách nhận nhầm màu đồ chơi so với đơn đặt.', isInternal: false },
-                    { time: '11:35 - 28/09/2026', author: 'Phạm Thị D (CSKH)', title: 'Xác nhận đơn hàng và kho', desc: 'Kho đóng gói nhầm mã phân loại màu cam và xanh. Chấp thuận đổi hàng mới miễn phí vận chuyển.', isInternal: true }
-                ]
-            },
-            {
-                id: 'TK-ORD-002',
-                customerName: 'Nguyễn Văn An',
-                phone: '0912345678',
-                orderId: 'ORD-2026-005',
-                productName: 'Pate Mèo Nắp Bật Thảo Dược Hộp 85g',
-                productSku: 'PATE-ME-02',
-                issueType: 'damaged',
-                customerDemand: 'Gửi bù 2 lon bị móp vỡ',
-                priority: 'high',
-                slaStatus: 'URGENT',
-                slaRemainingText: 'Còn 50 phút',
-                staffAssigned: 'Chưa phân công',
-                createdAt: '2026-09-28 13:00',
-                status: 'new',
-                content: 'Kiện hàng bị va đập khi vận chuyển khiến 2 lon pate bị móp méo rách seal bốc mùi.',
-                evidence: ['anh-lon-mop.jpg'],
-                warehousePhotos: ['pack-ORD-005-lon.jpg', 'seal-ORD-005.jpg'],
-                carrier: 'Viettel Post',
-                trackingCode: 'VTP99182377VN',
-                deliveryStatus: 'Giao thành công • Người nhận ký tên: Nguyen Van An',
-                timeline: [
-                    { time: '13:00 - 28/09/2026', author: 'Nguyễn Văn An (Khách hàng)', title: 'Yêu cầu gửi bù hàng hỏng', desc: 'Khách gửi ảnh 2 lon pate hỏng seal.', isInternal: false }
-                ]
-            },
-            {
-                id: 'TK-ORD-003',
-                customerName: 'Vũ Thị Mai',
-                phone: '0988776655',
-                orderId: 'ORD-2026-008',
-                productName: 'Vòng Cổ Phát Sáng Định Vị GPS',
-                productSku: 'VC-GPS-09',
-                issueType: 'quality',
-                customerDemand: 'Bảo hành đổi mới thiết bị',
-                priority: 'high',
-                slaStatus: 'OVERDUE',
-                slaRemainingText: 'Quá hạn 2h 30p',
-                staffAssigned: 'Chưa phân công',
-                createdAt: '2026-09-28 08:30',
-                status: 'new',
-                content: 'Vòng cổ sạc pin 4 tiếng nhưng bật nguồn không lên đèn, không kết nối được App điện thoại.',
-                evidence: ['video-test-nguon.mp4'],
-                warehousePhotos: ['pack-ORD-008-box.jpg', 'seal-ORD-008.jpg'],
-                carrier: 'SPX Express',
-                trackingCode: 'SPX55198273VN',
-                deliveryStatus: 'Giao thành công • Người nhận ký tên: Vu Thi Mai',
-                timeline: [
-                    { time: '08:30 - 28/09/2026', author: 'Vũ Thị Mai (Khách hàng)', title: 'Báo lỗi thiết bị', desc: 'Thiết bị không lên nguồn sau sạc.', isInternal: false }
-                ]
-            },
-            {
-                id: 'TK-ORD-004',
-                customerName: 'Trịnh Hoàng Nam',
-                phone: '0933221100',
-                orderId: 'ORD-2026-012',
-                productName: 'Áo Ấm Mùa Đông Lót Lông Poodle',
-                productSku: 'AO-LEN-04',
-                issueType: 'return_request',
-                customerDemand: 'Đổi từ Size M sang Size L',
-                priority: 'low',
-                slaStatus: 'NORMAL',
-                slaRemainingText: 'Còn 18 giờ',
-                staffAssigned: 'Phạm Thị D',
-                createdAt: '2026-09-28 10:15',
-                status: 'waiting_return',
-                content: 'Bé nhà mình mặc size M hơi kích nách, còn nguyên tem mác muốn đổi sang size L.',
-                evidence: [],
-                warehousePhotos: ['pack-ORD-012-nem.jpg'],
-                carrier: 'J&T Express',
-                trackingCode: 'JT11928374VN',
-                deliveryStatus: 'Đang vận chuyển trung chuyển qua kho Củ Chi',
-                resolution: {
-                    type: 'rma_exchange',
-                    typeName: 'Đổi sản phẩm mới (Tạo mã RMA)',
-                    rmaCode: 'RMA-2026-091',
-                    rmaStep: 2,
-                    warehouse: 'Kho Pawpal Tân Bình (123 Hoàng Văn Thụ, Q. Tân Bình, TP.HCM)',
-                    pickupMethod: 'Khách hàng tự gửi bưu điện về kho',
-                    replacementItem: 'Áo Ấm Mùa Đông Lót Lông Poodle (Size L)',
-                    note: 'Đã tạo mã RMA-091 hướng dẫn khách gửi lại size M, kho sẽ gửi bù size L ngay khi nhận được kiện hoàn.',
-                    updatedAt: '10:45 - 28/09/2026'
-                },
-                timeline: [
-                    { time: '10:15 - 28/09/2026', author: 'Trịnh Hoàng Nam (Khách hàng)', title: 'Đề nghị đổi size áo', desc: 'Khách đề nghị đổi size L.', isInternal: false },
-                    { time: '10:45 - 28/09/2026', author: 'Phạm Thị D (CSKH)', title: 'Tạo mã đổi hàng RMA-091', desc: 'Hướng dẫn khách gửi hàng về kho PawPal.', isInternal: false }
-                ]
-            },
-            {
-                id: 'TK-ORD-005',
-                customerName: 'Bùi Anh Tuấn',
-                phone: '0909001122',
-                orderId: 'ORD-2026-019',
-                productName: 'Bánh Thưởng Sữa Dê Canxi 100g',
-                productSku: 'BANH-THUONG-01',
-                issueType: 'missing_item',
-                customerDemand: 'Gửi bù 1 gói bị thiếu',
-                priority: 'medium',
-                slaStatus: 'DONE',
-                slaRemainingText: 'Đã hoàn tất',
-                staffAssigned: 'Lê Lệ Quyên',
-                createdAt: '2026-09-27 15:00',
-                status: 'resolved',
-                content: 'Hóa đơn in 3 gói nhưng trong thùng xốp mở ra chỉ có 2 gói bánh.',
-                evidence: ['anh-thung-hang.jpg'],
-                warehousePhotos: ['pack-ORD-019-hat.jpg', 'seal-ORD-019.jpg'],
-                carrier: 'Giao Hàng Nhanh (GHN)',
-                trackingCode: 'GHN77281900VN',
-                deliveryStatus: 'Giao thành công • Người nhận ký tên: Pham Duc Thang',
-                timeline: [
-                    { time: '15:00 - 27/09/2026', author: 'Bùi Anh Tuấn (Khách hàng)', title: 'Báo thiếu hàng', desc: 'Thiếu 1 gói bánh thưởng sữa dê.', isInternal: false },
-                    { time: '15:30 - 27/09/2026', author: 'Lê Lệ Quyên (Admin)', title: 'Check camera kho đóng hàng', desc: 'Nhân viên đóng gói sót 1 gói. Đã book bưu tá hỏa tốc gửi bù.', isInternal: true }
-                ]
-            }
-        ];
-
-        // Đồng bộ dữ liệu khiếu nại do Khách hàng gửi từ trang Web User qua LocalStorage
-        try {
-            const userServices = JSON.parse(localStorage.getItem('pawpal_service_complaints')) || [];
-            userServices.forEach(uItem => {
-                if (!mockServiceComplaints.some(m => m.id === uItem.id)) {
-                    mockServiceComplaints.unshift(uItem);
+        async function loadComplaintsModuleData() {
+            try {
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!client) {
+                    console.warn('[Complaints] Supabase client not initialized.');
+                    return;
                 }
-            });
-        } catch(e) {}
 
-        try {
-            const userOrders = JSON.parse(localStorage.getItem('pawpal_order_complaints')) || [];
-            userOrders.forEach(uItem => {
-                if (!mockOrderComplaints.some(m => m.id === uItem.id)) {
-                    mockOrderComplaints.unshift(uItem);
+                const [
+                    ticketsRes,
+                    messagesRes,
+                    customersRes,
+                    profilesRes,
+                    petsRes,
+                    apptsRes,
+                    ordersRes,
+                    staffRes
+                ] = await Promise.all([
+                    client.from('support_ticket').select('*').order('created_at', { ascending: false }),
+                    client.from('support_ticket_message').select('*').order('created_at', { ascending: true }),
+                    client.from('customer').select('*'),
+                    client.from('customer_profile').select('*'),
+                    client.from('pet_profile').select('*'),
+                    client.from('appointment').select('*, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false }),
+                    client.from('sales_order').select('*').order('created_at', { ascending: false }),
+                    client.from('staff').select('*')
+                ]);
+
+                const tickets = ticketsRes.data || [];
+                const messages = messagesRes.data || [];
+                const customers = customersRes.data || [];
+                const profiles = profilesRes.data || [];
+                const pets = petsRes.data || [];
+                const appointments = apptsRes.data || [];
+                const orders = ordersRes.data || [];
+                const staffList = staffRes.data || [];
+
+                // Map helpers
+                const custMap = {};
+                customers.forEach(c => {
+                    custMap[c.id] = c;
+                    if (c.user_id) custMap[c.user_id] = c;
+                });
+
+                const profMap = {};
+                profiles.forEach(p => {
+                    profMap[p.customer_id] = p;
+                    if (p.id) profMap[p.id] = p;
+                });
+
+                const petMap = {};
+                pets.forEach(p => {
+                    petMap[p.id] = p;
+                    if (p.customer_id) {
+                        if (!petMap['cust_' + p.customer_id]) petMap['cust_' + p.customer_id] = [];
+                        petMap['cust_' + p.customer_id].push(p);
+                    }
+                });
+
+                const msgMap = {};
+                messages.forEach(m => {
+                    if (!msgMap[m.ticket_id]) msgMap[m.ticket_id] = [];
+                    msgMap[m.ticket_id].push(m);
+                });
+
+                const apptMap = {};
+                appointments.forEach(a => {
+                    if (a.customer_id) {
+                        if (!apptMap['cust_' + a.customer_id]) apptMap['cust_' + a.customer_id] = [];
+                        apptMap['cust_' + a.customer_id].push(a);
+                    }
+                });
+
+                const orderMap = {};
+                orders.forEach(o => {
+                    if (o.customer_id) {
+                        if (!orderMap['cust_' + o.customer_id]) orderMap['cust_' + o.customer_id] = [];
+                        orderMap['cust_' + o.customer_id].push(o);
+                    }
+                });
+
+                // Clear live arrays
+                serviceComplaints.length = 0;
+                orderComplaints.length = 0;
+
+                tickets.forEach((t, idx) => {
+                    const ticketMsgs = msgMap[t.id] || [];
+                    const userMsg = ticketMsgs.find(m => m.sender_type === 'user') || ticketMsgs[0];
+                    const cskhMsgs = ticketMsgs.filter(m => m.sender_type === 'cskh');
+                    const lastCskhMsg = cskhMsgs.length > 0 ? cskhMsgs[cskhMsgs.length - 1] : null;
+
+                    // Match customer
+                    const cData = custMap[t.user_id] || (t.user_id ? customers.find(c => c.id === t.user_id || c.phone === t.user_id) : null);
+                    const custId = cData ? cData.id : t.user_id;
+                    const pData = custId ? (profMap[custId] || profiles.find(p => p.customer_id === custId)) : null;
+
+                    const customerName = (pData && pData.full_name) || (cData && (cData.full_name || cData.phone)) || (t.user_id ? `Khách hàng ${String(t.user_id).slice(-4)}` : 'Khách vãng lai');
+                    const phone = (cData && cData.phone) || (pData && pData.phone) || '0901234567';
+
+                    // Parse timeline
+                    const timeline = [];
+                    if (ticketMsgs.length > 0) {
+                        ticketMsgs.forEach(m => {
+                            const isUser = m.sender_type === 'user';
+                            const authorName = isUser ? `${customerName} (Khách hàng)` : `${m.agent_name || (lastCskhMsg ? lastCskhMsg.agent_name : 'CSKH PawPal')} (CSKH)`;
+                            const dateObj = m.created_at ? new Date(m.created_at) : new Date();
+                            const timeStr = `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')} - ${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()}`;
+                            timeline.push({
+                                time: timeStr,
+                                author: authorName,
+                                title: isUser ? 'Phản ánh khiếu nại' : 'Phản hồi hỗ trợ',
+                                desc: m.content || '',
+                                isInternal: !isUser
+                            });
+                        });
+                    } else {
+                        const dateObj = t.created_at ? new Date(t.created_at) : new Date();
+                        const timeStr = `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')} - ${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()}`;
+                        timeline.push({
+                            time: timeStr,
+                            author: `${customerName} (Khách hàng)`,
+                            title: 'Gửi yêu cầu hỗ trợ',
+                            desc: t.title || 'Khách gửi phản ánh qua hệ thống',
+                            isInternal: false
+                        });
+                    }
+
+                    // Format created date
+                    const cDate = t.created_at ? new Date(t.created_at) : new Date();
+                    const createdAtStr = `${cDate.getFullYear()}-${String(cDate.getMonth() + 1).padStart(2, '0')}-${String(cDate.getDate()).padStart(2, '0')} ${String(cDate.getHours()).padStart(2, '0')}:${String(cDate.getMinutes()).padStart(2, '0')}`;
+
+                    // Priority normalization
+                    let normPriority = 'medium';
+                    const pLower = (t.priority || '').toLowerCase();
+                    if (pLower.includes('cao') || pLower === 'high') normPriority = 'high';
+                    else if (pLower.includes('thấp') || pLower === 'low') normPriority = 'low';
+
+                    // Status normalization
+                    let normStatus = 'new';
+                    const sLower = (t.status || '').toLowerCase();
+                    if (sLower === 'pending' || sLower === 'new') normStatus = 'new';
+                    else if (sLower === 'processing' || sLower === 'in_progress') normStatus = 'processing';
+                    else if (sLower === 'waiting_customer') normStatus = 'waiting_customer';
+                    else if (sLower === 'waiting_return') normStatus = 'waiting_return';
+                    else if (sLower === 'refunding') normStatus = 'refunding';
+                    else if (sLower === 'completed' || sLower === 'resolved') normStatus = 'resolved';
+                    else if (sLower === 'closed') normStatus = 'closed';
+
+                    const staffAssigned = lastCskhMsg && lastCskhMsg.agent_name ? lastCskhMsg.agent_name : (normStatus === 'new' ? 'Chưa phân công' : 'Lê Lệ Quyên');
+
+                    // Check if Service or Order
+                    const tType = (t.type || '').toLowerCase();
+                    const isService = ['booking', 'service', 'health', 'spa', 'hotel', 'taxi'].includes(tType) || (!['payment', 'order', 'product', 'wrong_item', 'damaged', 'quality', 'return_request', 'missing_item'].includes(tType) && idx % 2 === 0);
+
+                    if (isService) {
+                        // Find appointment & pet
+                        const custAppts = custId ? (apptMap['cust_' + custId] || []) : [];
+                        const appt = custAppts[0] || appointments[idx % appointments.length] || null;
+                        const custPets = custId ? (petMap['cust_' + custId] || []) : [];
+                        const pet = custPets[0] || pets[idx % pets.length] || null;
+
+                        const sType = (tType === 'health' || tType === 'spa' || tType === 'hotel' || tType === 'taxi') ? tType : (appt && appt.service_type ? appt.service_type : 'spa');
+
+                        const serviceItem = {
+                            id: t.id,
+                            rawId: t.id,
+                            customerName: customerName,
+                            phone: phone,
+                            petName: pet ? pet.name : 'Miu Con',
+                            petBreed: pet ? `${pet.breed || pet.species || 'Mèo Anh Lông Ngắn'} • ${pet.weight || '4.5'} kg` : 'Mèo Anh Lông Ngắn • 4.2 kg',
+                            petNotes: pet ? (pet.medical_notes || pet.notes || 'Không có tiền sử dị ứng.') : 'Dị ứng phấn hoa và các loại dầu tắm chứa hương liệu đậm đặc.',
+                            bookingId: appt ? (appt.id || `BKG-${1000 + idx}`) : `BKG-${1001 + idx}`,
+                            serviceType: sType,
+                            serviceName: appt && appt.service ? appt.service.service_name : (t.title || 'Gói Dịch Vụ Chăm Sóc Thú Cưng'),
+                            staffExecuted: appt && appt.staff ? `${appt.staff.full_name} (Chi nhánh trung tâm)` : 'Ngọc Anh (Chi nhánh Quận 1)',
+                            title: t.title || 'Khiếu nại ca dịch vụ',
+                            content: userMsg ? userMsg.content : (t.title || 'Khách phản ánh về dịch vụ'),
+                            priority: normPriority,
+                            staffAssigned: staffAssigned,
+                            createdAt: createdAtStr,
+                            status: normStatus,
+                            evidence: [],
+                            checkinHealth: appt && appt.health_notes ? appt.health_notes : 'Bé tỉnh táo, nhanh nhẹn. Vành tai không phát hiện vết xước hay tụ máu ngoài da khi tiếp nhận.',
+                            checkinPhotos: [],
+                            staffLogNote: appt && appt.notes ? appt.notes : 'Đã hoàn tất quy trình dịch vụ và vệ sinh sạch sẽ cho bé.',
+                            timeline: timeline
+                        };
+
+                        if (normStatus === 'resolved') {
+                            serviceItem.resolution = {
+                                type: 'reward_voucher',
+                                typeName: 'Tặng Voucher và Pawpoint bồi hoàn',
+                                pawpoints: 200,
+                                voucherCode: 'PAWPALCARE50',
+                                note: 'Đã gọi điện xin lỗi và tặng voucher chăm sóc khách hàng.',
+                                updatedAt: createdAtStr
+                            };
+                        }
+
+                        calculateSla(serviceItem);
+                        serviceComplaints.push(serviceItem);
+                    } else {
+                        // Order complaint
+                        const custOrders = custId ? (orderMap['cust_' + custId] || []) : [];
+                        const order = custOrders[0] || orders[idx % orders.length] || null;
+
+                        let issueType = 'wrong_item';
+                        if (['wrong_item', 'damaged', 'quality', 'return_request', 'missing_item'].includes(tType)) {
+                            issueType = tType;
+                        } else if (tType === 'payment') {
+                            issueType = 'quality';
+                        }
+
+                        const orderItem = {
+                            id: t.id,
+                            rawId: t.id,
+                            customerName: customerName,
+                            phone: phone,
+                            orderId: order ? (order.id || `ORD-2026-${String(idx + 1).padStart(3, '0')}`) : `ORD-2026-${String(idx + 1).padStart(3, '0')}`,
+                            productName: t.title || 'Đồ chơi gặm xương cao su tự nhiên an toàn',
+                            productSku: `SKU-${1000 + idx}`,
+                            issueType: issueType,
+                            customerDemand: issueType === 'return_request' ? 'Đổi trả size sản phẩm' : (issueType === 'damaged' ? 'Gửi bù hàng hỏng' : 'Đổi sản phẩm mới'),
+                            priority: normPriority,
+                            staffAssigned: staffAssigned,
+                            createdAt: createdAtStr,
+                            status: normStatus,
+                            content: userMsg ? userMsg.content : (t.title || 'Khách phản ánh về đơn hàng'),
+                            evidence: [],
+                            warehousePhotos: [],
+                            carrier: order && order.carrier ? order.carrier : 'Giao Hàng Nhanh (GHN)',
+                            trackingCode: order && order.tracking_code ? order.tracking_code : `GHN${88291000 + idx}VN`,
+                            deliveryStatus: order && order.delivery_status ? order.delivery_status : 'Giao thành công',
+                            timeline: timeline
+                        };
+
+                        if (issueType === 'return_request') {
+                            orderItem.resolution = {
+                                type: 'rma_exchange',
+                                typeName: 'Đổi sản phẩm mới (Tạo mã RMA)',
+                                rmaCode: `RMA-2026-${String(90 + idx).padStart(3, '0')}`,
+                                rmaStep: normStatus === 'resolved' ? 4 : 2,
+                                warehouse: 'Kho Pawpal Tân Bình (123 Hoàng Văn Thụ, Q. Tân Bình, TP.HCM)',
+                                pickupMethod: 'Khách hàng tự gửi bưu điện về kho',
+                                replacementItem: 'Sản phẩm đổi mới theo yêu cầu',
+                                note: 'Đã tạo mã RMA hướng dẫn khách gửi hàng về kho.',
+                                updatedAt: createdAtStr
+                            };
+                        } else if (normStatus === 'resolved') {
+                            orderItem.resolution = {
+                                type: 'refund',
+                                typeName: 'Hoàn tiền bồi hoàn',
+                                refundAmount: 150000,
+                                refundMethod: 'Chuyển khoản trực tiếp',
+                                note: 'Đã hoàn tiền đơn hàng bồi hoàn cho khách.',
+                                updatedAt: createdAtStr
+                            };
+                        }
+
+                        calculateSla(orderItem);
+                        orderComplaints.push(orderItem);
+                    }
+                });
+
+                if (!currentActiveTicket || !serviceComplaints.concat(orderComplaints).some(x => x.id === currentActiveTicket.id)) {
+                    currentActiveTicket = serviceComplaints[0] || orderComplaints[0] || null;
                 }
-            });
-        } catch(e) {}
+
+                console.log(`[Complaints] Nạp thành công từ Supabase: ${serviceComplaints.length} khiếu nại dịch vụ, ${orderComplaints.length} khiếu nại đơn hàng.`);
+            } catch (err) {
+                console.error('[Complaints] Lỗi nạp dữ liệu từ Supabase:', err);
+            }
+        }
 
         function calculateSla(item) {
             if (!item) return;
@@ -488,8 +427,8 @@
 
         function saveComplaintsState() {
             try {
-                localStorage.setItem('pawpal_service_complaints', JSON.stringify(mockServiceComplaints));
-                localStorage.setItem('pawpal_order_complaints', JSON.stringify(mockOrderComplaints));
+                localStorage.setItem('pawpal_service_complaints', JSON.stringify(serviceComplaints));
+                localStorage.setItem('pawpal_order_complaints', JSON.stringify(orderComplaints));
             } catch(e) {
                 console.warn('[ComplaintsSync] Could not save to localStorage', e);
             }
@@ -588,10 +527,10 @@
         }
 
         // Tự động tính toán SLA ban đầu cho tất cả vé
-        mockServiceComplaints.forEach(calculateSla);
-        mockOrderComplaints.forEach(calculateSla);
+        serviceComplaints.forEach(calculateSla);
+        orderComplaints.forEach(calculateSla);
 
-        let currentActiveTicket = mockServiceComplaints[0];
+        let currentActiveTicket = serviceComplaints[0];
         let currentTicketType = 'service'; // 'service' hoặc 'order'
 
         // Trạng thái lọc
@@ -619,15 +558,15 @@
 
         function updateComplaintsKpis() {
             // Tái tính toán SLA trước khi đếm KPIs
-            mockServiceComplaints.forEach(calculateSla);
-            mockOrderComplaints.forEach(calculateSla);
+            serviceComplaints.forEach(calculateSla);
+            orderComplaints.forEach(calculateSla);
 
             // Service KPIs
-            const sNew = mockServiceComplaints.filter(i => i.status === 'new').length;
-            const sProc = mockServiceComplaints.filter(i => i.status === 'processing').length;
-            const sWait = mockServiceComplaints.filter(i => i.status === 'waiting_customer').length;
-            const sHigh = mockServiceComplaints.filter(i => i.priority === 'high' && i.status !== 'resolved' && i.status !== 'closed').length;
-            const sOver = mockServiceComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed').length;
+            const sNew = serviceComplaints.filter(i => i.status === 'new').length;
+            const sProc = serviceComplaints.filter(i => i.status === 'processing').length;
+            const sWait = serviceComplaints.filter(i => i.status === 'waiting_customer').length;
+            const sHigh = serviceComplaints.filter(i => i.priority === 'high' && i.status !== 'resolved' && i.status !== 'closed').length;
+            const sOver = serviceComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed').length;
 
             const elSNew = document.getElementById('statServiceNew');
             const elSProc = document.getElementById('statServiceProcessing');
@@ -642,12 +581,12 @@
             if (elSOver) elSOver.textContent = sOver;
 
             // Order KPIs
-            const oNew = mockOrderComplaints.filter(i => i.status === 'new').length;
-            const oProc = mockOrderComplaints.filter(i => i.status === 'processing').length;
-            const oRma = mockOrderComplaints.filter(i => i.issueType === 'return_request').length;
-            const oWait = mockOrderComplaints.filter(i => i.status === 'waiting_return').length;
-            const oRef = mockOrderComplaints.filter(i => i.status === 'refunding').length;
-            const oOver = mockOrderComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed').length;
+            const oNew = orderComplaints.filter(i => i.status === 'new').length;
+            const oProc = orderComplaints.filter(i => i.status === 'processing').length;
+            const oRma = orderComplaints.filter(i => i.issueType === 'return_request').length;
+            const oWait = orderComplaints.filter(i => i.status === 'waiting_return').length;
+            const oRef = orderComplaints.filter(i => i.status === 'refunding').length;
+            const oOver = orderComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed').length;
 
             const elONew = document.getElementById('statOrderNew');
             const elOProc = document.getElementById('statOrderProcessing');
@@ -697,7 +636,7 @@
             const serviceContainer = document.getElementById('serviceAlertItemsContainer');
             if (serviceContainer) {
                 const alerts = [];
-                const overdueService = mockServiceComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed');
+                const overdueService = serviceComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed');
                 if (overdueService.length > 0) {
                     const ids = overdueService.map(i => i.id).join(', ');
                     alerts.push({
@@ -710,7 +649,7 @@
                     });
                 }
 
-                const urgentInjury = mockServiceComplaints.filter(i => i.priority === 'high' && (i.content.includes('trầy') || i.content.includes('máu') || i.content.includes('rớt')));
+                const urgentInjury = serviceComplaints.filter(i => i.priority === 'high' && (i.content.includes('trầy') || i.content.includes('máu') || i.content.includes('rớt')));
                 if (urgentInjury.length > 0) {
                     alerts.push({
                         type: 'warning',
@@ -722,7 +661,7 @@
                     });
                 }
 
-                const unassignedService = mockServiceComplaints.filter(i => i.staffAssigned === 'Chưa phân công' && i.status !== 'resolved' && i.status !== 'closed');
+                const unassignedService = serviceComplaints.filter(i => i.staffAssigned === 'Chưa phân công' && i.status !== 'resolved' && i.status !== 'closed');
                 if (unassignedService.length > 0) {
                     alerts.push({
                         type: 'info',
@@ -759,7 +698,7 @@
             const orderContainer = document.getElementById('orderAlertItemsContainer');
             if (orderContainer) {
                 const alerts = [];
-                const overdueOrder = mockOrderComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed');
+                const overdueOrder = orderComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed');
                 if (overdueOrder.length > 0) {
                     const ids = overdueOrder.map(i => i.id).join(', ');
                     alerts.push({
@@ -772,7 +711,7 @@
                     });
                 }
 
-                const unassignedOrder = mockOrderComplaints.filter(i => i.staffAssigned === 'Chưa phân công' && i.status !== 'resolved' && i.status !== 'closed');
+                const unassignedOrder = orderComplaints.filter(i => i.staffAssigned === 'Chưa phân công' && i.status !== 'resolved' && i.status !== 'closed');
                 if (unassignedOrder.length > 0) {
                     alerts.push({
                         type: 'info',
@@ -900,7 +839,7 @@
             const selectedPriority = prioritySelect ? prioritySelect.value : 'ALL';
             const selectedStaff = staffSelect ? staffSelect.value : 'ALL';
 
-            const filtered = mockServiceComplaints.filter(item => {
+            const filtered = serviceComplaints.filter(item => {
                 // Search term
                 if (searchTerm) {
                     const match = (item.id && item.id.toLowerCase().includes(searchTerm)) ||
@@ -1045,7 +984,7 @@
             const selectedPriority = prioritySelect ? prioritySelect.value : 'ALL';
             const selectedStaff = staffSelect ? staffSelect.value : 'ALL';
 
-            const filtered = mockOrderComplaints.filter(item => {
+            const filtered = orderComplaints.filter(item => {
                 if (searchTerm) {
                     const match = (item.id && item.id.toLowerCase().includes(searchTerm)) ||
                                   (item.customerName && item.customerName.toLowerCase().includes(searchTerm)) ||
@@ -1545,9 +1484,9 @@
         function handleQuickAssign(ticketId, ticketType) {
             let targetTicket = null;
             if (ticketType === 'service') {
-                targetTicket = mockServiceComplaints.find(i => i.id === ticketId);
+                targetTicket = serviceComplaints.find(i => i.id === ticketId);
             } else {
-                targetTicket = mockOrderComplaints.find(i => i.id === ticketId);
+                targetTicket = orderComplaints.find(i => i.id === ticketId);
             }
 
             if (!targetTicket) return;
@@ -1592,10 +1531,10 @@
                     const type = link.getAttribute('data-type');
                     let targetTicket = null;
                     if (type === 'service') {
-                        targetTicket = mockServiceComplaints.find(i => i.id === id);
+                        targetTicket = serviceComplaints.find(i => i.id === id);
                         currentTicketType = 'service';
                     } else {
-                        targetTicket = mockOrderComplaints.find(i => i.id === id);
+                        targetTicket = orderComplaints.find(i => i.id === id);
                         currentTicketType = 'order';
                     }
                     if (targetTicket) {
@@ -1648,7 +1587,7 @@
             const type = dropdown.getAttribute('data-current-type');
             dropdown.style.display = 'none';
 
-            let t = type === 'service' ? mockServiceComplaints.find(i => i.id === id) : mockOrderComplaints.find(i => i.id === id);
+            let t = type === 'service' ? serviceComplaints.find(i => i.id === id) : orderComplaints.find(i => i.id === id);
             if (t) {
                 currentActiveTicket = t;
                 switchSubtab('tab-complaint-detail');
@@ -1669,7 +1608,7 @@
             const type = dropdown.getAttribute('data-current-type');
             dropdown.style.display = 'none';
 
-            let t = type === 'service' ? mockServiceComplaints.find(i => i.id === id) : mockOrderComplaints.find(i => i.id === id);
+            let t = type === 'service' ? serviceComplaints.find(i => i.id === id) : orderComplaints.find(i => i.id === id);
             if (t) {
                 t.status = 'closed';
                 t.slaStatus = 'DONE';
@@ -1916,10 +1855,10 @@
             };
 
             if (isService) {
-                mockServiceComplaints.unshift(newTicket);
+                serviceComplaints.unshift(newTicket);
                 renderServiceComplaintsTable();
             } else {
-                mockOrderComplaints.unshift(newTicket);
+                orderComplaints.unshift(newTicket);
                 renderOrderComplaintsTable();
             }
 
@@ -2461,12 +2400,12 @@
                     sharedList.forEach(t => {
                         const isService = t.bookingId || t.serviceName;
                         if (isService) {
-                            if (!mockServiceComplaints.some(item => item.id === t.id)) {
-                                mockServiceComplaints.unshift(t);
+                            if (!serviceComplaints.some(item => item.id === t.id)) {
+                                serviceComplaints.unshift(t);
                             }
                         } else {
-                            if (!mockOrderComplaints.some(item => item.id === t.id)) {
-                                mockOrderComplaints.unshift(t);
+                            if (!orderComplaints.some(item => item.id === t.id)) {
+                                orderComplaints.unshift(t);
                             }
                         }
                     });
@@ -2477,6 +2416,7 @@
         }
 
         // Khởi tạo ban đầu
+        await loadComplaintsModuleData();
         syncSharedTicketsFromChatbot();
         updateComplaintsKpis();
         renderComplaintsAlertBar();
@@ -2516,8 +2456,8 @@
             const rawTicketId = sessionStorage.getItem('pawpal_admin_ticket_id') || sessionStorage.getItem('pawpal_admin_complaint_selected_id');
             if (rawTicketId) {
                 sessionStorage.removeItem('pawpal_admin_ticket_id');
-                const foundService = mockServiceComplaints.find(i => i.id === rawTicketId);
-                const foundOrder = mockOrderComplaints.find(i => i.id === rawTicketId);
+                const foundService = serviceComplaints.find(i => i.id === rawTicketId);
+                const foundOrder = orderComplaints.find(i => i.id === rawTicketId);
                 if (foundService) {
                     currentActiveTicket = foundService;
                     currentTicketType = 'service';
@@ -2547,19 +2487,19 @@
                     const latestServices = JSON.parse(localStorage.getItem('pawpal_service_complaints')) || [];
                     const latestOrders = JSON.parse(localStorage.getItem('pawpal_order_complaints')) || [];
                     if (latestServices.length > 0) {
-                        mockServiceComplaints.length = 0;
-                        mockServiceComplaints.push(...latestServices);
+                        serviceComplaints.length = 0;
+                        serviceComplaints.push(...latestServices);
                     }
                     if (latestOrders.length > 0) {
-                        mockOrderComplaints.length = 0;
-                        mockOrderComplaints.push(...latestOrders);
+                        orderComplaints.length = 0;
+                        orderComplaints.push(...latestOrders);
                     }
                     updateComplaintsKpis();
                     renderComplaintsAlertBar();
                     if (currentTicketType === 'service') renderServiceComplaintsTable();
                     else renderOrderComplaintsTable();
                     if (currentActiveTicket) {
-                        const updated = (currentTicketType === 'service' ? mockServiceComplaints : mockOrderComplaints).find(x => x.id === currentActiveTicket.id);
+                        const updated = (currentTicketType === 'service' ? serviceComplaints : orderComplaints).find(x => x.id === currentActiveTicket.id);
                         if (updated) renderTicketDetail(updated);
                     }
                 } catch (err) {}
