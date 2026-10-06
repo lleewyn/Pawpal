@@ -2406,13 +2406,15 @@
         });
 
         // Xác nhận bàn giao vận chuyển hàng loạt
-        document.getElementById('btnSubmitBatchDispatch')?.addEventListener('click', () => {
+        document.getElementById('btnSubmitBatchDispatch')?.addEventListener('click', async () => {
             if (selectedBatchOrderIds.length === 0) return;
             const carrier = document.getElementById('batchCarrierSelect')?.value || 'J và T Express';
             const mode = document.getElementById('batchTrackingMode')?.value || 'auto';
             const note = document.getElementById('batchCarrierNote')?.value.trim() || '';
 
-            selectedBatchOrderIds.forEach(id => {
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+
+            for (const id of selectedBatchOrderIds) {
                 const ord = currentOrdersList.find(o => o.id === id);
                 if (ord) {
                     ord.status = 'shipping';
@@ -2427,8 +2429,23 @@
                         desc: note ? `Xuất kho hàng loạt. Ghi chú: ${note}` : 'Xuất kho và bàn giao bưu cục thành công',
                         done: true
                     });
+
+                    // Cập nhật Supabase
+                    if (client) {
+                        try {
+                            if (ord.rawId) {
+                                await client.from('sales_order').update({ order_status: 'SHIPPING' }).eq('id', ord.rawId);
+                            } else {
+                                await client.from('sales_order').update({ order_status: 'SHIPPING' }).eq('order_code', ord.id);
+                            }
+                        } catch (errDbBatch) {
+                            console.warn('Lỗi khi cập nhật trạng thái đơn hàng hàng loạt lên Supabase:', errDbBatch);
+                        }
+                    }
                 }
-            });
+            }
+
+            persistOrdersData();
 
             const count = selectedBatchOrderIds.length;
             selectedBatchOrderIds = [];
@@ -2447,13 +2464,16 @@
         });
 
         // Nút đối soát toàn bộ tiền COD bưu cục
-        document.getElementById('btnQuickReconcileAllCod')?.addEventListener('click', function() {
+        document.getElementById('btnQuickReconcileAllCod')?.addEventListener('click', async function() {
             const codOrders = currentOrdersList.filter(o => o.paymentStatus === 'cod_pending');
             if (codOrders.length === 0) {
                 showToast('Không có đơn hàng nào đang chờ đối soát tiền COD.', 'warning');
                 return;
             }
-            codOrders.forEach(o => {
+
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+
+            for (const o of codOrders) {
                 o.paymentStatus = 'paid';
                 o.timeline.push({
                     title: 'Đã đối soát tiền COD',
@@ -2461,7 +2481,21 @@
                     desc: 'Kế toán đối soát thành công tiền COD bưu cục về tài khoản PawPal',
                     done: true
                 });
-            });
+
+                if (client) {
+                    try {
+                        if (o.rawId) {
+                            await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', o.rawId);
+                            await client.from('payment').update({ transaction_status: 'SUCCESS' }).eq('order_id', o.rawId);
+                        } else {
+                            await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', o.id);
+                        }
+                    } catch (errDbCod) {
+                        console.warn('Lỗi khi đối soát tiền COD lên Supabase:', errDbCod);
+                    }
+                }
+            }
+
             persistOrdersData();
             renderOrdersTable();
             if (selectedOrderId) renderOrderDetail(selectedOrderId);
@@ -2500,7 +2534,7 @@
         });
 
         // Xác nhận thêm / cập nhật sản phẩm mới
-        document.getElementById('btnSubmitAddProduct')?.addEventListener('click', () => {
+        document.getElementById('btnSubmitAddProduct')?.addEventListener('click', async () => {
             const editSku = document.getElementById('editProductOriginalSku')?.value.trim();
             const sku = document.getElementById('newProdSku')?.value.trim();
             const name = document.getElementById('newProdName')?.value.trim();
@@ -2612,6 +2646,8 @@
                 }
             }
 
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+
             if (editSku) {
                 // Chế độ Cập nhật sản phẩm
                 const prodIndex = currentProductsList.findIndex(p => p.sku.toLowerCase() === editSku.toLowerCase());
@@ -2679,6 +2715,36 @@
                     });
                 }
 
+                // Cập nhật Supabase
+                if (client && existingProd.id) {
+                    try {
+                        await client.from('product').update({
+                            sku: sku,
+                            product_name: name,
+                            unit: unit,
+                            cost_price: costPrice,
+                            sale_price: price,
+                            image_urls: images.split(',').map(s => s.trim()).filter(Boolean),
+                            status: status === 'Còn hàng' || status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
+                            origin: origin,
+                            ingredients: ingredients,
+                            benefits: benefits,
+                            usage_instructions: usage,
+                            specs: spec,
+                            badge: badge || null
+                        }).eq('id', existingProd.id);
+
+                        if (stock !== oldStock) {
+                            await client.from('inventory').update({
+                                quantity_in_stock: stock,
+                                minimum_stock: minStock
+                            }).eq('product_id', existingProd.id);
+                        }
+                    } catch (errUpProd) {
+                        console.warn('Lỗi khi cập nhật sản phẩm lên Supabase:', errUpProd);
+                    }
+                }
+
                 persistProductsData();
                 document.getElementById('modalAddProduct')?.classList.remove('active');
                 renderProductsTable();
@@ -2690,7 +2756,48 @@
                     return;
                 }
 
+                let createdProdDbId = null;
+
+                // Lưu vào Supabase
+                if (client) {
+                    try {
+                        const { data: cats } = await client.from('product_category').select('id, category_name').ilike('category_name', `%${cat}%`).limit(1);
+                        const categoryId = cats && cats[0] ? cats[0].id : null;
+
+                        const { data: newP, error: pErr } = await client.from('product').insert({
+                            sku: sku,
+                            product_name: name,
+                            category_id: categoryId,
+                            unit: unit,
+                            cost_price: costPrice,
+                            sale_price: price,
+                            image_urls: images.split(',').map(s => s.trim()).filter(Boolean),
+                            status: status === 'Còn hàng' || status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
+                            origin: origin,
+                            ingredients: ingredients,
+                            benefits: benefits,
+                            usage_instructions: usage,
+                            specs: spec,
+                            badge: badge || 'new',
+                            rating: 5.0,
+                            review_count: 0
+                        }).select().single();
+
+                        if (newP && newP.id) {
+                            createdProdDbId = newP.id;
+                            await client.from('inventory').insert({
+                                product_id: newP.id,
+                                quantity_in_stock: stock,
+                                minimum_stock: minStock
+                            });
+                        }
+                    } catch (errAddProdDb) {
+                        console.warn('Lỗi khi thêm sản phẩm mới vào Supabase:', errAddProdDb);
+                    }
+                }
+
                 const newProdObj = {
+                    id: createdProdDbId,
                     sku: sku,
                     name: name,
                     category: cat,
@@ -2747,7 +2854,7 @@
         });
 
         // Xác nhận lưu điều chỉnh tồn kho
-        document.getElementById('btnSubmitAdjustStock')?.addEventListener('click', () => {
+        document.getElementById('btnSubmitAdjustStock')?.addEventListener('click', async () => {
             const sku = activeAdjustProductSku;
             const prod = currentProductsList.find(p => p.sku === sku);
             if (!prod) return;
@@ -2787,6 +2894,26 @@
                 refCode: 'ADJ-' + Date.now().toString().slice(-4),
                 staff: 'Quản trị viên'
             });
+
+            // Cập nhật Supabase
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (client && prod.id) {
+                try {
+                    await client.from('inventory').update({
+                        quantity_in_stock: afterStock,
+                        last_updated_at: new Date().toISOString()
+                    }).eq('product_id', prod.id);
+
+                    const updateProdPayload = {};
+                    if (newPrice && parseInt(newPrice, 10) > 0) updateProdPayload.sale_price = parseInt(newPrice, 10);
+                    if (newStatus) updateProdPayload.status = (newStatus === 'Còn hàng' || newStatus === 'Đang bán') ? 'ACTIVE' : 'INACTIVE';
+                    if (Object.keys(updateProdPayload).length > 0) {
+                        await client.from('product').update(updateProdPayload).eq('id', prod.id);
+                    }
+                } catch (errAdjDb) {
+                    console.warn('Lỗi khi cập nhật điều chỉnh tồn kho lên Supabase:', errAdjDb);
+                }
+            }
 
             document.getElementById('modalAdjustStock')?.classList.remove('active');
             renderProductsTable();
@@ -2869,7 +2996,7 @@
         });
 
         // Xác nhận nhập kho và cộng dồn tồn
-        document.getElementById('btnSubmitGoodsReceipt')?.addEventListener('click', () => {
+        document.getElementById('btnSubmitGoodsReceipt')?.addEventListener('click', async () => {
             if (activeGrnItems.length === 0) {
                 showToast('Vui lòng thêm ít nhất một mặt hàng vào phiếu nhập kho.', 'warning');
                 return;
@@ -2879,7 +3006,9 @@
             const supplier = document.getElementById('grnSupplierSelect')?.value || 'Nhà cung cấp';
             const invoiceNo = document.getElementById('grnInvoiceNo')?.value.trim() || 'N/A';
 
-            activeGrnItems.forEach(item => {
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+
+            for (const item of activeGrnItems) {
                 const prod = currentProductsList.find(p => p.sku === item.sku);
                 if (prod) {
                     const before = prod.stock;
@@ -2898,8 +3027,20 @@
                         refCode: receiptCode,
                         staff: 'Nguyễn Văn Quản'
                     });
+
+                    // Cập nhật Supabase
+                    if (client && prod.id) {
+                        try {
+                            await client.from('inventory').update({
+                                quantity_in_stock: prod.stock,
+                                last_updated_at: new Date().toISOString()
+                            }).eq('product_id', prod.id);
+                        } catch (errGrnDb) {
+                            console.warn('Lỗi khi cập nhật nhập kho lên Supabase:', errGrnDb);
+                        }
+                    }
                 }
-            });
+            }
 
             persistProductsData();
             document.getElementById('modalGoodsReceipt')?.classList.remove('active');
@@ -2914,17 +3055,19 @@
         });
 
         // Xác nhận cân đối kiểm kê
-        document.getElementById('btnSubmitStocktake')?.addEventListener('click', () => {
+        document.getElementById('btnSubmitStocktake')?.addEventListener('click', async () => {
             const auditCode = document.getElementById('stkAuditCode')?.value || ('STK-' + Date.now().toString().slice(-4));
             const reason = document.getElementById('stkReasonSelect')?.value || 'Kiểm kê định kỳ';
             const rows = document.querySelectorAll('.stk-row-item');
 
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+
             let updatedCount = 0;
-            rows.forEach(row => {
+            for (const row of rows) {
                 const sku = row.getAttribute('data-sku');
                 const countInput = row.querySelector('.stk-count-input');
                 const diffReasonSelect = row.querySelector('.stk-row-reason-select');
-                if (!sku || !countInput) return;
+                if (!sku || !countInput) continue;
 
                 const actualCount = parseInt(countInput.value || '0', 10);
                 const prod = currentProductsList.find(p => p.sku === sku);
@@ -2945,8 +3088,20 @@
                         refCode: auditCode,
                         staff: 'Trần Hoài Nam'
                     });
+
+                    // Cập nhật Supabase
+                    if (client && prod.id) {
+                        try {
+                            await client.from('inventory').update({
+                                quantity_in_stock: prod.stock,
+                                last_updated_at: new Date().toISOString()
+                            }).eq('product_id', prod.id);
+                        } catch (errStkDb) {
+                            console.warn('Lỗi khi cân đối kiểm kê lên Supabase:', errStkDb);
+                        }
+                    }
                 }
-            });
+            }
 
             persistProductsData();
             document.getElementById('modalStocktake')?.classList.remove('active');
@@ -2981,13 +3136,26 @@
         });
 
         // Xác nhận đổi trạng thái kinh doanh trong modal
-        document.getElementById('btnConfirmToggleProductStatus')?.addEventListener('click', () => {
+        document.getElementById('btnConfirmToggleProductStatus')?.addEventListener('click', async () => {
             if (!activeStockActionSku) return;
             const prod = currentProductsList.find(p => p.sku === activeStockActionSku);
             if (prod) {
                 const isCurrentlySuspended = prod.status === 'Tạm ngưng';
                 prod.status = isCurrentlySuspended ? 'Còn hàng' : 'Tạm ngưng';
                 persistProductsData();
+
+                // Cập nhật Supabase
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client && prod.id) {
+                    try {
+                        await client.from('product').update({
+                            status: isCurrentlySuspended ? 'ACTIVE' : 'INACTIVE'
+                        }).eq('id', prod.id);
+                    } catch (errTogDb) {
+                        console.warn('Lỗi khi đổi trạng thái kinh doanh sản phẩm trên Supabase:', errTogDb);
+                    }
+                }
+
                 if (renderProductsTableRef) renderProductsTableRef();
                 document.getElementById('modalConfirmToggleProductStatus')?.classList.remove('active');
             }
@@ -2999,7 +3167,7 @@
         });
 
         // Xác nhận tạo mã khuyến mãi dùng chung
-        document.getElementById('btnSubmitCreateVoucher')?.addEventListener('click', () => {
+        document.getElementById('btnSubmitCreateVoucher')?.addEventListener('click', async () => {
             const code = document.getElementById('newVoucherCode')?.value.trim().toUpperCase();
             const title = document.getElementById('newVoucherTitle')?.value.trim();
             const discount = document.getElementById('newVoucherDiscount')?.value.trim();
@@ -3023,6 +3191,38 @@
             const numVal = parseInt(discount.replace(/[^\d]/g, '') || '0', 10);
             const numMinOrder = parseInt(minOrder.replace(/[^\d]/g, '') || '0', 10);
             const maxUsesNum = parseInt(maxUses || '100', 10);
+
+            // Ghi nhận vào Supabase
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (client) {
+                try {
+                    let formattedEndDate = '2026-12-31T23:59:59Z';
+                    if (expiry && expiry.includes('/')) {
+                        const parts = expiry.split('/');
+                        if (parts.length === 3) {
+                            formattedEndDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}T23:59:59Z`;
+                        }
+                    }
+
+                    await client.from('voucher').insert({
+                        voucher_code: code,
+                        voucher_name: title,
+                        discount_value: numVal,
+                        minimum_order_amount: numMinOrder,
+                        required_points: points.includes('Miễn phí') ? 0 : (parseInt(points.replace(/[^\d]/g, '') || '0', 10)),
+                        start_date: new Date().toISOString(),
+                        end_date: formattedEndDate,
+                        is_active: true,
+                        type: isPct ? 'percentage' : 'fixed',
+                        usage_count: 0,
+                        max_usage: maxUsesNum,
+                        applicable_for: ['all'],
+                        description: title
+                    });
+                } catch (errVouDb) {
+                    console.warn('Lỗi khi thêm voucher vào Supabase:', errVouDb);
+                }
+            }
 
             vouchersList.unshift({
                 code: code,
@@ -3049,7 +3249,7 @@
         });
 
         // Cập nhật voucher từ modal tác vụ
-        document.getElementById('btnSubmitUpdateVoucher')?.addEventListener('click', () => {
+        document.getElementById('btnSubmitUpdateVoucher')?.addEventListener('click', async () => {
             const code = activeActionVoucherCode;
             const vouchersList = getSharedVouchersList();
             const voucher = vouchersList.find(v => v.code === code);
@@ -3064,6 +3264,28 @@
             if (newExpiry) {
                 voucher.validDate = newExpiry;
                 voucher.expiry = newExpiry;
+            }
+
+            // Cập nhật Supabase
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (client) {
+                try {
+                    let formattedEndDate = undefined;
+                    if (newExpiry && newExpiry.includes('/')) {
+                        const parts = newExpiry.split('/');
+                        if (parts.length === 3) {
+                            formattedEndDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}T23:59:59Z`;
+                        }
+                    }
+
+                    const isAct = (voucher.status === 'active');
+                    const updatePayload = { is_active: isAct };
+                    if (formattedEndDate) updatePayload.end_date = formattedEndDate;
+
+                    await client.from('voucher').update(updatePayload).eq('voucher_code', code);
+                } catch (errUpVouDb) {
+                    console.warn('Lỗi khi cập nhật voucher trên Supabase:', errUpVouDb);
+                }
             }
 
             persistSharedVouchersData(vouchersList);
@@ -3654,7 +3876,7 @@
             document.getElementById('modalPosReceipt')?.classList.add('active');
         }
 
-        function finalizePosOrder(phone, name, payMethod, voucherInput, isDelivery, slotSelect, noteVal, calc) {
+        async function finalizePosOrder(phone, name, payMethod, voucherInput, isDelivery, slotSelect, noteVal, calc) {
             const newCode = 'ORD-2026-00' + (currentOrdersList.length + 1);
             const addrInput = document.getElementById('createOrderCustomAddress')?.value?.trim();
             const preset = window.__currentOrderPresetCust;
@@ -3663,6 +3885,7 @@
 
             const newOrder = {
                 id: newCode,
+                rawId: null,
                 userId: finalUserId,
                 customerName: name,
                 phone: phone,
@@ -3695,7 +3918,103 @@
                 ]
             };
 
-            // Trừ tồn kho từng sản phẩm bán lẻ
+            // 1. Ghi nhận tức thời vào cơ sở dữ liệu Supabase
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (client) {
+                try {
+                    let targetCustId = null;
+                    if (finalUserId && finalUserId.includes('-') && finalUserId.length > 20) {
+                        targetCustId = finalUserId;
+                    } else {
+                        // Tìm hoặc tạo khách hàng nhanh trên Supabase
+                        const { data: existCust } = await client.from('customer').select('id').eq('phone_main', phone).limit(1);
+                        if (existCust && existCust[0]) {
+                            targetCustId = existCust[0].id;
+                        } else {
+                            const { data: newCustRow } = await client.from('customer').insert({
+                                phone_main: phone,
+                                account_status: 'ACTIVE',
+                                is_temporary: true
+                            }).select('id').single();
+                            if (newCustRow) {
+                                targetCustId = newCustRow.id;
+                                await client.from('customer_profile').insert({
+                                    customer_id: newCustRow.id,
+                                    full_name: name
+                                });
+                            }
+                        }
+                    }
+
+                    const { data: orderRow, error: orderErr } = await client.from('sales_order').insert({
+                        order_code: newCode,
+                        customer_id: targetCustId || null,
+                        order_status: 'CONFIRMED',
+                        payment_status: (payMethod === 'cod') ? 'UNPAID' : 'PAID',
+                        total_amount: calc.grandTotal,
+                        note: noteVal || (isDelivery ? `Giao tận nơi (${slotSelect})` : 'Tạo đơn tại quầy')
+                    }).select().single();
+
+                    if (orderRow && orderRow.id) {
+                        newOrder.rawId = orderRow.id;
+
+                        // Insert chi tiết mặt hàng
+                        const detailRows = [];
+                        for (const cartItem of posCartItems) {
+                            if (!cartItem.isService) {
+                                const prodItem = currentProductsList.find(p => p.sku === cartItem.sku);
+                                if (prodItem && prodItem.id) {
+                                    detailRows.push({
+                                        order_id: orderRow.id,
+                                        product_id: prodItem.id,
+                                        quantity: cartItem.qty,
+                                        unit_price: cartItem.price,
+                                        discount_amount: 0,
+                                        subtotal: cartItem.price * cartItem.qty
+                                    });
+
+                                    // Trừ tồn kho trên Supabase
+                                    const { data: invRow } = await client.from('inventory').select('id, quantity_in_stock').eq('product_id', prodItem.id).limit(1);
+                                    if (invRow && invRow[0]) {
+                                        const newQty = Math.max(0, (invRow[0].quantity_in_stock || 0) - cartItem.qty);
+                                        await client.from('inventory').update({ quantity_in_stock: newQty }).eq('id', invRow[0].id);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (detailRows.length > 0) {
+                            await client.from('sales_order_detail').insert(detailRows);
+                        }
+
+                        // Ghi nhận bảng payment
+                        await client.from('payment').insert({
+                            payment_code: `PAY-${Date.now().toString().slice(-8)}`,
+                            order_id: orderRow.id,
+                            payment_type: 'PRODUCT',
+                            amount: calc.grandTotal,
+                            paw_points_used: calc.pointsUsed || 0,
+                            paw_points_earned: Math.round(calc.grandTotal / 10000),
+                            transaction_status: 'SUCCESS',
+                            payment_method_id: payMethod === 'cash' ? 'cash' : (payMethod === 'pos' ? 'pos' : (payMethod === 'qr' ? 'bank' : 'cod'))
+                        });
+
+                        // Cập nhật trạng thái ca dịch vụ nếu có trong giỏ hàng
+                        for (const cartItem of posCartItems) {
+                            if (cartItem.isService && cartItem.bookingId) {
+                                await client.from('appointment').update({
+                                    payment_status: 'PAID',
+                                    appointment_status: 'IN_PROGRESS'
+                                }).eq('appointment_code', cartItem.bookingId);
+                            }
+                        }
+                    }
+                } catch (errSupabasePos) {
+                    console.warn('Lỗi khi ghi đơn hàng POS vào Supabase:', errSupabasePos);
+                }
+            }
+
+            // Trừ tồn kho từng sản phẩm bán lẻ trong bộ nhớ
             posCartItems.forEach(cartItem => {
                 if (!cartItem.isService) {
                     const prodItem = currentProductsList.find(p => p.sku === cartItem.sku);
@@ -3725,12 +4044,11 @@
 
             // Tăng số lượt đã dùng của voucher nếu có dùng
             if (voucherInput) {
-                const voucher = initialVouchers.find(v => v.code === voucherInput);
-                if (voucher) {
-                    const parts = voucher.used.split('/');
-                    const usedCount = parseInt(parts[0].trim(), 10) + 1;
-                    const maxCount = parts[1] ? parts[1].trim() : '500';
-                    voucher.used = `${usedCount} / ${maxCount}`;
+                const voucherList = getSharedVouchersList();
+                const vItem = voucherList.find(v => v.code === voucherInput);
+                if (vItem) {
+                    vItem.used = (vItem.used || 0) + 1;
+                    persistSharedVouchersData(voucherList);
                 }
             }
 
@@ -3776,7 +4094,7 @@
             
             // Mở modal hóa đơn nhiệt K80
             renderAndOpenPosReceipt(newOrder, calc);
-            showToast(`Tạo thành công đơn hàng ${newCode}!`, 'success');
+            showToast(`Tạo thành công đơn hàng ${newCode} và đã lưu vào hệ thống!`, 'success');
         }
 
         // Xử lý tạo đơn hàng từ form POS
@@ -3816,7 +4134,7 @@
         });
 
         // Bàn giao vận chuyển modal
-        document.getElementById('btnSubmitShipOrder')?.addEventListener('click', () => {
+        document.getElementById('btnSubmitShipOrder')?.addEventListener('click', async () => {
             const tracking = document.getElementById('shipTrackingInput')?.value.trim();
             const carrier = document.getElementById('shipCarrierSelect')?.value;
 
@@ -3836,6 +4154,21 @@
                     desc: `Bàn giao cho ${carrier}. Mã vận đơn: ${tracking}`,
                     done: true
                 });
+
+                // Cập nhật Supabase
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client) {
+                    try {
+                        if (order.rawId) {
+                            await client.from('sales_order').update({ order_status: 'SHIPPING' }).eq('id', order.rawId);
+                        } else {
+                            await client.from('sales_order').update({ order_status: 'SHIPPING' }).eq('order_code', order.id);
+                        }
+                    } catch (errShipDb) {
+                        console.warn('Lỗi khi cập nhật giao vận lên Supabase:', errShipDb);
+                    }
+                }
+
                 persistOrdersData();
             }
 
@@ -3846,7 +4179,7 @@
         });
 
         // Hủy đơn modal
-        document.getElementById('btnSubmitCancelOrder')?.addEventListener('click', () => {
+        document.getElementById('btnSubmitCancelOrder')?.addEventListener('click', async () => {
             const reason = document.getElementById('cancelOrderReasonSelect')?.value;
             const detail = document.getElementById('cancelOrderReasonDetail')?.value.trim();
 
@@ -3861,11 +4194,51 @@
                     desc: `Hủy bởi nhân viên quản trị. Lý do: ${reason}`,
                     done: true
                 });
+
+                // Hoàn lại tồn kho trong bộ nhớ và Supabase
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+
+                for (const p of order.products) {
+                    const prodItem = currentProductsList.find(x => x.sku === p.sku);
+                    if (prodItem) {
+                        prodItem.stock += p.quantity;
+                        if (prodItem.status === 'Hết hàng' && prodItem.stock > 0) {
+                            prodItem.status = 'Còn hàng';
+                        }
+
+                        if (client && prodItem.id) {
+                            try {
+                                const { data: invRow } = await client.from('inventory').select('id, quantity_in_stock').eq('product_id', prodItem.id).limit(1);
+                                if (invRow && invRow[0]) {
+                                    await client.from('inventory').update({ quantity_in_stock: (invRow[0].quantity_in_stock || 0) + p.quantity }).eq('id', invRow[0].id);
+                                }
+                            } catch (errRestock) {
+                                console.warn('Lỗi hoàn tồn khi hủy đơn:', errRestock);
+                            }
+                        }
+                    }
+                }
+
+                // Cập nhật trạng thái đơn trên Supabase
+                if (client) {
+                    try {
+                        if (order.rawId) {
+                            await client.from('sales_order').update({ order_status: 'CANCELLED' }).eq('id', order.rawId);
+                        } else {
+                            await client.from('sales_order').update({ order_status: 'CANCELLED' }).eq('order_code', order.id);
+                        }
+                    } catch (errCancelDb) {
+                        console.warn('Lỗi khi hủy đơn hàng trên Supabase:', errCancelDb);
+                    }
+                }
+
+                persistProductsData();
                 persistOrdersData();
             }
 
             document.getElementById('modalCancelOrder')?.classList.remove('active');
             renderOrdersTable();
+            renderProductsTable();
             renderOrderDetail(selectedOrderId);
             showToast(`Đã hủy đơn hàng ${selectedOrderId} và hoàn lại tồn kho.`, 'success');
         });
@@ -3938,7 +4311,7 @@
         });
 
         // GIAI ĐOẠN 3: Xác nhận phê duyệt RMA Ticket
-        document.getElementById('btnSubmitRmaTicket')?.addEventListener('click', () => {
+        document.getElementById('btnSubmitRmaTicket')?.addEventListener('click', async () => {
             const order = currentOrdersList.find(o => o.id === selectedOrderId);
             if (!order) return;
 
@@ -3966,9 +4339,11 @@
 
             const rmaCode = 'RMA-2026-' + (Math.floor(100 + Math.random() * 900));
 
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+
             // Thu thập các sản phẩm trả và xử lý tồn kho
             const returnedItems = [];
-            checkedBoxes.forEach(cb => {
+            for (const cb of checkedBoxes) {
                 const sku = cb.getAttribute('data-sku');
                 const row = cb.closest('tr');
                 const qtyInput = row?.querySelector('.rma-item-qty-input');
@@ -3991,11 +4366,65 @@
                             if (stockItem.stock > 0 && stockItem.status === 'Hết hàng') {
                                 stockItem.status = 'Còn hàng';
                             }
-                            persistProductsData();
+
+                            if (client && stockItem.id) {
+                                try {
+                                    const { data: invRow } = await client.from('inventory').select('id, quantity_in_stock').eq('product_id', stockItem.id).limit(1);
+                                    if (invRow && invRow[0]) {
+                                        await client.from('inventory').update({ quantity_in_stock: (invRow[0].quantity_in_stock || 0) + qty }).eq('id', invRow[0].id);
+                                    }
+                                } catch (errRmaInv) {
+                                    console.warn('Lỗi nhập lại kho khi duyệt RMA:', errRmaInv);
+                                }
+                            }
                         }
                     }
                 }
-            });
+            }
+
+            // Ghi nhận RMA vào Supabase
+            if (client) {
+                try {
+                    let dbOrderId = order.rawId;
+                    if (!dbOrderId) {
+                        const { data: ordRow } = await client.from('sales_order').select('id').eq('order_code', order.id).limit(1);
+                        if (ordRow && ordRow[0]) dbOrderId = ordRow[0].id;
+                    }
+
+                    if (dbOrderId) {
+                        await client.from('sales_order').update({ order_status: 'RETURNED' }).eq('id', dbOrderId);
+
+                        const { data: rmaRow, error: rmaErr } = await client.from('return_request').insert({
+                            sales_order_id: dbOrderId,
+                            customer_id: (order.userId && order.userId.length > 20) ? order.userId : null,
+                            reason: reasonText,
+                            return_type: solType === 'refund' ? 'REFUND' : 'EXCHANGE',
+                            description: internalNote || `Phiếu ${rmaCode}: ${solTypeName}`,
+                            request_status: 'RESOLVED'
+                        }).select().single();
+
+                        if (rmaRow && rmaRow.id) {
+                            const rmaDetails = [];
+                            for (const retItem of returnedItems) {
+                                const prodDb = currentProductsList.find(p => p.sku === retItem.sku);
+                                if (prodDb && prodDb.id) {
+                                    rmaDetails.push({
+                                        return_request_id: rmaRow.id,
+                                        product_id: prodDb.id,
+                                        quantity: retItem.quantity,
+                                        unit_price: retItem.price
+                                    });
+                                }
+                            }
+                            if (rmaDetails.length > 0) {
+                                await client.from('return_request_detail').insert(rmaDetails);
+                            }
+                        }
+                    }
+                } catch (errRmaDb) {
+                    console.warn('Lỗi khi ghi phiếu RMA vào Supabase:', errRmaDb);
+                }
+            }
 
             // Cập nhật trạng thái đơn hàng sang Đổi trả
             order.status = 'returned';
@@ -4070,6 +4499,7 @@
             }
 
             document.getElementById('modalReturnRefund')?.classList.remove('active');
+            persistProductsData();
             persistOrdersData();
             renderOrdersTable();
             renderProductsTable();
@@ -4282,7 +4712,7 @@
                 window.print();
             }
         },
-        confirmOrder: function(orderId) {
+        confirmOrder: async function(orderId) {
             const order = currentOrdersList.find(o => o.id === orderId);
             if (order) {
                 order.status = 'confirmed';
@@ -4292,20 +4722,50 @@
                     desc: 'Nhân viên đã duyệt đơn và xuất kho đóng gói',
                     done: true
                 });
+
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client) {
+                    try {
+                        if (order.rawId) {
+                            await client.from('sales_order').update({ order_status: 'CONFIRMED' }).eq('id', order.rawId);
+                        } else {
+                            await client.from('sales_order').update({ order_status: 'CONFIRMED' }).eq('order_code', order.id);
+                        }
+                    } catch (errConfDb) {
+                        console.warn('Lỗi khi xác nhận đơn hàng trên Supabase:', errConfDb);
+                    }
+                }
+
+                persistOrdersData();
                 showToast(`Đã xác nhận đơn hàng ${orderId}!`, 'success');
                 window.PawpalOrdersModule.openOrderDetail(orderId);
             }
         },
-        confirmPayment: function(orderId) {
+        confirmPayment: async function(orderId) {
             const order = currentOrdersList.find(o => o.id === orderId);
             if (order) {
                 order.paymentStatus = 'paid';
+
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client) {
+                    try {
+                        if (order.rawId) {
+                            await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', order.rawId);
+                            await client.from('payment').update({ transaction_status: 'SUCCESS' }).eq('order_id', order.rawId);
+                        } else {
+                            await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', order.id);
+                        }
+                    } catch (errPayDb) {
+                        console.warn('Lỗi khi xác nhận thanh toán trên Supabase:', errPayDb);
+                    }
+                }
+
                 persistOrdersData();
                 showToast(`Đã xác nhận thu tiền cho đơn hàng ${orderId}!`, 'success');
                 window.PawpalOrdersModule.openOrderDetail(orderId);
             }
         },
-        completeDelivery: function(orderId) {
+        completeDelivery: async function(orderId) {
             const order = currentOrdersList.find(o => o.id === orderId);
             if (order) {
                 order.status = 'delivered';
@@ -4320,13 +4780,33 @@
                         : 'Bưu tá xác nhận khách đã nhận hàng thành công',
                     done: true
                 });
+
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client) {
+                    try {
+                        if (order.rawId) {
+                            await client.from('sales_order').update({
+                                order_status: 'DELIVERED',
+                                payment_status: order.paymentStatus === 'cod_pending' ? 'UNPAID' : 'PAID'
+                            }).eq('id', order.rawId);
+                        } else {
+                            await client.from('sales_order').update({
+                                order_status: 'DELIVERED',
+                                payment_status: order.paymentStatus === 'cod_pending' ? 'UNPAID' : 'PAID'
+                            }).eq('order_code', order.id);
+                        }
+                    } catch (errDelivDb) {
+                        console.warn('Lỗi khi cập nhật giao hàng thành công trên Supabase:', errDelivDb);
+                    }
+                }
+
                 persistOrdersData();
                 showToast(`Đã cập nhật trạng thái Đã giao cho đơn ${orderId}!`, 'success');
                 renderOrdersTable();
                 window.PawpalOrdersModule.openOrderDetail(orderId);
             }
         },
-        reconcileCod: function(orderId) {
+        reconcileCod: async function(orderId) {
             const order = currentOrdersList.find(o => o.id === orderId);
             if (order) {
                 order.paymentStatus = 'paid';
@@ -4336,13 +4816,28 @@
                     desc: 'Kế toán xác nhận bưu cục đã chuyển khoản tiền COD về tài khoản PawPal',
                     done: true
                 });
+
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client) {
+                    try {
+                        if (order.rawId) {
+                            await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', order.rawId);
+                            await client.from('payment').update({ transaction_status: 'SUCCESS' }).eq('order_id', order.rawId);
+                        } else {
+                            await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', order.id);
+                        }
+                    } catch (errRecDb) {
+                        console.warn('Lỗi khi đối soát tiền COD trên Supabase:', errRecDb);
+                    }
+                }
+
                 persistOrdersData();
                 showToast(`Đã đối soát thành công tiền COD cho đơn hàng ${orderId}!`, 'success');
                 renderOrdersTable();
                 window.PawpalOrdersModule.openOrderDetail(orderId);
             }
         },
-        completeOrder: function(orderId) {
+        completeOrder: async function(orderId) {
             const order = currentOrdersList.find(o => o.id === orderId);
             if (!order) return;
             if (order.paymentMethod === 'cod' && order.paymentStatus === 'cod_pending') {
@@ -4386,6 +4881,36 @@
                     }
                 }
             } catch (e) {}
+
+            // Cập nhật Supabase
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (client) {
+                try {
+                    if (order.rawId) {
+                        await client.from('sales_order').update({ order_status: 'COMPLETED' }).eq('id', order.rawId);
+                    } else {
+                        await client.from('sales_order').update({ order_status: 'COMPLETED' }).eq('order_code', order.id);
+                    }
+
+                    // Tích điểm trên Supabase
+                    if (order.userId && order.userId.length > 20) {
+                        const { data: memRows } = await client.from('customer_membership').select('id, total_paw_points').eq('customer_id', order.userId).limit(1);
+                        if (memRows && memRows[0]) {
+                            const newBal = (memRows[0].total_paw_points || 0) + pointsEarned;
+                            await client.from('customer_membership').update({ total_paw_points: newBal }).eq('id', memRows[0].id);
+
+                            await client.from('paw_point_transaction').insert({
+                                customer_id: order.userId,
+                                points: pointsEarned,
+                                balance_after: newBal,
+                                description: `Tích điểm hoàn tất đơn hàng ${order.id}`
+                            });
+                        }
+                    }
+                } catch (errCompDb) {
+                    console.warn('Lỗi khi hoàn tất đơn hàng trên Supabase:', errCompDb);
+                }
+            }
 
             persistOrdersData();
             showToast(`Đơn hàng ${orderId} đã hoàn tất! +${pointsEarned} điểm Pawpoint.`, 'success');
@@ -5568,12 +6093,21 @@
             }
         },
 
-        submitProductReviewReply: function(sku, reviewId) {
+        submitProductReviewReply: async function(sku, reviewId) {
             const inputEl = document.getElementById(`replyInput_${reviewId}`);
             const replyText = inputEl?.value.trim();
             if (!replyText) {
                 showToast('Vui lòng nhập nội dung phản hồi cho khách hàng.', 'warning');
                 return;
+            }
+
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (client && reviewId && reviewId.length > 20) {
+                try {
+                    await client.from('review').update({ shop_reply: replyText }).eq('id', reviewId);
+                } catch (errRev) {
+                    console.warn('Lỗi khi lưu phản hồi đánh giá lên Supabase:', errRev);
+                }
             }
 
             const storageKey = `pawpal_prod_reviews_${sku}`;
