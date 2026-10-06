@@ -99,6 +99,11 @@
         // ====================================================================
         let serviceComplaints = [];
         let orderComplaints = [];
+        let cachedAppointments = [];
+        let cachedOrders = [];
+        let cachedCustomers = [];
+        let cachedProfiles = [];
+        let cachedPets = [];
 
         async function loadComplaintsModuleData() {
             try {
@@ -136,6 +141,12 @@
                 const appointments = apptsRes.data || [];
                 const orders = ordersRes.data || [];
                 const staffList = staffRes.data || [];
+
+                cachedAppointments = appointments;
+                cachedOrders = orders;
+                cachedCustomers = customers;
+                cachedProfiles = profiles;
+                cachedPets = pets;
 
                 // Map helpers
                 const custMap = {};
@@ -1785,11 +1796,20 @@
             document.getElementById('createTicketModalTitle').textContent = 'Tiếp nhận khiếu nại dịch vụ';
             document.getElementById('labelTicketRefId').textContent = 'Chọn lịch hẹn liên quan *';
             const sel = document.getElementById('selectTicketRefId');
-            sel.innerHTML = `
-                <option value="BKG-1001">BKG-1001 (Miu Con - Tắm Vệ Sinh Cơ Bản)</option>
-                <option value="BKG-1008">BKG-1008 (Bông Xù - Tắm Thuốc Da Liễu)</option>
-                <option value="BKG-1004">BKG-1004 (Lu Lu - Pet Hotel Tiêu Chuẩn)</option>
-            `;
+            if (sel) {
+                if (cachedAppointments && cachedAppointments.length > 0) {
+                    sel.innerHTML = cachedAppointments.slice(0, 15).map(a => {
+                        const sName = a.service ? a.service.service_name : (a.service_type || 'Dịch vụ');
+                        const pName = a.pet_name || 'Bé cưng';
+                        const aDate = a.appointment_date ? a.appointment_date.substring(0, 10) : '';
+                        return `<option value="${a.id}">${a.id} (${pName} - ${sName}${aDate ? ' • ' + aDate : ''})</option>`;
+                    }).join('');
+                } else {
+                    sel.innerHTML = `
+                        <option value="BKG-1001">BKG-1001 (Tiếp nhận dịch vụ Spa / Hotel)</option>
+                    `;
+                }
+            }
             createTicketUploadedFiles = [];
             renderCreateTicketPreviews();
             createModal.classList.add('active');
@@ -1799,10 +1819,19 @@
             document.getElementById('createTicketModalTitle').textContent = 'Tiếp nhận khiếu nại đơn hàng';
             document.getElementById('labelTicketRefId').textContent = 'Chọn đơn hàng liên quan *';
             const sel = document.getElementById('selectTicketRefId');
-            sel.innerHTML = `
-                <option value="ORD-2026-001">ORD-2026-001 (Đồ chơi gặm xương)</option>
-                <option value="ORD-2026-005">ORD-2026-005 (Pate mèo nắp bật)</option>
-            `;
+            if (sel) {
+                if (cachedOrders && cachedOrders.length > 0) {
+                    sel.innerHTML = cachedOrders.slice(0, 15).map(o => {
+                        const total = o.total_amount ? Number(o.total_amount).toLocaleString('vi-VN') + 'đ' : '';
+                        const dateStr = o.created_at ? o.created_at.substring(0, 10) : '';
+                        return `<option value="${o.id}">${o.id} (${total ? total + ' • ' : ''}${dateStr})</option>`;
+                    }).join('');
+                } else {
+                    sel.innerHTML = `
+                        <option value="ORD-2026-001">ORD-2026-001 (Đơn hàng mua sắm)</option>
+                    `;
+                }
+            }
             createTicketUploadedFiles = [];
             renderCreateTicketPreviews();
             createModal.classList.add('active');
@@ -1811,61 +1840,158 @@
         document.getElementById('btnCancelCreateTicket')?.addEventListener('click', () => createModal.classList.remove('active'));
         document.getElementById('btnDismissCreateTicket')?.addEventListener('click', () => createModal.classList.remove('active'));
         
-        document.getElementById('btnSaveCreateTicket')?.addEventListener('click', () => {
-            const phone = document.getElementById('inputTicketCustomerPhone')?.value.trim() || '0901234567';
-            const name = document.getElementById('inputTicketCustomerName')?.value.trim() || 'Khách hàng tiếp nhận tại quầy';
-            const title = document.getElementById('inputTicketTitle')?.value.trim() || 'Khiếu nại tiếp nhận tại quầy';
-            const content = document.getElementById('inputTicketContent')?.value.trim() || title;
-            const refId = document.getElementById('selectTicketRefId')?.value || 'BKG-1001';
-            const priority = document.getElementById('selectTicketPriority')?.value || 'medium';
-            const isService = refId.startsWith('BKG');
-            const newId = isService ? ('TK-' + Math.floor(1000 + Math.random() * 9000)) : ('TK-ORD-' + Math.floor(100 + Math.random() * 900));
-
-            const newTicket = {
-                id: newId,
-                customerName: name,
-                phone: phone,
-                petName: isService ? 'Bé cưng' : '',
-                petBreed: isService ? 'Thú cưng' : '',
-                petNotes: 'Ghi nhận lúc lập ticket tại quầy',
-                bookingId: isService ? refId : '',
-                orderId: !isService ? refId : '',
-                serviceName: isService ? 'Dịch vụ Spa & Hotel' : '',
-                productName: !isService ? 'Sản phẩm mua sắm' : '',
-                title: title,
-                content: content,
-                priority: priority,
-                slaStatus: priority === 'high' ? 'URGENT' : 'NORMAL',
-                slaRemainingText: 'Còn 24 giờ',
-                staffAssigned: 'Lê Lệ Quyên',
-                createdAt: new Date().toLocaleDateString('vi-VN') + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                status: 'new',
-                evidence: [...createTicketUploadedFiles],
-                checkinPhotos: [],
-                warehousePhotos: [],
-                timeline: [
-                    {
-                        time: 'Vừa xong',
-                        author: 'Lê Lệ Quyên (Lễ tân)',
-                        title: 'Tiếp nhận khiếu nại tại quầy',
-                        desc: `Đã lập ticket và tải lên ${createTicketUploadedFiles.length} ảnh bằng chứng ban đầu.`,
-                        isInternal: false
+        
+        // Tự động nhận diện họ tên khách hàng khi nhập số điện thoại trong modal tạo Ticket
+        document.getElementById('inputTicketCustomerPhone')?.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            if (val.length >= 9) {
+                const found = cachedCustomers.find(c => c.phone === val) || cachedProfiles.find(p => p.phone === val);
+                if (found) {
+                    const nameInput = document.getElementById('inputTicketCustomerName');
+                    if (nameInput && !nameInput.value) {
+                        nameInput.value = found.full_name || '';
                     }
-                ]
-            };
+                }
+            }
+        });
+document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async () => {
+            const phone = document.getElementById('inputTicketCustomerPhone')?.value.trim() || '';
+            const name = document.getElementById('inputTicketCustomerName')?.value.trim() || '';
+            const title = document.getElementById('inputTicketTitle')?.value.trim() || '';
+            const content = document.getElementById('inputTicketContent')?.value.trim() || title;
+            const refId = document.getElementById('selectTicketRefId')?.value || '';
+            const priority = document.getElementById('selectTicketPriority')?.value || 'medium';
+            const modalTitle = document.getElementById('createTicketModalTitle')?.textContent || '';
+            const isService = modalTitle.includes('dịch vụ') || refId.startsWith('BKG') || refId.startsWith('APT');
 
-            if (isService) {
-                serviceComplaints.unshift(newTicket);
-                renderServiceComplaintsTable();
-            } else {
-                orderComplaints.unshift(newTicket);
-                renderOrderComplaintsTable();
+            if (!title) {
+                showToast('Vui lòng nhập tiêu đề khiếu nại.', 'warning');
+                return;
+            }
+            if (!content) {
+                showToast('Vui lòng nhập nội dung phản ánh chi tiết.', 'warning');
+                return;
             }
 
-            updateComplaintsKpis();
-            renderComplaintsAlertBar();
-            createModal.classList.remove('active');
-            showToast(`Tạo Ticket ${newId} thành công với ${createTicketUploadedFiles.length} ảnh bằng chứng đính kèm!`, 'success');
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                showToast('Chưa khởi tạo kết nối Supabase.', 'danger');
+                return;
+            }
+
+            const saveBtn = document.getElementById('btnSaveCreateTicket');
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Đang lưu...';
+            }
+
+            try {
+                // 1. Tìm hoặc tạo Customer
+                let matchedUserId = null;
+                if (phone) {
+                    const existingCust = cachedCustomers.find(c => c.phone === phone);
+                    if (existingCust) {
+                        matchedUserId = existingCust.id;
+                    } else {
+                        const { data: dbCust } = await client.from('customer').select('id, user_id').eq('phone', phone).limit(1);
+                        if (dbCust && dbCust.length > 0) {
+                            matchedUserId = dbCust[0].id;
+                        } else {
+                            const newCustId = 'CUST-' + Date.now().toString().slice(-6);
+                            const { data: newCust } = await client.from('customer').insert({
+                                id: newCustId,
+                                phone: phone,
+                                full_name: name || 'Khách hàng tiếp nhận',
+                                status: 'active',
+                                created_at: new Date().toISOString()
+                            }).select().single();
+
+                            if (newCust) {
+                                matchedUserId = newCust.id;
+                                await client.from('customer_profile').insert({
+                                    customer_id: newCust.id,
+                                    full_name: name || 'Khách hàng tiếp nhận',
+                                    phone: phone,
+                                    created_at: new Date().toISOString()
+                                });
+                            }
+                        }
+                    }
+                }
+
+                if (!matchedUserId && cachedCustomers.length > 0) {
+                    matchedUserId = cachedCustomers[0].id;
+                }
+
+                // 2. Insert vào bảng support_ticket trên Supabase
+                const ticketType = isService ? 'booking' : 'order';
+                const normPriority = priority === 'high' ? 'Cao' : (priority === 'low' ? 'Thấp' : 'Trung bình');
+
+                const { data: newTicket, error: ticketErr } = await client.from('support_ticket').insert({
+                    user_id: matchedUserId,
+                    title: title,
+                    type: ticketType,
+                    status: 'pending',
+                    priority: normPriority,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }).select().single();
+
+                if (ticketErr) {
+                    console.error('[Complaints] Lỗi khi tạo ticket:', ticketErr);
+                    showToast('Lỗi tạo khiếu nại vào Supabase: ' + ticketErr.message, 'danger');
+                    return;
+                }
+
+                // 3. Insert tin nhắn khởi tạo vào support_ticket_message
+                await client.from('support_ticket_message').insert({
+                    ticket_id: newTicket.id,
+                    sender_type: 'user',
+                    content: content,
+                    created_at: new Date().toISOString()
+                });
+
+                if (createTicketUploadedFiles.length > 0) {
+                    await client.from('support_ticket_message').insert({
+                        ticket_id: newTicket.id,
+                        sender_type: 'cskh',
+                        agent_name: 'Lê Lệ Quyên',
+                        content: `Tiếp nhận khiếu nại tại quầy kèm ${createTicketUploadedFiles.length} ảnh xác minh bằng chứng.`,
+                        created_at: new Date().toISOString()
+                    });
+                }
+
+                // 4. Tải lại toàn bộ dữ liệu live từ Supabase
+                await loadComplaintsModuleData();
+
+                if (isService) {
+                    renderServiceComplaintsTable();
+                    switchSubtab('tab-complaint-services');
+                } else {
+                    renderOrderComplaintsTable();
+                    switchSubtab('tab-complaint-orders');
+                }
+
+                updateComplaintsKpis();
+                renderComplaintsAlertBar();
+                createModal.classList.remove('active');
+
+                // Reset form
+                if (document.getElementById('inputTicketTitle')) document.getElementById('inputTicketTitle').value = '';
+                if (document.getElementById('inputTicketContent')) document.getElementById('inputTicketContent').value = '';
+                createTicketUploadedFiles = [];
+                renderCreateTicketPreviews();
+
+                showToast(`Tiếp nhận khiếu nại thành công! Mã Ticket: ${newTicket.id.substring(0, 8)}...`, 'success');
+            } catch (err) {
+                console.error('[Complaints] Exception tạo ticket:', err);
+                showToast('Lỗi khi tiếp nhận khiếu nại: ' + err.message, 'danger');
+            } finally {
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Tạo khiếu nại';
+                }
+            }
         });
 
         // Modal Phương án giải quyết (Phase 3: RMA, Redo, Reward và Refund)
