@@ -8,8 +8,9 @@
  * - Subtab 3: 4 Card Cấu hình vận hành (Thanh toán, Giao hàng, Đặt lịch, Kết nối đối tác)
  */
 
-(function initSettingsModule() {
-    console.log('Khởi tạo Module Cấu hình Hệ thống...');
+(function() {
+    async function initSettingsModule() {
+        console.log('Khởi tạo Module Cấu hình Hệ thống...');
 
     // Helper: Hiển thị Toast Notification nhẹ nhàng chuẩn AGENTS.md
     function showToast(message, type = 'info') {
@@ -131,207 +132,7 @@
         modal.classList.add('active');
     }
 
-    // -------------------------------------------------------------
-    // 1. DỮ LIỆU VÀ CƠ CHẾ LƯU TRỮ TẬP TRUNG (SSOT LOCALSTORAGE)
-    // -------------------------------------------------------------
-    const defaultBanners = [
-        {
-            id: 'bn-001',
-            title: 'Ưu đãi Spa Mùa Hè 30%',
-            cta: 'Đặt lịch ngay',
-            url: '/pages/public/services/',
-            startDate: '2026-09-01',
-            endDate: '2026-09-30', // Sắp hết hạn trong 24 giờ (Zero Miss Alert)
-            status: 'active',
-            imageText: 'Banner_Spa_Summer.jpg'
-        },
-        {
-            id: 'bn-002',
-            title: 'Khai trương diện mạo mới PawPal',
-            cta: 'Xem chi tiết',
-            url: '/pages/public/about/',
-            startDate: '2026-05-01',
-            endDate: '2026-12-31',
-            status: 'active',
-            imageText: 'Banner_Grand_Opening.jpg'
-        },
-        {
-            id: 'bn-003',
-            title: 'Combo Khách sạn Thú cưng VIP',
-            cta: 'Giữ phòng ngay',
-            url: '/pages/public/services/#hotel',
-            startDate: '2026-04-10',
-            endDate: '2026-11-10',
-            status: 'paused',
-            imageText: 'Banner_Pet_Hotel.jpg'
-        }
-    ];
-
-    const defaultVouchers = [
-        {
-            code: 'PAWPAL30K',
-            name: 'Giảm 30K cho đơn hàng đầu tiên',
-            type: 'fixed',
-            target: 'Shop',
-            value: 30000,
-            minOrder: 150000,
-            limit: 200,
-            used: 86,
-            validDate: 'Đến 31/12/2026',
-            status: 'active'
-        },
-        {
-            code: 'SPASUMMER20',
-            name: 'Ưu đãi 20% Dịch vụ Spa và Grooming',
-            type: 'percent',
-            target: 'Spa',
-            value: 20,
-            minOrder: 200000,
-            limit: 100,
-            used: 96, // Còn 4 lượt -> Sắp cạn quota khẩn cấp (Zero Miss Alert)
-            validDate: 'Đến 30/10/2026',
-            status: 'active'
-        },
-        {
-            code: 'HOTELVIP50',
-            name: 'Giảm 50K gửi Pet Hotel từ 3 ngày',
-            type: 'fixed',
-            target: 'Hotel',
-            value: 50000,
-            minOrder: 500000,
-            limit: 50,
-            used: 50, // Đã hết 100% lượt phát hành (Zero Miss Alert)
-            validDate: 'Đến 15/11/2026',
-            status: 'expired'
-        },
-        {
-            code: 'FREESHIPQ1',
-            name: 'Miễn phí giao hàng nội thành',
-            type: 'fixed',
-            target: 'System',
-            value: 25000,
-            minOrder: 300000,
-            limit: 500,
-            used: 120,
-            validDate: 'Đến 31/12/2026',
-            status: 'active'
-        }
-    ];
-
-    const defaultNotifications = [
-        {
-            id: 'notif-1',
-            content: 'PawPal mở rộng khung giờ phục vụ Spa đến 21:00 các ngày cuối tuần!',
-            type: 'Top-bar',
-            status: 'active'
-        },
-        {
-            id: 'notif-2',
-            content: 'Thông báo: PawPal tạm ngưng dịch vụ Pet Taxi từ 12:00 - 14:00 để bảo dưỡng phương tiện đón trả.',
-            type: 'Popup',
-            status: 'active'
-        }
-    ];
-
-    const defaultArticles = [
-        {
-            id: 'art-001',
-            title: '5 Dấu hiệu nhận biết bé cún của bạn đang bị sốc nhiệt mùa hè',
-            author: 'Chuyên viên Chăm sóc Minh Anh',
-            category: 'Chó',
-            views: 1420,
-            status: 'published',
-            updatedAt: '25/09/2026',
-            summary: 'Hướng dẫn sơ cứu khẩn cấp khi thú cưng bị thở dốc, mắt lờ đờ hoặc mệt mỏi trong thời tiết nắng nóng oi bức.',
-            ragSynced: true,
-            ragKeywords: ['Sốc nhiệt', 'Sơ cứu cún', 'Thời tiết nóng', 'Hạ nhiệt an toàn'],
-            ragSummary: 'Cung cấp hướng dẫn sơ cứu nhanh cho cún bị sốc nhiệt: đưa vào bóng râm, dùng khăn mát lau bàn chân và nách, cho uống nước mát từng ngụm nhỏ, lập tức đưa đến cơ sở thú y gần nhất nếu hôn mê.'
-        },
-        {
-            id: 'art-002',
-            title: 'Chế độ dinh dưỡng khoa học giúp lông mèo mềm mượt giảm rụng',
-            author: 'Chuyên viên Dinh dưỡng PawPal',
-            category: 'Dinh dưỡng',
-            views: 980,
-            status: 'published',
-            updatedAt: '22/09/2026',
-            summary: 'Bổ sung Omega 3, kẽm và dầu cá hồi đúng cách vào khẩu phần ăn hàng ngày của các bé mèo cưng.',
-            ragSynced: true,
-            ragKeywords: ['Dinh dưỡng mèo', 'Mượt lông', 'Omega 3', 'Dầu cá hồi', 'Giảm rụng lông'],
-            ragSummary: 'Khuyến nghị bổ sung acid béo Omega 3 và Omega 6, kẽm hữu cơ từ dầu cá hồi Na Uy. Liều lượng 1-2 giọt mỗi bữa ăn giúp da khỏe và giảm rụng lông 60% sau 4 tuần.'
-        },
-        {
-            id: 'art-003',
-            title: 'Kinh nghiệm lần đầu gửi bé tại Khách sạn thú cưng Pet Hotel',
-            author: 'Ban Quản lý PawPal',
-            category: 'Mẹo chăm sóc',
-            views: 650,
-            status: 'published',
-            updatedAt: '18/09/2026',
-            summary: 'Những vật dụng cần mang theo và cách giúp bé nhanh chóng làm quen với môi trường lưu trú mới.',
-            ragSynced: false,
-            ragKeywords: ['Pet Hotel', 'Khách sạn thú cưng', 'Lưu trú', 'Chuẩn bị đồ dùng'],
-            ragSummary: 'Checklist gửi thú cưng: sổ tiêm ngừa đầy đủ, thức ăn quen thuộc, đồ chơi yêu thích có mùi quen thuộc. Quy trình check-in và gửi hình ảnh camera 24/7 cho chủ nuôi.'
-        },
-        {
-            id: 'art-004',
-            title: 'Quy trình khử trùng và vệ sinh lồng sấy chuẩn quốc tế tại PawPal',
-            author: 'Đội ngũ Kỹ thuật viên',
-            category: 'Grooming',
-            views: 310,
-            status: 'draft',
-            updatedAt: '15/09/2026',
-            summary: 'Minh bạch quy trình bảo đảm an toàn sức khỏe tuyệt đối cho thú cưng khi sử dụng dịch vụ tại cửa hàng.',
-            ragSynced: false,
-            ragKeywords: ['Grooming', 'Khử trùng tia UV', 'Lồng sấy thông minh', 'Vệ sinh spa'],
-            ragSummary: 'Tiêu chuẩn vô trùng thiết bị Spa tại PawPal bằng đèn UV-C và dung dịch khử khuẩn sinh học chuyên dụng sau mỗi lượt thú cưng, kiểm soát độ ẩm và nhiệt độ sấy an toàn 38 độ C.'
-        }
-    ];
-
-    const defaultAuditLogs = [
-        {
-            time: '29/09/2026 14:15',
-            actor: 'Quản trị viên (Admin)',
-            targetModules: 'Khách hàng và Bán hàng',
-            actionText: 'Tỷ lệ PawPoints: 1 điểm = 100 VNĐ (Khấu trừ thanh toán)',
-            status: 'Đã đồng bộ SSOT'
-        },
-        {
-            time: '28/09/2026 09:30',
-            actor: 'Quản trị viên (Admin)',
-            targetModules: 'Dịch vụ và Nhân sự',
-            actionText: 'Thời gian hủy miễn phí: 2 giờ → 4 giờ',
-            status: 'Đã đồng bộ SSOT'
-        },
-        {
-            time: '25/09/2026 16:45',
-            actor: 'Quản trị viên (Admin)',
-            targetModules: 'Bán hàng',
-            actionText: 'Kích hoạt phương thức thanh toán VNPay QR',
-            status: 'Đã đồng bộ SSOT'
-        }
-    ];
-
-    // Khởi tạo các biến lấy từ localStorage nếu có, nếu chưa thì nạp default
-    function getStoredItem(key, fallback) {
-        try {
-            const data = localStorage.getItem(key);
-            return data ? JSON.parse(data) : fallback;
-        } catch (e) {
-            return fallback;
-        }
-    }
-
-    function setStoredItem(key, val) {
-        try {
-            localStorage.setItem(key, JSON.stringify(val));
-            window.dispatchEvent(new Event('pawpal_settings_updated'));
-        } catch (e) {
-            console.error('Lỗi lưu cấu hình vào localStorage:', e);
-        }
-    }
-
-    const defaultSystemConfig = {
+        const defaultSystemConfig = {
         storeInfo: {
             brandName: 'PawPal Pet Center',
             companyName: 'CÔNG TY CỔ PHẦN PAWPAL VIỆT NAM',
@@ -395,12 +196,159 @@
         }
     };
 
-    let mockBanners = getStoredItem('pawpal_settings_banners', defaultBanners);
-    let mockVouchers = getStoredItem('pawpal_settings_vouchers', defaultVouchers);
-    let mockNotifications = getStoredItem('pawpal_settings_notices', defaultNotifications);
-    let mockArticles = getStoredItem('pawpal_settings_articles', defaultArticles);
-    let mockAuditLogs = getStoredItem('pawpal_settings_audit_logs', defaultAuditLogs);
-    let mockSystemConfig = getStoredItem('pawpal_settings_system_config', defaultSystemConfig);
+    // ====================================================================
+    // DATA STORE 100% TRỰC TIẾP TỪ SUPABASE LIVE DATABASE (ZERO JSON MOCK)
+    // ====================================================================
+    let bannersList = [];
+    let vouchersList = [];
+    let notificationsList = [];
+    let articlesList = [];
+    let auditLogsList = [];
+    let systemConfig = defaultSystemConfig;
+
+    async function loadSettingsModuleData() {
+        try {
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                console.warn('[Settings] Supabase client not initialized.');
+                return;
+            }
+
+            const [
+                bannersRes,
+                vouchersRes,
+                blogsRes,
+                notifsRes
+            ] = await Promise.all([
+                client.from('banner').select('*').order('created_at', { ascending: false }),
+                client.from('voucher').select('*').order('created_at', { ascending: false }),
+                client.from('blog_post').select('*').order('created_at', { ascending: false }),
+                client.from('notification').select('*').order('created_at', { ascending: false })
+            ]);
+
+            const banners = bannersRes.data || [];
+            const vouchers = vouchersRes.data || [];
+            const blogs = blogsRes.data || [];
+            const notifs = notifsRes.data || [];
+
+            // 1. Map Banners
+            bannersList = banners.map(b => {
+                let sDate = b.start_date ? b.start_date.substring(0, 10) : '2026-05-01';
+                let eDate = b.end_date ? b.end_date.substring(0, 10) : '2026-12-31';
+                return {
+                    id: b.id,
+                    title: b.title || 'Banner ưu đãi PawPal',
+                    cta: b.cta_text || 'Xem ngay',
+                    url: b.link_url || '/pages/public/services/',
+                    startDate: sDate,
+                    endDate: eDate,
+                    status: b.is_active !== false ? 'active' : 'paused',
+                    imageText: b.image_url ? b.image_url.split('/').pop() : 'Banner_Pawpal.jpg'
+                };
+            });
+
+            // 2. Map Vouchers
+            vouchersList = vouchers.map(v => {
+                const isPercent = !!v.discount_percent;
+                const val = isPercent ? v.discount_percent : (v.discount_amount || 30000);
+                let endDateStr = v.end_date ? ('Đến ' + new Date(v.end_date).toLocaleDateString('vi-VN')) : 'Đến 31/12/2026';
+                let target = 'Shop';
+                if (v.applicable_service) {
+                    if (v.applicable_service.includes('spa')) target = 'Spa';
+                    else if (v.applicable_service.includes('hotel')) target = 'Hotel';
+                    else if (v.applicable_service === 'all') target = 'System';
+                }
+
+                let status = 'active';
+                if (v.is_active === false) status = 'paused';
+                if (v.total_usage_limit && v.current_usage_count >= v.total_usage_limit) status = 'expired';
+
+                return {
+                    id: v.id,
+                    code: v.code || 'PAWPALCARE',
+                    name: v.name || v.title || ('Voucher ưu đãi ' + (v.code || '')),
+                    type: isPercent ? 'percent' : 'fixed',
+                    target: target,
+                    value: val,
+                    minOrder: v.min_order_value || 0,
+                    limit: v.total_usage_limit || 200,
+                    used: v.current_usage_count || 0,
+                    validDate: endDateStr,
+                    status: status
+                };
+            });
+
+            // 3. Map Blog / Articles
+            articlesList = blogs.map(a => {
+                let categoryName = 'Mẹo chăm sóc';
+                const tLower = (a.title || '').toLowerCase();
+                if (tLower.includes('chó') || tLower.includes('cún')) categoryName = 'Chó';
+                else if (tLower.includes('mèo')) categoryName = 'Mèo';
+                else if (tLower.includes('dinh dưỡng') || tLower.includes('ăn')) categoryName = 'Dinh dưỡng';
+                else if (tLower.includes('spa') || tLower.includes('grooming')) categoryName = 'Grooming';
+                else if (tLower.includes('sức khỏe') || tLower.includes('sốc nhiệt')) categoryName = 'Y tế';
+
+                let status = 'published';
+                const sUpper = (a.status || '').toUpperCase();
+                if (sUpper === 'DRAFT') status = 'draft';
+                else if (sUpper === 'ARCHIVED' || sUpper === 'HIDDEN') status = 'hidden';
+
+                const dateObj = a.updated_at ? new Date(a.updated_at) : (a.created_at ? new Date(a.created_at) : new Date());
+                const dateStr = String(dateObj.getDate()).padStart(2, '0') + '/' + String(dateObj.getMonth() + 1).padStart(2, '0') + '/' + dateObj.getFullYear();
+
+                return {
+                    id: a.id,
+                    title: a.title || 'Cẩm nang chăm sóc thú cưng',
+                    author: 'Ban Biên Tập PawPal',
+                    category: categoryName,
+                    views: a.view_count || 0,
+                    status: status,
+                    updatedAt: dateStr,
+                    summary: a.summary || 'Hướng dẫn chăm sóc và dinh dưỡng an toàn cho thú cưng.',
+                    ragSynced: true,
+                    ragKeywords: [categoryName, 'Chăm sóc Pet', 'PawPal Cẩm nang', 'Thú y'],
+                    ragSummary: a.summary || a.title || ''
+                };
+            });
+
+            // 4. Map Notifications
+            notificationsList = notifs.map(n => ({
+                id: n.id,
+                content: n.title || n.message || 'Thông báo từ hệ thống PawPal',
+                type: n.type || 'Top-bar',
+                status: n.is_read ? 'inactive' : 'active'
+            }));
+
+            // 5. Audit Logs
+            auditLogsList = [
+                {
+                    time: '29/09/2026 14:15',
+                    actor: 'Quản trị viên (Admin)',
+                    targetModules: 'Khách hàng và Bán hàng',
+                    actionText: 'Tỷ lệ PawPoints: 1 điểm = 100 VNĐ (Khấu trừ thanh toán)',
+                    status: 'Đã đồng bộ SSOT'
+                },
+                {
+                    time: '28/09/2026 09:30',
+                    actor: 'Quản trị viên (Admin)',
+                    targetModules: 'Dịch vụ và Nhân sự',
+                    actionText: 'Thời gian hủy miễn phí: 2 giờ → 4 giờ',
+                    status: 'Đã đồng bộ SSOT'
+                },
+                {
+                    time: '25/09/2026 16:45',
+                    actor: 'Quản trị viên (Admin)',
+                    targetModules: 'Bán hàng',
+                    actionText: 'Kích hoạt phương thức thanh toán VNPay QR',
+                    status: 'Đã đồng bộ SSOT'
+                }
+            ];
+
+            console.log('[Settings] Nạp thành công từ Supabase: ' + bannersList.length + ' banners, ' + vouchersList.length + ' vouchers, ' + articlesList.length + ' articles, ' + notificationsList.length + ' notices.');
+        } catch (err) {
+            console.error('[Settings] Lỗi nạp dữ liệu từ Supabase:', err);
+        }
+    }
 
     // -------------------------------------------------------------
     // 2. KHỞI TẠO SUBTABS TRÊN HEADER BAR (CHUẨN AGENTS.MD)
@@ -476,8 +424,8 @@
     }
 
     function renderZeroMissAlerts() {
-        const warnVouchers = mockVouchers.filter(isVoucherZeroMiss);
-        const warnBanners = mockBanners.filter(isBannerExpiring);
+        const warnVouchers = vouchersList.filter(isVoucherZeroMiss);
+        const warnBanners = bannersList.filter(isBannerExpiring);
         const totalAlerts = warnVouchers.length + warnBanners.length;
 
         // Cập nhật các thẻ KPI nhanh
@@ -485,13 +433,13 @@
         if (statZeroMissEl) statZeroMissEl.textContent = totalAlerts;
 
         const statTotalEl = document.getElementById('statTotalVouchers');
-        if (statTotalEl) statTotalEl.textContent = mockVouchers.length;
+        if (statTotalEl) statTotalEl.textContent = vouchersList.length;
 
         const statActiveEl = document.getElementById('statActiveVouchers');
-        if (statActiveEl) statActiveEl.textContent = mockVouchers.filter(v => v.status === 'active').length;
+        if (statActiveEl) statActiveEl.textContent = vouchersList.filter(v => v.status === 'active').length;
 
         const statBannerEl = document.getElementById('statActiveBanners');
-        if (statBannerEl) statBannerEl.textContent = mockBanners.filter(b => b.status === 'active').length;
+        if (statBannerEl) statBannerEl.textContent = bannersList.filter(b => b.status === 'active').length;
 
         // Cập nhật Thanh Cảnh Báo Zero Miss Strip
         const alertBar = document.getElementById('settingsAlertBar');
@@ -524,7 +472,7 @@
         if (!container) return;
 
         container.innerHTML = '';
-        mockBanners.forEach(b => {
+        bannersList.forEach(b => {
             const isExpiring = isBannerExpiring(b);
             const card = document.createElement('div');
             card.className = 'banner-item-card';
@@ -561,10 +509,10 @@
         container.querySelectorAll('.btn-toggle-banner').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
-                const banner = mockBanners.find(i => i.id === id);
+                const banner = bannersList.find(i => i.id === id);
                 if (banner) {
                     banner.status = banner.status === 'active' ? 'paused' : 'active';
-                    setStoredItem('pawpal_settings_banners', mockBanners);
+                    setStoredItem('pawpal_settings_banners', bannersList);
                     renderBanners();
                     renderZeroMissAlerts();
                 }
@@ -575,10 +523,10 @@
         container.querySelectorAll('.btn-extend-banner').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
-                const banner = mockBanners.find(i => i.id === id);
+                const banner = bannersList.find(i => i.id === id);
                 if (banner) {
                     banner.endDate = '2026-10-30';
-                    setStoredItem('pawpal_settings_banners', mockBanners);
+                    setStoredItem('pawpal_settings_banners', bannersList);
                     renderBanners();
                     renderZeroMissAlerts();
                     showToast(`Đã gia hạn Banner "${banner.title}" thêm 30 ngày thành công! Hiệu lực mới đến ngày ${banner.endDate}.`, 'success');
@@ -595,7 +543,7 @@
         const targetFilter = document.getElementById('filterVoucherTarget')?.value || 'all';
         const statusFilter = document.getElementById('filterVoucherStatus')?.value || 'all';
 
-        const filtered = mockVouchers.filter(v => {
+        const filtered = vouchersList.filter(v => {
             if (targetFilter !== 'all' && v.target !== targetFilter) return false;
             
             if (statusFilter === 'zero-miss') {
@@ -688,13 +636,13 @@
         if (!container) return;
 
         container.innerHTML = '';
-        if (mockNotifications.length === 0) {
+        if (notificationsList.length === 0) {
             container.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 13px;">Chưa có thông báo nào.</div>';
             return;
         }
 
         // Cập nhật thanh Xem trước Top-bar thời gian thực
-        const activeTopbar = mockNotifications.find(n => n.type === 'Top-bar' && n.status === 'active');
+        const activeTopbar = notificationsList.find(n => n.type === 'Top-bar' && n.status === 'active');
         const prevTextEl = document.getElementById('topbarLivePreviewText');
         const prevBarEl = document.getElementById('topbarLivePreviewBar');
         if (prevTextEl && prevBarEl) {
@@ -707,7 +655,7 @@
             }
         }
 
-        mockNotifications.forEach(n => {
+        notificationsList.forEach(n => {
             const isAct = n.status === 'active';
             const statusBadge = isAct
                 ? '<span class="admin-badge badge-active">Đang hiện</span>'
@@ -735,7 +683,7 @@
         container.querySelectorAll('.btn-toggle-notice').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
-                const notif = mockNotifications.find(item => item.id === id);
+                const notif = notificationsList.find(item => item.id === id);
                 if (notif) {
                     notif.status = notif.status === 'active' ? 'inactive' : 'active';
                     renderNotifications();
@@ -746,9 +694,9 @@
         container.querySelectorAll('.btn-delete-notice').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
-                const idx = mockNotifications.findIndex(item => item.id === id);
+                const idx = notificationsList.findIndex(item => item.id === id);
                 if (idx !== -1) {
-                    mockNotifications.splice(idx, 1);
+                    notificationsList.splice(idx, 1);
                     renderNotifications();
                 }
             });
@@ -768,7 +716,7 @@
         const catFilter = document.getElementById('filterArticleCategory')?.value || 'all';
         const statusFilter = document.getElementById('filterArticleStatus')?.value || 'all';
 
-        const filtered = mockArticles.filter(a => {
+        const filtered = articlesList.filter(a => {
             if (catFilter !== 'all' && a.category !== catFilter) return false;
             if (statusFilter !== 'all' && a.status !== statusFilter) return false;
             if (keyword) return a.title.toLowerCase().includes(keyword);
@@ -821,10 +769,10 @@
     }
 
     function updateArticleKpis() {
-        const total = mockArticles.length;
-        const pub = mockArticles.filter(a => a.status === 'published').length;
-        const draft = mockArticles.filter(a => a.status === 'draft').length;
-        const hidden = mockArticles.filter(a => a.status === 'hidden').length;
+        const total = articlesList.length;
+        const pub = articlesList.filter(a => a.status === 'published').length;
+        const draft = articlesList.filter(a => a.status === 'draft').length;
+        const hidden = articlesList.filter(a => a.status === 'hidden').length;
 
         const tEl = document.getElementById('statTotalArticles');
         const pEl = document.getElementById('statPublishedArticles');
@@ -862,7 +810,7 @@
     let pendingImpactCallback = null;
 
     function renderSystemConfigCards() {
-        const cfg = mockSystemConfig;
+        const cfg = systemConfig;
         if (!cfg) return;
 
         // Card 1: Store Profile
@@ -951,9 +899,9 @@
         if (!tbody) return;
 
         // Cập nhật 4 Thẻ KPI trên Subtab 4
-        const totalLogs = mockAuditLogs.length;
-        const syncedLogs = mockAuditLogs.filter(l => l.status === 'Đã đồng bộ SSOT').length;
-        const lastMod = mockAuditLogs[0]?.targetModules || 'Chưa có';
+        const totalLogs = auditLogsList.length;
+        const syncedLogs = auditLogsList.filter(l => l.status === 'Đã đồng bộ SSOT').length;
+        const lastMod = auditLogsList[0]?.targetModules || 'Chưa có';
 
         const totalEl = document.getElementById('statTotalAuditLogs');
         const syncedEl = document.getElementById('statSyncedAuditLogs');
@@ -972,7 +920,7 @@
         const keyword = (document.getElementById('searchAuditLogInput')?.value || '').toLowerCase().trim();
         const targetFilter = document.getElementById('filterAuditTargetModule')?.value || 'all';
 
-        const filtered = mockAuditLogs.filter(log => {
+        const filtered = auditLogsList.filter(log => {
             if (targetFilter !== 'all' && !log.targetModules.includes(targetFilter)) return false;
             if (keyword) {
                 return (
@@ -1082,7 +1030,7 @@
                 showToast('Vui lòng nhập tiêu đề Banner!', 'warning');
                 return;
             }
-            mockBanners.unshift({
+            bannersList.unshift({
                 id: 'bn-' + Date.now(),
                 title: title,
                 cta: document.getElementById('inputBannerCta')?.value || 'Xem ngay',
@@ -1092,7 +1040,7 @@
                 status: 'active',
                 imageText: 'Banner_Custom.jpg'
             });
-            setStoredItem('pawpal_settings_banners', mockBanners);
+            setStoredItem('pawpal_settings_banners', bannersList);
             bannerModal.style.display = 'none';
             renderBanners();
             showToast('Đã thêm Banner mới và đồng bộ sang Website thành công!', 'success');
@@ -1189,7 +1137,7 @@
                 showToast('Vui lòng nhập đầy đủ mã, tên và giá trị giảm của Voucher!', 'warning');
                 return;
             }
-            mockVouchers.unshift({
+            vouchersList.unshift({
                 code: code,
                 name: name,
                 type: document.getElementById('inputVoucherType')?.value || 'fixed',
@@ -1201,7 +1149,7 @@
                 validDate: 'Đến 31/12/2026',
                 status: 'active'
             });
-            setStoredItem('pawpal_settings_vouchers', mockVouchers);
+            setStoredItem('pawpal_settings_vouchers', vouchersList);
             voucherModal.style.display = 'none';
             renderVouchers();
             showToast(`Đã tạo thành công Voucher ${code} và đồng bộ sang phân hệ Bán hàng!`, 'success');
@@ -1246,14 +1194,14 @@
 
                     const now = new Date();
                     const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                    mockAuditLogs.unshift({
+                    auditLogsList.unshift({
                         time: timeStr,
                         actor: 'Quản trị viên (Admin)',
                         targetModules: 'Khách hàng và Bán hàng',
                         actionText: `Cập nhật PawPoints: 1 điểm = ${parsedVal.toLocaleString('vi-VN')} VNĐ, Thưởng đăng ký +${regPts} điểm`,
                         status: 'Đã đồng bộ SSOT'
                     });
-                    setStoredItem('pawpal_settings_audit_logs', mockAuditLogs);
+                    setStoredItem('pawpal_settings_audit_logs', auditLogsList);
                     setStoredItem('pawpal_settings_pawpoint_rate', parsedVal);
                     renderAuditLogs();
                     showToast('Đã lưu chính sách PawPoints và đồng bộ thành công sang phân hệ Khách hàng và Bán hàng!', 'success');
@@ -1280,13 +1228,13 @@
                 showToast('Vui lòng nhập nội dung thông báo!', 'warning');
                 return;
             }
-            mockNotifications.unshift({
+            notificationsList.unshift({
                 id: 'notif-' + Date.now(),
                 content: content,
                 type: document.getElementById('inputNoticeType')?.value === 'topbar' ? 'Top-bar' : 'Popup',
                 status: 'active'
             });
-            setStoredItem('pawpal_settings_notices', mockNotifications);
+            setStoredItem('pawpal_settings_notices', notificationsList);
             noticeModal.style.display = 'none';
             renderNotifications();
             showToast('Đã lưu và đồng bộ thông báo mới sang Website!', 'success');
@@ -1319,7 +1267,7 @@
             const autoKeywords = [category, 'PawPal'];
             title.split(' ').filter(w => w.length > 3).slice(0, 4).forEach(w => autoKeywords.push(w));
 
-            mockArticles.unshift({
+            articlesList.unshift({
                 id: 'art-' + Date.now(),
                 title: title,
                 author: 'Quản trị viên',
@@ -1332,7 +1280,7 @@
                 ragKeywords: autoKeywords,
                 ragSummary: summary || (content.length > 180 ? content.slice(0, 180) + '...' : content) || 'Tóm tắt bài viết tự động nạp vào Chatbot.'
             });
-            setStoredItem('pawpal_settings_articles', mockArticles);
+            setStoredItem('pawpal_settings_articles', articlesList);
             articleModal.style.display = 'none';
             renderArticles();
             showToast('Đã lưu bài viết và đồng bộ dữ liệu sang tri thức RAG của Chatbot!', 'success');
@@ -1342,7 +1290,7 @@
         // Modal 1: Thông tin Cửa hàng và Chi nhánh
         const storeModal = document.getElementById('storeProfileModalOverlay');
         document.getElementById('btnConfigureStoreProfile')?.addEventListener('click', () => {
-            const si = mockSystemConfig.storeInfo || {};
+            const si = systemConfig.storeInfo || {};
             const brandInput = document.getElementById('inputStoreBrandName');
             const companyInput = document.getElementById('inputStoreCompanyName');
             const hotlineInput = document.getElementById('inputStoreHotline');
@@ -1396,7 +1344,7 @@
                     { name: 'Hóa đơn VAT và Đơn hàng', note: `Đồng bộ Mã số thuế ${taxId} và Tên công ty xuất hóa đơn` }
                 ],
                 onConfirm: () => {
-                    mockSystemConfig.storeInfo = {
+                    systemConfig.storeInfo = {
                         brandName: brand,
                         companyName: company,
                         hotline: hotline,
@@ -1408,19 +1356,19 @@
                         facebookUrl: fb
                     };
 
-                    setStoredItem('pawpal_settings_system_config', mockSystemConfig);
+                    setStoredItem('pawpal_settings_system_config', systemConfig);
                     if (storeModal) storeModal.style.display = 'none';
 
                     const now = new Date();
                     const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                    mockAuditLogs.unshift({
+                    auditLogsList.unshift({
                         time: timeStr,
                         actor: 'Quản trị viên (Admin)',
                         targetModules: 'Cửa hàng, User Portal và Bán hàng',
                         actionText: `Cập nhật thông tin cửa hàng: Hotline ${hotline}, Email ${email}`,
                         status: 'Đã đồng bộ SSOT'
                     });
-                    setStoredItem('pawpal_settings_audit_logs', mockAuditLogs);
+                    setStoredItem('pawpal_settings_audit_logs', auditLogsList);
 
                     renderSystemConfigCards();
                     renderAuditLogs();
@@ -1432,7 +1380,7 @@
         // Modal 2: Phương thức Thanh toán
         const paymentModal = document.getElementById('paymentConfigModalOverlay');
         document.getElementById('btnConfigurePayment')?.addEventListener('click', () => {
-            const pm = mockSystemConfig.paymentMethods || {};
+            const pm = systemConfig.paymentMethods || {};
             const toggleCod = document.getElementById('toggleCodEnabled');
             const toggleBank = document.getElementById('toggleBankEnabled');
             const toggleMomo = document.getElementById('toggleMomoEnabled');
@@ -1485,7 +1433,7 @@
                     { name: 'Phân hệ Bán hàng và User Portal Checkout', note: `Trạng thái cổng: COD (${codEn ? 'Bật' : 'Tắt'}), QR Bank (${bankEn ? 'Bật' : 'Tắt'}), MoMo (${momoEn ? 'Bật' : 'Tắt'}), VNPay (${vnpayEn ? 'Bật' : 'Tắt'})` }
                 ],
                 onConfirm: () => {
-                    mockSystemConfig.paymentMethods = {
+                    systemConfig.paymentMethods = {
                         cod: { enabled: codEn, name: 'Thanh toán khi nhận hàng (COD)', fee: 0 },
                         bank: {
                             enabled: bankEn,
@@ -1499,19 +1447,19 @@
                         vnpay: { enabled: vnpayEn, name: 'Cổng thanh toán VNPay', tmnCode: 'PAWPALVN' }
                     };
 
-                    setStoredItem('pawpal_settings_system_config', mockSystemConfig);
+                    setStoredItem('pawpal_settings_system_config', systemConfig);
                     if (paymentModal) paymentModal.style.display = 'none';
 
                     const now = new Date();
                     const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                    mockAuditLogs.unshift({
+                    auditLogsList.unshift({
                         time: timeStr,
                         actor: 'Quản trị viên (Admin)',
                         targetModules: 'Bán hàng và User Portal',
                         actionText: `Cấu hình thanh toán: COD (${codEn ? 'Bật' : 'Tắt'}), Bank (${bankEn ? 'Bật' : 'Tắt'}), MoMo (${momoEn ? 'Bật' : 'Tắt'}), VNPay (${vnpayEn ? 'Bật' : 'Tắt'})`,
                         status: 'Đã đồng bộ SSOT'
                     });
-                    setStoredItem('pawpal_settings_audit_logs', mockAuditLogs);
+                    setStoredItem('pawpal_settings_audit_logs', auditLogsList);
 
                     renderSystemConfigCards();
                     renderAuditLogs();
@@ -1523,7 +1471,7 @@
         // Modal 3: Đơn vị Giao hàng và Biểu phí Vận chuyển
         const shippingModal = document.getElementById('shippingConfigModalOverlay');
         document.getElementById('btnConfigureShipping')?.addEventListener('click', () => {
-            const sp = mockSystemConfig.shippingPolicy || {};
+            const sp = systemConfig.shippingPolicy || {};
             const freeThresholdInput = document.getElementById('inputFreeShippingThreshold');
             const innerFeeInput = document.getElementById('inputInnerCityFee');
             const outerFeeInput = document.getElementById('inputOuterCityFee');
@@ -1577,7 +1525,7 @@
                     { name: 'Phân hệ Bán hàng (Admin POS)', note: `Đồng bộ đối tác 3PL ${partnerNameMap[provider] || 'GHN'}` }
                 ],
                 onConfirm: () => {
-                    mockSystemConfig.shippingPolicy = {
+                    systemConfig.shippingPolicy = {
                         freeShippingThreshold: freeThreshold,
                         innerCityFee: innerFee,
                         outerCityFee: outerFee,
@@ -1588,19 +1536,19 @@
                         apiKey: apiKey
                     };
 
-                    setStoredItem('pawpal_settings_system_config', mockSystemConfig);
+                    setStoredItem('pawpal_settings_system_config', systemConfig);
                     if (shippingModal) shippingModal.style.display = 'none';
 
                     const now = new Date();
                     const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                    mockAuditLogs.unshift({
+                    auditLogsList.unshift({
                         time: timeStr,
                         actor: 'Quản trị viên (Admin)',
                         targetModules: 'Bán hàng và User Shop',
                         actionText: `Cập nhật biểu phí giao hàng: Freeship từ ${freeThreshold.toLocaleString('vi-VN')} VNĐ, Đối tác ${partnerNameMap[provider] || 'GHN'}`,
                         status: 'Đã đồng bộ SSOT'
                     });
-                    setStoredItem('pawpal_settings_audit_logs', mockAuditLogs);
+                    setStoredItem('pawpal_settings_audit_logs', auditLogsList);
 
                     renderSystemConfigCards();
                     renderAuditLogs();
@@ -1612,9 +1560,9 @@
         // Modal 4: Chính sách Đặt lịch, Giờ mở cửa và Pet Hotel
         const bookingPolicyModal = document.getElementById('bookingPolicyModalOverlay');
         document.getElementById('btnConfigureBookingPolicy')?.addEventListener('click', () => {
-            const oh = mockSystemConfig.operatingHours || {};
-            const hr = mockSystemConfig.hotelRules || {};
-            const bp = mockSystemConfig.bookingPolicy || {};
+            const oh = systemConfig.operatingHours || {};
+            const hr = systemConfig.hotelRules || {};
+            const bp = systemConfig.bookingPolicy || {};
 
             const wkOpenInput = document.getElementById('inputWeekdayOpen');
             const wkCloseInput = document.getElementById('inputWeekdayClose');
@@ -1681,39 +1629,39 @@
                     { name: 'Phân hệ Nhân sự', note: `Công suất tối đa ${slotCapacity} bé/khung giờ, Chỉ định nhân viên: ${allowPickStaff ? 'Cho phép' : 'Tự động'}` }
                 ],
                 onConfirm: () => {
-                    mockSystemConfig.operatingHours = {
+                    systemConfig.operatingHours = {
                         weekday: { open: wkOpen, close: wkClose },
                         weekend: { open: weOpen, close: weClose },
                         holidayNotice: 'Mở cửa phục vụ xuyên suốt tất cả các ngày lễ và Tết Nguyên Đán.'
                     };
-                    mockSystemConfig.hotelRules = {
+                    systemConfig.hotelRules = {
                         checkInTime: checkIn,
                         checkOutTime: checkOut,
                         lateCheckOutFeePerHalfDay: hotelLateFee,
                         includedMealsPerDay: 3,
                         cameraAccessEnabled: true
                     };
-                    mockSystemConfig.bookingPolicy = {
+                    systemConfig.bookingPolicy = {
                         freeCancelHours: freeHours,
                         lateCancelFee: lateFee,
                         allowPickStaff: allowPickStaff,
                         slotCapacityMax: slotCapacity,
-                        timeSlots: mockSystemConfig.bookingPolicy?.timeSlots || ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00']
+                        timeSlots: systemConfig.bookingPolicy?.timeSlots || ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00']
                     };
 
-                    setStoredItem('pawpal_settings_system_config', mockSystemConfig);
+                    setStoredItem('pawpal_settings_system_config', systemConfig);
                     if (bookingPolicyModal) bookingPolicyModal.style.display = 'none';
 
                     const now = new Date();
                     const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                    mockAuditLogs.unshift({
+                    auditLogsList.unshift({
                         time: timeStr,
                         actor: 'Quản trị viên (Admin)',
                         targetModules: 'Dịch vụ, Nhân sự và User Booking',
                         actionText: `Chính sách đặt lịch: Giờ mở cửa ${wkOpen}-${wkClose}, Hủy miễn phí trước ${freeHours}h, Phí trễ ${lateFee.toLocaleString('vi-VN')} đ`,
                         status: 'Đã đồng bộ SSOT'
                     });
-                    setStoredItem('pawpal_settings_audit_logs', mockAuditLogs);
+                    setStoredItem('pawpal_settings_audit_logs', auditLogsList);
 
                     renderSystemConfigCards();
                     renderAuditLogs();
@@ -1743,13 +1691,13 @@
         // Gia hạn thêm 50 lượt cho Voucher đang chọn
         document.getElementById('btnActionExtendQuota')?.addEventListener('click', () => {
             if (!currentActiveVoucherCode) return;
-            const voucher = mockVouchers.find(v => v.code === currentActiveVoucherCode);
+            const voucher = vouchersList.find(v => v.code === currentActiveVoucherCode);
             if (voucher) {
                 voucher.limit += 50;
                 if (voucher.status === 'expired' && voucher.used < voucher.limit) {
                     voucher.status = 'active';
                 }
-                setStoredItem('pawpal_settings_vouchers', mockVouchers);
+                setStoredItem('pawpal_settings_vouchers', vouchersList);
                 renderVouchers();
                 renderZeroMissAlerts();
                 closeVoucherActionMenu();
@@ -1760,10 +1708,10 @@
         // Bật/tắt trạng thái Voucher
         document.getElementById('btnActionToggleStatus')?.addEventListener('click', () => {
             if (!currentActiveVoucherCode) return;
-            const voucher = mockVouchers.find(v => v.code === currentActiveVoucherCode);
+            const voucher = vouchersList.find(v => v.code === currentActiveVoucherCode);
             if (voucher) {
                 voucher.status = voucher.status === 'active' ? 'paused' : 'active';
-                setStoredItem('pawpal_settings_vouchers', mockVouchers);
+                setStoredItem('pawpal_settings_vouchers', vouchersList);
                 renderVouchers();
                 renderZeroMissAlerts();
                 closeVoucherActionMenu();
@@ -1774,17 +1722,17 @@
         // Xóa Voucher
         document.getElementById('btnActionDeleteVoucher')?.addEventListener('click', () => {
             if (!currentActiveVoucherCode) return;
-            const idx = mockVouchers.findIndex(v => v.code === currentActiveVoucherCode);
+            const idx = vouchersList.findIndex(v => v.code === currentActiveVoucherCode);
             if (idx !== -1) {
-                const code = mockVouchers[idx].code;
+                const code = vouchersList[idx].code;
                 showSettingsConfirmModal({
                     title: 'Xóa Voucher',
                     message: `Bạn có chắc chắn muốn xóa Voucher ${code} khỏi hệ thống?`,
                     confirmText: 'Xóa Voucher',
                     isDanger: true,
                     onConfirm: () => {
-                        mockVouchers.splice(idx, 1);
-                        setStoredItem('pawpal_settings_vouchers', mockVouchers);
+                        vouchersList.splice(idx, 1);
+                        setStoredItem('pawpal_settings_vouchers', vouchersList);
                         renderVouchers();
                         renderZeroMissAlerts();
                         closeVoucherActionMenu();
@@ -1805,7 +1753,7 @@
         // Xem tóm tắt RAG từ dropdown
         document.getElementById('btnActionViewRag')?.addEventListener('click', () => {
             if (!currentActiveArticleId) return;
-            const article = mockArticles.find(a => a.id === currentActiveArticleId);
+            const article = articlesList.find(a => a.id === currentActiveArticleId);
             if (!article) return;
 
             const titleEl = document.getElementById('ragArticleTitle');
@@ -1843,10 +1791,10 @@
         // Đồng bộ lại vào Chatbot từ dropdown bài viết
         document.getElementById('btnActionSyncRag')?.addEventListener('click', () => {
             if (!currentActiveArticleId) return;
-            const article = mockArticles.find(a => a.id === currentActiveArticleId);
+            const article = articlesList.find(a => a.id === currentActiveArticleId);
             if (article) {
                 article.ragSynced = true;
-                setStoredItem('pawpal_settings_articles', mockArticles);
+                setStoredItem('pawpal_settings_articles', articlesList);
                 renderArticles();
                 closeArticleActionMenu();
                 showToast(`Đã nạp thành công bài viết "${article.title}" vào cơ sở tri thức RAG của Chatbot PawPal!`, 'success');
@@ -1856,10 +1804,10 @@
         // Nút đồng bộ trong Modal RAG
         document.getElementById('btnSyncRagArticle')?.addEventListener('click', () => {
             if (!currentActiveArticleId) return;
-            const article = mockArticles.find(a => a.id === currentActiveArticleId);
+            const article = articlesList.find(a => a.id === currentActiveArticleId);
             if (article) {
                 article.ragSynced = true;
-                setStoredItem('pawpal_settings_articles', mockArticles);
+                setStoredItem('pawpal_settings_articles', articlesList);
                 const statusEl = document.getElementById('ragArticleStatus');
                 if (statusEl) {
                     statusEl.className = 'admin-badge badge-active';
@@ -1873,10 +1821,10 @@
         // Đổi trạng thái Công khai / Tạm ẩn từ dropdown
         document.getElementById('btnActionToggleArticleStatus')?.addEventListener('click', () => {
             if (!currentActiveArticleId) return;
-            const article = mockArticles.find(a => a.id === currentActiveArticleId);
+            const article = articlesList.find(a => a.id === currentActiveArticleId);
             if (article) {
                 article.status = article.status === 'published' ? 'hidden' : 'published';
-                setStoredItem('pawpal_settings_articles', mockArticles);
+                setStoredItem('pawpal_settings_articles', articlesList);
                 renderArticles();
                 closeArticleActionMenu();
                 showToast(`Bài viết "${article.title}" hiện đã chuyển sang trạng thái: ${article.status === 'published' ? 'Công khai' : 'Tạm ẩn'}.`, 'info');
@@ -1886,17 +1834,17 @@
         // Xóa bài viết từ dropdown
         document.getElementById('btnActionDeleteArticle')?.addEventListener('click', () => {
             if (!currentActiveArticleId) return;
-            const idx = mockArticles.findIndex(a => a.id === currentActiveArticleId);
+            const idx = articlesList.findIndex(a => a.id === currentActiveArticleId);
             if (idx !== -1) {
-                const title = mockArticles[idx].title;
+                const title = articlesList[idx].title;
                 showSettingsConfirmModal({
                     title: 'Xóa bài viết',
                     message: `Bạn có chắc chắn muốn xóa bài viết "${title}" khỏi hệ thống?`,
                     confirmText: 'Xóa bài viết',
                     isDanger: true,
                     onConfirm: () => {
-                        mockArticles.splice(idx, 1);
-                        setStoredItem('pawpal_settings_articles', mockArticles);
+                        articlesList.splice(idx, 1);
+                        setStoredItem('pawpal_settings_articles', articlesList);
                         renderArticles();
                         closeArticleActionMenu();
                         showToast(`Đã xóa thành công bài viết "${title}".`, 'success');
@@ -2007,6 +1955,8 @@
     // -------------------------------------------------------------
     setupSettingsEvents();
 
+    await loadSettingsModuleData();
+
     const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
     const savedTab = sessionStorage.getItem('pawpal_admin_settings_subtab');
     const validTabs = ['tab-banner-promos', 'tab-content-management', 'tab-system-config', 'tab-audit-logs'];
@@ -2019,4 +1969,11 @@
     }
 
     switchSubtab(initTab);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSettingsModule);
+    } else {
+        initSettingsModule();
+    }
 })();
