@@ -1526,7 +1526,7 @@
             modal.classList.add('active');
         }
 
-        function handleSaveIncidentReport() {
+        async function handleSaveIncidentReport() {
             const modal = document.getElementById('incidentReportModalOverlay');
             const staffId = document.getElementById('incidentInputStaff')?.value;
             const wsId = document.getElementById('incidentInputBooking')?.value;
@@ -1550,6 +1550,31 @@
             if (staff && severity === 'URGENT') {
                 if (!staff.flags) staff.flags = [];
                 staff.flags.push(`Sự cố ca trực: ${incidentTypeLabel}`);
+            }
+
+            // Đồng bộ ghi nhận sự cố vào Supabase audit_log
+            try {
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client) {
+                    await client.from('audit_log').insert({
+                        user_id: staff?.rawId || 'd0000000-0000-0000-0000-000000000001',
+                        action: 'STAFF_INCIDENT_REPORTED',
+                        entity: 'workstation',
+                        entity_id: wsId || 'WS-01',
+                        old_data: null,
+                        new_data: {
+                            staffId: staffId,
+                            staffName: staff?.name,
+                            wsId: wsId,
+                            incidentType: incidentTypeLabel,
+                            extendMinutes: extendMinutes,
+                            severity: severity,
+                            note: note
+                        }
+                    });
+                }
+            } catch (err) {
+                console.warn('Lỗi ghi nhận sự cố vào Supabase:', err);
             }
 
             modal?.classList.remove('active');
@@ -2040,7 +2065,7 @@
             }
         }
 
-        function handleCreateLeaveSwapRequest(approveImmediately = false) {
+        async function handleCreateLeaveSwapRequest(approveImmediately = false) {
             const newId = 'REQ-' + String(mockLeaveSwapRequests.length + 1).padStart(3, '0');
             const now = new Date();
             const timeStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -2078,6 +2103,23 @@
                 };
 
                 mockLeaveSwapRequests.unshift(newReq);
+
+                // Đồng bộ vào Supabase
+                try {
+                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (client) {
+                        await client.from('audit_log').insert({
+                            user_id: staff?.rawId || 'd0000000-0000-0000-0000-000000000001',
+                            action: 'LEAVE_REQUEST_SUBMITTED',
+                            entity: 'staff_schedule',
+                            entity_id: newId,
+                            old_data: null,
+                            new_data: newReq
+                        });
+                    }
+                } catch (err) {
+                    console.warn('Lỗi gửi đơn nghỉ phép vào Supabase:', err);
+                }
 
                 if (approveImmediately) {
                     approveLeaveSwapRequest(newId);
@@ -2119,6 +2161,23 @@
                 };
 
                 mockLeaveSwapRequests.unshift(newReq);
+
+                // Đồng bộ vào Supabase
+                try {
+                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (client) {
+                        await client.from('audit_log').insert({
+                            user_id: staffFrom?.rawId || 'd0000000-0000-0000-0000-000000000001',
+                            action: 'SWAP_REQUEST_SUBMITTED',
+                            entity: 'staff_schedule',
+                            entity_id: newId,
+                            old_data: null,
+                            new_data: newReq
+                        });
+                    }
+                } catch (err) {
+                    console.warn('Lỗi gửi đề xuất đổi ca vào Supabase:', err);
+                }
 
                 if (approveImmediately) {
                     approveLeaveSwapRequest(newId);
@@ -2277,7 +2336,7 @@
             if (assessModalEl) assessModalEl.classList.add('active');
         }
 
-        function handleSaveAssessment(shouldNotify = false) {
+        async function handleSaveAssessment(shouldNotify = false) {
             const staffSelect = document.getElementById('assessInputStaff');
             const dateInput = document.getElementById('assessInputDate');
             const typeSelect = document.getElementById('assessInputType');
@@ -2341,6 +2400,31 @@
                 evaluator: 'Lê Lệ Quyên',
                 note: note || (result === 'PASS' ? 'Nghiệp vụ chuẩn xác' : 'Yêu cầu kèm cặp chuyên môn')
             });
+
+            // Đồng bộ đánh giá năng lực vào Supabase audit_log
+            try {
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client) {
+                    await client.from('audit_log').insert({
+                        user_id: staff.rawId || 'd0000000-0000-0000-0000-000000000001',
+                        action: 'STAFF_ASSESSMENT_RECORDED',
+                        entity: 'staff',
+                        entity_id: staff.rawId || staff.id,
+                        old_data: { skillScore: staff.skillScore, serviceLocked: staff.serviceLocked },
+                        new_data: {
+                            assessmentId: newAssId,
+                            date: assessDate,
+                            type: type,
+                            score: score,
+                            result: result,
+                            serviceLocked: staff.serviceLocked,
+                            note: note
+                        }
+                    });
+                }
+            } catch (err) {
+                console.warn('Lỗi lưu đánh giá vào Supabase:', err);
+            }
 
             saveAssessmentsToStorage();
             saveStaffDataToStorage();
@@ -2527,7 +2611,7 @@
             staffModal.classList.add('active');
         }
 
-        function handleSaveStaff() {
+        async function handleSaveStaff() {
             const nameIn = document.getElementById('staffInputName');
             const phoneIn = document.getElementById('staffInputPhone');
             const emailIn = document.getElementById('staffInputEmail');
@@ -2563,6 +2647,13 @@
             }
 
             const editingId = staffModal?.getAttribute('data-editing-id');
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            let dbRole = 'PET_CARE';
+            if (role === 'Admin') dbRole = 'ADMIN';
+            else if (role === 'Veterinarian') dbRole = 'VET';
+            else if (role === 'Driver') dbRole = 'DRIVER';
+            else if (role === 'Receptionist') dbRole = 'RECEPTIONIST';
+            else if (role === 'CSKH') dbRole = 'CSKH';
 
             if (editingId) {
                 const staff = mockStaff.find(s => s.id === editingId);
@@ -2575,6 +2666,30 @@
                     staff.join_date = join_date;
                     staff.position = position;
                     staff.role = role;
+
+                    if (client && staff.rawId) {
+                        try {
+                            await client.from('staff').update({
+                                full_name: name,
+                                phone_number: phone,
+                                role: dbRole,
+                                specialization: position,
+                                hire_date: join_date,
+                                updated_at: new Date().toISOString()
+                            }).eq('id', staff.rawId);
+
+                            await client.from('audit_log').insert({
+                                user_id: staff.rawId,
+                                action: 'STAFF_UPDATED',
+                                entity: 'staff',
+                                entity_id: staff.rawId,
+                                old_data: null,
+                                new_data: { full_name: name, phone_number: phone, role: dbRole, specialization: position }
+                            });
+                        } catch (err) {
+                            console.warn('Lỗi cập nhật staff Supabase:', err);
+                        }
+                    }
                     showToast(`Đã cập nhật thông tin nhân viên ${staff.name} (${staff.id})!`, 'success');
                 }
             } else {
@@ -2602,6 +2717,34 @@
                     serviceLocked: false,
                     note: 'Nhân sự mới bổ sung vào hệ thống PawPal'
                 };
+
+                if (client) {
+                    try {
+                        const { data: inserted } = await client.from('staff').insert({
+                            full_name: name,
+                            phone_number: phone,
+                            role: dbRole,
+                            specialization: position,
+                            hire_date: join_date
+                        }).select().single();
+
+                        if (inserted) {
+                            newStaff.rawId = inserted.id;
+                        }
+
+                        await client.from('audit_log').insert({
+                            user_id: inserted ? inserted.id : 'd0000000-0000-0000-0000-000000000001',
+                            action: 'STAFF_CREATED',
+                            entity: 'staff',
+                            entity_id: inserted ? inserted.id : newId,
+                            old_data: null,
+                            new_data: { full_name: name, phone_number: phone, role: dbRole, specialization: position }
+                        });
+                    } catch (err) {
+                        console.warn('Lỗi thêm staff Supabase:', err);
+                    }
+                }
+
                 mockStaff.unshift(newStaff);
                 selectedStaffId = newId;
                 showToast(`Đã thêm mới nhân viên ${newStaff.name} với mã ${newStaff.id}!`, 'success');
@@ -2921,7 +3064,7 @@
         document.getElementById('btnCancelShiftModal')?.addEventListener('click', () => shiftModalEl?.classList.remove('active'));
         document.getElementById('btnDismissShiftModal')?.addEventListener('click', () => shiftModalEl?.classList.remove('active'));
 
-        document.getElementById('btnSaveShift')?.addEventListener('click', () => {
+        document.getElementById('btnSaveShift')?.addEventListener('click', async () => {
             if (!mockRoster[modalActiveDate]) mockRoster[modalActiveDate] = {};
 
             mockStaff.forEach(s => {
@@ -2937,6 +3080,33 @@
                     mockRoster[modalActiveDate][s.id] = mockRoster[modalActiveDate][s.id].filter(sh => sh !== modalActiveShift);
                 }
             });
+
+            // Đồng bộ phân ca sang Supabase staff_schedule
+            try {
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client) {
+                    let startTime = '08:00:00', endTime = '12:00:00';
+                    if (modalActiveShift === 'AFTERNOON') { startTime = '13:00:00'; endTime = '17:00:00'; }
+                    else if (modalActiveShift === 'EVENING') { startTime = '17:30:00'; endTime = '21:30:00'; }
+                    else if (modalActiveShift === 'NIGHT') { startTime = '22:00:00'; endTime = '06:00:00'; }
+
+                    for (const s of mockStaff) {
+                        if (modalCurrentAssignedIds.includes(s.id)) {
+                            await client.from('staff_schedule').insert({
+                                staff_id: s.rawId || s.id,
+                                work_date: modalActiveDate,
+                                shift: modalActiveShift,
+                                start_time: startTime,
+                                end_time: endTime,
+                                work_location: 'Chi nhánh Quận 1',
+                                schedule_status: 'SCHEDULED'
+                            });
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn('Lỗi lưu staff_schedule Supabase:', err);
+            }
 
             saveRosterToStorage();
             shiftModalEl?.classList.remove('active');
