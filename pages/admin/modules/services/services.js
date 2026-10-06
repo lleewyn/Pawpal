@@ -13,9 +13,22 @@
         if (db && !forceReload) {
             try {
                 console.log('[Services] Đang nạp dữ liệu Dịch vụ & Lịch hẹn từ Supabase...');
-                const [appRes, svcRes, priceRes, revRes] = await Promise.all([
+                const [appRes, svcRes, priceRes, revRes, careLogRes] = await Promise.all([
                     db.from('appointment')
-                      .select('id, appointment_code, appointment_date, appointment_time, appointment_status, payment_status, total_price, note, customer(id, phone_main, customer_profile(full_name)), pet_profile(id, pet_code, pet_name, species, breed), service(id, service_code, service_name, service_category), staff(id, full_name)')
+                      .select(`
+                          id, 
+                          appointment_code, 
+                          appointment_date, 
+                          appointment_time, 
+                          appointment_status, 
+                          payment_status, 
+                          total_price, 
+                          note, 
+                          customer:customer_id (id, phone_main, customer_profile (full_name)), 
+                          pet_profile:pet_id (id, pet_code, pet_name, species, breed, weight, date_of_birth, allergy, vaccination_history, routine, avatar_url), 
+                          service:service_id (id, service_code, service_name, service_category, estimated_duration, checklist, benefits, amenities), 
+                          staff:staff_id (id, full_name, role)
+                      `)
                       .order('created_at', { ascending: false }),
                     db.from('service')
                       .select('*')
@@ -23,9 +36,13 @@
                     db.from('service_price_matrix')
                       .select('*'),
                     db.from('review')
-                      .select('id, rating, review_content, review_type, created_at, customer(id, customer_profile(full_name)), service(id, service_name)')
-                      .order('created_at', { ascending: false })
+                      .select('id, rating, review_content, review_type, created_at, shop_reply, customer:customer_id(id, customer_profile(full_name)), service:service_id(id, service_name)')
+                      .order('created_at', { ascending: false }),
+                    db.from('care_log')
+                      .select('*, care_action(*), care_log_media(*)')
                 ]);
+
+                const careLogs = (!careLogRes.error && careLogRes.data) ? careLogRes.data : [];
 
                 if (!appRes.error && appRes.data && appRes.data.length > 0) {
                     bookingsData = appRes.data.map((item, idx) => {
@@ -47,24 +64,43 @@
                         const petBreed = item.pet_profile?.breed || 'Thú cưng';
                         const serviceName = item.service?.service_name || 'Dịch vụ Spa';
                         const staff = item.staff?.full_name || null;
+                        const petWeight = item.pet_profile?.weight ? `${item.pet_profile.weight} kg` : '4.5 kg';
+                        const petAllergy = item.pet_profile?.allergy || (item.note && item.note.toLowerCase().includes('dị ứng') ? item.note : null);
+
+                        // Tìm care logs thuộc về appointment này
+                        const relatedLogs = careLogs.filter(cl => cl.appointment_id === item.id || cl.pet_id === item.pet_profile?.id);
 
                         return {
                             id: item.appointment_code || 'BKG-' + (1000 + idx),
                             dbId: item.id,
+                            userId: item.customer?.id || 'USER-001',
                             customerName,
                             phone,
                             petName,
                             petBreed,
                             petId: item.pet_profile?.pet_code || 'PET-001',
+                            petWeight,
+                            petAge: item.pet_profile?.date_of_birth ? '2 tuổi' : 'Chưa rõ',
+                            petAlert: petAllergy,
                             category: cat,
                             categoryName: cat === 'Hotel' ? 'Pet Hotel' : (cat === 'Taxi' ? 'Pet Taxi' : 'Spa và Grooming'),
                             serviceName,
+                            duration: item.service?.estimated_duration ? `${item.service.estimated_duration} phút` : '60 phút',
                             date: item.appointment_date || '2026-07-10',
                             time: item.appointment_time ? item.appointment_time.substring(0, 5) : '09:00',
                             staff,
+                            price: item.total_price || 0,
                             total: item.total_price || 0,
                             paymentStatus: item.payment_status === 'PAID' ? 'Đã thanh toán' : 'Chưa thu',
-                            status
+                            status,
+                            alertType: (status === 'confirmed' && idx < 3) ? 'upcoming' : null,
+                            careLogs: relatedLogs,
+                            timeline: [
+                                { title: 'Đặt lịch hẹn', time: item.appointment_time ? item.appointment_time.substring(0, 5) : '09:00', desc: 'Khách hàng đặt trực tuyến', done: true },
+                                { title: 'Tiếp nhận an toàn', time: '09:15', desc: 'KTV kiểm tra da lông, mắt tai', done: status === 'in_progress' || status === 'completed' },
+                                { title: 'Thực hiện dịch vụ', time: '09:30', desc: serviceName, done: status === 'in_progress' || status === 'completed' },
+                                { title: 'Hoàn tất & Trả bé', time: '10:30', desc: 'Bàn giao cho chủ nuôi', done: status === 'completed' }
+                            ]
                         };
                     });
                 }
@@ -114,6 +150,7 @@
                         serviceName: r.service?.service_name || 'Dịch vụ Spa',
                         star: r.rating || 5,
                         comment: r.review_content || 'Dịch vụ rất tốt',
+                        reply: r.shop_reply || '',
                         date: r.created_at ? r.created_at.split('T')[0] : '2026-07-08',
                         status: 'approved'
                     }));
