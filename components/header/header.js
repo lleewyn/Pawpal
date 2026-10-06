@@ -25,67 +25,93 @@
         return './';
     }
 
-    const mockNotifications = [
-        {
-            id: 1,
-            isRead: false,
-            title: "Khuyến mãi 20% Dịch vụ Spa cuối tuần này",
-            time: "cách đây 2 giờ",
-            url: "#",
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>`
-        },
-        {
-            id: 2,
-            isRead: false,
-            title: "Bé Cún đã hoàn thành dịch vụ Tắm và Cắt tỉa.",
-            time: "cách đây 4 giờ",
-            url: "#",
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`
-        },
-        {
-            id: 3,
-            isRead: true,
-            title: "Nhắc nhở: Lịch hẹn Khám sức khỏe ngày mai (05/07)",
-            time: "cách đây 1 ngày",
-            url: "#",
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`
-        },
-        {
-            id: 4,
-            isRead: true,
-            title: "Bạn có hoạt động sắp hết hạn (Mã giảm giá Paw10)",
-            time: "cách đây 4 ngày 6 giờ",
-            url: "#",
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`
-        },
-        {
-            id: 5,
-            isRead: true,
-            title: "Đơn hàng #PP-2894 đã được giao thành công.",
-            time: "cách đây 9 ngày 11 giờ",
-            url: "#",
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>`
-        }
-    ];
+    function getSharedNotifications() {
+        try {
+            const notis = JSON.parse(localStorage.getItem('pawpal_notifications') || '[]');
+            if (Array.isArray(notis) && notis.length > 0) return notis;
+        } catch (e) {}
+        return [];
+    }
+
+    function getRelativeTimeString(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        const diffMs = Date.now() - date.getTime();
+        const diffMin = Math.floor(diffMs / 60000);
+        if (diffMin < 1) return 'Vừa xong';
+        if (diffMin < 60) return `${diffMin} phút trước`;
+        const diffHour = Math.floor(diffMin / 60);
+        if (diffHour < 24) return `${diffHour} giờ trước`;
+        const diffDay = Math.floor(diffHour / 24);
+        if (diffDay < 7) return `${diffDay} ngày trước`;
+        
+        const d = String(date.getDate()).padStart(2, '0');
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const y = date.getFullYear();
+        return `${d}/${m}/${y}`;
+    }
 
     function renderNotifications() {
-        if (!mockNotifications || !mockNotifications.length) {
+        const notis = getSharedNotifications();
+        if (!notis || !notis.length) {
             return `
                 <div style="padding: 24px; text-align: center; color: #4F7A65; font-size: 13.5px;">
                     Bạn không có thông báo mới nào.
                 </div>
             `;
         }
-        return mockNotifications.map(n => `
-            <a href="${n.url || '#'}" class="notification-item ${n.isRead ? '' : 'notification-item--unread'}">
-                <div class="notification-item__content">
-                    <p class="notification-item__title">${n.title}</p>
-                    <span class="notification-item__time">${n.time}</span>
-                </div>
-                ${!n.isRead ? '<div class="notification-item__dot"></div>' : ''}
+        const sorted = [...notis].sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
+        return sorted.map(n => `
+            <a href="${n.link || n.url || '#'}" class="notification-item-dropdown ${n.read || n.isRead ? '' : 'unread'}" data-id="${n.id}">
+                ${!(n.read || n.isRead) ? '<span class="unread-dot"></span>' : ''}
+                <span class="item-content">
+                    <span class="item-title">${n.title || 'Thông báo'}</span>
+                    <span class="item-text">${n.content || n.message || ''}</span>
+                    <span class="item-time">${getRelativeTimeString(n.time || n.sent_at)}</span>
+                </span>
             </a>
         `).join('');
     }
+
+    window.updateNotificationBadge = function() {
+        const notis = getSharedNotifications();
+        const unreadCount = notis.filter(n => !n.read && !n.isRead).length;
+        const badge = document.getElementById('notificationBadge');
+        if (badge) {
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+                badge.textContent = '0';
+            }
+        }
+        const list = document.getElementById('headerNotificationList');
+        if (list) {
+            list.innerHTML = renderNotifications();
+            // Gắn sự kiện click cho từng item
+            list.querySelectorAll('.notification-item-dropdown').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const notiId = item.getAttribute('data-id');
+                    const allNotis = getSharedNotifications();
+                    const targetNoti = allNotis.find(x => String(x.id) === String(notiId));
+                    if (targetNoti) {
+                        targetNoti.read = true;
+                        targetNoti.isRead = true;
+                        localStorage.setItem('pawpal_notifications', JSON.stringify(allNotis));
+                        window.updateNotificationBadge();
+                    }
+                });
+            });
+        }
+    };
+
+    document.addEventListener('notifications_updated', () => {
+        if (typeof window.updateNotificationBadge === 'function') {
+            window.updateNotificationBadge();
+        }
+    });
 
     window.updateCartBadge = async function() {
         let totalItems = 0;
@@ -282,17 +308,17 @@
             
             authActions.innerHTML = `
                 <div class="notification-menu-wrapper me-3">
-                    <button class="notification-btn position-relative" id="headerNotificationBtn" title="Thông báo">
+                    <button class="notification-btn position-relative" id="headerNotificationBtn" title="Thông báo" type="button">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
-                        <span class="notification-badge" id="notificationBadge">${mockNotifications.filter(n => !n.isRead).length}</span>
+                        <span class="notification-badge" id="notificationBadge">0</span>
                     </button>
                     <div class="notification-dropdown" id="notificationDropdown">
                         <div class="notification-dropdown-header">
                             <span>Thông báo</span>
-                            <button class="btn-mark-all-read" id="btnMarkAllRead">Đọc tất cả</button>
+                            <button class="btn-mark-all-read" id="btnMarkAllRead" type="button">Đọc tất cả</button>
                         </div>
                         <div class="notification-list" id="headerNotificationList">
                             ${renderNotifications()}
@@ -359,17 +385,17 @@
 
             authActions.innerHTML = `
                 <div class="notification-menu-wrapper me-3">
-                    <button class="notification-btn position-relative" id="headerNotificationBtn" title="Thông báo">
+                    <button class="notification-btn position-relative" id="headerNotificationBtn" title="Thông báo" type="button">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
-                        <span class="notification-badge" id="notificationBadge">${mockNotifications.filter(n => !n.isRead).length}</span>
+                        <span class="notification-badge" id="notificationBadge">0</span>
                     </button>
                     <div class="notification-dropdown" id="notificationDropdown">
                         <div class="notification-dropdown-header">
                             <span>Thông báo</span>
-                            <button class="btn-mark-all-read" id="btnMarkAllRead">Đọc tất cả</button>
+                            <button class="btn-mark-all-read" id="btnMarkAllRead" type="button">Đọc tất cả</button>
                         </div>
                         <div class="notification-list" id="headerNotificationList">
                             ${renderNotifications()}
@@ -413,17 +439,17 @@
             
             authActions.innerHTML = `
                 <div class="notification-menu-wrapper me-3">
-                    <button class="notification-btn position-relative" id="headerNotificationBtn" title="Thông báo">
+                    <button class="notification-btn position-relative" id="headerNotificationBtn" title="Thông báo" type="button">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
-                        <span class="notification-badge" id="notificationBadge">${mockNotifications.filter(n => !n.isRead).length}</span>
+                        <span class="notification-badge" id="notificationBadge">0</span>
                     </button>
                     <div class="notification-dropdown" id="notificationDropdown">
                         <div class="notification-dropdown-header">
                             <span>Thông báo</span>
-                            <button class="btn-mark-all-read" id="btnMarkAllRead">Đọc tất cả</button>
+                            <button class="btn-mark-all-read" id="btnMarkAllRead" type="button">Đọc tất cả</button>
                         </div>
                         <div class="notification-list" id="headerNotificationList">
                             ${renderNotifications()}
@@ -462,6 +488,9 @@
         }
 
         // Thực thi cập nhật số lượng badge tức thì
+        if (typeof window.updateNotificationBadge === 'function') {
+            window.updateNotificationBadge();
+        }
         window.updateCartBadge(true);
     }
     
