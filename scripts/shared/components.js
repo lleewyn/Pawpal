@@ -232,6 +232,20 @@
         injectComponent('user-sidebar', root + 'components/user-sidebar/user-sidebar.html');
         
         initLucideIcons();
+        ensureSpaRouter();
+    }
+
+    function ensureSpaRouter() {
+        var path = window.location.pathname;
+        if (path.startsWith('/admin') || path.startsWith('/pages/admin') || path.startsWith('/user') || path.startsWith('/pages/user')) {
+            return;
+        }
+        if (!document.querySelector('script[src*="spa-router.js"]')) {
+            var script = document.createElement('script');
+            script.src = getRootPath() + 'scripts/shared/spa-router.js';
+            script.defer = true;
+            document.head.appendChild(script);
+        }
     }
 
     if (document.readyState === 'loading') {

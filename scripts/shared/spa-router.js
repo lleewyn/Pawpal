@@ -7,6 +7,19 @@
     if (window.PawPalSPARouterReady) return;
     window.PawPalSPARouterReady = true;
 
+    // Các script shared đã được load ở mọi trang — KHÔNG load lại
+    const SHARED_SCRIPT_PATTERNS = [
+        'components.js', 'header.js', 'main.js', 'auth.js',
+        'spa-router.js', 'supabase', 'bootstrap', 'lenis',
+        'gsap', 'ScrollTrigger', 'lucide', 'data-loader.js',
+        'api-global.js', 'supabase-client.js', 'notifications-handler.js',
+        'support-handler.js', 'fab.js'
+    ];
+
+    function isSharedScript(src) {
+        return SHARED_SCRIPT_PATTERNS.some(p => src.includes(p));
+    }
+
     async function spaNavigateTo(url, pushState = true) {
         try {
             const targetUrl = new URL(url, window.location.origin);
@@ -58,7 +71,7 @@
                 document.title = doc.title;
             }
 
-            // Đồng bộ thẻ body class nếu cần
+            // Đồng bộ thẻ body class
             if (doc.body && doc.body.className) {
                 document.body.className = doc.body.className;
             }
@@ -66,7 +79,7 @@
             // Nạp các file CSS mới của trang đích
             doc.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
                 const href = link.getAttribute('href');
-                if (href && !document.querySelector(`link[href="${href}"]`)) {
+                if (href && !document.querySelector('link[href="' + href + '"]')) {
                     const newLink = document.createElement('link');
                     newLink.rel = 'stylesheet';
                     newLink.href = href;
@@ -87,36 +100,55 @@
             // Cuộn lên đầu trang
             window.scrollTo({ top: 0, behavior: 'instant' });
 
-            // Nạp và thực thi các script của trang mới
-            doc.querySelectorAll('main script, body script[src*="services.js"], body script[src*="shop.js"], body script[src*="about.js"], body script[src*="contact.js"], body script[src*="blog.js"], body script[src*="booking.js"]').forEach(s => {
-                const script = document.createElement('script');
-                if (s.src) {
-                    script.src = s.src + (s.src.includes('?') ? '&' : '?') + 't=' + Date.now();
-                    script.defer = true;
-                } else {
-                    script.textContent = s.textContent;
-                }
-                document.body.appendChild(script);
+            // Track các script đã load
+            const loadedSrcs = new Set(
+                Array.from(document.querySelectorAll('script[src]')).map(function(s) {
+                    try { return new URL(s.src, window.location.origin).pathname; } catch (e) { return s.src; }
+                })
+            );
+
+            // Tìm script page-specific (không phải shared)
+            const pageScripts = Array.from(doc.querySelectorAll('body script[src]')).filter(function(s) {
+                const rawSrc = s.getAttribute('src') || '';
+                if (isSharedScript(rawSrc)) return false;
+                try {
+                    const pathname = new URL(rawSrc, targetUrl.origin).pathname;
+                    return !loadedSrcs.has(pathname);
+                } catch (e) { return false; }
             });
 
-            // Khôi phục hiển thị mượt mà
-            requestAnimationFrame(() => {
+            // Load tuần tự từng script page-specific với cache-bust
+            for (const s of pageScripts) {
+                await new Promise(function(resolve) {
+                    const script = document.createElement('script');
+                    const rawSrc = s.getAttribute('src');
+                    script.src = rawSrc + (rawSrc.includes('?') ? '&' : '?') + 't=' + Date.now();
+                    if (s.type === 'module') script.type = 'module';
+                    script.defer = true;
+                    script.onload = resolve;
+                    script.onerror = resolve;
+                    document.body.appendChild(script);
+                });
+            }
+
+            // Chạy inline script trong <main>
+            currentMain.querySelectorAll('script:not([src])').forEach(function(s) {
+                const inline = document.createElement('script');
+                inline.textContent = s.textContent;
+                document.body.appendChild(inline);
+            });
+
+            // Khôi phục hiển thị
+            requestAnimationFrame(function() {
                 currentMain.style.opacity = '1';
             });
 
-            // Kích hoạt lại các module liên quan
-            if (typeof window.initActiveNav === 'function') {
-                window.initActiveNav();
-            }
-            if (typeof window.initApp === 'function') {
-                window.initApp();
-            }
-            if (typeof window.initLucideIcons === 'function') {
-                window.initLucideIcons();
-            }
-            if (typeof window.updateCartBadge === 'function') {
-                window.updateCartBadge();
-            }
+            // Kích hoạt lại các module
+            if (typeof window.initActiveNav === 'function') window.initActiveNav();
+            if (typeof window.initApp === 'function') window.initApp();
+            if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
+            if (typeof window.updateNotificationBadge === 'function') window.updateNotificationBadge();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
 
             document.dispatchEvent(new CustomEvent('page_navigated', { detail: { url: targetUrl.href } }));
 
@@ -127,33 +159,30 @@
     }
 
     // Đón bắt toàn bộ sự kiện click link nội bộ
-    document.addEventListener('click', function (e) {
+    document.addEventListener('click', function(e) {
         const link = e.target.closest('a');
         if (!link) return;
 
         const href = link.getAttribute('href');
         if (!href) return;
 
-        // Bỏ qua các liên kết không phải navigation
         if (href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
         if (link.target === '_blank' || link.hasAttribute('download')) return;
 
         try {
             const targetUrl = new URL(link.href, window.location.origin);
             if (targetUrl.origin !== window.location.origin) return;
-
-            // Bỏ qua các file tài nguyên tĩnh
             if (/\.(png|jpg|jpeg|gif|webp|svg|pdf|zip|mp4)$/i.test(targetUrl.pathname)) return;
 
             e.preventDefault();
             spaNavigateTo(targetUrl.href, true);
         } catch (error) {
-            // Nếu parse URL lỗi thì để browser điều hướng tự nhiên
+            // parse URL lỗi — để browser xử lý
         }
     });
 
-    // Lắng nghe nút Back/Forward của trình duyệt
-    window.addEventListener('popstate', function () {
+    // Lắng nghe nút Back/Forward
+    window.addEventListener('popstate', function() {
         spaNavigateTo(window.location.href, false);
     });
 

@@ -122,7 +122,7 @@
                 hasLocalCart = true;
                 const cartList = JSON.parse(rawCart);
                 if (Array.isArray(cartList)) {
-                    totalItems = cartList.length;
+                    totalItems = cartList.reduce((sum, item) => sum + Number(item.quantity ?? item.qty ?? 1), 0);
                 }
             }
         } catch(e) {}
@@ -135,7 +135,7 @@
             try {
                 const cart = await window.API.getUserCart(currentUser.id);
                 if (Array.isArray(cart)) {
-                    totalItems = cart.length;
+                    totalItems = cart.reduce((sum, item) => sum + Number(item.quantity ?? item.qty ?? 1), 0);
                 }
             } catch (e) {
                 console.error("Failed to update cart badge", e);
@@ -170,24 +170,21 @@
             const item = el.closest('.nav-item') || el;
             if (isVisible) {
                 item.classList.remove('d-none');
-                item.classList.remove('d-none');
             } else {
-                item.classList.add('d-none');
                 item.classList.add('d-none');
             }
         });
     }
-
 
     function syncMobileAuthLinks(state) {
         const nav = document.getElementById('primaryNavigation');
         if (!nav) return;
 
         const loginLinks = nav.querySelectorAll(
-            'a[href*="login.html"], a[href*="login/login.html"], a[href*="#register"], a[href*="action=register"]'
+            'a[href*="/login"], a[href*="login.html"], a[href*="#register"], a[href*="action=register"]'
         );
         const guestLoginItems = nav.querySelectorAll(
-            '.mobile-guest-only, .nav-link-cta-mobile, .mobile-auth-login, a[href*="login.html"], a[href*="login/login.html"], a[href*="#register"], a[href*="action=register"]'
+            '.mobile-guest-only, .mobile-auth-login'
         );
         const userOnlyItems = nav.querySelectorAll('.mobile-user-only');
         const tempOnlyItems = nav.querySelectorAll('.mobile-temp-only');
@@ -198,12 +195,11 @@
         loginLinks.forEach((link) => {
             const label = (link.textContent || '').trim().toLowerCase();
             if (label.includes('đăng nhập') || label.includes('đăng ký') || label.includes('login') || label.includes('register')) {
+                const item = link.closest('.nav-item') || link;
                 if (isUser) {
-                    link.classList.add('d-none');
-                    link.classList.add('d-none');
-                } else {
-                    link.classList.remove('d-none');
-                    link.classList.remove('d-none');
+                    item.classList.add('d-none');
+                } else if (!isTemp) {
+                    item.classList.remove('d-none');
                 }
             }
         });
@@ -326,11 +322,11 @@
                                 ${renderNotifications()}
                             </div>
                             <div class="notification-dropdown-footer">
-                                <a href="${root}pages/user/#notifications" id="btnSeeAllNotis">Xem tất cả</a>
+                                <a href="/pages/user/#notifications" id="btnSeeAllNotis">Xem tất cả</a>
                             </div>
                         </div>
                     </div>
-                    <a href="${root}pages/shop/cart/cart.html" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi">
+                    <a href="/cart" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="9" cy="21" r="1"></circle>
                             <circle cx="20" cy="21" r="1"></circle>
@@ -356,14 +352,14 @@
                                 </div>
                             </div>
                             <div class="dropdown-divider"></div>
-                            <a href="${root}pages/user/#profile" class="dropdown-item">Tài khoản của tôi</a>
-                            <a href="${root}pages/user/#pets" class="dropdown-item">Hồ sơ bé cưng</a>
-                            <a href="${root}pages/user/#bookings" class="dropdown-item">Lịch hẹn của bé</a>
-                            <a href="${root}pages/user/#orders" class="dropdown-item">Đơn hàng của bé</a>
-                            <a href="${root}pages/user/#wishlist" class="dropdown-item">Yêu thích</a>
-                            <a href="${root}pages/user/#diary" class="dropdown-item">Nhật ký chăm sóc</a>
-                            <a href="${root}pages/user/#loyalty" class="dropdown-item">Paw Points</a>
-                            <a href="${root}pages/user/#settings" class="dropdown-item">Cài đặt</a>
+                            <a href="/pages/user/#profile" class="dropdown-item">Tài khoản của tôi</a>
+                            <a href="/pages/user/#pets" class="dropdown-item">Hồ sơ bé cưng</a>
+                            <a href="/pages/user/#bookings" class="dropdown-item">Lịch hẹn của bé</a>
+                            <a href="/pages/user/#orders" class="dropdown-item">Đơn hàng của bé</a>
+                            <a href="/pages/user/#wishlist" class="dropdown-item">Yêu thích</a>
+                            <a href="/pages/user/#diary" class="dropdown-item">Nhật ký chăm sóc</a>
+                            <a href="/pages/user/#loyalty" class="dropdown-item">Paw Points</a>
+                            <a href="/pages/user/#settings" class="dropdown-item">Cài đặt</a>
                             <div class="dropdown-divider"></div>
                             <button class="dropdown-item dropdown-item-danger" id="btnLogout">Đăng xuất</button>
                         </div>
@@ -392,7 +388,7 @@
             if (lookupDivider) lookupDivider.classList.remove('d-none');
 
             authActions.innerHTML = `
-                <a href="${root}pages/shop/cart/cart.html" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi">
+                <a href="/cart" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="9" cy="21" r="1"></circle>
                         <circle cx="20" cy="21" r="1"></circle>
@@ -400,7 +396,7 @@
                     </svg>
                     <span class="cart-badge">0</span>
                 </a>
-                <a href="${root}pages/public/login/login.html" class="login-btn">
+                <a href="/login" class="login-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -408,7 +404,7 @@
                     </svg>
                     <span>Đăng nhập</span>
                 </a>
-                <a href="${root}pages/public/login/login.html?action=setup-password" class="btn-signup">Kích hoạt</a>
+                <a href="/login?action=setup-password" class="btn-signup">Kích hoạt</a>
             `;
 
             // Mobile Nav
@@ -425,7 +421,7 @@
             if (lookupDivider) lookupDivider.classList.remove('d-none');
             
             authActions.innerHTML = `
-                <a href="${root}pages/shop/cart/cart.html" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi">
+                <a href="/cart" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="9" cy="21" r="1"></circle>
                         <circle cx="20" cy="21" r="1"></circle>
@@ -433,7 +429,7 @@
                     </svg>
                     <span class="cart-badge">0</span>
                 </a>
-                <a href="${root}pages/public/login/login.html" class="login-btn">
+                <a href="/login" class="login-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -441,7 +437,7 @@
                     </svg>
                     <span>Đăng nhập</span>
                 </a>
-                <a href="${root}pages/public/login/login.html#register" class="btn-signup">Đăng ký</a>
+                <a href="/login#register" class="btn-signup">Đăng ký</a>
             `;
             
             // Cập nhật Mobile Nav
@@ -466,8 +462,8 @@
         const notiToggle = document.getElementById('headerNotificationBtn');
         const notiDropdown = document.getElementById('notificationDropdown');
         
-        if (toggle && dropdown) {
-            // Đóng/mở dropdown
+        if (toggle && dropdown && toggle.dataset.dropdownBound !== 'true') {
+            toggle.dataset.dropdownBound = 'true';
             toggle.addEventListener('click', (e) => {
                 e.stopPropagation();
                 dropdown.classList.toggle('show');
@@ -475,7 +471,8 @@
             });
         }
 
-        if (notiToggle && notiDropdown) {
+        if (notiToggle && notiDropdown && notiToggle.dataset.dropdownBound !== 'true') {
+            notiToggle.dataset.dropdownBound = 'true';
             notiToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
                 notiDropdown.classList.toggle('show');
@@ -483,11 +480,19 @@
             });
 
             const btnMarkAll = notiDropdown.querySelector('#btnMarkAllRead');
-            if (btnMarkAll) {
+            if (btnMarkAll && btnMarkAll.dataset.bound !== 'true') {
+                btnMarkAll.dataset.bound = 'true';
                 btnMarkAll.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    mockNotifications.forEach(n => n.isRead = true);
+                    try {
+                        const notis = getSharedNotifications();
+                        if (Array.isArray(notis)) {
+                            notis.forEach(n => { n.read = true; n.isRead = true; });
+                            localStorage.setItem('pawpal_notifications', JSON.stringify(notis));
+                            document.dispatchEvent(new CustomEvent('notifications_updated'));
+                        }
+                    } catch(err) {}
                     const list = document.getElementById('headerNotificationList');
                     if (list) list.innerHTML = renderNotifications();
                     const badge = document.getElementById('notificationBadge');
@@ -495,18 +500,11 @@
                         badge.style.display = 'none';
                         badge.textContent = '0';
                     }
-                    try {
-                        const notis = JSON.parse(localStorage.getItem('pawpal_notifications') || '[]');
-                        if (Array.isArray(notis)) {
-                            notis.forEach(n => n.read = true);
-                            localStorage.setItem('pawpal_notifications', JSON.stringify(notis));
-                            document.dispatchEvent(new CustomEvent('notifications_updated'));
-                        }
-                    } catch(err) {}
                 });
             }
             const btnSeeAll = notiDropdown.querySelector('#btnSeeAllNotis');
-            if (btnSeeAll) {
+            if (btnSeeAll && btnSeeAll.dataset.bound !== 'true') {
+                btnSeeAll.dataset.bound = 'true';
                 btnSeeAll.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -516,18 +514,20 @@
             }
         }
         
-        // Đóng dropdown khi click ra ngoài (ngoại trừ dropdown)
-        document.addEventListener('click', (e) => {
-            if (dropdown && !e.target.closest('.user-menu-wrapper')) {
-                dropdown.classList.remove('show');
-            }
-            if (notiDropdown && !e.target.closest('.notification-menu-wrapper')) {
-                notiDropdown.classList.remove('show');
-            }
-        });
-        
         setupLogoutButtons();
     }
+
+    // Đóng dropdown khi click ra ngoài (đăng ký 1 lần duy nhất)
+    document.addEventListener('click', (e) => {
+        const dropdown = document.getElementById('userDropdown');
+        const notiDropdown = document.getElementById('notificationDropdown');
+        if (dropdown && !e.target.closest('.user-menu-wrapper')) {
+            dropdown.classList.remove('show');
+        }
+        if (notiDropdown && !e.target.closest('.notification-menu-wrapper')) {
+            notiDropdown.classList.remove('show');
+        }
+    });
 
     function handleGlobalLogout(e) {
         if (e) {
@@ -539,6 +539,7 @@
             sessionStorage.removeItem('pawpal_current_user');
             localStorage.removeItem('pawpal_cart');
             sessionStorage.removeItem('pawpal_cart');
+            localStorage.removeItem('pawpal_notifications');
             sessionStorage.removeItem('pawpal_component_site-header');
             localStorage.removeItem('pawpal_component_site-header');
         } catch(err) {}
@@ -654,11 +655,10 @@
 
             // Đánh dấu đã đọc tất cả
             overlay.querySelector('#btnModalMarkAllRead').addEventListener('click', () => {
-                mockNotifications.forEach(n => n.isRead = true);
                 try {
-                    const notis = JSON.parse(localStorage.getItem('pawpal_notifications') || '[]');
+                    const notis = getSharedNotifications();
                     if (Array.isArray(notis)) {
-                        notis.forEach(n => n.read = true);
+                        notis.forEach(n => { n.read = true; n.isRead = true; });
                         localStorage.setItem('pawpal_notifications', JSON.stringify(notis));
                         document.dispatchEvent(new CustomEvent('notifications_updated'));
                     }
@@ -712,13 +712,15 @@
 
             // Đánh dấu đã đọc
             noti.isRead = true;
-            const matched = mockNotifications.find(x => String(x.id) === String(noti.id));
-            if (matched) matched.isRead = true;
+            noti.read = true;
             try {
-                const notis = JSON.parse(localStorage.getItem('pawpal_notifications') || '[]');
+                const notis = getSharedNotifications();
                 if (Array.isArray(notis)) {
                     const found = notis.find(x => String(x.id) === String(noti.id));
-                    if (found) found.read = true;
+                    if (found) {
+                        found.read = true;
+                        found.isRead = true;
+                    }
                     localStorage.setItem('pawpal_notifications', JSON.stringify(notis));
                     document.dispatchEvent(new CustomEvent('notifications_updated'));
                 }
@@ -735,21 +737,20 @@
 
             const category = getNotiCategoryName(noti);
             const formattedTime = formatNotiTime(noti.time);
-            const root = getRootPath();
             
             // Xử lý link đích nếu có
             let actionText = '';
-            let targetUrl = noti.url || '#';
+            let targetUrl = noti.url || noti.link || '#';
             if (category === 'Dịch vụ') {
                 actionText = 'Xem lịch hẹn của bé';
-                if (!noti.url || noti.url === '#') targetUrl = `${root}pages/user/#bookings`;
+                if (!targetUrl || targetUrl === '#') targetUrl = '/pages/user/#bookings';
             } else if (category === 'Đơn hàng') {
                 actionText = 'Xem đơn hàng của bé';
-                if (!noti.url || noti.url === '#') targetUrl = `${root}pages/user/#orders`;
+                if (!targetUrl || targetUrl === '#') targetUrl = '/pages/user/#orders';
             } else if (category === 'Ưu đãi') {
                 actionText = 'Xem ưu đãi Paw Points';
-                if (!noti.url || noti.url === '#') targetUrl = `${root}pages/user/#loyalty`;
-            } else if (noti.url && noti.url !== '#' && noti.url !== '') {
+                if (!targetUrl || targetUrl === '#') targetUrl = '/pages/user/#loyalty';
+            } else if (targetUrl && targetUrl !== '#' && targetUrl !== '') {
                 actionText = 'Đến trang liên kết';
             }
 
@@ -791,23 +792,19 @@
 
             let items = [];
             try {
-                const stored = JSON.parse(localStorage.getItem('pawpal_notifications') || '[]');
+                const stored = getSharedNotifications();
                 if (Array.isArray(stored) && stored.length > 0) {
                     items = stored.map(s => ({
                         id: s.id,
                         title: s.title,
                         content: s.content || s.message,
                         time: s.time,
-                        isRead: Boolean(s.read),
+                        isRead: Boolean(s.read || s.isRead),
                         type: s.type || 'info',
-                        url: s.link || '#'
+                        url: s.link || s.url || '#'
                     }));
                 }
             } catch(e) {}
-
-            if (!items.length) {
-                items = mockNotifications;
-            }
 
             let filtered = items;
             if (filterType === 'unread') {
@@ -900,24 +897,7 @@
         });
     }
 
-    function setupLogoutButtons() {
-        // Gắn sự kiện click đăng xuất cho cả nút desktop và mobile
-        document.querySelectorAll('#btnLogout, .mobile-logout-btn').forEach(btn => {
-            // Tránh lặp sự kiện bằng cách clone và thay thế
-            const newBtn = btn.cloneNode(true);
-            btn.parentNode.replaceChild(newBtn, btn);
-            
-            newBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (confirm('Bạn có chắc muốn đăng xuất?')) {
-                    localStorage.removeItem('pawpal_current_user');
-                    localStorage.removeItem('pawpal_notifications');
-                    try { sessionStorage.clear(); } catch(e) {}
-                    window.location.href = '/pages/public/landing/landing.html';
-                }
-            });
-        });
-    }
+
     
     // -------------------------------------------------------------
     // TÍCH HỢP DẢI THÔNG BÁO TOP-BAR TỪ PHÂN HỆ CẤU HÌNH ADMIN (GIAI ĐOẠN 2)
@@ -952,7 +932,7 @@
                     position: relative;
                     letter-spacing: 0.1px;
                 `;
-                const siteHeader = document.getElementById('site-header') || document.body;
+                const siteHeader = document.getElementById('mainHeader') || document.querySelector('.main-header') || document.getElementById('site-header') || document.body;
                 if (siteHeader === document.body) {
                     document.body.insertBefore(topBarEl, document.body.firstChild);
                 } else {
@@ -971,6 +951,43 @@
         } catch (e) {
             console.warn('Lỗi hiển thị topbar notice:', e);
         }
+    }
+
+    // -------------------------------------------------------------
+    // TÌM KIẾM TRÊN HEADER (ĐIỀU HƯỚNG TỚI /shop?search=...)
+    // -------------------------------------------------------------
+    function setupHeaderSearch() {
+        document.querySelectorAll('.search-bar').forEach(bar => {
+            if (bar.dataset.searchBound === 'true') return;
+            bar.dataset.searchBound = 'true';
+
+            const input = bar.querySelector('input');
+            const icon = bar.querySelector('.search-icon');
+            if (!input) return;
+
+            const executeSearch = () => {
+                const query = input.value.trim();
+                if (query) {
+                    window.location.href = `/shop?search=${encodeURIComponent(query)}`;
+                }
+            };
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    executeSearch();
+                }
+            });
+
+            if (icon) {
+                icon.style.cursor = 'pointer';
+                icon.style.pointerEvents = 'auto';
+                icon.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    executeSearch();
+                });
+            }
+        });
     }
 
     // -------------------------------------------------------------
@@ -1138,6 +1155,7 @@
     // Chạy khi header được chèn vào HTML
     document.addEventListener('headerInjected', () => {
         updateHeaderAuth();
+        setupHeaderSearch();
         renderDynamicTopBarNotice();
         initMobileNavigation();
     });
@@ -1146,11 +1164,13 @@
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             updateHeaderAuth();
+            setupHeaderSearch();
             renderDynamicTopBarNotice();
             initMobileNavigation();
         });
     } else {
         updateHeaderAuth();
+        setupHeaderSearch();
         renderDynamicTopBarNotice();
         initMobileNavigation();
     }

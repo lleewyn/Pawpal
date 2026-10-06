@@ -561,6 +561,13 @@ async function initShop() {
             }
         }
 
+        const searchParam = urlParams.get('search') || urlParams.get('q');
+        if (searchParam) {
+            state.filters.search = searchParam.trim();
+            const shopSearchInput = document.getElementById('searchInput');
+            if (shopSearchInput) shopSearchInput.value = searchParam.trim();
+        }
+
         initToolbar();
         initBrands();
         initMobileFilter();

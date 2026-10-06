@@ -44,10 +44,7 @@
     z-index: 9999 !important;
 }
 
-/* Sửa lỗi nhỏ: đảm bảo các thành phần không bị đè lên nhau */
-.main-header * {
-    z-index: 1001;
-}
+
 
 .main-header .navbar {
     width: 100%;
@@ -795,7 +792,7 @@
     visibility: hidden;
     transform: translateY(-10px);
     transition: all 0.3s ease;
-    z-index: 1000;
+    z-index: 1050;
 }
 
 .user-dropdown.show {
