@@ -1096,21 +1096,40 @@
             } else if (action === 'adjust-points') {
                 openAdjustPointsModal(customerDatabase[custId].phone);
             } else if (action === 'toggle-lock') {
-                if (customerDatabase[custId].status === 'LOCKED') {
-                    customerDatabase[custId].status = 'ACTIVE';
-                    customerDatabase[custId].authStatus = 'Đã kích hoạt';
-                    persistCustomersData();
-                    renderCustomersTable();
-                    updateCustomerKPIs();
-                    showToast(`Đã mở khóa tài khoản khách hàng ${customerDatabase[custId].name}!`);
-                } else {
-                    customerDatabase[custId].status = 'LOCKED';
-                    customerDatabase[custId].authStatus = 'Tài khoản bị khóa';
-                    persistCustomersData();
-                    renderCustomersTable();
-                    updateCustomerKPIs();
-                    showToast(`Đã khóa tài khoản khách hàng ${customerDatabase[custId].name}!`);
+                const custObj = customerDatabase[custId];
+                if (!custObj || !custObj.dbId) return;
+
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!client) {
+                    showToast('Lỗi kết nối CSDL Supabase!', 'danger');
+                    return;
                 }
+
+                const isLocking = custObj.status !== 'LOCKED';
+                const newStatus = isLocking ? 'LOCKED' : 'ACTIVE';
+
+                (async () => {
+                    try {
+                        const { error: lockErr } = await client
+                            .from('customer')
+                            .update({ account_status: newStatus })
+                            .eq('id', custObj.dbId);
+
+                        if (lockErr) {
+                            console.error('[Customers] Lỗi cập nhật trạng thái:', lockErr);
+                            showToast('Không thể cập nhật trạng thái tài khoản trên CSDL!', 'danger');
+                            return;
+                        }
+
+                        await loadCustomersModuleData();
+                        renderCustomersTable();
+                        updateCustomerKPIs();
+                        showToast(isLocking ? `Đã khóa tài khoản khách hàng ${custObj.name}!` : `Đã mở khóa tài khoản khách hàng ${custObj.name}!`, 'success');
+                    } catch (err) {
+                        console.error('[Customers] Lỗi cập nhật trạng thái:', err);
+                        showToast('Đã xảy ra lỗi khi cập nhật trạng thái!', 'danger');
+                    }
+                })();
             }
         });
 
@@ -1792,7 +1811,7 @@
         });
 
         if (formEdit) {
-            formEdit.addEventListener('submit', (e) => {
+            formEdit.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const custId = document.getElementById('editCustId')?.value || 'CUST-001';
                 const newName = document.getElementById('editCustFullName')?.value || '';
@@ -1813,58 +1832,57 @@
                     validAddresses[0].isDefault = true;
                 }
 
-                let formattedDob = newDobRaw;
-                if (newDobRaw && newDobRaw.includes('-')) {
-                    const p = newDobRaw.split('-');
-                    formattedDob = `${p[2]}/${p[1]}/${p[0]}`;
+                const custObj = customerDatabase[custId];
+                const custDbId = custObj?.dbId;
+
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!client) {
+                    showToast('Lỗi kết nối CSDL Supabase!', 'danger');
+                    return;
                 }
 
-                // Map tên và class của Hạng thẻ
-                const tierMap = {
-                    'BRONZE': { name: 'Đồng', badgeClass: 'badge-neutral' },
-                    'SILVER': { name: 'Bạc', badgeClass: 'badge-tier-silver' },
-                    'GOLD': { name: 'Vàng', badgeClass: 'badge-tier-gold' },
-                    'DIAMOND': { name: 'Kim Cương', badgeClass: 'badge-tier-diamond' }
-                };
+                try {
+                    if (custDbId) {
+                        // 1. Cập nhật bảng customer
+                        await client.from('customer').update({
+                            email: newEmail || null,
+                            phone_main: newPhone || null
+                        }).eq('id', custDbId);
 
-                // Cập nhật vào Database
-                if (!customerDatabase[custId]) customerDatabase[custId] = {};
-                customerDatabase[custId].name = newName;
-                customerDatabase[custId].phone = newPhone;
-                customerDatabase[custId].email = newEmail;
-                customerDatabase[custId].gender = newGender;
-                customerDatabase[custId].dob = formattedDob;
-                customerDatabase[custId].tier = newTier;
-                customerDatabase[custId].tierName = tierMap[newTier].name;
-                customerDatabase[custId].tierBadgeClass = tierMap[newTier].badgeClass;
-                customerDatabase[custId].addresses = validAddresses;
+                        // 2. Cập nhật bảng customer_profile
+                        const genderVal = (newGender === 'Nữ' || newGender === 'FEMALE') ? 'FEMALE' : ((newGender === 'Nam' || newGender === 'MALE') ? 'MALE' : 'OTHER');
+                        await client.from('customer_profile').upsert({
+                            customer_id: custDbId,
+                            full_name: newName,
+                            gender: genderVal,
+                            date_of_birth: newDobRaw || null
+                        });
 
-                // Cập nhật hiển thị Drawer Hồ sơ
-                renderDrawerCustomerProfile(custId);
-
-                // Cập nhật lên dòng dữ liệu trong bảng danh sách
-                document.querySelectorAll('#customerTableTbody tr').forEach(row => {
-                    const idCell = row.querySelector('td:first-child')?.textContent?.trim();
-                    if (idCell === custId) {
-                        const link = row.querySelector('.user-name-link');
-                        if (link) link.textContent = newName;
-                        const sub = row.querySelector('.user-sub-cell');
-                        if (sub) sub.textContent = newEmail;
-                        const phoneCell = row.querySelectorAll('td')[2]?.querySelector('strong');
-                        if (phoneCell) phoneCell.textContent = newPhone;
-                        const tierBadge = row.querySelector('.points-val')?.parentElement?.querySelector('.admin-badge') || row.querySelectorAll('td')[4]?.querySelector('.admin-badge');
-                        if (tierBadge) {
-                            tierBadge.textContent = tierMap[newTier].name;
-                            tierBadge.className = `admin-badge ${tierMap[newTier].badgeClass}`;
+                        // 3. Cập nhật sổ địa chỉ customer_address
+                        await client.from('customer_address').delete().eq('customer_id', custDbId);
+                        const addrInserts = validAddresses.map(a => ({
+                            customer_id: custDbId,
+                            receiver_name: newName,
+                            receiver_phone: newPhone,
+                            street_address: a.address,
+                            is_default: !!a.isDefault
+                        }));
+                        if (addrInserts.length > 0) {
+                            await client.from('customer_address').insert(addrInserts);
                         }
                     }
-                });
 
-                persistCustomersData();
-                renderCustomersTable();
-                updateCustomerKPIs();
-                showToast(`Đã cập nhật thành công hồ sơ của khách hàng ${newName}!`);
-                closeEditModal();
+                    // Nạp lại toàn bộ dữ liệu từ Supabase
+                    await loadCustomersModuleData();
+                    renderDrawerCustomerProfile(custId);
+                    renderCustomersTable();
+                    updateCustomerKPIs();
+                    showToast(`Đã cập nhật thành công hồ sơ của khách hàng ${newName} vào CSDL!`, 'success');
+                    closeEditModal();
+                } catch (err) {
+                    console.error('[Customers] Lỗi cập nhật hồ sơ khách hàng:', err);
+                    showToast('Đã xảy ra lỗi khi cập nhật hồ sơ!', 'danger');
+                }
             });
         }
 
@@ -1974,50 +1992,87 @@
         if (btnCancelEditPet) btnCancelEditPet.addEventListener('click', closeEditPetModal);
 
         if (formEditPet) {
-            formEditPet.addEventListener('submit', (e) => {
+            formEditPet.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!currentEditingPetCustId || currentEditPetIndex === null) return;
                 const pet = customerDatabase[currentEditingPetCustId]?.pets[currentEditPetIndex];
                 if (!pet) return;
 
-                pet.name = document.getElementById('editPetName')?.value || pet.name;
-                pet.species = document.getElementById('editPetSpecies')?.value || pet.species;
-                pet.breed = document.getElementById('editPetBreed')?.value || '';
-                pet.weight = document.getElementById('editPetWeight')?.value || '';
-                pet.vaccine = document.getElementById('editPetVaccine')?.value || 'Chưa cập nhật';
-                pet.alertNote = document.getElementById('editPetAlert')?.value || 'Bình thường';
+                const newPetName = document.getElementById('editPetName')?.value || pet.name;
+                const newSpecies = document.getElementById('editPetSpecies')?.value || pet.species;
+                const newBreed = document.getElementById('editPetBreed')?.value || '';
+                const newWeight = document.getElementById('editPetWeight')?.value || '';
+                const newVaccine = document.getElementById('editPetVaccine')?.value || 'Chưa cập nhật';
+                const newAlert = document.getElementById('editPetAlert')?.value || 'Bình thường';
 
-                renderDrawerPets(currentEditingPetCustId);
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!client) {
+                    showToast('Lỗi kết nối CSDL Supabase!', 'danger');
+                    return;
+                }
 
-                // Cập nhật lại cột thú cưng trên bảng danh sách
-                document.querySelectorAll('#customerTableTbody tr').forEach(row => {
-                    const idCell = row.querySelector('td:first-child')?.textContent?.trim();
-                    if (idCell === currentEditingPetCustId) {
-                        const petCell = row.querySelectorAll('td')[3];
-                        if (petCell) {
-                            petCell.innerHTML = formatCustomerPetsCell(customerDatabase[currentEditingPetCustId]?.pets);
+                try {
+                    const spec = (newSpecies === 'Mèo' || newSpecies === 'CAT') ? 'cat' : ((newSpecies === 'Thỏ' || newSpecies === 'RABBIT') ? 'rabbit' : ((newSpecies === 'Khác' || newSpecies === 'OTHER') ? 'other' : 'dog'));
+                    if (pet.dbId) {
+                        const { error: petErr } = await client.from('pet_profile').update({
+                            pet_name: newPetName,
+                            species: spec,
+                            breed: newBreed || 'Chưa cập nhật',
+                            weight: newWeight ? parseFloat(newWeight) : null,
+                            vaccination_history: newVaccine || 'Chưa cập nhật',
+                            allergy: (newAlert && newAlert !== 'Bình thường') ? newAlert : 'Không'
+                        }).eq('id', pet.dbId);
+
+                        if (petErr) {
+                            console.error('[Customers] Lỗi cập nhật thú cưng:', petErr);
+                            showToast('Không thể cập nhật thú cưng trên CSDL!', 'danger');
+                            return;
                         }
                     }
-                });
 
-                persistCustomersData();
-                renderCustomersTable();
-                showToast(`Đã cập nhật thành công thông tin bé cưng ${pet.name}!`);
-                closeEditPetModal();
+                    await loadCustomersModuleData();
+                    renderDrawerPets(currentEditingPetCustId);
+                    renderCustomersTable();
+                    updateCustomerKPIs();
+                    showToast(`Đã cập nhật thành công thông tin bé cưng ${newPetName} vào CSDL!`, 'success');
+                    closeEditPetModal();
+                } catch (err) {
+                    console.error('[Customers] Lỗi cập nhật thú cưng:', err);
+                    showToast('Đã xảy ra lỗi khi cập nhật thú cưng!', 'danger');
+                }
             });
         }
 
         // 13. Lưu ghi chú khách hàng trong Drawer
         const btnSaveNote = document.getElementById('btnSaveCustomerNote');
         if (btnSaveNote) {
-            btnSaveNote.addEventListener('click', () => {
-                const currentCustId = document.getElementById('profileValCustId')?.textContent || 'CUST-001';
+            btnSaveNote.addEventListener('click', async () => {
+                const currentCustId = sessionStorage.getItem('pawpal_admin_customer_id') || document.getElementById('profileValCustId')?.textContent || 'CUST-001';
                 const noteVal = document.getElementById('drawerCustNote')?.value || '';
-                if (customerDatabase[currentCustId]) {
-                    customerDatabase[currentCustId].note = noteVal;
+                const custObj = customerDatabase[currentCustId];
+                const custDbId = custObj?.dbId;
+
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!client) {
+                    showToast('Lỗi kết nối CSDL Supabase!', 'danger');
+                    return;
                 }
-                persistCustomersData();
-                    showToast('Đã lưu thành công ghi chú khách hàng!');
+
+                try {
+                    if (custDbId) {
+                        const { error: noteErr } = await client.from('customer').update({ note: noteVal }).eq('id', custDbId);
+                        if (noteErr) {
+                            console.error('[Customers] Lỗi lưu ghi chú:', noteErr);
+                            showToast('Không thể lưu ghi chú vào CSDL!', 'danger');
+                            return;
+                        }
+                    }
+                    await loadCustomersModuleData();
+                    showToast('Đã lưu thành công ghi chú khách hàng vào CSDL!', 'success');
+                } catch (err) {
+                    console.error('[Customers] Lỗi lưu ghi chú:', err);
+                    showToast('Đã xảy ra lỗi khi lưu ghi chú!', 'danger');
+                }
             });
         }
 
