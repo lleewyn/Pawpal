@@ -26,6 +26,9 @@
         
         html = html.replace(/(src|href)="\/([^"]*)"/g, function(match, attr, p1) {
             if (p1.startsWith('/') || p1.startsWith('http') || p1.startsWith('data:')) return match;
+            if (rootPath === '/' || rootPath === '') {
+                return attr + '="/' + p1 + '"';
+            }
             return attr + '="' + rootPath + p1 + '"';
         });
 
