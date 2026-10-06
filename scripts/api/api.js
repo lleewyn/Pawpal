@@ -1,43 +1,4 @@
 
-export const API = {
-    DATA_VERSION: '2026-07-04-v14-guest-data',
-
-    async getJSON(url) {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
-        } catch (error) {
-            console.error(`[API] Cannot load ${url}:`, error);
-            return null;
-        }
-    },
-
-    async request(path, options = {}) {
-        if (!this.USE_BACKEND) return null;
-        try {
-            const response = await fetch(`${this.getBaseUrl()}${path}`, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(options.headers || {})
-                },
-                ...options
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error(`[API] request failed: ${path}`, error);
-            return null;
-        }
-    },
-
-    async initData() {
-    },
-
 async function resolveCustomerId(db, userOrId) {
     if (!db || !userOrId) return null;
     if (typeof userOrId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userOrId)) {
@@ -81,6 +42,44 @@ async function resolveCustomerId(db, userOrId) {
 }
 
 export const API = {
+    DATA_VERSION: '2026-07-04-v14-guest-data',
+
+    async getJSON(url) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.json();
+        } catch (error) {
+            console.error(`[API] Cannot load ${url}:`, error);
+            return null;
+        }
+    },
+
+    async request(path, options = {}) {
+        if (!this.USE_BACKEND) return null;
+        try {
+            const response = await fetch(`${this.getBaseUrl()}${path}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(options.headers || {})
+                },
+                ...options
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error(`[API] request failed: ${path}`, error);
+            return null;
+        }
+    },
+
+    async initData() {
+    },
+
     async getUserPets(userOrId) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !userOrId) return [];
