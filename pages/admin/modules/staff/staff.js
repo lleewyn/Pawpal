@@ -181,103 +181,62 @@
             return 'Kỹ thuật viên Grooming';
         }
 
-        // Hàm nạp dữ liệu từ Supabase hoặc /data/staff.json / localStorage
+        // Hàm nạp dữ liệu từ Supabase 100% (trực tiếp từ database, không lấy json)
         async function loadStaffModuleData() {
-            // 1. Nạp baseline từ /data/staff.json hoặc localStorage trước để có khung thuộc tính phong phú
-            try {
-                const res = await fetch('/data/staff.json?v=' + Date.now());
-                if (res.ok) {
-                    const data = await res.json();
-                    mockStaff = data.staff || [];
-                    mockAssessments = data.assessments || [];
-                    mockRoster = data.roster || {};
-                    mockLeaveSwapRequests = data.leaveRequests || [];
-                }
-            } catch (err) {
-                console.warn('Không thể nạp baseline từ /data/staff.json:', err);
-                try {
-                    const savedStaff = localStorage.getItem('pawpal_staff_data');
-                    const savedAss = localStorage.getItem('pawpal_staff_assessments');
-                    const savedRos = localStorage.getItem('pawpal_staff_roster');
-                    const savedReq = localStorage.getItem('pawpal_staff_leave_requests');
-                    if (savedStaff) mockStaff = JSON.parse(savedStaff) || [];
-                    if (savedAss) mockAssessments = JSON.parse(savedAss) || [];
-                    if (savedRos) mockRoster = JSON.parse(savedRos) || {};
-                    if (savedReq) mockLeaveSwapRequests = JSON.parse(savedReq) || [];
-                } catch(e) {}
-            }
-
-            // 2. Thử nạp trực tiếp từ Supabase và ánh xạ dữ liệu thời gian thực
             try {
                 const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                 if (client) {
-                    // A. Nạp bảng staff
+                    // A. Nạp bảng staff trực tiếp từ Supabase
                     const { data: staffData, error: staffErr } = await client
                         .from('staff')
                         .select('*')
                         .order('created_at', { ascending: true });
 
                     if (!staffErr && Array.isArray(staffData) && staffData.length > 0) {
-                        staffData.forEach((s, idx) => {
-                            const dbPhone = s.phone_number || s.phone || '';
-                            const dbName = s.full_name || '';
-                            // Tìm bản ghi tương ứng trong mockStaff để kế thừa đánh giá và chứng chỉ nếu có
-                            let existing = mockStaff.find(st => st.rawId === s.id || (dbPhone && st.phone === dbPhone) || (dbName && st.name.toLowerCase() === dbName.toLowerCase()));
-
+                        mockStaff = staffData.map((s, idx) => {
                             const formattedRole = mapDbRoleToStaffRole(s.role, s.specialization);
                             const formattedPosition = mapDbRoleToPosition(s.role, s.specialization);
                             const joinDateFormatted = s.hire_date 
                                 ? new Date(s.hire_date).toLocaleDateString('vi-VN') 
                                 : (s.created_at ? new Date(s.created_at).toLocaleDateString('vi-VN') : '01/01/2026');
 
-                            if (existing) {
-                                existing.rawId = s.id;
-                                existing.name = s.full_name || existing.name;
-                                existing.phone = dbPhone || existing.phone;
-                                existing.role = formattedRole;
-                                existing.position = formattedPosition;
-                                if (s.specialization) existing.specialties = [s.specialization];
-                                if (s.hire_date) existing.join_date = joinDateFormatted;
-                                if (s.status) {
-                                    existing.status = s.status === 'locked' ? 'RESIGNED' : (s.status === 'leave' ? 'LEAVE' : (s.status === 'pause' ? 'PAUSE' : 'ACTIVE'));
-                                }
-                            } else {
-                                const newId = `EMP-0${String(mockStaff.length + 1).padStart(2, '0')}`;
-                                const newStaffItem = {
-                                    id: newId,
-                                    rawId: s.id,
-                                    name: s.full_name || 'Nhân viên PawPal',
-                                    position: formattedPosition,
-                                    role: formattedRole,
-                                    phone: dbPhone || '0901234567',
-                                    email: s.email || `${newId.toLowerCase()}@pawpal.vn`,
-                                    shift: 'MORNING',
-                                    status: s.status === 'leave' ? 'LEAVE' : (s.status === 'pause' ? 'PAUSE' : (s.status === 'locked' ? 'RESIGNED' : 'ACTIVE')),
-                                    join_date: joinDateFormatted,
-                                    dob: '1998-01-01',
-                                    address: 'Hồ Chí Minh',
-                                    branch_id: 'BRANCH-Q1',
-                                    branch_name: 'Chi nhánh Quận 1',
-                                    avatar: `/assets/images/staff/emp-00${(idx % 6) + 1}.jpg`,
-                                    bio: s.specialization ? `Chuyên viên ${s.specialization} tại PawPal.` : 'Chuyên viên chăm sóc thú cưng tận tâm và giàu kinh nghiệm.',
-                                    is_bookable: true,
-                                    specialties: s.specialization ? [s.specialization] : ['Chăm sóc thú cưng', 'Spa và Grooming'],
-                                    skillScore: 88,
-                                    skillResult: 'PASS',
-                                    skillExam: 'Đạt (88đ)',
-                                    serviceLocked: false,
-                                    note: s.specialization || '',
-                                    customer_rating: {
-                                        avg_score: 5.0,
-                                        total_reviews: 24
-                                    },
-                                    requested_count: 8,
-                                    zero_complaint_rate: '100%',
-                                    customer_reviews: [],
-                                    complaint_count: 0
-                                };
-                                mockStaff.push(newStaffItem);
-                            }
+                            const code = `EMP-${String(idx + 1).padStart(3, '0')}`;
+                            const phone = s.phone_number || s.phone || '0901234567';
+                            const email = s.email || `${(s.full_name || 'staff').toLowerCase().replace(/[^a-z0-9]/g, '')}@pawpal.vn`;
+
+                            return {
+                                id: code,
+                                rawId: s.id,
+                                name: s.full_name || 'Nhân viên PawPal',
+                                position: formattedPosition,
+                                role: formattedRole,
+                                phone: phone,
+                                email: email,
+                                shift: s.shift || (idx % 2 === 0 ? 'MORNING' : 'AFTERNOON'),
+                                status: s.status === 'locked' ? 'RESIGNED' : (s.status === 'leave' ? 'LEAVE' : (s.status === 'pause' ? 'PAUSE' : 'ACTIVE')),
+                                join_date: joinDateFormatted,
+                                dob: s.dob || '1998-01-01',
+                                address: s.address || 'TP. Hồ Chí Minh',
+                                branch_id: 'BRANCH-Q1',
+                                branch_name: 'Chi nhánh Quận 1',
+                                avatar: `/assets/images/staff/emp-00${(idx % 6) + 1}.jpg`,
+                                bio: s.specialization ? `Chuyên viên ${s.specialization} tại PawPal.` : 'Chuyên viên chăm sóc thú cưng tận tâm và giàu kinh nghiệm.',
+                                is_bookable: true,
+                                specialties: s.specialization ? [s.specialization] : ['Chăm sóc thú cưng', 'Spa và Grooming'],
+                                skillScore: s.skill_score || 90,
+                                skillResult: (s.skill_score || 90) >= 80 ? 'PASS' : ((s.skill_score || 90) >= 60 ? 'RETRAIN' : 'FAIL'),
+                                skillExam: (s.skill_score || 90) >= 80 ? `Đạt (${s.skill_score || 90}đ)` : `Cần đào tạo (${s.skill_score || 90}đ)`,
+                                serviceLocked: Boolean(s.service_locked || s.serviceLocked),
+                                note: s.specialization || '',
+                                customer_rating: {
+                                    avg_score: 5.0,
+                                    total_reviews: 18
+                                },
+                                requested_count: 8,
+                                zero_complaint_rate: '100%',
+                                customer_reviews: [],
+                                complaint_count: 0
+                            };
                         });
                     }
 
@@ -287,6 +246,7 @@
                         .select('*')
                         .order('work_date', { ascending: true });
 
+                    mockRoster = {};
                     if (!schedErr && Array.isArray(schedData) && schedData.length > 0) {
                         schedData.forEach(sch => {
                             const wDate = sch.work_date;
@@ -301,6 +261,16 @@
                             if (!mockRoster[wDate][staffKey]) mockRoster[wDate][staffKey] = [];
                             if (!mockRoster[wDate][staffKey].includes(shiftVal)) {
                                 mockRoster[wDate][staffKey].push(shiftVal);
+                            }
+                        });
+                    }
+
+                    // Gán mặc định ca làm việc nếu ngày hiện tại chưa có trong roster
+                    if (mockStaff.length > 0) {
+                        if (!mockRoster[currentScheduleDate]) mockRoster[currentScheduleDate] = {};
+                        mockStaff.forEach(s => {
+                            if (!mockRoster[currentScheduleDate][s.id]) {
+                                mockRoster[currentScheduleDate][s.id] = [s.shift];
                             }
                         });
                     }
@@ -350,29 +320,37 @@
                             .limit(15);
 
                         if (Array.isArray(revData) && revData.length > 0) {
-                            const groomers = mockStaff.filter(s => s.role === 'Groomer' || s.role === 'Caregiver');
-                            revData.forEach((rv, rIdx) => {
-                                const targetGroomer = groomers[rIdx % groomers.length];
-                                if (targetGroomer) {
-                                    if (!targetGroomer.customer_reviews) targetGroomer.customer_reviews = [];
-                                    const revDate = rv.created_at ? new Date(rv.created_at).toLocaleDateString('vi-VN') : '28/09/2026';
-                                    const isDuplicate = targetGroomer.customer_reviews.some(r => r.comment === rv.review_content);
-                                    if (!isDuplicate && rv.review_content) {
-                                        targetGroomer.customer_reviews.unshift({
-                                            date: revDate,
-                                            customer_name: rv.customer?.full_name || 'Khách hàng thân thiết',
-                                            pet_name: 'Bé cưng',
-                                            service_name: rv.service?.service_name || 'Dịch vụ Spa và Grooming',
-                                            rating: rv.rating || 5,
-                                            is_requested: rIdx % 2 === 0,
-                                            comment: rv.review_content
-                                        });
+                            const groomers = mockStaff.filter(s => s.role === 'Groomer' || s.role === 'Caregiver' || s.role === 'Veterinarian');
+                            if (groomers.length > 0) {
+                                revData.forEach((rv, rIdx) => {
+                                    const targetGroomer = groomers[rIdx % groomers.length];
+                                    if (targetGroomer) {
+                                        if (!targetGroomer.customer_reviews) targetGroomer.customer_reviews = [];
+                                        const revDate = rv.created_at ? new Date(rv.created_at).toLocaleDateString('vi-VN') : '28/09/2026';
+                                        const isDuplicate = targetGroomer.customer_reviews.some(r => r.comment === rv.review_content);
+                                        if (!isDuplicate && rv.review_content) {
+                                            targetGroomer.customer_reviews.unshift({
+                                                date: revDate,
+                                                customer_name: rv.customer?.full_name || 'Khách hàng thân thiết',
+                                                pet_name: 'Bé cưng',
+                                                service_name: rv.service?.service_name || 'Dịch vụ Spa và Grooming',
+                                                rating: rv.rating || 5,
+                                                is_requested: rIdx % 2 === 0,
+                                                comment: rv.review_content
+                                            });
+                                        }
                                     }
-                                }
-                            });
+                                });
+                            }
                         }
                     } catch (eRev) {
                         console.warn('Lỗi nạp Review CSAT:', eRev);
+                    }
+
+                    // Thiết lập selectedStaffId là ID đầu tiên của staff thật
+                    if (mockStaff.length > 0 && !mockStaff.some(s => s.id === selectedStaffId)) {
+                        selectedStaffId = mockStaff[0].id;
+                        sessionStorage.setItem('pawpal_admin_staff_selected_id', selectedStaffId);
                     }
 
                     saveStaffDataToStorage();
