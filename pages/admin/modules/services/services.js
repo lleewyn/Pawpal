@@ -1941,6 +1941,26 @@
             staff: 'Quản trị viên'
         });
 
+        // Đồng bộ lên Supabase support_ticket
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (db) {
+            try {
+                db.from('support_ticket').insert([{
+                    ticket_code: ticketId,
+                    customer_id: (booking.userId && String(booking.userId).length > 30) ? booking.userId : null,
+                    appointment_id: booking.dbId || null,
+                    channel: 'WEB',
+                    category: 'APPOINTMENT',
+                    subject: title,
+                    description: content,
+                    priority: 'HIGH',
+                    status: 'OPEN'
+                }]);
+            } catch(err) {
+                console.warn('Lỗi ghi Supabase support_ticket:', err);
+            }
+        }
+
         showServiceConfirmModal({
             title: 'Khởi tạo Ticket Khiếu nại thành công',
             message: `Đã tạo thành công Phiếu Khiếu Nại ${ticketId}! Bạn có muốn chuyển sang phân hệ Khiếu Nại để xử lý ngay không?`,
@@ -4012,6 +4032,24 @@
                                 file_name: 'complete_photo.jpg'
                             }));
                             await db.from('care_log_media').insert(mediaRows);
+                        }
+
+                        // Ghi nhận tích điểm vào bảng paw_point_transaction trên Supabase
+                        if (booking.userId && String(booking.userId).length > 30) {
+                            if (earnedPoints > 0) {
+                                await db.from('paw_point_transaction').insert([{
+                                    customer_id: booking.userId,
+                                    points: earnedPoints,
+                                    description: `Tích điểm hoàn tất ca dịch vụ ${booking.id} (${booking.serviceName})`
+                                }]);
+                            }
+                            if (usedPoints > 0) {
+                                await db.from('paw_point_transaction').insert([{
+                                    customer_id: booking.userId,
+                                    points: -usedPoints,
+                                    description: `Đổi ưu đãi giảm giá ca dịch vụ ${booking.id}`
+                                }]);
+                            }
                         }
                     } catch(err) {
                         console.warn('Lỗi cập nhật Supabase khi hoàn tất ca:', err);
