@@ -1901,7 +1901,7 @@
             });
         }
 
-        function approveLeaveSwapRequest(reqId) {
+        async function approveLeaveSwapRequest(reqId) {
             const req = mockLeaveSwapRequests.find(r => r.id === reqId);
             if (!req) return;
 
@@ -1987,6 +1987,38 @@
                 }
             }
 
+            // Đồng bộ phê duyệt đơn vào Supabase
+            try {
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client) {
+                    const staff = mockStaff.find(s => s.id === req.staffId);
+                    if (req.type === 'LEAVE') {
+                        await client.from('staff_schedule').insert({
+                            staff_id: staff?.rawId || req.staffId,
+                            work_date: req.startDate,
+                            shift: req.scope === 'ALL' ? 'MORNING' : req.scope,
+                            start_time: '08:00:00',
+                            end_time: '17:00:00',
+                            work_location: 'Chi nhánh Quận 1',
+                            schedule_status: 'LEAVE'
+                        });
+                    }
+
+                    await client.from('audit_log').insert({
+                        user_id: staff?.rawId || 'd0000000-0000-0000-0000-000000000001',
+                        action: req.type === 'LEAVE' ? 'LEAVE_REQUEST_APPROVED' : 'SWAP_REQUEST_APPROVED',
+                        entity: 'staff_schedule',
+                        entity_id: req.id,
+                        old_data: { status: 'PENDING' },
+                        new_data: { status: 'APPROVED', reqId: req.id, staffId: req.staffId }
+                    });
+                }
+            } catch (err) {
+                console.warn('Lỗi duyệt đơn trên Supabase:', err);
+            }
+
+            saveRosterToStorage();
+            saveLeaveRequestsToStorage();
             updatePendingRequestsCounters();
             renderStaffAlertBar();
             renderScheduleTable();
@@ -1994,10 +2026,29 @@
             showToast(`Đã duyệt đơn ${req.id} và cập nhật lịch làm việc thành công!`, 'success');
         }
 
-        function rejectLeaveSwapRequest(reqId) {
+        async function rejectLeaveSwapRequest(reqId) {
             const req = mockLeaveSwapRequests.find(r => r.id === reqId);
             if (!req) return;
             req.status = 'REJECTED';
+
+            try {
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client) {
+                    const staff = mockStaff.find(s => s.id === req.staffId);
+                    await client.from('audit_log').insert({
+                        user_id: staff?.rawId || 'd0000000-0000-0000-0000-000000000001',
+                        action: req.type === 'LEAVE' ? 'LEAVE_REQUEST_REJECTED' : 'SWAP_REQUEST_REJECTED',
+                        entity: 'staff_schedule',
+                        entity_id: req.id,
+                        old_data: { status: 'PENDING' },
+                        new_data: { status: 'REJECTED', reqId: req.id }
+                    });
+                }
+            } catch (err) {
+                console.warn('Lỗi từ chối đơn trên Supabase:', err);
+            }
+
+            saveLeaveRequestsToStorage();
             updatePendingRequestsCounters();
             renderStaffAlertBar();
             renderLeaveRequestsList();
@@ -2894,8 +2945,9 @@
             const dismissBtn = document.getElementById('btnDismissReassignModal');
             const cancelBtn = document.getElementById('btnCancelReassignModal');
 
-            confirmBtn.onclick = () => {
-                tbody.querySelectorAll('.reassign-select-row').forEach(sel => {
+            confirmBtn.onclick = async () => {
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                for (const sel of tbody.querySelectorAll('.reassign-select-row')) {
                     const bkgId = sel.getAttribute('data-bkg-id');
                     const targetNewStaffId = sel.value;
                     const newStaff = mockStaff.find(s => s.id === targetNewStaffId);
@@ -2903,9 +2955,16 @@
                     if (bkg && newStaff) {
                         bkg.staffId = newStaff.id;
                         bkg.staffName = newStaff.name;
-                    }
-                });
 
+                        if (client && newStaff.rawId) {
+                            try {
+                                await client.from('appointment').update({ staff_id: newStaff.rawId }).eq('appointment_code', bkgId);
+                            } catch(e) {}
+                        }
+                    }
+                }
+
+                saveActiveBookingsToStorage();
                 modal.classList.remove('active');
                 if (typeof onLockConfirmed === 'function') onLockConfirmed(true);
             };
@@ -2920,15 +2979,29 @@
             modal.classList.add('active');
         }
 
-        function handleToggleStaffLock(staffId) {
+        async function handleToggleStaffLock(staffId) {
             const staff = mockStaff.find(s => s.id === staffId);
             if (!staff) return;
+
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
 
             if (!staff.serviceLocked) {
                 const affected = getAffectedBookingsForStaff(staff.id);
                 if (affected.length > 0) {
-                    openReassignModal(staff.id, (reassigned) => {
+                    openReassignModal(staff.id, async (reassigned) => {
                         staff.serviceLocked = true;
+                        if (client) {
+                            try {
+                                await client.from('audit_log').insert({
+                                    user_id: staff.rawId || 'd0000000-0000-0000-0000-000000000001',
+                                    action: 'STAFF_SAFETY_LOCK_ENABLED',
+                                    entity: 'staff',
+                                    entity_id: staff.rawId || staff.id,
+                                    old_data: { serviceLocked: false },
+                                    new_data: { serviceLocked: true, reassigned: reassigned }
+                                });
+                            } catch(e) {}
+                        }
                         saveStaffDataToStorage();
                         renderStaffProfile(staff.id);
                         updateKpiCounters();
@@ -2944,6 +3017,18 @@
             }
 
             staff.serviceLocked = !staff.serviceLocked;
+            if (client) {
+                try {
+                    await client.from('audit_log').insert({
+                        user_id: staff.rawId || 'd0000000-0000-0000-0000-000000000001',
+                        action: staff.serviceLocked ? 'STAFF_SAFETY_LOCK_ENABLED' : 'STAFF_SAFETY_LOCK_DISABLED',
+                        entity: 'staff',
+                        entity_id: staff.rawId || staff.id,
+                        old_data: { serviceLocked: !staff.serviceLocked },
+                        new_data: { serviceLocked: staff.serviceLocked }
+                    });
+                } catch(e) {}
+            }
             saveStaffDataToStorage();
             renderStaffProfile(staff.id);
             updateKpiCounters();
@@ -3004,9 +3089,25 @@
                     message: `Bạn có chắc chắn muốn xóa nhân viên ${staff.name} (${staff.id}) khỏi hệ thống?`,
                     confirmText: 'Xóa nhân viên',
                     isDanger: true,
-                    onConfirm: () => {
+                    onConfirm: async () => {
                         const idx = mockStaff.findIndex(s => s.id === id);
                         if (idx !== -1) {
+                            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                            if (client && staff.rawId) {
+                                try {
+                                    await client.from('staff').delete().eq('id', staff.rawId);
+                                    await client.from('audit_log').insert({
+                                        user_id: staff.rawId,
+                                        action: 'STAFF_DELETED',
+                                        entity: 'staff',
+                                        entity_id: staff.rawId,
+                                        old_data: { name: staff.name, phone: staff.phone },
+                                        new_data: null
+                                    });
+                                } catch(err) {
+                                    console.warn('Lỗi xóa staff Supabase:', err);
+                                }
+                            }
                             mockStaff.splice(idx, 1);
                             saveStaffDataToStorage();
                             updateKpiCounters();
