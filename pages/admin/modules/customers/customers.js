@@ -1412,10 +1412,10 @@
         }
 
         if (formAdd) {
-            formAdd.addEventListener('submit', (e) => {
+            formAdd.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (dupFoundCustId) {
-                    showToast(`Số điện thoại này đã thuộc về khách hàng ${customerDatabase[dupFoundCustId]?.name}! Vui lòng kiểm tra lại.`);
+                    showToast(`Số điện thoại này đã thuộc về khách hàng ${customerDatabase[dupFoundCustId]?.name}! Vui lòng kiểm tra lại.`, 'warning');
                     return;
                 }
 
@@ -1427,55 +1427,79 @@
                 const petWeight = document.getElementById('quickAddPetWeight')?.value || '';
                 const initialAddress = document.getElementById('quickAddAddress')?.value || 'Tiếp nhận trực tiếp tại quầy Pawpal Center';
 
-                const newId = 'CUST-' + String(Object.keys(customerDatabase).length + 1).padStart(3, '0');
-                const specName = petSpecies === 'CAT' ? 'Mèo' : (petSpecies === 'OTHER' ? 'Khác' : 'Chó');
-
-                customerDatabase[newId] = {
-                    id: newId,
-                    name: name,
-                    phone: phone,
-                    email: 'Chưa cập nhật',
-                    gender: 'Khác',
-                    dob: '01/01/1990',
-                    tier: 'BRONZE',
-                    tierName: 'Đồng',
-                    tierBadgeClass: 'badge-neutral',
-                    points: 0,
-                    status: 'TEMP',
-                    authStatus: 'Tạm thời tại quầy',
-                    note: 'Khách tiếp nhận nhanh tại quầy.',
-                    emergencyAlert: null,
-                    addresses: [{ address: initialAddress, isDefault: true }],
-                    pets: petName ? [{
-                        id: 'PET-' + newId,
-                        name: petName,
-                        species: specName,
-                        breed: petBreed,
-                        weight: petWeight,
-                        vaccine: 'Chưa cập nhật',
-                        alertNote: 'Bình thường'
-                    }] : [],
-                    orders: [],
-                    bookings: [],
-                    complaints: []
-                };
-
-                persistCustomersData();
-
-                // Tự động đồng bộ bé cưng sang kho dữ liệu pets module
-                if (petName) {
-                    syncNewPetToPetsModule(customerDatabase[newId].pets[0], newId, name, phone);
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!client) {
+                    showToast('Lỗi kết nối CSDL Supabase!', 'danger');
+                    return;
                 }
 
-                renderCustomersTable();
-                updateCustomerKPIs();
-                showToast(`Đã tạo thành công tài khoản tạm ${newId} cho khách hàng ${name} tại quầy!`);
-                formAdd.reset();
-                closeAddModal();
+                try {
+                    // 1. Tạo bản ghi khách hàng vào bảng customer
+                    const { data: newCust, error: custErr } = await client.from('customer').insert({
+                        email: null,
+                        phone_main: phone || null,
+                        account_status: 'ACTIVE',
+                        is_temporary: true,
+                        note: 'Khách tiếp nhận nhanh tại quầy.'
+                    }).select().single();
+
+                    if (custErr || !newCust) {
+                        console.error('[Customers] Lỗi tạo customer:', custErr);
+                        showToast('Không thể tạo hồ sơ khách hàng trên CSDL!', 'danger');
+                        return;
+                    }
+
+                    // 2. Tạo hồ sơ cá nhân customer_profile
+                    await client.from('customer_profile').insert({
+                        customer_id: newCust.id,
+                        full_name: name,
+                        gender: 'OTHER'
+                    });
+
+                    // 3. Khởi tạo hội viên customer_membership
+                    await client.from('customer_membership').insert({
+                        customer_id: newCust.id,
+                        total_paw_points: 0
+                    });
+
+                    // 4. Lưu địa chỉ nếu có
+                    if (initialAddress && initialAddress.trim()) {
+                        await client.from('customer_address').insert({
+                            customer_id: newCust.id,
+                            receiver_name: name,
+                            receiver_phone: phone || '',
+                            street_address: initialAddress.trim(),
+                            is_default: true
+                        });
+                    }
+
+                    // 5. Lưu thú cưng nếu có
+                    if (petName && petName.trim()) {
+                        const spec = petSpecies === 'CAT' ? 'cat' : (petSpecies === 'OTHER' ? 'other' : 'dog');
+                        await client.from('pet_profile').insert({
+                            customer_id: newCust.id,
+                            pet_name: petName.trim(),
+                            species: spec,
+                            breed: petBreed || 'Chưa cập nhật',
+                            weight: petWeight ? parseFloat(petWeight) : null
+                        });
+                    }
+
+                    // Nạp lại toàn bộ dữ liệu từ Supabase
+                    await loadCustomersModuleData();
+                    renderCustomersTable();
+                    updateCustomerKPIs();
+                    showToast(`Đã tạo thành công hồ sơ khách hàng ${name} vào CSDL!`, 'success');
+                    formAdd.reset();
+                    closeAddModal();
+                } catch (err) {
+                    console.error('[Customers] Lỗi tạo khách hàng:', err);
+                    showToast('Đã xảy ra lỗi khi tạo khách hàng!', 'danger');
+                }
             });
         }
 
-        // 7. Modal Điều chỉnh Pawpoint (Hỗ trợ cả CỘNG ĐIỂM và TRỪ ĐIỂM, cập nhật tức thì vào bảng)
+        // 7. Modal Điều chỉnh Pawpoint (Hỗ trợ cả CỘNG ĐIỂM và TRỪ ĐIỂM, ghi trực tiếp vào Supabase)
         const modalAdjust = document.getElementById('modalAdjustPoints');
         const btnOpenAdjust = document.getElementById('btnOpenAdjustPointsModal');
         const btnCloseAdjust = document.getElementById('btnCloseAdjustPoints');
@@ -1492,6 +1516,7 @@
         }
         if (btnCloseAdjust) btnCloseAdjust.addEventListener('click', closeAdjustModal);
         if (btnCancelAdjust) btnCancelAdjust.addEventListener('click', closeAdjustModal);
+        
         // Gợi ý thông tin khách hàng thời gian thực khi nhập SĐT điều chỉnh điểm
         const adjustPhoneInput = document.getElementById('adjustPhone');
         if (adjustPhoneInput) {
@@ -1512,7 +1537,7 @@
         }
 
         if (formAdjust) {
-            formAdjust.addEventListener('submit', (e) => {
+            formAdjust.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const phone = document.getElementById('adjustPhone')?.value || '';
                 const type = document.getElementById('adjustType')?.value || 'ADD';
@@ -1532,85 +1557,61 @@
                     return;
                 }
 
-                const custName = matchedCust.name;
-                const currentBalance = Number(matchedCust.points) || 0;
-                const newBalance = type === 'ADD' ? (currentBalance + pts) : Math.max(0, currentBalance - pts);
-                matchedCust.points = newBalance;
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!client) {
+                    showToast('Lỗi kết nối CSDL Supabase!', 'danger');
+                    return;
+                }
 
-                // Tự động kiểm tra và thăng / hạ hạng thành viên
-                const tierResult = evaluateCustomerTier(matchedCust);
-
-                // Thêm vào kho lịch sử Pawpoint
-                const now = new Date();
-                const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                pawpointHistory.unshift({
-                    id: 'PWH-' + String(pawpointHistory.length + 1).padStart(3, '0'),
-                    time: timeStr,
-                    custId: matchedCust.id,
-                    custName: custName,
-                    phone: matchedCust.phone,
-                    type: type,
-                    points: pts,
-                    balance: newBalance,
-                    reason: reason
-                });
-
-                persistPawpointHistory();
-                persistCustomersData();
-
-                // Đồng bộ sang pawpal_current_user và pawpal_users_db trong localStorage nếu cùng số điện thoại
                 try {
-                    const rawCurrentUser = localStorage.getItem('pawpal_current_user');
-                    if (rawCurrentUser) {
-                        const currentUser = JSON.parse(rawCurrentUser);
-                        if (currentUser && currentUser.phone && currentUser.phone.replace(/[^0-9]/g, '') === cleanPhone) {
-                            currentUser.points = newBalance;
-                            currentUser.pawPoints = newBalance;
-                            if (tierResult.changed) {
-                                currentUser.membershipTier = tierResult.newTierName;
-                                currentUser.tier = tierResult.newTierName;
-                            }
-                            localStorage.setItem('pawpal_current_user', JSON.stringify(currentUser));
+                    const custDbId = matchedCust.dbId;
+                    const currentBalance = Number(matchedCust.points) || 0;
+                    const newBalance = type === 'ADD' ? (currentBalance + pts) : Math.max(0, currentBalance - pts);
+                    const ptsSigned = type === 'ADD' ? pts : -pts;
+
+                    // 1. Cập nhật số điểm trong customer_membership
+                    if (custDbId) {
+                        const { error: memErr } = await client
+                            .from('customer_membership')
+                            .update({ total_paw_points: newBalance })
+                            .eq('customer_id', custDbId);
+
+                        if (memErr) {
+                            console.warn('[Customers] Lỗi cập nhật customer_membership, thử upsert:', memErr);
+                            await client
+                                .from('customer_membership')
+                                .upsert({ customer_id: custDbId, total_paw_points: newBalance });
                         }
+
+                        // 2. Ghi nhật ký giao dịch điểm vào paw_point_transaction
+                        await client.from('paw_point_transaction').insert({
+                            customer_id: custDbId,
+                            points: ptsSigned,
+                            balance_after: newBalance,
+                            description: reason
+                        });
                     }
-                    const rawUsersDb = localStorage.getItem('pawpal_users_db');
-                    if (rawUsersDb) {
-                        const usersDb = JSON.parse(rawUsersDb);
-                        const idx = usersDb.findIndex(u => u.phone && u.phone.replace(/[^0-9]/g, '') === cleanPhone);
-                        if (idx !== -1) {
-                            usersDb[idx].points = newBalance;
-                            usersDb[idx].pawPoints = newBalance;
-                            if (tierResult.changed) {
-                                usersDb[idx].membershipTier = tierResult.newTierName;
-                                usersDb[idx].tier = tierResult.newTierName;
-                            }
-                            localStorage.setItem('pawpal_users_db', JSON.stringify(usersDb));
-                        }
+
+                    // Nạp lại toàn bộ dữ liệu từ Supabase
+                    await loadCustomersModuleData();
+                    renderCustomersTable();
+                    updateCustomerKPIs();
+                    renderPawpointHistory();
+
+                    const currentOpenCustId = sessionStorage.getItem('pawpal_admin_customer_id');
+                    if (currentOpenCustId === matchedCust.id) {
+                        renderDrawerCustomerProfile(matchedCust.id);
                     }
+
+                    showToast(`Đã ${type === 'ADD' ? 'cộng' : 'trừ'} ${pts} Pawpoint cho khách hàng ${matchedCust.name}! Số dư mới: ${newBalance.toLocaleString('vi-VN')} pts`, 'success');
+                    formAdjust.reset();
+                    const hint = document.getElementById('adjustPhoneCustomerHint');
+                    if (hint) hint.style.display = 'none';
+                    closeAdjustModal();
                 } catch (err) {
-                    console.warn('Lỗi đồng bộ điểm sang user storage:', err);
+                    console.error('[Customers] Lỗi điều chỉnh điểm:', err);
+                    showToast('Đã xảy ra lỗi khi điều chỉnh điểm!', 'danger');
                 }
-
-                renderCustomersTable();
-                updateCustomerKPIs();
-                renderPawpointHistory();
-
-                // Cập nhật lại Drawer nếu đang mở đúng khách hàng này
-                const currentOpenCustId = sessionStorage.getItem('pawpal_admin_customer_id');
-                if (currentOpenCustId === matchedCust.id) {
-                    renderDrawerCustomerProfile(matchedCust.id);
-                }
-
-                if (tierResult.changed) {
-                    showToast(`Đã ${type === 'ADD' ? 'cộng' : 'trừ'} ${pts} Pawpoint! ${matchedCust.name} được tự động cập nhật hạng: ${tierResult.newTierName}!`);
-                } else {
-                    showToast(`Đã ${type === 'ADD' ? 'cộng' : 'trừ'} ${pts} Pawpoint cho khách hàng ${matchedCust.name}! Số dư mới: ${newBalance.toLocaleString('vi-VN')} pts`);
-                }
-
-                formAdjust.reset();
-                const hint = document.getElementById('adjustPhoneCustomerHint');
-                if (hint) hint.style.display = 'none';
-                closeAdjustModal();
             });
         }
 
@@ -1886,7 +1887,7 @@
         if (btnCancelAddPet) btnCancelAddPet.addEventListener('click', closeAddPetModal);
 
         if (formAddPet) {
-            formAddPet.addEventListener('submit', (e) => {
+            formAddPet.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const petName = document.getElementById('addPetName')?.value || 'Bé cưng';
                 const species = document.getElementById('addPetSpecies')?.value || 'Chó';
@@ -1895,44 +1896,49 @@
                 const vaccine = document.getElementById('addPetVaccine')?.value || 'Chưa cập nhật';
                 const alertNote = document.getElementById('addPetAlert')?.value || 'Bình thường';
 
-                const currentCustId = document.getElementById('profileValCustId')?.textContent || 'CUST-001';
-                if (!customerDatabase[currentCustId]) {
-                    customerDatabase[currentCustId] = { pets: [] };
+                const currentCustId = sessionStorage.getItem('pawpal_admin_customer_id') || document.getElementById('profileValCustId')?.textContent || 'CUST-001';
+                const custObj = customerDatabase[currentCustId];
+                const custDbId = custObj?.dbId;
+
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!client) {
+                    showToast('Lỗi kết nối CSDL Supabase!', 'danger');
+                    return;
                 }
-                if (!customerDatabase[currentCustId].pets) {
-                    customerDatabase[currentCustId].pets = [];
-                }
 
-                const newPetId = 'PET-' + String(customerDatabase[currentCustId].pets.length + 1).padStart(3, '0');
-                customerDatabase[currentCustId].pets.unshift({
-                    id: newPetId,
-                    name: petName,
-                    species: species,
-                    breed: breed,
-                    weight: weight,
-                    vaccine: vaccine,
-                    alertNote: alertNote
-                });
+                try {
+                    const spec = (species === 'Mèo' || species === 'CAT') ? 'cat' : ((species === 'Thỏ' || species === 'RABBIT') ? 'rabbit' : ((species === 'Khác' || species === 'OTHER') ? 'other' : 'dog'));
 
-                renderDrawerPets(currentCustId);
+                    if (custDbId) {
+                        const { error: petErr } = await client.from('pet_profile').insert({
+                            customer_id: custDbId,
+                            pet_name: petName,
+                            species: spec,
+                            breed: breed || 'Chưa cập nhật',
+                            weight: weight ? parseFloat(weight) : null,
+                            vaccination_history: vaccine || 'Chưa cập nhật',
+                            allergy: (alertNote && alertNote !== 'Bình thường') ? alertNote : 'Không'
+                        });
 
-                // Cập nhật lại cột thú cưng trên bảng danh sách
-                document.querySelectorAll('#customerTableTbody tr').forEach(row => {
-                    const idCell = row.querySelector('td:first-child')?.textContent?.trim();
-                    if (idCell === currentCustId) {
-                        const petCell = row.querySelectorAll('td')[3];
-                        if (petCell) {
-                            petCell.innerHTML = formatCustomerPetsCell(customerDatabase[currentCustId]?.pets);
+                        if (petErr) {
+                            console.error('[Customers] Lỗi thêm thú cưng:', petErr);
+                            showToast('Không thể thêm thú cưng vào CSDL!', 'danger');
+                            return;
                         }
                     }
-                });
 
-                persistCustomersData();
-                syncNewPetToPetsModule(customerDatabase[currentCustId].pets[0], currentCustId, customerDatabase[currentCustId]?.name, customerDatabase[currentCustId]?.phone);
-                renderCustomersTable();
-                showToast(`Đã thêm thành công bé cưng ${petName} vào hồ sơ!`);
-                formAddPet.reset();
-                closeAddPetModal();
+                    // Nạp lại toàn bộ dữ liệu từ Supabase
+                    await loadCustomersModuleData();
+                    renderDrawerPets(currentCustId);
+                    renderCustomersTable();
+                    updateCustomerKPIs();
+                    showToast(`Đã thêm thành công bé cưng ${petName} vào CSDL!`, 'success');
+                    formAddPet.reset();
+                    closeAddPetModal();
+                } catch (err) {
+                    console.error('[Customers] Lỗi thêm thú cưng:', err);
+                    showToast('Đã xảy ra lỗi khi thêm thú cưng!', 'danger');
+                }
             });
         }
 
