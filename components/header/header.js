@@ -384,27 +384,6 @@
             if (lookupDivider) lookupDivider.classList.remove('d-none');
 
             authActions.innerHTML = `
-                <div class="notification-menu-wrapper me-3">
-                    <button class="notification-btn position-relative" id="headerNotificationBtn" title="Thông báo" type="button">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                        </svg>
-                        <span class="notification-badge" id="notificationBadge">0</span>
-                    </button>
-                    <div class="notification-dropdown" id="notificationDropdown">
-                        <div class="notification-dropdown-header">
-                            <span>Thông báo</span>
-                            <button class="btn-mark-all-read" id="btnMarkAllRead" type="button">Đọc tất cả</button>
-                        </div>
-                        <div class="notification-list" id="headerNotificationList">
-                            ${renderNotifications()}
-                        </div>
-                        <div class="notification-dropdown-footer">
-                            <a href="${root}pages/user/#notifications" id="btnSeeAllNotis">Xem tất cả</a>
-                        </div>
-                    </div>
-                </div>
                 <a href="${root}pages/shop/cart/cart.html" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="9" cy="21" r="1"></circle>
@@ -421,7 +400,7 @@
                     </svg>
                     <span>Đăng nhập</span>
                 </a>
-                <a href="${root}pages/public/login/login.html?action=register" class="btn-signup">Đăng ký</a>
+                <a href="${root}pages/public/login/login.html?action=setup-password" class="btn-signup">Kích hoạt</a>
             `;
 
             // Mobile Nav
@@ -438,27 +417,6 @@
             if (lookupDivider) lookupDivider.classList.remove('d-none');
             
             authActions.innerHTML = `
-                <div class="notification-menu-wrapper me-3">
-                    <button class="notification-btn position-relative" id="headerNotificationBtn" title="Thông báo" type="button">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                        </svg>
-                        <span class="notification-badge" id="notificationBadge">0</span>
-                    </button>
-                    <div class="notification-dropdown" id="notificationDropdown">
-                        <div class="notification-dropdown-header">
-                            <span>Thông báo</span>
-                            <button class="btn-mark-all-read" id="btnMarkAllRead" type="button">Đọc tất cả</button>
-                        </div>
-                        <div class="notification-list" id="headerNotificationList">
-                            ${renderNotifications()}
-                        </div>
-                        <div class="notification-dropdown-footer">
-                            <a href="${root}pages/user/#notifications" id="btnSeeAllNotis">Xem tất cả</a>
-                        </div>
-                    </div>
-                </div>
                 <a href="${root}pages/shop/cart/cart.html" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="9" cy="21" r="1"></circle>
@@ -909,6 +867,8 @@
                 e.preventDefault();
                 if (confirm('Bạn có chắc muốn đăng xuất?')) {
                     localStorage.removeItem('pawpal_current_user');
+                    localStorage.removeItem('pawpal_notifications');
+                    try { sessionStorage.clear(); } catch(e) {}
                     window.location.href = '/pages/public/landing/landing.html';
                 }
             });
