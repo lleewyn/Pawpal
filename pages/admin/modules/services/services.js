@@ -3746,6 +3746,19 @@
                     images: []
                 });
 
+                // Đồng bộ cập nhật KTV lên Supabase
+                const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (db && booking.dbId) {
+                    try {
+                        db.from('care_log').insert([{
+                            appointment_id: booking.dbId,
+                            description: `Điều phối KTV: ${oldStaff} ➔ ${newStaff}. Lý do: ${reason}`,
+                            health_status: 'NORMAL',
+                            recorded_at: new Date().toISOString()
+                        }]);
+                    } catch(err) {}
+                }
+
                 persistData();
                 closeModal();
                 renderBookingDetail(booking.id);
