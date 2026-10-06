@@ -802,14 +802,32 @@
                     const pet = customerDatabase[cId]?.pets[pIdx];
                     showCustomerConfirmModal({
                         title: 'Xác nhận xóa thú cưng',
-                        message: `Bạn có chắc chắn muốn xóa bé cưng <strong>${pet?.name || ''}</strong> khỏi hồ sơ của khách hàng này?`,
+                        message: `Bạn có chắc chắn muốn xóa bé cưng <strong>${pet?.name || ''}</strong> khỏi hồ sơ của khách hàng này trên CSDL?`,
                         acceptText: 'Xóa thú cưng',
-                        onAccept: () => {
-                            customerDatabase[cId].pets.splice(pIdx, 1);
-                            renderDrawerPets(cId);
-                            persistCustomersData();
-                            renderCustomersTable();
-                            showToast('Đã xóa bé cưng khỏi hồ sơ thành công!', 'success');
+                        onAccept: async () => {
+                            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                            if (!client) {
+                                showToast('Lỗi kết nối CSDL Supabase!', 'danger');
+                                return;
+                            }
+                            try {
+                                if (pet?.dbId) {
+                                    const { error: delErr } = await client.from('pet_profile').delete().eq('id', pet.dbId);
+                                    if (delErr) {
+                                        console.error('[Customers] Lỗi xóa thú cưng:', delErr);
+                                        showToast('Không thể xóa thú cưng khỏi CSDL!', 'danger');
+                                        return;
+                                    }
+                                }
+                                await loadCustomersModuleData();
+                                renderDrawerPets(cId);
+                                renderCustomersTable();
+                                updateCustomerKPIs();
+                                showToast(`Đã xóa bé cưng ${pet?.name || ''} khỏi CSDL thành công!`, 'success');
+                            } catch (err) {
+                                console.error('[Customers] Lỗi xóa thú cưng:', err);
+                                showToast('Đã xảy ra lỗi khi xóa thú cưng!', 'danger');
+                            }
                         }
                     });
                 });
@@ -2407,6 +2425,58 @@
             pawpointFilterType.addEventListener('change', renderPawpointHistory);
         }
 
+        // 18. THIẾT LẬP KÊNH ĐỒNG BỘ REALTIME TỪ SUPABASE
+        function setupCustomersRealtimeSubscription() {
+            try {
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!client) return;
+
+                if (window._custRealtimeChannel) {
+                    client.removeChannel(window._custRealtimeChannel);
+                }
+
+                window._custRealtimeChannel = client.channel('admin_customers_realtime')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'customer' }, async () => {
+                        await loadCustomersModuleData();
+                        renderCustomersTable();
+                        updateCustomerKPIs();
+                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_profile' }, async () => {
+                        await loadCustomersModuleData();
+                        renderCustomersTable();
+                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_membership' }, async () => {
+                        await loadCustomersModuleData();
+                        renderCustomersTable();
+                        updateCustomerKPIs();
+                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_address' }, async () => {
+                        await loadCustomersModuleData();
+                        const currentOpenId = sessionStorage.getItem('pawpal_admin_customer_id');
+                        if (currentOpenId) renderDrawerAddresses(currentOpenId);
+                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_profile' }, async () => {
+                        await loadCustomersModuleData();
+                        renderCustomersTable();
+                        const currentOpenId = sessionStorage.getItem('pawpal_admin_customer_id');
+                        if (currentOpenId) renderDrawerPets(currentOpenId);
+                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, async () => {
+                        await loadCustomersModuleData();
+                        renderComplaintBar();
+                        renderCustomersTable();
+                        updateCustomerKPIs();
+                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'paw_point_transaction' }, async () => {
+                        await loadCustomersModuleData();
+                        renderPawpointHistory();
+                    })
+                    .subscribe();
+            } catch (err) {
+                console.warn('[Customers] Không thể thiết lập Supabase Realtime:', err);
+            }
+        }
+
         // Nạp 100% dữ liệu từ Supabase Live Database
         await loadCustomersModuleData();
 
@@ -2416,7 +2486,7 @@
         renderComplaintBar();
         renderPawpointHistory();
 
-        // 18. KHỞI TẠO VÀ KHÔI PHỤC TRẠNG THÁI KHI F5 / RELOAD
+        // 19. KHỞI TẠO VÀ KHÔI PHỤC TRẠNG THÁI KHI F5 / RELOAD
         const hashSubtab = window.location.hash ? window.location.hash.replace('#', '') : null;
         const validSubtabs = ['tab-list', 'tab-profile', 'tab-pawpoint'];
         let initialSubtab = 'tab-list';
@@ -2442,6 +2512,9 @@
         if (savedDrawerTab && document.getElementById(savedDrawerTab)) {
             switchDrawerTab(savedDrawerTab);
         }
+
+        // Kích hoạt lắng nghe Realtime Supabase
+        setupCustomersRealtimeSubscription();
 
         if (window.lucide) {
             lucide.createIcons();
