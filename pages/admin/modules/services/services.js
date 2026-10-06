@@ -1424,16 +1424,19 @@
     }
 
     // Cập nhật trạng thái lịch hẹn theo Quy tắc Nghiệp vụ (State Machine)
-    function updateBookingStatus(bookingId, newStatus) {
+    async function updateBookingStatus(bookingId, newStatus) {
         const booking = bookingsData.find(b => b.id === bookingId);
         if (!booking) return;
 
         const timeNow = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
         booking.status = newStatus;
 
+        let dbStatus = 'PENDING';
         if (newStatus === 'confirmed') {
+            dbStatus = 'CONFIRMED';
             if (!booking.staff) booking.staff = 'Ngọc Anh';
         } else if (newStatus === 'in_progress') {
+            dbStatus = 'IN_PROGRESS';
             booking.alertType = null;
             if (!booking.staff) booking.staff = 'Ngọc Anh';
             
@@ -1448,6 +1451,7 @@
                 staff: booking.staff
             });
         } else if (newStatus === 'completed') {
+            dbStatus = 'COMPLETED';
             booking.alertType = null;
             if (!booking.paymentStatus || booking.paymentStatus.includes('Chưa')) {
                 booking.paymentStatus = 'Đã thanh toán (Tại quầy)';
@@ -1463,6 +1467,21 @@
                 done: true,
                 staff: booking.staff || 'KTV'
             });
+        } else if (newStatus === 'cancelled') {
+            dbStatus = 'CANCELLED';
+        }
+
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (db && booking.dbId) {
+            try {
+                const payload = { appointment_status: dbStatus };
+                if (newStatus === 'completed') {
+                    payload.payment_status = 'PAID';
+                }
+                await db.from('appointment').update(payload).eq('id', booking.dbId);
+            } catch (err) {
+                console.warn('Lỗi cập nhật Supabase appointment status:', err);
+            }
         }
 
         persistData();
@@ -2725,7 +2744,7 @@
         if (btnDismissCancel) btnDismissCancel.addEventListener('click', closeCancelModal);
 
         if (btnConfirmCancel) {
-            btnConfirmCancel.addEventListener('click', () => {
+            btnConfirmCancel.addEventListener('click', async () => {
                 const bkgId = btnConfirmCancel.getAttribute('data-booking-id');
                 const reasonSelect = document.getElementById('cancelBookingReasonSelect').value;
                 const reasonDetail = document.getElementById('cancelBookingReasonDetail').value;
@@ -2741,6 +2760,18 @@
                         done: true,
                         staff: 'Admin'
                     });
+
+                    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (db && booking.dbId) {
+                        try {
+                            await db.from('appointment').update({
+                                appointment_status: 'CANCELLED',
+                                note: booking.customerNote
+                            }).eq('id', booking.dbId);
+                        } catch(err) {
+                            console.warn('Lỗi cập nhật Supabase khi hủy ca:', err);
+                        }
+                    }
                 }
                 persistData();
                 closeCancelModal();
@@ -3039,7 +3070,7 @@
         }
 
         if (formReply) {
-            formReply.addEventListener('submit', (e) => {
+            formReply.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const reviewId = document.getElementById('replyReviewIdHidden').value;
                 const replyText = document.getElementById('replyContentText').value.trim();
@@ -3056,10 +3087,22 @@
                     else if (voucherVal === 'VOUCHER_FREE_BATH') review.voucherSent = '01 Lượt Tắm Miễn Phí';
                     else review.voucherSent = null;
 
+                    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (db && review.dbId) {
+                        try {
+                            await db.from('review').update({
+                                shop_reply: replyText
+                            }).eq('id', review.dbId);
+                        } catch(err) {
+                            console.warn('Lỗi cập nhật phản hồi Supabase review:', err);
+                        }
+                    }
+
                     persistData();
                     closeReplyModal();
                     renderReviewsTable();
                     updateReviewKPIs();
+                    showToast('Đã lưu và gửi phản hồi đánh giá cho khách hàng!');
                 }
             });
         }
@@ -3201,6 +3244,14 @@
                 closeAddSurchargeModal();
                 renderBookingDetail(booking.id);
                 renderBookingsTable();
+
+                const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (db && booking.dbId) {
+                    try {
+                        db.from('appointment').update({ total_price: booking.total }).eq('id', booking.dbId);
+                    } catch(err) {}
+                }
+
                 showToast(`Đã thêm phụ phí phát sinh "${name}" (+${formatCurrency(amount)}, Hoa hồng KTV: +${formatCurrency(commissionAmount)})!`);
             });
         }
@@ -3321,6 +3372,13 @@
                 closeAddAccompanyingModal();
                 renderBookingDetail(booking.id);
                 renderBookingsTable();
+
+                const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (db && booking.dbId) {
+                    try {
+                        db.from('appointment').update({ total_price: booking.total }).eq('id', booking.dbId);
+                    } catch(err) {}
+                }
             });
         }
 
@@ -3338,7 +3396,7 @@
         if (btnCancelIntake) btnCancelIntake.addEventListener('click', closeIntakeModal);
 
         if (formIntake) {
-            formIntake.addEventListener('submit', (e) => {
+            formIntake.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const booking = bookingsData.find(b => b.id === selectedBookingId);
                 if (!booking) return;
@@ -3491,6 +3549,37 @@
                                 images: []
                             });
                         });
+                    }
+
+                    // Đồng bộ lên Supabase
+                    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (db && booking.dbId) {
+                        try {
+                            await db.from('appointment').update({
+                                appointment_status: 'IN_PROGRESS',
+                                note: (booking.customerNote ? booking.customerNote + '\n' : '') + `[Tiếp nhận]: ${actualWeightStr}, ${booking.intakeSafety.skinCoat}`
+                            }).eq('id', booking.dbId);
+
+                            const { data: intakeLog } = await db.from('care_log').insert([{
+                                appointment_id: booking.dbId,
+                                description: `Tiếp nhận an toàn: Cân nặng ${actualWeightStr} (${weightEval}). Da lông: ${booking.intakeSafety.skinCoat}. Vết thương: ${woundsVal}. Tính khí: ${selectedTemp}. Đồ gửi: ${belongingsVal}.`,
+                                health_status: (skinParts.includes('Có mảng nấm/viêm đỏ') || skinParts.includes('Có ve rận/bọ chét')) ? 'WARNING' : 'NORMAL',
+                                recorded_at: new Date().toISOString()
+                            }]).select();
+
+                            if (intakeLog && intakeLog[0] && intakeProofImagesTemp.length > 0) {
+                                const logDbId = intakeLog[0].id;
+                                const mediaRows = intakeProofImagesTemp.map(img => ({
+                                    care_log_id: logDbId,
+                                    media_type: 'IMAGE',
+                                    media_url: img,
+                                    file_name: 'intake_photo.jpg'
+                                }));
+                                await db.from('care_log_media').insert(mediaRows);
+                            }
+                        } catch(err) {
+                            console.warn('Lỗi cập nhật Supabase khi tiếp nhận bé:', err);
+                        }
                     }
 
                     persistData();
@@ -3804,7 +3893,7 @@
         if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
         if (form) {
-            form.addEventListener('submit', (e) => {
+            form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const bookingId = modal ? modal.getAttribute('data-booking-id') : null;
                 const booking = bookingsData.find(b => b.id === bookingId);
@@ -3896,6 +3985,38 @@
                     staff: booking.staff || 'KTV',
                     images: [...completeProofImagesTemp]
                 });
+
+                // Cập nhật trạng thái và xuất log lên Supabase
+                const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (db && booking.dbId) {
+                    try {
+                        await db.from('appointment').update({
+                            appointment_status: 'COMPLETED',
+                            payment_status: isPaid ? 'PAID' : 'UNPAID',
+                            total_price: finalTotal
+                        }).eq('id', booking.dbId);
+
+                        const { data: compLog } = await db.from('care_log').insert([{
+                            appointment_id: booking.dbId,
+                            description: `Nghiệm thu ca dịch vụ và bàn giao bé. Tổng hóa đơn: ${finalTotal.toLocaleString('vi-VN')} đ. ${belongingsNote}`,
+                            health_status: 'NORMAL',
+                            recorded_at: new Date().toISOString()
+                        }]).select();
+
+                        if (compLog && compLog[0] && completeProofImagesTemp.length > 0) {
+                            const logDbId = compLog[0].id;
+                            const mediaRows = completeProofImagesTemp.map(img => ({
+                                care_log_id: logDbId,
+                                media_type: 'IMAGE',
+                                media_url: img,
+                                file_name: 'complete_photo.jpg'
+                            }));
+                            await db.from('care_log_media').insert(mediaRows);
+                        }
+                    } catch(err) {
+                        console.warn('Lỗi cập nhật Supabase khi hoàn tất ca:', err);
+                    }
+                }
 
                 persistData();
                 closeModal();
