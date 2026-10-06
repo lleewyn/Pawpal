@@ -260,13 +260,19 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: var(--shadow-card);
 }
 
-@keyframes vt-fade-in  { from { opacity: 0; } to { opacity: 1; } }
-@keyframes vt-fade-out { from { opacity: 1; } to { opacity: 0; } }
-@keyframes vt-slide-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes vt-slide-out{ from { opacity: 1; transform: translateY(0); }    to { opacity: 0; transform: translateY(-8px); } }
+html {
+    scrollbar-gutter: stable;
+}
 
-::view-transition-old(root) { animation: 180ms ease-out both vt-fade-out; }
-::view-transition-new(root) { animation: 280ms ease-out both vt-slide-in; }
+/* Triệt tiêu 100% hiện tượng rung lắc / dịch chuyển khi chuyển giữa các trang */
+::view-transition-old(root),
+::view-transition-new(root),
+::view-transition-group(root),
+::view-transition-old(site-header),
+::view-transition-new(site-header),
+::view-transition-group(site-header) {
+    animation: none !important;
+}
 \n\n.rounded-lg { border-radius: var(--border-radius-lg) !important; }\n.text-primary { color: var(--color-primary) !important; }\n.rounded-pill { border-radius: var(--border-radius-pill) !important; }\n.font-heading { font-family: var(--font-heading) !important; }\n.text-primary-dark { color: var(--color-primary-dark) !important; }\n.fs-h3 { font-size: var(--fs-h3) !important; }\n.fs-h4 { font-size: var(--fs-h4) !important; }\n.fs-small { font-size: var(--fs-small) !important; }\n.bg-bg-light { background-color: var(--color-bg-light) !important; }\n.text-accent { color: var(--color-accent) !important; }\n.bg-success { background-color: var(--color-success) !important; }\n.bg-accent { background-color: var(--color-accent) !important; }\n.bg-border { background-color: var(--color-border) !important; }\n.rounded-card-border-radius { border-radius: var(--card-border-radius) !important; }\n.text-success { color: var(--color-success) !important; }\n.bg-bg-white { background-color: var(--color-bg-white) !important; }\n.fs-h2 { font-size: var(--fs-h2) !important; }\n.fs-body { font-size: var(--fs-body) !important; }\n
 
 .h-48px { height: 48px !important; }
