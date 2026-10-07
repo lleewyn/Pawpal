@@ -629,6 +629,188 @@
     background: #1B5338;
 }
 
+/* Khung đính kèm ảnh phía trên input */
+.fab-chat-attach-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: #F4FAF6;
+    border-top: 1px solid #C3DEC7;
+    border-bottom: 1px solid #ECF2EE;
+}
+
+.fab-chat-attach-preview img {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    object-fit: cover;
+    border: 1px solid #C3DEC7;
+}
+
+.fab-chat-attach-preview-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.fab-chat-attach-preview-name {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #203A2C;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fab-chat-attach-preview-size {
+    font-size: 10.5px;
+    color: #4F7A65;
+}
+
+.fab-chat-attach-preview-remove {
+    background: none;
+    border: none;
+    color: #9CA3AF;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 9px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.fab-chat-attach-preview-remove:hover {
+    color: #DC2626;
+    background: #FEE2E2;
+}
+
+.fab-chat-attach-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: #EEF5F1;
+    border: 1px solid #ECF2EE;
+    color: #236B48;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+}
+
+.fab-chat-attach-btn:hover {
+    background: #DCEEE2;
+    border-color: #236B48;
+}
+
+/* Thẻ hiển thị ảnh trong tin nhắn chat */
+.chat-attachment-image-wrap {
+    margin: 4px 0;
+    cursor: pointer;
+    border-radius: 9px;
+    overflow: hidden;
+    display: inline-block;
+    max-width: 100%;
+}
+
+.chat-attachment-img {
+    max-width: 240px;
+    max-height: 200px;
+    border-radius: 9px;
+    object-fit: cover;
+    display: block;
+    border: 1px solid rgba(0,0,0,0.08);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.chat-attachment-img:hover {
+    opacity: 0.92;
+    transform: scale(1.02);
+}
+
+.chat-attachment-caption {
+    font-size: 11px;
+    color: inherit;
+    opacity: 0.85;
+    margin-top: 4px;
+    display: block;
+}
+
+/* Lightbox xem ảnh toàn màn hình */
+.fab-image-lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fab-image-lightbox-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.fab-image-lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 85vh;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.fab-image-lightbox-content img {
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: 9px;
+    object-fit: contain;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+.fab-image-lightbox-close {
+    position: absolute;
+    top: -42px;
+    right: 0;
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    border: none;
+    border-radius: 9px;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.18s;
+}
+
+.fab-image-lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.fab-image-lightbox-caption {
+    margin-top: 10px;
+    color: #ffffff;
+    font-size: 13px;
+    text-align: center;
+    max-width: 80vw;
+}
+
 /* -------------------------------------------------------------
  * GIAI ĐOẠN 3: RICH MESSAGE CARDS THEO CHUẨN AGENTS.MD (9PX, FOREST GREEN)
  * ------------------------------------------------------------- */
@@ -738,6 +920,128 @@
 
 .fab-rich-card--ticket {
     border-left: 3px solid #DC2626;
+}
+
+.fab-rich-card--csat {
+    border-left: 3px solid #F59E0B;
+}
+
+.fab-csat-stars-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 8px 0 6px;
+    padding: 4px 0;
+}
+
+.fab-csat-stars {
+    display: flex;
+    gap: 2px;
+}
+
+.fab-star-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: #D1D5DB;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+    transition: color 0.15s ease, transform 0.1s ease;
+}
+
+.fab-star-btn:hover {
+    transform: scale(1.15);
+}
+
+.fab-star-btn.active {
+    color: #F59E0B;
+}
+
+.fab-csat-score-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #734718;
+}
+
+.fab-csat-tags-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 6px 0 8px;
+}
+
+.fab-csat-tag-btn {
+    background: #EEF5F1;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #203A2C;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.fab-csat-tag-btn:hover {
+    background: #E2ECE5;
+}
+
+.fab-csat-tag-btn.active {
+    background: #236B48;
+    color: #FFFFFF;
+    border-color: #236B48;
+}
+
+.fab-csat-feedback-input {
+    width: 100%;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-family: inherit;
+    margin-top: 6px;
+    box-sizing: border-box;
+    background: #FAFCFA;
+}
+
+.fab-csat-feedback-input:focus {
+    outline: none;
+    border-color: #236B48;
+    background: #FFFFFF;
+}
+
+.fab-csat-submit-btn {
+    display: block;
+    width: 100%;
+    padding: 7px 12px;
+    background: #236B48;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.18s ease;
+    margin-top: 8px;
+    box-sizing: border-box;
+}
+
+.fab-csat-submit-btn:hover {
+    background: #1B5338;
+}
+
+.fab-csat-submitted {
+    padding: 10px 12px;
+    text-align: center;
+    color: #165335;
+    font-size: 12px;
+    font-weight: 500;
+    background: #DCEEE2;
+    border-radius: 9px;
+    margin-top: 6px;
+    line-height: 1.45;
 }
 
 .fab-rich-card .admin-badge {

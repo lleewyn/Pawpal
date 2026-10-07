@@ -80,6 +80,7 @@
                             <button type="button" class="chat-action-item" id="btnRewardPoints">Tặng điểm Pawpoint</button>
                             <button type="button" class="chat-action-item" id="btnConvertToTicket">Chuyển thành Ticket</button>
                             <button type="button" class="chat-action-item" id="btnEscalateManager">Chuyển cấp Quản lý</button>
+                            <button type="button" class="chat-action-item" id="btnResolveChatAction">Hoàn tất ca chat</button>
                         </div>
                     </div>
 
@@ -87,6 +88,7 @@
 
                     <div class="chat-header-actions-spacer"></div>
                     <span class="sla-timer-pill sla-danger" id="currentChatSlaBadge">Quá hạn: 2m 25s</span>
+                    <button type="button" class="admin-btn btn-resolve-compact" id="btnHeaderResolveChat" style="display: none; background: #EEF5F1; color: #236B48; border: 1px solid #C3DEC7; border-radius: 9px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer;">Hoàn tất ca</button>
                     <button type="button" class="admin-btn admin-btn-primary btn-takeover-compact" id="btnToggleTakeover">Tiếp nhận</button>
                 </div>
 
@@ -139,6 +141,15 @@
 
                     <!-- TẦNG 2: KHUNG SOẠN THẢO VÀ GỬI TIN NHẮN -->
                     <div class="chat-composer-box">
+                        <!-- Khung xem trước ảnh đính kèm trước khi gửi -->
+                        <div class="admin-chat-attach-preview" id="adminChatAttachPreview" style="display: none;">
+                            <img src="" id="adminChatAttachPreviewImg" alt="Xem trước ảnh">
+                            <div class="admin-chat-attach-preview-info">
+                                <span class="admin-chat-attach-preview-name" id="adminChatAttachPreviewName">anh_dinh_kem.jpg</span>
+                                <span class="admin-chat-attach-preview-size" id="adminChatAttachPreviewSize">120 KB</span>
+                            </div>
+                            <button type="button" class="admin-chat-attach-preview-remove" id="adminChatAttachPreviewRemove" title="Bỏ đính kèm">✕</button>
+                        </div>
                         <textarea class="admin-input chat-composer-textarea" id="chatMessageInput" rows="2" placeholder="Gõ tin nhắn gửi khách hàng... (Enter để gửi, Shift+Enter xuống dòng)"></textarea>
                         <div class="chat-composer-footer">
                             <div class="composer-mode-left">
@@ -148,6 +159,8 @@
                                 <button type="button" class="btn-toggle-assistant-pill" id="btnShowAssistantBar">Mở gợi ý AI</button>
                             </div>
                             <div class="composer-actions-right">
+                                <input type="file" id="adminChatFileInput" accept="image/*" style="display: none;">
+                                <button type="button" class="admin-btn admin-btn-secondary" id="btnAdminChatAttach" title="Gửi ảnh thú cưng / đơn hàng">Đính kèm ảnh</button>
                                 <button type="button" class="admin-btn admin-btn-primary btn-send-message" id="btnSendLiveMessage">Gửi tin</button>
                             </div>
                         </div>
@@ -983,6 +996,59 @@
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelCannedEditor">Hủy</button>
                 <button type="button" class="admin-btn admin-btn-primary" id="btnSaveCannedRecord">Lưu mẫu câu</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 11: HOÀN TẤT CA CHAT VÀ GỬI ĐÁNH GIÁ CSAT
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalResolveChatOverlay" style="display: none;">
+        <div class="admin-modal-card" style="width: 540px; max-width: 94vw;">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Hoàn tất ca hỗ trợ trực tuyến</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseResolveChatModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Khách hàng</label>
+                    <input type="text" class="admin-input" id="resolveChatCustomerName" readonly style="background: #F8FAF9;">
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Kết quả giải quyết *</label>
+                    <select class="admin-select" id="selectResolveReason">
+                        <option value="resolved_complete">Đã giải quyết trọn vẹn yêu cầu của khách</option>
+                        <option value="service_consulted">Đã tư vấn dịch vụ Spa / Grooming / Hotel</option>
+                        <option value="order_tracked">Đã xử lý thông tin đơn hàng và vận chuyển</option>
+                        <option value="ticket_created">Đã lập vé khiếu nại chuyển bộ phận chuyên môn</option>
+                        <option value="customer_left">Khách hàng đã rời khỏi cuộc trò chuyện</option>
+                    </select>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Ghi chú tổng kết ca (Lưu vào hồ sơ)</label>
+                    <textarea class="admin-input" id="textareaResolveNotes" rows="3" placeholder="Tóm tắt ngắn nội dung đã hỗ trợ khách hàng..."></textarea>
+                </div>
+                <div class="form-group-item">
+                    <label class="admin-checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="checkboxSendCsatSurvey" checked>
+                        <span style="font-size: 13px; font-weight: 500; color: var(--text-main);">Gửi biểu mẫu đánh giá mức độ hài lòng (CSAT) cho khách hàng</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelResolveChat">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmResolveChat">Xác nhận hoàn tất</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 12: LIGHTBOX XEM ẢNH ĐÍNH KÈM TOÀN MÀN HÌNH
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalAdminImageLightbox" style="display: none;">
+        <div class="admin-image-lightbox-wrapper">
+            <button type="button" class="admin-image-lightbox-close" id="btnCloseAdminLightbox" title="Đóng">✕</button>
+            <img src="" id="imgAdminLightboxPreview" alt="Xem ảnh phóng to">
+            <div class="admin-image-lightbox-caption" id="captionAdminLightbox"></div>
         </div>
     </div>
 </div>

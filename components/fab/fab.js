@@ -31,6 +31,90 @@ function initFab() {
     const sendBtn     = document.getElementById('fabChatSend');
     const messages    = document.getElementById('fabChatMessages');
 
+    // Các phần tử đính kèm ảnh và Lightbox
+    const attachBtn       = document.getElementById('fabChatAttachBtn');
+    const fileInput       = document.getElementById('fabChatFileInput');
+    const attachPreview   = document.getElementById('fabChatAttachPreview');
+    const previewImg      = document.getElementById('fabChatAttachPreviewImg');
+    const previewName     = document.getElementById('fabChatAttachPreviewName');
+    const previewSize     = document.getElementById('fabChatAttachPreviewSize');
+    const previewRemove   = document.getElementById('fabChatAttachPreviewRemove');
+    const imageLightbox   = document.getElementById('fabImageLightbox');
+    const lightboxImg     = document.getElementById('fabImageLightboxImg');
+    const lightboxCaption = document.getElementById('fabImageLightboxCaption');
+    const lightboxClose   = document.getElementById('fabImageLightboxClose');
+    const lightboxBackdrop = document.getElementById('fabImageLightboxBackdrop');
+
+    let pendingAttachedImage = null; // { name, size, dataUrl }
+
+    function formatBytes(bytes) {
+        if (!bytes || bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function clearPendingAttachment() {
+        pendingAttachedImage = null;
+        if (fileInput) fileInput.value = '';
+        if (attachPreview) attachPreview.style.display = 'none';
+    }
+
+    function openLightbox(imgUrl, caption) {
+        if (!imageLightbox || !lightboxImg) return;
+        lightboxImg.src = imgUrl;
+        if (lightboxCaption) lightboxCaption.textContent = caption || '';
+        imageLightbox.style.display = 'flex';
+    }
+
+    function closeLightbox() {
+        if (!imageLightbox) return;
+        imageLightbox.style.display = 'none';
+        if (lightboxImg) lightboxImg.src = '';
+    }
+
+    if (attachBtn && fileInput) {
+        attachBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+
+            // Giới hạn 5MB
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Dung lượng ảnh vượt quá 5MB. Vui lòng chọn ảnh nhẹ hơn để tải lên nhanh chóng!');
+                fileInput.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const dataUrl = ev.target.result;
+                pendingAttachedImage = {
+                    name: file.name,
+                    size: file.size,
+                    dataUrl: dataUrl
+                };
+                if (previewImg) previewImg.src = dataUrl;
+                if (previewName) previewName.textContent = file.name;
+                if (previewSize) previewSize.textContent = formatBytes(file.size);
+                if (attachPreview) attachPreview.style.display = 'flex';
+                if (input) input.focus();
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (previewRemove) {
+        previewRemove.addEventListener('click', clearPendingAttachment);
+    }
+
+    if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
+    if (lightboxBackdrop) lightboxBackdrop.addEventListener('click', closeLightbox);
+
     if (!aiBtn || !chatPanel) return;
 
     aiBtn.addEventListener('click', () => {
@@ -310,6 +394,54 @@ function initFab() {
             } catch(e) { return match; }
         });
 
+        // 4. Thẻ Đánh giá mức độ hài lòng (CSAT Loop): :::csat_survey { ... } :::
+        html = html.replace(/:::csat_survey\s*(\{[\s\S]*?\})\s*:::/g, (match, jsonStr) => {
+            try {
+                const data = JSON.parse(jsonStr);
+                const convId = data.convId || activeConversationId || '';
+                const staff = data.staffName || data.staff || 'Chuyên viên CSKH';
+                return `
+                    <div class="fab-rich-card fab-rich-card--csat" data-csat-conv-id="${convId}">
+                        <div class="fab-rich-card-header">
+                            <span class="fab-rich-card-tag">Đánh giá hỗ trợ</span>
+                            <span class="admin-badge badge-active">Hoàn tất</span>
+                        </div>
+                        <div class="fab-rich-card-body">
+                            <div class="fab-rich-card-title">Sen hài lòng với hỗ trợ từ PawPal chứ?</div>
+                            <div class="fab-rich-card-desc">Chuyên viên phụ trách: <strong>${staff}</strong></div>
+                            
+                            <div class="fab-csat-stars-container">
+                                <div class="fab-csat-stars" data-selected-score="5">
+                                    <button type="button" class="fab-star-btn active" data-score="1" title="Rất tệ">★</button>
+                                    <button type="button" class="fab-star-btn active" data-score="2" title="Chưa hài lòng">★</button>
+                                    <button type="button" class="fab-star-btn active" data-score="3" title="Bình thường">★</button>
+                                    <button type="button" class="fab-star-btn active" data-score="4" title="Hài lòng">★</button>
+                                    <button type="button" class="fab-star-btn active" data-score="5" title="Rất hài lòng">★</button>
+                                </div>
+                                <span class="fab-csat-score-label">Rất hài lòng (5/5)</span>
+                            </div>
+
+                            <div class="fab-csat-tags-row">
+                                <button type="button" class="fab-csat-tag-btn active" data-tag="Nhiệt tình">Nhiệt tình</button>
+                                <button type="button" class="fab-csat-tag-btn active" data-tag="Nhanh chóng">Nhanh chóng</button>
+                                <button type="button" class="fab-csat-tag-btn" data-tag="Rõ ràng">Rõ ràng</button>
+                                <button type="button" class="fab-csat-tag-btn" data-tag="Chuyên nghiệp">Chuyên nghiệp</button>
+                            </div>
+
+                            <input type="text" class="fab-csat-feedback-input" placeholder="Góp ý thêm cho PawPal (tùy chọn)...">
+                        </div>
+                        <button type="button" class="fab-csat-submit-btn">Gửi đánh giá</button>
+                    </div>
+                `;
+            } catch(e) { return match; }
+        });
+
+        // 5. Thẻ Ảnh đính kèm: ![caption](url)
+        html = html.replace(/!\[(.*?)\]\((.*?)\)/g, (match, alt, url) => {
+            const safeAlt = (alt || '').replace(/"/g, '&quot;');
+            return `<div class="chat-attachment-image-wrap" data-img-url="${url}" data-img-caption="${safeAlt}"><img src="${url}" alt="${safeAlt || 'Ảnh đính kèm'}" class="chat-attachment-img">${safeAlt ? `<span class="chat-attachment-caption">${safeAlt}</span>` : ''}</div>`;
+        });
+
         // Xuống dòng text thông thường
         html = html.replace(/\n/g, '<br>');
 
@@ -539,7 +671,7 @@ function initFab() {
                 bubble.innerHTML = `<span class="staff-sender-title">${msg.senderName || 'Chuyên viên CSKH'}</span>${formatChatContent(msg.content)}`;
             } else {
                 bubble.className = `fab-chat-bubble fab-chat-bubble--${msg.role === 'user' ? 'user' : 'bot'}`;
-                bubble.innerHTML = msg.role === 'model' ? formatChatContent(msg.content) : msg.content;
+                bubble.innerHTML = formatChatContent(msg.content);
             }
             messages.appendChild(bubble);
         });
@@ -855,17 +987,25 @@ function initFab() {
     // GỬI TIN NHẮN (ĐIỀU PHỐI: TRỰC TIẾP NHÂN VIÊN HOẶC QUA AI COPILOT)
     // -------------------------------------------------------------
     async function sendMessage() {
-        if (!input || !input.value.trim()) return;
-        const text = input.value.trim();
-        input.value = '';
-        appendMessage(text, 'user');
+        const rawText = input ? input.value.trim() : '';
+        if (!rawText && !pendingAttachedImage) return;
+
+        let textToSend = rawText;
+        if (pendingAttachedImage) {
+            const imgMd = `![${pendingAttachedImage.name}](${pendingAttachedImage.dataUrl})`;
+            textToSend = rawText ? `${rawText}\n${imgMd}` : imgMd;
+        }
+
+        if (input) input.value = '';
+        clearPendingAttachment();
+        appendMessage(textToSend, 'user');
 
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
 
         // Trường hợp 1: Đang có chuyên viên tiếp quản hoặc đang đợi chuyên viên
         if (currentConversationStatus === 'agent_handling' || currentConversationStatus === 'waiting_agent') {
             const convId = await ensureConversationExists();
-            conversationHistory.push({ role: 'user', content: text });
+            conversationHistory.push({ role: 'user', content: textToSend });
             saveChatHistory();
 
             if (db && convId) {
@@ -874,8 +1014,8 @@ function initFab() {
                         conversation_id: convId,
                         sender_type: 'customer',
                         sender_name: currentUserName,
-                        content: text,
-                        raw_content: text,
+                        content: textToSend,
+                        raw_content: textToSend,
                         is_toxic: false
                     }]);
 
@@ -919,7 +1059,7 @@ function initFab() {
             
             conversationHistory.push({
                 "role": "user",
-                "content": text
+                "content": textToSend
             });
             saveChatHistory();
 
@@ -1063,6 +1203,99 @@ function initFab() {
                 return;
             }
 
+            // Xử lý chọn sao CSAT
+            const starBtn = e.target.closest('.fab-star-btn');
+            if (starBtn) {
+                const container = starBtn.closest('.fab-csat-stars');
+                const card = starBtn.closest('.fab-rich-card--csat');
+                const score = parseInt(starBtn.getAttribute('data-score') || '5', 10);
+                if (container) {
+                    container.setAttribute('data-selected-score', score);
+                    container.querySelectorAll('.fab-star-btn').forEach(b => {
+                        const bScore = parseInt(b.getAttribute('data-score') || '0', 10);
+                        if (bScore <= score) b.classList.add('active');
+                        else b.classList.remove('active');
+                    });
+                }
+                const labelEl = card?.querySelector('.fab-csat-score-label');
+                if (labelEl) {
+                    const scoreMap = { 1: 'Rất tệ (1/5)', 2: 'Chưa hài lòng (2/5)', 3: 'Bình thường (3/5)', 4: 'Hài lòng (4/5)', 5: 'Rất hài lòng (5/5)' };
+                    labelEl.textContent = scoreMap[score] || `${score}/5`;
+                }
+                return;
+            }
+
+            // Xử lý chọn tag CSAT
+            const tagBtn = e.target.closest('.fab-csat-tag-btn');
+            if (tagBtn) {
+                tagBtn.classList.toggle('active');
+                return;
+            }
+
+            // Xử lý gửi biểu mẫu CSAT
+            const submitBtn = e.target.closest('.fab-csat-submit-btn');
+            if (submitBtn) {
+                const card = submitBtn.closest('.fab-rich-card--csat');
+                if (!card) return;
+                const convId = card.getAttribute('data-csat-conv-id') || activeConversationId;
+                const container = card.querySelector('.fab-csat-stars');
+                const score = parseInt(container?.getAttribute('data-selected-score') || '5', 10);
+                const selectedTags = Array.from(card.querySelectorAll('.fab-csat-tag-btn.active')).map(b => b.getAttribute('data-tag')).filter(Boolean);
+                const feedback = (card.querySelector('.fab-csat-feedback-input')?.value || '').trim();
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Đang gửi...';
+
+                const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (db && convId) {
+                    (async () => {
+                        try {
+                            await db.from('chat_conversation').update({
+                                csat_score: score,
+                                csat_feedback: feedback,
+                                csat_tags: selectedTags,
+                                updated_at: new Date().toISOString()
+                            }).eq('id', convId);
+
+                            try {
+                                await db.from('chat_rating').insert([{
+                                    conversation_id: convId,
+                                    customer_id: currentUserId !== 'guest' ? currentUserId : null,
+                                    score: score,
+                                    feedback: feedback,
+                                    tags: selectedTags
+                                }]);
+                            } catch(e) {}
+                        } catch(err) {
+                            console.warn('[FAB] Lỗi ghi nhận CSAT vào Supabase:', err);
+                        }
+                    })();
+                }
+
+                card.innerHTML = `
+                    <div class="fab-rich-card-header">
+                        <span class="fab-rich-card-tag">Đánh giá dịch vụ</span>
+                        <span class="admin-badge badge-active">Đã tiếp nhận</span>
+                    </div>
+                    <div class="fab-csat-submitted">
+                        ✓ Cảm ơn sen đã gửi đánh giá <strong>${score}★</strong>!<br>
+                        Ý kiến của sen giúp PawPal phục vụ các bé cưng ngày càng chu đáo hơn ạ.
+                    </div>
+                `;
+
+                updateHeaderMode('bot_handling');
+                return;
+            }
+
+            // Click vào ảnh xem phóng to (Lightbox)
+            const imgWrap = e.target.closest('.chat-attachment-image-wrap');
+            if (imgWrap) {
+                const url = imgWrap.getAttribute('data-img-url');
+                const cap = imgWrap.getAttribute('data-img-caption');
+                if (url) openLightbox(url, cap);
+                return;
+            }
+
             const btn = e.target.closest('.fab-chat-suggest');
             if (btn) {
                 if (btn.classList.contains('fab-chat-suggest--agent')) {
@@ -1089,7 +1322,7 @@ function initFab() {
     function appendMessage(text, type) {
         const bubble = document.createElement('div');
         bubble.className = `fab-chat-bubble fab-chat-bubble--${type}`;
-        bubble.innerHTML = text;
+        bubble.innerHTML = formatChatContent(text);
         if (type === 'user') {
             const sug = messages && messages.querySelector('.fab-chat-suggestions');
             if (sug) sug.remove();

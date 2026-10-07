@@ -2250,4 +2250,148 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
+/* ====================================================================
+   ĐÍNH KÈM ẢNH VÀ LIGHTBOX (GIAI ĐOẠN 2 - CHUẨN AGENTS.MD 9PX)
+   ==================================================================== */
+
+/* Khung xem trước ảnh đính kèm trước khi gửi của Admin */
+.admin-chat-attach-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    background-color: #FFFFFF;
+    border: 1px solid #C3DEC7;
+    border-radius: var(--admin-radius, 9px);
+    margin-bottom: 6px;
+}
+
+.admin-chat-attach-preview img {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--admin-radius, 9px);
+    object-fit: cover;
+    border: 1px solid #ECF2EE;
+}
+
+.admin-chat-attach-preview-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.admin-chat-attach-preview-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-main, #203A2C);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-chat-attach-preview-size {
+    font-size: 11px;
+    color: var(--text-muted, #4F7A65);
+}
+
+.admin-chat-attach-preview-remove {
+    background: transparent;
+    border: none;
+    color: var(--text-muted, #4F7A65);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 3px 6px;
+    border-radius: var(--admin-radius, 9px);
+    transition: color 0.15s, background-color 0.15s;
+}
+
+.admin-chat-attach-preview-remove:hover {
+    color: #DC2626;
+    background-color: #FEE2E2;
+}
+
+/* Thẻ hiển thị ảnh trong tin nhắn của Admin và Khách */
+.chat-attachment-image-wrap {
+    margin: 4px 0;
+    cursor: pointer;
+    border-radius: var(--admin-radius, 9px);
+    overflow: hidden;
+    display: inline-block;
+    max-width: 100%;
+}
+
+.chat-attachment-img {
+    max-width: 280px;
+    max-height: 220px;
+    border-radius: var(--admin-radius, 9px);
+    object-fit: cover;
+    display: block;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    transition: opacity 0.15s ease;
+}
+
+.chat-attachment-img:hover {
+    opacity: 0.92;
+}
+
+.chat-attachment-caption {
+    font-size: 11.5px;
+    color: inherit;
+    opacity: 0.85;
+    margin-top: 4px;
+    display: block;
+}
+
+/* Modal Lightbox xem ảnh lớn của Admin */
+.admin-image-lightbox-wrapper {
+    position: relative;
+    max-width: 85vw;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: transparent;
+}
+
+.admin-image-lightbox-wrapper img {
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: var(--admin-radius, 9px);
+    object-fit: contain;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.admin-image-lightbox-close {
+    position: absolute;
+    top: -42px;
+    right: 0;
+    background: rgba(255, 255, 255, 0.25);
+    color: #FFFFFF;
+    border: none;
+    border-radius: var(--admin-radius, 9px);
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.admin-image-lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.admin-image-lightbox-caption {
+    margin-top: 10px;
+    color: #FFFFFF;
+    font-size: 13px;
+    text-align: center;
+    max-width: 80vw;
+}
+
+
 

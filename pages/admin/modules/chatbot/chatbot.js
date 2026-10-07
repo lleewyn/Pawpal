@@ -920,6 +920,21 @@
         });
     }
 
+    function formatAdminChatText(rawText) {
+        if (!rawText) return '';
+        let html = rawText;
+        // In đậm
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        // Thẻ Ảnh đính kèm: ![caption](url)
+        html = html.replace(/!\[(.*?)\]\((.*?)\)/g, (match, alt, url) => {
+            const safeAlt = (alt || '').replace(/"/g, '&quot;');
+            return `<div class="chat-attachment-image-wrap" data-img-url="${url}" data-img-caption="${safeAlt}"><img src="${url}" alt="${safeAlt || 'Ảnh đính kèm'}" class="chat-attachment-img">${safeAlt ? `<span class="chat-attachment-caption">${safeAlt}</span>` : ''}</div>`;
+        });
+        // Xuống dòng text thông thường
+        html = html.replace(/\n/g, '<br>');
+        return html;
+    }
+
     function renderCurrentChat() {
         if (!currentConversation) return;
 
@@ -960,9 +975,14 @@
             headerSla.className = `sla-timer-pill ${sla.className}`;
         }
 
+        const resolveHeaderBtn = document.getElementById('btnHeaderResolveChat');
         if (takeoverBtn) {
-            takeoverBtn.textContent = currentConversation.isHandover ? 'Hoàn thành' : 'Tiếp nhận';
+            takeoverBtn.textContent = currentConversation.isHandover ? 'Trả lại AI' : 'Tiếp nhận';
             takeoverBtn.className = 'admin-btn btn-takeover-compact ' + (currentConversation.isHandover ? 'admin-btn-secondary' : 'admin-btn-primary');
+        }
+
+        if (resolveHeaderBtn) {
+            resolveHeaderBtn.style.display = currentConversation.isHandover ? 'inline-flex' : 'none';
         }
 
         if (aiSummaryTextEl) {
@@ -1140,7 +1160,7 @@
                         </div>
                     `;
                 } else {
-                    bubbleContent = msg.text;
+                    bubbleContent = formatAdminChatText(msg.text);
                     wrap.innerHTML = `
                         <div class="chat-bubble-meta">
                             <span><strong>${authorText}</strong> ${senderBadge}</span>
@@ -1150,6 +1170,16 @@
                     `;
                 }
                 timelineEl.appendChild(wrap);
+            });
+
+            // Click vào ảnh xem lightbox toàn màn hình
+            timelineEl.querySelectorAll('.chat-attachment-image-wrap').forEach(wrap => {
+                wrap.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const url = wrap.getAttribute('data-img-url');
+                    const caption = wrap.getAttribute('data-img-caption');
+                    openAdminImageLightbox(url, caption);
+                });
             });
 
             // Nút ••• màng lọc tâm lý: toggle dropdown
@@ -1481,18 +1511,103 @@
             }
         });
 
+        // --- GIAI ĐOẠN 2: ĐÍNH KÈM ẢNH VÀ LIGHTBOX XEM ẢNH ADMIN ---
+        const adminLightboxModal = document.getElementById('modalAdminImageLightbox');
+        const adminLightboxImg = document.getElementById('imgAdminLightboxPreview');
+        const adminLightboxCaption = document.getElementById('captionAdminLightbox');
+        const btnCloseAdminLightbox = document.getElementById('btnCloseAdminLightbox');
+
+        function openAdminImageLightbox(url, caption) {
+            if (!adminLightboxModal || !adminLightboxImg) return;
+            adminLightboxImg.src = url;
+            if (adminLightboxCaption) adminLightboxCaption.textContent = caption || '';
+            adminLightboxModal.style.display = 'flex';
+        }
+
+        function closeAdminImageLightbox() {
+            if (!adminLightboxModal) return;
+            adminLightboxModal.style.display = 'none';
+            if (adminLightboxImg) adminLightboxImg.src = '';
+        }
+
+        btnCloseAdminLightbox?.addEventListener('click', closeAdminImageLightbox);
+        adminLightboxModal?.addEventListener('click', (e) => {
+            if (e.target === adminLightboxModal) closeAdminImageLightbox();
+        });
+
+        // Đính kèm ảnh phía Admin
+        const btnAdminAttach = document.getElementById('btnAdminChatAttach');
+        const adminFileInput = document.getElementById('adminChatFileInput');
+        const adminAttachPreview = document.getElementById('adminChatAttachPreview');
+        const adminAttachPreviewImg = document.getElementById('adminChatAttachPreviewImg');
+        const adminAttachPreviewName = document.getElementById('adminChatAttachPreviewName');
+        const adminAttachPreviewSize = document.getElementById('adminChatAttachPreviewSize');
+        const adminAttachPreviewRemove = document.getElementById('adminChatAttachPreviewRemove');
+
+        let pendingAdminAttachment = null; // { name, size, dataUrl }
+
+        function clearAdminAttachment() {
+            pendingAdminAttachment = null;
+            if (adminFileInput) adminFileInput.value = '';
+            if (adminAttachPreview) adminAttachPreview.style.display = 'none';
+        }
+
+        if (btnAdminAttach && adminFileInput) {
+            btnAdminAttach.addEventListener('click', () => {
+                adminFileInput.click();
+            });
+
+            adminFileInput.addEventListener('change', (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+
+                if (file.size > 5 * 1024 * 1024) {
+                    showToast('Dung lượng ảnh vượt quá 5MB. Vui lòng chọn ảnh nhẹ hơn.', 'warning');
+                    adminFileInput.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const dataUrl = ev.target.result;
+                    pendingAdminAttachment = {
+                        name: file.name,
+                        size: file.size,
+                        dataUrl: dataUrl
+                    };
+                    if (adminAttachPreviewImg) adminAttachPreviewImg.src = dataUrl;
+                    if (adminAttachPreviewName) adminAttachPreviewName.textContent = file.name;
+                    if (adminAttachPreviewSize) {
+                        const kb = Math.round(file.size / 1024);
+                        adminAttachPreviewSize.textContent = kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb} KB`;
+                    }
+                    if (adminAttachPreview) adminAttachPreview.style.display = 'flex';
+                    if (msgInput) msgInput.focus();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        adminAttachPreviewRemove?.addEventListener('click', clearAdminAttachment);
+
         // Gửi tin nhắn nhân viên trực tiếp (Ghi trực tiếp vào bảng chat_message trên Supabase)
         const sendMsgBtn = document.getElementById('btnSendLiveMessage');
         const msgInput = document.getElementById('chatMessageInput');
 
         async function sendLiveMsg() {
             if (!currentConversation) return;
-            const text = msgInput.value.trim();
-            if (!text) return;
+            const text = msgInput ? msgInput.value.trim() : '';
+            if (!text && !pendingAdminAttachment) return;
 
             if (!currentConversation.isHandover) {
                 showToast('Vui lòng bấm nút "Tiếp nhận" trước khi gửi tin nhắn cho khách hàng.', 'warning');
                 return;
+            }
+
+            let fullText = text;
+            if (pendingAdminAttachment) {
+                const imgMd = `![${pendingAdminAttachment.name}](${pendingAdminAttachment.dataUrl})`;
+                fullText = text ? `${text}\n${imgMd}` : imgMd;
             }
 
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1502,9 +1617,11 @@
                 sender: 'agent',
                 agentName: 'Chuyên viên CSKH',
                 time: timeStr,
-                text: text
+                text: fullText
             });
-            msgInput.value = '';
+
+            if (msgInput) msgInput.value = '';
+            clearAdminAttachment();
             renderCurrentChat();
 
             // Ghi trực tiếp vào bảng chat_message trên Supabase Live DB
@@ -1518,8 +1635,8 @@
                                 conversation_id: convId,
                                 sender_type: 'staff',
                                 sender_name: 'Chuyên viên CSKH',
-                                content: text,
-                                raw_content: text,
+                                content: fullText,
+                                raw_content: fullText,
                                 is_toxic: false
                             }])
                             .select('id')
@@ -1839,6 +1956,119 @@
             renderConversationsList();
             renderCurrentChat();
             showToast(`Đã chuyển ca cho ${targetName}!`, 'info');
+        });
+
+        // --- MODAL 11: HOÀN TẤT CA CHAT VÀ GỬI ĐÁNH GIÁ CSAT ---
+        const resolveModal = document.getElementById('modalResolveChatOverlay');
+        const btnResolveAction = document.getElementById('btnResolveChatAction');
+        const btnHeaderResolve = document.getElementById('btnHeaderResolveChat');
+        const btnCloseResolveModal = document.getElementById('btnCloseResolveChatModal');
+        const btnCancelResolve = document.getElementById('btnCancelResolveChat');
+        const btnConfirmResolve = document.getElementById('btnConfirmResolveChat');
+        const resolveCustomerNameInput = document.getElementById('resolveChatCustomerName');
+        const selectResolveReason = document.getElementById('selectResolveReason');
+        const textareaResolveNotes = document.getElementById('textareaResolveNotes');
+        const checkboxSendCsat = document.getElementById('checkboxSendCsatSurvey');
+
+        function openResolveModal() {
+            if (!currentConversation) return;
+            if (resolveCustomerNameInput) resolveCustomerNameInput.value = currentConversation.customerName;
+            if (textareaResolveNotes) textareaResolveNotes.value = '';
+            if (resolveModal) resolveModal.style.display = 'flex';
+        }
+
+        function closeResolveModal() {
+            if (resolveModal) resolveModal.style.display = 'none';
+        }
+
+        btnResolveAction?.addEventListener('click', openResolveModal);
+        btnHeaderResolve?.addEventListener('click', openResolveModal);
+        btnCloseResolveModal?.addEventListener('click', closeResolveModal);
+        btnCancelResolve?.addEventListener('click', closeResolveModal);
+
+        btnConfirmResolve?.addEventListener('click', async () => {
+            if (!currentConversation) return;
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const reasonVal = selectResolveReason ? selectResolveReason.value : 'resolved_complete';
+            const reasonText = selectResolveReason ? selectResolveReason.options[selectResolveReason.selectedIndex].text : 'Đã giải quyết yêu cầu';
+            const notes = textareaResolveNotes ? textareaResolveNotes.value.trim() : '';
+            const shouldSendCsat = checkboxSendCsat ? checkboxSendCsat.checked : true;
+
+            currentConversation.isHandover = false;
+            currentConversation.waitingSeconds = 0;
+            currentConversation.category = 'resolved';
+
+            // Thêm tin nhắn hệ thống đóng ca
+            const endNotice = `Hệ thống: Ca hỗ trợ trực tuyến đã được chuyên viên CSKH hoàn tất lúc ${timeStr} (Kết quả: ${reasonText}).`;
+            currentConversation.messages.push({
+                id: 'msg-resolve-notice-' + Date.now(),
+                sender: 'system',
+                time: timeStr,
+                text: endNotice
+            });
+
+            closeResolveModal();
+            renderChatbotAlertBar();
+            renderConversationsList();
+            renderCurrentChat();
+
+            // Ghi nhận vào Supabase Live DB
+            if (supabase) {
+                try {
+                    const convId = await ensureRealConversation(currentConversation);
+                    if (convId) {
+                        // 1. Cập nhật trạng thái hội thoại sang resolved
+                        await supabase
+                            .from('chat_conversation')
+                            .update({
+                                status: 'resolved',
+                                is_urgent: false,
+                                resolved_at: new Date().toISOString(),
+                                resolved_reason: reasonText,
+                                internal_note: (currentConversation.internalNotes ? currentConversation.internalNotes + '\n' : '') + `[Hoàn tất ca ${timeStr}]: ${notes || reasonText}`,
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id', convId);
+
+                        // 2. Ghi tin nhắn kết thúc vào bảng chat_message
+                        await supabase
+                            .from('chat_message')
+                            .insert([{
+                                conversation_id: convId,
+                                sender_type: 'staff',
+                                sender_name: 'Hệ thống PawPal',
+                                content: endNotice,
+                                raw_content: endNotice,
+                                is_toxic: false
+                            }]);
+
+                        // 3. Nếu có gửi đánh giá CSAT, bắn thẻ CSAT survey để widget User hiển thị
+                        if (shouldSendCsat) {
+                            const csatPayload = JSON.stringify({
+                                convId: convId,
+                                staffName: currentConversation.agentName || 'Chuyên viên CSKH',
+                                timestamp: new Date().toISOString()
+                            });
+                            const csatMessageContent = `:::csat_survey ${csatPayload} :::`;
+
+                            await supabase
+                                .from('chat_message')
+                                .insert([{
+                                    conversation_id: convId,
+                                    sender_type: 'staff',
+                                    sender_name: 'PawPal CSKH',
+                                    content: csatMessageContent,
+                                    raw_content: 'PawPal rất mong nhận được đánh giá từ sen để nâng cao chất lượng dịch vụ!',
+                                    is_toxic: false
+                                }]);
+                        }
+                    }
+                } catch (resErr) {
+                    console.error('[Chatbot] Lỗi hoàn tất ca chat trên Supabase:', resErr);
+                }
+            }
+
+            showToast('Đã hoàn tất ca chat và gửi biểu mẫu đánh giá CSAT cho khách hàng!', 'success');
         });
     }
 

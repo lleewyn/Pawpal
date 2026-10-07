@@ -112,11 +112,39 @@
             </div>
         </div>
         <div class="fab-toxic-countdown" id="fabToxicCountdown" style="display: none;"></div>
+
+        <!-- Khung xem trước ảnh đính kèm trước khi gửi -->
+        <div class="fab-chat-attach-preview" id="fabChatAttachPreview" style="display: none;">
+            <img src="" id="fabChatAttachPreviewImg" alt="Xem trước ảnh">
+            <div class="fab-chat-attach-preview-info">
+                <span class="fab-chat-attach-preview-name" id="fabChatAttachPreviewName">anh_thu_cung.jpg</span>
+                <span class="fab-chat-attach-preview-size" id="fabChatAttachPreviewSize">120 KB</span>
+            </div>
+            <button type="button" class="fab-chat-attach-preview-remove" id="fabChatAttachPreviewRemove" title="Bỏ đính kèm">✕</button>
+        </div>
+
         <div class="fab-chat-input-row">
-            <input type="text" id="fabChatInput" class="fab-chat-input" placeholder="Nhập câu hỏi...">
+            <input type="file" id="fabChatFileInput" accept="image/*" style="display: none;">
+            <button type="button" class="fab-chat-attach-btn" id="fabChatAttachBtn" title="Gửi ảnh thú cưng / đơn hàng">
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+            </button>
+            <input type="text" id="fabChatInput" class="fab-chat-input" placeholder="Nhập câu hỏi hoặc gửi ảnh...">
             <button class="fab-chat-send" id="fabChatSend" aria-label="Gửi">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
             </button>
+        </div>
+    </div>
+
+    <!-- Lightbox phóng to ảnh đính kèm -->
+    <div class="fab-image-lightbox" id="fabImageLightbox" style="display: none;">
+        <div class="fab-image-lightbox-backdrop" id="fabImageLightboxBackdrop"></div>
+        <div class="fab-image-lightbox-content">
+            <button type="button" class="fab-image-lightbox-close" id="fabImageLightboxClose">✕</button>
+            <img src="" id="fabImageLightboxImg" alt="Ảnh phóng to">
+            <div class="fab-image-lightbox-caption" id="fabImageLightboxCaption"></div>
         </div>
     </div>
 </div>
