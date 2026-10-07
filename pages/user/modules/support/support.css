@@ -817,6 +817,16 @@
     color: #165335;
 }
 
+.badge-status-waiting {
+    background: #F5E8D3;
+    color: #734718;
+}
+
+.badge-status-reprocessing {
+    background: #F7DCDC;
+    color: #8F2424;
+}
+
 /* Huy hiệu độ ưu tiên 9px */
 .badge-priority {
     display: inline-flex;

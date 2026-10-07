@@ -44,7 +44,7 @@ Spa & Grooming.
 Pet Hotel.
 Pet Taxi.
 Bộ lọc trạng thái:
-Mới tiếp nhận.
+Chưa xử lý.
 Đang xử lý.
 Chờ phản hồi khách hàng.
 Đã giải quyết.
@@ -274,7 +274,7 @@ Ghi chú nội bộ của nhân viên phải được phân biệt với nội d
 Cả Khiếu nại Dịch vụ và Khiếu nại Đơn hàng sử dụng chung vòng đời Ticket:
 Chưa xử lý → Đang xử lý → Đã giải quyết → Đã đóng
 Trong đó:
-Mới tiếp nhận: Ticket vừa được tạo, chưa có hoặc chưa bắt đầu xử lý.
+Chưa xử lý: Ticket vừa được tạo, chưa có hoặc chưa bắt đầu xử lý.
 Đang xử lý: Nhân viên đã tiếp nhận và đang xác minh/đưa ra phương án.
 Chờ phản hồi khách hàng: PawPal đã yêu cầu thêm thông tin hoặc gửi phương án và đang chờ khách phản hồi.
 Đã giải quyết: Phương án xử lý đã được thực hiện.
@@ -285,7 +285,7 @@ Khi nhận phản ánh liên quan đến dịch vụ:
 Ticket được tạo và liên kết với Booking ID.
 Nhân viên mở Ticket và bấm Nhận xử lý.
 Hệ thống chuyển:
-Mới tiếp nhận → Đang xử lý
+Chưa xử lý → Đang xử lý
 Nhân viên kiểm tra:
 Nội dung khách phản ánh.
 Pet và các lưu ý đặc biệt.

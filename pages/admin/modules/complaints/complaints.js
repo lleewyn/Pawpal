@@ -1160,7 +1160,7 @@
 
             filtered.forEach(item => {
                 let statusBadge = '';
-                if (item.status === 'new') statusBadge = '<span class="admin-badge badge-warning">Mới tiếp nhận</span>';
+                if (item.status === 'new') statusBadge = '<span class="admin-badge badge-warning">Chưa xử lý</span>';
                 else if (item.status === 'processing') statusBadge = '<span class="admin-badge badge-info">Đang xử lý</span>';
                 else if (item.status === 'waiting_customer') statusBadge = '<span class="admin-badge badge-neutral">Chờ phản hồi</span>';
                 else if (item.status === 'waiting_manager_approval') statusBadge = '<span class="admin-badge badge-waiting-approval">Chờ quản lý duyệt</span>';
@@ -1306,7 +1306,7 @@
 
             filtered.forEach(item => {
                 let statusBadge = '';
-                if (item.status === 'new') statusBadge = '<span class="admin-badge badge-warning">Mới tiếp nhận</span>';
+                if (item.status === 'new') statusBadge = '<span class="admin-badge badge-warning">Chưa xử lý</span>';
                 else if (item.status === 'processing') statusBadge = '<span class="admin-badge badge-info">Đang xử lý</span>';
                 else if (item.status === 'waiting_return') statusBadge = '<span class="admin-badge badge-neutral">Chờ nhận hàng</span>';
                 else if (item.status === 'waiting_manager_approval') statusBadge = '<span class="admin-badge badge-waiting-approval">Chờ quản lý duyệt</span>';

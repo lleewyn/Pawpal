@@ -110,10 +110,22 @@
                     <div class="ticket-timeline-wrapper" id="ticketTimelineMessages"></div>
                 </div>
 
+                <!-- Dải thông báo khi CSKH yêu cầu bổ sung thông tin -->
+                <div id="detailWaitingCustomerAlert" class="alert-waiting-customer d-none mb-3" style="background: #F5E8D3; color: #734718; border-radius: 9px; padding: 10px 14px; font-size: 12.5px; line-height: 1.5;">
+                    <strong>Lưu ý từ CSKH:</strong> Chúng tôi đang chờ bạn bổ sung thêm thông tin hoặc hình ảnh để xác minh sự cố. Vui lòng phản hồi sớm (yêu cầu sẽ được nhắc nhở sau 48h và tự động đóng sau 72h nếu không có phản hồi).
+                </div>
+
                 <!-- Form gửi phản hồi bổ sung -->
                 <div class="reply-editor-area" id="replyEditorArea">
                     <div class="form-group mb-3">
-                        <label class="reply-label fw-semibold" for="replyTextarea">Gửi phản hồi bổ sung cho CSKH</label>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="reply-label fw-semibold mb-0" for="replyTextarea">Gửi phản hồi bổ sung cho CSKH</label>
+                            <div>
+                                <input type="file" id="replyFileInput" multiple accept="image/*" class="d-none">
+                                <button type="button" class="btn-attach-evidence" id="btnTriggerReplyFile" style="background: none; border: 1px dashed #236B48; color: #236B48; border-radius: 6px; padding: 3px 10px; font-size: 12px; cursor: pointer;">Đính kèm ảnh bằng chứng</button>
+                            </div>
+                        </div>
+                        <div id="replyFilePreviews" class="d-flex gap-2 flex-wrap mb-2"></div>
                         <textarea id="replyTextarea" class="form-control reply-textarea" rows="3" placeholder="Nhập thêm thông tin hoặc gửi phản hồi cho nhân viên CSKH..."></textarea>
                     </div>
                     <div class="d-flex gap-2 justify-content-end align-items-center">

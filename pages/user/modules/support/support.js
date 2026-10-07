@@ -202,10 +202,19 @@ export function initSupportTickets() {
             tickets.forEach(ticket => {
                 let statusLabel = 'Chờ xử lý';
                 let statusClass = 'badge-status-pending';
-                if (ticket.status === 'processing') {
+                if (ticket.status === 'processing' || ticket.status === 'waiting_manager_approval') {
                     statusLabel = 'Đang giải quyết';
                     statusClass = 'badge-status-processing';
-                } else if (ticket.status === 'completed' || ticket.status === 'resolved' || ticket.status === 'closed') {
+                } else if (ticket.status === 'waiting_customer') {
+                    statusLabel = 'Chờ bạn phản hồi';
+                    statusClass = 'badge-status-waiting';
+                } else if (ticket.status === 'reprocessing') {
+                    statusLabel = 'Đang can thiệp lần 2';
+                    statusClass = 'badge-status-reprocessing';
+                } else if (ticket.status === 'resolved') {
+                    statusLabel = 'Đã giải quyết';
+                    statusClass = 'badge-status-completed';
+                } else if (ticket.status === 'completed' || ticket.status === 'closed') {
                     statusLabel = 'Hoàn tất';
                     statusClass = 'badge-status-completed';
                 }
@@ -259,12 +268,31 @@ export function initSupportTickets() {
 
             let statusLabel = 'Chờ xử lý';
             let statusClass = 'badge-status-pending';
-            if (ticket.status === 'processing') {
+            if (ticket.status === 'processing' || ticket.status === 'waiting_manager_approval') {
                 statusLabel = 'Đang giải quyết';
                 statusClass = 'badge-status-processing';
-            } else if (ticket.status === 'completed' || ticket.status === 'resolved' || ticket.status === 'closed') {
+            } else if (ticket.status === 'waiting_customer') {
+                statusLabel = 'Chờ bạn phản hồi';
+                statusClass = 'badge-status-waiting';
+            } else if (ticket.status === 'reprocessing') {
+                statusLabel = 'Đang can thiệp lần 2';
+                statusClass = 'badge-status-reprocessing';
+            } else if (ticket.status === 'resolved') {
+                statusLabel = 'Đã giải quyết';
+                statusClass = 'badge-status-completed';
+            } else if (ticket.status === 'completed' || ticket.status === 'closed') {
                 statusLabel = 'Hoàn tất';
                 statusClass = 'badge-status-completed';
+            }
+
+            // Hiển thị banner nhắc nhở khi chờ phản hồi
+            const waitingAlertEl = document.getElementById('detailWaitingCustomerAlert');
+            if (waitingAlertEl) {
+                if (ticket.status === 'waiting_customer') {
+                    waitingAlertEl.classList.remove('d-none');
+                } else {
+                    waitingAlertEl.classList.add('d-none');
+                }
             }
 
             const isPriorityHigh = ticket.priority === 'Cao';
@@ -544,18 +572,64 @@ export function initSupportTickets() {
             }
         });
 
+        let attachedReplyPhotos = [];
+        const replyFileInput = document.getElementById('replyFileInput');
+        const btnTriggerReplyFile = document.getElementById('btnTriggerReplyFile');
+        const replyFilePreviews = document.getElementById('replyFilePreviews');
+
+        function renderReplyPreviews() {
+            if (!replyFilePreviews) return;
+            replyFilePreviews.innerHTML = attachedReplyPhotos.map((src, i) => `
+                <div style="position: relative; width: 56px; height: 56px; border-radius: 6px; overflow: hidden; border: 1px solid #ECF2EE;">
+                    <img src="${src}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <button type="button" data-index="${i}" class="btn-remove-preview-photo" style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;">&times;</button>
+                </div>
+            `).join('');
+            replyFilePreviews.querySelectorAll('.btn-remove-preview-photo').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(btn.getAttribute('data-index'), 10);
+                    attachedReplyPhotos.splice(idx, 1);
+                    renderReplyPreviews();
+                });
+            });
+        }
+
+        if (btnTriggerReplyFile && replyFileInput) {
+            btnTriggerReplyFile.addEventListener('click', () => {
+                replyFileInput.click();
+            });
+            replyFileInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files || []);
+                files.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        attachedReplyPhotos.push(event.target.result);
+                        renderReplyPreviews();
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+        }
+
         if (btnSendReply) {
             btnSendReply.addEventListener('click', async () => {
                 const textarea = document.getElementById('replyTextarea');
                 if (!textarea) return;
-                const text = textarea.value;
-                if (!text.trim()) return;
+                const text = textarea.value.trim();
+                if (!text && attachedReplyPhotos.length === 0) return;
 
                 btnSendReply.disabled = true;
                 btnSendReply.textContent = 'Đang gửi...';
 
-                await window.PawPalSupport.sendTicketReply(activeTicketId, text);
+                let finalContent = text || 'Gửi ảnh bằng chứng bổ sung';
+                if (attachedReplyPhotos.length > 0) {
+                    finalContent += ` [Khách đã đính kèm ${attachedReplyPhotos.length} ảnh bằng chứng xác minh]`;
+                }
+
+                await window.PawPalSupport.sendTicketReply(activeTicketId, finalContent);
                 textarea.value = '';
+                attachedReplyPhotos = [];
+                renderReplyPreviews();
                 btnSendReply.disabled = false;
                 btnSendReply.textContent = 'Gửi phản hồi';
 
