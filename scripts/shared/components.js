@@ -99,11 +99,13 @@
     }
 
     function injectComponent(targetId, componentPath) {
-        if (targetId === 'site-header') {
+        if (targetId === 'site-header' || targetId === 'site-fab') {
             try {
-                sessionStorage.removeItem('pawpal_component_site-header');
-                localStorage.removeItem('pawpal_component_site-header');
+                sessionStorage.removeItem('pawpal_component_' + targetId);
+                localStorage.removeItem('pawpal_component_' + targetId);
             } catch(e) {}
+        }
+        if (targetId === 'site-header') {
             var existingHeader = document.getElementById('mainHeader') || document.querySelector('.main-header');
             if (existingHeader) {
                 ensureHeaderAuth();

@@ -56,7 +56,7 @@
 }
 
 .fab-item--ai {
-    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    background: #236B48;
 }
 
 .fab-item--messenger {
@@ -101,14 +101,18 @@
 
 .fab-chatbot-panel {
     position: fixed;
-    right: 84px;
+    right: 88px;
     bottom: 28px;
-    width: 380px;
-    height: 480px;
-    background: var(--color-bg-white);
-    border-radius: var(--card-border-radius);
+    width: 440px;
+    height: 600px;
+    max-width: calc(100vw - 110px);
+    max-height: calc(100vh - 56px);
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 9px;
     box-shadow: 0 12px 40px rgba(0,0,0,0.18);
-    border: var(--border-card);
+    border: 1px solid #ECF2EE;
     z-index: 9001;
     display: flex;
     flex-direction: column;
@@ -116,7 +120,7 @@
     transform: scale(0.9) translateY(20px);
     opacity: 0;
     pointer-events: none;
-    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease, width 0.25s ease, height 0.25s ease;
     transform-origin: bottom right;
 }
 
@@ -126,13 +130,20 @@
     pointer-events: all !important;
 }
 
+.fab-chatbot-panel.expanded {
+    width: 700px;
+    height: 700px;
+    max-width: calc(100vw - 40px);
+    max-height: 88vh;
+}
+
 /* Header */
 .fab-chat-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 16px;
-    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    gap: 8px;
+    padding: 12px 16px;
+    background: #236B48;
     color: #ffffff;
 }
 
@@ -145,63 +156,83 @@
     display: flex;
     flex-direction: column;
     flex: 1;
+    min-width: 0;
 }
 
 .fab-chat-title span:first-child {
     font-family: var(--font-body);
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .fab-chat-title span:last-child {
     font-size: 11px;
     font-weight: 400;
-    opacity: 0.8;
+    opacity: 0.85;
 }
 
-.fab-chat-clear {
-    background: none;
-    border: none;
-    color: white;
+.fab-chat-handover-btn {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 9px;
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
     cursor: pointer;
-    opacity: 0.8;
-    padding: 4px;
+    white-space: nowrap;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.fab-chat-handover-btn:hover {
+    background: rgba(255, 255, 255, 0.26);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.fab-chat-handover-btn.active-agent {
+    background: #F5E8D3;
+    color: #734718;
+    border-color: #F5E8D3;
+}
+
+.fab-chat-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     margin-left: auto;
-    margin-right: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.2s ease;
 }
 
-.fab-chat-clear:hover {
-    opacity: 1;
-}
-
-.fab-chat-close {
+.fab-chat-icon-btn {
     background: none;
     border: none;
-    color: white;
+    color: #ffffff;
     cursor: pointer;
-    opacity: 0.8;
-    padding: 4px;
-    margin-left: 0;
+    opacity: 0.85;
+    padding: 5px;
+    border-radius: 9px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s ease, background 0.2s ease;
+    flex-shrink: 0;
 }
 
-.fab-chat-close:hover {
+.fab-chat-icon-btn:hover {
     opacity: 1;
+    background: rgba(255, 255, 255, 0.18);
 }
 
 .fab-chat-status {
     font-size: 0.72rem;
-    opacity: 0.85;
+    opacity: 0.9;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
 }
 
 .fab-chat-status::before {
@@ -213,16 +244,168 @@
     display: inline-block;
 }
 
-.fab-chat-close {
-    background: none;
-    border: none;
-    color: rgba(255,255,255,0.8);
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 50%;
+.fab-chat-status.waiting::before {
+    background: #F59E0B;
+    box-shadow: 0 0 6px rgba(245, 158, 11, 0.7);
+}
+
+.fab-chat-status.live::before {
+    background: #10B981;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
+}
+
+/* -------------------------------------------------------------
+ * MÀN HÌNH LỊCH SỬ CÁC ĐOẠN CHAT (HISTORY DRAWER)
+ * ------------------------------------------------------------- */
+.fab-chat-main-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.fab-chat-history-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    background: #FAFCFA;
+    overflow: hidden;
+}
+
+.fab-history-subbar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #ECF2EE;
+}
+
+.fab-history-back-btn {
+    background: none;
+    border: none;
+    color: #236B48;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px;
+    border-radius: 9px;
     transition: background 0.2s ease;
+}
+
+.fab-history-back-btn:hover {
+    background: #EEF5F1;
+}
+
+.fab-history-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #203A2C;
+}
+
+.fab-history-new-btn {
+    background: #236B48;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 9px;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 5px 11px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.fab-history-new-btn:hover {
+    background: #1B5338;
+}
+
+.fab-history-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.fab-history-empty {
+    text-align: center;
+    padding: 36px 16px;
+    color: var(--text-muted, #4F7A65);
+    font-size: 12.5px;
+}
+
+.fab-history-card {
+    background: #FFFFFF;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease;
+    gap: 10px;
+}
+
+.fab-history-card:hover {
+    background: #F4FAF6;
+    border-color: #C3DEC7;
+}
+
+.fab-history-card.active {
+    background: #EEF5F1;
+    border-color: #236B48;
+}
+
+.fab-history-card-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.fab-history-card-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #203A2C;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fab-history-card-meta {
+    font-size: 11px;
+    color: #4F7A65;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fab-history-card-del {
+    background: none;
+    border: none;
+    color: #9CA3AF;
+    padding: 4px;
+    border-radius: 9px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transition: opacity 0.2s ease, color 0.2s ease, background 0.2s ease;
+    flex-shrink: 0;
+}
+
+.fab-history-card-del:hover {
+    opacity: 1;
+    color: #DC2626;
+    background: #FEE2E2;
 }
 
 .fab-toxic-banner {
@@ -284,7 +467,7 @@
 
 .fab-chat-bubble {
     padding: 10px 14px;
-    border-radius: var(--card-border-radius);
+    border-radius: 9px;
     font-family: var(--font-body);
     font-size: 0.85rem;
     line-height: 1.5;
@@ -292,19 +475,22 @@
 }
 
 .fab-chat-bubble--bot {
-    background: var(--color-primary-light);
-    color: var(--color-primary-dark);
+    background: #EEF5F1;
+    color: #203A2C;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
     align-self: flex-start;
 }
 
 .fab-chat-bubble--bot strong {
-    color: var(--color-primary);
+    color: #236B48;
     font-weight: 700;
 }
 
 .fab-chat-bubble--user {
-    background: #7c3aed;
+    background: #236B48;
     color: #ffffff;
+    border-radius: 9px;
     align-self: flex-end;
 }
 
@@ -312,6 +498,7 @@
     background: #DCEEE2;
     color: #165335;
     border-left: 3px solid #236B48;
+    border-radius: 9px;
     align-self: flex-start;
 }
 
@@ -324,7 +511,8 @@
 }
 
 .fab-chat-bubble--typing {
-    background: var(--color-primary-light);
+    background: #EEF5F1;
+    border-radius: 9px;
     align-self: flex-start;
     display: flex;
     gap: 4px;
@@ -336,7 +524,7 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--color-primary);
+    background: #236B48;
     animation: typing-dot 1.2s ease-in-out infinite;
 }
 
@@ -353,7 +541,7 @@
     background: #EEF5F1;
     color: #203A2C;
     border: 1px solid #C3DEC7;
-    border-radius: var(--card-border-radius);
+    border-radius: 9px;
     font-size: 0.8rem;
     padding: 8px 12px;
     align-self: center;
@@ -379,23 +567,24 @@
 }
 
 .fab-chat-suggest {
-    background: none;
-    border: 1px solid rgba(124, 58, 237, 0.25);
-    border-radius: var(--border-radius-pill);
+    background: #ffffff;
+    border: 1px solid #C3DEC7;
+    border-radius: 9px;
     padding: 6px 12px;
     font-family: var(--font-body);
     font-size: 0.78rem;
-    color: #7c3aed;
+    color: #236B48;
     cursor: pointer;
     text-align: left;
     transition: all 0.2s ease;
     width: fit-content;
+    font-weight: 500;
 }
 
 .fab-chat-suggest:hover {
-    background: #7c3aed;
-    color: #ffffff;
-    border-color: #7c3aed;
+    background: #EEF5F1;
+    color: #1B5338;
+    border-color: #236B48;
 }
 
 
@@ -403,13 +592,13 @@
     display: flex;
     gap: 8px;
     padding: 12px 16px;
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid #ECF2EE;
 }
 
 .fab-chat-input {
     flex: 1;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-pill);
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
     padding: 8px 14px;
     font-family: var(--font-body);
     font-size: 0.85rem;
@@ -418,14 +607,14 @@
 }
 
 .fab-chat-input:focus {
-    border-color: #7c3aed;
+    border-color: #236B48;
 }
 
 .fab-chat-send {
     width: 36px;
     height: 36px;
-    border-radius: 50%;
-    background: #7c3aed;
+    border-radius: 9px;
+    background: #236B48;
     border: none;
     color: #ffffff;
     display: flex;
@@ -437,9 +626,137 @@
 }
 
 .fab-chat-send:hover {
-    background: #6d28d9;
-    
+    background: #1B5338;
 }
+
+/* -------------------------------------------------------------
+ * GIAI ĐOẠN 3: RICH MESSAGE CARDS THEO CHUẨN AGENTS.MD (9PX, FOREST GREEN)
+ * ------------------------------------------------------------- */
+.fab-rich-card {
+    background: #ffffff;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 12px 14px;
+    margin: 8px 0 4px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+}
+
+.fab-rich-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.fab-rich-card-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: #236B48;
+    text-transform: none;
+    letter-spacing: 0.2px;
+}
+
+.fab-rich-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.fab-rich-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #203A2C;
+    line-height: 1.35;
+}
+
+.fab-rich-card-desc {
+    font-size: 11.5px;
+    color: #4F7A65;
+    line-height: 1.45;
+}
+
+.fab-rich-card-desc strong {
+    color: #236B48;
+}
+
+.fab-rich-card-action {
+    display: block;
+    width: 100%;
+    padding: 7px 12px;
+    background: #EEF5F1;
+    color: #236B48;
+    border: none;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.fab-rich-card-action:hover {
+    background: #E2ECE5;
+    color: #1B5338;
+}
+
+.fab-voucher-code {
+    background: #F4FAF6;
+    border: 1px dashed #236B48;
+    color: #236B48;
+    padding: 2px 8px;
+    border-radius: 9px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: monospace;
+}
+
+.fab-rich-card--order {
+    border-left: 3px solid #236B48;
+}
+
+.fab-rich-card--booking {
+    border-left: 3px solid #2563EB;
+}
+
+.fab-rich-card--voucher {
+    border-left: 3px solid #D97706;
+}
+
+.fab-rich-card--tracking {
+    border-left: 3px solid #059669;
+}
+
+.fab-rich-card--camera {
+    border-left: 3px solid #7C3AED;
+}
+
+.fab-rich-card--ticket {
+    border-left: 3px solid #DC2626;
+}
+
+.fab-rich-card .admin-badge {
+    height: 22px;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 9px !important;
+    border: none !important;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.badge-active { background: #DCEEE2; color: #165335; }
+.badge-info { background: #DCEAF2; color: #20495E; }
+.badge-warning { background: #F5E8D3; color: #734718; }
+.badge-danger { background: #F7DCDC; color: #8F2424; }
+.badge-neutral { background: #E2ECE5; color: #2D483B; }
 
 
 @media (max-width: 640px) {
@@ -458,6 +775,15 @@
         right: 16px;
         bottom: 80px;
         width: calc(100vw - 32px);
+        height: calc(100vh - 100px);
+        max-height: 620px;
+        max-width: none;
+    }
+
+    .fab-chatbot-panel.expanded {
+        width: calc(100vw - 32px);
+        height: calc(100vh - 100px);
+        max-height: 90vh;
     }
 
     .fab-tooltip {

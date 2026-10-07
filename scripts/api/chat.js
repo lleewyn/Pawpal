@@ -226,6 +226,57 @@ function evaluateToxicAndSentiment(userText, filters, triggers) {
     };
 }
 
+async function checkCustomerVipAttention(customerId) {
+    if (!customerId) return { isVip: false, reason: '' };
+    try {
+        const [ticketsRes, pointsRes] = await Promise.all([
+            supabase.from('support_ticket').select('id', { count: 'exact', head: true }).eq('user_id', customerId),
+            supabase.from('paw_point_transaction').select('points').eq('customer_id', customerId)
+        ]);
+        const ticketCount = ticketsRes.count || 0;
+        let totalPoints = 0;
+        if (pointsRes.data) {
+            totalPoints = pointsRes.data.reduce((sum, p) => sum + (p.points || 0), 0);
+        }
+
+        if (ticketCount >= 2) {
+            return {
+                isVip: true,
+                reason: `Khách từng có ${ticketCount} khiếu nại cũ (Cần chú ý cao độ)`
+            };
+        }
+        if (totalPoints >= 500) {
+            return {
+                isVip: true,
+                reason: `Khách hàng VIP Hạng ${totalPoints >= 1000 ? 'Kim Cương' : 'Vàng'} (${totalPoints} điểm)`
+            };
+        }
+    } catch (e) {
+        console.warn('Lỗi kiểm tra VIP Attention:', e.message);
+    }
+    return { isVip: false, reason: '' };
+}
+
+async function getPreviousCustomerSentiment(conversationId) {
+    if (!conversationId) return null;
+    try {
+        const { data } = await supabase
+            .from('chat_message')
+            .select('sentiment_score')
+            .eq('conversation_id', conversationId)
+            .eq('sender_type', 'customer')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        if (data && data.sentiment_score !== null && data.sentiment_score !== undefined) {
+            return Number(data.sentiment_score);
+        }
+    } catch (e) {
+        console.warn('Lỗi lấy previous sentiment:', e.message);
+    }
+    return null;
+}
+
 async function getOrCreateConversation({ conversationId, customerId, sessionToken, sentimentLevel, isUrgent }) {
     try {
         if (conversationId) {
@@ -508,6 +559,26 @@ module.exports = async function handler(req, res) {
 
         // 4. LƯU TIN NHẮN KHÁCH HÀNG VÀO CHAT_MESSAGE
         if (activeConvId) {
+            // Lấy cảm xúc câu trước đó để đo lường biến thiên xu hướng (sentiment_trend)
+            const prevSentiment = await getPreviousCustomerSentiment(activeConvId);
+            let sentimentTrend = 'stable';
+            let isSharpEscalation = false;
+
+            if (prevSentiment !== null) {
+                if (detectedLevel > prevSentiment) {
+                    sentimentTrend = 'escalating';
+                    if (detectedLevel - prevSentiment >= 2) {
+                        isSharpEscalation = true;
+                    }
+                } else if (detectedLevel < prevSentiment) {
+                    sentimentTrend = 'de_escalating';
+                }
+            }
+
+            // Kiểm tra khách hàng VIP / Tiền sử khiếu nại (VIP Attention)
+            const vipInfo = await checkCustomerVipAttention(userId);
+            const isVipAttention = vipInfo.isVip;
+
             await supabase.from('chat_message').insert({
                 conversation_id: activeConvId,
                 sender_type: 'customer',
@@ -525,15 +596,21 @@ module.exports = async function handler(req, res) {
             
             const nextStatus = conversation?.status === 'agent_handling' 
                 ? 'agent_handling' 
-                : (isAgentRequested || detectedLevel >= 4 ? 'waiting_agent' : 'bot_handling');
+                : (isAgentRequested || detectedLevel >= 4 || isSharpEscalation ? 'waiting_agent' : 'bot_handling');
 
-            // Cập nhật cấp độ cảm xúc, vi phạm và trạng thái cho phiên
+            // Cập nhật cấp độ cảm xúc, xu hướng, vi phạm và trạng thái cho phiên
             const updatePayload = {
                 status: nextStatus,
                 sentiment_level: isAgentRequested ? Math.max(detectedLevel, 3) : detectedLevel,
-                is_urgent: isUrgent || isAgentRequested,
+                sentiment_trend: sentimentTrend,
+                is_urgent: isUrgent || isAgentRequested || isSharpEscalation || isVipAttention,
                 updated_at: new Date().toISOString()
             };
+
+            if (isVipAttention && !conversation?.ai_summary) {
+                updatePayload.ai_summary = `[VIP Attention] ${vipInfo.reason}. Cần ưu tiên phục vụ ân cần.`;
+            }
+
             if (isToxic) {
                 updatePayload.violation_count = violationCount;
                 if (blockedUntilTime) {
@@ -613,6 +690,10 @@ module.exports = async function handler(req, res) {
             systemInstruction += "- ĐỐI TƯỢNG PHỤC VỤ: PawPal nhận chăm sóc Chó, Mèo, Thỏ và thú cưng nhỏ. Không nói chỉ nhận chó mèo.\n";
             systemInstruction += "- KHÔNG ẢO GIÁC: Chỉ trả lời dựa trên dữ liệu do Tools trả về. Nếu không có dữ liệu, hãy nhận lỗi chân thành và chuyển nhân viên trong 15 phút.\n";
             systemInstruction += "- AN TOÀN Y TẾ: Tuyệt đối không tự ý chẩn đoán bệnh thú y, không kê đơn thuốc, không hứa bồi thường tiền mặt.\n";
+            systemInstruction += "- ĐỊNH DẠNG THẺ TƯƠNG TÁC (RICH CARDS): Khi người dùng hỏi hoặc khi tra cứu thông tin đơn hàng, lịch hẹn, ưu đãi, hãy chèn khối thẻ trực quan:\n";
+            systemInstruction += "  + Đơn hàng: :::order {\"code\": \"Mã_Đơn\", \"status\": \"Trạng_Thái\", \"total\": \"Tổng_Tiền\", \"items\": \"Tóm_Tắt_Món\"} :::\n";
+            systemInstruction += "  + Lịch hẹn: :::booking {\"service\": \"Tên_Dịch_Vụ\", \"pet\": \"Tên_Bé\", \"time\": \"Giờ_Hẹn\", \"status\": \"Trạng_Thái\"} :::\n";
+            systemInstruction += "  + Ưu đãi: :::voucher {\"code\": \"MÃ_VOUCHER\", \"discount\": \"Mức_Giảm\", \"minOrder\": \"Điều_Kiện\", \"expiry\": \"Hạn_Dùng\"} :::\n";
 
             // Bổ sung các chỉ thị cấu hình từ database
             if (systemPrompts && systemPrompts.length > 0) {
@@ -636,16 +717,45 @@ module.exports = async function handler(req, res) {
             systemInstruction += `\nTrạng thái: Khách Vãng Lai. Nếu khách yêu cầu lấy dữ liệu cá nhân, HÃY TỪ CHỐI gọi Tool và yêu cầu họ đăng nhập.\n`;
         }
 
-        // 7. GỌI GEMINI MODEL
+        // 7. GỌI GEMINI MODEL (ÁP DỤNG SLIDING WINDOW & CONTEXT COMPACTION NẾU > 15 TIN NHẮN)
         const genAIResult = await getGenAI();
         if (!genAIResult) return res.status(500).json({ error: 'System AI Error: No API Keys available' });
         
         const { genAI, keyPrefix } = genAIResult;
         
-        const history = messages.slice(0, -1).map(m => ({
-            role: m.role,
-            parts: [{ text: m.content }]
-        }));
+        let history = [];
+        if (messages.length > 15) {
+            // Kỹ thuật Sliding Window & Context Compaction:
+            // Tóm tắt ngắn gọn các tin nhắn cũ, chỉ giữ 6 tin nhắn trao đổi gần nhất
+            const oldMessages = messages.slice(0, messages.length - 7);
+            const recentMessages = messages.slice(messages.length - 7, -1);
+            
+            const oldSummaryLines = oldMessages
+                .filter(m => m.content && m.content.length > 0)
+                .slice(-4)
+                .map(m => `${m.role === 'user' ? 'Khách' : 'Bot'}: ${m.content.slice(0, 80)}`)
+                .join(' | ');
+
+            history = [
+                {
+                    role: 'user',
+                    parts: [{ text: `[Tóm tắt bối cảnh các câu trao đổi trước đó: ${oldSummaryLines}]` }]
+                },
+                {
+                    role: 'model',
+                    parts: [{ text: 'Dạ PawPal đã nắm toàn bộ bối cảnh trên, em đang tiếp tục hỗ trợ sen chu đáo ạ.' }]
+                },
+                ...recentMessages.map(m => ({
+                    role: m.role,
+                    parts: [{ text: m.content }]
+                }))
+            ];
+        } else {
+            history = messages.slice(0, -1).map(m => ({
+                role: m.role,
+                parts: [{ text: m.content }]
+            }));
+        }
 
         let streamResult;
         let chat;

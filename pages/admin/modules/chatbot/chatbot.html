@@ -279,6 +279,7 @@
                     <button type="button" class="rules-hub-tab-btn" data-rules-view="profanity">Màng lọc Toxic Shield <span class="rules-tab-count" id="badgeProfanityCount">127</span></button>
                     <button type="button" class="rules-hub-tab-btn" data-rules-view="canned">Mẫu câu phản hồi <span class="rules-tab-count" id="badgeCannedCount">11</span></button>
                     <button type="button" class="rules-hub-tab-btn" data-rules-view="policy">Hạn mức bồi hoàn và chuyển giao <span class="rules-tab-count" id="badgePolicyCount">54</span></button>
+                    <button type="button" class="rules-hub-tab-btn" data-rules-view="matrix">Ma trận kịch bản Benchmark <span class="rules-tab-count" id="badgeMatrixCount">18</span></button>
                     <button type="button" class="rules-hub-tab-btn" data-rules-view="guidelines">Quy chuẩn văn hóa CSKH</button>
                 </div>
             </div>
@@ -528,6 +529,44 @@
                             </ul>
                         </section>
                     </div>
+                </div>
+            <!-- VIEW 6: MA TRẬN KỊCH BẢN BENCHMARK (chatbot_scenario_matrix) -->
+            <div class="rules-view-panel" id="rulesViewMatrix" style="display: none;">
+                <div class="admin-card rules-master-card">
+                    <div class="rules-table-toolbar">
+                        <div class="rules-toolbar-left">
+                            <input type="text" class="admin-input rules-search-input" id="inputMatrixSearch" placeholder="Tìm theo tên tình huống hoặc từ khóa...">
+                            <select class="admin-select rules-filter-select" id="selectMatrixStatusFilter">
+                                <option value="all">Tất cả kết quả</option>
+                                <option value="passed">Đạt chuẩn (Passed)</option>
+                                <option value="failed">Chưa đạt (Failed)</option>
+                            </select>
+                        </div>
+                        <div class="rules-toolbar-right">
+                            <button type="button" class="admin-btn admin-btn-primary" id="btnRunBenchmarkUI">Chạy kiểm thử Benchmark</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive-wrapper">
+                        <table class="admin-table rules-data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 250px;">Tình huống kiểm thử</th>
+                                    <th>Đầu vào kiểm thử mẫu</th>
+                                    <th style="width: 140px; text-align: center;">Cảm xúc kỳ vọng</th>
+                                    <th style="width: 120px; text-align: center;">Bàn giao</th>
+                                    <th style="width: 120px; text-align: center;">Kết quả</th>
+                                </tr>
+                            </thead>
+                            <tbody id="matrixTableBody">
+                                <!-- Render by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="rules-pagination-wrap" id="matrixPaginationWrap">
+                    <!-- Render by JS -->
                 </div>
             </div>
         </div>

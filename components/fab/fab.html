@@ -42,38 +42,81 @@
 </div>
 
 <div class="fab-chatbot-panel" id="fabChatPanel">
+    <!-- Header chính -->
     <div class="fab-chat-header">
         <div class="fab-chat-title">
-            <span>PawPal AI</span>
-            <span class="fab-chat-status">Trực tuyến</span>
+            <span id="fabChatTitleText">PawPal AI</span>
+            <span class="fab-chat-status" id="fabChatStatus">Trực tuyến</span>
         </div>
-        <button class="fab-chat-clear" id="fabChatClear" aria-label="Xóa" title="Xóa lịch sử chat">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-            </svg>
-        </button>
-        <button class="fab-chat-close" id="fabChatClose" aria-label="Đóng">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
+        <div class="fab-chat-header-actions">
+            <button class="fab-chat-handover-btn" id="fabHandoverBtn" title="Gặp chuyên viên tư vấn trực tiếp">Gặp chuyên viên</button>
+            <button class="fab-chat-icon-btn" id="fabChatNewBtn" aria-label="Đoạn chat mới" title="Bắt đầu đoạn chat mới">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+            </button>
+            <button class="fab-chat-icon-btn" id="fabChatHistoryBtn" aria-label="Lịch sử chat" title="Lịch sử các đoạn chat">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </button>
+            <button class="fab-chat-icon-btn" id="fabChatExpand" aria-label="Mở rộng" title="Mở rộng hoặc thu nhỏ">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <polyline points="9 21 3 21 3 15"></polyline>
+                    <line x1="21" y1="3" x2="14" y2="10"></line>
+                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                </svg>
+            </button>
+            <button class="fab-chat-icon-btn" id="fabChatClose" aria-label="Đóng" title="Đóng khung chat">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
     </div>
-    <div class="fab-toxic-banner" id="fabToxicBanner" style="display: none;"></div>
-    <div class="fab-chat-messages" id="fabChatMessages">
-        <div class="fab-chat-bubble fab-chat-bubble--bot">
-            Xin chào! Tôi là trợ lý AI của PawPal <br>
-            Bạn cần tư vấn về dịch vụ nào?
+
+    <!-- Màn hình Lịch sử các đoạn chat (History Drawer View) -->
+    <div class="fab-chat-history-view" id="fabChatHistoryView" style="display: none;">
+        <div class="fab-history-subbar">
+            <button class="fab-history-back-btn" id="fabHistoryBackBtn" title="Quay lại đoạn chat">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                <span>Quay lại</span>
+            </button>
+            <span class="fab-history-title">Các đoạn chat trước</span>
+            <button class="fab-history-new-btn" id="fabHistoryNewBtn">Chat mới</button>
         </div>
-        <div class="fab-chat-suggestions">
-            <button class="fab-chat-suggest">Dịch vụ Spa và Grooming</button>
-            <button class="fab-chat-suggest">Pet Hotel giá bao nhiêu?</button>
-            <button class="fab-chat-suggest">Cần chuẩn bị gì khi gửi bé?</button>
-            <button class="fab-chat-suggest fab-chat-suggest--agent">Gặp nhân viên tư vấn</button>
+        <div class="fab-history-list" id="fabHistoryList">
+            <div class="fab-history-empty">Chưa có đoạn chat nào trước đó.</div>
         </div>
     </div>
-    <div class="fab-toxic-countdown" id="fabToxicCountdown" style="display: none;"></div>
-    <div class="fab-chat-input-row">
-        <input type="text" id="fabChatInput" class="fab-chat-input" placeholder="Nhập câu hỏi...">
-        <button class="fab-chat-send" id="fabChatSend" aria-label="Gửi">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-        </button>
+
+    <!-- Màn hình Chat chính -->
+    <div class="fab-chat-main-view" id="fabChatMainView">
+        <div class="fab-toxic-banner" id="fabToxicBanner" style="display: none;"></div>
+        <div class="fab-chat-messages" id="fabChatMessages">
+            <div class="fab-chat-bubble fab-chat-bubble--bot">
+                Xin chào! Tôi là trợ lý AI của PawPal <br>
+                Bạn cần tư vấn về dịch vụ nào?
+            </div>
+            <div class="fab-chat-suggestions">
+                <button class="fab-chat-suggest">Dịch vụ Spa và Grooming</button>
+                <button class="fab-chat-suggest">Pet Hotel giá bao nhiêu?</button>
+                <button class="fab-chat-suggest">Cần chuẩn bị gì khi gửi bé?</button>
+                <button class="fab-chat-suggest fab-chat-suggest--agent">Gặp nhân viên tư vấn</button>
+            </div>
+        </div>
+        <div class="fab-toxic-countdown" id="fabToxicCountdown" style="display: none;"></div>
+        <div class="fab-chat-input-row">
+            <input type="text" id="fabChatInput" class="fab-chat-input" placeholder="Nhập câu hỏi...">
+            <button class="fab-chat-send" id="fabChatSend" aria-label="Gửi">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+        </div>
     </div>
 </div>

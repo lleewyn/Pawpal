@@ -276,6 +276,8 @@
                             updatedAt: new Date(rc.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                             sentimentLevel: sLevel,
                             sentimentText: sText,
+                            sentimentTrend: rc.sentiment_trend || 'stable',
+                            isVipAttention: ((ticketsMap[rc.customer_id] || []).length >= 2) || (points >= 500) || Boolean(rc.ai_summary && rc.ai_summary.includes('VIP')),
                             isHandover: rc.status === 'agent_handling',
                             isUrgent: rc.is_urgent,
                             waitingSeconds: rc.is_urgent ? 180 : 30,
@@ -869,6 +871,18 @@
                 sentimentDot = '<span style="color: #D97706; font-size: 11px; font-weight: 600;">• Cần lưu ý</span>';
             }
 
+            let trendHtml = '';
+            if (conv.sentimentTrend === 'escalating') {
+                trendHtml = '<span style="color: #DC2626; font-size: 11px; margin-right: 4px;" title="Căng thẳng gia tăng">↑</span>';
+            } else if (conv.sentimentTrend === 'de_escalating') {
+                trendHtml = '<span style="color: #236B48; font-size: 11px; margin-right: 4px;" title="Tâm lý hạ nhiệt">↓</span>';
+            }
+
+            let vipTag = '';
+            if (conv.isVipAttention) {
+                vipTag = '<span style="color: #236B48; font-size: 11px; font-weight: 600; margin-left: 6px;">• VIP Lưu ý</span>';
+            }
+
             const handoverTag = `<span class="admin-badge badge-neutral" style="font-size: 10.5px; height: 20px; padding: 0 6px;">${conv.isHandover ? 'Nhân viên' : 'Bot'}</span>`;
             const sla = formatSlaInfo(conv.waitingSeconds, conv.isHandover);
 
@@ -876,7 +890,7 @@
             item.className = `conversation-item ${isActive ? 'active' : ''}`;
             item.innerHTML = `
                 <div class="conversation-item-top">
-                    <span class="conv-cust-name">${conv.customerName}</span>
+                    <span class="conv-cust-name">${conv.customerName}${vipTag}</span>
                     <span class="conv-time">${conv.updatedAt}</span>
                 </div>
                 <div class="conversation-item-mid">
@@ -884,7 +898,7 @@
                 </div>
                 <div class="conversation-item-bottom">
                     <div class="conv-bottom-left">
-                        ${sentimentDot}
+                        ${trendHtml}${sentimentDot}
                         ${handoverTag}
                         <span class="sla-timer-pill ${sla.className} sla-pill-${conv.id}">${sla.text}</span>
                     </div>
@@ -2166,6 +2180,7 @@
     let rulesCannedData = [];
     let rulesCompPolicyData = [];
     let rulesHandoverRuleData = [];
+    let rulesMatrixData = [];
 
     let currentRulesView = 'faq';
     let currentPolicySubView = 'comp';
@@ -2174,6 +2189,7 @@
     let profanityPage = 1;
     let cannedPage = 1;
     let policyPage = 1;
+    let matrixPage = 1;
     const RULES_PAGE_SIZE = 10;
     let rulesHubInitialized = false;
 
@@ -2217,6 +2233,13 @@
                 .order('sla_seconds', { ascending: true });
             if (handRes) rulesHandoverRuleData = handRes;
 
+            // 6. Scenario Matrix (chatbot_scenario_matrix)
+            const { data: matRes } = await supabase
+                .from('chatbot_scenario_matrix')
+                .select('*')
+                .order('created_at', { ascending: true });
+            if (matRes) rulesMatrixData = matRes;
+
             updateRulesBadges();
             populateRulesCategories();
             renderActiveRulesView();
@@ -2230,11 +2253,13 @@
         const bProf = document.getElementById('badgeProfanityCount');
         const bCanned = document.getElementById('badgeCannedCount');
         const bPol = document.getElementById('badgePolicyCount');
+        const bMat = document.getElementById('badgeMatrixCount');
 
         if (bFaq) bFaq.textContent = rulesFaqData.length;
         if (bProf) bProf.textContent = rulesProfanityData.length;
         if (bCanned) bCanned.textContent = rulesCannedData.length;
         if (bPol) bPol.textContent = rulesCompPolicyData.length + rulesHandoverRuleData.length;
+        if (bMat) bMat.textContent = rulesMatrixData.length;
     }
 
     function populateRulesCategories() {
@@ -2262,6 +2287,7 @@
         else if (currentRulesView === 'profanity') renderProfanityTable();
         else if (currentRulesView === 'canned') renderCannedTable();
         else if (currentRulesView === 'policy') renderPolicyTable();
+        else if (currentRulesView === 'matrix') renderMatrixTable();
     }
 
     // Helper: Tạo thanh phân trang chuẩn AGENTS.md (căn giữa, không đóng khung, < và >, max 10 dòng)
@@ -2852,6 +2878,121 @@
         }
     }
 
+    // -------------------------------------------------------------
+    // VIEW 5: MA TRẬN KỊCH BẢN BENCHMARK TABLE (chatbot_scenario_matrix)
+    // -------------------------------------------------------------
+    function renderMatrixTable() {
+        const tbody = document.getElementById('matrixTableBody');
+        if (!tbody) return;
+
+        const searchVal = (document.getElementById('inputMatrixSearch')?.value || '').toLowerCase().trim();
+        const statusVal = document.getElementById('selectMatrixStatusFilter')?.value || 'all';
+
+        const filtered = rulesMatrixData.filter(item => {
+            const matchSearch = !searchVal || 
+                (item.scenario_name && item.scenario_name.toLowerCase().includes(searchVal)) ||
+                (item.sample_user_input && item.sample_user_input.toLowerCase().includes(searchVal));
+            const matchStatus = statusVal === 'all' || item.benchmark_status === statusVal;
+            return matchSearch && matchStatus;
+        });
+
+        const totalPages = Math.ceil(filtered.length / RULES_PAGE_SIZE) || 1;
+        if (matrixPage > totalPages) matrixPage = totalPages;
+        const start = (matrixPage - 1) * RULES_PAGE_SIZE;
+        const pageItems = filtered.slice(start, start + RULES_PAGE_SIZE);
+
+        if (pageItems.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">Không tìm thấy kịch bản kiểm thử phù hợp</td></tr>`;
+            renderPaginationControls('matrixPaginationWrap', 1, 1, () => {});
+            return;
+        }
+
+        tbody.innerHTML = pageItems.map(item => {
+            const statusBadge = item.benchmark_status === 'passed'
+                ? `<span class="admin-badge badge-active">Đạt chuẩn</span>`
+                : `<span class="admin-badge badge-danger">Chưa đạt</span>`;
+
+            const sentimentLabels = {
+                1: 'Cấp 1: Hài lòng',
+                2: 'Cấp 2: Trung tính',
+                3: 'Cấp 3: Thất vọng',
+                4: 'Cấp 4: Tức giận',
+                5: 'Cấp 5: Mất kiểm soát',
+                6: 'Cấp 6: Y tế khẩn cấp'
+            };
+
+            const sampleSnippet = (item.sample_user_input || '').length > 120 
+                ? (item.sample_user_input.substring(0, 115) + '...') 
+                : (item.sample_user_input || '—');
+
+            return `
+                <tr>
+                    <td><div style="font-weight: 600; color: #236B48; line-height: 1.4;">${item.scenario_name}</div></td>
+                    <td><div style="font-size: 12.5px; color: var(--text-main); line-height: 1.4;">${sampleSnippet}</div></td>
+                    <td style="text-align: center;"><span style="font-size: 12px; font-weight: 600; color: var(--text-main);">${sentimentLabels[item.expected_sentiment] || `Cấp ${item.expected_sentiment}`}</span></td>
+                    <td style="text-align: center;">
+                        <span class="admin-badge ${item.expected_handover ? 'badge-neutral' : ''}">${item.expected_handover ? 'Bàn giao' : 'Tự động'}</span>
+                    </td>
+                    <td style="text-align: center;">${statusBadge}</td>
+                </tr>
+            `;
+        }).join('');
+
+        renderPaginationControls('matrixPaginationWrap', matrixPage, totalPages, (newPage) => {
+            matrixPage = newPage;
+            renderMatrixTable();
+        });
+    }
+
+    async function runBenchmarkFromUI() {
+        showToast('Đang tiến hành chạy kiểm thử Benchmark trên Supabase...', 'info');
+        try {
+            if (!supabase) return;
+            const [filtersRes, triggersRes] = await Promise.all([
+                supabase.from('chatbot_profanity_filter').select('*').eq('is_active', true),
+                supabase.from('chatbot_sentiment_trigger').select('*').eq('is_active', true)
+            ]);
+            const filters = filtersRes.data || [];
+            const triggers = triggersRes.data || [];
+
+            let passed = 0;
+            for (const sc of rulesMatrixData) {
+                const text = sc.sample_user_input || sc.scenario_name;
+                const lower = text.toLowerCase();
+                let detLevel = 2;
+                triggers.forEach(tr => {
+                    const patterns = (tr.trigger_pattern || '').split(',').map(p => p.trim().toLowerCase()).filter(Boolean);
+                    for (const p of patterns) {
+                        if (lower.includes(p)) {
+                            if (tr.tier_level === 6 || tr.tier_level > detLevel) detLevel = tr.tier_level;
+                        }
+                    }
+                });
+                filters.forEach(f => {
+                    const kw = (f.keyword || '').toLowerCase().trim();
+                    if (kw && lower.includes(kw) && detLevel < 4) detLevel = 4;
+                });
+
+                const isMatch = (detLevel === sc.expected_sentiment) ||
+                                (sc.expected_sentiment >= 4 && detLevel >= 4) ||
+                                (sc.expected_sentiment === 2 && [1, 2, 3].includes(detLevel));
+
+                const nextStatus = isMatch ? 'passed' : 'failed';
+                if (isMatch) passed++;
+                sc.benchmark_status = nextStatus;
+
+                await supabase.from('chatbot_scenario_matrix').update({ benchmark_status: nextStatus }).eq('id', sc.id);
+            }
+
+            renderMatrixTable();
+            const rate = rulesMatrixData.length > 0 ? ((passed / rulesMatrixData.length) * 100).toFixed(0) : 100;
+            showToast(`Kiểm thử hoàn tất! Đạt ${passed}/${rulesMatrixData.length} kịch bản (${rate}%).`, 'success');
+        } catch (e) {
+            console.error('Lỗi khi chạy benchmark từ UI:', e);
+            showToast('Lỗi khi chạy kiểm thử Benchmark: ' + e.message, 'danger');
+        }
+    }
+
     // Helper: Popup dropdown chung cho các tác vụ 3 chấm (Clean Text-Only chuẩn AGENTS.md)
     function openGenericRulesActionMenu(targetBtn, items) {
         document.querySelectorAll('.rules-popover-dropdown').forEach(p => p.remove());
@@ -2945,6 +3086,7 @@
                     profanity: 'rulesViewProfanity',
                     canned: 'rulesViewCanned',
                     policy: 'rulesViewPolicy',
+                    matrix: 'rulesViewMatrix',
                     guidelines: 'rulesViewGuidelines'
                 };
 
@@ -3034,6 +3176,17 @@
             policyPage = 1;
             renderPolicyTable();
         });
+
+        // Matrix Filters & Run Benchmark
+        document.getElementById('inputMatrixSearch')?.addEventListener('input', () => {
+            matrixPage = 1;
+            renderMatrixTable();
+        });
+        document.getElementById('selectMatrixStatusFilter')?.addEventListener('change', () => {
+            matrixPage = 1;
+            renderMatrixTable();
+        });
+        document.getElementById('btnRunBenchmarkUI')?.addEventListener('click', runBenchmarkFromUI);
 
         // Modal 8: Save FAQ
         const faqModal = document.getElementById('modalFaqEditorOverlay');
