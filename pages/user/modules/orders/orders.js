@@ -217,11 +217,11 @@ function startPendingOrdersTicker() {
 }
 
 function updateStats() {
-    const processingStatuses = ['pending', 'pending_payment', 'preparing', 'shipping', 'delivered'];
-    const processingCount = ordersState.allOrders.filter((order) => processingStatuses.includes(order.status)).length;
-    const completedCount = ordersState.allOrders.filter((order) => order.status === 'completed').length;
+    const processingStatuses = ['pending', 'preparing', 'shipping', 'delivered'];
+    const processingCount = ordersState.allOrders.filter((order) => processingStatuses.includes(normalizeOrderStatus(order.status))).length;
+    const completedCount = ordersState.allOrders.filter((order) => normalizeOrderStatus(order.status) === 'completed').length;
     const totalSpent = ordersState.allOrders
-        .filter((order) => order.paymentStatus === 'paid')
+        .filter((order) => order.paymentStatus === 'paid' && !['cancelled', 'returned'].includes(normalizeOrderStatus(order.status)))
         .reduce((sum, order) => {
             const amount = toNumber(order.pricing?.total)
                         || toNumber(order.pricing?.grandTotal);
@@ -234,7 +234,7 @@ function updateStats() {
 }
 
 function updateTabCounts() {
-    const statuses = ['all', 'pending_payment', 'preparing', 'shipping', 'delivered', 'completed', 'cancelled'];
+    const statuses = ['all', 'pending', 'preparing', 'shipping', 'delivered', 'completed', 'cancelled', 'returned'];
 
     statuses.forEach((status) => {
         const count = status === 'all'
@@ -322,23 +322,24 @@ function createOrderCard(order) {
     const payMethod = (order.paymentMethod || order.payment?.method || '').toLowerCase();
     const isOnline  = ONLINE_METHODS.includes(payMethod);
 
-    const isPendingConfirm = (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && isPaid && isOnline;
-    const displayStatusLabel = isPendingConfirm ? 'Chờ xác nhận' : getStatusLabel(normalizedStatus);
-    const displayStatusClass = isPendingConfirm ? 'status-preparing' : `status-${normalizedStatus}`;
+    const displayStatusLabel = getStatusLabel(normalizedStatus);
+    const displayStatusClass = `status-${normalizedStatus}`;
 
+    const isDelivered = normalizedStatus === 'delivered';
     const isCompleted = normalizedStatus === 'completed';
+    const isReturned = normalizedStatus === 'returned';
     const productCount = Array.isArray(order.products)
         ? order.products.reduce((sum, product) => sum + (Number(product.quantity) || 1), 0)
         : 0;
     const paymentLabel = getPaymentMethodLabel(order.paymentMethod).replace(/\s*&\s*/g, ' và ');
-    const orderAlreadyReviewed = isCompleted && ordersState.reviews.includes(String(orderId));
+    const orderAlreadyReviewed = (isDelivered || isCompleted) && ordersState.reviews.includes(String(orderId));
 
-    const alreadyReturned = ordersState.returns.includes(String(orderId));
+    const alreadyReturned = isReturned || ordersState.returns.includes(String(orderId));
 
     let actionButtonsHtml = '';
 
-    // 1. Phản ánh đơn hàng
-    if (isCompleted) {
+    // 1. Phản ánh / Khiếu nại đơn hàng (Tại Đã giao hoặc Hoàn thành)
+    if (isDelivered || isCompleted) {
         actionButtonsHtml += `
             <a class="btn-order-action btn-action-complaint" href="/pages/user/support-create/support-create.html?type=order&orderId=${encodeURIComponent(orderId)}" onclick="event.stopPropagation()" title="Gửi phản ánh hoặc khiếu nại về đơn hàng này">
                 Phản ánh đơn
@@ -346,8 +347,8 @@ function createOrderCard(order) {
         `;
     }
 
-    // 2. Hủy đơn hàng
-    if (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment' || normalizedStatus === 'preparing') {
+    // 2. Hủy đơn hàng (Chỉ cho phép khi đơn ở trạng thái Chờ xác nhận)
+    if (normalizedStatus === 'pending') {
         actionButtonsHtml += `
             <button type="button" class="btn-order-action btn-action-cancel" onclick="event.stopPropagation(); cancelOrder('${escapeHtml(orderId)}')">
                 Hủy đơn
@@ -355,22 +356,24 @@ function createOrderCard(order) {
         `;
     }
 
-    // 3. Đổi trả / Hoàn tiền
-    if (isCompleted) {
-        const completedEntry = Array.isArray(order.timeline)
-            ? order.timeline.slice().reverse().find((timelineItem) => timelineItem.status === 'completed')
+    // 3. Đổi trả hàng:
+    // - Nếu đã có yêu cầu / trạng thái trả hàng: hiển thị Chi tiết đổi trả
+    // - Khách chỉ được tạo yêu cầu đổi/trả mới khi ở trạng thái Đã giao (trong thời hạn 7 ngày)
+    if (alreadyReturned) {
+        actionButtonsHtml += `
+            <a href="/pages/user/index.html#return-detail?orderId=${encodeURIComponent(orderId)}" class="btn-order-action btn-action-modify" onclick="event.stopPropagation()">
+                Chi tiết đổi trả
+            </a>
+        `;
+    } else if (isDelivered) {
+        const deliveredEntry = Array.isArray(order.timeline)
+            ? order.timeline.slice().reverse().find((timelineItem) => timelineItem.status === 'delivered')
             : null;
-        const completedAt = completedEntry ? new Date(completedEntry.timestamp) : new Date(order.createdAt || 0);
-        const daysPassed = (Date.now() - completedAt.getTime()) / (1000 * 60 * 60 * 24);
+        const deliveredAt = deliveredEntry ? new Date(deliveredEntry.timestamp) : new Date(order.updatedAt || order.createdAt || 0);
+        const daysPassed = (Date.now() - deliveredAt.getTime()) / (1000 * 60 * 60 * 24);
         const withinReturnWindow = daysPassed <= 7;
 
-        if (alreadyReturned) {
-            actionButtonsHtml += `
-                <a href="/pages/user/index.html#return-detail?orderId=${encodeURIComponent(orderId)}" class="btn-order-action btn-action-modify" onclick="event.stopPropagation()">
-                    Chi tiết đổi trả
-                </a>
-            `;
-        } else if (withinReturnWindow && !orderAlreadyReviewed) {
+        if (withinReturnWindow && !orderAlreadyReviewed) {
             actionButtonsHtml += `
                 <button type="button" class="btn-order-action btn-action-modify" onclick="event.stopPropagation(); openRMADrawer('${escapeHtml(orderId)}')">
                     Yêu cầu đổi trả
@@ -379,8 +382,8 @@ function createOrderCard(order) {
         }
     }
 
-    // 4. Đổi phương thức thanh toán
-    const canPayNow = (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && !isPaid && isOnline;
+    // 4. Đổi phương thức thanh toán (khi đơn Chờ xác nhận chưa thanh toán online)
+    const canPayNow = normalizedStatus === 'pending' && !isPaid && isOnline;
     if (canPayNow) {
         actionButtonsHtml += `
             <button type="button" class="btn-order-action btn-action-modify" onclick="event.stopPropagation(); openChangePaymentMethodModal('${escapeHtml(orderId)}')">
@@ -396,8 +399,8 @@ function createOrderCard(order) {
         </button>
     `;
 
-    // 6. Đánh giá
-    if (isCompleted) {
+    // 6. Đánh giá sản phẩm (tùy chọn hậu mãi tại Đã giao hoặc Hoàn thành)
+    if (isDelivered || isCompleted) {
         if (!orderAlreadyReviewed) {
             actionButtonsHtml += `
                 <a class="btn-order-action btn-action-review" href="/pages/user/index.html#order-detail?id=${encodeURIComponent(orderId)}#reviews" onclick="event.stopPropagation()">
@@ -409,7 +412,7 @@ function createOrderCard(order) {
         }
     }
 
-    // 7. Xác nhận nhận hàng
+    // 7. Xác nhận nhận hàng sớm (khi shipper đã giao thành công)
     if (normalizedStatus === 'delivered') {
         actionButtonsHtml += `
             <button type="button" class="btn-order-action btn-action-primary" onclick="event.stopPropagation(); confirmOrderReceipt('${escapeHtml(orderId)}')">
@@ -434,7 +437,7 @@ function createOrderCard(order) {
     }
 
     let statusNoticeHtml = '';
-    if ((normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && !isPaid && isOnline && order.paymentExpiry) {
+    if (normalizedStatus === 'pending' && !isPaid && isOnline && order.paymentExpiry) {
         statusNoticeHtml = `
             <div class="order-alert-note order-pending-countdown" data-expiry="${order.paymentExpiry}" data-order-id="${orderId}">
                 ⏳ Thời gian thanh toán còn lại: <strong class="countdown-clock">--:--</strong>
@@ -617,6 +620,22 @@ function cancelOrder(orderId) {
             }
         }
 
+        // Hoàn lại Voucher nếu đơn hàng có sử dụng
+        const voucherCode = order.voucherCode || order.pricing?.voucherCode || order.discount?.code;
+        if (voucherCode) {
+            try {
+                const userVouchers = JSON.parse(localStorage.getItem('pawpal_user_vouchers') || '[]');
+                const vIdx = userVouchers.findIndex(v => (v.code === voucherCode || v.id === voucherCode));
+                if (vIdx !== -1) {
+                    userVouchers[vIdx].isUsed = false;
+                    userVouchers[vIdx].usedAt = null;
+                    localStorage.setItem('pawpal_user_vouchers', JSON.stringify(userVouchers));
+                }
+            } catch (vErr) {
+                console.warn('Lỗi khôi phục voucher khi hủy đơn:', vErr);
+            }
+        }
+
         const isPaid = order.paymentMethod && order.paymentMethod !== 'cod' && order.paymentStatus === 'paid';
         const newPaymentStatus = isPaid ? 'pending_refund' : 'cancelled';
 
@@ -659,6 +678,47 @@ function cancelOrder(orderId) {
 
 window.cancelOrder = cancelOrder;
 
+function awardLoyaltyPointsForOrder(order) {
+    if (!order || order.pointsAwarded) return;
+
+    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    if (!user || user.is_temporary) return; // Khách vãng lai không có Paw Points
+
+    const grandTotal = Number(
+        order.pricing?.total ?? order.pricing?.grandTotal ?? order.total ?? 0
+    );
+    if (grandTotal <= 0) return;
+
+    const pointsEarned = Math.floor(grandTotal / 1000);
+    if (pointsEarned <= 0) return;
+
+    try {
+        const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
+        const idx = users.findIndex(u => String(u.id) === String(user.id) || String(u.phone) === String(user.phone));
+        if (idx !== -1) {
+            users[idx].points = (users[idx].points || 0) + pointsEarned;
+            users[idx].spend = (users[idx].spend || 0) + grandTotal;
+            users[idx].lastTransactionAt = new Date().toISOString();
+            localStorage.setItem('pawpal_users', JSON.stringify(users));
+        }
+
+        user.points = (user.points || 0) + pointsEarned;
+        user.spend = (user.spend || 0) + grandTotal;
+        user.lastTransactionAt = new Date().toISOString();
+        localStorage.setItem('pawpal_current_user', JSON.stringify(user));
+
+        order.pointsAwarded = true;
+        order.pointsEarned = pointsEarned;
+
+        const headerPoints = document.getElementById('headerPoints');
+        if (headerPoints) headerPoints.textContent = user.points + ' Paw Points';
+
+        showOrdersToast(`Bạn nhận được +${pointsEarned} Paw Points từ đơn hàng hoàn thành!`, 'success');
+    } catch (e) {
+        console.warn('Lỗi tích điểm PawPoint cho đơn hàng:', e);
+    }
+}
+
 function confirmOrderReceipt(orderId) {
     const order = ordersState.allOrders.find((item) => String(item.id) === String(orderId));
     if (!order) {
@@ -685,6 +745,7 @@ function confirmOrderReceipt(orderId) {
         ]
     };
 
+    awardLoyaltyPointsForOrder(updatedOrder);
     saveOrderToLocalStorage(updatedOrder);
     if (window.API && typeof window.API.updateOrderStatus === 'function') {
         window.API.updateOrderStatus(updatedOrder.id, 'COMPLETED').catch((err) => {
@@ -927,24 +988,27 @@ function saveOrderToLocalStorage(order) {
 function getStatusLabel(status) {
     const s = String(status || '').toLowerCase().trim();
     const labels = {
-        cho_thanh_toan:      'Chờ thanh toán',
         cho_xac_nhan:        'Chờ xác nhận',
-        da_xac_nhan:         'Đang chuẩn bị',
-        dang_chuan_bi:       'Đang chuẩn bị',
-        dang_giao:           'Đang giao',
-        da_giao:             'Đã giao hàng',
-        da_hoan_tat:         'Hoàn thành',
-        da_huy:              'Đã hủy',
-        thanh_toan_that_bai: 'Thanh toán thất bại',
         placed:              'Chờ xác nhận',
-        pending:             'Chờ thanh toán',
-        pending_payment:     'Chờ thanh toán',
-        confirmed:           'Đang chuẩn bị',
-        preparing:           'Đang chuẩn bị',
+        pending:             'Chờ xác nhận',
+        pending_payment:     'Chờ xác nhận',
+        cho_thanh_toan:      'Chờ xác nhận',
+        cho_lay_hang:        'Chờ lấy hàng',
+        dang_chuan_bi:       'Chờ lấy hàng',
+        preparing:           'Chờ lấy hàng',
+        confirmed:           'Chờ lấy hàng',
+        da_xac_nhan:         'Chờ lấy hàng',
+        dang_giao:           'Đang giao',
         shipping:            'Đang giao',
-        delivered:           'Đã giao hàng',
+        da_giao:             'Đã giao',
+        delivered:           'Đã giao',
+        da_hoan_tat:         'Hoàn thành',
         completed:           'Hoàn thành',
+        da_huy:              'Đã hủy',
         cancelled:           'Đã hủy',
+        thanh_toan_that_bai: 'Đã hủy',
+        tra_hang:            'Trả hàng',
+        returned:            'Trả hàng',
         return_pending:      'Chờ duyệt đổi trả',
         return_approved:     'Đổi trả được duyệt',
         refunded:            'Đã hoàn tiền'
@@ -954,14 +1018,14 @@ function getStatusLabel(status) {
 
 function normalizeOrderStatus(status) {
     const s = String(status || '').toLowerCase().trim();
-    if (s === 'cho_thanh_toan' || s === 'pending') return 'pending_payment';
-    if (s === 'cho_xac_nhan' || s === 'placed') return 'placed';
-    if (s === 'da_xac_nhan' || s === 'confirmed' || s === 'dang_chuan_bi') return 'preparing';
+    if (s === 'cho_xac_nhan' || s === 'placed' || s === 'pending' || s === 'pending_payment' || s === 'cho_thanh_toan') return 'pending';
+    if (s === 'cho_lay_hang' || s === 'preparing' || s === 'confirmed' || s === 'da_xac_nhan' || s === 'dang_chuan_bi') return 'preparing';
     if (s === 'dang_giao' || s === 'shipping') return 'shipping';
     if (s === 'da_giao' || s === 'delivered') return 'delivered';
     if (s === 'da_hoan_tat' || s === 'completed') return 'completed';
     if (s === 'da_huy' || s === 'cancelled' || s === 'thanh_toan_that_bai') return 'cancelled';
-    return s || 'placed';
+    if (s === 'tra_hang' || s === 'returned' || s === 'return_pending' || s === 'return_approved' || s === 'refunded') return 'returned';
+    return s || 'pending';
 }
 
 function getPaymentMethodLabel(method) {

@@ -321,16 +321,16 @@
 .order-badge-status.status-confirmed,
 .order-badge-status.status-preparing,
 .order-badge-status.status-shipping,
+.order-badge-status.status-delivered,
 .status-badge.status-confirmed,
 .status-badge.status-preparing,
-.status-badge.status-shipping {
+.status-badge.status-shipping,
+.status-badge.status-delivered {
     background: #DCEAF2;
     color: #20495E;
 }
 
-.order-badge-status.status-delivered,
 .order-badge-status.status-completed,
-.status-badge.status-delivered,
 .status-badge.status-completed {
     background: #DCEEE2;
     color: #165335;
@@ -340,6 +340,12 @@
 .status-badge.status-cancelled {
     background: #F7DCDC;
     color: #8F2424;
+}
+
+.order-badge-status.status-returned,
+.status-badge.status-returned {
+    background: #E2ECE5;
+    color: #2D483B;
 }
 
 /* ==========================================================================

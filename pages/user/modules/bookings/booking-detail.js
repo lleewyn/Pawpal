@@ -371,33 +371,66 @@ function checkBookingModifiability(booking) {
     const btnChange = document.getElementById('btnChangeSchedule');
     const btnCancel = document.getElementById('btnCancelBooking');
 
+    if (!btnChange || !btnCancel) return;
+
     const scheduledAt = getBookingScheduledAt(booking);
-    if (!scheduledAt) {
+    const currentStatus = resolveBookingStatus(booking);
+
+    // 1. Nghiệp vụ Thay đổi lịch hẹn (Quy trình 3.1.5):
+    // Chỉ kích hoạt khi ca hẹn ở trạng thái "Đã xác nhận" (confirmed)
+    const isConfirmed = currentStatus === 'confirmed';
+    const changeCount = Number(booking.changeCount || 0);
+    const changeLimitReached = changeCount >= 2;
+
+    if (!isConfirmed || changeLimitReached || !scheduledAt) {
         btnChange.classList.add('d-none');
-        btnCancel.classList.add('d-none');
-        return;
+    } else {
+        btnChange.classList.remove('d-none');
+        const now = new Date();
+        const diffMinutes = (scheduledAt - now) / (1000 * 60);
+
+        if (diffMinutes < 120) {
+            btnChange.disabled = true;
+            btnChange.classList.add('disabled');
+            btnChange.setAttribute('title', 'Đã quá thời gian tự thay đổi lịch tự động (< 2 tiếng). Vui lòng gọi Hotline để được hỗ trợ.');
+        } else {
+            btnChange.disabled = false;
+            btnChange.classList.remove('disabled');
+            btnChange.removeAttribute('title');
+        }
     }
 
-    const now = new Date();
-    const diffMinutes = (scheduledAt - now) / (1000 * 60);
-    const changeLimitReached = (booking.changeCount || 0) >= 2;
+    // 2. Nghiệp vụ Hủy lịch hẹn:
+    // Tuyệt đối không cho phép hủy khi: Đang thực hiện (in-progress), Đã tiếp nhận (accepted), Hoàn thành (completed), Đã hủy (cancelled)
+    const nonCancellable = ['in-progress', 'accepted', 'completed', 'cancelled'];
+    const canAttemptCancel = ['pending', 'confirmed'].includes(currentStatus) && !nonCancellable.includes(currentStatus);
 
-    const currentStatus = resolveBookingStatus(booking);
-    const canModify = diffMinutes >= 120
-        && !['in-progress', 'completed', 'cancelled'].includes(currentStatus)
-        && !changeLimitReached;
+    if (!canAttemptCancel || !scheduledAt) {
+        btnCancel.classList.add('d-none');
+    } else {
+        btnCancel.classList.remove('d-none');
+        const now = new Date();
+        const diffMinutes = (scheduledAt - now) / (1000 * 60);
 
-    const canCancel = diffMinutes >= 120
-        && ['pending', 'confirmed', 'upcoming', 'accepted'].includes(currentStatus)
-        && (booking.cancelCount || 0) < 3;
-
-    btnChange.classList.toggle('d-none', !canModify);
-    btnCancel.classList.toggle('d-none', !canCancel);
+        if (diffMinutes < 120) {
+            btnCancel.disabled = true;
+            btnCancel.classList.add('disabled');
+            btnCancel.setAttribute('title', 'Đã quá thời gian tự hủy lịch tự động (< 2 tiếng). Vui lòng gọi Hotline để được hỗ trợ.');
+        } else {
+            btnCancel.disabled = false;
+            btnCancel.classList.remove('disabled');
+            btnCancel.removeAttribute('title');
+        }
+    }
 }
 
 function handleChangeSchedule() {
     const btnChange = document.getElementById('btnChangeSchedule');
-    if (!btnChange || btnChange.disabled) {
+    const scheduledAt = getBookingScheduledAt(currentBooking);
+    const now = new Date();
+    const diffMinutes = scheduledAt ? (scheduledAt - now) / (1000 * 60) : 0;
+
+    if (diffMinutes < 120 || (btnChange && btnChange.disabled)) {
         showErrorBanner();
         return;
     }
@@ -641,7 +674,20 @@ function showChangeScheduleModal(user = null) {
 }
 
 function handleCancelBooking() {
-    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+    const scheduledAt = getBookingScheduledAt(currentBooking);
+    const now = new Date();
+    const diffMinutes = scheduledAt ? (scheduledAt - now) / (1000 * 60) : 999;
+
+    if (diffMinutes < 120) {
+        showToast('Chỉ được phép tự hủy lịch hẹn trước giờ bắt đầu tối thiểu 2 tiếng. Ca hẹn sắp diễn ra, vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'danger');
+        return;
+    }
+
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    if (currentUser && Number(currentUser.cancelCount || 0) >= 3) {
+        showToast('Tài khoản của bạn đã vượt quá ngưỡng hủy lịch cho phép (> 3 lần). Chức năng đặt và quản lý lịch trực tuyến của bạn đã bị tạm khóa. Vui lòng gọi Hotline 1900 1234.', 'danger');
+        return;
+    }
 
     if (currentUser && currentUser.is_temporary) {
         showCancelConfirmModal(() => {
@@ -693,7 +739,7 @@ function showGuestOTPModal(user, onSuccess) {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Huỷ</button>
+                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Hủy</button>
                     <button type="button" class="btn-cta" id="confirmOtpBtn">Xác nhận</button>
                 </div>
             </div>
@@ -716,15 +762,67 @@ function showGuestOTPModal(user, onSuccess) {
 }
 
 function confirmCancelBooking(onDone) {
-    const bookings = JSON.parse('[]' || '[]');
-    const idx = bookings.findIndex(b => b.id === currentBooking.id);
-    if (idx !== -1) {
-        bookings[idx].cancelCount = (bookings[idx].cancelCount || 0) + 1;
-        bookings[idx].status = 'cancelled';
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    if (currentUser) {
+        currentUser.cancelCount = (Number(currentUser.cancelCount) || 0) + 1;
+        if (currentUser.cancelCount > 3) {
+            currentUser.booking_locked = true;
+        }
+        localStorage.setItem('pawpal_current_user', JSON.stringify(currentUser));
+
+        try {
+            const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
+            const uIdx = users.findIndex(u => u.id === currentUser.id || u.phone === currentUser.phone);
+            if (uIdx !== -1) {
+                users[uIdx].cancelCount = currentUser.cancelCount;
+                users[uIdx].booking_locked = currentUser.booking_locked;
+                localStorage.setItem('pawpal_users', JSON.stringify(users));
+            }
+        } catch (_) {}
     }
+
+    try {
+        const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        const idx = bookings.findIndex(b => String(b.id || b._id) === String(currentBooking.id || currentBooking._id));
+        if (idx !== -1) {
+            bookings[idx].cancelCount = (bookings[idx].cancelCount || 0) + 1;
+            bookings[idx].status = 'cancelled';
+            localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
+        }
+    } catch (_) {}
 
     currentBooking.status = 'cancelled';
     cancelBookingOnSupabase(currentBooking); // sync Supabase (không await để không block UI)
+
+    // Tạo thông báo xác nhận hủy lịch cho Khách hàng
+    try {
+        const userNotifs = JSON.parse(localStorage.getItem('pawpal_notifications') || '[]');
+        userNotifs.unshift({
+            id: `notif-${Date.now()}`,
+            userId: currentUser?.id,
+            title: 'Xác nhận hủy lịch hẹn',
+            message: `Lịch hẹn #${currentBooking.id || currentBooking.code} của bé ${currentBooking.petName || 'cưng'} đã được hủy thành công.`,
+            createdAt: new Date().toISOString(),
+            type: 'booking_cancelled',
+            read: false
+        });
+        localStorage.setItem('pawpal_notifications', JSON.stringify(userNotifs));
+    } catch (_) {}
+
+    // Gửi thông báo đến Admin
+    try {
+        const adminNotifs = JSON.parse(localStorage.getItem('pawpal_admin_notifications') || '[]');
+        adminNotifs.unshift({
+            id: `admin-notif-${Date.now()}`,
+            type: 'booking_cancelled',
+            title: 'Khách hàng hủy lịch hẹn',
+            content: `Khách hàng ${currentUser?.name || currentBooking.ownerName || 'vãng lai'} (${currentUser?.phone || currentBooking.ownerPhone}) vừa hủy ca hẹn #${currentBooking.id || currentBooking.code}.`,
+            createdAt: new Date().toISOString(),
+            read: false
+        });
+        localStorage.setItem('pawpal_admin_notifications', JSON.stringify(adminNotifs));
+    } catch (_) {}
+
     showToast('Đã hủy lịch hẹn thành công', 'success');
 
     if (onDone) {

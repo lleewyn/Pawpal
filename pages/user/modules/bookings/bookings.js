@@ -290,13 +290,20 @@ function createBookingCard(booking) {
     const card = document.createElement('div');
     card.className = 'booking-card pawpal-smooth-entrance';
     const normalizedStatus = resolveBookingStatus(booking);
+    const scheduledAt = getBookingScheduledAt(booking);
+    const now = new Date();
+    const diffMinutes = scheduledAt ? (scheduledAt - now) / (1000 * 60) : 999;
+    const isWithin2Hours = diffMinutes < 120;
+
     const changeCount = Number(booking.changeCount || 0);
     const cancelCount = Number(booking.cancelCount || 0);
     const isChangeLimited = changeCount >= 2;
-    const canModify = !['in-progress', 'completed', 'cancelled'].includes(normalizedStatus)
-        && !isChangeLimited;
-    const canCancel = ['pending', 'confirmed', 'accepted'].includes(normalizedStatus)
-        && cancelCount < 3;
+
+    // 1. Quy trình 3.1.5: Chỉ cho phép đổi lịch khi trạng thái là "confirmed" (Đã xác nhận)
+    const canModify = (normalizedStatus === 'confirmed') && !isChangeLimited;
+
+    // 2. Nghiệp vụ Hủy lịch: Chỉ cho phép hủy khi pending hoặc confirmed. Khóa hoàn toàn khi in-progress, accepted, completed, cancelled.
+    const canCancel = ['pending', 'confirmed'].includes(normalizedStatus);
     
     const petKey = String(booking.petId || '');
     const petNameLower = String(booking.petName || booking.petInfo?.petName || '').trim().toLowerCase();
@@ -325,7 +332,9 @@ function createBookingCard(booking) {
     // 2. Hủy lịch
     if (canCancel) {
         actionButtonsHtml += `
-            <button type="button" class="btn-booking-action btn-action-cancel btn-cancel-booking" data-booking-id="${bookingId}">
+            <button type="button" class="btn-booking-action btn-action-cancel btn-cancel-booking ${isWithin2Hours ? 'disabled' : ''}" 
+                data-booking-id="${bookingId}" 
+                title="${isWithin2Hours ? 'Đã quá thời gian tự hủy lịch (< 2 tiếng). Vui lòng gọi Hotline để được hỗ trợ.' : 'Hủy lịch hẹn này'}">
                 Hủy lịch
             </button>
         `;
@@ -334,7 +343,9 @@ function createBookingCard(booking) {
     // 3. Đổi lịch
     if (canModify) {
         actionButtonsHtml += `
-            <button type="button" class="btn-booking-action btn-action-modify btn-change-schedule" data-booking-id="${bookingId}">
+            <button type="button" class="btn-booking-action btn-action-modify btn-change-schedule ${isWithin2Hours ? 'disabled' : ''}" 
+                data-booking-id="${bookingId}" 
+                title="${isWithin2Hours ? 'Đã quá thời gian tự thay đổi lịch (< 2 tiếng). Vui lòng gọi Hotline để được hỗ trợ.' : 'Thay đổi ngày giờ lịch hẹn'}">
                 Đổi lịch
             </button>
         `;
@@ -420,6 +431,10 @@ function createBookingCard(booking) {
         changeBtn.addEventListener('click', (event) => {
             event.preventDefault();
             event.stopPropagation();
+            if (isWithin2Hours) {
+                showToast('Đã quá thời gian tự thay đổi lịch hẹn (< 2 tiếng). Ca hẹn sắp diễn ra, vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'danger');
+                return;
+            }
             openQuickRescheduleModal(booking);
         });
     }
@@ -429,6 +444,15 @@ function createBookingCard(booking) {
         cancelBtn.addEventListener('click', (event) => {
             event.preventDefault();
             event.stopPropagation();
+            if (isWithin2Hours) {
+                showToast('Chỉ được phép tự hủy lịch trước giờ bắt đầu tối thiểu 2 tiếng. Ca hẹn sắp diễn ra, vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'danger');
+                return;
+            }
+            const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+            if (currentUser && Number(currentUser.cancelCount || 0) >= 3) {
+                showToast('Tài khoản của bạn đã vượt quá ngưỡng hủy lịch cho phép (> 3 lần). Chức năng đặt và quản lý lịch trực tuyến của bạn đã bị tạm khóa. Vui lòng gọi Hotline 1900 1234.', 'danger');
+                return;
+            }
             openQuickCancelModal(booking);
         });
     }
@@ -527,7 +551,47 @@ window.BookingsData = {
     formatPrice
 };
 
+function showToast(message, type = 'info') {
+    if (typeof window.showToast === 'function') {
+        window.showToast(message, type);
+        return;
+    }
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `toast-custom toast-${type}`;
+    const bg = type === 'danger' ? '#ef4444' : (type === 'success' ? '#236B48' : (type === 'warning' ? '#d97706' : '#3b82f6'));
+    toast.style.cssText = `background:${bg};color:#fff;padding:12px 18px;border-radius:9px;font-size:0.9rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
 function openQuickCancelModal(booking) {
+    const scheduledAt = getBookingScheduledAt(booking);
+    const now = new Date();
+    const diffMinutes = scheduledAt ? (scheduledAt - now) / (1000 * 60) : 999;
+
+    if (diffMinutes < 120) {
+        showToast('Chỉ được phép tự hủy lịch hẹn trước giờ bắt đầu tối thiểu 2 tiếng. Ca hẹn sắp diễn ra, vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'danger');
+        return;
+    }
+
+    const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+    if (currentUser && Number(currentUser.cancelCount || 0) >= 3) {
+        showToast('Tài khoản của bạn đã vượt quá ngưỡng hủy lịch cho phép (> 3 lần). Chức năng đặt và quản lý lịch trực tuyến của bạn đã bị tạm khóa. Vui lòng gọi Hotline 1900 1234.', 'danger');
+        return;
+    }
+
     const existing = document.getElementById('quickCancelBookingModal');
     if (existing) existing.remove();
 
@@ -564,12 +628,64 @@ function openQuickCancelModal(booking) {
     modal.show();
 
     modalEl.querySelector('#quickConfirmCancelBtn').addEventListener('click', async () => {
-        const bookings = JSON.parse('[]' || '[]');
-        const idx = bookings.findIndex((b) => String(b.id || b._id) === String(bookingId));
-        if (idx !== -1) {
-            bookings[idx].status = 'cancelled';
-            bookings[idx].cancelCount = (bookings[idx].cancelCount || 0) + 1;
+        // Cập nhật số lần hủy của người dùng
+        if (currentUser) {
+            currentUser.cancelCount = (Number(currentUser.cancelCount) || 0) + 1;
+            if (currentUser.cancelCount > 3) {
+                currentUser.booking_locked = true;
+            }
+            localStorage.setItem('pawpal_current_user', JSON.stringify(currentUser));
+
+            try {
+                const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
+                const uIdx = users.findIndex(u => u.id === currentUser.id || u.phone === currentUser.phone);
+                if (uIdx !== -1) {
+                    users[uIdx].cancelCount = currentUser.cancelCount;
+                    users[uIdx].booking_locked = currentUser.booking_locked;
+                    localStorage.setItem('pawpal_users', JSON.stringify(users));
+                }
+            } catch (_) {}
         }
+
+        try {
+            const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+            const idx = bookings.findIndex((b) => String(b.id || b._id) === String(bookingId));
+            if (idx !== -1) {
+                bookings[idx].status = 'cancelled';
+                bookings[idx].cancelCount = (bookings[idx].cancelCount || 0) + 1;
+                localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
+            }
+        } catch (_) {}
+
+        // Tạo thông báo xác nhận hủy lịch cho Khách hàng
+        try {
+            const userNotifs = JSON.parse(localStorage.getItem('pawpal_notifications') || '[]');
+            userNotifs.unshift({
+                id: `notif-${Date.now()}`,
+                userId: currentUser?.id,
+                title: 'Xác nhận hủy lịch hẹn',
+                message: `Lịch hẹn #${booking.id || booking.code} của bé ${petName} đã được hủy thành công.`,
+                createdAt: new Date().toISOString(),
+                type: 'booking_cancelled',
+                read: false
+            });
+            localStorage.setItem('pawpal_notifications', JSON.stringify(userNotifs));
+        } catch (_) {}
+
+        // Gửi thông báo đến Admin
+        try {
+            const adminNotifs = JSON.parse(localStorage.getItem('pawpal_admin_notifications') || '[]');
+            adminNotifs.unshift({
+                id: `admin-notif-${Date.now()}`,
+                type: 'booking_cancelled',
+                title: 'Khách hàng hủy lịch hẹn',
+                content: `Khách hàng ${currentUser?.name || booking.ownerName || 'vãng lai'} (${currentUser?.phone || booking.ownerPhone}) vừa hủy ca hẹn #${booking.id || booking.code}.`,
+                createdAt: new Date().toISOString(),
+                read: false
+            });
+            localStorage.setItem('pawpal_admin_notifications', JSON.stringify(adminNotifs));
+        } catch (_) {}
+
         await cancelOnSupabase(bookingId);
         modal.hide();
         showToast('Đã hủy lịch hẹn thành công!', 'success');
@@ -578,6 +694,21 @@ function openQuickCancelModal(booking) {
 }
 
 function openQuickRescheduleModal(booking) {
+    const scheduledAt = getBookingScheduledAt(booking);
+    const now = new Date();
+    const diffMinutes = scheduledAt ? (scheduledAt - now) / (1000 * 60) : 999;
+
+    if (diffMinutes < 120) {
+        showToast('Đã quá thời gian tự thay đổi lịch tự động (< 2 tiếng). Ca hẹn sắp diễn ra, vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'danger');
+        return;
+    }
+
+    const changeCount = Number(booking.changeCount || 0);
+    if (changeCount >= 2) {
+        showToast('Bạn đã sử dụng hết 2 lần thay đổi lịch hẹn trực tuyến. Vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'warning');
+        return;
+    }
+
     const existing = document.getElementById('quickRescheduleBookingModal');
     if (existing) existing.remove();
 
@@ -673,22 +804,26 @@ function openQuickRescheduleModal(booking) {
     }
 
     modalEl.querySelector('#quickConfirmRescheduleBtn').addEventListener('click', async () => {
-        const bookings = JSON.parse('[]' || '[]');
-        const idx = bookings.findIndex((b) => String(b.id || b._id) === String(bookingId));
-        if (idx !== -1) {
-            bookings[idx].date = selectedDate;
-            if (!isHotelBooking) {
-                bookings[idx].time = selectedSlot;
-                bookings[idx].timeStart = selectedSlot;
-                bookings[idx].staff = selectedStaff;
-            } else {
-                bookings[idx].time = '';
-                bookings[idx].timeStart = '';
-                bookings[idx].timeEnd = '';
-                bookings[idx].staff = 'Bảo mẫu khách sạn';
+        try {
+            const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+            const idx = bookings.findIndex((b) => String(b.id || b._id) === String(bookingId));
+            if (idx !== -1) {
+                bookings[idx].date = selectedDate;
+                if (!isHotelBooking) {
+                    bookings[idx].time = selectedSlot;
+                    bookings[idx].timeStart = selectedSlot;
+                    bookings[idx].staff = selectedStaff;
+                } else {
+                    bookings[idx].time = '';
+                    bookings[idx].timeStart = '';
+                    bookings[idx].timeEnd = '';
+                    bookings[idx].staff = 'Bảo mẫu khách sạn';
+                }
+                bookings[idx].changeCount = (bookings[idx].changeCount || 0) + 1;
+                localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
             }
-            bookings[idx].changeCount = (bookings[idx].changeCount || 0) + 1;
-        }
+        } catch (_) {}
+
         await rescheduleOnSupabase(bookingId, selectedDate, selectedSlot);
         modal.hide();
         showToast('Đã đổi lịch hẹn thành công!', 'success');

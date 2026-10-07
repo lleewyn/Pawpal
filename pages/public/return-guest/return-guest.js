@@ -10,12 +10,12 @@ const BOOKING_STATUS = {
 
 const ORDER_STATUS = {
     pending:         { label: 'Chờ xác nhận',   cls: 'rg-badge-pending' },
-    pending_payment: { label: 'Chờ thanh toán', cls: 'rg-badge-pending' },
-    preparing:       { label: 'Đang chuẩn bị',  cls: 'rg-badge-inprogress' },
-    shipping:        { label: 'Đang giao hàng', cls: 'rg-badge-shipping' },
+    preparing:       { label: 'Chờ lấy hàng',   cls: 'rg-badge-inprogress' },
+    shipping:        { label: 'Đang giao',      cls: 'rg-badge-shipping' },
     delivered:       { label: 'Đã giao',        cls: 'rg-badge-confirmed' },
     completed:       { label: 'Hoàn thành',     cls: 'rg-badge-completed' },
     cancelled:       { label: 'Đã hủy',         cls: 'rg-badge-cancelled' },
+    returned:        { label: 'Trả hàng',       cls: 'rg-badge-pending' },
     return_pending:  { label: 'Chờ đổi trả',    cls: 'rg-badge-pending' },
 };
 
@@ -53,6 +53,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!phone) return;
 
             const normPhone = normalizePhone(phone);
+
+            // Kiểm tra xem số điện thoại có thuộc về tài khoản Thành viên chính thức không
+            const member = isRegisteredMember(normPhone);
+            if (member) {
+                resultsEl.classList.add('d-none');
+                errorBox.classList.remove('d-none');
+                errorBox.innerHTML = `
+                    <div class="alert-member-prompt" style="padding:16px 20px; background:#f4f9f6; border-radius:9px; border:1px solid #c3dec7; color:#203a2c; text-align:left;">
+                        <div style="font-weight:700; color:#236b48; font-size:1.05rem; margin-bottom:6px;">Số điện thoại đã được đăng ký thành viên</div>
+                        <div style="font-size:0.92rem; margin-bottom:14px; color:#4f7a65;">Số điện thoại <strong>${esc(phone)}</strong> thuộc tài khoản thành viên Pawpal. Vui lòng đăng nhập để xem đầy đủ hồ sơ, lịch hẹn và quản lý đơn hàng của bạn.</div>
+                        <a href="/pages/public/login/login.html?phone=${encodeURIComponent(normPhone)}" class="btn-cta" style="display:inline-block; padding:8px 20px; text-decoration:none; border-radius:9px;">Đăng nhập ngay</a>
+                    </div>
+                `;
+                return;
+            }
+
             const btn = form.querySelector('button[type=submit]');
             btn.disabled    = true;
             btn.textContent = 'Đang tìm...';
@@ -100,6 +116,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+function isRegisteredMember(normPhone) {
+    try {
+        const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
+        const found = users.find(u => normalizePhone(u.phone) === normPhone && (!u.is_temporary || u.password));
+        if (found) return found;
+
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        if (currentUser && normalizePhone(currentUser.phone) === normPhone && !currentUser.is_temporary) {
+            return currentUser;
+        }
+    } catch (_) {}
+    return null;
+}
 
 function resolveAppUrl(path) {
     return new URL(path, window.location.href).href;
@@ -244,15 +274,20 @@ function normalizeImageUrl(url) {
 }
 
 function mapOrderStatus(status) {
+    const s = String(status || '').toUpperCase();
     return {
-        'PENDING': 'pending',
-        'CONFIRMED': 'pending',
-        'PREPARING': 'preparing',
-        'SHIPPING': 'shipping',
-        'DELIVERED': 'delivered',
-        'COMPLETED': 'completed',
-        'CANCELLED': 'cancelled',
-    }[String(status || '').toUpperCase()] || String(status || 'pending').toLowerCase();
+        'PENDING':         'pending',
+        'PENDING_PAYMENT': 'pending',
+        'CONFIRMED':       'preparing',
+        'PREPARING':       'preparing',
+        'SHIPPING':        'shipping',
+        'DELIVERED':       'delivered',
+        'COMPLETED':       'completed',
+        'CANCELLED':       'cancelled',
+        'RETURNED':        'returned',
+        'REFUNDED':        'returned',
+        'RETURN_PENDING':  'return_pending'
+    }[s] || String(status || 'pending').toLowerCase();
 }
 
 
@@ -327,15 +362,16 @@ function esc(s) {
 
 function canCancelOrder(o) {
     const status = normalizeOrderStatus(o.status);
-    if (!['pending', 'pending_payment', 'preparing'].includes(status)) return false;
+    if (status !== 'pending') return false;
     if (o.paymentStatus === 'pending_refund' || o.paymentStatus === 'refunded') return false;
     
     return true;
 }
 
 function canReturnOrder(o) {
-    if (o.status !== 'completed') return false;
-    if (o.status === 'return_pending') return false;
+    const status = normalizeOrderStatus(o.status);
+    if (status !== 'delivered' && status !== 'completed') return false;
+    if (status === 'returned' || o.status === 'return_pending') return false;
     
     const updatedAt = o.updatedAt || o.createdAt;
     if (!updatedAt) return false;
@@ -347,14 +383,25 @@ function canConfirmOrder(o) {
     return true;
 }
 
+function getBookingScheduledAt(booking) {
+    if (!booking?.date) return null;
+    const time = booking.time || booking.timeStart || '09:00';
+    const scheduled = new Date(`${booking.date}T${time}:00`);
+    return isNaN(scheduled.getTime()) ? null : scheduled;
+}
+
 function canModifyBooking(b) {
-    if (!['pending', 'confirmed', 'upcoming'].includes(b.status)) return false;
+    const status = resolveBookingStatus(b);
+    // 3.1.5: Chỉ kích hoạt đổi lịch khi ca hẹn ở trạng thái "Đã xác nhận" (confirmed)
+    if (status !== 'confirmed') return false;
     if ((b.changeCount || 0) >= 2) return false;
     return true;
 }
 
 function canCancelBooking(b) {
-    if (!['pending', 'confirmed', 'upcoming'].includes(b.status)) return false;
+    const status = resolveBookingStatus(b);
+    // Hủy lịch: Chỉ cho phép khi pending hoặc confirmed. Khóa khi in-progress, accepted, completed, cancelled.
+    if (!['pending', 'confirmed'].includes(status)) return false;
     if ((b.cancelCount || 0) >= 3) return false;
     return true;
 }
@@ -507,13 +554,41 @@ window.handleGuestBookingAction = function(bookingId, action) {
     const phone = document.getElementById('rg-phone').value.trim();
     if (!phone) { showToast('Vui lòng nhập số điện thoại trước.', 'info'); return; }
 
+    const booking = (rgLastSearchState.bookings || []).find(b => String(b.id || b._supabaseId) === String(bookingId));
+    if (!booking) {
+        showToast('Không tìm thấy thông tin lịch hẹn.', 'error');
+        return;
+    }
+
+    const scheduledAt = getBookingScheduledAt(booking);
+    const now = new Date();
+    const diffMinutes = scheduledAt ? (scheduledAt - now) / (1000 * 60) : 999;
+
     if (action === 'cancel') {
+        if (diffMinutes < 120) {
+            showToast('Chỉ được phép tự hủy lịch hẹn trước giờ bắt đầu tối thiểu 2 tiếng. Ca hẹn sắp diễn ra, vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'danger');
+            return;
+        }
+        if ((booking.cancelCount || 0) >= 3) {
+            showToast('Lịch hẹn này đã vượt quá ngưỡng hủy cho phép (> 3 lần). Vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'danger');
+            return;
+        }
         showActionConfirm(
             'Hủy lịch hẹn',
             `Bạn có chắc chắn muốn hủy lịch hẹn <strong>${esc(bookingId)}</strong>? Lịch hẹn sau khi hủy sẽ không thể khôi phục.`,
-            () => confirmCancelBooking(bookingId)
+            () => {
+                showOTPModal(phone, () => confirmCancelBooking(bookingId), 'xác thực hủy lịch hẹn');
+            }
         );
     } else {
+        if (diffMinutes < 120) {
+            showToast('Đã quá thời gian tự thay đổi lịch hẹn (< 2 tiếng). Ca hẹn sắp diễn ra, vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'danger');
+            return;
+        }
+        if ((booking.changeCount || 0) >= 2) {
+            showToast('Bạn đã sử dụng hết 2 lần thay đổi lịch hẹn trực tuyến. Vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'warning');
+            return;
+        }
         showChangeScheduleModal(bookingId, phone);
     }
 };
@@ -628,7 +703,7 @@ function showActionConfirm(title, descHtml, onConfirm) {
     });
 }
 
-function showOTPModal(phone, onSuccess) {
+function showOTPModal(phone, onSuccess, purposeText = 'xác thực quyền truy cập tra cứu') {
     if (rgOtpFlowActive) return;
     rgOtpFlowActive = true;
 
@@ -647,7 +722,7 @@ function showOTPModal(phone, onSuccess) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center py-4">
-                    <p class="text-muted small mb-4">Mã OTP 6 số đã được gửi đến <strong>${esc(phone)}</strong> để xác thực quyền truy cập tra cứu.<br><span class="text-muted" class="rg-otp-hint">(Mã test: 555666)</span></p>
+                    <p class="text-muted small mb-4">Mã OTP 6 số đã được gửi đến <strong>${esc(phone)}</strong> để ${purposeText}.<br><span class="text-muted rg-otp-hint">(Mã test: 555666)</span></p>
                     <div class="otp-inputs-wrapper mb-3">
                         ${Array.from({length:6}, (_,i) =>
                             `<input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric"${i>0?' disabled':''}>`
@@ -864,7 +939,7 @@ function showCancelConfirmModal(bookingId, phone) {
 }
 
 function confirmCancelBooking(bookingId) {
-    const booking = rgLastSearchState.bookings.find(b => b.id === bookingId);
+    const booking = rgLastSearchState.bookings.find(b => String(b.id || b._supabaseId) === String(bookingId));
     if (!booking) {
         showToast('Không tìm thấy lịch hẹn.', 'error');
         return;
@@ -873,16 +948,37 @@ function confirmCancelBooking(bookingId) {
     booking.status = 'cancelled';
     booking.cancelCount = (booking.cancelCount || 0) + 1;
 
-    if (window.API && typeof window.API.updateBookingStatus === 'function') {
-        window.API.updateBookingStatus(bookingId, 'CANCELLED').catch(e => console.warn(e));
-    } else {
-        const db = window.SupabaseClient;
-        if (db) {
-            const isUUID = typeof bookingId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingId);
-            let query = db.from('appointment').update({ appointment_status: 'CANCELLED', updated_at: new Date().toISOString() });
-            query = isUUID ? query.eq('id', bookingId) : query.eq('appointment_code', bookingId);
-            query.then(({error}) => { if (error) console.warn('[ReturnGuest] Cancel booking sync error:', error); });
+    // Gửi thông báo đến Admin
+    try {
+        const adminNotifs = JSON.parse(localStorage.getItem('pawpal_admin_notifications') || '[]');
+        adminNotifs.unshift({
+            id: `admin-notif-${Date.now()}`,
+            type: 'booking_cancelled',
+            title: 'Khách vãng lai hủy lịch hẹn',
+            content: `Khách hàng vãng lai (${rgLastSearchState.phone}) vừa hủy ca hẹn #${booking.id || bookingId}.`,
+            createdAt: new Date().toISOString(),
+            read: false
+        });
+        localStorage.setItem('pawpal_admin_notifications', JSON.stringify(adminNotifs));
+    } catch (_) {}
+
+    // Cập nhật pawpal_bookings nếu có
+    try {
+        const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        const idx = localBookings.findIndex(b => String(b.id || b._id) === String(bookingId));
+        if (idx !== -1) {
+            localBookings[idx].status = 'cancelled';
+            localBookings[idx].cancelCount = (localBookings[idx].cancelCount || 0) + 1;
+            localStorage.setItem('pawpal_bookings', JSON.stringify(localBookings));
         }
+    } catch (_) {}
+
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (db) {
+        const isUUID = typeof bookingId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingId);
+        let query = db.from('appointment').update({ appointment_status: 'da_huy', updated_at: new Date().toISOString() });
+        query = isUUID ? query.eq('id', bookingId) : query.eq('appointment_code', bookingId);
+        query.then(({error}) => { if (error) console.warn('[ReturnGuest] Cancel booking sync error:', error); });
     }
 
     showToast('Đã hủy lịch hẹn thành công!', 'success');
@@ -923,7 +1019,15 @@ function confirmCancelOrder(orderId) {
 }
 
 function normalizeOrderStatus(status) {
-    return status || 'pending';
+    const s = String(status || '').toLowerCase().trim();
+    if (s === 'cho_xac_nhan' || s === 'placed' || s === 'pending' || s === 'pending_payment' || s === 'cho_thanh_toan') return 'pending';
+    if (s === 'cho_lay_hang' || s === 'preparing' || s === 'confirmed' || s === 'da_xac_nhan' || s === 'dang_chuan_bi') return 'preparing';
+    if (s === 'dang_giao' || s === 'shipping') return 'shipping';
+    if (s === 'da_giao' || s === 'delivered') return 'delivered';
+    if (s === 'da_hoan_tat' || s === 'completed') return 'completed';
+    if (s === 'da_huy' || s === 'cancelled' || s === 'thanh_toan_that_bai') return 'cancelled';
+    if (s === 'tra_hang' || s === 'returned' || s === 'return_pending' || s === 'return_approved' || s === 'refunded') return 'returned';
+    return s || 'pending';
 }
 
 function showChangeScheduleModal(bookingId, phone) {
@@ -1103,29 +1207,63 @@ function showChangeScheduleModal(bookingId, phone) {
     document.getElementById('rg-change-confirm').addEventListener('click', () => {
         if (!selDate || !selTime || !selStaff) return;
         clearHoldTimer();
-        
+        modal.hide();
 
-        if (window.API && typeof window.API.updateBookingStatus === 'function') {
-            window.API.updateBookingStatus(bookingId, 'CONFIRMED').catch(e => console.warn(e));
-        } else {
-            const db = window.SupabaseClient;
+        // Kích hoạt bước bảo mật OTP xác thực thay đổi lịch hẹn theo quy trình 3.1.5
+        showOTPModal(phone, () => {
+            const booking = rgLastSearchState.bookings.find(b => String(b.id || b._supabaseId) === String(bookingId));
+            if (booking) {
+                booking.changeCount = (booking.changeCount || 0) + 1;
+                booking.date = selDate;
+                booking.time = selTime;
+                booking.staff = selStaff;
+            }
+
+            // Cập nhật pawpal_bookings
+            try {
+                const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+                const idx = localBookings.findIndex(b => String(b.id || b._id) === String(bookingId));
+                if (idx !== -1) {
+                    localBookings[idx].date = selDate;
+                    localBookings[idx].time = selTime;
+                    localBookings[idx].staff = selStaff;
+                    localBookings[idx].changeCount = (localBookings[idx].changeCount || 0) + 1;
+                    localStorage.setItem('pawpal_bookings', JSON.stringify(localBookings));
+                }
+            } catch (_) {}
+
+            // Gửi thông báo đến Admin
+            try {
+                const adminNotifs = JSON.parse(localStorage.getItem('pawpal_admin_notifications') || '[]');
+                adminNotifs.unshift({
+                    id: `admin-notif-${Date.now()}`,
+                    type: 'booking_rescheduled',
+                    title: 'Khách vãng lai đổi lịch hẹn',
+                    content: `Khách hàng vãng lai (${rgLastSearchState.phone}) vừa đổi ca hẹn #${bookingId} sang ngày ${selDate} lúc ${selTime}.`,
+                    createdAt: new Date().toISOString(),
+                    read: false
+                });
+                localStorage.setItem('pawpal_admin_notifications', JSON.stringify(adminNotifs));
+            } catch (_) {}
+
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (db) {
                 const isUUID = typeof bookingId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingId);
                 let query = db.from('appointment').update({ 
                     appointment_date: selDate,
-                    appointment_time: selTime,
-                    appointment_status: 'CONFIRMED', 
+                    appointment_time: selTime + ':00',
+                    appointment_status: 'cho_xac_nhan', 
+                    change_count: booking ? booking.changeCount : 1,
                     updated_at: new Date().toISOString() 
                 });
                 query = isUUID ? query.eq('id', bookingId) : query.eq('appointment_code', bookingId);
                 query.then(({error}) => { if (error) console.warn('[ReturnGuest] Change booking sync error:', error); });
             }
-        }
 
-        modal.hide();
-        showToast('Đã đổi lịch hẹn thành công!', 'success');
-        showUpsellModal(phone);
-        setTimeout(() => document.getElementById('rg-form').dispatchEvent(new Event('submit')), 1200);
+            showToast('Đã đổi lịch hẹn thành công!', 'success');
+            showUpsellModal(phone);
+            setTimeout(() => document.getElementById('rg-form').dispatchEvent(new Event('submit')), 1200);
+        }, 'xác thực thay đổi lịch hẹn');
     });
 }
 
@@ -1145,10 +1283,10 @@ function showUpsellModal(phone) {
                     <div class="modal-body text-center py-4 px-4">
                         <div class="rg-success-icon">🐾</div>
                         <h5 class="fw-bold mb-2" class="rg-success-title">Thao tác thành công!</h5>
-                        <p class="text-muted mb-4">Thiết lập mật khẩu để quản lý lịch hẹn, tích điểm Paw Points và nhận nhiều ưu đãi thành viên.</p>
+                        <p class="text-muted mb-4">Thiết lập mật khẩu để liên kết toàn bộ lịch sử đơn hàng, lịch hẹn, tích điểm Paw Points và nhận nhiều ưu đãi độc quyền dành cho thành viên.</p>
                         <div class="d-flex flex-column gap-2">
                             <button class="btn-cta w-100" id="rg-upsell-setup">Thiết lập mật khẩu ngay</button>
-                            <button class="btn-green-outline w-100" id="rg-upsell-skip">Bỏ qua</button>
+                            <button class="btn-green-outline w-100" id="rg-upsell-skip">Bỏ qua, quay lại tra cứu</button>
                         </div>
                     </div>
                 </div>
@@ -1159,13 +1297,105 @@ function showUpsellModal(phone) {
         modal.show();
 
         document.getElementById('rg-upsell-setup').addEventListener('click', () => {
-            window.location.href = `/pages/public/login/login.html`;
+            modal.hide();
+            showQuickSetupPasswordModal(phone);
         });
         document.getElementById('rg-upsell-skip').addEventListener('click', () => {
             modal.hide();
             restoreLastSearchResults();
         });
     }, 800);
+}
+
+function showQuickSetupPasswordModal(phone) {
+    const existing = document.getElementById('rg-setup-pwd-modal');
+    if (existing) existing.remove();
+
+    const el = document.createElement('div');
+    el.id = 'rg-setup-pwd-modal';
+    el.className = 'modal fade';
+    el.tabIndex = -1;
+    el.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nâng cấp tài khoản thành viên</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-3 px-4">
+                    <p class="text-muted small mb-3">Số điện thoại <strong>${esc(phone)}</strong> sẽ được nâng cấp lên tài khoản Thành viên chính thức.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Mật khẩu mới (tối thiểu 6 ký tự)</label>
+                        <input type="password" id="rgNewPassword" class="form-control" placeholder="Nhập mật khẩu..." minlength="6">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Xác nhận mật khẩu</label>
+                        <input type="password" id="rgConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu...">
+                    </div>
+                    <div class="text-danger small d-none mb-2" id="rgPwdError"></div>
+                    <div class="p-2 mb-2" style="background:#f4f9f6;border-radius:9px;border:1px solid #c3dec7;font-size:0.83rem;color:#236b48;">
+                        🎁 <strong>Đặc quyền thành viên:</strong> Tặng ngay <strong>50 PawPoint</strong> chào mừng và tự động liên kết toàn bộ đơn hàng, lịch hẹn!
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn-cta" id="rgConfirmSetupPwdBtn">Tạo tài khoản ngay</button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(el);
+
+    const modal = new bootstrap.Modal(el);
+    modal.show();
+
+    document.getElementById('rgConfirmSetupPwdBtn').addEventListener('click', () => {
+        const pwd = document.getElementById('rgNewPassword').value.trim();
+        const confirmPwd = document.getElementById('rgConfirmPassword').value.trim();
+        const errEl = document.getElementById('rgPwdError');
+
+        if (!pwd || pwd.length < 6) {
+            errEl.textContent = 'Mật khẩu phải có tối thiểu 6 ký tự.';
+            errEl.classList.remove('d-none');
+            return;
+        }
+        if (pwd !== confirmPwd) {
+            errEl.textContent = 'Mật khẩu xác nhận không trùng khớp.';
+            errEl.classList.remove('d-none');
+            return;
+        }
+        errEl.classList.add('d-none');
+
+        // Nâng cấp user
+        try {
+            const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
+            const normPhone = normalizePhone(phone);
+            let uIdx = users.findIndex(u => normalizePhone(u.phone) === normPhone);
+            const newMember = {
+                id: uIdx !== -1 ? users[uIdx].id : `USER-${Date.now()}`,
+                phone: phone,
+                password: pwd,
+                name: (uIdx !== -1 && users[uIdx].name) ? users[uIdx].name : 'Khách hàng',
+                role: 'customer',
+                is_temporary: false,
+                points: ((uIdx !== -1 && users[uIdx].points) ? users[uIdx].points : 0) + 50,
+                tier: 'Standard',
+                createdAt: new Date().toISOString()
+            };
+            if (uIdx !== -1) {
+                users[uIdx] = { ...users[uIdx], ...newMember };
+            } else {
+                users.push(newMember);
+            }
+            localStorage.setItem('pawpal_users', JSON.stringify(users));
+            localStorage.setItem('pawpal_current_user', JSON.stringify(newMember));
+        } catch (_) {}
+
+        modal.hide();
+        showToast('Nâng cấp tài khoản thành công! Tặng bạn 50 PawPoint chào mừng.', 'success');
+        setTimeout(() => {
+            window.location.href = '/pages/user/#bookings';
+        }, 1200);
+    });
 }
 
 function restoreLastSearchResults() {
@@ -1185,13 +1415,23 @@ function restoreLastSearchResults() {
 }
 
 function showToast(msg, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;';
+        document.body.appendChild(container);
+    }
     const t = document.createElement('div');
     t.className = `toast-custom toast-${type}`;
+    const bg = type === 'danger' || type === 'error' ? '#ef4444' : (type === 'success' ? '#236B48' : (type === 'warning' ? '#d97706' : '#3b82f6'));
+    t.style.cssText = `background:${bg};color:#fff;padding:12px 18px;border-radius:9px;font-size:0.9rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);`;
     t.innerHTML = `<div class="toast-content"><span class="toast-message">${msg}</span></div>`;
     container.appendChild(t);
-    setTimeout(() => t.classList.add('show'), 10);
-    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 4000);
+    setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => t.remove(), 300);
+    }, 4000);
 }
 

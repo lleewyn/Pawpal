@@ -527,9 +527,11 @@ function renderActions() {
                 <button class="btn-green-outline" onclick="contactHotline()">
                     Liên hệ hotline
                 </button>
-                <button class="btn-danger-outline" onclick="cancelOrder()">
-                    Hủy đơn hàng
-                </button>
+            `);
+            statusNotes.push(`
+                <span class="order-inline-note text-muted" title="Đơn hàng đang chuẩn bị/đóng gói, không thể hủy trực tiếp trên website.">
+                    Đơn đang được chuẩn bị đóng gói
+                </span>
             `);
             break;
             
@@ -539,24 +541,75 @@ function renderActions() {
                     Liên hệ hotline
                 </button>
             `);
+            statusNotes.push(`
+                <span class="order-inline-note text-muted">
+                    Đơn hàng đã bàn giao vận chuyển
+                </span>
+            `);
             break;
             
-        case 'delivered':
+        case 'delivered': {
+            const deliveredEntry = currentOrder.timeline
+                ? currentOrder.timeline.slice().reverse().find(t => t.status === 'delivered')
+                : null;
+            const deliveredAt = deliveredEntry ? new Date(deliveredEntry.timestamp) : new Date(currentOrder.updatedAt || currentOrder.createdAt || 0);
+            const daysPassed = (Date.now() - deliveredAt.getTime()) / (1000 * 60 * 60 * 24);
+            const withinReturnWindow = daysPassed <= 7;
+
+            const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
+            const alreadyReturned = returnsList.some(r => r.orderId === currentOrder.id);
+
+            const orderAlreadyReviewed = typeof ReviewHandler !== 'undefined'
+                ? ReviewHandler.hasOrderReviewed(currentOrder.id)
+                : false;
+
+            // Nút Xác nhận đã nhận hàng
             buttons.push(`
                 <button class="btn-cta" onclick="confirmReceived()">
                     Xác nhận đã nhận hàng
                 </button>
             `);
+
+            // Nút Yêu cầu đổi trả
+            if (alreadyReturned) {
+                buttons.push(`
+                    <a href="/pages/user/return-detail/return-detail.html?orderId=${currentOrder.id}" class="btn-track-order text-decoration-none">
+                        Chi tiết đổi trả
+                    </a>
+                `);
+            } else if (withinReturnWindow && !orderAlreadyReviewed) {
+                buttons.push(`
+                    <button class="btn-track-order" onclick="openRMADrawer('${currentOrder.id}')">
+                        Yêu cầu trả hàng/hoàn tiền
+                    </button>
+                `);
+            }
+
+            // Nút Phản ánh đơn
+            buttons.push(`
+                <a href="/pages/user/support-create/support-create.html?type=order&orderId=${encodeURIComponent(currentOrder.id)}" class="btn-green-outline text-decoration-none" title="Gửi phản ánh hoặc khiếu nại về đơn hàng này">
+                    Phản ánh đơn
+                </a>
+            `);
+
+            // Nút Đánh giá (tùy chọn hậu mãi)
+            if (orderAlreadyReviewed) {
+                buttons.push(`
+                    <button class="btn-review border-0" onclick="showOrderReviewsModal('${currentOrder.id}')">
+                        Xem đánh giá
+                    </button>
+                `);
+            } else {
+                buttons.push(`
+                    <button class="btn-review border-0" onclick="showOrderReviewsModal('${currentOrder.id}')">
+                        Đánh giá sản phẩm
+                    </button>
+                `);
+            }
             break;
+        }
 
         case 'completed': {
-            const completedEntry = currentOrder.timeline
-                ? currentOrder.timeline.slice().reverse().find(t => t.status === 'completed')
-                : null;
-            const completedAt = completedEntry ? new Date(completedEntry.timestamp) : new Date(currentOrder.createdAt || 0);
-            const daysPassed = (Date.now() - completedAt.getTime()) / (1000 * 60 * 60 * 24);
-            const withinReturnWindow = daysPassed <= 7;
-
             const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
             const alreadyReturned = returnsList.some(r => r.orderId === currentOrder.id);
 
@@ -570,30 +623,25 @@ function renderActions() {
                         Chi tiết đổi trả
                     </a>
                 `);
-            } else if (!withinReturnWindow) {
-                statusNotes.push(`
-                    <span class="order-warning-text order-inline-note" title="Đã quá 7 ngày kể từ ngày nhận hàng, không thể yêu cầu đổi trả.">
-                        Hết hạn đổi trả
-                    </span>
-                `);
-            } else if (orderAlreadyReviewed) {
-                statusNotes.push(`
-                    <span class="order-reviewed-note order-inline-note" title="Giao dịch đã được đánh giá, không thể đổi trả.">
-                        Đã đánh giá
-                    </span>
-                `);
-            } else {
-                buttons.push(`
-                    <button class="btn-track-order" onclick="openRMADrawer('${currentOrder.id}')">
-                        Yêu cầu trả hàng/hoàn tiền
-                    </button>
-                `);
             }
-            
+
+            // Nút Phản ánh đơn
+            buttons.push(`
+                <a href="/pages/user/support-create/support-create.html?type=order&orderId=${encodeURIComponent(currentOrder.id)}" class="btn-green-outline text-decoration-none" title="Gửi phản ánh hoặc khiếu nại về đơn hàng này">
+                    Phản ánh đơn
+                </a>
+            `);
+
             if (orderAlreadyReviewed) {
                 buttons.push(`
                     <button class="btn-review border-0" onclick="showOrderReviewsModal('${currentOrder.id}')">
                         Xem đánh giá
+                    </button>
+                `);
+            } else {
+                buttons.push(`
+                    <button class="btn-review border-0" onclick="showOrderReviewsModal('${currentOrder.id}')">
+                        Đánh giá sản phẩm
                     </button>
                 `);
             }
@@ -1014,7 +1062,6 @@ function confirmOrderPayment() {
             renderPaymentInfo();
             renderTimeline();
             renderActions();
-            awardLoyaltyPoints(currentOrder);
         }, 1200);
     }, 1500);
 }
@@ -1115,6 +1162,22 @@ function cancelOrder() {
                 }
             } catch (err) {
                 console.warn('Lỗi hoàn điểm khi hủy đơn:', err);
+            }
+        }
+
+        // Hoàn lại Voucher nếu đơn hàng có sử dụng
+        const voucherCode = currentOrder.voucherCode || currentOrder.pricing?.voucherCode || currentOrder.discount?.code;
+        if (voucherCode) {
+            try {
+                const userVouchers = JSON.parse(localStorage.getItem('pawpal_user_vouchers') || '[]');
+                const vIdx = userVouchers.findIndex(v => (v.code === voucherCode || v.id === voucherCode));
+                if (vIdx !== -1) {
+                    userVouchers[vIdx].isUsed = false;
+                    userVouchers[vIdx].usedAt = null;
+                    localStorage.setItem('pawpal_user_vouchers', JSON.stringify(userVouchers));
+                }
+            } catch (vErr) {
+                console.warn('Lỗi khôi phục voucher khi hủy đơn:', vErr);
             }
         }
 
