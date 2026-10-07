@@ -533,6 +533,7 @@
 
         btnToggleQuick?.addEventListener('click', (e) => {
             e.stopPropagation();
+            solutionCardsWrap?.classList.remove('open');
             quickTemplatesWrap?.classList.toggle('open');
         });
 
@@ -549,8 +550,57 @@
             });
         });
 
+        // Toggle Solution Cards Dropdown Popover (Giai đoạn 3: Chèn thẻ giải pháp tương tác)
+        const solutionCardsWrap = document.getElementById('solutionCardsDropdownWrap');
+        const btnToggleSolution = document.getElementById('btnToggleSolutionCards');
+
+        btnToggleSolution?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            quickTemplatesWrap?.classList.remove('open');
+            solutionCardsWrap?.classList.toggle('open');
+        });
+
+        document.getElementById('btnInsertVoucherCard')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const input = document.getElementById('chatMessageInput');
+            if (input) {
+                const voucherCode = 'PAWPALVIP';
+                const cardMd = `Dạ PawPal xin gửi tặng sen voucher ưu đãi chăm sóc bé cưng ạ:\n:::voucher { "code": "${voucherCode}", "discount": "Giảm 50.000đ dịch vụ Spa", "minOrder": "Áp dụng đơn từ 200k", "expiry": "HSD: 30 ngày" } :::`;
+                input.value = input.value ? `${input.value.trim()}\n${cardMd}` : cardMd;
+                input.focus();
+            }
+            solutionCardsWrap?.classList.remove('open');
+        });
+
+        document.getElementById('btnInsertBookingCard')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const input = document.getElementById('chatMessageInput');
+            if (input) {
+                const serviceName = currentConversation?.recentBooking?.service || 'Combo Spa và Cắt tỉa tạo kiểu';
+                const petName = (currentConversation?.pets && currentConversation.pets[0]?.name) || 'Bé cưng';
+                const cardMd = `Dạ sen có thể tham khảo gói dịch vụ chăm sóc tại PawPal nhé ạ:\n:::booking { "service": "${serviceName}", "pet": "${petName}", "time": "14:00 - Hôm nay", "status": "Sẵn sàng phục vụ" } :::`;
+                input.value = input.value ? `${input.value.trim()}\n${cardMd}` : cardMd;
+                input.focus();
+            }
+            solutionCardsWrap?.classList.remove('open');
+        });
+
+        document.getElementById('btnInsertOrderCard')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const input = document.getElementById('chatMessageInput');
+            if (input) {
+                const orderCode = currentConversation?.recentOrder?.id || 'SP-2026-003';
+                const orderStatus = currentConversation?.recentOrder?.status || 'Đang giao hàng';
+                const cardMd = `Dạ em gửi thông tin đơn hàng để sen theo dõi tiến độ vận chuyển nhé ạ:\n:::order { "code": "${orderCode}", "status": "${orderStatus}", "items": "Thức ăn hạt hữu cơ và Đồ chơi", "total": "285.000đ" } :::`;
+                input.value = input.value ? `${input.value.trim()}\n${cardMd}` : cardMd;
+                input.focus();
+            }
+            solutionCardsWrap?.classList.remove('open');
+        });
+
         document.addEventListener('click', () => {
             quickTemplatesWrap?.classList.remove('open');
+            solutionCardsWrap?.classList.remove('open');
         });
 
         // Toggle Smart Assistant Bar (Mặc định ban đầu KHÔNG MỞ SẴN - người dùng tự bấm "Mở gợi ý AI" khi cần)
@@ -925,6 +975,46 @@
         let html = rawText;
         // In đậm
         html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+        // 1. Thẻ Đơn hàng: :::order { ... } :::
+        html = html.replace(/:::order\s*(\{[\s\S]*?\})\s*:::/g, (match, jsonStr) => {
+            try {
+                const data = JSON.parse(jsonStr);
+                const st = data.status || 'Đang xử lý';
+                const statusBadge = (st === 'Đã giao' || st === 'Hoàn thành') ? 'badge-active' : (st === 'Đã hủy' ? 'badge-danger' : 'badge-info');
+                const code = data.code || data.id || 'DH';
+                return `<div class="fab-rich-card fab-rich-card--order"><div class="fab-rich-card-header"><span class="fab-rich-card-tag">Đơn hàng #${code}</span><span class="admin-badge ${statusBadge}">${st}</span></div><div class="fab-rich-card-body"><div class="fab-rich-card-title">${data.items || 'Sản phẩm PawPal'}</div><div class="fab-rich-card-desc">Tổng tiền: <strong>${data.total || '0đ'}</strong></div></div><div class="fab-rich-card-action">Đơn hàng đã chia sẻ</div></div>`;
+            } catch(e) { return match; }
+        });
+
+        // 2. Thẻ Lịch hẹn Dịch vụ: :::booking { ... } :::
+        html = html.replace(/:::booking\s*(\{[\s\S]*?\})\s*:::/g, (match, jsonStr) => {
+            try {
+                const data = JSON.parse(jsonStr);
+                const st = data.status || 'Đã xác nhận';
+                const statusBadge = (st === 'Hoàn thành' || st === 'Đang thực hiện') ? 'badge-active' : (st === 'Đã hủy' ? 'badge-danger' : 'badge-info');
+                return `<div class="fab-rich-card fab-rich-card--booking"><div class="fab-rich-card-header"><span class="fab-rich-card-tag">Lịch hẹn dịch vụ</span><span class="admin-badge ${statusBadge}">${st}</span></div><div class="fab-rich-card-body"><div class="fab-rich-card-title">${data.service || 'Chăm sóc thú cưng'}</div><div class="fab-rich-card-desc">Bé: <strong>${data.pet || 'Bé cưng'}</strong> • Giờ hẹn: <strong>${data.time || 'Hôm nay'}</strong></div></div><div class="fab-rich-card-action">Lịch hẹn dịch vụ</div></div>`;
+            } catch(e) { return match; }
+        });
+
+        // 3. Thẻ Ưu đãi / Voucher: :::voucher { ... } :::
+        html = html.replace(/:::voucher\s*(\{[\s\S]*?\})\s*:::/g, (match, jsonStr) => {
+            try {
+                const data = JSON.parse(jsonStr);
+                const code = data.code || 'PAWPAL';
+                return `<div class="fab-rich-card fab-rich-card--voucher"><div class="fab-rich-card-header"><span class="fab-rich-card-tag">Ưu đãi PawPal</span><span class="fab-voucher-code">${code}</span></div><div class="fab-rich-card-body"><div class="fab-rich-card-title">${data.discount || 'Giảm giá đặc biệt'}</div><div class="fab-rich-card-desc">${data.minOrder || 'Áp dụng mọi đơn'} • ${data.expiry || 'HSD: 30 ngày'}</div></div><div class="fab-rich-card-action">Mã ưu đãi đã gửi</div></div>`;
+            } catch(e) { return match; }
+        });
+
+        // 4. Thẻ Khảo sát CSAT: :::csat_survey { ... } :::
+        html = html.replace(/:::csat_survey\s*(\{[\s\S]*?\})\s*:::/g, (match, jsonStr) => {
+            try {
+                const data = JSON.parse(jsonStr);
+                const staff = data.staffName || 'Chuyên viên CSKH';
+                return `<div class="fab-rich-card fab-rich-card--csat"><div class="fab-rich-card-header"><span class="fab-rich-card-tag">Đánh giá dịch vụ</span><span class="admin-badge badge-warning">Khảo sát CSAT</span></div><div class="fab-rich-card-body"><div class="fab-rich-card-title">Biểu mẫu đánh giá mức độ hài lòng</div><div class="fab-rich-card-desc">Phụ trách: <strong>${staff}</strong> • Đã gửi tới màn hình khách hàng</div></div></div>`;
+            } catch(e) { return match; }
+        });
+
         // Thẻ Ảnh đính kèm: ![caption](url)
         html = html.replace(/!\[(.*?)\]\((.*?)\)/g, (match, alt, url) => {
             const safeAlt = (alt || '').replace(/"/g, '&quot;');
@@ -935,8 +1025,59 @@
         return html;
     }
 
+    let currentAdminRoomChannel = null;
+    let customerTypingHideTimer = null;
+    const customerTypingBar = document.getElementById('customerTypingBar');
+    const customerTypingText = document.getElementById('customerTypingText');
+
+    function subscribeToConversationRoom(convId) {
+        if (!supabase || !convId) return;
+        if (currentAdminRoomChannel) {
+            try { supabase.removeChannel(currentAdminRoomChannel); } catch(e) {}
+        }
+        if (customerTypingBar) customerTypingBar.style.display = 'none';
+
+        currentAdminRoomChannel = supabase.channel('fab-customer-' + convId)
+            .on('broadcast', { event: 'typing' }, (payload) => {
+                const data = payload && payload.payload;
+                if (data && data.who === 'customer') {
+                    if (data.isTyping) {
+                        if (customerTypingBar) {
+                            if (customerTypingText) customerTypingText.textContent = `${data.customerName || 'Khách hàng'} đang soạn tin...`;
+                            customerTypingBar.style.display = 'flex';
+                        }
+                        clearTimeout(customerTypingHideTimer);
+                        customerTypingHideTimer = setTimeout(() => {
+                            if (customerTypingBar) customerTypingBar.style.display = 'none';
+                        }, 4000);
+                    } else {
+                        clearTimeout(customerTypingHideTimer);
+                        if (customerTypingBar) customerTypingBar.style.display = 'none';
+                    }
+                }
+            })
+            .subscribe();
+    }
+
+    let adminTypingDebounceTimer = null;
+    function notifyAdminTyping(isTyping) {
+        if (currentAdminRoomChannel && currentConversation?.id) {
+            try {
+                currentAdminRoomChannel.send({
+                    type: 'broadcast',
+                    event: 'typing',
+                    payload: { who: 'staff', staffName: currentConversation.agentName || 'Chuyên viên CSKH', isTyping }
+                });
+            } catch(e) {}
+        }
+    }
+
     function renderCurrentChat() {
         if (!currentConversation) return;
+
+        if (currentConversation.id) {
+            subscribeToConversationRoom(currentConversation.id);
+        }
 
         // Cột giữa - Header
         const nameEl = document.getElementById('currentChatCustomerName');
@@ -1620,6 +1761,10 @@
                 text: fullText
             });
 
+            clearTimeout(adminTypingDebounceTimer);
+            notifyAdminTyping(false);
+            if (customerTypingBar) customerTypingBar.style.display = 'none';
+
             if (msgInput) msgInput.value = '';
             clearAdminAttachment();
             renderCurrentChat();
@@ -1667,6 +1812,14 @@
                 e.preventDefault();
                 sendLiveMsg();
             }
+        });
+
+        msgInput?.addEventListener('input', () => {
+            notifyAdminTyping(true);
+            clearTimeout(adminTypingDebounceTimer);
+            adminTypingDebounceTimer = setTimeout(() => {
+                notifyAdminTyping(false);
+            }, 2500);
         });
 
         // Quick replies

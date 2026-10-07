@@ -110,6 +110,12 @@
                     <!-- Render by JS -->
                 </div>
 
+                <!-- CHỈ BÁO KHÁCH HÀNG ĐANG SOẠN TIN NHẮN (REALTIME) -->
+                <div class="customer-typing-bar" id="customerTypingBar" style="display: none;">
+                    <span class="typing-dot-pulse"></span>
+                    <span id="customerTypingText">Khách hàng đang soạn tin...</span>
+                </div>
+
                 <!-- VÙNG CÔNG CỤ SOẠN THẢO TINH GỌN (2 TẦNG CHUẨN CAO CẤP) -->
                 <div class="chat-bottom-toolbar">
                     <!-- TẦNG 1: THANH TRỢ LÝ THÔNG MINH (GỢI Ý AI + MẪU NHANH GOM 1 DÒNG) - MẶC ĐỊNH ẨN BAN ĐẦU -->
@@ -132,6 +138,14 @@
                                     <button type="button" class="quick-reply-pill" data-reply="Dạ PawPal thành thật xin lỗi vì sự bất tiện này. Em đã kiểm tra bưu tá đang trên đường giao hàng và sẽ đến trong chiều nay ạ.">Xin lỗi giao trễ</button>
                                     <button type="button" class="quick-reply-pill" data-reply="Dạ để hỗ trợ tốt nhất, sen vui lòng chụp giúp em hình ảnh tình trạng hiện tại gửi qua đây nhé ạ.">Yêu cầu gửi ảnh</button>
                                     <button type="button" class="quick-reply-pill" data-reply="Dạ để tạ lỗi vì sự cố vừa rồi, PawPal xin gửi tặng mình 50 điểm Pawpoint vào tài khoản nhé ạ.">Tặng điểm tạ lỗi</button>
+                                </div>
+                            </div>
+                            <div class="quick-templates-dropdown-wrap" id="solutionCardsDropdownWrap">
+                                <button type="button" class="btn-quick-templates-menu" id="btnToggleSolutionCards">Chèn thẻ ▾</button>
+                                <div class="quick-templates-dropdown-panel" id="solutionCardsPanel">
+                                    <button type="button" class="quick-reply-pill" id="btnInsertVoucherCard">Thẻ Ưu đãi Voucher</button>
+                                    <button type="button" class="quick-reply-pill" id="btnInsertBookingCard">Thẻ Lịch hẹn Dịch vụ</button>
+                                    <button type="button" class="quick-reply-pill" id="btnInsertOrderCard">Thẻ Đơn hàng gần nhất</button>
                                 </div>
                             </div>
                             <button type="button" class="btn-canned-lib-link" id="btnOpenCannedModal">Thư viện câu mẫu</button>

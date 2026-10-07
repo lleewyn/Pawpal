@@ -449,6 +449,7 @@ function initFab() {
     }
 
     function appendStaffMessage(text, staffName) {
+        removeStaffTyping();
         const bubble = document.createElement('div');
         bubble.className = 'fab-chat-bubble fab-chat-bubble--staff';
         bubble.innerHTML = `<span class="staff-sender-title">${staffName || 'Chuyên viên CSKH'}</span>${formatChatContent(text)}`;
@@ -456,6 +457,29 @@ function initFab() {
             messages.appendChild(bubble);
             scrollToBottom();
         }
+    }
+
+    let staffTypingHideTimer = null;
+    function showStaffTyping(staffName) {
+        let t = document.getElementById('fabStaffTyping');
+        if (!t && messages) {
+            t = document.createElement('div');
+            t.className = 'fab-chat-bubble fab-chat-bubble--staff-typing';
+            t.id = 'fabStaffTyping';
+            t.innerHTML = `<span class="staff-typing-name">${staffName || 'Chuyên viên CSKH'} đang soạn tin...</span><span class="typing-dots"><span></span><span></span><span></span></span>`;
+            messages.appendChild(t);
+            scrollToBottom();
+        }
+        clearTimeout(staffTypingHideTimer);
+        staffTypingHideTimer = setTimeout(() => {
+            removeStaffTyping();
+        }, 4000);
+    }
+
+    function removeStaffTyping() {
+        clearTimeout(staffTypingHideTimer);
+        const t = document.getElementById('fabStaffTyping');
+        if (t) t.remove();
     }
 
     const toxicBanner = document.getElementById('fabToxicBanner');
@@ -532,6 +556,16 @@ function initFab() {
         }
 
         window.__pawpalFabRealtimeChannel = db.channel('fab-customer-' + convId)
+            .on('broadcast', { event: 'typing' }, (payload) => {
+                const data = payload && payload.payload;
+                if (data && data.who === 'staff') {
+                    if (data.isTyping) {
+                        showStaffTyping(data.staffName || 'Chuyên viên CSKH');
+                    } else {
+                        removeStaffTyping();
+                    }
+                }
+            })
             .on('postgres_changes', { 
                 event: 'INSERT', 
                 schema: 'public', 
@@ -540,6 +574,7 @@ function initFab() {
             }, (payload) => {
                 const newM = payload.new;
                 if (newM && newM.sender_type === 'staff') {
+                    removeStaffTyping();
                     const exists = conversationHistory.some(h => h._msgId === newM.id);
                     if (!exists) {
                         conversationHistory.push({
@@ -983,10 +1018,26 @@ function initFab() {
     if (historyBackBtn) historyBackBtn.addEventListener('click', closeHistoryView);
     if (historyNewBtn) historyNewBtn.addEventListener('click', startNewConversation);
 
+    let customerTypingDebounceTimer = null;
+    function notifyCustomerTyping(isTyping) {
+        if (window.__pawpalFabRealtimeChannel && activeConversationId) {
+            try {
+                window.__pawpalFabRealtimeChannel.send({
+                    type: 'broadcast',
+                    event: 'typing',
+                    payload: { who: 'customer', customerName: currentUserName, isTyping: isTyping }
+                });
+            } catch(e) {}
+        }
+    }
+
     // -------------------------------------------------------------
     // GỬI TIN NHẮN (ĐIỀU PHỐI: TRỰC TIẾP NHÂN VIÊN HOẶC QUA AI COPILOT)
     // -------------------------------------------------------------
     async function sendMessage() {
+        clearTimeout(customerTypingDebounceTimer);
+        notifyCustomerTyping(false);
+
         const rawText = input ? input.value.trim() : '';
         if (!rawText && !pendingAttachedImage) return;
 
@@ -1185,6 +1236,14 @@ function initFab() {
     if (input) {
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') sendMessage();
+        });
+
+        input.addEventListener('input', () => {
+            notifyCustomerTyping(true);
+            clearTimeout(customerTypingDebounceTimer);
+            customerTypingDebounceTimer = setTimeout(() => {
+                notifyCustomerTyping(false);
+            }, 2500);
         });
     }
 

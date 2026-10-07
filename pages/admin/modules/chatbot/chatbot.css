@@ -2393,5 +2393,102 @@
     max-width: 80vw;
 }
 
+/* ====================================================================
+   CHỈ BÁO KHÁCH HÀNG ĐANG SOẠN TIN NHẮN (REALTIME TYPING INDICATOR)
+   ==================================================================== */
+.customer-typing-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    background-color: #EEF5F1;
+    border: 1px solid #C3DEC7;
+    border-radius: var(--admin-radius, 9px);
+    font-size: 11.5px;
+    color: #236B48;
+    font-weight: 500;
+    margin: 4px 0 6px;
+    width: fit-content;
+}
+
+.typing-dot-pulse {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: #236B48;
+    animation: dot-pulse 1s infinite alternate ease-in-out;
+}
+
+@keyframes dot-pulse {
+    from { opacity: 0.35; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1.15); }
+}
+
+/* ====================================================================
+   PARSER THẺ GIẢI PHÁP TƯƠNG TÁC (RICH MESSAGE CARDS) TRÊN ADMIN TIMELINE
+   ==================================================================== */
+.chat-timeline-messages .fab-rich-card {
+    background-color: #FFFFFF;
+    border: 1px solid #C3DEC7;
+    border-radius: var(--admin-radius, 9px);
+    padding: 10px 14px;
+    margin: 6px 0;
+    max-width: 320px;
+}
+
+.chat-timeline-messages .fab-rich-card--order { border-left: 3px solid #0284C7; }
+.chat-timeline-messages .fab-rich-card--booking { border-left: 3px solid #236B48; }
+.chat-timeline-messages .fab-rich-card--voucher { border-left: 3px solid #D97706; }
+.chat-timeline-messages .fab-rich-card--csat { border-left: 3px solid #F59E0B; }
+
+.chat-timeline-messages .fab-rich-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.chat-timeline-messages .fab-rich-card-tag {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #236B48;
+}
+
+.chat-timeline-messages .fab-voucher-code {
+    background: #FEF3C7;
+    color: #92400E;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 11px;
+}
+
+.chat-timeline-messages .fab-rich-card-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-main, #203A2C);
+    margin-bottom: 2px;
+}
+
+.chat-timeline-messages .fab-rich-card-desc {
+    font-size: 11.5px;
+    color: var(--text-muted, #4F7A65);
+    line-height: 1.4;
+}
+
+.chat-timeline-messages .fab-rich-card-action {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #236B48;
+    background: #EEF5F1;
+    border: 1px solid #C3DEC7;
+    border-radius: 6px;
+    padding: 4px 10px;
+    text-decoration: none;
+    cursor: default;
+}
+
 
 
