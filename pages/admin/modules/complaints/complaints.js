@@ -152,7 +152,8 @@
                 const custMap = {};
                 customers.forEach(c => {
                     custMap[c.id] = c;
-                    if (c.user_id) custMap[c.user_id] = c;
+                    if (c.phone_main) custMap[c.phone_main] = c;
+                    if (c.phone) custMap[c.phone] = c;
                 });
 
                 const profMap = {};
@@ -196,6 +197,11 @@
                 serviceComplaints.length = 0;
                 orderComplaints.length = 0;
 
+                let localOverridesMap = {};
+                try {
+                    localOverridesMap = JSON.parse(localStorage.getItem('pawpal_complaint_overrides') || '{}');
+                } catch (e) {}
+
                 tickets.forEach((t, idx) => {
                     const ticketMsgs = msgMap[t.id] || [];
                     const userMsg = ticketMsgs.find(m => m.sender_type === 'user') || ticketMsgs[0];
@@ -203,12 +209,12 @@
                     const lastCskhMsg = cskhMsgs.length > 0 ? cskhMsgs[cskhMsgs.length - 1] : null;
 
                     // Match customer
-                    const cData = custMap[t.user_id] || (t.user_id ? customers.find(c => c.id === t.user_id || c.phone === t.user_id) : null);
+                    const cData = custMap[t.user_id] || (t.user_id ? customers.find(c => c.id === t.user_id || c.phone_main === t.user_id || c.phone === t.user_id) : null);
                     const custId = cData ? cData.id : t.user_id;
                     const pData = custId ? (profMap[custId] || profiles.find(p => p.customer_id === custId)) : null;
 
-                    const customerName = (pData && pData.full_name) || (cData && (cData.full_name || cData.phone)) || (t.user_id ? `Khách hàng ${String(t.user_id).slice(-4)}` : 'Khách vãng lai');
-                    const phone = (cData && cData.phone) || (pData && pData.phone) || '0901234567';
+                    const customerName = (pData && pData.full_name) || (cData && (cData.note || cData.phone_main || cData.email)) || (t.user_id ? `Khách hàng ${String(t.user_id).slice(-4)}` : 'Khách vãng lai');
+                    const phone = (cData && (cData.phone_main || cData.phone)) || (pData && pData.phone) || '0901234567';
 
                     // Parse timeline
                     const timeline = [];
@@ -254,12 +260,21 @@
                     if (sLower === 'pending' || sLower === 'new') normStatus = 'new';
                     else if (sLower === 'processing' || sLower === 'in_progress') normStatus = 'processing';
                     else if (sLower === 'waiting_customer') normStatus = 'waiting_customer';
+                    else if (sLower === 'waiting_manager_approval') normStatus = 'waiting_manager_approval';
+                    else if (sLower === 'reprocessing') normStatus = 'reprocessing';
                     else if (sLower === 'waiting_return') normStatus = 'waiting_return';
                     else if (sLower === 'refunding') normStatus = 'refunding';
                     else if (sLower === 'completed' || sLower === 'resolved') normStatus = 'resolved';
                     else if (sLower === 'closed') normStatus = 'closed';
 
+                    if (t.rating && Number(t.rating) < 3 && normStatus === 'resolved') {
+                        normStatus = 'reprocessing';
+                    }
+
                     const staffAssigned = lastCskhMsg && lastCskhMsg.agent_name ? lastCskhMsg.agent_name : (normStatus === 'new' ? 'Chưa phân công' : 'Lê Lệ Quyên');
+
+                    // Check override reference
+                    const ov = localOverridesMap[t.id];
 
                     // Check if Service or Order
                     const tType = (t.type || '').toLowerCase();
@@ -267,22 +282,37 @@
 
                     if (isService) {
                         // Find appointment & pet
-                        const custAppts = custId ? (apptMap['cust_' + custId] || []) : [];
-                        const appt = custAppts[0] || appointments[idx % appointments.length] || null;
-                        const custPets = custId ? (petMap['cust_' + custId] || []) : [];
-                        const pet = custPets[0] || pets[idx % pets.length] || null;
+                        let appt = null;
+                        if (ov && ov.refId) {
+                            appt = appointments.find(a => a.id === ov.refId || a.appointment_code === ov.refId);
+                        }
+                        if (!appt) {
+                            const custAppts = custId ? (apptMap['cust_' + custId] || []) : [];
+                            appt = custAppts[0] || appointments[idx % appointments.length] || null;
+                        }
+
+                        let pet = null;
+                        if (appt && appt.pet_id) {
+                            pet = pets.find(p => p.id === appt.pet_id);
+                        }
+                        if (!pet) {
+                            const custPets = custId ? (petMap['cust_' + custId] || []) : [];
+                            pet = custPets[0] || pets[idx % pets.length] || null;
+                        }
 
                         const sType = (tType === 'health' || tType === 'spa' || tType === 'hotel' || tType === 'taxi') ? tType : (appt && appt.service_type ? appt.service_type : 'spa');
+                        const petDisplayBreed = pet ? `${pet.breed || pet.species || 'Thú cưng'} • ${pet.weight || '4.5'} kg` : 'Mèo Anh Lông Ngắn • 4.2 kg';
+                        const petDisplayNotes = pet ? (pet.allergy && pet.allergy !== 'Không' ? `Dị ứng: ${pet.allergy}. ${pet.routine || ''}` : (pet.routine || 'Không có tiền sử dị ứng.')) : 'Không có tiền sử dị ứng.';
 
                         const serviceItem = {
                             id: t.id,
                             rawId: t.id,
                             customerName: customerName,
                             phone: phone,
-                            petName: pet ? pet.name : 'Miu Con',
-                            petBreed: pet ? `${pet.breed || pet.species || 'Mèo Anh Lông Ngắn'} • ${pet.weight || '4.5'} kg` : 'Mèo Anh Lông Ngắn • 4.2 kg',
-                            petNotes: pet ? (pet.medical_notes || pet.notes || 'Không có tiền sử dị ứng.') : 'Dị ứng phấn hoa và các loại dầu tắm chứa hương liệu đậm đặc.',
-                            bookingId: appt ? (appt.id || `BKG-${1000 + idx}`) : `BKG-${1001 + idx}`,
+                            petName: pet ? (pet.pet_name || pet.name) : 'Miu Con',
+                            petBreed: petDisplayBreed,
+                            petNotes: petDisplayNotes,
+                            bookingId: appt ? (appt.appointment_code || appt.id) : `BKG-${1001 + idx}`,
                             serviceType: sType,
                             serviceName: appt && appt.service ? appt.service.service_name : (t.title || 'Gói Dịch Vụ Chăm Sóc Thú Cưng'),
                             staffExecuted: appt && appt.staff ? `${appt.staff.full_name} (Chi nhánh trung tâm)` : 'Ngọc Anh (Chi nhánh Quận 1)',
@@ -293,9 +323,9 @@
                             createdAt: createdAtStr,
                             status: normStatus,
                             evidence: [],
-                            checkinHealth: appt && appt.health_notes ? appt.health_notes : 'Bé tỉnh táo, nhanh nhẹn. Vành tai không phát hiện vết xước hay tụ máu ngoài da khi tiếp nhận.',
+                            checkinHealth: appt && appt.note ? appt.note : 'Bé tỉnh táo, nhanh nhẹn. Vành tai không phát hiện vết xước hay tụ máu ngoài da khi tiếp nhận.',
                             checkinPhotos: [],
-                            staffLogNote: appt && appt.notes ? appt.notes : 'Đã hoàn tất quy trình dịch vụ và vệ sinh sạch sẽ cho bé.',
+                            staffLogNote: appt && appt.note ? appt.note : 'Đã hoàn tất quy trình dịch vụ và vệ sinh sạch sẽ cho bé.',
                             timeline: timeline
                         };
 
@@ -314,8 +344,14 @@
                         serviceComplaints.push(serviceItem);
                     } else {
                         // Order complaint
-                        const custOrders = custId ? (orderMap['cust_' + custId] || []) : [];
-                        const order = custOrders[0] || orders[idx % orders.length] || null;
+                        let order = null;
+                        if (ov && ov.refId) {
+                            order = orders.find(o => o.id === ov.refId || o.order_code === ov.refId);
+                        }
+                        if (!order) {
+                            const custOrders = custId ? (orderMap['cust_' + custId] || []) : [];
+                            order = custOrders[0] || orders[idx % orders.length] || null;
+                        }
 
                         let issueType = 'wrong_item';
                         if (['wrong_item', 'damaged', 'quality', 'return_request', 'missing_item'].includes(tType)) {
@@ -329,7 +365,7 @@
                             rawId: t.id,
                             customerName: customerName,
                             phone: phone,
-                            orderId: order ? (order.id || `ORD-2026-${String(idx + 1).padStart(3, '0')}`) : `ORD-2026-${String(idx + 1).padStart(3, '0')}`,
+                            orderId: order ? (order.order_code || order.id) : `ORD-2026-${String(idx + 1).padStart(3, '0')}`,
                             productName: t.title || 'Đồ chơi gặm xương cao su tự nhiên an toàn',
                             productSku: `SKU-${1000 + idx}`,
                             issueType: issueType,
@@ -343,7 +379,7 @@
                             warehousePhotos: [],
                             carrier: order && order.carrier ? order.carrier : 'Giao Hàng Nhanh (GHN)',
                             trackingCode: order && order.tracking_code ? order.tracking_code : `GHN${88291000 + idx}VN`,
-                            deliveryStatus: order && order.delivery_status ? order.delivery_status : 'Giao thành công',
+                            deliveryStatus: order && order.order_status ? (order.order_status === 'DELIVERED' ? 'Giao thành công' : 'Đang xử lý') : 'Giao thành công',
                             timeline: timeline
                         };
 
@@ -375,6 +411,34 @@
                     }
                 });
 
+                // Khôi phục overrides cục bộ (trạng thái duyệt, hạn mở lại, timer, đánh giá)
+                try {
+                    const localOverrides = JSON.parse(localStorage.getItem('pawpal_complaint_overrides') || '{}');
+                    serviceComplaints.concat(orderComplaints).forEach(item => {
+                        const ov = localOverrides[item.id];
+                        if (ov) {
+                            if (ov.status) item.status = ov.status;
+                            if (ov.pendingResolution) item.pendingResolution = ov.pendingResolution;
+                            if (ov.resolution) item.resolution = ov.resolution;
+                            if (ov.unverified !== undefined) item.unverified = ov.unverified;
+                            if (ov.waitingCustomerSince) item.waitingCustomerSince = ov.waitingCustomerSince;
+                            if (ov.reminder48hSent !== undefined) item.reminder48hSent = ov.reminder48hSent;
+                            if (ov.resolvedAt) item.resolvedAt = ov.resolvedAt;
+                            if (ov.closedAt) item.closedAt = ov.closedAt;
+                            if (ov.closedReason) item.closedReason = ov.closedReason;
+                            if (ov.canReopenUntil) item.canReopenUntil = ov.canReopenUntil;
+                            if (ov.customerRating) item.customerRating = ov.customerRating;
+                            if (ov.customerRatingComment) item.customerRatingComment = ov.customerRatingComment;
+                            if (ov.timeline && ov.timeline.length > item.timeline.length) item.timeline = ov.timeline;
+                        }
+                    });
+                } catch (e) {
+                    console.warn('[Complaints] Lỗi khôi phục overrides:', e);
+                }
+
+                // Chạy kiểm tra các mốc tự động hóa (48h/72h/3 ngày)
+                checkComplaintTimers();
+
                 if (!currentActiveTicket || !serviceComplaints.concat(orderComplaints).some(x => x.id === currentActiveTicket.id)) {
                     currentActiveTicket = serviceComplaints[0] || orderComplaints[0] || null;
                 }
@@ -385,11 +449,143 @@
             }
         }
 
+        function formatTimestamp(d) {
+            const dateObj = d ? new Date(d) : new Date();
+            return `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')} - ${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()}`;
+        }
+
+        function saveComplaintsOverrides() {
+            try {
+                const overrides = {};
+                serviceComplaints.concat(orderComplaints).forEach(item => {
+                    overrides[item.id] = {
+                        status: item.status,
+                        pendingResolution: item.pendingResolution,
+                        resolution: item.resolution,
+                        unverified: item.unverified,
+                        waitingCustomerSince: item.waitingCustomerSince,
+                        reminder48hSent: item.reminder48hSent,
+                        resolvedAt: item.resolvedAt,
+                        closedAt: item.closedAt,
+                        closedReason: item.closedReason,
+                        canReopenUntil: item.canReopenUntil,
+                        customerRating: item.customerRating,
+                        customerRatingComment: item.customerRatingComment,
+                        timeline: item.timeline
+                    };
+                });
+                localStorage.setItem('pawpal_complaint_overrides', JSON.stringify(overrides));
+            } catch (e) {
+                console.warn('[Complaints] Lỗi lưu overrides:', e);
+            }
+        }
+
+        // Tự động hóa thời gian theo quy trình 3.16:
+        // - Chờ phản hồi khách hàng: 48h gửi nhắc nhở 1, 72h tự đóng và cho mở lại 7 ngày
+        // - Đã giải quyết: Tự đóng sau 3 ngày nếu khách không khiếu nại thêm; nếu chấm < 3 sao thì chuyển Quản lý xử lý lần 2
+        function checkComplaintTimers() {
+            const now = Date.now();
+            let changed = false;
+            const allItems = serviceComplaints.concat(orderComplaints);
+
+            allItems.forEach(item => {
+                // 1. Quét Ticket Chờ phản hồi khách hàng (48h & 72h)
+                if (item.status === 'waiting_customer') {
+                    const waitStart = item.waitingCustomerSince ? Date.parse(item.waitingCustomerSince) : (item.createdAt ? Date.parse(item.createdAt) : now);
+                    const elapsed = now - waitStart;
+                    const hoursElapsed = elapsed / (3600 * 1000);
+
+                    // Quá 48h tự động nhắc nhở lần 1
+                    if (hoursElapsed >= 48 && !item.reminder48hSent) {
+                        item.reminder48hSent = true;
+                        if (!item.timeline) item.timeline = [];
+                        item.timeline.unshift({
+                            time: formatTimestamp(new Date()),
+                            author: 'Hệ thống Pawpal',
+                            title: 'Tự động gửi nhắc nhở lần 1 (Quá 48 giờ)',
+                            desc: 'Đã tự động gửi thông báo nhắc khách hàng cung cấp bổ sung hình ảnh và bằng chứng đối chiếu sự cố.',
+                            isInternal: true
+                        });
+                        changed = true;
+                    }
+
+                    // Quá 72h tự động đóng Ticket
+                    if (hoursElapsed >= 72) {
+                        item.status = 'closed';
+                        item.closedReason = 'Khách hàng không bổ sung thông tin sau 72 giờ';
+                        item.closedAt = new Date().toISOString();
+                        item.canReopenUntil = new Date(now + 7 * 24 * 3600 * 1000).toISOString();
+                        if (!item.timeline) item.timeline = [];
+                        item.timeline.unshift({
+                            time: formatTimestamp(new Date()),
+                            author: 'Hệ thống Pawpal',
+                            title: 'Tự động đóng Ticket (Quá 72 giờ)',
+                            desc: 'Hệ thống tự động đóng Ticket do khách hàng không phản hồi bổ sung thông tin sau 72 giờ. Cho phép mở lại trong vòng 07 ngày.',
+                            isInternal: true
+                        });
+                        changed = true;
+                    }
+                }
+
+                // 2. Quét Ticket Đã giải quyết
+                if (item.status === 'resolved') {
+                    // Nếu khách chấm dưới 3 sao: hủy tự đóng sau 3 ngày, chuyển Quản lý xử lý lần 2
+                    if (item.customerRating && Number(item.customerRating) < 3) {
+                        item.status = 'reprocessing';
+                        if (!item.timeline) item.timeline = [];
+                        item.timeline.unshift({
+                            time: formatTimestamp(new Date()),
+                            author: 'Hệ thống Pawpal',
+                            title: `Cảnh báo khẩn cấp: Khách đánh giá ${item.customerRating} sao`,
+                            desc: `Hệ thống hủy tự động đóng Ticket sau 3 ngày và chuyển thẳng lên cấp Quản lý để gọi điện trực tiếp xử lý lần 2. Nhận xét của khách: "${item.customerRatingComment || 'Không có nhận xét'}"`,
+                            isInternal: true
+                        });
+                        changed = true;
+                    } else {
+                        // Tự động đóng sau 3 ngày (72h)
+                        const resolveStart = item.resolvedAt ? Date.parse(item.resolvedAt) : (item.createdAt ? Date.parse(item.createdAt) : now);
+                        const elapsed = now - resolveStart;
+                        const hoursElapsed = elapsed / (3600 * 1000);
+
+                        if (hoursElapsed >= 72) {
+                            item.status = 'closed';
+                            item.closedReason = 'Tự động đóng sau 03 ngày giải quyết thỏa đáng';
+                            item.closedAt = new Date().toISOString();
+                            item.canReopenUntil = new Date(now + 3 * 24 * 3600 * 1000).toISOString();
+                            if (!item.timeline) item.timeline = [];
+                            item.timeline.unshift({
+                                time: formatTimestamp(new Date()),
+                                author: 'Hệ thống Pawpal',
+                                title: 'Tự động đóng Ticket (Sau 03 ngày giải quyết)',
+                                desc: 'Ticket hoàn tất và lưu trữ hồ sơ. Toàn bộ lịch sử xử lý và bằng chứng được lưu giữ nguyên vẹn.',
+                                isInternal: true
+                            });
+                            changed = true;
+                        }
+                    }
+                }
+            });
+
+            if (changed) {
+                saveComplaintsOverrides();
+            }
+        }
+
         function calculateSla(item) {
             if (!item) return;
             if (item.status === 'resolved' || item.status === 'closed') {
                 item.slaStatus = 'DONE';
                 item.slaRemainingText = item.status === 'resolved' ? 'Đã giải quyết' : 'Đã đóng';
+                return;
+            }
+            if (item.status === 'waiting_manager_approval') {
+                item.slaStatus = 'URGENT';
+                item.slaRemainingText = 'Chờ quản lý duyệt';
+                return;
+            }
+            if (item.status === 'reprocessing') {
+                item.slaStatus = 'OVERDUE';
+                item.slaRemainingText = 'Cần xử lý lần 2';
                 return;
             }
 
@@ -647,6 +843,35 @@
             const serviceContainer = document.getElementById('serviceAlertItemsContainer');
             if (serviceContainer) {
                 const alerts = [];
+
+                // 1. Ca cần xử lý lần 2 do đánh giá < 3 sao
+                const reprocessService = serviceComplaints.filter(i => i.status === 'reprocessing');
+                if (reprocessService.length > 0) {
+                    const ids = reprocessService.map(i => i.id).join(', ');
+                    alerts.push({
+                        type: 'danger',
+                        prefix: 'Cảnh báo',
+                        main: 'Khách chấm < 3 sao (Xử lý lần 2)',
+                        sub: `(${ids})`,
+                        text: `Có ${reprocessService.length} khiếu nại khách hàng không hài lòng cần Quản lý can thiệp (${ids})`,
+                        filter: 'REPROCESSING'
+                    });
+                }
+
+                // 2. Ca chờ Quản lý duyệt bồi hoàn
+                const waitMgrService = serviceComplaints.filter(i => i.status === 'waiting_manager_approval');
+                if (waitMgrService.length > 0) {
+                    const ids = waitMgrService.map(i => i.id).join(', ');
+                    alerts.push({
+                        type: 'warning',
+                        prefix: `${waitMgrService.length} ca`,
+                        main: 'Chờ quản lý duyệt bồi hoàn',
+                        sub: `(${ids})`,
+                        text: `${waitMgrService.length} khiếu nại dịch vụ chờ Quản lý phê duyệt ngân sách/tài sản (${ids})`,
+                        filter: 'WAITING_MANAGER'
+                    });
+                }
+
                 const overdueService = serviceComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed');
                 if (overdueService.length > 0) {
                     const ids = overdueService.map(i => i.id).join(', ');
@@ -709,6 +934,35 @@
             const orderContainer = document.getElementById('orderAlertItemsContainer');
             if (orderContainer) {
                 const alerts = [];
+
+                // Ca cần xử lý lần 2
+                const reprocessOrder = orderComplaints.filter(i => i.status === 'reprocessing');
+                if (reprocessOrder.length > 0) {
+                    const ids = reprocessOrder.map(i => i.id).join(', ');
+                    alerts.push({
+                        type: 'danger',
+                        prefix: 'Cảnh báo',
+                        main: 'Khách chấm < 3 sao (Xử lý lần 2)',
+                        sub: `(${ids})`,
+                        text: `Có ${reprocessOrder.length} khiếu nại đơn hàng cần Quản lý gọi điện xử lý lần 2 (${ids})`,
+                        filter: 'REPROCESSING'
+                    });
+                }
+
+                // Ca chờ Quản lý duyệt
+                const waitMgrOrder = orderComplaints.filter(i => i.status === 'waiting_manager_approval');
+                if (waitMgrOrder.length > 0) {
+                    const ids = waitMgrOrder.map(i => i.id).join(', ');
+                    alerts.push({
+                        type: 'warning',
+                        prefix: `${waitMgrOrder.length} ca`,
+                        main: 'Chờ quản lý duyệt hoàn tiền/đổi trả',
+                        sub: `(${ids})`,
+                        text: `${waitMgrOrder.length} khiếu nại đơn hàng chờ Quản lý duyệt (${ids})`,
+                        filter: 'WAITING_MANAGER'
+                    });
+                }
+
                 const overdueOrder = orderComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed');
                 if (overdueOrder.length > 0) {
                     const ids = overdueOrder.map(i => i.id).join(', ');
@@ -876,6 +1130,8 @@
                 // Quick chips
                 if (currentServiceQuickFilter === 'MY' && item.staffAssigned !== 'Lê Lệ Quyên') return false;
                 if (currentServiceQuickFilter === 'UNASSIGNED' && item.staffAssigned !== 'Chưa phân công') return false;
+                if (currentServiceQuickFilter === 'WAITING_MANAGER' && item.status !== 'waiting_manager_approval') return false;
+                if (currentServiceQuickFilter === 'REPROCESSING' && item.status !== 'reprocessing') return false;
                 if (currentServiceQuickFilter === 'OVERDUE' && item.slaStatus !== 'OVERDUE') return false;
                 if (currentServiceQuickFilter === 'HIGH' && item.priority !== 'high') return false;
 
@@ -907,6 +1163,8 @@
                 if (item.status === 'new') statusBadge = '<span class="admin-badge badge-warning">Mới tiếp nhận</span>';
                 else if (item.status === 'processing') statusBadge = '<span class="admin-badge badge-info">Đang xử lý</span>';
                 else if (item.status === 'waiting_customer') statusBadge = '<span class="admin-badge badge-neutral">Chờ phản hồi</span>';
+                else if (item.status === 'waiting_manager_approval') statusBadge = '<span class="admin-badge badge-waiting-approval">Chờ quản lý duyệt</span>';
+                else if (item.status === 'reprocessing') statusBadge = '<span class="admin-badge badge-reprocessing">Xử lý lần 2</span>';
                 else if (item.status === 'resolved') statusBadge = '<span class="admin-badge badge-success">Đã giải quyết</span>';
                 else statusBadge = '<span class="admin-badge badge-neutral">Đã đóng</span>';
 
@@ -1017,6 +1275,8 @@
 
                 if (currentOrderQuickFilter === 'MY' && item.staffAssigned !== 'Lê Lệ Quyên') return false;
                 if (currentOrderQuickFilter === 'UNASSIGNED' && item.staffAssigned !== 'Chưa phân công') return false;
+                if (currentOrderQuickFilter === 'WAITING_MANAGER' && item.status !== 'waiting_manager_approval') return false;
+                if (currentOrderQuickFilter === 'REPROCESSING' && item.status !== 'reprocessing') return false;
                 if (currentOrderQuickFilter === 'OVERDUE' && item.slaStatus !== 'OVERDUE') return false;
                 if (currentOrderQuickFilter === 'HIGH' && item.priority !== 'high') return false;
 
@@ -1049,6 +1309,8 @@
                 if (item.status === 'new') statusBadge = '<span class="admin-badge badge-warning">Mới tiếp nhận</span>';
                 else if (item.status === 'processing') statusBadge = '<span class="admin-badge badge-info">Đang xử lý</span>';
                 else if (item.status === 'waiting_return') statusBadge = '<span class="admin-badge badge-neutral">Chờ nhận hàng</span>';
+                else if (item.status === 'waiting_manager_approval') statusBadge = '<span class="admin-badge badge-waiting-approval">Chờ quản lý duyệt</span>';
+                else if (item.status === 'reprocessing') statusBadge = '<span class="admin-badge badge-reprocessing">Xử lý lần 2</span>';
                 else if (item.status === 'resolved') statusBadge = '<span class="admin-badge badge-success">Đã giải quyết</span>';
                 else statusBadge = '<span class="admin-badge badge-neutral">Đã đóng</span>';
 
@@ -1235,9 +1497,30 @@
             if (codeEl) codeEl.textContent = ticket.id;
             if (catBadgeEl) catBadgeEl.textContent = ticket.serviceName ? 'Dịch vụ: ' + ticket.serviceName : 'Đơn hàng: ' + ticket.orderId;
             if (statusBadgeEl) {
-                statusBadgeEl.textContent = ticket.status === 'processing' ? 'Đang xử lý' : (ticket.status === 'new' ? 'Mới tiếp nhận' : (ticket.status === 'waiting_customer' ? 'Chờ phản hồi khách hàng' : (ticket.status === 'waiting_return' ? 'Chờ nhận hàng trả' : 'Đã giải quyết')));
-                statusBadgeEl.className = 'admin-badge ' + (ticket.status === 'processing' ? 'badge-info' : (ticket.status === 'new' ? 'badge-warning' : 'badge-active'));
+                const s = ticket.status;
+                let text = 'Đã giải quyết';
+                let cls = 'badge-active';
+                if (s === 'processing') { text = 'Đang xử lý'; cls = 'badge-info'; }
+                else if (s === 'new') { text = 'Chưa xử lý'; cls = 'badge-warning'; }
+                else if (s === 'waiting_customer') { text = 'Chờ khách phản hồi'; cls = 'badge-warning'; }
+                else if (s === 'waiting_return') { text = 'Chờ nhận hàng trả'; cls = 'badge-info'; }
+                else if (s === 'waiting_manager_approval') { text = 'Chờ quản lý duyệt'; cls = 'badge-waiting-approval'; }
+                else if (s === 'reprocessing') { text = 'Đang xử lý lần 2'; cls = 'badge-reprocessing'; }
+                else if (s === 'closed') { text = 'Đã đóng'; cls = ''; }
+                statusBadgeEl.textContent = text;
+                statusBadgeEl.className = 'admin-badge ' + cls;
             }
+
+            const unverifiedBadgeEl = document.getElementById('viewTicketUnverifiedBadge');
+            if (unverifiedBadgeEl) {
+                unverifiedBadgeEl.style.display = ticket.unverified ? 'inline-flex' : 'none';
+            }
+
+            const reopenBtn = document.getElementById('btnReopenTicket');
+            if (reopenBtn) {
+                reopenBtn.style.display = (ticket.status === 'closed') ? 'inline-block' : 'none';
+            }
+
             if (priorityBadgeEl) {
                 priorityBadgeEl.textContent = ticket.priority === 'high' ? 'Mức độ Cao' : 'Mức độ Trung bình';
             }
@@ -1475,6 +1758,67 @@
                     `;
                     timelineContainer.appendChild(entry);
                 });
+            }
+
+            // Khối Quản lý phê duyệt bồi hoàn (vượt thẩm quyền CSKH)
+            const managerApprovalPanel = document.getElementById('managerApprovalPanel');
+            const managerApprovalSummary = document.getElementById('managerApprovalProposalSummary');
+            if (managerApprovalPanel) {
+                if (ticket.status === 'waiting_manager_approval' && ticket.pendingResolution) {
+                    managerApprovalPanel.style.display = 'block';
+                    const pres = ticket.pendingResolution;
+                    let summaryHtml = `<strong>Phương án đề xuất:</strong> ${escapeHtml(pres.typeName)}<br>`;
+                    if (pres.refundAmount) {
+                        summaryHtml += `• Số tiền bồi hoàn: <strong>${Number(pres.refundAmount).toLocaleString('vi-VN')} VNĐ</strong> (Hình thức: ${escapeHtml(pres.refundMethod || 'Chuyển khoản trực tiếp')})<br>`;
+                    }
+                    if (pres.pawpoints || pres.voucherCode) {
+                        summaryHtml += `• Bồi hoàn: ${pres.pawpoints ? '+' + pres.pawpoints + ' Pawpoint ' : ''}${pres.voucherCode ? '• Voucher: ' + escapeHtml(pres.voucherCode) : ''}<br>`;
+                    }
+                    if (pres.replacementItem) {
+                        summaryHtml += `• Đổi bù sản phẩm: ${escapeHtml(pres.replacementItem)} (Kho: ${escapeHtml(pres.warehouse)})<br>`;
+                    }
+                    summaryHtml += `• Ghi chú đề xuất: <em>"${escapeHtml(pres.note || 'Không có ghi chú')}"</em>`;
+                    if (managerApprovalSummary) managerApprovalSummary.innerHTML = summaryHtml;
+                } else {
+                    managerApprovalPanel.style.display = 'none';
+                }
+            }
+
+            // Khối Mở lại khiếu nại (khi đã đóng trong vòng 7 ngày)
+            const reopenPanel = document.getElementById('ticketReopenPanel');
+            const reopenDeadlineText = document.getElementById('ticketReopenDeadlineText');
+            if (reopenPanel) {
+                if (ticket.status === 'closed') {
+                    reopenPanel.style.display = 'flex';
+                    if (reopenDeadlineText) {
+                        if (ticket.canReopenUntil) {
+                            const d = new Date(ticket.canReopenUntil);
+                            reopenDeadlineText.textContent = `Thời hạn mở lại còn hiệu lực đến: ${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} ngày ${d.toLocaleDateString('vi-VN')}`;
+                        } else {
+                            reopenDeadlineText.textContent = 'Có thể yêu cầu mở lại trong vòng 7 ngày kể từ khi đóng.';
+                        }
+                    }
+                } else {
+                    reopenPanel.style.display = 'none';
+                }
+            }
+
+            // Khối Cảnh báo khẩn cấp khi khách đánh giá < 3 sao (Xử lý lần 2)
+            const lowRatingPanel = document.getElementById('ticketLowRatingAlertPanel');
+            const lowRatingStars = document.getElementById('ticketLowRatingStars');
+            const lowRatingComment = document.getElementById('ticketLowRatingComment');
+            if (lowRatingPanel) {
+                if (ticket.status === 'reprocessing' || (ticket.customerRating && Number(ticket.customerRating) < 3)) {
+                    lowRatingPanel.style.display = 'flex';
+                    if (lowRatingStars) lowRatingStars.textContent = `${ticket.customerRating || '1-2'}★`;
+                    if (lowRatingComment) {
+                        lowRatingComment.textContent = ticket.customerRatingComment
+                            ? `Phản hồi của khách: "${ticket.customerRatingComment}". Cần Quản lý trực tiếp can thiệp xoa dịu và xử lý lần 2.`
+                            : 'Khách hàng không hài lòng với phương án xử lý trước đó. Chuyển sang trạng thái Xử lý lần 2, Quản lý cần can thiệp trực tiếp.';
+                    }
+                } else {
+                    lowRatingPanel.style.display = 'none';
+                }
             }
 
             // Nút liên kết xem lịch hẹn / đơn hàng gốc
@@ -1822,11 +2166,12 @@
             const sel = document.getElementById('selectTicketRefId');
             if (sel) {
                 if (cachedAppointments && cachedAppointments.length > 0) {
-                    sel.innerHTML = cachedAppointments.slice(0, 15).map(a => {
+                    sel.innerHTML = cachedAppointments.slice(0, 20).map(a => {
                         const sName = a.service ? a.service.service_name : (a.service_type || 'Dịch vụ');
                         const pName = a.pet_name || 'Bé cưng';
+                        const aCode = a.appointment_code || a.id;
                         const aDate = a.appointment_date ? a.appointment_date.substring(0, 10) : '';
-                        return `<option value="${a.id}">${a.id} (${pName} - ${sName}${aDate ? ' • ' + aDate : ''})</option>`;
+                        return `<option value="${aCode}">${aCode} (${pName} - ${sName}${aDate ? ' • ' + aDate : ''})</option>`;
                     }).join('');
                 } else {
                     sel.innerHTML = `
@@ -1845,10 +2190,11 @@
             const sel = document.getElementById('selectTicketRefId');
             if (sel) {
                 if (cachedOrders && cachedOrders.length > 0) {
-                    sel.innerHTML = cachedOrders.slice(0, 15).map(o => {
+                    sel.innerHTML = cachedOrders.slice(0, 20).map(o => {
+                        const oCode = o.order_code || o.id;
                         const total = o.total_amount ? Number(o.total_amount).toLocaleString('vi-VN') + 'đ' : '';
                         const dateStr = o.created_at ? o.created_at.substring(0, 10) : '';
-                        return `<option value="${o.id}">${o.id} (${total ? total + ' • ' : ''}${dateStr})</option>`;
+                        return `<option value="${oCode}">${oCode} (${total ? total + ' • ' : ''}${dateStr})</option>`;
                     }).join('');
                 } else {
                     sel.innerHTML = `
@@ -1865,28 +2211,58 @@
         document.getElementById('btnDismissCreateTicket')?.addEventListener('click', () => createModal.classList.remove('active'));
         
         
-        // Tự động nhận diện họ tên khách hàng khi nhập số điện thoại trong modal tạo Ticket
+        // Kiểm tra phát hiện Ticket trùng lặp đang mở cho cùng khách hàng / mã giao dịch
+        function checkDuplicateTicket(phone, refId) {
+            const warningBox = document.getElementById('ticketDuplicateWarningBox');
+            if (!warningBox) return;
+
+            const allActive = serviceComplaints.concat(orderComplaints).filter(t => !['resolved', 'closed'].includes(t.status));
+            const dup = allActive.find(t => {
+                const matchPhone = phone && (t.phone === phone);
+                const matchRef = refId && (t.bookingId === refId || t.orderId === refId);
+                return matchPhone || matchRef;
+            });
+
+            if (dup) {
+                warningBox.style.display = 'block';
+                warningBox.innerHTML = `<strong>Cảnh báo trùng lặp:</strong> Phát hiện Ticket đang mở <strong>${escapeHtml(dup.id)}</strong> (${escapeHtml(dup.title || 'Đang xử lý')}) cho ${dup.phone === phone ? 'số điện thoại này' : 'mã giao dịch này'}. Vui lòng kiểm tra kỹ tránh tạo trùng Ticket!`;
+            } else {
+                warningBox.style.display = 'none';
+            }
+        }
+
+        // Tự động nhận diện họ tên khách hàng và cảnh báo trùng lặp khi nhập số điện thoại trong modal tạo Ticket
         document.getElementById('inputTicketCustomerPhone')?.addEventListener('input', (e) => {
             const val = e.target.value.trim();
             if (val.length >= 9) {
-                const found = cachedCustomers.find(c => c.phone === val) || cachedProfiles.find(p => p.phone === val);
+                const found = cachedCustomers.find(c => (c.phone_main || c.phone) === val);
                 if (found) {
+                    const prof = cachedProfiles.find(p => p.customer_id === found.id);
                     const nameInput = document.getElementById('inputTicketCustomerName');
                     if (nameInput && !nameInput.value) {
-                        nameInput.value = found.full_name || '';
+                        nameInput.value = (prof && prof.full_name) || found.note || '';
                     }
                 }
             }
+            checkDuplicateTicket(val, document.getElementById('selectTicketRefId')?.value || '');
         });
-document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async () => {
+
+        document.getElementById('selectTicketRefId')?.addEventListener('change', (e) => {
+            const refVal = e.target.value || '';
+            const phoneVal = document.getElementById('inputTicketCustomerPhone')?.value.trim() || '';
+            checkDuplicateTicket(phoneVal, refVal);
+        });
+
+        document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async () => {
             const phone = document.getElementById('inputTicketCustomerPhone')?.value.trim() || '';
             const name = document.getElementById('inputTicketCustomerName')?.value.trim() || '';
             const title = document.getElementById('inputTicketTitle')?.value.trim() || '';
             const content = document.getElementById('inputTicketContent')?.value.trim() || title;
             const refId = document.getElementById('selectTicketRefId')?.value || '';
             const priority = document.getElementById('selectTicketPriority')?.value || 'medium';
+            const isUnverified = document.getElementById('chkTicketUnverified')?.checked || false;
             const modalTitle = document.getElementById('createTicketModalTitle')?.textContent || '';
-            const isService = modalTitle.includes('dịch vụ') || refId.startsWith('BKG') || refId.startsWith('APT');
+            const isService = modalTitle.includes('dịch vụ') || refId.startsWith('BKG') || refId.startsWith('APP');
 
             if (!title) {
                 showToast('Vui lòng nhập tiêu đề khiếu nại.', 'warning');
@@ -1913,30 +2289,26 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                 // 1. Tìm hoặc tạo Customer
                 let matchedUserId = null;
                 if (phone) {
-                    const existingCust = cachedCustomers.find(c => c.phone === phone);
+                    const existingCust = cachedCustomers.find(c => (c.phone_main || c.phone) === phone);
                     if (existingCust) {
                         matchedUserId = existingCust.id;
                     } else {
-                        const { data: dbCust } = await client.from('customer').select('id, user_id').eq('phone', phone).limit(1);
+                        const { data: dbCust } = await client.from('customer').select('id, phone_main').eq('phone_main', phone).limit(1);
                         if (dbCust && dbCust.length > 0) {
                             matchedUserId = dbCust[0].id;
                         } else {
-                            const newCustId = 'CUST-' + Date.now().toString().slice(-6);
-                            const { data: newCust } = await client.from('customer').insert({
-                                id: newCustId,
-                                phone: phone,
-                                full_name: name || 'Khách hàng tiếp nhận',
-                                status: 'active',
-                                created_at: new Date().toISOString()
+                            const { data: newCust, error: newCustErr } = await client.from('customer').insert({
+                                phone_main: phone,
+                                account_status: 'ACTIVE',
+                                is_temporary: true,
+                                note: name || 'Khách hàng tiếp nhận khiếu nại'
                             }).select().single();
 
                             if (newCust) {
                                 matchedUserId = newCust.id;
                                 await client.from('customer_profile').insert({
                                     customer_id: newCust.id,
-                                    full_name: name || 'Khách hàng tiếp nhận',
-                                    phone: phone,
-                                    created_at: new Date().toISOString()
+                                    full_name: name || 'Khách hàng tiếp nhận'
                                 });
                             }
                         }
@@ -1971,7 +2343,7 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                 await client.from('support_ticket_message').insert({
                     ticket_id: newTicket.id,
                     sender_type: 'user',
-                    content: content,
+                    content: refId ? `[Tham chiếu: ${refId}] ${content}` : content,
                     created_at: new Date().toISOString()
                 });
 
@@ -1984,6 +2356,13 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                         created_at: new Date().toISOString()
                     });
                 }
+
+                // Lưu liên kết refId và trạng thái xác minh vào local overrides
+                const localOverrides = JSON.parse(localStorage.getItem('pawpal_complaint_overrides') || '{}');
+                localOverrides[newTicket.id] = localOverrides[newTicket.id] || {};
+                if (refId) localOverrides[newTicket.id].refId = refId;
+                if (isUnverified) localOverrides[newTicket.id].unverified = true;
+                localStorage.setItem('pawpal_complaint_overrides', JSON.stringify(localOverrides));
 
                 // 4. Tải lại toàn bộ dữ liệu live từ Supabase
                 await loadComplaintsModuleData();
@@ -2003,6 +2382,8 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                 // Reset form
                 if (document.getElementById('inputTicketTitle')) document.getElementById('inputTicketTitle').value = '';
                 if (document.getElementById('inputTicketContent')) document.getElementById('inputTicketContent').value = '';
+                if (document.getElementById('chkTicketUnverified')) document.getElementById('chkTicketUnverified').checked = false;
+                if (document.getElementById('ticketDuplicateWarningBox')) document.getElementById('ticketDuplicateWarningBox').style.display = 'none';
                 createTicketUploadedFiles = [];
                 renderCreateTicketPreviews();
 
@@ -2021,6 +2402,40 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
         // Modal Phương án giải quyết (Phase 3: RMA, Redo, Reward và Refund)
         const resolveModal = document.getElementById('resolveTicketModalOverlay');
         const selectResolveOpt = document.getElementById('selectResolveOption');
+
+        // Kiểm tra phân cấp thẩm quyền giải quyết bồi hoàn theo quy trình 3.16:
+        // - CSKH tự quyết: Phi tiền mặt (Voucher < 100k, Pawpoint <= 500, Redo 0đ, Giải thích, Từ chối).
+        // - Bắt buộc Quản lý duyệt: Hoàn tiền mặt / chuyển khoản bất kỳ, RMA hoàn tiền > 500.000đ, Voucher >= 100k, Pawpoint > 500.
+        function checkRequiresManagerApproval(type, details) {
+            if (type === 'refund') {
+                return {
+                    required: true,
+                    reason: `Chi tiền mặt / hoàn tiền trực tiếp (${Number(details.refundAmount || 0).toLocaleString('vi-VN')}đ) bắt buộc phải có Quản lý phê duyệt.`
+                };
+            }
+            if (type === 'rma_refund') {
+                const amt = Number(details.refundAmount || 0);
+                if (amt > 500000) {
+                    return {
+                        required: true,
+                        reason: `Hoàn tiền RMA (${amt.toLocaleString('vi-VN')}đ > 500.000đ) vượt thẩm quyền CSKH, cần Quản lý duyệt.`
+                    };
+                }
+            }
+            if (type === 'reward_voucher') {
+                const pts = Number(details.pawpoints || 0);
+                const vch = String(details.voucherCode || '').toUpperCase();
+                const vchMatch = vch.match(/\d+/);
+                const vchVal = vchMatch ? parseInt(vchMatch[0], 10) : 0;
+                if (pts > 500 || vchVal >= 100) {
+                    return {
+                        required: true,
+                        reason: `Bồi hoàn ${pts > 500 ? pts + ' Pawpoint (> 500)' : 'Voucher giá trị lớn (' + vch + ')'} vượt hạn mức CSKH tự quyết, cần Quản lý duyệt.`
+                    };
+                }
+            }
+            return { required: false };
+        }
 
         function updateResolveModalSubgroups() {
             if (!selectResolveOpt) return;
@@ -2084,6 +2499,32 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                     if (refAmtInput && !refAmtInput.value) refAmtInput.value = '250000';
                 }
             }
+
+            // Kiểm tra phân cấp thẩm quyền (CSKH vs Quản lý)
+            const details = {
+                refundAmount: val === 'refund'
+                    ? (document.getElementById('inputResolveRefundAmount')?.value || 250000)
+                    : (val === 'rma_refund' ? (document.getElementById('inputResolveRmaRefundAmount')?.value || 350000) : 0),
+                pawpoints: document.getElementById('inputResolveRewardPoints')?.value || 0,
+                voucherCode: document.getElementById('inputResolveRewardVoucher')?.value || ''
+            };
+
+            const approvalCheck = checkRequiresManagerApproval(val, details);
+            const noticeEl = document.getElementById('resolveManagerApprovalNotice');
+            const confirmBtn = document.getElementById('btnConfirmResolveTicket');
+
+            if (noticeEl) {
+                if (approvalCheck.required) {
+                    noticeEl.style.display = 'block';
+                    const textP = noticeEl.querySelector('div:last-child');
+                    if (textP) textP.textContent = approvalCheck.reason;
+                } else {
+                    noticeEl.style.display = 'none';
+                }
+            }
+            if (confirmBtn) {
+                confirmBtn.textContent = approvalCheck.required ? 'Gửi yêu cầu Quản lý duyệt' : 'Xác nhận áp dụng';
+            }
         }
 
         function openResolveModal() {
@@ -2113,6 +2554,9 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
         document.getElementById('btnDismissResolveModal')?.addEventListener('click', () => resolveModal.classList.remove('active'));
 
         selectResolveOpt?.addEventListener('change', updateResolveModalSubgroups);
+        ['inputResolveRefundAmount', 'inputResolveRmaRefundAmount', 'inputResolveRewardPoints', 'inputResolveRewardVoucher'].forEach(id => {
+            document.getElementById(id)?.addEventListener('input', updateResolveModalSubgroups);
+        });
 
         document.getElementById('btnConfirmResolveTicket')?.addEventListener('click', async () => {
             if (!currentActiveTicket) return;
@@ -2124,6 +2568,15 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
 
             const val = selectResolveOpt ? selectResolveOpt.value : 'explain';
             const note = document.getElementById('inputResolveNote')?.value.trim() || 'Đã thỏa thuận thống nhất phương án xử lý thỏa đáng với khách hàng.';
+
+            const details = {
+                refundAmount: val === 'refund'
+                    ? (document.getElementById('inputResolveRefundAmount')?.value || 250000)
+                    : (val === 'rma_refund' ? (document.getElementById('inputResolveRmaRefundAmount')?.value || 350000) : 0),
+                pawpoints: document.getElementById('inputResolveRewardPoints')?.value || 0,
+                voucherCode: document.getElementById('inputResolveRewardVoucher')?.value || ''
+            };
+            const approvalCheck = checkRequiresManagerApproval(val, details);
 
             let resolutionObj = null;
             let newStatus = 'resolved';
@@ -2187,22 +2640,23 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                 newStatus = 'resolved';
                 dbStatus = 'completed';
                 timelineTitle = `Bồi hoàn +${pts} Pawpoint và tặng Voucher ${vch}`;
-                timelineDesc = `Đã cộng trực tiếp ${pts} Pawpoint vào tài khoản khách hàng và phát hành mã voucher ${vch}. Ghi chú: "${note}".`;
+                timelineDesc = `Đã đề xuất/áp dụng ${pts} Pawpoint vào tài khoản khách hàng và phát hành mã voucher ${vch}. Ghi chú: "${note}".`;
 
-                // Cộng điểm Pawpoint vào Supabase
-                try {
-                    const cust = cachedCustomers.find(c => c.phone === currentActiveTicket.phone || c.id === currentActiveTicket.user_id);
-                    if (cust) {
-                        await client.from('paw_point_transaction').insert({
-                            customer_id: cust.id,
-                            points: pts,
-                            transaction_type: 'earn',
-                            description: `Bồi hoàn khiếu nại ${currentActiveTicket.id}`,
-                            created_at: new Date().toISOString()
-                        });
+                // Nếu không cần duyệt thì cộng điểm trực tiếp ngay
+                if (!approvalCheck.required) {
+                    try {
+                        const cust = cachedCustomers.find(c => (c.phone_main || c.phone) === currentActiveTicket.phone || c.id === currentActiveTicket.user_id);
+                        if (cust) {
+                            await client.from('paw_point_transaction').insert({
+                                customer_id: cust.id,
+                                points: pts,
+                                description: `Bồi hoàn khiếu nại ${currentActiveTicket.id}`,
+                                created_at: new Date().toISOString()
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('[Complaints] Lỗi cộng Pawpoint Supabase:', e);
                     }
-                } catch (e) {
-                    console.warn('[Complaints] Lỗi cộng Pawpoint Supabase:', e);
                 }
             } else if (val === 'refund') {
                 const refAmt = document.getElementById('inputResolveRefundAmount')?.value.trim() || '250000';
@@ -2244,6 +2698,52 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                 timelineDesc = note;
             }
 
+            // Trường hợp vượt thẩm quyền CSKH: Chuyển sang Chờ Quản lý duyệt
+            if (approvalCheck.required) {
+                try {
+                    currentActiveTicket.status = 'waiting_manager_approval';
+                    currentActiveTicket.pendingResolution = resolutionObj;
+                    if (!currentActiveTicket.timeline) currentActiveTicket.timeline = [];
+                    currentActiveTicket.timeline.unshift({
+                        time: formatTimestamp(new Date()),
+                        author: 'Lê Lệ Quyên (CSKH)',
+                        title: 'Đề xuất phương án bồi hoàn (Chờ Quản lý duyệt)',
+                        desc: `Đã đề xuất phương án: ${resolutionObj.typeName}. Lý do cần duyệt: ${approvalCheck.reason}. Ghi chú: "${note}".`,
+                        isInternal: true
+                    });
+
+                    // Cập nhật trạng thái và tin nhắn trong Supabase
+                    await client.from('support_ticket').update({
+                        status: 'processing',
+                        updated_at: new Date().toISOString()
+                    }).eq('id', currentActiveTicket.id);
+
+                    await client.from('support_ticket_message').insert({
+                        ticket_id: currentActiveTicket.id,
+                        sender_type: 'cskh',
+                        agent_name: 'Lê Lệ Quyên',
+                        content: `Đề xuất phương án bồi hoàn: ${resolutionObj.typeName}. Chờ Quản lý duyệt (Lý do: ${approvalCheck.reason})`,
+                        created_at: new Date().toISOString()
+                    });
+
+                    saveComplaintsOverrides();
+                    resolveModal.classList.remove('active');
+                    updateComplaintsKpis();
+                    renderComplaintsAlertBar();
+                    if (currentTicketType === 'service') renderServiceComplaintsTable();
+                    else renderOrderComplaintsTable();
+
+                    renderTicketDetail(currentActiveTicket);
+                    showToast('Đã gửi đề xuất bồi hoàn lên Quản lý phê duyệt thành công!', 'info');
+                    return;
+                } catch (err) {
+                    console.error('[Complaints] Lỗi gửi yêu cầu duyệt:', err);
+                    showToast('Lỗi gửi yêu cầu duyệt: ' + err.message, 'danger');
+                    return;
+                }
+            }
+
+            // Trường hợp CSKH tự quyết định trong thẩm quyền
             try {
                 // Update support_ticket trên Supabase
                 await client.from('support_ticket').update({
@@ -2261,21 +2761,34 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                     created_at: new Date().toISOString()
                 });
 
-                await loadComplaintsModuleData();
+                currentActiveTicket.status = newStatus;
+                currentActiveTicket.resolution = resolutionObj;
+                delete currentActiveTicket.pendingResolution;
+                if (newStatus === 'resolved') {
+                    currentActiveTicket.resolvedAt = new Date().toISOString();
+                } else if (newStatus === 'closed') {
+                    currentActiveTicket.closedAt = new Date().toISOString();
+                    currentActiveTicket.canReopenUntil = new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+                }
 
+                if (!currentActiveTicket.timeline) currentActiveTicket.timeline = [];
+                currentActiveTicket.timeline.unshift({
+                    time: formatTimestamp(new Date()),
+                    author: 'Lê Lệ Quyên (CSKH)',
+                    title: timelineTitle,
+                    desc: timelineDesc,
+                    isInternal: false
+                });
+
+                saveComplaintsOverrides();
                 resolveModal.classList.remove('active');
                 updateComplaintsKpis();
                 renderComplaintsAlertBar();
                 if (currentTicketType === 'service') renderServiceComplaintsTable();
                 else renderOrderComplaintsTable();
 
-                const updated = (currentTicketType === 'service' ? serviceComplaints : orderComplaints).find(i => i.id === currentActiveTicket.id);
-                if (updated) {
-                    currentActiveTicket = updated;
-                    currentActiveTicket.resolution = resolutionObj;
-                    renderTicketDetail(currentActiveTicket);
-                    syncTicketToUserPortal(currentActiveTicket);
-                }
+                renderTicketDetail(currentActiveTicket);
+                syncTicketToUserPortal(currentActiveTicket);
 
                 showToast(`Đã áp dụng phương án "${resolutionObj.typeName}" cho Ticket thành công!`, 'success');
             } catch (err) {
@@ -2283,6 +2796,240 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                 showToast('Lỗi áp dụng phương án: ' + err.message, 'danger');
             }
         });
+
+        // ---------------------------------------------------------
+        // EVENT LISTENERS QUẢN LÝ DUYỆT, CAN THIỆP LẦN 2 VÀ MỞ LẠI TICKET
+        // ---------------------------------------------------------
+        // Quản lý phê duyệt phương án đề xuất
+        document.getElementById('btnManagerApproveProposal')?.addEventListener('click', async () => {
+            if (!currentActiveTicket || !currentActiveTicket.pendingResolution) return;
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                showToast('Chưa khởi tạo kết nối Supabase.', 'danger');
+                return;
+            }
+
+            const pres = currentActiveTicket.pendingResolution;
+            const resType = pres.type;
+            const newStatus = (resType === 'rma_exchange' || resType === 'rma_refund') ? 'waiting_return' : 'resolved';
+            const dbStatus = (resType === 'rma_exchange' || resType === 'rma_refund') ? 'processing' : 'completed';
+
+            try {
+                // Nếu là reward_voucher có điểm, thực thi giao dịch điểm
+                if (resType === 'reward_voucher' && pres.pawpoints) {
+                    const cust = cachedCustomers.find(c => (c.phone_main || c.phone) === currentActiveTicket.phone || c.id === currentActiveTicket.user_id);
+                    if (cust) {
+                        await client.from('paw_point_transaction').insert({
+                            customer_id: cust.id,
+                            points: pres.pawpoints,
+                            description: `Quản lý duyệt bồi hoàn khiếu nại ${currentActiveTicket.id}`,
+                            created_at: new Date().toISOString()
+                        });
+                    }
+                }
+
+                await client.from('support_ticket').update({
+                    status: dbStatus,
+                    updated_at: new Date().toISOString()
+                }).eq('id', currentActiveTicket.id);
+
+                await client.from('support_ticket_message').insert({
+                    ticket_id: currentActiveTicket.id,
+                    sender_type: 'cskh',
+                    agent_name: 'Quản lý Pawpal',
+                    content: `Phê duyệt phương án bồi hoàn: ${pres.typeName}. Bắt đầu triển khai chi trả / xuất kho.`,
+                    created_at: new Date().toISOString()
+                });
+
+                currentActiveTicket.resolution = pres;
+                delete currentActiveTicket.pendingResolution;
+                currentActiveTicket.status = newStatus;
+                currentActiveTicket.resolvedAt = new Date().toISOString();
+                if (!currentActiveTicket.timeline) currentActiveTicket.timeline = [];
+                currentActiveTicket.timeline.unshift({
+                    time: formatTimestamp(new Date()),
+                    author: 'Quản lý Pawpal',
+                    title: 'Phê duyệt phương án bồi hoàn',
+                    desc: `Đã duyệt phương án: ${pres.typeName}. Bắt đầu triển khai thực hiện.`,
+                    isInternal: true
+                });
+
+                saveComplaintsOverrides();
+                updateComplaintsKpis();
+                renderComplaintsAlertBar();
+                if (currentTicketType === 'service') renderServiceComplaintsTable();
+                else renderOrderComplaintsTable();
+                renderTicketDetail(currentActiveTicket);
+                syncTicketToUserPortal(currentActiveTicket);
+                showToast('Quản lý đã phê duyệt phương án bồi hoàn thành công!', 'success');
+            } catch (err) {
+                console.error('[Complaints] Lỗi duyệt phương án:', err);
+                showToast('Lỗi khi duyệt phương án: ' + err.message, 'danger');
+            }
+        });
+
+        // Quản lý từ chối và yêu cầu CSKH điều chỉnh
+        document.getElementById('btnManagerRejectProposal')?.addEventListener('click', async () => {
+            if (!currentActiveTicket || !currentActiveTicket.pendingResolution) return;
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                showToast('Chưa khởi tạo kết nối Supabase.', 'danger');
+                return;
+            }
+
+            const reason = prompt('Nhập lý do từ chối hoặc hướng dẫn điều chỉnh cho CSKH:', 'Phương án chi phí cao, CSKH thương lượng voucher thay vì hoàn tiền mặt');
+            if (reason === null) return;
+
+            try {
+                await client.from('support_ticket').update({
+                    status: 'processing',
+                    updated_at: new Date().toISOString()
+                }).eq('id', currentActiveTicket.id);
+
+                await client.from('support_ticket_message').insert({
+                    ticket_id: currentActiveTicket.id,
+                    sender_type: 'cskh',
+                    agent_name: 'Quản lý Pawpal',
+                    content: `Từ chối đề xuất bồi hoàn. Chỉ đạo điều chỉnh: "${reason}"`,
+                    created_at: new Date().toISOString()
+                });
+
+                delete currentActiveTicket.pendingResolution;
+                currentActiveTicket.status = 'processing';
+                if (!currentActiveTicket.timeline) currentActiveTicket.timeline = [];
+                currentActiveTicket.timeline.unshift({
+                    time: formatTimestamp(new Date()),
+                    author: 'Quản lý Pawpal',
+                    title: 'Từ chối đề xuất bồi hoàn',
+                    desc: `Quản lý yêu cầu điều chỉnh phương án: "${reason}"`,
+                    isInternal: true
+                });
+
+                saveComplaintsOverrides();
+                updateComplaintsKpis();
+                renderComplaintsAlertBar();
+                if (currentTicketType === 'service') renderServiceComplaintsTable();
+                else renderOrderComplaintsTable();
+                renderTicketDetail(currentActiveTicket);
+                showToast('Đã trả về cho CSKH điều chỉnh phương án bồi hoàn.', 'warning');
+            } catch (err) {
+                console.error('[Complaints] Lỗi từ chối đề xuất:', err);
+                showToast('Lỗi khi từ chối đề xuất: ' + err.message, 'danger');
+            }
+        });
+
+        // Can thiệp giải quyết lần 2 (khi khách đánh giá < 3 sao)
+        document.getElementById('btnResolveReprocess')?.addEventListener('click', async () => {
+            if (!currentActiveTicket) return;
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                showToast('Chưa khởi tạo kết nối Supabase.', 'danger');
+                return;
+            }
+
+            const note = prompt('Nhập kết quả can thiệp xử lý lần 2 cho khách:', 'Quản lý đã trực tiếp liên hệ xin lỗi, tặng voucher tri ân 100k, khách đã hài lòng');
+            if (note === null) return;
+
+            try {
+                await client.from('support_ticket').update({
+                    status: 'completed',
+                    rating_comment: note,
+                    updated_at: new Date().toISOString()
+                }).eq('id', currentActiveTicket.id);
+
+                await client.from('support_ticket_message').insert({
+                    ticket_id: currentActiveTicket.id,
+                    sender_type: 'cskh',
+                    agent_name: 'Quản lý Pawpal',
+                    content: `Hoàn tất can thiệp xử lý lần 2: "${note}"`,
+                    created_at: new Date().toISOString()
+                });
+
+                currentActiveTicket.status = 'resolved';
+                currentActiveTicket.resolvedAt = new Date().toISOString();
+                if (!currentActiveTicket.timeline) currentActiveTicket.timeline = [];
+                currentActiveTicket.timeline.unshift({
+                    time: formatTimestamp(new Date()),
+                    author: 'Quản lý Pawpal',
+                    title: 'Hoàn tất xử lý khiếu nại lần 2',
+                    desc: `Can thiệp trực tiếp giải quyết thỏa đáng: "${note}".`,
+                    isInternal: true
+                });
+
+                saveComplaintsOverrides();
+                updateComplaintsKpis();
+                renderComplaintsAlertBar();
+                if (currentTicketType === 'service') renderServiceComplaintsTable();
+                else renderOrderComplaintsTable();
+                renderTicketDetail(currentActiveTicket);
+                syncTicketToUserPortal(currentActiveTicket);
+                showToast('Đã xử lý xong khiếu nại lần 2 thành công!', 'success');
+            } catch (err) {
+                console.error('[Complaints] Lỗi can thiệp lần 2:', err);
+                showToast('Lỗi can thiệp lần 2: ' + err.message, 'danger');
+            }
+        });
+
+        // Mở lại khiếu nại (trong vòng 7 ngày)
+        async function handleReopenTicket() {
+            if (!currentActiveTicket) return;
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                showToast('Chưa khởi tạo kết nối Supabase.', 'danger');
+                return;
+            }
+
+            if (currentActiveTicket.canReopenUntil && Date.now() > Date.parse(currentActiveTicket.canReopenUntil)) {
+                showToast('Đã quá thời hạn 07 ngày, không thể mở lại khiếu nại này. Vui lòng tạo Ticket mới.', 'warning');
+                return;
+            }
+
+            const reason = prompt('Nhập lý do mở lại khiếu nại:', 'Khách hàng liên hệ lại thông báo vấn đề chưa được khắc phục triệt để');
+            if (reason === null) return;
+
+            try {
+                await client.from('support_ticket').update({
+                    status: 'processing',
+                    updated_at: new Date().toISOString()
+                }).eq('id', currentActiveTicket.id);
+
+                await client.from('support_ticket_message').insert({
+                    ticket_id: currentActiveTicket.id,
+                    sender_type: 'cskh',
+                    agent_name: 'Lê Lệ Quyên',
+                    content: `Mở lại Ticket khiếu nại. Lý do: "${reason}"`,
+                    created_at: new Date().toISOString()
+                });
+
+                currentActiveTicket.status = 'processing';
+                currentActiveTicket.reopenedAt = new Date().toISOString();
+                delete currentActiveTicket.closedAt;
+                delete currentActiveTicket.closedReason;
+                if (!currentActiveTicket.timeline) currentActiveTicket.timeline = [];
+                currentActiveTicket.timeline.unshift({
+                    time: formatTimestamp(new Date()),
+                    author: 'Lê Lệ Quyên (CSKH)',
+                    title: 'Mở lại khiếu nại',
+                    desc: `Mở lại Ticket để tiếp tục theo dõi và xử lý. Lý do: "${reason}".`,
+                    isInternal: true
+                });
+
+                saveComplaintsOverrides();
+                updateComplaintsKpis();
+                renderComplaintsAlertBar();
+                if (currentTicketType === 'service') renderServiceComplaintsTable();
+                else renderOrderComplaintsTable();
+                renderTicketDetail(currentActiveTicket);
+                syncTicketToUserPortal(currentActiveTicket);
+                showToast('Đã mở lại khiếu nại thành công!', 'success');
+            } catch (err) {
+                console.error('[Complaints] Lỗi mở lại ticket:', err);
+                showToast('Lỗi mở lại: ' + err.message, 'danger');
+            }
+        }
+
+        document.getElementById('btnReopenTicket')?.addEventListener('click', handleReopenTicket);
+        document.getElementById('btnTriggerReopenTicket')?.addEventListener('click', handleReopenTicket);
 
         // Nút cập nhật tiến độ RMA (Phase 3)
         document.getElementById('btnAdvanceRmaStep')?.addEventListener('click', async () => {
@@ -2497,8 +3244,21 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
             }
 
             try {
+                currentActiveTicket.status = 'waiting_customer';
+                currentActiveTicket.waitingCustomerSince = new Date().toISOString();
+                currentActiveTicket.reminder48hSent = false;
+                if (!currentActiveTicket.timeline) currentActiveTicket.timeline = [];
+                currentActiveTicket.timeline.unshift({
+                    time: formatTimestamp(new Date()),
+                    author: 'Lê Lệ Quyên (CSKH)',
+                    title: `Yêu cầu bổ sung thông tin (${channelLabel})`,
+                    desc: msg,
+                    isInternal: false
+                });
+                saveComplaintsOverrides();
+
                 await client.from('support_ticket').update({
-                    status: 'processing',
+                    status: 'waiting_customer',
                     updated_at: new Date().toISOString()
                 }).eq('id', currentActiveTicket.id);
 
@@ -2510,20 +3270,14 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
                     created_at: new Date().toISOString()
                 });
 
-                await loadComplaintsModuleData();
-
                 requestInfoModal.classList.remove('active');
                 updateComplaintsKpis();
                 renderComplaintsAlertBar();
                 if (currentTicketType === 'service') renderServiceComplaintsTable();
                 else renderOrderComplaintsTable();
 
-                const updated = (currentTicketType === 'service' ? serviceComplaints : orderComplaints).find(i => i.id === currentActiveTicket.id);
-                if (updated) {
-                    currentActiveTicket = updated;
-                    renderTicketDetail(currentActiveTicket);
-                    syncTicketToUserPortal(currentActiveTicket);
-                }
+                renderTicketDetail(currentActiveTicket);
+                syncTicketToUserPortal(currentActiveTicket);
 
                 showToast(`Đã gửi yêu cầu bổ sung thông tin qua kênh ${channelLabel} thành công!`, 'success');
             } catch (err) {

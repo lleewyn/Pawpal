@@ -4528,7 +4528,11 @@
         try {
             const rtClient = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (rtClient && rtClient.channel) {
-                rtClient.channel('admin_orders_realtime')
+                if (window._pawpalOrdersRealtimeChannel) {
+                    try { rtClient.removeChannel(window._pawpalOrdersRealtimeChannel); } catch (e) {}
+                }
+                const chName = 'admin_orders_realtime_' + Date.now();
+                window._pawpalOrdersRealtimeChannel = rtClient.channel(chName)
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_order' }, () => {
                         syncOrdersAndProductsFromSupabase();
                     })

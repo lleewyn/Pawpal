@@ -1,0 +1,27 @@
+"Bảng 8: Chuyển tiếp nhân viên và Màng lọc bảo vệ tâm lý
+"				
+"Mục đích: Thiết lập điều kiện cắt quyền Bot để chuyển sang người thật, kèm cơ chế che chắn từ ngữ độc hại.
+
+"				
+Tình huống cảm xúc kích hoạt	Điều kiện chuyển tiếp cho người trực	Mức độ ưu tiên xử lý	Cơ chế bảo vệ tâm lý nhân viên	Vai trò nhân sự chịu trách nhiệm
+Khách liên tục xúc phạm	Từ 2 tin nhắn trở lên chứa từ ngữ khiếm nhã hướng trực tiếp vào nhân viên/PawPal	Khẩn cấp	Tự động che mờ từ chửi; nhân viên có nút Hiện nội dung gốc nếu thật sự cần xem; hiển thị tóm tắt nguyên nhân khiếu nại	Trưởng ca CSKH
+Khách chủ động yêu cầu gặp người thật	Khách nói rõ “gặp nhân viên”, “cho tôi nói chuyện với người thật”, “gọi quản lý”	Cao	Hiển thị bản tóm tắt hội thoại trước khi nhân viên tiếp nhận để không phải đọc lại toàn bộ	Nhân viên CSKH; nếu yêu cầu quản lý → Trưởng ca
+Cấp 3 kéo dài không giải quyết được	Bot đã thử giải quyết nhưng khách tiếp tục phàn nàn/lặp lại vấn đề	Cao	Tóm tắt vấn đề, những giải pháp Bot đã thử và phản hồi của khách	Nhân viên CSKH
+Khách tăng từ Cấp 3 lên Cấp 4	Có dấu hiệu tức giận mạnh, đòi hoàn tiền/bồi thường/gặp quản lý	Cao	Highlight thông tin nghiệp vụ quan trọng thay vì bắt nhân viên đọc toàn bộ tin nhắn	CSKH senior/Trưởng ca
+Khách spam xúc phạm	Nhiều tin nhắn xúc phạm liên tục trong thời gian ngắn	Cao	Gộp chuỗi spam thành một khối; mặc định thu gọn nội dung; không phát âm thanh thông báo cho từng tin	Trưởng ca CSKH
+Khách đe dọa phá cửa hàng/tài sản	Có câu thể hiện ý định phá quán, đập tiệm hoặc gây thiệt hại vật chất	Khẩn cấp	Che nội dung gây kích động trên giao diện thông thường nhưng lưu bản gốc trong audit có phân quyền	Quản lý ca/Quản lý vận hành
+Khách đe dọa bạo lực đối với nhân viên	Có lời đe dọa gây thương tích trực tiếp	Khẩn cấp	Không yêu cầu nhân viên tuyến đầu tiếp tục tranh luận; khóa Auto Reply; chỉ người có quyền mới xem toàn bộ transcript	Quản lý vận hành/Trưởng ca
+Khiếu nại Pet bị thương trong dịch vụ	Khách báo Pet chảy máu, trầy xước, đau, stress nghiêm trọng hoặc có bằng chứng	Khẩn cấp	Bot tự tóm tắt Booking, Pet, nhân viên thực hiện, Care Log và bằng chứng để giảm tải cho người tiếp nhận	Trưởng ca dịch vụ + CSKH
+Cáo buộc nhân viên đối xử thô bạo với Pet	Có nội dung “đánh bé”, “giật xích”, “bạo hành”, hoặc bằng chứng ảnh/video	Khẩn cấp	Không hiển thị lặp lại hình ảnh/nội dung gây khó chịu; thumbnail cảnh báo trước khi nhân viên chủ động mở	Quản lý vận hành
+Khách yêu cầu bồi thường lớn/hoàn tiền ngoài quyền CSKH	Giá trị yêu cầu vượt hạn mức nhân viên được phép xử lý	Cao	Hiển thị tóm tắt sự cố và số tiền/giá trị yêu cầu; tránh nhân viên tuyến đầu phải thương lượng ngoài thẩm quyền	Trưởng ca/Quản lý
+Khách đe dọa bóc phốt/tẩy chay	Khách nói rõ sẽ đăng mạng xã hội/review tiêu cực để gây áp lực	Cao	Tóm tắt vấn đề và lịch sử giải pháp đã cung cấp; không làm nổi bật lời xúc phạm không cần thiết	CSKH senior/Trưởng ca
+Lo âu sức khỏe Pet	Khách mô tả dấu hiệu bất thường nhưng chưa rõ cấp cứu	Cao	Tự động trích riêng triệu chứng và thời điểm xảy ra, bỏ bớt nội dung không liên quan	CSKH/nhân sự có chuyên môn phù hợp
+Pet có dấu hiệu cấp cứu	Co giật, khó thở, bất tỉnh, chảy máu nhiều, nuốt dị vật hoặc dấu hiệu nguy hiểm khác	Khẩn cấp	Ưu tiên thông tin y tế cần thiết; không bắt nhân viên đọc toàn bộ lịch sử mua hàng/chat trước	Nhân sự chuyên môn phù hợp/Quản lý điều phối
+Bot không hiểu sau nhiều lần	Bot có độ tin cậy thấp hoặc trả lời sai hướng nhiều lần và khách vẫn cần hỗ trợ	Trung bình	Hiển thị câu hỏi gốc + những câu Bot đã trả lời để nhân viên tránh lặp lại	Nhân viên CSKH
+Bot không có dữ liệu để trả lời	Câu hỏi ngoài Knowledge Base hoặc cần dữ liệu mà Bot không được quyền truy cập	Trung bình	Tóm tắt ý định và dữ liệu còn thiếu	Nhân viên CSKH/chuyên viên nghiệp vụ
+Khiếu nại giao sai/thiếu hàng cần xác minh	Khách cung cấp Order ID và bằng chứng nhưng Bot không thể quyết định đổi/trả	Cao	Tóm tắt Order ID, SKU, sản phẩm, bằng chứng; ẩn phần chat không liên quan	CSKH phụ trách đơn hàng
+Khiếu nại giao hàng trễ kéo dài	Đã quá thời gian dự kiến và khách phản ánh nhiều lần	Cao	Hiển thị timeline giao hàng thay vì bắt nhân viên đọc các tin nhắn hỏi tiến độ lặp lại	CSKH/nhân viên vận hành đơn hàng
+Sự cố thanh toán	Khách báo bị trừ tiền nhưng không có Order/Booking hoặc dữ liệu đối soát không khớp	Cao	Tự động che số thẻ, tài khoản, OTP, CVV và dữ liệu thanh toán nhạy cảm	CSKH + nhân sự phụ trách thanh toán
+Khách gửi số thẻ/CVV/OTP	Phát hiện chuỗi dữ liệu tài chính nhạy cảm	Cao	Mask tự động dữ liệu trước khi hiển thị và lưu; cảnh báo nhân viên không yêu cầu khách gửi lại	CSKH; chuyển bộ phận thanh toán nếu cần
+Khách quấy rối không liên quan nghiệp vụ	Nội dung xúc phạm/quấy rối kéo dài sau khi đã được cảnh báo và không còn yêu cầu hỗ trợ hợp lệ	Khẩn cấp	Blur nội dung, thu gọn hội thoại, tắt preview độc hại; giữ bản gốc phục vụ audit	Trưởng ca/Quản lý
+Khách quay lại sau khi đã chuyển người thật	Phiên đã ở trạng thái Human Handling	Theo Ticket hiện tại	Bot không tự giành lại quyền trả lời; chỉ theo dõi ở Shadow Mode	Nhân viên đang sở hữu phiên

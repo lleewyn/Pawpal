@@ -56,6 +56,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
     </div>
+    <div class="fab-toxic-banner" id="fabToxicBanner" style="display: none;"></div>
     <div class="fab-chat-messages" id="fabChatMessages">
         <div class="fab-chat-bubble fab-chat-bubble--bot">
             Xin chào! Tôi là trợ lý AI của PawPal <br>
@@ -65,8 +66,10 @@
             <button class="fab-chat-suggest">Dịch vụ Spa và Grooming</button>
             <button class="fab-chat-suggest">Pet Hotel giá bao nhiêu?</button>
             <button class="fab-chat-suggest">Cần chuẩn bị gì khi gửi bé?</button>
+            <button class="fab-chat-suggest fab-chat-suggest--agent">Gặp nhân viên tư vấn</button>
         </div>
     </div>
+    <div class="fab-toxic-countdown" id="fabToxicCountdown" style="display: none;"></div>
     <div class="fab-chat-input-row">
         <input type="text" id="fabChatInput" class="fab-chat-input" placeholder="Nhập câu hỏi...">
         <button class="fab-chat-send" id="fabChatSend" aria-label="Gửi">

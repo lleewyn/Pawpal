@@ -83,15 +83,15 @@
                         </div>
                     </div>
 
-                    <button type="button" class="btn-toggle-context-pill" id="btnShowAiContext" style="display: none;">Tóm tắt AI</button>
+                    <button type="button" class="btn-toggle-context-pill" id="btnShowAiContext">Mở tóm tắt AI</button>
 
                     <div class="chat-header-actions-spacer"></div>
                     <span class="sla-timer-pill sla-danger" id="currentChatSlaBadge">Quá hạn: 2m 25s</span>
                     <button type="button" class="admin-btn admin-btn-primary btn-takeover-compact" id="btnToggleTakeover">Tiếp nhận</button>
                 </div>
 
-                <!-- THẺ TÓM TẮT NGỮ CẢNH AI (COMPACT 1 DÒNG VỚI EXPAND) -->
-                <div class="ai-context-strip" id="aiContextCard">
+                <!-- THẺ TÓM TẮT NGỮ CẢNH AI (MẶC ĐỊNH ẨN BAN ĐẦU - ĐỂ NGƯỜI DÙNG TỰ MỞ KHI CẦN) -->
+                <div class="ai-context-strip" id="aiContextCard" style="display: none;">
                     <span class="ai-context-strip-label">AI:</span>
                     <span class="ai-context-strip-tag" id="aiContextStripTag">Nhận diện sự cố</span>
                     <span class="ai-context-strip-body" id="aiContextSummaryText">Khách phản ánh đơn hàng SP-2026-003 đã quá 2 ngày giao dự kiến vẫn chưa nhận được. Khách đã thanh toán qua MoMo và đang cần gấp thức ăn cho thú cưng.</span>
@@ -110,8 +110,8 @@
 
                 <!-- VÙNG CÔNG CỤ SOẠN THẢO TINH GỌN (2 TẦNG CHUẨN CAO CẤP) -->
                 <div class="chat-bottom-toolbar">
-                    <!-- TẦNG 1: THANH TRỢ LÝ THÔNG MINH (GỢI Ý AI + MẪU NHANH GOM 1 DÒNG) -->
-                    <div class="smart-assistant-bar" id="smartAssistantBar">
+                    <!-- TẦNG 1: THANH TRỢ LÝ THÔNG MINH (GỢI Ý AI + MẪU NHANH GOM 1 DÒNG) - MẶC ĐỊNH ẨN BAN ĐẦU -->
+                    <div class="smart-assistant-bar" id="smartAssistantBar" style="display: none;">
                         <div class="ai-smart-suggestions-box" id="aiSmartSuggestionsBox">
                             <span class="suggest-carousel-label">Gợi ý AI:</span>
                             <button type="button" class="suggest-carousel-prev" id="btnSuggestPrev" title="Gợi ý trước">‹</button>
@@ -145,7 +145,7 @@
                                 <div class="composer-mode-status" id="composerModeStatus">
                                     Chế độ: <strong>Nhân viên trực tiếp</strong>
                                 </div>
-                                <button type="button" class="btn-toggle-assistant-pill" id="btnShowAssistantBar" style="display: none;">Mở gợi ý AI</button>
+                                <button type="button" class="btn-toggle-assistant-pill" id="btnShowAssistantBar">Mở gợi ý AI</button>
                             </div>
                             <div class="composer-actions-right">
                                 <button type="button" class="admin-btn admin-btn-primary btn-send-message" id="btnSendLiveMessage">Gửi tin</button>
@@ -269,46 +269,266 @@
         </div>
     </section>
 
-    <!-- SUB-TAB 3: QUY ĐỊNH TRÒ CHUYỆN VỚI KHÁCH HÀNG -->
+    <!-- SUB-TAB 3: KHO TRI THỨC VÀ QUY ĐỊNH CHATBOT (PHASE 3: 100% SUPABASE LIVE DATABASE) -->
     <section class="subtab-content" id="subtab-tab-chatbot-rules">
-        <div class="chatbot-rules-container admin-card">
-            <div class="chatbot-rules-intro">
-                <h2 class="chatbot-rules-title">Quy định trò chuyện với khách hàng</h2>
-                <p>Thống nhất cách tư vấn để mỗi cuộc trò chuyện đều rõ ràng, tôn trọng và giúp khách giải quyết được vấn đề.</p>
+        <div class="chatbot-rules-hub-wrapper">
+            <!-- THANH ĐIỀU HƯỚNG NỘI BỘ SUBTAB 3 (TABS TEXT ONLY, UNDERLINE THEO CHỮ CHUẨN AGENTS.MD) -->
+            <div class="rules-hub-nav-bar admin-card">
+                <div class="rules-hub-nav-left">
+                    <button type="button" class="rules-hub-tab-btn active" data-rules-view="faq">Kho tri thức FAQ <span class="rules-tab-count" id="badgeFaqCount">91</span></button>
+                    <button type="button" class="rules-hub-tab-btn" data-rules-view="profanity">Màng lọc Toxic Shield <span class="rules-tab-count" id="badgeProfanityCount">127</span></button>
+                    <button type="button" class="rules-hub-tab-btn" data-rules-view="canned">Mẫu câu phản hồi <span class="rules-tab-count" id="badgeCannedCount">11</span></button>
+                    <button type="button" class="rules-hub-tab-btn" data-rules-view="policy">Hạn mức bồi hoàn và chuyển giao <span class="rules-tab-count" id="badgePolicyCount">54</span></button>
+                    <button type="button" class="rules-hub-tab-btn" data-rules-view="guidelines">Quy chuẩn văn hóa CSKH</button>
+                </div>
             </div>
-            <div class="chatbot-rules-grid">
-                <section class="chatbot-rule-group">
-                    <h3>Thái độ và cách xưng hô</h3>
-                    <ul>
-                        <li>Chào hỏi lịch sự, xưng “PawPal” và gọi khách theo cách khách mong muốn.</li>
-                        <li>Giữ giọng điệu bình tĩnh, thân thiện; không tranh luận, trách móc hoặc phán xét khách.</li>
-                        <li>Dùng câu ngắn, dễ hiểu; xác nhận lại thông tin quan trọng trước khi kết thúc.</li>
-                    </ul>
-                </section>
-                <section class="chatbot-rule-group">
-                    <h3>Nguyên tắc tư vấn</h3>
-                    <ul>
-                        <li>Đọc đầy đủ nội dung và lịch sử liên quan trước khi trả lời.</li>
-                        <li>Chỉ cung cấp thông tin đã được xác minh về đơn hàng, lịch hẹn, giá và chính sách.</li>
-                        <li>Nếu chưa có câu trả lời, nói rõ sẽ kiểm tra và hẹn thời gian phản hồi; không tự suy đoán hoặc hứa ngoài thẩm quyền.</li>
-                    </ul>
-                </section>
-                <section class="chatbot-rule-group">
-                    <h3>Tiếp nhận sự cố và khiếu nại</h3>
-                    <ul>
-                        <li>Ghi nhận vấn đề, xin lỗi phù hợp và nêu bước xử lý tiếp theo.</li>
-                        <li>Ưu tiên tiếp nhận ngay các trường hợp thanh toán, giao hàng khẩn cấp, thú cưng bị thương hoặc khách yêu cầu gặp nhân viên.</li>
-                        <li>Chuyển quản lý hoặc bộ phận chuyên trách khi vượt thẩm quyền; tạo ticket để theo dõi nếu cần.</li>
-                    </ul>
-                </section>
-                <section class="chatbot-rule-group">
-                    <h3>Bảo mật và kết thúc hội thoại</h3>
-                    <ul>
-                        <li>Chỉ xác minh và sử dụng dữ liệu cần thiết; không yêu cầu khách gửi mật khẩu hoặc mã xác thực.</li>
-                        <li>Không chia sẻ thông tin cá nhân, ghi chú nội bộ hoặc dữ liệu của khách khác.</li>
-                        <li>Tóm tắt kết quả, xác nhận khách đã nắm hướng xử lý và cảm ơn khách trước khi kết thúc.</li>
-                    </ul>
-                </section>
+
+            <!-- VIEW 1: KHO TRI THỨC FAQ (chatbot_knowledge_faq) -->
+            <div class="rules-view-panel active" id="rulesViewFaq">
+                <div class="admin-card rules-master-card">
+                    <!-- TOOLBAR GOM KHỐI BẢNG CHUẨN AGENTS.MD -->
+                    <div class="rules-table-toolbar">
+                        <div class="rules-toolbar-left">
+                            <input type="text" class="admin-input rules-search-input" id="inputFaqSearch" placeholder="Tìm câu hỏi, câu trả lời hoặc từ khóa...">
+                            <select class="admin-select rules-filter-select" id="selectFaqCategoryFilter">
+                                <option value="all">Tất cả danh mục</option>
+                            </select>
+                            <select class="admin-select rules-filter-select" id="selectFaqStatusFilter">
+                                <option value="all">Tất cả trạng thái</option>
+                                <option value="active">Đang kích hoạt</option>
+                                <option value="inactive">Tạm tắt</option>
+                            </select>
+                        </div>
+                        <div class="rules-toolbar-right">
+                            <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddFaqModal">Thêm câu hỏi FAQ</button>
+                        </div>
+                    </div>
+
+                    <!-- BẢNG DỮ LIỆU FAQ -->
+                    <div class="table-responsive-wrapper">
+                        <table class="admin-table rules-data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 150px;">Danh mục</th>
+                                    <th style="width: 260px;">Câu hỏi</th>
+                                    <th>Nội dung giải đáp</th>
+                                    <th style="width: 170px;">Từ khóa nhận diện</th>
+                                    <th style="width: 80px; text-align: center;">Ưu tiên</th>
+                                    <th style="width: 110px; text-align: center;">Trạng thái</th>
+                                    <th style="width: 80px; text-align: center;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="faqTableBody">
+                                <!-- Render by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- THANH PHÂN TRANG CĂN GIỮA NẰM NGOÀI BẢNG CHUẨN AGENTS.MD -->
+                <div class="rules-pagination-wrap" id="faqPaginationWrap">
+                    <!-- Render by JS -->
+                </div>
+            </div>
+
+            <!-- VIEW 2: MÀNG LỌC TỪ NGỮ TOXIC SHIELD (chatbot_profanity_filter) -->
+            <div class="rules-view-panel" id="rulesViewProfanity" style="display: none;">
+                <div class="admin-card rules-master-card">
+                    <div class="rules-table-toolbar">
+                        <div class="rules-toolbar-left">
+                            <input type="text" class="admin-input rules-search-input" id="inputProfanitySearch" placeholder="Tìm từ khóa thô tục, tiêu cực hoặc xúc phạm...">
+                            <select class="admin-select rules-filter-select" id="selectProfanitySeverityFilter">
+                                <option value="all">Tất cả mức độ</option>
+                                <option value="critical">Khẩn cấp</option>
+                                <option value="high">Mức độ cao</option>
+                                <option value="medium">Mức độ trung bình</option>
+                                <option value="low">Mức độ thấp</option>
+                            </select>
+                            <select class="admin-select rules-filter-select" id="selectProfanityActionFilter">
+                                <option value="all">Tất cả hành động</option>
+                                <option value="mask">Che mờ ký tự</option>
+                                <option value="warn">Cảnh báo nhắc nhở</option>
+                                <option value="block">Chặn tạm thời 15 phút</option>
+                            </select>
+                            <select class="admin-select rules-filter-select" id="selectProfanityStatusFilter">
+                                <option value="all">Tất cả trạng thái</option>
+                                <option value="active">Đang kích hoạt</option>
+                                <option value="inactive">Tạm tắt</option>
+                            </select>
+                        </div>
+                        <div class="rules-toolbar-right">
+                            <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddProfanityModal">Thêm từ cấm</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive-wrapper">
+                        <table class="admin-table rules-data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 220px;">Từ ngữ nhận diện</th>
+                                    <th style="width: 140px; text-align: center;">Mức độ</th>
+                                    <th style="width: 170px;">Hành động xử lý</th>
+                                    <th style="width: 130px;">Ký tự thay thế</th>
+                                    <th style="width: 110px; text-align: center;">Trạng thái</th>
+                                    <th style="width: 80px; text-align: center;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="profanityTableBody">
+                                <!-- Render by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="rules-pagination-wrap" id="profanityPaginationWrap">
+                    <!-- Render by JS -->
+                </div>
+            </div>
+
+            <!-- VIEW 3: MẪU CÂU PHẢN HỒI NHANH (chatbot_canned_response) -->
+            <div class="rules-view-panel" id="rulesViewCanned" style="display: none;">
+                <div class="admin-card rules-master-card">
+                    <div class="rules-table-toolbar">
+                        <div class="rules-toolbar-left">
+                            <input type="text" class="admin-input rules-search-input" id="inputCannedSearch" placeholder="Tìm theo tiêu đề, phím tắt hoặc nội dung...">
+                            <select class="admin-select rules-filter-select" id="selectCannedCategoryFilter">
+                                <option value="all">Tất cả chủ đề</option>
+                            </select>
+                            <select class="admin-select rules-filter-select" id="selectCannedStatusFilter">
+                                <option value="all">Tất cả trạng thái</option>
+                                <option value="active">Đang kích hoạt</option>
+                                <option value="inactive">Tạm tắt</option>
+                            </select>
+                        </div>
+                        <div class="rules-toolbar-right">
+                            <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddCannedModal">Thêm câu mẫu</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive-wrapper">
+                        <table class="admin-table rules-data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 130px;">Phím tắt</th>
+                                    <th style="width: 220px;">Tiêu đề mẫu câu</th>
+                                    <th>Nội dung câu mẫu</th>
+                                    <th style="width: 160px;">Chủ đề</th>
+                                    <th style="width: 100px; text-align: center;">Lượt dùng</th>
+                                    <th style="width: 110px; text-align: center;">Trạng thái</th>
+                                    <th style="width: 80px; text-align: center;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cannedTableBody">
+                                <!-- Render by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="rules-pagination-wrap" id="cannedPaginationWrap">
+                    <!-- Render by JS -->
+                </div>
+            </div>
+
+            <!-- VIEW 4: HẠN MỨC BỒI HOÀN VÀ CHUYỂN GIAO (chatbot_compensation_policy & chatbot_handover_rule) -->
+            <div class="rules-view-panel" id="rulesViewPolicy" style="display: none;">
+                <div class="admin-card rules-master-card">
+                    <div class="rules-table-toolbar">
+                        <div class="rules-toolbar-left">
+                            <div class="policy-sub-toggle-group">
+                                <button type="button" class="policy-sub-toggle-btn active" id="btnToggleCompPolicy">Hạn mức bồi hoàn Pawpoint (33)</button>
+                                <button type="button" class="policy-sub-toggle-btn" id="btnToggleHandoverRule">Quy tắc chuyển ca CSKH (21)</button>
+                            </div>
+                            <input type="text" class="admin-input rules-search-input" id="inputPolicySearch" placeholder="Tìm theo sự cố, điều kiện kích hoạt...">
+                        </div>
+                    </div>
+
+                    <!-- BẢNG BỒI HOÀN -->
+                    <div class="table-responsive-wrapper" id="compPolicyTableWrapper">
+                        <table class="admin-table rules-data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 220px;">Sự cố phát sinh</th>
+                                    <th style="width: 130px; text-align: center;">Điểm tối đa</th>
+                                    <th style="width: 140px; text-align: right;">Chiết khấu tối đa</th>
+                                    <th style="width: 140px; text-align: center;">Phê duyệt</th>
+                                    <th>Kịch bản và Hướng xử lý</th>
+                                    <th style="width: 100px; text-align: center;">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="compPolicyTableBody">
+                                <!-- Render by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- BẢNG CHUYỂN GIAO -->
+                    <div class="table-responsive-wrapper" id="handoverRuleTableWrapper" style="display: none;">
+                        <table class="admin-table rules-data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 200px;">Điều kiện kích hoạt</th>
+                                    <th style="width: 140px;">Phân loại trigger</th>
+                                    <th>Ngưỡng kích hoạt và Cơ chế bảo vệ</th>
+                                    <th style="width: 150px;">Vai trò tiếp nhận</th>
+                                    <th style="width: 100px; text-align: center;">SLA phản hồi</th>
+                                    <th style="width: 100px; text-align: center;">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="handoverRuleTableBody">
+                                <!-- Render by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="rules-pagination-wrap" id="policyPaginationWrap">
+                    <!-- Render by JS -->
+                </div>
+            </div>
+
+            <!-- VIEW 5: QUY CHUẨN VĂN HÓA CSKH CHUẨN MỰC -->
+            <div class="rules-view-panel" id="rulesViewGuidelines" style="display: none;">
+                <div class="chatbot-rules-container admin-card">
+                    <div class="chatbot-rules-intro">
+                        <h2 class="chatbot-rules-title">Quy chuẩn trò chuyện và hỗ trợ khách hàng</h2>
+                        <p>Thống nhất phong cách tư vấn để mỗi cuộc trò chuyện đều rõ ràng, tôn trọng và mang lại trải nghiệm an tâm nhất cho phụ huynh thú cưng.</p>
+                    </div>
+                    <div class="chatbot-rules-grid">
+                        <section class="chatbot-rule-group">
+                            <h3>Thái độ và cách xưng hô</h3>
+                            <ul>
+                                <li>Chào hỏi lịch sự, xưng “PawPal” và gọi khách theo cách thân thiện: “sen”, “phụ huynh của bé” hoặc xưng hô theo tên riêng.</li>
+                                <li>Giữ giọng điệu bình tĩnh, ân cần; tuyệt đối không tranh luận, trách móc hoặc phán xét khách hàng trong mọi tình huống.</li>
+                                <li>Dùng câu ngắn, dễ hiểu; xác nhận lại thông tin quan trọng trước khi kết thúc cuộc trao đổi.</li>
+                            </ul>
+                        </section>
+                        <section class="chatbot-rule-group">
+                            <h3>Nguyên tắc tư vấn</h3>
+                            <ul>
+                                <li>Đọc đầy đủ nội dung tóm tắt của AI và lịch sử trò chuyện trước khi đưa ra câu trả lời cho khách.</li>
+                                <li>Chỉ cung cấp thông tin đã được xác minh từ hệ thống về đơn hàng, lịch hẹn, giá dịch vụ và chính sách.</li>
+                                <li>Nếu chưa rõ câu trả lời, nói rõ sẽ kiểm tra và hẹn thời gian phản hồi; không tự suy đoán hoặc hứa vượt thẩm quyền.</li>
+                            </ul>
+                        </section>
+                        <section class="chatbot-rule-group">
+                            <h3>Tiếp nhận sự cố và khiếu nại</h3>
+                            <ul>
+                                <li>Ghi nhận vấn đề, xin lỗi chân thành vì sự bất tiện và nêu rõ các bước xử lý tiếp theo.</li>
+                                <li>Ưu tiên xử lý ngay các trường hợp thanh toán, giao hàng khẩn cấp, thú cưng có dấu hiệu bất thường hoặc khách yêu cầu gặp nhân viên.</li>
+                                <li>Chuyển cấp Quản lý hoặc Bác sĩ thú y trực ban khi vượt thẩm quyền; tạo Ticket khiếu nại chính thức để lưu vết.</li>
+                            </ul>
+                        </section>
+                        <section class="chatbot-rule-group">
+                            <h3>Bảo mật và kết thúc hội thoại</h3>
+                            <ul>
+                                <li>Chỉ xác minh và sử dụng dữ liệu cần thiết; tuyệt đối không yêu cầu khách gửi mật khẩu hoặc mã xác thực OTP.</li>
+                                <li>Không chia sẻ thông tin cá nhân, số điện thoại, ghi chú nội bộ hoặc dữ liệu của khách hàng khác.</li>
+                                <li>Tóm tắt kết quả, xác nhận khách đã nắm hướng xử lý và cảm ơn khách đã tin tưởng đồng hành cùng PawPal.</li>
+                            </ul>
+                        </section>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -579,6 +799,150 @@
             <div class="modal-footer-clean">
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelChatbotConfirm">Hủy bỏ</button>
                 <button type="button" class="admin-btn admin-btn-primary" id="btnAcceptChatbotConfirm">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 8: THÊM / CHỈNH SỬA CÂU HỎI FAQ (PHASE 3)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalFaqEditorOverlay" style="display: none;">
+        <div class="admin-modal-card" style="width: 580px; max-width: 94vw;">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean" id="modalFaqEditorTitle">Thêm câu hỏi tri thức FAQ</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseFaqEditorModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <input type="hidden" id="inputFaqEditId" value="">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Danh mục nghiệp vụ *</label>
+                    <input type="text" class="admin-input" id="inputFaqCategory" placeholder="Ví dụ: Thông tin dịch vụ, Đặt lịch hẹn, Chính sách...">
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Câu hỏi của khách hàng *</label>
+                    <input type="text" class="admin-input" id="inputFaqQuestionText" placeholder="Nhập câu hỏi thường gặp...">
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Nội dung giải đáp chuẩn mực *</label>
+                    <textarea class="admin-input" id="textareaFaqAnswerText" rows="4" placeholder="Nội dung bot hoặc nhân viên sẽ giải đáp cho khách..."></textarea>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Từ khóa kích hoạt (phân cách dấu phẩy)</label>
+                    <input type="text" class="admin-input" id="inputFaqKeywordsList" placeholder="Ví dụ: giá tắm sấy, bảng giá spa, dịch vụ grooming...">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Độ ưu tiên (1: Cao nhất)</label>
+                        <input type="number" class="admin-input" id="inputFaqPriorityNum" value="1" min="1" max="100">
+                    </div>
+                    <div class="form-group-item" style="display: flex; flex-direction: column; justify-content: flex-end;">
+                        <label class="admin-checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding-bottom: 8px;">
+                            <input type="checkbox" id="checkboxFaqIsActive" checked>
+                            <span style="font-size: 13px; font-weight: 500; color: var(--text-main);">Kích hoạt trả lời tự động</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelFaqEditor">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveFaqRecord">Lưu câu hỏi FAQ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 9: THÊM / CHỈNH SỬA TỪ CẤM TOXIC SHIELD (PHASE 3)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalProfanityEditorOverlay" style="display: none;">
+        <div class="admin-modal-card" style="width: 540px; max-width: 94vw;">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean" id="modalProfanityEditorTitle">Thêm từ khóa Toxic Shield</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseProfanityEditorModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <input type="hidden" id="inputProfanityEditId" value="">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Từ ngữ cần nhận diện *</label>
+                    <input type="text" class="admin-input" id="inputProfanityKeywordText" placeholder="Nhập từ thô tục, tiêu cực hoặc xúc phạm...">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Mức độ nghiêm trọng *</label>
+                        <select class="admin-select" id="selectProfanitySeverityVal">
+                            <option value="critical">Khẩn cấp (critical)</option>
+                            <option value="high">Mức độ cao (high)</option>
+                            <option value="medium" selected>Trung bình (medium)</option>
+                            <option value="low">Mức độ thấp (low)</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Hành động xử lý *</label>
+                        <select class="admin-select" id="selectProfanityActionVal">
+                            <option value="mask" selected>Che mờ ký tự (mask)</option>
+                            <option value="warn">Cảnh báo nhắc nhở (warn)</option>
+                            <option value="block">Chặn tạm thời 15 phút (block)</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Ký tự thay thế</label>
+                        <input type="text" class="admin-input" id="inputProfanityReplacementVal" value="***">
+                    </div>
+                    <div class="form-group-item" style="display: flex; flex-direction: column; justify-content: flex-end;">
+                        <label class="admin-checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding-bottom: 8px;">
+                            <input type="checkbox" id="checkboxProfanityIsActive" checked>
+                            <span style="font-size: 13px; font-weight: 500; color: var(--text-main);">Kích hoạt màng lọc</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelProfanityEditor">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveProfanityRecord">Lưu từ cấm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 10: THÊM / CHỈNH SỬA MẪU CÂU PHẢN HỒI CSKH (PHASE 3)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalCannedEditorOverlay" style="display: none;">
+        <div class="admin-modal-card" style="width: 580px; max-width: 94vw;">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean" id="modalCannedEditorTitle">Thêm mẫu câu phản hồi nhanh</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseCannedEditorModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <input type="hidden" id="inputCannedEditId" value="">
+                <div style="display: grid; grid-template-columns: 140px 1fr; gap: 14px;">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Phím tắt *</label>
+                        <input type="text" class="admin-input" id="inputCannedShortcutText" placeholder="/chao, /loi...">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Tiêu đề mẫu câu *</label>
+                        <input type="text" class="admin-input" id="inputCannedTitleText" placeholder="Tiêu đề gợi nhớ cho nhân viên...">
+                    </div>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Chủ đề phân loại *</label>
+                    <input type="text" class="admin-input" id="inputCannedCategoryText" placeholder="Tiếp nhận hội thoại, Vận chuyển, Xử lý sự cố...">
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Nội dung mẫu phản hồi *</label>
+                    <textarea class="admin-input" id="textareaCannedContentText" rows="4" placeholder="Dạ PawPal xin chào sen..."></textarea>
+                </div>
+                <div class="form-group-item">
+                    <label class="admin-checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="checkboxCannedIsActive" checked>
+                        <span style="font-size: 13px; font-weight: 500; color: var(--text-main);">Kích hoạt mẫu câu</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelCannedEditor">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveCannedRecord">Lưu mẫu câu</button>
             </div>
         </div>
     </div>

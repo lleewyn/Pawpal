@@ -80,8 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
             storageKey: 'pawpal_admin_chatbot_subtab',
             subtabs: [
                 { id: 'tab-live-support', label: 'Hỗ trợ trực tuyến' },
-                { id: 'tab-chatbot-flow', label: 'Kịch bản bot' },
-                { id: 'tab-ai-training', label: 'Huấn luyện AI' }
+                { id: 'tab-ai-copilot', label: 'Trợ lý AI' },
+                { id: 'tab-chatbot-rules', label: 'Quy định' }
             ]
         },
         'Cấu hình': {
@@ -454,14 +454,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Gắn sự kiện click sidebar
     sidebarBtns.forEach(btn => {
         btn.addEventListener('click', () => {
+            const title = btn.getAttribute('data-title');
+            const currentMod = sessionStorage.getItem('pawpal_admin_active_module');
+            if (currentMod === title) return;
+
             sidebarBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            const title = btn.getAttribute('data-title');
             sessionStorage.setItem('pawpal_admin_active_module', title);
 
             // Đồng bộ hash URL ngay lập tức khi bấm đổi phân hệ
             const targetHash = getTargetHashForModule(title);
-            if (targetHash && resolveModuleFromHash(window.location.hash) !== title) {
+            if (targetHash) {
                 try {
                     history.replaceState(null, '', targetHash);
                 } catch (e) {

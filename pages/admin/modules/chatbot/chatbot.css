@@ -700,22 +700,24 @@
 }
 
 .btn-toggle-context-pill {
-    background: transparent;
+    background: #EEF5F1;
     border: none;
     color: #236B48;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
-    text-decoration: underline;
-    padding: 0 4px;
+    text-decoration: none;
+    padding: 3px 10px;
+    border-radius: var(--admin-radius, 9px);
     display: inline-flex;
     align-items: center;
-    transition: color 0.15s;
+    transition: background 0.15s, color 0.15s;
     flex-shrink: 0;
 }
 
 .btn-toggle-context-pill:hover {
+    background: #E2ECE5;
     color: #165335;
 }
 
@@ -1424,21 +1426,23 @@
 }
 
 .btn-toggle-assistant-pill {
-    background: transparent;
+    background: #EEF5F1;
     border: none;
     color: #236B48;
     font-size: 11.5px;
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
-    text-decoration: underline;
-    padding: 0 2px;
+    text-decoration: none;
+    padding: 3px 10px;
+    border-radius: var(--admin-radius, 9px);
     display: inline-flex;
     align-items: center;
-    transition: color 0.15s;
+    transition: background 0.15s, color 0.15s;
 }
 
 .btn-toggle-assistant-pill:hover {
+    background: #E2ECE5;
     color: #165335;
 }
 
@@ -1953,4 +1957,297 @@
 .camera-telemetry-bar strong {
     color: #FFFFFF;
 }
+
+/* ====================================================================
+   SUB-TAB 3: KHO TRI THỨC VÀ QUY ĐỊNH CHATBOT (PHASE 3 CSS)
+   Tuân thủ nghiêm ngặt AGENTS.md:
+   - Bo góc cố định 9px (--admin-radius: 9px)
+   - 100% Màu phẳng Solid & Nền bán trong suốt Frosted Glass
+   - Triệt tiêu hoàn toàn lớp nền lồng nhau (Anti-Opacity Stacking)
+   - Tĩnh hoàn toàn, triệt tiêu hover rung giật (transform: none !important)
+   - Bảng màu Forest Green (#236B48) & Muted Pastel badges
+   ==================================================================== */
+.chatbot-rules-hub-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: 24px;
+    box-sizing: border-box;
+}
+
+.rules-hub-nav-bar {
+    background-color: var(--surface-white);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    padding: 0 16px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.rules-hub-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+}
+
+.rules-hub-tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    font-size: 13.5px;
+    font-weight: 500;
+    padding: 13px 14px 11px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+    font-family: inherit;
+    transform: none !important;
+}
+
+.rules-hub-tab-btn:hover {
+    color: #236B48;
+}
+
+.rules-hub-tab-btn.active {
+    color: #236B48;
+    font-weight: 700;
+    border-bottom: 2px solid #236B48;
+}
+
+.rules-tab-count {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: var(--admin-radius);
+    background-color: #EEF5F1;
+    color: #236B48;
+    line-height: 1;
+}
+
+.rules-hub-tab-btn.active .rules-tab-count {
+    background-color: #DCEEE2;
+    color: #165335;
+}
+
+.rules-view-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.rules-master-card {
+    background-color: var(--surface-white);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.rules-table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.rules-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    flex-wrap: wrap;
+}
+
+.rules-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.rules-search-input {
+    min-width: 280px;
+    height: 36px;
+    font-size: 13px;
+    border-radius: var(--admin-radius);
+}
+
+.rules-filter-select {
+    height: 36px;
+    font-size: 13px;
+    border-radius: var(--admin-radius);
+    padding: 0 10px;
+}
+
+.rules-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.rules-data-table thead tr th {
+    background-color: var(--table-header-bg);
+    color: var(--table-header-text);
+    font-weight: 600;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-neutral);
+    white-space: nowrap;
+}
+
+.rules-data-table thead tr th:first-child {
+    border-left: 3px solid var(--table-header-bg);
+}
+
+.rules-data-table tbody tr {
+    background-color: transparent !important;
+    border-bottom: 1px solid var(--border-neutral);
+    transition: background-color 0.15s;
+}
+
+.rules-data-table tbody tr:hover {
+    background-color: rgba(238, 245, 241, 0.45) !important;
+}
+
+.rules-data-table tbody tr td {
+    padding: 11px 12px;
+    color: var(--text-main);
+    background-color: transparent !important;
+    vertical-align: middle;
+}
+
+.rules-data-table tbody tr td:first-child {
+    border-left: 3px solid transparent;
+}
+
+.rules-data-table tbody tr.row-inactive {
+    opacity: 0.55;
+}
+
+.rules-keywords-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.rules-keyword-pill {
+    display: inline-block;
+    font-size: 11.5px;
+    color: #4F7A65;
+    background-color: #EEF5F1;
+    padding: 2px 7px;
+    border-radius: var(--admin-radius);
+    white-space: nowrap;
+}
+
+.rules-action-menu-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--admin-radius);
+    transition: background 0.15s, color 0.15s;
+}
+
+.rules-action-menu-btn:hover {
+    background-color: #EEF5F1;
+    color: #236B48;
+}
+
+.rules-pagination-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+    margin-top: -4px;
+    background-color: transparent;
+    border: none;
+}
+
+.rules-page-btn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: var(--admin-radius);
+    border: none;
+    background-color: transparent;
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    transition: background-color 0.15s, color 0.15s;
+    transform: none !important;
+}
+
+.rules-page-btn:hover:not(:disabled) {
+    background-color: #EEF5F1;
+    color: #236B48;
+}
+
+.rules-page-btn.active {
+    background-color: #236B48;
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.rules-page-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.policy-sub-toggle-group {
+    display: inline-flex;
+    background-color: #EEF5F1;
+    border-radius: var(--admin-radius);
+    padding: 3px;
+    gap: 3px;
+}
+
+.policy-sub-toggle-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: calc(var(--admin-radius) - 2px);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    font-family: inherit;
+    transform: none !important;
+}
+
+.policy-sub-toggle-btn.active {
+    background-color: #FFFFFF;
+    color: #236B48;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
 

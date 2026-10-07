@@ -1,7 +1,7 @@
 # SỔ TAY VẬN HÀNH VÀ HƯỚNG DẪN LUỒNG NGHIỆP VỤ HỆ THỐNG QUẢN TRỊ PAWPAL-ER
 
 > **Dành cho:** Ban Quản lý cửa hàng, Lễ tân ca trực, Chuyên viên Chăm sóc khách hàng, Kỹ thuật viên Grooming / Spa, Nhân viên Khách sạn thú cưng và Thủ kho Bán lẻ.  
-> **Phiên bản:** 2.6 (Chuẩn hóa toàn diện 3 Subtab Phân hệ Khách hàng, Đồng bộ 2 chiều Cổng Người dùng - Admin, Bán hàng và Kho vận, Điều phối Dịch vụ không Thú y và Cơ chế Lưu trữ Trạng thái theo `AGENTS.md`).
+> **Phiên bản:** 2.7 (Chuẩn hóa toàn diện Quy trình Xử lý Khiếu nại 3.16: Vòng đời Ticket 7 trạng thái, Phân cấp thẩm quyền bồi hoàn CSKH vs Quản lý, Tự động hóa Timers 48h/72h/3 ngày, Xử lý lần 2 khi đánh giá < 3 sao, Cơ chế Mở lại 7 ngày và Cảnh báo Trùng lặp theo `AGENTS.md`).
 
 ---
 
@@ -11,8 +11,8 @@
    - [Luồng 1: Tiếp nhận khách hàng và bé cưng mới tại quầy (Walk-in & Chống trùng SĐT)](#luồng-1-tiếp-nhận-khách-hàng-và-bé-cưng-mới-tại-quầy-walk-in)
    - [Luồng 2: Đặt lịch, Đo thể trạng và Thực hiện dịch vụ Spa / Hotel](#luồng-2-đặt-lịch-đo-thể-trạng-và-thực-hiện-dịch-vụ)
    - [Luồng 3: Bán hàng tại quầy (POS), Vận hành Kho 2 lớp và Xử lý Đơn hàng](#luồng-3-bán-hàng-tại-quầy-pos-vận-hành-kho-2-lớp-và-xử-lý-đơn-hàng)
-   - [Luồng 4: Tiếp nhận và Xử lý Khiếu nại / Đổi trả theo SLA](#luồng-4-tiếp-nhận-và-xử-lý-khiếu-nại--đổi-trả-theo-sla)
-   - [Luồng 5: Tiếp nhận khiếu nại tại quầy hoặc qua Hotline (Ngoại tuyến)](#luồng-5-tiếp-nhận-khiếu-nại-tại-quầy-hoặc-qua-hotline-ngoại-tuyến)
+   - [Luồng 4: Tiếp nhận, Phân cấp Thẩm quyền và Xử lý Khiếu nại / Đổi trả theo SLA](#luồng-4-tiếp-nhận-phân-cấp-thẩm-quyền-và-xử-lý-khiếu-nại--đổi-trả-theo-sla)
+   - [Luồng 5: Tiếp nhận khiếu nại tại quầy hoặc qua Hotline (Chống trùng Ticket và Tiếp nhận chưa xác minh)](#luồng-5-tiếp-nhận-khiếu-nại-tại-quầy-hoặc-qua-hotline-ngoại-tuyến)
    - [Luồng 6: Luồng tương tác khép kín giữa Trực chat AI và Phân hệ Khiếu nại (Closed-Loop Escalation)](#luồng-6-luồng-tương-tác-khép-kín-giữa-trực-chat-ai-và-phân-hệ-khiếu-nại-closed-loop-escalation)
    - [Luồng 7: Đồng bộ Dữ liệu và Điểm thưởng 2 chiều giữa Cổng Người dùng và Admin (2-Way User-Admin Lifecycle)](#luồng-7-đồng-bộ-dữ-liệu-và-điểm-thưởng-2-chiều-giữa-cổng-người-dùng-và-admin)
 3. [Hướng dẫn chi tiết từng phân hệ chức năng](#3-hướng-dẫn-chi-tiết-từng-phân-hệ-chức-năng)
@@ -72,7 +72,7 @@ sequenceDiagram
     participant Pet as Phân hệ Thú cưng
 
     Khach->>Letan: Bước vào quầy mang theo bé cưng
-    Letan->>DB: Bấm nút "+ Tiếp nhận bé mới" (Quick Action)
+    Letan->>DB: Bấm nút "Tiếp nhận bé mới" (Quick Action)
     DB->>Pet: Mở trực tiếp Modal Tiếp nhận bé mới
     Note over Letan,Pet: Kiểm tra SĐT khách hàng
     alt Khách hàng chưa có trên hệ thống
@@ -146,37 +146,56 @@ flowchart TD
 
 ---
 
-### Luồng 4: Tiếp nhận và Xử lý Khiếu nại / Đổi trả theo SLA
-Quy trình đảm bảo khách hàng luôn được lắng nghe và xử lý sự cố trong vòng cam kết (SLA), không bao giờ bỏ quên ticket.
+### Luồng 4: Tiếp nhận, Phân cấp Thẩm quyền và Xử lý Khiếu nại / Đổi trả theo SLA
+Quy trình đảm bảo khách hàng luôn được lắng nghe, phân định rõ thẩm quyền CSKH vs Quản lý, kiểm soát bồi hoàn và tự động hóa theo thời gian cam kết (SLA), không bao giờ bỏ sót ticket.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Khach as Khách hàng
-    actor Admin as Quản lý CSKH
-    participant DB as Dashboard
+    actor CSKH as Chuyên viên CSKH
+    actor QL as Quản lý Cửa hàng
     participant Comp as Phân hệ Khiếu nại
-    participant Cust as Phân hệ Khách hàng
+    participant DB as Dashboard (Cảnh báo đỏ)
+    participant Cust as Hồ sơ Khách (Ví Pawpoint)
 
-    Khach->>Comp: Phản ánh dịch vụ hoặc gửi yêu cầu đổi trả hàng
-    Comp->>DB: Đồng bộ tức thì: Dòng cảnh báo khẩn cấp màu đỏ xuất hiện trên Dashboard
-    Admin->>DB: Nhìn thấy "Ưu tiên xử lý" -> Bấm "Xử lý ngay"
-    DB->>Comp: Deep-link mở thẳng Ticket đang chờ theo đúng SLA còn lại
-    Admin->>Comp: Đối chiếu hình ảnh trước/sau và nhật ký ca làm việc
-    alt Đổi trả sản phẩm hợp lệ (RMA)
-        Admin->>Comp: Duyệt đổi hàng mới / Hoàn tiền
-    else Khiếu nại dịch vụ
-        Admin->>Comp: Gửi lời xin lỗi + Đền bù điểm thưởng Pawpoint
-        Comp->>Cust: Điểm Pawpoint đền bù được cộng thẳng vào tài khoản khách
+    Khach->>Comp: Phản ánh dịch vụ hoặc gửi yêu cầu đổi trả (Trực tuyến / Ngoại tuyến)
+    Comp->>DB: Xuất hiện Dòng cảnh báo khẩn cấp màu đỏ (Zero Miss Strip)
+    CSKH->>Comp: Bấm "Nhận xử lý" ➔ Trạng thái: "Đang xử lý"
+    CSKH->>Comp: Đối chiếu dữ liệu 360° (Ảnh check-in đón bé / Kho xuất hàng)
+    
+    alt Thiếu hình ảnh / Cần đối soát khách
+        CSKH->>Comp: Bấm "Yêu cầu bổ sung thông tin" (Zalo/SMS) ➔ Trạng thái: "Chờ phản hồi khách hàng"
+        Note over Comp: Bắt đầu Timers SLA: 48h tự động nhắc nhở lần 1; 72h tự động đóng (cho phép mở lại 7 ngày)
+    else CSKH xác minh đủ thông tin và Lên phương án bồi hoàn
+        alt Phương án trong thẩm quyền tự quyết (Voucher < 100k, Pawpoint ≤ 500, Redo 0đ)
+            CSKH->>Comp: Xác nhận bồi hoàn ➔ Trạng thái: "Đã giải quyết"
+            Comp->>Cust: Tự động cộng điểm / phát hành mã voucher
+        else Phương án vượt thẩm quyền (Chi tiền mặt / CK, Voucher ≥ 100k, RMA hoàn tiền > 500k)
+            CSKH->>Comp: Đề xuất phương án ➔ Trạng thái: "Chờ quản lý duyệt"
+            Comp->>QL: Hiển thị Panel Quản lý phê duyệt bồi hoàn
+            alt Quản lý phê duyệt
+                QL->>Comp: Bấm "Phê duyệt phương án" ➔ Trạng thái: "Đã giải quyết"
+                Comp->>Cust: Thực thi lệnh bồi hoàn / xuất kho RMA
+            else Quản lý từ chối
+                QL->>Comp: Bấm "Từ chối và Yêu cầu điều chỉnh" (Ghi lý do) ➔ Trả về "Đang xử lý"
+            end
+        end
     end
-    Admin->>Comp: Chuyển trạng thái sang "Đã giải quyết"
-    Comp-->>DB: Tự động xóa cảnh báo khẩn cấp, hạ số đếm việc tồn đọng về 0
+
+    Note over Khach,Comp: Khách hàng đánh giá hài lòng sau giải quyết
+    alt Khách đánh giá hài lòng (≥ 3 sao) hoặc không khiếu nại thêm
+        Comp->>Comp: Tự động đóng vĩnh viễn sau 03 ngày
+    else Khách đánh giá không hài lòng (< 3 sao)
+        Comp->>Comp: Tự động hủy đóng 3 ngày ➔ Chuyển sang "Đang xử lý lần 2"
+        Comp->>QL: Đẩy cảnh báo đỏ khẩn cấp ➔ Quản lý gọi điện can thiệp trực tiếp
+    end
 ```
 
 ---
 
-### Luồng 5: Tiếp nhận khiếu nại tại quầy hoặc qua Hotline (Ngoại tuyến)
-Dành cho trường hợp khách hàng phản ánh trực tiếp với thu ngân/lễ tân tại quầy hoặc gọi điện đến hotline.
+### Luồng 5: Tiếp nhận khiếu nại tại quầy hoặc qua Hotline (Chống trùng Ticket và Tiếp nhận chưa xác minh)
+Dành cho trường hợp khách hàng phản ánh trực tiếp với thu ngân/lễ tân tại quầy hoặc gọi điện đến hotline. Hệ thống tích hợp thuật toán kiểm tra trùng lặp và hỗ trợ tiếp nhận khẩn cấp khi chưa kịp tìm hóa đơn.
 
 ```mermaid
 sequenceDiagram
@@ -185,19 +204,28 @@ sequenceDiagram
     participant Letan as Lễ tân / CSKH
     participant Comp as Phân hệ Khiếu nại
     participant DB as Bảng điều khiển (Dashboard)
-    participant Admin as Quản lý chi nhánh
+    participant QL as Quản lý cửa hàng
 
     Khach->>Letan: Phản ánh sự cố dịch vụ hoặc đơn hàng
-    Letan->>Comp: Mở modal "+ Tạo khiếu nại" (Điền SĐT khách)
-    Comp-->>Letan: Tự động gợi ý mã lịch hẹn / đơn hàng gần nhất
-    Letan->>Comp: Nhập nội dung phản ánh + đính kèm ảnh bằng chứng
+    Letan->>Comp: Bấm nút "Tiếp nhận khiếu nại"
+    Letan->>Comp: Nhập SĐT khách hàng
+    Comp-->>Letan: Tự động nhận diện họ tên và lịch sử giao dịch gần nhất
+    
+    Note over Comp: Thuật toán quét phát hiện trùng lặp
+    alt Khách đang có Ticket mở cho cùng giao dịch / SĐT
+        Comp-->>Letan: Hiển thị Cảnh báo trùng lặp màu vàng (Tránh tạo vé rác)
+    end
+
+    alt Khách chưa nhớ mã đơn hoặc chưa tìm thấy hóa đơn
+        Letan->>Comp: Tích chọn "Chưa xác minh giao dịch" (Cho phép tiếp nhận khẩn cấp)
+        Comp-->>Comp: Gắn nhãn đỏ "Chưa xác minh giao dịch" trên hồ sơ để đối soát sau
+    else Đã có mã giao dịch
+        Letan->>Comp: Chọn Lịch hẹn / Đơn hàng liên quan
+    end
+
+    Letan->>Comp: Nhập nội dung chi tiết + Tải ảnh bằng chứng ➔ Bấm "Tạo khiếu nại"
     Comp->>DB: Đẩy cảnh báo lên khối "Ưu tiên xử lý" (Dòng đỏ khẩn cấp)
-    Admin->>DB: Nhấp vào dòng cảnh báo khiếu nại
-    DB->>Comp: Chuyển thẳng vào màn hình Chi tiết Ticket
-    Admin->>Admin: Xác minh dữ liệu đối chứng 360° (Check-in ban đầu, KTV thực hiện, camera)
-    Admin->>Comp: Chọn phương án giải quyết (Tặng voucher, Làm lại miễn phí, Hoàn tiền)
-    Admin->>Comp: Chuyển trạng thái sang "Đã giải quyết"
-    Comp-->>DB: Tự động xóa cảnh báo khẩn cấp, hạ số đếm việc tồn đọng về 0
+    Letan->>Comp: Nhận phụ trách hoặc chuyển giao cấp Quản lý thẩm định
 ```
 
 ---
@@ -490,24 +518,61 @@ sequenceDiagram
 ---
 
 ### 3.7. Phân hệ Khiếu nại và Hỗ trợ (Complaints)
-*Giải quyết sự cố dịch vụ và đổi trả hàng minh bạch, bảo vệ uy tín thương hiệu.*
+*Giải quyết sự cố dịch vụ và đổi trả hàng minh bạch, phân cấp thẩm quyền bồi hoàn chặt chẽ, bảo vệ tối đa uy tín thương hiệu.*
 
-- **Cấu trúc 3 Subtab chuyên sâu trên Header Bar**:
-  1. *Theo Dịch vụ (`tab-complaint-services`)*: Quản lý các sự cố về Spa và Grooming, Pet Hotel, Pet Taxi (kèm nhãn mức độ, KTV thực hiện, đồng hồ đếm ngược SLA).
-  2. *Theo Đơn hàng (`tab-complaint-orders`)*: Quản lý khiếu nại về hàng lỗi, giao trễ, giao sai màu/kích thước, quy trình đổi trả hàng RMA.
-  3. *Chi tiết khiếu nại (`tab-complaint-detail`)*: Màn hình thẩm định và giải quyết 360°.
-- **Dữ liệu đối chứng 360° (Cross-Check Data)**:
-  - *Dành cho Dịch vụ*: Đối chiếu tình trạng sức khỏe lúc check-in đón bé, hình ảnh chụp vành tai/da lông đầu vào, nhật ký chăm sóc của KTV. Có nút *"Tạm khóa an toàn KTV"* để đình chỉ tạm thời KTV có nguy cơ vi phạm quy chuẩn.
-  - *Dành cho Đơn hàng*: Đối chiếu hình ảnh kiểm hàng trước khi đóng gói tại kho, thông tin đơn vị vận chuyển (GHN/GHTK), mã vận đơn và chữ ký người nhận.
-  - *Nguồn từ Trực chat*: Tự động hiển thị khối **"Biên bản đối thoại từ Kênh Trực chat"** trích xuất nguyên văn trao đổi giữa khách và CSKH.
-- **4 Phương án giải quyết và Đền bù chính thức**:
-  1. *Tặng Voucher và Pawpoint bồi hoàn*: Cộng trực tiếp điểm thưởng vào tài khoản khách và cấp mã voucher giảm giá cho lần chăm sóc kế tiếp.
-  2. *Làm lại dịch vụ miễn phí (Redo Service)*: Lên lịch hẹn mới miễn phí 100%, chỉ định KTV trưởng hoặc Groomer tay nghề cao thực hiện.
-  3. *Hoàn tiền bồi thường*: Nhập số tiền hoàn và chọn phương thức chuyển khoản/tiền mặt.
-  4. *Quy trình đổi trả hàng chuẩn RMA (4 bước)*: Tiếp nhận yêu cầu ➔ Bưu tá thu hồi hàng ➔ Kho kiểm định chất lượng ➔ Xuất hàng đổi mới hoặc hoàn tiền.
-- **Đồng hồ đếm ngược SLA**:
-  - Mức độ Khẩn cấp (High / Urgent): Cảnh báo đỏ, ưu tiên xử lý trong 30 phút - 2 giờ.
-  - Mức độ Tiêu chuẩn (Normal): Giải quyết dứt điểm trong vòng 24 giờ.
+- **Cấu trúc 3 Subtab chuyên sâu trên Header Bar (Chuẩn `AGENTS.md`)**:
+  1. *Theo Dịch vụ (`tab-complaint-services`)*: Quản lý các sự cố về Spa và Grooming, Pet Hotel, Pet Taxi (kèm nhãn mức độ, KTV thực hiện, đồng hồ đếm ngược SLA và huy hiệu số đếm màu đỏ).
+  2. *Theo Đơn hàng (`tab-complaint-orders`)*: Quản lý khiếu nại về hàng lỗi, giao trễ, giao sai màu/kích thước, quy trình đổi trả hàng RMA và kiểm soát hoàn tiền.
+  3. *Chi tiết khiếu nại (`tab-complaint-detail`)*: Màn hình thẩm định và giải quyết 360°, tích hợp Deep Breadcrumb `/ [Mã Ticket]`.
+
+- **Vòng đời Ticket Khiếu nại (Ticket Lifecycle - 8 trạng thái chuẩn hóa)**:
+  * **Chưa xử lý (`new` / `open`)**: Tiếp nhận mới từ Web, Hotline, Quầy lễ tân hoặc Chatbot AI chuyển sang. Chưa có nhân sự CSKH tiếp nhận.
+  * **Đang xử lý (`processing`)**: Chuyên viên CSKH đã bấm "Nhận xử lý" hoặc nhận bàn giao ca, đang trực tiếp thẩm định sự cố.
+  * **Chờ phản hồi khách hàng (`waiting_customer`)**: CSKH đã gửi yêu cầu bổ sung thông tin/hình ảnh qua Zalo OA, SMS, Email hoặc Cuộc gọi; bắt đầu kích hoạt đồng hồ đếm ngược.
+  * **Chờ nhận hàng trả (`waiting_return`)**: Áp dụng cho khiếu nại đơn hàng RMA; đã phát hành mã RMA hướng dẫn khách gửi hàng, chờ bưu tá thu hồi về kho kiểm định.
+  * **Chờ quản lý duyệt (`waiting_manager_approval`)**: Phương án bồi hoàn vượt thẩm quyền CSKH (hoàn tiền mặt/chuyển khoản, voucher lớn, điểm cao), đang chờ Ban Quản lý phê duyệt.
+  * **Đang xử lý lần 2 (`reprocessing`)**: Kích hoạt khi khách hàng đánh giá $< 3$ sao sau khi giải quyết; hệ thống chuyển ca lên Quản lý can thiệp trực tiếp.
+  * **Đã giải quyết (`resolved`)**: Đã áp dụng xong phương án bồi thường thỏa đáng, khách hàng hài lòng hoặc hệ thống đang đếm lùi thời gian tự đóng.
+  * **Đã đóng (`closed`)**: Khiếu nại hoàn tất vĩnh viễn, hoặc tự động đóng sau 72 giờ không phản hồi (cho phép mở lại trong 07 ngày).
+
+- **Ma trận Phân cấp Thẩm quyền Bồi hoàn (Delegation of Authority)**:
+  * **Cấp 1 - Chuyên viên CSKH tự quyết định (Phi tiền mặt & Hạn mức an toàn)**:
+    - Phát hành Voucher giảm giá cho dịch vụ/đơn hàng kế tiếp: Giá trị $< 100.000$ VNĐ (ví dụ: `PAWPALCARE50`).
+    - Bồi hoàn điểm thưởng Pawpoint: $\le 500$ điểm (tương đương $\le 50.000$ VNĐ).
+    - Làm lại dịch vụ (Redo Service): Miễn phí 100% ca tắm sấy/cắt tỉa bù, chỉ định Groomer trưởng tiếp nhận.
+    - Giải thích chính sách, xin lỗi khách hàng hoặc từ chối khiếu nại nếu khách hàng vi phạm quy định cửa hàng.
+  * **Cấp 2 - Bắt buộc Ban Quản lý Cửa hàng phê duyệt (`waiting_manager_approval`)**:
+    - **Hoàn tiền mặt / Chuyển khoản ngân hàng (`refund`)**: Bất kỳ số tiền nào (kể cả 10.000đ hay 50.000đ) đều bắt buộc Quản lý duyệt để kiểm soát chặt dòng tiền thu ngân.
+    - **RMA Trả hàng hoàn tiền (`rma_refund`)**: Giá trị hoàn tiền $> 500.000$ VNĐ.
+    - **Voucher giá trị lớn**: Voucher giảm giá $\ge 100.000$ VNĐ (ví dụ: `PAWPALCARE100`, `PAWPALCARE200`).
+    - **Điểm thưởng lớn**: Bồi hoàn $> 500$ điểm Pawpoint.
+  * **Cơ chế Khối Quản lý phê duyệt (`manager-approval-panel`)**:
+    - Khi CSKH chọn phương án vượt thẩm quyền, modal bồi hoàn tự động hiển thị biểu ngữ cảnh báo và chuyển nhãn nút thành *"Gửi yêu cầu Quản lý duyệt"*.
+    - Trên Hồ sơ Ticket xuất hiện khối phê duyệt với tóm tắt phương án, số tiền hoàn và 2 nút hành động:
+      * **Phê duyệt phương án**: Quản lý xác nhận duyệt ➔ Trạng thái chuyển sang `Đã giải quyết` (hoặc `Chờ nhận hàng trả` nếu RMA), hệ thống tự động giải ngân / cộng điểm Pawpoint.
+      * **Từ chối và Yêu cầu điều chỉnh**: Quản lý nhập lý do từ chối ➔ Trả Ticket về `Đang xử lý` để CSKH thương lượng phương án khác với khách.
+
+- **Cơ chế Tự động hóa Thời gian theo Cam kết SLA (Automated Timers)**:
+  * **Quá 48 giờ (Chờ khách phản hồi)**: Hệ thống tự động gửi nhắc nhở lần 1 (qua Zalo/SMS) và ghi nhận vào nhật ký hệ thống.
+  * **Quá 72 giờ (Chờ khách phản hồi)**: Hệ thống tự động chuyển trạng thái `Đã đóng` do khách không bổ sung thông tin; cấp quyền cho phép khách hàng hoặc CSKH mở lại trong vòng **07 ngày**.
+  * **Sau 03 ngày (Đã giải quyết)**: Hệ thống tự động đóng vĩnh viễn ticket nếu khách hàng không có khiếu nại phát sinh thêm.
+  * **Đánh giá Khách hàng & Can thiệp Xử lý lần 2**:
+    - Sau khi giải quyết, hệ thống gửi lời mời khách hàng đánh giá trải nghiệm (1 - 5 sao).
+    - Nếu khách chấm **$\ge 3$ sao**: Ghi nhận hài lòng, tiếp tục bộ đếm tự đóng sau 3 ngày.
+    - Nếu khách chấm **$< 3$ sao**: Hệ thống **tự động hủy bộ đếm đóng 3 ngày**, chuyển trạng thái sang `reprocessing` (*Đang xử lý lần 2*), hiển thị khối cảnh báo đỏ khẩn cấp trên màn hình (`ticketLowRatingAlertPanel`) để Quản lý gọi điện trực tiếp xoa dịu và xử lý dứt điểm.
+
+- **Cơ chế Mở lại Khiếu nại (`Reopen Ticket`)**:
+  - Dành riêng cho các Ticket ở trạng thái `Đã đóng`.
+  - Khách hàng hoặc CSKH có thể bấm nút **"Mở lại khiếu nại"** trong thời hạn **07 ngày** kể từ khi đóng nếu sự cố tái phát hoặc phát sinh hậu quả mới. Ticket chuyển về `Đang xử lý` và ghi nhật ký minh bạch.
+  - Quá 07 ngày, hệ thống khóa vĩnh viễn nút mở lại và yêu cầu tạo Ticket mới.
+
+- **Xử lý Ngoại lệ và Phòng ngừa Gian lận**:
+  * **Tiếp nhận khiếu nại Chưa xác minh giao dịch**: Cho phép tích chọn *"Chưa xác minh giao dịch"* khi khách hàng chưa tìm thấy hóa đơn hoặc chưa nhớ mã lịch hẹn. Ticket gắn huy hiệu đỏ `Chưa xác minh giao dịch` để CSKH tiếp nhận trước và bổ sung đối soát sau.
+  * **Cảnh báo trùng lặp Ticket đang mở (Duplicate Warning)**: Khi nhập SĐT hoặc mã giao dịch trong modal tạo vé, hệ thống tự động quét kiểm tra; nếu đã có Ticket chưa đóng cho giao dịch này, hiển thị ngay hộp cảnh báo màu vàng để tránh tạo trùng lặp vé rác.
+  * **Dữ liệu đối chứng 360°**:
+    - *Dịch vụ*: Ảnh chụp check-in sức khỏe vành tai/da lông lúc đón bé, nhật ký KTV, nút *"Tạm khóa an toàn KTV"* để đình chỉ tiếp nhận ca mới đối với KTV có nguy cơ vi phạm quy chuẩn an toàn.
+    - *Đơn hàng*: Ảnh chụp đóng gói kiểm hàng tại kho, chữ ký người nhận 3PL, Stepper RMA 4 bước dạng text phẳng (*1. Cấp mã RMA ➔ 2. Chờ nhận hàng hoàn ➔ 3. Kiểm định tại kho ➔ 4. Xuất hàng đổi mới / Hoàn tiền*).
+  * **Kiểm soát giá trị bồi hoàn**: Hệ thống tự động ràng buộc số tiền bồi hoàn RMA không được vượt quá tổng giá trị đơn hàng gốc.
 
 ---
 
@@ -575,11 +640,11 @@ sequenceDiagram
 
 | Nhóm trạng thái | Gam màu chuẩn (`AGENTS.md`) | Màu nền | Màu chữ | Ví dụ hiển thị |
 | :--- | :--- | :--- | :--- | :--- |
-| **Tích cực / Hoàn thành** | Muted Forest Green | `#DCEEE2` | `#165335` | `Đang hoạt động`, `Đã xác nhận`, `Đã hoàn tất`, `Đã thanh toán`, `Còn hàng` |
-| **Chờ duyệt / Lưu ý** | Warm Amber (Hổ phách dịu) | `#F5E8D3` | `#734718` | `Chờ xác nhận`, `Chờ xử lý`, `Đang chuẩn bị`, `Sắp hết hàng`, `Tạm dừng` |
-| **Khẩn cấp / Tiêu cực** | Muted Earth Red (Đỏ đất) | `#F7DCDC` | `#8F2424` | `Đã hủy`, `Bị khóa`, `Hết hàng`, `Khiếu nại khẩn` |
-| **Tiến trình / Thông tin** | Muted Soft Blue (Xanh phấn) | `#DCEAF2` | `#20495E` | `Đang thực hiện`, `Đang giao hàng`, `Đang lưu trú Hotel` |
-| **Trung tính / Mặc định** | Muted Sage Slate (Xám xô thơm)| `#E2ECE5` | `#2D483B` | `Bản nháp`, `Lưu trữ`, `Sắp tới` |
+| **Tích cực / Hoàn thành** | Muted Forest Green | `#DCEEE2` | `#165335` | `Đang hoạt động`, `Đã xác nhận`, `Đã hoàn tất`, `Đã thanh toán`, `Còn hàng`, `Đã giải quyết` |
+| **Chờ duyệt / Lưu ý** | Warm Amber (Hổ phách dịu) | `#F5E8D3` | `#734718` | `Chờ xác nhận`, `Chờ xử lý`, `Đang chuẩn bị`, `Sắp hết hàng`, `Tạm dừng`, `Chờ khách phản hồi`, **`Chờ quản lý duyệt`** |
+| **Khẩn cấp / Tiêu cực** | Muted Earth Red (Đỏ đất) | `#F7DCDC` | `#8F2424` | `Đã hủy`, `Bị khóa`, `Hết hàng`, `Khiếu nại khẩn`, **`Đang xử lý lần 2`** |
+| **Tiến trình / Thông tin** | Muted Soft Blue (Xanh phấn) | `#DCEAF2` | `#20495E` | `Đang thực hiện`, `Đang giao hàng`, `Đang lưu trú Hotel`, `Đang xử lý`, `Chờ nhận hàng trả` |
+| **Trung tính / Mặc định** | Muted Sage Slate (Xám xô thơm)| `#E2ECE5` | `#2D483B` | `Bản nháp`, `Lưu trữ`, `Sắp tới`, `Đã đóng` |
 
 ### Quy tắc cảnh báo viền mép trái (`border-left`)
 - **Độc quyền duy nhất cho dòng dữ liệu bảng cần Alert**: Vạch đỏ 3px (`border-left: 3px solid #DC2626;` cho dòng có khiếu nại) hoặc vạch cam 3px (`#D97706;` cho dòng có lưu ý đặc biệt).

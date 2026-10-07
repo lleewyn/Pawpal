@@ -327,9 +327,6 @@
                             };
                         });
                     }
-
-                    persistPetsData();
-                    persistCustomersData();
                 }
             } catch (err) {
                 console.warn('Lỗi kết nối Supabase Pet Module:', err);
@@ -2478,7 +2475,6 @@
                 });
                 pet.vaccinated = true;
 
-                persistPetsData();
                 renderPetSubtabs(pet);
                 renderPetsTable();
 
@@ -2790,7 +2786,11 @@
             try {
                 const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                 if (client && typeof client.channel === 'function') {
-                    client.channel('pawpal-pets-realtime-channel')
+                    if (window._pawpalPetsRealtimeChannel) {
+                        try { client.removeChannel(window._pawpalPetsRealtimeChannel); } catch (e) {}
+                    }
+                    const channelName = 'pawpal-pets-realtime-' + Date.now();
+                    window._pawpalPetsRealtimeChannel = client.channel(channelName)
                         .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_profile' }, async (payload) => {
                             console.log('Realtime Supabase Pet Profile updated:', payload);
                             await loadPetsModuleData();

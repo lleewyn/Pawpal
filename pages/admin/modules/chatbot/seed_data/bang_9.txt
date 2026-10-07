@@ -1,0 +1,188 @@
+Bảng 9: Chính sách xoa dịu và Khung bồi hoàn thiện chí						
+"Mục đích: Chuẩn bị trước các giải pháp đền bù tương ứng với từng nguyên nhân gây ra bức xúc.
+P0   Khẩn cấp tối ca0, P1  Nghiêm trọng, P2  Trung bình, P3 Thấp / Nhẹ"						
+Phân loại	STT	Sự cố gây ra bức xúc	Mức độ nghiêm trọng	Kịch bản xoa dịu mẫu	Hạn mức bồi hoàn được phép áp dụng	Quy trình theo dõi sau khi bồi hoàn
+		Thợ cắt móng làm xước nhẹ chân bé	Nghiêm trọng vừa	PawPal vô cùng xin lỗi vì sự cố ngoài ý muốn này, cơ sở đã sát trùng y tế ngay cho bé và cử nhân viên theo dõi sát sao	Miễn phí toàn bộ buổi Spa hôm nay và tặng voucher giảm giá 20 phần trăm cho lần đặt sau	Nhân viên gọi điện hỏi thăm tình trạng vết thương của bé sau 24 giờ
+NHÓM SỰ CỐ MUA SẮM & GIAO VẬN HÀNG HÓA	1	"Giao hàng trễ khung giờ cam kết
+(Đơn thức ăn/cát trễ > 2h)"	P3	"Dạ PawPal thành thật xin lỗi ba mẹ vì sự chậm trễ khiến bé bị trễ bữa ăn ạ. Em đã ghi nhận mã đơn và đang liên hệ thúc giục đơn vị giao vận ưu tiên giao ngay. Chuyên viên CSKH bên em sẽ kiểm tra lộ trình thực tế và liên hệ hỗ trợ ba mẹ ngay ạ."	"(Sau khi xác nhận trễ do lỗi vận hành/shipper):
+- Nhân sự áp dụng voucher Freeship hoặc voucher giảm 10% (tối đa 30.000đ).
+- Hoặc cộng 50 PawPoints tích lũy."	"- CSKH giám sát đơn hàng đến khi khách nhận thành công.
+- T+24h: Nhắn tin kiểm tra độ hài lòng của khách."
+	2	"Giao nhầm sản phẩm, sai quy cách
+(Nhầm loại hạt, nhầm vị pate, nhầm size áo)"	P2	"Dạ PawPal vô cùng xin lỗi ba mẹ về sự cố này ạ! Để em hỗ trợ đổi hàng chuẩn xác nhất, ba mẹ vui lòng chụp giúp em hình ảnh sản phẩm thực tế nhận được kèm mã đơn hàng nhé ạ. Em đang chuyển thông tin khẩn cấp đến bộ phận Kho vận để đối soát và xử lý đổi ngay cho mình ạ."	"(Sau khi đối soát ảnh sản phẩm nhận sai):
+- Giao hỏa tốc sản phẩm đúng tận nơi đổi lại miễn phí 100% phí ship trong 2h - 4h.
+- Tặng kèm 01 phần snack hoặc pate mini trị giá dưới 40.000đ."	"- T+3h: CSKH gọi điện xác nhận khách đã nhận đúng món đổi.
+- Ghi nhận biên bản kiểm hàng nội bộ đối với nhân viên đóng gói."
+	3	"Sản phẩm bị móp méo, rách bao bì, chảy đổ
+(Bao hạt xì hơi, lon pate móp, sữa tắm bung nắp)"	P2	"Dạ PawPal rất lấy làm tiếc về sự cố này ạ! Để đảm bảo an toàn cho bé và đối soát bồi thường với bên giao vận, ba mẹ chụp giúp em hiện trạng bao bì/vết rách và phiếu gửi trên kiện hàng với ạ. Chuyên viên kho sẽ kiểm tra và lập tức gửi sản phẩm mới nguyên seal đến đổi cho mình ạ."	"(Sau khi xác minh ảnh chụp bao bì hư hao):
+- 1 đổi 1 sản phẩm mới 100% trong ngày.
+- Khách được giữ lại sản phẩm lỗi nếu còn tận dụng được.
+- Áp dụng voucher giảm 15% (tối đa 50.000đ) cho đơn sau."	"- T+24h: Kiểm tra kiện hàng thay thế giao đến nơi.
+- Chuyển bằng chứng lập biên bản bồi hoàn với đơn vị vận chuyển đối tác."
+	4	"Sản phẩm cận date, hết hạn sử dụng
+(Date dưới 3 tháng không báo trước hoặc quá hạn)"	P1	"Dạ PawPal xin nhận lỗi nghiêm túc về phản ánh này của ba mẹ ạ. Việc kiểm soát hạn sử dụng cho các bé là điều tối quan trọng. Ba mẹ gửi giúp em ảnh chụp rõ phần in hạn sử dụng trên vỏ bao bì nhé ạ. Em đã chuyển vụ việc lên Trưởng bộ phận Kho để xác thực lô hàng và thu hồi bồi hoàn ngay ạ."	"(Sau khi kiểm tra đúng ảnh hạn sử dụng trên bao bì):
+- Thu hồi sản phẩm và hoàn tiền 100%.
+- Gửi tặng miễn phí 01 sản phẩm mới cùng loại có date xa nhất.
+- Tặng voucher 20% (tối đa 100.000đ) cho lần mua tiếp theo."	"- Khóa và thu hồi ngay toàn bộ lô hàng có vấn đề trên kệ kho.
+- T+3 ngày: Chuyên viên tư vấn gọi điện hỏi thăm tình hình sử dụng của bé."
+	5	"Bé bị tiêu chảy / nôn sau khi dùng thức ăn mua tại shop
+(Nghi ngờ chất lượng hạt/pate hoặc kích ứng)"	P1	"Dạ PawPal rất xót ruột và lo lắng khi nghe tình hình của bé ạ! Ba mẹ vui lòng ngưng cho bé dùng thức ăn này ngay nhé ạ. Ba mẹ gửi giúp em hình ảnh gói sản phẩm và thể trạng hiện tại của bé. Em đang kết nối khẩn cấp với Quản lý chi nhánh để hướng dẫn hỗ trợ đưa bé đi kiểm tra tại phòng khám thú y ngay lập tức ạ!"	"(Sau khi nhân sự kiểm tra thông tin và đơn mua):
+- Thu hồi sản phẩm và hoàn tiền 100%.
+- Chi trả chi phí thăm khám thú y theo hóa đơn phòng khám bên ngoài (tối đa 500.000đ).
+- Tặng men tiêu hóa chăm sóc đường ruột cho bé."	"- Quản lý cơ sở gọi điện trực tiếp thăm hỏi trong vòng 15 phút.
+- T+12h và T+24h: Nhắn tin/gọi điện theo dõi sát thể trạng của bé qua Zalo."
+	6	"Tài xế giao hàng thái độ gắt gỏng, vứt hàng
+(Bưu tá to tiếng, ném kiện hàng vào sân)"	P2	"Dạ PawPal thành thật xin lỗi ba mẹ vì trải nghiệm giao hàng thiếu chuyên nghiệp này ạ. Thái độ này hoàn toàn đi ngược lại tiêu chuẩn phục vụ của bên em. Em đã ghi nhận mã đơn và đang gửi khiếu nại trực tiếp lên Đơn vị quản lý vận chuyển để trích xuất thông tin tài xế và xử lý kỷ luật ngay ạ."	"(Sau khi đối soát mã bưu tá và lịch sử giao hàng):
+- Cấp voucher giảm 15% (tối đa 50.000đ) hoặc miễn phí ship cho đơn sau.
+- Chặn bưu tá vi phạm giao các tuyến của khách này."	"- CSKH làm việc với đơn vị vận chuyển để xử lý phạt bưu tá.
+- T+2h: Trưởng nhóm giao vận gọi điện xin lỗi và thông báo kết quả xử lý."
+NHÓM SỰ CỐ DỊCH VỤ SPA, GROOMING, LÀM ĐẸP	7	"Đã đặt lịch trước nhưng phải chờ > 30 phút
+(Kẹt ca, nhân viên tiếp nhận chậm)"	P3	"Dạ PawPal thành thật xin lỗi ba mẹ ạ. Do ca trước cần xử lý gỡ lông rối kỹ hơn dự kiến để đảm bảo an toàn cho bé nên đã làm lỡ giờ hẹn của ba mẹ. Em xin phép mời ba mẹ dùng nước tại sảnh chờ, kỹ thuật viên chính đã sẵn sàng tiếp nhận chăm sóc bé chu đáo ngay bây giờ ạ."	"(Sau khi Lễ tân xác nhận trễ giờ hẹn trên hệ thống):
+- Tặng miễn phí 01 dịch vụ Add-on (Vệ sinh răng miệng / Tỉa lông bàn chân / Xịt dưỡng lông trị giá đến 60.000đ).
+- Hoặc giảm trực tiếp 10% trên hóa đơn ca làm."	"- Mời khách dùng trà bánh tại sảnh chờ, cho bé ăn bánh thưởng.
+- Chụp ảnh cập nhật tiến độ chăm sóc bé trong ca làm."
+	8	"Cắt tỉa lông sai form / Không đúng yêu cầu mẫu
+(Cắt khác mẫu đã chọn, cạo quá sát)"	P2	"Dạ PawPal vô cùng xin lỗi ba mẹ vì tạo hình hôm nay chưa đúng với mong muốn của gia đình ạ. Ba mẹ gửi giúp em ảnh chụp bé hiện tại và hình mẫu ban đầu ba mẹ đã yêu cầu nhé ạ. Quản lý kỹ thuật Spa sẽ kiểm tra lại ngay hồ sơ ca làm để đưa ra giải pháp chăm sóc phục hồi tốt nhất cho bé ạ."	"(Sau khi Quản lý kỹ thuật đối chiếu ảnh mẫu và kết quả):
+- Giảm từ 30% đến 50% hóa đơn Grooming ca làm hôm đó.
+- Tặng voucher miễn phí 01 lần tắm dưỡng kích mọc lông.
+- Tặng 01 chai dưỡng phục hồi lông cho bé dùng tại nhà."	"- Gắn ảnh form chuẩn và ghi chú chi tiết vào hồ sơ thú cưng trên hệ thống.
+- T+14 ngày: Nhắn tin hỏi thăm tiến độ phục hồi và mọc lông của bé."
+	9	"Cắt phạm tủy móng gây chảy máu
+(Bé giật mình hoặc sơ suất kỹ thuật)"	P1	"Dạ PawPal chân thành cúi đầu xin lỗi ba mẹ vì sự cố này ạ. Nhân viên y tế của cơ sở đã lập tức chấm bột cầm máu chuyên dụng và sát trùng kỹ lưỡng cho bé tại chỗ. Em đã báo cáo khẩn cấp đến Quản lý chi nhánh để trực tiếp gặp và kiểm tra vết thương cho bé cùng ba mẹ ngay bây giờ ạ."	"(Sau khi xác nhận vết xước móng tại cơ sở):
+- Miễn phí 100% dịch vụ cắt móng hoặc buổi tắm vệ sinh hôm nay.
+- Tặng kèm 01 lọ bột/xịt sát khuẩn lành thương thú cưng mang về.
+- Tặng voucher giảm 20% cho lần ghé sau."	"- Nhân viên hướng dẫn phụ huynh giữ vệ sinh chân bé trong 24h.
+- T+6h và T+24h: Nhắn tin kiểm tra xem chân bé có bị đau hay đi cà nhắc không."
+	10	"Bé bị trầy xước viền tai, cằm, bụng do tông đơ / kéo
+(Bé giãy hoặc sơ suất khi cạo vệ sinh)"	P1	"Dạ PawPal vô cùng xót ruột và xin nhận lỗi chân thành cùng ba mẹ ạ. Nhân viên y tế tại cơ sở đã bôi thuốc mỡ làm dịu và kháng khuẩn ngay cho bé. Ba mẹ chụp giúp em vị trí vết xước nhé ạ, Quản lý cơ sở đang trực tiếp kiểm tra camera ca làm và sẽ hỗ trợ ba mẹ xử lý dứt điểm ngay lập tức ạ."	"(Sau khi Quản lý chi nhánh kiểm tra thực tế vết xước):
+- Miễn phí 100% hóa đơn dịch vụ hôm đó.
+- Cung cấp tuýp kem bôi làm dịu da thú cưng miễn phí.
+- Cam kết chi trả hóa đơn tại phòng khám thú y nếu vết trầy có dấu hiệu viêm (tối đa 500.000đ)."	"- Ghi chú cảnh báo vĩnh viễn trên hồ sơ: [Bé nhạy cảm tông đơ - Cần 2 nhân sự giữ nhẹ nhàng].
+- T+24h và T+48h: Gọi điện hoặc gọi video hỏi thăm tình trạng vết trầy."
+	11	"Bé bị sấy quá nhiệt / Bỏng rát / Đỏ mắt do xà phòng
+(Lồng sấy quá nóng hoặc bọt xà phòng vào mắt)"	P0	"Dạ PawPal thành thật cúi đầu xin lỗi ba mẹ ạ! Đây là sự cố kỹ thuật nghiêm trọng. Cơ sở xin phép bố trí xe riêng hỗ trợ đưa bé đến ngay Phòng khám thú y gần nhất để kiểm tra giác mạc/da toàn diện, toàn bộ chi phí kiểm tra và thuốc bên em xin chịu hoàn toàn trách nhiệm ạ!"	"(Sau khi Quản lý cơ sở xác minh sự việc và hồ sơ khám):
+- Miễn phí 100% ca dịch vụ.
+- Đài thọ 100% chi phí khám, xét nghiệm và thuốc men theo hóa đơn phòng khám thú y.
+- Bồi hoàn thêm voucher trị giá 200.000đ hoặc tiền mặt 200.000đ."	"- Đình chỉ và kiểm điểm kỷ luật kỹ thuật viên thao tác sai quy chuẩn.
+- Quản lý chi nhánh đến tận nhà thăm tình hình của bé trong vòng 24 giờ."
+NHÓM SỰ CỐ KHÁCH SẠN THÚ CƯNG	12	"Quên gửi hình ảnh / video cập nhật hàng ngày
+(Cam kết gửi video 2 lần/ngày nhưng quên)"	P3	"Dạ PawPal thành thật xin lỗi ba mẹ vì sự chậm trễ khiến ba mẹ lo lắng ạ! Bạn nhân sự phụ trách phòng vừa hoàn thành cữ dọn vệ sinh và đang cho bé chơi. Em xin phép gửi ngay video mới nhất quay cận cảnh sinh hoạt của bé trong 5 phút tới đây ạ."	"(Sau khi xác nhận nhân viên ca trực quên gửi báo cáo):
+- Gửi ngay hình ảnh và video chất lượng cao trong vòng 5 phút.
+- Tặng bé 01 phần pate tươi hoặc bánh thưởng dinh dưỡng bữa tối.
+- Hoặc tặng 100 PawPoints vào tài khoản của chủ."	"- Cài đặt chuông nhắc tự động trên hệ thống ca trực vào các khung giờ cam kết (9h và 17h).
+- Trưởng ca trực kiểm tra đối soát chéo danh sách phòng."
+	13	"Cho ăn sai thực đơn hoặc quên cử uống thuốc
+(Ăn nhầm hạt của shop, quên uống thuốc bổ)"	P1	"Dạ PawPal xin chân thành nhận lỗi sâu sắc với ba mẹ ạ. Nhân sự y tế tại cơ sở đã kiểm tra ngay thể trạng và đường ruột của bé, hiện tại phản xạ và bụng bé vẫn ổn định. Em đã chuyển vụ việc lên Quản lý khách sạn để đối chiếu sổ tay chăm sóc và trực tiếp giải trình cùng ba mẹ ngay ạ."	"(Sau khi Quản lý cơ sở xác minh nhật ký chăm sóc):
+- Miễn phí từ 1 đến 2 ngày tiền lưu trú tại khách sạn.
+- Nếu bé có biểu hiện tiêu hóa lạ: Hỗ trợ chi phí đưa bé đến phòng khám thú y kiểm tra.
+- Tặng voucher giảm 20% cho đợt gửi phòng kế tiếp."	"- Dán bảng theo dõi thực đơn/thuốc khổ lớn trực tiếp trước cửa chuồng của bé.
+- Cập nhật tình trạng sinh hoạt của bé mỗi 4 tiếng qua Zalo cho chủ."
+	14	"Phòng lưu trú có mùi hôi hoặc khay vệ sinh dơ chưa dọn
+(Khách xem camera thấy chưa dọn phân/nước tiểu)"	P2	"Dạ PawPal cảm ơn ba mẹ đã thông báo kịp thời ạ! Do trùng vào khung giờ các bạn đang tổng vệ sinh hành lang nên chưa kịp thay lót sàn cho bé. Em đã điều phối nhân viên vào khử khuẩn phòng và thay đệm lót mới tinh cho bé ngay bây giờ ạ."	"(Sau khi xác minh camera phòng lưu trú):
+- Dọn dẹp vệ sinh, khử khuẩn và thay nệm lót mới trong vòng 10 phút.
+- Miễn phí gói tắm vệ sinh thơm tho trước khi bé check-out về nhà."	"- Chụp ảnh/gửi clip căn phòng sau khi dọn sạch cho khách nghiệm thu.
+- Nhắc nhở và hạ điểm đánh giá nghiệp vụ của nhân viên trực buồng."
+	15	"Bé bị lây ve, bọ chét hoặc nấm da sau đợt lưu chuồng
+(Đón về phát hiện rận hoặc nấm)"	P0	"Dạ PawPal vô cùng đau lòng và xin gửi lời xin lỗi chân thành nhất đến ba mẹ ạ. Dù quy trình khử khuẩn buồng rất nghiêm ngặt nhưng đây là sự cố lây nhiễm chéo đáng tiếc. Ba mẹ gửi giúp em ảnh chụp vùng da của bé, Quản lý cơ sở xin phép liên hệ đưa ra phương án hỗ trợ điều trị dứt điểm cho con ạ."	"(Sau khi Quản lý cơ sở xác minh tình trạng da của bé):
+- Hoàn lại từ 50% đến 100% tiền phòng lưu trú đợt đó.
+- Đài thọ 100% chi phí thuốc trị ve rận/nấm da (chi phí khám phòng khám ngoài + thuốc xịt/thuốc uống chuyên dụng).
+- Tặng 01 buổi tắm thuốc thảo dược trị liệu miễn phí."	"- Phun khử trùng toàn bộ buồng phòng và chiếu đèn UV diệt khuẩn khu lưu trú.
+- Nhân viên phụ trách y tế cơ sở nhắn tin theo dõi lịch dùng thuốc của bé hàng tuần."
+	16	"Hai bé cắn nhau gây thương tích khi thả chơi chung
+(Nhân viên sơ suất để các bé lạ tiếp xúc gần)"	P0	"Dạ PawPal khẩn cấp xin lỗi ba mẹ ạ. Trong lúc vui chơi đã xảy ra va chạm ngoài ý muốn giữa hai bé. Nhân sự y tế của cơ sở đã sơ cứu sát trùng và Quản lý cơ sở đang đích thân đưa bé đến Bệnh viện thú y để kiểm tra và xử lý vết thương ngay. Em xin kết nối Quản lý để báo cáo chi tiết cho ba mẹ ạ!"	"(Sau khi Quản lý chi nhánh xác nhận sự việc và hồ sơ bệnh án):
+- Miễn phí 100% toàn bộ tiền gửi phòng đợt này.
+- Chi trả 100% mọi chi phí thú y, thuốc men và phẫu thuật/khâu vết thương tại bệnh viện thú y.
+- Bồi thường thêm voucher thiện chí 500.000đ."	"- Quản lý cơ sở gọi điện nhận trách nhiệm và gửi toàn bộ hồ sơ y tế từ phòng khám.
+- Áp dụng quy định cách ly tuyệt đối giữa các bé khác gia đình trong mọi khung giờ vận động."
+NHÓM SỰ CỐ DỊCH VỤ XE ĐƯA ĐÓN	17	"Tài xế trễ giờ đón / trả bé > 45 phút
+(Gây lỡ việc hoặc lỡ lịch hẹn của chủ)"	P2	"Dạ PawPal thành thật xin lỗi ba mẹ ạ. Do tuyến đường đang bị ùn tắc giao thông cục bộ nên tài xế chưa đến đúng giờ đã hẹn. Em đã kiểm tra định vị và tài xế đang cố gắng đến trong [X] phút nữa. Điều phối viên sẽ kiểm tra lại toàn bộ lộ trình và liên hệ xử lý ngay cho mình ạ."	"(Sau khi kiểm tra lịch sử định vị GPS chuyến xe):
+- Giảm từ 50% đến miễn phí 100% cước phí chuyến xe đó.
+- Tặng mã giảm giá 15% cho cuốc xe kế tiếp."	"- Gửi định vị GPS trực tiếp qua Zalo để khách theo dõi lộ trình di chuyển.
+- Tối ưu lại thời gian điều phối và lộ trình tránh các điểm kẹt xe giờ cao điểm."
+	18	"Khoang xe hôi mùi, máy lạnh yếu làm bé bị say xe
+(Xe ngột ngạt hoặc chưa dọn mùi trước đó)"	P1	"Dạ PawPal xin lỗi ba mẹ và thương bé nhiều lắm ạ. Tiêu chuẩn xe mát mẻ và khử mùi là bắt buộc tại PawPal. Em đã báo ngay cho điểm đến, khi xe vừa tới nơi, các bạn kỹ thuật viên Spa sẽ đón bé vào phòng mát, hỗ trợ lau mát người và xịt khử mùi dịu nhẹ cho con hoàn toàn miễn phí ạ."	"(Sau khi xác minh thông tin với tài xế và trạm tiếp nhận):
+- Miễn phí 100% cước phí chuyến xe Taxi đó.
+- Tặng gói vệ sinh lau người khử mùi dịu nhẹ tại cơ sở.
+- Phạt trừ điểm thi đua của tài xế không tuân thủ vệ sinh xe."	"- Tiến hành khử mùi bằng máy ozone khoang xe sau chuyến chạy.
+- Kiểm tra nhiệt độ điều hòa trước mỗi chuyến đón thú cưng."
+NHÓM SỰ CỐ TÀI CHÍNH, HỆ THỐNG & ĐẶT LỊCH	19	"Tính tiền sai hóa đơn / Quên áp mã khuyến mãi
+(Tính trùng món, quẹt nhầm giá, quên trừ điểm)"	P3	"Dạ PawPal xin lỗi ba mẹ vì sự cố nhầm lẫn hóa đơn ạ. Ba mẹ gửi giúp em ảnh chụp hóa đơn thanh toán kèm số tài khoản ngân hàng nhé ạ. Kế toán bên em sẽ đối soát dữ liệu trên phần mềm và hoàn trả lại số tiền chênh lệch ngay lập tức ạ."	"(Sau khi Kế toán kiểm tra hóa đơn và log thu ngân):
+- Chuyển khoản hoàn trả 100% số tiền chênh lệch ngay trong ca trực.
+- Hoàn trả lại số điểm PawPoint bị thiếu (nếu có) + tặng bù 100 PawPoints thiện chí.
+- Tặng voucher giảm 10% (tối đa 30.000đ)."	"- Gửi biên lai ủy nhiệm chi hoàn tiền qua Zalo/SMS cho khách.
+- Yêu cầu thu ngân ca trực kiểm điểm và rà soát lại kỹ năng thanh toán."
+	20	"Khách đến nơi nhưng hệ thống bị mất lịch hẹn
+(Booking Crash / Trùng lịch ca khác)"	P2	"Dạ PawPal thành thật xin lỗi ba mẹ vì sự cố đồng bộ dữ liệu khiến lịch của bé chưa hiển thị trên ca máy ạ. Ba mẹ đừng lo lắng nhé, Lễ tân cơ sở sẽ bố trí bàn làm việc ưu tiên để kỹ thuật viên phục vụ bé ngay bây giờ, không để gia đình phải chờ lâu đâu ạ."	"(Sau khi Lễ tân xác nhận mã đặt lịch hợp lệ trên app):
+- Bố trí ca phục vụ ưu tiên ngay lập tức.
+- Giảm trực tiếp 30% trên tổng hóa đơn dịch vụ hôm đó.
+- Tặng thêm 200 PawPoints vào tài khoản của khách."	"- Gửi báo cáo kỹ thuật IT kiểm tra log xung đột dữ liệu ca đặt trên hệ thống.
+- CSKH gọi điện chăm sóc sau khi ca dịch vụ hoàn thành."
+	21	"Khách bị trừ tiền online nhưng đơn hàng báo hủy
+(Lỗi cổng thanh toán MoMo/VNPAY/Ngân hàng)"	P2	"Dạ ba mẹ hoàn toàn yên tâm nhé ạ! Khoản tiền trừ đã được lưu vết an toàn tại ngân hàng. Ba mẹ gửi giúp em ảnh chụp màn hình trừ tiền thành công. Em đã báo bộ phận Kế toán đối soát và kích hoạt đơn hàng thủ công ngay cho mình để kịp giao cho bé ạ."	"(Sau khi Kế toán kiểm tra sao kê cổng thanh toán):
+- Kích hoạt đơn hàng thủ công (Manual Approval) ngay lập tức.
+- Tặng voucher giảm 30.000đ cho đơn hàng sau vì sự bất tiện của hệ thống."	"- Kế toán hoàn tất đối soát với cổng thanh toán trong vòng 24 giờ.
+- Nhắn tin thông báo khi trạng thái đơn hàng trên app đã khớp thành công."
+	22	"Tài khoản bị khóa nhầm do cơ chế chống gian lận
+(Khách thân thiết bị quét nhầm vi phạm điểm)"	P1	"Dạ PawPal vô cùng xin lỗi ba mẹ vì sự bất tiện này ạ! Bộ lọc tự động của hệ thống đã nhận diện nhầm lẫn phiên đăng nhập. Em đã tạo yêu cầu khẩn lên đội ngũ Kỹ thuật để kiểm tra lịch sử tài khoản và mở khóa ngay lập tức cho ba mẹ ạ."	"(Sau khi Kỹ thuật xác nhận tài khoản hoạt động bình thường):
+- Mở khóa tài khoản ngay lập tức.
+- Hoàn trả đúng hạng thành viên và tặng bù 500 PawPoints tích lũy.
+- Duy trì mức chiết khấu ưu đãi VIP cho khách trong tháng kế tiếp."	"- Quản lý CSKH gọi điện xin lỗi trực tiếp.
+- Đưa số điện thoại/tài khoản khách vào danh sách Whitelist an toàn của hệ thống."
+NHÓM SỰ CỐ PHẢN HỒI THÁI ĐỘ,HÀNH VI NHÂN VIÊN	23	"Nhân viên có hành vi thô bạo / Quát mắng / Đánh thú cưng
+(Trích xuất camera hoặc thấy trực tiếp)"	P0	"Dạ PawPal vô cùng bàng hoàng và chân thành cúi đầu xin lỗi ba mẹ ạ! Hành vi thô bạo với thú cưng là điều tuyệt đối CẤM kỵ tại PawPal. Em đã báo cáo khẩn đến Ban Giám Đốc để đình chỉ công tác nhân viên này và trích xuất camera xử lý kỷ luật nghiêm khắc. Quản lý cấp cao sẽ liên hệ trực tiếp với ba mẹ ngay bây giờ ạ!"	"(Sau khi Ban Quản lý kiểm tra camera xác thực vi phạm):
+- Đình chỉ công tác nhân viên ngay lập tức.
+- Miễn phí 100% toàn bộ dịch vụ của đợt này.
+- Tặng voucher chăm sóc đặc biệt từ 500.000đ đến 1.000.000đ hoặc bồi hoàn tiền mặt tương đương.
+- Hỗ trợ chi phí đưa bé đi kiểm tra tâm lý/sức khỏe tại phòng khám thú y nếu cần."	"- T+15 phút: Quản lý chi nhánh gọi điện xin lỗi và gửi biên bản trích xuất camera.
+- T+24h: Gửi văn bản thông báo quyết định xử lý kỷ luật nhân viên vi phạm.
+- Gắn nhãn ưu tiên: Các lần chăm sóc sau chỉ do Trưởng ca trực tiếp tiếp nhận."
+	24	"Nhân viên thái độ thiếu tôn trọng, lơ là bấm điện thoại
+(Tiếp tân không chào, cộc lốc, để khách đợi lâu)"	P2	"Dạ PawPal xin nhận lỗi sâu sắc cùng ba mẹ ạ. Thái độ đón tiếp chu đáo là tiêu chuẩn bắt buộc tại PawPal, việc nhân viên có thái độ thiếu lịch sự là hoàn toàn không thể chấp nhận. Em đã ghi nhận thời gian và chi nhánh để Quản lý cơ sở trích xuất camera quầy, xử lý kỷ luật nhân sự ngay ạ."	"(Sau khi Quản lý cơ sở xem camera đối chiếu):
+- Tặng voucher giảm 15% (tối đa 50.000đ) hoặc tặng 200 PawPoints.
+- Tặng 01 món đồ chơi hoặc phần snack cho bé khi gia đình rời quầy."	"- Quản lý ca trực lập tức ra quầy tiếp quản và phục vụ chu đáo.
+- Đưa nhân viên vào danh sách đào tạo lại văn hóa ứng xử dịch vụ khách hàng."
+	25	"Nhân viên chèo kéo ép mua dịch vụ / Vòi vĩnh tiền tip
+(Liên tục ép gói dịch vụ đắt tiền, vòi tip)"	P2	"Dạ PawPal chân thành xin lỗi ba mẹ về trải nghiệm không thoải mái này ạ. PawPal nghiêm cấm tuyệt đối mọi hành vi vòi tiền tip hay ép khách hàng sử dụng dịch vụ ngoài nhu cầu. Em đã chuyển phản ánh đến Quản lý chi nhánh để kiểm tra ca làm và chấn chỉnh nhân viên ngay lập tức ạ."	"(Sau khi Quản lý chi nhánh xác minh phản ánh):
+- Tặng voucher giảm giá 20% (tối đa 100.000đ) cho lần trải nghiệm dịch vụ kế tiếp.
+- Tặng bù 100 PawPoints tích lũy."	"- Quản lý chi nhánh gọi điện xin lỗi khách trong vòng 2 giờ.
+- Tái phổ biến quy định “Không ép dịch vụ - Không vòi tiền tip” trên toàn cơ sở."
+	26	"Làm mất / Trả nhầm đồ dùng cá nhân của bé
+(Mất balo, lồng vận chuyển, yếm cổ, quần áo)"	P2	"Dạ PawPal thành thật xin lỗi ba mẹ ạ! Do khâu đánh số gắn thẻ đồ dùng bị sơ suất nên các bạn đã để thất lạc phụ kiện của con. Em đã báo nhân viên trích xuất camera tủ đồ để tìm lại ngay. Trong trường hợp không tìm thấy trong 24h, PawPal cam kết bồi thường 100% món đồ mới cho ba mẹ ạ."	"(Sau khi trích xuất camera xác nhận mất đồ):
+- Đền bù 100% giá trị món đồ bị mất (mua mới hoặc hoàn tiền tương đương giá trị đồ).
+- Tặng kèm 01 món phụ kiện tiện ích từ PawPal Shop."	"- T+2h: Thông báo tiến độ tìm kiếm đồ qua camera cho khách.
+- Nếu tìm thấy đồ: Cử shipper mang trả tận nhà khách miễn phí 100%.
+- Cải tiến quy trình: Bắt buộc gắn thẻ mã số trùng khớp với vòng đeo tay của thú cưng."
+	27	"Làm lộ thông tin cá nhân của khách hàng
+(Nhân viên lấy số điện thoại làm phiền, gạ gẫm)"	P1	"Dạ PawPal xin nhận lỗi nghiêm khắc nhất về phản ánh này ạ. Bảo mật thông tin khách hàng là nguyên tắc bất biến tại PawPal. Việc nhân viên tùy tiện dùng số điện thoại khách hàng cho mục đích cá nhân là vi phạm pháp luật và quy chế công ty. Ban Giám Đốc sẽ xử lý sa thải nhân sự này ngay lập tức ạ!"	"(Sau khi kiểm tra tin nhắn/chứng cứ vi phạm):
+- Quản lý cấp cao trực tiếp gọi điện xin lỗi và ký văn bản cam kết bảo mật.
+- Tặng thẻ đặc quyền thành viên VIP trong 06 tháng.
+- Tặng voucher trị giá 200.000đ áp dụng cho mọi dịch vụ mua sắm."	"- Buộc nhân viên xóa thông tin, viết bản cam kết không liên lạc lại với khách.
+- T+48h: Chuyên viên bảo mật liên hệ kiểm tra lại xem khách còn bị làm phiền không."
+ CÁC SỰ CỐ ĐẶC THÙ VÀ NGOẠI CẢNH KHÁC	28	"Giao nhầm bé thú cưng khi khách đến đón
+(Giao nhầm giống chó/mèo có ngoại hình tương tự)"	P0	"Dạ PawPal khẩn thiết xin lỗi ba mẹ ạ! Quy trình đối soát vòng mã định danh đã bị nhân viên bỏ qua tắc trách. PawPal đang điều động xe riêng đón bé về tận nhà bàn giao lại cho gia đình ngay lập tức và cam kết bé an toàn 100%. Quản lý chi nhánh đang trực tiếp xử lý vụ việc này ạ!"	"(Sau khi Quản lý xử lý đổi trả đúng hai bé):
+- Miễn phí 100% toàn bộ dịch vụ của cả hai khách hàng bị trao nhầm bé.
+- Xe Pet Taxi đưa đón đổi trả bé tận nơi trong 30 phút hoàn toàn miễn phí.
+- Tặng voucher thiện chí từ 300.000đ đến 500.000đ cho mỗi gia đình."	"- Nhân viên y tế cơ sở kiểm tra toàn diện thể trạng hai bé khi bàn giao.
+- Ban hành quy chuẩn: Bắt buộc quét mã chip/vòng đeo tay có sự xác nhận của chủ trước khi rời sảnh."
+	29	"Cơ sở vật chất gặp sự cố (Cúp điện, hỏng máy lạnh)
+(Bé bị nóng, thở dốc trong phòng Pet Hotel)"	P1	"Dạ PawPal vô cùng xin lỗi ba mẹ vì sự cố điều hòa cục bộ tại phòng của bé ạ. Đội kỹ thuật đã khắc phục và nhân viên bảo mẫu đã lập tức chuyển bé sang phòng VIP máy lạnh chạy ổn định, đồng thời cho bé uống bù nước mát. Hiện tại thể trạng của bé đã ổn định và rất ngoan ạ."	"(Sau khi Quản lý khách sạn kiểm tra sự cố phòng):
+- Miễn phí 100% tiền phòng của ngày xảy ra sự cố.
+- Nâng cấp miễn phí lên phòng VIP/Luxury cho toàn bộ các ngày lưu trú còn lại.
+- Nhân viên y tế cơ sở kiểm tra thân nhiệt và nhịp thở cho bé miễn phí."	"- Cứ mỗi 2 tiếng gửi 01 video quay nhiệt độ phòng và tình trạng hoạt động của bé cho khách.
+- Bảo trì toàn bộ hệ thống máy lạnh và máy phát điện dự phòng tại cơ sở."
+	30	"Bé về nhà có mùi hôi lạ / Bị ẩm ướt lông chân
+(Sấy lông chưa khô triệt để kẽ chân hoặc mùi nồng)"	P3	"Dạ PawPal xin lỗi ba mẹ nhiều ạ. Chắc chắn do phần lông tơ ở kẽ chân bé dày nên bạn nhân viên sấy chưa khô kỹ triệt để, hoặc mùi nước hoa không hợp với mũi bé. Em xin phép mời ba mẹ đưa bé ghé lại bất kỳ lúc nào để bên em sấy khô kỹ và xả lại bằng hương dịu nhẹ hoàn toàn miễn phí cho bé ạ."	"(Sau khi xác minh thông tin ca làm):
+- Miễn phí 01 lần sấy khô / tắm xả lại toàn diện khi khách đưa bé ghé lại.
+- Hoặc cấp mã giảm giá 20% cho lần tắm kế tiếp.
+- Tặng thêm 50 PawPoints tích lũy."	"- Ghi chú hồ sơ bé: [Nhạy cảm mùi hương - Chỉ dùng sản phẩm tắm không mùi, sấy khô kỹ kẽ chân].
+- Nhắc nhở kỹ thuật viên kiểm tra độ ẩm lông bằng giấy thấm trước khi bàn giao."
+	31	"Khách bị mất lượt khuyến mãi Flash Sale do lỗi web/app
+(Sập mạng, lỗi giỏ hàng lúc thanh toán)"	P3	"Dạ PawPal xin lỗi ba mẹ vì sự cố nghẽn mạng trong khung giờ Flash Sale khiến ba mẹ bị lỡ đơn đặt ạ! Ba mẹ gửi giúp em ảnh chụp giỏ hàng hoặc số điện thoại đăng ký tài khoản. Kỹ thuật viên sẽ kiểm tra lịch sử truy cập và cấp riêng mã mua hàng đúng giá ưu đãi cho mình ạ."	"(Sau khi IT kiểm tra log truy cập giỏ hàng):
+- Cấp mã giảm giá riêng (Private Coupon) áp dụng mức giá đúng bằng giá ưu đãi Flash Sale.
+- Tặng thêm 50 PawPoints vào tài khoản của khách."	"- CSKH gửi trực tiếp mã giảm giá riêng qua tin nhắn Zalo/SMS cho khách.
+- Hỗ trợ khách hoàn tất đặt hàng trong ngày."
+	32	"Bé bị vón cục lông trở lại sau 1-2 ngày Grooming
+(Chải lông chưa kỹ lớp trong, vón cục)"	P2	"Dạ PawPal rất lấy làm tiếc vì lớp lông của bé chưa giữ được độ tơi xốp như mong đợi ạ. Với các dòng lông xoăn dày, nếu không gỡ từ chân lông sẽ dễ bị vón lại. PawPal xin mời ba mẹ đưa bé ghé lại, Kỹ thuật viên trưởng sẽ đích thân gỡ rối chân lông chuyên sâu và dưỡng mềm lại cho con hoàn toàn miễn phí ạ."	"(Sau khi Kỹ thuật viên trưởng kiểm tra thực tế bộ lông của bé):
+- Miễn phí dịch vụ gỡ rối chuyên sâu (trị giá 100.000đ - 150.000đ).
+- Tặng 01 lược chải lông chuyên dụng (Slicker Brush) mang về chăm sóc tại nhà."	"- Kỹ thuật viên trưởng hướng dẫn phụ huynh cách chải lông đúng hướng tại nhà.
+- Đánh giá lại tay nghề và quy trình chải sấy của kỹ thuật viên ca trước."

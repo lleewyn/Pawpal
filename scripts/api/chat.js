@@ -10,6 +10,19 @@ let lastKeysFetchTime = 0;
 let currentKeyIndex = 0;
 const validUsersCache = new Map();
 
+// Caching màng lọc và quy tắc Chatbot (TTL: 5 phút)
+let cachedFilters = null;
+let lastFiltersFetchTime = 0;
+let cachedTriggers = null;
+let lastTriggersFetchTime = 0;
+let cachedSystemPrompts = null;
+let lastPromptsFetchTime = 0;
+const CACHE_TTL_RULES = 5 * 60 * 1000;
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
 const getGenAI = async () => {
     try {
         const CACHE_TTL = 10 * 60 * 1000;
@@ -17,7 +30,6 @@ const getGenAI = async () => {
             const keyObj = cachedApiKeys[currentKeyIndex % cachedApiKeys.length];
             currentKeyIndex++;
             const keyPrefix = keyObj.key_value.substring(0, 15);
-            console.log(`[API Key Rotation - CACHED] Đang dùng key bắt đầu bằng: ${keyPrefix}... (thứ tự: ${(currentKeyIndex-1) % cachedApiKeys.length + 1}/${cachedApiKeys.length})`);
             return { genAI: new GoogleGenerativeAI(keyObj.key_value), keyPrefix };
         }
 
@@ -39,7 +51,6 @@ const getGenAI = async () => {
             const selectedKey = envKeys[currentKeyIndex % envKeys.length];
             currentKeyIndex++;
             const keyPrefix = selectedKey.substring(0, 15);
-            console.log(`[API Key Rotation - Fallback] Đang dùng key bắt đầu bằng: ${keyPrefix}...`);
             return { genAI: new GoogleGenerativeAI(selectedKey), keyPrefix };
         }
 
@@ -47,20 +58,15 @@ const getGenAI = async () => {
         lastKeysFetchTime = Date.now();
 
         const keyObj = data[currentKeyIndex % data.length];
-        currentKeyIndex++; // Tăng index cho lần sau
+        currentKeyIndex++;
         
         const keyPrefix = keyObj.key_value.substring(0, 15);
-        console.log(`[API Key Rotation] Đang dùng key bắt đầu bằng: ${keyPrefix}... (tổng số: ${data.length} keys, thứ tự: ${(currentKeyIndex-1) % data.length + 1}/${data.length})`);
         return { genAI: new GoogleGenerativeAI(keyObj.key_value), keyPrefix };
     } catch (err) {
         console.error("Lỗi khi lấy API key từ Supabase:", err);
         return null;
     }
 };
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const getUserIdFromToken = async (authHeader) => {
     if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
@@ -85,8 +91,7 @@ const getUserIdFromToken = async (authHeader) => {
             return null;
         }
         
-        validUsersCache.set(userId, Date.now()); // Lưu vào bộ nhớ đệm
-        console.log('[Auth] ✅ Xác thực thành công userId từ DB:', userId);
+        validUsersCache.set(userId, Date.now());
         return userId;
     }
     
@@ -98,6 +103,191 @@ const getUserIdFromToken = async (authHeader) => {
     return user.id;
 };
 
+// ------------------------------------------------------------------------------
+// TOXIC SHIELD & SENTIMENT RULES GETTERS (CACHED FROM SUPABASE LIVE DB)
+// ------------------------------------------------------------------------------
+async function getProfanityFilters() {
+    if (cachedFilters && (Date.now() - lastFiltersFetchTime < CACHE_TTL_RULES)) {
+        return cachedFilters;
+    }
+    try {
+        const { data, error } = await supabase
+            .from('chatbot_profanity_filter')
+            .select('keyword, severity, action, replacement_text')
+            .eq('is_active', true);
+        if (!error && data) {
+            cachedFilters = data;
+            lastFiltersFetchTime = Date.now();
+            return data;
+        }
+    } catch (e) {
+        console.error('Lỗi tải profanity filters:', e.message);
+    }
+    return cachedFilters || [];
+}
+
+async function getSentimentTriggers() {
+    if (cachedTriggers && (Date.now() - lastTriggersFetchTime < CACHE_TTL_RULES)) {
+        return cachedTriggers;
+    }
+    try {
+        const { data, error } = await supabase
+            .from('chatbot_sentiment_trigger')
+            .select('tier_level, trigger_pattern, weight, context_domain')
+            .eq('is_active', true);
+        if (!error && data) {
+            cachedTriggers = data;
+            lastTriggersFetchTime = Date.now();
+            return data;
+        }
+    } catch (e) {
+        console.error('Lỗi tải sentiment triggers:', e.message);
+    }
+    return cachedTriggers || [];
+}
+
+async function getActiveSystemPrompts() {
+    if (cachedSystemPrompts && (Date.now() - lastPromptsFetchTime < CACHE_TTL_RULES)) {
+        return cachedSystemPrompts;
+    }
+    try {
+        const { data, error } = await supabase
+            .from('chatbot_system_prompt')
+            .select('prompt_key, persona_name, tone_of_voice, content')
+            .eq('is_active', true);
+        if (!error && data) {
+            cachedSystemPrompts = data;
+            lastPromptsFetchTime = Date.now();
+            return data;
+        }
+    } catch (e) {
+        console.error('Lỗi tải system prompts:', e.message);
+    }
+    return cachedSystemPrompts || [];
+}
+
+function evaluateToxicAndSentiment(userText, filters, triggers) {
+    const lower = userText.toLowerCase();
+    const detectedKeywords = [];
+    let isToxic = false;
+    let worstAction = 'none'; // 'none', 'mask', 'warn', 'escalate', 'block'
+    let maskedText = userText;
+
+    // 1. Quét màng lọc từ cấm
+    filters.forEach(f => {
+        const kw = (f.keyword || '').toLowerCase().trim();
+        if (kw && lower.includes(kw)) {
+            detectedKeywords.push(f.keyword);
+            isToxic = true;
+            try {
+                const regex = new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                maskedText = maskedText.replace(regex, f.replacement_text || '***');
+            } catch (_) {}
+
+            if (f.action === 'block') {
+                worstAction = 'block';
+            } else if (f.action === 'escalate' && worstAction !== 'block') {
+                worstAction = 'escalate';
+            } else if (f.action === 'warn' && !['block', 'escalate'].includes(worstAction)) {
+                worstAction = 'warn';
+            } else if (f.action === 'mask' && worstAction === 'none') {
+                worstAction = 'mask';
+            }
+        }
+    });
+
+    // 2. Chấm điểm cấp độ cảm xúc (1 - 6)
+    let detectedLevel = 2; // Mặc định: Cấp 2 (Bình thường, trung lập)
+    triggers.forEach(tr => {
+        const patterns = (tr.trigger_pattern || '').split(',').map(p => p.trim().toLowerCase()).filter(Boolean);
+        for (const p of patterns) {
+            if (lower.includes(p)) {
+                if (tr.tier_level === 6 || tr.tier_level > detectedLevel) {
+                    detectedLevel = tr.tier_level;
+                }
+            }
+        }
+    });
+
+    // Nếu vi phạm từ cấm thì tối thiểu nâng lên Cấp 4 hoặc Cấp 5
+    if (isToxic && detectedLevel < 4) {
+        detectedLevel = worstAction === 'block' ? 5 : 4;
+    }
+
+    const isUrgent = detectedLevel >= 4;
+
+    return {
+        isToxic,
+        detectedKeywords,
+        worstAction,
+        maskedText,
+        detectedLevel,
+        isUrgent
+    };
+}
+
+async function getOrCreateConversation({ conversationId, customerId, sessionToken, sentimentLevel, isUrgent }) {
+    try {
+        if (conversationId) {
+            const { data } = await supabase
+                .from('chat_conversation')
+                .select('*')
+                .eq('id', conversationId)
+                .maybeSingle();
+            if (data) return data;
+        }
+
+        // Tìm phiên đang mở của khách hàng
+        if (customerId) {
+            const { data } = await supabase
+                .from('chat_conversation')
+                .select('*')
+                .eq('customer_id', customerId)
+                .in('status', ['bot_handling', 'waiting_agent'])
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+            if (data) return data;
+        } else if (sessionToken) {
+            const { data } = await supabase
+                .from('chat_conversation')
+                .select('*')
+                .eq('session_token', sessionToken)
+                .in('status', ['bot_handling', 'waiting_agent'])
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+            if (data) return data;
+        }
+
+        // Tạo phiên mới
+        const { data, error } = await supabase
+            .from('chat_conversation')
+            .insert({
+                customer_id: customerId || null,
+                session_token: sessionToken || null,
+                status: 'bot_handling',
+                sentiment_level: sentimentLevel || 2,
+                is_urgent: isUrgent || false,
+                channel: 'web'
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Lỗi tạo phiên chat:', error.message);
+            return null;
+        }
+        return data;
+    } catch (e) {
+        console.error('Exception khi tạo conversation:', e.message);
+        return null;
+    }
+}
+
+// ------------------------------------------------------------------------------
+// DATABASE TOOLS CHO GEMINI FUNCTION CALLING
+// ------------------------------------------------------------------------------
 const dbTools = {
     get_user_orders: async (user_id) => {
         if (!user_id) return { error: "Yêu cầu đăng nhập để xem đơn hàng" };
@@ -145,23 +335,51 @@ const dbTools = {
     },
     search_store_info: async (query, genAI_instance) => {
         try {
-            const embeddingModel = genAI_instance.getGenerativeModel({ model: "gemini-embedding-2" });
-            const result = await embeddingModel.embedContent(query);
-            const embedding = result.embedding.values;
-            
-            const { data, error } = await supabase.rpc('match_documents', {
-                query_embedding: embedding,
-                match_threshold: 0.7,
-                match_count: 2
-            });
-            
-            if (error || !data || data.length === 0) {
-                return { context: "PawPal cung cấp dịch vụ chăm sóc cho chó, mèo, THỎ, và các thú cưng nhỏ khác. Các dịch vụ bao gồm: Spa, Grooming, Pet Hotel, Pet Taxi (đưa đón tận nhà), và cửa hàng Bán lẻ đồ dùng. Mở cửa 8h-20h. Vui lòng liên hệ hotline để biết chi tiết." };
+            // 1. Ưu tiên tra cứu trực tiếp trong kho tri thức 91 câu hỏi FAQ (Bảng 2: chatbot_knowledge_faq)
+            const cleanQuery = (query || '').trim();
+            let faqContext = '';
+            if (cleanQuery) {
+                const words = cleanQuery.split(/\s+/).filter(w => w.length > 2).slice(0, 3);
+                const orClauses = words.map(w => `question.ilike.%${w}%,answer.ilike.%${w}%`).join(',');
+                const { data: faqData } = await supabase
+                    .from('chatbot_knowledge_faq')
+                    .select('category, question, answer')
+                    .or(orClauses || `question.ilike.%${cleanQuery}%`)
+                    .limit(3);
+
+                if (faqData && faqData.length > 0) {
+                    faqContext = faqData.map(f => `[${f.category}] Hỏi: ${f.question} -> Đáp: ${f.answer}`).join("\n");
+                }
             }
-            return { context: data.map(d => d.content).join("\n") };
+
+            // 2. Tra cứu vector match_documents nếu có
+            let vectorContext = '';
+            try {
+                const embeddingModel = genAI_instance.getGenerativeModel({ model: "gemini-embedding-2" });
+                const result = await embeddingModel.embedContent(cleanQuery);
+                const embedding = result.embedding.values;
+                
+                const { data, error } = await supabase.rpc('match_documents', {
+                    query_embedding: embedding,
+                    match_threshold: 0.7,
+                    match_count: 2
+                });
+                if (!error && data && data.length > 0) {
+                    vectorContext = data.map(d => d.content).join("\n");
+                }
+            } catch (vErr) {
+                // Vector search fallback silently
+            }
+
+            const combinedContext = [faqContext, vectorContext].filter(Boolean).join("\n\n");
+            if (combinedContext) {
+                return { context: combinedContext };
+            }
+
+            return { context: "PawPal cung cấp dịch vụ chăm sóc cho chó, mèo và các thú cưng. Các dịch vụ bao gồm: Pet Spa/Grooming, Pet Hotel (lưu trú qua đêm), Pet Taxi (đưa đón tận nhà), và sản phẩm bán lẻ. Vui lòng liên hệ hotline 1900 1234 để biết thêm chi tiết." };
         } catch (e) {
-            console.error("RAG Error:", e);
-            return { context: "PawPal cung cấp dịch vụ chăm sóc cho chó, mèo, THỎ, và các thú cưng nhỏ khác. Các dịch vụ bao gồm: Spa, Grooming, Pet Hotel, Pet Taxi (đưa đón tận nhà), và cửa hàng Bán lẻ đồ dùng. Mở cửa 8h-20h. Vui lòng liên hệ hotline để biết chi tiết." };
+            console.error("Knowledge search error:", e);
+            return { context: "PawPal cung cấp dịch vụ chăm sóc cho chó, mèo và các thú cưng. Vui lòng liên hệ hotline để được hỗ trợ." };
         }
     }
 };
@@ -200,69 +418,268 @@ const toolsDeclaration = [
     }
 ];
 
+// ------------------------------------------------------------------------------
+// MAIN HANDLER
+// ------------------------------------------------------------------------------
 module.exports = async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
-        const { messages } = req.body;
+        const { messages, conversationId: clientConvId, sessionToken } = req.body;
         const authHeader = req.headers['authorization'];
-        
         const userId = await getUserIdFromToken(authHeader);
         
-        let systemInstruction = "Bạn là Trợ lý AI siêu cấp đáng yêu của cửa hàng chăm sóc thú cưng PawPal. Xưng hô với khách hàng là 'sen' (hoặc 'sen' kèm tên nếu khách xưng tên), xưng mình là 'PawPal', gọi thú cưng là 'bé cưng' hoặc 'boss'. Hãy tư vấn thật nhiệt tình, thân thiện, dễ thương và đáng yêu bằng tiếng Việt. KHÔNG SỬ DỤNG EMOJI. Chỉ dùng định dạng in đậm (**text**) để làm nổi bật các thông tin quan trọng.\n";
-        
-        systemInstruction += "QUY TẮC QUAN TRỌNG NHẤT (GUARDRAILS):\n";
-        systemInstruction += "- ĐỐI TƯỢNG PHỤC VỤ: PawPal nhận chăm sóc tất cả thú cưng bao gồm Chó, Mèo, Thỏ, Hamster, v.v. Không bao giờ nói PawPal chỉ nhận chó mèo.\n";
-        systemInstruction += "- ĐỊNH DẠNG ĐẸP MẮT: Khi liệt kê đơn hàng, lịch hẹn, hoặc thú cưng, TUYỆT ĐỐI KHÔNG DÙNG EMOJI. Hãy viết đậm (**text**) các thông tin quan trọng như Tên dịch vụ, Mã, Trạng thái, Tổng tiền để dễ đọc.\n";
-        systemInstruction += "- KHÔNG ẢO GIÁC: Chỉ trả lời dựa trên dữ liệu thật do Tools trả về. Nếu Tool báo lỗi hoặc trống, phải nói thật là không tìm thấy, tuyệt đối không bịa dữ liệu.\n";
-        systemInstruction += "- NGOÀI PHẠM VI (OUT-OF-SCOPE): Nếu khách hỏi vấn đề không liên quan đến thú cưng hoặc PawPal, hãy từ chối lịch sự.\n\n";
-
-        if (userId) {
-            systemInstruction += `Trạng thái: Đã đăng nhập (ID: ${userId}). Khi khách hỏi thông tin cá nhân (đơn hàng, lịch hẹn, thú cưng), HÃY ƯU TIÊN GỌI TOOL tương ứng.\n`;
-        } else {
-            systemInstruction += `Trạng thái: Khách Vãng Lai. Nếu khách yêu cầu lấy dữ liệu cá nhân, HÃY TỪ CHỐI gọi Tool và yêu cầu họ đăng nhập.\n`;
+        if (!messages || !Array.isArray(messages) || messages.length === 0) {
+            return res.status(400).json({ error: 'Messages array is required' });
         }
 
+        const userMsg = messages[messages.length - 1].content || '';
+
+        // 1. NẠP MÀNG LỌC TOXIC SHIELD & SENTIMENT RULES TỪ DB
+        const [filters, triggers, systemPrompts] = await Promise.all([
+            getProfanityFilters(),
+            getSentimentTriggers(),
+            getActiveSystemPrompts()
+        ]);
+
+        // 2. ĐÁNH GIÁ NGÔN TỪ & ĐO LƯỜNG CẢM XÚC
+        const evalResult = evaluateToxicAndSentiment(userMsg, filters, triggers);
+        const { isToxic, detectedKeywords, worstAction, maskedText, detectedLevel, isUrgent } = evalResult;
+
+        // 3. QUẢN LÝ PHIÊN HỘI THOẠI TRÊN SUPABASE (LIVE PERSISTENCE)
+        const conversation = await getOrCreateConversation({
+            conversationId: clientConvId,
+            customerId: userId,
+            sessionToken: sessionToken,
+            sentimentLevel: detectedLevel,
+            isUrgent: isUrgent
+        });
+
+        const activeConvId = conversation ? conversation.id : null;
+
+        // 3B. KIỂM TRA KHÓA CHAT 15 PHÚT (NẾU ĐANG TRONG THỜI GIAN PHẠT)
+        if (conversation && conversation.blocked_until && new Date(conversation.blocked_until) > new Date()) {
+            const remainingSeconds = Math.max(0, Math.ceil((new Date(conversation.blocked_until) - Date.now()) / 1000));
+            const blockMsg = `Khung chat đang tạm khóa do vi phạm ngôn từ. Vui lòng thử lại sau ${Math.ceil(remainingSeconds / 60)} phút nữa nhé.`;
+            const wantsStream = (req.headers['accept'] && req.headers['accept'].includes('text/event-stream')) || req.body?.stream === true;
+            if (wantsStream) {
+                res.setHeader('Content-Type', 'text/event-stream');
+                res.setHeader('Cache-Control', 'no-cache');
+                res.write(`data: ${JSON.stringify({ error: 'blocked', blocked_until: conversation.blocked_until, remaining_seconds: remainingSeconds, message: blockMsg })}\n\n`);
+                return res.end();
+            } else {
+                return res.status(403).json({
+                    error: 'blocked',
+                    blocked_until: conversation.blocked_until,
+                    remaining_seconds: remainingSeconds,
+                    message: blockMsg
+                });
+            }
+        }
+
+        // 3C. TÍNH TOÁN VI PHẠM TOXIC SHIELD & CẢNH BÁO
+        let violationCount = conversation?.violation_count || 0;
+        let blockedUntilTime = null;
+        let warningPayload = null;
+
+        if (isToxic) {
+            violationCount += 1;
+            if (violationCount >= 3 || worstAction === 'block') {
+                blockedUntilTime = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+                warningPayload = {
+                    level: 3,
+                    blocked_until: blockedUntilTime,
+                    message: 'Phiên chat đã bị tạm khóa 15 phút do vi phạm tiêu chuẩn cộng đồng văn minh của PawPal.'
+                };
+            } else if (violationCount === 2) {
+                warningPayload = {
+                    level: 2,
+                    message: 'Hệ thống ghi nhận ngôn từ chưa phù hợp. Nếu tiếp tục vi phạm, phiên chat sẽ tạm khóa 15 phút.'
+                };
+            } else {
+                warningPayload = {
+                    level: 1,
+                    message: 'PawPal luôn sẵn sàng hỗ trợ hết mình. Sen vui lòng giữ ngôn từ lịch thiệp để chuyên viên hỗ trợ nhanh nhất nhé ạ!'
+                };
+            }
+        }
+
+        // 4. LƯU TIN NHẮN KHÁCH HÀNG VÀO CHAT_MESSAGE
+        if (activeConvId) {
+            await supabase.from('chat_message').insert({
+                conversation_id: activeConvId,
+                sender_type: 'customer',
+                sender_id: userId || null,
+                sender_name: userId ? 'Khách hàng' : 'Khách vãng lai',
+                content: maskedText,
+                raw_content: userMsg,
+                is_toxic: isToxic,
+                sentiment_score: detectedLevel
+            });
+
+            const isAgentRequested = userMsg.toLowerCase().includes('gặp nhân viên') || 
+                                     userMsg.toLowerCase().includes('người thật') || 
+                                     userMsg.toLowerCase().includes('tư vấn viên');
+            
+            const nextStatus = conversation?.status === 'agent_handling' 
+                ? 'agent_handling' 
+                : (isAgentRequested || detectedLevel >= 4 ? 'waiting_agent' : 'bot_handling');
+
+            // Cập nhật cấp độ cảm xúc, vi phạm và trạng thái cho phiên
+            const updatePayload = {
+                status: nextStatus,
+                sentiment_level: isAgentRequested ? Math.max(detectedLevel, 3) : detectedLevel,
+                is_urgent: isUrgent || isAgentRequested,
+                updated_at: new Date().toISOString()
+            };
+            if (isToxic) {
+                updatePayload.violation_count = violationCount;
+                if (blockedUntilTime) {
+                    updatePayload.blocked_until = blockedUntilTime;
+                }
+            }
+
+            await supabase.from('chat_conversation').update(updatePayload).eq('id', activeConvId);
+
+            // Ghi nhật ký nếu phát hiện vi phạm màng lọc
+            if (isToxic && detectedKeywords.length > 0) {
+                await supabase.from('chat_moderation_log').insert({
+                    conversation_id: activeConvId,
+                    customer_id: userId || null,
+                    detected_keywords: detectedKeywords,
+                    violation_count: violationCount,
+                    action_taken: blockedUntilTime ? 'blocked_15m' : (worstAction === 'warn' ? 'warned' : 'masked'),
+                    notes: `Từ ngữ vi phạm: ${detectedKeywords.join(', ')} | Lần vi phạm: ${violationCount}`
+                });
+            }
+        }
+
+        // 4B. NẾU CHUYÊN VIÊN CSKH ĐANG TRỰC TIẾP TIẾP QUẢN (HANDOVER ACTIVE):
+        // PawPal Bot tạm ngưng trả lời tự động để nhường quyền cho nhân viên
+        if (conversation && conversation.status === 'agent_handling') {
+            const wantsStream = (req.headers['accept'] && req.headers['accept'].includes('text/event-stream')) || req.body?.stream === true;
+            if (wantsStream) {
+                res.setHeader('Content-Type', 'text/event-stream');
+                res.setHeader('Cache-Control', 'no-cache');
+                res.write(`data: ${JSON.stringify({ done: true, conversationId: activeConvId, is_handover: true, warning: warningPayload })}\n\n`);
+                return res.end();
+            } else {
+                return res.status(200).json({
+                    conversationId: activeConvId,
+                    is_handover: true,
+                    status: 'agent_handling',
+                    warning: warningPayload
+                });
+            }
+        }
+
+        // 5. NẾU BỊ KHÓA 15 PHÚT DO VI PHẠM LẦN 3 HOẶC MỨC BLOCK: NGẮT NGAY VÀ PHẢN HỒI LỊCH SỰ (FAST-EXIT)
+        if (blockedUntilTime || worstAction === 'block') {
+            const blockReply = "Nội dung tin nhắn vi phạm tiêu chuẩn cộng đồng văn minh của PawPal. Khung chat tạm thời ngừng kết nối trong 15 phút. Mọi thắc mắc cần hỗ trợ, bạn vui lòng liên hệ hotline 1900 1234.";
+            
+            if (activeConvId) {
+                await supabase.from('chat_message').insert({
+                    conversation_id: activeConvId,
+                    sender_type: 'bot',
+                    sender_name: 'PawPal Bot',
+                    content: blockReply
+                });
+            }
+
+            const wantsStream = (req.headers['accept'] && req.headers['accept'].includes('text/event-stream')) || req.body?.stream === true;
+            if (wantsStream) {
+                res.setHeader('Content-Type', 'text/event-stream');
+                res.setHeader('Cache-Control', 'no-cache');
+                res.write(`data: ${JSON.stringify({ chunk: blockReply })}\n\n`);
+                res.write(`data: ${JSON.stringify({ done: true, conversationId: activeConvId, is_toxic: true, sentiment_level: detectedLevel, warning: warningPayload })}\n\n`);
+                return res.end();
+            } else {
+                return res.status(200).json({
+                    reply: blockReply,
+                    conversationId: activeConvId,
+                    sentiment_level: detectedLevel,
+                    is_toxic: true,
+                    warning: warningPayload
+                });
+            }
+        }
+
+        // 6. THIẾT LẬP SYSTEM PROMPT CHO GEMINI
+        let systemInstruction = req.body?.systemPrompt;
+        if (!systemInstruction) {
+            systemInstruction = "Bạn là Trợ lý AI chăm sóc thú cưng của hệ thống PawPal. Hãy tư vấn chu đáo, chuẩn mực, thân thiện bằng tiếng Việt. KHÔNG SỬ DỤNG EMOJI. Chỉ dùng in đậm (**text**) để làm nổi bật thông tin quan trọng.\n";
+            systemInstruction += "- ĐỐI TƯỢNG PHỤC VỤ: PawPal nhận chăm sóc Chó, Mèo, Thỏ và thú cưng nhỏ. Không nói chỉ nhận chó mèo.\n";
+            systemInstruction += "- KHÔNG ẢO GIÁC: Chỉ trả lời dựa trên dữ liệu do Tools trả về. Nếu không có dữ liệu, hãy nhận lỗi chân thành và chuyển nhân viên trong 15 phút.\n";
+            systemInstruction += "- AN TOÀN Y TẾ: Tuyệt đối không tự ý chẩn đoán bệnh thú y, không kê đơn thuốc, không hứa bồi thường tiền mặt.\n";
+
+            // Bổ sung các chỉ thị cấu hình từ database
+            if (systemPrompts && systemPrompts.length > 0) {
+                systemInstruction += "\n--- QUY TẮC BỔ SUNG TỪ HỆ THỐNG ---\n";
+                systemPrompts.slice(0, 5).forEach(p => {
+                    systemInstruction += `${p.content}\n`;
+                });
+            }
+        }
+
+        // Bổ sung chỉ thị đặc thù theo cảm xúc
+        if (detectedLevel === 6) {
+            systemInstruction += "\n⚠️ [CHỈ THỊ KHẨN CẤP Y TẾ]: Khách hàng đang rất lo âu/hoảng sợ về sức khỏe thú cưng (dấu hiệu co giật, nôn mửa, sốc nhiệt, chảy máu). Hãy ưu tiên trấn an ngắn gọn, hướng dẫn sơ cứu an toàn cơ bản và khuyên đưa bé đến cơ sở thú y gần nhất hoặc gọi hotline 1900 1234. TUYỆT ĐỐI không chẩn đoán bừa bãi hay kê đơn thuốc.\n";
+        } else if (detectedLevel >= 4) {
+            systemInstruction += "\n⚠️ [CHỈ THỊ XOA DỊU KHÁCH HÀNG]: Khách hàng đang có dấu hiệu bức xúc hoặc không hài lòng. Hãy lắng nghe, nhận lỗi chân thành về trải nghiệm, không tranh luận hoặc đổ lỗi, và thông báo chuyên viên quản lý sẽ liên hệ hỗ trợ dứt điểm.\n";
+        }
+
+        if (userId) {
+            systemInstruction += `\nTrạng thái: Đã đăng nhập (ID: ${userId}). Khi khách hỏi thông tin cá nhân (đơn hàng, lịch hẹn, thú cưng), HÃY ƯU TIÊN GỌI TOOL tương ứng.\n`;
+        } else {
+            systemInstruction += `\nTrạng thái: Khách Vãng Lai. Nếu khách yêu cầu lấy dữ liệu cá nhân, HÃY TỪ CHỐI gọi Tool và yêu cầu họ đăng nhập.\n`;
+        }
+
+        // 7. GỌI GEMINI MODEL
         const genAIResult = await getGenAI();
         if (!genAIResult) return res.status(500).json({ error: 'System AI Error: No API Keys available' });
         
         const { genAI, keyPrefix } = genAIResult;
         
         const history = messages.slice(0, -1).map(m => ({
-            role: m.role, // 'user' or 'model'
+            role: m.role,
             parts: [{ text: m.content }]
         }));
 
-        const userMsg = messages[messages.length - 1].content;
         let streamResult;
         let chat;
 
         try {
             const model = genAI.getGenerativeModel({ 
-                model: "gemini-3.5-flash",
+                model: "gemini-2.5-flash",
                 systemInstruction: systemInstruction,
                 tools: toolsDeclaration
             });
             chat = model.startChat({ history: history });
-            streamResult = await chat.sendMessageStream([{text: userMsg}]);
+            streamResult = await chat.sendMessageStream([{ text: maskedText }]);
         } catch (err1) {
-            console.warn("[API] gemini-3.5-flash failed (" + err1.message + "), falling back to gemini-2.5-flash");
+            console.warn("[API] gemini-2.5-flash stream failed (" + err1.message + "), retrying...");
             const fallbackModel = genAI.getGenerativeModel({ 
                 model: "gemini-2.5-flash",
                 systemInstruction: systemInstruction,
                 tools: toolsDeclaration
             });
             chat = fallbackModel.startChat({ history: history });
-            streamResult = await chat.sendMessageStream([{text: userMsg}]);
+            streamResult = await chat.sendMessageStream([{ text: maskedText }]);
         }
         
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Connection', 'keep-alive');
-        res.setHeader('X-API-Key-Used', keyPrefix);
+        const wantsStream = (req.headers['accept'] && req.headers['accept'].includes('text/event-stream')) || req.body?.stream === true;
+        let fullResponseText = '';
 
+        if (wantsStream) {
+            res.setHeader('Content-Type', 'text/event-stream');
+            res.setHeader('Cache-Control', 'no-cache');
+            res.setHeader('Connection', 'keep-alive');
+            res.setHeader('X-API-Key-Used', keyPrefix);
+        }
+
+        // 8. ĐỌC KẾT QUẢ VÀ XỬ LÝ TOOL CALLS
         for await (const chunk of streamResult.stream) {
             const calls = typeof chunk.functionCalls === 'function' ? chunk.functionCalls() : chunk.functionCalls;
             if (calls && calls.length > 0) {
@@ -297,43 +714,90 @@ module.exports = async function handler(req, res) {
                         try {
                             const text = typeof secondChunk.text === 'function' ? secondChunk.text() : (secondChunk.text || '');
                             if (text) {
-                                res.write(`data: ${JSON.stringify({ chunk: text })}\n\n`);
+                                if (wantsStream) {
+                                    res.write(`data: ${JSON.stringify({ chunk: text })}\n\n`);
+                                } else {
+                                    fullResponseText += text;
+                                }
                             }
                         } catch (textErr) {
-                            // Ignore text extraction errors (e.g. if model returns another function call)
-                            console.warn("Could not extract text from second chunk:", textErr.message);
+                            console.warn('Could not extract text from second chunk:', textErr.message);
                         }
                     }
                 } catch (toolErr) {
-                    console.error("[API] Function calling second stream failed:", toolErr.message);
-                    res.write(`data: ${JSON.stringify({ error: toolErr.message, reply: 'PawPal đã tìm thấy thông tin nhưng gặp lỗi khi đọc dữ liệu. Quý khách vui lòng thử lại sau.' })}\n\n`);
+                    console.error('[API] Function calling second stream failed:', toolErr.message);
+                    const errMsg = 'PawPal đã tìm thấy thông tin nhưng gặp lỗi khi đọc dữ liệu. Quý khách vui lòng thử lại sau.';
+                    if (wantsStream) {
+                        res.write(`data: ${JSON.stringify({ error: toolErr.message, reply: errMsg })}\n\n`);
+                    } else {
+                        fullResponseText += errMsg;
+                    }
                 }
-                break; // Xử lý xong function call thì thoát vòng lặp ngoài
+                break;
             }
             
             const text = typeof chunk.text === 'function' ? chunk.text() : '';
             if (text) {
-                res.write(`data: ${JSON.stringify({ chunk: text })}\n\n`);
+                if (wantsStream) {
+                    res.write(`data: ${JSON.stringify({ chunk: text })}\n\n`);
+                } else {
+                    fullResponseText += text;
+                }
             }
         }
 
-        res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-        res.end();
+        // 9. LƯU TIN NHẮN PHẢN HỒI CỦA BOT VÀO CHAT_MESSAGE
+        if (activeConvId && fullResponseText) {
+            await supabase.from('chat_message').insert({
+                conversation_id: activeConvId,
+                sender_type: 'bot',
+                sender_name: 'PawPal Bot',
+                content: fullResponseText
+            });
+        }
+
+        if (wantsStream) {
+            res.write(`data: ${JSON.stringify({
+                done: true,
+                conversationId: activeConvId,
+                sentiment_level: detectedLevel,
+                is_toxic: isToxic,
+                is_urgent: isUrgent,
+                warning: warningPayload
+            })}\n\n`);
+            res.end();
+        } else {
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.setHeader('X-API-Key-Used', keyPrefix);
+            return res.status(200).json({
+                reply: fullResponseText,
+                conversationId: activeConvId,
+                sentiment_level: detectedLevel,
+                is_toxic: isToxic,
+                is_urgent: isUrgent,
+                warning: warningPayload,
+                done: true
+            });
+        }
 
     } catch (error) {
-        console.error("Backend Error:", error);
+        console.error('Backend Error:', error);
         
         const msg = error.message || '';
-        
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache');
-        
+        let replyMsg = 'Xin lỗi, hệ thống PawPal AI đang gặp sự cố. Quý khách vui lòng thử lại sau.';
         if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('retryDelay') || msg.includes('quota')) {
-            res.write(`data: ${JSON.stringify({ error: msg, reply: 'PawPal AI đang bận xử lý nhiều yêu cầu cùng lúc. Bạn vui lòng thử lại sau vài giây nhé! 🐾' })}\n\n`);
-        } else {
-            res.write(`data: ${JSON.stringify({ error: msg, reply: 'Xin lỗi, hệ thống PawPal AI đang gặp sự cố. Quý khách vui lòng thử lại sau.' })}\n\n`);
+            replyMsg = 'PawPal AI đang bận xử lý nhiều yêu cầu cùng lúc. Bạn vui lòng thử lại sau vài giây nhé! 🐾';
         }
-        res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-        res.end();
+
+        const wantsStream = (req.headers['accept'] && req.headers['accept'].includes('text/event-stream')) || req.body?.stream === true;
+        if (wantsStream) {
+            res.setHeader('Content-Type', 'text/event-stream');
+            res.setHeader('Cache-Control', 'no-cache');
+            res.write(`data: ${JSON.stringify({ error: msg, reply: replyMsg })}\n\n`);
+            res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+            res.end();
+        } else {
+            return res.status(200).json({ error: msg, reply: replyMsg, done: true });
+        }
     }
 };

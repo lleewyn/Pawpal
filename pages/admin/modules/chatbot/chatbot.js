@@ -165,8 +165,8 @@
             const { data: customersData, error: custErr } = await supabase
                 .from('customer')
                 .select(`
-                    id, email, phone_main, account_status,
-                    customer_profile (full_name, phone, address_default, avatar_url, notes)
+                    id, email, phone_main, account_status, note,
+                    customer_profile (id, full_name, date_of_birth, gender)
                 `)
                 .limit(20);
 
@@ -183,8 +183,8 @@
             const [petsRes, ordersRes, apptsRes, ticketsRes, pointsRes] = await Promise.all([
                 supabase.from('pet_profile').select('*').in('customer_id', customerIds),
                 supabase.from('sales_order').select('*').in('customer_id', customerIds).order('created_at', { ascending: false }),
-                supabase.from('appointment').select('*, service(service_name)').in('customer_id', customerIds).order('created_at', { ascending: false }),
-                supabase.from('support_ticket').select('*').in('customer_id', customerIds).order('created_at', { ascending: false }),
+                supabase.from('appointment').select('*, service:service_id(service_name)').in('customer_id', customerIds).order('created_at', { ascending: false }),
+                supabase.from('support_ticket').select('*').in('user_id', customerIds).order('created_at', { ascending: false }),
                 supabase.from('paw_point_transaction').select('*').in('customer_id', customerIds)
             ]);
 
@@ -195,7 +195,7 @@
                     id: p.id,
                     name: p.pet_name || p.name || 'Thú cưng',
                     breed: p.breed || p.species || 'Chưa rõ',
-                    notes: p.allergy || p.notes || 'Bình thường'
+                    notes: p.allergy || p.routine || 'Bình thường'
                 });
             });
 
@@ -213,8 +213,11 @@
 
             const ticketsMap = {};
             (ticketsRes.data || []).forEach(t => {
-                if (!ticketsMap[t.customer_id]) ticketsMap[t.customer_id] = [];
-                ticketsMap[t.customer_id].push(t);
+                const uId = t.user_id || t.customer_id;
+                if (uId) {
+                    if (!ticketsMap[uId]) ticketsMap[uId] = [];
+                    ticketsMap[uId].push(t);
+                }
             });
 
             const pointsMap = {};
@@ -222,8 +225,84 @@
                 pointsMap[pt.customer_id] = (pointsMap[pt.customer_id] || 0) + (pt.points || 0);
             });
 
-            // 3. Xây dựng danh sách hội thoại từ dữ liệu Supabase
-            const convList = customersData.map((c, index) => {
+            // 3. ƯU TIÊN LẤY CÁC PHIÊN HỘI THOẠI THỰC TỪ BẢNG CHAT_CONVERSATION
+            let realConvList = [];
+            try {
+                const { data: dbConvs, error: convErr } = await supabase
+                    .from('chat_conversation')
+                    .select(`
+                        *,
+                        customer (
+                            id, email, phone_main, note,
+                            customer_profile (id, full_name, date_of_birth, gender)
+                        ),
+                        chat_message (*)
+                    `)
+                    .order('updated_at', { ascending: false })
+                    .limit(30);
+
+                if (!convErr && dbConvs && dbConvs.length > 0) {
+                    realConvList = dbConvs.map(rc => {
+                        const cust = rc.customer || {};
+                        const prof = Array.isArray(cust.customer_profile) ? cust.customer_profile[0] : (cust.customer_profile || {});
+                        const custName = prof.full_name || cust.email?.split('@')[0] || (rc.customer_id ? `Khách #${rc.customer_id.slice(0, 5)}` : 'Khách vãng lai');
+                        const phone = prof.phone || cust.phone_main || '—';
+                        const points = pointsMap[rc.customer_id] || 0;
+                        const tier = computeCustomerTier(points);
+
+                        const dbMsgs = (rc.chat_message || []).sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).map(m => ({
+                            id: m.id,
+                            sender: m.sender_type === 'customer' ? 'user' : (m.sender_type === 'staff' ? 'agent' : 'bot'),
+                            agentName: m.sender_name || (m.sender_type === 'staff' ? 'Chuyên viên CSKH' : 'PawPal Bot'),
+                            time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            text: m.content,
+                            rawText: m.raw_content,
+                            isToxic: m.is_toxic,
+                            activeMaskLevel: m.is_toxic ? 'words' : 'raw'
+                        }));
+
+                        const sLevel = rc.sentiment_level || 2;
+                        const sText = sLevel === 6 ? 'Mức độ 6: Khẩn cấp y tế' : (sLevel === 5 ? 'Mức độ 5: Mất kiểm soát' : (sLevel === 4 ? 'Mức độ 4: Tức giận cao độ' : (sLevel === 3 ? 'Mức độ 3: Thất vọng' : 'Mức độ 2: Trung tính')));
+
+                        return {
+                            id: rc.id,
+                            isRealDb: true,
+                            customerId: rc.customer_id,
+                            customerName: custName,
+                            phone: phone,
+                            tier: tier,
+                            pawpoints: points,
+                            unreadCount: rc.is_urgent ? 1 : 0,
+                            updatedAt: new Date(rc.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            sentimentLevel: sLevel,
+                            sentimentText: sText,
+                            isHandover: rc.status === 'agent_handling',
+                            isUrgent: rc.is_urgent,
+                            waitingSeconds: rc.is_urgent ? 180 : 30,
+                            category: rc.is_urgent ? 'urgent' : 'all',
+                            aiSummary: rc.ai_summary || (sLevel >= 4 ? 'Khách hàng có phản ánh cần ưu tiên xử lý.' : 'Hội thoại chăm sóc khách hàng tự động.'),
+                            internalNotes: rc.internal_note || cust.note || '',
+                            recentOrder: (ordersMap[rc.customer_id] || [])[0] ? { id: ordersMap[rc.customer_id][0].order_code || ordersMap[rc.customer_id][0].id, status: ordersMap[rc.customer_id][0].order_status } : null,
+                            recentBooking: (apptsMap[rc.customer_id] || [])[0] ? { id: apptsMap[rc.customer_id][0].appointment_code || apptsMap[rc.customer_id][0].id, status: apptsMap[rc.customer_id][0].appointment_status } : null,
+                            openTickets: (ticketsMap[rc.customer_id] || []).filter(t => t.status !== 'completed' && t.status !== 'resolved'),
+                            pets: petsMap[rc.customer_id] || [{ name: 'Bé cưng', breed: 'Thú cưng', notes: 'Bình thường' }],
+                            smartResponses: [
+                                { tag: 'Đồng cảm và Xoa dịu', text: `Dạ PawPal thành thật xin lỗi sen và bé vì sự bất tiện này! Em xin phép ưu tiên xử lý ngay cho sen ạ.` },
+                                { tag: 'Tặng điểm tạ lỗi', text: `Dạ để tạ lỗi, PawPal xin gửi tặng 50 điểm Pawpoint vào ví tài khoản của sen để sử dụng cho lần mua sắm tiếp theo ạ.` },
+                                { tag: 'Hỗ trợ tức thì', text: `Dạ em đã chuyển thông tin đến bộ phận chuyên môn, chuyên viên sẽ gọi điện hỗ trợ trực tiếp cho sen trong 3 phút nữa ạ.` }
+                            ],
+                            messages: dbMsgs.length > 0 ? dbMsgs : [
+                                { id: `init-${rc.id}`, sender: 'bot', time: new Date(rc.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: 'Dạ PawPal xin chào sen! Em có thể hỗ trợ gì cho sen hôm nay ạ?' }
+                            ]
+                        };
+                    });
+                }
+            } catch (convFetchErr) {
+                console.warn('[Chatbot] Không lấy được chat_conversation, sử dụng danh sách khách hàng:', convFetchErr.message);
+            }
+
+            // 4. Nếu chưa có phiên thực trong chat_conversation, khởi tạo từ khách hàng hiện có
+            const fallbackConvList = customersData.map((c, index) => {
                 const profile = Array.isArray(c.customer_profile) ? c.customer_profile[0] : (c.customer_profile || {});
                 const fullName = profile.full_name || c.email?.split('@')[0] || `Khách hàng ${c.id.slice(0, 5)}`;
                 const phone = profile.phone || c.phone_main || '0900.000.000';
@@ -235,12 +314,12 @@
                 const cAppts = apptsMap[c.id] || [];
                 const cTickets = ticketsMap[c.id] || [];
 
-                const openTickets = cTickets.filter(t => t.ticket_status !== 'resolved' && t.ticket_status !== 'closed');
+                const openTickets = cTickets.filter(t => t.status !== 'completed' && t.status !== 'resolved' && t.status !== 'closed');
                 const recentOrder = cOrders[0] ? { id: cOrders[0].order_code || cOrders[0].id, status: cOrders[0].order_status || 'Đang xử lý' } : null;
                 const recentBooking = cAppts[0] ? { id: cAppts[0].appointment_code || cAppts[0].id, status: cAppts[0].appointment_status || 'Đã đặt' } : null;
 
                 const hasUrgentIssue = openTickets.length > 0 || (recentOrder && recentOrder.status === 'Chờ giao hàng');
-                const sentimentLevel = openTickets.length > 0 ? (openTickets[0].priority === 'high' ? 5 : 4) : 2;
+                const sentimentLevel = openTickets.length > 0 ? (openTickets[0].priority === 'Cao' || openTickets[0].priority === 'high' ? 5 : 4) : 2;
                 const sentimentText = sentimentLevel >= 4 ? `Mức độ ${sentimentLevel}: Bực bội và Cần hỗ trợ` : 'Mức độ 2: Trung tính';
 
                 const aiSummary = openTickets.length > 0 
@@ -268,6 +347,7 @@
 
                 return {
                     id: c.id,
+                    isRealDb: false,
                     customerId: c.id,
                     customerName: fullName,
                     phone: phone,
@@ -281,10 +361,10 @@
                     waitingSeconds: openTickets.length > 0 ? 145 : 30,
                     category: hasUrgentIssue ? 'urgent' : 'all',
                     aiSummary: aiSummary,
-                    internalNotes: profile.notes || '',
+                    internalNotes: c.note || '',
                     recentOrder: recentOrder,
                     recentBooking: recentBooking,
-                    openTickets: openTickets.map(t => ({ id: t.id, title: t.title, status: t.ticket_status })),
+                    openTickets: openTickets.map(t => ({ id: t.id, title: t.title, status: t.status })),
                     pets: cPets,
                     smartResponses: [
                         { tag: 'Đồng cảm và Xoa dịu', text: `Dạ PawPal thành thật xin lỗi sen và bé vì sự bất tiện này! Em xin phép ưu tiên xử lý ngay cho sen ạ.` },
@@ -295,11 +375,17 @@
                 };
             });
 
-            liveConversations = convList;
+            liveConversations = realConvList.length > 0 ? realConvList : fallbackConvList;
 
-            // Đồng bộ conversation đang chọn
+            // Đồng bộ conversation đang chọn (hỗ trợ cả conv_id lẫn customer_id)
             const savedConvId = sessionStorage.getItem('pawpal_admin_chatbot_conv_id');
-            currentConversation = (savedConvId && liveConversations.find(c => c.id === savedConvId)) || liveConversations[0];
+            currentConversation = (savedConvId && liveConversations.find(c => c.id === savedConvId))
+                || (savedConvId && liveConversations.find(c => c.customerId === savedConvId))
+                || liveConversations[0];
+
+            if (currentConversation) {
+                sessionStorage.setItem('pawpal_admin_chatbot_conv_id', currentConversation.id);
+            }
 
             renderChatbotAlertBar();
             renderConversationsList();
@@ -388,45 +474,50 @@
     }
 
     let currentSuggestIndex = 0;
+    const defaultSmartSuggestions = [
+        { tag: 'Đồng cảm và Xoa dịu', text: 'Dạ PawPal thành thật xin lỗi sen và bé vì sự bất tiện này! Em xin phép ưu tiên xử lý ngay cho sen ạ.' },
+        { tag: 'Tặng điểm tạ lỗi', text: 'Dạ để tạ lỗi, PawPal xin gửi tặng 50 điểm Pawpoint vào ví tài khoản của sen để sử dụng cho lần mua sắm tiếp theo ạ.' },
+        { tag: 'Hỗ trợ tức thì', text: 'Dạ em đã chuyển thông tin đến bộ phận chuyên môn, chuyên viên sẽ gọi điện hỗ trợ trực tiếp cho sen trong 3 phút nữa ạ.' }
+    ];
 
     function renderSmartSuggestions() {
         const box = document.getElementById('aiSmartSuggestionsBox');
         if (!box) return;
 
-        if (!currentConversation || !currentConversation.smartResponses || currentConversation.smartResponses.length === 0) {
-            box.style.display = 'none';
-            return;
-        }
+        const list = (currentConversation && currentConversation.smartResponses && currentConversation.smartResponses.length > 0)
+            ? currentConversation.smartResponses
+            : defaultSmartSuggestions;
 
         box.style.display = 'flex';
-        currentSuggestIndex = Math.min(currentSuggestIndex, currentConversation.smartResponses.length - 1);
-        const item = currentConversation.smartResponses[currentSuggestIndex];
+        currentSuggestIndex = Math.min(currentSuggestIndex, list.length - 1);
+        if (currentSuggestIndex < 0) currentSuggestIndex = 0;
+        const item = list[currentSuggestIndex];
 
         const tagEl = document.getElementById('suggestCarouselTag');
         const textEl = document.getElementById('suggestCarouselText');
 
-        if (tagEl) tagEl.textContent = item.tag;
-        if (textEl) textEl.textContent = item.text;
+        if (tagEl && item) tagEl.textContent = item.tag;
+        if (textEl && item) textEl.textContent = item.text;
     }
 
     function setupSuggestCarouselEvents() {
         document.getElementById('btnSuggestPrev')?.addEventListener('click', () => {
-            if (!currentConversation?.smartResponses?.length) return;
-            const total = currentConversation.smartResponses.length;
+            const list = (currentConversation?.smartResponses?.length) ? currentConversation.smartResponses : defaultSmartSuggestions;
+            const total = list.length;
             currentSuggestIndex = (currentSuggestIndex - 1 + total) % total;
             renderSmartSuggestions();
         });
 
         document.getElementById('btnSuggestNext')?.addEventListener('click', () => {
-            if (!currentConversation?.smartResponses?.length) return;
-            const total = currentConversation.smartResponses.length;
+            const list = (currentConversation?.smartResponses?.length) ? currentConversation.smartResponses : defaultSmartSuggestions;
+            const total = list.length;
             currentSuggestIndex = (currentSuggestIndex + 1) % total;
             renderSmartSuggestions();
         });
 
         document.getElementById('btnApplySuggest')?.addEventListener('click', () => {
-            if (!currentConversation?.smartResponses?.length) return;
-            const item = currentConversation.smartResponses[currentSuggestIndex];
+            const list = (currentConversation?.smartResponses?.length) ? currentConversation.smartResponses : defaultSmartSuggestions;
+            const item = list[currentSuggestIndex];
             const input = document.getElementById('chatMessageInput');
             if (input && item) {
                 input.value = item.text;
@@ -460,49 +551,43 @@
             quickTemplatesWrap?.classList.remove('open');
         });
 
-        // Toggle Smart Assistant Bar (Đóng / Mở)
+        // Toggle Smart Assistant Bar (Mặc định ban đầu KHÔNG MỞ SẴN - người dùng tự bấm "Mở gợi ý AI" khi cần)
         const assistantBar = document.getElementById('smartAssistantBar');
         const btnHideAssistant = document.getElementById('btnHideAssistantBar');
         const btnShowAssistant = document.getElementById('btnShowAssistantBar');
 
+        // Mặc định ban đầu không mở sẵn: Ẩn thanh gợi ý, hiển thị nút "Mở gợi ý AI"
+        if (assistantBar) assistantBar.style.display = 'none';
+        if (btnShowAssistant) btnShowAssistant.style.display = 'inline-flex';
+
         btnHideAssistant?.addEventListener('click', () => {
             if (assistantBar) assistantBar.style.display = 'none';
             if (btnShowAssistant) btnShowAssistant.style.display = 'inline-flex';
-            sessionStorage.setItem('pawpal_assistant_bar_hidden', 'true');
         });
 
         btnShowAssistant?.addEventListener('click', () => {
             if (assistantBar) assistantBar.style.display = 'flex';
             if (btnShowAssistant) btnShowAssistant.style.display = 'none';
-            sessionStorage.removeItem('pawpal_assistant_bar_hidden');
         });
 
-        if (sessionStorage.getItem('pawpal_assistant_bar_hidden') === 'true') {
-            if (assistantBar) assistantBar.style.display = 'none';
-            if (btnShowAssistant) btnShowAssistant.style.display = 'inline-flex';
-        }
-
-        // Toggle AI Context Strip (Đóng / Mở)
+        // Toggle AI Context Strip (Mặc định ban đầu KHÔNG MỞ SẴN - người dùng tự bấm "Mở tóm tắt AI" khi cần)
         const aiContextCard = document.getElementById('aiContextCard');
         const btnHideAiContext = document.getElementById('btnHideAiContext');
         const btnShowAiContext = document.getElementById('btnShowAiContext');
 
+        // Ban đầu mặc định ẩn thẻ tóm tắt AI, hiển thị nút "Mở tóm tắt AI"
+        if (aiContextCard) aiContextCard.style.display = 'none';
+        if (btnShowAiContext) btnShowAiContext.style.display = 'inline-flex';
+
         btnHideAiContext?.addEventListener('click', () => {
             if (aiContextCard) aiContextCard.style.display = 'none';
             if (btnShowAiContext) btnShowAiContext.style.display = 'inline-flex';
-            sessionStorage.setItem('pawpal_ai_context_hidden', 'true');
         });
 
         btnShowAiContext?.addEventListener('click', () => {
             if (aiContextCard) aiContextCard.style.display = 'flex';
             if (btnShowAiContext) btnShowAiContext.style.display = 'none';
-            sessionStorage.removeItem('pawpal_ai_context_hidden');
         });
-
-        if (sessionStorage.getItem('pawpal_ai_context_hidden') === 'true') {
-            if (aiContextCard) aiContextCard.style.display = 'none';
-            if (btnShowAiContext) btnShowAiContext.style.display = 'inline-flex';
-        }
     }
 
     // -------------------------------------------------------------
@@ -538,7 +623,11 @@
         if (activeSec) activeSec.classList.add('active');
 
         renderHeaderSubtabs(tabId);
-        window.location.hash = `#${tabId}`;
+        try {
+            history.replaceState(null, '', `#${tabId}`);
+        } catch (e) {
+            window.location.hash = `#${tabId}`;
+        }
         sessionStorage.setItem('pawpal_admin_chatbot_subtab', tabId);
 
         // Deep Breadcrumb
@@ -555,6 +644,8 @@
             renderConversationsList();
             renderCurrentChat();
             startSlaTicker();
+        } else if (tabId === 'tab-chatbot-rules') {
+            initRulesHub();
         }
     }
 
@@ -1266,18 +1357,71 @@
             renderCurrentChat();
         });
 
-        // Tiếp nhận ca chat (Takeover / Handover)
-        document.getElementById('btnToggleTakeover')?.addEventListener('click', () => {
+        // Helper: Đảm bảo conversation đã tồn tại trong bảng chat_conversation trên Supabase
+        async function ensureRealConversation(conv) {
+            if (!conv || !supabase) return conv ? conv.id : null;
+            if (conv.isRealDb && conv.id) return conv.id;
+
+            try {
+                // Kiểm tra xem khách hàng này đã có phiên chat nào trong database chưa
+                if (conv.customerId) {
+                    const { data: existing } = await supabase
+                        .from('chat_conversation')
+                        .select('id')
+                        .eq('customer_id', conv.customerId)
+                        .order('updated_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+
+                    if (existing && existing.id) {
+                        conv.id = existing.id;
+                        conv.isRealDb = true;
+                        return existing.id;
+                    }
+
+                    // Nếu chưa có, tạo mới phiên chat chuẩn
+                    const { data: created, error: crErr } = await supabase
+                        .from('chat_conversation')
+                        .insert([{
+                            customer_id: conv.customerId,
+                            status: conv.isHandover ? 'agent_handling' : 'bot_handling',
+                            sentiment_level: conv.sentimentLevel || 2,
+                            is_urgent: conv.isUrgent || false,
+                            ai_summary: conv.aiSummary || 'Phiên tiếp nhận hỗ trợ khách hàng',
+                            channel: 'web'
+                        }])
+                        .select('id')
+                        .single();
+
+                    if (!crErr && created) {
+                        conv.id = created.id;
+                        conv.isRealDb = true;
+                        return created.id;
+                    }
+                }
+            } catch (err) {
+                console.warn('[Chatbot] Lỗi ensureRealConversation:', err.message);
+            }
+            return conv.id;
+        }
+
+        // Tiếp nhận ca chat (Takeover / Handover) - Đồng bộ Supabase Live DB
+        document.getElementById('btnToggleTakeover')?.addEventListener('click', async () => {
             if (!currentConversation) return;
             currentConversation.isHandover = !currentConversation.isHandover;
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+            const sysMsgText = currentConversation.isHandover
+                ? `Hệ thống: PawPal Bot đã tạm dừng. Chuyên viên CSKH đã tiếp quản ca chat lúc ${timeStr}`
+                : `Hệ thống: Ca chat đã được hỗ trợ trực tiếp xong. Quyền điều phối tự động được hoàn trả cho PawPal Bot lúc ${timeStr}`;
+
+            currentConversation.messages.push({
+                sender: 'system',
+                time: timeStr,
+                text: sysMsgText
+            });
+
             if (currentConversation.isHandover) {
-                currentConversation.messages.push({
-                    sender: 'system',
-                    time: timeStr,
-                    text: `Hệ thống: PawPal Bot đã tạm dừng. Chuyên viên CSKH đã tiếp quản ca chat lúc ${timeStr}`
-                });
                 currentConversation.messages.push({
                     sender: 'agent',
                     agentName: 'Chuyên viên CSKH',
@@ -1285,24 +1429,49 @@
                     text: 'Dạ PawPal xin chào sen! Em là chuyên viên CSKH đã tiếp nhận ca chat để hỗ trợ trực tiếp cho sen ngay đây ạ!'
                 });
                 currentConversation.waitingSeconds = 0;
-            } else {
-                currentConversation.messages.push({
-                    sender: 'system',
-                    time: timeStr,
-                    text: `Hệ thống: Ca chat đã được hỗ trợ trực tiếp xong. Quyền điều phối tự động được hoàn trả cho PawPal Bot lúc ${timeStr}`
-                });
             }
 
             renderChatbotAlertBar();
             renderConversationsList();
             renderCurrentChat();
+
+            // Ghi nhận trạng thái vào Supabase Live DB
+            if (supabase) {
+                try {
+                    const convId = await ensureRealConversation(currentConversation);
+                    if (convId) {
+                        const newStatus = currentConversation.isHandover ? 'agent_handling' : 'bot_handling';
+                        await supabase
+                            .from('chat_conversation')
+                            .update({
+                                status: newStatus,
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id', convId);
+
+                        // Lưu tin nhắn thông báo vào bảng chat_message
+                        await supabase
+                            .from('chat_message')
+                            .insert([{
+                                conversation_id: convId,
+                                sender_type: 'staff',
+                                sender_name: 'Hệ thống PawPal',
+                                content: sysMsgText,
+                                raw_content: sysMsgText,
+                                is_toxic: false
+                            }]);
+                    }
+                } catch (takeoverErr) {
+                    console.error('[Chatbot] Lỗi cập nhật tiếp quản vào Supabase:', takeoverErr);
+                }
+            }
         });
 
-        // Gửi tin nhắn
+        // Gửi tin nhắn nhân viên trực tiếp (Ghi trực tiếp vào bảng chat_message trên Supabase)
         const sendMsgBtn = document.getElementById('btnSendLiveMessage');
         const msgInput = document.getElementById('chatMessageInput');
 
-        function sendLiveMsg() {
+        async function sendLiveMsg() {
             if (!currentConversation) return;
             const text = msgInput.value.trim();
             if (!text) return;
@@ -1313,7 +1482,9 @@
             }
 
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const localMsgId = 'msg-staff-' + Date.now();
             currentConversation.messages.push({
+                id: localMsgId,
                 sender: 'agent',
                 agentName: 'Chuyên viên CSKH',
                 time: timeStr,
@@ -1321,6 +1492,42 @@
             });
             msgInput.value = '';
             renderCurrentChat();
+
+            // Ghi trực tiếp vào bảng chat_message trên Supabase Live DB
+            if (supabase) {
+                try {
+                    const convId = await ensureRealConversation(currentConversation);
+                    if (convId) {
+                        const { data: insertedMsg, error: msgErr } = await supabase
+                            .from('chat_message')
+                            .insert([{
+                                conversation_id: convId,
+                                sender_type: 'staff',
+                                sender_name: 'Chuyên viên CSKH',
+                                content: text,
+                                raw_content: text,
+                                is_toxic: false
+                            }])
+                            .select('id')
+                            .single();
+
+                        if (!msgErr && insertedMsg) {
+                            const localM = currentConversation.messages.find(m => m.id === localMsgId);
+                            if (localM) localM.id = insertedMsg.id;
+                        }
+
+                        await supabase
+                            .from('chat_conversation')
+                            .update({
+                                updated_at: new Date().toISOString(),
+                                status: 'agent_handling'
+                            })
+                            .eq('id', convId);
+                    }
+                } catch (dbErr) {
+                    console.error('[Chatbot] Lỗi lưu tin nhắn nhân viên vào Supabase:', dbErr);
+                }
+            }
         }
 
         sendMsgBtn?.addEventListener('click', sendLiveMsg);
@@ -1351,9 +1558,9 @@
             if (supabase && currentConversation.customerId) {
                 try {
                     await supabase
-                        .from('customer_profile')
-                        .update({ notes: note })
-                        .eq('customer_id', currentConversation.customerId);
+                        .from('customer')
+                        .update({ note: note })
+                        .eq('id', currentConversation.customerId);
                 } catch (e) {
                     console.error('Lỗi khi lưu note vào Supabase:', e);
                 }
@@ -1491,26 +1698,35 @@
             // Ghi trực tiếp vào bảng `support_ticket` trên Supabase
             if (supabase && currentConversation.customerId) {
                 try {
-                    const petId = currentConversation.pets && currentConversation.pets[0] ? currentConversation.pets[0].id : null;
+                    const normPriority = priVal === 'high' ? 'Cao' : (priVal === 'low' ? 'Thấp' : 'Trung bình');
+                    const ticketType = isServiceTicket ? 'booking' : 'order';
                     const { data: ticketCreated, error: tErr } = await supabase.from('support_ticket').insert([{
-                        id: newTicketId,
-                        customer_id: currentConversation.customerId,
+                        user_id: currentConversation.customerId,
                         title: title,
-                        ticket_status: 'new',
-                        priority: priVal,
-                        pet_id: petId,
-                        created_at: new Date().toISOString()
+                        type: ticketType,
+                        status: 'pending',
+                        priority: normPriority,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
                     }]).select().single();
 
                     if (!tErr && ticketCreated) {
+                        newTicketId = ticketCreated.id;
                         // Insert tin nhắn biên bản vào support_ticket_message
                         await supabase.from('support_ticket_message').insert([{
-                            ticket_id: newTicketId,
-                            sender_type: 'customer',
-                            sender_id: currentConversation.customerId,
-                            message_content: `[Biên bản hội thoại]:\n${chatTranscript}`,
+                            ticket_id: ticketCreated.id,
+                            sender_type: 'user',
+                            content: `[Chuyển từ Chat trực tuyến CSKH${refId ? ' • Tham chiếu: ' + refId : ''}]:\n${chatTranscript}`,
                             created_at: new Date().toISOString()
                         }]);
+
+                        // Lưu override liên kết tham chiếu
+                        try {
+                            const localOverrides = JSON.parse(localStorage.getItem('pawpal_complaint_overrides') || '{}');
+                            localOverrides[ticketCreated.id] = localOverrides[ticketCreated.id] || {};
+                            if (refId) localOverrides[ticketCreated.id].refId = refId;
+                            localStorage.setItem('pawpal_complaint_overrides', JSON.stringify(localOverrides));
+                        } catch (e) {}
                     }
                 } catch (e) {
                     console.error('Lỗi khi insert support_ticket vào Supabase:', e);
@@ -1613,25 +1829,44 @@
     }
 
     // -------------------------------------------------------------
-    // THƯ VIỆN CÂU MẪU CSKH CHUẨN MỰC
+    // THƯ VIỆN CÂU MẪU CSKH CHUẨN MỰC (100% SUPABASE LIVE DATABASE)
     // -------------------------------------------------------------
-    const cannedResponsesDatabase = [
+    let cannedResponsesDatabase = [
         { id: 'cr-01', category: 'greeting', categoryName: 'Chào hỏi và Tiếp nhận', title: 'Lời chào tiếp nhận ca hỗ trợ', content: 'Dạ PawPal xin chào sen, em là chuyên viên CSKH đã tiếp nhận ca chat này để trực tiếp hỗ trợ mình ngay ạ!' },
         { id: 'cr-02', category: 'greeting', categoryName: 'Chào hỏi và Tiếp nhận', title: 'Xin phép kiểm tra hệ thống trong 1-2 phút', content: 'Dạ sen vui lòng đợi em trong 1-2 phút, em đang tiến hành tra cứu dữ liệu trên hệ thống và sẽ phản hồi mình ngay ạ.' },
-        { id: 'cr-03', category: 'greeting', categoryName: 'Chào hỏi và Tiếp nhận', title: 'Xác nhận thông tin bé và đơn hàng', content: 'Dạ để hỗ trợ chính xác nhất, sen cho em xin mã đơn hàng hoặc số điện thoại đăng ký tài khoản của bé nhé ạ.' },
-        { id: 'cr-04', category: 'shipping', categoryName: 'Vận chuyển và Giao hàng', title: 'Xin lỗi vì giao hàng chậm trễ', content: 'Dạ PawPal thành thật xin lỗi sen và bé vì sự chậm trễ này! Do ảnh hưởng thời tiết và lượng đơn cao điểm, bưu tá đang ưu tiên phát hỏa tốc đơn của mình trong hôm nay ạ.' },
-        { id: 'cr-05', category: 'shipping', categoryName: 'Vận chuyển và Giao hàng', title: 'Thông báo điều phối shipper hỏa tốc', content: 'Dạ em đã liên hệ điều phối bưu cục, tài xế giao hỏa tốc đang trên đường vận chuyển và sẽ liên hệ giao tận tay cho sen trước 12:00 ạ.' },
-        { id: 'cr-06', category: 'shipping', categoryName: 'Vận chuyển và Giao hàng', title: 'Hướng dẫn đồng kiểm hàng khi nhận', content: 'Dạ khi nhận hàng từ bưu tá, sen hoàn toàn có thể kiểm tra quy cách đóng gói và hạn sử dụng của thức ăn trước khi ký nhận nhé ạ.' },
-        { id: 'cr-07', category: 'service', categoryName: 'Spa và Khách sạn', title: 'Cập nhật tình hình bé tại spa', content: 'Dạ em xin cập nhật là bé boss đang hoàn tất khâu sấy lông và vệ sinh tai móng, bé rất ngoan và hợp tác với kỹ thuật viên ạ!' },
-        { id: 'cr-08', category: 'service', categoryName: 'Spa và Khách sạn', title: 'Thông báo giờ đón bé cưng', content: 'Dạ liệu trình spa của bé đã hoàn thành thơm tho xinh đẹp rồi ạ! Sen có thể ghé chi nhánh đón bé về từ bây giờ nhé ạ.' },
-        { id: 'cr-09', category: 'service', categoryName: 'Spa và Khách sạn', title: 'Hướng dẫn chăm sóc sau dịch vụ', content: 'Dạ sau khi tắm tỉa, sen lưu ý giữ ấm cho bé và tránh để bé gãi mạnh vào vùng tai móng trong 24 giờ đầu nhé ạ.' },
-        { id: 'cr-10', category: 'reward', categoryName: 'Bồi hoàn và Tạ lỗi', title: 'Tặng điểm Pawpoint tạ lỗi vào ví', content: 'Dạ để tạ lỗi vì sự cố không mong muốn vừa rồi, PawPal xin phép gửi tặng 50 điểm Pawpoint vào ví tài khoản của sen để sử dụng cho lần mua sắm tiếp theo ạ.' },
-        { id: 'cr-11', category: 'reward', categoryName: 'Bồi hoàn và Tạ lỗi', title: 'Tặng mã giảm giá PAWPAL50K bồi thường', content: 'Dạ PawPal xin gửi tặng sen mã giảm giá PAWPAL50K (trừ trực tiếp 50.000đ áp dụng cho mọi đơn hàng tiếp theo) như lời cáo lỗi chân thành từ cửa hàng ạ.' },
-        { id: 'cr-12', category: 'reward', categoryName: 'Bồi hoàn và Tạ lỗi', title: 'Cam kết hoàn tiền trong 24 giờ', content: 'Dạ bộ phận kế toán đã tiếp nhận yêu cầu hoàn tiền cho đơn hàng của sen, số tiền sẽ được chuyển hoàn về ví MoMo / tài khoản ngân hàng trong vòng 24 giờ làm việc ạ.' },
-        { id: 'cr-13', category: 'dispute', categoryName: 'Khiếu nại và Đối soát', title: 'Yêu cầu gửi ảnh chụp chứng từ sự cố', content: 'Dạ để bộ phận kỹ thuật và bảo hành tiến hành đối soát ngay, sen vui lòng chụp giúp em hình ảnh sản phẩm bị lỗi hoặc hóa đơn gửi qua khung chat này nhé ạ.' },
-        { id: 'cr-14', category: 'dispute', categoryName: 'Khiếu nại và Đối soát', title: 'Tạo vé hỗ trợ chuyển cấp đối soát', content: 'Dạ em đã lập vé hỗ trợ chính thức và chuyển thông tin đến Trưởng bộ phận phụ trách. Chúng em sẽ có văn bản phản hồi giải quyết thấu đáo cho sen trước 17:00 hôm nay ạ.' },
-        { id: 'cr-15', category: 'dispute', categoryName: 'Khiếu nại và Đối soát', title: 'Hẹn gọi thoại tư vấn trực tiếp', content: 'Dạ nếu thuận tiện, em xin phép nhờ Quản lý chi nhánh gọi điện thoại trực tiếp để giải thích chi tiết và lắng nghe ý kiến đóng góp của sen nhé ạ.' }
+        { id: 'cr-03', category: 'greeting', categoryName: 'Chào hỏi và Tiếp nhận', title: 'Xác nhận thông tin bé và đơn hàng', content: 'Dạ để hỗ trợ chính xác nhất, sen cho em xin mã đơn hàng hoặc số điện thoại đăng ký tài khoản của bé nhé ạ.' }
     ];
+
+    async function loadCannedResponsesFromSupabase() {
+        if (!supabase) return;
+        try {
+            const { data, error } = await supabase
+                .from('chatbot_canned_response')
+                .select('*')
+                .eq('is_active', true)
+                .order('created_at', { ascending: true });
+
+            if (!error && data && data.length > 0) {
+                cannedResponsesDatabase = data.map(r => ({
+                    id: r.id,
+                    category: r.category || 'all',
+                    categoryName: r.category || 'Chăm sóc khách hàng',
+                    title: r.title,
+                    content: r.content,
+                    shortcut: r.shortcut
+                }));
+
+                const catSelect = document.getElementById('selectCannedCategory');
+                if (catSelect) {
+                    const uniqueCats = Array.from(new Set(cannedResponsesDatabase.map(c => c.categoryName))).filter(Boolean);
+                    catSelect.innerHTML = '<option value="all">Tất cả danh mục</option>' +
+                        uniqueCats.map(c => `<option value="${c}">${c}</option>`).join('');
+                }
+            }
+        } catch (err) {
+            console.warn('[Chatbot] Lỗi load chatbot_canned_response từ Supabase:', err.message);
+        }
+    }
 
     function setupCannedResponsesModal() {
         const modalOverlay = document.getElementById('cannedResponsesModalOverlay');
@@ -1671,7 +1906,7 @@
             const activeCat = categorySelect ? categorySelect.value : 'all';
 
             const filtered = cannedResponsesDatabase.filter(item => {
-                const matchCat = activeCat === 'all' || item.category === activeCat;
+                const matchCat = activeCat === 'all' || item.category === activeCat || item.categoryName === activeCat;
                 const matchQuery = !query || item.title.toLowerCase().includes(query) || item.content.toLowerCase().includes(query);
                 return matchCat && matchQuery;
             });
@@ -1708,11 +1943,12 @@
                     closeModal();
                 });
 
-                btnSend?.addEventListener('click', () => {
+                btnSend?.addEventListener('click', async () => {
                     if (!currentConversation) return;
                     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const localMsgId = 'msg-agent-' + Date.now();
                     currentConversation.messages.push({
-                        id: 'msg-agent-' + Date.now(),
+                        id: localMsgId,
                         sender: 'agent',
                         agentName: 'Chuyên viên CSKH',
                         time: timeStr,
@@ -1720,6 +1956,35 @@
                     });
                     closeModal();
                     renderCurrentChat();
+
+                    // Ghi trực tiếp vào Supabase Live DB
+                    if (supabase) {
+                        try {
+                            const convId = await ensureRealConversation(currentConversation);
+                            if (convId) {
+                                await supabase
+                                    .from('chat_message')
+                                    .insert([{
+                                        conversation_id: convId,
+                                        sender_type: 'staff',
+                                        sender_name: 'Chuyên viên CSKH',
+                                        content: item.content,
+                                        raw_content: item.content,
+                                        is_toxic: false
+                                    }]);
+
+                                await supabase
+                                    .from('chat_conversation')
+                                    .update({
+                                        updated_at: new Date().toISOString(),
+                                        status: 'agent_handling'
+                                    })
+                                    .eq('id', convId);
+                            }
+                        } catch (sendErr) {
+                            console.error('[Chatbot] Lỗi lưu câu mẫu vào Supabase:', sendErr);
+                        }
+                    }
                 });
 
                 listContainer.appendChild(card);
@@ -1837,7 +2102,37 @@
         if (!supabase || typeof supabase.channel !== 'function') return;
 
         try {
-            const channel = supabase.channel('admin-chatbot-sync')
+            if (window._pawpalChatbotRealtimeChannel) {
+                try { supabase.removeChannel(window._pawpalChatbotRealtimeChannel); } catch (e) {}
+            }
+            const channelName = 'admin-chatbot-sync-' + Date.now();
+            const channel = supabase.channel(channelName)
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_message' }, (payload) => {
+                    const newMsg = payload.new;
+                    if (!newMsg) return;
+                    console.log('[Realtime] Tin nhắn chat mới:', newMsg);
+                    if (currentConversation && currentConversation.id === newMsg.conversation_id) {
+                        const exists = currentConversation.messages.some(m => m.id === newMsg.id);
+                        if (!exists) {
+                            currentConversation.messages.push({
+                                id: newMsg.id,
+                                sender: newMsg.sender_type === 'customer' ? 'user' : (newMsg.sender_type === 'staff' ? 'agent' : 'bot'),
+                                agentName: newMsg.sender_name || (newMsg.sender_type === 'staff' ? 'Chuyên viên CSKH' : 'PawPal Bot'),
+                                time: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                text: newMsg.content,
+                                rawText: newMsg.raw_content,
+                                isToxic: newMsg.is_toxic,
+                                activeMaskLevel: newMsg.is_toxic ? 'words' : 'raw'
+                            });
+                            renderCurrentChat();
+                        }
+                    }
+                    loadChatbotDataFromSupabase();
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_conversation' }, () => {
+                    console.log('[Realtime] Cập nhật phiên chat chat_conversation -> Đồng bộ danh sách');
+                    loadChatbotDataFromSupabase();
+                })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, () => {
                     console.log('[Realtime] Phát hiện thay đổi trong support_ticket -> Reload chatbot data');
                     loadChatbotDataFromSupabase();
@@ -1852,12 +2147,1071 @@
                 })
                 .subscribe();
 
+            window._pawpalChatbotRealtimeChannel = channel;
+
             window.addEventListener('beforeunload', () => {
                 supabase.removeChannel(channel);
             });
         } catch (e) {
             console.error('Lỗi khi đăng ký Supabase Realtime Channel:', e);
         }
+    }
+
+    // =============================================================
+    // SUB-TAB 3: KHO TRI THỨC VÀ QUY ĐỊNH CHATBOT (PHASE 3)
+    // 100% Supabase Live Database - Zero Mock JSON - Chuẩn AGENTS.md
+    // =============================================================
+    let rulesFaqData = [];
+    let rulesProfanityData = [];
+    let rulesCannedData = [];
+    let rulesCompPolicyData = [];
+    let rulesHandoverRuleData = [];
+
+    let currentRulesView = 'faq';
+    let currentPolicySubView = 'comp';
+
+    let faqPage = 1;
+    let profanityPage = 1;
+    let cannedPage = 1;
+    let policyPage = 1;
+    const RULES_PAGE_SIZE = 10;
+    let rulesHubInitialized = false;
+
+    async function loadAllRulesDataFromSupabase() {
+        if (!supabase) return;
+        try {
+            // 1. FAQ (chatbot_knowledge_faq)
+            const { data: faqRes } = await supabase
+                .from('chatbot_knowledge_faq')
+                .select('*')
+                .order('priority', { ascending: true })
+                .order('created_at', { ascending: false });
+            if (faqRes) rulesFaqData = faqRes;
+
+            // 2. Toxic Shield (chatbot_profanity_filter)
+            const { data: profRes } = await supabase
+                .from('chatbot_profanity_filter')
+                .select('*')
+                .order('created_at', { ascending: false });
+            if (profRes) rulesProfanityData = profRes;
+
+            // 3. Canned Responses (chatbot_canned_response)
+            const { data: cannedRes } = await supabase
+                .from('chatbot_canned_response')
+                .select('*')
+                .order('usage_count', { ascending: false })
+                .order('created_at', { ascending: false });
+            if (cannedRes) rulesCannedData = cannedRes;
+
+            // 4. Compensation Policy (chatbot_compensation_policy)
+            const { data: compRes } = await supabase
+                .from('chatbot_compensation_policy')
+                .select('*')
+                .order('max_points', { ascending: false });
+            if (compRes) rulesCompPolicyData = compRes;
+
+            // 5. Handover Rules (chatbot_handover_rule)
+            const { data: handRes } = await supabase
+                .from('chatbot_handover_rule')
+                .select('*')
+                .order('sla_seconds', { ascending: true });
+            if (handRes) rulesHandoverRuleData = handRes;
+
+            updateRulesBadges();
+            populateRulesCategories();
+            renderActiveRulesView();
+        } catch (err) {
+            console.error('[Chatbot Rules Hub] Lỗi nạp dữ liệu từ Supabase:', err);
+        }
+    }
+
+    function updateRulesBadges() {
+        const bFaq = document.getElementById('badgeFaqCount');
+        const bProf = document.getElementById('badgeProfanityCount');
+        const bCanned = document.getElementById('badgeCannedCount');
+        const bPol = document.getElementById('badgePolicyCount');
+
+        if (bFaq) bFaq.textContent = rulesFaqData.length;
+        if (bProf) bProf.textContent = rulesProfanityData.length;
+        if (bCanned) bCanned.textContent = rulesCannedData.length;
+        if (bPol) bPol.textContent = rulesCompPolicyData.length + rulesHandoverRuleData.length;
+    }
+
+    function populateRulesCategories() {
+        // FAQ Categories
+        const faqCatSelect = document.getElementById('selectFaqCategoryFilter');
+        if (faqCatSelect) {
+            const currentVal = faqCatSelect.value;
+            const cats = Array.from(new Set(rulesFaqData.map(f => f.category))).filter(Boolean);
+            faqCatSelect.innerHTML = '<option value="all">Tất cả danh mục</option>' +
+                cats.map(c => `<option value="${c}" ${c === currentVal ? 'selected' : ''}>${c}</option>`).join('');
+        }
+
+        // Canned Categories
+        const cannedCatSelect = document.getElementById('selectCannedCategoryFilter');
+        if (cannedCatSelect) {
+            const currentVal = cannedCatSelect.value;
+            const cats = Array.from(new Set(rulesCannedData.map(c => c.category))).filter(Boolean);
+            cannedCatSelect.innerHTML = '<option value="all">Tất cả chủ đề</option>' +
+                cats.map(c => `<option value="${c}" ${c === currentVal ? 'selected' : ''}>${c}</option>`).join('');
+        }
+    }
+
+    function renderActiveRulesView() {
+        if (currentRulesView === 'faq') renderFaqTable();
+        else if (currentRulesView === 'profanity') renderProfanityTable();
+        else if (currentRulesView === 'canned') renderCannedTable();
+        else if (currentRulesView === 'policy') renderPolicyTable();
+    }
+
+    // Helper: Tạo thanh phân trang chuẩn AGENTS.md (căn giữa, không đóng khung, < và >, max 10 dòng)
+    function renderPaginationControls(containerId, currentPage, totalPages, onPageChange) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        if (totalPages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+        html += `<button type="button" class="rules-page-btn" ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}">&lt;</button>`;
+
+        for (let p = 1; p <= totalPages; p++) {
+            if (p === 1 || p === totalPages || (p >= currentPage - 2 && p <= currentPage + 2)) {
+                html += `<button type="button" class="rules-page-btn ${p === currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`;
+            } else if (p === currentPage - 3 || p === currentPage + 3) {
+                html += `<span style="color: var(--text-muted); font-size: 12px; padding: 0 4px;">...</span>`;
+            }
+        }
+
+        html += `<button type="button" class="rules-page-btn" ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}">&gt;</button>`;
+        container.innerHTML = html;
+
+        container.querySelectorAll('.rules-page-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetPage = parseInt(btn.getAttribute('data-page'), 10);
+                if (targetPage && targetPage !== currentPage && targetPage >= 1 && targetPage <= totalPages) {
+                    onPageChange(targetPage);
+                }
+            });
+        });
+    }
+
+    // -------------------------------------------------------------
+    // VIEW 1: FAQ TABLE
+    // -------------------------------------------------------------
+    function renderFaqTable() {
+        const tbody = document.getElementById('faqTableBody');
+        if (!tbody) return;
+
+        const searchVal = (document.getElementById('inputFaqSearch')?.value || '').toLowerCase().trim();
+        const catVal = document.getElementById('selectFaqCategoryFilter')?.value || 'all';
+        const statusVal = document.getElementById('selectFaqStatusFilter')?.value || 'all';
+
+        const filtered = rulesFaqData.filter(item => {
+            const matchSearch = !searchVal ||
+                (item.question && item.question.toLowerCase().includes(searchVal)) ||
+                (item.answer && item.answer.toLowerCase().includes(searchVal)) ||
+                (Array.isArray(item.keywords) && item.keywords.some(k => k.toLowerCase().includes(searchVal)));
+            const matchCat = catVal === 'all' || item.category === catVal;
+            const matchStatus = statusVal === 'all' ||
+                (statusVal === 'active' && item.is_active) ||
+                (statusVal === 'inactive' && !item.is_active);
+            return matchSearch && matchCat && matchStatus;
+        });
+
+        const totalPages = Math.ceil(filtered.length / RULES_PAGE_SIZE) || 1;
+        if (faqPage > totalPages) faqPage = totalPages;
+        const start = (faqPage - 1) * RULES_PAGE_SIZE;
+        const pageItems = filtered.slice(start, start + RULES_PAGE_SIZE);
+
+        if (pageItems.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">Không tìm thấy câu hỏi FAQ phù hợp</td></tr>`;
+            renderPaginationControls('faqPaginationWrap', 1, 1, () => {});
+            return;
+        }
+
+        tbody.innerHTML = pageItems.map(item => {
+            const kwHtml = Array.isArray(item.keywords) && item.keywords.length > 0
+                ? `<div class="rules-keywords-wrap">${item.keywords.slice(0, 3).map(k => `<span class="rules-keyword-pill">${k}</span>`).join('')}${item.keywords.length > 3 ? `<span class="rules-keyword-pill">+${item.keywords.length - 3}</span>` : ''}</div>`
+                : '<span style="color: var(--text-muted); opacity: 0.4;">—</span>';
+
+            const statusBadge = item.is_active
+                ? `<span class="admin-badge badge-active">Kích hoạt</span>`
+                : `<span class="admin-badge badge-neutral">Tạm tắt</span>`;
+
+            return `
+                <tr class="${item.is_active ? '' : 'row-inactive'}">
+                    <td><span style="font-weight: 600; color: #236B48;">${item.category || 'Chung'}</span></td>
+                    <td><div style="font-weight: 600; color: var(--text-main); line-height: 1.4;">${item.question}</div></td>
+                    <td><div style="max-width: 380px; font-size: 12.5px; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="${(item.answer || '').replace(/"/g, '&quot;')}">${item.answer || ''}</div></td>
+                    <td>${kwHtml}</td>
+                    <td style="text-align: center;"><span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">#${item.priority || 1}</span></td>
+                    <td style="text-align: center;">${statusBadge}</td>
+                    <td style="text-align: center;">
+                        <button type="button" class="rules-action-menu-btn" data-faq-id="${item.id}" title="Thao tác">•••</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        renderPaginationControls('faqPaginationWrap', faqPage, totalPages, (newPage) => {
+            faqPage = newPage;
+            renderFaqTable();
+        });
+
+        // Event listener cho nút 3 chấm của FAQ
+        tbody.querySelectorAll('.rules-action-menu-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = btn.getAttribute('data-faq-id');
+                const item = rulesFaqData.find(f => f.id === id);
+                if (!item) return;
+                openFaqActionMenu(item, e.currentTarget);
+            });
+        });
+    }
+
+    function openFaqActionMenu(item, targetBtn) {
+        openGenericRulesActionMenu(targetBtn, [
+            {
+                label: 'Chỉnh sửa câu hỏi',
+                action: () => openFaqEditorModal(item)
+            },
+            {
+                label: item.is_active ? 'Tạm tắt kích hoạt' : 'Kích hoạt câu hỏi',
+                action: async () => {
+                    if (!supabase) return;
+                    const { error } = await supabase
+                        .from('chatbot_knowledge_faq')
+                        .update({ is_active: !item.is_active, updated_at: new Date().toISOString() })
+                        .eq('id', item.id);
+                    if (error) {
+                        showToast('Lỗi cập nhật trạng thái FAQ: ' + error.message, 'danger');
+                    } else {
+                        item.is_active = !item.is_active;
+                        renderFaqTable();
+                        showToast(`Đã ${item.is_active ? 'kích hoạt' : 'tạm tắt'} câu hỏi!`, 'success');
+                    }
+                }
+            },
+            {
+                label: 'Xóa câu hỏi',
+                danger: true,
+                action: () => {
+                    openChatbotConfirmModal('Xóa câu hỏi tri thức FAQ', `Bạn có chắc chắn muốn xóa câu hỏi "${item.question}" khỏi kho tri thức không?`, async () => {
+                        if (!supabase) return;
+                        const { error } = await supabase.from('chatbot_knowledge_faq').delete().eq('id', item.id);
+                        if (error) {
+                            showToast('Lỗi xóa câu hỏi: ' + error.message, 'danger');
+                        } else {
+                            rulesFaqData = rulesFaqData.filter(f => f.id !== item.id);
+                            updateRulesBadges();
+                            renderFaqTable();
+                            showToast('Đã xóa câu hỏi FAQ thành công!', 'success');
+                        }
+                    });
+                }
+            }
+        ]);
+    }
+
+    function openFaqEditorModal(item = null) {
+        const overlay = document.getElementById('modalFaqEditorOverlay');
+        const titleEl = document.getElementById('modalFaqEditorTitle');
+        const editId = document.getElementById('inputFaqEditId');
+        const catInput = document.getElementById('inputFaqCategory');
+        const qInput = document.getElementById('inputFaqQuestionText');
+        const aInput = document.getElementById('textareaFaqAnswerText');
+        const kwInput = document.getElementById('inputFaqKeywordsList');
+        const prioInput = document.getElementById('inputFaqPriorityNum');
+        const activeCheck = document.getElementById('checkboxFaqIsActive');
+
+        if (!overlay) return;
+
+        if (item) {
+            if (titleEl) titleEl.textContent = 'Chỉnh sửa câu hỏi tri thức FAQ';
+            if (editId) editId.value = item.id;
+            if (catInput) catInput.value = item.category || '';
+            if (qInput) qInput.value = item.question || '';
+            if (aInput) aInput.value = item.answer || '';
+            if (kwInput) kwInput.value = Array.isArray(item.keywords) ? item.keywords.join(', ') : '';
+            if (prioInput) prioInput.value = item.priority || 1;
+            if (activeCheck) activeCheck.checked = !!item.is_active;
+        } else {
+            if (titleEl) titleEl.textContent = 'Thêm câu hỏi tri thức FAQ';
+            if (editId) editId.value = '';
+            if (catInput) catInput.value = 'Thông tin dịch vụ';
+            if (qInput) qInput.value = '';
+            if (aInput) aInput.value = '';
+            if (kwInput) kwInput.value = '';
+            if (prioInput) prioInput.value = 1;
+            if (activeCheck) activeCheck.checked = true;
+        }
+
+        overlay.style.display = 'flex';
+    }
+
+    // -------------------------------------------------------------
+    // VIEW 2: TOXIC SHIELD PROFANITY FILTER TABLE
+    // -------------------------------------------------------------
+    function renderProfanityTable() {
+        const tbody = document.getElementById('profanityTableBody');
+        if (!tbody) return;
+
+        const searchVal = (document.getElementById('inputProfanitySearch')?.value || '').toLowerCase().trim();
+        const sevVal = document.getElementById('selectProfanitySeverityFilter')?.value || 'all';
+        const actVal = document.getElementById('selectProfanityActionFilter')?.value || 'all';
+        const statusVal = document.getElementById('selectProfanityStatusFilter')?.value || 'all';
+
+        const filtered = rulesProfanityData.filter(item => {
+            const matchSearch = !searchVal || (item.keyword && item.keyword.toLowerCase().includes(searchVal));
+            const matchSev = sevVal === 'all' || item.severity === sevVal;
+            const matchAct = actVal === 'all' || item.action === actVal;
+            const matchStatus = statusVal === 'all' ||
+                (statusVal === 'active' && item.is_active) ||
+                (statusVal === 'inactive' && !item.is_active);
+            return matchSearch && matchSev && matchAct && matchStatus;
+        });
+
+        const totalPages = Math.ceil(filtered.length / RULES_PAGE_SIZE) || 1;
+        if (profanityPage > totalPages) profanityPage = totalPages;
+        const start = (profanityPage - 1) * RULES_PAGE_SIZE;
+        const pageItems = filtered.slice(start, start + RULES_PAGE_SIZE);
+
+        if (pageItems.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);">Không tìm thấy từ ngữ vi phạm phù hợp</td></tr>`;
+            renderPaginationControls('profanityPaginationWrap', 1, 1, () => {});
+            return;
+        }
+
+        tbody.innerHTML = pageItems.map(item => {
+            const sevBadges = {
+                critical: `<span class="admin-badge" style="background:#F7DCDC; color:#8F2424;">Khẩn cấp</span>`,
+                high: `<span class="admin-badge" style="background:#F5E8D3; color:#734718;">Mức độ cao</span>`,
+                medium: `<span class="admin-badge" style="background:#E2ECE5; color:#2D483B;">Trung bình</span>`,
+                low: `<span class="admin-badge" style="background:#DCEAF2; color:#20495E;">Mức độ thấp</span>`
+            };
+
+            const actLabels = {
+                mask: `Che mờ ký tự`,
+                warn: `Cảnh báo nhắc nhở`,
+                block: `Chặn tạm thời 15 phút`
+            };
+
+            const statusBadge = item.is_active
+                ? `<span class="admin-badge badge-active">Kích hoạt</span>`
+                : `<span class="admin-badge badge-neutral">Tạm tắt</span>`;
+
+            return `
+                <tr class="${item.is_active ? '' : 'row-inactive'}">
+                    <td><span style="font-weight: 700; color: #DC2626;">${item.keyword}</span></td>
+                    <td style="text-align: center;">${sevBadges[item.severity] || sevBadges.medium}</td>
+                    <td><span style="font-size: 13px; color: var(--text-main); font-weight: 500;">${actLabels[item.action] || item.action}</span></td>
+                    <td><code style="background: #EEF5F1; padding: 2px 8px; border-radius: var(--admin-radius); color: #236B48; font-weight: 600;">${item.replacement_text || '***'}</code></td>
+                    <td style="text-align: center;">${statusBadge}</td>
+                    <td style="text-align: center;">
+                        <button type="button" class="rules-action-menu-btn" data-prof-id="${item.id}" title="Thao tác">•••</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        renderPaginationControls('profanityPaginationWrap', profanityPage, totalPages, (newPage) => {
+            profanityPage = newPage;
+            renderProfanityTable();
+        });
+
+        tbody.querySelectorAll('.rules-action-menu-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = btn.getAttribute('data-prof-id');
+                const item = rulesProfanityData.find(p => p.id === id);
+                if (!item) return;
+                openProfanityActionMenu(item, e.currentTarget);
+            });
+        });
+    }
+
+    function openProfanityActionMenu(item, targetBtn) {
+        openGenericRulesActionMenu(targetBtn, [
+            {
+                label: 'Chỉnh sửa từ cấm',
+                action: () => openProfanityEditorModal(item)
+            },
+            {
+                label: item.is_active ? 'Tạm tắt màng lọc' : 'Kích hoạt màng lọc',
+                action: async () => {
+                    if (!supabase) return;
+                    const { error } = await supabase
+                        .from('chatbot_profanity_filter')
+                        .update({ is_active: !item.is_active })
+                        .eq('id', item.id);
+                    if (error) {
+                        showToast('Lỗi cập nhật: ' + error.message, 'danger');
+                    } else {
+                        item.is_active = !item.is_active;
+                        renderProfanityTable();
+                        showToast(`Đã ${item.is_active ? 'kích hoạt' : 'tạm tắt'} từ cấm!`, 'success');
+                    }
+                }
+            },
+            {
+                label: 'Xóa từ cấm',
+                danger: true,
+                action: () => {
+                    openChatbotConfirmModal('Xóa từ ngữ Toxic Shield', `Bạn có chắc chắn muốn xóa từ "${item.keyword}" khỏi danh sách lọc không?`, async () => {
+                        if (!supabase) return;
+                        const { error } = await supabase.from('chatbot_profanity_filter').delete().eq('id', item.id);
+                        if (error) {
+                            showToast('Lỗi xóa từ cấm: ' + error.message, 'danger');
+                        } else {
+                            rulesProfanityData = rulesProfanityData.filter(p => p.id !== item.id);
+                            updateRulesBadges();
+                            renderProfanityTable();
+                            showToast('Đã xóa từ cấm thành công!', 'success');
+                        }
+                    });
+                }
+            }
+        ]);
+    }
+
+    function openProfanityEditorModal(item = null) {
+        const overlay = document.getElementById('modalProfanityEditorOverlay');
+        const titleEl = document.getElementById('modalProfanityEditorTitle');
+        const editId = document.getElementById('inputProfanityEditId');
+        const kwInput = document.getElementById('inputProfanityKeywordText');
+        const sevSelect = document.getElementById('selectProfanitySeverityVal');
+        const actSelect = document.getElementById('selectProfanityActionVal');
+        const repInput = document.getElementById('inputProfanityReplacementVal');
+        const activeCheck = document.getElementById('checkboxProfanityIsActive');
+
+        if (!overlay) return;
+
+        if (item) {
+            if (titleEl) titleEl.textContent = 'Chỉnh sửa từ khóa Toxic Shield';
+            if (editId) editId.value = item.id;
+            if (kwInput) kwInput.value = item.keyword || '';
+            if (sevSelect) sevSelect.value = item.severity || 'medium';
+            if (actSelect) actSelect.value = item.action || 'mask';
+            if (repInput) repInput.value = item.replacement_text || '***';
+            if (activeCheck) activeCheck.checked = !!item.is_active;
+        } else {
+            if (titleEl) titleEl.textContent = 'Thêm từ khóa Toxic Shield';
+            if (editId) editId.value = '';
+            if (kwInput) kwInput.value = '';
+            if (sevSelect) sevSelect.value = 'medium';
+            if (actSelect) actSelect.value = 'mask';
+            if (repInput) repInput.value = '***';
+            if (activeCheck) activeCheck.checked = true;
+        }
+
+        overlay.style.display = 'flex';
+    }
+
+    // -------------------------------------------------------------
+    // VIEW 3: CANNED RESPONSES TABLE
+    // -------------------------------------------------------------
+    function renderCannedTable() {
+        const tbody = document.getElementById('cannedTableBody');
+        if (!tbody) return;
+
+        const searchVal = (document.getElementById('inputCannedSearch')?.value || '').toLowerCase().trim();
+        const catVal = document.getElementById('selectCannedCategoryFilter')?.value || 'all';
+        const statusVal = document.getElementById('selectCannedStatusFilter')?.value || 'all';
+
+        const filtered = rulesCannedData.filter(item => {
+            const matchSearch = !searchVal ||
+                (item.title && item.title.toLowerCase().includes(searchVal)) ||
+                (item.shortcut && item.shortcut.toLowerCase().includes(searchVal)) ||
+                (item.content && item.content.toLowerCase().includes(searchVal));
+            const matchCat = catVal === 'all' || item.category === catVal;
+            const matchStatus = statusVal === 'all' ||
+                (statusVal === 'active' && item.is_active) ||
+                (statusVal === 'inactive' && !item.is_active);
+            return matchSearch && matchCat && matchStatus;
+        });
+
+        const totalPages = Math.ceil(filtered.length / RULES_PAGE_SIZE) || 1;
+        if (cannedPage > totalPages) cannedPage = totalPages;
+        const start = (cannedPage - 1) * RULES_PAGE_SIZE;
+        const pageItems = filtered.slice(start, start + RULES_PAGE_SIZE);
+
+        if (pageItems.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">Không tìm thấy mẫu câu phù hợp</td></tr>`;
+            renderPaginationControls('cannedPaginationWrap', 1, 1, () => {});
+            return;
+        }
+
+        tbody.innerHTML = pageItems.map(item => {
+            const statusBadge = item.is_active
+                ? `<span class="admin-badge badge-active">Kích hoạt</span>`
+                : `<span class="admin-badge badge-neutral">Tạm tắt</span>`;
+
+            return `
+                <tr class="${item.is_active ? '' : 'row-inactive'}">
+                    <td><code style="background: #EEF5F1; padding: 3px 8px; border-radius: var(--admin-radius); color: #236B48; font-weight: 700;">${item.shortcut || '—'}</code></td>
+                    <td><div style="font-weight: 600; color: var(--text-main); line-height: 1.4;">${item.title}</div></td>
+                    <td><div style="max-width: 400px; font-size: 12.5px; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="${(item.content || '').replace(/"/g, '&quot;')}">${item.content || ''}</div></td>
+                    <td><span class="admin-badge badge-neutral">${item.category || 'Chung'}</span></td>
+                    <td style="text-align: center;"><span style="font-weight: 600; color: var(--text-main);">${item.usage_count || 0}</span></td>
+                    <td style="text-align: center;">${statusBadge}</td>
+                    <td style="text-align: center;">
+                        <button type="button" class="rules-action-menu-btn" data-canned-id="${item.id}" title="Thao tác">•••</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        renderPaginationControls('cannedPaginationWrap', cannedPage, totalPages, (newPage) => {
+            cannedPage = newPage;
+            renderCannedTable();
+        });
+
+        tbody.querySelectorAll('.rules-action-menu-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = btn.getAttribute('data-canned-id');
+                const item = rulesCannedData.find(c => c.id === id);
+                if (!item) return;
+                openCannedActionMenu(item, e.currentTarget);
+            });
+        });
+    }
+
+    function openCannedActionMenu(item, targetBtn) {
+        openGenericRulesActionMenu(targetBtn, [
+            {
+                label: 'Chỉnh sửa câu mẫu',
+                action: () => openCannedEditorModal(item)
+            },
+            {
+                label: item.is_active ? 'Tạm tắt mẫu câu' : 'Kích hoạt mẫu câu',
+                action: async () => {
+                    if (!supabase) return;
+                    const { error } = await supabase
+                        .from('chatbot_canned_response')
+                        .update({ is_active: !item.is_active })
+                        .eq('id', item.id);
+                    if (error) {
+                        showToast('Lỗi cập nhật: ' + error.message, 'danger');
+                    } else {
+                        item.is_active = !item.is_active;
+                        renderCannedTable();
+                        loadCannedResponsesFromSupabase();
+                        showToast(`Đã ${item.is_active ? 'kích hoạt' : 'tạm tắt'} mẫu câu!`, 'success');
+                    }
+                }
+            },
+            {
+                label: 'Xóa mẫu câu',
+                danger: true,
+                action: () => {
+                    openChatbotConfirmModal('Xóa mẫu câu phản hồi', `Bạn có chắc chắn muốn xóa mẫu câu "${item.title}" không?`, async () => {
+                        if (!supabase) return;
+                        const { error } = await supabase.from('chatbot_canned_response').delete().eq('id', item.id);
+                        if (error) {
+                            showToast('Lỗi xóa mẫu câu: ' + error.message, 'danger');
+                        } else {
+                            rulesCannedData = rulesCannedData.filter(c => c.id !== item.id);
+                            updateRulesBadges();
+                            renderCannedTable();
+                            loadCannedResponsesFromSupabase();
+                            showToast('Đã xóa mẫu câu thành công!', 'success');
+                        }
+                    });
+                }
+            }
+        ]);
+    }
+
+    function openCannedEditorModal(item = null) {
+        const overlay = document.getElementById('modalCannedEditorOverlay');
+        const titleEl = document.getElementById('modalCannedEditorTitle');
+        const editId = document.getElementById('inputCannedEditId');
+        const scInput = document.getElementById('inputCannedShortcutText');
+        const titInput = document.getElementById('inputCannedTitleText');
+        const catInput = document.getElementById('inputCannedCategoryText');
+        const cntInput = document.getElementById('textareaCannedContentText');
+        const activeCheck = document.getElementById('checkboxCannedIsActive');
+
+        if (!overlay) return;
+
+        if (item) {
+            if (titleEl) titleEl.textContent = 'Chỉnh sửa mẫu câu phản hồi nhanh';
+            if (editId) editId.value = item.id;
+            if (scInput) scInput.value = item.shortcut || '';
+            if (titInput) titInput.value = item.title || '';
+            if (catInput) catInput.value = item.category || '';
+            if (cntInput) cntInput.value = item.content || '';
+            if (activeCheck) activeCheck.checked = !!item.is_active;
+        } else {
+            if (titleEl) titleEl.textContent = 'Thêm mẫu câu phản hồi nhanh';
+            if (editId) editId.value = '';
+            if (scInput) scInput.value = '/';
+            if (titInput) titInput.value = '';
+            if (catInput) catInput.value = 'Tiếp nhận hội thoại';
+            if (cntInput) cntInput.value = '';
+            if (activeCheck) activeCheck.checked = true;
+        }
+
+        overlay.style.display = 'flex';
+    }
+
+    // -------------------------------------------------------------
+    // VIEW 4: COMPENSATION POLICY & HANDOVER RULES
+    // -------------------------------------------------------------
+    function renderPolicyTable() {
+        const compWrapper = document.getElementById('compPolicyTableWrapper');
+        const handWrapper = document.getElementById('handoverRuleTableWrapper');
+        const searchVal = (document.getElementById('inputPolicySearch')?.value || '').toLowerCase().trim();
+
+        if (currentPolicySubView === 'comp') {
+            if (compWrapper) compWrapper.style.display = 'block';
+            if (handWrapper) handWrapper.style.display = 'none';
+
+            const tbody = document.getElementById('compPolicyTableBody');
+            if (!tbody) return;
+
+            const filtered = rulesCompPolicyData.filter(item => {
+                return !searchVal ||
+                    (item.issue_type && item.issue_type.toLowerCase().includes(searchVal)) ||
+                    (item.description && item.description.toLowerCase().includes(searchVal));
+            });
+
+            const totalPages = Math.ceil(filtered.length / RULES_PAGE_SIZE) || 1;
+            if (policyPage > totalPages) policyPage = totalPages;
+            const start = (policyPage - 1) * RULES_PAGE_SIZE;
+            const pageItems = filtered.slice(start, start + RULES_PAGE_SIZE);
+
+            if (pageItems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);">Không tìm thấy hạn mức bồi hoàn phù hợp</td></tr>`;
+                renderPaginationControls('policyPaginationWrap', 1, 1, () => {});
+                return;
+            }
+
+            tbody.innerHTML = pageItems.map(item => `
+                <tr>
+                    <td><div style="font-weight: 600; color: var(--text-main); line-height: 1.4;">${item.issue_type}</div></td>
+                    <td style="text-align: center;"><span style="font-weight: 700; color: #236B48; background: #EEF5F1; padding: 2px 8px; border-radius: var(--admin-radius);">${item.max_points ? item.max_points + ' điểm' : '—'}</span></td>
+                    <td style="text-align: right;"><span style="font-weight: 600; color: var(--text-main);">${item.max_discount_vnd ? item.max_discount_vnd.toLocaleString('vi-VN') + ' đ' : '—'}</span></td>
+                    <td style="text-align: center;">
+                        <span class="admin-badge ${item.approval_required ? 'badge-warning' : 'badge-neutral'}">${item.approval_required ? 'Cần Quản lý duyệt' : 'Nhân viên tự duyệt'}</span>
+                    </td>
+                    <td><div style="max-width: 420px; font-size: 12px; color: var(--text-muted); line-height: 1.4; white-space: pre-line;">${item.description || ''}</div></td>
+                    <td style="text-align: center;">
+                        <span class="admin-badge ${item.is_active ? 'badge-active' : 'badge-neutral'}">${item.is_active ? 'Hiệu lực' : 'Tắt'}</span>
+                    </td>
+                </tr>
+            `).join('');
+
+            renderPaginationControls('policyPaginationWrap', policyPage, totalPages, (newPage) => {
+                policyPage = newPage;
+                renderPolicyTable();
+            });
+        } else {
+            if (compWrapper) compWrapper.style.display = 'none';
+            if (handWrapper) handWrapper.style.display = 'block';
+
+            const tbody = document.getElementById('handoverRuleTableBody');
+            if (!tbody) return;
+
+            const filtered = rulesHandoverRuleData.filter(item => {
+                return !searchVal ||
+                    (item.condition_name && item.condition_name.toLowerCase().includes(searchVal)) ||
+                    (item.threshold_value && item.threshold_value.toLowerCase().includes(searchVal)) ||
+                    (item.auto_assign_role && item.auto_assign_role.toLowerCase().includes(searchVal));
+            });
+
+            const totalPages = Math.ceil(filtered.length / RULES_PAGE_SIZE) || 1;
+            if (policyPage > totalPages) policyPage = totalPages;
+            const start = (policyPage - 1) * RULES_PAGE_SIZE;
+            const pageItems = filtered.slice(start, start + RULES_PAGE_SIZE);
+
+            if (pageItems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);">Không tìm thấy quy tắc chuyển ca phù hợp</td></tr>`;
+                renderPaginationControls('policyPaginationWrap', 1, 1, () => {});
+                return;
+            }
+
+            tbody.innerHTML = pageItems.map(item => `
+                <tr>
+                    <td><div style="font-weight: 600; color: #236B48; line-height: 1.4;">${item.condition_name}</div></td>
+                    <td><span class="admin-badge badge-neutral">${item.trigger_type || 'Tự động'}</span></td>
+                    <td><div style="max-width: 380px; font-size: 12px; color: var(--text-muted); line-height: 1.4;">${item.threshold_value || ''}</div></td>
+                    <td><span style="font-weight: 600; color: var(--text-main);">${item.auto_assign_role || 'Nhân viên CSKH'}</span></td>
+                    <td style="text-align: center;"><span style="font-weight: 700; color: #DC2626;">${item.sla_seconds ? item.sla_seconds + ' giây' : '—'}</span></td>
+                    <td style="text-align: center;">
+                        <span class="admin-badge ${item.is_active ? 'badge-active' : 'badge-neutral'}">${item.is_active ? 'Hiệu lực' : 'Tắt'}</span>
+                    </td>
+                </tr>
+            `).join('');
+
+            renderPaginationControls('policyPaginationWrap', policyPage, totalPages, (newPage) => {
+                policyPage = newPage;
+                renderPolicyTable();
+            });
+        }
+    }
+
+    // Helper: Popup dropdown chung cho các tác vụ 3 chấm (Clean Text-Only chuẩn AGENTS.md)
+    function openGenericRulesActionMenu(targetBtn, items) {
+        document.querySelectorAll('.rules-popover-dropdown').forEach(p => p.remove());
+
+        const popover = document.createElement('div');
+        popover.className = 'rules-popover-dropdown';
+        popover.style.cssText = `
+            position: absolute;
+            background: var(--surface-white);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-neutral);
+            border-radius: var(--admin-radius);
+            box-shadow: 0 4px 16px rgba(35, 107, 72, 0.12);
+            z-index: 9999;
+            min-width: 170px;
+            display: flex;
+            flex-direction: column;
+            padding: 4px 0;
+        `;
+
+        items.forEach(it => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = it.label;
+            btn.style.cssText = `
+                border: none;
+                background: transparent;
+                padding: 8px 14px;
+                text-align: left;
+                font-size: 13px;
+                color: ${it.danger ? '#DC2626' : 'var(--text-main)'};
+                font-weight: ${it.danger ? '600' : '500'};
+                cursor: pointer;
+                transition: background 0.15s;
+                font-family: inherit;
+            `;
+            btn.addEventListener('mouseenter', () => btn.style.background = '#EEF5F1');
+            btn.addEventListener('mouseleave', () => btn.style.background = 'transparent');
+            btn.addEventListener('click', () => {
+                popover.remove();
+                it.action();
+            });
+            popover.appendChild(btn);
+        });
+
+        document.body.appendChild(popover);
+
+        const rect = targetBtn.getBoundingClientRect();
+        popover.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+        popover.style.left = (rect.right + window.scrollX - popover.offsetWidth) + 'px';
+
+        const closeHandler = (e) => {
+            if (!popover.contains(e.target) && e.target !== targetBtn) {
+                popover.remove();
+                document.removeEventListener('click', closeHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closeHandler), 10);
+    }
+
+    // -------------------------------------------------------------
+    // KHỞI TẠO VÀ GẮN EVENT CHO SUBTAB 3
+    // -------------------------------------------------------------
+    function initRulesHub() {
+        if (!rulesHubInitialized) {
+            setupRulesHubEventListeners();
+            rulesHubInitialized = true;
+        }
+        loadAllRulesDataFromSupabase();
+    }
+
+    function setupRulesHubEventListeners() {
+        // Tab switching bên trong Subtab 3
+        document.querySelectorAll('.rules-hub-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const view = btn.getAttribute('data-rules-view');
+                if (!view) return;
+
+                document.querySelectorAll('.rules-hub-tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                currentRulesView = view;
+                document.querySelectorAll('.rules-view-panel').forEach(p => {
+                    p.style.display = 'none';
+                    p.classList.remove('active');
+                });
+
+                const viewIdMap = {
+                    faq: 'rulesViewFaq',
+                    profanity: 'rulesViewProfanity',
+                    canned: 'rulesViewCanned',
+                    policy: 'rulesViewPolicy',
+                    guidelines: 'rulesViewGuidelines'
+                };
+
+                const targetEl = document.getElementById(viewIdMap[view]);
+                if (targetEl) {
+                    targetEl.style.display = 'flex';
+                    targetEl.classList.add('active');
+                }
+
+                renderActiveRulesView();
+            });
+        });
+
+        // FAQ Filters & Add
+        document.getElementById('inputFaqSearch')?.addEventListener('input', () => {
+            faqPage = 1;
+            renderFaqTable();
+        });
+        document.getElementById('selectFaqCategoryFilter')?.addEventListener('change', () => {
+            faqPage = 1;
+            renderFaqTable();
+        });
+        document.getElementById('selectFaqStatusFilter')?.addEventListener('change', () => {
+            faqPage = 1;
+            renderFaqTable();
+        });
+        document.getElementById('btnOpenAddFaqModal')?.addEventListener('click', () => {
+            openFaqEditorModal(null);
+        });
+
+        // Profanity Filters & Add
+        document.getElementById('inputProfanitySearch')?.addEventListener('input', () => {
+            profanityPage = 1;
+            renderProfanityTable();
+        });
+        document.getElementById('selectProfanitySeverityFilter')?.addEventListener('change', () => {
+            profanityPage = 1;
+            renderProfanityTable();
+        });
+        document.getElementById('selectProfanityActionFilter')?.addEventListener('change', () => {
+            profanityPage = 1;
+            renderProfanityTable();
+        });
+        document.getElementById('selectProfanityStatusFilter')?.addEventListener('change', () => {
+            profanityPage = 1;
+            renderProfanityTable();
+        });
+        document.getElementById('btnOpenAddProfanityModal')?.addEventListener('click', () => {
+            openProfanityEditorModal(null);
+        });
+
+        // Canned Filters & Add
+        document.getElementById('inputCannedSearch')?.addEventListener('input', () => {
+            cannedPage = 1;
+            renderCannedTable();
+        });
+        document.getElementById('selectCannedCategoryFilter')?.addEventListener('change', () => {
+            cannedPage = 1;
+            renderCannedTable();
+        });
+        document.getElementById('selectCannedStatusFilter')?.addEventListener('change', () => {
+            cannedPage = 1;
+            renderCannedTable();
+        });
+        document.getElementById('btnOpenAddCannedModal')?.addEventListener('click', () => {
+            openCannedEditorModal(null);
+        });
+
+        // Policy Sub-Toggles & Search
+        const btnComp = document.getElementById('btnToggleCompPolicy');
+        const btnHand = document.getElementById('btnToggleHandoverRule');
+        btnComp?.addEventListener('click', () => {
+            btnComp.classList.add('active');
+            btnHand?.classList.remove('active');
+            currentPolicySubView = 'comp';
+            policyPage = 1;
+            renderPolicyTable();
+        });
+        btnHand?.addEventListener('click', () => {
+            btnHand.classList.add('active');
+            btnComp?.classList.remove('active');
+            currentPolicySubView = 'handover';
+            policyPage = 1;
+            renderPolicyTable();
+        });
+        document.getElementById('inputPolicySearch')?.addEventListener('input', () => {
+            policyPage = 1;
+            renderPolicyTable();
+        });
+
+        // Modal 8: Save FAQ
+        const faqModal = document.getElementById('modalFaqEditorOverlay');
+        document.getElementById('btnCloseFaqEditorModal')?.addEventListener('click', () => faqModal.style.display = 'none');
+        document.getElementById('btnCancelFaqEditor')?.addEventListener('click', () => faqModal.style.display = 'none');
+        document.getElementById('btnSaveFaqRecord')?.addEventListener('click', async () => {
+            const id = document.getElementById('inputFaqEditId')?.value.trim();
+            const category = document.getElementById('inputFaqCategory')?.value.trim() || 'Thông tin dịch vụ';
+            const question = document.getElementById('inputFaqQuestionText')?.value.trim();
+            const answer = document.getElementById('textareaFaqAnswerText')?.value.trim();
+            const rawKw = document.getElementById('inputFaqKeywordsList')?.value.trim();
+            const priority = parseInt(document.getElementById('inputFaqPriorityNum')?.value || '1', 10);
+            const is_active = document.getElementById('checkboxFaqIsActive')?.checked ?? true;
+
+            if (!question || !answer) {
+                showToast('Vui lòng nhập đầy đủ câu hỏi và câu trả lời!', 'warning');
+                return;
+            }
+
+            const keywords = rawKw ? rawKw.split(',').map(s => s.trim()).filter(Boolean) : [];
+            const saveBtn = document.getElementById('btnSaveFaqRecord');
+            if (saveBtn) saveBtn.disabled = true;
+
+            try {
+                if (id) {
+                    const { error } = await supabase
+                        .from('chatbot_knowledge_faq')
+                        .update({
+                            category,
+                            question,
+                            answer,
+                            keywords,
+                            priority,
+                            is_active,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', id);
+                    if (error) throw error;
+                    showToast('Đã cập nhật câu hỏi FAQ thành công!', 'success');
+                } else {
+                    const { error } = await supabase
+                        .from('chatbot_knowledge_faq')
+                        .insert([{
+                            category,
+                            question,
+                            answer,
+                            keywords,
+                            priority,
+                            is_active
+                        }]);
+                    if (error) throw error;
+                    showToast('Đã thêm câu hỏi FAQ mới vào kho tri thức!', 'success');
+                }
+
+                if (faqModal) faqModal.style.display = 'none';
+                await loadAllRulesDataFromSupabase();
+            } catch (err) {
+                showToast('Lỗi lưu câu hỏi FAQ: ' + err.message, 'danger');
+            } finally {
+                if (saveBtn) saveBtn.disabled = false;
+            }
+        });
+
+        // Modal 9: Save Profanity
+        const profModal = document.getElementById('modalProfanityEditorOverlay');
+        document.getElementById('btnCloseProfanityEditorModal')?.addEventListener('click', () => profModal.style.display = 'none');
+        document.getElementById('btnCancelProfanityEditor')?.addEventListener('click', () => profModal.style.display = 'none');
+        document.getElementById('btnSaveProfanityRecord')?.addEventListener('click', async () => {
+            const id = document.getElementById('inputProfanityEditId')?.value.trim();
+            const keyword = document.getElementById('inputProfanityKeywordText')?.value.trim().toLowerCase();
+            const severity = document.getElementById('selectProfanitySeverityVal')?.value || 'medium';
+            const action = document.getElementById('selectProfanityActionVal')?.value || 'mask';
+            const replacement_text = document.getElementById('inputProfanityReplacementVal')?.value.trim() || '***';
+            const is_active = document.getElementById('checkboxProfanityIsActive')?.checked ?? true;
+
+            if (!keyword) {
+                showToast('Vui lòng nhập từ ngữ cần nhận diện!', 'warning');
+                return;
+            }
+
+            const saveBtn = document.getElementById('btnSaveProfanityRecord');
+            if (saveBtn) saveBtn.disabled = true;
+
+            try {
+                if (id) {
+                    const { error } = await supabase
+                        .from('chatbot_profanity_filter')
+                        .update({
+                            keyword,
+                            severity,
+                            action,
+                            replacement_text,
+                            is_active
+                        })
+                        .eq('id', id);
+                    if (error) throw error;
+                    showToast('Đã cập nhật từ cấm Toxic Shield thành công!', 'success');
+                } else {
+                    const { error } = await supabase
+                        .from('chatbot_profanity_filter')
+                        .insert([{
+                            keyword,
+                            severity,
+                            action,
+                            replacement_text,
+                            is_active
+                        }]);
+                    if (error) throw error;
+                    showToast('Đã thêm từ ngữ mới vào màng lọc Toxic Shield!', 'success');
+                }
+
+                if (profModal) profModal.style.display = 'none';
+                await loadAllRulesDataFromSupabase();
+            } catch (err) {
+                showToast('Lỗi lưu từ cấm: ' + err.message, 'danger');
+            } finally {
+                if (saveBtn) saveBtn.disabled = false;
+            }
+        });
+
+        // Modal 10: Save Canned
+        const canModal = document.getElementById('modalCannedEditorOverlay');
+        document.getElementById('btnCloseCannedEditorModal')?.addEventListener('click', () => canModal.style.display = 'none');
+        document.getElementById('btnCancelCannedEditor')?.addEventListener('click', () => canModal.style.display = 'none');
+        document.getElementById('btnSaveCannedRecord')?.addEventListener('click', async () => {
+            const id = document.getElementById('inputCannedEditId')?.value.trim();
+            const shortcut = document.getElementById('inputCannedShortcutText')?.value.trim();
+            const title = document.getElementById('inputCannedTitleText')?.value.trim();
+            const category = document.getElementById('inputCannedCategoryText')?.value.trim() || 'Tiếp nhận hội thoại';
+            const content = document.getElementById('textareaCannedContentText')?.value.trim();
+            const is_active = document.getElementById('checkboxCannedIsActive')?.checked ?? true;
+
+            if (!title || !content) {
+                showToast('Vui lòng nhập đầy đủ tiêu đề và nội dung câu mẫu!', 'warning');
+                return;
+            }
+
+            const saveBtn = document.getElementById('btnSaveCannedRecord');
+            if (saveBtn) saveBtn.disabled = true;
+
+            try {
+                if (id) {
+                    const { error } = await supabase
+                        .from('chatbot_canned_response')
+                        .update({
+                            shortcut,
+                            title,
+                            category,
+                            content,
+                            is_active
+                        })
+                        .eq('id', id);
+                    if (error) throw error;
+                    showToast('Đã cập nhật mẫu câu phản hồi!', 'success');
+                } else {
+                    const { error } = await supabase
+                        .from('chatbot_canned_response')
+                        .insert([{
+                            shortcut,
+                            title,
+                            category,
+                            content,
+                            is_active,
+                            usage_count: 0
+                        }]);
+                    if (error) throw error;
+                    showToast('Đã thêm mẫu câu phản hồi mới!', 'success');
+                }
+
+                if (canModal) canModal.style.display = 'none';
+                await loadAllRulesDataFromSupabase();
+                await loadCannedResponsesFromSupabase();
+            } catch (err) {
+                showToast('Lỗi lưu mẫu câu: ' + err.message, 'danger');
+            } finally {
+                if (saveBtn) saveBtn.disabled = false;
+            }
+        });
     }
 
     // -------------------------------------------------------------
@@ -1869,9 +3223,19 @@
     setupCannedResponsesModal();
     setupSmartContextActions();
     setupChatbotRealtimeSync();
+    initRulesHub();
 
-    // Nạp dữ liệu thực tế từ Supabase
+    // Nạp dữ liệu thực tế từ Supabase Live DB
+    loadCannedResponsesFromSupabase();
     loadChatbotDataFromSupabase();
+
+    // Tự động đồng bộ lại khi người dùng quay lại tab Admin hoặc định kỳ 8 giây
+    window.addEventListener('focus', () => {
+        loadChatbotDataFromSupabase();
+    });
+    setInterval(() => {
+        loadChatbotDataFromSupabase();
+    }, 8000);
 
     const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
     const savedTab = sessionStorage.getItem('pawpal_admin_chatbot_subtab');

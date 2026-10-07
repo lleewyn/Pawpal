@@ -3516,7 +3516,11 @@
             try {
                 const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                 if (client && typeof client.channel === 'function') {
-                    client.channel('pawpal-staff-realtime-channel')
+                    if (window._pawpalStaffRealtimeChannel) {
+                        try { client.removeChannel(window._pawpalStaffRealtimeChannel); } catch (e) {}
+                    }
+                    const chName = 'pawpal-staff-realtime-' + Date.now();
+                    window._pawpalStaffRealtimeChannel = client.channel(chName)
                         .on('postgres_changes', { event: '*', schema: 'public', table: 'staff' }, async (payload) => {
                             console.log('Realtime Supabase Staff updated:', payload);
                             await loadStaffModuleData();

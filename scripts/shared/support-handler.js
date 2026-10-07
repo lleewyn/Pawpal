@@ -410,7 +410,7 @@
                         });
                         arr[idx].customerRating = rating;
                         arr[idx].customerRatingComment = comment;
-                        arr[idx].status = 'resolved';
+                        arr[idx].status = rating < 3 ? 'reprocessing' : 'resolved';
                         localStorage.setItem(storageKey, JSON.stringify(arr));
                     }
                 };

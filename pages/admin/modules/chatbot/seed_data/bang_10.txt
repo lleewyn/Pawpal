@@ -1,0 +1,98 @@
+Bảng 10: Ma trận kịch bản hội thoại theo tình huống
+				
+"Mục đích: Liệt kê các luồng trò chuyện điển hình từ khi khách đặt vấn đề đến khi giải quyết xong.
+
+"				
+Mã kịch bản	Tên tình huống thực tế	Mục tiêu của khách hàng	Bước dẫn dắt của Bot	Điểm kết thúc hoặc chuyển giao
+SCEN-SPA-01	Đặt lịch tắm vệ sinh cho thú cưng	Đặt hẹn khung giờ làm sạch cho cún	Hỏi cân nặng bé, đề xuất khung giờ thợ còn trống và báo giá sơ bộ	Chuyển dữ liệu sang màn hình xác nhận thanh toán
+SC-01	Tư vấn dinh dưỡng và Chọn thức ăn phù hợp	Tìm đúng loại hạt/pate cho giống, độ tuổi hoặc thói quen ăn uống của bé.	"1. Chào hỏi thân thiện + Hỏi thông tin bé: Loài (chó/mèo), giống, độ tuổi, cân nặng và khẩu vị/thói quen ăn.
+2. Phân tích nhu cầu cơ bản (dễ tiêu hóa, kén ăn, mượt lông, kiểm soát cân nặng).
+3. Đề xuất Top 2-3 sản phẩm có sẵn tại tiệm kèm giá, đặc điểm nổi bật và link xem sản phẩm.
+4. Hướng dẫn khách bấm thêm vào giỏ hàng hoặc áp dụng mã ưu đãi nếu có."	Kết thúc tự động: Khách chọn sản phẩm và bấm đặt mua trực tiếp trên Website.
+SC-02	Đặt lịch Spa và Grooming tạo kiểu	Đặt lịch làm đẹp, chọn kỹ thuật viên và biết trước giá dịch vụ.	"1. Hỏi nhu cầu làm đẹp (Tắm vệ sinh hay Cắt tỉa tạo kiểu) + Xin thông tin giống và cân nặng của bé.
+2. Tra cứu bảng giá chuẩn xác theo phân cấp cân nặng (Dưới 5kg, 5-10kg...).
+3. Hỏi ngày và khung giờ khách muốn đưa bé ghé tiệm.
+4. Kiểm tra ca trống trên hệ thống, tóm tắt thông tin ca hẹn và hướng dẫn bấm nút [Xác nhận đặt lịch]."	Kết thúc tự động: Hệ thống tạo mã lịch hẹn BKG-xxxx + Gửi tin nhắn xác nhận lịch hẹn vào Zalo/SMS của khách.
+SC-03	Đặt phòng Khách sạn thú cưng (Pet Hotel)	Gửi bé lưu trú an toàn tại tiệm trong dịp lễ/công tác.	"1. Hỏi ngày gửi, ngày đón, số lượng bé và loại phòng (Standard / VIP / Luxury Suite).
+2. Nhắc nhở quy định nhận phòng: Bé khỏe mạnh, không có rận/nấm và không mắc bệnh truyền nhiễm.
+3. Gợi ý các dịch vụ chăm sóc kèm theo: Chế độ ăn riêng, xem camera phòng, tắm sạch trước khi về.
+4. Tạm tính chi phí trọn gói và hiển thị thông tin đặt cọc giữ chỗ."	Kết thúc tự động: Tạo đơn đặt phòng tạm tính + Chuyển hướng khách thanh toán đặt cọc 30% giữ phòng.
+SC-04	Đặt xe Taxi Pet đưa đón tận nơi	Cần xe riêng của tiệm đưa bé đến làm Spa hoặc đón bé về nhà.	"1. Xác nhận địa chỉ đón/trả và khung giờ cần xe có mặt.
+2. Hỏi thông tin bé (cân nặng, tính cách có sợ xe/say xe không) và quy cách lồng vận chuyển.
+3. Hệ thống tính khoảng cách km từ tiệm đến nhà khách và báo giá cước di chuyển minh bạch.
+4. Hiển thị tóm tắt chuyến đi và xác nhận lịch xe riêng của tiệm xuất phát."	Kết thúc tự động: Tạo mã chuyến xe TXI-xxxx + Cập nhật trạng thái xe khởi hành đón bé.
+SC-05	Tra cứu tình trạng đơn hàng Shop	Biết đơn hàng đang ở đâu, khi nào giao tới.	"1. Hỏi số điện thoại đặt hàng hoặc mã đơn ORD-xxxx.
+2. Tra cứu trạng thái đơn trên hệ thống (Đã đóng gói / Đang giao / Giao thành công).
+3. Hiển thị vị trí đơn hàng, đơn vị giao hàng và thời gian giao dự kiến.
+4. Cung cấp nút xem chi tiết đơn hàng hoặc liên hệ nhân viên nếu cần hỗ trợ gấp."	Kết thúc tự động: Khách nắm được thông tin đơn hàng và an tâm đóng khung chat.
+SC-06	Tra cứu và Quản lý lịch hẹn (Đổi giờ / Hủy ca)	Đổi ngày giờ lịch hẹn đã đặt hoặc xin hủy ca đột xuất.	"1. Xác nhận mã lịch hẹn hoặc SĐT của khách, hiển thị thông tin ca hẹn hiện tại.
+2. Nếu khách đổi giờ: Kiểm tra ca còn trống trên lịch tiệm, cập nhật lại lịch hẹn tức thì.
+3. Nếu khách xin hủy ca: Hỏi lý do thiện chí, kiểm tra điều kiện hủy (trước ít nhất 2 tiếng) và hủy ca trên hệ thống.
+4. Gửi tin nhắn xác nhận lịch đã đổi/hủy thành công."	Kết thúc tự động: Cập nhật hệ thống lịch hẹn và giải phóng bàn làm việc cho khách khác.
+SC-07	Tra cứu điểm thưởng PawPoint và Đổi quà	Xem điểm tích lũy, hạng thành viên và các ưu đãi đổi được.	"1. Tra cứu thông tin hạng thành viên (Bạc / Vàng / Kim Cương) và số dư PawPoint hiện có theo SĐT.
+2. Liệt kê quyền lợi chiết khấu theo hạng thẻ của khách.
+3. Hiển thị danh mục quà tặng hoặc voucher có thể quy đổi theo số điểm hiện có.
+4. Hỗ trợ khách đổi điểm lấy mã ưu đãi trực tiếp trong khung chat."	Kết thúc tự động: Trừ điểm trên ví + Lưu mã voucher vào tài khoản của khách.
+SC-08	Khiếu nại giao trễ / Giao sai / Hỏng hàng (Shop)	Phản ánh sản phẩm bị lỗi để được đổi hàng hoặc hoàn tiền.	"1. Lắng nghe, xin lỗi thấu cảm về sự cố trải nghiệm của khách.
+2. Yêu cầu khách gửi hình ảnh/video chụp kiện hàng thực tế nhận được (bao bì móp méo, sản phẩm giao sai/thiếu).
+3. Ghi nhận mã đơn, tạo phiếu tiếp nhận sự cố vào hệ thống.
+4. Thông báo nhân viên CSKH/Kho sẽ đối soát minh chứng và liên hệ xử lý bồi hoàn cho khách trong vòng 15-30 phút."	Chuyển giao nhân sự: Ghi nhận Ticket khiếu nại lên hệ thống quản trị để nhân viên kiểm tra minh chứng trước khi áp dụng đền bù.
+SC-09	Khiếu nại bé bị trầy xước / Bị đau sau khi đi Spa về	Làm rõ sự cố, được hỗ trợ chăm sóc y tế và xin lỗi chân thành.	"1. Gửi lời xin lỗi chân thành và bày tỏ xót xa cùng gia đình.
+2. Hỏi thăm vị trí vết thương của bé, hướng dẫn phụ huynh giữ sạch vết thương, tránh dính nước.
+3. Yêu cầu khách gửi ảnh/video cận cảnh vết thương để cơ sở xác nhận ngay.
+4. Trấn an cam kết trách nhiệm của tiệm và chuyển ngay cho Quản lý cơ sở tiếp nhận."	Chuyển giao khẩn cấp: Đổi trạng thái Ticket khẩn cấp (P1/P0), ngắt kịch bản tự động và kết nối Quản lý cơ sở gọi điện trực tiếp trong 5-10 phút.
+SC-10	Khiếu nại thái độ nhân viên phục vụ / Tài xế xe	Phản ánh nhân viên gắt gỏng, bấm điện thoại lơ là hoặc thiếu trách nhiệm.	"1. Lắng nghe trọn vẹn, tuyệt đối không bao biện hay đôi co với khách.
+2. Thu thập thông tin: Tên nhân viên (nếu biết), khung giờ và vị trí xảy ra sự việc tại sảnh tiệm/trên xe.
+3. Thay mặt tiệm chân thành xin lỗi khách và cam kết Quản lý sẽ trích xuất camera/kiểm tra để xử lý kỷ luật nghiêm.
+4. Tạo Ticket phản ánh gửi lên Ban Quản lý."	Chuyển giao: Tạo Ticket nhân sự gửi Quản lý cửa hàng để gọi điện xin lỗi và thông báo kết quả giải quyết.
+SC-11	Khách yêu cầu gặp nhân viên tư vấn người thật	Khách không muốn chat tự động, cần người hỗ trợ giải quyết trực tiếp.	"1. Xác nhận yêu cầu: ""Dạ em hiểu ba mẹ đang cần hỗ trợ trực tiếp từ nhân viên PawPal ạ.""
+2. Xin vắn tắt nội dung: ""Ba mẹ cho em xin thông tin ngắn gọn vấn đề mình cần giải quyết để em chuyển đúng chuyên viên phụ trách nhé ạ.""
+3. Đưa cuộc trò chuyện vào hàng đợi ưu tiên của nhân viên trực ca.
+4. Thông báo thời gian dự kiến nhân sự phản hồi (trong 1-2 phút)."	Chuyển giao trực tiếp: Nhân viên CSKH nhấn tiếp nhận ca chat trên hệ thống quản trị, Bot lùi về chế độ theo dõi.
+SC-12	Sự cố thanh toán trừ tiền nhưng không ghi nhận đơn/lịch	Xác minh tiền đã đi đâu, không muốn bị mất tiền.	"1. Trấn an khách: Tiền thanh toán luôn được lưu vết an toàn tại ngân hàng/cổng thanh toán.
+2. Hướng dẫn khách gửi ảnh chụp biên lai giao dịch thành công (có hiển thị mã giao dịch/mã tham chiếu).
+3. Ghi nhận thông tin chuyển bộ phận Kế toán đối soát với cổng thanh toán.
+4. Báo thời gian xử lý và hỗ trợ kích hoạt đơn/lịch hẹn thủ công cho khách."	Chuyển giao Kế toán: Chuyển phiếu đối soát cho Kế toán cửa hàng xác nhận khớp tiền và duyệt đơn.
+SC-13	Khách hỏi sơ cứu khẩn cấp / Bé có dấu hiệu nguy kịch	Cần hỗ trợ khẩn khi bé co giật, sặc nước, nuốt dị vật, khó thở.	"1. Cảnh báo khẩn cấp: PawPal không có bác sĩ thú y chuyên khoa và không được phép chỉ định thuốc.
+2. Cung cấp ngay Hotline cấp cứu và địa chỉ của Bệnh viện/Phòng khám Thú y đối tác gần nhất.
+3. Nhắc nhở nguyên tắc an toàn khi đưa bé đi: Đặt bé nằm nghiêng một bên, giữ thông thoáng đường thở.
+4. Hỏi khách có cần điều ngay xe Taxi Pet của tiệm sang hỗ trợ chở bé đi bệnh viện cấp cứu gấp không."	Kết thúc khẩn cấp: Cung cấp thông tin bệnh viện thú y gần nhất + Điều phối xe riêng hỗ trợ đưa đi cấp cứu nếu khách yêu cầu.
+SC-14	Tư vấn chính sách đổi trả hàng hóa	Tìm hiểu điều kiện và thời hạn được đổi trả sản phẩm đã mua.	"1. Cung cấp quy định đổi trả của tiệm: Trong vòng 7 ngày đối với phụ kiện/đồ dùng còn nguyên tem; thức ăn/pate phải còn nguyên seal chưa khui.
+2. Hướng dẫn cách thức đổi trả: Mang trực tiếp ghé qua tiệm hoặc gửi shipper về địa chỉ cửa hàng.
+3. Hỏi mã đơn hàng để kiểm tra thời hạn mua hàng có hợp lệ không."	Kết thúc tự động: Khách nắm rõ quy định và được hướng dẫn tạo yêu cầu đổi hàng nếu đủ điều kiện.
+SC-15	Khách hỏi địa chỉ tiệm và Giờ mở cửa	Biết vị trí cửa hàng, chỗ đỗ xe, khung giờ làm việc.	"1. Cung cấp địa chỉ chi tiết của cửa hàng kèm đường link bản đồ chỉ đường Google Maps.
+2. Cung cấp khung giờ mở cửa (8:00 - 21:30 tất cả các ngày trong tuần) và hotline cửa hàng.
+3. Thông tin về bãi đỗ xe ô tô và xe máy thuận tiện ngay trước cửa tiệm.
+4. Gợi ý khách đặt lịch hẹn trước nếu muốn đưa bé qua làm đẹp để tránh phải chờ lâu."	Kết thúc tự động: Khách nhận được thông tin hướng dẫn đường đi và liên hệ.
+SC-16	Khách buông lời thô tục, giận dữ mất kiểm soát	Khách bức xúc gay gắt hoặc nhắn tin quấy rối hệ thống.	"1. Tự động che mờ từ ngữ nhạy cảm trên màn hình trực chat.
+2. Bot phản hồi điềm tĩnh, chuẩn mực: ""PawPal rất mong muốn lắng nghe và giải quyết thỏa đáng vấn đề của ba mẹ. Mong ba mẹ giữ bình tĩnh để nhân viên có thể hỗ trợ mình tốt nhất ạ.""
+3. Tập trung hỏi thẳng vào vấn đề khúc mắc cốt lõi.
+4. Nếu tiếp tục xúc phạm sau nhắc nhở: Tạm ngắt phiên chat tự động và chuyển Quản lý xem xét."	Chuyển giao Quản lý: Lưu toàn bộ nhật ký cuộc trò chuyện để Quản lý cơ sở trực tiếp liên hệ xử lý tranh chấp.
+SC-17	Tư vấn thú cưng khó tính / Hung dữ / Quá nhát người	Hỏi tiệm có nhận làm Spa cho chó dữ hoặc mèo hay cào cắn không.	"1. Đồng cảm với lo lắng của chủ: ""PawPal rất hiểu nhiều bé khi đến môi trường lạ sẽ sợ hãi và tự vệ ạ.""
+2. Hỏi thói quen của bé: Bé sợ tiếng máy sấy, kềm cắt móng hay sợ người lạ? Bé từng cắn ai chưa?
+3. Giới thiệu giải pháp: Thợ cắt tỉa nhiều kinh nghiệm, sử dụng loa che an toàn, thao tác nhẹ nhàng kiên nhẫn, tuyệt đối không đánh mắng bé.
+4. Khuyên chủ đưa bé đến sớm hơn 10-15 phút để bé làm quen không gian tiệm trước khi làm."	Kết thúc tự động: Đặt lịch dịch vụ kèm lưu cảnh báo: [Bé nhát/hung dữ - Bố trí Kỹ thuật viên trưởng thao tác nhẹ] trên hệ thống.
+SC-18	Bé có sức khỏe đặc biệt (Mang thai, già yếu, bệnh tim/hậu phẫu)	Hỏi bé đang mang thai hoặc già yếu có làm Spa hay gửi khách sạn được không.	"1. Hỏi rõ tình trạng của bé: Bé mang thai tháng thứ mấy, có bệnh tim hoặc vết thương phẫu thuật chưa lành không.
+2. Khuyến cáo an toàn: Tiệm xin phép từ chối các dịch vụ sấy nhiệt, cắt tỉa phức tạp hoặc gửi phòng đông đúc với các bé mang thai tháng cuối hoặc bệnh tim nặng để tránh sốc nhiệt/nguy hiểm cho bé.
+3. Gợi ý giải pháp an toàn: Chỉ nhận gói tắm vệ sinh nhanh, xả mát nhẹ nhàng.
+4. Khuyên chủ nên đưa bé đến kiểm tra tại phòng khám thú y chuyên khoa trước khi làm đẹp."	Kết thúc tư vấn an toàn: Bảo vệ an toàn cho thú cưng và tránh rủi ro trách nhiệm cho cửa hàng.
+SC-19	Tư vấn dinh dưỡng và chăm sóc chó/mèo con mới đón về	Chủ mới nuôi thú cưng, bối rối không biết chọn đồ ăn và đồ dùng ban đầu ra sao.	"1. Chúc mừng gia đình có thêm thành viên mới bốn chân! 🐾
+2. Hỏi độ tuổi của bé (dưới 2 tháng hay trên 2 tháng) để gợi ý thức ăn phù hợp: Sữa chuyên dụng, pate tập ăn dặm hoặc hạt ngâm mềm.
+3. Gợi ý các vật dụng sinh hoạt thiết yếu: Bát ăn, khay cát vệ sinh, đệm ngủ êm ái, đồ chơi gặm an toàn.
+4. Nhắc nhở chủ theo dõi thể trạng bé và đưa bé đi tiêm ngừa tại phòng khám thú y khi bé đủ ngày tuổi."	Kết thúc tự động: Giới thiệu danh mục các sản phẩm đồ dùng cho bé mới về nhà trên Website.
+SC-20	Khách muốn gửi thú cưng dài ngày / Theo tháng	Cần gửi bé lưu trú từ 2 tuần đến 1 tháng do đi công tác hoặc về quê.	"1. Hỏi thời gian gửi cụ thể, giống loài và thói quen sinh hoạt của bé.
+2. Cung cấp mức ưu đãi cho gói lưu trú dài ngày (chiết khấu theo tuần/tháng).
+3. Giới thiệu cam kết chăm sóc: Cung cấp camera phòng 24/7 xem bất cứ lúc nào, dọn phòng khử khuẩn mỗi ngày, nhắn tin cập nhật tình hình bé thường xuyên.
+4. Hẹn khách ghé xem phòng thực tế tại cửa hàng và thống nhất ký giấy gửi thú cưng."	Chuyển giao Quản lý: Kết nối Quản lý cửa hàng gọi điện tư vấn chi tiết và chuẩn bị phòng cho bé.
+SC-21	Báo cáo nhân viên có hành vi vòi tiền tip / Ép dịch vụ	Khách khó chịu vì nhân viên vòi tiền tip hoặc ép mua thêm gói đắt tiền.	"1. Cảm ơn phản ánh thẳng thắn của khách và xin lỗi vì trải nghiệm không thoải mái.
+2. Thu thập thông tin: Tên nhân viên (nếu nhớ) và khung giờ thực hiện dịch vụ tại tiệm.
+3. Khẳng định nguyên tắc: PawPal tuyệt đối nghiêm cấm hành vi vòi tiền tip hoặc chèo kéo ép giá khách.
+4. Tạo Ticket phản ánh gửi thẳng lên Quản lý cửa hàng để kiểm tra và xử lý kỷ luật."	Chuyển giao Quản lý: Quản lý cửa hàng liên hệ trực tiếp xin lỗi khách và kiểm điểm nhân sự ca trực.
+SC-22	Yêu cầu xuất hóa đơn điện tử cho công ty	Khách mua hàng/dịch vụ cần hóa đơn VAT để thanh toán chi phí doanh nghiệp.	"1. Hỏi mã đơn hàng hoặc mã lịch hẹn vừa thanh toán tại tiệm.
+2. Thu thập thông tin xuất hóa đơn: Tên công ty, Mã số thuế (MST), Địa chỉ doanh nghiệp và Email nhận hóa đơn.
+3. Hướng dẫn khách kiểm tra lại thông tin cho chuẩn xác.
+4. Thông báo thời gian phát hành hóa đơn điện tử gửi qua email trong vòng 24 - 48 giờ làm việc."	Chuyển giao Kế toán: Lưu dữ liệu vào hệ thống Kế toán để xuất hóa đơn điện tử gửi khách.
+SC-23	Khách để quên đồ dùng / Tư trang cá nhân tại tiệm	Khách làm rơi chìa khóa, nón bảo hiểm, ví, đồ chơi của bé tại sảnh tiệm.	"1. Thu thập thông tin mô tả món đồ để quên (màu sắc, đặc điểm nhận dạng) và khung giờ khách có mặt tại tiệm.
+2. Nhân viên lễ tân/bảo vệ đối chiếu với sổ ghi nhận đồ thất lạc nhặt được trong ngày.
+3. Nếu đã tìm thấy: Gửi ảnh xác nhận với khách và giữ tại quầy lễ tân để khách ghé lấy (hoặc khách tự book xe lấy đồ nếu muốn).
+4. Nếu chưa thấy: Báo nhân viên kiểm tra lại khu vực ghế chờ và camera sảnh."	Kết thúc hỗ trợ: Xác nhận giữ hộ đồ tại tiệm cho khách, không phát sinh chi phí vận chuyển bừa bãi.

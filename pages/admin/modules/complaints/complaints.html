@@ -59,6 +59,8 @@
                     <button type="button" class="quick-chip-btn active" data-filter="ALL">Tất cả</button>
                     <button type="button" class="quick-chip-btn" data-filter="MY">Của tôi phụ trách</button>
                     <button type="button" class="quick-chip-btn" data-filter="UNASSIGNED">Chưa phân công</button>
+                    <button type="button" class="quick-chip-btn" data-filter="WAITING_MANAGER">Chờ quản lý duyệt</button>
+                    <button type="button" class="quick-chip-btn" data-filter="REPROCESSING">Xử lý lần 2</button>
                     <button type="button" class="quick-chip-btn" data-filter="OVERDUE">Quá hạn SLA</button>
                     <button type="button" class="quick-chip-btn" data-filter="HIGH">Mức độ Cao</button>
                 </div>
@@ -81,6 +83,8 @@
                             <option value="new">Mới tiếp nhận</option>
                             <option value="processing">Đang xử lý</option>
                             <option value="waiting_customer">Chờ phản hồi khách hàng</option>
+                            <option value="waiting_manager_approval">Chờ quản lý duyệt</option>
+                            <option value="reprocessing">Đang xử lý lần 2</option>
                             <option value="resolved">Đã giải quyết</option>
                             <option value="closed">Đã đóng</option>
                         </select>
@@ -207,6 +211,8 @@
                     <button type="button" class="quick-chip-btn active" data-filter="ALL">Tất cả</button>
                     <button type="button" class="quick-chip-btn" data-filter="MY">Của tôi phụ trách</button>
                     <button type="button" class="quick-chip-btn" data-filter="UNASSIGNED">Chưa phân công</button>
+                    <button type="button" class="quick-chip-btn" data-filter="WAITING_MANAGER">Chờ quản lý duyệt</button>
+                    <button type="button" class="quick-chip-btn" data-filter="REPROCESSING">Xử lý lần 2</button>
                     <button type="button" class="quick-chip-btn" data-filter="OVERDUE">Quá hạn SLA</button>
                     <button type="button" class="quick-chip-btn" data-filter="HIGH">Mức độ Cao</button>
                 </div>
@@ -233,6 +239,8 @@
                             <option value="new">Mới tiếp nhận</option>
                             <option value="processing">Đang xử lý</option>
                             <option value="waiting_return">Chờ nhận hàng trả</option>
+                            <option value="waiting_manager_approval">Chờ quản lý duyệt</option>
+                            <option value="reprocessing">Đang xử lý lần 2</option>
                             <option value="resolved">Đã giải quyết</option>
                             <option value="closed">Đã đóng</option>
                         </select>
@@ -307,11 +315,13 @@
                     <span class="admin-badge badge-tier-diamond" id="viewTicketCategoryBadge">Dịch vụ Spa</span>
                     <span class="admin-badge badge-warning" id="viewTicketStatusBadge">Đang xử lý</span>
                     <span class="admin-badge badge-danger" id="viewTicketPriorityBadge">Mức độ Cao</span>
+                    <span class="admin-badge badge-neutral" id="viewTicketUnverifiedBadge" style="display: none;">Chưa xác minh giao dịch</span>
                 </div>
                 <div class="complaint-quick-actions" id="viewTicketQuickActions">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnAssignHandler">Chuyển người phụ trách</button>
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnRequestMoreInfo">Yêu cầu bổ sung</button>
                     <button type="button" class="admin-btn admin-btn-primary" id="btnOpenResolveModal">Chọn phương án giải quyết</button>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnReopenTicket" style="display: none; color: #236B48;">Mở lại Ticket</button>
                 </div>
             </div>
 
@@ -540,6 +550,45 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- KHỐI 4.1: BẢNG PHÊ DUYỆT CỦA QUẢN LÝ (KHI STATUS = WAITING_MANAGER_APPROVAL) -->
+                    <div class="drawer-info-block" id="managerApprovalPanel" style="margin-top: 24px; display: none;">
+                        <div class="manager-approval-panel">
+                            <div class="manager-approval-header">
+                                <span class="manager-approval-title">Yêu cầu Quản lý phê duyệt bồi hoàn</span>
+                                <span class="manager-approval-meta" id="managerApprovalSubmitTime">Đề xuất: Vừa xong</span>
+                            </div>
+                            <div class="manager-approval-content" id="managerApprovalSummary">
+                                <!-- Render summary text -->
+                            </div>
+                            <div class="manager-approval-actions">
+                                <button type="button" class="admin-btn admin-btn-secondary" id="btnManagerRejectProposal" style="color: #DC2626;">Từ chối đề xuất</button>
+                                <button type="button" class="admin-btn admin-btn-primary" id="btnManagerApproveProposal">Phê duyệt bồi hoàn</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KHỐI 4.2: BẢNG THÔNG BÁO VÀ NÚT MỞ LẠI TICKET KHI ĐÃ ĐÓNG -->
+                    <div class="drawer-info-block" id="ticketReopenPanel" style="margin-top: 24px; display: none;">
+                        <div class="ticket-reopen-panel">
+                            <div>
+                                <div style="font-weight: 600; font-size: 13px; color: var(--text-main);" id="ticketReopenTitle">Ticket đã đóng</div>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;" id="ticketReopenDesc">Có thể mở lại nếu khách hàng phản hồi bổ sung thông tin trong vòng 07 ngày.</div>
+                            </div>
+                            <button type="button" class="admin-btn admin-btn-primary" id="btnTriggerReopenTicket">Mở lại Ticket</button>
+                        </div>
+                    </div>
+
+                    <!-- KHỐI 4.3: CẢNH BÁO KHÁCH ĐÁNH GIÁ < 3 SAO (CẦN QUẢN LÝ XỬ LÝ LẦN 2) -->
+                    <div class="drawer-info-block" id="ticketLowRatingAlertPanel" style="margin-top: 24px; display: none;">
+                        <div style="background-color: #F7DCDC; border: 1px solid #F1AEAE; border-radius: 9px; padding: 14px 18px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="font-weight: 700; color: #8F2424; font-size: 13px;" id="lowRatingAlertTitle">Cảnh báo khẩn cấp: Khách hàng đánh giá thấp</div>
+                            <div style="font-size: 12.5px; color: #5C1515;" id="lowRatingAlertDesc">Khách hàng chấm điểm dưới 3 sao đối với thái độ/tốc độ xử lý. Quản lý cần gọi điện can thiệp và xử lý lần 2.</div>
+                            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;">
+                                <button type="button" class="admin-btn admin-btn-primary" id="btnResolveReprocess" style="background: #8F2424;">Hoàn tất can thiệp lần 2</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- CỘT PHẢI: LỊCH SỬ XỬ LÝ (TIMELINE) VÀ TRAO ĐỔI NỘI BỘ -->
@@ -604,6 +653,17 @@
                     </div>
                 </div>
 
+                <div style="margin-top: -8px; margin-bottom: 14px;">
+                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-muted); cursor: pointer;">
+                        <input type="checkbox" id="chkTicketUnverified" style="cursor: pointer;">
+                        Chưa xác minh giao dịch (Tạo vé tiếp nhận trước, liên kết giao dịch sau)
+                    </label>
+                </div>
+
+                <div class="ticket-duplicate-warning-box" id="ticketDuplicateWarningBox" style="display: none;">
+                    <strong>Cảnh báo:</strong> Giao dịch này đang có khiếu nại chưa đóng (<span id="ticketDuplicateWarningCode" style="font-weight: 700;"></span>). Chỉ tạo vé mới nếu đây là một sự cố hoàn toàn khác.
+                </div>
+
                 <div class="form-group-item">
                     <label class="form-label-clean">Tiêu đề khiếu nại *</label>
                     <input type="text" class="admin-input" id="inputTicketTitle" placeholder="Ví dụ: Bé trầy xước sau khi tắm sấy...">
@@ -644,6 +704,10 @@
                 <button type="button" class="modal-btn-close-text" id="btnCancelResolveModal">Đóng</button>
             </div>
             <div class="modal-body-clean">
+                <div id="resolveManagerApprovalNotice" style="display: none; background: #F5E8D3; color: #734718; padding: 10px 14px; border-radius: var(--admin-radius, 9px); font-size: 12.5px; margin-bottom: 14px; line-height: 1.4;">
+                    <strong>Phân cấp thẩm quyền:</strong> Phương án hoàn tiền hoặc bồi hoàn vượt hạn mức CSKH (Hoàn tiền mặt/chuyển khoản, Voucher ≥ 100.000 VNĐ, hoặc Pawpoint &gt; 500 điểm) bắt buộc phải chuyển sang <strong>Chờ quản lý duyệt</strong>.
+                </div>
+
                 <div class="form-group-item">
                     <label class="form-label-clean">Chọn phương án giải quyết *</label>
                     <select class="admin-select" id="selectResolveOption">

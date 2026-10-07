@@ -864,3 +864,86 @@
     text-decoration: underline;
 }
 
+/* 11. BỔ SUNG TRẠNG THÁI VÀ PHÂN CẤP DUYỆT (MỤC 3.16 & AGENTS.MD) */
+.badge-waiting-approval {
+    background-color: #F5E8D3 !important;
+    color: #734718 !important;
+    border: none !important;
+}
+
+.badge-reprocessing {
+    background-color: #F7DCDC !important;
+    color: #8F2424 !important;
+    border: none !important;
+}
+
+.manager-approval-panel {
+    background-color: rgba(245, 232, 211, 0.45);
+    border: 1px solid #E8D3B2;
+    border-radius: var(--admin-radius, 9px);
+    padding: 16px 20px;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.manager-approval-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.manager-approval-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #734718;
+}
+
+.manager-approval-meta {
+    font-size: 12px;
+    color: #8C5B23;
+}
+
+.manager-approval-content {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-main, #203A2C);
+    background: #FFFFFF;
+    border-radius: 6px;
+    padding: 10px 14px;
+    border: 1px solid #EFE4D2;
+}
+
+.manager-approval-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.ticket-reopen-panel {
+    background-color: rgba(238, 245, 241, 0.7);
+    border: 1px solid var(--border-neutral, #ECF2EE);
+    border-radius: var(--admin-radius, 9px);
+    padding: 14px 18px;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ticket-duplicate-warning-box {
+    background-color: #FDF2E9;
+    border: 1px solid #F5CBA7;
+    border-radius: var(--admin-radius, 9px);
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: #8A4B08;
+    line-height: 1.4;
+    margin-bottom: 14px;
+}
+
+

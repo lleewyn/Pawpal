@@ -127,10 +127,12 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'pages/admin/i
 // 3. Phục vụ các file tĩnh (html, css, js) từ thư mục gốc
 app.use(express.static(path.join(__dirname, '.'), { extensions: ['html'] }));
 
-// Route cho API Chatbot
+// Route cho API Chatbot (hỗ trợ tải động script AI)
 app.post('/api/chat', async (req, res) => {
     try {
-        await chatApi(req, res);
+        delete require.cache[require.resolve('./scripts/api/chat.js')];
+        const handler = require('./scripts/api/chat.js');
+        await handler(req, res);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });

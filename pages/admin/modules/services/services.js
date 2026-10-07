@@ -499,16 +499,19 @@
             });
         });
 
+        const currentMod = sessionStorage.getItem('pawpal_admin_active_module');
+        if (currentMod && currentMod !== 'Dịch vụ') return;
+
         // Kiểm tra hash hoặc sessionStorage để mở subtab mong muốn
         const hash = window.location.hash || '';
         const savedSubtab = sessionStorage.getItem('pawpal_admin_services_active_subtab');
-        if (hash === '#tab-service-detail' || (!hash.startsWith('#tab-service') && savedSubtab === 'tab-service-detail')) {
+        if (hash === '#tab-service-detail' || (hash.startsWith('#tab-service') && savedSubtab === 'tab-service-detail')) {
             switchSubtab('tab-service-detail');
-        } else if (hash === '#tab-service-catalog' || (!hash.startsWith('#tab-service') && savedSubtab === 'tab-service-catalog')) {
+        } else if (hash === '#tab-service-catalog' || (hash.startsWith('#tab-service') && savedSubtab === 'tab-service-catalog')) {
             switchSubtab('tab-service-catalog');
-        } else if (hash === '#tab-service-reviews' || (!hash.startsWith('#tab-service') && savedSubtab === 'tab-service-reviews')) {
+        } else if (hash === '#tab-service-reviews' || (hash.startsWith('#tab-service') && savedSubtab === 'tab-service-reviews')) {
             switchSubtab('tab-service-reviews');
-        } else if (hash === '#tab-service-bookings' || (!hash.startsWith('#tab-service') && savedSubtab === 'tab-service-bookings')) {
+        } else if (hash === '#tab-service-bookings' || (hash.startsWith('#tab-service') && savedSubtab === 'tab-service-bookings')) {
             switchSubtab('tab-service-bookings');
         } else if (savedSubtab && document.getElementById('subtab-' + savedSubtab)) {
             switchSubtab(savedSubtab);
@@ -540,9 +543,16 @@
         const targetSection = document.getElementById('subtab-' + subtabId);
         if (targetSection) targetSection.classList.add('active');
 
-        // Đồng bộ URL Hash
-        window.location.hash = subtabId;
-        sessionStorage.setItem('pawpal_admin_services_active_subtab', subtabId);
+        // Đồng bộ URL Hash một cách an toàn mà không kích hoạt hashchange làm gián đoạn router
+        const currentMod = sessionStorage.getItem('pawpal_admin_active_module');
+        if (!currentMod || currentMod === 'Dịch vụ') {
+            try {
+                history.replaceState(null, '', '#' + subtabId);
+            } catch (e) {
+                window.location.hash = '#' + subtabId;
+            }
+            sessionStorage.setItem('pawpal_admin_services_active_subtab', subtabId);
+        }
 
         // Quản lý Deep Breadcrumb
         if (deepBreadcrumbEl) {
@@ -4892,6 +4902,9 @@
     // ==========================================================================
     async function init() {
         await loadServicesData();
+        if (sessionStorage.getItem('pawpal_admin_active_module') && sessionStorage.getItem('pawpal_admin_active_module') !== 'Dịch vụ') {
+            return;
+        }
         setupHeaderSubtabs();
         renderUpcomingBar();
         updateKPIs();

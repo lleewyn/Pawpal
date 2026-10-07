@@ -225,11 +225,46 @@
     transition: background 0.2s ease;
 }
 
-.fab-chat-close:hover {
-    background: rgba(255,255,255,0.15);
-    color: #ffffff;
+.fab-toxic-banner {
+    background: #FEF3C7;
+    color: #92400E;
+    border-bottom: 1px solid #FCD34D;
+    font-size: 11.5px;
+    padding: 8px 14px;
+    line-height: 1.45;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 500;
 }
 
+.fab-toxic-banner.danger {
+    background: #FEE2E2;
+    color: #991B1B;
+    border-bottom-color: #FCA5A5;
+}
+
+.fab-toxic-countdown {
+    background: #FEE2E2;
+    color: #B91C1C;
+    font-weight: 600;
+    font-size: 11.5px;
+    padding: 6px 12px;
+    text-align: center;
+    border-top: 1px solid #FCA5A5;
+}
+
+.fab-chat-input:disabled {
+    background: #F3F4F6 !important;
+    color: #9CA3AF !important;
+    cursor: not-allowed !important;
+}
+
+.fab-chat-send:disabled {
+    background: #9CA3AF !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+}
 
 .fab-chat-messages {
     padding: 16px;
@@ -273,6 +308,21 @@
     align-self: flex-end;
 }
 
+.fab-chat-bubble--staff {
+    background: #DCEEE2;
+    color: #165335;
+    border-left: 3px solid #236B48;
+    align-self: flex-start;
+}
+
+.fab-chat-bubble--staff .staff-sender-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #236B48;
+    display: block;
+    margin-bottom: 3px;
+}
+
 .fab-chat-bubble--typing {
     background: var(--color-primary-light);
     align-self: flex-start;
@@ -298,6 +348,29 @@
     50%       { opacity: 1; transform: translateY(-3px); }
 }
 
+
+.fab-chat-bubble--system-notice {
+    background: #EEF5F1;
+    color: #203A2C;
+    border: 1px solid #C3DEC7;
+    border-radius: var(--card-border-radius);
+    font-size: 0.8rem;
+    padding: 8px 12px;
+    align-self: center;
+    text-align: center;
+    width: 92%;
+    margin: 4px 0;
+}
+
+.fab-chat-bubble--system-notice strong {
+    color: #236B48;
+}
+
+.fab-chat-suggest--agent {
+    border-color: #236B48 !important;
+    color: #236B48 !important;
+    font-weight: 600 !important;
+}
 
 .fab-chat-suggestions {
     display: flex;
