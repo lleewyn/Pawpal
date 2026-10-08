@@ -6,6 +6,7 @@
     let reviewsData = [];
     let liveStaffList = [];
     let liveCustomerDirectory = [];
+    let livePetDirectory = [];
     let updateServiceOptionsRef = null;
     let populateStaffSelectRef = null;
     let populateCustomerDatalistRef = null;
@@ -18,7 +19,7 @@
         if (db && !forceReload) {
             try {
                 console.log('[Services] Đang nạp dữ liệu Dịch vụ & Lịch hẹn từ Supabase...');
-                const [appRes, svcRes, priceRes, revRes, careLogRes, staffRes, custRes] = await Promise.all([
+                const [appRes, svcRes, priceRes, revRes, careLogRes, staffRes, custRes, petRes] = await Promise.all([
                     db.from('appointment')
                       .select(`
                           id, 
@@ -55,7 +56,21 @@
                           customer_profile (*), 
                           pet_profile (id, pet_code, pet_name, species, breed, weight, allergy, routine)
                       `)
-                      .order('created_at', { ascending: false })
+                      .order('created_at', { ascending: false }),
+                    db.from('pet_profile')
+                      .select(`
+                          id,
+                          pet_code,
+                          pet_name,
+                          species,
+                          breed,
+                          weight,
+                          allergy,
+                          routine,
+                          customer_id,
+                          customer:customer_id (id, phone_main, customer_profile (full_name))
+                      `)
+                      .order('pet_name', { ascending: true })
                 ]);
 
                 const careLogs = (!careLogRes.error && careLogRes.data) ? careLogRes.data : [];
@@ -246,6 +261,21 @@
                 if (!custRes.error && Array.isArray(custRes.data)) {
                     liveCustomerDirectory = custRes.data;
                     if (typeof populateCustomerDatalistRef === 'function') populateCustomerDatalistRef();
+                }
+                if (petRes && !petRes.error && Array.isArray(petRes.data) && petRes.data.length > 0) {
+                    livePetDirectory = petRes.data;
+                } else if (liveCustomerDirectory.length > 0) {
+                    livePetDirectory = [];
+                    liveCustomerDirectory.forEach(c => {
+                        const pets = Array.isArray(c.pet_profile) ? c.pet_profile : (c.pet_profile ? [c.pet_profile] : []);
+                        pets.forEach(p => {
+                            livePetDirectory.push({
+                                ...p,
+                                customer_id: c.id,
+                                customer: c
+                            });
+                        });
+                    });
                 }
                 if (typeof updateServiceOptionsRef === 'function') {
                     const currentCat = document.getElementById('newBookingCategory')?.value || 'Spa';
@@ -2401,6 +2431,31 @@
         }
 
         const custDropdown = document.getElementById('bookingCustomerDropdown');
+        const petDropdown = document.getElementById('bookingPetDropdown');
+
+        // Chọn thú cưng từ dropdown gợi ý
+        function selectPetForBooking(p) {
+            currentMatchedPet = p;
+            if (petInput) petInput.value = p.pet_name || '';
+            if (alertInput && (p.allergy || p.routine)) {
+                alertInput.value = p.allergy || p.routine;
+            }
+            if (petDropdown) petDropdown.style.display = 'none';
+
+            // Nếu thú cưng có liên kết với khách hàng, tự động điền khách hàng & SĐT nếu chưa có
+            const ownerId = p.customer_id || p.customer?.id;
+            const ownerPhone = p.customer?.phone_main;
+            if (ownerId || ownerPhone) {
+                const matchedCust = liveCustomerDirectory.find(c => c.id === ownerId || (ownerPhone && c.phone_main === ownerPhone));
+                if (matchedCust && (!currentMatchedCustomer || currentMatchedCustomer.id !== matchedCust.id)) {
+                    currentMatchedCustomer = matchedCust;
+                    const realName = getCustomerDisplayName(matchedCust);
+                    const realPhone = matchedCust.phone_main || '';
+                    if (custInput) custInput.value = realName;
+                    if (phoneInput && realPhone) phoneInput.value = realPhone;
+                }
+            }
+        }
 
         // Chọn khách hàng từ dropdown gợi ý
         function selectCustomerForBooking(c) {
@@ -2411,34 +2466,17 @@
             if (phoneInput && realPhone) phoneInput.value = realPhone;
             if (custDropdown) custDropdown.style.display = 'none';
 
-            // Nạp danh sách thú cưng của khách này
-            if (petDatalist) {
-                petDatalist.innerHTML = '';
-                const pets = Array.isArray(c.pet_profile) ? c.pet_profile : (c.pet_profile ? [c.pet_profile] : []);
-                pets.forEach(p => {
-                    const opt = document.createElement('option');
-                    opt.value = p.pet_name;
-                    opt.dataset.id = p.id;
-                    opt.dataset.breed = p.breed || '';
-                    opt.dataset.allergy = p.allergy || p.routine || '';
-                    opt.textContent = `${p.pet_name} (${p.breed || p.species || 'Thú cưng'}${p.weight ? ' - ' + p.weight + 'kg' : ''})`;
-                    petDatalist.appendChild(opt);
-                });
-
-                // Tự động điền bé cưng nếu khách có 1 bé
-                if (pets.length === 1 && petInput) {
-                    petInput.value = pets[0].pet_name;
-                    currentMatchedPet = pets[0];
-                    if (alertInput && (pets[0].allergy || pets[0].routine)) {
-                        alertInput.value = pets[0].allergy || pets[0].routine;
-                    }
-                } else if (pets.length > 1 && petInput && !petInput.value) {
-                    petInput.value = pets[0].pet_name;
-                    currentMatchedPet = pets[0];
-                    if (alertInput && (pets[0].allergy || pets[0].routine)) {
-                        alertInput.value = pets[0].allergy || pets[0].routine;
-                    }
-                }
+            // Xử lý danh sách thú cưng của khách này
+            const pets = Array.isArray(c.pet_profile) ? c.pet_profile : (c.pet_profile ? [c.pet_profile] : []);
+            if (pets.length === 1 && petInput) {
+                selectPetForBooking(pets[0]);
+            } else if (pets.length > 1 && petInput) {
+                petInput.value = '';
+                petInput.placeholder = `Bấm để chọn 1 trong ${pets.length} bé cưng của khách...`;
+                currentMatchedPet = null;
+                if (alertInput) alertInput.value = '';
+            } else if (pets.length === 0 && petInput) {
+                petInput.placeholder = 'Khách chưa có bé cưng, nhập tên bé mới...';
             }
         }
 
@@ -2493,6 +2531,78 @@
             custDropdown.style.display = 'block';
         }
 
+        // Hiển thị danh sách gợi ý thú cưng (Custom Autocomplete Popover)
+        function renderPetAutocomplete(filterText = '') {
+            if (!petDropdown) return;
+            const q = (filterText || '').toLowerCase().trim();
+
+            let candidatePets = [];
+            if (currentMatchedCustomer) {
+                // Ưu tiên các bé cưng của khách hàng này
+                const custPets = Array.isArray(currentMatchedCustomer.pet_profile) ? currentMatchedCustomer.pet_profile : (currentMatchedCustomer.pet_profile ? [currentMatchedCustomer.pet_profile] : []);
+                if (custPets.length > 0) {
+                    candidatePets = custPets.map(p => ({ ...p, customer: currentMatchedCustomer }));
+                } else {
+                    candidatePets = livePetDirectory.filter(p => p.customer_id === currentMatchedCustomer.id);
+                }
+            }
+
+            // Nếu không có khách hoặc người dùng đang tìm kiếm mà khách hiện tại không có bé khớp
+            if (candidatePets.length === 0 || (!currentMatchedCustomer && livePetDirectory.length > 0)) {
+                candidatePets = livePetDirectory;
+            }
+
+            const filtered = candidatePets.filter(p => {
+                if (!q) return true;
+                const petName = (p.pet_name || '').toLowerCase();
+                const breed = (p.breed || '').toLowerCase();
+                const species = (p.species || '').toLowerCase();
+                const ownerName = (p.customer?.customer_profile?.full_name || '').toLowerCase();
+                const ownerPhone = (p.customer?.phone_main || '').toLowerCase();
+                return petName.includes(q) || breed.includes(q) || species.includes(q) || ownerName.includes(q) || ownerPhone.includes(q);
+            });
+
+            if (filtered.length === 0) {
+                petDropdown.innerHTML = '<div class="customer-autocomplete-empty" style="padding: 14px; text-align: center; font-size: 12.5px; color: #4F7A65;">Không tìm thấy bé cưng. Bạn có thể nhập tên bé cưng mới trực tiếp.</div>';
+                petDropdown.style.display = 'block';
+                return;
+            }
+
+            petDropdown.innerHTML = '';
+            filtered.forEach(p => {
+                const petName = p.pet_name || 'Bé cưng';
+                const breed = p.breed || p.species || 'Thú cưng';
+                const weightText = p.weight ? ` • ${p.weight}kg` : '';
+                const ownerProf = Array.isArray(p.customer?.customer_profile) ? p.customer?.customer_profile[0] : p.customer?.customer_profile;
+                const ownerName = ownerProf?.full_name || (p.customer?.phone_main ? `Khách (${p.customer.phone_main})` : 'Chưa có chủ');
+                const ownerPhone = p.customer?.phone_main || '';
+                const ownerInfo = ownerPhone ? `${ownerName} • ${ownerPhone}` : ownerName;
+                const initial = petName.charAt(0).toUpperCase() || '🐾';
+
+                const item = document.createElement('div');
+                item.className = 'customer-autocomplete-item';
+                item.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 9px 14px; border-bottom: 1px solid #F4FAF6; cursor: pointer; transition: background 0.15s ease; background-color: #ffffff;';
+                item.innerHTML = `
+                    <div class="customer-autocomplete-info" style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                        <div class="customer-autocomplete-avatar" style="width: 32px; height: 32px; border-radius: 50%; background-color: #EEF5F1; color: #236B48; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">${initial}</div>
+                        <div class="customer-autocomplete-meta" style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                            <div class="customer-autocomplete-name" style="font-size: 13px; font-weight: 600; color: #203A2C; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${petName} <span style="font-size: 12px; font-weight: 400; color: #4F7A65;">(${breed}${weightText})</span></div>
+                            <div class="customer-autocomplete-phone" style="font-size: 11.5px; color: #4F7A65;">Chủ: ${ownerInfo}</div>
+                        </div>
+                    </div>
+                    ${p.allergy || p.routine ? `<div class="customer-autocomplete-pets" style="font-size: 11px; color: #D97706; background-color: #FEF3C7; padding: 3px 8px; border-radius: 9px; font-weight: 500; white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0;" title="${p.allergy || p.routine}">⚠️ Lưu ý</div>` : ''}
+                `;
+                item.addEventListener('mouseenter', () => { item.style.backgroundColor = '#EEF5F1'; });
+                item.addEventListener('mouseleave', () => { item.style.backgroundColor = '#ffffff'; });
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    selectPetForBooking(p);
+                });
+                petDropdown.appendChild(item);
+            });
+            petDropdown.style.display = 'block';
+        }
+
         if (custInput) {
             custInput.addEventListener('focus', () => {
                 renderCustomerAutocomplete(custInput.value);
@@ -2507,28 +2617,33 @@
             });
         }
 
+        if (petInput) {
+            petInput.addEventListener('focus', () => {
+                renderPetAutocomplete(petInput.value);
+            });
+            petInput.addEventListener('input', () => {
+                renderPetAutocomplete(petInput.value);
+            });
+            petInput.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (petDropdown) petDropdown.style.display = 'none';
+                }, 200);
+            });
+            petInput.addEventListener('change', () => {
+                const petVal = (petInput.value || '').trim().toLowerCase();
+                const matchedPet = livePetDirectory.find(p => (p.pet_name || '').toLowerCase() === petVal);
+                if (matchedPet) {
+                    selectPetForBooking(matchedPet);
+                }
+            });
+        }
+
         if (phoneInput) {
             phoneInput.addEventListener('change', () => {
                 const rawPhone = phoneInput.value.trim().toLowerCase();
                 if (!rawPhone) return;
                 const matched = liveCustomerDirectory.find(c => (c.phone_main || '').toLowerCase() === rawPhone);
                 if (matched) selectCustomerForBooking(matched);
-            });
-        }
-
-        if (petInput) {
-            petInput.addEventListener('change', () => {
-                const petVal = (petInput.value || '').trim().toLowerCase();
-                if (currentMatchedCustomer && currentMatchedCustomer.pet_profile) {
-                    const pets = Array.isArray(currentMatchedCustomer.pet_profile) ? currentMatchedCustomer.pet_profile : [currentMatchedCustomer.pet_profile];
-                    const p = pets.find(item => (item.pet_name || '').toLowerCase() === petVal);
-                    if (p) {
-                        currentMatchedPet = p;
-                        if (alertInput && (p.allergy || p.routine)) {
-                            alertInput.value = p.allergy || p.routine;
-                        }
-                    }
-                }
             });
         }
 
