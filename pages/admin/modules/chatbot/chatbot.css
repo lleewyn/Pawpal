@@ -307,13 +307,19 @@
     font-size: 12px;
     font-weight: 500;
     color: var(--text-muted);
-    padding: 6px 4px;
+    padding: 6px 2px;
     cursor: pointer;
     font-family: inherit;
     border-radius: var(--admin-radius);
     text-align: center;
     position: relative;
     transition: color 0.15s, background-color 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 48px;
 }
 
 .inbox-tab-btn:hover {
@@ -326,15 +332,32 @@
     background-color: #EEF5F1;
 }
 
-.badge-urgent-count {
-    display: inline-block;
-    color: #DC2626;
-    background-color: #FEE2E2;
-    padding: 1px 6px;
+.tab-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
     border-radius: 9px;
     font-size: 11px;
     font-weight: 700;
-    margin-left: 2px;
+    line-height: 1;
+}
+
+.badge-urgent-count {
+    color: #DC2626;
+    background-color: #FEE2E2;
+}
+
+.badge-active-count {
+    color: #20495E;
+    background-color: #DCEAF2;
+}
+
+.badge-all-count {
+    color: #2D483B;
+    background-color: #E2ECE5;
 }
 
 .conversations-scroll-list {

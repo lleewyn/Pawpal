@@ -882,10 +882,19 @@
             return true;
         });
 
-        // Cập nhật số đếm ca khẩn cấp
+        // Cập nhật số đếm các tab lọc
         const urgentCount = liveConversations.filter(c => c.category === 'urgent').length;
+        const activeCount = liveConversations.filter(c => c.isHandover).length;
+        const allCount = liveConversations.length;
+
         const countBadge = document.getElementById('urgentBadgeCount');
         if (countBadge) countBadge.textContent = urgentCount;
+
+        const activeBadge = document.getElementById('activeBadgeCount');
+        if (activeBadge) activeBadge.textContent = activeCount;
+
+        const allBadge = document.getElementById('allBadgeCount');
+        if (allBadge) allBadge.textContent = allCount;
 
         if (filtered.length === 0) {
             container.innerHTML = `
