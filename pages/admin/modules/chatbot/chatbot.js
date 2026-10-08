@@ -968,7 +968,6 @@
                         ${handoverTag}
                         <span class="sla-timer-pill ${sla.className} sla-pill-${conv.id}">${sla.text}</span>
                     </div>
-                    ${conv.unreadCount > 0 ? `<span class="badge-urgent-count">${conv.unreadCount}</span>` : ''}
                 </div>
             `;
 
