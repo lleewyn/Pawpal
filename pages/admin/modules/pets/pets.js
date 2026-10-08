@@ -1327,8 +1327,18 @@
             const pet = petsData[currentEditingPetCode] || petsData['PET-001'];
             if (!modalEditPet) return;
 
+            const ownerSelect = document.getElementById('editPetOwner');
+            if (ownerSelect) {
+                const custs = Object.values(customersData);
+                if (custs.length > 0) {
+                    ownerSelect.innerHTML = custs.map(c => `
+                        <option value="${c.id}">${c.name} - ${c.phone || 'Chưa có SĐT'} (${c.tier || 'Khách mới'})</option>
+                    `).join('');
+                }
+                ownerSelect.value = pet.custId || (custs[0] ? custs[0].id : '');
+            }
+
             if (document.getElementById('editPetCode')) document.getElementById('editPetCode').value = pet.code;
-            if (document.getElementById('editPetOwner')) document.getElementById('editPetOwner').value = pet.custId || 'CUST-001';
             if (document.getElementById('editPetName')) document.getElementById('editPetName').value = pet.name || '';
             if (document.getElementById('editPetSpecies')) document.getElementById('editPetSpecies').value = pet.species || 'dog';
             if (document.getElementById('editPetBreed')) document.getElementById('editPetBreed').value = pet.breed || pet.speciesBreed || '';
@@ -2437,7 +2447,7 @@
         }
 
         if (btnSubmitAddVaccine) {
-            btnSubmitAddVaccine.addEventListener('click', () => {
+            btnSubmitAddVaccine.addEventListener('click', async () => {
                 const currentPetId = sessionStorage.getItem('pawpal_admin_pet_id') || 'PET-001';
                 const pet = petsData[currentPetId];
                 if (!pet) return;
@@ -2464,6 +2474,17 @@
 
                 const place = document.getElementById('newVaccinePlace')?.value || 'Sổ tiêm đối chiếu';
                 const status = document.getElementById('newVaccineStatus')?.value || 'Đã tiêm đủ';
+
+                try {
+                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (client && pet.rawId) {
+                        await client.from('pet_profile').update({
+                            vaccination_history: `Đã tiêm ${title} (${formattedDate})`
+                        }).eq('id', pet.rawId);
+                    }
+                } catch (vErr) {
+                    console.warn('Lỗi lưu lịch sử tiêm vào Supabase:', vErr);
+                }
 
                 if (!pet.vaccines) pet.vaccines = [];
                 pet.vaccines.unshift({

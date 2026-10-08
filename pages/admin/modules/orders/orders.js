@@ -4548,10 +4548,13 @@
         // Khôi phục subtab từ hash hoặc sessionStorage
         const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
         const savedSubtab = sessionStorage.getItem('pawpal_admin_order_subtab');
+        const resolvedSavedSubtab = (savedSubtab === 'tab-order-catalog' || savedSubtab === 'tab-order-inventory')
+            ? 'tab-order-products'
+            : savedSubtab;
         const initialSubtab = (hash && document.getElementById(`subtab-${hash}`))
             ? hash
-            : (savedSubtab && document.getElementById(`subtab-${savedSubtab}`))
-                ? savedSubtab
+            : (resolvedSavedSubtab && document.getElementById(`subtab-${resolvedSavedSubtab}`))
+                ? resolvedSavedSubtab
                 : 'tab-order-list';
         switchSubtab(initialSubtab);
 

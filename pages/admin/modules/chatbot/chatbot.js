@@ -138,6 +138,40 @@
         modal.style.display = 'flex';
     }
 
+    // Wrapper: Hàm gọi nhanh openChatbotConfirmModal (hỗ trợ cả positional và object arguments)
+    function openChatbotConfirmModal(title, message, onConfirm, isDanger = true) {
+        if (typeof title === 'object' && title !== null) {
+            showChatbotConfirmModal(title);
+        } else {
+            showChatbotConfirmModal({
+                title: title || 'Xác nhận thao tác',
+                message: message || 'Bạn có chắc chắn muốn thực hiện thao tác này không?',
+                onConfirm: onConfirm,
+                isDanger: isDanger
+            });
+        }
+    }
+
+    // Modal 12: Lightbox xem ảnh đính kèm toàn màn hình
+    function openAdminImageLightbox(src, caption = '') {
+        const overlay = document.getElementById('modalAdminImageLightbox');
+        const imgEl = document.getElementById('imgAdminLightboxPreview');
+        const captionEl = document.getElementById('captionAdminLightbox');
+        const btnClose = document.getElementById('btnCloseAdminLightbox');
+
+        if (!overlay || !imgEl) return;
+        imgEl.src = src;
+        if (captionEl) captionEl.textContent = caption || '';
+        overlay.style.display = 'flex';
+
+        const closeLb = () => { overlay.style.display = 'none'; };
+        if (btnClose) btnClose.onclick = closeLb;
+        overlay.onclick = (e) => {
+            if (e.target === overlay) closeLb();
+        };
+    }
+
+
     // -------------------------------------------------------------
     // 1. DỮ LIỆU THỰC TẾ TỪ SUPABASE LIVE DATABASE
     // -------------------------------------------------------------
@@ -1302,7 +1336,7 @@
                 let senderBadge = '';
                 if (msg.sender === 'user') {
                     authorText = currentConversation.customerName;
-                    senderBadge = '<span class="admin-badge badge-info" style="font-size: 11px; padding: 1px 6px;">Khách hàng</span>';
+                    senderBadge = '';
                 } else if (msg.sender === 'bot') {
                     authorText = 'PawPal Bot';
                     senderBadge = '<span class="admin-badge badge-neutral" style="font-size: 11px; padding: 1px 6px;">AI tự động</span>';

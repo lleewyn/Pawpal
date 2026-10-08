@@ -360,8 +360,54 @@
                 } else {
                     pawpointHistory = [];
                 }
+                populateCustomerDatalists();
             } catch (err) {
                 console.error('[Customers] Lỗi nạp dữ liệu từ Supabase:', err);
+            }
+        }
+
+        // Nạp danh sách gợi ý sổ ra cho người dùng (Tìm kiếm, Pawpoint, Giống loài)
+        function populateCustomerDatalists() {
+            const searchDatalist = document.getElementById('customerSearchDatalist');
+            const adjustDatalist = document.getElementById('adjustCustomerDatalist');
+            const breedDatalist = document.getElementById('quickAddBreedDatalist');
+            const petBreedDatalist = document.getElementById('petBreedDatalist');
+
+            const customers = Object.values(customerDatabase);
+
+            if (searchDatalist) {
+                searchDatalist.innerHTML = '';
+                customers.forEach(c => {
+                    const opt = document.createElement('option');
+                    const petNames = (c.pets && c.pets.length > 0) ? ` (Bé: ${c.pets.map(p => p.name).join(', ')})` : '';
+                    opt.value = `${c.name} - ${c.phone}`;
+                    opt.label = `${c.tierName} • ${(c.points || 0).toLocaleString('vi-VN')} pts${petNames}`;
+                    searchDatalist.appendChild(opt);
+                });
+            }
+
+            if (adjustDatalist) {
+                adjustDatalist.innerHTML = '';
+                customers.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = `${c.name} - ${c.phone}`;
+                    opt.label = `Số dư: ${(c.points || 0).toLocaleString('vi-VN')} pts (${c.tierName})`;
+                    adjustDatalist.appendChild(opt);
+                });
+            }
+
+            const commonBreeds = [
+                'Poodle', 'Corgi', 'Golden Retriever', 'Phốc sóc (Pomeranian)', 
+                'Husky', 'Alaska', 'Pug', 'Chihuahua', 'Shiba Inu', 'Bulldog Pháp',
+                'Mèo Anh lông ngắn (ALN)', 'Mèo Anh lông dài (ALD)', 'Mèo Ba Tư (Persian)',
+                'Mèo Xiêm', 'Mèo Ragdoll', 'Mèo Munchkin', 'Mèo Sphynx', 'Thỏ Minilop'
+            ];
+
+            if (breedDatalist) {
+                breedDatalist.innerHTML = commonBreeds.map(b => `<option value="${b}">`).join('');
+            }
+            if (petBreedDatalist) {
+                petBreedDatalist.innerHTML = commonBreeds.map(b => `<option value="${b}">`).join('');
             }
         }
 
@@ -408,10 +454,15 @@
             const filterType = document.getElementById('pawpointFilterType')?.value || 'ALL';
 
             const filtered = pawpointHistory.filter(item => {
-                const matchQuery = !query ||
-                    (item.custName && item.custName.toLowerCase().includes(query)) ||
-                    (item.phone && item.phone.includes(query)) ||
-                    (item.reason && item.reason.toLowerCase().includes(query));
+                let matchQuery = !query;
+                if (query) {
+                    const qParts = query.includes(' - ') ? query.split(' - ').map(s => s.trim().toLowerCase()) : [query];
+                    matchQuery = qParts.some(part => 
+                        (item.custName && item.custName.toLowerCase().includes(part)) ||
+                        (item.phone && item.phone.includes(part)) ||
+                        (item.reason && item.reason.toLowerCase().includes(part))
+                    );
+                }
                 const matchType = (filterType === 'ALL') || (item.type === filterType);
                 return matchQuery && matchType;
             });
@@ -1260,12 +1311,17 @@
             const allCusts = Object.values(customerDatabase);
 
             const filtered = allCusts.filter(c => {
-                const matchSearch = !query || 
-                    c.id.toLowerCase().includes(query) ||
-                    c.name.toLowerCase().includes(query) ||
-                    c.phone.includes(query) ||
-                    (c.email && c.email.toLowerCase().includes(query)) ||
-                    (c.pets && c.pets.some(p => p.name.toLowerCase().includes(query) || (p.breed && p.breed.toLowerCase().includes(query))));
+                let matchSearch = !query;
+                if (query) {
+                    const qParts = query.includes(' - ') ? query.split(' - ').map(s => s.trim().toLowerCase()) : [query];
+                    matchSearch = qParts.some(part => 
+                        c.id.toLowerCase().includes(part) ||
+                        c.name.toLowerCase().includes(part) ||
+                        c.phone.includes(part) ||
+                        (c.email && c.email.toLowerCase().includes(part)) ||
+                        (c.pets && c.pets.some(p => p.name.toLowerCase().includes(part) || (p.breed && p.breed.toLowerCase().includes(part))))
+                    );
+                }
 
                 const matchTier = (selectedTier === 'ALL') || (c.tier === selectedTier);
 
@@ -1545,6 +1601,7 @@
 
         if (btnOpenAdjust && modalAdjust) {
             btnOpenAdjust.addEventListener('click', () => {
+                populateCustomerDatalists();
                 modalAdjust.style.display = 'flex';
             });
         }
@@ -1554,23 +1611,48 @@
         if (btnCloseAdjust) btnCloseAdjust.addEventListener('click', closeAdjustModal);
         if (btnCancelAdjust) btnCancelAdjust.addEventListener('click', closeAdjustModal);
         
-        // Gợi ý thông tin khách hàng thời gian thực khi nhập SĐT điều chỉnh điểm
+        // Gợi ý thông tin khách hàng thời gian thực khi nhập Tên hoặc SĐT điều chỉnh điểm
         const adjustPhoneInput = document.getElementById('adjustPhone');
         if (adjustPhoneInput) {
-            adjustPhoneInput.addEventListener('input', () => {
-                const clean = adjustPhoneInput.value.replace(/[^0-9]/g, '').trim();
+            function handleAdjustLookup() {
+                const raw = (adjustPhoneInput.value || '').trim();
                 const hint = document.getElementById('adjustPhoneCustomerHint');
                 if (!hint) return;
-                if (clean.length >= 9) {
-                    const matched = Object.values(customerDatabase).find(c => c.phone && c.phone.replace(/[^0-9]/g, '').trim() === clean);
-                    if (matched) {
-                        hint.innerHTML = `Khách hàng: <strong>${matched.name}</strong> (${matched.tierName}) — Số dư: <strong>${(matched.points || 0).toLocaleString('vi-VN')} pts</strong>`;
-                        hint.style.display = 'block';
-                        return;
-                    }
+
+                if (!raw) {
+                    hint.style.display = 'none';
+                    return;
                 }
-                hint.style.display = 'none';
-            });
+
+                let clean = raw.replace(/[^0-9]/g, '').trim();
+                let matched = null;
+
+                if (raw.includes(' - ')) {
+                    const [nPart, pPart] = raw.split(' - ').map(s => s.trim().toLowerCase());
+                    matched = Object.values(customerDatabase).find(c => 
+                        (c.phone && c.phone.toLowerCase() === pPart) || 
+                        (c.name && c.name.toLowerCase() === nPart)
+                    );
+                    if (matched && matched.phone) {
+                        adjustPhoneInput.value = matched.phone;
+                        clean = matched.phone.replace(/[^0-9]/g, '').trim();
+                    }
+                } else if (clean.length >= 9) {
+                    matched = Object.values(customerDatabase).find(c => c.phone && c.phone.replace(/[^0-9]/g, '').trim() === clean);
+                } else {
+                    matched = Object.values(customerDatabase).find(c => c.name && c.name.toLowerCase().includes(raw.toLowerCase()));
+                }
+
+                if (matched) {
+                    hint.innerHTML = `Khách hàng: <strong>${matched.name}</strong> (${matched.tierName}) — Số dư: <strong>${(matched.points || 0).toLocaleString('vi-VN')} pts</strong>`;
+                    hint.style.display = 'block';
+                } else {
+                    hint.style.display = 'none';
+                }
+            }
+
+            adjustPhoneInput.addEventListener('input', handleAdjustLookup);
+            adjustPhoneInput.addEventListener('change', handleAdjustLookup);
         }
 
         if (formAdjust) {
@@ -1586,11 +1668,21 @@
                     return;
                 }
 
-                // Tìm khách hàng có số điện thoại này
+                // Tìm khách hàng có số điện thoại hoặc tên này
                 const cleanPhone = phone.replace(/[^0-9]/g, '').trim();
-                let matchedCust = Object.values(customerDatabase).find(c => c.phone && c.phone.replace(/[^0-9]/g, '').trim() === cleanPhone);
+                let matchedCust = Object.values(customerDatabase).find(c => 
+                    (cleanPhone.length >= 9 && c.phone && c.phone.replace(/[^0-9]/g, '').trim() === cleanPhone) ||
+                    (c.name && c.name.toLowerCase() === phone.toLowerCase().trim())
+                );
+                if (!matchedCust && phone.includes(' - ')) {
+                    const [nPart, pPart] = phone.split(' - ').map(s => s.trim().toLowerCase());
+                    matchedCust = Object.values(customerDatabase).find(c => 
+                        (c.phone && c.phone.toLowerCase() === pPart) || 
+                        (c.name && c.name.toLowerCase() === nPart)
+                    );
+                }
                 if (!matchedCust) {
-                    showToast(`Không tìm thấy khách hàng với số điện thoại ${phone}!`, 'warning');
+                    showToast(`Không tìm thấy khách hàng với thông tin "${phone}"! Vui lòng chọn từ danh sách gợi ý.`, 'warning');
                     return;
                 }
 
@@ -1654,29 +1746,39 @@
 
         // 8. Tác vụ Khóa / Mở khóa tài khoản từ menu 3 chấm
         document.querySelectorAll('.btn-lock-user, .btn-unlock-user').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                const row = btn.closest('tr');
-                const badge = row?.querySelector('.admin-badge.badge-success, .admin-badge.badge-danger, .admin-badge.badge-warning');
                 const isLock = btn.classList.contains('btn-lock-user');
                 const custId = btn.getAttribute('data-id');
+                const custObj = customerDatabase[custId];
+                if (!custObj || !custObj.dbId) return;
 
-                if (isLock && badge) {
-                    row.classList.add('row-locked');
-                    badge.className = 'admin-badge badge-danger';
-                    badge.textContent = 'Bị khóa';
-                    btn.className = 'dropdown-item text-success btn-unlock-user';
-                    btn.innerHTML = `<span>Mở khóa tài khoản</span>`;
-                    if (customerDatabase[custId]) customerDatabase[custId].status = 'LOCKED';
-                    showToast('Đã khóa tài khoản khách hàng!');
-                } else if (!isLock && badge) {
-                    row.classList.remove('row-locked');
-                    badge.className = 'admin-badge badge-success';
-                    badge.textContent = 'Đang hoạt động';
-                    btn.className = 'dropdown-item text-danger btn-lock-user';
-                    btn.innerHTML = `<span>Khóa tài khoản</span>`;
-                    if (customerDatabase[custId]) customerDatabase[custId].status = 'ACTIVE';
-                    showToast('Đã mở khóa tài khoản khách hàng!');
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!client) {
+                    showToast('Lỗi kết nối CSDL Supabase!', 'danger');
+                    return;
+                }
+
+                try {
+                    const newStatus = isLock ? 'LOCKED' : 'ACTIVE';
+                    const { error: lockErr } = await client
+                        .from('customer')
+                        .update({ account_status: newStatus })
+                        .eq('id', custObj.dbId);
+
+                    if (lockErr) {
+                        console.error('[Customers] Lỗi cập nhật trạng thái:', lockErr);
+                        showToast('Không thể cập nhật trạng thái trên CSDL!', 'danger');
+                        return;
+                    }
+
+                    await loadCustomersModuleData();
+                    renderCustomersTable();
+                    updateCustomerKPIs();
+                    showToast(isLock ? `Đã khóa tài khoản khách hàng ${custObj.name}!` : `Đã mở khóa tài khoản khách hàng ${custObj.name}!`, 'success');
+                } catch (err) {
+                    console.error('[Customers] Lỗi cập nhật trạng thái:', err);
+                    showToast('Đã xảy ra lỗi khi cập nhật trạng thái!', 'danger');
                 }
 
                 document.querySelectorAll('.action-dropdown-menu.show').forEach(m => m.classList.remove('show'));
@@ -2222,6 +2324,24 @@
 
         if (searchInput) {
             searchInput.addEventListener('input', () => {
+                currentCustomerPage = 1;
+                renderCustomersTable();
+            });
+
+            searchInput.addEventListener('change', () => {
+                const val = (searchInput.value || '').trim();
+                if (val.includes(' - ')) {
+                    const [nPart, pPart] = val.split(' - ').map(s => s.trim().toLowerCase());
+                    const matched = Object.values(customerDatabase).find(c => 
+                        (c.phone && c.phone.toLowerCase() === pPart) || 
+                        (c.name && c.name.toLowerCase() === nPart)
+                    );
+                    if (matched) {
+                        sessionStorage.setItem('pawpal_admin_customer_id', matched.id);
+                        sessionStorage.setItem('pawpal_admin_customer_name', matched.name);
+                        renderDrawerCustomerProfile(matched.id);
+                    }
+                }
                 currentCustomerPage = 1;
                 renderCustomersTable();
             });

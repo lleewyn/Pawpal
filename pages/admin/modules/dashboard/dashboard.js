@@ -1,12 +1,12 @@
 /**
  * MODULE DASHBOARD TỔNG QUAN (PAWPAL ADMIN)
  * Tuân thủ nghiêm ngặt 100% AGENTS.md và ADMIN_DESIGN_SYSTEM.md:
- * - 100% SUPABASE LIVE DATABASE - ZERO JSON MOCK
- * - Nạp dữ liệu thực tế từ: sales_order, appointment, support_ticket, customer, customer_profile, pet_profile, product, staff, service
- * - Render 5 Thẻ KPI, Dòng cảnh báo khẩn cấp thuần chữ đỏ, Widget Ưu tiên xử lý, Tồn kho sản phẩm
- * - Biểu đồ Doanh thu 7 ngày thực tế từ sales_order
- * - Lịch hẹn đa chế độ (Tháng, Tuần, Ngày - Connected Overlap Clusters)
- * - Tiếp nhận quầy một chạm và Modal xem nhanh ca dịch vụ
+ * - 100% SUPABASE LIVE DATABASE - ZERO JSON MOCK - ZERO HARDCODED FALLBACKS
+ * - Nạp dữ liệu thực tế từ: sales_order, appointment, support_ticket, customer, customer_profile, pet_profile, product, staff, service, chat_conversation
+ * - Render 5 Thẻ KPI chuẩn xác, Dòng cảnh báo khẩn cấp thuần chữ đỏ, Widget Ưu tiên xử lý, Tồn kho thực tế
+ * - Biểu đồ Doanh thu 7 ngày tính toán từ sales_order hoàn thành
+ * - Lịch hẹn đa chế độ (Tháng, Tuần, Ngày) dựa trên 100% lịch hẹn thật từ appointment
+ * - Hiệu suất Chatbot AI & Tỷ lệ lấp đầy nhân sự thời gian thực
  */
 
 (function initDashboard() {
@@ -25,6 +25,14 @@
         return Number(value || 0).toLocaleString('vi-VN');
     }
 
+    function getTodayDateString() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     // ====================================================================
     // DATA STORE 100% TRỰC TIẾP TỪ SUPABASE LIVE DATABASE (ZERO JSON MOCK)
     // ====================================================================
@@ -32,6 +40,8 @@
     let liveAppointments = [];
     let liveTickets = [];
     let liveProducts = [];
+    let liveStaffList = [];
+    let liveChatConversations = [];
     let liveCustomersCount = 0;
     let livePetsCount = 0;
     let liveProfilesMap = new Map();
@@ -43,7 +53,7 @@
         try {
             const client = getSupabaseClient();
             if (!client) {
-                console.warn('[Dashboard] Supabase client not initialized.');
+                console.warn('[Dashboard] Supabase client chưa sẵn sàng.');
                 return;
             }
 
@@ -57,28 +67,32 @@
                 profilesRes,
                 petsRes,
                 staffRes,
-                servicesRes
+                servicesRes,
+                chatsRes
             ] = await Promise.all([
                 client.from('sales_order').select('*').order('created_at', { ascending: false }),
                 client.from('appointment').select('*').order('appointment_date', { ascending: false }),
                 client.from('support_ticket').select('*').order('created_at', { ascending: false }),
-                client.from('product').select('id, product_name, sku, sale_price, status').limit(10),
+                client.from('product').select('id, product_name, sku, sale_price, status, inventory(*)'),
                 client.from('customer').select('id', { count: 'exact', head: true }),
                 client.from('pet_profile').select('id', { count: 'exact', head: true }),
                 client.from('customer_profile').select('customer_id, full_name, phone'),
                 client.from('pet_profile').select('id, pet_name, customer_id, species, breed'),
-                client.from('staff').select('id, full_name'),
-                client.from('service').select('id, service_name, base_price')
+                client.from('staff').select('id, full_name, role, status'),
+                client.from('service').select('id, service_name, base_price'),
+                client.from('chat_conversation').select('id, status, created_at')
             ]);
 
             liveSalesOrders = ordersRes.data || [];
             liveAppointments = apptsRes.data || [];
             liveTickets = ticketsRes.data || [];
             liveProducts = productsRes.data || [];
-            liveCustomersCount = custCountRes.count || 0;
-            livePetsCount = petCountRes.count || 0;
+            liveStaffList = staffRes.data || [];
+            liveChatConversations = chatsRes.data || [];
+            liveCustomersCount = custCountRes.count !== null && custCountRes.count !== undefined ? custCountRes.count : 0;
+            livePetsCount = petCountRes.count !== null && petCountRes.count !== undefined ? petCountRes.count : 0;
 
-            // Maps cho việc tra cứu nhanh
+            // Maps tra cứu nhanh
             const profiles = profilesRes.data || [];
             liveProfilesMap.clear();
             profiles.forEach(p => {
@@ -91,9 +105,8 @@
                 livePetsMap.set(pet.id, pet);
             });
 
-            const staffList = staffRes.data || [];
             liveStaffMap.clear();
-            staffList.forEach(s => {
+            liveStaffList.forEach(s => {
                 liveStaffMap.set(s.id, s.full_name);
             });
 
@@ -103,7 +116,7 @@
                 liveServicesMap.set(srv.id, srv.service_name);
             });
 
-            console.log('[Dashboard] Nạp thành công từ Supabase: ' + liveSalesOrders.length + ' đơn, ' + liveAppointments.length + ' lịch hẹn, ' + liveTickets.length + ' tickets, ' + liveProducts.length + ' sản phẩm.');
+            console.log(`[Dashboard] Nạp dữ liệu thực tế thành công: ${liveSalesOrders.length} đơn, ${liveAppointments.length} lịch hẹn, ${liveTickets.length} ticket, ${liveProducts.length} sản phẩm, ${liveCustomersCount} khách, ${livePetsCount} bé.`);
         } catch (err) {
             console.error('[Dashboard] Lỗi nạp dữ liệu từ Supabase:', err);
         }
@@ -113,24 +126,27 @@
     // 1. RENDER 5 THẺ KPI & DÒNG CẢNH BÁO KHẨN CẤP
     // -------------------------------------------------------------
     function renderDashboardKPIs() {
-        const todayStr = new Date().toISOString().substring(0, 10);
+        const todayStr = getTodayDateString();
 
-        // Doanh thu hôm nay (từ đơn hàng hoàn thành trong ngày)
+        // Doanh thu hôm nay (chỉ tính các đơn hoàn thành/đã giao trong ngày hôm nay)
         const todayOrders = liveSalesOrders.filter(o => {
             const dateStr = o.created_at ? o.created_at.substring(0, 10) : '';
             return dateStr === todayStr;
         });
 
-        const todayCompletedRevenue = liveSalesOrders
-            .filter(o => o.order_status === 'COMPLETED' || o.order_status === 'completed' || o.order_status === 'DA_GIAO')
+        const todayCompletedRevenue = todayOrders
+            .filter(o => {
+                const s = (o.order_status || '').toUpperCase();
+                return s === 'COMPLETED' || s === 'DA_GIAO' || s === 'PAID';
+            })
             .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
 
         // Lịch hẹn hôm nay
         const todayBookingsCount = liveAppointments.filter(a => {
-            return a.appointment_date === todayStr || (a.created_at && a.created_at.substring(0, 10) === todayStr);
+            return a.appointment_date === todayStr;
         }).length;
 
-        // Đơn hàng mới cần duyệt
+        // Đơn hàng mới cần duyệt (Chờ xác nhận / Đang xử lý)
         const pendingOrders = liveSalesOrders.filter(o => {
             const s = (o.order_status || '').toUpperCase();
             return s === 'PENDING' || s === 'CHO_XAC_NHAN' || s === 'DANG_XU_LY';
@@ -142,32 +158,35 @@
             return s === 'OPEN' || s === 'IN_PROGRESS' || s === 'PENDING';
         });
 
-        // Render DOM 5 thẻ KPI
+        // Render DOM 5 thẻ KPI (100% số liệu thực)
         const elRevenue = document.getElementById('dashboardRevenue');
-        if (elRevenue) elRevenue.textContent = `${labelCurrency(todayCompletedRevenue || 25500000)} VNĐ`;
+        if (elRevenue) elRevenue.textContent = `${labelCurrency(todayCompletedRevenue)} VNĐ`;
 
         const elBookings = document.getElementById('dashboardBookings');
-        if (elBookings) elBookings.textContent = todayBookingsCount || liveAppointments.length;
+        if (elBookings) elBookings.textContent = todayBookingsCount;
 
         const elOrders = document.getElementById('dashboardOrders');
-        if (elOrders) elOrders.textContent = todayOrders.length || liveSalesOrders.length;
+        if (elOrders) elOrders.textContent = pendingOrders.length;
 
         const elCust = document.getElementById('dashboardCustomers');
-        if (elCust) elCust.textContent = liveCustomersCount || 7;
+        if (elCust) elCust.textContent = liveCustomersCount;
 
         const elPets = document.getElementById('dashboardPets');
-        if (elPets) elPets.textContent = livePetsCount || 5;
+        if (elPets) elPets.textContent = livePetsCount;
 
         // Render khối Ưu tiên xử lý
         const totalPriority = pendingTickets.length + pendingOrders.length;
         const elPriorityCount = document.getElementById('dashboardPriorityCount');
         if (elPriorityCount) {
             elPriorityCount.textContent = `${totalPriority} việc`;
-            elPriorityCount.className = `admin-badge ${totalPriority > 0 ? 'badge-warning' : 'badge-success'}`;
+            elPriorityCount.className = `admin-badge ${totalPriority > 0 ? 'badge-warning' : 'badge-neutral'}`;
         }
 
         const elComplaintsBadge = document.getElementById('dashboardComplaintsBadge');
-        if (elComplaintsBadge) elComplaintsBadge.textContent = pendingTickets.length;
+        if (elComplaintsBadge) {
+            elComplaintsBadge.textContent = pendingTickets.length;
+            elComplaintsBadge.className = `admin-badge ${pendingTickets.length > 0 ? 'badge-danger' : 'badge-neutral'}`;
+        }
 
         const elComplaintsSub = document.getElementById('dashboardComplaintsSub');
         if (elComplaintsSub) {
@@ -177,7 +196,10 @@
         }
 
         const elOrdersBadge = document.getElementById('dashboardOrdersBadge');
-        if (elOrdersBadge) elOrdersBadge.textContent = pendingOrders.length;
+        if (elOrdersBadge) {
+            elOrdersBadge.textContent = pendingOrders.length;
+            elOrdersBadge.className = `admin-badge ${pendingOrders.length > 0 ? 'badge-warning' : 'badge-neutral'}`;
+        }
 
         const elOrdersSub = document.getElementById('dashboardOrdersSub');
         if (elOrdersSub) {
@@ -186,7 +208,7 @@
                 : `Tất cả đơn hàng đã được duyệt`;
         }
 
-        // Cập nhật Dòng cảnh báo khẩn cấp (thuần chữ đỏ, không khung theo AGENTS.md)
+        // Dòng cảnh báo khẩn cấp (thuần chữ đỏ, không viền khung)
         const alertBanner = document.getElementById('dashboardAlertBanner');
         const alertText = document.getElementById('dashboardAlertText');
         const alertBtn = document.getElementById('dashboardAlertAction');
@@ -208,28 +230,88 @@
     }
 
     // -------------------------------------------------------------
-    // 2. RENDER WIDGET TỒN KHO SẢN PHẨM TỪ DATABASE
+    // 2. RENDER WIDGET TỒN KHO SẢN PHẨM THỰC TẾ TỪ INVENTORY
     // -------------------------------------------------------------
     function renderDashboardStockList() {
         const container = document.getElementById('dashboardStockList');
         if (!container) return;
 
         if (liveProducts.length === 0) {
-            container.innerHTML = '<div style="padding: 12px; font-size: 13px; color: var(--text-muted);">Kho hàng ổn định.</div>';
+            container.innerHTML = '<div style="padding: 12px; font-size: 13px; color: var(--text-muted);">Kho hàng ổn định, chưa có sản phẩm.</div>';
             return;
         }
 
-        const sampleStockCounts = [2, 0, 4, 1, 5];
-        container.innerHTML = liveProducts.slice(0, 3).map((prod, idx) => {
-            const count = sampleStockCounts[idx % sampleStockCounts.length];
-            const isLow = count > 0 && count <= 4;
-            const isEmpty = count === 0;
-            const badgeClass = isEmpty ? 'is-empty' : (isLow ? 'is-low' : '');
-            const badgeText = isEmpty ? 'Hết hàng' : `Còn ${count}`;
+        // Lấy thông tin tồn kho thực tế từ inventory
+        const productStockList = liveProducts
+            .filter(prod => {
+                const status = (prod.status || '').toUpperCase();
+                return status !== 'INACTIVE' && status !== 'DISCONTINUED' && status !== 'NGUNG_BAN';
+            })
+            .map(prod => {
+                const inv = Array.isArray(prod.inventory) ? prod.inventory[0] : prod.inventory;
+                const rawStock = inv?.quantity_in_stock !== undefined 
+                    ? inv.quantity_in_stock 
+                    : (inv?.quantity_on_hand !== undefined 
+                        ? inv.quantity_on_hand 
+                        : (inv?.stock_qty !== undefined ? inv.stock_qty : (prod.stock !== undefined ? prod.stock : 0)));
+                const stock = Math.max(0, parseInt(rawStock, 10) || 0);
+
+                const rawMinStock = inv?.minimum_stock !== undefined 
+                    ? inv.minimum_stock 
+                    : (inv?.safety_stock_level !== undefined ? inv.safety_stock_level : 5);
+                const minStock = Math.max(1, parseInt(rawMinStock, 10) || 5);
+
+                return {
+                    id: prod.id,
+                    name: prod.product_name || 'Sản phẩm PawPal',
+                    sku: prod.sku || 'N/A',
+                    stock: stock,
+                    minStock: minStock,
+                    isEmpty: stock === 0,
+                    isLow: stock > 0 && stock <= minStock
+                };
+            });
+
+        // Lọc các sản phẩm hết hàng hoặc sắp hết hàng theo Quy tắc thiết kế (Design & Business Rule)
+        // 1. Cấp bách nhất: Hết hàng (stock = 0) luôn luôn xếp đầu tiên (vị trí 1)
+        // 2. Tồn kho ít nhất xếp trước (tăng dần: 1 -> 2 -> 3 -> 4...)
+        // 3. Nếu cùng số lượng: Tỷ lệ thiếu hụt so với mức an toàn cao hơn xếp trước (stock / minStock nhỏ hơn)
+        // 4. Nếu bằng nhau: Mã SKU tăng dần theo bảng chữ cái A-Z
+        const lowStockItems = productStockList
+            .filter(p => p.isEmpty || p.isLow)
+            .sort((a, b) => {
+                // Quy tắc 1 (Ưu tiên cao nhất): Hết hàng (stock = 0) luôn luôn xếp lên đầu
+                if (a.stock === 0 && b.stock !== 0) return -1;
+                if (b.stock === 0 && a.stock !== 0) return 1;
+
+                // Quy tắc 2: Tồn kho ít nhất xếp trước (tăng dần: 1 -> 2 -> 3 -> 4...)
+                if (a.stock !== b.stock) {
+                    return a.stock - b.stock;
+                }
+
+                // Quy tắc 3: Tỷ lệ thiếu hụt so với mức tồn kho an toàn (thấp hơn xếp trước)
+                const ratioA = a.stock / a.minStock;
+                const ratioB = b.stock / b.minStock;
+                if (ratioA !== ratioB) {
+                    return ratioA - ratioB;
+                }
+
+                // Quy tắc 4: Sắp xếp theo mã SKU tăng dần (A -> Z)
+                return (a.sku || '').localeCompare(b.sku || '', undefined, { numeric: true, sensitivity: 'base' });
+            });
+
+        if (lowStockItems.length === 0) {
+            container.innerHTML = '<div style="padding: 12px; font-size: 13px; color: var(--text-muted);">Kho hàng ổn định, không có sản phẩm sắp hết.</div>';
+            return;
+        }
+
+        container.innerHTML = lowStockItems.slice(0, 4).map(prod => {
+            const badgeClass = prod.isEmpty ? 'is-empty' : 'is-low';
+            const badgeText = prod.isEmpty ? 'Hết hàng' : `Còn ${prod.stock}`;
 
             return `
-                <button type="button" class="dashboard-stock-row" data-sku="${prod.sku || 'SKU-00' + (idx + 1)}" data-dashboard-module="Bán hàng">
-                    <span><strong>${prod.product_name || 'Sản phẩm PawPal'}</strong><small>SKU: ${prod.sku || 'N/A'}</small></span>
+                <button type="button" class="dashboard-stock-row" data-sku="${prod.sku}" data-dashboard-module="Bán hàng">
+                    <span><strong>${prod.name}</strong><small>SKU: ${prod.sku}</small></span>
                     <span class="dashboard-stock-count ${badgeClass}">${badgeText}</span>
                 </button>
             `;
@@ -239,21 +321,68 @@
     }
 
     // -------------------------------------------------------------
-    // 3. RENDER BIỂU ĐỒ DOANH THU 7 NGÀY THỰC TẾ
+    // 3. RENDER BIỂU ĐỒ DOANH THU 7 NGÀY THỰC TẾ TỪ SALES_ORDER
     // -------------------------------------------------------------
     function renderRevenueChart() {
         const chart = document.getElementById('dashboardRevenueChart');
         if (!chart) return;
 
-        // Tính doanh thu thực tế 7 ngày trong tuần
-        const currentWeek = [34, 52, 43, 70, 59, 82, 76];
-        const previousWeek = [28, 39, 47, 42, 55, 61, 57];
+        // Tính ngày bắt đầu tuần hiện tại (Thứ 2)
+        const now = new Date();
+        const currentDayOfWeek = (now.getDay() + 6) % 7; // 0 = Thứ 2, 6 = Chủ Nhật
+        const mondayCurrent = new Date(now);
+        mondayCurrent.setDate(now.getDate() - currentDayOfWeek);
+        mondayCurrent.setHours(0, 0, 0, 0);
+
+        const mondayPrevious = new Date(mondayCurrent);
+        mondayPrevious.setDate(mondayCurrent.getDate() - 7);
+
+        function formatISODate(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const dt = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${dt}`;
+        }
+
+        const currentWeekDays = Array.from({ length: 7 }, (_, i) => {
+            const d = new Date(mondayCurrent);
+            d.setDate(mondayCurrent.getDate() + i);
+            return formatISODate(d);
+        });
+
+        const previousWeekDays = Array.from({ length: 7 }, (_, i) => {
+            const d = new Date(mondayPrevious);
+            d.setDate(mondayPrevious.getDate() + i);
+            return formatISODate(d);
+        });
+
+        // Tính doanh thu theo ngày từ các đơn hàng hoàn tất/đã giao
+        const completedOrders = liveSalesOrders.filter(o => {
+            const s = (o.order_status || '').toUpperCase();
+            return s === 'COMPLETED' || s === 'DA_GIAO' || s === 'PAID';
+        });
+
+        const currentWeek = currentWeekDays.map(dateStr => {
+            return completedOrders
+                .filter(o => o.created_at && o.created_at.substring(0, 10) === dateStr)
+                .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0) / 100000; // Đơn vị: 100k
+        });
+
+        const previousWeek = previousWeekDays.map(dateStr => {
+            return completedOrders
+                .filter(o => o.created_at && o.created_at.substring(0, 10) === dateStr)
+                .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0) / 100000;
+        });
+
+        const maxVal = Math.max(...currentWeek, ...previousWeek, 40);
+        const topTick = Math.ceil(maxVal / 20) * 20;
+
         const labels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
         const yTicks = [
-            { val: 80, label: '8 tr' },
-            { val: 60, label: '6 tr' },
-            { val: 40, label: '4 tr' },
-            { val: 20, label: '2 tr' },
+            { val: topTick, label: `${Math.round(topTick / 10)} tr` },
+            { val: topTick * 0.75, label: `${Math.round(topTick * 0.75 / 10)} tr` },
+            { val: topTick * 0.5, label: `${Math.round(topTick * 0.5 / 10)} tr` },
+            { val: topTick * 0.25, label: `${Math.round(topTick * 0.25 / 10)} tr` },
             { val: 0, label: '0' }
         ];
 
@@ -265,15 +394,17 @@
         const chartWidth = chartRight - chartLeft;
 
         const x = (index) => chartLeft + (index / (labels.length - 1)) * chartWidth;
-        const y = (val) => chartBottom - (val / 90) * chartHeight;
+        const y = (val) => chartBottom - (val / (topTick || 1)) * chartHeight;
 
         const gridLines = yTicks.map((tick) => {
             const lineY = y(tick.val);
             return `<g class="chart-grid-row"><text x="${chartLeft - 10}" y="${lineY + 4}" text-anchor="end" class="chart-y-label">${tick.label}</text><line x1="${chartLeft}" y1="${lineY}" x2="${chartRight}" y2="${lineY}" stroke="#ECF2EE" stroke-width="1" /></g>`;
         }).join('');
+
         const dayLabels = labels.map((label, index) =>
             `<text x="${x(index).toFixed(1)}" y="${chartBottom + 20}" text-anchor="middle" class="chart-x-label">${label}</text>`
         ).join('');
+
         const currentPoints = currentWeek.map((val, idx) => `${x(idx).toFixed(1)},${y(val).toFixed(1)}`).join(' ');
         const previousPoints = previousWeek.map((val, idx) => `${x(idx).toFixed(1)},${y(val).toFixed(1)}`).join(' ');
         const areaPolygon = `${x(0).toFixed(1)},${chartBottom} ${currentPoints} ${x(currentWeek.length - 1).toFixed(1)},${chartBottom}`;
@@ -281,6 +412,7 @@
         const currentDots = currentWeek.map((value, index) =>
             `<circle cx="${x(index).toFixed(1)}" cy="${y(value).toFixed(1)}" r="4" fill="#236B48" stroke="#FFFFFF" stroke-width="2"><title>Thứ ${labels[index]}: ${labelCurrency(value * 100000)} VNĐ</title></circle>`
         ).join('');
+
         chart.innerHTML = `
             <svg viewBox="0 0 640 195" preserveAspectRatio="none" aria-hidden="true">
                 ${gridLines}
@@ -293,7 +425,7 @@
     }
 
     // -------------------------------------------------------------
-    // 4. RENDER LỊCH HẸN VÀ AGENDA (THÁNG / TUẦN / NGÀY)
+    // 4. RENDER LỊCH HẸN VÀ AGENDA THỰC TẾ (THÁNG / TUẦN / NGÀY)
     // -------------------------------------------------------------
     function setupDashboardCalendar() {
         const monthLabel = document.getElementById('dashboardCalendarMonth');
@@ -311,21 +443,12 @@
         let selectedDate = new Date(today);
         let calendarView = 'month';
 
-        // Biến đổi các record liveAppointments thành định dạng render
+        // Biến đổi các record liveAppointments 100% thực tế
         function getMappedBookings() {
-            if (liveAppointments.length === 0) {
-                return [
-                    { pet: 'Bé Bông', customer: 'Nguyễn Thu Hà', service: 'Tắm sấy và cắt tỉa', time: '09:30', status: 'Đã xác nhận', badge: 'badge-neutral', id: 'BKG-1001', date: '2026-10-06' },
-                    { pet: 'Bé Đậu', customer: 'Trần Minh Khang', service: 'Combo Vệ sinh tai móng', time: '10:15', status: 'Chờ xác nhận', badge: 'badge-warning', id: 'BKG-1002', date: '2026-10-06' },
-                    { pet: 'Bé Milu', customer: 'Lê Lệ Quyên', service: 'Nhận phòng Pet Hotel', time: '11:00', status: 'Đã xác nhận', badge: 'badge-neutral', id: 'BKG-1003', date: '2026-10-06' },
-                    { pet: 'Bé Mây', customer: 'Phạm Hoàng Yến', service: 'Tắm sấy dưỡng lông', time: '13:30', status: 'Sắp tới', badge: 'badge-neutral', id: 'BKG-1004', date: '2026-10-06' }
-                ];
-            }
-
             return liveAppointments.map(a => {
                 const profile = liveProfilesMap.get(a.customer_id);
                 const pet = livePetsMap.get(a.pet_id);
-                const custName = profile ? profile.full_name : 'Khách hàng';
+                const custName = profile ? `${profile.full_name}${profile.phone ? ' (' + profile.phone + ')' : ''}` : 'Khách hàng';
                 const petName = pet ? pet.pet_name : 'Bé cưng';
                 const srvName = liveServicesMap.get(a.service_id) || 'Chăm sóc thú cưng';
                 const staffName = liveStaffMap.get(a.staff_id) || 'Kỹ thuật viên';
@@ -339,13 +462,20 @@
 
                 const s = (a.appointment_status || '').toUpperCase();
                 let statusText = 'Đã xác nhận';
-                let badgeClass = 'badge-neutral';
+                let badgeClass = 'badge-success';
+                let statusCode = 'confirmed';
                 if (s === 'COMPLETED' || s === 'DA_HOAN_THANH') {
                     statusText = 'Đã hoàn thành';
-                    badgeClass = 'badge-active';
+                    badgeClass = 'badge-success';
+                    statusCode = 'confirmed';
                 } else if (s === 'PENDING' || s === 'CHO_XAC_NHAN') {
                     statusText = 'Chờ xác nhận';
                     badgeClass = 'badge-warning';
+                    statusCode = 'pending';
+                } else if (s === 'CANCELLED' || s === 'DA_HUY') {
+                    statusText = 'Đã hủy';
+                    badgeClass = 'badge-danger';
+                    statusCode = 'cancelled';
                 }
 
                 return {
@@ -356,10 +486,11 @@
                     service: srvName,
                     staff: staffName,
                     time: timeStr,
-                    date: a.appointment_date || '2026-10-06',
+                    date: a.appointment_date || (a.created_at ? a.created_at.substring(0, 10) : ''),
                     status: statusText,
                     badge: badgeClass,
-                    notes: a.note || 'Bé ngoan, chăm sóc dịu nhẹ.'
+                    statusCode: statusCode,
+                    notes: a.note || 'Chăm sóc dịu nhẹ, đúng quy trình an toàn.'
                 };
             });
         }
@@ -376,39 +507,19 @@
             return new Date(year, month - 1, day);
         }
 
-        function bookingsForMonth(year, month) {
-            const allBookings = getMappedBookings();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const currentMonth = year === today.getFullYear() && month === today.getMonth();
-            const candidateDays = currentMonth
-                ? [today.getDate(), today.getDate() + 1, today.getDate() + 2, today.getDate() + 4, today.getDate() + 7]
-                : [3, 7, 12, 16, 21, 26];
-
-            return candidateDays
-                .filter((day, index, all) => day <= daysInMonth && all.indexOf(day) === index)
-                .map((day, index) => {
-                    const dateObj = new Date(year, month, day);
-                    const key = toDateKey(dateObj);
-                    const matchReal = allBookings.filter(b => b.date === key);
-                    const appointments = matchReal.length > 0 ? matchReal : allBookings.slice(index % 2, (index % 2) + 2);
-                    return {
-                        date: dateObj,
-                        appointments: appointments
-                    };
-                });
-        }
-
         function bookingsOnDate(date) {
-            return bookingsForMonth(date.getFullYear(), date.getMonth())
-                .find((entry) => toDateKey(entry.date) === toDateKey(date))?.appointments || [];
+            const dateKey = toDateKey(date);
+            const allBookings = getMappedBookings();
+            return allBookings.filter(b => b.date === dateKey);
         }
 
-        function renderAgenda(date, monthBookings) {
-            const dateKey = toDateKey(date);
-            const dayBookings = monthBookings.find((entry) => toDateKey(entry.date) === dateKey)?.appointments || [];
-            agendaTitle.textContent = new Intl.DateTimeFormat('vi-VN', {
+        function renderAgenda(date) {
+            const dayBookings = bookingsOnDate(date);
+            const isToday = toDateKey(date) === toDateKey(today);
+            const dateFormatted = new Intl.DateTimeFormat('vi-VN', {
                 weekday: 'long', day: 'numeric', month: 'long'
             }).format(date);
+            agendaTitle.textContent = isToday ? `${dateFormatted} · Hôm nay` : dateFormatted;
 
             if (!dayBookings.length) {
                 bookingList.innerHTML = '<p class="dashboard-agenda-empty">Ngày này chưa có lịch hẹn.</p>';
@@ -440,12 +551,16 @@
             const dateLabel = new Intl.DateTimeFormat('vi-VN', {
                 month: 'long', year: 'numeric'
             }).format(shownMonth);
+
             document.getElementById('dashboardCalendarPrev')?.setAttribute(
                 'aria-label', calendarView === 'month' ? 'Tháng trước' : calendarView === 'week' ? 'Tuần trước' : 'Ngày trước'
             );
             document.getElementById('dashboardCalendarNext')?.setAttribute(
                 'aria-label', calendarView === 'month' ? 'Tháng sau' : calendarView === 'week' ? 'Tuần sau' : 'Ngày sau'
             );
+
+            const allBookings = getMappedBookings();
+            const bookedDateKeys = new Set(allBookings.map(b => b.date).filter(Boolean));
 
             const calendarDates = [];
             if (calendarView === 'month') {
@@ -476,15 +591,18 @@
                     weekdays.classList.add('is-week-heading');
                     weekdays.innerHTML = calendarDates.map((date) => {
                         const key = toDateKey(date);
+                        const isToday = key === toDateKey(today);
                         const weekday = new Intl.DateTimeFormat('vi-VN', { weekday: 'short' }).format(date);
-                        return `<button type="button" class="dashboard-week-heading-btn ${key === toDateKey(selectedDate) ? 'is-selected' : ''}" data-calendar-date="${key}" aria-pressed="${key === toDateKey(selectedDate)}"><span>${weekday}</span><strong>${date.getDate()}</strong></button>`;
+                        return `<button type="button" class="dashboard-week-heading-btn ${key === toDateKey(selectedDate) ? 'is-selected' : ''} ${isToday ? 'is-today' : ''}" data-calendar-date="${key}" aria-pressed="${key === toDateKey(selectedDate)}" title="${isToday ? 'Hôm nay' : weekday}"><span>${isToday ? 'Hôm nay' : weekday}</span><strong>${date.getDate()}</strong></button>`;
                     }).join('');
                 }
             } else {
                 calendarDates.push(new Date(selectedDate));
-                monthLabel.textContent = new Intl.DateTimeFormat('vi-VN', {
+                const isToday = toDateKey(selectedDate) === toDateKey(today);
+                const dayFormatted = new Intl.DateTimeFormat('vi-VN', {
                     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
                 }).format(selectedDate);
+                monthLabel.textContent = isToday ? `${dayFormatted} · Hôm nay` : dayFormatted;
                 daysGrid.classList.add('is-day-view');
                 daysGrid.classList.remove('is-week-view');
                 if (weekdays) {
@@ -492,14 +610,6 @@
                     weekdays.classList.remove('is-week-heading');
                 }
             }
-
-            const eventDateKeys = new Set();
-            calendarDates.filter(Boolean).forEach((date) => {
-                const events = bookingsForMonth(date.getFullYear(), date.getMonth());
-                if (events.some((entry) => toDateKey(entry.date) === toDateKey(date))) {
-                    eventDateKeys.add(toDateKey(date));
-                }
-            });
 
             if (calendarView === 'week') {
                 daysGrid.innerHTML = calendarDates.map((date) => {
@@ -513,13 +623,14 @@
                 }).join('');
             } else if (calendarView === 'day') {
                 const dayBookings = bookingsOnDate(selectedDate);
-                const startHour = 8;
-                const endHour = 19;
+                const startHour = 0;
+                const endHour = 23;
                 const slotHeight = 46;
+                const timelineTopOffset = 16;
 
                 const timeSlotsMarkup = Array.from({ length: endHour - startHour + 1 }, (_, i) => {
                     const hour = startHour + i;
-                    return `<div class="dashboard-day-timeline-hour" style="top: ${i * slotHeight}px;"><time>${String(hour).padStart(2, '0')}:00</time><div class="dashboard-day-timeline-line"></div></div>`;
+                    return `<div class="dashboard-day-timeline-hour" style="top: ${timelineTopOffset + i * slotHeight}px;"><time>${String(hour).padStart(2, '0')}:00</time><div class="dashboard-day-timeline-line"></div></div>`;
                 }).join('');
 
                 const parsedBookings = dayBookings.map((b) => {
@@ -550,11 +661,12 @@
                 const eventsMarkup = clusters.flatMap((cluster) => {
                     const totalInCluster = cluster.length;
                     return cluster.map((b, idx) => {
-                        const topPx = (b.startMinutes / 60) * slotHeight;
+                        const topPx = timelineTopOffset + (b.startMinutes / 60) * slotHeight;
                         const heightPx = Math.max(38, (60 / 60) * slotHeight - 4);
 
                         let styleAttrs = `top: ${topPx}px; height: ${heightPx}px;`;
-                        let classes = 'dashboard-day-event';
+                        const statusClass = b.statusCode === 'pending' ? 'status-pending' : (b.statusCode === 'cancelled' ? 'status-cancelled' : 'status-confirmed');
+                        let classes = `dashboard-day-event ${statusClass}`;
 
                         if (totalInCluster === 1) {
                             classes += ' is-single-event';
@@ -578,12 +690,23 @@
                     });
                 }).join('');
 
-                const totalTimelineHeight = (endHour - startHour + 1) * slotHeight;
+                const totalTimelineHeight = timelineTopOffset + (endHour - startHour + 1) * slotHeight + 16;
                 daysGrid.innerHTML = `
                     <div class="dashboard-day-timeline-container" style="height: ${totalTimelineHeight}px;">
                         <div class="dashboard-day-timeline-grid">${timeSlotsMarkup}</div>
-                        <div class="dashboard-day-timeline-events">${eventsMarkup}</div>
+                        <div class="dashboard-day-timeline-events">${eventsMarkup || '<div style="padding: 24px; text-align: center; color: var(--text-muted);">Không có ca dịch vụ trong ngày này</div>'}</div>
                     </div>`;
+
+                const timelineContainer = daysGrid.querySelector('.dashboard-day-timeline-container');
+                if (timelineContainer) {
+                    const firstBooking = parsedBookings[0];
+                    let targetHour = 7.5;
+                    if (firstBooking) {
+                        const bookingHour = firstBooking.startMinutes / 60;
+                        targetHour = Math.max(0, bookingHour - 1);
+                    }
+                    timelineContainer.scrollTop = timelineTopOffset + targetHour * slotHeight;
+                }
 
                 daysGrid.querySelectorAll('.dashboard-day-event').forEach((btn) => {
                     btn.addEventListener('click', (e) => {
@@ -597,15 +720,17 @@
                 daysGrid.innerHTML = calendarDates.map((date) => {
                     if (!date) return '<span class="dashboard-calendar-blank" aria-hidden="true"></span>';
                     const key = toDateKey(date);
-                    const hasAppointments = eventDateKeys.has(key);
+                    const isToday = key === toDateKey(today);
+                    const hasAppointments = bookedDateKeys.has(key);
                     const classes = [
                         'dashboard-calendar-day',
                         hasAppointments ? 'has-appointments' : '',
-                        key === toDateKey(today) ? 'is-today' : '',
+                        isToday ? 'is-today' : '',
                         key === toDateKey(selectedDate) ? 'is-selected' : ''
                     ].filter(Boolean).join(' ');
                     const label = new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' }).format(date);
-                    return `<button type="button" class="${classes}" data-calendar-date="${key}" aria-label="${label}${hasAppointments ? ', có lịch hẹn' : ''}" aria-pressed="${key === toDateKey(selectedDate)}"><span class="dashboard-calendar-day-number">${date.getDate()}</span>${hasAppointments ? '<span class="dashboard-calendar-event-dot"></span>' : ''}</button>`;
+                    const todayText = isToday ? ', Hôm nay' : '';
+                    return `<button type="button" class="${classes}" data-calendar-date="${key}" aria-label="${label}${todayText}${hasAppointments ? ', có lịch hẹn' : ''}" aria-pressed="${key === toDateKey(selectedDate)}" title="${label}${todayText}"><span class="dashboard-calendar-day-number">${date.getDate()}</span>${hasAppointments ? '<span class="dashboard-calendar-event-dot"></span>' : ''}</button>`;
                 }).join('');
             }
 
@@ -616,7 +741,7 @@
             });
             calendarAgenda?.classList.toggle('is-week-view', calendarView === 'week');
             calendarAgenda?.classList.toggle('is-day-view', calendarView === 'day');
-            renderAgenda(selectedDate, bookingsForMonth(selectedDate.getFullYear(), selectedDate.getMonth()));
+            renderAgenda(selectedDate);
 
             daysGrid.querySelectorAll('[data-calendar-date]').forEach((button) => {
                 button.addEventListener('click', () => {
@@ -659,6 +784,17 @@
             renderCalendar();
         });
 
+        function goToToday() {
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            selectedDate = new Date(now);
+            shownMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            renderCalendar();
+        }
+
+        document.getElementById('dashboardCalendarToday')?.addEventListener('click', goToToday);
+        document.getElementById('dashboardCalendarMonth')?.addEventListener('click', goToToday);
+
         document.querySelectorAll('[data-calendar-view]').forEach((button) => {
             button.addEventListener('click', () => {
                 calendarView = button.dataset.calendarView;
@@ -671,7 +807,66 @@
     }
 
     // -------------------------------------------------------------
-    // 5. ĐIỀU HƯỚNG LIÊN PHÂN HỆ THÔNG MINH
+    // 5. RENDER HIỆU SUẤT CHATBOT AI VÀ TỶ LỆ LẤP ĐẦY NHÂN SỰ
+    // -------------------------------------------------------------
+    function renderChatbotAndStaffMetrics() {
+        const todayStr = getTodayDateString();
+
+        // 1. Chỉ số Chatbot
+        const totalSessions = liveChatConversations.length;
+        const handoverSessions = liveChatConversations.filter(c => {
+            const s = (c.status || '').toUpperCase();
+            return s === 'ESCALATED' || s === 'HANDOVER' || s === 'AGENT_HANDOVER';
+        }).length;
+        const aiSessions = Math.max(0, totalSessions - handoverSessions);
+        const aiPercent = totalSessions > 0 ? Math.round((aiSessions / totalSessions) * 100) : 100;
+
+        const elDonutCircle = document.getElementById('dashboardDonutCircle');
+        if (elDonutCircle) {
+            const strokeDash = (aiPercent / 100) * 301.59;
+            elDonutCircle.setAttribute('stroke-dasharray', `${strokeDash.toFixed(2)} 301.59`);
+        }
+
+        const elPercentWrap = document.getElementById('dashboardChatbotPercentWrap');
+        if (elPercentWrap) {
+            elPercentWrap.innerHTML = `<strong>${aiPercent}%</strong><small>AI tự xử lý</small>`;
+        }
+
+        const elAiSessions = document.getElementById('dashboardAiSessionsCount');
+        if (elAiSessions) elAiSessions.textContent = `${aiSessions} phiên`;
+
+        const elHandoverSessions = document.getElementById('dashboardHandoverSessionsCount');
+        if (elHandoverSessions) elHandoverSessions.textContent = `${handoverSessions} phiên`;
+
+        const elTotalChat = document.getElementById('dashboardTotalChatSessions');
+        if (elTotalChat) elTotalChat.textContent = `${totalSessions} phiên trò chuyện`;
+
+        // 2. Chỉ số Lấp đầy nhân sự (Tỷ lệ nhân viên đang có ca phụ trách hôm nay)
+        const activeStaffList = liveStaffList.filter(s => {
+            const st = (s.status || '').toUpperCase();
+            return st !== 'INACTIVE' && st !== 'RESIGNED' && st !== 'NGHI_VIEC';
+        });
+        const totalActiveStaff = activeStaffList.length || liveStaffList.length;
+
+        const assignedStaffToday = new Set(
+            liveAppointments
+                .filter(a => a.appointment_date === todayStr && a.staff_id)
+                .map(a => a.staff_id)
+        );
+
+        const utilPercent = totalActiveStaff > 0 
+            ? Math.min(100, Math.round((assignedStaffToday.size / totalActiveStaff) * 100)) 
+            : 0;
+
+        const elStaffPercent = document.getElementById('dashboardStaffUtilPercent');
+        if (elStaffPercent) elStaffPercent.textContent = `${utilPercent}%`;
+
+        const elStaffBar = document.getElementById('dashboardStaffUtilBar');
+        if (elStaffBar) elStaffBar.style.width = `${utilPercent}%`;
+    }
+
+    // -------------------------------------------------------------
+    // 6. ĐIỀU HƯỚNG LIÊN PHÂN HỆ THÔNG MINH
     // -------------------------------------------------------------
     function bindModuleNavigation(root = document) {
         root.querySelectorAll('[data-dashboard-module]').forEach((control) => {
@@ -702,7 +897,7 @@
                 } else if (moduleName === 'Bán hàng') {
                     sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-list');
                 } else if (moduleName === 'Khách hàng') {
-                    sessionStorage.setItem('pawpal_admin_customer_subtab', 'tab-customer-list');
+                    sessionStorage.setItem('pawpal_admin_customer_subtab', 'tab-list');
                 } else if (moduleName === 'Thú cưng') {
                     sessionStorage.setItem('pawpal_admin_pet_subtab', 'tab-pet-list');
                 }
@@ -715,7 +910,7 @@
     }
 
     // -------------------------------------------------------------
-    // 6. GIAI ĐOẠN 2: THANH THAO TÁC TIẾP NHẬN TẠI QUẦY
+    // 7. GIAI ĐOẠN 2: THANH THAO TÁC TIẾP NHẬN TẠI QUẦY
     // -------------------------------------------------------------
     function setupQuickReceptionActions() {
         const btnPet = document.getElementById('btnQuickReceptionPet');
@@ -754,7 +949,7 @@
     }
 
     // -------------------------------------------------------------
-    // 7. GIAI ĐOẠN 2: MODAL XEM NHANH CA DỊCH VỤ TRÊN LỊCH HẸN
+    // 8. GIAI ĐOẠN 2: MODAL XEM NHANH CA DỊCH VỤ TRÊN LỊCH HẸN
     // -------------------------------------------------------------
     let currentSelectedQuickBooking = null;
 
@@ -771,13 +966,29 @@
         const elStatus = document.getElementById('modalBookingStatus');
         const elNotes = document.getElementById('modalBookingNotes');
 
+        const todayStr = getTodayDateString();
+        const rawDate = (booking.date || '').substring(0, 10);
+        let dateDisplay = 'Hôm nay';
+        if (rawDate) {
+            if (rawDate === todayStr) {
+                dateDisplay = 'Hôm nay';
+            } else {
+                const parts = rawDate.split('-');
+                if (parts.length === 3) {
+                    dateDisplay = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                } else {
+                    dateDisplay = rawDate;
+                }
+            }
+        }
+
         if (elPet) elPet.textContent = booking.pet || 'Bé cưng';
         if (elCust) elCust.textContent = booking.customer || 'Khách hàng';
         if (elSvc) elSvc.textContent = booking.service || 'Chăm sóc thú cưng';
-        if (elTime) elTime.textContent = `${booking.time || '10:00'} · ${booking.date || 'Hôm nay'}`;
+        if (elTime) elTime.textContent = `${booking.time || '09:30'} · ${dateDisplay}`;
         if (elStaff) elStaff.textContent = booking.staff || 'Kỹ thuật viên';
         if (elStatus) elStatus.innerHTML = `<span class="admin-badge ${booking.badge || 'badge-neutral'}">${booking.status || 'Đã xác nhận'}</span>`;
-        if (elNotes) elNotes.textContent = booking.notes || 'Bé ngoan, cẩn thận sấy vùng tai và dùng dầu tắm dưỡng lông dịu nhẹ.';
+        if (elNotes) elNotes.textContent = booking.notes || 'Chăm sóc dịu nhẹ, đúng quy trình an toàn.';
 
         modal.style.display = 'flex';
     }
@@ -839,6 +1050,7 @@
                     await loadDashboardData();
                     renderDashboardKPIs();
                     setupDashboardCalendar();
+                    renderChatbotAndStaffMetrics();
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, async () => {
                     await loadDashboardData();
@@ -851,6 +1063,18 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_profile' }, async () => {
                     await loadDashboardData();
                     renderDashboardKPIs();
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'product' }, async () => {
+                    await loadDashboardData();
+                    renderDashboardStockList();
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, async () => {
+                    await loadDashboardData();
+                    renderDashboardStockList();
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_conversation' }, async () => {
+                    await loadDashboardData();
+                    renderChatbotAndStaffMetrics();
                 })
                 .subscribe();
         } catch (e) {
@@ -867,6 +1091,7 @@
         renderDashboardStockList();
         renderRevenueChart();
         setupDashboardCalendar();
+        renderChatbotAndStaffMetrics();
         setupQuickReceptionActions();
         setupBookingQuickModalEvents();
         bindModuleNavigation();
@@ -875,6 +1100,9 @@
         window.addEventListener('focus', async () => {
             await loadDashboardData();
             renderDashboardKPIs();
+            renderDashboardStockList();
+            renderRevenueChart();
+            renderChatbotAndStaffMetrics();
         });
     }
 

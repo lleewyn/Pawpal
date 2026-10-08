@@ -2,11 +2,11 @@
     <!-- KHU VỰC 1: 5 THẺ THỐNG KÊ KPI NHANH (CHUẨN HỆ THỐNG PAWPAL-ER) -->
     <section class="dashboard-kpi-grid" aria-label="Chỉ số trong ngày">
         <div class="admin-card kpi-card dashboard-kpi-card">
-            <span class="kpi-label">Tổng doanh thu hôm nay</span>
+            <span class="kpi-label">Doanh thu hôm nay</span>
             <span class="kpi-val text-heading" id="dashboardRevenue"><span class="skeleton-kpi" style="width: 120px;"></span></span>
         </div>
         <div class="admin-card kpi-card dashboard-kpi-card dashboard-kpi-link" data-dashboard-module="Dịch vụ">
-            <span class="kpi-label">Lịch hẹn mới</span>
+            <span class="kpi-label">Lịch hẹn hôm nay</span>
             <span class="kpi-val text-success" id="dashboardBookings"><span class="skeleton-kpi"></span></span>
         </div>
         <div class="admin-card kpi-card dashboard-kpi-card dashboard-kpi-link" data-dashboard-module="Bán hàng">
@@ -14,11 +14,11 @@
             <span class="kpi-val text-warning" id="dashboardOrders"><span class="skeleton-kpi"></span></span>
         </div>
         <div class="admin-card kpi-card dashboard-kpi-card dashboard-kpi-link" data-dashboard-module="Khách hàng">
-            <span class="kpi-label">Khách hàng mới</span>
+            <span class="kpi-label">Tổng khách hàng</span>
             <span class="kpi-val text-heading" id="dashboardCustomers"><span class="skeleton-kpi"></span></span>
         </div>
         <div class="admin-card kpi-card dashboard-kpi-card dashboard-kpi-link" data-dashboard-module="Thú cưng">
-            <span class="kpi-label">Bé cưng mới</span>
+            <span class="kpi-label">Tổng bé cưng</span>
             <span class="kpi-val text-neutral" id="dashboardPets"><span class="skeleton-kpi"></span></span>
         </div>
     </section>
@@ -48,16 +48,16 @@
                 <div>
                     <h2 class="dashboard-widget-title">Ưu tiên xử lý</h2>
                 </div>
-                <span class="admin-badge badge-warning" id="dashboardPriorityCount">6 việc</span>
+                <span class="admin-badge badge-neutral" id="dashboardPriorityCount">Đang tải...</span>
             </div>
             <div class="dashboard-priority-list">
                 <button type="button" class="dashboard-priority-row" id="dashboardPriorityComplaints" data-action="complaints" data-dashboard-module="Khiếu nại">
-                    <span><strong>Khiếu nại chờ xử lý</strong><small id="dashboardComplaintsSub">2 ticket cần nhân viên tiếp nhận</small></span>
-                    <span class="admin-badge badge-danger" id="dashboardComplaintsBadge">2</span>
+                    <span><strong>Khiếu nại chờ xử lý</strong><small id="dashboardComplaintsSub">Đang kiểm tra...</small></span>
+                    <span class="admin-badge badge-neutral" id="dashboardComplaintsBadge">0</span>
                 </button>
                 <button type="button" class="dashboard-priority-row" id="dashboardPriorityOrders" data-action="orders" data-dashboard-module="Bán hàng">
-                    <span><strong>Đơn hàng chờ duyệt</strong><small id="dashboardOrdersSub">4 đơn hàng mới cần xác nhận</small></span>
-                    <span class="admin-badge badge-warning" id="dashboardOrdersBadge">4</span>
+                    <span><strong>Đơn hàng chờ duyệt</strong><small id="dashboardOrdersSub">Đang kiểm tra...</small></span>
+                    <span class="admin-badge badge-neutral" id="dashboardOrdersBadge">0</span>
                 </button>
             </div>
             <div class="dashboard-widget-header dashboard-stock-heading">
@@ -67,18 +67,7 @@
                 <button type="button" class="dashboard-text-link" id="btnDashboardViewAllStock" data-dashboard-module="Bán hàng">Xem kho</button>
             </div>
             <div class="dashboard-stock-list" id="dashboardStockList">
-                <button type="button" class="dashboard-stock-row" data-sku="FOOD-012" data-dashboard-module="Bán hàng">
-                    <span><strong>Pate gà bí đỏ PawPal</strong><small>SKU: FOOD-012</small></span>
-                    <span class="dashboard-stock-count is-low">Còn 2</span>
-                </button>
-                <button type="button" class="dashboard-stock-row" data-sku="CARE-008" data-dashboard-module="Bán hàng">
-                    <span><strong>Dầu tắm dịu nhẹ</strong><small>SKU: CARE-008</small></span>
-                    <span class="dashboard-stock-count is-empty">Hết hàng</span>
-                </button>
-                <button type="button" class="dashboard-stock-row" data-sku="CAT-021" data-dashboard-module="Bán hàng">
-                    <span><strong>Cát vệ sinh đậu nành</strong><small>SKU: CAT-021</small></span>
-                    <span class="dashboard-stock-count is-low">Còn 4</span>
-                </button>
+                <div style="padding: 12px; font-size: 13px; color: var(--text-muted);">Đang kiểm tra tồn kho...</div>
             </div>
         </section>
 
@@ -100,9 +89,12 @@
             <div class="dashboard-calendar-agenda">
                 <div class="dashboard-calendar-panel">
                     <div class="dashboard-calendar-header">
-                        <button type="button" class="dashboard-calendar-nav" id="dashboardCalendarPrev" aria-label="Tháng trước">&lt;</button>
-                        <strong id="dashboardCalendarMonth"></strong>
-                        <button type="button" class="dashboard-calendar-nav" id="dashboardCalendarNext" aria-label="Tháng sau">&gt;</button>
+                        <strong id="dashboardCalendarMonth" title="Quay về hôm nay"></strong>
+                        <div class="dashboard-calendar-nav-wrap">
+                            <button type="button" class="dashboard-calendar-today-btn" id="dashboardCalendarToday" title="Quay về hôm nay">Hôm nay</button>
+                            <button type="button" class="dashboard-calendar-nav" id="dashboardCalendarPrev" aria-label="Tháng trước">&lt;</button>
+                            <button type="button" class="dashboard-calendar-nav" id="dashboardCalendarNext" aria-label="Tháng sau">&gt;</button>
+                        </div>
                     </div>
                     <div class="dashboard-calendar-weekdays" id="dashboardCalendarWeekdays" aria-hidden="true">
                         <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
@@ -122,7 +114,7 @@
         <article class="admin-card dashboard-widget dashboard-revenue-widget">
             <div class="dashboard-widget-header">
                 <div>
-                    <h2 class="dashboard-widget-title">Doanh thu</h2>
+                    <h2 class="dashboard-widget-title">Doanh thu 7 ngày</h2>
                 </div>
                 <div class="dashboard-chart-legend"><span><i class="legend-current"></i>Tuần này</span><span><i class="legend-previous"></i>Tuần trước</span></div>
             </div>
@@ -136,22 +128,22 @@
                 <button type="button" class="dashboard-text-link" data-dashboard-module="Chatbot">Xem hội thoại</button>
             </div>
             <div class="dashboard-chatbot-chart-wrap">
-                <div class="dashboard-donut-chart" role="img" aria-label="AI tự xử lý 72 phần trăm, chuyển nhân viên 28 phần trăm">
+                <div class="dashboard-donut-chart" id="dashboardChatbotDonut" role="img" aria-label="Tỷ lệ AI tự xử lý">
                     <svg viewBox="0 0 120 120" aria-hidden="true">
                         <circle class="dashboard-donut-track" cx="60" cy="60" r="48" fill="none" stroke="#AEC8B9" stroke-width="12"></circle>
-                        <circle class="dashboard-donut-value" cx="60" cy="60" r="48" fill="none" stroke="#236B48" stroke-width="12" stroke-dasharray="217.15 301.59" stroke-linecap="round"></circle>
+                        <circle class="dashboard-donut-value" id="dashboardDonutCircle" cx="60" cy="60" r="48" fill="none" stroke="#236B48" stroke-width="12" stroke-dasharray="0 301.59" stroke-linecap="round"></circle>
                     </svg>
-                    <span><strong>72%</strong><small>AI tự xử lý</small></span>
+                    <span id="dashboardChatbotPercentWrap"><strong>0%</strong><small>AI tự xử lý</small></span>
                 </div>
                 <div class="dashboard-chatbot-legend">
-                    <div><i class="legend-ai"></i><span>AI tự xử lý<small>144 phiên</small></span></div>
-                    <div><i class="legend-handover"></i><span>Chuyển nhân viên<small>56 phiên</small></span></div>
-                    <strong class="dashboard-chat-total">200 phiên trò chuyện</strong>
+                    <div><i class="legend-ai"></i><span>AI tự xử lý<small id="dashboardAiSessionsCount">0 phiên</small></span></div>
+                    <div><i class="legend-handover"></i><span>Chuyển nhân viên<small id="dashboardHandoverSessionsCount">0 phiên</small></span></div>
+                    <strong class="dashboard-chat-total" id="dashboardTotalChatSessions">0 phiên trò chuyện</strong>
                 </div>
             </div>
             <div class="dashboard-staff-utilization">
-                <div><span>Tỷ lệ lấp đầy nhân sự</span><strong>78%</strong></div>
-                <div class="dashboard-progress-track"><span style="width: 78%;"></span></div>
+                <div><span>Tỷ lệ lấp đầy nhân sự</span><strong id="dashboardStaffUtilPercent">0%</strong></div>
+                <div class="dashboard-progress-track"><span id="dashboardStaffUtilBar" style="width: 0%;"></span></div>
             </div>
         </article>
     </section>
@@ -170,7 +162,7 @@
                 <div class="dashboard-modal-row"><span class="modal-label">Thời gian:</span><span class="modal-val" id="modalBookingTime">09:30 · Hôm nay</span></div>
                 <div class="dashboard-modal-row"><span class="modal-label">Kỹ thuật viên:</span><span class="modal-val" id="modalBookingStaff">Groomer Tuấn</span></div>
                 <div class="dashboard-modal-row"><span class="modal-label">Trạng thái:</span><span class="modal-val" id="modalBookingStatus"><span class="admin-badge badge-success">Đã xác nhận</span></span></div>
-                <div class="dashboard-modal-row" style="border-bottom: none;"><span class="modal-label">Lưu ý khi làm:</span><span class="modal-val text-muted" id="modalBookingNotes">Bé hơi nhát nước và nhạy cảm vùng đuôi. Dùng dầu tắm thảo mộc dịu nhẹ.</span></div>
+                <div class="dashboard-modal-row" style="border-bottom: none;"><span class="modal-label">Lưu ý khi làm:</span><span class="modal-val text-muted" id="modalBookingNotes">Bé ngoan, chăm sóc dịu nhẹ.</span></div>
             </div>
             <div class="dashboard-modal-footer">
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissBookingModal">Quay lại</button>

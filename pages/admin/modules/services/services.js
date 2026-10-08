@@ -4,6 +4,11 @@
     let bookingsData = [];
     let servicesData = [];
     let reviewsData = [];
+    let liveStaffList = [];
+    let liveCustomerDirectory = [];
+    let updateServiceOptionsRef = null;
+    let populateStaffSelectRef = null;
+    let populateCustomerDatalistRef = null;
     let selectedBookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || 'BKG-1001';
 
     // Hàm nạp dữ liệu từ Supabase (kèm fallback tệp JSON tĩnh nếu cần)
@@ -13,7 +18,7 @@
         if (db && !forceReload) {
             try {
                 console.log('[Services] Đang nạp dữ liệu Dịch vụ & Lịch hẹn từ Supabase...');
-                const [appRes, svcRes, priceRes, revRes, careLogRes] = await Promise.all([
+                const [appRes, svcRes, priceRes, revRes, careLogRes, staffRes, custRes] = await Promise.all([
                     db.from('appointment')
                       .select(`
                           id, 
@@ -39,7 +44,18 @@
                       .select('id, rating, review_content, review_type, created_at, shop_reply, customer:customer_id(id, customer_profile(full_name)), service:service_id(id, service_name)')
                       .order('created_at', { ascending: false }),
                     db.from('care_log')
-                      .select('*, care_action(*), care_log_media(*)')
+                      .select('*, care_action(*), care_log_media(*)'),
+                    db.from('staff')
+                      .select('id, full_name, role, specialization, phone_number')
+                      .order('full_name', { ascending: true }),
+                    db.from('customer')
+                      .select(`
+                          id, 
+                          phone_main, 
+                          customer_profile (full_name), 
+                          pet_profile (id, pet_code, pet_name, species, breed, weight, allergy, routine)
+                      `)
+                      .order('phone_main', { ascending: true })
                 ]);
 
                 const careLogs = (!careLogRes.error && careLogRes.data) ? careLogRes.data : [];
@@ -109,9 +125,15 @@
                     const priceMatrix = priceRes.data || [];
                     servicesData = svcRes.data.map(svc => {
                         let group = 'spa';
+                        const codeUpper = String(svc.service_code || '').toUpperCase();
                         const catUpper = String(svc.service_category || '').toUpperCase();
-                        if (catUpper === 'PET_HOTEL' || catUpper.includes('HOTEL')) group = 'hotel';
-                        else if (catUpper === 'PET_TAXI' || catUpper.includes('TAXI')) group = 'taxi';
+                        const nameUpper = String(svc.service_name || '').toUpperCase();
+
+                        if (codeUpper.startsWith('HTL') || catUpper === 'PET_HOTEL' || catUpper.includes('HOTEL') || nameUpper.includes('PHÒNG') || nameUpper.includes('SUITE') || nameUpper.includes('DAYCARE')) {
+                            group = 'hotel';
+                        } else if (codeUpper.startsWith('TXI') || catUpper === 'PET_TAXI' || catUpper.includes('TAXI') || nameUpper.includes('ĐƯA ĐÓN') || nameUpper.includes('PET TAXI')) {
+                            group = 'taxi';
+                        }
 
                         const svcPrices = priceMatrix.filter(p => p.service_id === svc.id);
                         let minPriceVal = 120000;
@@ -217,28 +239,26 @@
                     });
                 }
 
+                if (!staffRes.error && Array.isArray(staffRes.data)) {
+                    liveStaffList = staffRes.data;
+                    if (typeof populateStaffSelectRef === 'function') populateStaffSelectRef();
+                }
+                if (!custRes.error && Array.isArray(custRes.data)) {
+                    liveCustomerDirectory = custRes.data;
+                    if (typeof populateCustomerDatalistRef === 'function') populateCustomerDatalistRef();
+                }
+                if (typeof updateServiceOptionsRef === 'function') {
+                    const currentCat = document.getElementById('newBookingCategory')?.value || 'Spa';
+                    updateServiceOptionsRef(currentCat);
+                }
+
                 if (bookingsData.length > 0 || servicesData.length > 0) {
-                    console.log(`[Services] Đã nạp thành công từ Supabase: ${bookingsData.length} lịch hẹn, ${servicesData.length} dịch vụ, ${reviewsData.length} đánh giá.`);
+                    console.log(`[Services] Đã nạp thành công từ Supabase: ${bookingsData.length} lịch hẹn, ${servicesData.length} dịch vụ, ${reviewsData.length} đánh giá, ${liveStaffList.length} nhân viên.`);
                     return;
                 }
             } catch (err) {
-                console.warn('[Services] Không kết nối được Supabase, chuyển sang đọc JSON tĩnh:', err);
+                console.error('[Services] Lỗi kết nối Supabase:', err);
             }
-        }
-
-        // Fallback đọc từ JSON tĩnh nếu không có Supabase
-        try {
-            const [bookingsRes, catalogRes, reviewsRes] = await Promise.all([
-                fetch('/data/services-bookings.json?v=' + Date.now()).catch(() => null),
-                fetch('/data/services-catalog.json?v=' + Date.now()).catch(() => null),
-                fetch('/data/services-reviews.json?v=' + Date.now()).catch(() => null)
-            ]);
-
-            if (bookingsRes && bookingsRes.ok) bookingsData = await bookingsRes.json();
-            if (catalogRes && catalogRes.ok) servicesData = await catalogRes.json();
-            if (reviewsRes && reviewsRes.ok) reviewsData = await reviewsRes.json();
-        } catch (error) {
-            console.error('Lỗi khi nạp dữ liệu phân hệ Dịch vụ từ JSON:', error);
         }
     }
     let currentCatalogGroup = 'spa';
@@ -2281,19 +2301,205 @@
 
         // Tự động chuyển đổi hiển thị trường theo phân nhóm dịch vụ (Hotel / Taxi / Spa)
         const catSelect = document.getElementById('newBookingCategory');
+        const svcSelect = document.getElementById('newBookingServiceSelect');
         const hotelFields = document.getElementById('createBookingHotelFields');
         const taxiFields = document.getElementById('createBookingTaxiFields');
         const spaFields = document.getElementById('createBookingSpaFields');
+        const custInput = document.getElementById('newBookingCustomer');
+        const phoneInput = document.getElementById('newBookingPhone');
+        const petInput = document.getElementById('newBookingPetName');
+        const petDatalist = document.getElementById('bookingPetDatalist');
+        const custDatalist = document.getElementById('bookingCustomerDatalist');
+        const alertInput = document.getElementById('newBookingPetAlert');
+        const newBookingStaffSelect = document.getElementById('newBookingStaff');
+        const newBookingStaffHint = document.getElementById('newBookingStaffWorkloadHint');
+
+        let currentMatchedCustomer = null;
+        let currentMatchedPet = null;
+
+        // Cập nhật danh sách gói dịch vụ cụ thể lọc chuẩn theo Nhóm dịch vụ từ CSDL Supabase
+        function updateServiceOptionsForCategory(val) {
+            if (!svcSelect) return;
+            const targetGroup = (val === 'Hotel') ? 'hotel' : ((val === 'Taxi') ? 'taxi' : 'spa');
+            let filtered = servicesData.filter(s => s.group === targetGroup);
+
+            // Dự phòng nếu dữ liệu CSDL chưa tải xong
+            if (filtered.length === 0) {
+                if (targetGroup === 'spa') {
+                    filtered = [
+                        { name: 'Gói Tắm Vệ Sinh Cơ Bản', priceFrom: '120.000', code: 'SPA01' },
+                        { name: 'Gói Tắm Dưỡng Premium', priceFrom: '220.000', code: 'SPA02' },
+                        { name: 'Grooming Tạo Kiểu Cơ Bản', priceFrom: '350.000', code: 'SPA07' }
+                    ];
+                } else if (targetGroup === 'hotel') {
+                    filtered = [
+                        { name: 'Phòng Standard', priceFrom: '180.000', code: 'HTL01' },
+                        { name: 'Phòng Standard Plus', priceFrom: '250.000', code: 'HTL02' },
+                        { name: 'Phòng Deluxe', priceFrom: '380.000', code: 'HTL03' },
+                        { name: 'Phòng Cat Condo – Khách Sạn Cho Mèo', priceFrom: '300.000', code: 'HTL04' },
+                        { name: 'Luxury Suite', priceFrom: '500.000', code: 'HTL05' }
+                    ];
+                } else {
+                    filtered = [
+                        { name: 'Dịch Vụ Xe Đưa Đón Tận Nơi (Pet Taxi)', priceFrom: '150.000', code: 'TXI01' }
+                    ];
+                }
+            }
+
+            svcSelect.innerHTML = '';
+            filtered.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.name;
+                opt.dataset.dbId = s.dbId || '';
+                opt.dataset.code = s.code || s.id || '';
+                const priceNum = (typeof s.priceFrom === 'string') ? s.priceFrom : ((s.priceFrom || 150000).toLocaleString('vi-VN'));
+                const unit = (targetGroup === 'hotel') ? ' đ/đêm' : ' đ';
+                opt.textContent = `${s.name} (${priceNum}${unit})`;
+                svcSelect.appendChild(opt);
+            });
+        }
+        updateServiceOptionsRef = updateServiceOptionsForCategory;
+
+        // Cập nhật danh sách Kỹ thuật viên / Tài xế từ CSDL Supabase
+        function populateStaffSelect() {
+            if (!newBookingStaffSelect) return;
+            const curVal = newBookingStaffSelect.value;
+            newBookingStaffSelect.innerHTML = '<option value="">Chưa phân công (Phân công sau)</option>';
+
+            if (liveStaffList && liveStaffList.length > 0) {
+                liveStaffList.forEach(stf => {
+                    const opt = document.createElement('option');
+                    opt.value = stf.full_name;
+                    opt.dataset.id = stf.id;
+                    const spec = stf.specialization || (stf.role === 'PET_CARE' ? 'KTV Chăm sóc' : (stf.role || 'KTV'));
+                    opt.textContent = `${stf.full_name} (${spec})`;
+                    newBookingStaffSelect.appendChild(opt);
+                });
+            } else {
+                ['Trần Văn Nhân Viên', 'Nguyễn Thị Chăm Sóc', 'Lê Hoàng Tiến', 'Phạm Thúy Vy'].forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    newBookingStaffSelect.appendChild(opt);
+                });
+            }
+            if (curVal) newBookingStaffSelect.value = curVal;
+        }
+        populateStaffSelectRef = populateStaffSelect;
+
+        // Nạp danh sách gợi ý Khách hàng từ CSDL Supabase
+        function populateCustomerDatalist() {
+            if (!custDatalist) return;
+            custDatalist.innerHTML = '';
+            liveCustomerDirectory.forEach(c => {
+                const name = c.customer_profile?.full_name || 'Khách hàng';
+                const phone = c.phone_main || '';
+                const opt = document.createElement('option');
+                opt.value = `${name} - ${phone}`;
+                opt.dataset.id = c.id;
+                opt.dataset.name = name;
+                opt.dataset.phone = phone;
+                custDatalist.appendChild(opt);
+            });
+        }
+        populateCustomerDatalistRef = populateCustomerDatalist;
+
+        // Tự động nhận diện Khách hàng & nạp danh sách Thú cưng tương ứng từ CSDL
+        function onCustomerLookup() {
+            const rawVal = (custInput?.value || '').trim();
+            const rawPhone = (phoneInput?.value || '').trim();
+            if (!rawVal && !rawPhone) return;
+
+            let matched = null;
+            if (rawVal.includes(' - ')) {
+                const [nPart, pPart] = rawVal.split(' - ').map(s => s.trim().toLowerCase());
+                matched = liveCustomerDirectory.find(c => {
+                    const cPhone = (c.phone_main || '').toLowerCase();
+                    const cName = (c.customer_profile?.full_name || '').toLowerCase();
+                    return cPhone === pPart || cName === nPart;
+                });
+            } else {
+                matched = liveCustomerDirectory.find(c => {
+                    const cPhone = (c.phone_main || '').toLowerCase();
+                    const cName = (c.customer_profile?.full_name || '').toLowerCase();
+                    return (rawPhone && cPhone === rawPhone.toLowerCase()) || (rawVal && (cName === rawVal.toLowerCase() || cPhone === rawVal.toLowerCase()));
+                });
+            }
+
+            if (matched) {
+                currentMatchedCustomer = matched;
+                const realName = matched.customer_profile?.full_name || '';
+                const realPhone = matched.phone_main || '';
+                if (custInput) custInput.value = realName;
+                if (phoneInput && realPhone) phoneInput.value = realPhone;
+
+                // Nạp thú cưng của khách này vào datalist
+                if (petDatalist) {
+                    petDatalist.innerHTML = '';
+                    const pets = Array.isArray(matched.pet_profile) ? matched.pet_profile : (matched.pet_profile ? [matched.pet_profile] : []);
+                    pets.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.pet_name;
+                        opt.dataset.id = p.id;
+                        opt.dataset.breed = p.breed || '';
+                        opt.dataset.allergy = p.allergy || p.routine || '';
+                        opt.textContent = `${p.pet_name} (${p.breed || p.species || 'Thú cưng'}${p.weight ? ' - ' + p.weight + 'kg' : ''})`;
+                        petDatalist.appendChild(opt);
+                    });
+
+                    // Nếu khách có 1 bé cưng duy nhất, tự động chọn luôn
+                    if (pets.length === 1 && petInput && !petInput.value) {
+                        petInput.value = pets[0].pet_name;
+                        currentMatchedPet = pets[0];
+                        if (alertInput && (pets[0].allergy || pets[0].routine)) {
+                            alertInput.value = pets[0].allergy || pets[0].routine;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (custInput) {
+            custInput.addEventListener('change', onCustomerLookup);
+            custInput.addEventListener('input', () => {
+                if (custInput.value.includes(' - ')) onCustomerLookup();
+            });
+        }
+        if (phoneInput) {
+            phoneInput.addEventListener('change', onCustomerLookup);
+            phoneInput.addEventListener('blur', onCustomerLookup);
+        }
+        if (petInput) {
+            petInput.addEventListener('change', () => {
+                const petVal = (petInput.value || '').trim().toLowerCase();
+                if (currentMatchedCustomer && currentMatchedCustomer.pet_profile) {
+                    const pets = Array.isArray(currentMatchedCustomer.pet_profile) ? currentMatchedCustomer.pet_profile : [currentMatchedCustomer.pet_profile];
+                    const p = pets.find(item => (item.pet_name || '').toLowerCase() === petVal);
+                    if (p) {
+                        currentMatchedPet = p;
+                        if (alertInput && (p.allergy || p.routine)) {
+                            alertInput.value = p.allergy || p.routine;
+                        }
+                    }
+                }
+            });
+        }
 
         function updateCreateCategoryFields() {
             const val = catSelect ? catSelect.value : 'Spa';
             if (hotelFields) hotelFields.style.display = (val === 'Hotel') ? 'block' : 'none';
             if (taxiFields) taxiFields.style.display = (val === 'Taxi') ? 'block' : 'none';
             if (spaFields) spaFields.style.display = (val === 'Spa') ? 'block' : 'none';
+            updateServiceOptionsForCategory(val);
         }
         if (catSelect) {
             catSelect.addEventListener('change', updateCreateCategoryFields);
         }
+
+        // Khởi tạo ngay options dịch vụ và nhân viên
+        updateServiceOptionsForCategory(catSelect ? catSelect.value : 'Spa');
+        populateStaffSelect();
+        populateCustomerDatalist();
 
         if (btnOpenCreate) {
             btnOpenCreate.addEventListener('click', () => {
@@ -2306,6 +2512,8 @@
                     nextDate.setDate(nextDate.getDate() + 3);
                     checkOutDateInput.value = nextDate.toISOString().split('T')[0];
                 }
+                populateStaffSelect();
+                populateCustomerDatalist();
                 updateCreateCategoryFields();
                 if (modalCreate) modalCreate.classList.add('active');
             });
@@ -2337,6 +2545,8 @@
                         dateInput.value = todayStr;
                     }
 
+                    populateStaffSelect();
+                    populateCustomerDatalist();
                     updateCreateCategoryFields();
                     if (modalCreate) modalCreate.classList.add('active');
                     sessionStorage.removeItem('pawpal_admin_booking_preset');
@@ -2349,6 +2559,8 @@
                 const todayStr = new Date().toISOString().split('T')[0];
                 const dateInput = document.getElementById('newBookingDate');
                 if (dateInput) dateInput.value = todayStr;
+                populateStaffSelect();
+                populateCustomerDatalist();
                 updateCreateCategoryFields();
                 if (modalCreate) modalCreate.classList.add('active');
             }
@@ -2358,14 +2570,13 @@
         const closeCreateModal = () => {
             if (modalCreate) modalCreate.classList.remove('active');
             activeBookingPreset = null;
-            const newBookingStaffHint = document.getElementById('newBookingStaffWorkloadHint');
+            currentMatchedCustomer = null;
+            currentMatchedPet = null;
             if (newBookingStaffHint) newBookingStaffHint.style.display = 'none';
         };
         if (btnCloseCreate) btnCloseCreate.addEventListener('click', closeCreateModal);
         if (btnCancelCreate) btnCancelCreate.addEventListener('click', closeCreateModal);
 
-        const newBookingStaffSelect = document.getElementById('newBookingStaff');
-        const newBookingStaffHint = document.getElementById('newBookingStaffWorkloadHint');
         if (newBookingStaffSelect && newBookingStaffHint) {
             newBookingStaffSelect.addEventListener('change', () => {
                 const staff = newBookingStaffSelect.value;
@@ -2373,7 +2584,7 @@
                     newBookingStaffHint.style.display = 'none';
                     return;
                 }
-                const staffItem = STAFF_DIRECTORY.find(s => s.name === staff) || { maxCapacity: 4 };
+                const staffItem = (liveStaffList && liveStaffList.find(s => s.full_name === staff)) || { maxCapacity: 4 };
                 const count = getStaffActiveBookings(staff).length;
                 const max = staffItem.maxCapacity || 4;
                 newBookingStaffHint.style.display = 'block';
@@ -2510,19 +2721,69 @@
                     timeline: initialTimeline
                 }, extraProps);
 
-                // Ghi nhận trực tiếp vào Supabase appointment
+                // Xác định chính xác các khóa ngoại liên kết CSDL Supabase
                 const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                let customerDbId = currentMatchedCustomer?.id || null;
+                let petDbId = currentMatchedPet?.id || null;
+
+                // Lấy service_id từ option đang chọn hoặc servicesData
+                const selectedSvcOpt = svcSelect?.selectedOptions?.[0];
+                let serviceDbId = selectedSvcOpt?.dataset?.dbId || matchedSvc?.dbId || null;
+                if (!serviceDbId && matchedSvc) serviceDbId = matchedSvc.dbId;
+
+                // Lấy staff_id từ option KTV đang chọn
+                const selectedStaffOpt = newBookingStaffSelect?.selectedOptions?.[0];
+                let staffDbId = selectedStaffOpt?.dataset?.id || (liveStaffList && liveStaffList.find(s => s.full_name === staff)?.id) || null;
+
+                // Nếu là khách hàng mới chưa có trong CSDL, tạo mới khách hàng & hồ sơ trong Supabase
+                if (db && !customerDbId && phone) {
+                    try {
+                        const { data: createdCust } = await db.from('customer').insert([{ phone_main: phone }]).select();
+                        if (createdCust && createdCust[0]) {
+                            customerDbId = createdCust[0].id;
+                            await db.from('customer_profile').insert([{
+                                customer_id: customerDbId,
+                                full_name: customer || 'Khách hàng mới'
+                            }]);
+                        }
+                    } catch(errCust) {
+                        console.warn('Lỗi ghi khách hàng mới Supabase:', errCust);
+                    }
+                }
+
+                // Nếu thú cưng chưa có ID trong CSDL, tạo mới pet_profile trong Supabase
+                if (db && customerDbId && !petDbId && petName) {
+                    try {
+                        const { data: createdPet } = await db.from('pet_profile').insert([{
+                            customer_id: customerDbId,
+                            pet_name: petName,
+                            species: (category === 'Hotel' && (serviceName.includes('Mèo') || serviceName.includes('Cat'))) ? 'cat' : 'dog',
+                            breed: (preset && preset.breed) ? preset.breed : 'Thú cưng',
+                            allergy: petAlert ? petAlert.trim() : null
+                        }]).select();
+                        if (createdPet && createdPet[0]) {
+                            petDbId = createdPet[0].id;
+                        }
+                    } catch(errPet) {
+                        console.warn('Lỗi ghi pet_profile Supabase:', errPet);
+                    }
+                }
+
+                // Ghi nhận trực tiếp vào Supabase appointment với đầy đủ liên kết ngoại
                 if (db) {
                     try {
                         const { data: insertedApp, error: appErr } = await db.from('appointment').insert([{
                             appointment_code: newId,
+                            customer_id: customerDbId,
+                            pet_id: petDbId,
+                            service_id: serviceDbId,
+                            staff_id: staffDbId,
                             appointment_date: date,
                             appointment_time: time.length === 5 ? time + ':00' : time,
                             appointment_status: 'PENDING',
                             payment_status: 'UNPAID',
                             total_price: calculatedPrice,
-                            note: note || '',
-                            service_id: matchedSvc?.dbId || null
+                            note: (petAlert ? `[Lưu ý: ${petAlert.trim()}] ` : '') + (note || '')
                         }]).select();
 
                         if (!appErr && insertedApp && insertedApp[0]) {
@@ -2533,9 +2794,13 @@
                     }
                 }
 
-                bookingsData.unshift(newBooking);
-                persistData();
                 closeCreateModal();
+                if (db) {
+                    await loadServicesData(true);
+                } else {
+                    bookingsData.unshift(newBooking);
+                    persistData();
+                }
                 renderBookingsTable();
                 renderUpcomingBar();
                 updateKPIs();
@@ -4897,6 +5162,47 @@
         }
     }
 
+    // Thiết lập Supabase Realtime Subscription cho phân hệ Dịch vụ
+    function setupServicesRealtimeSubscription() {
+        try {
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (client && typeof client.channel === 'function') {
+                if (window._pawpalServicesRealtimeChannel) {
+                    try { client.removeChannel(window._pawpalServicesRealtimeChannel); } catch (e) {}
+                }
+                const channelName = 'pawpal-services-realtime-' + Date.now();
+                window._pawpalServicesRealtimeChannel = client.channel(channelName)
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment' }, async (payload) => {
+                        console.log('Realtime Supabase Appointment updated in Services:', payload);
+                        await loadServicesData();
+                        renderBookingsTable();
+                        updateKPIs();
+                        renderUpcomingBar();
+                        if (selectedBookingId) openBookingDetail(selectedBookingId);
+                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'service' }, async (payload) => {
+                        console.log('Realtime Supabase Service updated:', payload);
+                        await loadServicesData();
+                        renderCatalogTable();
+                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'review' }, async (payload) => {
+                        console.log('Realtime Supabase Review updated in Services:', payload);
+                        await loadServicesData();
+                        renderReviewsTable();
+                        updateReviewKPIs();
+                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'care_log' }, async (payload) => {
+                        console.log('Realtime Supabase Care Log updated in Services:', payload);
+                        await loadServicesData();
+                        if (selectedBookingId) openBookingDetail(selectedBookingId);
+                    })
+                    .subscribe();
+            }
+        } catch (err) {
+            console.warn('Không thể khởi tạo Supabase Realtime cho Services:', err);
+        }
+    }
+
     // ==========================================================================
     // 10. KHỞI CHẠY PHÂN HỆ
     // ==========================================================================
@@ -4921,6 +5227,7 @@
         setupNotifyPickupModal();
         setupStaffScheduleModal();
         setupActionDropdownEvents();
+        setupServicesRealtimeSubscription();
     }
 
     // Chạy khởi tạo

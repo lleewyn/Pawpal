@@ -143,6 +143,15 @@
     border-bottom: none;
 }
 
+.dashboard-stock-row {
+    align-items: flex-start;
+}
+
+.dashboard-stock-row > span:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .dashboard-priority-row strong,
 .dashboard-stock-row strong,
 .dashboard-booking-detail strong {
@@ -171,6 +180,8 @@
     flex: 0 0 auto;
     font-size: 12px;
     font-weight: 700;
+    line-height: 1.45;
+    margin-top: 1px;
     white-space: nowrap;
 }
 
@@ -236,9 +247,9 @@
 }
 
 .dashboard-calendar-header {
-    display: grid;
-    grid-template-columns: 32px 1fr 32px;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     min-height: 36px;
     margin-bottom: 10px;
@@ -248,8 +259,43 @@
     color: var(--text-heading);
     font-size: 13px;
     font-weight: 700;
-    text-align: center;
     text-transform: capitalize;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    user-select: none;
+}
+
+.dashboard-calendar-nav-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.dashboard-calendar-today-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    padding: 0 9px;
+    color: var(--text-heading);
+    background-color: transparent;
+    border: 1px solid #C9DFD0;
+    border-radius: var(--admin-radius);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    line-height: 1;
+    white-space: nowrap;
+    transition: none !important;
+}
+
+.dashboard-calendar-today-btn:hover {
+    background-color: #EEF5F1;
+    color: var(--text-heading);
 }
 
 .dashboard-widget-actions {
@@ -407,7 +453,16 @@
 }
 
 .dashboard-calendar-day.is-today {
-    color: var(--admin-primary);
+    color: var(--text-heading);
+    font-weight: 700;
+}
+
+.dashboard-calendar-day.is-today:not(.is-selected) {
+    background-color: #EEF5F1;
+}
+
+.dashboard-week-heading-btn.is-today span {
+    color: var(--text-heading);
     font-weight: 700;
 }
 
@@ -554,6 +609,7 @@
     font-weight: 600;
     text-align: right;
     user-select: none;
+    line-height: 1;
 }
 
 .dashboard-day-timeline-line {
@@ -586,84 +642,105 @@
     transition: none !important;
 }
 
-/* 1. Ca lịch đơn lẻ (không trùng với ai): dài 96%, xanh Forest dịu nhẹ */
-.dashboard-day-event.is-single-event,
-.dashboard-day-event.layer-idx-0 {
+/* 1. Mặc định & Ca ĐÃ XÁC NHẬN: Thẻ màu xanh Forest dịu mát */
+.dashboard-day-event,
+.dashboard-day-event.status-confirmed,
+.dashboard-day-event.is-single-event {
     background-color: #F4FAF6;
     border: 1px solid #C9DFD0;
     box-shadow: 0 1px 3px rgba(35, 107, 72, 0.05);
 }
 
-.dashboard-day-event.is-single-event strong,
-.dashboard-day-event.layer-idx-0 strong {
+.dashboard-day-event strong,
+.dashboard-day-event.status-confirmed strong,
+.dashboard-day-event.is-single-event strong {
     color: var(--text-heading);
     font-size: 11.5px;
     font-weight: 700;
 }
 
-.dashboard-day-event.is-single-event .dashboard-day-event-body,
-.dashboard-day-event.layer-idx-0 .dashboard-day-event-body {
+.dashboard-day-event .dashboard-day-event-body,
+.dashboard-day-event.status-confirmed .dashboard-day-event-body,
+.dashboard-day-event.is-single-event .dashboard-day-event-body {
     color: var(--text-muted);
     font-size: 10.5px;
 }
 
-.dashboard-day-event.is-single-event .dashboard-day-event-status,
-.dashboard-day-event.layer-idx-0 .dashboard-day-event-status {
-    color: var(--admin-primary);
+.dashboard-day-event .dashboard-day-event-status,
+.dashboard-day-event.status-confirmed .dashboard-day-event-status,
+.dashboard-day-event.is-single-event .dashboard-day-event-status {
+    color: #165335;
+    background-color: #DCEEE2;
+    padding: 2px 7px;
+    border-radius: 9px;
     font-size: 10px;
     font-weight: 600;
+    line-height: 1.2;
 }
 
-/* 2. Ca lịch thứ hai chồng lên (Layer 1):
-   - Ngắn hơn theo tỷ lệ (80%), thụt lề 16%
-   - Nền trắng kem ấm (#FFFDF7), viền cam hổ phách (#D97706), bóng đổ nổi bật */
-.dashboard-day-event.layer-idx-1 {
+/* 2. Ca CHỜ XÁC NHẬN: Thẻ màu vàng / hổ phách ấm (Warm Amber) */
+.dashboard-day-event.status-pending {
     background-color: #FFFDF7;
-    border: 1.5px solid #D97706;
-    box-shadow: 0 4px 14px rgba(217, 119, 6, 0.16);
+    border: 1px solid #EAD8AB;
+    box-shadow: 0 1px 3px rgba(217, 119, 6, 0.07);
 }
 
-.dashboard-day-event.layer-idx-1 strong {
-    color: #B45309;
+.dashboard-day-event.status-pending strong {
+    color: #8C5815;
     font-size: 11.5px;
     font-weight: 700;
 }
 
-.dashboard-day-event.layer-idx-1 .dashboard-day-event-body {
-    color: #92400E;
+.dashboard-day-event.status-pending .dashboard-day-event-body {
+    color: #9A6928;
     font-size: 10.5px;
 }
 
-.dashboard-day-event.layer-idx-1 .dashboard-day-event-status {
-    color: #D97706;
+.dashboard-day-event.status-pending .dashboard-day-event-status {
+    color: #734718;
+    background-color: #F5E8D3;
+    padding: 2px 7px;
+    border-radius: 9px;
     font-size: 10px;
     font-weight: 600;
+    line-height: 1.2;
 }
 
-/* 3. Ca lịch thứ ba chồng lên tiếp (Layer 2 nếu có):
-   - Ngắn hơn tiếp theo tỷ lệ (66%), thụt lề 32%
-   - Nền xanh xô thơm ngọc bích (#F0F8F6), viền xanh mòng két Teal (#0D9488), bóng đổ riêng biệt */
+/* 3. Ca ĐÃ HỦY: Thẻ màu đỏ đất dịu */
+.dashboard-day-event.status-cancelled {
+    background-color: #FEF6F6;
+    border: 1px solid #F5C6C6;
+    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.05);
+}
+
+.dashboard-day-event.status-cancelled strong {
+    color: #991B1B;
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+.dashboard-day-event.status-cancelled .dashboard-day-event-body {
+    color: #B91C1C;
+    font-size: 10.5px;
+}
+
+.dashboard-day-event.status-cancelled .dashboard-day-event-status {
+    color: #8F2424;
+    background-color: #F7DCDC;
+    padding: 2px 7px;
+    border-radius: 9px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+/* Các lớp xếp tầng khi trùng giờ (Overlapping Layers) */
+.dashboard-day-event.layer-idx-1 {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
 .dashboard-day-event.layer-idx-2 {
-    background-color: #F0F8F6;
-    border: 1.5px solid #0D9488;
-    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.16);
-}
-
-.dashboard-day-event.layer-idx-2 strong {
-    color: #0F766E;
-    font-size: 11.5px;
-    font-weight: 700;
-}
-
-.dashboard-day-event.layer-idx-2 .dashboard-day-event-body {
-    color: #115E59;
-    font-size: 10.5px;
-}
-
-.dashboard-day-event.layer-idx-2 .dashboard-day-event-status {
-    color: #0D9488;
-    font-size: 10px;
-    font-weight: 600;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
 }
 
 /* Rê chuột vào thẻ nào thì thẻ đó được đẩy lên trên cùng */

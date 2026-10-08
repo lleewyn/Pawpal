@@ -591,7 +591,8 @@
             <form id="formCreateBooking" class="modal-body-clean">
                 <div class="form-group-item">
                     <label class="form-label-clean">Khách hàng:</label>
-                    <input type="text" class="admin-input" id="newBookingCustomer" placeholder="Nhập tên hoặc số điện thoại khách..." required>
+                    <input type="text" class="admin-input" id="newBookingCustomer" list="bookingCustomerDatalist" placeholder="Nhập tên hoặc số điện thoại khách..." required autocomplete="off">
+                    <datalist id="bookingCustomerDatalist"></datalist>
                 </div>
                 <div class="form-row-2col">
                     <div class="form-group-item">
@@ -600,7 +601,8 @@
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Tên thú cưng:</label>
-                        <input type="text" class="admin-input" id="newBookingPetName" placeholder="Tên bé cưng..." required>
+                        <input type="text" class="admin-input" id="newBookingPetName" list="bookingPetDatalist" placeholder="Tên bé cưng..." required autocomplete="off">
+                        <datalist id="bookingPetDatalist"></datalist>
                     </div>
                 </div>
                 <div class="form-row-2col">
@@ -615,12 +617,7 @@
                     <div class="form-group-item">
                         <label class="form-label-clean">Gói dịch vụ cụ thể:</label>
                         <select class="admin-select" id="newBookingServiceSelect" required>
-                            <option value="Gói Tắm Vệ Sinh Cơ Bản">Gói Tắm Vệ Sinh Cơ Bản (120.000 đ)</option>
-                            <option value="Gói Tắm Dưỡng Premium">Gói Tắm Dưỡng Premium (220.000 đ)</option>
-                            <option value="Grooming Tạo Kiểu Cơ Bản">Grooming Tạo Kiểu Cơ Bản (350.000 đ)</option>
-                            <option value="Phòng Standard">Phòng Standard (180.000 đ/đêm)</option>
-                            <option value="Phòng Deluxe">Phòng Deluxe (380.000 đ/đêm)</option>
-                            <option value="Dịch Vụ Xe Đưa Đón Tận Nơi">Dịch Vụ Xe Đưa Đón Tận Nơi (150.000 đ)</option>
+                            <option value="">Đang tải gói dịch vụ...</option>
                         </select>
                     </div>
                 </div>
@@ -635,7 +632,7 @@
                     </div>
                 </div>
                 <!-- CÁC TRƯỜNG ĐẶC THÙ CHO HOTEL -->
-                <div id="createBookingHotelFields" style="display: none; background: #F8FAF9; padding: 12px 14px; border-radius: var(--admin-radius); margin-bottom: 12px;">
+                <div id="createBookingHotelFields" style="display: none; background: transparent; padding: 4px 0; margin-bottom: 12px;">
                     <div style="font-size: 12.5px; font-weight: 600; color: #236B48; margin-bottom: 8px;">Thông tin lưu trú Khách sạn thú cưng:</div>
                     <div class="form-row-2col">
                         <div class="form-group-item">
@@ -668,7 +665,7 @@
                 </div>
 
                 <!-- CÁC TRƯỜNG ĐẶC THÙ CHO PET TAXI -->
-                <div id="createBookingTaxiFields" style="display: none; background: #F8FAF9; padding: 12px 14px; border-radius: var(--admin-radius); margin-bottom: 12px;">
+                <div id="createBookingTaxiFields" style="display: none; background: transparent; padding: 4px 0; margin-bottom: 12px;">
                     <div style="font-size: 12.5px; font-weight: 600; color: #236B48; margin-bottom: 8px;">Thông tin lộ trình Pet Taxi đưa đón:</div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Địa chỉ đón:</label>
@@ -695,7 +692,7 @@
                 </div>
 
                 <!-- CÁC TRƯỜNG ĐẶC THÙ CHO SPA VÀ GROOMING -->
-                <div id="createBookingSpaFields" style="background: #F8FAF9; padding: 12px 14px; border-radius: var(--admin-radius); margin-bottom: 12px;">
+                <div id="createBookingSpaFields" style="background: transparent; padding: 4px 0; margin-bottom: 12px;">
                     <div style="font-size: 12.5px; font-weight: 600; color: #236B48; margin-bottom: 8px;">Yêu cầu tạo hình và Grooming:</div>
                     <div class="form-row-2col">
                         <div class="form-group-item">
@@ -718,10 +715,6 @@
                         <label class="form-label-clean">Kỹ thuật viên / Tài xế phụ trách:</label>
                         <select class="admin-select" id="newBookingStaff">
                             <option value="">Chưa phân công (Phân công sau)</option>
-                            <option value="Ngọc Anh">Ngọc Anh (Senior Groomer)</option>
-                            <option value="Thu Thảo">Thu Thảo (Junior Groomer)</option>
-                            <option value="Hoàng Nam">Hoàng Nam (Master Groomer)</option>
-                            <option value="Hữu Phúc">Hữu Phúc (Tài xế / Chăm sóc)</option>
                         </select>
                         <div id="newBookingStaffWorkloadHint" style="display: none; margin-top: 4px; font-size: 11.5px; padding: 4px 8px; border-radius: var(--admin-radius);"></div>
                     </div>
@@ -1825,6 +1818,10 @@
 
             <div class="modal-footer-clean" style="display: flex; justify-content: space-between; align-items: center;">
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnNavToStaffModule">Quản lý nhân sự</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnDismissStaffSchedule">Đóng</button>
+            </div>
+        </div>
+    </div>
     <!-- ====================================================================
          MODAL 15: XÁC NHẬN THAO TÁC (CUSTOM CONFIRM DIALOG)
          ==================================================================== -->

@@ -46,7 +46,8 @@
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
                     <div class="search-box-wrapper">
-                        <input type="text" class="admin-input search-input" id="custSearchInput" placeholder="Tìm SĐT, Họ tên, Bé cưng, Email...">
+                        <input type="text" class="admin-input search-input" id="custSearchInput" placeholder="Tìm SĐT, Họ tên, Bé cưng, Email..." list="customerSearchDatalist" autocomplete="off">
+                        <datalist id="customerSearchDatalist"></datalist>
                     </div>
                     <div class="filter-actions-right">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportCustomerReport">Xuất file</button>
@@ -369,7 +370,7 @@
                     </div>
                 </div>
                 <div class="pawpoint-toolbar" style="padding: 10px 16px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-neutral);">
-                    <input type="text" class="admin-input" id="pawpointSearchInput" placeholder="Tìm theo tên hoặc SĐT..." style="max-width: 240px; height: 32px; font-size: 13px;">
+                    <input type="text" class="admin-input" id="pawpointSearchInput" placeholder="Tìm theo tên hoặc SĐT..." list="customerSearchDatalist" autocomplete="off" style="max-width: 240px; height: 32px; font-size: 13px;">
                     <select class="admin-select" id="pawpointFilterType" style="max-width: 150px; height: 32px; font-size: 13px;">
                         <option value="ALL">Tất cả giao dịch</option>
                         <option value="ADD">Cộng điểm</option>
@@ -435,7 +436,8 @@
                 </div>
                 <div class="form-group mb-3">
                     <label class="form-label">Giống loài bé cưng</label>
-                    <input type="text" class="admin-input" id="quickAddPetBreed" placeholder="Ví dụ: Corgi, Poodle, Mèo ALN...">
+                    <input type="text" class="admin-input" id="quickAddPetBreed" placeholder="Ví dụ: Corgi, Poodle, Mèo ALN..." list="quickAddBreedDatalist" autocomplete="off">
+                    <datalist id="quickAddBreedDatalist"></datalist>
                 </div>
                 <div class="form-group mb-3">
                     <label class="form-label">Địa chỉ nhận hàng ban đầu</label>
@@ -461,8 +463,9 @@
             </div>
             <form id="formAdjustPoints">
                 <div class="form-group mb-3">
-                    <label class="form-label">Số điện thoại (*)</label>
-                    <input type="tel" class="admin-input" id="adjustPhone" placeholder="Nhập SĐT khách cần điều chỉnh điểm..." required>
+                    <label class="form-label">Khách hàng hoặc Số điện thoại (*)</label>
+                    <input type="text" class="admin-input" id="adjustPhone" placeholder="Nhập tên hoặc SĐT khách cần điều chỉnh điểm..." list="adjustCustomerDatalist" required autocomplete="off">
+                    <datalist id="adjustCustomerDatalist"></datalist>
                     <div id="adjustPhoneCustomerHint" style="font-size: 12.5px; color: var(--admin-primary); margin-top: 5px; display: none;"></div>
                 </div>
                 <div class="form-row-two-col mb-3">
@@ -590,7 +593,8 @@
                 <div class="form-row-two-col mb-3">
                     <div class="form-group">
                         <label class="form-label">Giống loài</label>
-                        <input type="text" class="admin-input" id="addPetBreed" placeholder="Ví dụ: Poodle, Corgi, Golden, Mèo Anh...">
+                        <input type="text" class="admin-input" id="addPetBreed" placeholder="Ví dụ: Poodle, Corgi, Golden, Mèo Anh..." list="petBreedDatalist" autocomplete="off">
+                        <datalist id="petBreedDatalist"></datalist>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Cân nặng (kg)</label>
@@ -642,7 +646,7 @@
                 <div class="form-row-two-col mb-3">
                     <div class="form-group">
                         <label class="form-label">Giống loài</label>
-                        <input type="text" class="admin-input" id="editPetBreed" placeholder="Ví dụ: Poodle, Corgi, Golden, Mèo Anh...">
+                        <input type="text" class="admin-input" id="editPetBreed" placeholder="Ví dụ: Poodle, Corgi, Golden, Mèo Anh..." list="petBreedDatalist" autocomplete="off">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Cân nặng (kg)</label>

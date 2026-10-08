@@ -109,6 +109,7 @@
 
             const cleanup = () => {
                 modal.classList.remove('active');
+                modal.style.display = 'none';
                 if (btnAccept) btnAccept.onclick = null;
                 if (btnCancel) btnCancel.onclick = null;
                 if (btnClose) btnClose.onclick = null;
@@ -136,6 +137,7 @@
             }
 
             modal.classList.add('active');
+            modal.style.display = 'flex';
         }
 
         const defaultSystemConfig = {
