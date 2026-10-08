@@ -379,16 +379,39 @@
     cursor: pointer;
     background-color: transparent;
     border: 1px solid var(--border-neutral);
-    transition: background-color 0.15s;
+    transition: background-color 0.15s, border-color 0.15s;
 }
 
-.conversation-item:hover {
+/* Khách vãng lai (Mặc định) */
+.conversation-item.is-guest {
+    background-color: transparent;
+    border: 1px solid var(--border-neutral);
+}
+
+.conversation-item.is-guest:hover {
     background-color: rgba(238, 245, 241, 0.45);
 }
 
-.conversation-item.active {
+.conversation-item.is-guest.active {
     background-color: #F4FAF6;
     border-color: #C3DEC7;
+}
+
+/* Thành viên / Khách hàng có tài khoản */
+.conversation-item.is-member {
+    background-color: #F4FAF6;
+    border: 1px solid #B8DAC4;
+}
+
+.conversation-item.is-member:hover {
+    background-color: #EBF5EF;
+    border-color: #A3CFB2;
+}
+
+.conversation-item.is-member.active {
+    background-color: #E2F0E7;
+    border-color: #236B48;
+    box-shadow: inset 0 0 0 1px #236B48;
 }
 
 .conversation-item-top {
@@ -401,6 +424,23 @@
     font-size: 13.5px;
     font-weight: 600;
     color: var(--text-main);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.conv-member-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    color: #165335;
+    background-color: #DCEEE2;
+    padding: 2px 6px;
+    border-radius: var(--admin-radius, 9px);
+    letter-spacing: 0.2px;
 }
 
 .conv-time {

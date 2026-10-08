@@ -944,14 +944,16 @@
                 vipTag = '<span style="color: #236B48; font-size: 11px; font-weight: 600; margin-left: 6px;">• VIP Lưu ý</span>';
             }
 
-            const handoverTag = `<span class="admin-badge badge-neutral" style="font-size: 10.5px; height: 20px; padding: 0 6px;">${conv.isHandover ? 'Nhân viên' : 'Bot'}</span>`;
-            const sla = formatSlaInfo(conv.waitingSeconds, conv.isHandover);
+            const isMember = Boolean(conv.customerId && conv.customerId !== 'guest');
+            const memberBadge = isMember 
+                ? `<span class="conv-member-badge">${conv.tier || 'Thành viên'}</span>` 
+                : '';
 
             const item = document.createElement('div');
-            item.className = `conversation-item ${isActive ? 'active' : ''}`;
+            item.className = `conversation-item ${isMember ? 'is-member' : 'is-guest'} ${isActive ? 'active' : ''}`;
             item.innerHTML = `
                 <div class="conversation-item-top">
-                    <span class="conv-cust-name">${conv.customerName}${vipTag}</span>
+                    <span class="conv-cust-name">${conv.customerName}${memberBadge}${vipTag}</span>
                     <span class="conv-time">${conv.updatedAt}</span>
                 </div>
                 <div class="conversation-item-mid">
