@@ -868,6 +868,35 @@
         });
     }
 
+    // Helper dọn dẹp nội dung tin nhắn hiển thị xem trước (snippet), chuyển các thẻ kỹ thuật thành nhãn thân thiện
+    function formatSnippetPreview(rawText) {
+        if (!rawText) return '...';
+        let text = String(rawText);
+
+        // 1. Khảo sát CSAT: :::csat_survey {...} :::
+        text = text.replace(/:::csat_survey\b[\s\S]*?(:::|$)/gi, '[Khảo sát đánh giá dịch vụ]');
+
+        // 2. Thẻ Đơn hàng: :::order {...} :::
+        text = text.replace(/:::order\b[\s\S]*?(:::|$)/gi, '[Thông tin đơn hàng]');
+
+        // 3. Thẻ Lịch hẹn dịch vụ: :::booking {...} :::
+        text = text.replace(/:::booking\b[\s\S]*?(:::|$)/gi, '[Lịch hẹn dịch vụ]');
+
+        // 4. Thẻ Voucher ưu đãi: :::voucher {...} :::
+        text = text.replace(/:::voucher\b[\s\S]*?(:::|$)/gi, '[Mã ưu đãi PawPal]');
+
+        // 5. Thẻ ảnh markdown ![alt](url)
+        text = text.replace(/!\[(.*?)\]\(.*?\)/gi, (m, alt) => (alt ? `[Hình ảnh: ${alt}]` : '[Hình ảnh]'));
+
+        // 6. Dọn dẹp ký hiệu in đậm markdown **chữ**
+        text = text.replace(/\*\*(.*?)\*\*/g, '$1');
+
+        // 7. Thu gọn khoảng trắng và xuống dòng thành 1 dòng đơn
+        text = text.replace(/\s+/g, ' ').trim();
+
+        return text || '...';
+    }
+
     // -------------------------------------------------------------
     // 4. LOGIC SUB-TAB 2: TRỰC CHAT CSKH HỘP THƯ 3 KHU VỰC
     // -------------------------------------------------------------
@@ -923,7 +952,7 @@
         filtered.forEach(conv => {
             const isActive = currentConversation && currentConversation.id === conv.id;
             const lastMsg = conv.messages[conv.messages.length - 1];
-            const snippet = lastMsg ? (lastMsg.isToxic ? '[Nội dung đã được che mờ]' : lastMsg.text) : '...';
+            const snippet = lastMsg ? (lastMsg.isToxic ? '[Nội dung đã được che mờ]' : formatSnippetPreview(lastMsg.text)) : '...';
 
             let sentimentDot = '';
             if (conv.sentimentLevel >= 4) {
