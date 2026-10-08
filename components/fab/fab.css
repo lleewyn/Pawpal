@@ -934,33 +934,6 @@
     font-family: monospace;
 }
 
-.fab-rich-card--order {
-    border-left: 3px solid #236B48;
-}
-
-.fab-rich-card--booking {
-    border-left: 3px solid #2563EB;
-}
-
-.fab-rich-card--voucher {
-    border-left: 3px solid #D97706;
-}
-
-.fab-rich-card--tracking {
-    border-left: 3px solid #059669;
-}
-
-.fab-rich-card--camera {
-    border-left: 3px solid #7C3AED;
-}
-
-.fab-rich-card--ticket {
-    border-left: 3px solid #DC2626;
-}
-
-.fab-rich-card--csat {
-    border-left: 3px solid #F59E0B;
-}
 
 .fab-csat-stars-container {
     display: flex;

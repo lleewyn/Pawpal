@@ -2430,17 +2430,12 @@
    ==================================================================== */
 .chat-timeline-messages .fab-rich-card {
     background-color: #FFFFFF;
-    border: 1px solid #C3DEC7;
+    border: 1px solid var(--border-neutral, #ECF2EE);
     border-radius: var(--admin-radius, 9px);
-    padding: 10px 14px;
+    padding: 11px 14px;
     margin: 6px 0;
     max-width: 320px;
 }
-
-.chat-timeline-messages .fab-rich-card--order { border-left: 3px solid #0284C7; }
-.chat-timeline-messages .fab-rich-card--booking { border-left: 3px solid #236B48; }
-.chat-timeline-messages .fab-rich-card--voucher { border-left: 3px solid #D97706; }
-.chat-timeline-messages .fab-rich-card--csat { border-left: 3px solid #F59E0B; }
 
 .chat-timeline-messages .fab-rich-card-header {
     display: flex;
