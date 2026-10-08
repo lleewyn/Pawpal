@@ -421,19 +421,7 @@
     }
 
     function renderChatbotAlertBar() {
-        const bar = document.getElementById('chatbotAlertBar');
-        const textEl = document.getElementById('alertStripText');
-        if (!bar || !textEl) return;
-
-        const criticalList = liveConversations.filter(c => !c.isHandover && (c.sentimentLevel >= 4 || (c.waitingSeconds || 0) >= 120));
-        const overdueList = liveConversations.filter(c => !c.isHandover && (c.waitingSeconds || 0) >= 120);
-
-        if (criticalList.length > 0) {
-            bar.style.display = 'flex';
-            textEl.textContent = `Có ${criticalList.length} ca chat khách hàng bực bội chưa tiếp nhận (${overdueList.length} ca đã quá hạn SLA) cần xử lý ngay!`;
-        } else {
-            bar.style.display = 'none';
-        }
+        // Đã loại bỏ thanh cảnh báo vận hành do tab con 'Xử lý ngay' ở cột bên cạnh đã hiển thị đầy đủ số lượng và chỉ số
     }
 
     let slaTickerInterval = null;
