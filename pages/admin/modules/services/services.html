@@ -591,9 +591,9 @@
             <form id="formCreateBooking" class="modal-body-clean">
                 <div class="form-group-item">
                     <label class="form-label-clean">Khách hàng:</label>
-                    <div class="customer-autocomplete-wrapper">
+                    <div class="customer-autocomplete-wrapper" style="position: relative; width: 100%;">
                         <input type="text" class="admin-input" id="newBookingCustomer" placeholder="Nhập tên hoặc số điện thoại khách..." required autocomplete="off">
-                        <div class="customer-autocomplete-popover" id="bookingCustomerDropdown" style="display: none;"></div>
+                        <div class="customer-autocomplete-popover" id="bookingCustomerDropdown" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #FFFFFF; border: 1px solid #ECF2EE; border-radius: 9px; box-shadow: 0 10px 28px rgba(35, 107, 72, 0.14); z-index: 2500; max-height: 240px; overflow-y: auto;"></div>
                     </div>
                 </div>
                 <div class="form-row-2col">

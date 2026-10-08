@@ -2456,7 +2456,7 @@
             });
 
             if (filtered.length === 0) {
-                custDropdown.innerHTML = '<div class="customer-autocomplete-empty">Không tìm thấy khách trong danh bạ. Bạn có thể nhập thông tin khách mới trực tiếp.</div>';
+                custDropdown.innerHTML = '<div class="customer-autocomplete-empty" style="padding: 14px; text-align: center; font-size: 12.5px; color: #4F7A65;">Không tìm thấy khách trong danh bạ. Bạn có thể nhập thông tin khách mới trực tiếp.</div>';
                 custDropdown.style.display = 'block';
                 return;
             }
@@ -2471,16 +2471,19 @@
 
                 const item = document.createElement('div');
                 item.className = 'customer-autocomplete-item';
+                item.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 9px 14px; border-bottom: 1px solid #F4FAF6; cursor: pointer; transition: background 0.15s ease; background-color: #ffffff;';
                 item.innerHTML = `
-                    <div class="customer-autocomplete-info">
-                        <div class="customer-autocomplete-avatar">${initial}</div>
-                        <div class="customer-autocomplete-meta">
-                            <div class="customer-autocomplete-name">${name}</div>
-                            <div class="customer-autocomplete-phone">${phone}</div>
+                    <div class="customer-autocomplete-info" style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                        <div class="customer-autocomplete-avatar" style="width: 32px; height: 32px; border-radius: 50%; background-color: #DCEEE2; color: #165335; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">${initial}</div>
+                        <div class="customer-autocomplete-meta" style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                            <div class="customer-autocomplete-name" style="font-size: 13px; font-weight: 600; color: #203A2C; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${name}</div>
+                            <div class="customer-autocomplete-phone" style="font-size: 11.5px; color: #4F7A65;">${phone}</div>
                         </div>
                     </div>
-                    <div class="customer-autocomplete-pets" title="${petsSummary}">🐾 ${petsSummary}</div>
+                    <div class="customer-autocomplete-pets" style="font-size: 11.5px; color: #236B48; background-color: #EEF5F1; padding: 3px 8px; border-radius: 9px; font-weight: 500; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0;" title="${petsSummary}">🐾 ${petsSummary}</div>
                 `;
+                item.addEventListener('mouseenter', () => { item.style.backgroundColor = '#EEF5F1'; });
+                item.addEventListener('mouseleave', () => { item.style.backgroundColor = '#ffffff'; });
                 item.addEventListener('mousedown', (e) => {
                     e.preventDefault();
                     selectCustomerForBooking(c);
