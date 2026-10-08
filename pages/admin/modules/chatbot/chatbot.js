@@ -949,6 +949,9 @@
                 ? `<span class="conv-member-badge">${conv.tier || 'Thành viên'}</span>` 
                 : '';
 
+            const handoverTag = `<span class="admin-badge badge-neutral" style="font-size: 10.5px; height: 20px; padding: 0 6px;">${conv.isHandover ? 'Nhân viên' : 'Bot'}</span>`;
+            const sla = formatSlaInfo(conv.waitingSeconds, conv.isHandover);
+
             const item = document.createElement('div');
             item.className = `conversation-item ${isMember ? 'is-member' : 'is-guest'} ${isActive ? 'active' : ''}`;
             item.innerHTML = `
