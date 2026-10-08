@@ -16,7 +16,9 @@
         '/pages/public/about/about.css',
         '/pages/public/contact/contact.css',
         '/pages/public/blog/blog.css',
-        '/pages/shop/cart/cart.css'
+        '/pages/shop/cart/cart.css',
+        '/pages/public/return-guest/return-guest.css',
+        '/pages/user/modules/orders/return-detail.css'
     ];
 
     // Nạp trước tất cả Stylesheet để khi chuyển trang là có sẵn CSS ngay, 0% FOUC
@@ -219,6 +221,8 @@
                     window.initBlog();
                 } else if (targetUrl.pathname.includes('/cart') && typeof window.initCart === 'function') {
                     window.initCart();
+                } else if (targetUrl.pathname.includes('return-guest') && typeof window.initReturnGuestPage === 'function') {
+                    window.initReturnGuestPage();
                 }
             } catch (initErr) {
                 console.warn('[spa-router] Page init function error:', initErr);

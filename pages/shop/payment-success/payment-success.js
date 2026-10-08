@@ -368,15 +368,15 @@ function updateOrderAfterVNPay(orderId, paymentStatus, orderStatus, transactionN
         if (db && orderId) {
             const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
             let updateQuery = db.from('sales_order').update({
-                payment_status: 'da_thanh_toan',
-                order_status: 'da_xac_nhan',
+                payment_status: 'PAID',
+                order_status: 'CONFIRMED',
                 updated_at: new Date().toISOString()
             });
             updateQuery = isUUID ? updateQuery.eq('id', orderId) : updateQuery.eq('order_code', orderId);
             updateQuery.select('id').maybeSingle().then(({ data }) => {
                 if (data?.id) {
                     db.from('payment').update({
-                        transaction_status: 'thanh_cong',
+                        transaction_status: 'SUCCESS',
                         updated_at: new Date().toISOString()
                     }).eq('order_id', data.id).then(() => {});
                 }

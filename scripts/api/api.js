@@ -666,16 +666,17 @@ export const API = {
             const paymentMethodStr = String(orderData.payment?.method || 'cod').toLowerCase();
             const isPaid = orderData.payment?.status === 'paid' || orderData.payment?.status === 'PAID';
             
-            const initialOrderStatus = paymentMethodStr === 'cod' ? 'cho_xac_nhan' : (isPaid ? 'cho_xac_nhan' : 'cho_thanh_toan');
-            const initialPaymentStatus = isPaid ? 'da_thanh_toan' : 'chua_thanh_toan';
+            const initialOrderStatus = isPaid ? 'CONFIRMED' : 'PENDING';
+            const initialPaymentStatus = isPaid ? 'PAID' : (paymentMethodStr === 'cod' ? 'UNPAID' : 'PENDING');
 
+            const totalOrderAmount = Number(orderData.pricing?.grandTotal ?? orderData.pricing?.total ?? 0);
             const salesOrder = {
                 order_code: orderData.orderId,
                 customer_id: customerId,
                 shipping_address_id: shippingAddressId,
                 order_status: initialOrderStatus,
                 payment_status: initialPaymentStatus,
-                total_amount: orderData.pricing?.grandTotal || 0,
+                total_amount: isNaN(totalOrderAmount) ? 0 : totalOrderAmount,
             };
 
             const { data: newOrder, error: orderError } = await db.from('sales_order').insert(salesOrder).select('id').single();
@@ -685,23 +686,27 @@ export const API = {
             const paymentInsert = {
                 payment_code: paymentCode,
                 order_id: newOrder.id,
-                payment_type: 'mua_hang',
+                payment_type: 'PRODUCT',
                 payment_method_id: paymentMethodStr,
-                amount: orderData.pricing?.grandTotal || orderData.pricing?.total || 0,
-                transaction_status: isPaid ? 'thanh_cong' : 'cho_xu_ly'
+                amount: isNaN(totalOrderAmount) ? 0 : totalOrderAmount,
+                transaction_status: isPaid ? 'SUCCESS' : 'PENDING'
             };
             const { error: payError } = await db.from('payment').insert(paymentInsert);
             if (payError) console.error('[API] Failed to insert payment:', payError);
 
             if (orderData.items && orderData.items.length > 0) {
-                const orderDetails = orderData.items.map(item => ({
-                    order_id: newOrder.id,
-                    product_id: item.id,
-                    quantity: item.qty || item.quantity || 1,
-                    unit_price: item.price || 0,
-                    discount_amount: 0,
-                    subtotal: (item.price || 0) * (item.qty || item.quantity || 1)
-                }));
+                const orderDetails = orderData.items.map(item => {
+                    const uPrice = Number(item.price || 0);
+                    const qty = Number(item.qty || item.quantity || 1);
+                    return {
+                        order_id: newOrder.id,
+                        product_id: item.id,
+                        quantity: isNaN(qty) ? 1 : qty,
+                        unit_price: isNaN(uPrice) ? 0 : uPrice,
+                        discount_amount: 0,
+                        subtotal: (isNaN(uPrice) ? 0 : uPrice) * (isNaN(qty) ? 1 : qty)
+                    };
+                });
                 const { error: itemsError } = await db.from('sales_order_detail').insert(orderDetails);
                 if (itemsError) throw itemsError;
             }
@@ -720,17 +725,18 @@ export const API = {
         }
 
         try {
-            const rawStatus = String(paymentStatus || '').toLowerCase().trim();
+            const rawStatus = String(paymentStatus || '').toUpperCase().trim();
             const normalizedStatus = {
-                'paid': 'da_thanh_toan',
-                'da_thanh_toan': 'da_thanh_toan',
-                'failed': 'thanh_toan_that_bai',
-                'thanh_toan_that_bai': 'thanh_toan_that_bai',
-                'pending': 'chua_thanh_toan',
-                'chua_thanh_toan': 'chua_thanh_toan',
-                'refunded': 'da_hoan_tien',
-                'da_hoan_tien': 'da_hoan_tien'
-            }[rawStatus] || rawStatus;
+                'PAID': 'PAID',
+                'DA_THANH_TOAN': 'PAID',
+                'FAILED': 'UNPAID',
+                'THANH_TOAN_THAT_BAI': 'UNPAID',
+                'PENDING': 'PENDING',
+                'CHUA_THANH_TOAN': 'UNPAID',
+                'UNPAID': 'UNPAID',
+                'REFUNDED': 'REFUNDED',
+                'DA_HOAN_TIEN': 'REFUNDED'
+            }[rawStatus] || 'PENDING';
 
             const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
 
@@ -747,7 +753,7 @@ export const API = {
             if (error) throw error;
 
             if (data && data.id) {
-                const transStatus = normalizedStatus === 'da_thanh_toan' ? 'thanh_cong' : (normalizedStatus === 'thanh_toan_that_bai' ? 'that_bai' : 'dang_xu_ly');
+                const transStatus = normalizedStatus === 'PAID' ? 'SUCCESS' : (normalizedStatus === 'UNPAID' ? 'FAILED' : 'PENDING');
                 await db.from('payment').update({
                     transaction_status: transStatus,
                     updated_at: new Date().toISOString()
@@ -768,15 +774,25 @@ export const API = {
         }
 
         try {
-            const rawStatus = String(orderStatus || '').toLowerCase().trim();
+            const rawStatus = String(orderStatus || '').toUpperCase().trim();
             const normalizedStatus = {
-                'placed': 'cho_xac_nhan',
-                'confirmed': 'da_xac_nhan',
-                'preparing': 'dang_chuan_bi',
-                'shipping': 'dang_giao',
-                'delivered': 'da_giao',
-                'completed': 'da_hoan_tat',
-                'cancelled': 'da_huy',
+                'PLACED': 'PENDING',
+                'CHO_XAC_NHAN': 'PENDING',
+                'PENDING': 'PENDING',
+                'CONFIRMED': 'CONFIRMED',
+                'DA_XAC_NHAN': 'CONFIRMED',
+                'PREPARING': 'PACKING',
+                'PACKING': 'PACKING',
+                'DANG_CHUAN_BI': 'PACKING',
+                'SHIPPING': 'SHIPPING',
+                'DANG_GIAO': 'SHIPPING',
+                'DELIVERED': 'DELIVERED',
+                'DA_GIAO': 'DELIVERED',
+                'COMPLETED': 'COMPLETED',
+                'DA_HOAN_TAT': 'COMPLETED',
+                'CANCELLED': 'CANCELLED',
+                'DA_HUY': 'CANCELLED',
+                'RETURNED': 'RETURNED'
             }[rawStatus] || rawStatus;
 
             const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
@@ -1380,20 +1396,27 @@ export const API = {
         try {
             const providers = await this.getShippingProviders();
             if (providers && providers.length > 0) {
-                return providers.map(p => ({
-                    id: p.provider_code || p.id,
-                    name: p.provider_name,
-                    price: Number(p.base_fee || 30000),
-                    estimatedTime: p.estimated_days ? `${p.estimated_days} ngày` : '2-3 ngày',
-                    description: p.note || 'Giao hàng tiêu chuẩn toàn quốc'
-                }));
+                return providers.map(p => {
+                    const feeVal = Number(p.base_fee !== undefined ? p.base_fee : 30000);
+                    return {
+                        id: p.provider_code || p.id,
+                        name: p.provider_name,
+                        fee: isNaN(feeVal) ? 30000 : feeVal,
+                        price: isNaN(feeVal) ? 30000 : feeVal,
+                        estimatedDays: p.estimated_days ? [p.estimated_days, p.estimated_days] : [2, 3],
+                        estimatedTime: p.estimated_days ? `${p.estimated_days} ngày` : '2-3 ngày',
+                        description: p.note || 'Giao hàng tiêu chuẩn toàn quốc',
+                        available: true,
+                        icon: 'truck'
+                    };
+                });
             }
         } catch (e) {}
 
         // Dynamic fallback from settings or standard options
         return [
-            { id: 'standard', name: 'Giao hàng tiêu chuẩn', price: 30000, estimatedTime: '2-3 ngày', description: 'Giao hàng tiết kiệm toàn quốc' },
-            { id: 'express', name: 'Giao hàng hỏa tốc 2H', price: 50000, estimatedTime: '2 giờ', description: 'Áp dụng nội thành TP.HCM' }
+            { id: 'standard', name: 'Giao hàng tiêu chuẩn', fee: 30000, price: 30000, estimatedDays: [2, 3], estimatedTime: '2-3 ngày', description: 'Giao hàng tiết kiệm toàn quốc', available: true, icon: 'truck' },
+            { id: 'express', name: 'Giao hàng hỏa tốc 2H', fee: 50000, price: 50000, estimatedDays: [1, 1], estimatedTime: '2 giờ', description: 'Áp dụng nội thành TP.HCM', available: true, icon: 'truck' }
         ];
     },
 

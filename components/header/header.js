@@ -255,7 +255,7 @@
     }
 
     function updateHeaderAuth() {
-        const isGuestLookupPage = window.location.pathname.includes('/return-guest/');
+        const isGuestLookupPage = window.location.pathname.includes('return-guest');
         const user = isGuestLookupPage ? null : getCurrentUser();
         const authActions = document.querySelector('.auth-actions');
         const lookupBtn = document.querySelector('.lookup-btn');

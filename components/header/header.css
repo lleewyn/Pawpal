@@ -661,6 +661,9 @@
     font-weight: 600;
     color: var(--color-primary);
     cursor: pointer;
+    text-decoration: none;
+    user-select: none;
+    pointer-events: auto;
     transition: var(--transition-smooth);
     white-space: nowrap;
 }
@@ -672,6 +675,7 @@
 .lookup-btn:hover {
     background-color: var(--color-primary);
     color: #ffffff;
+    text-decoration: none;
     border-color: var(--color-primary);
     
     box-shadow: 0 4px 12px rgba(42, 89, 68, 0.15);

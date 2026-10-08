@@ -115,6 +115,14 @@
       "destination": "/pages/public/return-guest/return-guest.html"
     },
     {
+      "source": "/return-guest",
+      "destination": "/pages/public/return-guest/return-guest.html"
+    },
+    {
+      "source": "/return-guest/",
+      "destination": "/pages/public/return-guest/return-guest.html"
+    },
+    {
       "source": "/pages/user",
       "destination": "/pages/user/index.html"
     },

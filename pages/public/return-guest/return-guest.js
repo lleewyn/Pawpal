@@ -27,24 +27,26 @@ let rgLastSearchState = {
     orders: [],
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+function initReturnGuestPage() {
     const form      = document.getElementById('rg-form');
     const errorBox  = document.getElementById('rg-error');
     const resultsEl = document.getElementById('rg-results');
     const phoneInput = document.getElementById('rg-phone');
 
-    errorBox.classList.add('d-none');
-    resultsEl.classList.add('d-none');
+    if (!form || !phoneInput) return;
+    if (form.dataset.rgBound === 'true') return;
+    form.dataset.rgBound = 'true';
 
-    if (phoneInput) {
-        phoneInput.addEventListener('input', (e) => {
-            const currentNorm = normalizePhone(e.target.value);
-            if (rgVerifiedPhone && currentNorm !== rgVerifiedPhone) {
-                rgVerifiedPhone = null;
-                resultsEl.classList.add('d-none');
-            }
-        });
-    }
+    if (errorBox) errorBox.classList.add('d-none');
+    if (resultsEl) resultsEl.classList.add('d-none');
+
+    phoneInput.addEventListener('input', (e) => {
+        const currentNorm = normalizePhone(e.target.value);
+        if (rgVerifiedPhone && currentNorm !== rgVerifiedPhone) {
+            rgVerifiedPhone = null;
+            if (resultsEl) resultsEl.classList.add('d-none');
+        }
+    });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -57,50 +59,58 @@ document.addEventListener('DOMContentLoaded', () => {
             // Kiểm tra xem số điện thoại có thuộc về tài khoản Thành viên chính thức không
             const member = isRegisteredMember(normPhone);
             if (member) {
-                resultsEl.classList.add('d-none');
-                errorBox.classList.remove('d-none');
-                errorBox.innerHTML = `
-                    <div class="alert-member-prompt" style="padding:16px 20px; background:#f4f9f6; border-radius:9px; border:1px solid #c3dec7; color:#203a2c; text-align:left;">
-                        <div style="font-weight:700; color:#236b48; font-size:1.05rem; margin-bottom:6px;">Số điện thoại đã được đăng ký thành viên</div>
-                        <div style="font-size:0.92rem; margin-bottom:14px; color:#4f7a65;">Số điện thoại <strong>${esc(phone)}</strong> thuộc tài khoản thành viên Pawpal. Vui lòng đăng nhập để xem đầy đủ hồ sơ, lịch hẹn và quản lý đơn hàng của bạn.</div>
-                        <a href="/pages/public/login/login.html?phone=${encodeURIComponent(normPhone)}" class="btn-cta" style="display:inline-block; padding:8px 20px; text-decoration:none; border-radius:9px;">Đăng nhập ngay</a>
-                    </div>
-                `;
+                if (resultsEl) resultsEl.classList.add('d-none');
+                if (errorBox) {
+                    errorBox.classList.remove('d-none');
+                    errorBox.innerHTML = `
+                        <div class="alert-member-prompt" style="padding:16px 20px; background:#f4f9f6; border-radius:9px; border:1px solid #c3dec7; color:#203a2c; text-align:left;">
+                            <div style="font-weight:700; color:#236b48; font-size:1.05rem; margin-bottom:6px;">Số điện thoại đã được đăng ký thành viên</div>
+                            <div style="font-size:0.92rem; margin-bottom:14px; color:#4f7a65;">Số điện thoại <strong>${esc(phone)}</strong> thuộc tài khoản thành viên Pawpal. Vui lòng đăng nhập để xem đầy đủ hồ sơ, lịch hẹn và quản lý đơn hàng của bạn.</div>
+                            <a href="/pages/public/login/login.html?phone=${encodeURIComponent(normPhone)}" class="btn-cta" style="display:inline-block; padding:8px 20px; text-decoration:none; border-radius:9px;">Đăng nhập ngay</a>
+                        </div>
+                    `;
+                }
                 return;
             }
 
             const btn = form.querySelector('button[type=submit]');
-            btn.disabled    = true;
-            btn.textContent = 'Đang tìm...';
+            if (btn) {
+                btn.disabled    = true;
+                btn.textContent = 'Đang tìm...';
+            }
 
             const supabaseResults = await loadSupabaseGuestResults(phone);
             let bookings = supabaseResults.bookings || [];
             let orders = supabaseResults.orders || [];
 
-            btn.disabled    = false;
-            btn.textContent = 'Tìm kiếm';
+            if (btn) {
+                btn.disabled    = false;
+                btn.textContent = 'Tìm kiếm';
+            }
 
             if (bookings.length === 0 && orders.length === 0) {
-                resultsEl.classList.add('d-none');
-                errorBox.classList.remove('d-none');
-                errorBox.innerHTML = 'Không tìm thấy thông tin đơn hàng/lịch hẹn cho số điện thoại này.';
+                if (resultsEl) resultsEl.classList.add('d-none');
+                if (errorBox) {
+                    errorBox.classList.remove('d-none');
+                    errorBox.innerHTML = 'Không tìm thấy thông tin đơn hàng/lịch hẹn cho số điện thoại này.';
+                }
                 return;
             }
 
             // Check if this phone number was already OTP-verified in this session
             if (rgVerifiedPhone === normPhone) {
-                errorBox.classList.add('d-none');
-                resultsEl.classList.remove('d-none');
+                if (errorBox) errorBox.classList.add('d-none');
+                if (resultsEl) resultsEl.classList.remove('d-none');
                 rgLastSearchState = { phone, bookings, orders };
                 renderResults(bookings, orders);
                 return;
             }
 
             // First time searching this phone: Prompt OTP verification before showing results
-            errorBox.classList.add('d-none');
+            if (errorBox) errorBox.classList.add('d-none');
             showOTPModal(phone, () => {
                 rgVerifiedPhone = normPhone;
-                resultsEl.classList.remove('d-none');
+                if (resultsEl) resultsEl.classList.remove('d-none');
                 rgLastSearchState = { phone, bookings, orders };
                 renderResults(bookings, orders);
                 showToast('Xác thực số điện thoại thành công!', 'success');
@@ -115,7 +125,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-});
+}
+window.initReturnGuestPage = initReturnGuestPage;
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initReturnGuestPage);
+} else {
+    initReturnGuestPage();
+}
 
 function isRegisteredMember(normPhone) {
     try {

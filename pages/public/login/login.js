@@ -6,6 +6,27 @@ function saveUsers(users) {
     localStorage.setItem('pawpal_users', JSON.stringify(users));
 }
 
+function getCurrentUser() {
+    try {
+        return JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+    } catch {
+        return null;
+    }
+}
+
+function setCurrentUser(user) {
+    try {
+        if (user) {
+            localStorage.setItem('pawpal_current_user', JSON.stringify(user));
+            sessionStorage.setItem('pawpal_current_user', JSON.stringify(user));
+        } else {
+            localStorage.removeItem('pawpal_current_user');
+            sessionStorage.removeItem('pawpal_current_user');
+        }
+    } catch(e) {}
+    document.dispatchEvent(new CustomEvent('auth_state_changed', { detail: user }));
+}
+
 function ensureUserId(user) {
     if (!user) return user;
     if (!user.id) {

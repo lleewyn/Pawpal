@@ -30,7 +30,7 @@ async function resolveFailedPaymentInfo(orderId) {
             .from('sales_order')
             .select(`
                 id, order_code, order_status, payment_status,
-                subtotal, shipping_fee, discount_amount, total_amount, created_at
+                total_amount, created_at
             `)
             .or(`order_code.eq.${orderId},id.eq.${orderId}`)
             .limit(1);

@@ -856,15 +856,29 @@ function renderDeliveryOptions() {
     const container = document.getElementById('delivery-options');
     container.innerHTML = '';
     
+    if (checkoutState.deliveryOptions && checkoutState.deliveryOptions.length > 0) {
+        const found = checkoutState.deliveryOptions.find(o => o.id === checkoutState.selectedDelivery);
+        if (!found) {
+            checkoutState.selectedDelivery = checkoutState.deliveryOptions[0].id;
+            const initialFee = Number(checkoutState.deliveryOptions[0].fee ?? checkoutState.deliveryOptions[0].price ?? 0);
+            checkoutState.totals.shippingFee = isNaN(initialFee) ? 0 : initialFee;
+        } else {
+            const initialFee = Number(found.fee ?? found.price ?? 0);
+            checkoutState.totals.shippingFee = isNaN(initialFee) ? 0 : initialFee;
+        }
+    }
+    
     checkoutState.deliveryOptions.forEach((option, index) => {
         const isSelected = option.id === checkoutState.selectedDelivery;
+        const optFee = Number(option.fee ?? option.price ?? 0);
+        const resolvedFee = isNaN(optFee) ? 0 : optFee;
         
         const optionDiv = document.createElement('div');
         optionDiv.className = `delivery-option ${isSelected ? 'selected' : ''}`;
         optionDiv.innerHTML = `
             <input type="radio" name="delivery" value="${option.id}" 
                    id="delivery-${option.id}" ${isSelected ? 'checked' : ''}
-                   data-fee="${option.fee}">
+                   data-fee="${resolvedFee}">
             <svg class="delivery-icon" viewBox="0 0 24 24">
                 ${option.id === 'standard' ? 
                     '<path d="M18 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-9H17V12h4.46L19.5 9.5zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM20 8l3 4v5h-2c0 1.66-1.34 3-3 3s-3-1.34-3-3H9c0 1.66-1.34 3-3 3s-3-1.34-3-3H1V6c0-1.11.89-2 2-2h14v4h3zM3 6v9h.76c.55-.61 1.35-1 2.24-1s1.69.39 2.24 1H15V6H3z"/>' :
@@ -873,15 +887,15 @@ function renderDeliveryOptions() {
             </svg>
             <div class="delivery-info">
                 <h4>${option.name}</h4>
-                <p>${option.description}</p>
+                <p>${option.description || ''}</p>
             </div>
-            <div class="delivery-fee ${option.fee === 0 ? 'free' : ''}">
-                ${option.fee === 0 ? 'Miễn phí' : formatCurrency(option.fee)}
+            <div class="delivery-fee ${resolvedFee === 0 ? 'free' : ''}">
+                ${resolvedFee === 0 ? 'Miễn phí' : formatCurrency(resolvedFee)}
             </div>
         `;
         
         optionDiv.addEventListener('click', () => {
-            selectDeliveryOption(option.id, option.fee);
+            selectDeliveryOption(option.id, resolvedFee);
         });
         
         container.appendChild(optionDiv);
@@ -890,14 +904,21 @@ function renderDeliveryOptions() {
 
 function selectDeliveryOption(deliveryId, fee) {
     checkoutState.selectedDelivery = deliveryId;
-    checkoutState.totals.shippingFee = fee;
+    const option = checkoutState.deliveryOptions.find(o => o.id === deliveryId);
+    const optFee = Number(fee !== undefined && !isNaN(fee) ? fee : (option?.fee ?? option?.price ?? 0));
+    checkoutState.totals.shippingFee = isNaN(optFee) ? 0 : optFee;
     
     document.querySelectorAll('.delivery-option').forEach(el => el.classList.remove('selected'));
-    document.querySelector(`#delivery-${deliveryId}`).closest('.delivery-option').classList.add('selected');
-    document.querySelector(`#delivery-${deliveryId}`).checked = true;
+    const targetRadio = document.querySelector(`#delivery-${deliveryId}`);
+    if (targetRadio) {
+        targetRadio.closest('.delivery-option')?.classList.add('selected');
+        targetRadio.checked = true;
+    }
     
-    const option = checkoutState.deliveryOptions.find(o => o.id === deliveryId);
-    document.getElementById('delivery-label').textContent = `(${option.name})`;
+    if (option) {
+        const labelEl = document.getElementById('delivery-label');
+        if (labelEl) labelEl.textContent = `(${option.name})`;
+    }
     
     updateOrderTotals();
 }
@@ -1165,18 +1186,23 @@ function calculateSubtotal() {
 }
 
 function updateOrderTotals() {
-    const subtotal = calculateSubtotal();
-    checkoutState.totals.subtotal = subtotal;
-    checkoutState.totals.voucherDiscount = calculateVoucherDiscount();
+    const subtotal = Number(calculateSubtotal() || 0);
+    checkoutState.totals.subtotal = isNaN(subtotal) ? 0 : subtotal;
+    const vDiscount = Number(calculateVoucherDiscount() || 0);
+    checkoutState.totals.voucherDiscount = isNaN(vDiscount) ? 0 : vDiscount;
+    const sFee = Number(checkoutState.totals.shippingFee || 0);
+    checkoutState.totals.shippingFee = isNaN(sFee) ? 0 : sFee;
+    const pDiscount = Number(checkoutState.totals.pointsDiscount || 0);
+    checkoutState.totals.pointsDiscount = isNaN(pDiscount) ? 0 : pDiscount;
     
     const grandTotal = subtotal 
         + checkoutState.totals.shippingFee 
         - checkoutState.totals.pointsDiscount 
         - checkoutState.totals.voucherDiscount;
     
-    checkoutState.totals.grandTotal = Math.max(0, grandTotal);
+    checkoutState.totals.grandTotal = Math.max(0, isNaN(grandTotal) ? 0 : grandTotal);
     
-    document.getElementById('subtotal').textContent = formatCurrency(subtotal);
+    document.getElementById('subtotal').textContent = formatCurrency(checkoutState.totals.subtotal);
     document.getElementById('shipping-fee').textContent = 
         checkoutState.totals.shippingFee === 0 ? 'Miễn phí' : formatCurrency(checkoutState.totals.shippingFee);
     
