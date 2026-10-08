@@ -927,7 +927,7 @@ function awardBookingLoyaltyPoints(booking, user) {
     const pointsEarned = Math.floor(price / 10000);
     if (pointsEarned <= 0) return;
 
-    const users = JSON.parse('[]' || '[]');
+    const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
     const idx = users.findIndex(u => u.phone === user.phone);
     if (idx !== -1) {
         users[idx].points = (users[idx].points || 0) + pointsEarned;
@@ -938,14 +938,16 @@ function awardBookingLoyaltyPoints(booking, user) {
         user.spend  = users[idx].spend;
         user.lastTransactionAt = users[idx].lastTransactionAt;
         localStorage.setItem('pawpal_current_user', JSON.stringify(user));
+        localStorage.setItem('pawpal_users', JSON.stringify(users));
     }
 
     booking.pointsAwarded = true;
     booking.pointsEarned  = pointsEarned;
-    const bookings = JSON.parse('[]' || '[]');
+    const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
     const bi = bookings.findIndex(b => b.id === booking.id);
     if (bi !== -1) {
         bookings[bi] = { ...bookings[bi], pointsAwarded: true, pointsEarned };
+        localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
     }
 
     showToast(`Bạn vừa tích được +${pointsEarned} Paw Points cho dịch vụ này!`, 'success');

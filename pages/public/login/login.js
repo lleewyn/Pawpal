@@ -217,6 +217,176 @@ function buildPetFromBooking(booking, fallbackPhone = null) {
 }
 
 async function migrateGuestPetsToMember(user, fallbackPhone = null) {
+    if (!user) return Promise.resolve();
+    const phone = String(fallbackPhone || user.phone || '').trim();
+    if (!phone) return Promise.resolve();
+
+    const normPhone = phone.replace(/\s+/g, '');
+    const memberId = user.id;
+
+    console.log(`[Migration] Bắt đầu di chuyển dữ liệu vãng lai sang thành viên cho SĐT: ${normPhone}, ID: ${memberId}`);
+
+    // 1. DI CHUYỂN BÉ CƯNG (pawpal_pets & pet_profile)
+    try {
+        let localPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+        let localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+
+        // Thu thập pet từ bookings nếu chưa có trong pawpal_pets
+        localBookings.forEach(b => {
+            const bPhone = String(b.ownerPhone || b.userPhone || b.phone || '').trim().replace(/\s+/g, '');
+            if (bPhone === normPhone) {
+                const bPetName = String(b.petName || '').trim();
+                if (bPetName) {
+                    const exists = localPets.some(p => {
+                        const pPhone = String(p.ownerPhone || p.phone || '').trim().replace(/\s+/g, '');
+                        return (pPhone === normPhone || String(p.userId) === String(memberId)) &&
+                               String(p.name || '').trim().toLowerCase() === bPetName.toLowerCase();
+                    });
+                    if (!exists) {
+                        const built = buildPetFromBooking(b, normPhone);
+                        if (built) {
+                            built.userId = memberId;
+                            built.ownerPhone = normPhone;
+                            localPets.push(built);
+                        }
+                    }
+                }
+            }
+        });
+
+        // Cập nhật và khử trùng lặp các pet của SĐT này
+        const memberPetsMap = new Map();
+        const otherPets = [];
+
+        localPets.forEach(p => {
+            const pPhone = String(p.ownerPhone || p.phone || '').trim().replace(/\s+/g, '');
+            const isUserPet = (pPhone === normPhone) || (String(p.userId) === String(memberId)) || (String(p.userId) === normPhone);
+
+            if (isUserPet) {
+                const petName = String(p.name || 'Bé cưng').trim().toLowerCase();
+                const petSpecies = normalizePetSpecies(p.species);
+                const key = `${petName}_${petSpecies}`;
+
+                if (!memberPetsMap.has(key)) {
+                    memberPetsMap.set(key, {
+                        ...p,
+                        userId: memberId,
+                        ownerPhone: normPhone,
+                        ownerName: user.name || p.ownerName,
+                        isArchived: false,
+                        updatedAt: new Date().toISOString()
+                    });
+                } else {
+                    const existing = memberPetsMap.get(key);
+                    existing.weight = p.weight || existing.weight;
+                    existing.breed = p.breed || existing.breed;
+                    existing.avatar = p.avatar || existing.avatar;
+                    existing.notes = p.notes || existing.notes;
+                    existing.allergies = p.allergies || existing.allergies;
+                }
+            } else {
+                otherPets.push(p);
+            }
+        });
+
+        const mergedPets = [...Array.from(memberPetsMap.values()), ...otherPets];
+        localStorage.setItem('pawpal_pets', JSON.stringify(mergedPets));
+        console.log(`[Migration] Đã liên kết ${memberPetsMap.size} bé cưng cho thành viên.`);
+
+        // Đồng bộ Supabase pet_profile nếu có
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (db) {
+            try {
+                const { data: custData } = await db.from('customer').select('id').eq('phone_main', normPhone).limit(1);
+                if (custData && custData.length > 0) {
+                    const supCustId = custData[0].id;
+                    await db.from('pet_profile').update({ customer_id: supCustId }).eq('status', 'ACTIVE').is('customer_id', null);
+                }
+            } catch (supPetErr) {
+                console.warn('[Migration] Supabase pet_profile update error:', supPetErr.message);
+            }
+        }
+    } catch (petErr) {
+        console.error('[Migration] Lỗi khi di chuyển thú cưng:', petErr);
+    }
+
+    // 2. DI CHUYỂN LỊCH HẸN DỊCH VỤ (pawpal_bookings & appointment)
+    try {
+        let bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        let updatedBookingCount = 0;
+        bookings = bookings.map(b => {
+            const bPhone = String(b.ownerPhone || b.userPhone || b.phone || '').trim().replace(/\s+/g, '');
+            if (bPhone === normPhone) {
+                updatedBookingCount++;
+                return {
+                    ...b,
+                    userId: memberId,
+                    ownerPhone: normPhone,
+                    ownerName: user.name || b.ownerName
+                };
+            }
+            return b;
+        });
+        localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
+        console.log(`[Migration] Đã liên kết ${updatedBookingCount} lịch hẹn cho thành viên.`);
+
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (db) {
+            try {
+                const { data: custData } = await db.from('customer').select('id').eq('phone_main', normPhone).limit(1);
+                if (custData && custData.length > 0) {
+                    const supCustId = custData[0].id;
+                    await db.from('appointment').update({ customer_id: supCustId }).is('customer_id', null);
+                }
+            } catch (supAppErr) {
+                console.warn('[Migration] Supabase appointment update error:', supAppErr.message);
+            }
+        }
+    } catch (bErr) {
+        console.error('[Migration] Lỗi khi di chuyển lịch hẹn:', bErr);
+    }
+
+    // 3. DI CHUYỂN ĐƠN HÀNG (pawpal_orders & sales_order)
+    try {
+        let orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+        let updatedOrderCount = 0;
+        orders = orders.map(o => {
+            const oPhone = String(o.shipping?.phone || o.userPhone || o.guestPhone || o.phone || '').trim().replace(/\s+/g, '');
+            if (oPhone === normPhone) {
+                updatedOrderCount++;
+                return {
+                    ...o,
+                    userId: memberId,
+                    userPhone: normPhone
+                };
+            }
+            return o;
+        });
+        localStorage.setItem('pawpal_orders', JSON.stringify(orders));
+        console.log(`[Migration] Đã liên kết ${updatedOrderCount} đơn hàng cho thành viên.`);
+
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (db) {
+            try {
+                const { data: custData } = await db.from('customer').select('id').eq('phone_main', normPhone).limit(1);
+                if (custData && custData.length > 0) {
+                    const supCustId = custData[0].id;
+                    await db.from('sales_order').update({ customer_id: supCustId }).is('customer_id', null);
+                }
+            } catch (supOrdErr) {
+                console.warn('[Migration] Supabase sales_order update error:', supOrdErr.message);
+            }
+        }
+    } catch (oErr) {
+        console.error('[Migration] Lỗi khi di chuyển đơn hàng:', oErr);
+    }
+
+    // 4. XÓA TOKEN TẠM CŨ CỦA KHÁCH
+    try {
+        const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');
+        const remainingTokens = tokens.filter(t => String(t.phone || '').trim().replace(/\s+/g, '') !== normPhone);
+        localStorage.setItem('pawpal_temp_tokens', JSON.stringify(remainingTokens));
+    } catch (_) {}
 
     return Promise.resolve();
 }
@@ -971,6 +1141,7 @@ function initAuthForms() {
         }
 
         setCurrentUser(newUser);
+        await migrateGuestPetsToMember(newUser, newUser.phone);
 
         const counterEl = document.getElementById('pointsCounter');
         let current = 0;

@@ -221,7 +221,7 @@ function mergePetLists(serverPets, localPets, targetUserId) {
     const map = new Map();
 
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    const dbUsers = JSON.parse('[]' || '[]');
+    const dbUsers = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
     const dbUser = dbUsers.find(u =>
         String(u.id) === String(targetUserId) ||
         (currentUser?.phone && String(u.phone) === String(currentUser.phone))
@@ -490,6 +490,23 @@ export async function getPets(targetUserId) {
         localStorage.setItem('pawpal_pets', JSON.stringify(cleanedPets));
         syncToAdminPets(cleanedPets, currentUser);
     } catch (e) {}
+
+    if (currentUser || targetUserId) {
+        const uId = targetUserId || currentUser?.id;
+        const uPhone = currentUser?.phone ? String(currentUser.phone).replace(/\s+/g, '') : null;
+
+        const userPets = cleanedPets.filter(pet => {
+            if (uId && (String(pet.userId) === String(uId) || String(pet.custId) === String(uId))) return true;
+            if (uPhone) {
+                const petPhone = String(pet.ownerPhone || pet.phone || '').replace(/\s+/g, '');
+                if (petPhone && petPhone === uPhone) return true;
+            }
+            return false;
+        });
+
+        if (userPets.length > 0) return userPets;
+        if (uId || uPhone) return [];
+    }
 
     return cleanedPets;
 }

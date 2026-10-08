@@ -1397,10 +1397,11 @@ async function handleCheckout() {
         checkoutState.user = updatedUser;
         localStorage.setItem('pawpal_current_user', JSON.stringify(updatedUser));
 
-        const users = JSON.parse('[]' || '[]');
+        const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
         const userIndex = users.findIndex((user) => String(user.id) === String(updatedUser.id));
         if (userIndex !== -1) {
             users[userIndex] = { ...users[userIndex], ...updatedUser };
+            localStorage.setItem('pawpal_users', JSON.stringify(users));
         }
     }
     
@@ -1814,10 +1815,11 @@ function finalizePendingPointsUsage() {
     if (!checkoutState.user || !checkoutState.pointsUsed) return;
 
     try {
-        const users = JSON.parse('[]' || '[]');
+        const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
         const ui = users.findIndex(u => String(u.phone) === String(checkoutState.user.phone));
         if (ui !== -1) {
             users[ui].points = Math.max(0, (users[ui].points || 0) - checkoutState.pointsUsed);
+            localStorage.setItem('pawpal_users', JSON.stringify(users));
         }
         const sessionUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (sessionUser) {
@@ -2024,11 +2026,12 @@ function saveOrderToUserHistory(orderData) {
 }
 
 function createGuestTempUserForOrder(orderData) {
-    const users = JSON.parse('[]' || '[]');
+    const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
     let tempUser = users.find(u => u.phone === orderData.shipping.phone && u.is_temporary);
 
     if (!tempUser) {
         tempUser = {
+            id: `GUEST-${Date.now()}`,
             name: orderData.shipping.name,
             phone: orderData.shipping.phone,
             role: 'customer',
@@ -2036,6 +2039,7 @@ function createGuestTempUserForOrder(orderData) {
             points: 0
         };
         users.push(tempUser);
+        localStorage.setItem('pawpal_users', JSON.stringify(users));
     }
 
     const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');

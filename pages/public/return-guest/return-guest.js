@@ -1348,7 +1348,7 @@ function showQuickSetupPasswordModal(phone) {
     const modal = new bootstrap.Modal(el);
     modal.show();
 
-    document.getElementById('rgConfirmSetupPwdBtn').addEventListener('click', () => {
+    document.getElementById('rgConfirmSetupPwdBtn').addEventListener('click', async () => {
         const pwd = document.getElementById('rgNewPassword').value.trim();
         const confirmPwd = document.getElementById('rgConfirmPassword').value.trim();
         const errEl = document.getElementById('rgPwdError');
@@ -1365,12 +1365,13 @@ function showQuickSetupPasswordModal(phone) {
         }
         errEl.classList.add('d-none');
 
-        // Nâng cấp user
+        // Nâng cấp user và đồng bộ dữ liệu vãng lai
+        let newMember = null;
         try {
             const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
             const normPhone = normalizePhone(phone);
             let uIdx = users.findIndex(u => normalizePhone(u.phone) === normPhone);
-            const newMember = {
+            newMember = {
                 id: uIdx !== -1 ? users[uIdx].id : `USER-${Date.now()}`,
                 phone: phone,
                 password: pwd,
@@ -1388,6 +1389,69 @@ function showQuickSetupPasswordModal(phone) {
             }
             localStorage.setItem('pawpal_users', JSON.stringify(users));
             localStorage.setItem('pawpal_current_user', JSON.stringify(newMember));
+
+            // 1. Đồng bộ Thú cưng vãng lai
+            const allPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+            let petChanged = false;
+            allPets.forEach(p => {
+                const pPhone = normalizePhone(p.ownerPhone || p.phone || '');
+                if (pPhone === normPhone) {
+                    p.userId = newMember.id;
+                    p.ownerPhone = phone;
+                    petChanged = true;
+                }
+            });
+            if (petChanged) {
+                localStorage.setItem('pawpal_pets', JSON.stringify(allPets));
+            }
+
+            // 2. Đồng bộ Lịch hẹn
+            const allBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+            let bookingChanged = false;
+            allBookings.forEach(b => {
+                const bPhone = normalizePhone(b.ownerPhone || b.phone || '');
+                if (bPhone === normPhone) {
+                    b.userId = newMember.id;
+                    b.ownerPhone = phone;
+                    bookingChanged = true;
+                }
+            });
+            if (bookingChanged) {
+                localStorage.setItem('pawpal_bookings', JSON.stringify(allBookings));
+            }
+
+            // 3. Đồng bộ Đơn hàng
+            const allOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+            let orderChanged = false;
+            allOrders.forEach(o => {
+                const oPhone = normalizePhone(o.shipping?.phone || o.userPhone || o.guestPhone || o.phone || '');
+                if (oPhone === normPhone) {
+                    o.userId = newMember.id;
+                    o.userPhone = phone;
+                    orderChanged = true;
+                }
+            });
+            if (orderChanged) {
+                localStorage.setItem('pawpal_orders', JSON.stringify(allOrders));
+            }
+
+            // 4. Xóa token tạm
+            const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');
+            localStorage.setItem('pawpal_temp_tokens', JSON.stringify(tokens.filter(t => normalizePhone(t.phone) !== normPhone)));
+
+            // 5. Đồng bộ Supabase nếu có
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (db) {
+                try {
+                    await db.from('customer').update({
+                        password_hash: pwd,
+                        account_status: 'ACTIVE',
+                        is_temporary: false
+                    }).eq('phone_main', phone);
+                } catch (e) {
+                    console.warn('[ReturnGuest] Supabase sync error:', e);
+                }
+            }
         } catch (_) {}
 
         modal.hide();

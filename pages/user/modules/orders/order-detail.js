@@ -283,7 +283,7 @@ function awardLoyaltyPoints(order) {
     const pointsEarned = Math.floor(grandTotal / 1000);
     if (pointsEarned <= 0) return;
 
-    const users = JSON.parse('[]' || '[]');
+    const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
     const idx = users.findIndex(u => u.phone === user.phone);
     if (idx !== -1) {
         users[idx].points  = (users[idx].points  || 0) + pointsEarned;
@@ -294,6 +294,7 @@ function awardLoyaltyPoints(order) {
         user.spend   = users[idx].spend;
         user.lastTransactionAt = users[idx].lastTransactionAt;
         localStorage.setItem('pawpal_current_user', JSON.stringify(user));
+        localStorage.setItem('pawpal_users', JSON.stringify(users));
     }
 
     order.pointsAwarded  = true;

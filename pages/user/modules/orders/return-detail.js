@@ -255,10 +255,11 @@ function deductPointsForRefund(rmaData) {
     currentUser.points = Math.max(0, (currentUser.points || 0) - pointsToDeduct);
     localStorage.setItem('pawpal_current_user', JSON.stringify(currentUser));
 
-    const users = JSON.parse('[]' || '[]');
+    const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
     const uIdx = users.findIndex(u => u.phone === currentUser.phone);
     if (uIdx !== -1) {
         users[uIdx].points = currentUser.points;
+        localStorage.setItem('pawpal_users', JSON.stringify(users));
     }
     console.log(`[RMA] Đã trừ ${pointsToDeduct} điểm. Số dư mới: ${currentUser.points}`);
 }
