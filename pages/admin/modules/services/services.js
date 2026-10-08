@@ -52,10 +52,10 @@
                       .select(`
                           id, 
                           phone_main, 
-                          customer_profile (full_name), 
+                          customer_profile (*), 
                           pet_profile (id, pet_code, pet_name, species, breed, weight, allergy, routine)
                       `)
-                      .order('phone_main', { ascending: true })
+                      .order('created_at', { ascending: false })
                 ]);
 
                 const careLogs = (!careLogRes.error && careLogRes.data) ? careLogRes.data : [];
@@ -2387,88 +2387,132 @@
         }
         populateStaffSelectRef = populateStaffSelect;
 
-        // Nạp danh sách gợi ý Khách hàng từ CSDL Supabase
-        function populateCustomerDatalist() {
-            if (!custDatalist) return;
-            custDatalist.innerHTML = '';
-            liveCustomerDirectory.forEach(c => {
-                const name = c.customer_profile?.full_name || 'Khách hàng';
-                const phone = c.phone_main || '';
-                const opt = document.createElement('option');
-                opt.value = `${name} - ${phone}`;
-                opt.dataset.id = c.id;
-                opt.dataset.name = name;
-                opt.dataset.phone = phone;
-                custDatalist.appendChild(opt);
-            });
-        }
-        populateCustomerDatalistRef = populateCustomerDatalist;
-
-        // Tự động nhận diện Khách hàng & nạp danh sách Thú cưng tương ứng từ CSDL
-        function onCustomerLookup() {
-            const rawVal = (custInput?.value || '').trim();
-            const rawPhone = (phoneInput?.value || '').trim();
-            if (!rawVal && !rawPhone) return;
-
-            let matched = null;
-            if (rawVal.includes(' - ')) {
-                const [nPart, pPart] = rawVal.split(' - ').map(s => s.trim().toLowerCase());
-                matched = liveCustomerDirectory.find(c => {
-                    const cPhone = (c.phone_main || '').toLowerCase();
-                    const cName = (c.customer_profile?.full_name || '').toLowerCase();
-                    return cPhone === pPart || cName === nPart;
-                });
-            } else {
-                matched = liveCustomerDirectory.find(c => {
-                    const cPhone = (c.phone_main || '').toLowerCase();
-                    const cName = (c.customer_profile?.full_name || '').toLowerCase();
-                    return (rawPhone && cPhone === rawPhone.toLowerCase()) || (rawVal && (cName === rawVal.toLowerCase() || cPhone === rawVal.toLowerCase()));
-                });
+        // Helper: Lấy tên hiển thị chuẩn mực của Khách hàng
+        function getCustomerDisplayName(c) {
+            if (!c) return 'Khách hàng';
+            const prof = Array.isArray(c.customer_profile) ? c.customer_profile[0] : c.customer_profile;
+            const name = (prof?.full_name || c.full_name || c.name || '').trim();
+            if (name && name.toLowerCase() !== 'khách hàng') return name;
+            const pets = Array.isArray(c.pet_profile) ? c.pet_profile : (c.pet_profile ? [c.pet_profile] : []);
+            if (pets.length > 0 && pets[0]?.pet_name) {
+                return `Chủ nuôi bé ${pets[0].pet_name}`;
             }
+            return c.phone_main ? `Khách (${c.phone_main})` : 'Khách hàng';
+        }
 
-            if (matched) {
-                currentMatchedCustomer = matched;
-                const realName = matched.customer_profile?.full_name || '';
-                const realPhone = matched.phone_main || '';
-                if (custInput) custInput.value = realName;
-                if (phoneInput && realPhone) phoneInput.value = realPhone;
+        const custDropdown = document.getElementById('bookingCustomerDropdown');
 
-                // Nạp thú cưng của khách này vào datalist
-                if (petDatalist) {
-                    petDatalist.innerHTML = '';
-                    const pets = Array.isArray(matched.pet_profile) ? matched.pet_profile : (matched.pet_profile ? [matched.pet_profile] : []);
-                    pets.forEach(p => {
-                        const opt = document.createElement('option');
-                        opt.value = p.pet_name;
-                        opt.dataset.id = p.id;
-                        opt.dataset.breed = p.breed || '';
-                        opt.dataset.allergy = p.allergy || p.routine || '';
-                        opt.textContent = `${p.pet_name} (${p.breed || p.species || 'Thú cưng'}${p.weight ? ' - ' + p.weight + 'kg' : ''})`;
-                        petDatalist.appendChild(opt);
-                    });
+        // Chọn khách hàng từ dropdown gợi ý
+        function selectCustomerForBooking(c) {
+            currentMatchedCustomer = c;
+            const realName = getCustomerDisplayName(c);
+            const realPhone = c.phone_main || '';
+            if (custInput) custInput.value = realName;
+            if (phoneInput && realPhone) phoneInput.value = realPhone;
+            if (custDropdown) custDropdown.style.display = 'none';
 
-                    // Nếu khách có 1 bé cưng duy nhất, tự động chọn luôn
-                    if (pets.length === 1 && petInput && !petInput.value) {
-                        petInput.value = pets[0].pet_name;
-                        currentMatchedPet = pets[0];
-                        if (alertInput && (pets[0].allergy || pets[0].routine)) {
-                            alertInput.value = pets[0].allergy || pets[0].routine;
-                        }
+            // Nạp danh sách thú cưng của khách này
+            if (petDatalist) {
+                petDatalist.innerHTML = '';
+                const pets = Array.isArray(c.pet_profile) ? c.pet_profile : (c.pet_profile ? [c.pet_profile] : []);
+                pets.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.pet_name;
+                    opt.dataset.id = p.id;
+                    opt.dataset.breed = p.breed || '';
+                    opt.dataset.allergy = p.allergy || p.routine || '';
+                    opt.textContent = `${p.pet_name} (${p.breed || p.species || 'Thú cưng'}${p.weight ? ' - ' + p.weight + 'kg' : ''})`;
+                    petDatalist.appendChild(opt);
+                });
+
+                // Tự động điền bé cưng nếu khách có 1 bé
+                if (pets.length === 1 && petInput) {
+                    petInput.value = pets[0].pet_name;
+                    currentMatchedPet = pets[0];
+                    if (alertInput && (pets[0].allergy || pets[0].routine)) {
+                        alertInput.value = pets[0].allergy || pets[0].routine;
+                    }
+                } else if (pets.length > 1 && petInput && !petInput.value) {
+                    petInput.value = pets[0].pet_name;
+                    currentMatchedPet = pets[0];
+                    if (alertInput && (pets[0].allergy || pets[0].routine)) {
+                        alertInput.value = pets[0].allergy || pets[0].routine;
                     }
                 }
             }
         }
 
+        // Hiển thị danh sách gợi ý khách hàng (Custom Autocomplete Popover)
+        function renderCustomerAutocomplete(filterText = '') {
+            if (!custDropdown) return;
+            const q = (filterText || '').toLowerCase().trim();
+            const filtered = liveCustomerDirectory.filter(c => {
+                if (!q) return true;
+                const name = getCustomerDisplayName(c).toLowerCase();
+                const phone = (c.phone_main || '').toLowerCase();
+                const pets = Array.isArray(c.pet_profile) ? c.pet_profile : (c.pet_profile ? [c.pet_profile] : []);
+                const petMatch = pets.some(p => (p.pet_name || '').toLowerCase().includes(q));
+                return name.includes(q) || phone.includes(q) || petMatch;
+            });
+
+            if (filtered.length === 0) {
+                custDropdown.innerHTML = '<div class="customer-autocomplete-empty">Không tìm thấy khách trong danh bạ. Bạn có thể nhập thông tin khách mới trực tiếp.</div>';
+                custDropdown.style.display = 'block';
+                return;
+            }
+
+            custDropdown.innerHTML = '';
+            filtered.slice(0, 8).forEach(c => {
+                const name = getCustomerDisplayName(c);
+                const phone = c.phone_main || 'Chưa có SĐT';
+                const pets = Array.isArray(c.pet_profile) ? c.pet_profile : (c.pet_profile ? [c.pet_profile] : []);
+                const petsSummary = pets.length > 0 ? pets.map(p => p.pet_name).join(', ') : 'Chưa có bé cưng';
+                const initial = name.charAt(0).toUpperCase() || 'K';
+
+                const item = document.createElement('div');
+                item.className = 'customer-autocomplete-item';
+                item.innerHTML = `
+                    <div class="customer-autocomplete-info">
+                        <div class="customer-autocomplete-avatar">${initial}</div>
+                        <div class="customer-autocomplete-meta">
+                            <div class="customer-autocomplete-name">${name}</div>
+                            <div class="customer-autocomplete-phone">${phone}</div>
+                        </div>
+                    </div>
+                    <div class="customer-autocomplete-pets" title="${petsSummary}">🐾 ${petsSummary}</div>
+                `;
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    selectCustomerForBooking(c);
+                });
+                custDropdown.appendChild(item);
+            });
+            custDropdown.style.display = 'block';
+        }
+
         if (custInput) {
-            custInput.addEventListener('change', onCustomerLookup);
+            custInput.addEventListener('focus', () => {
+                renderCustomerAutocomplete(custInput.value);
+            });
             custInput.addEventListener('input', () => {
-                if (custInput.value.includes(' - ')) onCustomerLookup();
+                renderCustomerAutocomplete(custInput.value);
+            });
+            custInput.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (custDropdown) custDropdown.style.display = 'none';
+                }, 200);
             });
         }
+
         if (phoneInput) {
-            phoneInput.addEventListener('change', onCustomerLookup);
-            phoneInput.addEventListener('blur', onCustomerLookup);
+            phoneInput.addEventListener('change', () => {
+                const rawPhone = phoneInput.value.trim().toLowerCase();
+                if (!rawPhone) return;
+                const matched = liveCustomerDirectory.find(c => (c.phone_main || '').toLowerCase() === rawPhone);
+                if (matched) selectCustomerForBooking(matched);
+            });
         }
+
         if (petInput) {
             petInput.addEventListener('change', () => {
                 const petVal = (petInput.value || '').trim().toLowerCase();
@@ -2499,7 +2543,6 @@
         // Khởi tạo ngay options dịch vụ và nhân viên
         updateServiceOptionsForCategory(catSelect ? catSelect.value : 'Spa');
         populateStaffSelect();
-        populateCustomerDatalist();
 
         if (btnOpenCreate) {
             btnOpenCreate.addEventListener('click', () => {
@@ -2513,7 +2556,6 @@
                     checkOutDateInput.value = nextDate.toISOString().split('T')[0];
                 }
                 populateStaffSelect();
-                populateCustomerDatalist();
                 updateCreateCategoryFields();
                 if (modalCreate) modalCreate.classList.add('active');
             });
@@ -2546,7 +2588,6 @@
                     }
 
                     populateStaffSelect();
-                    populateCustomerDatalist();
                     updateCreateCategoryFields();
                     if (modalCreate) modalCreate.classList.add('active');
                     sessionStorage.removeItem('pawpal_admin_booking_preset');
@@ -2560,7 +2601,6 @@
                 const dateInput = document.getElementById('newBookingDate');
                 if (dateInput) dateInput.value = todayStr;
                 populateStaffSelect();
-                populateCustomerDatalist();
                 updateCreateCategoryFields();
                 if (modalCreate) modalCreate.classList.add('active');
             }

@@ -583,7 +583,7 @@
          MODAL 1: TẠO LỊCH HẸN MỚI TẠI QUẦY HOẶC QUA ĐIỆN THOẠI
          ==================================================================== -->
     <div class="admin-modal-overlay" id="modalCreateBooking">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card" style="width: 640px; max-width: 95vw;">
             <div class="modal-header-clean">
                 <div class="modal-title-clean">Tạo lịch hẹn dịch vụ mới</div>
                 <button type="button" class="modal-btn-close-text" id="btnCloseCreateBooking">Đóng</button>
@@ -591,8 +591,10 @@
             <form id="formCreateBooking" class="modal-body-clean">
                 <div class="form-group-item">
                     <label class="form-label-clean">Khách hàng:</label>
-                    <input type="text" class="admin-input" id="newBookingCustomer" list="bookingCustomerDatalist" placeholder="Nhập tên hoặc số điện thoại khách..." required autocomplete="off">
-                    <datalist id="bookingCustomerDatalist"></datalist>
+                    <div class="customer-autocomplete-wrapper">
+                        <input type="text" class="admin-input" id="newBookingCustomer" placeholder="Nhập tên hoặc số điện thoại khách..." required autocomplete="off">
+                        <div class="customer-autocomplete-popover" id="bookingCustomerDropdown" style="display: none;"></div>
+                    </div>
                 </div>
                 <div class="form-row-2col">
                     <div class="form-group-item">
