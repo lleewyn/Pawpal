@@ -2462,7 +2462,7 @@
             }
 
             custDropdown.innerHTML = '';
-            filtered.slice(0, 8).forEach(c => {
+            filtered.forEach(c => {
                 const name = getCustomerDisplayName(c);
                 const phone = c.phone_main || 'Chưa có SĐT';
                 const pets = Array.isArray(c.pet_profile) ? c.pet_profile : (c.pet_profile ? [c.pet_profile] : []);
