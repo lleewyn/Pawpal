@@ -143,7 +143,7 @@
     // -------------------------------------------------------------
     let liveConversations = [];
     let currentConversation = null;
-    let currentFilterTab = 'urgent';
+    let currentFilterTab = sessionStorage.getItem('pawpal_admin_chatbot_filter_tab') || 'all';
 
     // Helper tính hạng khách hàng từ điểm
     function computeCustomerTier(points) {
@@ -377,7 +377,11 @@
                 };
             });
 
-            liveConversations = realConvList.length > 0 ? realConvList : fallbackConvList;
+            if (realConvList.length > 0) {
+                liveConversations = realConvList;
+            } else if (liveConversations.length === 0) {
+                liveConversations = fallbackConvList;
+            }
 
             // Đồng bộ conversation đang chọn (hỗ trợ cả conv_id lẫn customer_id)
             const savedConvId = sessionStorage.getItem('pawpal_admin_chatbot_conv_id');
@@ -895,6 +899,16 @@
 
         const allBadge = document.getElementById('allBadgeCount');
         if (allBadge) allBadge.textContent = allCount;
+
+        // Đồng bộ trạng thái active của các tab lọc trong DOM
+        document.querySelectorAll('.inbox-tab-btn').forEach(btn => {
+            const f = btn.getAttribute('data-filter') || 'all';
+            if (f === currentFilterTab) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
 
         if (filtered.length === 0) {
             container.innerHTML = `
@@ -1487,9 +1501,11 @@
         // Tab lọc
         document.querySelectorAll('.inbox-tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
+                const filter = btn.getAttribute('data-filter') || 'all';
+                currentFilterTab = filter;
+                sessionStorage.setItem('pawpal_admin_chatbot_filter_tab', currentFilterTab);
                 document.querySelectorAll('.inbox-tab-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                currentFilterTab = btn.getAttribute('data-filter');
                 renderConversationsList();
             });
         });
