@@ -168,28 +168,28 @@
                     <img src="/assets/images/publics/dogcute3.jpg" class="drawer-pet-avatar" id="drawerPetAvatar" alt="Avatar">
                     <div>
                         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                            <span class="headline-name" id="drawerPetName">Milu</span>
-                            <span class="admin-badge badge-neutral" id="drawerPetCode">PET-001</span>
-                            <span class="admin-badge badge-tier-gold" id="drawerPetSpeciesBreed">Chó Corgi</span>
-                            <span class="admin-badge badge-success" id="drawerPetStatusBadge">Đang nuôi</span>
+                            <span class="headline-name" id="drawerPetName">Đang tải...</span>
+                            <span class="admin-badge badge-neutral" id="drawerPetCode">—</span>
+                            <span class="admin-badge badge-neutral" id="drawerPetSpeciesBreed">—</span>
+                            <span class="admin-badge badge-neutral" id="drawerPetStatusBadge">—</span>
                         </div>
                         <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
-                            Chủ sở hữu: <a href="javascript:void(0)" class="user-name-link btn-jump-customer" id="drawerPetOwnerLink" data-cust-id="CUST-001">Nguyễn Văn An (0912345678)</a> • Cân nặng: <strong id="drawerPetWeightHeadline" style="color: var(--text-main);">8.5 kg</strong>
+                            Chủ sở hữu: <a href="javascript:void(0)" class="user-name-link btn-jump-customer" id="drawerPetOwnerLink" data-cust-id="">Đang tải...</a> • Cân nặng: <strong id="drawerPetWeightHeadline" style="color: var(--text-main);">—</strong>
                         </div>
                     </div>
                 </div>
 
                 <div class="drawer-action-buttons">
                     <button type="button" class="action-btn-pill btn-primary-pill btn-quick-book-spa">Đặt lịch Spa hoặc Hotel</button>
-                    <button type="button" class="action-btn-pill btn-open-weigh-modal" id="btnDrawerWeighPet">Cân bé và Thể trạng</button>
+                    <button type="button" class="action-btn-pill btn-open-weigh-modal" id="btnDrawerWeighPet" data-id="">Cân bé và Thể trạng</button>
                     <button type="button" class="action-btn-pill btn-quick-carelog">Đăng ảnh nhật ký</button>
-                    <button type="button" class="action-btn-pill btn-jump-customer" id="btnDrawerJumpCustomer" data-cust-id="CUST-001">Xem chủ nuôi</button>
+                    <button type="button" class="action-btn-pill btn-jump-customer" id="btnDrawerJumpCustomer" data-cust-id="" disabled>Xem chủ nuôi</button>
                 </div>
             </div>
 
             <!-- BANNER CẢNH BÁO AN TOÀN KHẨN CẤP (DÒNG CHỮ ĐỎ THUẦN) -->
-            <div class="emergency-alert-banner" id="drawerPetAlertBanner">
-                <span class="alert-text" id="drawerPetAlertText">Cảnh báo: Bé hay cắn khi chạm vào đuôi hoặc khi sấy chân sau. Kỹ thuật viên Groomer cần đeo loa chắn mõm hoặc bố trí 2 người cùng phối hợp để đảm bảo an toàn!</span>
+            <div class="emergency-alert-banner" id="drawerPetAlertBanner" style="display: none;">
+                <span class="alert-text" id="drawerPetAlertText"></span>
             </div>
 
             <!-- 4 TAB CON CHI TIẾT BÊN TRONG HỒ SƠ VÀ TRẠNG THÁI -->
@@ -221,15 +221,15 @@
                                 <h4 class="detail-box-title" style="margin-bottom: 0;">Thông tin thể trạng</h4>
                                 <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnOpenEditPetModal">Sửa hồ sơ</button>
                             </div>
-                            <div class="data-pair-row"><span class="data-key">Mã thú cưng:</span><span class="data-val" id="profilePetCode">PET-001</span></div>
-                            <div class="data-pair-row"><span class="data-key">Tên bé cưng:</span><span class="data-val" id="profilePetName">Milu</span></div>
-                            <div class="data-pair-row"><span class="data-key">Loài và Giống:</span><span class="data-val" id="profilePetSpecies">Chó Corgi</span></div>
-                            <div class="data-pair-row"><span class="data-key">Giới tính:</span><span class="data-val" id="profilePetGender">Đực</span></div>
-                            <div class="data-pair-row"><span class="data-key">Cân nặng hiện tại:</span><span class="data-val"><strong id="profilePetWeight">8.5 kg</strong> (Phân khúc 5 - 10kg)</span></div>
-                            <div class="data-pair-row"><span class="data-key">Ngày sinh:</span><span class="data-val" id="profilePetDob">15/05/2023 (1 tuổi 4 tháng)</span></div>
-                            <div class="data-pair-row"><span class="data-key">Màu lông:</span><span class="data-val" id="profilePetColor">Vàng trắng</span></div>
-                            <div class="data-pair-row"><span class="data-key">Tiền sử dị ứng:</span><span class="data-val text-danger" id="profilePetAllergy">Dị ứng hải sản và sữa tắm tinh dầu tràm</span></div>
-                            <div class="data-pair-row" style="border-bottom: none;"><span class="data-key">Tập tính và Lưu ý:</span><span class="data-val" id="profilePetNotes">Bé khá nhát người lạ, thích ăn pate bò. Hơi dữ khi sấy đuôi.</span></div>
+                            <div class="data-pair-row"><span class="data-key">Mã thú cưng:</span><span class="data-val" id="profilePetCode">—</span></div>
+                            <div class="data-pair-row"><span class="data-key">Tên bé cưng:</span><span class="data-val" id="profilePetName">—</span></div>
+                            <div class="data-pair-row"><span class="data-key">Loài và Giống:</span><span class="data-val" id="profilePetSpecies">—</span></div>
+                            <div class="data-pair-row"><span class="data-key">Giới tính:</span><span class="data-val" id="profilePetGender">—</span></div>
+                            <div class="data-pair-row"><span class="data-key">Cân nặng hiện tại:</span><span class="data-val"><strong id="profilePetWeight">—</strong></span></div>
+                            <div class="data-pair-row"><span class="data-key">Ngày sinh:</span><span class="data-val" id="profilePetDob">—</span></div>
+                            <div class="data-pair-row"><span class="data-key">Màu lông:</span><span class="data-val" id="profilePetColor">—</span></div>
+                            <div class="data-pair-row"><span class="data-key">Tiền sử dị ứng:</span><span class="data-val text-danger" id="profilePetAllergy">—</span></div>
+                            <div class="data-pair-row" style="border-bottom: none;"><span class="data-key">Tập tính và Lưu ý:</span><span class="data-val" id="profilePetNotes">—</span></div>
                         </div>
 
                         <div class="detail-box">
@@ -249,24 +249,7 @@
                                         </tr>
                                     </thead>
                                     <tbody id="petWeightHistoryTbody">
-                                        <tr>
-                                            <td>25/09/2026</td>
-                                            <td><strong>8.5 kg</strong></td>
-                                            <td>Phân khúc 5 - 10kg (250.000đ)</td>
-                                            <td>Lễ tân Mai</td>
-                                        </tr>
-                                        <tr>
-                                            <td>10/08/2026</td>
-                                            <td><strong>8.2 kg</strong></td>
-                                            <td>Phân khúc 5 - 10kg (250.000đ)</td>
-                                            <td>Groomer Tuấn</td>
-                                        </tr>
-                                        <tr>
-                                            <td>15/06/2026</td>
-                                            <td><strong>7.9 kg</strong></td>
-                                            <td>Phân khúc 5 - 10kg (250.000đ)</td>
-                                            <td>Groomer Hương</td>
-                                        </tr>
+                                        <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 16px;">Đang tải lịch sử cân nặng...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -398,7 +381,7 @@
                         <h4 class="detail-box-title" style="margin-bottom: 2px;" id="wbFormTitle">Cập nhật nhật ký ca: Bé Milu</h4>
                         <div style="font-size: 12.5px; color: var(--text-muted);" id="wbFormSub">Giống loài: Chó Corgi • Mã lịch hẹn: BK-2609-01 • Chủ sở hữu: Nguyễn Văn An (0912345678)</div>
                     </div>
-                    <span class="admin-badge badge-warning" id="wbStatusBadge">Đang tiến hành</span>
+                    <span class="admin-badge badge-warning" id="wbStatusBadge">Đang làm</span>
                 </div>
 
                 <!-- TẢI ẢNH TRƯỚC VÀ SAU -->
@@ -473,9 +456,9 @@
                     <textarea class="admin-input textarea-note" rows="2" id="wbOwnerMessage" placeholder="Ví dụ: Lông vùng nách bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà; tai sạch sẽ thơm tho.">Lông vùng nách bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.</textarea>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 4px;">
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnPreviewCustomerDiary">Xem trước giao diện khách</button>
-                    <div style="display: flex; gap: 10px;">
+                <div class="carelog-actions-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary carelog-preview-btn" id="btnPreviewCustomerDiary">Xem trước giao diện khách</button>
+                    <div class="carelog-primary-actions">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnSaveDraftCareLog">Lưu bản nháp</button>
                         <button type="button" class="admin-btn admin-btn-primary" id="btnCompleteAndSendCareLog">Hoàn thiện và Gửi</button>
                     </div>
@@ -590,8 +573,8 @@
                         <button type="button" class="btn-text-action" id="btnOpenQuickAddOwnerModal">Thêm nhanh chủ nuôi</button>
                     </div>
                     <div class="pet-owner-autocomplete-wrapper">
-                        <input type="text" class="admin-input" id="newPetOwnerInput" placeholder="Nhập số điện thoại hoặc họ tên để tìm nhanh..." autocomplete="off" value="Nguyễn Văn An - 0912345678 (Hạng Vàng)" required>
-                        <input type="hidden" id="newPetOwner" value="CUST-001">
+                        <input type="text" class="admin-input" id="newPetOwnerInput" placeholder="Nhập số điện thoại hoặc họ tên để tìm nhanh..." autocomplete="off" required>
+                        <input type="hidden" id="newPetOwner" value="">
                         <div class="autocomplete-dropdown" id="newPetOwnerDropdown" style="display: none;"></div>
                     </div>
                 </div>
@@ -629,11 +612,11 @@
                 <div class="form-row-two-col">
                     <div class="form-group">
                         <label class="form-label">Cân nặng tại quầy (kg):</label>
-                        <input type="number" step="0.1" class="admin-input" id="newPetWeight" placeholder="Ví dụ: 6.5" required>
+                        <input type="number" min="0.1" step="0.1" class="admin-input" id="newPetWeight" placeholder="Ví dụ: 6.5" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Ngày sinh (Dự kiến):</label>
-                        <input type="date" class="admin-input" id="newPetDob" value="2024-01-15">
+                        <input type="date" class="admin-input" id="newPetDob" max="2026-10-09">
                     </div>
                 </div>
 
@@ -721,7 +704,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Cân nặng thực tế vừa cân tại quầy (kg):</label>
-                    <input type="number" step="0.1" class="admin-input" id="weighPetNewWeight" value="8.6" required style="font-size: 18px; font-weight: 700; color: #236B48;">
+                    <input type="number" min="0.1" step="0.1" class="admin-input" id="weighPetNewWeight" value="8.6" required style="font-size: 18px; font-weight: 700; color: #236B48;">
                 </div>
 
                 <!-- BẢNG MA TRẬN GIÁ DỊCH VỤ TỰ ĐỘNG NHẢY -->

@@ -218,41 +218,62 @@
 
 .search-box-wrapper {
     position: relative;
+    display: flex;
+    align-items: center;
     flex: 1;
     max-width: 480px;
+    height: 38px;
 }
 
 .search-box-wrapper .admin-input {
     width: 100%;
-    padding-right: 36px;
+    height: 100%;
+    padding-right: 32px;
+    box-sizing: border-box;
 }
 
+.btn-clear-search,
 .btn-search-clear-x {
     position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
+    right: 8px;
+    top: 0;
+    bottom: 0;
+    margin: auto 0;
     width: 22px;
     height: 22px;
-    border-radius: 50%;
-    border: none;
-    background-color: #EEF5F1;
-    color: #4F7A65;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1;
+    background: transparent !important;
+    background-color: transparent !important;
+    color: var(--text-muted) !important;
+    border: none !important;
+    cursor: pointer;
     display: none;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    font-family: inherit;
     padding: 0;
-    z-index: 2;
+    user-select: none;
+    outline: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+    transition: none !important;
+    z-index: 5;
 }
 
-.btn-search-clear-x:hover {
-    background-color: #236B48;
-    color: #FFFFFF;
+.btn-clear-search:hover,
+.btn-clear-search:focus,
+.btn-clear-search:active,
+.btn-search-clear-x:hover,
+.btn-search-clear-x:focus,
+.btn-search-clear-x:active {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: var(--text-heading) !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transform: none !important;
 }
 
 .admin-input, .admin-select {

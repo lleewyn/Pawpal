@@ -512,9 +512,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Đồng bộ hash URL ngay lập tức khi bấm đổi phân hệ
             const targetHash = getTargetHashForModule(title);
-            if (targetHash) {
+            if (targetHash && window.location.hash !== targetHash) {
                 try {
-                    history.replaceState(null, '', targetHash);
+                    history.pushState(null, '', targetHash);
                 } catch (e) {
                     window.location.hash = targetHash;
                 }
@@ -572,6 +572,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             sessionStorage.setItem('pawpal_admin_active_module', targetMod);
             loadModule(targetMod);
+        } else if (targetMod) {
+            renderHeaderSubtabsInstant(targetMod);
         }
     });
 
@@ -622,6 +624,45 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // ====================================================================
+    // CƠ CHẾ TỰ ĐỘNG GẮN VÀ ĐIỀU KHIỂN NÚT X XÓA TÌM KIẾM TOÀN HỆ THỐNG
+    // Tự động kích hoạt trên mọi ô tìm kiếm (.search-box-wrapper)
+    // ====================================================================
+    document.addEventListener('input', (e) => {
+        const input = e.target;
+        if (!input || !input.matches('.search-box-wrapper input')) return;
+        const wrapper = input.closest('.search-box-wrapper');
+        if (!wrapper) return;
+        
+        let btn = wrapper.querySelector('.btn-clear-search, .btn-search-clear-x');
+        if (!btn) {
+            btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn-clear-search';
+            btn.title = 'Xóa nội dung tìm kiếm';
+            btn.setAttribute('aria-label', 'Xóa tìm kiếm');
+            btn.textContent = '✕';
+            wrapper.appendChild(btn);
+        }
+        btn.style.display = input.value.trim().length > 0 ? 'inline-flex' : 'none';
+    });
+
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-clear-search, .btn-search-clear-x');
+        if (!btn) return;
+        const wrapper = btn.closest('.search-box-wrapper');
+        if (!wrapper) return;
+        const input = wrapper.querySelector('input');
+        if (!input) return;
+        
+        e.preventDefault();
+        input.value = '';
+        btn.style.display = 'none';
+        input.focus();
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
 
     // Khởi tạo Lucide
     if (window.lucide) {

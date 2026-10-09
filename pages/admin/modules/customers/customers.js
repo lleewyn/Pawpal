@@ -624,7 +624,7 @@
             }
         }
 
-        function switchSubtab(targetSubtab) {
+        function switchSubtab(targetSubtab, updateHistory = true) {
             headerSubtabBtns.forEach(btn => {
                 btn.classList.toggle('active', btn.getAttribute('data-subtab') === targetSubtab);
             });
@@ -644,9 +644,21 @@
             }
 
             sessionStorage.setItem('pawpal_admin_customer_subtab', targetSubtab);
-            try {
-                history.replaceState(null, '', '#' + targetSubtab);
-            } catch (e) {}
+            if (updateHistory) {
+                if (window.location.hash !== '#' + targetSubtab) {
+                    try {
+                        history.pushState(null, '', '#' + targetSubtab);
+                    } catch (e) {
+                        window.location.hash = targetSubtab;
+                    }
+                }
+            } else {
+                if (window.location.hash !== '#' + targetSubtab) {
+                    try {
+                        history.replaceState(null, '', '#' + targetSubtab);
+                    } catch (e) {}
+                }
+            }
 
             if (window.lucide) lucide.createIcons();
         }
@@ -654,9 +666,18 @@
         headerSubtabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 const targetSubtab = btn.getAttribute('data-subtab');
-                switchSubtab(targetSubtab);
+                switchSubtab(targetSubtab, true);
             });
         });
+
+        const handleCustomersHashChange = () => {
+            const currentHash = window.location.hash ? window.location.hash.substring(1) : '';
+            const validTabs = ['tab-list', 'tab-profile', 'tab-pawpoint'];
+            if (validTabs.includes(currentHash)) {
+                switchSubtab(currentHash, false);
+            }
+        };
+        window.addEventListener('hashchange', handleCustomersHashChange);
 
         // 3. Chuyển đổi giữa 5 tabs con trong Drawer Hồ sơ
         const drawerTabs = document.querySelectorAll('.drawer-tab-btn');

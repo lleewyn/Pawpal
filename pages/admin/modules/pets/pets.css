@@ -249,6 +249,17 @@
     border: 1px solid var(--border-neutral);
 }
 
+.pets-module .alert-indicator {
+    display: inline-flex;
+    align-items: flex-start;
+    max-width: 260px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
 .pet-name-cell {
     font-weight: 600;
 }
@@ -1107,6 +1118,50 @@
     margin-top: 8px;
     padding-top: 0;
     border-top: none;
+}
+
+.carelog-actions-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.carelog-primary-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.carelog-preview-btn {
+    border-color: #9BBEAA;
+    color: #236B48;
+    background-color: #F4FAF6;
+    font-weight: 600;
+}
+
+.carelog-preview-btn:hover,
+.carelog-preview-btn:focus-visible {
+    background-color: #EAF4ED;
+    border-color: #7FAF91;
+    color: #236B48;
+}
+
+@media (max-width: 640px) {
+    .carelog-actions-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .carelog-preview-btn,
+    .carelog-primary-actions {
+        width: 100%;
+    }
+
+    .carelog-primary-actions > .admin-btn {
+        flex: 1;
+    }
 }
 
 /* THẺ ĐEO CỔ PREVIEW */

@@ -2834,7 +2834,7 @@
         const headerSubtabBtns = subtabsContainer ? subtabsContainer.querySelectorAll('.header-subtab-btn') : [];
         const sections = document.querySelectorAll('.subtab-content');
 
-        function switchSubtab(targetSubtab) {
+        function switchSubtab(targetSubtab, updateHistory = true) {
             headerSubtabBtns.forEach(btn => {
                 if (btn.getAttribute('data-subtab') === targetSubtab) {
                     btn.classList.add('active');
@@ -2870,9 +2870,21 @@
             }
 
             sessionStorage.setItem('pawpal_admin_staff_active_subtab', targetSubtab);
-            try {
-                history.replaceState(null, '', '#' + targetSubtab);
-            } catch (e) {}
+            if (updateHistory) {
+                if (window.location.hash !== '#' + targetSubtab) {
+                    try {
+                        history.pushState(null, '', '#' + targetSubtab);
+                    } catch (e) {
+                        window.location.hash = targetSubtab;
+                    }
+                }
+            } else {
+                if (window.location.hash !== '#' + targetSubtab) {
+                    try {
+                        history.replaceState(null, '', '#' + targetSubtab);
+                    } catch (e) {}
+                }
+            }
 
             if (window.lucide && typeof window.lucide.createIcons === 'function') {
                 window.lucide.createIcons();
@@ -2884,10 +2896,20 @@
                 e.preventDefault();
                 const target = btn.getAttribute('data-subtab');
                 if (target) {
-                    switchSubtab(target);
+                    switchSubtab(target, true);
                 }
             });
         });
+
+        // Lắng nghe hashchange khi người dùng bấm nút Back / Forward trên trình duyệt
+        const handleStaffHashChange = () => {
+            const currentHash = window.location.hash ? window.location.hash.substring(1) : '';
+            const validStaffSubtabs = ['tab-staff-list', 'tab-staff-profile', 'tab-staff-schedule', 'tab-staff-assessment'];
+            if (validStaffSubtabs.includes(currentHash)) {
+                switchSubtab(currentHash, false);
+            }
+        };
+        window.addEventListener('hashchange', handleStaffHashChange);
 
         // ---------------------------------------------------------
         // 7. GẮN SỰ KIỆN CHO CÁC PHẦN TỬ TRÊN GIAO DIỆN
@@ -2905,9 +2927,30 @@
         });
 
         // Tìm kiếm và bộ lọc Subtab 1
-        document.getElementById('staffSearchInput')?.addEventListener('input', () => {
+        const staffSearchInput = document.getElementById('staffSearchInput');
+        const btnClearStaffSearch = document.getElementById('btnClearStaffSearch');
+
+        function updateStaffSearchClearBtn() {
+            if (btnClearStaffSearch && staffSearchInput) {
+                btnClearStaffSearch.style.display = staffSearchInput.value.length > 0 ? 'inline-flex' : 'none';
+            }
+        }
+
+        staffSearchInput?.addEventListener('input', () => {
+            updateStaffSearchClearBtn();
             currentStaffPage = 1;
             renderStaffList();
+        });
+
+        btnClearStaffSearch?.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (staffSearchInput) {
+                staffSearchInput.value = '';
+                updateStaffSearchClearBtn();
+                staffSearchInput.focus();
+                currentStaffPage = 1;
+                renderStaffList();
+            }
         });
         document.getElementById('staffFilterPosition')?.addEventListener('change', () => {
             currentStaffPage = 1;
@@ -3152,8 +3195,36 @@
         }
 
         function exportStaffToExcel() {
+            const list = getFilteredStaffList();
+            if (!list || list.length === 0) {
+                showToast('Không có dữ liệu nhân viên nào phù hợp để xuất file!', 'warning');
+                return;
+            }
+
+            if (window.XLSX) {
+                const data = list.map(s => ({
+                    'Mã NV': s.id,
+                    'Họ tên': s.name || '',
+                    'Chức vụ': s.position || '',
+                    'Vai trò': s.role || '',
+                    'Số điện thoại': s.phone || '',
+                    'Email': s.email || '',
+                    'Ca làm việc': s.shift === 'MORNING' ? 'Ca sáng' : s.shift === 'AFTERNOON' ? 'Ca chiều' : s.shift === 'EVENING' ? 'Ca tối' : s.shift === 'NIGHT' ? 'Ca khuya' : 'Toàn thời gian',
+                    'Trạng thái': s.status === 'ACTIVE' ? 'Đang làm việc' : s.status === 'LEAVE' ? 'Nghỉ phép' : s.status === 'PAUSE' ? 'Tạm nghỉ' : 'Nghỉ việc',
+                    'Điểm tay nghề': s.skillExam || '—',
+                    'Trạng thái nhận việc': s.serviceLocked ? 'Đang tạm khóa' : 'Sẵn sàng nhận việc',
+                    'Địa chỉ': s.address || ''
+                }));
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Danh sách nhân viên');
+                XLSX.writeFile(wb, `Danh_sach_nhan_vien_${new Date().toISOString().split('T')[0]}.xlsx`);
+                showToast(`Đã xuất file Excel thành công (${list.length} nhân viên)!`, 'success');
+                return;
+            }
+
             const headers = ['Mã NV', 'Họ tên', 'Chức vụ', 'Vai trò', 'Số điện thoại', 'Email', 'Ca làm việc', 'Trạng thái', 'Điểm tay nghề', 'Khóa nhận việc', 'Địa chỉ'];
-            const rows = mockStaff.map(s => [
+            const rows = list.map(s => [
                 s.id,
                 `"${(s.name || '').replace(/"/g, '""')}"`,
                 `"${(s.position || '').replace(/"/g, '""')}"`,
@@ -3176,6 +3247,7 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            showToast(`Đã xuất file thành công (${list.length} nhân viên)!`, 'success');
         }
 
         document.getElementById('btnOpenAddStaffModal')?.addEventListener('click', () => openStaffModal(null));
@@ -3665,9 +3737,30 @@
         });
 
         // Bộ lọc bảng đánh giá nghiệp vụ
-        document.getElementById('assessmentSearchInput')?.addEventListener('input', () => {
+        const assessmentSearchInput = document.getElementById('assessmentSearchInput');
+        const btnClearAssessmentSearch = document.getElementById('btnClearAssessmentSearch');
+
+        function updateAssessmentSearchClearBtn() {
+            if (btnClearAssessmentSearch && assessmentSearchInput) {
+                btnClearAssessmentSearch.style.display = assessmentSearchInput.value.length > 0 ? 'inline-flex' : 'none';
+            }
+        }
+
+        assessmentSearchInput?.addEventListener('input', () => {
+            updateAssessmentSearchClearBtn();
             currentAssessmentPage = 1;
             renderAssessmentList();
+        });
+
+        btnClearAssessmentSearch?.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (assessmentSearchInput) {
+                assessmentSearchInput.value = '';
+                updateAssessmentSearchClearBtn();
+                assessmentSearchInput.focus();
+                currentAssessmentPage = 1;
+                renderAssessmentList();
+            }
         });
         document.getElementById('assessmentFilterType')?.addEventListener('change', () => {
             currentAssessmentPage = 1;
@@ -3926,7 +4019,7 @@
         syncStaffWithAssessments();
 
         setupStaffRealtimeSubscription();
-        switchSubtab(initialSubtab);
+        switchSubtab(initialSubtab, false);
     }
 
     if (document.readyState === 'loading') {

@@ -625,6 +625,68 @@ textarea.admin-input,
     padding-right: 28px;
 }
 
+/* KHUNG Ô TÌM KIẾM CÓ NÚT XÓA DẤU X (TOÀN HỆ THỐNG ADMIN) */
+.search-box-wrapper {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    flex: 1;
+    height: 38px;
+}
+
+.search-box-wrapper .admin-input,
+.search-box-wrapper .search-input,
+.search-box-wrapper input[type="text"] {
+    width: 100% !important;
+    height: 100% !important;
+    padding-right: 32px !important;
+    box-sizing: border-box !important;
+}
+
+.btn-clear-search,
+.btn-search-clear-x {
+    position: absolute !important;
+    right: 8px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    margin: auto 0 !important;
+    width: 22px !important;
+    height: 22px !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    color: var(--text-muted) !important;
+    border: none !important;
+    cursor: pointer !important;
+    display: none;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    font-family: inherit !important;
+    padding: 0 !important;
+    user-select: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+    transition: none !important;
+    z-index: 5 !important;
+}
+
+.btn-clear-search:hover,
+.btn-clear-search:focus,
+.btn-clear-search:active,
+.btn-search-clear-x:hover,
+.btn-search-clear-x:focus,
+.btn-search-clear-x:active {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: var(--text-heading) !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
 /* 3. HUY HIỆU TRẠNG THÁI & HẠNG THÀNH VIÊN (BADGES - MUTED PASTEL & NO BORDER) */
 .admin-badge {
     display: inline-flex;

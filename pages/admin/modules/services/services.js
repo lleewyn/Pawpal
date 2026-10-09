@@ -619,9 +619,18 @@
         subtabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 const subtabId = btn.getAttribute('data-subtab');
-                switchSubtab(subtabId);
+                switchSubtab(subtabId, true);
             });
         });
+
+        const handleServicesHashChange = () => {
+            const currentHash = window.location.hash ? window.location.hash.substring(1) : '';
+            const validTabs = ['tab-service-bookings', 'tab-service-catalog', 'tab-service-pricing', 'tab-service-reports', 'tab-service-reviews', 'tab-service-detail'];
+            if (validTabs.includes(currentHash)) {
+                switchSubtab(currentHash, false);
+            }
+        };
+        window.addEventListener('hashchange', handleServicesHashChange);
 
         const currentMod = sessionStorage.getItem('pawpal_admin_active_module');
         if (currentMod && currentMod !== 'Dịch vụ') return;
@@ -630,21 +639,21 @@
         const hash = window.location.hash || '';
         const savedSubtab = sessionStorage.getItem('pawpal_admin_services_active_subtab');
         if (hash === '#tab-service-detail' || (hash.startsWith('#tab-service') && savedSubtab === 'tab-service-detail')) {
-            switchSubtab('tab-service-detail');
+            switchSubtab('tab-service-detail', false);
         } else if (hash === '#tab-service-catalog' || (hash.startsWith('#tab-service') && savedSubtab === 'tab-service-catalog')) {
-            switchSubtab('tab-service-catalog');
+            switchSubtab('tab-service-catalog', false);
         } else if (hash === '#tab-service-reviews' || (hash.startsWith('#tab-service') && savedSubtab === 'tab-service-reviews')) {
-            switchSubtab('tab-service-reviews');
+            switchSubtab('tab-service-reviews', false);
         } else if (hash === '#tab-service-bookings' || (hash.startsWith('#tab-service') && savedSubtab === 'tab-service-bookings')) {
-            switchSubtab('tab-service-bookings');
+            switchSubtab('tab-service-bookings', false);
         } else if (savedSubtab && document.getElementById('subtab-' + savedSubtab)) {
-            switchSubtab(savedSubtab);
+            switchSubtab(savedSubtab, false);
         } else {
-            switchSubtab('tab-service-bookings');
+            switchSubtab('tab-service-bookings', false);
         }
     }
 
-    function switchSubtab(subtabId) {
+    function switchSubtab(subtabId, updateHistory = true) {
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
 
@@ -667,15 +676,25 @@
         const targetSection = document.getElementById('subtab-' + subtabId);
         if (targetSection) targetSection.classList.add('active');
 
-        // Đồng bộ URL Hash một cách an toàn mà không kích hoạt hashchange làm gián đoạn router
+        // Đồng bộ URL Hash
         const currentMod = sessionStorage.getItem('pawpal_admin_active_module');
         if (!currentMod || currentMod === 'Dịch vụ') {
-            try {
-                history.replaceState(null, '', '#' + subtabId);
-            } catch (e) {
-                window.location.hash = '#' + subtabId;
-            }
             sessionStorage.setItem('pawpal_admin_services_active_subtab', subtabId);
+            if (updateHistory) {
+                if (window.location.hash !== '#' + subtabId) {
+                    try {
+                        history.pushState(null, '', '#' + subtabId);
+                    } catch (e) {
+                        window.location.hash = '#' + subtabId;
+                    }
+                }
+            } else {
+                if (window.location.hash !== '#' + subtabId) {
+                    try {
+                        history.replaceState(null, '', '#' + subtabId);
+                    } catch (e) {}
+                }
+            }
         }
 
         // Quản lý Deep Breadcrumb
@@ -822,19 +841,10 @@
         const totalRecords = filtered.length;
         const totalPages = Math.ceil(totalRecords / BOOKINGS_PER_PAGE);
 
-        // Cập nhật hiển thị nút X xóa bộ lọc bên trong ô tìm kiếm (chỉ hiện khi đang tìm hay lọc)
+        // Cập nhật hiển thị nút X xóa ô tìm kiếm (chỉ hiện khi có nhập text vào ô tìm kiếm)
         const btnToolbarReset = document.getElementById('btnToolbarResetFilters');
-        const hasActiveFilters = Boolean(
-            currentSearchTerm ||
-            currentFilterCategory !== 'ALL' ||
-            currentFilterStatus !== 'ALL' ||
-            currentFilterStaff !== 'ALL' ||
-            isUpcomingFilterActive ||
-            isAllergyFilterActive ||
-            isSlaFilterActive
-        );
         if (btnToolbarReset) {
-            btnToolbarReset.style.display = hasActiveFilters ? 'flex' : 'none';
+            btnToolbarReset.style.display = (currentSearchTerm && currentSearchTerm.length > 0) ? 'inline-flex' : 'none';
         }
 
         if (totalRecords === 0) {
@@ -3050,6 +3060,7 @@
         }
 
         let activeBookingPreset = null;
+        let hotelVaccineWarningConfirmed = false;
 
         // Tự động kiểm tra nếu chuyển từ phân hệ Thú cưng sang với thông tin bé cưng điền sẵn
         const checkPresetBooking = () => {
@@ -3059,6 +3070,7 @@
                     const preset = JSON.parse(rawPreset);
                     resetCreateBookingForm();
                     activeBookingPreset = preset;
+                    hotelVaccineWarningConfirmed = false;
                     const custEl = document.getElementById('newBookingCustomer');
                     const phoneEl = document.getElementById('newBookingPhone');
                     const petEl = document.getElementById('newBookingPetName');
@@ -3150,6 +3162,21 @@
             const branch = document.getElementById('newBookingBranch')?.value || '';
             const petAlert = (document.getElementById('newBookingPetAlert')?.value || '').trim();
             const note = (document.getElementById('newBookingNotes')?.value || '').trim();
+
+            const matchedPetNotVaccinated = currentMatchedPet &&
+                (!currentMatchedPet.vaccination_history || /chưa|không/i.test(currentMatchedPet.vaccination_history));
+            if (category === 'Hotel' && (activeBookingPreset?.petVaccinated === false || matchedPetNotVaccinated) && !hotelVaccineWarningConfirmed) {
+                showServiceConfirmModal({
+                    title: 'Cần kiểm tra sổ tiêm',
+                    message: `Bé ${petName || 'thú cưng'} chưa được xác nhận đủ vắc-xin. Vui lòng kiểm tra sổ tiêm trước khi check-in Pet Hotel. Bạn vẫn muốn tiếp tục tạo lịch hẹn để chờ đối chiếu?`,
+                    acceptText: 'Vẫn tạo lịch hẹn',
+                    onAccept: () => {
+                        hotelVaccineWarningConfirmed = true;
+                        handleCreateBookingSubmit(e);
+                    }
+                });
+                return;
+            }
 
             let hasError = false;
             let firstErrorInput = null;
@@ -5177,6 +5204,10 @@
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 currentSearchTerm = e.target.value.trim();
+                const btnX = document.getElementById('btnToolbarResetFilters');
+                if (btnX) {
+                    btnX.style.display = e.target.value.length > 0 ? 'inline-flex' : 'none';
+                }
                 currentBookingPage = 1;
                 renderBookingsTable();
             });
@@ -5296,11 +5327,20 @@
             });
         });
 
-        // Nút Xóa bộ lọc ngay bên cạnh ô tìm kiếm đầu bảng
+        // Nút Xóa ô tìm kiếm ngay bên trong ô tìm kiếm đầu bảng
         const btnToolbarReset = document.getElementById('btnToolbarResetFilters');
         if (btnToolbarReset) {
-            btnToolbarReset.addEventListener('click', () => {
-                clearBookingSearchAndFilters();
+            btnToolbarReset.addEventListener('click', (e) => {
+                e.preventDefault();
+                const searchIn = document.getElementById('serviceSearchInput');
+                if (searchIn) {
+                    searchIn.value = '';
+                    searchIn.focus();
+                }
+                currentSearchTerm = '';
+                btnToolbarReset.style.display = 'none';
+                currentBookingPage = 1;
+                renderBookingsTable();
             });
         }
 

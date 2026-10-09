@@ -1630,7 +1630,7 @@
             }
         }
 
-        function switchSubtab(targetSubtab) {
+        function switchSubtab(targetSubtab, updateHistory = true) {
             headerSubtabBtns.forEach(btn => {
                 btn.classList.toggle('active', btn.getAttribute('data-subtab') === targetSubtab);
             });
@@ -1656,18 +1656,39 @@
             }
 
             sessionStorage.setItem('pawpal_admin_order_subtab', targetSubtab);
-            try {
-                history.replaceState(null, '', '#' + targetSubtab);
-            } catch (e) {}
+            if (updateHistory) {
+                if (window.location.hash !== '#' + targetSubtab) {
+                    try {
+                        history.pushState(null, '', '#' + targetSubtab);
+                    } catch (e) {
+                        window.location.hash = targetSubtab;
+                    }
+                }
+            } else {
+                if (window.location.hash !== '#' + targetSubtab) {
+                    try {
+                        history.replaceState(null, '', '#' + targetSubtab);
+                    } catch (e) {}
+                }
+            }
         }
         switchSubtabRef = switchSubtab;
 
         headerSubtabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 const target = btn.getAttribute('data-subtab');
-                switchSubtab(target);
+                switchSubtab(target, true);
             });
         });
+
+        const handleOrdersHashChange = () => {
+            const currentHash = window.location.hash ? window.location.hash.substring(1) : '';
+            const validTabs = ['tab-order-list', 'tab-order-detail', 'tab-order-products', 'tab-order-promos'];
+            if (validTabs.includes(currentHash)) {
+                switchSubtab(currentHash, false);
+            }
+        };
+        window.addEventListener('hashchange', handleOrdersHashChange);
 
         // Hàm render phân trang danh sách đơn hàng
         function renderOrdersPagination(totalPages) {
