@@ -1,5 +1,27 @@
 // orders.js - Phân hệ Quản lý Bán hàng Pawpal-er
 (function() {
+    // Hàm định dạng thời gian chuẩn hóa toàn hệ thống (YYYY-MM-DD HH:mm, YYYY-MM-DD, HH:mm)
+    const formatDateTime = window.formatDateTime || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+    };
+
+    const formatDate = window.formatDate || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+    };
+
+    const formatTime = window.formatTime || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(dateObj);
+        return `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+    };
+
     // Dữ liệu mẫu đơn hàng chuẩn (kế thừa từ data/orders.json)
     const initialOrders = [
         {
@@ -855,7 +877,7 @@
     function addStockLog(entry) {
         const newLog = {
             id: 'LOG-' + String(currentStockLogsList.length + 1).padStart(3, '0'),
-            date: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN'),
+            date: formatDateTime(new Date()),
             staff: 'Quản trị viên',
             ...entry
         };
@@ -879,6 +901,7 @@
 
     let renderOrdersTableRef = null;
     let renderProductsTableRef = null;
+    let updateCategoryFilterDropdownRef = null;
     let renderOrderDetailRef = null;
     let renderVouchersTableRef = null;
     let renderGrnItemsTableRef = null;
@@ -890,7 +913,21 @@
 
             console.log('[Orders] Đang nạp dữ liệu Bán hàng, Kho, Voucher & Đổi trả từ Supabase...');
 
-            // 1. Nạp sản phẩm & tồn kho từ Supabase
+            // 1. Nạp danh mục sản phẩm từ CSDL Supabase
+            let dbCategories = [];
+            try {
+                const { data: catData, error: catErr } = await client
+                    .from('product_category')
+                    .select('id, category_name, status')
+                    .order('category_name', { ascending: true });
+                if (!catErr && Array.isArray(catData) && catData.length > 0) {
+                    dbCategories = catData.map(c => c.category_name).filter(Boolean);
+                }
+            } catch (errCat) {
+                console.warn('Lỗi khi nạp danh mục sản phẩm từ Supabase:', errCat);
+            }
+
+            // 2. Nạp sản phẩm & tồn kho từ Supabase
             const { data: prodsData, error: prodsErr } = await client
                 .from('product')
                 .select('*, product_category(*), inventory(*)')
@@ -908,7 +945,7 @@
                         id: p.id,
                         sku: p.sku || `SKU-${p.id.slice(0, 6)}`,
                         name: (p.product_name || 'Sản phẩm PawPal').replace(/&/g, 'và'),
-                        category: p.product_category?.category_name || 'Thức ăn',
+                        category: p.product_category?.category_name || 'Thực phẩm',
                         brand: p.origin || 'PawPal',
                         petType: p.pet_type || 'Chó và Mèo',
                         origin: p.origin || 'Việt Nam',
@@ -936,6 +973,9 @@
                 if (mappedProducts.length > 0) {
                     currentProductsList = mappedProducts;
                     persistProductsData();
+                    if (typeof updateCategoryFilterDropdownRef === 'function') {
+                        updateCategoryFilterDropdownRef(dbCategories);
+                    }
                     if (typeof renderProductsTableRef === 'function') renderProductsTableRef();
                 }
             }
@@ -957,7 +997,7 @@
                     }
 
                     const isPct = v.type === 'percentage' || v.type === 'percent';
-                    const validStr = v.end_date ? ('Đến ' + new Date(v.end_date).toLocaleDateString('vi-VN')) : 'Đến 31/12/2026';
+                    const validStr = v.end_date ? ('Đến ' + formatDate(v.end_date)) : 'Đến 2026-12-31';
 
                     return {
                         code: v.voucher_code,
@@ -1026,7 +1066,7 @@
                             items: items,
                             note: r.description || 'Yêu cầu đổi trả bảo hành tiếp nhận từ hệ thống.',
                             status: isResolved ? 'resolved' : 'pending',
-                            createdAt: r.created_at ? new Date(r.created_at).toLocaleDateString('vi-VN') : '2026-07-05'
+                            createdAt: r.created_at ? formatDateTime(r.created_at) : '2026-07-05 14:30'
                         };
 
                         if (r.sales_order_id) {
@@ -1088,6 +1128,8 @@
 
                     const rawStatus = (o.order_status || 'pending').toLowerCase();
                     const rawPaymentStatus = (o.payment_status || 'unpaid').toLowerCase();
+                    let mappedPaymentStatus = rawPaymentStatus;
+                    if (rawPaymentStatus === 'pending_refund') mappedPaymentStatus = 'refund_pending';
 
                     // Phương thức thanh toán
                     let payMethod = 'cod';
@@ -1124,16 +1166,20 @@
                     const orderCode = o.order_code || `ORD-${o.id.slice(0, 8).toUpperCase()}`;
 
                     // Tạo timeline chuẩn
-                    const createdStr = new Date(o.created_at || Date.now()).toLocaleString('vi-VN');
+                    const createdStr = formatDateTime(o.created_at || Date.now());
                     const timeline = [
                         { title: 'Đặt hàng thành công', time: createdStr, desc: 'Đơn hàng được khởi tạo trên hệ thống PawPal', done: true }
                     ];
+
+                    const resolvedCarrier = o.shipping_carrier || o.delivery?.carrier_name || o.delivery?.carrier || (rawStatus === 'shipping' || rawStatus === 'delivered' ? 'J và T Express' : 'Chưa phân công');
+                    const resolvedTracking = o.tracking_number || o.delivery?.tracking_code || o.delivery?.tracking_number || (rawStatus === 'shipping' || rawStatus === 'delivered' ? `JT${o.id.slice(0, 8).toUpperCase()}` : '--');
 
                     if (rawStatus === 'confirmed' || rawStatus === 'shipping' || rawStatus === 'delivered' || rawStatus === 'completed') {
                         timeline.push({ title: 'Đã xác nhận đơn hàng', time: 'Hôm nay', desc: 'Kho đã in phiếu nhặt hàng và đóng gói', done: true });
                     }
                     if (rawStatus === 'shipping' || rawStatus === 'delivered' || rawStatus === 'completed') {
-                        timeline.push({ title: 'Đã bàn giao vận chuyển', time: 'Hôm nay', desc: `Đã bàn giao cho ${o.delivery?.carrier_name || 'PawPal Express'}`, done: true });
+                        const trackingSuffix = (resolvedTracking && resolvedTracking !== '--') ? `. Mã vận đơn: ${resolvedTracking}` : '';
+                        timeline.push({ title: 'Đã bàn giao vận chuyển', time: 'Hôm nay', desc: `Đã bàn giao cho ${resolvedCarrier}${trackingSuffix}`, done: true });
                     }
                     if (rawStatus === 'delivered' || rawStatus === 'completed') {
                         timeline.push({ title: 'Giao hàng thành công', time: 'Hôm nay', desc: 'Khách hàng đã nhận đủ hàng', done: true });
@@ -1156,10 +1202,16 @@
                         phone: custPhone,
                         address: addrStr,
                         status: rawStatus,
-                        paymentStatus: rawPaymentStatus,
+                        paymentStatus: mappedPaymentStatus,
                         paymentMethod: payMethod,
-                        carrier: o.delivery?.carrier_name || (rawStatus === 'shipping' || rawStatus === 'delivered' ? 'J và T Express' : 'Chưa phân công'),
-                        trackingNumber: o.delivery?.tracking_code || (rawStatus === 'shipping' || rawStatus === 'delivered' ? `JT${o.id.slice(0, 8).toUpperCase()}` : '--'),
+                        carrier: resolvedCarrier,
+                        trackingNumber: resolvedTracking,
+                        delivery: o.delivery || {
+                            carrier: resolvedCarrier,
+                            carrier_name: resolvedCarrier,
+                            tracking_code: resolvedTracking,
+                            tracking_number: resolvedTracking
+                        },
                         createdAt: o.created_at || new Date().toISOString(),
                         slaMinutes: elapsedMinutes,
                         subtotal: o.total_amount || 0,
@@ -1290,20 +1342,20 @@
         const isCod = order.paymentMethod === 'cod' && order.paymentStatus !== 'paid';
         const carrierName = order.carrier || 'Chưa bàn giao';
         const trackingCode = order.trackingNumber || ('PAW' + order.id.replace(/[^0-9]/g, ''));
-        const dateFormatted = new Date(order.createdAt).toLocaleString('vi-VN');
+        const dateFormatted = formatDateTime(order.createdAt);
         const customerAddr = order.shippingAddress || 'Số 123 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh';
 
         const itemsRows = (order.products || []).map((p, idx) => `
             <tr>
-                <td style="width: 32px; text-align: center;">${idx + 1}</td>
-                <td style="font-family: monospace; font-weight: 600;">${p.sku}</td>
+                <td style="width: 36px; text-align: center; color: var(--text-muted);">${idx + 1}</td>
+                <td style="width: 120px; font-family: monospace; font-weight: 600;">${p.sku}</td>
                 <td>
-                    <div style="font-weight: 500;">${p.name}</div>
-                    ${p.spec ? `<div class="sub-meta-text">${p.spec}</div>` : ''}
+                    <div style="font-weight: 500; line-height: 1.45; font-size: 13px;">${p.name}</div>
+                    ${p.spec ? `<div class="sub-meta-text" style="margin-top: 3px;">${p.spec}</div>` : ''}
                 </td>
-                <td style="text-align: center; font-weight: 700; font-size: 14px; color: #236B48;">${p.quantity}</td>
-                <td style="text-align: right;">${formatVND(p.price)}</td>
-                <td style="text-align: right; font-weight: 600;">${formatVND(p.total || (p.price * p.quantity))}</td>
+                <td style="width: 50px; text-align: center; font-weight: 700; font-size: 13.5px; color: #236B48;">${p.quantity}</td>
+                <td style="width: 110px; text-align: right;">${formatVND(p.price)}</td>
+                <td style="width: 125px; text-align: right; font-weight: 600;">${formatVND(p.total || (p.price * p.quantity))}</td>
             </tr>
         `).join('');
 
@@ -1336,16 +1388,16 @@
                 </div>
 
                 <div>
-                    <div style="font-weight: 600; font-size: 12.5px; margin-bottom: 6px; color: var(--text-heading);">DANH SÁCH HÀNG CẦN ĐÓNG GÓI (PICK-LIST):</div>
+                    <div style="font-weight: 600; font-size: 12.5px; margin-bottom: 8px; color: var(--text-heading);">DANH SÁCH HÀNG CẦN ĐÓNG GÓI (PICK-LIST):</div>
                     <table class="slip-items-table">
                         <thead>
                             <tr>
-                                <th style="width: 32px; text-align: center;">STT</th>
-                                <th style="width: 95px;">Mã SKU</th>
+                                <th style="width: 36px; text-align: center;">STT</th>
+                                <th style="width: 120px;">Mã SKU</th>
                                 <th>Tên sản phẩm</th>
-                                <th style="width: 45px; text-align: center;">SL</th>
-                                <th style="width: 90px; text-align: right;">Đơn giá</th>
-                                <th style="width: 100px; text-align: right;">Thành tiền</th>
+                                <th style="width: 50px; text-align: center;">SL</th>
+                                <th style="width: 110px; text-align: right;">Đơn giá</th>
+                                <th style="width: 125px; text-align: right;">Thành tiền</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1379,7 +1431,7 @@
     }
 
     function generateManifestHtml(ordersList, carrierName) {
-        const todayStr = new Date().toLocaleDateString('vi-VN');
+        const todayStr = formatDate(new Date());
         const totalCod = ordersList.reduce((sum, o) => {
             return sum + (o.paymentMethod === 'cod' && o.paymentStatus !== 'paid' ? o.total : 0);
         }, 0);
@@ -1696,7 +1748,13 @@
 
                 if (currentFilterStatus !== 'ALL' && o.status !== currentFilterStatus) return false;
                 if (currentFilterPayment !== 'ALL' && o.paymentMethod !== currentFilterPayment) return false;
-                if (currentFilterPayStatus !== 'ALL' && o.paymentStatus !== currentFilterPayStatus) return false;
+                if (currentFilterPayStatus !== 'ALL') {
+                    if (currentFilterPayStatus === 'refund_pending') {
+                        if (o.paymentStatus !== 'refund_pending' && o.paymentStatus !== 'pending_refund') return false;
+                    } else if (o.paymentStatus !== currentFilterPayStatus) {
+                        return false;
+                    }
+                }
                 if (filterComplaintOnly && o.status !== 'returned' && o.alertType !== 'danger') return false;
                 if (filterUrgentOnly && sla.level !== 'danger' && sla.level !== 'warning') return false;
                 if (filterSlaOverdueOnly && !sla.isSlaOverdue) return false;
@@ -1781,6 +1839,12 @@
                 let payBadge = '';
                 if (o.paymentStatus === 'paid') {
                     payBadge = '<span class="admin-badge badge-success">Đã thanh toán</span>';
+                } else if (o.paymentStatus === 'refund_pending' || o.paymentStatus === 'pending_refund') {
+                    payBadge = '<span class="admin-badge badge-warning">Chờ hoàn tiền</span>';
+                } else if (o.paymentStatus === 'refunded') {
+                    payBadge = '<span class="admin-badge badge-danger">Đã hoàn tiền</span>';
+                } else if (o.paymentStatus === 'cancelled') {
+                    payBadge = '<span class="admin-badge badge-danger">Đã hủy</span>';
                 } else if (o.paymentStatus === 'cod_pending') {
                     payBadge = '<span class="admin-badge badge-warning">Chờ đối soát COD</span>';
                 } else {
@@ -1868,7 +1932,7 @@
             if (codeEl) codeEl.textContent = order.id;
             if (metaEl) {
                 const dateObj = new Date(order.createdAt);
-                metaEl.textContent = `Đặt lúc: ${dateObj.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} - ${dateObj.toLocaleDateString('vi-VN')} | Kênh đặt: Website PawPal`;
+                metaEl.textContent = `Đặt lúc: ${formatDateTime(dateObj)} | Kênh đặt: Website PawPal`;
             }
 
             // Nút thao tác một chạm theo trạng thái
@@ -1890,11 +1954,11 @@
                         <button type="button" class="admin-btn admin-btn-primary" onclick="PawpalOrdersModule.completeDelivery('${order.id}')">Đã giao hàng thành công</button>
                     `;
                 } else if (order.status === 'delivered') {
-                    if (order.paymentStatus === 'unpaid') {
+                    if (order.paymentMethod !== 'cod' && order.paymentStatus === 'unpaid' && order.paymentStatus !== 'paid') {
                         btnsHtml += `
                             <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.confirmPayment('${order.id}')">Xác nhận thu tiền</button>
                         `;
-                    } else if (order.paymentStatus === 'cod_pending') {
+                    } else if (order.paymentMethod === 'cod' && (order.paymentStatus === 'cod_pending' || order.paymentStatus === 'unpaid') && order.paymentStatus !== 'paid') {
                         btnsHtml += `
                             <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.reconcileCod('${order.id}')" style="color: #236B48; font-weight: 600;">Đối soát tiền COD bưu cục</button>
                         `;
@@ -1904,6 +1968,11 @@
                         <button type="button" class="admin-btn admin-btn-primary" onclick="PawpalOrdersModule.completeOrder('${order.id}')">Hoàn tất đơn hàng</button>
                     `;
                 } else if (order.status === 'completed') {
+                    if (order.paymentMethod === 'cod' && (order.paymentStatus === 'cod_pending' || order.paymentStatus === 'unpaid') && order.paymentStatus !== 'paid') {
+                        btnsHtml += `
+                            <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.reconcileCod('${order.id}')" style="color: #236B48; font-weight: 600;">Đối soát tiền COD bưu cục</button>
+                        `;
+                    }
                     btnsHtml += `
                         <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.printInvoice('${order.id}')">In hóa đơn</button>
                         <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.openRmaTicket('${order.id}')">Tạo khiếu nại và Đổi trả</button>
@@ -2005,6 +2074,18 @@
                 if (order.paymentStatus === 'paid') {
                     payBadgeEl.className = 'admin-badge badge-paid';
                     payBadgeEl.textContent = 'Đã thanh toán';
+                } else if (order.paymentStatus === 'refund_pending' || order.paymentStatus === 'pending_refund') {
+                    payBadgeEl.className = 'admin-badge badge-warning';
+                    payBadgeEl.textContent = 'Chờ hoàn tiền';
+                } else if (order.paymentStatus === 'refunded') {
+                    payBadgeEl.className = 'admin-badge badge-cancelled';
+                    payBadgeEl.textContent = 'Đã hoàn tiền';
+                } else if (order.paymentStatus === 'cancelled') {
+                    payBadgeEl.className = 'admin-badge badge-cancelled';
+                    payBadgeEl.textContent = 'Đã hủy thanh toán';
+                } else if (order.paymentStatus === 'cod_pending') {
+                    payBadgeEl.className = 'admin-badge badge-warning';
+                    payBadgeEl.textContent = 'Chờ đối soát COD';
                 } else {
                     payBadgeEl.className = 'admin-badge badge-unpaid';
                     payBadgeEl.textContent = 'Chưa thanh toán';
@@ -2027,10 +2108,52 @@
         }
         renderOrderDetailRef = renderOrderDetail;
 
-        // 4. Render danh sách sản phẩm và kho (Giai đoạn 3)
+        // 4. Quản lý danh mục & Render danh sách sản phẩm và kho (Giai đoạn 3)
+        let globalDbCategories = [];
+
+        function updateCategoryFilterDropdown(dbCategories = []) {
+            if (Array.isArray(dbCategories) && dbCategories.length > 0) {
+                globalDbCategories = dbCategories;
+            }
+            const catSelect = document.getElementById('productFilterCategory');
+            if (!catSelect) return;
+
+            const currentVal = catSelect.value || 'ALL';
+            const catSet = new Set();
+
+            // 1. Thêm danh mục từ CSDL Supabase
+            if (Array.isArray(globalDbCategories) && globalDbCategories.length > 0) {
+                globalDbCategories.forEach(c => { if (c) catSet.add(c.trim()); });
+            }
+
+            // 2. Thêm danh mục từ danh sách sản phẩm hiện tại
+            currentProductsList.forEach(p => {
+                if (p.category && p.category.trim()) {
+                    catSet.add(p.category.trim());
+                }
+            });
+
+            // 3. Đảm bảo đầy đủ các danh mục thiết kế chuẩn
+            ['Thực phẩm', 'Đồ dùng', 'Vệ sinh', 'Phụ kiện', 'Thức ăn khô', 'Thức ăn ướt', 'Sức khỏe và Dinh dưỡng', 'Bát ăn và Đồ dùng'].forEach(c => catSet.add(c));
+
+            const catList = Array.from(catSet).sort((a, b) => a.localeCompare(b, 'vi'));
+
+            catSelect.innerHTML = `
+                <option value="ALL">Tất cả danh mục</option>
+                ${catList.map(c => `<option value="${c}" ${c === currentVal ? 'selected' : ''}>${c}</option>`).join('')}
+            `;
+        }
+        updateCategoryFilterDropdownRef = updateCategoryFilterDropdown;
+
         function renderProductsTable() {
             const tbody = document.getElementById('productsTableBody');
             if (!tbody) return;
+
+            // Đảm bảo bộ lọc danh mục đã nạp đầy đủ option nếu chưa có
+            const catSelectEl = document.getElementById('productFilterCategory');
+            if (catSelectEl && (!catSelectEl.options || catSelectEl.options.length <= 1)) {
+                updateCategoryFilterDropdown(globalDbCategories);
+            }
 
             // Tính số lượng tạm giữ theo các đơn hàng đang xử lý (pending, confirmed)
             const reservedMap = {};
@@ -2073,7 +2196,30 @@
                 const reserved = reservedMap[p.sku] || 0;
                 const available = Math.max(0, physical - reserved);
 
-                if (catVal !== 'ALL' && p.category !== catVal) return false;
+                if (catVal !== 'ALL') {
+                    const pCat = (p.category || '').toLowerCase().trim();
+                    const fCat = catVal.toLowerCase().trim();
+
+                    let isCatMatch = (pCat === fCat);
+                    if (!isCatMatch) {
+                        if (fCat === 'thực phẩm' && (pCat.includes('thức ăn') || pCat.includes('hạt') || pCat.includes('pate') || pCat.includes('súp') || pCat.includes('thực phẩm'))) {
+                            isCatMatch = true;
+                        } else if ((fCat === 'thức ăn khô' || fCat === 'thức ăn ướt') && (pCat === 'thực phẩm' || pCat.includes(fCat) || fCat.includes(pCat))) {
+                            isCatMatch = true;
+                        } else if (fCat === 'đồ dùng' && (pCat.includes('bát') || pCat.includes('đồ dùng') || pCat.includes('máy') || pCat.includes('nước') || pCat.includes('khay'))) {
+                            isCatMatch = true;
+                        } else if (fCat === 'vệ sinh' && (pCat.includes('vệ sinh') || pCat.includes('chăm sóc') || pCat.includes('cát'))) {
+                            isCatMatch = true;
+                        } else if (fCat === 'phụ kiện' && (pCat.includes('phụ kiện') || pCat.includes('dây') || pCat.includes('vòng') || pCat.includes('chuông'))) {
+                            isCatMatch = true;
+                        } else if (fCat.includes('sức khỏe') && (pCat.includes('sức khỏe') || pCat.includes('dinh dưỡng') || pCat.includes('gel') || pCat.includes('dầu'))) {
+                            isCatMatch = true;
+                        } else if (pCat.includes(fCat) || fCat.includes(pCat)) {
+                            isCatMatch = true;
+                        }
+                    }
+                    if (!isCatMatch) return false;
+                }
                 if (stockVal === 'LOW' && (available > p.minStock || available === 0)) return false;
                 if (stockVal === 'OUT' && available !== 0) return false;
                 if (stockVal === 'IN_STOCK' && available <= p.minStock) return false;
@@ -2358,7 +2504,13 @@
             const visibleOrders = currentOrdersList.filter(o => {
                 if (currentFilterStatus !== 'ALL' && o.status !== currentFilterStatus) return false;
                 if (currentFilterPayment !== 'ALL' && o.paymentMethod !== currentFilterPayment) return false;
-                if (currentFilterPayStatus !== 'ALL' && o.paymentStatus !== currentFilterPayStatus) return false;
+                if (currentFilterPayStatus !== 'ALL') {
+                    if (currentFilterPayStatus === 'refund_pending') {
+                        if (o.paymentStatus !== 'refund_pending' && o.paymentStatus !== 'pending_refund') return false;
+                    } else if (o.paymentStatus !== currentFilterPayStatus) {
+                        return false;
+                    }
+                }
                 if (filterComplaintOnly && o.status !== 'returned' && o.alertType !== 'danger') return false;
                 if (filterSlaOverdueOnly && !getOrderSlaInfo(o).isSlaOverdue) return false;
                 if (searchVal) {
@@ -2408,51 +2560,125 @@
         // Xác nhận bàn giao vận chuyển hàng loạt
         document.getElementById('btnSubmitBatchDispatch')?.addEventListener('click', async () => {
             if (selectedBatchOrderIds.length === 0) return;
+
+            const eligibleOrders = selectedBatchOrderIds
+                .map(id => currentOrdersList.find(o => o.id === id))
+                .filter(o => o && (o.status === 'confirmed' || o.status === 'pending' || o.status === 'preparing' || o.status === 'processing'));
+
+            const ineligibleOrders = selectedBatchOrderIds
+                .map(id => currentOrdersList.find(o => o.id === id))
+                .filter(o => o && (o.status === 'completed' || o.status === 'cancelled' || o.status === 'shipping' || o.status === 'delivered' || o.status === 'returned'));
+
+            if (eligibleOrders.length === 0) {
+                showToast('Không có đơn hàng nào đủ điều kiện bàn giao vận chuyển (đơn đã hoàn tất hoặc đã hủy không thể bàn giao).', 'warning');
+                PawpalOrdersModule.closeModal('modalBatchDispatch');
+                return;
+            }
+
             const carrier = document.getElementById('batchCarrierSelect')?.value || 'J và T Express';
             const mode = document.getElementById('batchTrackingMode')?.value || 'auto';
             const note = document.getElementById('batchCarrierNote')?.value.trim() || '';
 
+            // Hàm sinh mã vận đơn bưu cục chuẩn quy tắc từng hãng
+            const generateCarrierTrackingNumber = (carrierName, orderId, seq) => {
+                const c = (carrierName || '').toLowerCase();
+                let prefix = 'JT';
+                if (c.includes('ghtk') || c.includes('tiết kiệm')) prefix = 'GHTK';
+                else if (c.includes('viettel')) prefix = 'VT';
+                else if (c.includes('hỏa tốc') || c.includes('pawpal')) prefix = 'PW-SHIP';
+                else if (c.includes('spx') || c.includes('shopee')) prefix = 'SPX';
+                else if (c.includes('ghn') || c.includes('nhanh')) prefix = 'GHN';
+
+                const orderNum = (orderId || '').replace(/[^0-9]/g, '').slice(-4) || String(seq + 1).padStart(4, '0');
+                const timeSalt = Date.now().toString().slice(-6);
+                const randSuffix = Math.floor(100 + Math.random() * 900);
+
+                if (prefix === 'PW-SHIP') {
+                    return `PW-SHIP-${orderNum || timeSalt}`;
+                }
+                return `${prefix}${timeSalt}${randSuffix}`;
+            };
+
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
 
-            for (const id of selectedBatchOrderIds) {
-                const ord = currentOrdersList.find(o => o.id === id);
-                if (ord) {
-                    ord.status = 'shipping';
-                    ord.carrier = carrier;
-                    if (mode === 'auto' || !ord.trackingNumber) {
-                        const prefix = carrier.includes('GHTK') ? 'GHTK' : (carrier.includes('Viettel') ? 'VT' : 'JT');
-                        ord.trackingNumber = `${prefix}${Date.now().toString().slice(-6)}${ord.id.slice(-3)}`;
-                    }
+            const nowIso = new Date().toISOString();
+            const nowTimeStr = formatTime(new Date()) + ' - Hôm nay';
+
+            for (let idx = 0; idx < eligibleOrders.length; idx++) {
+                const ord = eligibleOrders[idx];
+                ord.status = 'shipping';
+                ord.carrier = carrier;
+                ord.updatedAt = nowIso;
+
+                // Quy tắc kiểm tra và gán mã vận đơn:
+                // Nếu chọn mode 'auto' HOẶC đơn chưa có mã hợp lệ (đang là '--', rỗng, null, hoặc 'Chưa có')
+                // -> Bắt buộc tự động cấp mã vận đơn mới theo đúng quy tắc bưu cục
+                const hasValidTracking = ord.trackingNumber && ord.trackingNumber.trim() !== '' && ord.trackingNumber !== '--' && ord.trackingNumber !== 'Chưa có';
+                if (mode === 'auto' || !hasValidTracking) {
+                    ord.trackingNumber = generateCarrierTrackingNumber(carrier, ord.id, idx);
+                }
+
+                ord.delivery = {
+                    ...(ord.delivery || {}),
+                    carrier: carrier,
+                    carrier_name: carrier,
+                    tracking_code: ord.trackingNumber,
+                    tracking_number: ord.trackingNumber,
+                    note: note,
+                    updated_at: nowIso
+                };
+
+                // Đồng bộ hóa timeline trong cùng một phiên bản dữ liệu
+                const existingShipStep = ord.timeline.find(t => t.title === 'Đã bàn giao vận chuyển' || t.title.startsWith('Bàn giao vận chuyển'));
+                if (existingShipStep) {
+                    existingShipStep.title = `Bàn giao vận chuyển cho ${carrier}`;
+                    existingShipStep.desc = `Bưu tá đã tiếp nhận. Mã vận đơn: ${ord.trackingNumber}${note ? ` | Ghi chú: ${note}` : ''}`;
+                    existingShipStep.time = nowTimeStr;
+                    existingShipStep.done = true;
+                } else {
                     ord.timeline.push({
                         title: `Bàn giao vận chuyển hàng loạt cho ${carrier}`,
-                        time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
-                        desc: note ? `Xuất kho hàng loạt. Ghi chú: ${note}` : 'Xuất kho và bàn giao bưu cục thành công',
+                        time: nowTimeStr,
+                        desc: `Bưu tá đã tiếp nhận. Mã vận đơn: ${ord.trackingNumber}${note ? ` | Ghi chú: ${note}` : ''}`,
                         done: true
                     });
+                }
 
-                    // Cập nhật Supabase
-                    if (client) {
-                        try {
-                            if (ord.rawId) {
-                                await client.from('sales_order').update({ order_status: 'SHIPPING' }).eq('id', ord.rawId);
-                            } else {
-                                await client.from('sales_order').update({ order_status: 'SHIPPING' }).eq('order_code', ord.id);
-                            }
-                        } catch (errDbBatch) {
-                            console.warn('Lỗi khi cập nhật trạng thái đơn hàng hàng loạt lên Supabase:', errDbBatch);
+                // Cập nhật CSDL Supabase: lưu đồng bộ order_status, shipping_carrier, tracking_number và delivery
+                if (client) {
+                    try {
+                        const updatePayload = {
+                            order_status: 'SHIPPING',
+                            shipping_carrier: carrier,
+                            tracking_number: ord.trackingNumber,
+                            updated_at: nowIso,
+                            delivery: ord.delivery
+                        };
+                        if (ord.rawId) {
+                            await client.from('sales_order').update(updatePayload).eq('id', ord.rawId);
+                        } else {
+                            await client.from('sales_order').update(updatePayload).eq('order_code', ord.id);
                         }
+                    } catch (errDbBatch) {
+                        console.warn('Lỗi khi cập nhật trạng thái đơn hàng hàng loạt lên Supabase:', errDbBatch);
                     }
                 }
             }
 
             persistOrdersData();
 
-            const count = selectedBatchOrderIds.length;
+            const eligibleCount = eligibleOrders.length;
+            const ineligibleCount = ineligibleOrders.length;
             selectedBatchOrderIds = [];
-            document.getElementById('modalBatchDispatch')?.classList.remove('active');
+            PawpalOrdersModule.closeModal('modalBatchDispatch');
             renderOrdersTable();
             if (selectedOrderId) renderOrderDetail(selectedOrderId);
-            showToast(`Đã bàn giao thành công ${count} đơn hàng cho đơn vị vận chuyển ${carrier}!`, 'success');
+
+            if (ineligibleCount > 0) {
+                showToast(`Đã bàn giao ${eligibleCount} đơn hợp lệ cho ${carrier}. Bỏ qua ${ineligibleCount} đơn không đủ điều kiện (đã hoàn tất/đã hủy)!`, 'info');
+            } else {
+                showToast(`Đã bàn giao thành công ${eligibleCount} đơn hàng cho đơn vị vận chuyển ${carrier}!`, 'success');
+            }
         });
 
         // Lệnh in phiếu đóng gói và in bảng kê
@@ -2465,7 +2691,7 @@
 
         // Nút đối soát toàn bộ tiền COD bưu cục
         document.getElementById('btnQuickReconcileAllCod')?.addEventListener('click', async function() {
-            const codOrders = currentOrdersList.filter(o => o.paymentStatus === 'cod_pending');
+            const codOrders = currentOrdersList.filter(o => o.paymentMethod === 'cod' && o.paymentStatus === 'cod_pending');
             if (codOrders.length === 0) {
                 showToast('Không có đơn hàng nào đang chờ đối soát tiền COD.', 'warning');
                 return;
@@ -2477,7 +2703,7 @@
                 o.paymentStatus = 'paid';
                 o.timeline.push({
                     title: 'Đã đối soát tiền COD',
-                    time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
+                    time: formatTime(new Date()) + ' - Hôm nay',
                     desc: 'Kế toán đối soát thành công tiền COD bưu cục về tài khoản PawPal',
                     done: true
                 });
@@ -3653,6 +3879,34 @@
             posCartItems = [];
             renderPosCartTable();
 
+            // Đặt lại dữ liệu và trạng thái validation
+            setPhoneValidationState(true);
+            const phoneInput = document.getElementById('createOrderPhone');
+            if (phoneInput) phoneInput.value = '';
+            const nameInput = document.getElementById('createOrderName');
+            if (nameInput) {
+                nameInput.value = '';
+                nameInput.style.borderColor = '';
+                nameInput.style.backgroundColor = '';
+            }
+            const nameErr = document.getElementById('createOrderNameError');
+            if (nameErr) {
+                nameErr.style.display = 'none';
+                nameErr.textContent = '';
+            }
+
+            const addrInput = document.getElementById('createOrderCustomAddress');
+            if (addrInput) {
+                addrInput.value = '';
+                addrInput.style.borderColor = '';
+                addrInput.style.backgroundColor = '';
+            }
+            const addrErr = document.getElementById('createOrderAddressError');
+            if (addrErr) {
+                addrErr.style.display = 'none';
+                addrErr.textContent = '';
+            }
+
             const memberBanner = document.getElementById('createOrderMemberBanner');
             if (memberBanner) memberBanner.style.display = 'none';
 
@@ -3664,6 +3918,7 @@
 
             populateCreateOrderProducts(null);
             document.getElementById('modalCreateOrder')?.classList.add('active');
+            setDeliveryMethodState(false);
             updatePosLiveCalculation();
         });
 
@@ -3678,27 +3933,140 @@
             addToPosCart(prodSelect.value, qty);
         });
 
-        // Chuyển đổi phương thức nhận hàng
+        // Chuyển đổi phương thức nhận hàng (Mua ngay tại quầy vs Đặt giao tận nơi)
+        function setDeliveryMethodState(isDelivery) {
+            const cardAddrInStore = document.getElementById('cardAddrInStore');
+            const cardAddrDelivery = document.getElementById('cardAddrDelivery');
+            const radioAddrInStore = document.getElementById('radioAddrInStore');
+            const radioAddrDelivery = document.getElementById('radioAddrDelivery');
+            const deliveryDetailFields = document.getElementById('deliveryDetailFields');
+            const nameStar = document.getElementById('createOrderNameRequiredStar');
+            const nameInput = document.getElementById('createOrderName');
+            const nameLabel = document.getElementById('createOrderNameLabel');
+            const nameErr = document.getElementById('createOrderNameError');
+            const btnSubmit = document.getElementById('btnSubmitCreateOrder');
+            const codOption = document.querySelector('#createOrderPaymentMethod option[value="cod"]');
+            const paySelect = document.getElementById('createOrderPaymentMethod');
+            const addrErr = document.getElementById('createOrderAddressError');
+            const addrInputField = document.getElementById('createOrderCustomAddress');
+
+            if (isDelivery) {
+                if (radioAddrDelivery) radioAddrDelivery.checked = true;
+                cardAddrDelivery?.classList.add('selected');
+                cardAddrInStore?.classList.remove('selected');
+                if (deliveryDetailFields) deliveryDetailFields.style.display = 'block';
+                if (nameStar) nameStar.style.display = 'inline';
+                if (nameLabel) nameLabel.innerHTML = 'Họ và tên người nhận: <span id="createOrderNameRequiredStar" style="color: #DC2626;">*</span>';
+                if (nameInput) nameInput.placeholder = 'Họ và tên người nhận hàng...';
+                if (btnSubmit) btnSubmit.textContent = 'Tạo đơn giao hàng và In bill';
+                if (codOption) {
+                    codOption.disabled = false;
+                    codOption.style.display = '';
+                }
+            } else {
+                if (radioAddrInStore) radioAddrInStore.checked = true;
+                cardAddrInStore?.classList.add('selected');
+                cardAddrDelivery?.classList.remove('selected');
+                if (deliveryDetailFields) deliveryDetailFields.style.display = 'none';
+                if (nameStar) nameStar.style.display = 'none';
+                if (nameLabel) nameLabel.innerHTML = 'Họ và tên khách hàng: <span id="createOrderNameRequiredStar" style="display: none; color: #DC2626;">*</span>';
+                if (nameInput) {
+                    nameInput.placeholder = 'Tên khách hàng (để trống nếu là khách lẻ)...';
+                    nameInput.style.borderColor = '';
+                    nameInput.style.backgroundColor = '';
+                }
+                if (nameErr) {
+                    nameErr.style.display = 'none';
+                    nameErr.textContent = '';
+                }
+                if (addrInputField) {
+                    addrInputField.style.borderColor = '';
+                    addrInputField.style.backgroundColor = '';
+                }
+                if (addrErr) {
+                    addrErr.style.display = 'none';
+                    addrErr.textContent = '';
+                }
+                if (btnSubmit) btnSubmit.textContent = 'Thanh toán và In bill ngay';
+                if (codOption) {
+                    codOption.disabled = true;
+                    codOption.style.display = 'none';
+                }
+                if (paySelect && paySelect.value === 'cod') {
+                    paySelect.value = 'cash';
+                }
+            }
+            updatePosLiveCalculation();
+        }
+
         const cardAddrInStore = document.getElementById('cardAddrInStore');
         const cardAddrDelivery = document.getElementById('cardAddrDelivery');
         const radioAddrInStore = document.getElementById('radioAddrInStore');
         const radioAddrDelivery = document.getElementById('radioAddrDelivery');
 
         cardAddrInStore?.addEventListener('click', () => {
-            if (radioAddrInStore) radioAddrInStore.checked = true;
-            cardAddrInStore.classList.add('selected');
-            cardAddrDelivery?.classList.remove('selected');
-            updatePosLiveCalculation();
+            setDeliveryMethodState(false);
         });
 
-        cardAddrDelivery?.addEventListener('click', () => {
-            if (radioAddrDelivery) radioAddrDelivery.checked = true;
-            cardAddrDelivery.classList.add('selected');
-            cardAddrInStore?.classList.remove('selected');
-            updatePosLiveCalculation();
+        cardAddrDelivery?.addEventListener('click', (e) => {
+            // Không chuyển đổi nếu click trực tiếp vào ô nhập địa chỉ hoặc dropdown con
+            if (e.target && (e.target.id === 'createOrderCustomAddress' || e.target.id === 'createOrderDeliverySlot' || e.target.id === 'createOrderFastDelivery')) {
+                return;
+            }
+            setDeliveryMethodState(true);
         });
+
+        radioAddrInStore?.addEventListener('change', () => setDeliveryMethodState(false));
+        radioAddrDelivery?.addEventListener('change', () => setDeliveryMethodState(true));
 
         document.getElementById('createOrderFastDelivery')?.addEventListener('change', updatePosLiveCalculation);
+        document.getElementById('createOrderCustomAddress')?.addEventListener('input', () => {
+            const addrErr = document.getElementById('createOrderAddressError');
+            if (addrErr && addrErr.style.display !== 'none') {
+                addrErr.style.display = 'none';
+                addrErr.textContent = '';
+                const addrInput = document.getElementById('createOrderCustomAddress');
+                if (addrInput) {
+                    addrInput.style.borderColor = '';
+                    addrInput.style.backgroundColor = '';
+                }
+            }
+        });
+
+        // Bắt sự kiện blur trên các trường bắt buộc khi giao tận nơi
+        document.getElementById('createOrderName')?.addEventListener('blur', () => {
+            const isDelivery = document.getElementById('radioAddrDelivery')?.checked;
+            const name = document.getElementById('createOrderName')?.value?.trim();
+            const nameErr = document.getElementById('createOrderNameError');
+            const nameInput = document.getElementById('createOrderName');
+            if (isDelivery && !name) {
+                if (nameErr) {
+                    nameErr.style.display = 'block';
+                    nameErr.textContent = 'Họ và tên người nhận không được để trống khi đặt giao hàng.';
+                }
+                if (nameInput) {
+                    nameInput.style.borderColor = '#DC2626';
+                    nameInput.style.backgroundColor = '#FFF5F5';
+                }
+            }
+        });
+
+        document.getElementById('createOrderCustomAddress')?.addEventListener('blur', () => {
+            const isDelivery = document.getElementById('radioAddrDelivery')?.checked;
+            const addrInput = document.getElementById('createOrderCustomAddress')?.value?.trim();
+            const addrErr = document.getElementById('createOrderAddressError');
+            const addrInputField = document.getElementById('createOrderCustomAddress');
+            if (isDelivery && !addrInput) {
+                if (addrErr) {
+                    addrErr.style.display = 'block';
+                    addrErr.textContent = 'Địa chỉ giao hàng không được để trống khi đặt giao hàng tận nơi.';
+                }
+                if (addrInputField) {
+                    addrInputField.style.borderColor = '#DC2626';
+                    addrInputField.style.backgroundColor = '#FFF5F5';
+                }
+            }
+        });
 
         // Gắn sự kiện tính tiền tức thời khi thay đổi trường trong form POS
         document.getElementById('createOrderVoucherCode')?.addEventListener('input', updatePosLiveCalculation);
@@ -3716,81 +4084,215 @@
             }
         });
 
-        // Tự động tìm kiếm thông tin khách hàng khi nhập số điện thoại
-        document.getElementById('createOrderPhone')?.addEventListener('input', (e) => {
-            const val = e.target.value.trim();
+        // =============================================================
+        // VALIDATION VÀ TRA CỨU SỐ ĐIỆN THOẠI KHÁCH HÀNG (POS)
+        // =============================================================
+        function validateCustomerPhone(phoneRaw) {
+            const raw = (phoneRaw !== undefined && phoneRaw !== null) ? String(phoneRaw) : '';
+            const trimmed = raw.trim();
+
+            // Scenario 1 & 5: Để trống hoặc chỉ chứa khoảng trắng
+            if (!trimmed) {
+                return {
+                    isValid: false,
+                    message: 'Số điện thoại khách hàng không được để trống.'
+                };
+            }
+
+            // Scenario 2: Chứa chữ cái hoặc ký tự đặc biệt
+            if (/[^0-9\s]/.test(trimmed)) {
+                return {
+                    isValid: false,
+                    message: 'Số điện thoại không hợp lệ (chỉ được chứa ký tự số, không được chứa chữ cái hoặc ký tự đặc biệt).'
+                };
+            }
+
+            const digits = trimmed.replace(/\s+/g, '');
+
+            // Scenario 3: Quá ngắn (ít hơn 10 chữ số)
+            if (digits.length < 10) {
+                return {
+                    isValid: false,
+                    message: `Số điện thoại quá ngắn (${digits.length} số). Số điện thoại hợp lệ phải có đúng 10 chữ số.`
+                };
+            }
+
+            // Scenario 4: Quá dài (vượt quá độ dài quy định)
+            if (digits.length > 11) {
+                return {
+                    isValid: false,
+                    message: `Số điện thoại vượt quá độ dài quy định (${digits.length} số). Vui lòng kiểm tra lại.`
+                };
+            }
+
+            // Phải bắt đầu bằng số 0
+            if (!digits.startsWith('0')) {
+                return {
+                    isValid: false,
+                    message: 'Số điện thoại không hợp lệ (phải bắt đầu bằng số 0).'
+                };
+            }
+
+            return {
+                isValid: true,
+                phone: digits,
+                message: ''
+            };
+        }
+
+        function setPhoneValidationState(isValid, message) {
+            const phoneInput = document.getElementById('createOrderPhone');
+            const errorEl = document.getElementById('createOrderPhoneError');
+            if (!phoneInput) return;
+
+            if (!isValid) {
+                phoneInput.style.borderColor = '#DC2626';
+                phoneInput.style.backgroundColor = '#FFF5F5';
+                if (errorEl) {
+                    errorEl.style.display = 'block';
+                    errorEl.textContent = message || 'Số điện thoại không hợp lệ.';
+                }
+            } else {
+                phoneInput.style.borderColor = '';
+                phoneInput.style.backgroundColor = '';
+                if (errorEl) {
+                    errorEl.style.display = 'none';
+                    errorEl.textContent = '';
+                }
+            }
+        }
+
+        // Hàm thực hiện nhận diện khách hàng theo SĐT (Tự động hoặc khi Enter)
+        function performPhoneLookup(showToastOnNotFound = false) {
+            const phoneInput = document.getElementById('createOrderPhone');
+            const valRaw = phoneInput?.value;
+            const result = validateCustomerPhone(valRaw);
+
+            if (!result.isValid) {
+                if (showToastOnNotFound) {
+                    setPhoneValidationState(false, result.message);
+                    showToast(result.message, 'warning');
+                }
+                const memberBanner = document.getElementById('createOrderMemberBanner');
+                if (memberBanner) memberBanner.style.display = 'none';
+                activePosCustomer = null;
+                return false;
+            }
+
+            // SĐT hợp lệ -> xóa lỗi
+            setPhoneValidationState(true);
+            const val = result.phone;
+
+            let foundName = '';
+            let foundAddr = '';
+            let foundRank = 'Thành viên Đồng';
+            let foundPoints = 0;
+            let foundUserId = 'USER-001';
+
+            // Tìm trong bộ nhớ khách hàng hệ thống
+            try {
+                const rawCusts = sessionStorage.getItem('pawpal_admin_customers_data');
+                if (rawCusts) {
+                    const parsed = JSON.parse(rawCusts);
+                    Object.keys(parsed).forEach(cId => {
+                        const c = parsed[cId];
+                        if (c.phone && c.phone.replace(/\s+/g, '') === val) {
+                            foundName = c.fullName || c.name || foundName;
+                            foundAddr = c.address || (c.addresses && c.addresses[0]?.address) || foundAddr;
+                            foundRank = c.membershipTier || c.tier || 'Thành viên Vàng';
+                            foundPoints = c.points || 0;
+                            foundUserId = cId;
+                        }
+                    });
+                }
+            } catch (err) {}
+
+            // Tìm trong danh sách đơn hàng đã có
+            if (!foundName) {
+                const matchedOrder = currentOrdersList.find(o => o.phone && o.phone.replace(/\s+/g, '') === val);
+                if (matchedOrder) {
+                    foundName = matchedOrder.customerName;
+                    foundAddr = matchedOrder.address;
+                    foundUserId = matchedOrder.userId || 'USER-001';
+                    foundRank = 'Thành viên Vàng (Giảm 5%)';
+                    foundPoints = 500;
+                }
+            }
+
             const memberBanner = document.getElementById('createOrderMemberBanner');
             const rankLabel = document.getElementById('createOrderRankLabel');
             const pointsLabel = document.getElementById('createOrderPointsLabel');
 
-            if (val.length >= 9) {
-                let foundName = '';
-                let foundAddr = '';
-                let foundRank = 'Thành viên Đồng';
-                let foundPoints = 0;
-                let foundUserId = 'USER-001';
+            if (foundName) {
+                activePosCustomer = {
+                    userId: foundUserId,
+                    name: foundName,
+                    phone: val,
+                    address: foundAddr,
+                    rank: foundRank,
+                    points: foundPoints
+                };
 
-                // Tìm trong bộ nhớ khách hàng hệ thống
-                try {
-                    const rawCusts = sessionStorage.getItem('pawpal_admin_customers_data');
-                    if (rawCusts) {
-                        const parsed = JSON.parse(rawCusts);
-                        Object.keys(parsed).forEach(cId => {
-                            const c = parsed[cId];
-                            if (c.phone && c.phone.replace(/\s+/g, '') === val.replace(/\s+/g, '')) {
-                                foundName = c.fullName || c.name || foundName;
-                                foundAddr = c.address || (c.addresses && c.addresses[0]?.address) || foundAddr;
-                                foundRank = c.membershipTier || c.tier || 'Thành viên Vàng';
-                                foundPoints = c.points || 0;
-                                foundUserId = cId;
-                            }
-                        });
-                    }
-                } catch (err) {}
+                const nameInput = document.getElementById('createOrderName');
+                if (nameInput) nameInput.value = foundName;
 
-                // Tìm trong danh sách đơn hàng đã có
-                if (!foundName) {
-                    const matchedOrder = currentOrdersList.find(o => o.phone && o.phone.replace(/\s+/g, '') === val.replace(/\s+/g, ''));
-                    if (matchedOrder) {
-                        foundName = matchedOrder.customerName;
-                        foundAddr = matchedOrder.address;
-                        foundUserId = matchedOrder.userId || 'USER-001';
-                        foundRank = 'Thành viên Vàng (Giảm 5%)';
-                        foundPoints = 500;
-                    }
+                const customAddrInput = document.getElementById('createOrderCustomAddress');
+                if (customAddrInput && foundAddr) customAddrInput.value = foundAddr;
+
+                if (memberBanner) {
+                    memberBanner.style.display = 'flex';
+                    if (rankLabel) rankLabel.textContent = foundRank;
+                    if (pointsLabel) pointsLabel.textContent = `${foundPoints.toLocaleString('vi-VN')} điểm`;
                 }
-
-                if (foundName) {
-                    activePosCustomer = {
-                        userId: foundUserId,
-                        name: foundName,
-                        phone: val,
-                        address: foundAddr,
-                        rank: foundRank,
-                        points: foundPoints
-                    };
-
-                    const nameInput = document.getElementById('createOrderName');
-                    if (nameInput && !nameInput.value) nameInput.value = foundName;
-
-                    const customAddrInput = document.getElementById('createOrderCustomAddress');
-                    if (customAddrInput && foundAddr && !customAddrInput.value) customAddrInput.value = foundAddr;
-
-                    if (memberBanner) {
-                        memberBanner.style.display = 'flex';
-                        if (rankLabel) rankLabel.textContent = foundRank;
-                        if (pointsLabel) pointsLabel.textContent = `${foundPoints.toLocaleString('vi-VN')} điểm`;
-                    }
-                } else {
-                    activePosCustomer = null;
-                    if (memberBanner) memberBanner.style.display = 'none';
-                }
+                showToast(`Đã nhận diện thành viên: ${foundName} (${foundRank})`, 'success');
             } else {
                 activePosCustomer = null;
                 if (memberBanner) memberBanner.style.display = 'none';
+                if (showToastOnNotFound) {
+                    showToast('Không tìm thấy thông tin khách hàng cũ với SĐT này.', 'info');
+                }
             }
 
             updatePosLiveCalculation();
+            return true;
+        }
+
+        // Tự động nhận diện khi gõ số điện thoại
+        document.getElementById('createOrderPhone')?.addEventListener('input', (e) => {
+            const raw = e.target.value || '';
+            const digits = raw.replace(/\s+/g, '');
+            const errEl = document.getElementById('createOrderPhoneError');
+            if (errEl && errEl.style.display !== 'none') {
+                const check = validateCustomerPhone(raw);
+                if (check.isValid) {
+                    setPhoneValidationState(true);
+                }
+            }
+            if (digits.length >= 10) {
+                performPhoneLookup(false);
+            }
+        });
+
+        // Bắt sự kiện phím Enter trên ô SĐT
+        document.getElementById('createOrderPhone')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performPhoneLookup(true);
+            }
+        });
+
+        // Tự động xóa lỗi tên người nhận khi gõ
+        document.getElementById('createOrderName')?.addEventListener('input', () => {
+            const nameErr = document.getElementById('createOrderNameError');
+            if (nameErr && nameErr.style.display !== 'none') {
+                nameErr.style.display = 'none';
+                nameErr.textContent = '';
+                const nameInput = document.getElementById('createOrderName');
+                if (nameInput) {
+                    nameInput.style.borderColor = '';
+                    nameInput.style.backgroundColor = '';
+                }
+            }
         });
 
         // Hàm hiển thị modal hóa đơn nhiệt K80
@@ -3817,7 +4319,7 @@
             const recPointsEarned = document.getElementById('recPointsEarned');
             const recCustRank = document.getElementById('recCustRank');
 
-            const nowStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN');
+            const nowStr = formatDateTime(new Date());
 
             if (recOrderId) recOrderId.textContent = order.id;
             if (recOrderTime) recOrderTime.textContent = nowStr;
@@ -3880,8 +4382,30 @@
             const newCode = 'ORD-2026-00' + (currentOrdersList.length + 1);
             const addrInput = document.getElementById('createOrderCustomAddress')?.value?.trim();
             const preset = window.__currentOrderPresetCust;
-            const finalAddr = isDelivery ? (addrInput || (preset && preset.address) || (activePosCustomer && activePosCustomer.address) || 'Giao tận nơi theo yêu cầu') : 'Tại cửa hàng PawPal (Nhận trực tiếp)';
+            const finalAddr = isDelivery ? (addrInput || (preset && preset.address) || (activePosCustomer && activePosCustomer.address) || 'Giao tận nơi theo yêu cầu') : 'Tại cửa hàng PawPal - Khách nhận trực tiếp (Chi nhánh Quận 1, TP. HCM)';
             const finalUserId = (preset && (preset.custId || preset.userId)) || (activePosCustomer && activePosCustomer.userId) || 'USER-001';
+
+            const isCompletedAtCounter = !isDelivery;
+            const orderStatus = isCompletedAtCounter ? 'completed' : 'confirmed';
+            const paymentStatus = (isDelivery && payMethod === 'cod') ? 'unpaid' : 'paid';
+
+            const timeline = [
+                { 
+                    title: 'Tạo đơn hàng tại quầy (POS)', 
+                    time: formatTime(new Date()) + ' - Hôm nay', 
+                    desc: `Thu ngân lập đơn (${posCartItems.length} mặt hàng) và thanh toán ${formatVND(calc.grandTotal)}`, 
+                    done: true 
+                }
+            ];
+
+            if (isCompletedAtCounter) {
+                timeline.push({
+                    title: 'Hoàn tất đơn hàng tại quầy',
+                    time: formatTime(new Date()) + ' - Hôm nay',
+                    desc: 'Khách hàng đã thanh toán và nhận đủ sản phẩm trực tiếp tại chi nhánh',
+                    done: true
+                });
+            }
 
             const newOrder = {
                 id: newCode,
@@ -3890,10 +4414,10 @@
                 customerName: name,
                 phone: phone,
                 address: finalAddr,
-                status: 'confirmed',
-                paymentStatus: (payMethod === 'cod') ? 'unpaid' : 'paid',
+                status: orderStatus,
+                paymentStatus: paymentStatus,
                 paymentMethod: payMethod,
-                carrier: isDelivery ? 'Giao tận nơi (PawPal Express)' : 'Tại quầy PawPal',
+                carrier: isDelivery ? 'Giao tận nơi (PawPal Express)' : 'Mua trực tiếp tại quầy',
                 trackingNumber: '--',
                 createdAt: new Date().toISOString(),
                 subtotal: calc.subtotal,
@@ -3901,7 +4425,7 @@
                 discount: calc.tierDiscount + calc.voucherDiscount,
                 pawPointsUsed: calc.pointsUsed,
                 total: calc.grandTotal,
-                customerNote: noteVal || (isDelivery ? `Giao tận nơi (${slotSelect})` : 'Tạo đơn tại quầy'),
+                customerNote: noteVal || (isDelivery ? `Giao tận nơi (${slotSelect})` : 'Mua trực tiếp tại quầy'),
                 internalNote: `Đơn bán trực tiếp POS | Khách: ${activePosCustomer ? activePosCustomer.rank : 'Thành viên mới'}${calc.cashTendered > 0 ? ` | Khách đưa: ${formatVND(calc.cashTendered)} - Thối: ${formatVND(calc.cashChange)}` : ''}`,
                 alertType: null,
                 products: posCartItems.map(item => ({
@@ -3913,9 +4437,7 @@
                     total: item.price * item.qty,
                     image: item.image || '/assets/images/shop/products/tp-hat-01.png'
                 })),
-                timeline: [
-                    { title: 'Tạo đơn hàng tại quầy (POS)', time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay', desc: `Nhân viên thu ngân lập đơn (${posCartItems.length} mặt hàng) và thu tiền ${formatVND(calc.grandTotal)}`, done: true }
-                ]
+                timeline: timeline
             };
 
             // 1. Ghi nhận tức thời vào cơ sở dữ liệu Supabase
@@ -3949,10 +4471,10 @@
                     const { data: orderRow, error: orderErr } = await client.from('sales_order').insert({
                         order_code: newCode,
                         customer_id: targetCustId || null,
-                        order_status: 'CONFIRMED',
-                        payment_status: (payMethod === 'cod') ? 'UNPAID' : 'PAID',
+                        order_status: isCompletedAtCounter ? 'COMPLETED' : 'CONFIRMED',
+                        payment_status: (isDelivery && payMethod === 'cod') ? 'UNPAID' : 'PAID',
                         total_amount: calc.grandTotal,
-                        note: noteVal || (isDelivery ? `Giao tận nơi (${slotSelect})` : 'Tạo đơn tại quầy')
+                        note: noteVal || (isDelivery ? `Giao tận nơi (${slotSelect})` : 'Mua trực tiếp tại quầy')
                     }).select().single();
 
                     if (orderRow && orderRow.id) {
@@ -4094,23 +4616,130 @@
             
             // Mở modal hóa đơn nhiệt K80
             renderAndOpenPosReceipt(newOrder, calc);
-            showToast(`Tạo thành công đơn hàng ${newCode} và đã lưu vào hệ thống!`, 'success');
+            const successMsg = isDelivery 
+                ? `Tạo thành công đơn giao tận nơi ${newCode} và chuyển sang bộ phận đóng gói!` 
+                : `Thanh toán thành công đơn hàng ${newCode}! Khách đã nhận hàng và hoàn tất đơn tại quầy.`;
+            showToast(successMsg, 'success');
         }
 
         // Xử lý tạo đơn hàng từ form POS
         document.getElementById('btnSubmitCreateOrder')?.addEventListener('click', () => {
-            const phone = document.getElementById('createOrderPhone')?.value.trim();
-            const name = document.getElementById('createOrderName')?.value.trim();
+            const isDelivery = document.getElementById('radioAddrDelivery')?.checked;
+            const phoneRaw = document.getElementById('createOrderPhone')?.value;
+            const phoneVal = validateCustomerPhone(phoneRaw);
+            let name = document.getElementById('createOrderName')?.value?.trim();
+            const addrInput = document.getElementById('createOrderCustomAddress')?.value?.trim();
+
+            const nameErr = document.getElementById('createOrderNameError');
+            const nameInput = document.getElementById('createOrderName');
+            const addrErr = document.getElementById('createOrderAddressError');
+            const addrInputField = document.getElementById('createOrderCustomAddress');
+
+            let hasError = false;
+            let firstFocusEl = null;
+
+            // 1. Kiểm tra SĐT khách hàng
+            if (!phoneVal.isValid) {
+                setPhoneValidationState(false, phoneVal.message);
+                hasError = true;
+                if (!firstFocusEl) firstFocusEl = document.getElementById('createOrderPhone');
+            } else {
+                setPhoneValidationState(true);
+            }
+
+            // 2. Nếu chọn Giao tận nơi: Bắt buộc Họ tên người nhận và Địa chỉ giao hàng
+            if (isDelivery) {
+                if (!name) {
+                    hasError = true;
+                    if (nameErr) {
+                        nameErr.style.display = 'block';
+                        nameErr.textContent = 'Họ và tên người nhận không được để trống khi đặt giao hàng.';
+                    }
+                    if (nameInput) {
+                        nameInput.style.borderColor = '#DC2626';
+                        nameInput.style.backgroundColor = '#FFF5F5';
+                    }
+                    if (!firstFocusEl) firstFocusEl = nameInput;
+                } else {
+                    if (nameErr) {
+                        nameErr.style.display = 'none';
+                        nameErr.textContent = '';
+                    }
+                    if (nameInput) {
+                        nameInput.style.borderColor = '';
+                        nameInput.style.backgroundColor = '';
+                    }
+                }
+
+                if (!addrInput) {
+                    hasError = true;
+                    if (addrErr) {
+                        addrErr.style.display = 'block';
+                        addrErr.textContent = 'Địa chỉ giao hàng không được để trống khi đặt giao hàng tận nơi.';
+                    }
+                    if (addrInputField) {
+                        addrInputField.style.borderColor = '#DC2626';
+                        addrInputField.style.backgroundColor = '#FFF5F5';
+                    }
+                    if (!firstFocusEl) firstFocusEl = addrInputField;
+                } else {
+                    if (addrErr) {
+                        addrErr.style.display = 'none';
+                        addrErr.textContent = '';
+                    }
+                    if (addrInputField) {
+                        addrInputField.style.borderColor = '';
+                        addrInputField.style.backgroundColor = '';
+                    }
+                }
+            } else {
+                // Mua và nhận ngay tại quầy: Tên không bắt buộc, nếu để trống thì mặc định là Khách lẻ tại quầy
+                if (!name) {
+                    name = activePosCustomer?.name || 'Khách lẻ tại quầy';
+                }
+                if (nameErr) {
+                    nameErr.style.display = 'none';
+                    nameErr.textContent = '';
+                }
+                if (nameInput) {
+                    nameInput.style.borderColor = '';
+                    nameInput.style.backgroundColor = '';
+                }
+                if (addrErr) {
+                    addrErr.style.display = 'none';
+                    addrErr.textContent = '';
+                }
+                if (addrInputField) {
+                    addrInputField.style.borderColor = '';
+                    addrInputField.style.backgroundColor = '';
+                }
+            }
+
+            // Nếu có lỗi validation -> chặn tạo đơn và thông báo rõ ràng
+            if (hasError) {
+                if (firstFocusEl) firstFocusEl.focus();
+
+                if (isDelivery && !name && !addrInput && !phoneVal.isValid) {
+                    showToast('Vui lòng nhập số điện thoại, tên người nhận và địa chỉ giao hàng.', 'warning');
+                } else if (isDelivery && !name && !addrInput) {
+                    showToast('Vui lòng nhập họ tên người nhận và địa chỉ giao hàng.', 'warning');
+                } else if (isDelivery && !name) {
+                    showToast('Họ và tên người nhận không được để trống khi đặt giao hàng.', 'warning');
+                } else if (isDelivery && !addrInput) {
+                    showToast('Địa chỉ giao hàng không được để trống khi đặt giao hàng tận nơi.', 'warning');
+                } else if (!phoneVal.isValid) {
+                    showToast(phoneVal.message, 'warning');
+                }
+                return;
+            }
+
+            const phone = phoneVal.phone;
+
             const payMethod = document.getElementById('createOrderPaymentMethod')?.value || 'cash';
             const voucherInput = document.getElementById('createOrderVoucherCode')?.value.trim().toUpperCase();
-            const isDelivery = document.getElementById('radioAddrDelivery')?.checked;
             const slotSelect = document.getElementById('createOrderDeliverySlot')?.value;
             const noteVal = document.getElementById('createOrderNote')?.value.trim();
 
-            if (!phone || !name) {
-                showToast('Vui lòng nhập họ tên và số điện thoại người nhận.', 'warning');
-                return;
-            }
             if (posCartItems.length === 0) {
                 showToast('Giỏ hàng đang trống! Vui lòng chọn sản phẩm và bấm "Thêm món" trước khi tạo đơn.', 'warning');
                 return;
@@ -4133,36 +4762,252 @@
             finalizePosOrder(phone, name, payMethod, voucherInput, isDelivery, slotSelect, noteVal, calc);
         });
 
-        // Bàn giao vận chuyển modal
-        document.getElementById('btnSubmitShipOrder')?.addEventListener('click', async () => {
-            const tracking = document.getElementById('shipTrackingInput')?.value.trim();
-            const carrier = document.getElementById('shipCarrierSelect')?.value;
+        // Bàn giao / Cập nhật vận chuyển modal
+        let isSubmittingShipOrder = false;
+        let lastShipSubmitTime = 0;
 
+        // Tự động cắt khoảng trắng đầu/cuối khi người dùng rời khỏi ô nhập mã vận đơn
+        const shipTrackInputEl = document.getElementById('shipTrackingInput');
+        shipTrackInputEl?.addEventListener('blur', () => {
+            if (shipTrackInputEl) shipTrackInputEl.value = (shipTrackInputEl.value || '').trim();
+        });
+        shipTrackInputEl?.addEventListener('input', () => {
+            const errEl = document.getElementById('shipTrackingError');
+            if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+            if (shipTrackInputEl) shipTrackInputEl.style.borderColor = '';
+        });
+
+        document.getElementById('btnSubmitShipOrder')?.addEventListener('click', async () => {
+            const now = Date.now();
+            // Cơ chế chống double-click: kiểm tra cờ đang xử lý và chặn nhấp liên tục (debounce 1000ms)
+            if (isSubmittingShipOrder || (now - lastShipSubmitTime < 1000)) {
+                return;
+            }
+
+            const submitBtn = document.getElementById('btnSubmitShipOrder');
+            if (submitBtn && submitBtn.disabled) {
+                return;
+            }
+
+            // Tự động cắt khoảng trắng đầu/cuối (trim) trên form
+            const trackingInput = document.getElementById('shipTrackingInput');
+            const noteInput = document.getElementById('shipCarrierNote');
+            const trackingErrorEl = document.getElementById('shipTrackingError');
+
+            if (trackingInput) trackingInput.value = (trackingInput.value || '').trim();
+            if (noteInput) noteInput.value = (noteInput.value || '').trim();
+
+            const tracking = trackingInput ? trackingInput.value : '';
+            const carrier = document.getElementById('shipCarrierSelect')?.value;
+            const carrierNote = noteInput ? noteInput.value : '';
+
+            const showTrackingError = (msg) => {
+                if (trackingErrorEl) {
+                    trackingErrorEl.textContent = msg;
+                    trackingErrorEl.style.display = 'block';
+                }
+                if (trackingInput) {
+                    trackingInput.style.borderColor = '#DC2626';
+                    trackingInput.focus();
+                }
+                showToast(msg, 'warning');
+            };
+
+            const clearTrackingError = () => {
+                if (trackingErrorEl) {
+                    trackingErrorEl.textContent = '';
+                    trackingErrorEl.style.display = 'none';
+                }
+                if (trackingInput) {
+                    trackingInput.style.borderColor = '';
+                }
+            };
+
+            clearTrackingError();
+
+            // 1. Kiểm tra bắt buộc nhập
             if (!tracking) {
-                showToast('Vui lòng nhập mã vận đơn bưu cục.', 'warning');
+                showTrackingError('Vui lòng nhập mã vận đơn bưu cục.');
+                return;
+            }
+
+            // 2. Kiểm tra giới hạn độ dài ký tự (5 - 35 ký tự)
+            if (tracking.length < 5 || tracking.length > 35) {
+                showTrackingError('Mã vận đơn phải có độ dài từ 5 đến 35 ký tự.');
+                return;
+            }
+
+            // 3. Kiểm tra định dạng: chỉ chấp nhận chữ cái, chữ số, dấu gạch nối (-) và (_)
+            const trackingFormatRegex = /^[A-Za-z0-9\-_]+$/;
+            if (!trackingFormatRegex.test(tracking)) {
+                showTrackingError('Mã vận đơn không hợp lệ. Chỉ chấp nhận chữ cái, chữ số và dấu gạch nối (không chứa khoảng trắng hoặc ký tự đặc biệt).');
+                return;
+            }
+
+            // 4. Kiểm tra giới hạn ký tự ghi chú bưu tá (tối đa 250 ký tự)
+            if (carrierNote && carrierNote.length > 250) {
+                showToast('Ghi chú cho bưu tá vượt quá giới hạn tối đa 250 ký tự.', 'warning');
+                if (noteInput) noteInput.focus();
+                return;
+            }
+
+            // 5. Kiểm tra tương thích giữa đơn vị vận chuyển và tiền tố mã vận đơn
+            const validateCarrierTrackingCompatibility = (carrierName, trackingCode) => {
+                const code = (trackingCode || '').toUpperCase().trim();
+                const c = (carrierName || '').toLowerCase();
+                if (c.includes('j và t') || c.includes('j&t')) {
+                    if (code.startsWith('VP') || code.startsWith('GHTK') || code.startsWith('PW-SHIP')) {
+                        return `Tiền tố mã vận đơn "${trackingCode}" không khớp với đơn vị vận chuyển J và T Express. Vui lòng kiểm tra lại!`;
+                    }
+                } else if (c.includes('tiết kiệm') || c.includes('ghtk')) {
+                    if (code.startsWith('JT') || code.startsWith('VP') || code.startsWith('PW-SHIP')) {
+                        return `Tiền tố mã vận đơn "${trackingCode}" không khớp với đơn vị vận chuyển Giao Hàng Tiết Kiệm (GHTK). Vui lòng kiểm tra lại!`;
+                    }
+                } else if (c.includes('viettel')) {
+                    if (code.startsWith('JT') || code.startsWith('GHTK') || code.startsWith('PW-SHIP')) {
+                        return `Tiền tố mã vận đơn "${trackingCode}" không khớp với đơn vị vận chuyển Viettel Post. Vui lòng kiểm tra lại!`;
+                    }
+                } else if (c.includes('hỏa tốc') || c.includes('pawpal')) {
+                    if (code.startsWith('JT') || code.startsWith('GHTK') || code.startsWith('VP')) {
+                        return `Tiền tố mã vận đơn "${trackingCode}" không khớp với Đội giao hỏa tốc PawPal. Vui lòng kiểm tra lại!`;
+                    }
+                }
+                return null;
+            };
+
+            const carrierCompatError = validateCarrierTrackingCompatibility(carrier, tracking);
+            if (carrierCompatError) {
+                showTrackingError(carrierCompatError);
                 return;
             }
 
             const order = currentOrdersList.find(o => o.id === selectedOrderId);
-            if (order) {
-                order.status = 'shipping';
-                order.carrier = carrier;
-                order.trackingNumber = tracking;
-                order.timeline.push({
-                    title: 'Đã bàn giao vận chuyển',
-                    time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
-                    desc: `Bàn giao cho ${carrier}. Mã vận đơn: ${tracking}`,
-                    done: true
-                });
+            if (!order) return;
 
-                // Cập nhật Supabase
+            // 6. Chống tạo dữ liệu trùng lặp khi thông tin vận đơn không có bất kỳ thay đổi nào
+            if (order.status === 'shipping' && order.trackingNumber === tracking && order.carrier === carrier) {
+                showToast('Mã vận đơn và đơn vị vận chuyển không thay đổi so với hiện tại.', 'info');
+                PawpalOrdersModule.closeModal('modalShipOrder');
+                return;
+            }
+
+            // Guard clause FE: Kiểm tra trạng thái đơn hàng trước khi xử lý
+            if (order.status === 'cancelled') {
+                showToast(`Đơn hàng ${order.id} đã ở trạng thái Đã hủy. Không thể bàn giao vận chuyển!`, 'warning');
+                PawpalOrdersModule.closeModal('modalShipOrder');
+                return;
+            }
+            if (order.status === 'completed' || order.status === 'delivered') {
+                showToast(`Đơn hàng ${order.id} đã kết thúc hoặc đã giao thành công. Không thể bàn giao vận chuyển!`, 'warning');
+                PawpalOrdersModule.closeModal('modalShipOrder');
+                return;
+            }
+
+            // Kích hoạt khóa chống double-click và vô hiệu hóa nút xác nhận ngay lập tức
+            isSubmittingShipOrder = true;
+            lastShipSubmitTime = now;
+            const originalBtnText = submitBtn ? submitBtn.textContent : 'Xác nhận';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.6';
+                submitBtn.style.cursor = 'not-allowed';
+                submitBtn.textContent = 'Đang xử lý...';
+            }
+
+            try {
+                // Guard clause BE / Database: Kiểm tra trạng thái thực tế từ CSDL Supabase trước khi update
                 const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                 if (client) {
                     try {
+                        let dbOrder = null;
                         if (order.rawId) {
-                            await client.from('sales_order').update({ order_status: 'SHIPPING' }).eq('id', order.rawId);
+                            const { data } = await client.from('sales_order').select('id, order_status').eq('id', order.rawId).maybeSingle();
+                            dbOrder = data;
                         } else {
-                            await client.from('sales_order').update({ order_status: 'SHIPPING' }).eq('order_code', order.id);
+                            const { data } = await client.from('sales_order').select('id, order_status').eq('order_code', order.id).maybeSingle();
+                            dbOrder = data;
+                        }
+
+                        if (dbOrder) {
+                            if (dbOrder.order_status === 'CANCELLED') {
+                                showToast(`Đơn hàng ${order.id} đã bị hủy trên hệ thống. Không thể bàn giao vận chuyển!`, 'warning');
+                                order.status = 'cancelled';
+                                persistOrdersData();
+                                renderOrdersTable();
+                                PawpalOrdersModule.closeModal('modalShipOrder');
+                                return;
+                            }
+                            if (dbOrder.order_status === 'COMPLETED' || dbOrder.order_status === 'DELIVERED') {
+                                showToast(`Đơn hàng ${order.id} đã kết thúc trên hệ thống. Không thể bàn giao vận chuyển!`, 'warning');
+                                order.status = dbOrder.order_status === 'COMPLETED' ? 'completed' : 'delivered';
+                                persistOrdersData();
+                                renderOrdersTable();
+                                PawpalOrdersModule.closeModal('modalShipOrder');
+                                return;
+                            }
+                        }
+                    } catch (checkErr) {
+                        console.warn('Lỗi kiểm tra trạng thái đơn trước khi bàn giao vận chuyển:', checkErr);
+                    }
+                }
+
+                const isAlreadyShipping = order.status === 'shipping';
+                const trackingChanged = order.trackingNumber !== tracking || order.carrier !== carrier;
+                const nowIso = new Date().toISOString();
+                const nowTimeStr = formatTime(new Date()) + ' - Hôm nay';
+
+                // Đồng bộ hóa chặt chẽ hãng, mã vận đơn, delivery và timeline trong cùng một phiên bản dữ liệu
+                order.status = 'shipping';
+                order.carrier = carrier;
+                order.trackingNumber = tracking;
+                order.updatedAt = nowIso;
+                order.delivery = {
+                    ...(order.delivery || {}),
+                    carrier: carrier,
+                    carrier_name: carrier,
+                    tracking_code: tracking,
+                    tracking_number: tracking,
+                    note: carrierNote,
+                    updated_at: nowIso
+                };
+
+                // Đồng bộ hóa các bước lịch trình timeline tương ứng
+                const existingShipStep = order.timeline.find(t => t.title === 'Đã bàn giao vận chuyển' || t.title.startsWith('Bàn giao vận chuyển'));
+                if (existingShipStep) {
+                    existingShipStep.desc = `Đã bàn giao cho ${carrier}. Mã vận đơn: ${tracking}${carrierNote ? ` | Ghi chú: ${carrierNote}` : ''}`;
+                    existingShipStep.done = true;
+                } else if (!isAlreadyShipping) {
+                    order.timeline.push({
+                        title: 'Đã bàn giao vận chuyển',
+                        time: nowTimeStr,
+                        desc: `Đã bàn giao cho ${carrier}. Mã vận đơn: ${tracking}${carrierNote ? ` | Ghi chú: ${carrierNote}` : ''}`,
+                        done: true
+                    });
+                }
+
+                if (isAlreadyShipping && trackingChanged) {
+                    order.timeline.push({
+                        title: 'Cập nhật vận đơn',
+                        time: nowTimeStr,
+                        desc: `Cập nhật thông tin giao vận: ${carrier}. Mã vận đơn mới: ${tracking}${carrierNote ? ` | Ghi chú: ${carrierNote}` : ''}`,
+                        done: true
+                    });
+                }
+
+                // Cập nhật CSDL Supabase đồng bộ trong cùng một payload giao dịch
+                if (client) {
+                    try {
+                        const updatePayload = {
+                            order_status: 'SHIPPING',
+                            shipping_carrier: carrier,
+                            tracking_number: tracking,
+                            updated_at: nowIso,
+                            delivery: order.delivery
+                        };
+                        if (order.rawId) {
+                            await client.from('sales_order').update(updatePayload).eq('id', order.rawId);
+                        } else {
+                            await client.from('sales_order').update(updatePayload).eq('order_code', order.id);
                         }
                     } catch (errShipDb) {
                         console.warn('Lỗi khi cập nhật giao vận lên Supabase:', errShipDb);
@@ -4170,12 +5015,22 @@
                 }
 
                 persistOrdersData();
+                PawpalOrdersModule.closeModal('modalShipOrder');
+                renderOrdersTable();
+                renderOrderDetail(selectedOrderId);
+                showToast(isAlreadyShipping ? `Đã cập nhật vận đơn cho đơn ${selectedOrderId}!` : `Đã bàn giao vận chuyển cho đơn ${selectedOrderId}!`, 'success');
+            } catch (err) {
+                console.error('Lỗi khi xử lý vận đơn:', err);
+                showToast('Có lỗi xảy ra khi xử lý vận đơn. Vui lòng thử lại!', 'warning');
+            } finally {
+                isSubmittingShipOrder = false;
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                    submitBtn.textContent = originalBtnText;
+                }
             }
-
-            document.getElementById('modalShipOrder')?.classList.remove('active');
-            renderOrdersTable();
-            renderOrderDetail(selectedOrderId);
-            showToast(`Đã cập nhật giao vận cho đơn ${selectedOrderId}!`, 'success');
         });
 
         // Hủy đơn modal
@@ -4184,63 +5039,141 @@
             const detail = document.getElementById('cancelOrderReasonDetail')?.value.trim();
 
             const order = currentOrdersList.find(o => o.id === selectedOrderId);
-            if (order) {
-                order.status = 'cancelled';
-                order.alertType = null;
-                order.internalNote = (order.internalNote ? order.internalNote + ' | ' : '') + `Lý do hủy: ${reason} (${detail})`;
-                order.timeline.push({
-                    title: 'Đã hủy đơn hàng',
-                    time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
-                    desc: `Hủy bởi nhân viên quản trị. Lý do: ${reason}`,
-                    done: true
-                });
+            if (!order) return;
 
-                // Hoàn lại tồn kho trong bộ nhớ và Supabase
-                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-
-                for (const p of order.products) {
-                    const prodItem = currentProductsList.find(x => x.sku === p.sku);
-                    if (prodItem) {
-                        prodItem.stock += p.quantity;
-                        if (prodItem.status === 'Hết hàng' && prodItem.stock > 0) {
-                            prodItem.status = 'Còn hàng';
-                        }
-
-                        if (client && prodItem.id) {
-                            try {
-                                const { data: invRow } = await client.from('inventory').select('id, quantity_in_stock').eq('product_id', prodItem.id).limit(1);
-                                if (invRow && invRow[0]) {
-                                    await client.from('inventory').update({ quantity_in_stock: (invRow[0].quantity_in_stock || 0) + p.quantity }).eq('id', invRow[0].id);
-                                }
-                            } catch (errRestock) {
-                                console.warn('Lỗi hoàn tồn khi hủy đơn:', errRestock);
-                            }
-                        }
-                    }
-                }
-
-                // Cập nhật trạng thái đơn trên Supabase
-                if (client) {
-                    try {
-                        if (order.rawId) {
-                            await client.from('sales_order').update({ order_status: 'CANCELLED' }).eq('id', order.rawId);
-                        } else {
-                            await client.from('sales_order').update({ order_status: 'CANCELLED' }).eq('order_code', order.id);
-                        }
-                    } catch (errCancelDb) {
-                        console.warn('Lỗi khi hủy đơn hàng trên Supabase:', errCancelDb);
-                    }
-                }
-
-                persistProductsData();
-                persistOrdersData();
+            // Guard clause FE: Chặn hủy đơn đã hoàn tất hoặc đã hủy
+            if (order.status === 'cancelled') {
+                showToast(`Đơn hàng ${order.id} đã ở trạng thái Đã hủy trước đó. Không thể hủy lại!`, 'warning');
+                PawpalOrdersModule.closeModal('modalCancelOrder');
+                return;
+            }
+            if (order.status === 'completed') {
+                showToast(`Đơn hàng ${order.id} đã hoàn tất thành công. Không thể hủy đơn hàng này!`, 'warning');
+                PawpalOrdersModule.closeModal('modalCancelOrder');
+                return;
+            }
+            if (order.status === 'delivered') {
+                showToast(`Đơn hàng ${order.id} đã giao thành công. Vui lòng sử dụng quy trình Đổi trả và hoàn tiền (RMA)!`, 'warning');
+                PawpalOrdersModule.closeModal('modalCancelOrder');
+                return;
             }
 
-            document.getElementById('modalCancelOrder')?.classList.remove('active');
+            // Guard clause BE / Database: Kiểm tra trực tiếp trên CSDL Supabase trước khi hủy
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (client) {
+                try {
+                    let dbOrder = null;
+                    if (order.rawId) {
+                        const { data } = await client.from('sales_order').select('id, order_status').eq('id', order.rawId).maybeSingle();
+                        dbOrder = data;
+                    } else {
+                        const { data } = await client.from('sales_order').select('id, order_status').eq('order_code', order.id).maybeSingle();
+                        dbOrder = data;
+                    }
+
+                    if (dbOrder) {
+                        if (dbOrder.order_status === 'CANCELLED') {
+                            showToast(`Đơn hàng ${order.id} đã bị hủy trên hệ thống. Không thể hủy lại!`, 'warning');
+                            order.status = 'cancelled';
+                            persistOrdersData();
+                            renderOrdersTable();
+                            PawpalOrdersModule.closeModal('modalCancelOrder');
+                            return;
+                        }
+                        if (dbOrder.order_status === 'COMPLETED') {
+                            showToast(`Đơn hàng ${order.id} đã hoàn tất trên hệ thống. Không thể hủy!`, 'warning');
+                            order.status = 'completed';
+                            persistOrdersData();
+                            renderOrdersTable();
+                            PawpalOrdersModule.closeModal('modalCancelOrder');
+                            return;
+                        }
+                    }
+                } catch (checkErr) {
+                    console.warn('Lỗi kiểm tra trạng thái đơn trước khi hủy trên Supabase:', checkErr);
+                }
+            }
+
+            const wasPaid = (order.paymentStatus === 'paid');
+            const wasCodPending = (order.paymentStatus === 'cod_pending');
+            const newPaymentStatusLocal = wasPaid ? 'refund_pending' : 'cancelled';
+            const newPaymentStatusDb = wasPaid ? 'PENDING_REFUND' : 'CANCELLED';
+
+            order.paymentStatus = newPaymentStatusLocal;
+            order.status = 'cancelled';
+            order.alertType = null;
+            order.internalNote = (order.internalNote ? order.internalNote + ' | ' : '') + `Lý do hủy: ${reason} (${detail})`;
+            order.timeline.push({
+                title: 'Đã hủy đơn hàng',
+                time: formatTime(new Date()) + ' - Hôm nay',
+                desc: `Hủy bởi nhân viên quản trị. Lý do: ${reason}${detail ? ` (${detail})` : ''}`,
+                done: true
+            });
+
+            if (wasPaid) {
+                order.timeline.push({
+                    title: 'Chuyển sang Chờ hoàn tiền',
+                    time: formatTime(new Date()) + ' - Hôm nay',
+                    desc: `Đơn đã thanh toán (${formatVND(order.total)}). Hệ thống đã tự động chuyển trạng thái thanh toán sang Chờ hoàn tiền (Refund Pending).`,
+                    done: true
+                });
+            } else if (wasCodPending) {
+                order.timeline.push({
+                    title: 'Hủy khoản thu tiền COD bưu cục',
+                    time: formatTime(new Date()) + ' - Hôm nay',
+                    desc: 'Đã hủy khoản tiền thu hộ COD của bưu tá tương ứng với đơn hàng.',
+                    done: true
+                });
+            }
+
+            // Hoàn lại tồn kho trong bộ nhớ và Supabase
+            // Tái sử dụng client đã khởi tạo ở trên
+            for (const p of order.products) {
+                const prodItem = currentProductsList.find(x => x.sku === p.sku);
+                if (prodItem) {
+                    prodItem.stock += p.quantity;
+                    if (prodItem.status === 'Hết hàng' && prodItem.stock > 0) {
+                        prodItem.status = 'Còn hàng';
+                    }
+
+                    if (client && prodItem.id) {
+                        try {
+                            const { data: invRow } = await client.from('inventory').select('id, quantity_in_stock').eq('product_id', prodItem.id).limit(1);
+                            if (invRow && invRow[0]) {
+                                await client.from('inventory').update({ quantity_in_stock: (invRow[0].quantity_in_stock || 0) + p.quantity }).eq('id', invRow[0].id);
+                            }
+                        } catch (errRestock) {
+                            console.warn('Lỗi hoàn tồn khi hủy đơn:', errRestock);
+                        }
+                    }
+                }
+            }
+
+            // Cập nhật trạng thái đơn và trạng thái thanh toán đồng bộ trên Supabase
+            if (client) {
+                try {
+                    const updatePayload = {
+                        order_status: 'CANCELLED',
+                        payment_status: newPaymentStatusDb
+                    };
+                    if (order.rawId) {
+                        await client.from('sales_order').update(updatePayload).eq('id', order.rawId);
+                    } else {
+                        await client.from('sales_order').update(updatePayload).eq('order_code', order.id);
+                    }
+                } catch (errCancelDb) {
+                    console.warn('Lỗi khi hủy đơn hàng trên Supabase:', errCancelDb);
+                }
+            }
+
+            persistProductsData();
+            persistOrdersData();
+
+            PawpalOrdersModule.closeModal('modalCancelOrder');
             renderOrdersTable();
             renderProductsTable();
             renderOrderDetail(selectedOrderId);
-            showToast(`Đã hủy đơn hàng ${selectedOrderId} và hoàn lại tồn kho.`, 'success');
+            showToast(`Đã hủy đơn hàng ${selectedOrderId}, hoàn lại tồn kho và cập nhật trạng thái thanh toán (${wasPaid ? 'Chờ hoàn tiền' : 'Đã hủy thanh toán'})!`, 'success');
         });
 
         // Đóng dropdown khi click ngoài
@@ -4315,11 +5248,53 @@
             const order = currentOrdersList.find(o => o.id === selectedOrderId);
             if (!order) return;
 
-            // Kiểm tra sản phẩm được tích chọn
+            // 1. Kiểm tra trạng thái đơn hàng đủ điều kiện RMA
+            if (order.status === 'cancelled') {
+                showToast(`Đơn hàng ${order.id} đã bị hủy, không thể tạo yêu cầu đổi trả (RMA)!`, 'warning');
+                PawpalOrdersModule.closeModal('modalReturnRefund');
+                return;
+            }
+            if (order.status !== 'delivered' && order.status !== 'completed' && order.status !== 'returned') {
+                showToast(`Chỉ đơn hàng đã giao thành công (Đã giao / Hoàn tất) mới có thể xử lý đổi trả (RMA)!`, 'warning');
+                PawpalOrdersModule.closeModal('modalReturnRefund');
+                return;
+            }
+
+            // 2. Kiểm tra sản phẩm được tích chọn
             const checkedBoxes = document.querySelectorAll('.rma-item-select-checkbox:checked');
             if (checkedBoxes.length === 0) {
                 showToast('Vui lòng tích chọn ít nhất một sản phẩm cần đổi trả hoặc bồi hoàn.', 'warning');
                 return;
+            }
+
+            // 3. CHẶN CHỌN SẢN PHẨM NGOÀI ĐƠN GỐC & RÀNG BUỘC SỐ LƯỢNG
+            const validOrderSkus = new Set((order.products || []).map(p => p.sku));
+            for (const cb of checkedBoxes) {
+                const sku = cb.getAttribute('data-sku');
+                const row = cb.closest('tr');
+                const qtyInput = row?.querySelector('.rma-item-qty-input');
+                const qty = parseInt(qtyInput?.value || '1', 10);
+
+                if (!validOrderSkus.has(sku)) {
+                    showToast(`Sản phẩm với mã SKU "${sku}" không thuộc đơn hàng gốc ${order.id}! Thao tác bị từ chối.`, 'danger');
+                    return;
+                }
+
+                const prodInOrder = order.products.find(p => p.sku === sku);
+                if (!prodInOrder) {
+                    showToast(`Sản phẩm với mã SKU "${sku}" không tồn tại trong đơn hàng gốc ${order.id}!`, 'danger');
+                    return;
+                }
+
+                if (isNaN(qty) || qty < 1) {
+                    showToast(`Số lượng đổi trả của sản phẩm "${prodInOrder.name}" không hợp lệ.`, 'warning');
+                    return;
+                }
+
+                if (qty > prodInOrder.quantity) {
+                    showToast(`Số lượng đổi trả của sản phẩm "${prodInOrder.name}" (${qty}) vượt quá số lượng đã mua (${prodInOrder.quantity})!`, 'warning');
+                    return;
+                }
             }
 
             const solSelect = document.getElementById('rmaSolutionType');
@@ -4392,7 +5367,11 @@
                     }
 
                     if (dbOrderId) {
-                        await client.from('sales_order').update({ order_status: 'RETURNED' }).eq('id', dbOrderId);
+                        const updateOrderPayload = { order_status: 'RETURNED' };
+                        if (solType === 'refund') {
+                            updateOrderPayload.payment_status = 'REFUNDED';
+                        }
+                        await client.from('sales_order').update(updateOrderPayload).eq('id', dbOrderId);
 
                         const { data: rmaRow, error: rmaErr } = await client.from('return_request').insert({
                             sales_order_id: dbOrderId,
@@ -4428,6 +5407,9 @@
 
             // Cập nhật trạng thái đơn hàng sang Đổi trả
             order.status = 'returned';
+            if (solType === 'refund') {
+                order.paymentStatus = 'refunded';
+            }
             order.alertType = 'danger';
             order.alertMessage = `Phiếu RMA: ${rmaCode}`;
             order.rmaInfo = {
@@ -4449,7 +5431,7 @@
             // Ghi nhận vào Lịch trình (Timeline)
             order.timeline.push({
                 title: 'Tiếp nhận Đổi trả và Hoàn tiền (RMA)',
-                time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
+                time: formatTime(new Date()) + ' - Hôm nay',
                 desc: `Phê duyệt ${rmaCode}. Hình thức: ${solTypeName}. Lý do: ${reasonText}`,
                 done: true
             });
@@ -4457,14 +5439,14 @@
             if (restockVal === 'restock') {
                 order.timeline.push({
                     title: 'Kiểm định kho hàng đạt chuẩn',
-                    time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
+                    time: formatTime(new Date()) + ' - Hôm nay',
                     desc: 'Sản phẩm còn nguyên seal hộp. Đã tự động nhập lại kho khả dụng',
                     done: true
                 });
             } else {
                 order.timeline.push({
                     title: 'Chuyển kho hàng lỗi và phế phẩm',
-                    time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
+                    time: formatTime(new Date()) + ' - Hôm nay',
                     desc: 'Hàng hư hại do vận chuyển. Đã đưa vào kho hủy và ghi nhận chi phí rủi ro',
                     done: true
                 });
@@ -4473,7 +5455,7 @@
             if (solType === 'refund' && refundAmountVal > 0) {
                 order.timeline.push({
                     title: 'Hoàn tất bồi hoàn tiền cho khách',
-                    time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
+                    time: formatTime(new Date()) + ' - Hôm nay',
                     desc: `Đã xác nhận hoàn tiền ${formatVND(refundAmountVal)} qua ${refundMethod === 'bank_transfer' ? 'chuyển khoản ngân hàng' : 'điểm thưởng Pawpoint'}`,
                     done: true
                 });
@@ -4491,14 +5473,14 @@
                     solutionType: solTypeName,
                     refundAmount: refundAmountVal,
                     status: 'resolved',
-                    createdAt: new Date().toLocaleDateString('vi-VN')
+                    createdAt: formatDate(new Date())
                 });
                 sessionStorage.setItem('pawpal_admin_order_rma_tickets', JSON.stringify(storedTickets));
             } catch (err) {
                 console.warn('Không thể lưu session RMA:', err);
             }
 
-            document.getElementById('modalReturnRefund')?.classList.remove('active');
+            PawpalOrdersModule.closeModal('modalReturnRefund');
             persistProductsData();
             persistOrdersData();
             renderOrdersTable();
@@ -4514,8 +5496,10 @@
         // Render lần đầu
         renderOrdersTableRef = renderOrdersTable;
         renderProductsTableRef = renderProductsTable;
+        updateCategoryFilterDropdownRef = updateCategoryFilterDropdown;
         renderOrderDetailRef = renderOrderDetail;
         renderVouchersTableRef = renderVouchersTable;
+        updateCategoryFilterDropdown();
         renderOrdersTable();
         renderOrderDetail(selectedOrderId);
         renderProductsTable();
@@ -4574,11 +5558,7 @@
                     if (nameEl && (preset.custName || preset.ownerName)) nameEl.value = preset.custName || preset.ownerName;
                     if (preset.address && addrInput) {
                         addrInput.value = preset.address;
-                        if (addrRadios && addrRadios[1]) {
-                            addrRadios[1].checked = true;
-                            addrRadios[1].closest('.address-item-card')?.classList.add('selected');
-                            addrRadios[0]?.closest('.address-item-card')?.classList.remove('selected');
-                        }
+                        setDeliveryMethodState(true);
                     }
 
                     const modal = document.getElementById('modalCreateOrder');
@@ -4624,6 +5604,26 @@
             // Kiểm tra và tự động mở form POS thanh toán cho ca dịch vụ nếu được chuyển sang từ module Dịch vụ
             checkPendingServiceCheckout();
         };
+
+        // Đóng modal và reset sạch dữ liệu tạm khi click ra ngoài backdrop overlay
+        document.querySelectorAll('.admin-modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    PawpalOrdersModule.closeModal(overlay.id);
+                }
+            });
+        });
+
+        // Đóng modal và reset sạch dữ liệu tạm khi nhấn phím Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const activeModal = document.querySelector('.admin-modal-overlay.active');
+                if (activeModal) {
+                    PawpalOrdersModule.closeModal(activeModal.id);
+                }
+            }
+        });
+
         setTimeout(checkPresetOrder, 150);
     }
 
@@ -4673,15 +5673,90 @@
             if (custBtn) custBtn.click();
         },
         openShipModal: function(orderId) {
+            const order = currentOrdersList.find(o => o.id === orderId);
+            if (!order) return;
+            if (order.status === 'cancelled') {
+                showToast(`Đơn hàng ${orderId} đã ở trạng thái Đã hủy. Không thể bàn giao vận chuyển!`, 'warning');
+                return;
+            }
+            if (order.status === 'completed') {
+                showToast(`Đơn hàng ${orderId} đã hoàn tất. Không thể bàn giao vận chuyển!`, 'warning');
+                return;
+            }
+            if (order.status === 'delivered') {
+                showToast(`Đơn hàng ${orderId} đã giao thành công. Không thể bàn giao vận chuyển lại!`, 'warning');
+                return;
+            }
             selectedOrderId = orderId;
             const targetEl = document.getElementById('shipOrderTargetCode');
             if (targetEl) targetEl.textContent = orderId;
+
+            // Điền dữ liệu hiện tại nếu là ca cập nhật vận đơn
+            const trackInput = document.getElementById('shipTrackingInput');
+            if (trackInput) {
+                trackInput.value = (order.trackingNumber && order.trackingNumber !== '--') ? order.trackingNumber : '';
+                trackInput.style.borderColor = '';
+            }
+            const trackError = document.getElementById('shipTrackingError');
+            if (trackError) {
+                trackError.textContent = '';
+                trackError.style.display = 'none';
+            }
+            const carrierSelect = document.getElementById('shipCarrierSelect');
+            if (carrierSelect && order.carrier) {
+                carrierSelect.value = order.carrier;
+            }
+
+            // Đồng bộ tiêu đề modal và nút xác nhận theo nghiệp vụ
+            const modalTitleEl = document.querySelector('#modalShipOrder .modal-title-clean');
+            const submitBtn = document.getElementById('btnSubmitShipOrder');
+            if (order.status === 'shipping') {
+                if (modalTitleEl) modalTitleEl.textContent = 'Cập nhật vận đơn giao hàng';
+                if (submitBtn) submitBtn.textContent = 'Xác nhận cập nhật';
+            } else {
+                if (modalTitleEl) modalTitleEl.textContent = 'Bàn giao vận chuyển đơn hàng';
+                if (submitBtn) submitBtn.textContent = 'Xác nhận giao hàng';
+            }
+
+            // Đảm bảo nút xác nhận luôn sẵn sàng khi mở modal
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+            }
+
             document.getElementById('modalShipOrder')?.classList.add('active');
         },
         openCancelModal: function(orderId) {
+            const order = currentOrdersList.find(o => o.id === orderId);
+            if (!order) return;
+            if (order.status === 'cancelled') {
+                showToast(`Đơn hàng ${orderId} đã ở trạng thái Đã hủy trước đó. Không thể hủy lại!`, 'warning');
+                return;
+            }
+            if (order.status === 'completed') {
+                showToast(`Đơn hàng ${orderId} đã hoàn tất thành công. Không thể hủy đơn hàng này!`, 'warning');
+                return;
+            }
+            if (order.status === 'delivered') {
+                showToast(`Đơn hàng ${orderId} đã giao thành công. Vui lòng sử dụng quy trình Đổi trả và hoàn tiền (RMA) thay vì hủy đơn!`, 'warning');
+                return;
+            }
             selectedOrderId = orderId;
             const targetEl = document.getElementById('cancelOrderTargetCode');
             if (targetEl) targetEl.textContent = orderId;
+
+            const impactEl = document.getElementById('cancelOrderPaymentImpact');
+            if (impactEl) {
+                if (order.paymentStatus === 'paid') {
+                    impactEl.innerHTML = `<span style="color: #734718; font-weight: 600;">Đã thanh toán (${formatVND(order.total)}) ➔ Tự động chuyển Chờ hoàn tiền (Refund Pending)</span>`;
+                } else if (order.paymentStatus === 'cod_pending') {
+                    impactEl.innerHTML = `<span style="color: #4F7A65; font-weight: 600;">COD chưa đối soát ➔ Tự động hủy khoản thu tiền COD bưu tá</span>`;
+                } else {
+                    impactEl.innerHTML = `<span style="color: #4F7A65; font-weight: 600;">Chưa thanh toán ➔ Tự động hủy yêu cầu thanh toán</span>`;
+                }
+            }
+
             document.getElementById('modalCancelOrder')?.classList.add('active');
         },
         closeModal: function(modalId) {
@@ -4691,6 +5766,87 @@
                 sessionStorage.removeItem('pawpal_pos_pending_service_checkout');
                 const banner = document.getElementById('posServiceCheckoutBanner');
                 if (banner) banner.style.display = 'none';
+                const phoneErr = document.getElementById('createOrderPhoneError');
+                if (phoneErr) { phoneErr.style.display = 'none'; phoneErr.textContent = ''; }
+                const phoneInput = document.getElementById('createOrderPhone');
+                if (phoneInput) { phoneInput.style.borderColor = ''; phoneInput.style.backgroundColor = ''; }
+                const nameErr = document.getElementById('createOrderNameError');
+                if (nameErr) { nameErr.style.display = 'none'; nameErr.textContent = ''; }
+                const nameInput = document.getElementById('createOrderName');
+                if (nameInput) { nameInput.style.borderColor = ''; nameInput.style.backgroundColor = ''; }
+            } else if (modalId === 'modalShipOrder') {
+                // Reset sạch form Bàn giao vận chuyển / Cập nhật vận đơn
+                const trackInput = document.getElementById('shipTrackingInput');
+                if (trackInput) {
+                    trackInput.value = '';
+                    trackInput.style.borderColor = '';
+                }
+                const trackErr = document.getElementById('shipTrackingError');
+                if (trackErr) {
+                    trackErr.textContent = '';
+                    trackErr.style.display = 'none';
+                }
+                const noteInput = document.getElementById('shipCarrierNote');
+                if (noteInput) noteInput.value = '';
+                const carrierSelect = document.getElementById('shipCarrierSelect');
+                if (carrierSelect) carrierSelect.selectedIndex = 0;
+                const targetCode = document.getElementById('shipOrderTargetCode');
+                if (targetCode) targetCode.textContent = '--';
+                const submitBtn = document.getElementById('btnSubmitShipOrder');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                    submitBtn.textContent = 'Xác nhận giao hàng';
+                }
+                const modalTitleEl = document.querySelector('#modalShipOrder .modal-title-clean');
+                if (modalTitleEl) modalTitleEl.textContent = 'Bàn giao vận chuyển đơn hàng';
+            } else if (modalId === 'modalBatchDispatch') {
+                // Reset sạch form Bàn giao vận chuyển hàng loạt (Batch Dispatch)
+                const carrierSelect = document.getElementById('batchCarrierSelect');
+                if (carrierSelect) carrierSelect.selectedIndex = 0;
+                const trackMode = document.getElementById('batchTrackingMode');
+                if (trackMode) trackMode.selectedIndex = 0;
+                const noteInput = document.getElementById('batchCarrierNote');
+                if (noteInput) noteInput.value = '';
+                const warnBox = document.getElementById('batchDispatchWarningBox');
+                if (warnBox) { warnBox.style.display = 'none'; warnBox.innerHTML = ''; }
+                const countEl = document.getElementById('batchDispatchCount');
+                if (countEl) countEl.textContent = '0 đơn';
+            } else if (modalId === 'modalReturnRefund') {
+                // Reset sạch form và loại bỏ dữ liệu tạm chưa lưu của RMA
+                const codeEl = document.getElementById('rmaOrderTargetCode');
+                if (codeEl) codeEl.textContent = '--';
+                const custEl = document.getElementById('rmaCustomerName');
+                if (custEl) custEl.textContent = '--';
+                const totalEl = document.getElementById('rmaOrderTotal');
+                if (totalEl) totalEl.textContent = '0 đ';
+                const solSelect = document.getElementById('rmaSolutionType');
+                if (solSelect) solSelect.selectedIndex = 0;
+                const reasonSelect = document.getElementById('rmaReasonSelect');
+                if (reasonSelect) reasonSelect.selectedIndex = 0;
+                const amountInput = document.getElementById('rmaRefundAmountInput');
+                if (amountInput) amountInput.value = '';
+                const noteInput = document.getElementById('rmaInternalNote');
+                if (noteInput) noteInput.value = '';
+                const refundRow = document.getElementById('rmaRefundFieldsRow');
+                if (refundRow) refundRow.style.display = 'none';
+                const restockDefault = document.querySelector('input[name="rmaRestockAction"][value="restock"]');
+                if (restockDefault) restockDefault.checked = true;
+                const refundMethod = document.getElementById('rmaRefundMethod');
+                if (refundMethod) refundMethod.selectedIndex = 0;
+                const tbody = document.getElementById('rmaItemsTableBody');
+                if (tbody) tbody.innerHTML = '';
+            } else if (modalId === 'modalCancelOrder') {
+                // Reset sạch form Hủy đơn hàng
+                const reasonSelect = document.getElementById('cancelOrderReasonSelect');
+                if (reasonSelect) reasonSelect.selectedIndex = 0;
+                const detailInput = document.getElementById('cancelOrderReasonDetail');
+                if (detailInput) detailInput.value = '';
+                const targetCode = document.getElementById('cancelOrderTargetCode');
+                if (targetCode) targetCode.textContent = '--';
+                const impactEl = document.getElementById('cancelOrderPaymentImpact');
+                if (impactEl) impactEl.innerHTML = '--';
             }
         },
         updatePosCartQty: function(index, qty) {
@@ -4742,7 +5898,7 @@
                 order.status = 'confirmed';
                 order.timeline.push({
                     title: 'Đã xác nhận đơn hàng',
-                    time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
+                    time: formatTime(new Date()) + ' - Hôm nay',
                     desc: 'Nhân viên đã duyệt đơn và xuất kho đóng gói',
                     done: true
                 });
@@ -4767,27 +5923,85 @@
         },
         confirmPayment: async function(orderId) {
             const order = currentOrdersList.find(o => o.id === orderId);
-            if (order) {
-                order.paymentStatus = 'paid';
+            if (!order) return;
 
-                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                if (client) {
-                    try {
-                        if (order.rawId) {
-                            await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', order.rawId);
-                            await client.from('payment').update({ transaction_status: 'SUCCESS' }).eq('order_id', order.rawId);
-                        } else {
-                            await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', order.id);
-                        }
-                    } catch (errPayDb) {
-                        console.warn('Lỗi khi xác nhận thanh toán trên Supabase:', errPayDb);
-                    }
-                }
-
-                persistOrdersData();
-                showToast(`Đã xác nhận thu tiền cho đơn hàng ${orderId}!`, 'success');
-                window.PawpalOrdersModule.openOrderDetail(orderId);
+            // Guard clause 1: Không cho phép thu tiền lần hai đối với đơn đã thanh toán
+            if (order.paymentStatus === 'paid') {
+                showToast(`Đơn hàng ${orderId} đã được thanh toán trước đó. Hệ thống không ghi nhận thu tiền lần hai!`, 'warning');
+                return;
             }
+
+            // Guard clause 2: Không cho phép thu tiền đối với đơn đã hủy
+            if (order.status === 'cancelled') {
+                showToast(`Đơn hàng ${orderId} đã bị hủy, không thể xác nhận thu tiền!`, 'warning');
+                return;
+            }
+
+            // Guard clause 3: Đơn COD phải dùng đối soát COD bưu cục
+            if (order.paymentMethod === 'cod') {
+                showToast(`Đơn hàng ${orderId} áp dụng hình thức thu hộ COD. Vui lòng sử dụng tính năng Đối soát tiền COD bưu cục sau khi giao hàng thành công!`, 'warning');
+                return;
+            }
+
+            // Guard clause Backend / Database: kiểm tra trực tiếp trạng thái trên CSDL Supabase
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (client) {
+                try {
+                    let dbOrder = null;
+                    if (order.rawId) {
+                        const { data } = await client.from('sales_order').select('id, payment_status, order_status').eq('id', order.rawId).maybeSingle();
+                        dbOrder = data;
+                    } else {
+                        const { data } = await client.from('sales_order').select('id, payment_status, order_status').eq('order_code', order.id).maybeSingle();
+                        dbOrder = data;
+                    }
+
+                    if (dbOrder) {
+                        if (dbOrder.payment_status === 'PAID') {
+                            showToast(`Đơn hàng ${orderId} đã được thanh toán trên hệ thống. Không thể thu tiền lần hai!`, 'warning');
+                            order.paymentStatus = 'paid';
+                            persistOrdersData();
+                            renderOrdersTable();
+                            return;
+                        }
+                        if (dbOrder.order_status === 'CANCELLED') {
+                            showToast(`Đơn hàng ${orderId} đã bị hủy trên hệ thống, không thể thu tiền!`, 'warning');
+                            order.status = 'cancelled';
+                            persistOrdersData();
+                            renderOrdersTable();
+                            return;
+                        }
+                    }
+                } catch (checkErr) {
+                    console.warn('Lỗi kiểm tra trạng thái thanh toán từ Supabase:', checkErr);
+                }
+            }
+
+            order.paymentStatus = 'paid';
+            order.timeline.push({
+                title: 'Đã xác nhận thu tiền',
+                time: formatTime(new Date()) + ' - Hôm nay',
+                desc: 'Nhân viên thu ngân xác nhận đã thu đủ số tiền cho đơn hàng',
+                done: true
+            });
+
+            if (client) {
+                try {
+                    if (order.rawId) {
+                        await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', order.rawId);
+                        await client.from('payment').update({ transaction_status: 'SUCCESS' }).eq('order_id', order.rawId);
+                    } else {
+                        await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', order.id);
+                    }
+                } catch (errPayDb) {
+                    console.warn('Lỗi khi xác nhận thanh toán trên Supabase:', errPayDb);
+                }
+            }
+
+            persistOrdersData();
+            showToast(`Đã xác nhận thu tiền cho đơn hàng ${orderId}!`, 'success');
+            renderOrdersTable();
+            window.PawpalOrdersModule.openOrderDetail(orderId);
         },
         completeDelivery: async function(orderId) {
             const order = currentOrdersList.find(o => o.id === orderId);
@@ -4798,7 +6012,7 @@
                 }
                 order.timeline.push({
                     title: 'Đã giao hàng thành công',
-                    time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
+                    time: formatTime(new Date()) + ' - Hôm nay',
                     desc: order.paymentStatus === 'cod_pending' 
                         ? 'Bưu tá xác nhận khách đã nhận hàng và thu tiền COD. Đơn chuyển sang trạng thái chờ bưu cục chuyển khoản đối soát.'
                         : 'Bưu tá xác nhận khách đã nhận hàng thành công',
@@ -4832,34 +6046,95 @@
         },
         reconcileCod: async function(orderId) {
             const order = currentOrdersList.find(o => o.id === orderId);
-            if (order) {
-                order.paymentStatus = 'paid';
-                order.timeline.push({
-                    title: 'Đã đối soát tiền COD',
-                    time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
-                    desc: 'Kế toán xác nhận bưu cục đã chuyển khoản tiền COD về tài khoản PawPal',
-                    done: true
-                });
+            if (!order) return;
 
-                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                if (client) {
-                    try {
-                        if (order.rawId) {
-                            await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', order.rawId);
-                            await client.from('payment').update({ transaction_status: 'SUCCESS' }).eq('order_id', order.rawId);
-                        } else {
-                            await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', order.id);
-                        }
-                    } catch (errRecDb) {
-                        console.warn('Lỗi khi đối soát tiền COD trên Supabase:', errRecDb);
-                    }
-                }
-
-                persistOrdersData();
-                showToast(`Đã đối soát thành công tiền COD cho đơn hàng ${orderId}!`, 'success');
-                renderOrdersTable();
-                window.PawpalOrdersModule.openOrderDetail(orderId);
+            // Guard clause 1: Không cho phép đối soát đơn đã hủy
+            if (order.status === 'cancelled') {
+                showToast(`Đơn hàng ${orderId} đã bị hủy, không thể đối soát tiền COD!`, 'warning');
+                return;
             }
+
+            // Guard clause 2: Chỉ áp dụng cho đơn thanh toán COD
+            if (order.paymentMethod !== 'cod') {
+                showToast(`Đơn hàng ${orderId} thanh toán qua hình thức trực tuyến (${order.paymentMethodName || order.paymentMethod || 'Online'}), không áp dụng đối soát tiền COD bưu cục!`, 'warning');
+                return;
+            }
+
+            // Guard clause 3: Không cho phép đối soát lần hai khi đã đối soát / đã thanh toán
+            if (order.paymentStatus === 'paid') {
+                showToast(`Đơn hàng ${orderId} đã được đối soát/thanh toán trước đó. Không thể đối soát lần hai!`, 'warning');
+                return;
+            }
+
+            // Guard clause 4: Chưa đủ điều kiện đối soát (đơn phải đã giao thành công)
+            if (order.status !== 'delivered' && order.status !== 'completed') {
+                showToast(`Đơn hàng ${orderId} chưa giao hàng thành công đến người nhận. Chưa đủ điều kiện đối soát tiền COD!`, 'warning');
+                return;
+            }
+
+            // Guard clause Backend / Database: kiểm tra trực tiếp trạng thái trên CSDL Supabase
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (client) {
+                try {
+                    let dbOrder = null;
+                    if (order.rawId) {
+                        const { data } = await client.from('sales_order').select('id, payment_status, order_status').eq('id', order.rawId).maybeSingle();
+                        dbOrder = data;
+                    } else {
+                        const { data } = await client.from('sales_order').select('id, payment_status, order_status').eq('order_code', order.id).maybeSingle();
+                        dbOrder = data;
+                    }
+
+                    if (dbOrder) {
+                        if (dbOrder.payment_status === 'PAID') {
+                            showToast(`Đơn hàng ${orderId} đã được đối soát/thanh toán trên hệ thống. Không thể đối soát lần hai!`, 'warning');
+                            order.paymentStatus = 'paid';
+                            persistOrdersData();
+                            renderOrdersTable();
+                            return;
+                        }
+                        if (dbOrder.order_status === 'CANCELLED') {
+                            showToast(`Đơn hàng ${orderId} đã bị hủy trên hệ thống, không thể đối soát COD!`, 'warning');
+                            order.status = 'cancelled';
+                            persistOrdersData();
+                            renderOrdersTable();
+                            return;
+                        }
+                        if (dbOrder.order_status !== 'DELIVERED' && dbOrder.order_status !== 'COMPLETED') {
+                            showToast(`Đơn hàng ${orderId} chưa giao hàng thành công trên hệ thống. Chưa đủ điều kiện đối soát COD!`, 'warning');
+                            return;
+                        }
+                    }
+                } catch (checkErr) {
+                    console.warn('Lỗi kiểm tra đối soát COD từ Supabase:', checkErr);
+                }
+            }
+
+            order.paymentStatus = 'paid';
+            order.timeline.push({
+                title: 'Đã đối soát tiền COD',
+                time: formatTime(new Date()) + ' - Hôm nay',
+                desc: 'Kế toán xác nhận bưu cục đã chuyển khoản tiền COD về tài khoản PawPal',
+                done: true
+            });
+
+            if (client) {
+                try {
+                    if (order.rawId) {
+                        await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', order.rawId);
+                        await client.from('payment').update({ transaction_status: 'SUCCESS' }).eq('order_id', order.rawId);
+                    } else {
+                        await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', order.id);
+                    }
+                } catch (errRecDb) {
+                    console.warn('Lỗi khi đối soát tiền COD trên Supabase:', errRecDb);
+                }
+            }
+
+            persistOrdersData();
+            showToast(`Đã đối soát thành công tiền COD cho đơn hàng ${orderId}!`, 'success');
+            renderOrdersTable();
+            window.PawpalOrdersModule.openOrderDetail(orderId);
         },
         completeOrder: async function(orderId) {
             const order = currentOrdersList.find(o => o.id === orderId);
@@ -4876,7 +6151,7 @@
             const pointsEarned = Math.floor(order.total / 10000);
             order.timeline.push({
                 title: 'Hoàn tất đơn hàng',
-                time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
+                time: formatTime(new Date()) + ' - Hôm nay',
                 desc: `Đơn hàng đã hoàn thành và tích lũy +${pointsEarned} điểm Pawpoint cho khách hàng`,
                 done: true
             });
@@ -4894,7 +6169,7 @@
                         if (!cData[cId].orders.some(o => o.id === order.id)) {
                             cData[cId].orders.unshift({
                                 id: order.id,
-                                date: new Date().toLocaleDateString('vi-VN'),
+                                date: formatDate(new Date()),
                                 total: formatVND(order.total),
                                 payment: 'Đã thanh toán',
                                 status: 'Hoàn tất',
@@ -4950,7 +6225,7 @@
                 container.innerHTML = generatePackingSlipHtml(order);
             }
             if (titleEl) {
-                titleEl.textContent = `Phiếu đóng gói đơn hàng ${order.id} | Khổ in A6 / K80`;
+                titleEl.textContent = 'Xem trước định dạng in chuẩn khổ A6 / K80';
             }
             document.getElementById('modalPackingSlip')?.classList.add('active');
         },
@@ -4975,7 +6250,7 @@
                 container.innerHTML = selectedOrders.map(o => generatePackingSlipHtml(o)).join('');
             }
             if (titleEl) {
-                titleEl.textContent = `In hàng loạt ${selectedOrders.length} phiếu đóng gói liên tiếp | Khổ in A6 / K80`;
+                titleEl.textContent = 'Xem trước định dạng in chuẩn khổ A6 / K80';
             }
             document.getElementById('modalPackingSlip')?.classList.add('active');
         },
@@ -4984,8 +6259,41 @@
                 showToast('Vui lòng chọn ít nhất một đơn hàng để bàn giao vận chuyển.', 'warning');
                 return;
             }
+
+            const eligibleOrders = selectedBatchOrderIds
+                .map(id => currentOrdersList.find(o => o.id === id))
+                .filter(o => o && (o.status === 'confirmed' || o.status === 'pending' || o.status === 'preparing' || o.status === 'processing'));
+
+            const ineligibleOrders = selectedBatchOrderIds
+                .map(id => currentOrdersList.find(o => o.id === id))
+                .filter(o => o && (o.status === 'completed' || o.status === 'cancelled' || o.status === 'shipping' || o.status === 'delivered' || o.status === 'returned'));
+
+            if (eligibleOrders.length === 0) {
+                showToast('Không có đơn hàng nào đủ điều kiện bàn giao vận chuyển (đơn đã hoàn tất hoặc đã hủy không thể bàn giao).', 'warning');
+                return;
+            }
+
             const countEl = document.getElementById('batchDispatchCount');
-            if (countEl) countEl.textContent = `${selectedBatchOrderIds.length} đơn hàng`;
+            if (countEl) {
+                if (ineligibleOrders.length > 0) {
+                    countEl.innerHTML = `<span style="color: #236B48; font-weight: 700;">${eligibleOrders.length} đơn hợp lệ</span> <span style="font-size: 12.5px; color: var(--text-muted); font-weight: normal;">(trên tổng ${selectedBatchOrderIds.length} đơn đã chọn)</span>`;
+                } else {
+                    countEl.textContent = `${eligibleOrders.length} đơn hàng`;
+                }
+            }
+
+            const warnBox = document.getElementById('batchDispatchWarningBox');
+            if (warnBox) {
+                if (ineligibleOrders.length > 0) {
+                    const sampleCodes = ineligibleOrders.slice(0, 3).map(o => o.id).join(', ');
+                    warnBox.style.display = 'block';
+                    warnBox.innerHTML = `<strong>Lưu ý:</strong> Có <strong>${ineligibleOrders.length} đơn không đủ điều kiện</strong> (${sampleCodes}${ineligibleOrders.length > 3 ? '...' : ''}) do đã hoàn tất, đã hủy hoặc đang giao. Hệ thống sẽ <strong>tự động bỏ qua</strong> các đơn này và chỉ bàn giao <strong>${eligibleOrders.length} đơn hợp lệ</strong>.`;
+                } else {
+                    warnBox.style.display = 'none';
+                    warnBox.innerHTML = '';
+                }
+            }
+
             document.getElementById('modalBatchDispatch')?.classList.add('active');
         },
         exportDispatchManifest: function() {
@@ -5016,6 +6324,20 @@
             const order = currentOrdersList.find(o => o.id === orderId);
             if (!order) return;
 
+            // Ràng buộc trạng thái đơn hàng khi tạo RMA
+            if (order.status === 'cancelled') {
+                showToast(`Đơn hàng ${order.id} đã bị hủy, không thể tạo yêu cầu đổi trả (RMA)!`, 'warning');
+                return;
+            }
+            if (order.status !== 'delivered' && order.status !== 'completed' && order.status !== 'returned') {
+                showToast(`Chỉ đơn hàng đã giao thành công (Đã giao / Hoàn tất) mới có thể tạo yêu cầu đổi trả (RMA)!`, 'warning');
+                return;
+            }
+            if (!order.products || order.products.length === 0) {
+                showToast(`Đơn hàng ${order.id} không có sản phẩm nào để xử lý đổi trả.`, 'warning');
+                return;
+            }
+
             selectedOrderId = order.id;
 
             const codeEl = document.getElementById('rmaOrderTargetCode');
@@ -5029,23 +6351,38 @@
             if (totalEl) totalEl.textContent = formatVND(order.total);
             if (amountInput) amountInput.value = order.total || 0;
 
+            // CHỈ hiển thị và cho phép chọn đúng các sản phẩm thuộc đơn gốc
             if (tbody) {
                 tbody.innerHTML = order.products.map(p => `
-                    <tr>
+                    <tr data-sku="${p.sku}">
                         <td style="text-align: center;">
                             <input type="checkbox" class="admin-checkbox rma-item-select-checkbox" data-sku="${p.sku}" data-price="${p.price}" checked>
                         </td>
                         <td>
                             <div style="font-weight: 500;">${p.name}</div>
-                            <div class="sub-meta-text">${p.sku}</div>
+                            <div class="sub-meta-text">Mã SKU: ${p.sku}</div>
                         </td>
                         <td style="text-align: center; font-weight: 500;">${p.quantity}</td>
                         <td style="text-align: center;">
-                            <input type="number" class="admin-input rma-item-qty-input" value="${p.quantity}" min="1" max="${p.quantity}" style="width: 54px; height: 28px; text-align: center; padding: 2px;">
+                            <input type="number" class="admin-input rma-item-qty-input" value="${p.quantity}" min="1" max="${p.quantity}" data-max="${p.quantity}" style="width: 54px; height: 28px; text-align: center; padding: 2px;">
                         </td>
                         <td style="text-align: right; font-weight: 600;">${formatVND(p.price)}</td>
                     </tr>
                 `).join('');
+
+                // Gắn listener kiểm tra giới hạn số lượng trả không vượt quá số lượng đã mua
+                tbody.querySelectorAll('.rma-item-qty-input').forEach(input => {
+                    input.addEventListener('change', (e) => {
+                        const max = parseInt(e.target.getAttribute('data-max') || '1', 10);
+                        let val = parseInt(e.target.value || '1', 10);
+                        if (isNaN(val) || val < 1) val = 1;
+                        if (val > max) {
+                            val = max;
+                            showToast(`Số lượng đổi trả không được vượt quá số lượng đã mua (${max})!`, 'warning');
+                        }
+                        e.target.value = val;
+                    });
+                });
             }
 
             document.getElementById('modalReturnRefund')?.classList.add('active');
@@ -5072,6 +6409,59 @@
             activeActionOrderId = orderId;
             const popover = document.getElementById('orderActionDropdown');
             if (!popover) return;
+
+            const order = currentOrdersList.find(o => o.id === orderId);
+            if (order) {
+                // 1. Kiểm soát hiển thị "Xác nhận thu tiền":
+                // CHỈ hiển thị khi đơn chưa thanh toán (unpaid), chưa từng thanh toán (khác paid), không phải COD và KHÔNG phải đơn đã hủy
+                const btnPay = document.getElementById('menuActionConfirmPayment');
+                if (btnPay) {
+                    const canPay = (order.paymentStatus === 'unpaid' || !order.paymentStatus) 
+                                   && order.paymentStatus !== 'paid' 
+                                   && order.paymentMethod !== 'cod' 
+                                   && order.status !== 'cancelled';
+                    btnPay.style.display = canPay ? 'block' : 'none';
+                }
+
+                // 2. Kiểm soát hiển thị "Đối soát tiền COD bưu cục":
+                // CHỈ hiển thị khi: Đơn COD + ĐÃ giao thành công (delivered / completed) + CHƯA đối soát (cod_pending / unpaid) + KHÔNG phải đơn đã thanh toán/đối soát (paid) + KHÔNG phải đơn đã hủy
+                const btnReconcile = document.getElementById('menuActionReconcileCod');
+                if (btnReconcile) {
+                    const isCod = order.paymentMethod === 'cod';
+                    const isDeliveredOrCompleted = order.status === 'delivered' || order.status === 'completed';
+                    const isAwaitingReconcile = order.paymentStatus === 'cod_pending' || order.paymentStatus === 'unpaid';
+                    const notPaid = order.paymentStatus !== 'paid';
+                    const notCancelled = order.status !== 'cancelled';
+                    const canReconcile = isCod && isDeliveredOrCompleted && isAwaitingReconcile && notPaid && notCancelled;
+                    btnReconcile.style.display = canReconcile ? 'block' : 'none';
+                }
+
+                // 3. Kiểm soát hiển thị "Bàn giao vận chuyển":
+                // CHỈ hiển thị cho đơn chưa giao (confirmed, pending, preparing, processing, shipping)
+                // TUYỆT ĐỐI KHÔNG hiển thị cho đơn ĐÃ HỦY (cancelled), ĐÃ HOÀN TẤT (completed) hoặc ĐÃ GIAO (delivered)
+                const btnShip = document.getElementById('menuActionShipOrder');
+                if (btnShip) {
+                    const canShip = (order.status === 'confirmed' || order.status === 'pending' || order.status === 'preparing' || order.status === 'processing' || order.status === 'shipping') 
+                                    && order.status !== 'cancelled' 
+                                    && order.status !== 'completed' 
+                                    && order.status !== 'delivered';
+                    btnShip.style.display = canShip ? 'block' : 'none';
+                }
+
+                // 4. Kiểm soát hiển thị "Hủy đơn hàng":
+                // Không cho phép hủy đơn đã hoàn tất, đã giao hoặc đã hủy
+                const btnCancel = document.getElementById('menuActionCancelOrder');
+                if (btnCancel) {
+                    btnCancel.style.display = (order.status !== 'completed' && order.status !== 'cancelled' && order.status !== 'delivered') ? 'block' : 'none';
+                }
+
+                // 5. Kiểm soát hiển thị "Tạo khiếu nại và Đổi trả (RMA)":
+                // CHỈ hiển thị khi đơn đã giao thành công (delivered / completed)
+                const btnRma = document.getElementById('menuActionReturnRefund');
+                if (btnRma) {
+                    btnRma.style.display = (order.status === 'delivered' || order.status === 'completed') ? 'block' : 'none';
+                }
+            }
 
             const rect = e.target.getBoundingClientRect();
             popover.style.top = `${rect.bottom + 4}px`;

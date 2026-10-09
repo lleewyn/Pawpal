@@ -140,12 +140,7 @@
         </div>
 
         <!-- PHÂN TRANG NGOÀI BẢNG -->
-        <div class="admin-pagination-container" id="servicePagination">
-            <button type="button" class="btn-pagination">&lt;</button>
-            <button type="button" class="btn-pagination active">1</button>
-            <button type="button" class="btn-pagination">2</button>
-            <button type="button" class="btn-pagination">&gt;</button>
-        </div>
+        <div class="admin-pagination-container" id="servicePagination" style="display: none;"></div>
     </section>
 
     <!-- ====================================================================
@@ -295,16 +290,11 @@
         </div>
 
         <!-- PHÂN TRANG NGOÀI BẢNG -->
-        <div class="admin-pagination-container" id="orderPagination">
-            <button type="button" class="btn-pagination">&lt;</button>
-            <button type="button" class="btn-pagination active">1</button>
-            <button type="button" class="btn-pagination">2</button>
-            <button type="button" class="btn-pagination">&gt;</button>
-        </div>
+        <div class="admin-pagination-container" id="orderPagination" style="display: none;"></div>
     </section>
 
     <!-- ====================================================================
-         SUB-TAB 3: CHI TIẾT TICKET 360° (CHI TIẾT KHIẾU NẠI)
+         SUB-TAB 3: HỒ SƠ TICKET 360°
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-complaint-detail">
         <div class="admin-card complaint-detail-container">
@@ -629,10 +619,12 @@
                     <div class="form-group-item">
                         <label class="form-label-clean">Số điện thoại khách hàng *</label>
                         <input type="text" class="admin-input" id="inputTicketCustomerPhone" placeholder="Nhập 10 số điện thoại...">
+                        <div class="field-error-text" id="errorTicketCustomerPhone" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Tên khách hàng</label>
-                        <input type="text" class="admin-input" id="inputTicketCustomerName" placeholder="Tự động điền theo SĐT..." readonly>
+                        <label class="form-label-clean">Tên khách hàng *</label>
+                        <input type="text" class="admin-input" id="inputTicketCustomerName" placeholder="Tự động điền theo SĐT hoặc nhập tên...">
+                        <div class="field-error-text" id="errorTicketCustomerName" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                     </div>
                 </div>
 

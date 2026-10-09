@@ -1,5 +1,27 @@
 // customers.js - Phân hệ Quản lý Khách hàng Pawpal-er
 (function() {
+    // Hàm định dạng thời gian chuẩn hóa toàn hệ thống (YYYY-MM-DD HH:mm, YYYY-MM-DD, HH:mm)
+    const formatDateTime = window.formatDateTime || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+    };
+
+    const formatDate = window.formatDate || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(dateObj);
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+    };
+
+    const formatTime = window.formatTime || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+    };
+
     async function initCustomersModule() {
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
@@ -205,7 +227,7 @@
                 if (Array.isArray(ordersRes.data)) {
                     ordersRes.data.forEach(o => {
                         if (!ordersMap[o.customer_id]) ordersMap[o.customer_id] = [];
-                        const dateStr = o.created_at ? new Date(o.created_at).toLocaleDateString('vi-VN') : '25/09/2026';
+                        const dateStr = o.created_at ? formatDateTime(o.created_at) : '2026-09-25 14:30';
                         const totalStr = o.total_amount ? Number(o.total_amount).toLocaleString('vi-VN') + ' đ' : '0 đ';
                         let st = 'Hoàn tất';
                         let stClass = 'badge-success';
@@ -234,7 +256,7 @@
                         if (!apptsMap[app.customer_id]) apptsMap[app.customer_id] = [];
                         const sName = app.service?.service_name || 'Dịch vụ Spa & Grooming';
                         const staffName = app.staff?.full_name || 'KTV PawPal';
-                        const appDate = app.appointment_date ? new Date(app.appointment_date).toLocaleDateString('vi-VN') : '25/09/2026';
+                        const appDate = app.appointment_date ? formatDate(app.appointment_date) : '2026-09-25';
                         const appTime = app.appointment_time ? app.appointment_time.slice(0, 5) : '09:00';
                         let st = 'Chờ xác nhận';
                         let stClass = 'badge-warning';
@@ -260,7 +282,7 @@
                         const uId = t.user_id;
                         if (!uId) return;
                         if (!complaintsMap[uId]) complaintsMap[uId] = [];
-                        const tDate = t.created_at ? new Date(t.created_at).toLocaleDateString('vi-VN') : '27/09/2026';
+                        const tDate = t.created_at ? formatDateTime(t.created_at) : '2026-09-27 10:00';
                         let st = 'Đang xử lý';
                         let stClass = 'badge-warning';
                         if (t.status === 'RESOLVED' || t.status === 'CLOSED') { st = 'Đã giải quyết'; stClass = 'badge-success'; }
@@ -317,7 +339,7 @@
                             phone: c.phone_main || '—',
                             email: c.email || 'Chưa cập nhật',
                             gender: (prof.gender === 'FEMALE' || prof.gender === 'Nữ') ? 'Nữ' : ((prof.gender === 'MALE' || prof.gender === 'Nam') ? 'Nam' : 'Khác'),
-                            dob: prof.date_of_birth ? new Date(prof.date_of_birth).toLocaleDateString('vi-VN') : 'Chưa cập nhật',
+                            dob: prof.date_of_birth ? formatDate(prof.date_of_birth) : 'Chưa cập nhật',
                             dobRaw: prof.date_of_birth || '',
                             tier,
                             tierName,
@@ -342,7 +364,7 @@
                 if (Array.isArray(pointsTxRes.data) && pointsTxRes.data.length > 0) {
                     pawpointHistory = pointsTxRes.data.map(pt => {
                         const cObj = Object.values(customerDatabase).find(c => c.dbId === pt.customer_id) || {};
-                        const tTime = pt.created_at ? new Date(pt.created_at).toLocaleString('vi-VN') : '25/09/2026';
+                        const tTime = pt.created_at ? formatDateTime(pt.created_at) : '2026-09-25 14:30';
                         const ptsNum = Number(pt.points) || 0;
                         return {
                             id: `PWH-${pt.id.slice(0, 4)}`,
@@ -913,7 +935,7 @@
                         if (!orders.some(ord => ord.id === mo.id)) {
                             orders.unshift({
                                 id: mo.id,
-                                date: new Date(mo.createdAt).toLocaleDateString('vi-VN'),
+                                date: formatDate(mo.createdAt),
                                 total: Number(mo.total).toLocaleString('vi-VN') + ' đ',
                                 payment: mo.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán',
                                 status: mo.status === 'completed' ? 'Hoàn tất' : mo.status === 'shipping' ? 'Đang giao' : mo.status === 'confirmed' ? 'Đang chuẩn bị' : 'Chờ xác nhận',

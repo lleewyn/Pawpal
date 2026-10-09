@@ -11,6 +11,28 @@
  */
 
 (function() {
+    // Hàm định dạng thời gian chuẩn hóa toàn hệ thống (YYYY-MM-DD HH:mm, YYYY-MM-DD, HH:mm)
+    const formatDateTime = window.formatDateTime || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+    };
+
+    const formatDate = window.formatDate || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+    };
+
+    const formatTime = window.formatTime || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+    };
+
     async function initSettingsModule() {
         console.log('Khởi tạo Module Cấu hình Hệ thống (Supabase Live SSOT)...');
 
@@ -304,7 +326,7 @@
                     const name = v.voucher_name || v.name || ('Voucher ' + code);
                     const isPercent = (v.type === 'percentage' || v.type === 'percent' || !!v.discount_percent);
                     const val = Number(v.discount_value || v.discount_amount || v.discount_percent || 30000);
-                    let endDateStr = v.end_date ? ('Đến ' + new Date(v.end_date).toLocaleDateString('vi-VN')) : 'Đến 31/12/2026';
+                    let endDateStr = v.end_date ? ('Đến ' + formatDate(v.end_date)) : 'Đến 2026-12-31';
                     
                     let target = 'Shop';
                     const appFor = Array.isArray(v.applicable_for) ? v.applicable_for.join(',') : String(v.applicable_for || v.applicable_service || '');
@@ -349,7 +371,7 @@
                     else if (sUpper === 'ARCHIVED' || sUpper === 'HIDDEN') status = 'hidden';
 
                     const dateObj = a.updated_at ? new Date(a.updated_at) : (a.created_at ? new Date(a.created_at) : new Date());
-                    const dateStr = String(dateObj.getDate()).padStart(2, '0') + '/' + String(dateObj.getMonth() + 1).padStart(2, '0') + '/' + dateObj.getFullYear();
+                    const dateStr = formatDate(dateObj);
 
                     return {
                         id: a.id,
@@ -377,8 +399,7 @@
                 // 5. Map Audit Logs (Database column: created_at, staff_id, action, entity_name, description)
                 if (audits.length > 0) {
                     auditLogsList = audits.map(l => {
-                        const dateObj = l.created_at ? new Date(l.created_at) : new Date();
-                        const timeStr = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+                        const timeStr = formatDateTime(l.created_at);
                         return {
                             time: timeStr,
                             actor: 'Quản trị viên (Admin)',
@@ -1207,7 +1228,7 @@
                     if (client) {
                         const { error } = await client.from('banner').insert([{
                             title: title,
-                            description: 'Ưu đãi PawPal cập nhật ' + new Date().toLocaleDateString('vi-VN'),
+                            description: 'Ưu đãi PawPal cập nhật ' + formatDate(new Date()),
                             image_url: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=1200&q=80',
                             link: url,
                             button_text: cta,

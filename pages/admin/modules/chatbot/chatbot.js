@@ -11,6 +11,28 @@
  */
 
 (function initChatbotModule() {
+    // Hàm định dạng thời gian chuẩn hóa toàn hệ thống (YYYY-MM-DD HH:mm, YYYY-MM-DD, HH:mm)
+    const formatDateTime = window.formatDateTime || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+    };
+
+    const formatDate = window.formatDate || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+    };
+
+    const formatTime = window.formatTime || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+    };
+
     console.log('Khởi tạo Module Chatbot và Trực chat CSKH (100% Supabase Live Database)...');
 
     // Khởi tạo Supabase Client
@@ -2534,7 +2556,7 @@
         btnCamera?.addEventListener('click', () => {
             if (!currentConversation) return;
             if (cameraTimeEl) {
-                cameraTimeEl.textContent = new Date().toLocaleTimeString();
+                cameraTimeEl.textContent = formatTime(new Date());
             }
             if (cameraOverlay) cameraOverlay.style.display = 'flex';
         });

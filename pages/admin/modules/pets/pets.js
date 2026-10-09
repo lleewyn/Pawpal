@@ -1,5 +1,27 @@
 // pets.js - Phân hệ Quản lý Thú cưng Pawpal-er
 (function() {
+    // Hàm định dạng thời gian chuẩn hóa toàn hệ thống (YYYY-MM-DD HH:mm, YYYY-MM-DD, HH:mm)
+    const formatDateTime = window.formatDateTime || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+    };
+
+    const formatDate = window.formatDate || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+    };
+
+    const formatTime = window.formatTime || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+    };
+
     async function initPetsModule() {
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
@@ -206,7 +228,7 @@
                             if (!petApptsMap[pId]) petApptsMap[pId] = [];
                             
                             const sName = app.service?.service_name || 'Dịch vụ Spa và Grooming';
-                            const appDate = app.appointment_date ? new Date(app.appointment_date).toLocaleDateString('vi-VN') : '25/09/2026';
+                            const appDate = app.appointment_date ? formatDate(app.appointment_date) : '2026-09-25';
                             const appTime = app.appointment_time ? app.appointment_time.slice(0, 5) : '14:00';
                             const priceStr = app.total_price ? Number(app.total_price).toLocaleString('vi-VN') + 'đ' : '250.000đ';
                             
@@ -235,7 +257,7 @@
                             if (!pId) return;
                             if (!petCareLogsMap[pId]) petCareLogsMap[pId] = [];
                             
-                            const logTime = cl.recorded_at ? new Date(cl.recorded_at).toLocaleString('vi-VN') : '25/09/2026 14:30';
+                            const logTime = cl.recorded_at ? formatDateTime(cl.recorded_at) : '2026-09-25 14:30';
                             petCareLogsMap[pId].push({
                                 time: logTime,
                                 service: cl.description || 'Tắm sấy dưỡng ẩm và Vệ sinh định kỳ',
@@ -271,12 +293,12 @@
                             if (p.status === 'HOTEL') statusStr = 'Lưu trú Hotel';
                             else if (isArch) statusStr = 'Lưu trữ';
 
-                            const dobFormatted = p.date_of_birth ? new Date(p.date_of_birth).toLocaleDateString('vi-VN') : '01/01/2023';
+                            const dobFormatted = p.date_of_birth ? formatDate(p.date_of_birth) : '2023-01-01';
 
                             // Tạo lịch sử cân nặng
                             const weightLogs = [
                                 {
-                                    date: p.updated_at ? new Date(p.updated_at).toLocaleDateString('vi-VN') : '25/09/2026',
+                                    date: p.updated_at ? formatDate(p.updated_at) : '2026-09-25',
                                     weight: `${wNum} kg`,
                                     tier: wNum < 5 ? 'Dưới 5kg (180.000đ)' : (wNum <= 10 ? 'Phân khúc 5 - 10kg (250.000đ)' : 'Phân khúc trên 10kg (350.000đ)'),
                                     by: 'Kỹ thuật viên quầy'

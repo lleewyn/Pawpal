@@ -1,4 +1,46 @@
 // admin.js - Quản trị hệ thống Pawpal-er
+
+// ====================================================================
+// CHUẨN HÓA HÀM ĐỊNH DẠNG THỜI GIAN TOÀN HỆ THỐNG
+// Định dạng hiển thị chuẩn: YYYY-MM-DD HH:mm (không giây), YYYY-MM-DD, HH:mm
+// ====================================================================
+function formatDateTime(dateInput) {
+    if (!dateInput) return '—';
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return String(dateInput);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+}
+
+function formatDate(dateInput) {
+    if (!dateInput) return '—';
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return String(dateInput);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function formatTime(dateInput) {
+    if (!dateInput) return '—';
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return String(dateInput);
+    const hh = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${hh}:${min}`;
+}
+
+if (typeof window !== 'undefined') {
+    window.formatDateTime = formatDateTime;
+    window.formatDate = formatDate;
+    window.formatTime = formatTime;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const sidebarBtns = document.querySelectorAll('.sidebar-menu-btn');
     const moduleTitleEl = document.getElementById('headerModuleTitle');
@@ -69,9 +111,9 @@ document.addEventListener('DOMContentLoaded', () => {
             defaultTab: 'tab-complaint-services',
             storageKey: 'pawpal_admin_complaint_active_subtab',
             subtabs: [
-                { id: 'tab-complaint-services', label: 'Dịch vụ' },
-                { id: 'tab-complaint-orders', label: 'Đơn hàng' },
-                { id: 'tab-complaint-reports', label: 'Báo cáo SLA' }
+                { id: 'tab-complaint-services', label: 'Theo dịch vụ' },
+                { id: 'tab-complaint-orders', label: 'Theo đơn hàng' },
+                { id: 'tab-complaint-detail', label: 'Hồ sơ' }
             ]
         },
         'Chatbot': {

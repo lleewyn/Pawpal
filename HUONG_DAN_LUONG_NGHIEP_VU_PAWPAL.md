@@ -523,7 +523,7 @@ sequenceDiagram
 - **Cấu trúc 3 Subtab chuyên sâu trên Header Bar (Chuẩn `AGENTS.md`)**:
   1. *Theo Dịch vụ (`tab-complaint-services`)*: Quản lý các sự cố về Spa và Grooming, Pet Hotel, Pet Taxi (kèm nhãn mức độ, KTV thực hiện, đồng hồ đếm ngược SLA và huy hiệu số đếm màu đỏ).
   2. *Theo Đơn hàng (`tab-complaint-orders`)*: Quản lý khiếu nại về hàng lỗi, giao trễ, giao sai màu/kích thước, quy trình đổi trả hàng RMA và kiểm soát hoàn tiền.
-  3. *Chi tiết khiếu nại (`tab-complaint-detail`)*: Màn hình thẩm định và giải quyết 360°, tích hợp Deep Breadcrumb `/ [Mã Ticket]`.
+  3. *Hồ sơ (`tab-complaint-detail`)*: Màn hình thẩm định và giải quyết 360°, tích hợp Deep Breadcrumb `/ [Mã Ticket]`.
 
 - **Vòng đời Ticket Khiếu nại (Ticket Lifecycle - 8 trạng thái chuẩn hóa)**:
   * **Chưa xử lý (`new` / `open`)**: Tiếp nhận mới từ Web, Hotline, Quầy lễ tân hoặc Chatbot AI chuyển sang. Chưa có nhân sự CSKH tiếp nhận.

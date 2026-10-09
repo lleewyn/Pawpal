@@ -450,6 +450,20 @@
     color: #FFFFFF;
 }
 
+.btn-pagination:disabled,
+.btn-pagination.disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.admin-btn:disabled,
+.admin-btn.disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 /* 5. SUBTAB 3: CHI TIẾT TICKET 360° */
 .complaint-detail-container {
     padding: 24px 28px;

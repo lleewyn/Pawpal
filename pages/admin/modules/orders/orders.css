@@ -1166,22 +1166,34 @@
 }
 
 /* MODAL XEM TRƯỚC PHIẾU ĐÓNG GÓI (PACKING SLIP MODAL) */
+.admin-modal-card.packing-slip-modal-card,
+#modalPackingSlip .admin-modal-card,
+#modalPackingSlip .packing-slip-modal-card,
 .packing-slip-modal-card {
-    width: 680px;
-    max-width: 96vw;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
+    width: 960px !important;
+    max-width: 96vw !important;
+    max-height: 92vh !important;
+    padding: 24px 28px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.packing-slip-modal-card .modal-header-clean {
+    flex-shrink: 0;
+    margin-bottom: 8px;
 }
 
 .packing-slip-body {
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 20px 24px;
+    padding: 18px 20px;
     background-color: #F8FAF9;
+    border-radius: var(--admin-radius);
     display: flex;
     flex-direction: column;
     gap: 20px;
+    flex: 1;
 }
 
 /* TỜ PHIẾU ĐÓNG GÓI MÔ PHỎNG IN A6 / K80 */
@@ -1189,20 +1201,24 @@
     background-color: #FFFFFF;
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius);
-    padding: 24px;
+    padding: 28px 32px;
     color: var(--text-main);
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 22px;
     font-size: 13px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .slip-header-block {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding-bottom: 12px;
+    padding-bottom: 18px;
     border-bottom: 1px solid #ECF2EE;
+    gap: 20px;
 }
 
 .slip-brand-title {
@@ -1211,12 +1227,14 @@
     color: #236B48;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    line-height: 1.3;
 }
 
 .slip-brand-sub {
-    font-size: 11.5px;
+    font-size: 12px;
     color: var(--text-muted);
-    margin-top: 2px;
+    margin-top: 4px;
+    line-height: 1.5;
 }
 
 .slip-tracking-box {
@@ -1224,6 +1242,8 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
 }
 
 .slip-barcode-text {
@@ -1232,7 +1252,7 @@
     font-weight: 700;
     letter-spacing: 2px;
     background-color: #EEF5F1;
-    padding: 4px 10px;
+    padding: 6px 14px;
     border-radius: var(--admin-radius);
     color: #236B48;
 }
@@ -1240,29 +1260,33 @@
 .slip-info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    padding-bottom: 12px;
+    gap: 28px;
+    padding-bottom: 18px;
     border-bottom: 1px solid #ECF2EE;
 }
 
 .slip-info-col {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
 }
 
 .slip-info-label {
     font-size: 11.5px;
-    color: var(--text-muted);
+    font-weight: 700;
+    color: var(--text-heading);
+    letter-spacing: 0.3px;
 }
 
 .slip-info-val {
     font-size: 13px;
     color: var(--text-main);
+    line-height: 1.5;
 }
 
 .slip-info-val.strong {
     font-weight: 600;
+    font-size: 13.5px;
 }
 
 /* BẢNG SẢN PHẨM PICK-LIST TRÊN PHIẾU */
@@ -1270,21 +1294,23 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 12.5px;
+    margin-top: 6px;
 }
 
 .slip-items-table th {
     background-color: #EEF5F1;
     color: #236B48;
     font-weight: 600;
-    padding: 8px 10px;
+    padding: 10px 12px;
     text-align: left;
     border-bottom: 1px solid #C3DEC7;
 }
 
 .slip-items-table td {
-    padding: 8px 10px;
+    padding: 11px 12px;
     border-bottom: 1px solid #ECF2EE;
     color: var(--text-main);
+    vertical-align: middle;
 }
 
 /* KHỐI TỔNG TIỀN VÀ COD TRÊN PHIẾU */
@@ -1292,9 +1318,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
+    padding: 14px 20px;
     border-radius: var(--admin-radius);
-    font-size: 14px;
+    font-size: 13.5px;
+    margin-top: 4px;
+    gap: 16px;
 }
 
 .slip-cod-highlight-box.is-cod {
@@ -1316,8 +1344,9 @@
 .slip-sign-row {
     display: flex;
     justify-content: space-between;
-    padding-top: 10px;
-    font-size: 12px;
+    padding-top: 16px;
+    margin-top: 6px;
+    font-size: 12.5px;
     color: var(--text-muted);
 }
 
@@ -1325,7 +1354,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 40px;
+    gap: 48px;
     width: 45%;
 }
 

@@ -1,5 +1,27 @@
 // complaints.js - Phân hệ Quản lý Khiếu nại Pawpal-er (Chống bỏ sót, SLA và Giải quyết bồi hoàn)
 (function() {
+    // Hàm định dạng thời gian chuẩn hóa toàn hệ thống (YYYY-MM-DD HH:mm, YYYY-MM-DD, HH:mm)
+    const formatDateTime = window.formatDateTime || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+    };
+
+    const formatDate = window.formatDate || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+    };
+
+    const formatTime = window.formatTime || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+    };
+
     async function initComplaintsModule() {
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
@@ -107,9 +129,19 @@
 
         async function loadComplaintsModuleData() {
             try {
-                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                let client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                 if (!client) {
-                    console.warn('[Complaints] Supabase client not initialized.');
+                    for (let attempt = 0; attempt < 30; attempt++) {
+                        await new Promise(r => setTimeout(r, 100));
+                        client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                        if (client) break;
+                    }
+                }
+                if (!client) {
+                    console.warn('[Complaints] Supabase client không khả dụng sau khi chờ.');
+                    updateComplaintsKpis();
+                    renderServiceComplaintsTable();
+                    renderOrderComplaintsTable();
                     return;
                 }
 
@@ -123,24 +155,24 @@
                     ordersRes,
                     staffRes
                 ] = await Promise.all([
-                    client.from('support_ticket').select('*').order('created_at', { ascending: false }),
-                    client.from('support_ticket_message').select('*').order('created_at', { ascending: true }),
-                    client.from('customer').select('*'),
-                    client.from('customer_profile').select('*'),
-                    client.from('pet_profile').select('*'),
-                    client.from('appointment').select('*, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false }),
-                    client.from('sales_order').select('*').order('created_at', { ascending: false }),
-                    client.from('staff').select('*')
+                    Promise.resolve(client.from('support_ticket').select('*').order('priority', { ascending: true }).order('created_at', { ascending: false })).catch(err => ({ data: [], error: err })),
+                    Promise.resolve(client.from('support_ticket_message').select('*').order('created_at', { ascending: true })).catch(err => ({ data: [], error: err })),
+                    Promise.resolve(client.from('customer').select('*')).catch(err => ({ data: [], error: err })),
+                    Promise.resolve(client.from('customer_profile').select('*')).catch(err => ({ data: [], error: err })),
+                    Promise.resolve(client.from('pet_profile').select('*')).catch(err => ({ data: [], error: err })),
+                    Promise.resolve(client.from('appointment').select('*, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false })).catch(err => ({ data: [], error: err })),
+                    Promise.resolve(client.from('sales_order').select('*').order('created_at', { ascending: false })).catch(err => ({ data: [], error: err })),
+                    Promise.resolve(client.from('staff').select('*')).catch(err => ({ data: [], error: err }))
                 ]);
 
-                const tickets = ticketsRes.data || [];
-                const messages = messagesRes.data || [];
-                const customers = customersRes.data || [];
-                const profiles = profilesRes.data || [];
-                const pets = petsRes.data || [];
-                const appointments = apptsRes.data || [];
-                const orders = ordersRes.data || [];
-                const staffList = staffRes.data || [];
+                const tickets = (ticketsRes && ticketsRes.data) || [];
+                const messages = (messagesRes && messagesRes.data) || [];
+                const customers = (customersRes && customersRes.data) || [];
+                const profiles = (profilesRes && profilesRes.data) || [];
+                const pets = (petsRes && petsRes.data) || [];
+                const appointments = (apptsRes && apptsRes.data) || [];
+                const orders = (ordersRes && ordersRes.data) || [];
+                const staffList = (staffRes && staffRes.data) || [];
 
                 cachedAppointments = appointments;
                 cachedOrders = orders;
@@ -245,8 +277,7 @@
                     }
 
                     // Format created date
-                    const cDate = t.created_at ? new Date(t.created_at) : new Date();
-                    const createdAtStr = `${cDate.getFullYear()}-${String(cDate.getMonth() + 1).padStart(2, '0')}-${String(cDate.getDate()).padStart(2, '0')} ${String(cDate.getHours()).padStart(2, '0')}:${String(cDate.getMinutes()).padStart(2, '0')}`;
+                    const createdAtStr = formatDateTime(t.created_at);
 
                     // Priority normalization
                     let normPriority = 'medium';
@@ -439,6 +470,10 @@
                 // Chạy kiểm tra các mốc tự động hóa (48h/72h/3 ngày)
                 checkComplaintTimers();
 
+                // Sắp xếp ưu tiên các ca khẩn cấp và hạn xử lý SLA lên đầu bảng
+                serviceComplaints.sort(sortComplaintsByUrgencyAndSla);
+                orderComplaints.sort(sortComplaintsByUrgencyAndSla);
+
                 if (!currentActiveTicket || !serviceComplaints.concat(orderComplaints).some(x => x.id === currentActiveTicket.id)) {
                     currentActiveTicket = serviceComplaints[0] || orderComplaints[0] || null;
                 }
@@ -446,12 +481,14 @@
                 console.log(`[Complaints] Nạp thành công từ Supabase: ${serviceComplaints.length} khiếu nại dịch vụ, ${orderComplaints.length} khiếu nại đơn hàng.`);
             } catch (err) {
                 console.error('[Complaints] Lỗi nạp dữ liệu từ Supabase:', err);
+                updateComplaintsKpis();
+                renderServiceComplaintsTable();
+                renderOrderComplaintsTable();
             }
         }
 
         function formatTimestamp(d) {
-            const dateObj = d ? new Date(d) : new Date();
-            return `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')} - ${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()}`;
+            return formatDateTime(d);
         }
 
         function saveComplaintsOverrides() {
@@ -632,6 +669,50 @@
             }
         }
 
+        // Hàm sắp xếp ưu tiên theo mức độ khẩn cấp và hạn xử lý SLA (Quy chuẩn vận hành thông minh)
+        function sortComplaintsByUrgencyAndSla(a, b) {
+            calculateSla(a);
+            calculateSla(b);
+
+            // 1. Ca đã đóng hoặc đã giải quyết luôn đưa xuống cuối bảng
+            const isDoneA = (a.status === 'resolved' || a.status === 'closed');
+            const isDoneB = (b.status === 'resolved' || b.status === 'closed');
+            if (isDoneA !== isDoneB) return isDoneA ? 1 : -1;
+
+            // 2. Độ ưu tiên theo SLA: OVERDUE (Quá hạn) > URGENT (Sắp quá hạn) > NORMAL > DONE
+            const slaRank = { 'OVERDUE': 1, 'URGENT': 2, 'NORMAL': 3, 'DONE': 4 };
+            const sRankA = slaRank[a.slaStatus] || 3;
+            const sRankB = slaRank[b.slaStatus] || 3;
+            if (sRankA !== sRankB) return sRankA - sRankB;
+
+            // 3. Mức độ ưu tiên của Ticket: Cao (high: 1) > Trung bình (medium: 2) > Thấp (low: 3)
+            const priorityRank = { 'high': 1, 'medium': 2, 'low': 3 };
+            const pA = priorityRank[a.priority] || 2;
+            const pB = priorityRank[b.priority] || 2;
+            if (pA !== pB) return pA - pB;
+
+            // 4. Trạng thái cần can thiệp: Chưa xử lý (1) > Xử lý lần 2 (2) > Chờ duyệt (3) > Đang xử lý (4) > Chờ khách (5)
+            const statusRank = {
+                'new': 1,
+                'reprocessing': 2,
+                'waiting_manager_approval': 3,
+                'processing': 4,
+                'waiting_return': 4,
+                'refunding': 4,
+                'waiting_customer': 5,
+                'resolved': 6,
+                'closed': 7
+            };
+            const stA = statusRank[a.status] || 5;
+            const stB = statusRank[b.status] || 5;
+            if (stA !== stB) return stA - stB;
+
+            // 5. Nếu cùng mức độ khẩn cấp, đưa ca tiếp nhận mới nhất lên trước
+            const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return timeB - timeA;
+        }
+
         function saveComplaintsState() {
             try {
                 localStorage.setItem('pawpal_service_complaints', JSON.stringify(serviceComplaints));
@@ -733,9 +814,11 @@
             }
         }
 
-        // Tự động tính toán SLA ban đầu cho tất cả vé
+        // Tự động tính toán SLA ban đầu và sắp xếp theo mức độ khẩn cấp
         serviceComplaints.forEach(calculateSla);
         orderComplaints.forEach(calculateSla);
+        serviceComplaints.sort(sortComplaintsByUrgencyAndSla);
+        orderComplaints.sort(sortComplaintsByUrgencyAndSla);
 
         let currentActiveTicket = serviceComplaints[0];
         let currentTicketType = 'service'; // 'service' hoặc 'order'
@@ -1063,6 +1146,9 @@
 
             renderComplaintsAlertBar();
             updateComplaintsKpis();
+            if (typeof bindExportButtons === 'function') {
+                bindExportButtons();
+            }
         }
 
         headerSubtabBtns.forEach(btn => {
@@ -1078,8 +1164,379 @@
         // ---------------------------------------------------------
         // 5. RENDER SUB-TAB 1: KHIẾU NẠI DỊCH VỤ VÀ BỘ LỌC ĐỘNG
         // ---------------------------------------------------------
+        let serviceCurrentPage = 1;
+        let currentFilteredServices = [];
+        let currentFilteredOrders = [];
+
+        async function ensureXLSXLoaded() {
+            if (window.XLSX && window.XLSX.utils && (window.XLSX.writeFile || window.XLSX.write)) {
+                return window.XLSX;
+            }
+
+            return new Promise((resolve, reject) => {
+                const existing = document.querySelector('script[data-xlsx-tag]');
+                if (existing) {
+                    if (window.XLSX) return resolve(window.XLSX);
+                    existing.addEventListener('load', () => resolve(window.XLSX));
+                    existing.addEventListener('error', () => {
+                        loadCdnXlsx(resolve, reject);
+                    });
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.setAttribute('data-xlsx-tag', 'true');
+                script.src = '/scripts/xlsx.full.min.js';
+                script.onload = () => {
+                    if (window.XLSX) resolve(window.XLSX);
+                    else loadCdnXlsx(resolve, reject);
+                };
+                script.onerror = () => {
+                    loadCdnXlsx(resolve, reject);
+                };
+                document.head.appendChild(script);
+            });
+        }
+
+        function loadCdnXlsx(resolve, reject) {
+            const cdn = document.createElement('script');
+            cdn.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+            cdn.onload = () => {
+                if (window.XLSX) resolve(window.XLSX);
+                else reject(new Error('Không tìm thấy đối tượng XLSX sau khi tải.'));
+            };
+            cdn.onerror = () => reject(new Error('Không thể tải thư viện XLSX.'));
+            document.head.appendChild(cdn);
+        }
+
+        async function exportServiceComplaintsToExcel(dataList) {
+            let list = dataList;
+            if (!list || list.length === 0) {
+                list = (currentFilteredServices && currentFilteredServices.length > 0)
+                    ? currentFilteredServices
+                    : (serviceComplaints && serviceComplaints.length > 0 ? serviceComplaints : []);
+            }
+
+            if (!list || list.length === 0) {
+                showToast('Không có dữ liệu khiếu nại dịch vụ để xuất file.', 'warning');
+                return;
+            }
+
+            try {
+                showToast('Đang khởi tạo và xuất file Excel (.xlsx)...', 'info');
+                const XLSXLib = await ensureXLSXLoaded();
+                if (!XLSXLib || !XLSXLib.utils) {
+                    throw new Error('Thư viện XLSX không khả dụng.');
+                }
+
+                const headers = [
+                    'STT',
+                    'Mã khiếu nại',
+                    'Tên khách hàng',
+                    'Số điện thoại',
+                    'Tên thú cưng',
+                    'Giống loài và thể trạng',
+                    'Ghi chú sức khỏe thú cưng',
+                    'Mã lịch hẹn',
+                    'Phân loại dịch vụ',
+                    'Tên gói dịch vụ',
+                    'Kỹ thuật viên thực hiện',
+                    'Tiêu đề khiếu nại',
+                    'Nội dung phản ánh của khách',
+                    'Mức độ ưu tiên',
+                    'Hạn xử lý SLA',
+                    'Trạng thái SLA',
+                    'Nhân viên CSKH phụ trách',
+                    'Ngày tiếp nhận',
+                    'Trạng thái giải quyết',
+                    'Phương án bồi hoàn / giải quyết'
+                ];
+
+                const statusMap = {
+                    'new': 'Chưa xử lý',
+                    'processing': 'Đang xử lý',
+                    'waiting_customer': 'Chờ phản hồi',
+                    'waiting_manager_approval': 'Chờ quản lý duyệt',
+                    'reprocessing': 'Xử lý lần 2',
+                    'resolved': 'Đã giải quyết',
+                    'closed': 'Đã đóng'
+                };
+
+                const priorityMap = {
+                    'high': 'Cao',
+                    'medium': 'Trung bình',
+                    'low': 'Thấp'
+                };
+
+                const serviceTypeMap = {
+                    'spa': 'Spa và Grooming',
+                    'hotel': 'Khách sạn thú cưng',
+                    'taxi': 'Pet Taxi vận chuyển',
+                    'health': 'Khám chữa bệnh thú y'
+                };
+
+                const rows = list.map((item, idx) => {
+                    const resInfo = item.resolution
+                        ? `${item.resolution.typeName || ''}${item.resolution.note ? ' - ' + item.resolution.note : ''}${item.resolution.voucherCode ? ' [Mã: ' + item.resolution.voucherCode + ']' : ''}`
+                        : '';
+
+                    return [
+                        idx + 1,
+                        item.id || '',
+                        item.customerName || '',
+                        item.phone || '',
+                        item.petName || '',
+                        item.petBreed || '',
+                        item.petNotes || '',
+                        item.bookingId || '',
+                        serviceTypeMap[item.serviceType] || item.serviceType || 'Dịch vụ',
+                        item.serviceName || '',
+                        item.staffExecuted || '',
+                        item.title || '',
+                        (item.content || '').replace(/\r?\n/g, ' '),
+                        priorityMap[item.priority] || item.priority || 'Trung bình',
+                        item.slaRemainingText || '',
+                        item.slaStatus === 'OVERDUE' ? 'Quá hạn SLA' : (item.slaStatus === 'WARNING' ? 'Sắp quá hạn' : 'Trong hạn'),
+                        item.staffAssigned || 'Chưa phân công',
+                        item.createdAt || '',
+                        statusMap[item.status] || item.status || '',
+                        resInfo || 'Chưa có phương án'
+                    ];
+                });
+
+                const wsData = [headers, ...rows];
+                const ws = XLSXLib.utils.aoa_to_sheet(wsData);
+
+                // Thiết lập độ rộng cột chuẩn mực cho file Excel
+                ws['!cols'] = [
+                    { wch: 6 },  // STT
+                    { wch: 18 }, // Mã khiếu nại
+                    { wch: 22 }, // Tên khách hàng
+                    { wch: 14 }, // Số điện thoại
+                    { wch: 14 }, // Tên thú cưng
+                    { wch: 26 }, // Giống loài và thể trạng
+                    { wch: 30 }, // Ghi chú sức khỏe
+                    { wch: 16 }, // Mã lịch hẹn
+                    { wch: 22 }, // Phân loại dịch vụ
+                    { wch: 28 }, // Tên gói dịch vụ
+                    { wch: 24 }, // KTV thực hiện
+                    { wch: 28 }, // Tiêu đề khiếu nại
+                    { wch: 45 }, // Nội dung phản ánh
+                    { wch: 16 }, // Mức độ ưu tiên
+                    { wch: 18 }, // Hạn xử lý SLA
+                    { wch: 16 }, // Trạng thái SLA
+                    { wch: 24 }, // CSKH phụ trách
+                    { wch: 20 }, // Ngày tiếp nhận
+                    { wch: 20 }, // Trạng thái
+                    { wch: 38 }  // Phương án bồi hoàn
+                ];
+
+                const wb = XLSXLib.utils.book_new();
+                XLSXLib.utils.book_append_sheet(wb, ws, 'Khieu_Nai_Theo_Dich_Vu');
+
+                const now = new Date();
+                const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+                const fileName = `Pawpal_Khieu_Nai_Dich_Vu_${dateStr}.xlsx`;
+
+                XLSXLib.writeFile(wb, fileName);
+                showToast(`Đã xuất thành công ${list.length} khiếu nại dịch vụ ra file Excel (.xlsx)!`, 'success');
+            } catch (err) {
+                console.error('[Complaints] Lỗi xuất file Excel dịch vụ:', err);
+                showToast('Lỗi khi xuất file Excel: ' + (err.message || err), 'danger');
+            }
+        }
+
+        async function exportOrderComplaintsToExcel(dataList) {
+            let list = dataList;
+            if (!list || list.length === 0) {
+                list = (currentFilteredOrders && currentFilteredOrders.length > 0)
+                    ? currentFilteredOrders
+                    : (orderComplaints && orderComplaints.length > 0 ? orderComplaints : []);
+            }
+
+            if (!list || list.length === 0) {
+                showToast('Không có dữ liệu khiếu nại đơn hàng để xuất file.', 'warning');
+                return;
+            }
+
+            try {
+                showToast('Đang khởi tạo và xuất file Excel (.xlsx)...', 'info');
+                const XLSXLib = await ensureXLSXLoaded();
+                if (!XLSXLib || !XLSXLib.utils) {
+                    throw new Error('Thư viện XLSX không khả dụng.');
+                }
+
+                const headers = [
+                    'STT',
+                    'Mã khiếu nại',
+                    'Tên khách hàng',
+                    'Số điện thoại',
+                    'Mã đơn hàng',
+                    'Tên sản phẩm',
+                    'Mã SKU',
+                    'Phân loại sự cố',
+                    'Yêu cầu của khách',
+                    'Nội dung phản ánh của khách',
+                    'Mức độ ưu tiên',
+                    'Đơn vị vận chuyển',
+                    'Mã vận đơn',
+                    'Hạn xử lý SLA',
+                    'Trạng thái SLA',
+                    'Nhân viên CSKH phụ trách',
+                    'Ngày tiếp nhận',
+                    'Trạng thái giải quyết',
+                    'Phương án bồi hoàn / RMA'
+                ];
+
+                const statusMap = {
+                    'new': 'Chưa xử lý',
+                    'processing': 'Đang xử lý',
+                    'waiting_customer': 'Chờ phản hồi',
+                    'waiting_manager_approval': 'Chờ quản lý duyệt',
+                    'reprocessing': 'Xử lý lần 2',
+                    'resolved': 'Đã giải quyết',
+                    'closed': 'Đã đóng'
+                };
+
+                const priorityMap = {
+                    'high': 'Cao',
+                    'medium': 'Trung bình',
+                    'low': 'Thấp'
+                };
+
+                const issueTypeMap = {
+                    'wrong_item': 'Giao sai hàng',
+                    'damaged': 'Hàng hỏng vỡ móp méo',
+                    'quality': 'Lỗi chất lượng sản phẩm',
+                    'return_request': 'Yêu cầu đổi hàng hoặc size',
+                    'missing_item': 'Thiếu quà tặng hoặc phụ kiện'
+                };
+
+                const rows = list.map((item, idx) => {
+                    const resInfo = item.resolution
+                        ? `${item.resolution.typeName || ''}${item.resolution.note ? ' - ' + item.resolution.note : ''}${item.resolution.rmaCode ? ' [RMA: ' + item.resolution.rmaCode + ']' : ''}`
+                        : '';
+
+                    return [
+                        idx + 1,
+                        item.id || '',
+                        item.customerName || '',
+                        item.phone || '',
+                        item.orderId || '',
+                        item.productName || '',
+                        item.productSku || '',
+                        issueTypeMap[item.issueType] || item.issueType || 'Sự cố đơn hàng',
+                        item.customerDemand || '',
+                        (item.content || '').replace(/\r?\n/g, ' '),
+                        priorityMap[item.priority] || item.priority || 'Trung bình',
+                        item.carrier || '',
+                        item.trackingCode || '',
+                        item.slaRemainingText || '',
+                        item.slaStatus === 'OVERDUE' ? 'Quá hạn SLA' : (item.slaStatus === 'WARNING' ? 'Sắp quá hạn' : 'Trong hạn'),
+                        item.staffAssigned || 'Chưa phân công',
+                        item.createdAt || '',
+                        statusMap[item.status] || item.status || '',
+                        resInfo || 'Chưa có phương án'
+                    ];
+                });
+
+                const wsData = [headers, ...rows];
+                const ws = XLSXLib.utils.aoa_to_sheet(wsData);
+
+                ws['!cols'] = [
+                    { wch: 6 },  // STT
+                    { wch: 18 }, // Mã khiếu nại
+                    { wch: 22 }, // Tên khách hàng
+                    { wch: 14 }, // Số điện thoại
+                    { wch: 18 }, // Mã đơn hàng
+                    { wch: 30 }, // Tên sản phẩm
+                    { wch: 16 }, // Mã SKU
+                    { wch: 24 }, // Phân loại sự cố
+                    { wch: 24 }, // Yêu cầu khách
+                    { wch: 45 }, // Nội dung phản ánh
+                    { wch: 16 }, // Mức độ ưu tiên
+                    { wch: 24 }, // Đơn vị VC
+                    { wch: 20 }, // Mã vận đơn
+                    { wch: 18 }, // SLA
+                    { wch: 16 }, // Trạng thái SLA
+                    { wch: 24 }, // CSKH phụ trách
+                    { wch: 20 }, // Ngày tiếp nhận
+                    { wch: 20 }, // Trạng thái
+                    { wch: 38 }  // Phương án bồi hoàn
+                ];
+
+                const wb = XLSXLib.utils.book_new();
+                XLSXLib.utils.book_append_sheet(wb, ws, 'Khieu_Nai_Theo_Don_Hang');
+
+                const now = new Date();
+                const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+                const fileName = `Pawpal_Khieu_Nai_Don_Hang_${dateStr}.xlsx`;
+
+                XLSXLib.writeFile(wb, fileName);
+                showToast(`Đã xuất thành công ${list.length} khiếu nại đơn hàng ra file Excel (.xlsx)!`, 'success');
+            } catch (err) {
+                console.error('[Complaints] Lỗi xuất file Excel đơn hàng:', err);
+                showToast('Lỗi khi xuất file Excel: ' + (err.message || err), 'danger');
+            }
+        }
+
+        function exportServiceComplaintsToCSV(dataList) {
+            exportServiceComplaintsToExcel(dataList);
+        }
+
+        function renderServicePagination(totalPages) {
+            const pagContainer = document.getElementById('servicePagination');
+            if (!pagContainer) return;
+
+            if (totalPages <= 1) {
+                pagContainer.style.display = 'none';
+                pagContainer.innerHTML = '';
+                return;
+            }
+
+            pagContainer.style.display = 'flex';
+
+            let html = '';
+            const prevDisabled = serviceCurrentPage === 1 ? 'disabled' : '';
+            html += `<button type="button" class="btn-pagination ${prevDisabled}" data-page="prev" title="Trang trước" ${prevDisabled ? 'disabled' : ''}>&lt;</button>`;
+
+            for (let p = 1; p <= totalPages; p++) {
+                const activeClass = p === serviceCurrentPage ? 'active' : '';
+                html += `<button type="button" class="btn-pagination ${activeClass}" data-page="${p}">${p}</button>`;
+            }
+
+            const nextDisabled = serviceCurrentPage === totalPages ? 'disabled' : '';
+            html += `<button type="button" class="btn-pagination ${nextDisabled}" data-page="next" title="Trang sau" ${nextDisabled ? 'disabled' : ''}>&gt;</button>`;
+
+            pagContainer.innerHTML = html;
+
+            pagContainer.querySelectorAll('.btn-pagination').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const pageAction = btn.getAttribute('data-page');
+                    if (pageAction === 'prev') {
+                        if (serviceCurrentPage > 1) {
+                            serviceCurrentPage--;
+                            renderServiceComplaintsTable();
+                        }
+                    } else if (pageAction === 'next') {
+                        if (serviceCurrentPage < totalPages) {
+                            serviceCurrentPage++;
+                            renderServiceComplaintsTable();
+                        }
+                    } else {
+                        const targetP = parseInt(pageAction, 10);
+                        if (targetP && targetP !== serviceCurrentPage) {
+                            serviceCurrentPage = targetP;
+                            renderServiceComplaintsTable();
+                        }
+                    }
+                });
+            });
+        }
+
         function setServiceQuickFilter(filter) {
             currentServiceQuickFilter = filter;
+            serviceCurrentPage = 1;
             document.querySelectorAll('#serviceQuickChips .quick-chip-btn').forEach(btn => {
                 if (btn.getAttribute('data-filter') === filter) btn.classList.add('active');
                 else btn.classList.remove('active');
@@ -1147,6 +1604,56 @@
                 return true;
             });
 
+            // Sắp xếp ưu tiên theo mức độ khẩn cấp và hạn xử lý SLA lên đầu bảng
+            filtered.sort(sortComplaintsByUrgencyAndSla);
+
+            currentFilteredServices = filtered;
+
+            const itemsPerPage = 10;
+            const totalPages = Math.ceil(filtered.length / itemsPerPage);
+
+            if (serviceCurrentPage > totalPages) {
+                serviceCurrentPage = totalPages || 1;
+            }
+            if (serviceCurrentPage < 1) {
+                serviceCurrentPage = 1;
+            }
+
+            // Vô hiệu hóa hoặc bật Nút Xuất file theo số lượng kết quả
+            const btnExportService = document.getElementById('btnExportServiceComplaints');
+            if (btnExportService) {
+                if (filtered.length === 0 && (!serviceComplaints || serviceComplaints.length === 0)) {
+                    btnExportService.disabled = true;
+                    btnExportService.classList.add('disabled');
+                    btnExportService.style.opacity = '0.45';
+                    btnExportService.style.cursor = 'not-allowed';
+                    btnExportService.title = 'Không có dữ liệu khiếu nại để xuất file';
+                } else {
+                    btnExportService.disabled = false;
+                    btnExportService.classList.remove('disabled');
+                    btnExportService.style.opacity = '1';
+                    btnExportService.style.cursor = 'pointer';
+                    btnExportService.title = 'Xuất file dữ liệu khiếu nại dịch vụ (.xlsx)';
+                }
+            }
+            if (typeof bindExportButtons === 'function') {
+                bindExportButtons();
+            }
+
+            // Ẩn thanh phân trang khi kết quả rỗng hoặc chỉ có 1 trang duy nhất
+            const pagContainer = document.getElementById('servicePagination');
+            if (filtered.length === 0 || totalPages <= 1) {
+                if (pagContainer) {
+                    pagContainer.style.display = 'none';
+                    pagContainer.innerHTML = '';
+                }
+            } else {
+                if (pagContainer) {
+                    pagContainer.style.display = 'flex';
+                    renderServicePagination(totalPages);
+                }
+            }
+
             if (filtered.length === 0) {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -1158,7 +1665,10 @@
                 return;
             }
 
-            filtered.forEach(item => {
+            const startIdx = (serviceCurrentPage - 1) * itemsPerPage;
+            const pagedItems = filtered.slice(startIdx, startIdx + itemsPerPage);
+
+            pagedItems.forEach(item => {
                 let statusBadge = '';
                 if (item.status === 'new') statusBadge = '<span class="admin-badge badge-warning">Chưa xử lý</span>';
                 else if (item.status === 'processing') statusBadge = '<span class="admin-badge badge-info">Đang xử lý</span>';
@@ -1292,6 +1802,32 @@
 
                 return true;
             });
+
+            // Sắp xếp ưu tiên các ca khẩn cấp và hạn xử lý SLA lên đầu bảng
+            filtered.sort(sortComplaintsByUrgencyAndSla);
+
+            currentFilteredOrders = filtered;
+
+            // Vô hiệu hóa hoặc bật Nút Xuất file theo số lượng kết quả
+            const btnExportOrder = document.getElementById('btnExportOrderComplaints');
+            if (btnExportOrder) {
+                if (filtered.length === 0 && (!orderComplaints || orderComplaints.length === 0)) {
+                    btnExportOrder.disabled = true;
+                    btnExportOrder.classList.add('disabled');
+                    btnExportOrder.style.opacity = '0.45';
+                    btnExportOrder.style.cursor = 'not-allowed';
+                    btnExportOrder.title = 'Không có dữ liệu khiếu nại để xuất file';
+                } else {
+                    btnExportOrder.disabled = false;
+                    btnExportOrder.classList.remove('disabled');
+                    btnExportOrder.style.opacity = '1';
+                    btnExportOrder.style.cursor = 'pointer';
+                    btnExportOrder.title = 'Xuất file dữ liệu khiếu nại đơn hàng (.xlsx)';
+                }
+            }
+            if (typeof bindExportButtons === 'function') {
+                bindExportButtons();
+            }
 
             if (filtered.length === 0) {
                 const tr = document.createElement('tr');
@@ -1793,7 +2329,7 @@
                     if (reopenDeadlineText) {
                         if (ticket.canReopenUntil) {
                             const d = new Date(ticket.canReopenUntil);
-                            reopenDeadlineText.textContent = `Thời hạn mở lại còn hiệu lực đến: ${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} ngày ${d.toLocaleDateString('vi-VN')}`;
+                            reopenDeadlineText.textContent = `Thời hạn mở lại còn hiệu lực đến: ${formatDateTime(d)}`;
                         } else {
                             reopenDeadlineText.textContent = 'Có thể yêu cầu mở lại trong vòng 7 ngày kể từ khi đóng.';
                         }
@@ -2160,6 +2696,31 @@
 
         // Modal Tạo Ticket
         const createModal = document.getElementById('createTicketModalOverlay');
+
+        function clearCreateTicketErrors() {
+            const phoneErr = document.getElementById('errorTicketCustomerPhone');
+            const nameErr = document.getElementById('errorTicketCustomerName');
+            const phoneInput = document.getElementById('inputTicketCustomerPhone');
+            const nameInput = document.getElementById('inputTicketCustomerName');
+
+            if (phoneErr) {
+                phoneErr.style.display = 'none';
+                phoneErr.textContent = '';
+            }
+            if (nameErr) {
+                nameErr.style.display = 'none';
+                nameErr.textContent = '';
+            }
+            if (phoneInput) {
+                phoneInput.style.borderColor = '';
+                phoneInput.style.backgroundColor = '';
+            }
+            if (nameInput) {
+                nameInput.style.borderColor = '';
+                nameInput.style.backgroundColor = '';
+            }
+        }
+
         document.getElementById('btnOpenCreateServiceTicket')?.addEventListener('click', () => {
             document.getElementById('createTicketModalTitle').textContent = 'Tiếp nhận khiếu nại dịch vụ';
             document.getElementById('labelTicketRefId').textContent = 'Chọn lịch hẹn liên quan *';
@@ -2181,6 +2742,7 @@
             }
             createTicketUploadedFiles = [];
             renderCreateTicketPreviews();
+            clearCreateTicketErrors();
             createModal.classList.add('active');
         });
 
@@ -2204,11 +2766,18 @@
             }
             createTicketUploadedFiles = [];
             renderCreateTicketPreviews();
+            clearCreateTicketErrors();
             createModal.classList.add('active');
         });
 
-        document.getElementById('btnCancelCreateTicket')?.addEventListener('click', () => createModal.classList.remove('active'));
-        document.getElementById('btnDismissCreateTicket')?.addEventListener('click', () => createModal.classList.remove('active'));
+        document.getElementById('btnCancelCreateTicket')?.addEventListener('click', () => {
+            clearCreateTicketErrors();
+            createModal.classList.remove('active');
+        });
+        document.getElementById('btnDismissCreateTicket')?.addEventListener('click', () => {
+            clearCreateTicketErrors();
+            createModal.classList.remove('active');
+        });
         
         
         // Kiểm tra phát hiện Ticket trùng lặp đang mở cho cùng khách hàng / mã giao dịch
@@ -2234,6 +2803,16 @@
         // Tự động nhận diện họ tên khách hàng và cảnh báo trùng lặp khi nhập số điện thoại trong modal tạo Ticket
         document.getElementById('inputTicketCustomerPhone')?.addEventListener('input', (e) => {
             const val = e.target.value.trim();
+            const phoneErr = document.getElementById('errorTicketCustomerPhone');
+            const phoneInput = document.getElementById('inputTicketCustomerPhone');
+            if (val && phoneErr && phoneErr.style.display !== 'none') {
+                phoneErr.style.display = 'none';
+                phoneErr.textContent = '';
+                if (phoneInput) {
+                    phoneInput.style.borderColor = '';
+                    phoneInput.style.backgroundColor = '';
+                }
+            }
             if (val.length >= 9) {
                 const found = cachedCustomers.find(c => (c.phone_main || c.phone) === val);
                 if (found) {
@@ -2241,10 +2820,63 @@
                     const nameInput = document.getElementById('inputTicketCustomerName');
                     if (nameInput && !nameInput.value) {
                         nameInput.value = (prof && prof.full_name) || found.note || '';
+                        const nameErr = document.getElementById('errorTicketCustomerName');
+                        if (nameErr && nameErr.style.display !== 'none') {
+                            nameErr.style.display = 'none';
+                            nameErr.textContent = '';
+                            nameInput.style.borderColor = '';
+                            nameInput.style.backgroundColor = '';
+                        }
                     }
                 }
             }
             checkDuplicateTicket(val, document.getElementById('selectTicketRefId')?.value || '');
+        });
+
+        document.getElementById('inputTicketCustomerPhone')?.addEventListener('blur', (e) => {
+            const val = e.target.value.trim();
+            const phoneErr = document.getElementById('errorTicketCustomerPhone');
+            const phoneInput = document.getElementById('inputTicketCustomerPhone');
+            if (!val) {
+                if (phoneErr) {
+                    phoneErr.style.display = 'block';
+                    phoneErr.textContent = 'Vui lòng nhập số điện thoại.';
+                }
+                if (phoneInput) {
+                    phoneInput.style.borderColor = '#DC2626';
+                    phoneInput.style.backgroundColor = '#FFF5F5';
+                }
+            }
+        });
+
+        document.getElementById('inputTicketCustomerName')?.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            const nameErr = document.getElementById('errorTicketCustomerName');
+            const nameInput = document.getElementById('inputTicketCustomerName');
+            if (val && nameErr && nameErr.style.display !== 'none') {
+                nameErr.style.display = 'none';
+                nameErr.textContent = '';
+                if (nameInput) {
+                    nameInput.style.borderColor = '';
+                    nameInput.style.backgroundColor = '';
+                }
+            }
+        });
+
+        document.getElementById('inputTicketCustomerName')?.addEventListener('blur', (e) => {
+            const val = e.target.value.trim();
+            const nameErr = document.getElementById('errorTicketCustomerName');
+            const nameInput = document.getElementById('inputTicketCustomerName');
+            if (!val) {
+                if (nameErr) {
+                    nameErr.style.display = 'block';
+                    nameErr.textContent = 'Vui lòng nhập tên khách hàng.';
+                }
+                if (nameInput) {
+                    nameInput.style.borderColor = '#DC2626';
+                    nameInput.style.backgroundColor = '#FFF5F5';
+                }
+            }
         });
 
         document.getElementById('selectTicketRefId')?.addEventListener('change', (e) => {
@@ -2254,8 +2886,10 @@
         });
 
         document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async () => {
-            const phone = document.getElementById('inputTicketCustomerPhone')?.value.trim() || '';
-            const name = document.getElementById('inputTicketCustomerName')?.value.trim() || '';
+            const phoneInput = document.getElementById('inputTicketCustomerPhone');
+            const nameInput = document.getElementById('inputTicketCustomerName');
+            const phone = phoneInput?.value.trim() || '';
+            const name = nameInput?.value.trim() || '';
             const title = document.getElementById('inputTicketTitle')?.value.trim() || '';
             const content = document.getElementById('inputTicketContent')?.value.trim() || title;
             const refId = document.getElementById('selectTicketRefId')?.value || '';
@@ -2264,12 +2898,70 @@
             const modalTitle = document.getElementById('createTicketModalTitle')?.textContent || '';
             const isService = modalTitle.includes('dịch vụ') || refId.startsWith('BKG') || refId.startsWith('APP');
 
+            const phoneErr = document.getElementById('errorTicketCustomerPhone');
+            const nameErr = document.getElementById('errorTicketCustomerName');
+
+            let hasError = false;
+
+            if (!phone) {
+                if (phoneErr) {
+                    phoneErr.style.display = 'block';
+                    phoneErr.textContent = 'Vui lòng nhập số điện thoại.';
+                }
+                if (phoneInput) {
+                    phoneInput.style.borderColor = '#DC2626';
+                    phoneInput.style.backgroundColor = '#FFF5F5';
+                }
+                hasError = true;
+            } else {
+                if (phoneErr) {
+                    phoneErr.style.display = 'none';
+                    phoneErr.textContent = '';
+                }
+                if (phoneInput) {
+                    phoneInput.style.borderColor = '';
+                    phoneInput.style.backgroundColor = '';
+                }
+            }
+
+            if (!name) {
+                if (nameErr) {
+                    nameErr.style.display = 'block';
+                    nameErr.textContent = 'Vui lòng nhập tên khách hàng.';
+                }
+                if (nameInput) {
+                    nameInput.style.borderColor = '#DC2626';
+                    nameInput.style.backgroundColor = '#FFF5F5';
+                }
+                hasError = true;
+            } else {
+                if (nameErr) {
+                    nameErr.style.display = 'none';
+                    nameErr.textContent = '';
+                }
+                if (nameInput) {
+                    nameInput.style.borderColor = '';
+                    nameInput.style.backgroundColor = '';
+                }
+            }
+
+            if (hasError) {
+                if (!phone && phoneInput) {
+                    phoneInput.focus();
+                } else if (!name && nameInput) {
+                    nameInput.focus();
+                }
+                return;
+            }
+
             if (!title) {
                 showToast('Vui lòng nhập tiêu đề khiếu nại.', 'warning');
+                document.getElementById('inputTicketTitle')?.focus();
                 return;
             }
             if (!content) {
                 showToast('Vui lòng nhập nội dung phản ánh chi tiết.', 'warning');
+                document.getElementById('inputTicketContent')?.focus();
                 return;
             }
 
@@ -2380,10 +3072,13 @@
                 createModal.classList.remove('active');
 
                 // Reset form
+                if (document.getElementById('inputTicketCustomerPhone')) document.getElementById('inputTicketCustomerPhone').value = '';
+                if (document.getElementById('inputTicketCustomerName')) document.getElementById('inputTicketCustomerName').value = '';
                 if (document.getElementById('inputTicketTitle')) document.getElementById('inputTicketTitle').value = '';
                 if (document.getElementById('inputTicketContent')) document.getElementById('inputTicketContent').value = '';
                 if (document.getElementById('chkTicketUnverified')) document.getElementById('chkTicketUnverified').checked = false;
                 if (document.getElementById('ticketDuplicateWarningBox')) document.getElementById('ticketDuplicateWarningBox').style.display = 'none';
+                clearCreateTicketErrors();
                 createTicketUploadedFiles = [];
                 renderCreateTicketPreviews();
 
@@ -3332,12 +4027,112 @@
             }
         });
 
+        // ---------------------------------------------------------
+        // GẮN SỰ KIỆN XUẤT FILE EXCEL (.XLSX) TOÀN DIỆN VÀ AN TOÀN
+        // ---------------------------------------------------------
+        let isExportingProcess = false;
+
+        async function triggerServiceExport() {
+            if (isExportingProcess) return;
+            isExportingProcess = true;
+            try {
+                const dataToExport = (currentFilteredServices && currentFilteredServices.length > 0)
+                    ? currentFilteredServices
+                    : (serviceComplaints && serviceComplaints.length > 0 ? serviceComplaints : []);
+
+                if (!dataToExport || dataToExport.length === 0) {
+                    showToast('Không có dữ liệu khiếu nại dịch vụ để xuất file.', 'warning');
+                    return;
+                }
+                await exportServiceComplaintsToExcel(dataToExport);
+            } catch (e) {
+                console.error('[Complaints] Lỗi triggerServiceExport:', e);
+            } finally {
+                setTimeout(() => { isExportingProcess = false; }, 600);
+            }
+        }
+
+        async function triggerOrderExport() {
+            if (isExportingProcess) return;
+            isExportingProcess = true;
+            try {
+                const dataToExport = (currentFilteredOrders && currentFilteredOrders.length > 0)
+                    ? currentFilteredOrders
+                    : (orderComplaints && orderComplaints.length > 0 ? orderComplaints : []);
+
+                if (!dataToExport || dataToExport.length === 0) {
+                    showToast('Không có dữ liệu khiếu nại đơn hàng để xuất file.', 'warning');
+                    return;
+                }
+                await exportOrderComplaintsToExcel(dataToExport);
+            } catch (e) {
+                console.error('[Complaints] Lỗi triggerOrderExport:', e);
+            } finally {
+                setTimeout(() => { isExportingProcess = false; }, 600);
+            }
+        }
+
+        function bindExportButtons() {
+            const btnExportService = document.getElementById('btnExportServiceComplaints');
+            if (btnExportService) {
+                btnExportService.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    triggerServiceExport();
+                };
+            }
+
+            const btnExportOrder = document.getElementById('btnExportOrderComplaints');
+            if (btnExportOrder) {
+                btnExportOrder.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    triggerOrderExport();
+                };
+            }
+        }
+
+        // Gắn sự kiện ban đầu cho các nút xuất file
+        bindExportButtons();
+
+        // Gắn ủy quyền sự kiện trên tài liệu để bắt mọi trường hợp click kể cả khi DOM cập nhật động
+        document.addEventListener('click', (e) => {
+            const serviceBtn = e.target.closest('#btnExportServiceComplaints');
+            if (serviceBtn) {
+                e.preventDefault();
+                triggerServiceExport();
+                return;
+            }
+
+            const orderBtn = e.target.closest('#btnExportOrderComplaints');
+            if (orderBtn) {
+                e.preventDefault();
+                triggerOrderExport();
+                return;
+            }
+        });
+
         // Gắn sự kiện bộ lọc Subtab 1 (Dịch vụ)
-        document.getElementById('serviceSearchInput')?.addEventListener('input', renderServiceComplaintsTable);
-        document.getElementById('serviceFilterCategory')?.addEventListener('change', renderServiceComplaintsTable);
-        document.getElementById('serviceFilterStatus')?.addEventListener('change', renderServiceComplaintsTable);
-        document.getElementById('serviceFilterPriority')?.addEventListener('change', renderServiceComplaintsTable);
-        document.getElementById('serviceFilterStaff')?.addEventListener('change', renderServiceComplaintsTable);
+        document.getElementById('serviceSearchInput')?.addEventListener('input', () => {
+            serviceCurrentPage = 1;
+            renderServiceComplaintsTable();
+        });
+        document.getElementById('serviceFilterCategory')?.addEventListener('change', () => {
+            serviceCurrentPage = 1;
+            renderServiceComplaintsTable();
+        });
+        document.getElementById('serviceFilterStatus')?.addEventListener('change', () => {
+            serviceCurrentPage = 1;
+            renderServiceComplaintsTable();
+        });
+        document.getElementById('serviceFilterPriority')?.addEventListener('change', () => {
+            serviceCurrentPage = 1;
+            renderServiceComplaintsTable();
+        });
+        document.getElementById('serviceFilterStaff')?.addEventListener('change', () => {
+            serviceCurrentPage = 1;
+            renderServiceComplaintsTable();
+        });
 
         document.querySelectorAll('#serviceQuickChips .quick-chip-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -3349,6 +4144,7 @@
         // Click KPI Card Subtab 1
         document.querySelectorAll('[data-service-kpi]').forEach(card => {
             card.addEventListener('click', () => {
+                serviceCurrentPage = 1;
                 const filterVal = card.getAttribute('data-service-kpi');
                 if (currentServiceKpiFilter === filterVal) {
                     currentServiceKpiFilter = 'ALL';
@@ -3484,11 +4280,15 @@
 
         const currentHash = window.location.hash ? window.location.hash.substring(1) : '';
         const savedSubtab = sessionStorage.getItem('pawpal_admin_complaint_active_subtab');
-        const initialSubtab = (currentHash && document.getElementById('subtab-' + currentHash))
+        let initialSubtab = (currentHash && document.getElementById('subtab-' + currentHash))
             ? currentHash
             : (savedSubtab && document.getElementById('subtab-' + savedSubtab))
                 ? savedSubtab
                 : 'tab-complaint-services';
+
+        if (initialSubtab === 'tab-complaint-detail' && !currentActiveTicket) {
+            initialSubtab = 'tab-complaint-services';
+        }
 
         switchSubtab(initialSubtab);
 

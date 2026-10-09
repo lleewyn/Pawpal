@@ -80,6 +80,9 @@
                             <option value="paid">Đã thanh toán và Đối soát</option>
                             <option value="cod_pending">Chờ bưu cục đối soát COD</option>
                             <option value="unpaid">Chưa thanh toán</option>
+                            <option value="refund_pending">Chờ hoàn tiền</option>
+                            <option value="refunded">Đã hoàn tiền</option>
+                            <option value="cancelled">Đã hủy thanh toán</option>
                         </select>
                     </div>
 
@@ -370,10 +373,14 @@
                         <label class="filter-label">Danh mục:</label>
                         <select class="admin-select" id="productFilterCategory">
                             <option value="ALL">Tất cả danh mục</option>
+                            <option value="Thực phẩm">Thực phẩm</option>
+                            <option value="Đồ dùng">Đồ dùng</option>
+                            <option value="Vệ sinh">Vệ sinh</option>
+                            <option value="Phụ kiện">Phụ kiện</option>
                             <option value="Thức ăn khô">Thức ăn khô</option>
                             <option value="Thức ăn ướt">Thức ăn ướt</option>
                             <option value="Sức khỏe">Sức khỏe và Dinh dưỡng</option>
-                            <option value="Bát ăn">Bát ăn và Phụ kiện</option>
+                            <option value="Bát ăn">Bát ăn và Đồ dùng</option>
                         </select>
                     </div>
 
@@ -507,12 +514,14 @@
             <div class="modal-body-clean">
                 <div class="form-row-2col">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Số điện thoại khách hàng:</label>
-                        <input type="text" class="admin-input" id="createOrderPhone" placeholder="Nhập SĐT khách hàng...">
+                        <label class="form-label-clean">Số điện thoại khách hàng: <span style="color: #DC2626;">*</span></label>
+                        <input type="text" class="admin-input" id="createOrderPhone" placeholder="Nhập SĐT khách hàng..." maxlength="20">
+                        <div class="field-error-text" id="createOrderPhoneError" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Họ và tên người nhận:</label>
-                        <input type="text" class="admin-input" id="createOrderName" placeholder="Tên khách hàng...">
+                        <label class="form-label-clean" id="createOrderNameLabel">Họ và tên khách hàng: <span id="createOrderNameRequiredStar" style="display: none; color: #DC2626;">*</span></label>
+                        <input type="text" class="admin-input" id="createOrderName" placeholder="Tên khách hàng (để trống nếu là khách lẻ)...">
+                        <div class="field-error-text" id="createOrderNameError" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                     </div>
                 </div>
 
@@ -541,30 +550,35 @@
                 </div>
 
                 <div class="form-group-item">
-                    <label class="form-label-clean">Địa chỉ nhận hàng:</label>
+                    <label class="form-label-clean">Hình thức nhận hàng:</label>
                     <div class="address-select-group">
                         <div class="address-item-card selected" id="cardAddrInStore">
                             <input type="radio" name="addrSelect" id="radioAddrInStore" class="address-item-radio" checked>
                             <div class="address-item-content">
-                                <span class="address-person-line">Tại cửa hàng PawPal - Khách nhận trực tiếp</span>
-                                <span class="address-street-line">Chi nhánh Quận 1, TP. Hồ Chí Minh</span>
+                                <span class="address-person-line">Mua và nhận ngay tại quầy</span>
+                                <span class="address-street-line">Khách thanh toán và lấy hàng trực tiếp tại chi nhánh (Hoàn tất ngay)</span>
                             </div>
                         </div>
                         <div class="address-item-card" id="cardAddrDelivery">
                             <input type="radio" name="addrSelect" id="radioAddrDelivery" class="address-item-radio">
                             <div class="address-item-content" style="width: 100%;">
-                                <span class="address-person-line">Giao tận nơi theo địa chỉ</span>
-                                <input type="text" class="admin-input" id="createOrderCustomAddress" placeholder="Nhập số nhà, tên đường, phường xã..." style="margin-top: 6px; height: 32px; width: 100%;">
-                                <div class="delivery-options-subrow" style="display: flex; gap: 14px; margin-top: 8px; font-size: 12.5px; align-items: center;">
-                                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #236B48; font-weight: 600;">
-                                        <input type="checkbox" id="createOrderFastDelivery"> Giao hỏa tốc 2 giờ (+25.000 đ)
-                                    </label>
-                                    <select class="admin-select" id="createOrderDeliverySlot" style="height: 28px; font-size: 12px; width: auto; padding: 0 8px;">
-                                        <option value="any">Khung giờ: Trong ngày (08:00 - 18:00)</option>
-                                        <option value="morning">Buổi sáng (08:00 - 12:00)</option>
-                                        <option value="afternoon">Buổi chiều (14:00 - 18:00)</option>
-                                        <option value="evening">Buổi tối (18:00 - 21:00)</option>
-                                    </select>
+                                <span class="address-person-line">Đặt giao hàng tận nơi</span>
+                                <span class="address-street-line" style="display: block; margin-bottom: 4px;">Lên đơn xuất kho và giao về địa chỉ theo yêu cầu</span>
+                                <div id="deliveryDetailFields" style="display: none; margin-top: 8px;">
+                                    <label class="form-label-clean" id="createOrderAddressLabel" style="font-size: 12px; margin-bottom: 4px; display: block;">Địa chỉ giao hàng: <span style="color: #DC2626;">*</span></label>
+                                    <input type="text" class="admin-input" id="createOrderCustomAddress" placeholder="Nhập số nhà, tên đường, phường xã..." style="height: 32px; width: 100%;">
+                                    <div class="field-error-text" id="createOrderAddressError" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
+                                    <div class="delivery-options-subrow" style="display: flex; gap: 14px; margin-top: 8px; font-size: 12.5px; align-items: center;">
+                                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #236B48; font-weight: 600;">
+                                            <input type="checkbox" id="createOrderFastDelivery"> Giao hỏa tốc 2 giờ (+25.000 đ)
+                                        </label>
+                                        <select class="admin-select" id="createOrderDeliverySlot" style="height: 28px; font-size: 12px; width: auto; padding: 0 8px;">
+                                            <option value="any">Khung giờ: Trong ngày (08:00 - 18:00)</option>
+                                            <option value="morning">Buổi sáng (08:00 - 12:00)</option>
+                                            <option value="afternoon">Buổi chiều (14:00 - 18:00)</option>
+                                            <option value="evening">Buổi tối (18:00 - 21:00)</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -799,12 +813,13 @@
 
                 <div class="form-group-item">
                     <label class="form-label-clean">Mã vận đơn bưu cục:</label>
-                    <input type="text" class="admin-input" id="shipTrackingInput" placeholder="Ví dụ: JT8839201923...">
+                    <input type="text" class="admin-input" id="shipTrackingInput" maxlength="35" placeholder="Ví dụ: JT8839201923...">
+                    <div id="shipTrackingError" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px;"></div>
                 </div>
 
                 <div class="form-group-item">
                     <label class="form-label-clean">Ghi chú cho bưu tá:</label>
-                    <input type="text" class="admin-input" id="shipCarrierNote" placeholder="Hàng dễ vỡ, liên hệ trước khi giao...">
+                    <input type="text" class="admin-input" id="shipCarrierNote" maxlength="250" placeholder="Hàng dễ vỡ, liên hệ trước khi giao...">
                 </div>
             </div>
 
@@ -829,6 +844,10 @@
                 <div class="info-pair">
                     <span class="info-label">Mã đơn hàng:</span>
                     <span class="info-value" id="cancelOrderTargetCode" style="color: #DC2626; font-size: 15px;">ORD-2026-004</span>
+                </div>
+                <div class="info-pair" id="cancelOrderPaymentInfoRow">
+                    <span class="info-label">Xử lý thanh toán:</span>
+                    <span class="info-value" id="cancelOrderPaymentImpact" style="font-weight: 500;">--</span>
                 </div>
                 <p style="font-size: 13px; color: var(--text-muted);">Khi hủy đơn, toàn bộ sản phẩm sẽ được tự động hoàn trả số lượng khả dụng vào tồn kho.</p>
 
@@ -861,7 +880,7 @@
          Chuẩn khổ A6 / K80 in nhiệt cho kho, hỗ trợ in đơn lẻ hoặc in liên tiếp hàng loạt
          ==================================================================== -->
     <div class="admin-modal-overlay" id="modalPackingSlip">
-        <div class="admin-modal-card packing-slip-modal-card">
+        <div class="admin-modal-card packing-slip-modal-card" style="width: 960px !important; max-width: 96vw !important;">
             <div class="modal-header-clean">
                 <div>
                     <div class="modal-title-clean">Phiếu đóng gói và giao hàng</div>
@@ -894,7 +913,8 @@
                     <span class="info-label">Số đơn đã chọn bàn giao:</span>
                     <span class="info-value text-heading" id="batchDispatchCount" style="font-size: 15px;">0 đơn</span>
                 </div>
-                <p style="font-size: 13px; color: var(--text-muted);">Các đơn hàng được chọn sẽ tự động chuyển sang trạng thái <strong>Đang giao</strong> và được gán mã vận đơn bưu cục.</p>
+                <div id="batchDispatchWarningBox" style="display: none; padding: 10px 14px; border-radius: var(--admin-radius); font-size: 12.5px; background-color: #FEF3C7; color: #92400E; margin-bottom: 12px; line-height: 1.45;"></div>
+                <p style="font-size: 13px; color: var(--text-muted);">Các đơn hàng hợp lệ sẽ tự động chuyển sang trạng thái <strong>Đang giao</strong> và được gán mã vận đơn bưu cục.</p>
 
                 <div class="form-group-item">
                     <label class="form-label-clean">Đơn vị vận chuyển tiếp nhận:</label>

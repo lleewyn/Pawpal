@@ -1,5 +1,27 @@
 // staff.js - Logic cho phân hệ Nhân sự Pawpal-er
 (function() {
+    // Hàm định dạng thời gian chuẩn hóa toàn hệ thống (YYYY-MM-DD HH:mm, YYYY-MM-DD, HH:mm)
+    const formatDateTime = window.formatDateTime || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+    };
+
+    const formatDate = window.formatDate || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+    };
+
+    const formatTime = window.formatTime || function(d) {
+        if (!d) return '—';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+    };
+
     async function initStaffModule() {
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
@@ -198,8 +220,8 @@
                             const formattedRole = mapDbRoleToStaffRole(s.role, s.specialization);
                             const formattedPosition = mapDbRoleToPosition(s.role, s.specialization);
                             const joinDateFormatted = s.hire_date 
-                                ? new Date(s.hire_date).toLocaleDateString('vi-VN') 
-                                : (s.created_at ? new Date(s.created_at).toLocaleDateString('vi-VN') : '01/01/2026');
+                                ? formatDate(s.hire_date) 
+                                : (s.created_at ? formatDate(s.created_at) : '2026-01-01');
 
                             const code = `EMP-${String(idx + 1).padStart(3, '0')}`;
                             const phone = s.phone_number || s.phone || '0901234567';
@@ -330,7 +352,7 @@
                                     const targetGroomer = groomers[rIdx % groomers.length];
                                     if (targetGroomer) {
                                         if (!targetGroomer.customer_reviews) targetGroomer.customer_reviews = [];
-                                        const revDate = rv.created_at ? new Date(rv.created_at).toLocaleDateString('vi-VN') : '28/09/2026';
+                                        const revDate = rv.created_at ? formatDate(rv.created_at) : '2026-09-28';
                                         const isDuplicate = targetGroomer.customer_reviews.some(r => r.comment === rv.review_content);
                                         if (!isDuplicate && rv.review_content) {
                                             targetGroomer.customer_reviews.unshift({

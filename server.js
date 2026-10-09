@@ -124,7 +124,11 @@ app.get('/return-guest/return-guest.html', (req, res) => res.sendFile(path.join(
 app.get('/return-guest.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/return-guest/return-guest.css')));
 app.get('/return-guest.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/return-guest/return-guest.js')));
 app.get('/user', (req, res) => res.sendFile(path.join(__dirname, 'pages/user/index.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'pages/admin/index.html')));
+app.get('/admin', (req, res) => res.redirect('/pages/admin/index.html'));
+app.get('/admin/', (req, res) => res.redirect('/pages/admin/index.html'));
+app.get('/admin.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/admin/admin.css')));
+app.get('/admin.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/admin/admin.js')));
+app.use('/modules', express.static(path.join(__dirname, 'pages/admin/modules')));
 
 // 3. Phục vụ các file tĩnh (html, css, js) từ thư mục gốc
 app.use(express.static(path.join(__dirname, '.'), { extensions: ['html'] }));
