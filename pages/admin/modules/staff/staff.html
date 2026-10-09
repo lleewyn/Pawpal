@@ -58,6 +58,7 @@
                         <label class="filter-label">Chức vụ:</label>
                         <select class="admin-select" id="staffFilterPosition">
                             <option value="ALL">Tất cả</option>
+                            <option value="Admin">Quản trị viên</option>
                             <option value="Receptionist">Lễ tân</option>
                             <option value="Groomer">Groomer</option>
                             <option value="Caregiver">Bảo mẫu Pet Hotel</option>
@@ -97,13 +98,13 @@
                 <table class="admin-table" id="staffListTable">
                     <thead>
                         <tr>
-                            <th style="width: 100px;">Mã NV</th>
-                            <th>Họ tên</th>
-                            <th>Chức vụ</th>
-                            <th>Số điện thoại</th>
-                            <th>Ca hiện tại</th>
-                            <th>Tay nghề</th>
-                            <th>Trạng thái</th>
+                            <th style="width: 95px;">Mã NV</th>
+                            <th style="width: 180px; max-width: 220px;">Họ tên</th>
+                            <th style="width: 140px;">Chức vụ</th>
+                            <th style="width: 120px;">Số điện thoại</th>
+                            <th style="width: 120px;">Ca hiện tại</th>
+                            <th style="width: 150px;">Tay nghề</th>
+                            <th style="width: 130px;">Trạng thái</th>
                             <th style="text-align: center; width: 60px;">Thao tác</th>
                         </tr>
                     </thead>
@@ -115,13 +116,7 @@
         </div>
 
         <!-- Phân trang -->
-        <div class="admin-pagination-container" id="staffPagination">
-            <button type="button" class="btn-pagination">&lt;</button>
-            <button type="button" class="btn-pagination active">1</button>
-            <button type="button" class="btn-pagination">2</button>
-            <button type="button" class="btn-pagination">3</button>
-            <button type="button" class="btn-pagination">&gt;</button>
-        </div>
+        <div class="admin-pagination-container" id="staffPagination" style="display: none;"></div>
     </section>
 
     <!-- ====================================================================
@@ -213,15 +208,15 @@
                                 <span class="metric-label">Tổng giờ công</span>
                             </div>
                             <div class="metric-box">
-                                <span class="metric-val text-indigo" id="viewStaffNightShifts">4 ca</span>
+                                <span class="metric-val" id="viewStaffNightShifts">4 ca</span>
                                 <span class="metric-label">Trực đêm 24/7</span>
                             </div>
                             <div class="metric-box">
-                                <span class="metric-val text-success" id="viewStaffCompletedServices">42 lượt</span>
+                                <span class="metric-val" id="viewStaffCompletedServices">42 lượt</span>
                                 <span class="metric-label">Dịch vụ phục vụ</span>
                             </div>
                             <div class="metric-box">
-                                <span class="metric-val text-primary" id="viewStaffPunctuality">98.5%</span>
+                                <span class="metric-val" id="viewStaffPunctuality">98.5%</span>
                                 <span class="metric-label">Đúng giờ</span>
                             </div>
                         </div>
@@ -545,12 +540,8 @@
             </div>
         </div>
         
-        <div class="admin-pagination-container" id="assessmentPagination">
-            <button type="button" class="btn-pagination">&lt;</button>
-            <button type="button" class="btn-pagination active">1</button>
-            <button type="button" class="btn-pagination">2</button>
-            <button type="button" class="btn-pagination">&gt;</button>
-        </div>
+        <!-- Phân trang -->
+        <div class="admin-pagination-container" id="assessmentPagination" style="display: none;"></div>
     </section>
 
     <!-- DRAWER: HỒ SƠ NHÂN VIÊN -->
@@ -645,7 +636,7 @@
                 <div class="form-row-2col">
                     <div class="form-group-item">
                         <label class="form-label-clean">Họ và tên *</label>
-                        <input type="text" class="admin-input" id="staffInputName" placeholder="Ví dụ: Nguyễn Văn A">
+                        <input type="text" class="admin-input" id="staffInputName" placeholder="Ví dụ: Nguyễn Văn A" maxlength="70">
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Số điện thoại *</label>
@@ -674,6 +665,7 @@
                     <div class="form-group-item">
                         <label class="form-label-clean">Chức vụ *</label>
                         <select class="admin-select" id="staffInputPosition">
+                            <option value="Quản trị viên">Quản trị viên</option>
                             <option value="Lễ tân">Lễ tân</option>
                             <option value="Groomer">Groomer</option>
                             <option value="Chuyên viên Spa thú cưng">Chuyên viên Spa thú cưng</option>

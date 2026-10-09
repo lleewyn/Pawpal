@@ -1,18 +1,50 @@
 // staff.js - Logic cho phân hệ Nhân sự Pawpal-er
 (function() {
-    // Hàm định dạng thời gian chuẩn hóa toàn hệ thống (YYYY-MM-DD HH:mm, YYYY-MM-DD, HH:mm)
-    const formatDateTime = window.formatDateTime || function(d) {
-        if (!d) return '—';
-        const dateObj = new Date(d);
-        if (isNaN(dateObj.getTime())) return String(d);
-        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
-    };
+    // Hàm định dạng ngày chuẩn Việt Nam (DD/MM/YYYY)
+    function formatDateVN(dateInput) {
+        if (!dateInput) return '—';
+        if (typeof dateInput === 'string') {
+            const s = dateInput.trim();
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+            const match = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (match) {
+                return `${match[3]}/${match[2]}/${match[1]}`;
+            }
+        }
+        const dateObj = new Date(dateInput);
+        if (isNaN(dateObj.getTime())) return String(dateInput);
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const yyyy = dateObj.getFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+    }
 
-    const formatDate = window.formatDate || function(d) {
+    const formatDate = formatDateVN;
+
+    // Helper chuyển đổi chuỗi ngày sang chuẩn HTML5 input date (YYYY-MM-DD)
+    function toIsoDate(d) {
+        if (!d) return '';
+        if (typeof d === 'string') {
+            const s = d.trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+            const match = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+            if (match) return `${match[3]}-${match[2]}-${match[1]}`;
+        }
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return String(d);
+        return dateObj.toISOString().split('T')[0];
+    }
+
+    const formatDateTime = function(d) {
         if (!d) return '—';
         const dateObj = new Date(d);
         if (isNaN(dateObj.getTime())) return String(d);
-        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const yyyy = dateObj.getFullYear();
+        const hh = String(dateObj.getHours()).padStart(2, '0');
+        const min = String(dateObj.getMinutes()).padStart(2, '0');
+        return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
     };
 
     const formatTime = window.formatTime || function(d) {
@@ -220,8 +252,8 @@
                             const formattedRole = mapDbRoleToStaffRole(s.role, s.specialization);
                             const formattedPosition = mapDbRoleToPosition(s.role, s.specialization);
                             const joinDateFormatted = s.hire_date 
-                                ? formatDate(s.hire_date) 
-                                : (s.created_at ? formatDate(s.created_at) : '2026-01-01');
+                                ? formatDateVN(s.hire_date) 
+                                : (s.created_at ? formatDateVN(s.created_at) : '01/01/2024');
 
                             const code = `EMP-${String(idx + 1).padStart(3, '0')}`;
                             const phone = s.phone_number || s.phone || '0901234567';
@@ -238,7 +270,7 @@
                                 shift: s.shift || (idx % 2 === 0 ? 'MORNING' : 'AFTERNOON'),
                                 status: s.status === 'locked' ? 'RESIGNED' : (s.status === 'leave' ? 'LEAVE' : (s.status === 'pause' ? 'PAUSE' : 'ACTIVE')),
                                 join_date: joinDateFormatted,
-                                dob: s.dob || '1998-01-01',
+                                dob: s.dob ? formatDateVN(s.dob) : '01/01/1998',
                                 address: s.address || 'TP. Hồ Chí Minh',
                                 branch_id: 'BRANCH-Q1',
                                 branch_name: 'Chi nhánh Quận 1',
@@ -352,7 +384,7 @@
                                     const targetGroomer = groomers[rIdx % groomers.length];
                                     if (targetGroomer) {
                                         if (!targetGroomer.customer_reviews) targetGroomer.customer_reviews = [];
-                                        const revDate = rv.created_at ? formatDate(rv.created_at) : '2026-09-28';
+                                        const revDate = rv.created_at ? formatDateVN(rv.created_at) : '28/09/2026';
                                         const isDuplicate = targetGroomer.customer_reviews.some(r => r.comment === rv.review_content);
                                         if (!isDuplicate && rv.review_content) {
                                             targetGroomer.customer_reviews.unshift({
@@ -379,6 +411,39 @@
                         sessionStorage.setItem('pawpal_admin_staff_selected_id', selectedStaffId);
                     }
 
+                    // Đồng bộ và nạp mockAssessments nếu chưa có
+                    if (mockAssessments.length === 0) {
+                        try {
+                            const storedAss = localStorage.getItem('pawpal_staff_assessments');
+                            if (storedAss) {
+                                mockAssessments = JSON.parse(storedAss);
+                            }
+                        } catch (e) {}
+
+                        if (mockAssessments.length === 0 && mockStaff.length > 0) {
+                            mockStaff.forEach((s, i) => {
+                                const dayNum = String(20 - (i % 8)).padStart(2, '0');
+                                const assDate = `${dayNum}/09/2026`;
+                                const assType = s.role === 'Groomer' ? 'Grooming' : (s.role === 'Driver' ? 'Taxi Pet' : (s.role === 'Caregiver' ? 'Lưu trú 24/7' : 'CSKH'));
+                                mockAssessments.push({
+                                    id: `ASM-${String(i + 1).padStart(3, '0')}`,
+                                    date: assDate,
+                                    staff_id: s.id,
+                                    name: s.name,
+                                    position: s.position,
+                                    type: assType,
+                                    score: s.skillScore || 85,
+                                    result: s.skillResult || 'PASS',
+                                    evaluator: 'Lê Lệ Quyên',
+                                    note: s.skillResult === 'PASS' ? 'Thao tác chuẩn xác, đạt yêu cầu định biên' : 'Cần đào tạo bổ sung quy trình chăm sóc'
+                                });
+                            });
+                        }
+                    }
+
+                    // Đồng bộ năng lực tay nghề và khóa an toàn từ kết quả sát hạch mới nhất vào từng nhân viên
+                    syncStaffWithAssessments();
+
                     saveStaffDataToStorage();
                     saveRosterToStorage();
                     saveAssessmentsToStorage();
@@ -387,6 +452,62 @@
             } catch (err) {
                 console.warn('Lỗi kết nối Supabase Staff:', err);
             }
+        }
+
+        // Đồng bộ năng lực tay nghề và khóa an toàn từ kết quả sát hạch mới nhất trong mockAssessments
+        function syncStaffWithAssessments() {
+            if (!Array.isArray(mockStaff) || !Array.isArray(mockAssessments) || mockAssessments.length === 0) return;
+
+            mockStaff.forEach(staff => {
+                const staffAssessments = mockAssessments.filter(a => a.staff_id === staff.id);
+                if (staffAssessments.length > 0) {
+                    // Sắp xếp: ưu tiên ngày mới nhất (theo ISO timestamp), nếu cùng ngày thì ưu tiên bài thi ghi nhận gần nhất
+                    const sorted = [...staffAssessments].sort((a, b) => {
+                        const isoA = toIsoDate(a.date);
+                        const isoB = toIsoDate(b.date);
+                        const timeA = new Date(isoA).getTime() || 0;
+                        const timeB = new Date(isoB).getTime() || 0;
+                        if (timeB !== timeA) return timeB - timeA;
+                        return mockAssessments.indexOf(a) - mockAssessments.indexOf(b);
+                    });
+                    const latest = sorted[0];
+
+                    staff.skillScore = latest.score;
+                    staff.skillResult = latest.result;
+
+                    const isManuallyUnlocked = localStorage.getItem('pawpal_staff_manual_unlocked_' + staff.id) === '1';
+
+                    if (latest.result === 'PASS') {
+                        staff.skillExam = `Đạt (${latest.score}đ)`;
+                        const isManuallyLocked = localStorage.getItem('pawpal_staff_manual_locked_' + staff.id) === '1';
+                        if (!isManuallyLocked) {
+                            staff.serviceLocked = false;
+                            try {
+                                localStorage.setItem('pawpal_staff_locked_' + staff.id, '0');
+                                localStorage.setItem('pawpal_staff_locked_name_' + staff.name.toLowerCase(), '0');
+                            } catch (e) {}
+                        }
+                    } else if (latest.result === 'RETRAIN') {
+                        staff.skillExam = `Cần đào tạo (${latest.score}đ)`;
+                        if (!isManuallyUnlocked) {
+                            staff.serviceLocked = true;
+                            try {
+                                localStorage.setItem('pawpal_staff_locked_' + staff.id, '1');
+                                localStorage.setItem('pawpal_staff_locked_name_' + staff.name.toLowerCase(), '1');
+                            } catch (e) {}
+                        }
+                    } else if (latest.result === 'FAIL') {
+                        staff.skillExam = `Không đạt (${latest.score}đ)`;
+                        if (!isManuallyUnlocked) {
+                            staff.serviceLocked = true;
+                            try {
+                                localStorage.setItem('pawpal_staff_locked_' + staff.id, '1');
+                                localStorage.setItem('pawpal_staff_locked_name_' + staff.name.toLowerCase(), '1');
+                            } catch (e) {}
+                        }
+                    }
+                }
+            });
         }
 
         // Khởi tạo danh sách 6 bàn làm việc trực tiếp từ đội ngũ nhân sự thật
@@ -518,6 +639,12 @@
         let filterLockActive = false;
         let alertFilterQuickActive = false;
 
+        // Trạng thái phân trang
+        let currentStaffPage = 1;
+        const STAFF_PAGE_SIZE = 10;
+        let currentAssessmentPage = 1;
+        const ASSESSMENT_PAGE_SIZE = 10;
+
         // Trạng thái lịch làm việc (Subtab 3 - Giai đoạn 2)
         let currentScheduleDate = '2026-09-28';
         let currentScheduleViewMode = 'DAY'; // 'DAY' hoặc 'WEEK'
@@ -602,7 +729,7 @@
             if (statActive) statActive.textContent = mockStaff.filter(s => s.status === 'ACTIVE').length;
             if (statLeave) statLeave.textContent = mockStaff.filter(s => s.status === 'LEAVE').length;
             if (statPause) statPause.textContent = mockStaff.filter(s => s.status === 'PAUSE').length;
-            if (statRetrain) statRetrain.textContent = mockStaff.filter(s => s.skillResult === 'RETRAIN').length;
+            if (statRetrain) statRetrain.textContent = mockStaff.filter(s => (s.skillResult === 'RETRAIN' || s.skillResult === 'FAIL') && s.status !== 'RESIGNED').length;
         }
 
         function renderStaffAlertBar() {
@@ -611,34 +738,59 @@
 
             const alerts = [];
 
-            // 1. Kiểm tra thiếu hụt nhân sự ca làm việc
-            const afternoonGroomers = mockStaff.filter(s => s.role === 'Groomer' && s.shift === 'AFTERNOON' && s.status === 'ACTIVE');
-            const availableAfternoonGroomers = afternoonGroomers.filter(s => !s.serviceLocked);
-            if (afternoonGroomers.length > 0 && availableAfternoonGroomers.length < afternoonGroomers.length) {
-                const lockedStaff = afternoonGroomers.filter(s => s.serviceLocked).map(s => s.name).join(', ');
+            // 1. Kiểm tra nhân sự chưa đạt sát hạch hoặc cần đào tạo lại
+            const failOrRetrainStaff = mockStaff.filter(s => (s.skillResult === 'FAIL' || s.skillResult === 'RETRAIN') && s.status !== 'RESIGNED');
+            if (failOrRetrainStaff.length > 0) {
+                const listDetails = failOrRetrainStaff.map(s => `${s.id}: ${s.skillExam}`).join(', ');
+                const failCount = failOrRetrainStaff.filter(s => s.skillResult === 'FAIL').length;
+                const retrainCount = failOrRetrainStaff.filter(s => s.skillResult === 'RETRAIN').length;
+                let alertMainText = 'Cần đào tạo lại';
+                if (failCount > 0 && retrainCount === 0) alertMainText = 'Không đạt sát hạch';
+                else if (failCount > 0 && retrainCount > 0) alertMainText = 'Chưa đạt nghiệp vụ';
+
+                alerts.push({
+                    type: failCount > 0 ? 'danger' : 'warning',
+                    prefix: `${failOrRetrainStaff.length} nhân sự`,
+                    main: alertMainText,
+                    sub: `(${failOrRetrainStaff.map(s => s.id).join(', ')})`,
+                    fullText: `Có ${failOrRetrainStaff.length} nhân sự chưa đạt sát hạch chuyên môn (${listDetails}) cần đào tạo và giám sát tay nghề`
+                });
+            }
+
+            // 2. Kiểm tra nhân sự đang bị tạm khóa an toàn nhận việc
+            const lockedStaffActive = mockStaff.filter(s => s.serviceLocked && s.status === 'ACTIVE');
+            if (lockedStaffActive.length > 0) {
+                const lockedCodes = lockedStaffActive.map(s => s.id).join(', ');
                 alerts.push({
                     type: 'danger',
-                    prefix: 'Ca chiều',
-                    main: 'Thiếu Groomer',
-                    sub: `(1/2 khả dụng, ${lockedStaff})`,
-                    fullText: `Ca chiều thiếu Groomer: Chỉ có ${availableAfternoonGroomers.length}/${afternoonGroomers.length} nhân sự sẵn sàng làm việc (${lockedStaff} đang khóa nhận việc)`
+                    prefix: `${lockedStaffActive.length} nhân sự`,
+                    main: 'Tạm khóa nhận việc',
+                    sub: `(${lockedCodes})`,
+                    fullText: `Có ${lockedStaffActive.length} nhân viên đang tạm khóa an toàn nhận việc (${lockedStaffActive.map(s => s.name).join(', ')})`
                 });
             }
 
-            // 2. Nhân sự cần đào tạo lại
-            const retrainStaff = mockStaff.filter(s => s.skillResult === 'RETRAIN');
-            if (retrainStaff.length > 0) {
-                const retrainIds = retrainStaff.map(s => s.id).join(', ');
-                alerts.push({
-                    type: 'warning',
-                    prefix: `${retrainStaff.length} nhân sự`,
-                    main: 'Cần đào tạo lại',
-                    sub: `(${retrainIds})`,
-                    fullText: `${retrainStaff.length} nhân viên cần đào tạo lại tay nghề trước ngày 05/10 (${retrainIds})`
-                });
-            }
+            // 3. Kiểm tra thiếu hụt nhân sự ca làm việc (ca sáng, ca chiều)
+            const shiftsToCheck = [
+                { key: 'MORNING', label: 'Ca sáng' },
+                { key: 'AFTERNOON', label: 'Ca chiều' }
+            ];
+            shiftsToCheck.forEach(sh => {
+                const groomers = mockStaff.filter(s => s.role === 'Groomer' && s.shift === sh.key && s.status === 'ACTIVE');
+                const availGroomers = groomers.filter(s => !s.serviceLocked);
+                if (groomers.length > 0 && availGroomers.length < groomers.length) {
+                    const lockedInShift = groomers.filter(s => s.serviceLocked).map(s => s.name).join(', ');
+                    alerts.push({
+                        type: 'danger',
+                        prefix: sh.label,
+                        main: 'Thiếu Groomer',
+                        sub: `(${availGroomers.length}/${groomers.length} khả dụng)`,
+                        fullText: `${sh.label} thiếu Groomer: Chỉ có ${availGroomers.length}/${groomers.length} nhân sự sẵn sàng làm việc (${lockedInShift} đang khóa nhận việc)`
+                    });
+                }
+            });
 
-            // 3. Nhân sự nghỉ phép
+            // 4. Nhân sự nghỉ phép hôm nay
             const leaveStaff = mockStaff.filter(s => s.status === 'LEAVE');
             if (leaveStaff.length > 0) {
                 const names = leaveStaff.map(s => s.name).join(', ');
@@ -651,7 +803,7 @@
                 });
             }
 
-            // 4. Đơn xin nghỉ phép và đổi ca chờ duyệt (Giai đoạn 3)
+            // 5. Đơn xin nghỉ phép và đổi ca chờ duyệt
             const pendingReqs = mockLeaveSwapRequests.filter(r => r.status === 'PENDING');
             if (pendingReqs.length > 0) {
                 alerts.push({
@@ -677,6 +829,19 @@
             }
 
             container.innerHTML = tagsHtml;
+
+            // Gắn sự kiện click vào các thẻ tag cảnh báo để kích hoạt nhanh bộ lọc
+            container.querySelectorAll('.alert-item-tag').forEach(tag => {
+                tag.addEventListener('click', () => {
+                    const btnFilterAlertQuick = document.getElementById('btnFilterStaffAlertQuick');
+                    alertFilterQuickActive = true;
+                    if (btnFilterAlertQuick) {
+                        btnFilterAlertQuick.textContent = 'Hiện tất cả';
+                        btnFilterAlertQuick.classList.add('active');
+                    }
+                    renderStaffList();
+                });
+            });
 
             const alertBar = document.getElementById('staffAlertBar');
             if (alertBar) {
@@ -758,8 +923,8 @@
             if (elId) elId.textContent = staff.id;
             if (elPhone) elPhone.textContent = staff.phone;
             if (elEmail) elEmail.textContent = staff.email;
-            if (elDob) elDob.textContent = staff.dob || '--';
-            if (elJoin) elJoin.textContent = staff.join_date || '--';
+            if (elDob) elDob.textContent = formatDateVN(staff.dob) || '—';
+            if (elJoin) elJoin.textContent = formatDateVN(staff.join_date) || '—';
             if (elAddress) elAddress.textContent = staff.address || 'Chưa cập nhật';
 
             // Thông tin công việc
@@ -876,7 +1041,7 @@
                             </div>
                             <div class="review-comment-body">"${escapeHtml(rv.comment)}"</div>
                             <div class="review-card-meta">
-                                <span>${escapeHtml(rv.service_name)} • ${rv.date}</span>
+                                <span>${escapeHtml(rv.service_name)} • ${formatDateVN(rv.date)}</span>
                                 ${requestedBadgeHtml}
                             </div>
                         `;
@@ -904,7 +1069,7 @@
                         item.innerHTML = `
                             <div class="history-item-left">
                                 <span style="font-weight: 600; color: var(--text-main);">${escapeHtml(ass.type)}</span>
-                                <span style="font-size: 11.5px; color: var(--text-muted);">${ass.date} • ${escapeHtml(ass.evaluator || 'Lê Lệ Quyên')}${ass.note ? ' • ' + escapeHtml(ass.note) : ''}</span>
+                                <span style="font-size: 11.5px; color: var(--text-muted);">${formatDateVN(ass.date)} • ${escapeHtml(ass.evaluator || 'Lê Lệ Quyên')}${ass.note ? ' • ' + escapeHtml(ass.note) : ''}</span>
                             </div>
                             <div class="history-item-right" style="font-weight: 700; ${colorStyle}">
                                 ${ass.score}/100 (${resultText})
@@ -952,13 +1117,63 @@
                 if (currentKpiFilter === 'ACTIVE' && staff.status !== 'ACTIVE') return false;
                 if (currentKpiFilter === 'LEAVE' && staff.status !== 'LEAVE') return false;
                 if (currentKpiFilter === 'PAUSE' && staff.status !== 'PAUSE') return false;
-                if (currentKpiFilter === 'RETRAIN' && staff.skillResult !== 'RETRAIN') return false;
+                if (currentKpiFilter === 'RETRAIN' && !(staff.skillResult === 'RETRAIN' || staff.skillResult === 'FAIL')) return false;
 
-                if (filterRetrainActive && staff.skillResult !== 'RETRAIN') return false;
+                if (filterRetrainActive && !(staff.skillResult === 'RETRAIN' || staff.skillResult === 'FAIL')) return false;
                 if (filterLockActive && !staff.serviceLocked) return false;
-                if (alertFilterQuickActive && !(staff.skillResult === 'RETRAIN' || staff.serviceLocked || staff.status === 'LEAVE')) return false;
+                if (alertFilterQuickActive && !(staff.skillResult === 'RETRAIN' || staff.skillResult === 'FAIL' || staff.serviceLocked || staff.status === 'LEAVE')) return false;
 
                 return true;
+            });
+        }
+
+        function renderStaffPagination(totalPages) {
+            const pagContainer = document.getElementById('staffPagination');
+            if (!pagContainer) return;
+
+            if (totalPages === 0) {
+                pagContainer.innerHTML = '';
+                pagContainer.style.display = 'none';
+                return;
+            }
+            pagContainer.style.display = 'flex';
+
+            const actualPages = Math.max(1, totalPages);
+            let html = '';
+            const prevDisabled = currentStaffPage === 1 ? 'disabled' : '';
+            html += `<button type="button" class="btn-pagination ${prevDisabled}" data-page="prev" ${prevDisabled ? 'disabled' : ''} title="Trang trước">&lt;</button>`;
+
+            for (let p = 1; p <= actualPages; p++) {
+                const activeClass = p === currentStaffPage ? 'active' : '';
+                html += `<button type="button" class="btn-pagination ${activeClass}" data-page="${p}">${p}</button>`;
+            }
+
+            const nextDisabled = currentStaffPage === actualPages ? 'disabled' : '';
+            html += `<button type="button" class="btn-pagination ${nextDisabled}" data-page="next" ${nextDisabled ? 'disabled' : ''} title="Trang sau">&gt;</button>`;
+
+            pagContainer.innerHTML = html;
+
+            pagContainer.querySelectorAll('.btn-pagination').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const pageAction = btn.getAttribute('data-page');
+                    if (pageAction === 'prev') {
+                        if (currentStaffPage > 1) {
+                            currentStaffPage--;
+                            renderStaffList();
+                        }
+                    } else if (pageAction === 'next') {
+                        if (currentStaffPage < actualPages) {
+                            currentStaffPage++;
+                            renderStaffList();
+                        }
+                    } else {
+                        const targetP = parseInt(pageAction, 10);
+                        if (targetP && targetP !== currentStaffPage) {
+                            currentStaffPage = targetP;
+                            renderStaffList();
+                        }
+                    }
+                });
             });
         }
 
@@ -968,6 +1183,12 @@
             tbody.innerHTML = '';
 
             const list = getFilteredStaffList();
+            const totalPages = Math.ceil(list.length / STAFF_PAGE_SIZE);
+
+            if (currentStaffPage > totalPages && totalPages > 0) {
+                currentStaffPage = totalPages;
+            }
+            if (currentStaffPage < 1) currentStaffPage = 1;
 
             if (list.length === 0) {
                 const emptyTr = document.createElement('tr');
@@ -977,10 +1198,14 @@
                     </td>
                 `;
                 tbody.appendChild(emptyTr);
+                renderStaffPagination(0);
                 return;
             }
 
-            list.forEach(staff => {
+            const startIndex = (currentStaffPage - 1) * STAFF_PAGE_SIZE;
+            const pageList = list.slice(startIndex, startIndex + STAFF_PAGE_SIZE);
+
+            pageList.forEach(staff => {
                 let statusBadge = '';
                 if (staff.status === 'ACTIVE') statusBadge = '<span class="admin-badge badge-success">Đang làm việc</span>';
                 else if (staff.status === 'LEAVE') statusBadge = '<span class="admin-badge badge-warning">Nghỉ phép</span>';
@@ -1015,7 +1240,7 @@
 
                 tr.innerHTML = `
                     <td>${staff.id}</td>
-                    <td><a href="javascript:void(0)" class="user-link-text btn-view-profile" data-id="${staff.id}">${staff.name}</a></td>
+                    <td><a href="javascript:void(0)" class="user-link-text btn-view-profile" data-id="${staff.id}" title="${escapeHtml(staff.name)}">${escapeHtml(staff.name)}</a></td>
                     <td>${staff.position}</td>
                     <td>${staff.phone}</td>
                     <td>${shiftText}</td>
@@ -1033,6 +1258,7 @@
                 tbody.appendChild(tr);
             });
 
+            renderStaffPagination(totalPages);
             attachActionDropdowns();
             attachProfileDrawerEvents();
         }
@@ -1278,8 +1504,8 @@
                 tr.innerHTML = `
                     <td style="font-weight: 500;">${staff.id}</td>
                     <td>
-                        <div style="font-weight: 600; color: var(--text-heading); cursor: pointer;" class="btn-view-profile" data-id="${staff.id}">${staff.name}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted);">${staff.position}</div>
+                        <div class="name-cell-text btn-view-profile" data-id="${staff.id}" title="${escapeHtml(staff.name)}">${escapeHtml(staff.name)}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted);">${escapeHtml(staff.position)}</div>
                     </td>
                     <td>${mCell}</td>
                     <td>${aCell}</td>
@@ -1360,8 +1586,8 @@
                 tr.innerHTML = `
                     <td style="font-weight: 500;">${staff.id}</td>
                     <td>
-                        <div style="font-weight: 600; color: var(--text-heading); cursor: pointer;" class="btn-view-profile" data-id="${staff.id}">${staff.name}</div>
-                        <div style="font-size: 11px; color: var(--text-muted);">${staff.position}</div>
+                        <div class="name-cell-text btn-view-profile" data-id="${staff.id}" title="${escapeHtml(staff.name)}">${escapeHtml(staff.name)}</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(staff.position)}</div>
                     </td>
                     ${dayCellsHtml}
                     <td style="text-align: center;">${weekHoursBadge}</td>
@@ -1828,7 +2054,9 @@
 
                 let detailsHtml = '';
                 if (req.type === 'LEAVE') {
-                    const dateText = req.startDate === req.endDate ? req.startDate : `${req.startDate} đến ${req.endDate}`;
+                    const sDate = formatDateVN(req.startDate);
+                    const eDate = formatDateVN(req.endDate);
+                    const dateText = sDate === eDate ? sDate : `${sDate} đến ${eDate}`;
                     const repText = req.replacementName ? `<span style="color: #236B48; font-weight: 500;">Người thay: ${req.replacementName}</span>` : '<span style="color: #B45309;">Chưa có người trực thay</span>';
                     detailsHtml = `
                         <div class="leave-req-desc">
@@ -1838,10 +2066,12 @@
                         </div>
                     `;
                 } else {
-                    const returnText = req.shiftTo === 'NONE' ? 'Trực hộ (Không nhận ca bù)' : `${req.dateTo} (${req.shiftToLabel})`;
+                    const dFrom = formatDateVN(req.dateFrom);
+                    const dTo = formatDateVN(req.dateTo);
+                    const returnText = req.shiftTo === 'NONE' ? 'Trực hộ (Không nhận ca bù)' : `${dTo} (${req.shiftToLabel})`;
                     detailsHtml = `
                         <div class="leave-req-desc">
-                            <div><strong>Ca xin đổi:</strong> ${req.dateFrom} (${req.shiftFromLabel})</div>
+                            <div><strong>Ca xin đổi:</strong> ${dFrom} (${req.shiftFromLabel})</div>
                             <div><strong>Đổi với:</strong> <span style="font-weight: 600; color: var(--text-heading);">${req.swapWithName}</span> ➔ Ca nhận lại: ${returnText}</div>
                             <div class="leave-req-reason">Lý do: "${req.reason}"</div>
                         </div>
@@ -2275,11 +2505,61 @@
 
             if (statAssessed) statAssessed.textContent = mockAssessments.length;
             if (statPass) statPass.textContent = mockAssessments.filter(a => a.result === 'PASS').length;
-            if (statRetrain) statRetrain.textContent = mockAssessments.filter(a => a.result === 'RETRAIN').length;
+            if (statRetrain) statRetrain.textContent = mockAssessments.filter(a => a.result === 'RETRAIN' || a.result === 'FAIL').length;
 
             const assessedStaffIds = new Set(mockAssessments.map(a => a.staff_id));
             const notAssessedCount = mockStaff.filter(s => !assessedStaffIds.has(s.id) || s.skillExam === 'Chưa kiểm tra').length;
             if (statNotAssessed) statNotAssessed.textContent = notAssessedCount;
+        }
+
+        function renderAssessmentPagination(totalPages) {
+            const pagContainer = document.getElementById('assessmentPagination');
+            if (!pagContainer) return;
+
+            if (totalPages === 0) {
+                pagContainer.innerHTML = '';
+                pagContainer.style.display = 'none';
+                return;
+            }
+            pagContainer.style.display = 'flex';
+
+            const actualPages = Math.max(1, totalPages);
+            let html = '';
+            const prevDisabled = currentAssessmentPage === 1 ? 'disabled' : '';
+            html += `<button type="button" class="btn-pagination ${prevDisabled}" data-page="prev" ${prevDisabled ? 'disabled' : ''} title="Trang trước">&lt;</button>`;
+
+            for (let p = 1; p <= actualPages; p++) {
+                const activeClass = p === currentAssessmentPage ? 'active' : '';
+                html += `<button type="button" class="btn-pagination ${activeClass}" data-page="${p}">${p}</button>`;
+            }
+
+            const nextDisabled = currentAssessmentPage === actualPages ? 'disabled' : '';
+            html += `<button type="button" class="btn-pagination ${nextDisabled}" data-page="next" ${nextDisabled ? 'disabled' : ''} title="Trang sau">&gt;</button>`;
+
+            pagContainer.innerHTML = html;
+
+            pagContainer.querySelectorAll('.btn-pagination').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const pageAction = btn.getAttribute('data-page');
+                    if (pageAction === 'prev') {
+                        if (currentAssessmentPage > 1) {
+                            currentAssessmentPage--;
+                            renderAssessmentList();
+                        }
+                    } else if (pageAction === 'next') {
+                        if (currentAssessmentPage < actualPages) {
+                            currentAssessmentPage++;
+                            renderAssessmentList();
+                        }
+                    } else {
+                        const targetP = parseInt(pageAction, 10);
+                        if (targetP && targetP !== currentAssessmentPage) {
+                            currentAssessmentPage = targetP;
+                            renderAssessmentList();
+                        }
+                    }
+                });
+            });
         }
 
         function renderAssessmentList() {
@@ -2309,6 +2589,12 @@
                 return true;
             });
 
+            const totalPages = Math.ceil(filteredAssessments.length / ASSESSMENT_PAGE_SIZE);
+            if (currentAssessmentPage > totalPages && totalPages > 0) {
+                currentAssessmentPage = totalPages;
+            }
+            if (currentAssessmentPage < 1) currentAssessmentPage = 1;
+
             if (filteredAssessments.length === 0) {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -2318,10 +2604,14 @@
                 `;
                 tbody.appendChild(tr);
                 updateAssessmentKpiCounters();
+                renderAssessmentPagination(0);
                 return;
             }
 
-            filteredAssessments.forEach(ass => {
+            const startIndex = (currentAssessmentPage - 1) * ASSESSMENT_PAGE_SIZE;
+            const pageList = filteredAssessments.slice(startIndex, startIndex + ASSESSMENT_PAGE_SIZE);
+
+            pageList.forEach(ass => {
                 let resBadge = '';
                 let rowHighlightClass = '';
 
@@ -2340,9 +2630,9 @@
                     tr.className = rowHighlightClass;
                 }
                 tr.innerHTML = `
-                    <td>${ass.date}</td>
+                    <td>${formatDateVN(ass.date)}</td>
                     <td><strong>${escapeHtml(ass.staff_id)}</strong></td>
-                    <td>${escapeHtml(ass.name)}</td>
+                    <td><span class="user-link-text" title="${escapeHtml(ass.name)}">${escapeHtml(ass.name)}</span></td>
                     <td>${escapeHtml(ass.type)}</td>
                     <td style="text-align: center; font-weight: 700;">${ass.score}</td>
                     <td>${resBadge}</td>
@@ -2365,6 +2655,7 @@
                 });
             });
 
+            renderAssessmentPagination(totalPages);
             updateAssessmentKpiCounters();
         }
 
@@ -2453,6 +2744,11 @@
                 safetyLockMessage = `\nĐã kích hoạt TỰ ĐỘNG KHÓA AN TOÀN nhận dịch vụ cho nhân viên ${staff.name} do chưa đạt điểm chuẩn (≥ 80đ).`;
             }
 
+            // Gỡ bỏ cờ mở khóa thủ công nếu có bài kiểm tra mới
+            try {
+                localStorage.removeItem('pawpal_staff_manual_unlocked_' + staff.id);
+            } catch (e) {}
+
             // Lưu vào mockAssessments
             const newAssId = 'ASM-' + String(mockAssessments.length + 1).padStart(3, '0');
             mockAssessments.unshift({
@@ -2465,8 +2761,11 @@
                 score: score,
                 result: result,
                 evaluator: 'Lê Lệ Quyên',
-                note: note || (result === 'PASS' ? 'Nghiệp vụ chuẩn xác' : 'Yêu cầu kèm cặp chuyên môn')
+                note: note || (result === 'PASS' ? 'Nghiệp vụ chuẩn xác' : (result === 'RETRAIN' ? 'Yêu cầu kèm cặp chuyên môn' : 'Không đạt chuẩn sát hạch'))
             });
+
+            // Đồng bộ ngay lập tức sang danh sách mockStaff
+            syncStaffWithAssessments();
 
             // Đồng bộ đánh giá năng lực vào Supabase audit_log
             try {
@@ -2504,7 +2803,7 @@
 
             // Cập nhật tức thì hồ sơ chi tiết nếu đang mở nhân viên này
             if (selectedStaffId === staff.id) {
-                renderStaffProfileDetail(staff);
+                renderStaffProfile(selectedStaffId);
             }
 
             if (assessModalEl) assessModalEl.classList.remove('active');
@@ -2553,6 +2852,8 @@
             });
 
             if (targetSubtab === 'tab-staff-list') {
+                updateKpiCounters();
+                renderStaffAlertBar();
                 renderStaffList();
                 updateBreadcrumb(null);
             } else if (targetSubtab === 'tab-staff-profile') {
@@ -2563,6 +2864,7 @@
                 renderScheduleTable();
                 updateBreadcrumb(null);
             } else if (targetSubtab === 'tab-staff-assessment') {
+                updateAssessmentKpiCounters();
                 renderAssessmentList();
                 updateBreadcrumb(null);
             }
@@ -2597,21 +2899,35 @@
                 document.querySelectorAll('.kpi-card-clickable').forEach(c => c.classList.remove('active'));
                 card.classList.add('active');
                 currentKpiFilter = card.getAttribute('data-kpi-filter') || 'ALL';
+                currentStaffPage = 1;
                 renderStaffList();
             });
         });
 
         // Tìm kiếm và bộ lọc Subtab 1
-        document.getElementById('staffSearchInput')?.addEventListener('input', renderStaffList);
-        document.getElementById('staffFilterPosition')?.addEventListener('change', renderStaffList);
-        document.getElementById('staffFilterStatus')?.addEventListener('change', renderStaffList);
-        document.getElementById('staffFilterShift')?.addEventListener('change', renderStaffList);
+        document.getElementById('staffSearchInput')?.addEventListener('input', () => {
+            currentStaffPage = 1;
+            renderStaffList();
+        });
+        document.getElementById('staffFilterPosition')?.addEventListener('change', () => {
+            currentStaffPage = 1;
+            renderStaffList();
+        });
+        document.getElementById('staffFilterStatus')?.addEventListener('change', () => {
+            currentStaffPage = 1;
+            renderStaffList();
+        });
+        document.getElementById('staffFilterShift')?.addEventListener('change', () => {
+            currentStaffPage = 1;
+            renderStaffList();
+        });
 
         // Nút Toggle: Cần đào tạo lại
         const btnFilterRetrain = document.getElementById('btnFilterRetrainOnly');
         btnFilterRetrain?.addEventListener('click', () => {
             filterRetrainActive = !filterRetrainActive;
             btnFilterRetrain.classList.toggle('active', filterRetrainActive);
+            currentStaffPage = 1;
             renderStaffList();
         });
 
@@ -2620,6 +2936,7 @@
         btnFilterLock?.addEventListener('click', () => {
             filterLockActive = !filterLockActive;
             btnFilterLock.classList.toggle('active', filterLockActive);
+            currentStaffPage = 1;
             renderStaffList();
         });
 
@@ -2629,6 +2946,7 @@
             alertFilterQuickActive = !alertFilterQuickActive;
             btnFilterAlertQuick.textContent = alertFilterQuickActive ? 'Hiện tất cả' : 'Lọc danh sách';
             btnFilterAlertQuick.classList.toggle('active', alertFilterQuickActive);
+            currentStaffPage = 1;
             renderStaffList();
         });
 
@@ -2657,8 +2975,8 @@
                     if (phoneIn) phoneIn.value = staff.phone || '';
                     if (emailIn) emailIn.value = staff.email || '';
                     if (addrIn) addrIn.value = staff.address || '';
-                    if (dobIn) dobIn.value = staff.dob || '1998-01-01';
-                    if (joinIn) joinIn.value = staff.join_date || new Date().toISOString().split('T')[0];
+                    if (dobIn) dobIn.value = toIsoDate(staff.dob) || '1998-01-01';
+                    if (joinIn) joinIn.value = toIsoDate(staff.join_date) || new Date().toISOString().split('T')[0];
                     if (posIn) posIn.value = staff.position || 'Groomer';
                     if (roleIn) roleIn.value = staff.role || 'Groomer';
                 }
@@ -2702,6 +3020,11 @@
                 nameIn?.focus();
                 return;
             }
+            if (name.length > 70) {
+                showToast('Họ và tên nhân viên không được vượt quá 70 ký tự!', 'warning');
+                nameIn?.focus();
+                return;
+            }
             if (!phone || phone.length < 10) {
                 showToast('Vui lòng nhập số điện thoại hợp lệ (10 chữ số)!', 'warning');
                 phoneIn?.focus();
@@ -2729,8 +3052,8 @@
                     staff.phone = phone;
                     staff.email = email;
                     staff.address = address;
-                    staff.dob = dob;
-                    staff.join_date = join_date;
+                    staff.dob = formatDateVN(dob);
+                    staff.join_date = formatDateVN(join_date);
                     staff.position = position;
                     staff.role = role;
 
@@ -2741,7 +3064,7 @@
                                 phone_number: phone,
                                 role: dbRole,
                                 specialization: position,
-                                hire_date: join_date,
+                                hire_date: toIsoDate(join_date),
                                 updated_at: new Date().toISOString()
                             }).eq('id', staff.rawId);
 
@@ -2775,8 +3098,8 @@
                     email: email,
                     shift: 'MORNING',
                     status: 'ACTIVE',
-                    join_date: join_date,
-                    dob: dob,
+                    join_date: formatDateVN(join_date),
+                    dob: formatDateVN(dob),
                     address: address,
                     skillScore: 85,
                     skillResult: 'PASS',
@@ -2792,7 +3115,7 @@
                             phone_number: phone,
                             role: dbRole,
                             specialization: position,
-                            hire_date: join_date
+                            hire_date: toIsoDate(join_date)
                         }).select().single();
 
                         if (inserted) {
@@ -3018,6 +3341,12 @@
                                 });
                             } catch(e) {}
                         }
+                        try {
+                            localStorage.setItem('pawpal_staff_locked_' + staff.id, '1');
+                            localStorage.setItem('pawpal_staff_locked_name_' + staff.name.toLowerCase(), '1');
+                            localStorage.setItem('pawpal_staff_manual_locked_' + staff.id, '1');
+                            localStorage.removeItem('pawpal_staff_manual_unlocked_' + staff.id);
+                        } catch(e) {}
                         saveStaffDataToStorage();
                         renderStaffProfile(staff.id);
                         updateKpiCounters();
@@ -3045,6 +3374,17 @@
                     });
                 } catch(e) {}
             }
+            try {
+                localStorage.setItem('pawpal_staff_locked_' + staff.id, staff.serviceLocked ? '1' : '0');
+                localStorage.setItem('pawpal_staff_locked_name_' + staff.name.toLowerCase(), staff.serviceLocked ? '1' : '0');
+                if (!staff.serviceLocked) {
+                    localStorage.setItem('pawpal_staff_manual_unlocked_' + staff.id, '1');
+                    localStorage.removeItem('pawpal_staff_manual_locked_' + staff.id);
+                } else {
+                    localStorage.setItem('pawpal_staff_manual_locked_' + staff.id, '1');
+                    localStorage.removeItem('pawpal_staff_manual_unlocked_' + staff.id);
+                }
+            } catch(e) {}
             saveStaffDataToStorage();
             renderStaffProfile(staff.id);
             updateKpiCounters();
@@ -3326,12 +3666,15 @@
 
         // Bộ lọc bảng đánh giá nghiệp vụ
         document.getElementById('assessmentSearchInput')?.addEventListener('input', () => {
+            currentAssessmentPage = 1;
             renderAssessmentList();
         });
         document.getElementById('assessmentFilterType')?.addEventListener('change', () => {
+            currentAssessmentPage = 1;
             renderAssessmentList();
         });
         document.getElementById('assessmentFilterResult')?.addEventListener('change', () => {
+            currentAssessmentPage = 1;
             renderAssessmentList();
         });
 
@@ -3579,6 +3922,8 @@
                 if (stored !== null) s.serviceLocked = stored === '1';
             } catch(e) {}
         });
+
+        syncStaffWithAssessments();
 
         setupStaffRealtimeSubscription();
         switchSubtab(initialSubtab);

@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="modules/pets/pets.css?v=40">
     <link rel="stylesheet" href="modules/orders/orders.css?v=42">
     <link rel="stylesheet" href="modules/services/services.css?v=47">
-    <link rel="stylesheet" href="modules/staff/staff.css?v=15">
+    <link rel="stylesheet" href="modules/staff/staff.css?v=16">
     <link rel="stylesheet" href="modules/complaints/complaints.css?v=5">
     <link rel="stylesheet" href="modules/chatbot/chatbot.css?v=5">
     <link rel="stylesheet" href="modules/settings/settings.css?v=4">
@@ -25,8 +25,11 @@
 <body class="admin-body">
 
     <div class="admin-layout">
+        <!-- LỚP PHỦ MỜ KHI MỞ MENU TRÊN MOBILE -->
+        <div class="admin-sidebar-overlay" id="adminSidebarOverlay"></div>
+
         <!-- THANH ĐIỀU HƯỚNG BÊN TRÁI (SIDEBAR) -->
-        <aside class="admin-sidebar">
+        <aside class="admin-sidebar" id="adminSidebar">
             <!-- LOGO VÀ TIÊU ĐỀ + NÚT THU GỌN SIDEBAR -->
             <div class="admin-sidebar-brand">
                 <div class="brand-title">Pawpal-er</div>
@@ -93,6 +96,7 @@
         <main class="admin-main">
             <header class="admin-header">
                 <div class="admin-header-left">
+                    <button type="button" class="btn-mobile-menu-toggle" id="btnMobileMenuToggle" aria-label="Mở menu quản trị">Menu</button>
                     <span class="header-module-title" id="headerModuleTitle" style="display: none;"></span>
                     <div class="header-subtabs-group" id="headerSubtabsGroup"></div>
                     <div class="header-deep-breadcrumb" id="headerDeepBreadcrumb"></div>

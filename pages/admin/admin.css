@@ -784,3 +784,157 @@ textarea.admin-input,
     padding: 0 4px;
     font-size: 13px;
 }
+
+/* ==========================================================================
+   NÚT MỞ MENU TRÊN MOBILE VÀ BACKDROP OVERLAY
+   ========================================================================== */
+.btn-mobile-menu-toggle {
+    display: none;
+    background-color: #EEF5F1;
+    color: var(--text-heading);
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    padding: 5px 11px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    white-space: nowrap;
+    line-height: 1.3;
+    flex-shrink: 0;
+    transition: background-color 0.15s ease;
+}
+
+.btn-mobile-menu-toggle:hover {
+    background-color: #E2ECE5;
+}
+
+.admin-sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(20, 38, 28, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 9990;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+/* ==========================================================================
+   RESPONSIVE CHO CHIỀU RỘNG HẸP / MOBILE (< 768px, VD: 375px - 496px)
+   ========================================================================== */
+@media (max-width: 768px) {
+    .btn-mobile-menu-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .admin-sidebar-overlay {
+        display: block;
+    }
+
+    /* Sidebar chuyển thành Drawer trượt nổi (Off-canvas) - Không chiếm diện tích cố định */
+    .admin-sidebar {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        height: 100vh !important;
+        width: 250px !important;
+        min-width: 250px !important;
+        max-width: 80vw !important;
+        z-index: 9999 !important;
+        transform: translateX(-100%);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
+        border-right: 1px solid var(--border-neutral);
+        background-color: #FFFFFF !important;
+    }
+
+    /* Khi mở sidebar trên mobile */
+    .admin-layout.mobile-sidebar-open .admin-sidebar {
+        transform: translateX(0);
+    }
+
+    .admin-layout.mobile-sidebar-open .admin-sidebar-overlay {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Đảm bảo nội dung sidebar khi mở trên mobile hiển thị đầy đủ tên chữ và icon */
+    .admin-layout.mobile-sidebar-open .brand-title {
+        display: block !important;
+    }
+
+    .admin-layout.mobile-sidebar-open .sidebar-menu-btn .menu-text {
+        display: inline !important;
+    }
+
+    .admin-layout.mobile-sidebar-open .sidebar-menu-btn {
+        width: 100% !important;
+        justify-content: flex-start !important;
+        padding: 11px 16px !important;
+    }
+
+    .admin-layout.mobile-sidebar-open .btn-sidebar-footer span:not(.menu-icon) {
+        display: inline !important;
+    }
+
+    .admin-layout.mobile-sidebar-open .btn-sidebar-footer {
+        width: 100% !important;
+        justify-content: flex-start !important;
+        padding: 10px 16px !important;
+        font-size: 14px !important;
+    }
+
+    /* Màn hình chính chiếm trọn 100% chiều ngang */
+    .admin-main {
+        width: 100% !important;
+        min-width: 0 !important;
+        flex: 1 !important;
+    }
+
+    .admin-header {
+        padding: 0 12px;
+        gap: 8px;
+    }
+
+    .admin-header-left {
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: none;
+    }
+
+    .admin-header-left::-webkit-scrollbar {
+        display: none;
+    }
+
+    .header-subtabs-group {
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .header-subtab-btn {
+        font-size: 13.5px;
+        padding: 4px 2px;
+    }
+
+    .admin-header-right {
+        flex-shrink: 0;
+    }
+
+    .header-user-tag {
+        padding: 4px 8px;
+        font-size: 11.5px;
+    }
+
+    .admin-preview-content {
+        padding: 12px;
+    }
+}

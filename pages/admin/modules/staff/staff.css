@@ -245,15 +245,96 @@
     color: #FFFFFF !important;
 }
 
-/* DÒNG CẢNH BÁO BẢNG: VIỀN MÉP TRÁI DUY NHẤT */
+/* CẤU TRÚC BẢNG DỮ LIỆU CHUẨN AGENTS.MD */
+.table-responsive-wrapper {
+    overflow-x: auto;
+    background-color: transparent;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    text-align: left;
+    background-color: transparent;
+}
+
+.admin-table tbody,
+.admin-table tbody tr {
+    background-color: transparent;
+}
+
+.admin-table th {
+    background-color: var(--table-header-bg);
+    color: var(--table-header-text);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-neutral);
+    white-space: nowrap;
+}
+
 .admin-table th:first-child {
     border-left: 3px solid var(--table-header-bg);
+}
+
+.admin-table td {
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--border-neutral);
+    color: var(--text-main);
+    vertical-align: middle;
+    white-space: nowrap;
+    background-color: transparent;
 }
 
 .admin-table td:first-child {
     border-left: 3px solid transparent;
 }
 
+.admin-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* LINK HỌ TÊN VÀ ĐỊNH DẠNG TEXT DÀI TRONG BẢNG (CHỐNG TRÀN VÀ ĐẨY RỘNG CỘT) */
+.user-link-text,
+.user-name-link {
+    color: var(--text-heading);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 13.5px;
+    display: inline-block;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.user-link-text:hover,
+.user-name-link:hover {
+    color: var(--admin-primary);
+    text-decoration: underline;
+}
+
+.name-cell-text {
+    font-weight: 600;
+    color: var(--text-heading);
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    max-width: 180px;
+    vertical-align: middle;
+}
+
+.name-cell-text:hover {
+    color: var(--admin-primary);
+    text-decoration: underline;
+}
+
+/* DÒNG CẢNH BÁO BẢNG: VIỀN MÉP TRÁI DUY NHẤT */
 .row-highlight-danger td:first-child {
     border-left: 3px solid #DC2626 !important;
 }
@@ -747,6 +828,13 @@
     color: #FFFFFF;
 }
 
+.btn-pagination:disabled,
+.btn-pagination.disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 /* DRAWER HỒ SƠ TỪ CẠNH PHẢI */
 .profile-drawer-overlay {
     position: fixed;
@@ -866,6 +954,8 @@
 .info-value {
     color: var(--text-main);
     font-weight: 600;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 /* LIST QUYỀN VÀ ĐÁNH GIÁ TRONG DRAWER */
@@ -1139,6 +1229,16 @@
     flex-wrap: wrap;
 }
 
+.headline-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-heading);
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .staff-quick-actions {
     display: flex;
     align-items: center;
@@ -1402,6 +1502,10 @@
     font-weight: 700;
     color: var(--text-main);
     letter-spacing: -0.2px;
+}
+
+.timesheet-metrics-grid .metric-val {
+    color: var(--text-main) !important;
 }
 
 .metric-label {

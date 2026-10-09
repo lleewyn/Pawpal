@@ -498,6 +498,12 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             const title = btn.getAttribute('data-title');
             const currentMod = sessionStorage.getItem('pawpal_admin_active_module');
+            
+            // Tự động đóng drawer sidebar trên mobile khi chọn mục
+            if (adminLayout) {
+                adminLayout.classList.remove('mobile-sidebar-open');
+            }
+
             if (currentMod === title) return;
 
             sidebarBtns.forEach(b => b.classList.remove('active'));
@@ -572,15 +578,42 @@ document.addEventListener('DOMContentLoaded', () => {
     // Thu gọn / Mở rộng Sidebar & Lưu trạng thái vào localStorage
     const adminLayout = document.querySelector('.admin-layout');
     const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+    const btnMobileMenuToggle = document.getElementById('btnMobileMenuToggle');
+    const adminSidebarOverlay = document.getElementById('adminSidebarOverlay');
 
-    // Khôi phục trạng thái sidebar đã lưu
+    // Nút mở Menu trên Mobile
+    if (btnMobileMenuToggle && adminLayout) {
+        btnMobileMenuToggle.addEventListener('click', () => {
+            adminLayout.classList.toggle('mobile-sidebar-open');
+        });
+    }
+
+    // Nhấp vào màn mờ backdrop để đóng Sidebar trên Mobile
+    if (adminSidebarOverlay && adminLayout) {
+        adminSidebarOverlay.addEventListener('click', () => {
+            adminLayout.classList.remove('mobile-sidebar-open');
+        });
+    }
+
+    // Đóng drawer khi nhấp vào nút chân sidebar
+    document.querySelectorAll('.admin-sidebar-footer a, .admin-sidebar-footer button').forEach(el => {
+        el.addEventListener('click', () => {
+            if (adminLayout) adminLayout.classList.remove('mobile-sidebar-open');
+        });
+    });
+
+    // Khôi phục trạng thái sidebar đã lưu (chỉ trên màn hình desktop > 768px)
     const isSidebarCollapsed = localStorage.getItem('pawpal_admin_sidebar_collapsed') === 'true';
-    if (isSidebarCollapsed && adminLayout) {
+    if (isSidebarCollapsed && adminLayout && window.innerWidth > 768) {
         adminLayout.classList.add('sidebar-collapsed');
     }
 
     if (btnToggleSidebar && adminLayout) {
         btnToggleSidebar.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                adminLayout.classList.remove('mobile-sidebar-open');
+                return;
+            }
             adminLayout.classList.toggle('sidebar-collapsed');
             const collapsed = adminLayout.classList.contains('sidebar-collapsed');
             localStorage.setItem('pawpal_admin_sidebar_collapsed', collapsed ? 'true' : 'false');
