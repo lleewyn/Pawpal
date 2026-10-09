@@ -1742,7 +1742,62 @@
             });
         }
 
+        function toUnaccent(str) {
+            if (!str) return '';
+            return String(str)
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[đĐ]/g, m => m === 'đ' ? 'd' : 'D')
+                .toLowerCase()
+                .trim();
+        }
+
+        function matchSearch(sourceText, searchTerm) {
+            if (!searchTerm) return true;
+            if (!sourceText) return false;
+            const src = String(sourceText).toLowerCase();
+            const query = String(searchTerm).toLowerCase().trim();
+            if (src.includes(query)) return true;
+            return toUnaccent(sourceText).includes(toUnaccent(searchTerm));
+        }
+
         // 2. Render bảng danh sách đơn hàng
+        function clearAllOrderFilters() {
+            const searchInput = document.getElementById('orderSearchInput');
+            const filterStatus = document.getElementById('orderFilterStatus');
+            const filterPayment = document.getElementById('orderFilterPayment');
+            const filterPayStatus = document.getElementById('orderFilterPayStatus');
+            const btnClearOrderSearch = document.getElementById('btnClearOrderSearch');
+            const btnOrderClearFilters = document.getElementById('btnOrderClearFilters');
+
+            if (searchInput) searchInput.value = '';
+            if (btnClearOrderSearch) btnClearOrderSearch.style.display = 'none';
+            if (btnOrderClearFilters) btnOrderClearFilters.style.display = 'none';
+            if (filterStatus) filterStatus.value = 'ALL';
+            if (filterPayment) filterPayment.value = 'ALL';
+            if (filterPayStatus) filterPayStatus.value = 'ALL';
+
+            currentFilterStatus = 'ALL';
+            currentFilterPayment = 'ALL';
+            currentFilterPayStatus = 'ALL';
+            filterComplaintOnly = false;
+            filterUrgentOnly = false;
+            filterSlaOverdueOnly = false;
+            ordersCurrentPage = 1;
+
+            const btnComplaint = document.getElementById('btnFilterComplaintOrders');
+            if (btnComplaint) btnComplaint.classList.remove('active');
+            const btnUrgent = document.getElementById('btnFilterUrgentOrders');
+            if (btnUrgent) btnUrgent.classList.remove('active');
+            const btnSla = document.getElementById('btnFilterSlaOverdue');
+            if (btnSla) btnSla.classList.remove('active');
+
+            document.querySelectorAll('.order-kpi-card, .kpi-card-clickable').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.order-quick-filter-btn').forEach(b => b.classList.remove('active'));
+
+            renderOrdersTable();
+        }
+
         function renderOrdersTable() {
             const tbody = document.getElementById('ordersTableBody');
             if (!tbody) return;
@@ -1762,7 +1817,21 @@
             if (statCompletedOrdersEl) statCompletedOrdersEl.textContent = currentOrdersList.filter(o => o.status === 'completed').length;
             if (statCancelledOrdersEl) statCancelledOrdersEl.textContent = currentOrdersList.filter(o => o.status === 'cancelled' || o.status === 'returned').length;
 
-            const searchVal = (document.getElementById('orderSearchInput')?.value || '').toLowerCase().trim();
+            const searchVal = (document.getElementById('orderSearchInput')?.value || '').trim();
+            const btnOrderClearFilters = document.getElementById('btnOrderClearFilters');
+
+            const isAnyFilterActive = Boolean(
+                searchVal ||
+                currentFilterStatus !== 'ALL' ||
+                currentFilterPayment !== 'ALL' ||
+                currentFilterPayStatus !== 'ALL' ||
+                filterComplaintOnly ||
+                filterUrgentOnly ||
+                filterSlaOverdueOnly
+            );
+            if (btnOrderClearFilters) {
+                btnOrderClearFilters.style.display = isAnyFilterActive ? 'inline-flex' : 'none';
+            }
 
             const filtered = currentOrdersList.filter(o => {
                 const sla = getOrderSlaInfo(o);
@@ -1781,11 +1850,12 @@
                 if (filterSlaOverdueOnly && !sla.isSlaOverdue) return false;
 
                 if (searchVal) {
-                    const matchId = o.id.toLowerCase().includes(searchVal);
-                    const matchName = o.customerName.toLowerCase().includes(searchVal);
-                    const matchPhone = o.phone.includes(searchVal);
-                    const matchTrack = (o.trackingNumber || '').toLowerCase().includes(searchVal);
-                    if (!matchId && !matchName && !matchPhone && !matchTrack) return false;
+                    const matchId = matchSearch(o.id, searchVal);
+                    const matchName = matchSearch(o.customerName, searchVal);
+                    const matchPhone = matchSearch(o.phone, searchVal);
+                    const matchTrack = matchSearch(o.trackingNumber, searchVal);
+                    const matchItems = (o.items && o.items.some(it => matchSearch(it.name, searchVal) || matchSearch(it.sku, searchVal)));
+                    if (!matchId && !matchName && !matchPhone && !matchTrack && !matchItems) return false;
                 }
                 return true;
             });
@@ -1836,11 +1906,14 @@
             if (pagedOrders.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="10" style="text-align: center; padding: 36px; color: var(--text-muted);">
-                            <div>Không tìm thấy đơn hàng phù hợp với bộ lọc hiện tại.</div>
+                        <td colspan="10" style="text-align: center; padding: 36px; color: var(--text-muted); font-size: 13.5px;">
+                            <div>Không tìm thấy đơn hàng phù hợp với bộ lọc hiện tại. 
+                            <button type="button" id="btnResetOrderFilters" style="background: none; border: none; color: #236B48; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 0 4px; font-size: 13.5px;">Xóa bộ lọc</button>
+                            </div>
                         </td>
                     </tr>
                 `;
+                document.getElementById('btnResetOrderFilters')?.addEventListener('click', clearAllOrderFilters);
                 renderOrdersPagination(0);
                 return;
             }
@@ -2246,10 +2319,11 @@
                 if (stockVal === 'IN_STOCK' && available <= p.minStock) return false;
 
                 if (searchVal) {
-                    const matchName = p.name.toLowerCase().includes(searchVal);
-                    const matchSku = p.sku.toLowerCase().includes(searchVal);
-                    const matchBrand = p.brand.toLowerCase().includes(searchVal);
-                    if (!matchName && !matchSku && !matchBrand) return false;
+                    const matchName = matchSearch(p.name, searchVal);
+                    const matchSku = matchSearch(p.sku, searchVal);
+                    const matchBrand = matchSearch(p.brand, searchVal);
+                    const matchCat = matchSearch(p.category, searchVal);
+                    if (!matchName && !matchSku && !matchBrand && !matchCat) return false;
                 }
                 return true;
             });
@@ -2392,7 +2466,7 @@
             const tbody = document.getElementById('vouchersTableBody');
             if (!tbody) return;
 
-            const searchVal = (document.getElementById('promoSearchInput')?.value || '').toLowerCase().trim();
+            const searchVal = (document.getElementById('promoSearchInput')?.value || '').trim();
             const vouchersList = getSharedVouchersList();
 
             const statActive = document.getElementById('statActiveVouchers');
@@ -2405,8 +2479,8 @@
 
             const filtered = vouchersList.filter(v => {
                 if (searchVal) {
-                    const matchCode = (v.code || '').toLowerCase().includes(searchVal);
-                    const matchTitle = ((v.name || v.title) || '').toLowerCase().includes(searchVal);
+                    const matchCode = matchSearch(v.code, searchVal);
+                    const matchTitle = matchSearch((v.name || v.title), searchVal);
                     if (!matchCode && !matchTitle) return false;
                 }
                 return true;
@@ -2517,6 +2591,9 @@
             sessionStorage.setItem('pawpal_admin_orders_page', '1');
             renderOrdersTable();
         });
+
+        // Nút Xóa bộ lọc ngay cạnh các dropdown lọc
+        document.getElementById('btnOrderClearFilters')?.addEventListener('click', clearAllOrderFilters);
 
         // GIAI ĐOẠN 2: Checkbox chọn tất cả đơn hàng
         document.getElementById('checkSelectAllOrders')?.addEventListener('change', function(e) {

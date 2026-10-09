@@ -1072,22 +1072,85 @@
             });
         }
 
+        function toUnaccent(str) {
+            if (!str) return '';
+            return String(str)
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[đĐ]/g, m => m === 'đ' ? 'd' : 'D')
+                .toLowerCase()
+                .trim();
+        }
+
+        function matchSearch(sourceText, searchTerm) {
+            if (!searchTerm) return true;
+            if (!sourceText) return false;
+            const src = String(sourceText).toLowerCase();
+            const query = String(searchTerm).toLowerCase().trim();
+            if (src.includes(query)) return true;
+            return toUnaccent(sourceText).includes(toUnaccent(searchTerm));
+        }
+
+        function clearAllPetFilters() {
+            const btnPetClearFilters = document.getElementById('btnPetClearFilters');
+            if (petSearchInput) petSearchInput.value = '';
+            if (btnClearPetSearch) btnClearPetSearch.style.display = 'none';
+            if (btnPetClearFilters) btnPetClearFilters.style.display = 'none';
+            if (petFilterSpecies) petFilterSpecies.value = 'ALL';
+            if (petFilterBreed) petFilterBreed.value = 'ALL';
+            if (petFilterWeight) petFilterWeight.value = 'ALL';
+            if (petFilterVaccine) petFilterVaccine.value = 'ALL';
+
+            isHotelOnly = false;
+            isAlertOnly = false;
+            petCurrentPage = 1;
+
+            if (btnToggleHotelOnly) btnToggleHotelOnly.classList.remove('active');
+            if (btnToggleAlertOnly) btnToggleAlertOnly.classList.remove('active');
+            document.querySelectorAll('#tab-pet-list .kpi-card, .pet-kpi-card').forEach(c => c.classList.remove('active'));
+
+            updatePetKPIs();
+            renderPetsTable();
+        }
+
         function renderPetsTable() {
             closePetGlobalDropdown();
             const tbody = document.getElementById('petTableTbody');
             if (!tbody) return;
 
-            const query = petSearchInput ? petSearchInput.value.toLowerCase().trim() : '';
+            const query = petSearchInput ? petSearchInput.value.trim() : '';
             const speciesVal = petFilterSpecies ? petFilterSpecies.value : 'ALL';
             const breedVal = petFilterBreed ? petFilterBreed.value : 'ALL';
             const weightVal = petFilterWeight ? petFilterWeight.value : 'ALL';
             const vaccineVal = petFilterVaccine ? petFilterVaccine.value : 'ALL';
+            const btnPetClearFilters = document.getElementById('btnPetClearFilters');
+
+            const isAnyFilterActive = Boolean(
+                query ||
+                speciesVal !== 'ALL' ||
+                breedVal !== 'ALL' ||
+                weightVal !== 'ALL' ||
+                vaccineVal !== 'ALL' ||
+                isHotelOnly ||
+                isAlertOnly
+            );
+            if (btnPetClearFilters) {
+                btnPetClearFilters.style.display = isAnyFilterActive ? 'inline-flex' : 'none';
+            }
 
             const petsList = Object.values(petsData);
             const filteredPets = petsList.filter(pet => {
-                const text = `${pet.code} ${pet.name} ${pet.speciesBreed || ''} ${pet.breed || ''} ${pet.ownerName || ''} ${pet.ownerPhone || ''}`.toLowerCase();
-                
-                if (query && !text.includes(query)) return false;
+                if (query) {
+                    const matchPet = matchSearch(pet.code, query) ||
+                                     matchSearch(pet.name, query) ||
+                                     matchSearch(pet.speciesBreed, query) ||
+                                     matchSearch(pet.breed, query) ||
+                                     matchSearch(pet.ownerName, query) ||
+                                     matchSearch(pet.ownerPhone, query) ||
+                                     matchSearch(pet.notes, query) ||
+                                     matchSearch(pet.alert, query);
+                    if (!matchPet) return false;
+                }
 
                 if (speciesVal !== 'ALL') {
                     if (speciesVal === 'dog' && pet.species !== 'dog') return false;
@@ -1097,7 +1160,8 @@
                 }
 
                 if (breedVal !== 'ALL') {
-                    if (!text.includes(breedVal.toLowerCase())) return false;
+                    const breedMatches = matchSearch(pet.breed, breedVal) || matchSearch(pet.speciesBreed, breedVal);
+                    if (!breedMatches) return false;
                 }
 
                 if (weightVal !== 'ALL') {
@@ -1130,10 +1194,12 @@
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 36px 16px; font-size: 13.5px;">
-                            Không tìm thấy bé cưng nào phù hợp với bộ lọc tìm kiếm hiện tại.
+                            Không tìm thấy bé cưng nào phù hợp với bộ lọc tìm kiếm hiện tại. 
+                            <button type="button" id="btnResetPetFilters" style="background: none; border: none; color: #236B48; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 0 4px; font-size: 13.5px;">Xóa bộ lọc</button>
                         </td>
                     </tr>
                 `;
+                document.getElementById('btnResetPetFilters')?.addEventListener('click', clearAllPetFilters);
                 return;
             }
 
@@ -1249,6 +1315,7 @@
         if (petFilterBreed) petFilterBreed.addEventListener('change', () => { petCurrentPage = 1; renderPetsTable(); });
         if (petFilterWeight) petFilterWeight.addEventListener('change', () => { petCurrentPage = 1; renderPetsTable(); });
         if (petFilterVaccine) petFilterVaccine.addEventListener('change', () => { petCurrentPage = 1; renderPetsTable(); });
+        document.getElementById('btnPetClearFilters')?.addEventListener('click', clearAllPetFilters);
 
         // ====================================================================
         // 7. TÁC VỤ LƯU TRỮ VÀ KHÔI PHỤC HỒ SƠ THÚ CƯNG TRÊN MENU 3 CHẤM
@@ -2085,7 +2152,15 @@
             const saved = sessionStorage.getItem('pawpal_admin_pet_reminders');
             if (saved) {
                 try {
-                    return JSON.parse(saved);
+                    const parsed = JSON.parse(saved);
+                    if (!Array.isArray(parsed)) return [];
+                    const seen = new Set();
+                    return parsed.filter(item => {
+                        const key = `${item.petId || item.petName}|${item.type || item.typeText}`;
+                        if (seen.has(key)) return false;
+                        seen.add(key);
+                        return true;
+                    });
                 } catch(e) {
                     console.error('Lỗi phân tích cú pháp pawpal_admin_pet_reminders:', e);
                 }
@@ -2210,21 +2285,21 @@
 
         function renderRemindersTable() {
             if (!reminderTableTbody) return;
-            const query = (reminderSearchInput?.value || '').toLowerCase().trim();
+            const query = (reminderSearchInput?.value || '').trim();
             const typeFilter = reminderFilterType?.value || 'ALL';
             const statusFilter = reminderFilterStatus?.value || 'ALL';
 
             const filtered = remindersData.filter(item => {
-                const matchSearch = !query || 
-                    item.petName.toLowerCase().includes(query) ||
-                    item.ownerName.toLowerCase().includes(query) ||
-                    item.ownerPhone.includes(query) ||
-                    item.speciesBreed.toLowerCase().includes(query) ||
-                    item.petId.toLowerCase().includes(query);
+                const matchSearchCondition = !query || 
+                    matchSearch(item.petName, query) ||
+                    matchSearch(item.ownerName, query) ||
+                    matchSearch(item.ownerPhone, query) ||
+                    matchSearch(item.speciesBreed, query) ||
+                    matchSearch(item.petId, query);
 
                 const matchType = (typeFilter === 'ALL') || (item.type === typeFilter);
                 const matchStatus = (statusFilter === 'ALL') || (item.status === statusFilter);
-                return matchSearch && matchType && matchStatus;
+                return matchSearchCondition && matchType && matchStatus;
             });
 
             const totalItems = filtered.length;
@@ -2404,15 +2479,27 @@
                 const petId = btnQuickBook.getAttribute('data-id') || '';
                 const ownerPhone = btnQuickBook.getAttribute('data-phone') || '';
                 const pet = petsData[petId];
+                const reminder = remindersData.find(item => item.petId === petId && item.petName === petName);
+                const resolvedOwnerName = pet?.ownerName || ownerName;
+                const resolvedOwnerPhone = pet?.ownerPhone || ownerPhone;
+                if (!resolvedOwnerPhone) {
+                    showToast('Chưa có số điện thoại chủ nuôi; không thể tạo lịch hẹn.', 'warning');
+                    return;
+                }
 
                 sessionStorage.setItem('pawpal_admin_booking_preset', JSON.stringify({
                     petId: petId,
                     petName: petName,
-                    ownerName: ownerName,
-                    ownerPhone: ownerPhone,
+                    ownerName: resolvedOwnerName,
+                    ownerPhone: resolvedOwnerPhone,
                     breed: pet ? (pet.speciesBreed || pet.breed) : '',
                     weight: pet ? pet.weight : '',
-                    petAlert: pet ? (pet.alert || pet.allergy || pet.notes) : ''
+                    petAlert: reminder?.type === 'HOTEL_VACCINE'
+                        ? `Cảnh báo sổ tiêm Hotel: ${pet?.alert || 'Chưa xác nhận sổ tiêm.'}`
+                        : (pet ? (pet.alert || pet.allergy || pet.notes) : ''),
+                    petVaccinated: reminder?.type === 'HOTEL_VACCINE' ? false : pet?.vaccinated === true,
+                    reminderId: reminder?.id || null,
+                    reminderType: reminder?.type || null
                 }));
 
                 showToast(`Đã chọn bé ${petName} (${ownerName}). Đang chuyển sang Phân hệ Dịch vụ để xếp lịch hẹn...`);
@@ -2523,6 +2610,33 @@
         const wbBeforeImg = document.getElementById('wbBeforeImgPreview');
         const wbAfterImg = document.getElementById('wbAfterImgPreview');
         const wbOwnerMsg = document.getElementById('wbOwnerMessage');
+        const careDraftStorageKey = 'pawpal_pet_carelog_drafts';
+
+        function readCareDrafts() {
+            try { return JSON.parse(localStorage.getItem(careDraftStorageKey) || '{}'); } catch (e) { return {}; }
+        }
+
+        function restoreCareDraft(careId) {
+            const draft = readCareDrafts()[careId];
+            if (!draft) return false;
+            if (wbBeforeImg && draft.before) wbBeforeImg.src = draft.before;
+            if (wbAfterImg && draft.after) wbAfterImg.src = draft.after;
+            if (wbOwnerMsg) wbOwnerMsg.value = draft.message || '';
+            if (draft.checklist) {
+                Object.keys(checklistState).forEach((key) => {
+                    if (typeof draft.checklist[key] === 'boolean') {
+                        checklistState[key] = draft.checklist[key];
+                        const checkbox = document.getElementById(key);
+                        if (checkbox) checkbox.checked = draft.checklist[key];
+                    }
+                });
+            }
+            if (wbStatusBadge) {
+                wbStatusBadge.textContent = 'Bản nháp';
+                wbStatusBadge.className = 'admin-badge badge-neutral';
+            }
+            return true;
+        }
 
         const queuePresets = {
             'CL-001': {
@@ -2573,6 +2687,7 @@
                 if (wbBeforeImg) wbBeforeImg.src = preset.before;
                 if (wbAfterImg) wbAfterImg.src = preset.after;
                 if (wbOwnerMsg) wbOwnerMsg.value = preset.msg;
+                restoreCareDraft(careId);
 
                 const subTexts = Array.from(item.querySelectorAll('.queue-card-sub')).map(el => el.textContent.trim());
                 if (wbFormSub && subTexts.length > 0) {
@@ -2670,7 +2785,10 @@
         // ====================================================================
         const modalSelectPhoto = document.getElementById('modalSelectPhoto');
         const photoPickerGrid = document.getElementById('photoPickerGrid');
+        const petPhotoFileInput = document.getElementById('petPhotoFileInput');
+        const btnUploadPetPhoto = document.getElementById('btnUploadPetPhoto');
         let currentPhotoTargetImg = null;
+        const maxPetPhotoBytes = 5 * 1024 * 1024;
 
         const availablePhotos = [
             { url: '/assets/images/publics/dogcute1.jpg', label: 'Cún Poodle nâu' },
@@ -2704,12 +2822,42 @@
             if (modalSelectPhoto) modalSelectPhoto.classList.add('open');
         }
 
+        if (btnUploadPetPhoto && petPhotoFileInput) {
+            btnUploadPetPhoto.addEventListener('click', () => petPhotoFileInput.click());
+            petPhotoFileInput.addEventListener('change', () => {
+                const file = petPhotoFileInput.files?.[0];
+                petPhotoFileInput.value = '';
+                if (!file) return;
+                if (!file.type || !file.type.startsWith('image/')) {
+                    showToast('File không hợp lệ. Vui lòng chọn tệp hình ảnh.', 'warning');
+                    return;
+                }
+                if (file.size > maxPetPhotoBytes) {
+                    showToast('Ảnh vượt quá giới hạn 5 MB.', 'warning');
+                    return;
+                }
+                if (!currentPhotoTargetImg) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                    if (typeof reader.result === 'string') {
+                        currentPhotoTargetImg.src = reader.result;
+                        currentPhotoTargetImg.closest('.photo-upload-placeholder, .checklist-detail-row')?.classList.remove('photo-upload-invalid', 'checklist-row-invalid');
+                        if (modalSelectPhoto) modalSelectPhoto.classList.remove('open');
+                        showToast('Đã cập nhật ảnh thành công!');
+                    }
+                };
+                reader.onerror = () => showToast('Không thể đọc tệp hình ảnh.', 'danger');
+                reader.readAsDataURL(file);
+            });
+        }
+
         if (photoPickerGrid) {
             photoPickerGrid.addEventListener('click', (e) => {
                 const item = e.target.closest('.photo-picker-item');
                 if (item && currentPhotoTargetImg) {
                     const url = item.getAttribute('data-url');
                     currentPhotoTargetImg.src = url;
+                    currentPhotoTargetImg.closest('.photo-upload-placeholder, .checklist-detail-row')?.classList.remove('photo-upload-invalid', 'checklist-row-invalid');
                     if (modalSelectPhoto) modalSelectPhoto.classList.remove('open');
                     showToast('Đã cập nhật ảnh kiểm chứng thành công!');
                 }
@@ -2744,6 +2892,7 @@
             checkbox.addEventListener('change', (event) => {
                 // Mỗi mục có trạng thái riêng; không dùng thao tác chọn tất cả.
                 checklistState[checkId] = event.currentTarget.checked;
+                event.currentTarget.closest('.checklist-detail-row')?.classList.remove('checklist-row-invalid');
             });
         });
 
@@ -2806,13 +2955,24 @@
         // Lưu bản nháp
         const btnSaveDraft = document.getElementById('btnSaveDraftCareLog');
         if (btnSaveDraft) {
-            btnSaveDraft.addEventListener('click', () => {
+            btnSaveDraft.addEventListener('click', async () => {
+                const activeItem = document.querySelector('.queue-card-item.active');
+                const careId = activeItem?.getAttribute('data-care-id') || sessionStorage.getItem('pawpal_admin_pet_id') || 'current';
+                const drafts = readCareDrafts();
+                drafts[careId] = {
+                    careId,
+                    message: document.getElementById('wbOwnerMessage')?.value.trim() || '',
+                    before: document.getElementById('wbBeforeImgPreview')?.src || '',
+                    after: document.getElementById('wbAfterImgPreview')?.src || '',
+                    checklist: { ...checklistState },
+                    savedAt: new Date().toISOString()
+                };
+                localStorage.setItem(careDraftStorageKey, JSON.stringify(drafts));
                 const wbBadge = document.getElementById('wbStatusBadge');
                 if (wbBadge) {
                     wbBadge.textContent = 'Bản nháp';
                     wbBadge.className = 'admin-badge badge-neutral';
                 }
-                const activeItem = document.querySelector('.queue-card-item.active');
                 if (activeItem) {
                     const itemBadge = activeItem.querySelector('.admin-badge');
                     if (itemBadge) {
@@ -2828,6 +2988,53 @@
         const btnCompleteAndSend = document.getElementById('btnCompleteAndSendCareLog');
         if (btnCompleteAndSend) {
             btnCompleteAndSend.addEventListener('click', async () => {
+                const hasImageSource = (element) => Boolean(element?.getAttribute('src')?.trim());
+                const missingEvidence = [];
+                const beforeImage = document.getElementById('wbBeforeImgPreview');
+                const afterImage = document.getElementById('wbAfterImgPreview');
+                if (!hasImageSource(beforeImage)) missingEvidence.push({ element: beforeImage, message: 'Vui lòng thêm ảnh trước khi làm.' });
+                if (!hasImageSource(afterImage)) missingEvidence.push({ element: afterImage, message: 'Vui lòng thêm ảnh sau khi hoàn thiện.' });
+
+                const checklistImages = [
+                    ['chkEar', 'thumbEarImg', 'Tai'],
+                    ['chkNail', 'thumbNailImg', 'Móng'],
+                    ['chkAnal', 'thumbAnalImg', 'Tuyến hôi'],
+                    ['chkSkin', 'thumbSkinImg', 'Da lông']
+                ];
+                checklistImages.forEach(([checkId, imageId, label]) => {
+                    if (checklistState[checkId] === true && !hasImageSource(document.getElementById(imageId))) {
+                        missingEvidence.push({ element: document.getElementById(imageId), message: `Vui lòng thêm ảnh kiểm chứng mục ${label}.` });
+                    }
+                });
+
+                if (missingEvidence.length > 0) {
+                    document.querySelectorAll('.checklist-row-invalid, .photo-upload-invalid').forEach((el) => el.classList.remove('checklist-row-invalid', 'photo-upload-invalid'));
+                    missingEvidence.forEach(({ element }) => {
+                        const row = element?.closest('.checklist-detail-row');
+                        if (row) row.classList.add('checklist-row-invalid');
+                        else element?.closest('.photo-upload-placeholder')?.classList.add('photo-upload-invalid');
+                    });
+                    showToast(missingEvidence[0].message, 'warning');
+                    missingEvidence[0].element?.closest('.checklist-detail-row, .photo-upload-placeholder')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                    return;
+                }
+
+                const incompleteChecklist = Object.entries(checklistState)
+                    .filter(([, isChecked]) => isChecked !== true)
+                    .map(([checkId]) => document.getElementById(checkId));
+                if (incompleteChecklist.length > 0) {
+                    incompleteChecklist.forEach((checkbox) => {
+                        checkbox?.closest('.checklist-detail-row')?.classList.add('checklist-row-invalid');
+                    });
+                    showToast('Vui lòng hoàn tất đủ 4 mục checklist trước khi gửi.', 'warning');
+                    incompleteChecklist[0]?.focus();
+                    return;
+                }
+
+                const ownerMessageInput = document.getElementById('wbOwnerMessage');
+                const normalizedOwnerMessage = ownerMessageInput?.value.trim() || '';
+                if (ownerMessageInput) ownerMessageInput.value = normalizedOwnerMessage;
+
                 const wbBadge = document.getElementById('wbStatusBadge');
                 if (wbBadge) {
                     wbBadge.textContent = 'Hoàn thiện';
@@ -2847,11 +3054,17 @@
                 const pet = Object.values(petsData).find(p => p.name.toLowerCase() === petName.toLowerCase()) || petsData['PET-001'];
                 
                 if (pet) {
+                    const drafts = readCareDrafts();
+                    const activeCareId = activeItem?.getAttribute('data-care-id');
+                    if (activeCareId) {
+                        delete drafts[activeCareId];
+                        localStorage.setItem(careDraftStorageKey, JSON.stringify(drafts));
+                    }
                     const now = new Date();
                     const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
                     const beforeSrc = document.getElementById('wbBeforeImgPreview')?.src || pet.avatar;
                     const afterSrc = document.getElementById('wbAfterImgPreview')?.src || pet.avatar;
-                    const ownerMsg = document.getElementById('wbOwnerMessage')?.value || 'Bé rất ngoan và hoàn thành tốt dịch vụ!';
+                    const ownerMsg = normalizedOwnerMessage;
 
                     try {
                         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;

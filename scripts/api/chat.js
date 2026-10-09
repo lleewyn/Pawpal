@@ -166,6 +166,25 @@ async function getActiveSystemPrompts() {
     return cachedSystemPrompts || [];
 }
 
+function escapeRegExp(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Match complete words/phrases from the DB rule list. Raw substring matching
+// makes short rules such as "cl" flag ordinary Vietnamese words by accident.
+function buildSafeKeywordRegex(keyword) {
+    const normalized = String(keyword || '').trim();
+    if (!normalized) return null;
+
+    const escaped = escapeRegExp(normalized);
+    const startsWithWordChar = /^[\p{L}\p{N}_]/u.test(normalized);
+    const endsWithWordChar = /[\p{L}\p{N}_]$/u.test(normalized);
+    const prefix = startsWithWordChar ? '(?<![\\p{L}\\p{N}_])' : '';
+    const suffix = endsWithWordChar ? '(?![\\p{L}\\p{N}_])' : '';
+
+    return new RegExp(`${prefix}${escaped}${suffix}`, 'giu');
+}
+
 function evaluateToxicAndSentiment(userText, filters, triggers) {
     const lower = userText.toLowerCase();
     const detectedKeywords = [];
@@ -175,13 +194,14 @@ function evaluateToxicAndSentiment(userText, filters, triggers) {
 
     // 1. Quét màng lọc từ cấm
     filters.forEach(f => {
-        const kw = (f.keyword || '').toLowerCase().trim();
-        if (kw && lower.includes(kw)) {
+        const kw = String(f.keyword || '').trim();
+        const matchRegex = buildSafeKeywordRegex(kw);
+        if (matchRegex && matchRegex.test(userText)) {
             detectedKeywords.push(f.keyword);
             isToxic = true;
             try {
-                const regex = new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-                maskedText = maskedText.replace(regex, f.replacement_text || '***');
+                matchRegex.lastIndex = 0;
+                maskedText = maskedText.replace(matchRegex, f.replacement_text || '***');
             } catch (_) {}
 
             if (f.action === 'block') {

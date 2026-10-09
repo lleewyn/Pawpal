@@ -60,7 +60,6 @@
                         <label class="filter-label">Hạng thẻ:</label>
                         <select class="admin-select" id="custFilterTier">
                             <option value="ALL">Tất cả</option>
-                            <option value="BRONZE">Đồng</option>
                             <option value="SILVER">Bạc</option>
                             <option value="GOLD">Vàng</option>
                             <option value="DIAMOND">Kim Cương</option>
@@ -78,6 +77,7 @@
                     </div>
 
                     <button type="button" class="admin-btn-filter-toggle" id="btnFilterComplaintOnly">Có khiếu nại</button>
+                    <button type="button" class="admin-btn-clear-filters" id="btnCustClearFilters" style="display: none;">Xóa bộ lọc</button>
                 </div>
             </div>
 
@@ -317,7 +317,7 @@
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-pawpoint">
         <div class="pawpoint-grid-layout">
-            <!-- BẢNG CẤU HÌNH 4 HẠNG THÀNH VIÊN -->
+            <!-- BẢNG CẤU HÌNH 3 HẠNG THÀNH VIÊN -->
             <div class="admin-card">
                 <div class="admin-card-header">
                     <span class="admin-card-title">Chính sách hạng thẻ</span>
@@ -332,12 +332,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td><span class="admin-badge badge-neutral">Đồng</span></td>
-                            <td>0 đ</td>
-                            <td>0%</td>
-                            <td>Tích lũy 10.000 đ = 1 Pawpoint</td>
-                        </tr>
                         <tr>
                             <td><span class="admin-badge badge-tier-silver">Bạc</span></td>
                             <td>3.000.000 đ</td>
@@ -542,7 +536,6 @@
                 <div class="form-group mb-3">
                     <label class="form-label">Hạng thành viên (Đặc cách / Điều chỉnh)</label>
                     <select class="admin-select" id="editCustTier">
-                        <option value="BRONZE">Đồng</option>
                         <option value="SILVER">Bạc</option>
                         <option value="GOLD">Vàng</option>
                         <option value="DIAMOND">Kim Cương</option>

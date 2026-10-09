@@ -2098,6 +2098,21 @@
 
                     if (!tErr && ticketCreated) {
                         newTicketId = ticketCreated.id;
+                        // Gắn phiên chat với Ticket vừa tạo để luồng Khiếu nại
+                        // truy ngược được đúng hội thoại nguồn.
+                        const { error: conversationLinkError } = await supabase
+                            .from('chat_conversation')
+                            .update({
+                                ticket_id: ticketCreated.id,
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id', currentConversation.id);
+
+                        if (conversationLinkError) {
+                            console.error('[Chatbot] Không liên kết được conversation với Ticket:', conversationLinkError);
+                            throw conversationLinkError;
+                        }
+
                         // Insert tin nhắn biên bản vào support_ticket_message
                         await supabase.from('support_ticket_message').insert([{
                             ticket_id: ticketCreated.id,

@@ -395,6 +395,15 @@
             .trim();
     }
 
+    function matchSearch(sourceText, searchTerm) {
+        if (!searchTerm) return true;
+        if (!sourceText) return false;
+        const src = String(sourceText).toLowerCase();
+        const query = String(searchTerm).toLowerCase().trim();
+        if (src.includes(query)) return true;
+        return toUnaccent(sourceText).includes(toUnaccent(searchTerm));
+    }
+
     // Cấu hình danh mục KTV và định mức tải ca trong ngày (Chuẩn Forest Palette & Muted Pastel)
     const STAFF_DIRECTORY = [
         { name: 'Ngọc Anh', role: 'Senior Groomer', maxCapacity: 4, level: 'Senior' },
@@ -841,10 +850,24 @@
         const totalRecords = filtered.length;
         const totalPages = Math.ceil(totalRecords / BOOKINGS_PER_PAGE);
 
-        // Cập nhật hiển thị nút X xóa ô tìm kiếm (chỉ hiện khi có nhập text vào ô tìm kiếm)
+        // Cập nhật hiển thị nút Xóa bộ lọc và nút X ô tìm kiếm
         const btnToolbarReset = document.getElementById('btnToolbarResetFilters');
         if (btnToolbarReset) {
             btnToolbarReset.style.display = (currentSearchTerm && currentSearchTerm.length > 0) ? 'inline-flex' : 'none';
+        }
+
+        const btnServiceClearFilters = document.getElementById('btnServiceClearFilters');
+        const isAnyFilterActive = Boolean(
+            currentSearchTerm ||
+            currentFilterCategory !== 'ALL' ||
+            currentFilterStatus !== 'ALL' ||
+            currentFilterStaff !== 'ALL' ||
+            isUpcomingFilterActive ||
+            isAllergyFilterActive ||
+            isSlaFilterActive
+        );
+        if (btnServiceClearFilters) {
+            btnServiceClearFilters.style.display = isAnyFilterActive ? 'inline-flex' : 'none';
         }
 
         if (totalRecords === 0) {
@@ -853,14 +876,15 @@
                 <tr>
                     <td colspan="11" class="empty-state-cell">
                         <div class="empty-state-wrapper">
-                            <div class="empty-state-text">
-                                Không tìm thấy lịch hẹn phù hợp
+                            <div class="empty-state-text" style="font-size: 13.5px; color: var(--text-muted); text-align: center; padding: 30px;">
+                                Không tìm thấy lịch hẹn phù hợp với bộ lọc hiện tại. 
+                                <button type="button" id="btnResetServiceFilters" style="background: none; border: none; color: #236B48; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 0 4px; font-size: 13.5px;">Xóa bộ lọc</button>
                             </div>
                         </div>
                     </td>
                 </tr>
             `;
-
+            document.getElementById('btnResetServiceFilters')?.addEventListener('click', clearBookingSearchAndFilters);
             renderBookingsPagination(0);
             return;
         }
@@ -1095,6 +1119,12 @@
         document.querySelectorAll('.kpi-card-clickable').forEach(c => c.classList.remove('active'));
         const kpiAll = document.querySelector('.kpi-card-clickable[data-kpi-filter="ALL"]');
         if (kpiAll) kpiAll.classList.add('active');
+
+        const btnServiceClearFilters = document.getElementById('btnServiceClearFilters');
+        if (btnServiceClearFilters) btnServiceClearFilters.style.display = 'none';
+
+        const btnToolbarReset = document.getElementById('btnToolbarResetFilters');
+        if (btnToolbarReset) btnToolbarReset.style.display = 'none';
 
         // 5. Hiển thị lại toàn bộ danh sách
         renderBookingsTable();
@@ -3428,6 +3458,20 @@
 
             resetCreateBookingForm();
             closeCreateModal();
+            if (activeBookingPreset?.reminderId) {
+                try {
+                    const reminderItems = JSON.parse(sessionStorage.getItem('pawpal_admin_pet_reminders') || '[]');
+                    const reminder = reminderItems.find(item => item.id === activeBookingPreset.reminderId);
+                    if (reminder) {
+                        reminder.status = 'BOOKED';
+                        reminder.statusText = 'Đã tạo lịch hẹn';
+                        reminder.statusBadgeClass = 'badge-success';
+                        sessionStorage.setItem('pawpal_admin_pet_reminders', JSON.stringify(reminderItems));
+                    }
+                } catch (reminderError) {
+                    console.warn('Không thể cập nhật trạng thái nhắc lịch sau khi đặt hẹn:', reminderError);
+                }
+            }
             if (db) {
                 await loadServicesData(true);
             } else {
@@ -5343,6 +5387,9 @@
                 renderBookingsTable();
             });
         }
+
+        // Nút Xóa bộ lọc cạnh dropdowns
+        document.getElementById('btnServiceClearFilters')?.addEventListener('click', clearBookingSearchAndFilters);
 
         // Bộ lọc cho Subtab 3: Danh mục và Bảng giá
         const catalogSearchInput = document.getElementById('catalogSearchInput');

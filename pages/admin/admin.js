@@ -35,10 +35,31 @@ function formatTime(dateInput) {
     return `${hh}:${min}`;
 }
 
+function toUnaccent(str) {
+    if (!str) return '';
+    return String(str)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[đĐ]/g, m => m === 'đ' ? 'd' : 'D')
+        .toLowerCase()
+        .trim();
+}
+
+function matchSearch(sourceText, searchTerm) {
+    if (!searchTerm) return true;
+    if (!sourceText) return false;
+    const src = String(sourceText).toLowerCase();
+    const query = String(searchTerm).toLowerCase().trim();
+    if (src.includes(query)) return true;
+    return toUnaccent(sourceText).includes(toUnaccent(searchTerm));
+}
+
 if (typeof window !== 'undefined') {
     window.formatDateTime = formatDateTime;
     window.formatDate = formatDate;
     window.formatTime = formatTime;
+    window.toUnaccent = toUnaccent;
+    window.matchSearch = matchSearch;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -603,6 +624,27 @@ document.addEventListener('DOMContentLoaded', () => {
             if (adminLayout) adminLayout.classList.remove('mobile-sidebar-open');
         });
     });
+
+    // Nút Đăng xuất ở chân Sidebar
+    const btnSidebarLogout = document.getElementById('btnSidebarLogout');
+    if (btnSidebarLogout) {
+        btnSidebarLogout.addEventListener('click', () => {
+            try {
+                sessionStorage.removeItem('pawpal_admin_active_module');
+                sessionStorage.removeItem('pawpal_current_user');
+                sessionStorage.removeItem('pawpal_user_role');
+                localStorage.removeItem('pawpal_current_user');
+                if (window.PawpalStorage && typeof window.PawpalStorage.remove === 'function') {
+                    window.PawpalStorage.remove('pawpal_current_user');
+                }
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client && client.auth && typeof client.auth.signOut === 'function') {
+                    client.auth.signOut();
+                }
+            } catch (e) {}
+            window.location.href = '/pages/public/landing/landing.html';
+        });
+    }
 
     // Khôi phục trạng thái sidebar đã lưu (chỉ trên màn hình desktop > 768px)
     const isSidebarCollapsed = localStorage.getItem('pawpal_admin_sidebar_collapsed') === 'true';

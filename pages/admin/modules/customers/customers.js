@@ -279,13 +279,20 @@
                 const complaintsMap = {};
                 if (Array.isArray(ticketsRes.data)) {
                     ticketsRes.data.forEach(t => {
-                        const uId = t.user_id;
+                        const uId = t.user_id || t.customer_id;
                         if (!uId) return;
                         if (!complaintsMap[uId]) complaintsMap[uId] = [];
                         const tDate = t.created_at ? formatDateTime(t.created_at) : '2026-09-27 10:00';
+                        const rawStatus = String(t.status || '').trim().toLowerCase();
                         let st = 'Đang xử lý';
                         let stClass = 'badge-warning';
-                        if (t.status === 'RESOLVED' || t.status === 'CLOSED') { st = 'Đã giải quyết'; stClass = 'badge-success'; }
+                        if (['resolved', 'closed', 'completed', 'done', 'đã giải quyết'].includes(rawStatus)) {
+                            st = 'Đã giải quyết';
+                            stClass = 'badge-success';
+                        } else if (['pending', 'new', 'open', 'chờ xử lý', 'chờ xác nhận'].includes(rawStatus)) {
+                            st = 'Chưa xử lý';
+                            stClass = 'badge-danger';
+                        }
                         complaintsMap[uId].push({
                             id: `TK-${t.id.slice(0, 4)}`,
                             rawId: t.id,
@@ -306,9 +313,9 @@
                         const mem = memMap[c.id] || {};
                         const points = mem.total_paw_points || 0;
 
-                        let tier = 'BRONZE';
-                        let tierName = 'Đồng';
-                        let tierBadge = 'badge-neutral';
+                        let tier = 'SILVER';
+                        let tierName = 'Bạc';
+                        let tierBadge = 'badge-tier-silver';
                         if (points >= 3000) { tier = 'DIAMOND'; tierName = 'Kim Cương'; tierBadge = 'badge-tier-diamond'; }
                         else if (points >= 1000) { tier = 'GOLD'; tierName = 'Vàng'; tierBadge = 'badge-tier-gold'; }
                         else if (points >= 300) { tier = 'SILVER'; tierName = 'Bạc'; tierBadge = 'badge-tier-silver'; }
@@ -324,9 +331,9 @@
                         const cComplaints = complaintsMap[c.id] || [];
 
                         let emergency = null;
-                        const pendingComp = cComplaints.find(comp => comp.status === 'Đang xử lý');
+                        const pendingComp = cComplaints.find(comp => comp.status !== 'Đã giải quyết');
                         if (pendingComp) {
-                            emergency = `Khách hàng đang có phản ánh mức độ ${pendingComp.level} (${pendingComp.issue}). Cần giải quyết trước khi nhận giao dịch mới!`;
+                            emergency = `Ticket ${pendingComp.id} · ${pendingComp.status}: ${pendingComp.issue}`;
                         }
 
                         let isLocked = c.account_status === 'LOCKED';
@@ -439,9 +446,9 @@
         function evaluateCustomerTier(cust) {
             if (!cust) return { changed: false };
             const pts = Number(cust.points) || 0;
-            let newTier = 'BRONZE';
-            let newTierName = 'Đồng';
-            let newBadgeClass = 'badge-neutral';
+            let newTier = 'SILVER';
+            let newTierName = 'Bạc';
+            let newBadgeClass = 'badge-tier-silver';
 
             if (pts >= 2000) {
                 newTier = 'DIAMOND';
@@ -468,21 +475,40 @@
             return { changed: false };
         }
 
+        function toUnaccent(str) {
+            if (!str) return '';
+            return String(str)
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[đĐ]/g, m => m === 'đ' ? 'd' : 'D')
+                .toLowerCase()
+                .trim();
+        }
+
+        function matchSearch(sourceText, searchTerm) {
+            if (!searchTerm) return true;
+            if (!sourceText) return false;
+            const src = String(sourceText).toLowerCase();
+            const query = String(searchTerm).toLowerCase().trim();
+            if (src.includes(query)) return true;
+            return toUnaccent(sourceText).includes(toUnaccent(searchTerm));
+        }
+
         function renderPawpointHistory() {
             const tbody = document.getElementById('pawpointHistoryTbody');
             if (!tbody) return;
 
-            const query = (document.getElementById('pawpointSearchInput')?.value || '').toLowerCase().trim();
+            const query = (document.getElementById('pawpointSearchInput')?.value || '').trim();
             const filterType = document.getElementById('pawpointFilterType')?.value || 'ALL';
 
             const filtered = pawpointHistory.filter(item => {
                 let matchQuery = !query;
                 if (query) {
-                    const qParts = query.includes(' - ') ? query.split(' - ').map(s => s.trim().toLowerCase()) : [query];
+                    const qParts = query.includes(' - ') ? query.split(' - ').map(s => s.trim()) : [query];
                     matchQuery = qParts.some(part => 
-                        (item.custName && item.custName.toLowerCase().includes(part)) ||
-                        (item.phone && item.phone.includes(part)) ||
-                        (item.reason && item.reason.toLowerCase().includes(part))
+                        matchSearch(item.custName, part) ||
+                        matchSearch(item.phone, part) ||
+                        matchSearch(item.reason, part)
                     );
                 }
                 const matchType = (filterType === 'ALL') || (item.type === filterType);
@@ -717,9 +743,9 @@
                     email: 'khachhang@email.com',
                     gender: 'Nam',
                     dob: '01/01/1990',
-                    tier: 'BRONZE',
-                    tierName: 'Đồng',
-                    tierBadgeClass: 'badge-neutral',
+                    tier: 'SILVER',
+                    tierName: 'Bạc',
+                    tierBadgeClass: 'badge-tier-silver',
                     points: 0,
                     status: 'ACTIVE',
                     authStatus: 'Đã kích hoạt',
@@ -1344,25 +1370,57 @@
             return true;
         }
 
+        function clearAllCustomerFilters() {
+            const searchInput = document.getElementById('custSearchInput');
+            const filterTier = document.getElementById('custFilterTier');
+            const filterStatus = document.getElementById('custFilterStatus');
+            const btnClearCustSearch = document.getElementById('btnClearCustSearch');
+            const btnCustClearFilters = document.getElementById('btnCustClearFilters');
+
+            if (searchInput) searchInput.value = '';
+            if (btnClearCustSearch) btnClearCustSearch.style.display = 'none';
+            if (btnCustClearFilters) btnCustClearFilters.style.display = 'none';
+            if (filterTier) filterTier.value = 'ALL';
+            if (filterStatus) filterStatus.value = 'ALL';
+
+            currentCustomerFilter = 'ALL';
+            currentCustomerPage = 1;
+
+            const btnFilterComplaint = document.getElementById('btnFilterComplaintOnly');
+            if (btnFilterComplaint) btnFilterComplaint.classList.remove('active');
+            document.querySelectorAll('#tab-customer-list .kpi-card, .customers-kpi-grid .kpi-card-clickable').forEach(c => c.classList.remove('active'));
+            renderCustomersTable();
+        }
+
         function renderCustomersTable() {
             const tbody = document.getElementById('customerTableTbody');
             if (!tbody) return;
 
-            const query = (document.getElementById('custSearchInput')?.value || '').toLowerCase().trim();
+            const query = (document.getElementById('custSearchInput')?.value || '').trim();
             const selectedTier = document.getElementById('custFilterTier')?.value || 'ALL';
+            const btnCustClearFilters = document.getElementById('btnCustClearFilters');
+
+            const isAnyFilterActive = Boolean(
+                query ||
+                selectedTier !== 'ALL' ||
+                currentCustomerFilter !== 'ALL'
+            );
+            if (btnCustClearFilters) {
+                btnCustClearFilters.style.display = isAnyFilterActive ? 'inline-flex' : 'none';
+            }
 
             const allCusts = Object.values(customerDatabase);
 
             const filtered = allCusts.filter(c => {
-                let matchSearch = !query;
+                let matchQuery = !query;
                 if (query) {
-                    const qParts = query.includes(' - ') ? query.split(' - ').map(s => s.trim().toLowerCase()) : [query];
-                    matchSearch = qParts.some(part => 
-                        c.id.toLowerCase().includes(part) ||
-                        c.name.toLowerCase().includes(part) ||
-                        c.phone.includes(part) ||
-                        (c.email && c.email.toLowerCase().includes(part)) ||
-                        (c.pets && c.pets.some(p => p.name.toLowerCase().includes(part) || (p.breed && p.breed.toLowerCase().includes(part))))
+                    const qParts = query.includes(' - ') ? query.split(' - ').map(s => s.trim()) : [query];
+                    matchQuery = qParts.some(part => 
+                        matchSearch(c.id, part) ||
+                        matchSearch(c.name, part) ||
+                        matchSearch(c.phone, part) ||
+                        matchSearch(c.email, part) ||
+                        (c.pets && c.pets.some(p => matchSearch(p.name, part) || matchSearch(p.breed, part) || matchSearch(p.species, part)))
                     );
                 }
 
@@ -1375,8 +1433,8 @@
                     matchCategory = (c.status === 'TEMP');
                 } else if (currentCustomerFilter === 'LOCKED') {
                     matchCategory = (c.status === 'LOCKED');
-                } else if (currentCustomerFilter === 'COMPLAINT') {
-                    matchCategory = Boolean(c.emergencyAlert || (c.complaints && c.complaints.some(tc => tc.status === 'Đang xử lý')));
+            } else if (currentCustomerFilter === 'COMPLAINT') {
+                    matchCategory = Boolean(c.emergencyAlert || (c.complaints && c.complaints.some(tc => tc.status !== 'Đã giải quyết')));
                 }
 
                 return matchSearch && matchTier && matchCategory;
@@ -1391,18 +1449,21 @@
             if (pageItems.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
-                            Không tìm thấy khách hàng nào phù hợp với bộ lọc hiện tại.
+                        <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px; font-size: 13.5px;">
+                            Không tìm thấy khách hàng nào phù hợp với bộ lọc hiện tại. 
+                            <button type="button" id="btnResetCustomerFilters" style="background: none; border: none; color: #236B48; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 0 4px; font-size: 13.5px;">Xóa bộ lọc</button>
                         </td>
                     </tr>
                 `;
+                document.getElementById('btnResetCustomerFilters')?.addEventListener('click', clearAllCustomerFilters);
                 renderCustomerPagination(0);
                 return;
             }
 
             tbody.innerHTML = pageItems.map(c => {
                 const isLocked = (c.status === 'LOCKED');
-                const hasEmergency = Boolean(c.emergencyAlert || (c.complaints && c.complaints.some(tc => tc.status === 'Đang xử lý')));
+                const activeComplaint = c.complaints && c.complaints.find(tc => tc.status !== 'Đã giải quyết');
+                const hasEmergency = Boolean(c.emergencyAlert || activeComplaint);
                 const alertPet = (c.pets && Array.isArray(c.pets)) ? c.pets.find(p => isRealPetAlert(p.alertNote)) : null;
                 const hasPetAlert = Boolean(alertPet);
 
@@ -1419,8 +1480,10 @@
 
                 let alertBadgeHtml = '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>';
                 if (hasEmergency) {
-                    const ticketId = (c.complaints && c.complaints.length > 0 && c.complaints[0].id) ? c.complaints[0].id : '';
-                    alertBadgeHtml = `<span class="alert-indicator text-danger">• Khiếu nại ${ticketId || 'đang xử lý'}</span>`;
+                    const ticket = activeComplaint || (c.complaints && c.complaints[0]);
+                    const ticketId = ticket?.id || '';
+                    const ticketStatus = ticket?.status || 'Chưa xử lý';
+                    alertBadgeHtml = `<span class="alert-indicator text-danger">• ${ticketId} · ${ticketStatus}</span>`;
                 } else if (hasPetAlert && alertPet) {
                     alertBadgeHtml = `<span class="alert-indicator text-warning">• ${alertPet.name}: ${alertPet.alertNote}</span>`;
                 }
@@ -1449,7 +1512,7 @@
                             ${formatCustomerPetsCell(c.pets)}
                         </td>
                         <td>
-                            <span class="admin-badge ${c.tierBadgeClass || 'badge-neutral'}">${c.tierName || 'Đồng'}</span>
+                            <span class="admin-badge ${c.tierBadgeClass || 'badge-tier-silver'}">${c.tierName || 'Bạc'}</span>
                             <span class="points-val">${(c.points || 0).toLocaleString('vi-VN')} pts</span>
                         </td>
                         <td>${alertBadgeHtml}</td>
@@ -1538,10 +1601,13 @@
         if (btnOpenDupCustomer) {
             btnOpenDupCustomer.addEventListener('click', () => {
                 if (dupFoundCustId) {
+                    // Lưu lại trước khi đóng modal vì closeAddModal sẽ reset biến này.
+                    const existingCustomerId = dupFoundCustId;
+                    const existingCustomer = customerDatabase[existingCustomerId];
                     closeAddModal();
-                    sessionStorage.setItem('pawpal_admin_customer_id', dupFoundCustId);
-                    sessionStorage.setItem('pawpal_admin_customer_name', customerDatabase[dupFoundCustId]?.name || '');
-                    renderDrawerCustomerProfile(dupFoundCustId);
+                    sessionStorage.setItem('pawpal_admin_customer_id', existingCustomerId);
+                    sessionStorage.setItem('pawpal_admin_customer_name', existingCustomer?.name || '');
+                    renderDrawerCustomerProfile(existingCustomerId);
                     switchSubtab('tab-profile');
                 }
             });
@@ -1555,12 +1621,37 @@
                     return;
                 }
 
-                const name = document.getElementById('quickAddName')?.value || 'Khách vãng lai';
-                const phone = document.getElementById('quickAddPhone')?.value || '';
-                const petName = document.getElementById('quickAddPetName')?.value || '';
+                const nameInput = document.getElementById('quickAddName');
+                const name = (nameInput?.value || '').replace(/\s+/g, ' ').trim();
+                const phone = (document.getElementById('quickAddPhone')?.value || '').trim();
+                const phoneInput = document.getElementById('quickAddPhone');
+                const petNameInput = document.getElementById('quickAddPetName');
+                const rawPetName = petNameInput?.value || '';
+                const petName = rawPetName.replace(/\s+/g, ' ').trim();
+                // Pet là trường không bắt buộc; chuỗi chỉ có khoảng trắng được xem như bỏ trống.
+                if (rawPetName && !petName) {
+                    if (petNameInput) petNameInput.value = '';
+                }
                 const petSpecies = document.getElementById('quickAddPetSpecies')?.value || 'DOG';
                 const petBreed = document.getElementById('quickAddPetBreed')?.value || 'Chưa cập nhật';
-                const petWeight = document.getElementById('quickAddPetWeight')?.value || '';
+                const petWeightInput = document.getElementById('quickAddPetWeight');
+                const petWeightRaw = (petWeightInput?.value || '').trim();
+                const petWeight = petWeightRaw === '' ? '' : Number(petWeightRaw);
+                const validationErrors = [];
+                const nameError = !name ? 'Họ tên là thông tin bắt buộc.' : (name.length < 2 ? 'Họ tên phải có ít nhất 2 ký tự.' : '');
+                const phoneError = /^\d{10}$/.test(phone) ? '' : 'Số điện thoại phải gồm đúng 10 chữ số.';
+                const weightError = petWeightRaw !== '' && (!Number.isFinite(petWeight) || petWeight <= 0) ? 'Cân nặng phải là số lớn hơn 0.' : '';
+                if (nameInput) nameInput.setCustomValidity(nameError);
+                if (phoneInput) phoneInput.setCustomValidity(phoneError);
+                if (petWeightInput) petWeightInput.setCustomValidity(weightError);
+                if (nameError) validationErrors.push(nameError);
+                if (phoneError) validationErrors.push(phoneError);
+                if (weightError) validationErrors.push(weightError);
+                if (validationErrors.length) {
+                    [nameInput, phoneInput, petWeightInput].find(input => input && input.validationMessage)?.reportValidity();
+                    showToast(validationErrors.join(' '), 'warning');
+                    return;
+                }
                 const initialAddress = document.getElementById('quickAddAddress')?.value || 'Tiếp nhận trực tiếp tại quầy Pawpal Center';
 
                 const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -1570,13 +1661,17 @@
                 }
 
                 try {
+                    const activationToken = (window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`).replace(/-/g, '');
+                    const activationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
                     // 1. Tạo bản ghi khách hàng vào bảng customer
                     const { data: newCust, error: custErr } = await client.from('customer').insert({
                         email: null,
                         phone_main: phone || null,
                         account_status: 'ACTIVE',
                         is_temporary: true,
-                        note: 'Khách tiếp nhận nhanh tại quầy.'
+                        note: 'Khách tiếp nhận nhanh tại quầy.',
+                        activation_token: activationToken,
+                        activation_token_expires_at: activationExpiresAt
                     }).select().single();
 
                     if (custErr || !newCust) {
@@ -1609,6 +1704,14 @@
                         });
                     }
 
+                    // Ghi nhận yêu cầu SMS để bộ phận tích hợp SMS gửi đúng số và đúng liên kết.
+                    await client.from('customer_activation_sms').insert({
+                        customer_id: newCust.id,
+                        phone: phone,
+                        activation_url: `${window.location.origin}/pages/public/activate-account.html?token=${encodeURIComponent(activationToken)}`,
+                        status: 'pending'
+                    });
+
                     // 5. Lưu thú cưng nếu có
                     if (petName && petName.trim()) {
                         const spec = petSpecies === 'CAT' ? 'cat' : (petSpecies === 'OTHER' ? 'other' : 'dog');
@@ -1617,7 +1720,7 @@
                             pet_name: petName.trim(),
                             species: spec,
                             breed: petBreed || 'Chưa cập nhật',
-                            weight: petWeight ? parseFloat(petWeight) : null
+                            weight: petWeight === '' ? null : petWeight
                         });
                     }
 
@@ -2435,6 +2538,8 @@
             });
         }
 
+        document.getElementById('btnCustClearFilters')?.addEventListener('click', clearAllCustomerFilters);
+
         document.querySelectorAll('.customers-kpi-grid .kpi-card-clickable').forEach(card => {
             card.addEventListener('click', () => {
                 const filter = card.getAttribute('data-kpi-filter');
@@ -2459,8 +2564,24 @@
         // ====================================================================
         // XUẤT BÁO CÁO DỮ LIỆU KHÁCH HÀNG VÀ LỊCH SỬ PAWPOINT (CSV / EXCEL UTF-8 BOM)
         // ====================================================================
+        function getCustomersInCurrentFilter() {
+            const query = (document.getElementById('custSearchInput')?.value || '').trim();
+            const selectedTier = document.getElementById('custFilterTier')?.value || 'ALL';
+            const selectedStatus = document.getElementById('custFilterStatus')?.value || 'ALL';
+            const matchSearch = (value, term) => String(value || '').toLowerCase().includes(String(term || '').toLowerCase());
+
+            return Object.values(customerDatabase).filter(c => {
+                const matchesQuery = !query || [c.id, c.name, c.phone, c.email, ...(c.pets || []).flatMap(p => [p.name, p.breed, p.species])]
+                    .some(value => matchSearch(value, query));
+                const matchesTier = selectedTier === 'ALL' || c.tier === selectedTier;
+                const matchesStatus = selectedStatus === 'ALL' || c.status === selectedStatus;
+                const matchesCategory = currentCustomerFilter !== 'COMPLAINT' || Boolean(c.emergencyAlert || (c.complaints || []).some(t => t.status !== 'Đã giải quyết'));
+                return matchesQuery && matchesTier && matchesStatus && matchesCategory;
+            });
+        }
+
         function exportCustomersToCSV() {
-            const allCusts = Object.values(customerDatabase);
+            const allCusts = getCustomersInCurrentFilter();
             if (!allCusts || allCusts.length === 0) {
                 showToast('Không có dữ liệu khách hàng để xuất!', 'warning');
                 return;
@@ -2522,7 +2643,7 @@
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
 
-            showToast(`Đã xuất báo cáo ${allCusts.length} khách hàng thành công ra file CSV!`);
+            showToast(`Đã xuất báo cáo ${allCusts.length} khách hàng theo bộ lọc hiện tại ra file CSV!`);
         }
 
         function exportPawpointHistoryToCSV() {

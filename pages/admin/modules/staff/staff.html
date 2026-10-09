@@ -60,6 +60,7 @@
                         <select class="admin-select" id="staffFilterPosition">
                             <option value="ALL">Tất cả</option>
                             <option value="Admin">Quản trị viên</option>
+                            <option value="Veterinarian">Bác sĩ thú y</option>
                             <option value="Receptionist">Lễ tân</option>
                             <option value="Groomer">Groomer</option>
                             <option value="Caregiver">Bảo mẫu Pet Hotel</option>
@@ -92,6 +93,7 @@
 
                     <button type="button" class="admin-btn-filter-toggle" id="btnFilterRetrainOnly">Cần đào tạo lại</button>
                     <button type="button" class="admin-btn-filter-toggle toggle-danger" id="btnFilterLockOnly">Đang khóa nhận việc</button>
+                    <button type="button" class="admin-btn-clear-filters" id="btnStaffClearFilters" style="display: none;">Xóa bộ lọc</button>
                 </div>
             </div>
 
@@ -389,6 +391,8 @@
                         <label class="filter-label">Chức vụ:</label>
                         <select class="admin-select" id="scheduleFilterPosition">
                             <option value="ALL">Tất cả</option>
+                            <option value="Admin">Quản trị viên</option>
+                            <option value="Veterinarian">Bác sĩ thú y</option>
                             <option value="Receptionist">Lễ tân</option>
                             <option value="Groomer">Groomer</option>
                             <option value="Caregiver">Bảo mẫu Pet Hotel</option>

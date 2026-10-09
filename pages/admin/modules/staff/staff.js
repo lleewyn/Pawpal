@@ -1087,6 +1087,59 @@
             }
         }
 
+        // Helper: Chuyển tiếng Việt có dấu thành không dấu
+        function toUnaccent(str) {
+            if (!str) return '';
+            return String(str)
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[đĐ]/g, m => m === 'đ' ? 'd' : 'D')
+                .toLowerCase()
+                .trim();
+        }
+
+        // Helper: So khớp chuỗi tìm kiếm thông minh có dấu và không dấu
+        function matchSearch(sourceText, searchTerm) {
+            if (!searchTerm) return true;
+            if (!sourceText) return false;
+            const src = String(sourceText).toLowerCase();
+            const query = String(searchTerm).toLowerCase().trim();
+            if (src.includes(query)) return true;
+            return toUnaccent(sourceText).includes(toUnaccent(searchTerm));
+        }
+
+        function clearAllStaffFilters() {
+            const searchInput = document.getElementById('staffSearchInput');
+            const filterPos = document.getElementById('staffFilterPosition');
+            const filterStatus = document.getElementById('staffFilterStatus');
+            const filterShift = document.getElementById('staffFilterShift');
+            const btnClearStaffSearch = document.getElementById('btnClearStaffSearch');
+            const btnStaffClearFilters = document.getElementById('btnStaffClearFilters');
+
+            if (searchInput) searchInput.value = '';
+            if (btnClearStaffSearch) btnClearStaffSearch.style.display = 'none';
+            if (btnStaffClearFilters) btnStaffClearFilters.style.display = 'none';
+            if (filterPos) filterPos.value = 'ALL';
+            if (filterStatus) filterStatus.value = 'ALL';
+            if (filterShift) filterShift.value = 'ALL';
+
+            const btnFilterRetrain = document.getElementById('btnFilterRetrainOnly');
+            if (btnFilterRetrain) btnFilterRetrain.classList.remove('active');
+            const btnFilterLock = document.getElementById('btnFilterLockOnly');
+            if (btnFilterLock) btnFilterLock.classList.remove('active');
+
+            currentKpiFilter = 'ALL';
+            filterRetrainActive = false;
+            filterLockActive = false;
+            alertFilterQuickActive = false;
+            currentStaffPage = 1;
+
+            document.querySelectorAll('#tab-staff-list .kpi-card, .staff-kpi-card').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.staff-quick-filter-btn').forEach(b => b.classList.remove('active'));
+
+            renderStaffList();
+        }
+
         // ---------------------------------------------------------
         // 3. RENDER SUB-TAB 1: DANH SÁCH NHÂN VIÊN VÀ BỘ LỌC
         // ---------------------------------------------------------
@@ -1095,22 +1148,46 @@
             const filterPos = document.getElementById('staffFilterPosition');
             const filterStatus = document.getElementById('staffFilterStatus');
             const filterShift = document.getElementById('staffFilterShift');
+            const btnStaffClearFilters = document.getElementById('btnStaffClearFilters');
 
-            const searchTerm = (searchInput && searchInput.value) ? searchInput.value.trim().toLowerCase() : '';
+            const searchTerm = (searchInput && searchInput.value) ? searchInput.value.trim() : '';
             const selectedPos = (filterPos && filterPos.value) ? filterPos.value : 'ALL';
             const selectedStatus = (filterStatus && filterStatus.value) ? filterStatus.value : 'ALL';
             const selectedShift = (filterShift && filterShift.value) ? filterShift.value : 'ALL';
 
+            const isAnyFilterActive = Boolean(
+                searchTerm ||
+                selectedPos !== 'ALL' ||
+                selectedStatus !== 'ALL' ||
+                selectedShift !== 'ALL' ||
+                currentKpiFilter !== 'ALL' ||
+                filterRetrainActive ||
+                filterLockActive ||
+                alertFilterQuickActive
+            );
+            if (btnStaffClearFilters) {
+                btnStaffClearFilters.style.display = isAnyFilterActive ? 'inline-flex' : 'none';
+            }
+
             return mockStaff.filter(staff => {
                 if (searchTerm) {
-                    const match = (staff.id && staff.id.toLowerCase().includes(searchTerm)) ||
-                                  (staff.name && staff.name.toLowerCase().includes(searchTerm)) ||
-                                  (staff.phone && staff.phone.toLowerCase().includes(searchTerm)) ||
-                                  (staff.position && staff.position.toLowerCase().includes(searchTerm));
+                    const match = matchSearch(staff.id, searchTerm) ||
+                                  matchSearch(staff.name, searchTerm) ||
+                                  matchSearch(staff.phone, searchTerm) ||
+                                  matchSearch(staff.position, searchTerm) ||
+                                  matchSearch(staff.role, searchTerm) ||
+                                  matchSearch(staff.email, searchTerm) ||
+                                  matchSearch(staff.address, searchTerm);
                     if (!match) return false;
                 }
 
-                if (selectedPos !== 'ALL' && staff.role !== selectedPos) return false;
+                if (selectedPos !== 'ALL') {
+                    const posMatch = staff.role === selectedPos ||
+                                     staff.position === selectedPos ||
+                                     toUnaccent(staff.position).includes(toUnaccent(selectedPos)) ||
+                                     toUnaccent(staff.role).includes(toUnaccent(selectedPos));
+                    if (!posMatch) return false;
+                }
                 if (selectedStatus !== 'ALL' && staff.status !== selectedStatus) return false;
                 if (selectedShift !== 'ALL' && staff.shift !== selectedShift) return false;
 
@@ -1194,10 +1271,12 @@
                 const emptyTr = document.createElement('tr');
                 emptyTr.innerHTML = `
                     <td colspan="8" style="text-align: center; padding: 28px 16px; color: var(--text-muted); font-size: 13.5px;">
-                        Không tìm thấy nhân viên nào phù hợp với điều kiện lọc hiện tại.
+                        Không tìm thấy nhân viên nào phù hợp với điều kiện lọc hiện tại. 
+                        <button type="button" id="btnResetStaffFilters" style="background: none; border: none; color: #236B48; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 0 4px; font-size: 13.5px;">Xóa bộ lọc</button>
                     </td>
                 `;
                 tbody.appendChild(emptyTr);
+                document.getElementById('btnResetStaffFilters')?.addEventListener('click', clearAllStaffFilters);
                 renderStaffPagination(0);
                 return;
             }
@@ -1433,7 +1512,13 @@
             tbody.innerHTML = '';
 
             const filteredStaff = mockStaff.filter(s => {
-                if (scheduleFilterPos !== 'ALL' && s.role !== scheduleFilterPos) return false;
+                if (scheduleFilterPos !== 'ALL') {
+                    const posMatch = s.role === scheduleFilterPos || 
+                                     s.position === scheduleFilterPos ||
+                                     toUnaccent(s.position).includes(toUnaccent(scheduleFilterPos)) ||
+                                     toUnaccent(s.role).includes(toUnaccent(scheduleFilterPos));
+                    if (!posMatch) return false;
+                }
                 if (scheduleFilterShf !== 'ALL') {
                     const shifts = getStaffShiftsForDate(currentScheduleDate, s.id);
                     if (!shifts.includes(scheduleFilterShf)) return false;
@@ -1537,7 +1622,13 @@
             tbody.innerHTML = '';
 
             const filteredStaff = mockStaff.filter(s => {
-                if (scheduleFilterPos !== 'ALL' && s.role !== scheduleFilterPos) return false;
+                if (scheduleFilterPos !== 'ALL') {
+                    const posMatch = s.role === scheduleFilterPos || 
+                                     s.position === scheduleFilterPos ||
+                                     toUnaccent(s.position).includes(toUnaccent(scheduleFilterPos)) ||
+                                     toUnaccent(s.role).includes(toUnaccent(scheduleFilterPos));
+                    if (!posMatch) return false;
+                }
                 return true;
             });
 
@@ -2571,17 +2662,18 @@
             const filterTypeEl = document.getElementById('assessmentFilterType');
             const filterResultEl = document.getElementById('assessmentFilterResult');
 
-            const searchTerm = (searchInput && searchInput.value) ? searchInput.value.trim().toLowerCase() : '';
+            const searchTerm = (searchInput && searchInput.value) ? searchInput.value.trim() : '';
             const selectedType = (filterTypeEl && filterTypeEl.value) ? filterTypeEl.value : 'ALL';
             const selectedResult = (filterResultEl && filterResultEl.value) ? filterResultEl.value : 'ALL';
 
             const filteredAssessments = mockAssessments.filter(ass => {
                 if (searchTerm) {
-                    const match = (ass.staff_id && ass.staff_id.toLowerCase().includes(searchTerm)) ||
-                                  (ass.name && ass.name.toLowerCase().includes(searchTerm)) ||
-                                  (ass.type && ass.type.toLowerCase().includes(searchTerm)) ||
-                                  (ass.evaluator && ass.evaluator.toLowerCase().includes(searchTerm)) ||
-                                  (ass.note && ass.note.toLowerCase().includes(searchTerm));
+                    const match = matchSearch(ass.staff_id, searchTerm) ||
+                                  matchSearch(ass.name, searchTerm) ||
+                                  matchSearch(ass.position, searchTerm) ||
+                                  matchSearch(ass.type, searchTerm) ||
+                                  matchSearch(ass.evaluator, searchTerm) ||
+                                  matchSearch(ass.note, searchTerm);
                     if (!match) return false;
                 }
                 if (selectedType !== 'ALL' && ass.type !== selectedType) return false;
@@ -2982,6 +3074,9 @@
             currentStaffPage = 1;
             renderStaffList();
         });
+
+        // Nút Xóa bộ lọc ngay cạnh các dropdown lọc
+        document.getElementById('btnStaffClearFilters')?.addEventListener('click', clearAllStaffFilters);
 
         // Nút Lọc nhanh trên thanh cảnh báo chủ động
         const btnFilterAlertQuick = document.getElementById('btnFilterStaffAlertQuick');

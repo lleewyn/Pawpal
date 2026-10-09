@@ -592,6 +592,30 @@ body.admin-body {
     font-size: 12.5px;
 }
 
+.admin-btn-clear-filters {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    padding: 0 10px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #DC2626;
+    background-color: transparent;
+    border: none;
+    border-radius: var(--admin-radius);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-btn-clear-filters:hover {
+    color: #991B1B;
+    background-color: rgba(220, 38, 38, 0.08);
+}
+
 /* 2. Ô NHẬP LIỆU VÀ DROPDOWN (INPUTS & SELECTS) */
 .admin-input,
 .admin-select {

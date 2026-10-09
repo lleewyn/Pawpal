@@ -55,7 +55,7 @@ Tab 4 Lịch sử lịch hẹn: Bảng danh sách các lịch hẹn tắm spa, k
 Tab 5 Khiếu nại và Đổi trả: Danh sách toàn bộ vé hỗ trợ và đơn đổi trả hàng của khách. Bấm vào một vé sẽ chuyển thẳng sang phân hệ Khiếu nại và mở đúng khung chat.
 Sub-tab 3: Pawpoint và Khách hàng thân thiết
 Màn hình chuyên trách về chăm sóc khách hàng thân thiết và tích điểm:
-Bảng cấu hình chính sách bốn hạng thành viên: Hạng Đồng, Bạc, Vàng và Kim Cương kèm tỷ lệ chiết khấu giảm giá.
+Bảng cấu hình chính sách ba hạng thành viên: Hạng Bạc, Vàng và Kim Cương kèm tỷ lệ chiết khấu giảm giá.
 Danh sách khách hàng VIP và bảng xếp hạng chi tiêu cao nhất.
 Bảng nhật ký lịch sử cộng hoặc trừ điểm Pawpoint của từng khách hàng.
 Nút Điều chỉnh điểm thưởng để cộng điểm đền bù cho khách khi có sự cố.
@@ -127,7 +127,7 @@ Nhãn hạng
 membership_tier.tier_name
 u.tier
 Có
-Nhận tên hạng Đồng, Bạc, Vàng hoặc Kim Cương
+Nhận tên hạng Bạc, Vàng hoặc Kim Cương
 Điểm thưởng Pawpoint
 Số nguyên
 customer_membership.total_paw_points

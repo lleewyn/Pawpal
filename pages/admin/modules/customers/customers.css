@@ -889,8 +889,27 @@
    ========================================================================== */
 .pawpoint-grid-layout {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 16px;
+    align-items: start;
+    width: 100%;
+    min-width: 0;
+}
+
+.pawpoint-grid-layout > .admin-card {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.pawpoint-grid-layout .admin-table {
+    width: 100%;
+    min-width: 0;
+}
+
+.pawpoint-grid-layout .pawpoint-toolbar {
+    min-width: 0;
+    flex-wrap: wrap;
 }
 
 @media (max-width: 1024px) {
