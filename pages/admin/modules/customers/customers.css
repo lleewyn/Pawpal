@@ -846,12 +846,18 @@
 }
 
 .btn-pet-view-profile {
-    color: var(--admin-primary);
-    background-color: #EEF5F1;
+    color: #2D483B;
+    background-color: #E2ECE5;
+    border: none;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 500;
 }
 
 .btn-pet-view-profile:hover {
-    background-color: #DCEEE2;
+    background-color: #DCEEE5;
 }
 
 .btn-pet-edit {

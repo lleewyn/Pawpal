@@ -229,9 +229,15 @@
                         if (!ordersMap[o.customer_id]) ordersMap[o.customer_id] = [];
                         const dateStr = o.created_at ? formatDateTime(o.created_at) : '2026-09-25 14:30';
                         const totalStr = o.total_amount ? Number(o.total_amount).toLocaleString('vi-VN') + ' đ' : '0 đ';
-                        let st = 'Hoàn tất';
+                        let st = 'Hoàn thành';
                         let stClass = 'badge-success';
-                        if (o.order_status === 'PENDING' || o.order_status === 'PROCESSING') {
+                        if (o.order_status === 'PENDING') {
+                            st = 'Chờ xác nhận';
+                            stClass = 'badge-warning';
+                        } else if (o.order_status === 'PROCESSING' || o.order_status === 'CONFIRMED') {
+                            st = 'Đang chuẩn bị';
+                            stClass = 'badge-info';
+                        } else if (o.order_status === 'SHIPPING' || o.order_status === 'DELIVERING') {
                             st = 'Đang giao';
                             stClass = 'badge-info';
                         } else if (o.order_status === 'CANCELLED') {
@@ -244,6 +250,7 @@
                             date: dateStr,
                             total: totalStr,
                             payment: o.payment_status === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán',
+                            paymentClass: o.payment_status === 'PAID' ? 'badge-success' : 'badge-warning',
                             status: st,
                             statusClass: stClass
                         });
@@ -663,7 +670,7 @@
             if (targetSubtab === 'tab-profile') {
                 const currentName = sessionStorage.getItem('pawpal_admin_customer_name') || 
                                     document.getElementById('drawerCustomerName')?.textContent?.trim() || 
-                                    'Nguyễn Văn An';
+                                    'Khách hàng';
                 updateBreadcrumb(currentName);
             } else {
                 updateBreadcrumb(null);
@@ -791,10 +798,22 @@
             if (document.getElementById('profileValCustId')) document.getElementById('profileValCustId').textContent = data.id;
             if (document.getElementById('profileValFullName')) document.getElementById('profileValFullName').textContent = data.name;
             if (document.getElementById('profileValPhone')) document.getElementById('profileValPhone').textContent = data.phone;
-            if (document.getElementById('profileValEmail')) document.getElementById('profileValEmail').textContent = data.email;
-            if (document.getElementById('profileValGender')) document.getElementById('profileValGender').textContent = data.gender;
+            const displayOptional = (value, fallback = 'Chưa cập nhật') => {
+                const normalized = value === null || value === undefined || String(value).trim().toLowerCase() === 'null' || String(value).trim().toLowerCase() === 'undefined' ? '' : String(value).trim();
+                return normalized || fallback;
+            };
+            if (document.getElementById('profileValEmail')) document.getElementById('profileValEmail').textContent = displayOptional(data.email);
+            if (document.getElementById('profileValGender')) document.getElementById('profileValGender').textContent = displayOptional(data.gender);
             if (document.getElementById('profileValDob')) document.getElementById('profileValDob').textContent = data.dob || 'Chưa cập nhật';
             if (document.getElementById('drawerCustNote')) document.getElementById('drawerCustNote').value = data.note || '';
+            const authStatusEl = document.getElementById('profileValAuthStatus');
+            if (authStatusEl) {
+                const authBadgeClass = data.status === 'LOCKED' ? 'badge-danger' : (data.status === 'TEMP' ? 'badge-warning' : 'badge-success');
+                authStatusEl.innerHTML = `<span class="admin-badge ${authBadgeClass}">${data.status === 'LOCKED' ? 'Tài khoản bị khóa' : (data.status === 'TEMP' ? 'Tài khoản tạm' : 'Đang hoạt động')}</span><button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnResendSmsToken" style="font-size: 11.5px; padding: 3px 8px;">Gửi lại SMS</button>`;
+                authStatusEl.querySelector('#btnResendSmsToken')?.addEventListener('click', () => {
+                    showToast(`Đã gửi lại tin nhắn SMS chứa liên kết tạo mật khẩu đến số ${data.phone}!`);
+                });
+            }
 
             // Sổ địa chỉ
             renderDrawerAddresses(custId);
@@ -874,7 +893,7 @@
                             </span>
                         </div>
                         <div class="pet-card-actions">
-                            <button type="button" class="btn-pet-action btn-pet-view-profile" data-pet-id="${pet.id || ('PET-' + (idx+1))}" data-pet-name="${pet.name}">Xem hồ sơ bé</button>
+                            <button type="button" class="btn-pet-action btn-pet-view-profile admin-badge badge-neutral" data-pet-id="${pet.id || ('PET-' + (idx+1))}" data-pet-name="${pet.name}">Xem hồ sơ bé</button>
                             <button type="button" class="btn-pet-action btn-pet-edit" data-cust-id="${custId}" data-pet-index="${idx}">Sửa</button>
                             <button type="button" class="btn-pet-action btn-pet-delete" data-cust-id="${custId}" data-pet-index="${idx}">Xóa</button>
                         </div>
@@ -985,7 +1004,8 @@
                                 date: formatDate(mo.createdAt),
                                 total: Number(mo.total).toLocaleString('vi-VN') + ' đ',
                                 payment: mo.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán',
-                                status: mo.status === 'completed' ? 'Hoàn tất' : mo.status === 'shipping' ? 'Đang giao' : mo.status === 'confirmed' ? 'Đang chuẩn bị' : 'Chờ xác nhận',
+                                paymentClass: mo.paymentStatus === 'paid' ? 'badge-success' : 'badge-warning',
+                                status: mo.status === 'completed' ? 'Hoàn thành' : mo.status === 'shipping' ? 'Đang giao' : mo.status === 'confirmed' ? 'Đang chuẩn bị' : 'Chờ xác nhận',
                                 statusClass: mo.status === 'completed' ? 'badge-success' : mo.status === 'shipping' ? 'badge-info' : 'badge-warning'
                             });
                         }
@@ -1005,7 +1025,7 @@
                     </td>
                     <td>${ord.date}</td>
                     <td>${ord.total}</td>
-                    <td><span class="admin-badge badge-success">${ord.payment}</span></td>
+                    <td><span class="admin-badge ${ord.paymentClass || (ord.payment === 'Đã thanh toán' ? 'badge-success' : 'badge-warning')}">${ord.payment}</span></td>
                     <td><span class="admin-badge ${ord.statusClass}">${ord.status}</span></td>
                     <td><button type="button" class="admin-btn admin-btn-secondary btn-sm btn-view-order-action" data-order-id="${ord.id}">Xem chi tiết đơn</button></td>
                 </tr>
@@ -2117,12 +2137,24 @@
 
                         // 2. Cập nhật bảng customer_profile
                         const genderVal = (newGender === 'Nữ' || newGender === 'FEMALE') ? 'FEMALE' : ((newGender === 'Nam' || newGender === 'MALE') ? 'MALE' : 'OTHER');
-                        await client.from('customer_profile').upsert({
-                            customer_id: custDbId,
+                        const profilePayload = {
                             full_name: newName,
                             gender: genderVal,
                             date_of_birth: newDobRaw || null
-                        });
+                        };
+                        const { data: updatedProfiles, error: profileUpdateError } = await client
+                            .from('customer_profile')
+                            .update(profilePayload)
+                            .eq('customer_id', custDbId)
+                            .select('id');
+                        if (profileUpdateError) throw profileUpdateError;
+                        if (!updatedProfiles || updatedProfiles.length === 0) {
+                            const { error: profileInsertError } = await client.from('customer_profile').insert({
+                                customer_id: custDbId,
+                                ...profilePayload
+                            });
+                            if (profileInsertError) throw profileInsertError;
+                        }
 
                         // 3. Cập nhật sổ địa chỉ customer_address
                         await client.from('customer_address').delete().eq('customer_id', custDbId);
