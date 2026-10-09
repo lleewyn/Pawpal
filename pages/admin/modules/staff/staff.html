@@ -45,7 +45,7 @@
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
                     <div class="search-box-wrapper">
-                        <input type="text" class="admin-input" id="staffSearchInput" placeholder="Tìm mã nhân viên, họ tên, số điện thoại...">
+                        <input type="text" class="admin-input" id="staffSearchInput" placeholder="Tìm mã nhân viên, họ tên, số điện thoại..." maxlength="300">
                         <button type="button" class="btn-clear-search" id="btnClearStaffSearch" title="Xóa nội dung tìm kiếm" aria-label="Xóa nội dung tìm kiếm" style="display: none;">✕</button>
                     </div>
                     <div class="filter-actions-right">
@@ -60,7 +60,7 @@
                         <select class="admin-select" id="staffFilterPosition">
                             <option value="ALL">Tất cả</option>
                             <option value="Admin">Quản trị viên</option>
-                            <option value="Veterinarian">Bác sĩ thú y</option>
+                            <option value="MEDICAL_CAREGIVER">Bác sĩ/Bảo mẫu</option>
                             <option value="Receptionist">Lễ tân</option>
                             <option value="Groomer">Groomer</option>
                             <option value="Caregiver">Bảo mẫu Pet Hotel</option>
@@ -88,6 +88,7 @@
                             <option value="AFTERNOON">Ca chiều</option>
                             <option value="EVENING">Ca tối</option>
                             <option value="NIGHT">Ca khuya</option>
+                            <option value="FULL_TIME">Toàn thời gian</option>
                         </select>
                     </div>
 
@@ -642,7 +643,7 @@
                 <div class="form-row-2col">
                     <div class="form-group-item">
                         <label class="form-label-clean">Họ và tên *</label>
-                        <input type="text" class="admin-input" id="staffInputName" placeholder="Ví dụ: Nguyễn Văn A" maxlength="70">
+                        <input type="text" class="admin-input" id="staffInputName" placeholder="Ví dụ: Nguyễn Văn A" maxlength="100" autofocus>
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Số điện thoại *</label>
@@ -678,6 +679,16 @@
                             <option value="Bảo mẫu Pet Hotel">Bảo mẫu Pet Hotel</option>
                             <option value="CSKH">CSKH</option>
                             <option value="Tài xế Taxi Pet">Tài xế Taxi Pet</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Ca làm việc *</label>
+                        <select class="admin-select" id="staffInputShift" required>
+                            <option value="">Chọn ca làm việc</option>
+                            <option value="MORNING">Ca sáng</option>
+                            <option value="AFTERNOON">Ca chiều</option>
+                            <option value="EVENING">Ca tối</option>
+                            <option value="NIGHT">Ca khuya</option>
                         </select>
                     </div>
                     <div class="form-group-item">

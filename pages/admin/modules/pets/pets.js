@@ -2919,34 +2919,101 @@
         if (btnPreviewCustomerDiary && modalPreviewAppDiary) {
             btnPreviewCustomerDiary.addEventListener('click', () => {
                 const activeItem = document.querySelector('.queue-card-item.active');
-                const petName = activeItem?.querySelector('.queue-pet-name')?.textContent || 'Bé cưng';
+                const petName = activeItem?.querySelector('.queue-pet-name')?.textContent || 'Bé Milu';
+                const subTexts = Array.from(activeItem?.querySelectorAll('.queue-card-sub') || []).map(el => el.textContent.trim());
 
                 const beforeSrc = document.getElementById('wbBeforeImgPreview')?.src || '/assets/images/publics/dogcute3.jpg';
                 const afterSrc = document.getElementById('wbAfterImgPreview')?.src || '/assets/images/publics/dogcute1.jpg';
                 const message = document.getElementById('wbOwnerMessage')?.value || 'Bé rất ngoan và hoàn thành tốt dịch vụ!';
 
+                // Pet details
+                const petAvatarEl = document.getElementById('appDiaryPetAvatar');
+                if (petAvatarEl) petAvatarEl.src = afterSrc || '/assets/images/publics/dogcute1.jpg';
+
+                const petNameEl = document.getElementById('appDiaryPetName');
+                if (petNameEl) petNameEl.textContent = petName;
+
+                const petCodeEl = document.getElementById('appDiaryPetCode');
+                const careId = activeItem?.getAttribute('data-care-id') || 'CL-001';
+                if (petCodeEl) petCodeEl.textContent = careId === 'CL-002' ? 'PET-002' : (careId === 'CL-003' ? 'PET-003' : 'PET-001');
+
+                const petMetaEl = document.getElementById('appDiaryPetMeta');
+                if (petMetaEl && subTexts[0]) {
+                    const parts = subTexts[0].split('•');
+                    petMetaEl.innerHTML = `
+                        <span>${parts[0]?.trim() || 'Chó • Poodle'}</span>
+                        <span>•</span>
+                        <span>5.2 kg</span>
+                        <span>•</span>
+                        <span>2 tuổi</span>
+                    `;
+                }
+
+                // Live status badge
+                const liveBadgeEl = document.getElementById('appDiaryLiveBadge');
+                const currentStatus = document.getElementById('wbStatusBadge')?.textContent || 'Đang làm';
+                if (liveBadgeEl) {
+                    liveBadgeEl.textContent = currentStatus === 'Hoàn thiện' ? 'Đã hoàn tất' : 'Đang làm Spa';
+                    liveBadgeEl.style.background = currentStatus === 'Hoàn thiện' ? '#DCEEE2' : '#F5E8D3';
+                    liveBadgeEl.style.color = currentStatus === 'Hoàn thiện' ? '#165335' : '#734718';
+                }
+
+                // Service info
+                const serviceNameEl = document.getElementById('appDiaryServiceName');
+                if (serviceNameEl) {
+                    if (subTexts[0] && subTexts[0].includes('Dịch vụ:')) {
+                        serviceNameEl.textContent = subTexts[0].split('Dịch vụ:')[1]?.trim() || 'Tắm sấy và Cắt tỉa tạo kiểu';
+                    } else {
+                        serviceNameEl.textContent = 'Tắm sấy và Cắt tỉa tạo kiểu';
+                    }
+                }
+
+                const serviceDateEl = document.getElementById('appDiaryServiceDate');
+                if (serviceDateEl) {
+                    const today = new Date();
+                    const dStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+                    serviceDateEl.textContent = dStr;
+                }
+
+                // Images
+                if (document.getElementById('appDiaryImgBefore')) document.getElementById('appDiaryImgBefore').src = beforeSrc;
+                if (document.getElementById('appDiaryImgAfter')) document.getElementById('appDiaryImgAfter').src = afterSrc;
+
+                // Checklist 4 items
                 const chkEarVal = checklistState.chkEar;
                 const chkNailVal = checklistState.chkNail;
                 const chkAnalVal = checklistState.chkAnal;
                 const chkSkinVal = checklistState.chkSkin;
+                const passedCount = [chkEarVal, chkNailVal, chkAnalVal, chkSkinVal].filter(Boolean).length;
 
-                if (document.getElementById('appDiaryPetName')) document.getElementById('appDiaryPetName').textContent = `${petName} hôm nay`;
-                if (document.getElementById('appDiaryImgBefore')) document.getElementById('appDiaryImgBefore').src = beforeSrc;
-                if (document.getElementById('appDiaryImgAfter')) document.getElementById('appDiaryImgAfter').src = afterSrc;
-                if (document.getElementById('appDiaryMessage')) document.getElementById('appDiaryMessage').textContent = message;
-
-                function updateAppBadge(badgeId, isChecked) {
-                    const el = document.getElementById(badgeId);
-                    if (el) {
-                        el.textContent = isChecked ? 'Đạt chuẩn' : 'Cần theo dõi';
-                        el.className = `admin-badge ${isChecked ? 'badge-success' : 'badge-warning'}`;
-                    }
+                const scoreEl = document.getElementById('appDiaryHygieneScore');
+                if (scoreEl) {
+                    scoreEl.textContent = `${passedCount}/4 mục đạt chuẩn`;
+                    scoreEl.style.color = passedCount === 4 ? '#165335' : '#D97706';
                 }
 
-                updateAppBadge('appBadgeEar', chkEarVal);
-                updateAppBadge('appBadgeNail', chkNailVal);
-                updateAppBadge('appBadgeAnal', chkAnalVal);
-                updateAppBadge('appBadgeSkin', chkSkinVal);
+                function setCheckIcon(elId, passed) {
+                    const el = document.getElementById(elId);
+                    if (!el) return;
+                    el.textContent = passed ? '✓' : '!';
+                    el.style.background = passed ? '#DCEEE2' : '#FEE2E2';
+                    el.style.color = passed ? '#165335' : '#DC2626';
+                }
+
+                setCheckIcon('appDiaryCheckEar', chkEarVal);
+                setCheckIcon('appDiaryCheckNail', chkNailVal);
+                setCheckIcon('appDiaryCheckAnal', chkAnalVal);
+                setCheckIcon('appDiaryCheckSkin', chkSkinVal);
+
+                // Technician message
+                const techTitleEl = document.getElementById('appDiaryTechnicianTitle');
+                let groomerName = 'KTV Hoàng Tuấn';
+                if (subTexts[1] && subTexts[1].includes('KTV:')) {
+                    groomerName = subTexts[1].split('KTV:')[1]?.trim() || 'KTV Hoàng Tuấn';
+                }
+                if (techTitleEl) techTitleEl.textContent = `Lời dặn dò từ chuyên viên (${groomerName}):`;
+
+                if (document.getElementById('appDiaryMessage')) document.getElementById('appDiaryMessage').textContent = message;
 
                 modalPreviewAppDiary.classList.add('open');
             });

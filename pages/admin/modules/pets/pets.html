@@ -1167,78 +1167,156 @@
     <!-- ====================================================================
          MODAL 9: XEM TRƯỚC GIAO DIỆN APP SEN (PAWPAL DIARY MÔ PHỎNG)
          ==================================================================== -->
+    <!-- ====================================================================
+         MODAL 9: XEM TRƯỚC GIAO DIỆN NHẬT KÝ KHÁCH HÀNG (PAWPAL USER DIARY)
+         ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalPreviewAppDiary">
-        <div class="admin-modal-card" style="width: 440px; padding: 0; overflow: hidden; background: #F8FAF9;">
-            <!-- APP HEADER MÔ PHỎNG MOBILE -->
-            <div style="background-color: #236B48; color: #FFFFFF; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="admin-modal-card preview-user-diary-modal-card" style="width: 680px; max-width: 95vw; padding: 0; overflow: hidden; background: #FAFDFB;">
+            <!-- MODAL HEADER -->
+            <div style="padding: 16px 22px; border-bottom: 1px solid var(--border-neutral); display: flex; justify-content: space-between; align-items: center; background: #FFFFFF;">
                 <div>
-                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; opacity: 0.85;">PawPal Sen App • Nhật ký làm đẹp</div>
-                    <div style="font-size: 17px; font-weight: 700; margin-top: 2px;" id="appDiaryPetName">Bé Milu hôm nay</div>
+                    <div style="font-size: 15px; font-weight: 700; color: var(--text-heading);">Xem trước giao diện nhật ký khách hàng</div>
+                    <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">Mô phỏng hiển thị trên cổng thành viên PawPal Sen App</div>
                 </div>
-                <button type="button" class="btn-modal-close" data-close-modal="modalPreviewAppDiary" style="color: #FFFFFF; font-size: 13px;">✕ Đóng</button>
+                <button type="button" class="btn-modal-close" data-close-modal="modalPreviewAppDiary" style="font-size: 14px; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 4px 8px;">✕</button>
             </div>
 
-            <div style="padding: 18px; display: flex; flex-direction: column; gap: 14px; max-height: 75vh; overflow-y: auto;">
-                <!-- SO SÁNH TRƯỚC VÀ SAU -->
-                <div style="background: #FFFFFF; border-radius: var(--admin-radius); padding: 12px; border: 1px solid var(--border-neutral);">
-                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">Khoảnh khắc Before và After</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                        <div>
-                            <img src="/assets/images/publics/dogcute3.jpg" id="appDiaryImgBefore" style="width: 100%; height: 140px; object-fit: cover; border-radius: var(--admin-radius);" alt="Trước khi làm">
-                            <div style="font-size: 11.5px; color: var(--text-muted); text-align: center; margin-top: 4px; font-weight: 600;">Lúc mới đón bé</div>
+            <!-- MODAL SCROLLABLE CONTENT (ĐỒNG BỘ 100% VỚI DIARY CỦA USER) -->
+            <div style="padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; max-height: 75vh; overflow-y: auto; overscroll-behavior: contain;">
+                <!-- 1. THẺ THÔNG TIN BÉ CƯNG -->
+                <div class="preview-pet-info-card" style="background: #FFFFFF; border: 1px solid #DFEAE2; border-radius: var(--admin-radius); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="position: relative; width: 52px; height: 52px; border-radius: 50%; overflow: hidden; border: 2px solid #236B48; flex-shrink: 0;">
+                            <img src="/assets/images/publics/dogcute1.jpg" id="appDiaryPetAvatar" style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar">
+                            <span style="position: absolute; bottom: 2px; right: 2px; width: 9px; height: 9px; background: #22C55E; border: 2px solid #FFFFFF; border-radius: 50%;"></span>
                         </div>
                         <div>
-                            <img src="/assets/images/publics/dogcute1.jpg" id="appDiaryImgAfter" style="width: 100%; height: 140px; object-fit: cover; border-radius: var(--admin-radius);" alt="Sau khi làm">
-                            <div style="font-size: 11.5px; color: #236B48; text-align: center; margin-top: 4px; font-weight: 600;">Sau khi spa thơm tho</div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h3 style="font-size: 15.5px; font-weight: 700; color: #203A2C; margin: 0;" id="appDiaryPetName">Bé Milu</h3>
+                                <span style="font-size: 11px; font-weight: 600; padding: 2px 7px; background: #EEF5F1; color: #236B48; border-radius: var(--admin-radius);" id="appDiaryPetCode">PET-001</span>
+                            </div>
+                            <div style="font-size: 12px; color: #4F7A65; margin-top: 3px; display: flex; gap: 6px; align-items: center;" id="appDiaryPetMeta">
+                                <span>Chó • Poodle</span>
+                                <span>•</span>
+                                <span>5.2 kg</span>
+                                <span>•</span>
+                                <span>2 tuổi</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="admin-badge badge-success" id="appDiaryLiveBadge" style="height: 24px; padding: 0 10px; border-radius: var(--admin-radius); font-size: 11.5px; font-weight: 600; background: #DCEEE2; color: #165335;">Đang làm Spa</span>
+                    </div>
+                </div>
+
+                <!-- 2. THANH TIẾN TRÌNH DỊCH VỤ TRỰC TIẾP (LIVE SERVICE STEPPER) -->
+                <div class="preview-service-stepper-card" style="background: #FFFFFF; border: 1px solid #DFEAE2; border-radius: var(--admin-radius); padding: 14px 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <h4 style="font-size: 13.5px; font-weight: 700; color: #236B48; margin: 0;" id="appDiaryServiceName">Tắm sấy và Cắt tỉa tạo kiểu</h4>
+                            <span style="font-size: 12px; color: #4F7A65; font-weight: 500;" id="appDiaryServiceDate">2026-10-10</span>
+                        </div>
+                        <span class="admin-badge badge-success" style="font-size: 11px; background: #DCEEE2; color: #165335;">Tiến trình trực tiếp</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center;">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #236B48; color: #ffffff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">✓</div>
+                            <span style="font-size: 11.5px; font-weight: 600; color: #203A2C;">Tiếp nhận</span>
+                            <span style="font-size: 10.5px; color: #4F7A65;">Check-in</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #236B48; color: #ffffff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">✓</div>
+                            <span style="font-size: 11.5px; font-weight: 600; color: #203A2C;">Tắm và Sấy</span>
+                            <span style="font-size: 10.5px; color: #4F7A65;">Thư giãn</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #236B48; color: #ffffff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">✓</div>
+                            <span style="font-size: 11.5px; font-weight: 600; color: #203A2C;">Cắt tỉa</span>
+                            <span style="font-size: 10.5px; color: #4F7A65;">Tạo kiểu</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #DCEEE2; color: #165335; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">4</div>
+                            <span style="font-size: 11.5px; font-weight: 600; color: #236B48;">Hoàn tất</span>
+                            <span style="font-size: 10.5px; color: #4F7A65;">Đón bé</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- CHECKLIST 4 MỤC VỆ SINH ĐẠT CHUẨN -->
-                <div style="background: #FFFFFF; border-radius: var(--admin-radius); padding: 12px; border: 1px solid var(--border-neutral);">
-                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">4 Mục chăm sóc an toàn vệ sinh</div>
-                    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12.5px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <span id="appDiaryItemEar">1. Vệ sinh tai sạch sẽ, không viêm</span>
-                            <span class="admin-badge badge-success" id="appBadgeEar" style="font-size: 11px;">Đạt chuẩn</span>
+                <!-- 3. THẺ TỔNG KẾT DỊCH VỤ VÀ BÀN GIAO BÉ (CARELOG SHOWCASE CARD) -->
+                <div class="carelog-showcase-card" style="background: #FFFFFF; border: 1px solid #DFEAE2; border-radius: var(--admin-radius); padding: 18px 20px; box-shadow: 0 2px 12px rgba(35, 107, 72, 0.04);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+                        <h4 style="font-size: 14px; font-weight: 700; color: #236B48; margin: 0;">Tổng kết dịch vụ và Bàn giao bé</h4>
+                        <span class="showcase-badge-success" style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: var(--admin-radius); background: #DCEEE2; color: #165335;">Đã nghiệm thu</span>
+                    </div>
+
+                    <!-- LƯỚI ẢNH BEFORE & AFTER -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                        <div style="position: relative; border-radius: var(--admin-radius); overflow: hidden; border: 1px solid #DFEAE2; background: #EEF5F1;">
+                            <span style="position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: var(--admin-radius); background: rgba(32, 58, 44, 0.85); color: #ffffff; z-index: 2;">Trước khi làm</span>
+                            <img src="/assets/images/publics/dogcute3.jpg" id="appDiaryImgBefore" style="width: 100%; height: 160px; object-fit: cover; display: block;" alt="Trước khi làm">
+                            <span style="position: absolute; bottom: 6px; right: 6px; font-size: 10.5px; font-weight: 600; background: rgba(255, 255, 255, 0.88); color: #236B48; padding: 2px 7px; border-radius: var(--admin-radius);">Phóng to</span>
                         </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <span id="appDiaryItemNail">2. Móng cắt mài tròn nhẵn</span>
-                            <span class="admin-badge badge-success" id="appBadgeNail" style="font-size: 11px;">Đạt chuẩn</span>
-                        </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <span id="appDiaryItemAnal">3. Tuyến hôi đã vắt sạch sẽ</span>
-                            <span class="admin-badge badge-success" id="appBadgeAnal" style="font-size: 11px;">Đạt chuẩn</span>
-                        </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <span id="appDiaryItemSkin">4. Da lông sạch, không nấm ve</span>
-                            <span class="admin-badge badge-success" id="appBadgeSkin" style="font-size: 11px;">Đạt chuẩn</span>
+                        <div style="position: relative; border-radius: var(--admin-radius); overflow: hidden; border: 1px solid #DFEAE2; background: #EEF5F1;">
+                            <span style="position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: var(--admin-radius); background: rgba(35, 107, 72, 0.90); color: #ffffff; z-index: 2;">Sau khi hoàn thiện</span>
+                            <img src="/assets/images/publics/dogcute1.jpg" id="appDiaryImgAfter" style="width: 100%; height: 160px; object-fit: cover; display: block;" alt="Sau khi làm">
+                            <span style="position: absolute; bottom: 6px; right: 6px; font-size: 10.5px; font-weight: 600; background: rgba(255, 255, 255, 0.88); color: #236B48; padding: 2px 7px; border-radius: var(--admin-radius);">Phóng to</span>
                         </div>
                     </div>
-                </div>
 
-                <!-- LỜI DẶN DÒ TỪ KỸ THUẬT VIÊN -->
-                <div style="background: #FFFFFF; border-radius: var(--admin-radius); padding: 12px; border: 1px solid var(--border-neutral);">
-                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 6px;">Lời dặn dò từ Kỹ thuật viên:</div>
-                    <div id="appDiaryMessage" style="font-size: 12.5px; color: var(--text-main); line-height: 1.5;">
-                        Lông vùng tai bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.
+                    <!-- CHỨNG THỰC VỆ SINH 4 MỤC TIÊU CHUẨN -->
+                    <div style="background: #F4FAF6; border: 1px solid #DFEAE2; border-radius: var(--admin-radius); padding: 12px 14px; margin-bottom: 14px;">
+                        <div style="font-size: 12px; font-weight: 700; color: #236B48; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                            <span>Chứng thực vệ sinh 4 mục tiêu chuẩn</span>
+                            <span id="appDiaryHygieneScore" style="font-size: 11px; font-weight: 600; color: #165335;">4/4 mục đạt chuẩn</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <div style="display: flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid #ECF2EE; border-radius: var(--admin-radius); padding: 7px 10px; font-size: 12px; color: #203A2C;">
+                                <span id="appDiaryCheckEar" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #DCEEE2; color: #165335; border-radius: var(--admin-radius); font-size: 10.5px; font-weight: 700; flex-shrink: 0;">✓</span>
+                                <span id="appDiaryItemEar">Vệ sinh tai sạch sẽ</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid #ECF2EE; border-radius: var(--admin-radius); padding: 7px 10px; font-size: 12px; color: #203A2C;">
+                                <span id="appDiaryCheckNail" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #DCEEE2; color: #165335; border-radius: var(--admin-radius); font-size: 10.5px; font-weight: 700; flex-shrink: 0;">✓</span>
+                                <span id="appDiaryItemNail">Cắt và mài móng an toàn</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid #ECF2EE; border-radius: var(--admin-radius); padding: 7px 10px; font-size: 12px; color: #203A2C;">
+                                <span id="appDiaryCheckAnal" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #DCEEE2; color: #165335; border-radius: var(--admin-radius); font-size: 10.5px; font-weight: 700; flex-shrink: 0;">✓</span>
+                                <span id="appDiaryItemAnal">Vắt tuyến hôi sạch sẽ</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid #ECF2EE; border-radius: var(--admin-radius); padding: 7px 10px; font-size: 12px; color: #203A2C;">
+                                <span id="appDiaryCheckSkin" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #DCEEE2; color: #165335; border-radius: var(--admin-radius); font-size: 10.5px; font-weight: 700; flex-shrink: 0;">✓</span>
+                                <span id="appDiaryItemSkin">Chăm sóc và dưỡng da lông</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- ĐÁNH GIÁ 5 SAO CHO KHÁCH -->
-                <div style="text-align: center; padding: 6px 0;">
-                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Sen hài lòng với buổi làm đẹp của bé chứ?</div>
-                    <div style="display: flex; justify-content: center; gap: 8px;">
-                        <span style="font-size: 18px; color: #EAB308;">★</span>
-                        <span style="font-size: 18px; color: #EAB308;">★</span>
-                        <span style="font-size: 18px; color: #EAB308;">★</span>
-                        <span style="font-size: 18px; color: #EAB308;">★</span>
-                        <span style="font-size: 18px; color: #EAB308;">★</span>
+                    <!-- LỜI DẶN DÒ TỪ CHUYÊN VIÊN -->
+                    <div style="background: #FAF8F5; border: 1px solid #EBE4D8; border-radius: var(--admin-radius); padding: 12px 14px; margin-bottom: 14px;">
+                        <div style="font-size: 12px; font-weight: 700; color: #8C5E1B; margin-bottom: 4px;" id="appDiaryTechnicianTitle">Lời dặn dò từ chuyên viên (KTV Hoàng Tuấn):</div>
+                        <p style="font-size: 12.5px; color: #4A3B2C; margin: 0; line-height: 1.5;" id="appDiaryMessage">
+                            Lông vùng tai bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.
+                        </p>
+                    </div>
+
+                    <!-- ĐÁNH GIÁ CHẤT LƯỢNG DỊCH VỤ 5 SAO -->
+                    <div style="border-top: 1px solid #ECF2EE; padding-top: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                            <h5 style="font-size: 12.5px; font-weight: 700; color: #236B48; margin: 0;">Đánh giá chất lượng dịch vụ</h5>
+                            <div style="display: inline-flex; gap: 4px; align-items: center; font-size: 18px; color: #F59E0B; cursor: pointer;">
+                                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <textarea class="admin-input" style="width: 100%; min-height: 60px; padding: 8px 10px; font-size: 12.5px; border-radius: var(--admin-radius); background: #FAFDFB;" placeholder="Chia sẻ cảm nhận của bạn về trải nghiệm của bé tại PawPal..." readonly></textarea>
+                            <div style="display: flex; justify-content: flex-end;">
+                                <button type="button" class="admin-btn admin-btn-primary" style="font-size: 12px; padding: 6px 14px; border-radius: var(--admin-radius);" disabled>Gửi đánh giá</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div style="padding: 12px 18px; background: #FFFFFF; border-top: 1px solid var(--border-neutral); display: flex; justify-content: flex-end;">
+            <!-- MODAL FOOTER -->
+            <div style="padding: 12px 20px; background: #FFFFFF; border-top: 1px solid var(--border-neutral); display: flex; justify-content: flex-end;">
                 <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalPreviewAppDiary">Đóng xem trước</button>
             </div>
         </div>

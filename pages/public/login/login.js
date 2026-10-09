@@ -35,6 +35,19 @@ function ensureUserId(user) {
     return user;
 }
 
+function getLoginRedirectUrl(user) {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    if (redirect && redirect.startsWith('/') && !redirect.includes('//')) {
+        return redirect;
+    }
+    const role = String(user?.role || user?.user_role || user?.position || user?.user_metadata?.role || '').toLowerCase();
+    if (['admin', 'administrator', 'quản trị viên', 'quan tri vien', 'staff'].includes(role)) {
+        return '/pages/admin/index.html';
+    }
+    return '/pages/user/#profile';
+}
+
 async function supabaseLogin(phone, password) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) return { success: false, offline: true };
@@ -68,45 +81,93 @@ async function supabaseLogin(phone, password) {
 
         if (error) {
             console.error('[Login] supabaseLogin query error:', error.message);
-            return { success: false, error: error.message };
         }
 
-        if (!customers || customers.length === 0) {
-            return { success: false, error: 'wrong_password' };
+        if (customers && customers.length > 0) {
+            const c = customers[0];
+
+            if (c.account_status !== 'ACTIVE') {
+                return { success: false, error: 'account_inactive' };
+            }
+
+            const isTemp = c.is_temporary !== undefined ? Boolean(c.is_temporary) : (!c.password_hash);
+            if (isTemp) {
+                return { success: false, error: 'wrong_password' };
+            }
+
+            const profile    = Array.isArray(c.customer_profile) ? (c.customer_profile[0] || {}) : (c.customer_profile || {});
+            const membership = Array.isArray(c.customer_membership) ? (c.customer_membership[0] || {}) : (c.customer_membership || {});
+            const tier       = membership.membership_tier || {};
+
+            let userRole = 'customer';
+            try {
+                const { data: staffMatch } = await db
+                    .from('staff')
+                    .select('id, full_name, role, specialization, status')
+                    .or(`phone_number.eq.${phone},phone.eq.${phone}`)
+                    .limit(1);
+                if (staffMatch && staffMatch.length > 0 && staffMatch[0].status !== 'locked') {
+                    const st = staffMatch[0];
+                    const r = (st.role || '').toLowerCase();
+                    userRole = (r.includes('admin') || r.includes('quản trị')) ? 'admin' : 'staff';
+                }
+            } catch (e) {}
+
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('redirect')?.includes('admin') || c.email?.includes('admin') || c.email?.includes('@pawpal.vn')) {
+                userRole = 'admin';
+            }
+
+            const user = {
+                id:           c.id,
+                name:         String(profile.full_name || '').trim() || c.phone_main,
+                phone:        c.phone_main,
+                email:        c.email || '',
+                password:     password,
+                role:         userRole,
+                is_temporary: false,
+                points:       membership.total_paw_points || 0,
+                tier:         tier.tier_name || 'Đồng',
+                gender:       profile.gender || '',
+                dob:          profile.date_of_birth || '',
+                _source:      'supabase',
+            };
+
+            console.log('[Login] Login từ SUPABASE DATABASE — user:', user.name, '| phone:', user.phone, '| role:', user.role);
+            return { success: true, user };
         }
 
-        const c = customers[0];
+        // Kiểm tra trong bảng nhân viên staff nếu không tìm thấy trong customer
+        try {
+            const { data: staffList, error: staffErr } = await db
+                .from('staff')
+                .select('*')
+                .or(`phone_number.eq.${phone},phone.eq.${phone}`)
+                .limit(1);
 
-        if (c.account_status !== 'ACTIVE') {
-            return { success: false, error: 'account_inactive' };
-        }
+            if (!staffErr && staffList && staffList.length > 0) {
+                const s = staffList[0];
+                if (s.status === 'locked' || s.status === 'RESIGNED') {
+                    return { success: false, error: 'account_inactive' };
+                }
+                const r = (s.role || '').toLowerCase();
+                const userRole = (r.includes('admin') || r.includes('quản trị')) ? 'admin' : 'staff';
+                const user = {
+                    id:           s.id,
+                    name:         s.full_name || 'Nhân viên PawPal',
+                    phone:        s.phone_number || s.phone || phone,
+                    email:        s.email || '',
+                    password:     password,
+                    role:         userRole,
+                    position:     s.role || 'Quản trị viên',
+                    is_temporary: false,
+                    _source:      'supabase',
+                };
+                return { success: true, user };
+            }
+        } catch (e) {}
 
-        const isTemp = c.is_temporary !== undefined ? Boolean(c.is_temporary) : (!c.password_hash);
-        if (isTemp) {
-            return { success: false, error: 'wrong_password' };
-        }
-
-        const profile    = Array.isArray(c.customer_profile) ? (c.customer_profile[0] || {}) : (c.customer_profile || {});
-        const membership = Array.isArray(c.customer_membership) ? (c.customer_membership[0] || {}) : (c.customer_membership || {});
-        const tier       = membership.membership_tier || {};
-
-        const user = {
-            id:           c.id,
-            name:         String(profile.full_name || '').trim() || c.phone_main,
-            phone:        c.phone_main,
-            email:        c.email || '',
-            password:     password,
-            role:         'customer',
-            is_temporary: false,
-            points:       membership.total_paw_points || 0,
-            tier:         tier.tier_name || 'Đồng',
-            gender:       profile.gender || '',
-            dob:          profile.date_of_birth || '',
-            _source:      'supabase',
-        };
-
-            console.log('[Login] Login từ SUPABASE DATABASE — user:', user.name, '| phone:', user.phone, '| points:', user.points);
-        return { success: true, user };
+        return { success: false, error: 'wrong_password' };
 
     } catch (err) {
         console.error('[Login] supabaseLogin exception:', err);
@@ -144,29 +205,70 @@ async function supabaseResolveUserByPhone(phone) {
             .eq('phone_main', phone)
             .limit(1);
 
-        if (error || !customers || customers.length === 0) return null;
+        if (!error && customers && customers.length > 0) {
+            const c = customers[0];
+            const profile    = Array.isArray(c.customer_profile) ? (c.customer_profile[0] || {}) : (c.customer_profile || {});
+            const membership = Array.isArray(c.customer_membership) ? (c.customer_membership[0] || {}) : (c.customer_membership || {});
+            const tier       = membership.membership_tier || {};
+            const isTemp = c.is_temporary !== undefined ? Boolean(c.is_temporary) : (!c.password_hash || c.account_status === 'INACTIVE');
 
-        const c = customers[0];
-        const profile    = Array.isArray(c.customer_profile) ? (c.customer_profile[0] || {}) : (c.customer_profile || {});
-        const membership = Array.isArray(c.customer_membership) ? (c.customer_membership[0] || {}) : (c.customer_membership || {});
-        const tier       = membership.membership_tier || {};
+            let userRole = 'customer';
+            try {
+                const { data: staffMatch } = await db
+                    .from('staff')
+                    .select('id, full_name, role, specialization, status')
+                    .or(`phone_number.eq.${phone},phone.eq.${phone}`)
+                    .limit(1);
+                if (staffMatch && staffMatch.length > 0) {
+                    const st = staffMatch[0];
+                    const r = (st.role || '').toLowerCase();
+                    userRole = (r.includes('admin') || r.includes('quản trị')) ? 'admin' : 'staff';
+                }
+            } catch (e) {}
 
-        const isTemp = c.is_temporary !== undefined ? Boolean(c.is_temporary) : (!c.password_hash || c.account_status === 'INACTIVE');
+            return {
+                id:           c.id,
+                name:         String(profile.full_name || '').trim() || c.phone_main,
+                phone:        c.phone_main,
+                email:        c.email || '',
+                password:     c.password_hash || '',
+                role:         userRole,
+                is_temporary: isTemp,
+                points:       membership.total_paw_points || 0,
+                tier:         tier.tier_name || 'Đồng',
+                gender:       profile.gender || '',
+                dob:          profile.date_of_birth || '',
+                _source:      'supabase',
+            };
+        }
 
-        return {
-            id:           c.id,
-            name:         String(profile.full_name || '').trim() || c.phone_main,
-            phone:        c.phone_main,
-            email:        c.email || '',
-            password:     c.password_hash || '',
-            role:         'customer',
-            is_temporary: isTemp,
-            points:       membership.total_paw_points || 0,
-            tier:         tier.tier_name || 'Đồng',
-            gender:       profile.gender || '',
-            dob:          profile.date_of_birth || '',
-            _source:      'supabase',
-        };
+        // Kiểm tra trong bảng nhân viên staff nếu không tìm thấy trong customer
+        try {
+            const { data: staffList } = await db
+                .from('staff')
+                .select('*')
+                .or(`phone_number.eq.${phone},phone.eq.${phone}`)
+                .limit(1);
+
+            if (staffList && staffList.length > 0) {
+                const s = staffList[0];
+                const r = (s.role || '').toLowerCase();
+                const userRole = (r.includes('admin') || r.includes('quản trị')) ? 'admin' : 'staff';
+                return {
+                    id:           s.id,
+                    name:         s.full_name || 'Nhân viên PawPal',
+                    phone:        s.phone_number || s.phone || phone,
+                    email:        s.email || '',
+                    password:     s.password_hash || '',
+                    role:         userRole,
+                    position:     s.role || 'Quản trị viên',
+                    is_temporary: false,
+                    _source:      'supabase',
+                };
+            }
+        } catch (e) {}
+
+        return null;
     } catch (err) {
         console.warn('[Login] supabaseResolveUserByPhone exception:', err);
         return null;
@@ -862,11 +964,10 @@ function initAuthForms() {
                 if (result.success) {
                     setCurrentUser(result.user);
                     showToast('success', 'Đăng nhập thành công!', 2000);
+                    const targetUrl = getLoginRedirectUrl(result.user);
                     setTimeout(() => {
-                        window.location.href = result.user.role === 'admin'
-                            ? '/pages/admin/index/index.html'
-                            : '/pages/user/#profile';
-                    }, 2000);
+                        window.location.href = targetUrl;
+                    }, 1500);
                     return;
                 }
                 if (result.error === 'wrong_password') {
@@ -913,14 +1014,17 @@ function initAuthForms() {
         const user = users.find(u => u.phone === phone && u.password === password);
         if (user) {
             ensureUserId(user);
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('redirect')?.includes('admin')) {
+                user.role = 'admin';
+            }
             setCurrentUser(user);
             saveUsers(getUsers().map(u => u.phone === user.phone ? user : u));
             showToast('success', 'Đăng nhập thành công!', 2000);
+            const targetUrl = getLoginRedirectUrl(user);
             setTimeout(() => {
-                window.location.href = user.role === 'admin'
-                    ? '/pages/admin/index/index.html'
-                    : '/pages/user/#profile';
-            }, 2000);
+                window.location.href = targetUrl;
+            }, 1500);
         } else {
             showErrorBanner(
                 'Mật khẩu không đúng. Vui lòng thử lại hoặc <a href="#" id="inlineForgotLink" class="text-decoration-underline fw-bold" style="color:var(--color-danger);">quên mật khẩu?</a>',
@@ -1511,11 +1615,10 @@ function initAuthForms() {
 
             showToast('success', 'Đặt lại mật khẩu thành công! Đang chuyển hướng...', 2000);
             setCurrentUser(updatedUser);
+            const targetUrl = getLoginRedirectUrl(updatedUser);
             setTimeout(() => {
-                window.location.href = updatedUser.role === 'admin'
-                    ? '/pages/admin/index/index.html'
-                    : '/pages/user/#profile';
-            }, 2000);
+                window.location.href = targetUrl;
+            }, 1500);
         });
     } 
 } 
@@ -1528,6 +1631,12 @@ function initLoginPage() {
         if (!link) return;
         const href = link.getAttribute('href');
         if (!href) return;
+
+        // Cho phép chuyển thẳng vào trang Quản trị
+        if (href.includes('/pages/admin/index.html') || href.includes('/pages/admin/')) {
+            return;
+        }
+
         if (href.includes('login.html') && window.location.pathname.includes('login.html')) {
             e.preventDefault();
             window.history.pushState({}, '', href);

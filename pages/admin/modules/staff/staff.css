@@ -1951,3 +1951,5 @@
 
 
 
+
+.field-error{margin-top:4px;color:#B42318;font-size:12px;} .admin-input.is-invalid,.admin-select.is-invalid{border-color:#DC2626 !important;}

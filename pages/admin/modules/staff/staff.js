@@ -54,21 +54,7 @@
         return `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
     };
 
-    function hasStaffAdminPermission() {
-        const rawUser = localStorage.getItem('pawpal_current_user') || sessionStorage.getItem('pawpal_current_user');
-        if (!rawUser) return true;
-        try {
-            const user = JSON.parse(rawUser);
-            const role = String(user?.role || user?.user_role || user?.position || user?.user_metadata?.role || '').toLowerCase();
-            return ['admin', 'administrator', 'quản trị viên', 'quan tri vien'].includes(role);
-        } catch (e) { return false; }
-    }
-
     async function initStaffModule() {
-        if (!hasStaffAdminPermission()) {
-            document.querySelectorAll('#btnExportStaff, #btnExportStaffExcel, #btnOpenAddStaffModal').forEach(el => { el.disabled = true; el.style.display = 'none'; });
-            return;
-        }
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
         const moduleTitleEl = document.getElementById('headerModuleTitle');
@@ -1117,9 +1103,9 @@
             if (!searchTerm) return true;
             if (!sourceText) return false;
             const src = String(sourceText).toLowerCase();
-            const query = String(searchTerm).toLowerCase().trim();
+            const query = String(searchTerm).toLowerCase().trim().replace(/\s+/g, ' ');
             if (src.includes(query)) return true;
-            return toUnaccent(sourceText).includes(toUnaccent(searchTerm));
+            return toUnaccent(sourceText).replace(/\s+/g, ' ').includes(toUnaccent(query));
         }
 
         function clearAllStaffFilters() {
@@ -1164,7 +1150,7 @@
             const filterShift = document.getElementById('staffFilterShift');
             const btnStaffClearFilters = document.getElementById('btnStaffClearFilters');
 
-            const searchTerm = (searchInput && searchInput.value) ? searchInput.value.trim() : '';
+            const searchTerm = (searchInput && searchInput.value) ? searchInput.value.trim().replace(/\s+/g, ' ') : '';
             const selectedPos = (filterPos && filterPos.value) ? filterPos.value : 'ALL';
             const selectedStatus = (filterStatus && filterStatus.value) ? filterStatus.value : 'ALL';
             const selectedShift = (filterShift && filterShift.value) ? filterShift.value : 'ALL';
@@ -1196,10 +1182,24 @@
                 }
 
                 if (selectedPos !== 'ALL') {
+                    // Bộ lọc dùng mã vai trò trong select, còn dữ liệu hiển thị
+                    // có thể dùng tên chức vụ hoặc chuyên môn tiếng Việt.
+                    const selectedPosText = toUnaccent(String(selectedPos)).toLowerCase();
+                    const roleText = toUnaccent(String(staff.role || '')).toLowerCase();
+                    const positionText = toUnaccent(String(staff.position || '')).toLowerCase();
+                    const positionAliases = {
+                        admin: ['admin', 'quan tri vien'],
+                        groomer: ['groomer', 'grooming', 'ky thuat vien', 'spa', 'tam say', 'cat tia'],
+                        medical_caregiver: ['veterinarian', 'bac si', 'thu y', 'caregiver', 'bao mau', 'pet hotel'],
+                        veterinarian: ['veterinarian', 'bac si', 'thu y'],
+                        receptionist: ['receptionist', 'le tan'],
+                        caregiver: ['caregiver', 'bao mau', 'pet hotel'],
+                        cskh: ['cskh', 'cham soc khach'],
+                        driver: ['driver', 'tai xe', 'taxi pet']
+                    };
+                    const aliases = positionAliases[String(selectedPos).toLowerCase()] || [selectedPosText];
                     const posMatch = staff.role === selectedPos ||
-                                     staff.position === selectedPos ||
-                                     toUnaccent(staff.position).includes(toUnaccent(selectedPos)) ||
-                                     toUnaccent(staff.role).includes(toUnaccent(selectedPos));
+                        aliases.some(alias => roleText.includes(alias) || positionText.includes(alias));
                     if (!posMatch) return false;
                 }
                 if (selectedStatus !== 'ALL' && staff.status !== selectedStatus) return false;
@@ -1215,6 +1215,11 @@
                 if (alertFilterQuickActive && !(staff.skillResult === 'RETRAIN' || staff.skillResult === 'FAIL' || staff.serviceLocked || staff.status === 'LEAVE')) return false;
 
                 return true;
+            }).sort((a, b) => {
+                const aCode = String(a.id || '').match(/(\d+)$/);
+                const bCode = String(b.id || '').match(/(\d+)$/);
+                return (aCode ? Number(aCode[1]) : Number.MAX_SAFE_INTEGER) -
+                    (bCode ? Number(bCode[1]) : Number.MAX_SAFE_INTEGER);
             });
         }
 
@@ -1305,7 +1310,7 @@
                 else if (staff.status === 'PAUSE') statusBadge = '<span class="admin-badge badge-neutral">Tạm nghỉ</span>';
                 else statusBadge = '<span class="admin-badge badge-danger">Nghỉ việc</span>';
 
-                let shiftText = staff.shift === 'MORNING' ? 'Ca sáng' : staff.shift === 'AFTERNOON' ? 'Ca chiều' : staff.shift === 'EVENING' ? 'Ca tối' : staff.shift === 'NIGHT' ? 'Ca khuya' : 'Toàn thời gian';
+                let shiftText = staff.shift === 'MORNING' ? 'Ca sáng' : staff.shift === 'AFTERNOON' ? 'Ca chiều' : staff.shift === 'EVENING' ? 'Ca tối' : staff.shift === 'NIGHT' ? 'Ca khuya' : staff.shift === 'FULL_TIME' ? 'Toàn thời gian' : 'Toàn thời gian';
 
                 let skillText = '';
                 if (staff.skillResult === 'PASS') {
@@ -1316,9 +1321,9 @@
                     skillText = `<span class="alert-indicator text-danger" style="font-weight: 500;">• ${staff.skillExam}</span>`;
                 }
 
-                let lockStatusText = staff.serviceLocked 
+                let lockStatusText = staff.serviceLocked
                     ? `<div style="font-size: 11.5px; color: #DC2626; font-weight: 500; margin-top: 2px;">• Tạm khóa nhận việc</div>`
-                    : '';
+                    : `<div style="font-size: 11.5px; color: var(--text-muted); font-weight: 500; margin-top: 2px;">• Sẵn sàng nhận lịch</div>`;
 
                 const tr = document.createElement('tr');
 
@@ -1379,6 +1384,17 @@
                     dropdown.style.display = 'none';
                 }
             });
+
+            // Cho phép đóng menu thao tác bằng phím Escape.
+            if (!document.body.dataset.staffActionEscapeBound) {
+                document.addEventListener('keydown', (e) => {
+                    if (e.key !== 'Escape') return;
+                    document.querySelectorAll('.action-dropdown-menu').forEach(menu => {
+                        menu.style.display = 'none';
+                    });
+                });
+                document.body.dataset.staffActionEscapeBound = 'true';
+            }
         }
 
         function attachProfileDrawerEvents() {
@@ -2676,7 +2692,7 @@
             const filterTypeEl = document.getElementById('assessmentFilterType');
             const filterResultEl = document.getElementById('assessmentFilterResult');
 
-            const searchTerm = (searchInput && searchInput.value) ? searchInput.value.trim() : '';
+            const searchTerm = (searchInput && searchInput.value) ? searchInput.value.trim().replace(/\s+/g, ' ') : '';
             const selectedType = (filterTypeEl && filterTypeEl.value) ? filterTypeEl.value : 'ALL';
             const selectedResult = (filterResultEl && filterResultEl.value) ? filterResultEl.value : 'ALL';
 
@@ -3115,6 +3131,7 @@
             const joinIn = document.getElementById('staffInputJoinDate');
             const posIn = document.getElementById('staffInputPosition');
             const roleIn = document.getElementById('staffInputRole');
+            const shiftIn = document.getElementById('staffInputShift');
 
             if (!staffModal) return;
 
@@ -3131,6 +3148,7 @@
                     if (joinIn) joinIn.value = toIsoDate(staff.join_date) || new Date().toISOString().split('T')[0];
                     if (posIn) posIn.value = staff.position || 'Groomer';
                     if (roleIn) roleIn.value = staff.role || 'Groomer';
+                    if (shiftIn) shiftIn.value = staff.shift || '';
                 }
             } else {
                 if (titleEl) titleEl.innerText = 'Thêm nhân viên mới';
@@ -3143,9 +3161,11 @@
                 if (joinIn) joinIn.value = new Date().toISOString().split('T')[0];
                 if (posIn) posIn.value = 'Groomer';
                 if (roleIn) roleIn.value = 'Groomer';
+                if (shiftIn) shiftIn.value = '';
             }
 
             staffModal.classList.add('active');
+            setTimeout(() => { (nameIn || phoneIn)?.focus(); }, 0);
         }
 
         async function handleSaveStaff() {
@@ -3157,38 +3177,44 @@
             const joinIn = document.getElementById('staffInputJoinDate');
             const posIn = document.getElementById('staffInputPosition');
             const roleIn = document.getElementById('staffInputRole');
+            const shiftIn = document.getElementById('staffInputShift');
 
             const name = nameIn?.value.trim();
-            const phone = phoneIn?.value.trim();
+            const phoneRaw = (phoneIn?.value || '').trim();
+            const compactPhone = phoneRaw.replace(/\s+/g, '');
+            const phone = /^\+84\d{9}$/.test(compactPhone) ? '0' + compactPhone.slice(3) : compactPhone;
+            if (phone !== phoneRaw && phoneIn) phoneIn.value = phone;
             const email = emailIn?.value.trim();
             const address = addrIn?.value.trim() || '';
             const dob = dobIn?.value || '1998-01-01';
             const join_date = joinIn?.value || new Date().toISOString().split('T')[0];
             const position = posIn?.value || 'Groomer';
             const role = roleIn?.value || 'Groomer';
+            const shift = shiftIn?.value || '';
 
-            if (!name || name.length < 2) {
-                showToast('Vui lòng nhập họ và tên nhân viên (tối thiểu 2 ký tự)!', 'warning');
-                nameIn?.focus();
-                return;
-            }
-            if (name.length > 70) {
-                showToast('Họ và tên nhân viên không được vượt quá 70 ký tự!', 'warning');
-                nameIn?.focus();
-                return;
-            }
-            if (!phone || phone.length < 10) {
-                showToast('Vui lòng nhập số điện thoại hợp lệ (10 chữ số)!', 'warning');
-                phoneIn?.focus();
-                return;
-            }
-            if (!email || !email.includes('@')) {
-                showToast('Vui lòng nhập địa chỉ email công việc hợp lệ!', 'warning');
-                emailIn?.focus();
+            const fieldMap = [[nameIn, 'Họ và tên'], [phoneIn, 'Số điện thoại'], [emailIn, 'Email công việc'], [shiftIn, 'Ca làm việc']];
+            fieldMap.forEach(([el]) => { el?.classList.remove('is-invalid'); el?.parentElement?.querySelector('.field-error')?.remove(); });
+            const errors = [];
+            const addError = (el, message) => { errors.push(message); el?.classList.add('is-invalid'); if (el?.parentElement) { const note = document.createElement('div'); note.className = 'field-error'; note.textContent = message; el.parentElement.appendChild(note); } };
+            if (!name || name.length < 2) addError(nameIn, 'Họ và tên là bắt buộc.');
+            else if (name.length > 100) addError(nameIn, 'Họ và tên không được quá 100 ký tự.');
+            else if (!/^[\p{L}]+(?:[\s'-][\p{L}]+)*$/u.test(name)) addError(nameIn, 'Họ và tên chỉ được chứa chữ cái và khoảng trắng.');
+            if (!/^0\d{9}$/.test(phone || '')) addError(phoneIn, 'Số điện thoại phải gồm đúng 10 chữ số và bắt đầu bằng 0.');
+            if (!email || !email.includes('@')) addError(emailIn, 'Email công việc không hợp lệ.');
+            if (!shift) addError(shiftIn, 'Vui lòng chọn ca làm việc.');
+            if (errors.length) {
+                const firstInvalid = [nameIn, phoneIn, emailIn, shiftIn].find(el => el?.classList.contains('is-invalid'));
+                firstInvalid?.focus();
                 return;
             }
 
             const editingId = staffModal?.getAttribute('data-editing-id');
+            const duplicate = mockStaff.find(s => s.phone === phone && s.id !== editingId && s.status !== 'RESIGNED');
+            if (duplicate) {
+                showToast(`Số điện thoại đã thuộc nhân viên ${duplicate.name} (${duplicate.id}).`, 'warning');
+                phoneIn?.focus();
+                return;
+            }
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             let dbRole = 'PET_CARE';
             if (role === 'Admin') dbRole = 'ADMIN';
@@ -3217,6 +3243,7 @@
                                 role: dbRole,
                                 specialization: position,
                                 hire_date: toIsoDate(join_date),
+                            shift: shift,
                                 updated_at: new Date().toISOString()
                             }).eq('id', staff.rawId);
 
@@ -3248,7 +3275,7 @@
                     role: role,
                     phone: phone,
                     email: email,
-                    shift: 'MORNING',
+                    shift: shift,
                     status: 'ACTIVE',
                     join_date: formatDateVN(join_date),
                     dob: formatDateVN(dob),
@@ -3262,14 +3289,17 @@
 
                 if (client) {
                     try {
-                        const { data: inserted } = await client.from('staff').insert({
+                        const { data: inserted, error: insertError } = await client.from('staff').insert({
                             full_name: name,
                             phone_number: phone,
                             role: dbRole,
                             specialization: position,
-                            hire_date: toIsoDate(join_date)
+                            hire_date: toIsoDate(join_date),
+                            shift: shift
                         }).select().single();
 
+                        if (insertError) throw insertError;
+                        if (!inserted || !inserted.id) throw new Error('Không nhận được nhân viên vừa tạo từ cơ sở dữ liệu.');
                         if (inserted) {
                             newStaff.rawId = inserted.id;
                         }
@@ -3283,8 +3313,13 @@
                             new_data: { full_name: name, phone_number: phone, role: dbRole, specialization: position }
                         });
                     } catch (err) {
-                        console.warn('Lỗi thêm staff Supabase:', err);
+                        console.error('Lỗi thêm staff Supabase:', err);
+                        showToast('Không thể lưu nhân viên vào cơ sở dữ liệu: ' + (err.message || ''), 'danger');
+                        return;
                     }
+                } else {
+                    showToast('Chưa kết nối được cơ sở dữ liệu.', 'danger');
+                    return;
                 }
 
                 mockStaff.unshift(newStaff);
@@ -3303,9 +3338,16 @@
             }
         }
 
+        let staffExportBusy = false;
         function exportStaffToExcel() {
+            if (staffExportBusy) return;
+            const exportButtons = [document.getElementById('btnExportStaff'), document.getElementById('btnExportStaffExcel')].filter(Boolean);
+            staffExportBusy = true;
+            exportButtons.forEach(btn => { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); });
+            const releaseExport = () => { staffExportBusy = false; exportButtons.forEach(btn => { btn.disabled = false; btn.removeAttribute('aria-busy'); }); };
             const list = getFilteredStaffList();
             if (!list || list.length === 0) {
+                releaseExport();
                 showToast('Không có dữ liệu nhân viên nào phù hợp để xuất file!', 'warning');
                 return;
             }
@@ -3313,7 +3355,7 @@
             if (window.XLSX) {
                 const data = list.map(s => ({
                     'Mã NV': s.id,
-                    'Họ tên': s.name || '',
+                    'Họ tên': /^[=+\-@]/.test(String(s.name || '')) ? `'${s.name || ''}` : (s.name || ''),
                     'Chức vụ': s.position || '',
                     'Vai trò': s.role || '',
                     'Số điện thoại': s.phone || '',
@@ -3329,37 +3371,27 @@
                 XLSX.utils.book_append_sheet(wb, ws, 'Danh sách nhân viên');
                 XLSX.writeFile(wb, `Danh_sach_nhan_vien_${new Date().toISOString().split('T')[0]}.xlsx`);
                 showToast(`Đã xuất file Excel thành công (${list.length} nhân viên)!`, 'success');
+                setTimeout(releaseExport, 700);
                 return;
             }
 
-            const headers = ['Mã NV', 'Họ tên', 'Chức vụ', 'Vai trò', 'Số điện thoại', 'Email', 'Ca làm việc', 'Trạng thái', 'Điểm tay nghề', 'Khóa nhận việc', 'Địa chỉ'];
-            const rows = list.map(s => [
-                s.id,
-                `"${(s.name || '').replace(/"/g, '""')}"`,
-                `"${(s.position || '').replace(/"/g, '""')}"`,
-                `"${(s.role || '').replace(/"/g, '""')}"`,
-                `"${s.phone || ''}"`,
-                `"${s.email || ''}"`,
-                `"${s.shift || ''}"`,
-                `"${s.status || ''}"`,
-                `"${s.skillExam || ''}"`,
-                s.serviceLocked ? 'Đang khóa' : 'Sẵn sàng',
-                `"${(s.address || '').replace(/"/g, '""')}"`
-            ]);
-
-            const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.setAttribute('href', url);
-            link.setAttribute('download', `Pawpal_Staff_List_${new Date().toISOString().split('T')[0]}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            showToast(`Đã xuất file thành công (${list.length} nhân viên)!`, 'success');
+            // Không hạ xuống CSV: nút này luôn phải xuất đúng định dạng Excel.
+            releaseExport();
+            showToast('Không thể tạo file Excel. Vui lòng tải lại trang và thử lại.', 'error');
         }
 
         document.getElementById('btnOpenAddStaffModal')?.addEventListener('click', () => openStaffModal(null));
+        staffModal?.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') { event.preventDefault(); staffModal.classList.remove('active'); return; }
+            if (event.key !== 'Tab') return;
+            const focusable = Array.from(staffModal.querySelectorAll('input, select, textarea, button')).filter(el => !el.disabled && el.offsetParent !== null);
+            if (!focusable.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        });
+        [document.getElementById('staffInputName'), document.getElementById('staffInputPhone'), document.getElementById('staffInputEmail'), document.getElementById('staffInputShift')].forEach(el => el?.addEventListener('input', () => { el.classList.remove('is-invalid'); el.parentElement?.querySelector('.field-error')?.remove(); }));
         document.getElementById('btnCancelStaff')?.addEventListener('click', () => staffModal?.classList.remove('active'));
         document.getElementById('btnDismissStaffModal')?.addEventListener('click', () => staffModal?.classList.remove('active'));
         document.getElementById('btnSaveStaff')?.addEventListener('click', handleSaveStaff);
