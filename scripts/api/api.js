@@ -357,9 +357,18 @@ export const API = {
                     code: v.voucher_code,
                     discountAmount: v.discount_value,
                     discountType: v.type,
+                    type: String(v.type || 'percentage').toLowerCase() === 'percent' ? 'percentage' : String(v.type || 'percentage').toLowerCase(),
+                    value: Number(v.discount_value || 0),
+                    maxDiscount: v.max_discount || null,
+                    minOrderValue: Number(v.minimum_order_amount || 0),
                     minOrderAmount: v.minimum_order_amount,
                     validFrom: v.start_date,
+                    validUntil: v.end_date,
                     validTo: v.end_date,
+                    usageCount: Number(v.usage_count || 0),
+                    maxUsage: v.max_usage,
+                    applicableFor: v.applicable_for || ['all'],
+                    active: !row.voucher_status || row.voucher_status.toUpperCase() !== 'USED',
                     description: v.description,
                     isUsed: row.voucher_status === 'USED' || row.voucher_status === 'used',
                     usedAt: row.used_at
@@ -845,7 +854,7 @@ export const API = {
                     id: v.id,
                     code: v.voucher_code,
                     name: v.voucher_name || v.voucher_code,
-                    type: v.type || 'percentage',
+                    type: (String(v.type || 'percentage').toLowerCase() === 'percent' ? 'percentage' : String(v.type || 'percentage').toLowerCase()),
                     value: v.discount_value || 0,
                     minOrderValue: v.minimum_order_amount || 0,
                     maxDiscount: maxDiscount,
@@ -856,7 +865,14 @@ export const API = {
                     maxUsage: v.max_usage,
                     applicableFor: v.applicable_for || ['all'],
                     description: v.description,
-                    active: v.is_active
+                    active: (() => {
+                        if (v.is_active !== true) return false;
+                        const now = Date.now();
+                        const from = v.start_date ? new Date(v.start_date).getTime() : -Infinity;
+                        const until = v.end_date ? new Date(v.end_date).getTime() : Infinity;
+                        const quotaOk = v.max_usage == null || Number(v.usage_count || 0) < Number(v.max_usage);
+                        return now >= from && now <= until && quotaOk;
+                    })(),
                 };
             });
             

@@ -919,3 +919,30 @@
     white-space: pre-line;
 }
 
+.admin-modal-overlay#voucherModalOverlay .admin-modal-card {
+    width: 560px;
+    max-width: 95vw;
+}
+
+.admin-modal-overlay#voucherModalOverlay .modal-body-clean {
+    padding: 20px 16px;
+}
+
+.admin-modal-overlay#voucherModalOverlay .form-row-2col {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.admin-modal-overlay#voucherModalOverlay .form-group-item {
+    min-width: 0;
+}
+
+@media (max-width: 700px) {
+    .admin-modal-overlay#voucherModalOverlay .form-row-2col {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+}
+

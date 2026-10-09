@@ -316,7 +316,9 @@
                         startDate: sDate,
                         endDate: eDate,
                         status: isActive ? 'active' : 'paused',
-                        imageText: b.image_url ? b.image_url.split('/').pop() : 'Banner_Pawpal.jpg'
+                        imageText: b.image_url ? b.image_url.split('/').pop() : 'Banner_Pawpal.jpg',
+                        imageUrl: b.image_url || '',
+                        endDateRaw: eDate
                     };
                 });
 
@@ -329,10 +331,12 @@
                     let endDateStr = v.end_date ? ('Đến ' + formatDate(v.end_date)) : 'Đến 2026-12-31';
                     
                     let target = 'Shop';
-                    const appFor = Array.isArray(v.applicable_for) ? v.applicable_for.join(',') : String(v.applicable_for || v.applicable_service || '');
+                    const appFor = (Array.isArray(v.applicable_for) ? v.applicable_for.join(',') : String(v.applicable_for || v.applicable_service || '')).toLowerCase();
                     if (appFor.includes('spa') || appFor.includes('care')) target = 'Spa';
                     else if (appFor.includes('hotel')) target = 'Hotel';
-                    else if (appFor.includes('all')) target = 'System';
+                    else if (appFor.includes('taxi')) target = 'Taxi';
+                    else if (appFor.includes('all') || appFor.includes('system')) target = 'System';
+                    else if (appFor.includes('shop') || appFor.includes('store') || appFor.includes('cửa hàng')) target = 'Shop';
 
                     let status = 'active';
                     if (v.is_active === false) status = 'paused';
@@ -382,9 +386,9 @@
                         status: status,
                         updatedAt: dateStr,
                         summary: a.summary || 'Hướng dẫn chăm sóc và dinh dưỡng an toàn cho thú cưng.',
-                        ragSynced: true,
-                        ragKeywords: [categoryName, 'Chăm sóc Pet', 'PawPal Cẩm nang', 'Thú y'],
-                        ragSummary: a.summary || a.title || ''
+                        ragSynced: Boolean(a.rag_synced ?? a.ragSynced ?? false),
+                        ragKeywords: Array.isArray(a.rag_keywords) ? a.rag_keywords : [],
+                        ragSummary: a.rag_summary || (a.rag_synced ? (a.summary || a.title || '') : '')
                     };
                 });
 
@@ -392,7 +396,7 @@
                 notificationsList = notifs.map(n => ({
                     id: n.id,
                     content: n.content || n.title || 'Thông báo từ hệ thống PawPal',
-                    type: (n.notification_type === 'POPUP' || n.type === 'popup') ? 'Popup' : 'Top-bar',
+                    type: (String(n.notification_type || n.type || '').toUpperCase() === 'POPUP' || n.type === 'popup') ? 'Popup' : 'Top-bar',
                     status: n.is_read ? 'inactive' : 'active'
                 }));
 
@@ -625,8 +629,8 @@
                     ? `<div style="margin-top: 4px;"><span class="banner-alert-tag">Hết hạn trong 24h</span></div>`
                     : '';
 
-                const extendBtnHtml = isExpiring
-                    ? `<button type="button" class="banner-action-btn btn-extend-banner" data-id="${b.id}" style="color: #236B48; border-color: #C3DEC7; background-color: #F4FAF6;">Gia hạn 30 ngày</button>`
+                const extendBtnHtml = b.status === 'active'
+                    ? `<button type="button" class="banner-action-btn btn-extend-banner" data-id="${b.id}">Gia hạn 30 ngày</button>`
                     : '';
 
                 card.innerHTML = `
@@ -640,6 +644,8 @@
                     <div class="banner-card-actions">
                         <span class="admin-badge ${b.status === 'active' ? 'badge-active' : 'badge-neutral'}">${b.status === 'active' ? 'Đang bật' : 'Tạm tắt'}</span>
                         <div style="display: flex; gap: 6px;">
+                            <button type="button" class="banner-action-btn btn-edit-banner" data-id="${b.id}">Sửa</button>
+                            <button type="button" class="banner-action-btn btn-delete-banner" data-id="${b.id}">Xóa</button>
                             ${extendBtnHtml}
                             <button type="button" class="banner-action-btn btn-toggle-banner ${b.status === 'active' ? 'is-pause' : 'is-enable'}" data-id="${b.id}">${b.status === 'active' ? 'Tắt' : 'Bật'}</button>
                         </div>
@@ -658,9 +664,10 @@
                     const newStatusStr = banner.status === 'active' ? 'tam_an' : 'dang_hien_thi';
                     try {
                         const client = getSupabaseClient();
-                        if (client) {
-                            await client.from('banner').update({ status: newStatusStr, updated_at: new Date().toISOString() }).eq('id', id);
-                        }
+                        if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
+                        const { data: updated, error } = await client.from('banner').update({ status: newStatusStr, updated_at: new Date().toISOString() }).eq('id', id).select('id');
+                        if (error) throw error;
+                        if (!updated || !updated.length) throw new Error('Không tìm thấy Banner để cập nhật.');
                         await logSystemAudit('UPDATE', 'banner', `Đổi trạng thái banner "${banner.title}" thành ${newStatusStr}`);
                         await loadSettingsModuleData();
                         renderBanners();
@@ -673,6 +680,22 @@
                 });
             });
 
+            container.querySelectorAll('.btn-edit-banner').forEach(btn => btn.addEventListener('click', () => {
+                const banner = bannersList.find(i => String(i.id) === String(btn.dataset.id));
+                if (banner) openBannerModal(banner);
+            }));
+            container.querySelectorAll('.btn-delete-banner').forEach(btn => btn.addEventListener('click', async () => {
+                const banner = bannersList.find(i => String(i.id) === String(btn.dataset.id));
+                if (!banner || !window.confirm(`Xóa Banner "${banner.title}"?`)) return;
+                try {
+                    const client = getSupabaseClient(); if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
+                    const { data, error } = await client.from('banner').delete().eq('id', banner.id).select('id');
+                    if (error) throw error; if (!data?.length) throw new Error('Không tìm thấy Banner để xóa.');
+                    await logSystemAudit('DELETE', 'banner', `Xóa Banner: "${banner.title}"`);
+                    await loadSettingsModuleData(); renderBanners(); renderZeroMissAlerts(); showToast('Đã xóa Banner.', 'success');
+                } catch (e) { console.error('[Settings] Lỗi xóa banner:', e); showToast('Không thể xóa Banner: ' + (e.message || ''), 'danger'); }
+            }));
+
             // Gia hạn banner 30 ngày (Update Supabase: cột end_date)
             container.querySelectorAll('.btn-extend-banner').forEach(btn => {
                 btn.addEventListener('click', async () => {
@@ -680,12 +703,23 @@
                     const banner = bannersList.find(i => i.id === id);
                     if (!banner) return;
 
-                    const newEndDate = '2026-10-30';
+                    const currentDate = new Date();
+                    currentDate.setHours(0, 0, 0, 0);
+                    const originalEndDate = new Date(`${banner.endDateRaw || ''}T00:00:00`);
+                    const baseDate = Number.isNaN(originalEndDate.getTime()) || originalEndDate < currentDate
+                        ? new Date(currentDate)
+                        : new Date(originalEndDate);
+                    baseDate.setDate(baseDate.getDate() + 30);
+                    const newEndDate = baseDate.toISOString().slice(0, 10);
+                    if (!Number.isNaN(originalEndDate.getTime()) && newEndDate <= banner.endDateRaw) {
+                        throw new Error('Ngày gia hạn phải lớn hơn hạn hiện tại.');
+                    }
                     try {
                         const client = getSupabaseClient();
-                        if (client) {
-                            await client.from('banner').update({ end_date: newEndDate, status: 'dang_hien_thi', updated_at: new Date().toISOString() }).eq('id', id);
-                        }
+                        if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
+                        const { data: updated, error } = await client.from('banner').update({ end_date: newEndDate, status: 'dang_hien_thi', updated_at: new Date().toISOString() }).eq('id', id).select('id');
+                        if (error) throw error;
+                        if (!updated || !updated.length) throw new Error('Không tìm thấy Banner để gia hạn.');
                         await logSystemAudit('UPDATE', 'banner', `Gia hạn banner "${banner.title}" đến ngày ${newEndDate}`);
                         await loadSettingsModuleData();
                         renderBanners();
@@ -721,6 +755,24 @@
                 }
                 return true;
             });
+            const voucherPageSize = 10;
+            const totalVoucherPages = Math.max(1, Math.ceil(filtered.length / voucherPageSize));
+            const requestedPage = Number(window._settingsVoucherPage) || 1;
+            window._settingsVoucherPage = Math.max(1, Math.min(requestedPage, totalVoucherPages));
+            const voucherPage = window._settingsVoucherPage;
+            const pageItems = filtered.slice((voucherPage - 1) * voucherPageSize, voucherPage * voucherPageSize);
+            const pageBar = document.querySelector('#subtab-tab-banner-promos .admin-pagination-bar');
+            if (pageBar) {
+                const prevBtn = pageBar.querySelector('.voucher-page-prev');
+                const nextBtn = pageBar.querySelector('.voucher-page-next');
+                prevBtn?.classList.toggle('disabled', voucherPage <= 1);
+                nextBtn?.classList.toggle('disabled', voucherPage >= totalVoucherPages);
+                const nums = pageBar.querySelector('.voucher-page-numbers');
+                if (nums) nums.innerHTML = Array.from({ length: totalVoucherPages }, (_, i) => `<button type="button" class="pagination-btn ${i + 1 === voucherPage ? 'active' : ''}" data-voucher-page="${i + 1}">${i + 1}</button>`).join('');
+                nums?.querySelectorAll('[data-voucher-page]').forEach(btn => btn.addEventListener('click', () => { window._settingsVoucherPage = Number(btn.dataset.voucherPage); renderVouchers(); }));
+                prevBtn?.addEventListener('click', () => { if (window._settingsVoucherPage > 1) { window._settingsVoucherPage -= 1; renderVouchers(); } });
+                nextBtn?.addEventListener('click', () => { if (window._settingsVoucherPage < totalVoucherPages) { window._settingsVoucherPage += 1; renderVouchers(); } });
+            }
 
             tbody.innerHTML = '';
             if (filtered.length === 0) {
@@ -728,7 +780,7 @@
                 return;
             }
 
-            filtered.forEach(v => {
+            pageItems.forEach(v => {
                 let statusBadge = '';
                 if (v.status === 'active') statusBadge = '<span class="admin-badge badge-active">Hoạt động</span>';
                 else if (v.status === 'paused') statusBadge = '<span class="admin-badge badge-warning">Tạm dừng</span>';
@@ -896,6 +948,8 @@
         // 5. RENDER SUB-TAB 2: BÀI VIẾT (BLOG VÀ CẨM NANG)
         // -------------------------------------------------------------
         let currentActiveArticleId = null;
+        let currentArticlePage = 1;
+        const ARTICLE_PAGE_SIZE = 10;
 
         function renderArticles() {
             const tbody = document.getElementById('articlesTableBody');
@@ -911,6 +965,19 @@
                 if (keyword) return a.title.toLowerCase().includes(keyword);
                 return true;
             });
+            const totalPages = Math.max(1, Math.ceil(filtered.length / ARTICLE_PAGE_SIZE));
+            currentArticlePage = Math.min(currentArticlePage, totalPages);
+            const pageItems = filtered.slice((currentArticlePage - 1) * ARTICLE_PAGE_SIZE, currentArticlePage * ARTICLE_PAGE_SIZE);
+            const pageBar = document.querySelector('#subtab-tab-content-management .admin-pagination-bar');
+            if (pageBar) {
+                pageBar.querySelector('.article-page-prev')?.classList.toggle('disabled', currentArticlePage === 1);
+                pageBar.querySelector('.article-page-next')?.classList.toggle('disabled', currentArticlePage === totalPages);
+                const nums = pageBar.querySelector('.article-page-numbers');
+                if (nums) nums.innerHTML = Array.from({ length: totalPages }, (_, i) => `<button type="button" class="pagination-btn ${i + 1 === currentArticlePage ? 'active' : ''}" data-article-page="${i + 1}">${i + 1}</button>`).join('');
+                nums?.querySelectorAll('[data-article-page]').forEach(btn => btn.addEventListener('click', () => { currentArticlePage = Number(btn.dataset.articlePage); renderArticles(); }));
+                pageBar.querySelector('.article-page-prev')?.addEventListener('click', () => { if (currentArticlePage > 1) { currentArticlePage--; renderArticles(); } });
+                pageBar.querySelector('.article-page-next')?.addEventListener('click', () => { if (currentArticlePage < totalPages) { currentArticlePage++; renderArticles(); } });
+            }
 
             tbody.innerHTML = '';
             if (filtered.length === 0) {
@@ -919,7 +986,7 @@
                 return;
             }
 
-            filtered.forEach(a => {
+            pageItems.forEach(a => {
                 let statusBadge = '';
                 if (a.status === 'published') statusBadge = '<span class="admin-badge badge-active">Công khai</span>';
                 else if (a.status === 'draft') statusBadge = '<span class="admin-badge badge-neutral">Bản nháp</span>';
@@ -1192,63 +1259,66 @@
             });
 
             // Lọc Voucher
-            document.getElementById('searchVoucherInput')?.addEventListener('input', renderVouchers);
-            document.getElementById('filterVoucherTarget')?.addEventListener('change', renderVouchers);
-            document.getElementById('filterVoucherStatus')?.addEventListener('change', renderVouchers);
+            document.getElementById('searchVoucherInput')?.addEventListener('input', () => { window._settingsVoucherPage = 1; renderVouchers(); });
+            document.getElementById('filterVoucherTarget')?.addEventListener('change', () => { window._settingsVoucherPage = 1; renderVouchers(); });
+            document.getElementById('filterVoucherStatus')?.addEventListener('change', () => { window._settingsVoucherPage = 1; renderVouchers(); });
 
             // Lọc Bài viết
             document.getElementById('searchArticleInput')?.addEventListener('input', renderArticles);
-            document.getElementById('filterArticleCategory')?.addEventListener('change', renderArticles);
-            document.getElementById('filterArticleStatus')?.addEventListener('change', renderArticles);
+            document.getElementById('filterArticleCategory')?.addEventListener('change', () => { currentArticlePage = 1; renderArticles(); });
+            document.getElementById('filterArticleStatus')?.addEventListener('change', () => { currentArticlePage = 1; renderArticles(); });
 
-            // --- MODAL BANNER (INSERT SUPABASE: cột link, button_text, status) ---
+            // --- MODAL BANNER (THÊM / SỬA) ---
             const bannerModal = document.getElementById('bannerModalOverlay');
-            document.getElementById('btnOpenBannerModal')?.addEventListener('click', () => {
-                if (bannerModal) bannerModal.style.display = 'flex';
-            });
-            document.getElementById('btnCancelBannerModal')?.addEventListener('click', () => {
-                if (bannerModal) bannerModal.style.display = 'none';
-            });
-            document.getElementById('btnDismissBannerModal')?.addEventListener('click', () => {
-                if (bannerModal) bannerModal.style.display = 'none';
-            });
+            let editingBannerId = null;
+            const resetBannerModal = () => {
+                editingBannerId = null;
+                document.getElementById('bannerModalTitle').textContent = 'Thêm Banner Quảng cáo';
+                document.getElementById('btnSaveBanner').textContent = 'Lưu Banner';
+                ['inputBannerTitle','inputBannerImage','inputBannerCta','inputBannerUrl','inputBannerStartDate','inputBannerEndDate'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+            };
+            const openBannerModal = (banner) => {
+                editingBannerId = banner?.id || null;
+                document.getElementById('bannerModalTitle').textContent = editingBannerId ? 'Sửa Banner' : 'Thêm Banner Quảng cáo';
+                document.getElementById('btnSaveBanner').textContent = editingBannerId ? 'Lưu thay đổi' : 'Lưu Banner';
+                const values = { inputBannerTitle: banner?.title || '', inputBannerImage: banner?.imageUrl || '', inputBannerCta: banner?.cta || '', inputBannerUrl: banner?.url || '', inputBannerStartDate: banner?.startDate || '', inputBannerEndDate: banner?.endDateRaw || banner?.endDate || '' };
+                Object.entries(values).forEach(([id,val]) => { const el=document.getElementById(id); if(el) el.value=val; });
+                if (bannerModal) bannerModal.style.display='flex';
+            };
+            document.getElementById('btnOpenBannerModal')?.addEventListener('click', () => { resetBannerModal(); openBannerModal(); });
+            document.getElementById('btnCancelBannerModal')?.addEventListener('click', () => { if (bannerModal) bannerModal.style.display = 'none'; });
+            document.getElementById('btnDismissBannerModal')?.addEventListener('click', () => { if (bannerModal) bannerModal.style.display = 'none'; });
             document.getElementById('btnSaveBanner')?.addEventListener('click', async () => {
                 const title = document.getElementById('inputBannerTitle')?.value.trim();
-                if (!title) {
-                    showToast('Vui lòng nhập tiêu đề Banner!', 'warning');
-                    return;
-                }
+                const imageUrl = document.getElementById('inputBannerImage')?.value.trim();
                 const cta = document.getElementById('inputBannerCta')?.value.trim() || 'Xem ngay';
                 const url = document.getElementById('inputBannerUrl')?.value.trim() || '/pages/public/';
-                const startDate = document.getElementById('inputBannerStartDate')?.value || '2026-06-01';
-                const endDate = document.getElementById('inputBannerEndDate')?.value || '2026-12-31';
-
+                const startDate = document.getElementById('inputBannerStartDate')?.value;
+                const endDate = document.getElementById('inputBannerEndDate')?.value;
+                if (!title || !imageUrl || !startDate || !endDate) { showToast('Vui lòng nhập đủ tiêu đề, ảnh và thời gian Banner.', 'warning'); return; }
+                const isValidImageUrl = /^(https?:\/\/|\/)[^\s]+$/i.test(imageUrl);
+                if (!isValidImageUrl) { showToast('URL ảnh Banner không hợp lệ. Hãy dùng đường dẫn bắt đầu bằng http://, https:// hoặc /.', 'warning'); return; }
+                if (endDate < startDate) { showToast('Ngày kết thúc phải sau ngày bắt đầu.', 'warning'); return; }
                 try {
                     const client = getSupabaseClient();
-                    if (client) {
-                        const { error } = await client.from('banner').insert([{
-                            title: title,
-                            description: 'Ưu đãi PawPal cập nhật ' + formatDate(new Date()),
-                            image_url: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=1200&q=80',
-                            link: url,
-                            button_text: cta,
-                            display_order: bannersList.length + 1,
-                            start_date: startDate,
-                            end_date: endDate,
-                            status: 'dang_hien_thi'
-                        }]);
+                    if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
+                    const payload = { title, image_url: imageUrl, link: url, button_text: cta, start_date: startDate, end_date: endDate, updated_at: new Date().toISOString() };
+                    const wasEditing = Boolean(editingBannerId);
+                    if (wasEditing) {
+                        const { data, error } = await client.from('banner').update(payload).eq('id', editingBannerId).select('id');
                         if (error) throw error;
+                        if (!data?.length) throw new Error('Không tìm thấy Banner để cập nhật.');
+                        await logSystemAudit('UPDATE', 'banner', `Cập nhật Banner: "${title}"`);
+                    } else {
+                        const { error } = await client.from('banner').insert([{ ...payload, display_order: bannersList.length + 1, status: 'dang_hien_thi' }]);
+                        if (error) throw error;
+                        await logSystemAudit('INSERT', 'banner', `Thêm Banner mới: "${title}"`);
                     }
-                    await logSystemAudit('INSERT', 'banner', `Thêm Banner mới: "${title}"`);
                     if (bannerModal) bannerModal.style.display = 'none';
-                    await loadSettingsModuleData();
-                    renderBanners();
-                    renderZeroMissAlerts();
-                    showToast('Đã thêm Banner mới và đồng bộ sang Website thành công!', 'success');
-                } catch (e) {
-                    console.error('[Settings] Lỗi thêm banner:', e);
-                    showToast('Lỗi khi thêm Banner vào cơ sở dữ liệu: ' + (e.message || ''), 'danger');
-                }
+                    await loadSettingsModuleData(); renderBanners(); renderZeroMissAlerts();
+                    showToast(wasEditing ? 'Đã cập nhật Banner thành công.' : 'Đã thêm Banner mới thành công.', 'success');
+                    editingBannerId = null;
+                } catch (e) { console.error('[Settings] Lỗi lưu banner:', e); showToast('Không thể lưu Banner: ' + (e.message || ''), 'danger'); }
             });
 
             // --- MODAL VOUCHER (INSERT SUPABASE: cột voucher_code, voucher_name, discount_value, type, minimum_order_amount, max_usage, applicable_for) ---
@@ -1341,15 +1411,28 @@
                 const target = document.getElementById('inputVoucherTarget')?.value || 'System';
                 const minOrder = parseFloat(document.getElementById('inputVoucherMinOrder')?.value) || 0;
                 const limit = parseInt(document.getElementById('inputVoucherLimit')?.value, 10) || 100;
+                const startDate = document.getElementById('inputVoucherStart')?.value || '';
+                const endDate = document.getElementById('inputVoucherEnd')?.value || '';
 
                 if (!code || !name || val <= 0) {
                     showToast('Vui lòng nhập đầy đủ mã, tên và giá trị giảm của Voucher!', 'warning');
                     return;
                 }
+                if (!startDate || !endDate) {
+                    showToast('Vui lòng nhập ngày bắt đầu và ngày kết thúc của Voucher.', 'warning');
+                    return;
+                }
+                const startObj = new Date(`${startDate}T00:00:00`);
+                const endObj = new Date(`${endDate}T23:59:59`);
+                if (Number.isNaN(startObj.getTime()) || Number.isNaN(endObj.getTime()) || endDate < startDate) {
+                    showToast('Khoảng thời gian Voucher không hợp lệ.', 'warning');
+                    return;
+                }
 
                 try {
                     const client = getSupabaseClient();
-                    if (client) {
+                    if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
+                    {
                         const appFor = target.toLowerCase() === 'system' ? ['all'] : [target.toLowerCase()];
                         const { error } = await client.from('voucher').insert([{
                             voucher_code: code,
@@ -1363,8 +1446,8 @@
                             required_points: 0,
                             is_active: true,
                             applicable_for: appFor,
-                            start_date: '2026-06-01T00:00:00+00:00',
-                            end_date: '2026-12-31T23:59:59+00:00'
+                            start_date: `${startDate}T00:00:00+00:00`,
+                            end_date: `${endDate}T23:59:59+00:00`
                         }]);
                         if (error) throw error;
                     }
@@ -1452,21 +1535,22 @@
                     showToast('Vui lòng nhập nội dung thông báo!', 'warning');
                     return;
                 }
-                const nType = document.getElementById('inputNoticeType')?.value === 'topbar' ? 'SYSTEM' : 'PROMO';
+                const typeValue = document.getElementById('inputNoticeType')?.value || 'topbar';
+                const statusValue = document.getElementById('inputNoticeStatus')?.value || 'active';
+                const nType = typeValue === 'popup' ? 'POPUP' : 'TOPBAR';
 
                 try {
                     const client = getSupabaseClient();
-                    if (client) {
-                        const { error } = await client.from('notification').insert([{
-                            title: content.substring(0, 60),
-                            content: content,
-                            notification_type: nType,
-                            is_read: false,
-                            sent_at: new Date().toISOString()
-                        }]);
-                        if (error) throw error;
-                    }
-                    await logSystemAudit('INSERT', 'notification', `Thêm thông báo mới: "${content.substring(0, 50)}..."`);
+                    if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
+                    const { error } = await client.from('notification').insert([{
+                        title: content.substring(0, 60),
+                        content,
+                        notification_type: nType,
+                        is_read: statusValue !== 'active',
+                        sent_at: new Date().toISOString()
+                    }]);
+                    if (error) throw error;
+                    await logSystemAudit('INSERT', 'notification', `Thêm thông báo ${typeValue === 'popup' ? 'Popup' : 'Top-bar'}: "${content.substring(0, 50)}..."`);
                     if (noticeModal) noticeModal.style.display = 'none';
                     await loadSettingsModuleData();
                     renderNotifications();
@@ -1495,8 +1579,12 @@
                 const category = document.getElementById('inputArticleCategory')?.value || 'Mẹo chăm sóc';
                 const status = document.getElementById('inputArticleStatus')?.value || 'published';
 
-                if (!title) {
-                    showToast('Vui lòng nhập tiêu đề bài viết!', 'warning');
+                const articleValidationErrors = [];
+                if (!title) articleValidationErrors.push('Tiêu đề là bắt buộc.');
+                if (!summary) articleValidationErrors.push('Tóm tắt là bắt buộc.');
+                if (!content) articleValidationErrors.push('Nội dung là bắt buộc.');
+                if (articleValidationErrors.length) {
+                    showToast(articleValidationErrors.join(' '), 'warning');
                     return;
                 }
 
@@ -1507,20 +1595,22 @@
 
                 try {
                     const client = getSupabaseClient();
-                    if (client) {
-                        const { error } = await client.from('blog_post').insert([{
+                    if (!client) throw new Error('Không kết nối được Supabase.');
+                    let categoryId = null;
+                    const { data: categoryRow } = await client.from('blog_category').select('id').eq('category_name', category).maybeSingle();
+                    categoryId = categoryRow?.id || null;
+                    const { error } = await client.from('blog_post').insert([{
                             title: title,
                             slug: slug,
                             summary: summary,
                             content: content || `<p>${summary}</p>`,
-                            category_id: null,
+                            category_id: categoryId,
                             thumbnail_url: '/assets/images/publics/dogcute6.jpg',
                             status: status.toUpperCase(),
                             view_count: 0,
                             publish_at: new Date().toISOString()
                         }]);
-                        if (error) throw error;
-                    }
+                    if (error) throw error;
                     await logSystemAudit('INSERT', 'blog_post', `Tạo bài viết mới: "${title}"`);
                     if (articleModal) articleModal.style.display = 'none';
                     await loadSettingsModuleData();
@@ -1547,13 +1637,13 @@
                 const zaloInput = document.getElementById('inputStoreZalo');
                 const fbInput = document.getElementById('inputStoreFacebook');
 
-                if (brandInput) brandInput.value = si.brandName || 'PawPal Pet Center';
+                if (brandInput) brandInput.value = si.brandName || '';
                 if (companyInput) companyInput.value = si.companyName || 'CÔNG TY CỔ PHẦN PAWPAL VIỆT NAM';
-                if (hotlineInput) hotlineInput.value = si.hotline || '1900 888 999';
+                if (hotlineInput) hotlineInput.value = si.hotline || '';
                 if (emergInput) emergInput.value = si.emergencyPhone || '0901 234 567';
-                if (emailInput) emailInput.value = si.email || 'cskh@pawpal.vn';
+                if (emailInput) emailInput.value = si.email || '';
                 if (taxInput) taxInput.value = si.taxId || '0316889988';
-                if (addrInput) addrInput.value = si.address || '120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP. Hồ Chí Minh';
+                if (addrInput) addrInput.value = si.address || '';
                 if (zaloInput) zaloInput.value = si.zaloUrl || 'https://zalo.me/0901234567';
                 if (fbInput) fbInput.value = si.facebookUrl || 'https://facebook.com/pawpalvietnam';
 
@@ -1572,15 +1662,25 @@
                     return;
                 }
 
-                const brand = document.getElementById('inputStoreBrandName')?.value.trim() || 'PawPal Pet Center';
+                const brand = document.getElementById('inputStoreBrandName')?.value.trim() || '';
                 const company = document.getElementById('inputStoreCompanyName')?.value.trim() || 'CÔNG TY CỔ PHẦN PAWPAL VIỆT NAM';
-                const hotline = document.getElementById('inputStoreHotline')?.value.trim() || '1900 888 999';
+                const hotline = document.getElementById('inputStoreHotline')?.value.trim() || '';
                 const emerg = document.getElementById('inputStoreEmergency')?.value.trim() || '0901 234 567';
-                const email = document.getElementById('inputStoreEmail')?.value.trim() || 'cskh@pawpal.vn';
+                const email = document.getElementById('inputStoreEmail')?.value.trim() || '';
                 const taxId = document.getElementById('inputStoreTaxId')?.value.trim() || '0316889988';
-                const address = document.getElementById('inputStoreAddress')?.value.trim() || '120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP. Hồ Chí Minh';
+                const address = document.getElementById('inputStoreAddress')?.value.trim() || '';
                 const zalo = document.getElementById('inputStoreZalo')?.value.trim() || 'https://zalo.me/0901234567';
                 const fb = document.getElementById('inputStoreFacebook')?.value.trim() || 'https://facebook.com/pawpalvietnam';
+
+                const requiredErrors = [];
+                if (!brand) requiredErrors.push('Tên thương hiệu là bắt buộc.');
+                if (!hotline) requiredErrors.push('Hotline là bắt buộc.');
+                if (!address) requiredErrors.push('Địa chỉ là bắt buộc.');
+                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) requiredErrors.push('Email không hợp lệ.');
+                if (requiredErrors.length) {
+                    showToast(requiredErrors.join(' '), 'warning');
+                    return;
+                }
 
                 openImpactConfirmationModal({
                     title: 'Thông tin Cửa hàng và Chi nhánh',
@@ -1635,9 +1735,9 @@
                 const syntaxInput = document.getElementById('inputPaymentSyntax');
 
                 if (bankSelect && pm.bank?.bankName) bankSelect.value = pm.bank.bankName;
-                if (accNoInput) accNoInput.value = pm.bank?.accountNumber || '999888666';
+                if (accNoInput) accNoInput.value = pm.bank?.accountNumber || '';
                 if (accHolderInput) accHolderInput.value = pm.bank?.accountHolder || 'CONG TY CP PAWPAL VIET NAM';
-                if (syntaxInput) syntaxInput.value = pm.bank?.syntax || 'PAWPAL [MA_DON_HANG] [SDT]';
+                if (syntaxInput) syntaxInput.value = pm.bank?.syntax || '';
 
                 if (paymentModal) paymentModal.style.display = 'flex';
             });
@@ -1660,9 +1760,17 @@
                 const vnpayEn = document.getElementById('toggleVnpayEnabled')?.checked || false;
 
                 const bankName = document.getElementById('inputPaymentBank')?.value || 'vietcombank';
-                const accNo = document.getElementById('inputPaymentAccNo')?.value || '999888666';
+                const accNo = document.getElementById('inputPaymentAccNo')?.value.trim() || '';
                 const accHolder = document.getElementById('inputPaymentAccHolder')?.value || 'CONG TY CP PAWPAL VIET NAM';
-                const syntax = document.getElementById('inputPaymentSyntax')?.value || 'PAWPAL [MA_DON_HANG] [SDT]';
+                const syntax = document.getElementById('inputPaymentSyntax')?.value.trim() || '';
+                if (!accNo || !/^\d+$/.test(accNo)) {
+                    showToast('Số tài khoản QR phải là số và không được để trống.', 'warning');
+                    return;
+                }
+                if (!syntax) {
+                    showToast('Cú pháp chuyển khoản không được để trống.', 'warning');
+                    return;
+                }
 
                 openImpactConfirmationModal({
                     title: 'Cấu hình Cổng Thanh toán',
@@ -1738,8 +1846,16 @@
                 const outerFee = parseInt(document.getElementById('inputOuterCityFee')?.value || '35000', 10);
                 const expressFee = parseInt(document.getElementById('inputExpressFee')?.value || '45000', 10);
                 const provider = document.getElementById('inputShippingProvider')?.value || 'ghn';
-                const shopId = document.getElementById('inputShippingShopId')?.value || 'PAWPAL_Q1_STORE';
-                const apiKey = document.getElementById('inputShippingApiKey')?.value || 'ghn_prod_secret_token_12345';
+                const shopId = document.getElementById('inputShippingShopId')?.value.trim() || '';
+                const apiKey = document.getElementById('inputShippingApiKey')?.value.trim() || '';
+                if (!shopId || !apiKey) {
+                    showToast('Shop ID và API Token là bắt buộc với đối tác vận chuyển.', 'warning');
+                    return;
+                }
+                if ([freeThreshold, innerFee, outerFee, expressFee].some(value => !Number.isFinite(value) || value < 0)) {
+                    showToast('Các mức phí vận chuyển không được là số âm.', 'warning');
+                    return;
+                }
 
                 const partnerNameMap = {
                     ghn: 'Giao Hàng Nhanh (GHN Express)',
@@ -1842,6 +1958,27 @@
                 const freeHours = parseInt(document.getElementById('inputFreeCancelHours')?.value || '4', 10);
                 const lateFee = parseInt(document.getElementById('inputLateCancelFee')?.value || '50000', 10);
                 const allowPickStaff = document.getElementById('inputAllowPickStaff')?.value === 'yes';
+
+                const toMinutes = (value) => {
+                    const [hour, minute] = String(value).split(':').map(Number);
+                    return hour * 60 + minute;
+                };
+                if (toMinutes(wkOpen) >= toMinutes(wkClose) || toMinutes(weOpen) >= toMinutes(weClose)) {
+                    showToast('Giờ mở cửa phải sớm hơn giờ đóng cửa.', 'warning');
+                    return;
+                }
+                if (toMinutes(checkIn) >= toMinutes(checkOut)) {
+                    showToast('Giờ Check-in phải sớm hơn giờ Check-out.', 'warning');
+                    return;
+                }
+                if (!Number.isInteger(slotCapacity) || slotCapacity <= 0) {
+                    showToast('Công suất phải là số nguyên dương.', 'warning');
+                    return;
+                }
+                if ([hotelLateFee, freeHours, lateFee].some(value => !Number.isFinite(value) || value < 0)) {
+                    showToast('Phí Hotel, phí hủy và số giờ miễn phí không được là số âm.', 'warning');
+                    return;
+                }
 
                 openImpactConfirmationModal({
                     title: 'Chính sách Đặt lịch, Giờ mở cửa và Pet Hotel',
@@ -2014,7 +2151,7 @@
 
                 if (kwsBox) {
                     kwsBox.innerHTML = '';
-                    const kws = article.ragKeywords || ['Chăm sóc thú cưng', 'Cẩm nang PawPal'];
+                    const kws = article.ragSynced ? (article.ragKeywords || []) : [];
                     kws.forEach(kw => {
                         const pill = document.createElement('span');
                         pill.className = 'rag-keyword-pill';
@@ -2024,7 +2161,9 @@
                 }
 
                 if (contentBox) {
-                    contentBox.textContent = article.ragSummary || article.summary || 'Chưa có dữ liệu trích xuất RAG.';
+                    contentBox.textContent = article.ragSynced && article.ragSummary
+                        ? article.ragSummary
+                        : 'Chưa có dữ liệu trích xuất RAG cho bài viết này.';
                 }
 
                 closeArticleActionMenu();
@@ -2068,9 +2207,14 @@
                 const newStatus = article.status === 'published' ? 'HIDDEN' : 'PUBLISHED';
                 try {
                     const client = getSupabaseClient();
-                    if (client) {
-                        await client.from('blog_post').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', currentActiveArticleId);
-                    }
+                    if (!client) throw new Error('Không kết nối được Supabase.');
+                    const { data: updatedRows, error: updateError } = await client
+                        .from('blog_post')
+                        .update({ status: newStatus, updated_at: new Date().toISOString() })
+                        .eq('id', currentActiveArticleId)
+                        .select('id, status');
+                    if (updateError) throw updateError;
+                    if (!updatedRows || updatedRows.length === 0) throw new Error('Không tìm thấy bài viết để cập nhật.');
                     await logSystemAudit('UPDATE', 'blog_post', `Chuyển trạng thái bài viết "${article.title}" thành ${newStatus}`);
                     closeArticleActionMenu();
                     await loadSettingsModuleData();

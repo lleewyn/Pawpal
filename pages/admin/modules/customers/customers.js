@@ -379,7 +379,11 @@
                     pawpointHistory = pointsTxRes.data.map(pt => {
                         const cObj = Object.values(customerDatabase).find(c => c.dbId === pt.customer_id) || {};
                         const tTime = pt.created_at ? formatDateTime(pt.created_at) : '2026-09-25 14:30';
-                        const ptsNum = Number(pt.points) || 0;
+                        const rawPoints = Number(pt.points ?? pt.point_amount ?? pt.amount ?? 0) || 0;
+                        const transactionType = String(pt.transaction_type || pt.type || pt.direction || '').toUpperCase();
+                        const descriptionText = String(pt.description || pt.reason || '').toLowerCase();
+                        const isSubtraction = rawPoints < 0 || ['SUB', 'DEBIT', 'DEDUCT', 'REDEEM', 'TRỪ'].includes(transactionType) || /trừ|đổi quà|sử dụng điểm|khấu trừ/.test(descriptionText);
+                        const ptsNum = Math.abs(rawPoints);
                         return {
                             id: `PWH-${pt.id.slice(0, 4)}`,
                             rawId: pt.id,
@@ -387,11 +391,15 @@
                             custId: cObj.id || 'CUST-001',
                             custName: cObj.name || 'Khách hàng',
                             phone: cObj.phone || '—',
-                            type: ptsNum >= 0 ? 'ADD' : 'SUB',
-                            points: Math.abs(ptsNum),
-                            balance: pt.balance_after || cObj.points || 0,
+                            type: isSubtraction ? 'SUB' : 'ADD',
+                            points: ptsNum,
+                            balance: pt.balance_after ?? cObj.points ?? 0,
                             reason: pt.description || 'Giao dịch điểm Pawpoint'
                         };
+                    }).sort((a, b) => {
+                        const timeA = Date.parse(a.time) || 0;
+                        const timeB = Date.parse(b.time) || 0;
+                        return timeB - timeA;
                     });
                 } else {
                     pawpointHistory = [];
@@ -1827,10 +1835,14 @@
                 const phone = document.getElementById('adjustPhone')?.value || '';
                 const type = document.getElementById('adjustType')?.value || 'ADD';
                 const pts = parseInt(document.getElementById('adjustPointsVal')?.value || '0', 10);
-                const reason = document.getElementById('adjustReason')?.value || 'Điều chỉnh điểm';
+                const reason = (document.getElementById('adjustReason')?.value || '').trim();
 
                 if (pts <= 0) {
                     showToast('Vui lòng nhập số điểm lớn hơn 0!', 'warning');
+                    return;
+                }
+                if (!reason) {
+                    showToast('Vui lòng nhập lý do điều chỉnh điểm.', 'warning');
                     return;
                 }
 
@@ -1861,7 +1873,11 @@
                 try {
                     const custDbId = matchedCust.dbId;
                     const currentBalance = Number(matchedCust.points) || 0;
-                    const newBalance = type === 'ADD' ? (currentBalance + pts) : Math.max(0, currentBalance - pts);
+                    if (type === 'SUB' && pts > currentBalance) {
+                        showToast('Số điểm trừ không được vượt quá số dư hiện tại.', 'warning');
+                        return;
+                    }
+                    const newBalance = type === 'ADD' ? (currentBalance + pts) : (currentBalance - pts);
                     const ptsSigned = type === 'ADD' ? pts : -pts;
 
                     // 1. Cập nhật số điểm trong customer_membership
@@ -1873,18 +1889,20 @@
 
                         if (memErr) {
                             console.warn('[Customers] Lỗi cập nhật customer_membership, thử upsert:', memErr);
-                            await client
+                            const { error: upsertErr } = await client
                                 .from('customer_membership')
                                 .upsert({ customer_id: custDbId, total_paw_points: newBalance });
+                            if (upsertErr) throw upsertErr;
                         }
 
                         // 2. Ghi nhật ký giao dịch điểm vào paw_point_transaction
-                        await client.from('paw_point_transaction').insert({
+                        const { error: transactionError } = await client.from('paw_point_transaction').insert({
                             customer_id: custDbId,
                             points: ptsSigned,
                             balance_after: newBalance,
                             description: reason
                         });
+                        if (transactionError) throw transactionError;
                     }
 
                     // Nạp lại toàn bộ dữ liệu từ Supabase
@@ -2679,7 +2697,13 @@
         }
 
         function exportPawpointHistoryToCSV() {
-            if (!pawpointHistory || pawpointHistory.length === 0) {
+            const query = (document.getElementById('pawpointSearchInput')?.value || '').trim();
+            const filterType = document.getElementById('pawpointFilterType')?.value || 'ALL';
+            const filteredHistory = (pawpointHistory || []).filter(item => {
+                const matchesQuery = !query || [item.custName, item.phone, item.reason].some(value => matchSearch(value, query));
+                return matchesQuery && (filterType === 'ALL' || item.type === filterType);
+            });
+            if (filteredHistory.length === 0) {
                 showToast('Không có lịch sử điểm để xuất!', 'warning');
                 return;
             }
@@ -2696,7 +2720,7 @@
                 'Lý do điều chỉnh'
             ];
 
-            const rows = pawpointHistory.map(item => [
+            const rows = filteredHistory.map(item => [
                 item.id || '',
                 item.time || '',
                 item.custId || '',
@@ -2726,7 +2750,7 @@
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
 
-            showToast(`Đã xuất lịch sử ${pawpointHistory.length} giao dịch Pawpoint ra file CSV!`);
+            showToast(`Đã xuất lịch sử ${filteredHistory.length} giao dịch Pawpoint theo bộ lọc hiện tại ra file CSV!`);
         }
 
         document.getElementById('btnExportCustomerReport')?.addEventListener('click', exportCustomersToCSV);

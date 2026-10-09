@@ -477,14 +477,15 @@
                 </div>
                 <div class="form-group mb-4">
                     <label class="form-label">Lý do điều chỉnh (*)</label>
-                    <select class="admin-select" id="adjustReason">
-                        <option value="Bù sự cố dịch vụ Spa / Hotel trễ hẹn">Bù sự cố dịch vụ Spa / Hotel trễ hẹn</option>
-                        <option value="Bù sự cố giao hàng chậm / sản phẩm lỗi">Bù sự cố giao hàng chậm / sản phẩm lỗi</option>
-                        <option value="Tặng điểm tri ân khách hàng thân thiết">Tặng điểm tri ân khách hàng thân thiết</option>
-                        <option value="Thu hồi điểm do hủy đơn hàng / hoàn tiền">Thu hồi điểm do hủy đơn hàng / hoàn tiền</option>
-                        <option value="Khách đổi quà tặng trực tiếp tại quầy">Khách đổi quà tặng trực tiếp tại quầy</option>
-                        <option value="Điều chỉnh sai lệch số dư điểm">Điều chỉnh sai lệch số dư điểm</option>
-                    </select>
+                    <input type="text" class="admin-input" id="adjustReason" list="adjustReasonDatalist" placeholder="Nhập lý do điều chỉnh..." required>
+                    <datalist id="adjustReasonDatalist">
+                        <option value="Bù sự cố dịch vụ Spa / Hotel trễ hẹn"></option>
+                        <option value="Bù sự cố giao hàng chậm / sản phẩm lỗi"></option>
+                        <option value="Tặng điểm tri ân khách hàng thân thiết"></option>
+                        <option value="Thu hồi điểm do hủy đơn hàng / hoàn tiền"></option>
+                        <option value="Khách đổi quà tặng trực tiếp tại quầy"></option>
+                        <option value="Điều chỉnh sai lệch số dư điểm"></option>
+                    </datalist>
                 </div>
                 <div class="modal-actions-footer">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAdjustPoints">Hủy bỏ</button>

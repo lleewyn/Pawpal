@@ -62,12 +62,48 @@ if (typeof window !== 'undefined') {
     window.matchSearch = matchSearch;
 }
 
+function getAdminSessionUser() {
+    const raw = localStorage.getItem('pawpal_current_user') || sessionStorage.getItem('pawpal_current_user');
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch (e) { return null; }
+}
+function enforceAdminAuth() {
+    if (!getAdminSessionUser()) {
+        window.location.replace('/pages/public/login/login.html?redirect=/pages/admin/index.html');
+        return false;
+    }
+    return true;
+}
+
+if (!enforceAdminAuth()) { throw new Error('ADMIN_AUTH_REQUIRED'); }
+window.addEventListener('pageshow', () => { if (!enforceAdminAuth()) return; });
 document.addEventListener('DOMContentLoaded', () => {
+    if (!enforceAdminAuth()) return;
     const sidebarBtns = document.querySelectorAll('.sidebar-menu-btn');
     const moduleTitleEl = document.getElementById('headerModuleTitle');
     const subtabsContainer = document.getElementById('headerSubtabsGroup');
     const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
     const contentArea = document.querySelector('.admin-preview-content');
+
+    // Header subtabs are rendered by the shell and may be replaced when a
+    // module script initializes. Delegate the click so every render remains
+    // functional, including the Cấu hình tabs.
+    document.addEventListener('click', (event) => {
+        const tabButton = event.target.closest('.header-subtab-btn');
+        if (!tabButton) return;
+        const tabId = tabButton.getAttribute('data-tab') || tabButton.getAttribute('data-subtab');
+        if (!tabId) return;
+        const moduleName = sessionStorage.getItem('pawpal_admin_active_module');
+        const config = MODULE_SUBTABS_MAP[moduleName];
+        if (!config || !config.subtabs.some(tab => tab.id === tabId)) return;
+        event.preventDefault();
+        config.storageKey && sessionStorage.setItem(config.storageKey, tabId);
+        document.querySelectorAll('.admin-preview-content .subtab-content').forEach(section => {
+            section.classList.toggle('active', section.id === `subtab-${tabId}`);
+        });
+        document.querySelectorAll('.header-subtab-btn').forEach(button => button.classList.toggle('active', button === tabButton));
+        if (window.location.hash !== `#${tabId}`) history.pushState(null, '', `#${tabId}`);
+    });
 
     const MODULE_SUBTABS_MAP = {
         'Dashboard': {
@@ -354,6 +390,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (moduleName === 'Nhân sự') {
+            const rawUser = localStorage.getItem('pawpal_current_user') || sessionStorage.getItem('pawpal_current_user');
+            let currentUser = null;
+            try { currentUser = rawUser ? JSON.parse(rawUser) : null; } catch (e) { currentUser = null; }
+            const role = String(currentUser?.role || currentUser?.user_role || currentUser?.position || currentUser?.user_metadata?.role || '').toLowerCase();
+            if (currentUser && !['admin', 'administrator', 'quản trị viên', 'quan tri vien'].includes(role)) {
+                if (contentArea) contentArea.innerHTML = '<div class="admin-card" style="padding: 32px; text-align: center;"><strong>Không có quyền truy cập</strong><div style="margin-top: 8px; color: var(--text-muted);">Chỉ Quản trị viên được truy cập phân hệ Nhân sự.</div></div>';
+                if (subtabsContainer) subtabsContainer.innerHTML = '';
+                return;
+            }
             try {
                 const res = await fetch('modules/staff/staff.html?v=' + Date.now());
                 if (res.ok) {
@@ -642,7 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     client.auth.signOut();
                 }
             } catch (e) {}
-            window.location.href = '/pages/public/landing/landing.html';
+            window.location.replace('/pages/public/login/login.html');
         });
     }
 

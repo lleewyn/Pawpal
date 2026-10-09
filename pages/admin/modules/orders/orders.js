@@ -2293,25 +2293,19 @@
                 if (catVal !== 'ALL') {
                     const pCat = (p.category || '').toLowerCase().trim();
                     const fCat = catVal.toLowerCase().trim();
-
-                    let isCatMatch = (pCat === fCat);
-                    if (!isCatMatch) {
-                        if (fCat === 'thực phẩm' && (pCat.includes('thức ăn') || pCat.includes('hạt') || pCat.includes('pate') || pCat.includes('súp') || pCat.includes('thực phẩm'))) {
-                            isCatMatch = true;
-                        } else if ((fCat === 'thức ăn khô' || fCat === 'thức ăn ướt') && (pCat === 'thực phẩm' || pCat.includes(fCat) || fCat.includes(pCat))) {
-                            isCatMatch = true;
-                        } else if (fCat === 'đồ dùng' && (pCat.includes('bát') || pCat.includes('đồ dùng') || pCat.includes('máy') || pCat.includes('nước') || pCat.includes('khay'))) {
-                            isCatMatch = true;
-                        } else if (fCat === 'vệ sinh' && (pCat.includes('vệ sinh') || pCat.includes('chăm sóc') || pCat.includes('cát'))) {
-                            isCatMatch = true;
-                        } else if (fCat === 'phụ kiện' && (pCat.includes('phụ kiện') || pCat.includes('dây') || pCat.includes('vòng') || pCat.includes('chuông'))) {
-                            isCatMatch = true;
-                        } else if (fCat.includes('sức khỏe') && (pCat.includes('sức khỏe') || pCat.includes('dinh dưỡng') || pCat.includes('gel') || pCat.includes('dầu'))) {
-                            isCatMatch = true;
-                        } else if (pCat.includes(fCat) || fCat.includes(pCat)) {
-                            isCatMatch = true;
-                        }
-                    }
+                    const categoryGroups = {
+                        'thức ăn khô': ['thức ăn khô', 'thực phẩm', 'hạt', 'đồ ăn'],
+                        'thức ăn ướt': ['thức ăn ướt', 'thực phẩm', 'pate', 'súp'],
+                        'sức khỏe': ['sức khỏe', 'sức khỏe và dinh dưỡng', 'dinh dưỡng', 'chăm sóc'],
+                        'sức khỏe và dinh dưỡng': ['sức khỏe', 'sức khỏe và dinh dưỡng', 'dinh dưỡng', 'chăm sóc'],
+                        'bát ăn': ['bát ăn', 'bát ăn và đồ dùng', 'đồ dùng', 'phụ kiện'],
+                        'bát ăn và đồ dùng': ['bát ăn', 'bát ăn và đồ dùng', 'đồ dùng', 'phụ kiện'],
+                        'đồ chơi': ['đồ chơi', 'đồ dùng'],
+                        'vệ sinh': ['vệ sinh', 'chăm sóc', 'cát'],
+                        'phụ kiện': ['phụ kiện', 'đồ dùng']
+                    };
+                    const aliases = categoryGroups[fCat] || [fCat];
+                    const isCatMatch = aliases.some(alias => pCat === alias || pCat.includes(alias) || alias.includes(pCat));
                     if (!isCatMatch) return false;
                 }
                 if (stockVal === 'LOW' && (available > p.minStock || available === 0)) return false;
@@ -2849,7 +2843,42 @@
             showToast('Đã xuất báo cáo danh sách đơn hàng sang file Excel/CSV thành công.', 'success');
         });
         document.getElementById('btnExportProductStock')?.addEventListener('click', () => {
-            showToast('Đã xuất báo cáo kiểm kê kho hàng thành công.', 'success');
+            const searchVal = (document.getElementById('productSearchInput')?.value || '').toLowerCase().trim();
+            const catVal = (document.getElementById('productFilterCategory')?.value || 'ALL').toLowerCase().trim();
+            const stockVal = document.getElementById('productFilterStockStatus')?.value || 'ALL';
+            const filtered = currentProductsList.filter(p => {
+                const text = [p.sku, p.name, p.brand, p.category].join(' ').toLowerCase();
+                if (searchVal && !text.includes(searchVal)) return false;
+                if (catVal !== 'all') {
+                    const productCat = String(p.category || '').toLowerCase();
+                    const groups = {
+                        'thức ăn khô': ['thức ăn khô', 'thực phẩm', 'hạt', 'đồ ăn'],
+                        'thức ăn ướt': ['thức ăn ướt', 'thực phẩm', 'pate', 'súp'],
+                        'sức khỏe': ['sức khỏe', 'dinh dưỡng', 'chăm sóc'],
+                        'sức khỏe và dinh dưỡng': ['sức khỏe', 'dinh dưỡng', 'chăm sóc'],
+                        'bát ăn': ['bát ăn', 'đồ dùng', 'phụ kiện'],
+                        'bát ăn và đồ dùng': ['bát ăn', 'đồ dùng', 'phụ kiện'],
+                        'đồ chơi': ['đồ chơi', 'đồ dùng'],
+                        'vệ sinh': ['vệ sinh', 'chăm sóc', 'cát'],
+                        'phụ kiện': ['phụ kiện', 'đồ dùng']
+                    };
+                    if (!(groups[catVal] || [catVal]).some(a => productCat === a || productCat.includes(a) || a.includes(productCat))) return false;
+                }
+                const available = Math.max(0, Number(p.stock || 0));
+                if (stockVal === 'LOW' && (available > Number(p.minStock || 0) || available === 0)) return false;
+                if (stockVal === 'OUT' && available !== 0) return false;
+                if (stockVal === 'IN_STOCK' && available <= Number(p.minStock || 0)) return false;
+                return true;
+            });
+            if (!filtered.length) { showToast('Không có dữ liệu phù hợp để xuất.', 'warning'); return; }
+            const esc = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+            const rows = [['SKU', 'Tên sản phẩm', 'Danh mục', 'Giá bán', 'Tồn kho', 'Tồn tối thiểu', 'Trạng thái'], ...filtered.map(p => [p.sku, p.name, p.category, p.price, p.stock, p.minStock, p.status])];
+            const csv = '\uFEFF' + rows.map(row => row.map(esc).join(',')).join('\r\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a'); link.href = url; link.download = `bao-cao-kho-${new Date().toISOString().slice(0,10)}.csv`; link.click();
+            URL.revokeObjectURL(url);
+            showToast(`Đã tải file kho gồm ${filtered.length} sản phẩm.`, 'success');
         });
 
         // Mở modal thêm sản phẩm mới
@@ -3107,6 +3136,8 @@
                             review_count: 0
                         }).select().single();
 
+                        if (pErr) throw pErr;
+                        if (!newP || !newP.id) throw new Error('Không nhận được sản phẩm vừa tạo từ cơ sở dữ liệu.');
                         if (newP && newP.id) {
                             createdProdDbId = newP.id;
                             await client.from('inventory').insert({
@@ -3116,7 +3147,9 @@
                             });
                         }
                     } catch (errAddProdDb) {
-                        console.warn('Lỗi khi thêm sản phẩm mới vào Supabase:', errAddProdDb);
+                        console.error('Lỗi khi thêm sản phẩm mới vào Supabase:', errAddProdDb);
+                        showToast('Không thể tạo sản phẩm: ' + (errAddProdDb.message || ''), 'danger');
+                        return;
                     }
                 }
 
@@ -3171,6 +3204,7 @@
                     });
                 }
 
+                await syncOrdersAndProductsFromSupabase();
                 document.getElementById('modalAddProduct')?.classList.remove('active');
                 renderProductsTable();
                 showToast(`Đã thêm thành công sản phẩm mới "${name}" (SKU: ${sku}) đầy đủ thông số!`, 'success');
@@ -3497,13 +3531,15 @@
             const discount = document.getElementById('newVoucherDiscount')?.value.trim();
             const minOrder = document.getElementById('newVoucherMinOrder')?.value.trim() || '0 đ';
             const points = document.getElementById('newVoucherPoints')?.value.trim() || 'Miễn phí';
-            const expiry = document.getElementById('newVoucherExpiry')?.value.trim() || '31/12/2026';
-            const maxUses = document.getElementById('newVoucherMaxUses')?.value || '100';
+            const expiry = document.getElementById('newVoucherExpiry')?.value.trim();
+            const maxUses = document.getElementById('newVoucherMaxUses')?.value;
 
-            if (!code || !title || !discount) {
-                showToast('Vui lòng nhập đầy đủ mã voucher, tên chương trình và mức giảm giá.', 'warning');
+            if (!code || !title || !discount || !expiry || !maxUses) {
+                showToast('Vui lòng nhập đầy đủ mã, tên, mức giảm, ngày hết hạn và số lượt.', 'warning');
                 return;
             }
+            if (!/^[A-Z0-9]+$/.test(code)) { showToast('Mã voucher chỉ được gồm chữ in hoa không dấu và chữ số, không khoảng trắng hoặc ký tự đặc biệt.', 'warning'); return; }
+            if (title.length > 100) { showToast('Tên chương trình không được vượt quá 100 ký tự.', 'warning'); return; }
 
             const vouchersList = getSharedVouchersList();
             if (vouchersList.some(v => (v.code || '').toUpperCase() === code)) {
@@ -3512,13 +3548,22 @@
             }
 
             const isPct = discount.includes('%');
-            const numVal = parseInt(discount.replace(/[^\d]/g, '') || '0', 10);
-            const numMinOrder = parseInt(minOrder.replace(/[^\d]/g, '') || '0', 10);
-            const maxUsesNum = parseInt(maxUses || '100', 10);
+            const numericDiscount = Number(discount.replace(/[%\s,đ₫]/gi, ''));
+            const numVal = Number.isFinite(numericDiscount) ? numericDiscount : NaN;
+            const numMinOrder = Number(minOrder.replace(/[,\sđ₫]/gi, ''));
+            const pointsNum = points.includes('Miễn phí') ? 0 : Number(points.replace(/[^\d]/g, ''));
+            const maxUsesNum = Number(maxUses);
+            const expiryMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(expiry);
+            const expiryDate = expiryMatch ? new Date(`${expiryMatch[3]}-${expiryMatch[2]}-${expiryMatch[1]}T23:59:59`) : null;
+            if (!Number.isFinite(numVal) || numVal <= 0 || (isPct && numVal > 100) || (!isPct && discount.includes('-'))) { showToast('Mức giảm giá không hợp lệ.', 'warning'); return; }
+            if (!Number.isFinite(numMinOrder) || numMinOrder <= 0) { showToast('Đơn hàng tối thiểu phải lớn hơn 0.', 'warning'); return; }
+            if (!Number.isFinite(pointsNum) || pointsNum < 0 || !Number.isFinite(maxUsesNum) || maxUsesNum <= 0) { showToast('Điểm PawPoint và số lượt phải là số hợp lệ.', 'warning'); return; }
+            if (!expiryDate || Number.isNaN(expiryDate.getTime()) || expiryDate.getDate() !== Number(expiryMatch[1]) || expiryDate.getMonth() + 1 !== Number(expiryMatch[2]) || expiryDate < new Date()) { showToast('Ngày hết hạn không hợp lệ hoặc đã qua.', 'warning'); return; }
 
             // Ghi nhận vào Supabase
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (client) {
+            if (!client) { showToast('Không thể kết nối cơ sở dữ liệu.', 'danger'); return; }
+            {
                 try {
                     let formattedEndDate = '2026-12-31T23:59:59Z';
                     if (expiry && expiry.includes('/')) {
@@ -3528,12 +3573,12 @@
                         }
                     }
 
-                    await client.from('voucher').insert({
+                    const { error: voucherInsertError } = await client.from('voucher').insert({
                         voucher_code: code,
                         voucher_name: title,
                         discount_value: numVal,
                         minimum_order_amount: numMinOrder,
-                        required_points: points.includes('Miễn phí') ? 0 : (parseInt(points.replace(/[^\d]/g, '') || '0', 10)),
+                        required_points: pointsNum,
                         start_date: new Date().toISOString(),
                         end_date: formattedEndDate,
                         is_active: true,
@@ -3543,8 +3588,11 @@
                         applicable_for: ['all'],
                         description: title
                     });
+                    if (voucherInsertError) throw voucherInsertError;
                 } catch (errVouDb) {
-                    console.warn('Lỗi khi thêm voucher vào Supabase:', errVouDb);
+                    console.error('Lỗi khi thêm voucher vào Supabase:', errVouDb);
+                    showToast('Không thể tạo mã khuyến mãi: ' + (errVouDb.message || ''), 'danger');
+                    return;
                 }
             }
 
@@ -3582,17 +3630,17 @@
             const newStatus = document.getElementById('voucherTargetStatus')?.value;
             const newExpiry = document.getElementById('voucherTargetExpiry')?.value.trim();
 
-            if (newStatus) {
-                voucher.status = (newStatus === 'Đang chạy' || newStatus === 'active') ? 'active' : (newStatus === 'Tạm ngưng' || newStatus === 'paused') ? 'paused' : 'expired';
-            }
+            const nextStatus = newStatus ? ((newStatus === 'Đang chạy' || newStatus === 'active') ? 'active' : (newStatus === 'Tạm ngưng' || newStatus === 'paused') ? 'paused' : 'expired') : voucher.status;
             if (newExpiry) {
-                voucher.validDate = newExpiry;
-                voucher.expiry = newExpiry;
+                const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(newExpiry);
+                const d = m ? new Date(`${m[3]}-${m[2]}-${m[1]}T23:59:59`) : null;
+                if (!d || Number.isNaN(d.getTime()) || d.getDate() !== Number(m[1]) || d.getMonth()+1 !== Number(m[2]) || d < new Date()) { showToast('Ngày gia hạn không hợp lệ.', 'warning'); return; }
             }
 
             // Cập nhật Supabase
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (client) {
+            if (!client) { showToast('Không thể kết nối cơ sở dữ liệu.', 'danger'); return; }
+            {
                 try {
                     let formattedEndDate = undefined;
                     if (newExpiry && newExpiry.includes('/')) {
@@ -3602,14 +3650,19 @@
                         }
                     }
 
-                    const isAct = (voucher.status === 'active');
+                    const isAct = (nextStatus === 'active');
                     const updatePayload = { is_active: isAct };
                     if (formattedEndDate) updatePayload.end_date = formattedEndDate;
 
-                    await client.from('voucher').update(updatePayload).eq('voucher_code', code);
+                    const { error } = await client.from('voucher').update(updatePayload).eq('voucher_code', code);
+                    if (error) throw error;
                 } catch (errUpVouDb) {
-                    console.warn('Lỗi khi cập nhật voucher trên Supabase:', errUpVouDb);
+                    console.error('Lỗi khi cập nhật voucher trên Supabase:', errUpVouDb);
+                    showToast('Không thể cập nhật Voucher: ' + (errUpVouDb.message || ''), 'danger');
+                    return;
                 }
+                voucher.status = nextStatus;
+                if (newExpiry) { voucher.validDate = newExpiry; voucher.expiry = newExpiry; }
             }
 
             persistSharedVouchersData(vouchersList);
@@ -4540,7 +4593,8 @@
 
             // 1. Ghi nhận tức thời vào cơ sở dữ liệu Supabase
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (client) {
+            if (!client) { showToast('Không thể kết nối cơ sở dữ liệu.', 'danger'); return; }
+            {
                 try {
                     let targetCustId = null;
                     if (finalUserId && finalUserId.includes('-') && finalUserId.length > 20) {
@@ -5158,7 +5212,8 @@
 
             // Guard clause BE / Database: Kiểm tra trực tiếp trên CSDL Supabase trước khi hủy
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (client) {
+            if (!client) { showToast('Không thể kết nối cơ sở dữ liệu.', 'danger'); return; }
+            {
                 try {
                     let dbOrder = null;
                     if (order.rawId) {
@@ -5248,7 +5303,8 @@
             }
 
             // Cập nhật trạng thái đơn và trạng thái thanh toán đồng bộ trên Supabase
-            if (client) {
+            if (!client) { showToast('Không thể kết nối cơ sở dữ liệu.', 'danger'); return; }
+            {
                 try {
                     const updatePayload = {
                         order_status: 'CANCELLED',
@@ -5456,7 +5512,8 @@
             }
 
             // Ghi nhận RMA vào Supabase
-            if (client) {
+            if (!client) { showToast('Không thể kết nối cơ sở dữ liệu.', 'danger'); return; }
+            {
                 try {
                     let dbOrderId = order.rawId;
                     if (!dbOrderId) {
@@ -6043,7 +6100,8 @@
 
             // Guard clause Backend / Database: kiểm tra trực tiếp trạng thái trên CSDL Supabase
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (client) {
+            if (!client) { showToast('Không thể kết nối cơ sở dữ liệu.', 'danger'); return; }
+            {
                 try {
                     let dbOrder = null;
                     if (order.rawId) {
@@ -6083,7 +6141,8 @@
                 done: true
             });
 
-            if (client) {
+            if (!client) { showToast('Không thể kết nối cơ sở dữ liệu.', 'danger'); return; }
+            {
                 try {
                     if (order.rawId) {
                         await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', order.rawId);
@@ -6172,7 +6231,8 @@
 
             // Guard clause Backend / Database: kiểm tra trực tiếp trạng thái trên CSDL Supabase
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (client) {
+            if (!client) { showToast('Không thể kết nối cơ sở dữ liệu.', 'danger'); return; }
+            {
                 try {
                     let dbOrder = null;
                     if (order.rawId) {
@@ -6216,7 +6276,8 @@
                 done: true
             });
 
-            if (client) {
+            if (!client) { showToast('Không thể kết nối cơ sở dữ liệu.', 'danger'); return; }
+            {
                 try {
                     if (order.rawId) {
                         await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', order.rawId);
@@ -6281,7 +6342,8 @@
 
             // Cập nhật Supabase
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (client) {
+            if (!client) { showToast('Không thể kết nối cơ sở dữ liệu.', 'danger'); return; }
+            {
                 try {
                     if (order.rawId) {
                         await client.from('sales_order').update({ order_status: 'COMPLETED' }).eq('id', order.rawId);

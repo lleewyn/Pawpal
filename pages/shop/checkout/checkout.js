@@ -327,7 +327,7 @@ function validateVoucher(code, showMessage = true) {
     let discount = 0;
     if (voucher.type === 'fixed') {
         discount = voucher.value;
-    } else if (voucher.type === 'percentage') {
+    } else if (voucher.type === 'percentage' || voucher.type === 'percent') {
         discount = Math.min(
             Math.floor((subtotal * voucher.value) / 100),
             voucher.maxDiscount || Infinity
@@ -403,7 +403,7 @@ function renderVoucherHints() {
             ? `-${voucher.value}%`
             : `-${formatCurrency(voucher.value)}`;
             
-        if (voucher.type === 'percentage' && voucher.maxDiscount) {
+        if ((voucher.type === 'percentage' || voucher.type === 'percent') && voucher.maxDiscount) {
             discountText += ` (Tối đa ${formatCurrency(voucher.maxDiscount)})`;
         }
 

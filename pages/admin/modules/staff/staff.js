@@ -54,7 +54,21 @@
         return `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
     };
 
+    function hasStaffAdminPermission() {
+        const rawUser = localStorage.getItem('pawpal_current_user') || sessionStorage.getItem('pawpal_current_user');
+        if (!rawUser) return true;
+        try {
+            const user = JSON.parse(rawUser);
+            const role = String(user?.role || user?.user_role || user?.position || user?.user_metadata?.role || '').toLowerCase();
+            return ['admin', 'administrator', 'quản trị viên', 'quan tri vien'].includes(role);
+        } catch (e) { return false; }
+    }
+
     async function initStaffModule() {
+        if (!hasStaffAdminPermission()) {
+            document.querySelectorAll('#btnExportStaff, #btnExportStaffExcel, #btnOpenAddStaffModal').forEach(el => { el.disabled = true; el.style.display = 'none'; });
+            return;
+        }
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
         const moduleTitleEl = document.getElementById('headerModuleTitle');

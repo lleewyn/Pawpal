@@ -460,6 +460,18 @@ async function initCartPage() {
             return;
         }
 
+        const now = Date.now();
+        const validFrom = voucher.validFrom ? new Date(voucher.validFrom).getTime() : -Infinity;
+        const validUntil = voucher.validUntil ? new Date(voucher.validUntil).getTime() : Infinity;
+        if (Number.isNaN(validFrom) || Number.isNaN(validUntil) || now < validFrom || now > validUntil) {
+            alert('Voucher chưa đến hoặc đã hết thời gian hiệu lực.');
+            return;
+        }
+        if (voucher.maxUsage != null && Number(voucher.usageCount || 0) >= Number(voucher.maxUsage)) {
+            alert('Voucher đã hết lượt sử dụng.');
+            return;
+        }
+
         if (appliedVoucher && appliedVoucher.code === code) {
             appliedVoucher = null;
             localStorage.removeItem('pawpal_applied_voucher_code');
@@ -992,10 +1004,10 @@ async function initCartPage() {
         availableVouchersList.innerHTML = activeVouchers.map(voucher => {
             let label = voucher.type === 'fixed'
                 ? `Giảm ${formatPrice(voucher.value)}`
-                : voucher.type === 'percentage'
+                : (voucher.type === 'percentage' || voucher.type === 'percent')
                     ? `Giảm ${voucher.value}%` : `Freeship tối đa ${formatPrice(voucher.value)}`;
             
-            if (voucher.type === 'percentage' && voucher.maxDiscount) {
+            if ((voucher.type === 'percentage' || voucher.type === 'percent') && voucher.maxDiscount) {
                 label += ` (Tối đa ${formatPrice(voucher.maxDiscount)})`;
             }
 
@@ -1073,7 +1085,7 @@ async function initCartPage() {
         
         if (voucher.type === 'fixed') {
             discount = voucher.value;
-        } else if (voucher.type === 'percentage') {
+        } else if (voucher.type === 'percentage' || voucher.type === 'percent') {
             discount = Math.floor((subtotal * voucher.value) / 100);
             if (voucher.maxDiscount) {
                 discount = Math.min(discount, voucher.maxDiscount);
