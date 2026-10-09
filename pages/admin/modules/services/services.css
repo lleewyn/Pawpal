@@ -192,6 +192,7 @@
 .text-success { color: #15803D !important; }
 .text-warning { color: #B45309 !important; }
 .text-danger { color: #DC2626 !important; }
+.text-info { color: #0284C7 !important; }
 .text-neutral { color: var(--text-muted) !important; }
 
 /* 2. KHỐI BẢNG DỮ LIỆU THỐNG NHẤT (GOM KHỐI) */
@@ -216,8 +217,42 @@
 }
 
 .search-box-wrapper {
+    position: relative;
     flex: 1;
     max-width: 480px;
+}
+
+.search-box-wrapper .admin-input {
+    width: 100%;
+    padding-right: 36px;
+}
+
+.btn-search-clear-x {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background-color: #EEF5F1;
+    color: #4F7A65;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    padding: 0;
+    z-index: 2;
+}
+
+.btn-search-clear-x:hover {
+    background-color: #236B48;
+    color: #FFFFFF;
 }
 
 .admin-input, .admin-select {
@@ -1442,18 +1477,25 @@
 /* ==========================================================================
    ALERT PILLS VÀ SLA BADGES (MUTED PASTEL VÀ NO BORDER)
    ========================================================================== */
-.alert-badges-stack {
+.alert-badges-stack,
 .alert-text-stack {
     display: flex;
     flex-direction: column;
+    flex-wrap: wrap;
     align-items: flex-start;
+    justify-content: center;
     gap: 3px;
+    max-width: 170px;
+    white-space: normal;
 }
 
 .alert-indicator {
+    display: inline-flex;
+    align-items: center;
     font-size: 12px;
-    line-height: 1.3;
-    white-space: nowrap;
+    line-height: 1.35;
+    white-space: normal;
+    word-break: break-word;
 }
 
 /* ĐỒNG BỘ VẠCH MÉP TRÁI CHO CẢ ROW-ALERT-DANGER VÀ ROW-ALERT-RED (CHỈ TRÊN TD:FIRST-CHILD) */
@@ -2161,4 +2203,63 @@
     text-align: center;
     font-size: 12.5px;
     color: var(--text-muted, #4F7A65);
+}
+
+/* Trạng thái rỗng cho bảng dữ liệu Lịch hẹn */
+.empty-state-cell {
+    padding: 42px 20px !important;
+    text-align: center;
+    background-color: transparent !important;
+}
+
+.empty-state-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.empty-state-text {
+    font-size: 13.5px;
+    color: var(--text-muted, #4F7A65);
+    font-weight: 500;
+}
+
+.btn-clear-booking-filters {
+    height: 32px;
+    padding: 0 16px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #236B48;
+    background-color: #EEF5F1;
+    border: none;
+    border-radius: var(--admin-radius, 9px);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.btn-clear-booking-filters:hover {
+    background-color: #E2ECE5;
+}
+
+/* Trạng thái lỗi viền đỏ và thông báo chữ đỏ cho Modal Lịch hẹn */
+.admin-input.input-error-border,
+.admin-select.input-error-border {
+    border-color: #DC2626 !important;
+    background-color: #FFF8F8 !important;
+}
+
+.admin-input.input-error-border:focus,
+.admin-select.input-error-border:focus {
+    border-color: #DC2626 !important;
+    outline: none !important;
+}
+
+.field-error-text {
+    color: #DC2626 !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    margin-top: 4px !important;
+    line-height: 1.4 !important;
 }

@@ -52,6 +52,7 @@
                 <div class="filter-row-top">
                     <div class="search-box-wrapper">
                         <input type="text" class="admin-input" id="serviceSearchInput" placeholder="Tìm mã BKG, tên khách, số điện thoại, tên thú cưng...">
+                        <button type="button" class="btn-search-clear-x" id="btnToolbarResetFilters" title="Xóa bộ lọc và làm trống ô tìm kiếm" aria-label="Xóa bộ lọc" style="display: none;">✕</button>
                     </div>
                     <div class="filter-actions-right">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenStaffScheduleModal">Lịch trực KTV</button>
@@ -86,7 +87,7 @@
                     <div class="filter-dropdown-group">
                         <label class="filter-label">Kỹ thuật viên:</label>
                         <select class="admin-select" id="serviceFilterStaff">
-                            <option value="ALL">Tất cả KTV</option>
+                            <option value="ALL">Tất cả</option>
                             <option value="Ngọc Anh">Ngọc Anh</option>
                             <option value="Thu Thảo">Thu Thảo</option>
                             <option value="Hoàng Nam">Hoàng Nam</option>
@@ -165,13 +166,7 @@
         </div>
 
         <!-- PHÂN TRANG NẰM NGOÀI BẢNG (KHÔNG NỀN, KHÔNG ĐÓNG KHUNG, CĂN GIỮA) -->
-        <div class="admin-pagination-container" id="servicesPagination">
-            <button type="button" class="btn-pagination" id="btnServicePrev">&lt;</button>
-            <button type="button" class="btn-pagination active">1</button>
-            <button type="button" class="btn-pagination">2</button>
-            <button type="button" class="btn-pagination">3</button>
-            <button type="button" class="btn-pagination" id="btnServiceNext">&gt;</button>
-        </div>
+        <div class="admin-pagination-container" id="servicesPagination" style="display: none;"></div>
     </section>
 
     <!-- ====================================================================
@@ -585,54 +580,61 @@
     <div class="admin-modal-overlay" id="modalCreateBooking">
         <div class="admin-modal-card" style="width: 640px; max-width: 95vw;">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Tạo lịch hẹn dịch vụ mới</div>
+                <div class="modal-title-clean">Thêm lịch hẹn</div>
                 <button type="button" class="modal-btn-close-text" id="btnCloseCreateBooking">Đóng</button>
             </div>
-            <form id="formCreateBooking" class="modal-body-clean">
+            <form id="formCreateBooking" class="modal-body-clean" novalidate>
                 <div class="form-group-item">
                     <label class="form-label-clean">Khách hàng:</label>
                     <div class="customer-autocomplete-wrapper" style="position: relative; width: 100%;">
-                        <input type="text" class="admin-input" id="newBookingCustomer" placeholder="Nhập tên hoặc số điện thoại khách..." required autocomplete="off">
+                        <input type="text" class="admin-input" id="newBookingCustomer" placeholder="Nhập tên hoặc số điện thoại khách..." autocomplete="off">
                         <div class="customer-autocomplete-popover" id="bookingCustomerDropdown" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #FFFFFF; border: 1px solid #ECF2EE; border-radius: 9px; box-shadow: 0 10px 28px rgba(35, 107, 72, 0.14); z-index: 2500; max-height: 240px; overflow-y: auto;"></div>
                     </div>
+                    <div class="field-error-text" id="errorNewBookingCustomer" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                 </div>
                 <div class="form-row-2col">
                     <div class="form-group-item">
                         <label class="form-label-clean">Số điện thoại:</label>
-                        <input type="text" class="admin-input" id="newBookingPhone" placeholder="0901234567..." required>
+                        <input type="text" class="admin-input" id="newBookingPhone" placeholder="0901234567...">
+                        <div class="field-error-text" id="errorNewBookingPhone" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Tên thú cưng:</label>
                         <div class="customer-autocomplete-wrapper" style="position: relative; width: 100%;">
-                            <input type="text" class="admin-input" id="newBookingPetName" placeholder="Tên bé cưng..." required autocomplete="off">
+                            <input type="text" class="admin-input" id="newBookingPetName" placeholder="Tên bé cưng..." autocomplete="off">
                             <div class="customer-autocomplete-popover" id="bookingPetDropdown" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #FFFFFF; border: 1px solid #ECF2EE; border-radius: 9px; box-shadow: 0 10px 28px rgba(35, 107, 72, 0.14); z-index: 2500; max-height: 240px; overflow-y: auto;"></div>
                         </div>
+                        <div class="field-error-text" id="errorNewBookingPetName" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                     </div>
                 </div>
                 <div class="form-row-2col">
                     <div class="form-group-item">
                         <label class="form-label-clean">Nhóm dịch vụ:</label>
-                        <select class="admin-select" id="newBookingCategory" required>
+                        <select class="admin-select" id="newBookingCategory">
                             <option value="Spa">Spa và Grooming</option>
                             <option value="Hotel">Pet Hotel</option>
                             <option value="Taxi">Pet Taxi</option>
                         </select>
+                        <div class="field-error-text" id="errorNewBookingCategory" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Gói dịch vụ cụ thể:</label>
-                        <select class="admin-select" id="newBookingServiceSelect" required>
-                            <option value="">Đang tải gói dịch vụ...</option>
+                        <select class="admin-select" id="newBookingServiceSelect">
+                            <option value="">-- Chọn dịch vụ --</option>
                         </select>
+                        <div class="field-error-text" id="errorNewBookingServiceSelect" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                     </div>
                 </div>
                 <div class="form-row-2col">
                     <div class="form-group-item">
                         <label class="form-label-clean">Ngày hẹn:</label>
-                        <input type="date" class="admin-input" id="newBookingDate" required>
+                        <input type="date" class="admin-input" id="newBookingDate">
+                        <div class="field-error-text" id="errorNewBookingDate" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Giờ hẹn:</label>
-                        <input type="time" class="admin-input" id="newBookingTime" value="09:00" required>
+                        <input type="time" class="admin-input" id="newBookingTime" value="09:00">
+                        <div class="field-error-text" id="errorNewBookingTime" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                     </div>
                 </div>
                 <!-- CÁC TRƯỜNG ĐẶC THÙ CHO HOTEL -->
@@ -642,6 +644,7 @@
                         <div class="form-group-item">
                             <label class="form-label-clean">Ngày trả phòng (Check-out):</label>
                             <input type="date" class="admin-input" id="newBookingHotelCheckOutDate">
+                            <div class="field-error-text" id="errorNewBookingHotelCheckOutDate" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                         </div>
                         <div class="form-group-item">
                             <label class="form-label-clean">Giờ trả phòng:</label>
@@ -674,6 +677,7 @@
                     <div class="form-group-item">
                         <label class="form-label-clean">Địa chỉ đón:</label>
                         <input type="text" class="admin-input" id="newBookingTaxiPickup" placeholder="Nhập địa chỉ đón bé (Số nhà, đường, phường, quận)...">
+                        <div class="field-error-text" id="errorNewBookingTaxiPickup" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Địa chỉ trả:</label>
@@ -740,7 +744,7 @@
                 </div>
                 <div class="modal-footer-clean">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelCreateBooking">Hủy bỏ</button>
-                    <button type="submit" class="admin-btn admin-btn-primary">Tạo lịch hẹn</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitCreateBooking">Lưu</button>
                 </div>
             </form>
         </div>

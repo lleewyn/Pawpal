@@ -12,6 +12,69 @@
     let populateCustomerDatalistRef = null;
     let selectedBookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || 'BKG-1001';
 
+    // Helper: Kiểm tra lịch hẹn sắp tới theo thời gian thực (trong vòng 60 phút)
+    function isBookingUpcoming(booking) {
+        if (!booking) return false;
+        const status = booking.status ? String(booking.status).toLowerCase() : '';
+        if (status === 'completed' || status === 'cancelled') {
+            return false;
+        }
+
+        // 1. Ca đang diễn ra trong phiên phục vụ tại tiệm (in_progress)
+        if (status === 'in_progress') {
+            return true;
+        }
+
+        // 2. Kiểm tra mốc thời gian thực tế trong vòng 60 phút
+        const dateVal = booking.date || booking.appointment_date;
+        const timeVal = booking.time || booking.appointment_time;
+
+        if (dateVal && timeVal) {
+            try {
+                const now = new Date();
+                const dStr = String(dateVal).split('T')[0];
+                const dParts = dStr.split('-');
+                const tParts = String(timeVal).split(':');
+
+                if (dParts.length === 3 && tParts.length >= 2) {
+                    const bYear = parseInt(dParts[0], 10);
+                    const bMonth = parseInt(dParts[1], 10) - 1;
+                    const bDay = parseInt(dParts[2], 10);
+                    const bHour = parseInt(tParts[0], 10);
+                    const bMinute = parseInt(tParts[1], 10);
+
+                    const bDate = new Date(bYear, bMonth, bDay, bHour, bMinute, 0);
+
+                    if (!isNaN(bDate.getTime())) {
+                        const isSameDay = (
+                            bDate.getFullYear() === now.getFullYear() &&
+                            bDate.getMonth() === now.getMonth() &&
+                            bDate.getDate() === now.getDate()
+                        );
+
+                        // Nếu là cùng ngày hôm nay: tính độ chênh lệch phút
+                        // Sắp tới trong 60 phút: từ -30 phút (trễ/đang chờ tiếp nhận) đến +60 phút (sắp đến giờ)
+                        if (isSameDay) {
+                            const diffMinutes = (bDate.getTime() - now.getTime()) / (1000 * 60);
+                            if (diffMinutes >= -30 && diffMinutes <= 60) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                // Bỏ qua lỗi parse
+            }
+        }
+
+        // 3. Cờ alertType được gán rõ ràng
+        if (booking.alertType === 'upcoming') {
+            return true;
+        }
+
+        return false;
+    }
+
     // Hàm nạp dữ liệu từ Supabase (kèm fallback tệp JSON tĩnh nếu cần)
     async function loadServicesData(forceReload = false) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -124,7 +187,7 @@
                             total: item.total_price || 0,
                             paymentStatus: item.payment_status === 'PAID' ? 'Đã thanh toán' : 'Chưa thu',
                             status,
-                            alertType: (status === 'confirmed' && idx < 3) ? 'upcoming' : null,
+                            alertType: isBookingUpcoming({ status, date: item.appointment_date, time: item.appointment_time }) ? 'upcoming' : null,
                             careLogs: relatedLogs,
                             timeline: [
                                 { title: 'Đặt lịch hẹn', time: item.appointment_time ? item.appointment_time.substring(0, 5) : '09:00', desc: 'Khách hàng đặt trực tuyến', done: true },
@@ -304,6 +367,8 @@
     let isUpcomingFilterActive = false;
     let isAllergyFilterActive = false;
     let isSlaFilterActive = false;
+    let currentBookingPage = 1;
+    const BOOKINGS_PER_PAGE = 10;
     let intakeProofImagesTemp = [];
     let surchargeProofImagesTemp = [];
     let completeProofImagesTemp = [];
@@ -319,7 +384,16 @@
     let reviewFilterCategory = 'ALL';
     let reviewFilterStaff = 'ALL';
     let reviewFilterStatus = 'ALL';
-    let currentReplyingReview = null;
+    // Chuyển chuỗi tiếng Việt có dấu thành không dấu để tìm kiếm thông minh (Unaccent Search)
+    function toUnaccent(str) {
+        if (!str) return '';
+        return String(str)
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[đĐ]/g, m => m === 'đ' ? 'd' : 'D')
+            .toLowerCase()
+            .trim();
+    }
 
     // Cấu hình danh mục KTV và định mức tải ca trong ngày (Chuẩn Forest Palette & Muted Pastel)
     const STAFF_DIRECTORY = [
@@ -468,7 +542,7 @@
             if (booking.alertType === 'urgent' || (!booking.staff)) {
                 return { level: 'warning', label: 'Chờ KTV (+15p)', minutesLate: 15 };
             }
-            if (booking.alertType === 'upcoming' || booking.id === 'BKG-1008') {
+            if (isBookingUpcoming(booking) || booking.id === 'BKG-1008') {
                 return { level: 'info', label: 'Sắp tới giờ', minutesLate: 0 };
             }
             return { level: 'ok', label: 'Chờ đón bé', minutesLate: 0 };
@@ -634,7 +708,7 @@
     function updateKPIs() {
         const total = bookingsData.length;
         const pending = bookingsData.filter(b => b.status === 'pending').length;
-        const upcoming = bookingsData.filter(b => b.alertType === 'upcoming' || b.status === 'in_progress').length;
+        const upcoming = bookingsData.filter(isBookingUpcoming).length;
         const inProgress = bookingsData.filter(b => b.status === 'in_progress').length;
         const completed = bookingsData.filter(b => b.status === 'completed').length;
         const cancelled = bookingsData.filter(b => b.status === 'cancelled').length;
@@ -662,7 +736,7 @@
         const bar = document.getElementById('upcomingAlertBar');
         if (!container) return;
 
-        const upcomingList = bookingsData.filter(b => b.alertType === 'upcoming' || b.status === 'in_progress');
+        const upcomingList = bookingsData.filter(isBookingUpcoming);
 
         if (upcomingList.length === 0) {
             if (bar) bar.style.display = 'none';
@@ -697,14 +771,22 @@
 
         // Lọc dữ liệu
         let filtered = bookingsData.filter(item => {
-            // Tìm kiếm
+            // Tìm kiếm (Hỗ trợ tiếng Việt không dấu và có dấu)
             if (currentSearchTerm) {
-                const term = currentSearchTerm.toLowerCase();
-                const matchCode = item.id.toLowerCase().includes(term);
-                const matchCustomer = item.customerName.toLowerCase().includes(term);
-                const matchPhone = item.phone.includes(term);
-                const matchPet = item.petName.toLowerCase().includes(term);
-                if (!matchCode && !matchCustomer && !matchPhone && !matchPet) return false;
+                const termUnaccent = toUnaccent(currentSearchTerm);
+                const termRaw = currentSearchTerm.toLowerCase().trim();
+
+                const matchCode = toUnaccent(item.id).includes(termUnaccent) || item.id.toLowerCase().includes(termRaw);
+                const matchCustomer = toUnaccent(item.customerName).includes(termUnaccent) || item.customerName.toLowerCase().includes(termRaw);
+                const matchPhone = (item.phone || '').includes(termRaw);
+                const matchPet = toUnaccent(item.petName).includes(termUnaccent) || item.petName.toLowerCase().includes(termRaw);
+                const matchBreed = toUnaccent(item.petBreed || '').includes(termUnaccent);
+                const matchService = toUnaccent(item.serviceName || '').includes(termUnaccent);
+                const matchStaff = toUnaccent(item.staff || '').includes(termUnaccent);
+
+                if (!matchCode && !matchCustomer && !matchPhone && !matchPet && !matchBreed && !matchService && !matchStaff) {
+                    return false;
+                }
             }
 
             // Nhóm dịch vụ
@@ -722,8 +804,8 @@
                 }
             }
 
-            // Toggle lịch sắp tới
-            if (isUpcomingFilterActive && item.alertType !== 'upcoming') return false;
+            // Toggle lịch sắp tới (đồng bộ logic thời gian thực 60 phút)
+            if (isUpcomingFilterActive && !isBookingUpcoming(item)) return false;
 
             // Toggle pet có dị ứng / lưu ý
             if (isAllergyFilterActive && !item.petAlert) return false;
@@ -737,18 +819,53 @@
             return true;
         });
 
-        if (filtered.length === 0) {
+        const totalRecords = filtered.length;
+        const totalPages = Math.ceil(totalRecords / BOOKINGS_PER_PAGE);
+
+        // Cập nhật hiển thị nút X xóa bộ lọc bên trong ô tìm kiếm (chỉ hiện khi đang tìm hay lọc)
+        const btnToolbarReset = document.getElementById('btnToolbarResetFilters');
+        const hasActiveFilters = Boolean(
+            currentSearchTerm ||
+            currentFilterCategory !== 'ALL' ||
+            currentFilterStatus !== 'ALL' ||
+            currentFilterStaff !== 'ALL' ||
+            isUpcomingFilterActive ||
+            isAllergyFilterActive ||
+            isSlaFilterActive
+        );
+        if (btnToolbarReset) {
+            btnToolbarReset.style.display = hasActiveFilters ? 'flex' : 'none';
+        }
+
+        if (totalRecords === 0) {
+            currentBookingPage = 1;
             tbody.innerHTML = `
                 <tr>
                     <td colspan="11" class="empty-state-cell">
-                        Không tìm thấy lịch hẹn phù hợp với điều kiện tìm kiếm.
+                        <div class="empty-state-wrapper">
+                            <div class="empty-state-text">
+                                Không tìm thấy lịch hẹn phù hợp
+                            </div>
+                        </div>
                     </td>
                 </tr>
             `;
+
+            renderBookingsPagination(0);
             return;
         }
 
-        tbody.innerHTML = filtered.map(item => {
+        if (currentBookingPage > totalPages) {
+            currentBookingPage = totalPages;
+        }
+        if (currentBookingPage < 1) {
+            currentBookingPage = 1;
+        }
+
+        const startIndex = (currentBookingPage - 1) * BOOKINGS_PER_PAGE;
+        const pagedBookings = filtered.slice(startIndex, startIndex + BOOKINGS_PER_PAGE);
+
+        tbody.innerHTML = pagedBookings.map(item => {
             // Xác định class alert mép trái thẳng
             const sla = getServiceSlaInfo(item);
             let alertClass = '';
@@ -871,6 +988,107 @@
                 toggleActionDropdown(bkgId, btn);
             });
         });
+
+        // Cập nhật phân trang động theo số lượng bản ghi thực tế
+        renderBookingsPagination(totalPages);
+    }
+
+    // Render thanh phân trang danh sách Lịch hẹn (Căn giữa, không nền, không viền khung)
+    function renderBookingsPagination(totalPages) {
+        const pagContainer = document.getElementById('servicesPagination');
+        if (!pagContainer) return;
+
+        // Nếu không có dữ liệu hoặc chỉ có 1 trang: ẩn hoặc vô hiệu hóa các nút vượt quá số lượng bản ghi thực tế
+        if (totalPages <= 1) {
+            pagContainer.style.display = 'none';
+            pagContainer.innerHTML = '';
+            return;
+        }
+
+        pagContainer.style.display = 'flex';
+        let html = '';
+
+        const prevDisabled = currentBookingPage === 1 ? 'disabled' : '';
+        html += `<button type="button" class="btn-pagination ${prevDisabled}" data-page="prev" title="Trang trước" ${prevDisabled ? 'disabled' : ''}>&lt;</button>`;
+
+        for (let p = 1; p <= totalPages; p++) {
+            const activeClass = p === currentBookingPage ? 'active' : '';
+            html += `<button type="button" class="btn-pagination ${activeClass}" data-page="${p}">${p}</button>`;
+        }
+
+        const nextDisabled = currentBookingPage === totalPages ? 'disabled' : '';
+        html += `<button type="button" class="btn-pagination ${nextDisabled}" data-page="next" title="Trang sau" ${nextDisabled ? 'disabled' : ''}>&gt;</button>`;
+
+        pagContainer.innerHTML = html;
+
+        pagContainer.querySelectorAll('.btn-pagination').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.disabled || btn.classList.contains('disabled')) return;
+                const pageAction = btn.getAttribute('data-page');
+                if (pageAction === 'prev') {
+                    if (currentBookingPage > 1) {
+                        currentBookingPage--;
+                        renderBookingsTable();
+                    }
+                } else if (pageAction === 'next') {
+                    if (currentBookingPage < totalPages) {
+                        currentBookingPage++;
+                        renderBookingsTable();
+                    }
+                } else {
+                    const targetP = parseInt(pageAction, 10);
+                    if (targetP && targetP !== currentBookingPage) {
+                        currentBookingPage = targetP;
+                        renderBookingsTable();
+                    }
+                }
+            });
+        });
+    }
+
+    // Xóa toàn bộ bộ lọc và từ khóa tìm kiếm của danh sách Lịch hẹn
+    function clearBookingSearchAndFilters() {
+        currentSearchTerm = '';
+        currentFilterCategory = 'ALL';
+        currentFilterStatus = 'ALL';
+        currentFilterStaff = 'ALL';
+        isUpcomingFilterActive = false;
+        isAllergyFilterActive = false;
+        isSlaFilterActive = false;
+        currentBookingPage = 1;
+
+        // 1. Làm trống ô tìm kiếm
+        const searchInput = document.getElementById('serviceSearchInput');
+        if (searchInput) searchInput.value = '';
+
+        // 2. Reset toàn bộ dropdown về "Tất cả"
+        const selectCategory = document.getElementById('serviceFilterCategory');
+        if (selectCategory) selectCategory.value = 'ALL';
+
+        const selectStatus = document.getElementById('serviceFilterStatus');
+        if (selectStatus) selectStatus.value = 'ALL';
+
+        const selectStaff = document.getElementById('serviceFilterStaff');
+        if (selectStaff) selectStaff.value = 'ALL';
+
+        // 3. Reset các nút lọc nhanh toggle
+        const btnUpcoming = document.getElementById('btnToggleUpcomingOnly');
+        if (btnUpcoming) btnUpcoming.classList.remove('active');
+
+        const btnAllergy = document.getElementById('btnToggleAllergyOnly');
+        if (btnAllergy) btnAllergy.classList.remove('active');
+
+        const btnSla = document.getElementById('btnToggleSlaOverdue');
+        if (btnSla) btnSla.classList.remove('active');
+
+        // 4. Reset trạng thái chọn trên các thẻ KPI về "Tất cả"
+        document.querySelectorAll('.kpi-card-clickable').forEach(c => c.classList.remove('active'));
+        const kpiAll = document.querySelector('.kpi-card-clickable[data-kpi-filter="ALL"]');
+        if (kpiAll) kpiAll.classList.add('active');
+
+        // 5. Hiển thị lại toàn bộ danh sách
+        renderBookingsTable();
+        showToast('Đã xóa bộ lọc và hiển thị lại toàn bộ danh sách lịch hẹn.', 'info');
     }
 
     // Mở hồ sơ chi tiết một lịch hẹn
@@ -2376,7 +2594,7 @@
                 }
             }
 
-            svcSelect.innerHTML = '';
+            svcSelect.innerHTML = '<option value="">-- Chọn dịch vụ --</option>';
             filtered.forEach(s => {
                 const opt = document.createElement('option');
                 opt.value = s.name;
@@ -2387,6 +2605,7 @@
                 opt.textContent = `${s.name} (${priceNum}${unit})`;
                 svcSelect.appendChild(opt);
             });
+            svcSelect.value = '';
         }
         updateServiceOptionsRef = updateServiceOptionsForCategory;
 
@@ -2441,6 +2660,7 @@
                 alertInput.value = p.allergy || p.routine;
             }
             if (petDropdown) petDropdown.style.display = 'none';
+            clearBookingFieldError('newBookingPetName', 'errorNewBookingPetName');
 
             // Nếu thú cưng có liên kết với khách hàng, tự động điền khách hàng & SĐT nếu chưa có
             const ownerId = p.customer_id || p.customer?.id;
@@ -2453,6 +2673,8 @@
                     const realPhone = matchedCust.phone_main || '';
                     if (custInput) custInput.value = realName;
                     if (phoneInput && realPhone) phoneInput.value = realPhone;
+                    clearBookingFieldError('newBookingCustomer', 'errorNewBookingCustomer');
+                    clearBookingFieldError('newBookingPhone', 'errorNewBookingPhone');
                 }
             }
         }
@@ -2465,6 +2687,8 @@
             if (custInput) custInput.value = realName;
             if (phoneInput && realPhone) phoneInput.value = realPhone;
             if (custDropdown) custDropdown.style.display = 'none';
+            clearBookingFieldError('newBookingCustomer', 'errorNewBookingCustomer');
+            clearBookingFieldError('newBookingPhone', 'errorNewBookingPhone');
 
             // Xử lý danh sách thú cưng của khách này
             const pets = Array.isArray(c.pet_profile) ? c.pet_profile : (c.pet_profile ? [c.pet_profile] : []);
@@ -2662,19 +2886,165 @@
         updateServiceOptionsForCategory(catSelect ? catSelect.value : 'Spa');
         populateStaffSelect();
 
+        // Helper hiển thị và xóa thông báo lỗi chữ đỏ bên dưới trường bắt buộc
+        function setBookingFieldError(fieldId, errorId, message) {
+            const errEl = document.getElementById(errorId);
+            const inputEl = document.getElementById(fieldId);
+            if (errEl) {
+                errEl.textContent = message;
+                errEl.style.display = 'block';
+            }
+            if (inputEl) {
+                inputEl.classList.add('input-error-border');
+                inputEl.style.borderColor = '#DC2626';
+            }
+        }
+
+        function clearBookingFieldError(fieldId, errorId) {
+            const errEl = document.getElementById(errorId);
+            const inputEl = document.getElementById(fieldId);
+            if (errEl) {
+                errEl.textContent = '';
+                errEl.style.display = 'none';
+            }
+            if (inputEl) {
+                inputEl.classList.remove('input-error-border');
+                inputEl.style.borderColor = '';
+            }
+        }
+
+        function clearCreateBookingErrors() {
+            const errorMappings = [
+                ['newBookingCustomer', 'errorNewBookingCustomer'],
+                ['newBookingPhone', 'errorNewBookingPhone'],
+                ['newBookingPetName', 'errorNewBookingPetName'],
+                ['newBookingCategory', 'errorNewBookingCategory'],
+                ['newBookingServiceSelect', 'errorNewBookingServiceSelect'],
+                ['newBookingDate', 'errorNewBookingDate'],
+                ['newBookingTime', 'errorNewBookingTime'],
+                ['newBookingHotelCheckOutDate', 'errorNewBookingHotelCheckOutDate'],
+                ['newBookingTaxiPickup', 'errorNewBookingTaxiPickup']
+            ];
+            errorMappings.forEach(([fieldId, errorId]) => clearBookingFieldError(fieldId, errorId));
+        }
+
+        // Tự động xóa lỗi khi người dùng nhập liệu hoặc thay đổi giá trị
+        [
+            ['newBookingCustomer', 'errorNewBookingCustomer', 'input'],
+            ['newBookingPhone', 'errorNewBookingPhone', 'input'],
+            ['newBookingPetName', 'errorNewBookingPetName', 'input'],
+            ['newBookingCategory', 'errorNewBookingCategory', 'change'],
+            ['newBookingServiceSelect', 'errorNewBookingServiceSelect', 'change'],
+            ['newBookingDate', 'errorNewBookingDate', 'change'],
+            ['newBookingTime', 'errorNewBookingTime', 'change'],
+            ['newBookingHotelCheckOutDate', 'errorNewBookingHotelCheckOutDate', 'change'],
+            ['newBookingTaxiPickup', 'errorNewBookingTaxiPickup', 'input']
+        ].forEach(([fieldId, errorId, evtName]) => {
+            const el = document.getElementById(fieldId);
+            if (el) {
+                el.addEventListener(evtName, () => clearBookingFieldError(fieldId, errorId));
+            }
+        });
+
+        // Hàm xóa sạch toàn bộ dữ liệu trên form Thêm lịch hẹn
+        function resetCreateBookingForm() {
+            if (formCreate) {
+                formCreate.reset();
+            }
+
+            // Xóa sạch tường minh tất cả các trường nhập liệu
+            if (custInput) custInput.value = '';
+            if (phoneInput) phoneInput.value = '';
+            if (petInput) {
+                petInput.value = '';
+                petInput.placeholder = 'Tên bé cưng...';
+            }
+            if (catSelect) catSelect.value = 'Spa';
+            if (svcSelect) svcSelect.value = '';
+            if (alertInput) alertInput.value = '';
+
+            const dateInput = document.getElementById('newBookingDate');
+            if (dateInput) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+            }
+
+            const timeInput = document.getElementById('newBookingTime');
+            if (timeInput) timeInput.value = '09:00';
+
+            const checkOutDateInput = document.getElementById('newBookingHotelCheckOutDate');
+            if (checkOutDateInput) {
+                const nextDate = new Date();
+                nextDate.setDate(nextDate.getDate() + 3);
+                checkOutDateInput.value = nextDate.toISOString().split('T')[0];
+            }
+
+            const checkOutTimeInput = document.getElementById('newBookingHotelCheckOutTime');
+            if (checkOutTimeInput) checkOutTimeInput.value = '10:00';
+
+            const roomTypeInput = document.getElementById('newBookingHotelRoomType');
+            if (roomTypeInput) roomTypeInput.selectedIndex = 0;
+
+            const dietInput = document.getElementById('newBookingHotelDiet');
+            if (dietInput) dietInput.selectedIndex = 0;
+
+            const taxiPickup = document.getElementById('newBookingTaxiPickup');
+            if (taxiPickup) taxiPickup.value = '';
+
+            const taxiDropoff = document.getElementById('newBookingTaxiDropoff');
+            if (taxiDropoff) taxiDropoff.value = '';
+
+            const taxiTripType = document.getElementById('newBookingTaxiTripType');
+            if (taxiTripType) taxiTripType.selectedIndex = 0;
+
+            const taxiDistance = document.getElementById('newBookingTaxiDistance');
+            if (taxiDistance) taxiDistance.value = '4.0';
+
+            const spaStyle = document.getElementById('newBookingSpaStyle');
+            if (spaStyle) spaStyle.value = '';
+
+            const spaLevel = document.getElementById('newBookingSpaGroomerLevel');
+            if (spaLevel) spaLevel.selectedIndex = 0;
+
+            if (newBookingStaffSelect) newBookingStaffSelect.value = '';
+
+            const branchSelect = document.getElementById('newBookingBranch');
+            if (branchSelect) branchSelect.selectedIndex = 0;
+
+            const notesInput = document.getElementById('newBookingNotes');
+            if (notesInput) notesInput.value = '';
+
+            // Ẩn popover gợi ý autocomplete
+            if (custDropdown) {
+                custDropdown.style.display = 'none';
+                custDropdown.innerHTML = '';
+            }
+            if (petDropdown) {
+                petDropdown.style.display = 'none';
+                petDropdown.innerHTML = '';
+            }
+
+            // Ẩn cảnh báo tải ca KTV
+            if (newBookingStaffHint) {
+                newBookingStaffHint.style.display = 'none';
+                newBookingStaffHint.textContent = '';
+            }
+
+            // Reset các biến liên kết
+            activeBookingPreset = null;
+            currentMatchedCustomer = null;
+            currentMatchedPet = null;
+
+            // Xóa sạch trạng thái lỗi đỏ
+            clearCreateBookingErrors();
+
+            // Cập nhật lại các trường hiển thị theo nhóm Spa
+            updateCreateCategoryFields();
+        }
+
         if (btnOpenCreate) {
             btnOpenCreate.addEventListener('click', () => {
-                const todayStr = new Date().toISOString().split('T')[0];
-                const dateInput = document.getElementById('newBookingDate');
-                if (dateInput) dateInput.value = todayStr;
-                const checkOutDateInput = document.getElementById('newBookingHotelCheckOutDate');
-                if (checkOutDateInput) {
-                    const nextDate = new Date();
-                    nextDate.setDate(nextDate.getDate() + 3);
-                    checkOutDateInput.value = nextDate.toISOString().split('T')[0];
-                }
+                resetCreateBookingForm();
                 populateStaffSelect();
-                updateCreateCategoryFields();
                 if (modalCreate) modalCreate.classList.add('active');
             });
         }
@@ -2687,6 +3057,7 @@
             if (rawPreset) {
                 try {
                     const preset = JSON.parse(rawPreset);
+                    resetCreateBookingForm();
                     activeBookingPreset = preset;
                     const custEl = document.getElementById('newBookingCustomer');
                     const phoneEl = document.getElementById('newBookingPhone');
@@ -2707,6 +3078,7 @@
 
                     populateStaffSelect();
                     updateCreateCategoryFields();
+                    clearCreateBookingErrors();
                     if (modalCreate) modalCreate.classList.add('active');
                     sessionStorage.removeItem('pawpal_admin_booking_preset');
                     showToast(`Đã tự động điền thông tin bé ${preset.petName} và cảnh báo an toàn vào phiếu đặt lịch!`);
@@ -2715,11 +3087,8 @@
 
             if (sessionStorage.getItem('pawpal_admin_service_open_create_modal') === 'true') {
                 sessionStorage.removeItem('pawpal_admin_service_open_create_modal');
-                const todayStr = new Date().toISOString().split('T')[0];
-                const dateInput = document.getElementById('newBookingDate');
-                if (dateInput) dateInput.value = todayStr;
+                resetCreateBookingForm();
                 populateStaffSelect();
-                updateCreateCategoryFields();
                 if (modalCreate) modalCreate.classList.add('active');
             }
         };
@@ -2727,13 +3096,17 @@
 
         const closeCreateModal = () => {
             if (modalCreate) modalCreate.classList.remove('active');
-            activeBookingPreset = null;
-            currentMatchedCustomer = null;
-            currentMatchedPet = null;
-            if (newBookingStaffHint) newBookingStaffHint.style.display = 'none';
+            resetCreateBookingForm();
         };
         if (btnCloseCreate) btnCloseCreate.addEventListener('click', closeCreateModal);
         if (btnCancelCreate) btnCancelCreate.addEventListener('click', closeCreateModal);
+        if (modalCreate) {
+            modalCreate.addEventListener('click', (e) => {
+                if (e.target === modalCreate) {
+                    closeCreateModal();
+                }
+            });
+        }
 
         if (newBookingStaffSelect && newBookingStaffHint) {
             newBookingStaffSelect.addEventListener('change', () => {
@@ -2760,211 +3133,293 @@
             });
         }
 
+        async function handleCreateBookingSubmit(e) {
+            if (e && e.preventDefault) e.preventDefault();
+
+            // Xóa trạng thái lỗi cũ trước khi kiểm tra
+            clearCreateBookingErrors();
+
+            const customer = (document.getElementById('newBookingCustomer')?.value || '').trim();
+            const phone = (document.getElementById('newBookingPhone')?.value || '').trim();
+            const petName = (document.getElementById('newBookingPetName')?.value || '').trim();
+            const category = document.getElementById('newBookingCategory')?.value || '';
+            const serviceName = document.getElementById('newBookingServiceSelect')?.value || '';
+            const date = document.getElementById('newBookingDate')?.value || '';
+            const time = document.getElementById('newBookingTime')?.value || '';
+            const staff = document.getElementById('newBookingStaff')?.value || '';
+            const branch = document.getElementById('newBookingBranch')?.value || '';
+            const petAlert = (document.getElementById('newBookingPetAlert')?.value || '').trim();
+            const note = (document.getElementById('newBookingNotes')?.value || '').trim();
+
+            let hasError = false;
+            let firstErrorInput = null;
+
+            const markError = (fieldId, errorId, message) => {
+                setBookingFieldError(fieldId, errorId, message);
+                if (!hasError) {
+                    hasError = true;
+                    firstErrorInput = document.getElementById(fieldId);
+                }
+            };
+
+            // 1. Validate Khách hàng (bắt buộc)
+            if (!customer) {
+                markError('newBookingCustomer', 'errorNewBookingCustomer', 'Vui lòng nhập tên khách hàng.');
+            }
+
+            // 2. Validate Thú cưng (bắt buộc)
+            if (!petName) {
+                markError('newBookingPetName', 'errorNewBookingPetName', 'Vui lòng nhập tên thú cưng.');
+            }
+
+            // 3. Validate Gói dịch vụ cụ thể (bắt buộc)
+            if (!serviceName) {
+                markError('newBookingServiceSelect', 'errorNewBookingServiceSelect', 'Vui lòng chọn dịch vụ.');
+            }
+
+            // Validate Số điện thoại (nếu có nhập thì kiểm tra định dạng)
+            if (phone) {
+                const cleanPhone = phone.replace(/[\s.-]/g, '');
+                if (!/^(\+84|0)[0-9]{8,10}$/.test(cleanPhone)) {
+                    markError('newBookingPhone', 'errorNewBookingPhone', 'Số điện thoại không hợp lệ (9 - 11 chữ số).');
+                }
+            }
+
+            // Validate Nhóm dịch vụ
+            if (!category) {
+                markError('newBookingCategory', 'errorNewBookingCategory', 'Vui lòng chọn nhóm dịch vụ.');
+            }
+
+            // Validate Ngày hẹn
+            if (!date) {
+                markError('newBookingDate', 'errorNewBookingDate', 'Vui lòng chọn ngày hẹn.');
+            }
+
+            // Validate Giờ hẹn
+            if (!time) {
+                markError('newBookingTime', 'errorNewBookingTime', 'Vui lòng chọn giờ hẹn.');
+            }
+
+            // Validate trường đặc thù theo Nhóm dịch vụ Hotel / Taxi
+            if (category === 'Hotel') {
+                const checkOutDate = document.getElementById('newBookingHotelCheckOutDate')?.value || '';
+                if (!checkOutDate) {
+                    markError('newBookingHotelCheckOutDate', 'errorNewBookingHotelCheckOutDate', 'Vui lòng chọn ngày trả phòng.');
+                } else if (date && checkOutDate < date) {
+                    markError('newBookingHotelCheckOutDate', 'errorNewBookingHotelCheckOutDate', 'Ngày trả phòng không được trước ngày nhận phòng.');
+                }
+            } else if (category === 'Taxi') {
+                const pickup = (document.getElementById('newBookingTaxiPickup')?.value || '').trim();
+                if (!pickup) {
+                    markError('newBookingTaxiPickup', 'errorNewBookingTaxiPickup', 'Vui lòng nhập địa chỉ đón bé.');
+                }
+            }
+
+            // Nếu có lỗi, dừng submit và cuộn/focus vào ô đầu tiên bị lỗi
+            if (hasError) {
+                if (firstErrorInput) firstErrorInput.focus();
+                showToast('Vui lòng điền đầy đủ và chính xác các trường bắt buộc.', 'warning');
+                return;
+            }
+
+            const newId = 'BKG-' + (1000 + bookingsData.length + 1);
+            let categoryName = 'Spa và Grooming';
+            if (category === 'Hotel') categoryName = 'Pet Hotel';
+            if (category === 'Taxi') categoryName = 'Pet Taxi';
+
+            // Tự động sinh danh sách bước Care-log từ Quy trình chuẩn của Dịch vụ được chọn
+            const matchedSvc = servicesData.find(s => s.name === serviceName);
+            const initialTimeline = (matchedSvc && matchedSvc.steps && matchedSvc.steps.length > 0)
+                ? matchedSvc.steps.map((st, i) => ({
+                    time: i === 0 ? time : '--:--',
+                    title: st,
+                    desc: i === 0 ? 'Đã tiếp nhận và chuẩn bị ca dịch vụ' : 'Đang chờ thực hiện theo quy trình',
+                    done: i === 0,
+                    staff: staff || 'KTV'
+                }))
+                : [ { time: time, title: 'Tiếp nhận ca mới', desc: 'Đã tạo lịch hẹn thành công', done: true, staff: staff || 'PawPal' } ];
+
+            let extraProps = {};
+            let calculatedDuration = matchedSvc ? matchedSvc.duration : '60 phút';
+            let calculatedPrice = 250000;
+
+            if (category === 'Hotel') {
+                const checkOutDate = document.getElementById('newBookingHotelCheckOutDate')?.value || date;
+                const checkOutTime = document.getElementById('newBookingHotelCheckOutTime')?.value || '10:00';
+                const roomType = document.getElementById('newBookingHotelRoomType')?.value || 'Phòng Deluxe (Máy lạnh 24/7)';
+                const dietPlan = document.getElementById('newBookingHotelDiet')?.value || 'Pate tươi dinh dưỡng (2 bữa/ngày)';
+
+                const d1 = new Date(date);
+                const d2 = new Date(checkOutDate);
+                const diffTime = Math.abs(d2 - d1);
+                const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+                calculatedDuration = `${diffDays} đêm`;
+                calculatedPrice = diffDays * 380000;
+
+                extraProps = {
+                    checkInDate: date,
+                    checkInTime: time,
+                    checkOutDate: checkOutDate,
+                    checkOutTime: checkOutTime,
+                    nights: diffDays,
+                    roomType: roomType,
+                    roomCode: 'DLX-0' + (bookingsData.length + 1),
+                    dietPlan: dietPlan,
+                    cameraCode: 'CAM-HOTEL-0' + (bookingsData.length + 1),
+                    duration: calculatedDuration
+                };
+            } else if (category === 'Taxi') {
+                const pickup = document.getElementById('newBookingTaxiPickup')?.value || 'Địa chỉ đón bé';
+                const dropoff = document.getElementById('newBookingTaxiDropoff')?.value || 'PawPal Chi nhánh Quận 1';
+                const tripType = document.getElementById('newBookingTaxiTripType')?.value || '2 chiều khứ hồi';
+                const dist = parseFloat(document.getElementById('newBookingTaxiDistance')?.value) || 4.0;
+                calculatedPrice = 150000;
+
+                extraProps = {
+                    pickupAddress: pickup,
+                    dropoffAddress: dropoff,
+                    tripType: tripType,
+                    distanceKm: dist,
+                    driverName: staff || 'Hữu Phúc',
+                    driverPhone: '0978.112.233'
+                };
+            } else {
+                const style = document.getElementById('newBookingSpaStyle')?.value || 'Tắm sấy và Tạo hình tiêu chuẩn';
+                const lvl = document.getElementById('newBookingSpaGroomerLevel')?.value || 'Senior Groomer';
+                calculatedPrice = 350000;
+
+                extraProps = {
+                    styleType: style,
+                    groomerLevel: lvl
+                };
+            }
+
+            const preset = activeBookingPreset;
+            const newBooking = Object.assign({
+                id: newId,
+                userId: (preset && preset.userId) ? preset.userId : 'USER-001',
+                customerName: customer,
+                phone: phone,
+                petId: (preset && preset.petId) ? preset.petId : 'PET-001',
+                petName: petName,
+                petBreed: (preset && (preset.breed || preset.speciesBreed)) ? (preset.breed || preset.speciesBreed) : 'Thú cưng',
+                petWeight: (preset && preset.weight) ? preset.weight : '5.0 kg',
+                petAge: (preset && preset.age) ? preset.age : '2 tuổi',
+                serviceCode: matchedSvc ? matchedSvc.code : 'SPA01',
+                category: category,
+                categoryName: categoryName,
+                serviceName: serviceName,
+                date: date,
+                time: time,
+                duration: calculatedDuration,
+                staff: staff,
+                branch: branch,
+                price: calculatedPrice,
+                addonPrice: 0,
+                discount: 0,
+                total: calculatedPrice,
+                paymentStatus: 'Chưa thanh toán (Tại quầy)',
+                status: 'pending',
+                alertType: !staff ? 'urgent' : null,
+                petAlert: petAlert || null,
+                customerNote: note,
+                timeline: initialTimeline
+            }, extraProps);
+
+            // Xác định chính xác các khóa ngoại liên kết CSDL Supabase
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            let customerDbId = currentMatchedCustomer?.id || null;
+            let petDbId = currentMatchedPet?.id || null;
+
+            // Lấy service_id từ option đang chọn hoặc servicesData
+            const selectedSvcOpt = svcSelect?.selectedOptions?.[0];
+            let serviceDbId = selectedSvcOpt?.dataset?.dbId || matchedSvc?.dbId || null;
+            if (!serviceDbId && matchedSvc) serviceDbId = matchedSvc.dbId;
+
+            // Lấy staff_id từ option KTV đang chọn
+            const selectedStaffOpt = newBookingStaffSelect?.selectedOptions?.[0];
+            let staffDbId = selectedStaffOpt?.dataset?.id || (liveStaffList && liveStaffList.find(s => s.full_name === staff)?.id) || null;
+
+            // Nếu là khách hàng mới chưa có trong CSDL, tạo mới khách hàng & hồ sơ trong Supabase
+            if (db && !customerDbId && phone) {
+                try {
+                    const { data: createdCust } = await db.from('customer').insert([{ phone_main: phone }]).select();
+                    if (createdCust && createdCust[0]) {
+                        customerDbId = createdCust[0].id;
+                        await db.from('customer_profile').insert([{
+                            customer_id: customerDbId,
+                            full_name: customer || 'Khách hàng mới'
+                        }]);
+                    }
+                } catch(errCust) {
+                    console.warn('Lỗi ghi khách hàng mới Supabase:', errCust);
+                }
+            }
+
+            // Nếu thú cưng chưa có ID trong CSDL, tạo mới pet_profile trong Supabase
+            if (db && customerDbId && !petDbId && petName) {
+                try {
+                    const { data: createdPet } = await db.from('pet_profile').insert([{
+                        customer_id: customerDbId,
+                        pet_name: petName,
+                        species: (category === 'Hotel' && (serviceName.includes('Mèo') || serviceName.includes('Cat'))) ? 'cat' : 'dog',
+                        breed: (preset && preset.breed) ? preset.breed : 'Thú cưng',
+                        allergy: petAlert || null
+                    }]).select();
+                    if (createdPet && createdPet[0]) {
+                        petDbId = createdPet[0].id;
+                    }
+                } catch(errPet) {
+                    console.warn('Lỗi ghi pet_profile Supabase:', errPet);
+                }
+            }
+
+            // Ghi nhận trực tiếp vào Supabase appointment với đầy đủ liên kết ngoại
+            if (db) {
+                try {
+                    const { data: insertedApp, error: appErr } = await db.from('appointment').insert([{
+                        appointment_code: newId,
+                        customer_id: customerDbId,
+                        pet_id: petDbId,
+                        service_id: serviceDbId,
+                        staff_id: staffDbId,
+                        appointment_date: date,
+                        appointment_time: time.length === 5 ? time + ':00' : time,
+                        appointment_status: 'PENDING',
+                        payment_status: 'UNPAID',
+                        total_price: calculatedPrice,
+                        note: (petAlert ? `[Lưu ý: ${petAlert}] ` : '') + (note || '')
+                    }]).select();
+
+                    if (!appErr && insertedApp && insertedApp[0]) {
+                        newBooking.dbId = insertedApp[0].id;
+                    }
+                } catch(err) {
+                    console.warn('Lỗi ghi Supabase appointment:', err);
+                }
+            }
+
+            resetCreateBookingForm();
+            closeCreateModal();
+            if (db) {
+                await loadServicesData(true);
+            } else {
+                bookingsData.unshift(newBooking);
+                persistData();
+            }
+            renderBookingsTable();
+            renderUpcomingBar();
+            updateKPIs();
+            resetCreateBookingForm();
+            showToast(`Đã lưu thành công lịch hẹn ${newId} (${categoryName})!`);
+        }
+
         if (formCreate) {
-            formCreate.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const newId = 'BKG-' + (1000 + bookingsData.length + 1);
-                const customer = document.getElementById('newBookingCustomer').value;
-                const phone = document.getElementById('newBookingPhone').value;
-                const petName = document.getElementById('newBookingPetName').value;
-                const category = document.getElementById('newBookingCategory').value;
-                const serviceName = document.getElementById('newBookingServiceSelect').value;
-                const date = document.getElementById('newBookingDate').value;
-                const time = document.getElementById('newBookingTime').value;
-                const staff = document.getElementById('newBookingStaff').value;
-                const branch = document.getElementById('newBookingBranch').value;
-                const petAlert = document.getElementById('newBookingPetAlert').value;
-                const note = document.getElementById('newBookingNotes').value;
-
-                let categoryName = 'Spa và Grooming';
-                if (category === 'Hotel') categoryName = 'Pet Hotel';
-                if (category === 'Taxi') categoryName = 'Pet Taxi';
-
-                // Tự động sinh danh sách bước Care-log từ Quy trình chuẩn của Dịch vụ được chọn
-                const matchedSvc = servicesData.find(s => s.name === serviceName);
-                const initialTimeline = (matchedSvc && matchedSvc.steps && matchedSvc.steps.length > 0)
-                    ? matchedSvc.steps.map((st, i) => ({
-                        time: i === 0 ? time : '--:--',
-                        title: st,
-                        desc: i === 0 ? 'Đã tiếp nhận và chuẩn bị ca dịch vụ' : 'Đang chờ thực hiện theo quy trình',
-                        done: i === 0,
-                        staff: staff || 'KTV'
-                    }))
-                    : [ { time: time, title: 'Tiếp nhận ca mới', desc: 'Đã tạo lịch hẹn thành công', done: true, staff: staff || 'PawPal' } ];
-
-                let extraProps = {};
-                let calculatedDuration = matchedSvc ? matchedSvc.duration : '60 phút';
-                let calculatedPrice = 250000;
-
-                if (category === 'Hotel') {
-                    const checkOutDate = document.getElementById('newBookingHotelCheckOutDate')?.value || date;
-                    const checkOutTime = document.getElementById('newBookingHotelCheckOutTime')?.value || '10:00';
-                    const roomType = document.getElementById('newBookingHotelRoomType')?.value || 'Phòng Deluxe (Máy lạnh 24/7)';
-                    const dietPlan = document.getElementById('newBookingHotelDiet')?.value || 'Pate tươi dinh dưỡng (2 bữa/ngày)';
-
-                    const d1 = new Date(date);
-                    const d2 = new Date(checkOutDate);
-                    const diffTime = Math.abs(d2 - d1);
-                    const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-                    calculatedDuration = `${diffDays} đêm`;
-                    calculatedPrice = diffDays * 380000;
-
-                    extraProps = {
-                        checkInDate: date,
-                        checkInTime: time,
-                        checkOutDate: checkOutDate,
-                        checkOutTime: checkOutTime,
-                        nights: diffDays,
-                        roomType: roomType,
-                        roomCode: 'DLX-0' + (bookingsData.length + 1),
-                        dietPlan: dietPlan,
-                        cameraCode: 'CAM-HOTEL-0' + (bookingsData.length + 1),
-                        duration: calculatedDuration
-                    };
-                } else if (category === 'Taxi') {
-                    const pickup = document.getElementById('newBookingTaxiPickup')?.value || 'Địa chỉ đón bé';
-                    const dropoff = document.getElementById('newBookingTaxiDropoff')?.value || 'PawPal Chi nhánh Quận 1';
-                    const tripType = document.getElementById('newBookingTaxiTripType')?.value || '2 chiều khứ hồi';
-                    const dist = parseFloat(document.getElementById('newBookingTaxiDistance')?.value) || 4.0;
-                    calculatedPrice = 150000;
-
-                    extraProps = {
-                        pickupAddress: pickup,
-                        dropoffAddress: dropoff,
-                        tripType: tripType,
-                        distanceKm: dist,
-                        driverName: staff || 'Hữu Phúc',
-                        driverPhone: '0978.112.233'
-                    };
-                } else {
-                    const style = document.getElementById('newBookingSpaStyle')?.value || 'Tắm sấy và Tạo hình tiêu chuẩn';
-                    const lvl = document.getElementById('newBookingSpaGroomerLevel')?.value || 'Senior Groomer';
-                    calculatedPrice = 350000;
-
-                    extraProps = {
-                        styleType: style,
-                        groomerLevel: lvl
-                    };
-                }
-
-                const preset = activeBookingPreset;
-                const newBooking = Object.assign({
-                    id: newId,
-                    userId: (preset && preset.userId) ? preset.userId : 'USER-001',
-                    customerName: customer,
-                    phone: phone,
-                    petId: (preset && preset.petId) ? preset.petId : 'PET-001',
-                    petName: petName,
-                    petBreed: (preset && (preset.breed || preset.speciesBreed)) ? (preset.breed || preset.speciesBreed) : 'Thú cưng',
-                    petWeight: (preset && preset.weight) ? preset.weight : '5.0 kg',
-                    petAge: (preset && preset.age) ? preset.age : '2 tuổi',
-                    serviceCode: matchedSvc ? matchedSvc.code : 'SPA01',
-                    category: category,
-                    categoryName: categoryName,
-                    serviceName: serviceName,
-                    date: date,
-                    time: time,
-                    duration: calculatedDuration,
-                    staff: staff,
-                    branch: branch,
-                    price: calculatedPrice,
-                    addonPrice: 0,
-                    discount: 0,
-                    total: calculatedPrice,
-                    paymentStatus: 'Chưa thanh toán (Tại quầy)',
-                    status: 'pending',
-                    alertType: !staff ? 'urgent' : null,
-                    petAlert: petAlert.trim() || null,
-                    customerNote: note,
-                    timeline: initialTimeline
-                }, extraProps);
-
-                // Xác định chính xác các khóa ngoại liên kết CSDL Supabase
-                const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                let customerDbId = currentMatchedCustomer?.id || null;
-                let petDbId = currentMatchedPet?.id || null;
-
-                // Lấy service_id từ option đang chọn hoặc servicesData
-                const selectedSvcOpt = svcSelect?.selectedOptions?.[0];
-                let serviceDbId = selectedSvcOpt?.dataset?.dbId || matchedSvc?.dbId || null;
-                if (!serviceDbId && matchedSvc) serviceDbId = matchedSvc.dbId;
-
-                // Lấy staff_id từ option KTV đang chọn
-                const selectedStaffOpt = newBookingStaffSelect?.selectedOptions?.[0];
-                let staffDbId = selectedStaffOpt?.dataset?.id || (liveStaffList && liveStaffList.find(s => s.full_name === staff)?.id) || null;
-
-                // Nếu là khách hàng mới chưa có trong CSDL, tạo mới khách hàng & hồ sơ trong Supabase
-                if (db && !customerDbId && phone) {
-                    try {
-                        const { data: createdCust } = await db.from('customer').insert([{ phone_main: phone }]).select();
-                        if (createdCust && createdCust[0]) {
-                            customerDbId = createdCust[0].id;
-                            await db.from('customer_profile').insert([{
-                                customer_id: customerDbId,
-                                full_name: customer || 'Khách hàng mới'
-                            }]);
-                        }
-                    } catch(errCust) {
-                        console.warn('Lỗi ghi khách hàng mới Supabase:', errCust);
-                    }
-                }
-
-                // Nếu thú cưng chưa có ID trong CSDL, tạo mới pet_profile trong Supabase
-                if (db && customerDbId && !petDbId && petName) {
-                    try {
-                        const { data: createdPet } = await db.from('pet_profile').insert([{
-                            customer_id: customerDbId,
-                            pet_name: petName,
-                            species: (category === 'Hotel' && (serviceName.includes('Mèo') || serviceName.includes('Cat'))) ? 'cat' : 'dog',
-                            breed: (preset && preset.breed) ? preset.breed : 'Thú cưng',
-                            allergy: petAlert ? petAlert.trim() : null
-                        }]).select();
-                        if (createdPet && createdPet[0]) {
-                            petDbId = createdPet[0].id;
-                        }
-                    } catch(errPet) {
-                        console.warn('Lỗi ghi pet_profile Supabase:', errPet);
-                    }
-                }
-
-                // Ghi nhận trực tiếp vào Supabase appointment với đầy đủ liên kết ngoại
-                if (db) {
-                    try {
-                        const { data: insertedApp, error: appErr } = await db.from('appointment').insert([{
-                            appointment_code: newId,
-                            customer_id: customerDbId,
-                            pet_id: petDbId,
-                            service_id: serviceDbId,
-                            staff_id: staffDbId,
-                            appointment_date: date,
-                            appointment_time: time.length === 5 ? time + ':00' : time,
-                            appointment_status: 'PENDING',
-                            payment_status: 'UNPAID',
-                            total_price: calculatedPrice,
-                            note: (petAlert ? `[Lưu ý: ${petAlert.trim()}] ` : '') + (note || '')
-                        }]).select();
-
-                        if (!appErr && insertedApp && insertedApp[0]) {
-                            newBooking.dbId = insertedApp[0].id;
-                        }
-                    } catch(err) {
-                        console.warn('Lỗi ghi Supabase appointment:', err);
-                    }
-                }
-
-                closeCreateModal();
-                if (db) {
-                    await loadServicesData(true);
-                } else {
-                    bookingsData.unshift(newBooking);
-                    persistData();
-                }
-                renderBookingsTable();
-                renderUpcomingBar();
-                updateKPIs();
-                formCreate.reset();
-                showToast(`Đã tạo thành công lịch hẹn ${newId} (${categoryName})!`);
-            });
+            formCreate.addEventListener('submit', handleCreateBookingSubmit);
+        }
+        const btnSubmitCreate = document.getElementById('btnSubmitCreateBooking');
+        if (btnSubmitCreate) {
+            btnSubmitCreate.addEventListener('click', handleCreateBookingSubmit);
         }
 
         // Modal 2: Thêm / Sửa dịch vụ
@@ -4722,6 +5177,7 @@
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 currentSearchTerm = e.target.value.trim();
+                currentBookingPage = 1;
                 renderBookingsTable();
             });
         }
@@ -4729,6 +5185,7 @@
         if (selectCategory) {
             selectCategory.addEventListener('change', (e) => {
                 currentFilterCategory = e.target.value;
+                currentBookingPage = 1;
                 renderBookingsTable();
             });
         }
@@ -4736,6 +5193,7 @@
         if (selectStatus) {
             selectStatus.addEventListener('change', (e) => {
                 currentFilterStatus = e.target.value;
+                currentBookingPage = 1;
                 renderBookingsTable();
             });
         }
@@ -4743,6 +5201,7 @@
         if (selectStaff) {
             selectStaff.addEventListener('change', (e) => {
                 currentFilterStaff = e.target.value;
+                currentBookingPage = 1;
                 renderBookingsTable();
             });
         }
@@ -4751,6 +5210,20 @@
             btnUpcoming.addEventListener('click', () => {
                 isUpcomingFilterActive = !isUpcomingFilterActive;
                 btnUpcoming.classList.toggle('active', isUpcomingFilterActive);
+
+                // Đồng bộ class active trên thẻ KPI
+                document.querySelectorAll('.kpi-card-clickable').forEach(card => {
+                    const kf = card.getAttribute('data-kpi-filter');
+                    if (kf === 'upcoming') {
+                        card.classList.toggle('active', isUpcomingFilterActive);
+                    } else if (isUpcomingFilterActive) {
+                        card.classList.remove('active');
+                    } else if (kf === 'ALL') {
+                        card.classList.add('active');
+                    }
+                });
+
+                currentBookingPage = 1;
                 renderBookingsTable();
             });
         }
@@ -4759,6 +5232,7 @@
             btnAllergy.addEventListener('click', () => {
                 isAllergyFilterActive = !isAllergyFilterActive;
                 btnAllergy.classList.toggle('active', isAllergyFilterActive);
+                currentBookingPage = 1;
                 renderBookingsTable();
             });
         }
@@ -4768,6 +5242,7 @@
             btnSla.addEventListener('click', () => {
                 isSlaFilterActive = !isSlaFilterActive;
                 btnSla.classList.toggle('active', isSlaFilterActive);
+                currentBookingPage = 1;
                 renderBookingsTable();
             });
         }
@@ -4778,6 +5253,17 @@
             btnStripFilter.addEventListener('click', () => {
                 isUpcomingFilterActive = true;
                 if (btnUpcoming) btnUpcoming.classList.add('active');
+
+                // Đồng bộ class active trên thẻ KPI
+                document.querySelectorAll('.kpi-card-clickable').forEach(card => {
+                    if (card.getAttribute('data-kpi-filter') === 'upcoming') {
+                        card.classList.add('active');
+                    } else {
+                        card.classList.remove('active');
+                    }
+                });
+
+                currentBookingPage = 1;
                 renderBookingsTable();
             });
         }
@@ -4789,6 +5275,7 @@
                 document.querySelectorAll('.kpi-card-clickable').forEach(c => c.classList.remove('active'));
                 card.classList.add('active');
 
+                currentBookingPage = 1;
                 if (kpiFilter === 'ALL') {
                     currentFilterStatus = 'ALL';
                     isUpcomingFilterActive = false;
@@ -4808,6 +5295,14 @@
                 renderBookingsTable();
             });
         });
+
+        // Nút Xóa bộ lọc ngay bên cạnh ô tìm kiếm đầu bảng
+        const btnToolbarReset = document.getElementById('btnToolbarResetFilters');
+        if (btnToolbarReset) {
+            btnToolbarReset.addEventListener('click', () => {
+                clearBookingSearchAndFilters();
+            });
+        }
 
         // Bộ lọc cho Subtab 3: Danh mục và Bảng giá
         const catalogSearchInput = document.getElementById('catalogSearchInput');
