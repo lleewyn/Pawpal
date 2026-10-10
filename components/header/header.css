@@ -734,7 +734,11 @@
         padding: 8px 10px;
     }
     .auth-actions .login-btn span {
-        display: none !important;
+        display: inline-block !important;
+    }
+    .auth-actions .login-btn {
+        padding: 6px 10px;
+        font-size: 0.85rem;
     }
     .btn-signup {
         padding: 6px 14px;
