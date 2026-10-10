@@ -1,0 +1,5 @@
+.env
+.env.*
+scripts/test/
+scripts/database/
+scripts/migrate_customer_auth.js

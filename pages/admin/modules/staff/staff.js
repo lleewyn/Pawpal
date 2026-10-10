@@ -262,6 +262,12 @@
                             return {
                                 id: code,
                                 rawId: s.id,
+                                auth_user_id: s.auth_user_id || null,
+                                account_status: s.account_status || (s.auth_user_id ? 'ACTIVE' : 'UNPROVISIONED'),
+                                system_role: s.system_role || 'STAFF',
+                                permissions: Array.isArray(s.permissions) ? s.permissions : [],
+                                must_change_password: Boolean(s.must_change_password),
+                                last_login_at: s.last_login_at ? formatDateTime(s.last_login_at) : null,
                                 name: s.full_name || 'Nhân viên PawPal',
                                 position: formattedPosition,
                                 role: formattedRole,
@@ -942,6 +948,27 @@
             if (elWorkStatus) {
                 elWorkStatus.textContent = staff.status === 'ACTIVE' ? 'Đang làm việc' : (staff.status === 'LEAVE' ? 'Nghỉ phép' : (staff.status === 'PAUSE' ? 'Tạm nghỉ' : 'Nghỉ việc'));
                 elWorkStatus.className = 'info-value ' + (staff.status === 'ACTIVE' ? 'text-success' : 'text-danger');
+            }
+
+            // Tài khoản hệ thống Pawpal-er
+            const elAccountStatus = document.getElementById('viewStaffAccountStatus');
+            const elLastLogin = document.getElementById('viewStaffLastLogin');
+            if (elAccountStatus) {
+                if (staff.auth_user_id) {
+                    if (staff.account_status === 'LOCKED') {
+                        elAccountStatus.textContent = 'Đang khóa';
+                        elAccountStatus.className = 'admin-badge badge-danger';
+                    } else {
+                        elAccountStatus.textContent = 'Đã kích hoạt';
+                        elAccountStatus.className = 'admin-badge badge-active';
+                    }
+                } else {
+                    elAccountStatus.textContent = 'Chưa cấp';
+                    elAccountStatus.className = 'admin-badge badge-neutral';
+                }
+            }
+            if (elLastLogin) {
+                elLastLogin.textContent = staff.last_login_at || 'Chưa đăng nhập';
             }
 
             // Công ca và năng suất tháng hiện tại (Giai đoạn 4)
@@ -3120,7 +3147,33 @@
         });
 
         // Modal Thêm/Sửa nhân sự
+        // Modal Thêm/Sửa nhân sự & Cấp tài khoản quản trị
         const staffModal = document.getElementById('staffModalOverlay');
+
+        const SYSTEM_ROLE_DEFAULT_PERMISSIONS = {
+            ADMIN: ['view_booking', 'confirm_booking', 'cancel_booking', 'update_image', 'update_note', 'create_order', 'checkout', 'manage_staff', 'manage_schedule', 'manage_promo'],
+            RECEPTIONIST: ['view_booking', 'confirm_booking', 'cancel_booking', 'create_order', 'checkout'],
+            GROOMER: ['view_booking', 'confirm_booking', 'update_image', 'update_note'],
+            CAREGIVER: ['view_booking', 'update_image', 'update_note'],
+            CSKH: ['view_booking', 'confirm_booking', 'update_note'],
+            DRIVER: ['view_booking'],
+            STAFF: ['view_booking', 'update_image', 'update_note']
+        };
+
+        function setPermissionsCheckboxes(permArray) {
+            const grid = document.getElementById('staffPermissionsGrid');
+            if (!grid) return;
+            const checkboxes = grid.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.checked = Array.isArray(permArray) && permArray.includes(cb.value);
+            });
+        }
+
+        function getSelectedPermissions() {
+            const grid = document.getElementById('staffPermissionsGrid');
+            if (!grid) return [];
+            return Array.from(grid.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+        }
 
         function openStaffModal(staffId) {
             const titleEl = document.getElementById('staffModalTitle');
@@ -3131,8 +3184,20 @@
             const dobIn = document.getElementById('staffInputDob');
             const joinIn = document.getElementById('staffInputJoinDate');
             const posIn = document.getElementById('staffInputPosition');
-            const roleIn = document.getElementById('staffInputRole');
+            const specIn = document.getElementById('staffInputSpecialization');
             const shiftIn = document.getElementById('staffInputShift');
+
+            const enableAccountToggle = document.getElementById('staffEnableAccountToggle');
+            const accountConfigSection = document.getElementById('staffAccountConfigSection');
+            const accountStatusRow = document.getElementById('staffAccountStatusRow');
+            const accountStatusBadge = document.getElementById('staffAccountStatusBadge');
+            const accountLastLoginText = document.getElementById('staffAccountLastLoginText');
+            const accountEmailIn = document.getElementById('staffAccountEmail');
+            const accountPassIn = document.getElementById('staffAccountPassword');
+            const accountPassLabel = document.getElementById('staffAccountPasswordLabel');
+            const systemRoleSelect = document.getElementById('staffAccountSystemRole');
+            const mustChangePassCb = document.getElementById('staffMustChangePasswordCheckbox');
+            const btnLockAccount = document.getElementById('btnStaffToggleLockAccount');
 
             if (!staffModal) return;
 
@@ -3147,9 +3212,46 @@
                     if (addrIn) addrIn.value = staff.address || '';
                     if (dobIn) dobIn.value = toIsoDate(staff.dob) || '1998-01-01';
                     if (joinIn) joinIn.value = toIsoDate(staff.join_date) || new Date().toISOString().split('T')[0];
-                    if (posIn) posIn.value = staff.position || 'Groomer';
-                    if (roleIn) roleIn.value = staff.role || 'Groomer';
+                    if (posIn) posIn.value = staff.position || 'Kỹ thuật viên Grooming';
+                    if (specIn) specIn.value = staff.note || '';
                     if (shiftIn) shiftIn.value = staff.shift || '';
+
+                    // Nạp trạng thái tài khoản đăng nhập
+                    if (staff.auth_user_id) {
+                        if (enableAccountToggle) enableAccountToggle.checked = true;
+                        if (accountConfigSection) accountConfigSection.style.display = 'block';
+                        if (accountStatusRow) accountStatusRow.style.display = 'flex';
+                        if (accountStatusBadge) {
+                            if (staff.account_status === 'LOCKED') {
+                                accountStatusBadge.textContent = 'Đang khóa';
+                                accountStatusBadge.className = 'admin-badge badge-danger';
+                                if (btnLockAccount) btnLockAccount.textContent = 'Mở khóa tài khoản';
+                            } else {
+                                accountStatusBadge.textContent = 'Đã kích hoạt';
+                                accountStatusBadge.className = 'admin-badge badge-active';
+                                if (btnLockAccount) btnLockAccount.textContent = 'Khóa tài khoản';
+                            }
+                        }
+                        if (accountLastLoginText) {
+                            accountLastLoginText.textContent = staff.last_login_at ? `Đăng nhập gần nhất: ${staff.last_login_at}` : 'Chưa đăng nhập';
+                        }
+                        if (accountEmailIn) accountEmailIn.value = staff.email || '';
+                        if (accountPassLabel) accountPassLabel.textContent = 'Mật khẩu mới (Bỏ trống nếu giữ nguyên)';
+                        if (accountPassIn) { accountPassIn.value = ''; accountPassIn.placeholder = 'Nhập nếu muốn đổi mật khẩu...'; }
+                        if (systemRoleSelect) systemRoleSelect.value = staff.system_role || 'GROOMER';
+                        if (mustChangePassCb) mustChangePassCb.checked = Boolean(staff.must_change_password);
+                        setPermissionsCheckboxes(staff.permissions && staff.permissions.length ? staff.permissions : SYSTEM_ROLE_DEFAULT_PERMISSIONS[staff.system_role || 'GROOMER']);
+                    } else {
+                        if (enableAccountToggle) enableAccountToggle.checked = false;
+                        if (accountConfigSection) accountConfigSection.style.display = 'none';
+                        if (accountStatusRow) accountStatusRow.style.display = 'none';
+                        if (accountEmailIn) accountEmailIn.value = staff.email || '';
+                        if (accountPassLabel) accountPassLabel.textContent = 'Mật khẩu khởi tạo *';
+                        if (accountPassIn) { accountPassIn.value = ''; accountPassIn.placeholder = 'Tối thiểu 6 ký tự...'; }
+                        if (systemRoleSelect) systemRoleSelect.value = 'GROOMER';
+                        if (mustChangePassCb) mustChangePassCb.checked = true;
+                        setPermissionsCheckboxes(SYSTEM_ROLE_DEFAULT_PERMISSIONS['GROOMER']);
+                    }
                 }
             } else {
                 if (titleEl) titleEl.innerText = 'Thêm nhân viên mới';
@@ -3160,9 +3262,19 @@
                 if (addrIn) addrIn.value = '';
                 if (dobIn) dobIn.value = '1998-01-01';
                 if (joinIn) joinIn.value = new Date().toISOString().split('T')[0];
-                if (posIn) posIn.value = 'Groomer';
-                if (roleIn) roleIn.value = 'Groomer';
+                if (posIn) posIn.value = 'Kỹ thuật viên Grooming';
+                if (specIn) specIn.value = '';
                 if (shiftIn) shiftIn.value = '';
+
+                if (enableAccountToggle) enableAccountToggle.checked = false;
+                if (accountConfigSection) accountConfigSection.style.display = 'none';
+                if (accountStatusRow) accountStatusRow.style.display = 'none';
+                if (accountEmailIn) accountEmailIn.value = '';
+                if (accountPassLabel) accountPassLabel.textContent = 'Mật khẩu khởi tạo *';
+                if (accountPassIn) { accountPassIn.value = ''; accountPassIn.placeholder = 'Tối thiểu 6 ký tự...'; }
+                if (systemRoleSelect) systemRoleSelect.value = 'GROOMER';
+                if (mustChangePassCb) mustChangePassCb.checked = true;
+                setPermissionsCheckboxes(SYSTEM_ROLE_DEFAULT_PERMISSIONS['GROOMER']);
             }
 
             staffModal.classList.add('active');
@@ -3177,8 +3289,14 @@
             const dobIn = document.getElementById('staffInputDob');
             const joinIn = document.getElementById('staffInputJoinDate');
             const posIn = document.getElementById('staffInputPosition');
-            const roleIn = document.getElementById('staffInputRole');
+            const specIn = document.getElementById('staffInputSpecialization');
             const shiftIn = document.getElementById('staffInputShift');
+
+            const enableAccountToggle = document.getElementById('staffEnableAccountToggle');
+            const accountEmailIn = document.getElementById('staffAccountEmail');
+            const accountPassIn = document.getElementById('staffAccountPassword');
+            const systemRoleSelect = document.getElementById('staffAccountSystemRole');
+            const mustChangePassCb = document.getElementById('staffMustChangePasswordCheckbox');
 
             const name = nameIn?.value.trim();
             const phoneRaw = (phoneIn?.value || '').trim();
@@ -3189,9 +3307,16 @@
             const address = addrIn?.value.trim() || '';
             const dob = dobIn?.value || '1998-01-01';
             const join_date = joinIn?.value || new Date().toISOString().split('T')[0];
-            const position = posIn?.value || 'Groomer';
-            const role = roleIn?.value || 'Groomer';
+            const position = posIn?.value || 'Kỹ thuật viên Grooming';
+            const specialization = specIn?.value.trim() || position;
             const shift = shiftIn?.value || '';
+
+            const isProvisioning = enableAccountToggle?.checked;
+            const accountEmail = accountEmailIn?.value.trim() || email;
+            const accountPass = accountPassIn?.value.trim() || '';
+            const systemRole = systemRoleSelect?.value || 'STAFF';
+            const selectedPermissions = getSelectedPermissions();
+            const mustChangePass = mustChangePassCb ? mustChangePassCb.checked : true;
 
             const fieldMap = [[nameIn, 'Họ và tên'], [phoneIn, 'Số điện thoại'], [emailIn, 'Email công việc'], [shiftIn, 'Ca làm việc']];
             fieldMap.forEach(([el]) => { el?.classList.remove('is-invalid'); el?.parentElement?.querySelector('.field-error')?.remove(); });
@@ -3203,13 +3328,25 @@
             if (!/^0\d{9}$/.test(phone || '')) addError(phoneIn, 'Số điện thoại phải gồm đúng 10 chữ số và bắt đầu bằng 0.');
             if (!email || !email.includes('@')) addError(emailIn, 'Email công việc không hợp lệ.');
             if (!shift) addError(shiftIn, 'Vui lòng chọn ca làm việc.');
+
+            const editingId = staffModal?.getAttribute('data-editing-id');
+            const editingStaff = editingId ? mockStaff.find(s => s.id === editingId) : null;
+
+            if (isProvisioning) {
+                if (!accountEmail || !accountEmail.includes('@')) {
+                    addError(accountEmailIn, 'Email công vụ đăng nhập không hợp lệ.');
+                }
+                if (!editingStaff?.auth_user_id && (!accountPass || accountPass.length < 6)) {
+                    addError(accountPassIn, 'Mật khẩu khởi tạo phải có độ dài tối thiểu 6 ký tự.');
+                }
+            }
+
             if (errors.length) {
-                const firstInvalid = [nameIn, phoneIn, emailIn, shiftIn].find(el => el?.classList.contains('is-invalid'));
+                const firstInvalid = [nameIn, phoneIn, emailIn, shiftIn, accountEmailIn, accountPassIn].find(el => el?.classList.contains('is-invalid'));
                 firstInvalid?.focus();
                 return;
             }
 
-            const editingId = staffModal?.getAttribute('data-editing-id');
             const duplicate = mockStaff.find(s => s.phone === phone && s.id !== editingId && s.status !== 'RESIGNED');
             if (duplicate) {
                 showToast(`Số điện thoại đã thuộc nhân viên ${duplicate.name} (${duplicate.id}).`, 'warning');
@@ -3218,49 +3355,54 @@
             }
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             let dbRole = 'PET_CARE';
-            if (role === 'Admin') dbRole = 'ADMIN';
-            else if (role === 'Veterinarian') dbRole = 'VET';
-            else if (role === 'Driver') dbRole = 'DRIVER';
-            else if (role === 'Receptionist') dbRole = 'RECEPTIONIST';
-            else if (role === 'CSKH') dbRole = 'CSKH';
+            if (systemRole === 'ADMIN') dbRole = 'ADMIN';
+            else if (systemRole === 'RECEPTIONIST') dbRole = 'RECEPTIONIST';
+            else if (systemRole === 'CSKH') dbRole = 'CSKH';
+            else if (systemRole === 'DRIVER') dbRole = 'DRIVER';
 
-            if (editingId) {
-                const staff = mockStaff.find(s => s.id === editingId);
-                if (staff) {
-                    staff.name = name;
-                    staff.phone = phone;
-                    staff.email = email;
-                    staff.address = address;
-                    staff.dob = formatDateVN(dob);
-                    staff.join_date = formatDateVN(join_date);
-                    staff.position = position;
-                    staff.role = role;
+            let savedRawId = null;
+            let targetStaff = null;
 
-                    if (client && staff.rawId) {
-                        try {
-                            await client.from('staff').update({
-                                full_name: name,
-                                phone_number: phone,
-                                role: dbRole,
-                                specialization: position,
-                                hire_date: toIsoDate(join_date),
+            if (editingId && editingStaff) {
+                targetStaff = editingStaff;
+                targetStaff.name = name;
+                targetStaff.phone = phone;
+                targetStaff.email = email;
+                targetStaff.address = address;
+                targetStaff.dob = formatDateVN(dob);
+                targetStaff.join_date = formatDateVN(join_date);
+                targetStaff.position = position;
+                targetStaff.note = specialization;
+                targetStaff.shift = shift;
+                targetStaff.system_role = systemRole;
+                targetStaff.permissions = selectedPermissions;
+                savedRawId = editingStaff.rawId;
+
+                if (client && savedRawId) {
+                    try {
+                        await client.from('staff').update({
+                            full_name: name,
+                            phone_number: phone,
+                            role: dbRole,
+                            specialization: specialization,
+                            hire_date: toIsoDate(join_date),
                             shift: shift,
-                                updated_at: new Date().toISOString()
-                            }).eq('id', staff.rawId);
+                            system_role: systemRole,
+                            permissions: selectedPermissions,
+                            updated_at: new Date().toISOString()
+                        }).eq('id', savedRawId);
 
-                            await client.from('audit_log').insert({
-                                user_id: staff.rawId,
-                                action: 'STAFF_UPDATED',
-                                entity: 'staff',
-                                entity_id: staff.rawId,
-                                old_data: null,
-                                new_data: { full_name: name, phone_number: phone, role: dbRole, specialization: position }
-                            });
-                        } catch (err) {
-                            console.warn('Lỗi cập nhật staff Supabase:', err);
-                        }
+                        await client.from('audit_log').insert({
+                            user_id: savedRawId,
+                            action: 'STAFF_UPDATED',
+                            entity: 'staff',
+                            entity_id: savedRawId,
+                            old_data: null,
+                            new_data: { full_name: name, phone_number: phone, role: dbRole, specialization: specialization }
+                        });
+                    } catch (err) {
+                        console.warn('Lỗi cập nhật staff Supabase:', err);
                     }
-                    showToast(`Đã cập nhật thông tin nhân viên ${staff.name} (${staff.id})!`, 'success');
                 }
             } else {
                 const maxNum = mockStaff.reduce((max, s) => {
@@ -3269,11 +3411,16 @@
                 }, 0);
                 const newId = `EMP-${String(maxNum + 1).padStart(3, '0')}`;
 
-                const newStaff = {
+                targetStaff = {
                     id: newId,
                     name: name,
                     position: position,
-                    role: role,
+                    role: mapDbRoleToStaffRole(dbRole, specialization),
+                    system_role: systemRole,
+                    permissions: selectedPermissions,
+                    auth_user_id: null,
+                    account_status: 'UNPROVISIONED',
+                    must_change_password: mustChangePass,
                     phone: phone,
                     email: email,
                     shift: shift,
@@ -3285,7 +3432,7 @@
                     skillResult: 'PASS',
                     skillExam: 'Đạt (85đ)',
                     serviceLocked: false,
-                    note: 'Nhân sự mới bổ sung vào hệ thống PawPal'
+                    note: specialization
                 };
 
                 if (client) {
@@ -3294,24 +3441,25 @@
                             full_name: name,
                             phone_number: phone,
                             role: dbRole,
-                            specialization: position,
+                            specialization: specialization,
                             hire_date: toIsoDate(join_date),
-                            shift: shift
+                            shift: shift,
+                            system_role: systemRole,
+                            permissions: selectedPermissions
                         }).select().single();
 
                         if (insertError) throw insertError;
                         if (!inserted || !inserted.id) throw new Error('Không nhận được nhân viên vừa tạo từ cơ sở dữ liệu.');
-                        if (inserted) {
-                            newStaff.rawId = inserted.id;
-                        }
+                        targetStaff.rawId = inserted.id;
+                        savedRawId = inserted.id;
 
                         await client.from('audit_log').insert({
-                            user_id: inserted ? inserted.id : 'd0000000-0000-0000-0000-000000000001',
+                            user_id: savedRawId,
                             action: 'STAFF_CREATED',
                             entity: 'staff',
-                            entity_id: inserted ? inserted.id : newId,
+                            entity_id: savedRawId,
                             old_data: null,
-                            new_data: { full_name: name, phone_number: phone, role: dbRole, specialization: position }
+                            new_data: { full_name: name, phone_number: phone, role: dbRole, specialization: specialization }
                         });
                     } catch (err) {
                         console.error('Lỗi thêm staff Supabase:', err);
@@ -3323,9 +3471,50 @@
                     return;
                 }
 
-                mockStaff.unshift(newStaff);
-                selectedStaffId = newId;
-                showToast(`Đã thêm mới nhân viên ${newStaff.name} với mã ${newStaff.id}!`, 'success');
+                mockStaff.unshift(targetStaff);
+                selectedStaffId = targetStaff.id;
+            }
+
+            // Xử lý Cấp hoặc Cập nhật tài khoản Auth qua Server API
+            if (isProvisioning && savedRawId) {
+                try {
+                    const payload = {
+                        staffId: savedRawId,
+                        email: accountEmail,
+                        password: accountPass || (targetStaff.auth_user_id ? undefined : 'PawPal@2026'),
+                        systemRole: systemRole,
+                        permissions: selectedPermissions,
+                        mustChangePassword: mustChangePass
+                    };
+
+                    let apiRes = await fetch('/api/admin/staff/provision-account', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (apiRes.status === 404) {
+                        apiRes = await fetch('/api/chat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'STAFF_AUTH_PROVISION', ...payload })
+                        });
+                    }
+                    const apiData = await apiRes.json();
+                    if (apiData && apiData.success) {
+                        targetStaff.auth_user_id = apiData.authUserId;
+                        targetStaff.account_status = 'ACTIVE';
+                        targetStaff.system_role = systemRole;
+                        targetStaff.must_change_password = mustChangePass;
+                        showToast(`Đã lưu nhân viên và cấp tài khoản đăng nhập thành công cho ${targetStaff.name}!`, 'success');
+                    } else {
+                        showToast('Lưu nhân viên thành công, nhưng cấp tài khoản gặp sự cố: ' + (apiData?.message || ''), 'warning');
+                    }
+                } catch (provisionErr) {
+                    console.warn('Lỗi gọi API cấp tài khoản:', provisionErr);
+                    showToast('Lưu thông tin nhân viên thành công!', 'success');
+                }
+            } else {
+                showToast(`Đã lưu thông tin nhân viên ${targetStaff.name}!`, 'success');
             }
 
             saveStaffDataToStorage();
@@ -3398,6 +3587,124 @@
         document.getElementById('btnSaveStaff')?.addEventListener('click', handleSaveStaff);
         document.getElementById('btnExportStaffExcel')?.addEventListener('click', exportStaffToExcel);
         document.getElementById('btnExportStaff')?.addEventListener('click', exportStaffToExcel);
+
+        // Bật / tắt khu vực cấu hình tài khoản
+        document.getElementById('staffEnableAccountToggle')?.addEventListener('change', (e) => {
+            const configSection = document.getElementById('staffAccountConfigSection');
+            if (configSection) {
+                configSection.style.display = e.target.checked ? 'block' : 'none';
+            }
+            if (e.target.checked) {
+                const emailIn = document.getElementById('staffInputEmail');
+                const accountEmailIn = document.getElementById('staffAccountEmail');
+                if (accountEmailIn && !accountEmailIn.value.trim() && emailIn?.value.trim()) {
+                    accountEmailIn.value = emailIn.value.trim();
+                }
+            }
+        });
+
+        // Thay đổi Vai trò hệ thống -> Tự động gợi ý ma trận quyền
+        document.getElementById('staffAccountSystemRole')?.addEventListener('change', (e) => {
+            const role = e.target.value;
+            if (SYSTEM_ROLE_DEFAULT_PERMISSIONS[role]) {
+                setPermissionsCheckboxes(SYSTEM_ROLE_DEFAULT_PERMISSIONS[role]);
+            }
+        });
+
+        // Nút Tạo mật khẩu ngẫu nhiên
+        document.getElementById('btnGenerateRandomStaffPass')?.addEventListener('click', () => {
+            const passIn = document.getElementById('staffAccountPassword');
+            if (passIn) {
+                const randomStr = 'PawPal@' + Math.floor(1000 + Math.random() * 9000);
+                passIn.value = randomStr;
+                showToast(`Đã tạo mật khẩu khởi tạo: ${randomStr}`, 'info');
+            }
+        });
+
+        // Nút Đặt lại mật khẩu trong Modal
+        document.getElementById('btnStaffResetPasswordModal')?.addEventListener('click', async () => {
+            const editingId = staffModal?.getAttribute('data-editing-id');
+            const staff = mockStaff.find(s => s.id === editingId);
+            if (!staff || !staff.rawId || !staff.auth_user_id) {
+                showToast('Nhân viên này chưa có tài khoản hệ thống để đặt lại mật khẩu.', 'warning');
+                return;
+            }
+            const randomPass = 'PawPal@' + Math.floor(1000 + Math.random() * 9000);
+            const confirmed = confirm(`Bạn có muốn đặt lại mật khẩu cho nhân viên ${staff.name} thành "${randomPass}" không?`);
+            if (!confirmed) return;
+
+            try {
+                const payload = { staffId: staff.rawId, newPassword: randomPass };
+                let res = await fetch('/api/admin/staff/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.status === 404) {
+                    res = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'STAFF_AUTH_RESET_PASSWORD', ...payload })
+                    });
+                }
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`Đã đặt lại mật khẩu thành công: ${randomPass}`, 'success');
+                } else {
+                    showToast(data.message || 'Không thể đặt lại mật khẩu.', 'danger');
+                }
+            } catch (err) {
+                showToast('Lỗi kết nối khi đặt lại mật khẩu: ' + err.message, 'danger');
+            }
+        });
+
+        // Nút Khóa / Mở khóa tài khoản trong Modal
+        document.getElementById('btnStaffToggleLockAccount')?.addEventListener('click', async () => {
+            const editingId = staffModal?.getAttribute('data-editing-id');
+            const staff = mockStaff.find(s => s.id === editingId);
+            if (!staff || !staff.rawId) return;
+
+            const isLocked = staff.account_status === 'LOCKED';
+            const targetStatus = isLocked ? 'ACTIVE' : 'LOCKED';
+            const actionText = isLocked ? 'mở khóa' : 'khóa';
+
+            const confirmed = confirm(`Bạn có chắc chắn muốn ${actionText} tài khoản đăng nhập của ${staff.name}?`);
+            if (!confirmed) return;
+
+            try {
+                const payload = { staffId: staff.rawId, targetStatus: targetStatus };
+                let res = await fetch('/api/admin/staff/toggle-account-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.status === 404) {
+                    res = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'STAFF_AUTH_TOGGLE_STATUS', ...payload })
+                    });
+                }
+                const data = await res.json();
+                if (data.success) {
+                    staff.account_status = targetStatus;
+                    const badge = document.getElementById('staffAccountStatusBadge');
+                    const btn = document.getElementById('btnStaffToggleLockAccount');
+                    if (badge) {
+                        badge.textContent = targetStatus === 'LOCKED' ? 'Đang khóa' : 'Đã kích hoạt';
+                        badge.className = 'admin-badge ' + (targetStatus === 'LOCKED' ? 'badge-danger' : 'badge-active');
+                    }
+                    if (btn) btn.textContent = targetStatus === 'LOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản';
+                    showToast(data.message, 'success');
+                    renderStaffList();
+                    if (selectedStaffId === staff.id) renderStaffProfileDetail(staff);
+                } else {
+                    showToast(data.message || 'Lỗi cập nhật trạng thái', 'danger');
+                }
+            } catch (err) {
+                showToast('Lỗi kết nối: ' + err.message, 'danger');
+            }
+        });
 
         // Thao tác từ dropdown 3 chấm
         document.getElementById('menuActionViewProfile')?.addEventListener('click', () => {

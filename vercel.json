@@ -11,6 +11,18 @@
   ],
   "rewrites": [
     {
+      "source": "/api/customer/auth/:path*",
+      "destination": "/api/customer-auth?action=:path*"
+    },
+    {
+      "source": "/user",
+      "destination": "/pages/user/index.html"
+    },
+    {
+      "source": "/user/",
+      "destination": "/pages/user/index.html"
+    },
+    {
       "source": "/pages/public/landing",
       "destination": "/pages/public/landing/landing.html"
     },

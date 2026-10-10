@@ -12,12 +12,7 @@ function getSupabaseClient() {
 
 function getCurrentUser() {
     try {
-        return JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || {
-            id: 'USER-001',
-            name: 'Nguyễn Văn A',
-            phone: '0901234567',
-            email: 'quyen@gmail.com'
-        };
+        return JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || null;
     } catch (e) {
         return null;
     }
@@ -162,7 +157,7 @@ function validateChangePasswordForm() {
     if (!newPassword || !confirmNewPassword || !btnSubmit) return;
 
     const isCurrentValid = currentPassword ? currentPassword.value.trim().length > 0 : true;
-    const isPasswordValid = newPassword.value.length >= 8;
+    const isPasswordValid = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/s.test(newPassword.value) && newPassword.value.length <= 128;
     const isConfirmMatch = confirmNewPassword.value === newPassword.value;
     const isConfirmFilled = confirmNewPassword.value.length > 0;
 
@@ -217,26 +212,19 @@ function initChangePasswordForm() {
         btnSubmit.disabled = true;
         btnSubmit.textContent = 'Đang lưu...';
 
-        const updatedUser = {
-            ...user,
-            password: newPassword.value,
-            is_temporary: false
-        };
-
-        // 1. Cập nhật vào Supabase Live Database
         try {
-            const client = getSupabaseClient();
-            if (client && user.id) {
-                await client.from('customer').update({
-                    password_hash: newPassword.value,
-                    is_temporary: false
-                }).eq('id', user.id);
-            }
+            if (!currentPassword?.value || !newPassword.value || newPassword.value !== confirmNewPassword.value) throw new Error('Vui lòng kiểm tra mật khẩu hiện tại và mật khẩu nhập lại.');
+            const result = await window.PawpalCustomerAuth.request('change-password', {
+                currentPassword: currentPassword.value,
+                newPassword: newPassword.value
+            }, true);
+            await window.PawpalCustomerAuth.accept(result);
         } catch (dbErr) {
-            console.warn('[Settings] Lỗi cập nhật mật khẩu lên Supabase:', dbErr);
+            showToast('error', dbErr.message || 'Không thể cập nhật mật khẩu. Vui lòng thử lại.');
+            btnSubmit.textContent = 'Cập nhật mật khẩu';
+            validateChangePasswordForm();
+            return;
         }
-
-        updateCurrentUserRecord(updatedUser);
 
         const warning = document.getElementById('tempAccountWarning');
         if (warning) warning.classList.add('d-none');

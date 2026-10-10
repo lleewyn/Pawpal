@@ -1,5 +1,6 @@
 
 import { API } from '/scripts/api/api.js';
+import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
 import './return-handler.js';
 import './review-handler.js';
 
@@ -14,7 +15,16 @@ const ordersState = {
     reviews: []
 };
 
+let ordersLoadVersion = 0;
+let stopOrdersRealtime;
+export function dispose() {
+    ++ordersLoadVersion;
+    stopOrdersRealtime?.();
+    clearInterval(pendingOrdersTicker);
+}
+
 async function loadOrders() {
+    const loadVersion = ++ordersLoadVersion;
     try {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         
@@ -27,49 +37,10 @@ async function loadOrders() {
             await new Promise(r => setTimeout(r, 300));
         }
 
-        let remoteOrders = [];
-        try {
-            if (currentUser && currentUser.id) {
-                const res = await API.getUserOrders(currentUser.id);
-                if (Array.isArray(res)) remoteOrders = res;
-            }
-        } catch (e) {
-            console.warn('[Orders] API.getUserOrders error:', e);
-        }
-
-        // 1. Lấy đơn hàng từ localStorage (được tạo qua checkout hoặc thanh toán)
-        const localOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-        
-        // 2. Lọc đơn thuộc về user hiện tại
-        const userPhone = String(currentUser?.phone || '').trim();
-        const userId = String(currentUser?.id || '').trim();
-        
-        let matchingLocalOrders = localOrders.filter(o => {
-            const oUserId = String(o.userId || '');
-            const oPhone = String(o.userPhone || o.shipping?.phone || o.delivery?.phone || '');
-            if (userId && (oUserId === userId || oUserId === 'USER-001')) return true;
-            if (userPhone && oPhone === userPhone) return true;
-            if (!userId && !userPhone) return true;
-            return false;
-        });
-
-        // 3. Hợp nhất danh sách đơn hàng
-        const orderMap = new Map();
-        matchingLocalOrders.forEach(order => {
-            const key = String(order.id || order.orderId || order._supabaseId || '');
-            if (key) orderMap.set(key, order);
-        });
-
-        remoteOrders.forEach(order => {
-            const key = String(order.id || order.order_code || order._supabaseId || '');
-            if (key) {
-                const existing = orderMap.get(key);
-                orderMap.set(key, { ...order, ...(existing || {}) });
-            }
-        });
-
-        // 5. Chuẩn hóa từng đơn hàng
-        const mergedList = Array.from(orderMap.values()).map(order => {
+        const remoteOrders = await API.getUserOrders(currentUser.id);
+        if (loadVersion !== ordersLoadVersion) return;
+        // Live data is authoritative; never merge browser copies over server state.
+        const mergedList = remoteOrders.map(order => {
             const products = Array.isArray(order.products) && order.products.length > 0
                 ? order.products
                 : (Array.isArray(order.items) && order.items.length > 0 ? order.items : []);
@@ -113,6 +84,7 @@ async function loadOrders() {
                     db.from('return_request').select('sales_order_id').eq('customer_id', currentUser.id),
                     db.from('review').select('sales_order_id').eq('customer_id', currentUser.id)
                 ]);
+                if (loadVersion !== ordersLoadVersion) return;
                 if (returnsRes.data) ordersState.returns = returnsRes.data.map(r => r.sales_order_id);
                 if (reviewsRes.data) ordersState.reviews = reviewsRes.data.map(r => r.sales_order_id);
             } catch(e) {
@@ -121,11 +93,13 @@ async function loadOrders() {
         }
 
         checkAndExpirePendingOrders();
+        if (loadVersion !== ordersLoadVersion) return;
         updateStats();
         updateTabCounts();
         applyFilters();
         startPendingOrdersTicker();
     } catch (error) {
+        if (loadVersion !== ordersLoadVersion) return;
         console.error('Lỗi load đơn hàng:', error);
         showEmptyState('Không thể tải đơn hàng. Vui lòng thử lại sau.');
     }
@@ -1238,6 +1212,9 @@ export async function initOrders() {
     if (isInitRunning) return;
     isInitRunning = true;
     try {
+        const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        stopOrdersRealtime = watchCustomerTables(client, user?.id, ['sales_order', 'return_request', 'review'], loadOrders);
         if (typeof window.setUserSubBreadcrumb === 'function') {
             window.setUserSubBreadcrumb('', 'orders');
         }

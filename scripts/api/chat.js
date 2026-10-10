@@ -497,6 +497,20 @@ module.exports = async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
+    // Điều phối API Cấp và Quản lý Tài khoản Nhân sự (Hot-reload an toàn)
+    if (req.body?.action === 'STAFF_AUTH_PROVISION') {
+        const staffAuthApi = require('./staff_auth.js');
+        return staffAuthApi.provisionAccount(req, res);
+    }
+    if (req.body?.action === 'STAFF_AUTH_RESET_PASSWORD') {
+        const staffAuthApi = require('./staff_auth.js');
+        return staffAuthApi.resetPassword(req, res);
+    }
+    if (req.body?.action === 'STAFF_AUTH_TOGGLE_STATUS') {
+        const staffAuthApi = require('./staff_auth.js');
+        return staffAuthApi.toggleAccountStatus(req, res);
+    }
+
     try {
         const { messages, conversationId: clientConvId, sessionToken } = req.body;
         const authHeader = req.headers['authorization'];

@@ -1138,3 +1138,143 @@
     margin-top: -8px;
     align-self: start;
 }
+
+/* ==========================================================================
+   CUSTOMER AUTOCOMPLETE POPOVER & CHIPS (CHUẨN PAWPAL-ER)
+   ========================================================================== */
+.customer-autocomplete-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.customer-autocomplete-popover {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #FFFFFF;
+    border: 1px solid var(--border-neutral, #ECF2EE);
+    border-radius: var(--admin-radius, 9px);
+    box-shadow: 0 10px 28px rgba(35, 107, 72, 0.14);
+    z-index: 2500;
+    max-height: 240px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.customer-autocomplete-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 14px;
+    border-bottom: 1px solid #F4FAF6;
+    cursor: pointer;
+    background-color: transparent;
+    transition: background 0.15s ease;
+}
+
+.customer-autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.customer-autocomplete-item:hover,
+.customer-autocomplete-item.active {
+    background-color: #EEF5F1;
+}
+
+.customer-autocomplete-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.customer-autocomplete-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #DCEEE2;
+    color: #165335;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.customer-autocomplete-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.customer-autocomplete-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-main, #203A2C);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.customer-autocomplete-phone {
+    font-size: 11.5px;
+    color: var(--text-muted, #4F7A65);
+}
+
+.customer-autocomplete-badge {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #236B48;
+    background-color: #EEF5F1;
+    padding: 3px 8px;
+    border-radius: var(--admin-radius, 9px);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.customer-autocomplete-empty {
+    padding: 14px;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--text-muted, #4F7A65);
+}
+
+.adjust-customer-selected-card {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background-color: #EEF5F1;
+    border-radius: var(--admin-radius, 9px);
+    font-size: 12.5px;
+    color: var(--text-heading, #236B48);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.adjust-reason-quick-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.reason-quick-chip {
+    background-color: #EEF5F1;
+    border: none;
+    border-radius: var(--admin-radius, 9px);
+    padding: 4px 10px;
+    font-size: 12px;
+    color: var(--text-heading, #236B48);
+    cursor: pointer;
+    font-weight: 500;
+    line-height: 1.4;
+    transition: background-color 0.15s ease;
+}
+
+.reason-quick-chip:hover {
+    background-color: #DCEEE2;
+}
+

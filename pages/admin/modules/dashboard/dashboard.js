@@ -128,34 +128,47 @@
     function renderDashboardKPIs() {
         const todayStr = getTodayDateString();
 
-        // Doanh thu hôm nay (chỉ tính các đơn hoàn thành/đã giao trong ngày hôm nay)
+        // 1. Doanh thu hôm nay (gồm đơn bán hàng hoàn thành/đã giao/đã thanh toán + ca dịch vụ hoàn thành)
         const todayOrders = liveSalesOrders.filter(o => {
             const dateStr = o.created_at ? o.created_at.substring(0, 10) : '';
             return dateStr === todayStr;
         });
 
-        const todayCompletedRevenue = todayOrders
+        const todayOrderRevenue = todayOrders
             .filter(o => {
                 const s = (o.order_status || '').toUpperCase();
-                return s === 'COMPLETED' || s === 'DA_GIAO' || s === 'PAID';
+                const p = (o.payment_status || '').toUpperCase();
+                return s === 'COMPLETED' || s === 'DELIVERED' || s === 'DA_GIAO' || s === 'PAID' || p === 'PAID';
             })
             .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
 
-        // Lịch hẹn hôm nay
+        const todayServiceRevenue = liveAppointments
+            .filter(a => {
+                const isToday = a.appointment_date === todayStr;
+                const s = (a.appointment_status || '').toUpperCase();
+                return isToday && (s === 'COMPLETED' || s === 'DA_HOAN_THANH');
+            })
+            .reduce((sum, a) => sum + (parseFloat(a.total_price || a.price || 0) || 0), 0);
+
+        const todayCompletedRevenue = todayOrderRevenue + todayServiceRevenue;
+
+        // 2. Lịch hẹn hôm nay (chỉ đếm ca chưa bị hủy)
         const todayBookingsCount = liveAppointments.filter(a => {
-            return a.appointment_date === todayStr;
+            const isToday = a.appointment_date === todayStr;
+            const s = (a.appointment_status || '').toUpperCase();
+            return isToday && s !== 'CANCELLED' && s !== 'DA_HUY';
         }).length;
 
-        // Đơn hàng mới cần duyệt (Chờ xác nhận / Đang xử lý)
+        // 3. Đơn hàng mới cần duyệt (Chờ xác nhận / Đang xử lý)
         const pendingOrders = liveSalesOrders.filter(o => {
             const s = (o.order_status || '').toUpperCase();
             return s === 'PENDING' || s === 'CHO_XAC_NHAN' || s === 'DANG_XU_LY';
         });
 
-        // Khiếu nại chờ xử lý
+        // 4. Khiếu nại chờ xử lý (hỗ trợ cả cột status và ticket_status từ Supabase support_ticket)
         const pendingTickets = liveTickets.filter(t => {
-            const s = (t.ticket_status || '').toUpperCase();
-            return s === 'OPEN' || s === 'IN_PROGRESS' || s === 'PENDING';
+            const s = (t.status || t.ticket_status || '').toUpperCase();
+            return s === 'OPEN' || s === 'IN_PROGRESS' || s === 'PENDING' || s === 'NEW' || s === 'PROCESSING';
         });
 
         // Render DOM 5 thẻ KPI (100% số liệu thực)
@@ -356,22 +369,36 @@
             return formatISODate(d);
         });
 
-        // Tính doanh thu theo ngày từ các đơn hàng hoàn tất/đã giao
+        // Tính doanh thu theo ngày từ các đơn hàng hoàn tất/đã giao + lịch dịch vụ hoàn tất
         const completedOrders = liveSalesOrders.filter(o => {
             const s = (o.order_status || '').toUpperCase();
-            return s === 'COMPLETED' || s === 'DA_GIAO' || s === 'PAID';
+            const p = (o.payment_status || '').toUpperCase();
+            return s === 'COMPLETED' || s === 'DELIVERED' || s === 'DA_GIAO' || s === 'PAID' || p === 'PAID';
+        });
+
+        const completedAppts = liveAppointments.filter(a => {
+            const s = (a.appointment_status || '').toUpperCase();
+            return s === 'COMPLETED' || s === 'DA_HOAN_THANH';
         });
 
         const currentWeek = currentWeekDays.map(dateStr => {
-            return completedOrders
+            const orderSum = completedOrders
                 .filter(o => o.created_at && o.created_at.substring(0, 10) === dateStr)
-                .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0) / 100000; // Đơn vị: 100k
+                .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
+            const apptSum = completedAppts
+                .filter(a => (a.appointment_date === dateStr || (a.created_at && a.created_at.substring(0, 10) === dateStr)))
+                .reduce((sum, a) => sum + (parseFloat(a.total_price || a.price || 0) || 0), 0);
+            return (orderSum + apptSum) / 100000; // Đơn vị: 100k
         });
 
         const previousWeek = previousWeekDays.map(dateStr => {
-            return completedOrders
+            const orderSum = completedOrders
                 .filter(o => o.created_at && o.created_at.substring(0, 10) === dateStr)
-                .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0) / 100000;
+                .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
+            const apptSum = completedAppts
+                .filter(a => (a.appointment_date === dateStr || (a.created_at && a.created_at.substring(0, 10) === dateStr)))
+                .reduce((sum, a) => sum + (parseFloat(a.total_price || a.price || 0) || 0), 0);
+            return (orderSum + apptSum) / 100000;
         });
 
         const maxVal = Math.max(...currentWeek, ...previousWeek, 40);
@@ -850,7 +877,11 @@
 
         const assignedStaffToday = new Set(
             liveAppointments
-                .filter(a => a.appointment_date === todayStr && a.staff_id)
+                .filter(a => {
+                    const isToday = a.appointment_date === todayStr;
+                    const s = (a.appointment_status || '').toUpperCase();
+                    return isToday && a.staff_id && s !== 'CANCELLED' && s !== 'DA_HUY';
+                })
                 .map(a => a.staff_id)
         );
 
@@ -890,7 +921,7 @@
                     sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-products');
                     sessionStorage.setItem('pawpal_admin_product_search', sku);
                 } else if (bookingId) {
-                    sessionStorage.setItem('pawpal_admin_services_active_subtab', 'tab-service-bookings');
+                    sessionStorage.setItem('pawpal_admin_services_active_subtab', 'tab-service-detail');
                     sessionStorage.setItem('pawpal_admin_service_selected_id', bookingId);
                 } else if (moduleName === 'Dịch vụ') {
                     sessionStorage.setItem('pawpal_admin_services_active_subtab', 'tab-service-bookings');
@@ -1016,9 +1047,10 @@
         if (btnGo) {
             btnGo.addEventListener('click', () => {
                 closeBookingQuickModal();
-                sessionStorage.setItem('pawpal_admin_services_active_subtab', 'tab-service-bookings');
-                if (currentSelectedQuickBooking && currentSelectedQuickBooking.id) {
-                    sessionStorage.setItem('pawpal_admin_service_selected_id', currentSelectedQuickBooking.id);
+                sessionStorage.setItem('pawpal_admin_services_active_subtab', 'tab-service-detail');
+                if (currentSelectedQuickBooking) {
+                    const targetCode = currentSelectedQuickBooking.appointmentCode || currentSelectedQuickBooking.id;
+                    sessionStorage.setItem('pawpal_admin_service_selected_id', targetCode);
                 }
                 const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
                     .find(b => b.getAttribute('data-title') === 'Dịch vụ');

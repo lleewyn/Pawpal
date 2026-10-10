@@ -2,20 +2,58 @@
  * user.js - Bộ điều phối Single-Page Application (SPA Module Router) cho PawPal User Portal
  */
 
-(function () {
-    // 1. Kiểm tra trạng thái đăng nhập
+(async function () {
+    // 1. Kiểm tra trạng thái đăng nhập & Bảo vệ cô lập 2 chiều
     function checkAuth() {
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
+        let currentUser = null;
+        try {
+            currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
+        } catch(e) {}
+
         if (!currentUser) {
             sessionStorage.setItem('pawpal_redirect_after_login', window.location.href);
             alert('Vui lòng đăng nhập để truy cập trang này');
-            window.location.href = '/pages/public/login/login.html';
+            window.location.href = '/login';
             return false;
         }
+
+        if (currentUser.is_temporary) {
+            window.location.href = `/login?action=guest-activate&phone=${encodeURIComponent(currentUser.phone || '')}`;
+            return false;
+        }
+
+        // BẢO VỆ CÔ LẬP 2 CHIỀU: Chặn tuyệt đối tài khoản Quản trị / Nhân sự truy cập Cổng Khách hàng
+        if (currentUser.system_role === 'ADMIN' || currentUser.system_role === 'STAFF' || currentUser.system_role === 'MANAGER' || currentUser.role === 'admin' || currentUser.role === 'staff') {
+            localStorage.removeItem('pawpal_current_user');
+            sessionStorage.removeItem('pawpal_current_user');
+            alert('Tài khoản công vụ Quản trị viên / Nhân sự không được phép truy cập Cổng Khách hàng. Hệ thống sẽ chuyển hướng bạn về Cổng Quản trị.');
+            window.location.href = '/admin/login';
+            return false;
+        }
+
+        if (currentUser.role && currentUser.role !== 'customer') {
+            localStorage.removeItem('pawpal_current_user');
+            sessionStorage.removeItem('pawpal_current_user');
+            window.location.href = '/login';
+            return false;
+        }
+
         return true;
     }
 
     if (!checkAuth()) return;
+    try {
+        const result = await window.PawpalCustomerAuth.request('me', {}, true);
+        await window.PawpalCustomerAuth.accept(result);
+    } catch {
+        localStorage.removeItem('pawpal_current_user');
+        sessionStorage.removeItem('pawpal_current_user');
+        window.location.href = '/login';
+        return;
+    }
+
+    const { createLatestRenderer } = await import('/scripts/shared/latest-render.mjs');
+    const moduleRenderer = createLatestRenderer();
 
     // 2. Định nghĩa cấu hình Routing
     const ROUTE_CONFIG = {
@@ -169,6 +207,7 @@
     }
 
     // 4. Trình nạp Script động
+    let activeModuleDispose;
     async function loadModuleScript(scriptSrc, isModule = false) {
         const existingScript = document.getElementById('dynamic-user-module-script');
         if (existingScript) existingScript.remove();
@@ -177,13 +216,16 @@
         const fullSrc = (scriptSrc.startsWith('/') ? scriptSrc : `/pages/user/${scriptSrc}`) + '?v=' + Date.now();
         if (isModule) {
             try {
+                if (activeModuleDispose) await activeModuleDispose();
+                activeModuleDispose = null;
                 const mod = await import(fullSrc);
+                activeModuleDispose = typeof mod.dispose === 'function' ? mod.dispose : null;
                 if (mod && typeof mod.init === 'function') {
                     await mod.init();
                 }
                 return;
             } catch (err) {
-                console.warn('[user.js] dynamic import fallback to script tag:', err);
+                throw err;
             }
         }
         const script = document.createElement('script');
@@ -307,6 +349,7 @@
 
     // 7. Hàm chính: Tải module
     async function loadModule(routeKey) {
+        const ticket = moduleRenderer.begin();
         const contentContainer = document.getElementById('userAppContent');
         if (!contentContainer) return;
 
@@ -321,10 +364,12 @@
                 const res = await fetch(fullModuleUrl);
                 if (res.ok) {
                     const html = await res.text();
-                    contentContainer.innerHTML = `<div class="user-module-view">${html}</div>`;
-                    if (config.moduleCss) loadModuleCss(config.moduleCss);
-                    if (config.moduleScript) await loadModuleScript(config.moduleScript, true);
-                    if (window.lucide) window.lucide.createIcons();
+                    await moduleRenderer.commit(ticket, async () => {
+                        contentContainer.innerHTML = `<div class="user-module-view">${html}</div>`;
+                        if (config.moduleCss) loadModuleCss(config.moduleCss);
+                        if (config.moduleScript) await loadModuleScript(config.moduleScript, true);
+                        if (window.lucide) window.lucide.createIcons();
+                    });
                     return;
                 }
             } catch (e) {
@@ -333,13 +378,13 @@
         }
 
         // Trường hợp không tìm thấy
-        contentContainer.innerHTML = `
+        await moduleRenderer.commit(ticket, () => { contentContainer.innerHTML = `
             <div class="card p-5 text-center border-0 shadow-sm rounded-4">
                 <h4 class="text-danger mb-2">Phân hệ đang được hoàn thiện</h4>
                 <p class="text-muted">Chúng tôi đang cập nhật phân hệ ${config.breadcrumb}. Vui lòng quay lại sau.</p>
                 <div><a href="#profile" class="btn btn-outline-success btn-sm px-3">Quay lại tổng quan</a></div>
             </div>
-        `;
+        `; });
     }
 
     // 8. Quản lý Slide-In Detail Drawer (Xem chi tiết tại chỗ)

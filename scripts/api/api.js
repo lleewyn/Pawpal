@@ -1,45 +1,6 @@
+import { resolveAuthenticatedCustomerId } from '/scripts/shared/customer-identity.mjs';
 
-async function resolveCustomerId(db, userOrId) {
-    if (!db || !userOrId) return null;
-    if (typeof userOrId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userOrId)) {
-        return userOrId;
-    }
-    let phone = null;
-    let email = null;
-    if (typeof userOrId === 'object' && userOrId !== null) {
-        if (userOrId.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userOrId.id)) {
-            return userOrId.id;
-        }
-        phone = userOrId.phone || userOrId.phone_main || null;
-        email = userOrId.email || null;
-    } else if (typeof userOrId === 'string') {
-        if (/^\d{8,12}$/.test(userOrId)) {
-            phone = userOrId;
-        } else {
-            try {
-                const cur = JSON.parse(localStorage.getItem('pawpal_current_user') || '{}');
-                if (cur) {
-                    if (cur.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cur.id)) {
-                        return cur.id;
-                    }
-                    phone = cur.phone || cur.phone_main || null;
-                    email = cur.email || null;
-                }
-            } catch (e) {}
-        }
-    }
-
-    if (phone || email) {
-        let query = db.from('customer').select('id').limit(1);
-        if (phone) query = query.eq('phone_main', phone);
-        else if (email) query = query.eq('email', email);
-        const { data, error } = await query;
-        if (!error && data?.length) {
-            return data[0].id;
-        }
-    }
-    return null;
-}
+const resolveCustomerId = resolveAuthenticatedCustomerId;
 
 export const API = {
     DATA_VERSION: '2026-07-04-v14-guest-data',
@@ -115,7 +76,7 @@ export const API = {
 
     async getUserBookings(userOrId) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db || !userOrId) return [];
+        if (!db || !userOrId) throw new Error('Vui lòng đăng nhập để tải dữ liệu.');
         try {
             const customerId = await resolveCustomerId(db, userOrId);
             if (!customerId) return [];
@@ -136,7 +97,7 @@ export const API = {
                 
             if (error) {
                 console.error('[API] Supabase getUserBookings error:', error.message);
-                return [];
+                throw error;
             }
 
             const mapAppointmentStatus = (status) => {
@@ -192,7 +153,7 @@ export const API = {
             });
         } catch (err) {
             console.error('[API] Supabase getUserBookings failed:', err);
-            return [];
+                throw err;
         }
     },
 
@@ -202,7 +163,7 @@ export const API = {
 
     async getUserOrders(userOrId) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db || !userOrId) return [];
+        if (!db || !userOrId) throw new Error('Vui lòng đăng nhập để tải dữ liệu.');
         try {
             const customerId = await resolveCustomerId(db, userOrId);
             if (!customerId) return [];
@@ -223,8 +184,8 @@ export const API = {
                 .order('created_at', { ascending: false });
 
             if (error) { 
-                console.error('[API] Supabase getUserOrders error:', error.message); 
-                return []; 
+                console.error('[API] Supabase getUserOrders error:', error.message);
+                throw error;
             }
 
             const normalizeImageUrl = (url) => {
@@ -306,7 +267,7 @@ export const API = {
             return orders;
         } catch (err) {
             console.error('[API] Supabase getUserOrders failed:', err);
-            return [];
+                throw err;
         }
     },
 
@@ -623,32 +584,13 @@ export const API = {
             if (!customerId || !isUuidLike) {
                 const phone = orderData.shipping?.phone || '';
                 if (phone) {
-                    const { data: existingCust } = await db.from('customer').select('id').eq('phone_main', phone).limit(1);
-                    if (existingCust && existingCust.length > 0) {
-                        customerId = existingCust[0].id;
-                    } else {
-                        const { data: newCust, error: errC } = await db.from('customer').insert({
-                            email: null,
-                            password_hash: null,
-                            phone_main: phone,
-                            account_status: 'ACTIVE',
-                            is_temporary: true,
-                            registered_at: new Date().toISOString()
-                        }).select('id').single();
-                        
-                        if (errC) {
-                            console.error('[API] Failed to create guest customer:', errC);
-                        }
-                        
-                        if (!errC && newCust) {
-                            customerId = newCust.id;
-                            const { error: profileErr } = await db.from('customer_profile').insert({
-                                customer_id: customerId,
-                                full_name: orderData.shipping?.name || 'Khách vãng lai'
-                            });
-                            if (profileErr) console.warn('Could not create profile', profileErr);
-                        }
-                    }
+                    const response = await fetch('/api/customer/auth/guest', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone, name: orderData.shipping?.name || 'Khách vãng lai' })
+                    });
+                    const result = await response.json();
+                    if (!response.ok || !result.success) throw new Error(result.message || 'Không thể tạo hồ sơ nhận hàng.');
+                    customerId = result.customerId;
                 } else {
                     customerId = null;
                 }

@@ -25,6 +25,14 @@ window.PawpalStorage = {
     },
     set(key, value) {
         try {
+            if (['pawpal_current_user', 'pawpal_users', 'pawpal_users_db'].includes(key)) {
+                const clean = user => {
+                    if (!user || typeof user !== 'object') return user;
+                    const { password, password_hash, ...safe } = user;
+                    return safe;
+                };
+                value = Array.isArray(value) ? value.map(clean) : clean(value);
+            }
             localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
             return true;
         } catch (e) {
@@ -44,19 +52,37 @@ window.PawpalStorage = {
 const CURRENT_USER_KEY = window.PawpalStorage.KEYS.CURRENT_USER;
 
 function getCurrentUser() {
-    return window.PawpalStorage.get(CURRENT_USER_KEY);
+    const user = window.PawpalStorage.get(CURRENT_USER_KEY);
+    if (user && (user.system_role === 'ADMIN' || user.system_role === 'STAFF' || user.system_role === 'MANAGER' || user.role === 'admin' || user.role === 'staff')) {
+        // Bảo vệ cô lập 2 chiều: Xóa tài khoản nhân viên nếu bị rò rỉ vào session khách
+        window.PawpalStorage.remove(CURRENT_USER_KEY);
+        try {
+            sessionStorage.removeItem(CURRENT_USER_KEY);
+        } catch(e) {}
+        return null;
+    }
+    return user;
 }
 
 window.getCurrentUser = getCurrentUser;
 
 function setCurrentUser(user) {
+    if (user && (user.system_role === 'ADMIN' || user.system_role === 'STAFF' || user.system_role === 'MANAGER' || user.role === 'admin' || user.role === 'staff')) {
+        console.warn('[auth] Chặn lưu tài khoản nhân sự/quản trị vào session khách hàng');
+        return;
+    }
     window.PawpalStorage.set(CURRENT_USER_KEY, user);
     document.dispatchEvent(new CustomEvent('auth_state_changed', { detail: user }));
 }
 
 window.setCurrentUser = setCurrentUser;
 
-function logout() {
+async function logout() {
+    const client = window.getSupabaseClient?.() || window.SupabaseClient;
+    if (client) {
+        const { error } = await client.auth.signOut();
+        if (error) { console.error('[auth] Không thể đăng xuất:', error.message); return; }
+    }
     window.PawpalStorage.remove(CURRENT_USER_KEY);
     try {
         sessionStorage.removeItem('pawpal_current_user');
@@ -130,19 +156,8 @@ function enforceTemporaryAccountLock() {
     const isTemp = currentUser && currentUser.is_temporary;
 
     const currentPath = window.location.pathname.toLowerCase();
-    if (isTemp && currentPath.includes('/pages/user/')) {
-        const tokens = window.PawpalStorage.get(TEMP_TOKENS_KEY, []);
-        let tokenObj = tokens.find(t => t.phone === currentUser.phone);
-        if (!tokenObj) {
-            tokenObj = {
-                token: 'token-dynamic-' + Math.random().toString(36).substr(2, 9),
-                phone: currentUser.phone,
-                createdAt: Date.now()
-            };
-            tokens.push(tokenObj);
-            window.PawpalStorage.set(TEMP_TOKENS_KEY, tokens);
-        }
-        window.location.href = `/pages/public/login/login.html?action=setup-password&token=${tokenObj.token}`;
+    if (isTemp && (currentPath.includes('/pages/user/') || currentPath === '/user' || currentPath === '/user/')) {
+        window.location.href = `/login?action=guest-activate&phone=${encodeURIComponent(currentUser.phone || '')}`;
         return;
     }
 
@@ -291,6 +306,19 @@ function initAdminQuickAddCustomer() {
 }
 
 function initAuthShared() {
+    for (const storage of [localStorage, sessionStorage]) {
+        for (const key of ['pawpal_current_user', 'pawpal_users', 'pawpal_users_db']) {
+            try {
+                const value = JSON.parse(storage.getItem(key));
+                const clean = user => {
+                    if (!user || typeof user !== 'object') return user;
+                    const { password, password_hash, ...safe } = user;
+                    return safe;
+                };
+                if (value) storage.setItem(key, JSON.stringify(Array.isArray(value) ? value.map(clean) : clean(value)));
+            } catch {}
+        }
+    }
     enforceTemporaryAccountLock();
     initAdminQuickAddCustomer();
 }

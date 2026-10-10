@@ -425,18 +425,8 @@
                     const opt = document.createElement('option');
                     const petNames = (c.pets && c.pets.length > 0) ? ` (Bé: ${c.pets.map(p => p.name).join(', ')})` : '';
                     opt.value = `${c.name} - ${c.phone}`;
-                    opt.label = `${c.tierName} • ${(c.points || 0).toLocaleString('vi-VN')} pts${petNames}`;
+                    opt.label = `${c.tierName} • ${(c.points || 0).toLocaleString('vi-VN')} điểm${petNames}`;
                     searchDatalist.appendChild(opt);
-                });
-            }
-
-            if (adjustDatalist) {
-                adjustDatalist.innerHTML = '';
-                customers.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = `${c.name} - ${c.phone}`;
-                    opt.label = `Số dư: ${(c.points || 0).toLocaleString('vi-VN')} pts (${c.tierName})`;
-                    adjustDatalist.appendChild(opt);
                 });
             }
 
@@ -559,8 +549,8 @@
                     <tr>
                         <td>${item.time}</td>
                         <td><strong>${item.custName}</strong> <span style="color: var(--text-muted); font-size: 12px;">(${item.phone})</span></td>
-                        <td><strong class="${colorClass}">${sign}${item.points} pts</strong></td>
-                        <td>${Number(item.balance).toLocaleString('vi-VN')} pts</td>
+                        <td><strong class="${colorClass}">${sign}${item.points} điểm</strong></td>
+                        <td>${Number(item.balance).toLocaleString('vi-VN')} điểm</td>
                         <td>${item.reason}</td>
                     </tr>
                 `;
@@ -1062,9 +1052,12 @@
                 sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-detail');
                 sessionStorage.setItem('pawpal_admin_active_module', 'Bán hàng');
                 showToast(`Mở chi tiết đơn hàng ${ordId} tại phân hệ Bán hàng!`);
-                setTimeout(() => {
+                const menuBtn = document.querySelector('.sidebar-menu-btn[data-title="Bán hàng"]');
+                if (menuBtn) {
+                    menuBtn.click();
+                } else {
                     window.location.hash = '#tab-order-detail';
-                }, 300);
+                }
             };
 
             tbody.querySelectorAll('.btn-jump-order-code, .btn-view-order-action').forEach(btn => {
@@ -1443,11 +1436,13 @@
 
             const query = (document.getElementById('custSearchInput')?.value || '').trim();
             const selectedTier = document.getElementById('custFilterTier')?.value || 'ALL';
+            const selectedStatus = document.getElementById('custFilterStatus')?.value || 'ALL';
             const btnCustClearFilters = document.getElementById('btnCustClearFilters');
 
             const isAnyFilterActive = Boolean(
                 query ||
                 selectedTier !== 'ALL' ||
+                selectedStatus !== 'ALL' ||
                 currentCustomerFilter !== 'ALL'
             );
             if (btnCustClearFilters) {
@@ -1478,11 +1473,13 @@
                     matchCategory = (c.status === 'TEMP');
                 } else if (currentCustomerFilter === 'LOCKED') {
                     matchCategory = (c.status === 'LOCKED');
-            } else if (currentCustomerFilter === 'COMPLAINT') {
+                } else if (currentCustomerFilter === 'COMPLAINT') {
                     matchCategory = Boolean(c.emergencyAlert || (c.complaints && c.complaints.some(tc => tc.status !== 'Đã giải quyết')));
                 }
 
-                return matchSearch && matchTier && matchCategory;
+                const matchStatus = (selectedStatus === 'ALL') || (c.status === selectedStatus);
+
+                return matchQuery && matchTier && matchCategory && matchStatus;
             });
 
             const totalPages = Math.ceil(filtered.length / CUSTOMER_PAGE_SIZE) || 1;
@@ -1558,7 +1555,7 @@
                         </td>
                         <td>
                             <span class="admin-badge ${c.tierBadgeClass || 'badge-tier-silver'}">${c.tierName || 'Bạc'}</span>
-                            <span class="points-val">${(c.points || 0).toLocaleString('vi-VN')} pts</span>
+                            <span class="points-val">${(c.points || 0).toLocaleString('vi-VN')} điểm</span>
                         </td>
                         <td>${alertBadgeHtml}</td>
                         <td>${statusBadgeHtml}</td>
@@ -1624,6 +1621,16 @@
         }
         if (btnCloseAdd) btnCloseAdd.addEventListener('click', closeAddModal);
         if (btnCancelAdd) btnCancelAdd.addEventListener('click', closeAddModal);
+
+        document.querySelectorAll('#quickAddBreedChips .reason-quick-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const input = document.getElementById('quickAddPetBreed');
+                if (input) {
+                    input.value = chip.textContent.trim();
+                    input.focus();
+                }
+            });
+        });
 
         if (quickAddPhoneInput) {
             quickAddPhoneInput.addEventListener('input', () => {
@@ -1783,76 +1790,164 @@
             });
         }
 
-        // 7. Modal Điều chỉnh Pawpoint (Hỗ trợ cả CỘNG ĐIỂM và TRỪ ĐIỂM, ghi trực tiếp vào Supabase)
+        // 7. Modal Điều chỉnh Pawpoint (Hỗ trợ cả CỘNG ĐIỂM và TRỪ ĐIỂM, ghi trực tiếp vào Supabase Live DB)
         const modalAdjust = document.getElementById('modalAdjustPoints');
         const btnOpenAdjust = document.getElementById('btnOpenAdjustPointsModal');
         const btnCloseAdjust = document.getElementById('btnCloseAdjustPoints');
         const btnCancelAdjust = document.getElementById('btnCancelAdjustPoints');
         const formAdjust = document.getElementById('formAdjustPoints');
+        const adjustPhoneInput = document.getElementById('adjustPhone');
+        const adjustCustomerDropdown = document.getElementById('adjustCustomerDropdown');
+        const adjustPhoneCustomerHint = document.getElementById('adjustPhoneCustomerHint');
+        const adjustReasonInput = document.getElementById('adjustReason');
+
+        let selectedAdjustCustomer = null;
+
+        function renderAdjustCustomerDropdown(filterText = '') {
+            if (!adjustCustomerDropdown) return;
+            const q = (filterText || '').toLowerCase().trim();
+            const allCustomers = Object.values(customerDatabase);
+
+            const matches = allCustomers.filter(c => {
+                if (!q) return true;
+                const name = (c.name || '').toLowerCase();
+                const phone = (c.phone || '').replace(/[^0-9]/g, '');
+                const cleanQ = q.replace(/[^0-9]/g, '');
+                const matchPhone = cleanQ && phone.includes(cleanQ);
+                const matchName = name.includes(q);
+                const matchPets = (c.pets || []).some(p => (p.name || '').toLowerCase().includes(q));
+                return matchName || matchPhone || matchPets;
+            }).slice(0, 15);
+
+            if (matches.length === 0) {
+                adjustCustomerDropdown.innerHTML = '<div class="customer-autocomplete-empty">Không tìm thấy khách hàng phù hợp</div>';
+                adjustCustomerDropdown.style.display = 'block';
+                return;
+            }
+
+            adjustCustomerDropdown.innerHTML = '';
+            matches.forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'customer-autocomplete-item';
+                const initial = (c.name || 'K').trim().charAt(0).toUpperCase();
+                const pts = (c.points || 0).toLocaleString('vi-VN');
+                const petNames = (c.pets && c.pets.length > 0) ? ` • Bé: ${c.pets.map(p => p.name).join(', ')}` : '';
+
+                item.innerHTML = `
+                    <div class="customer-autocomplete-info">
+                        <div class="customer-autocomplete-avatar">${initial}</div>
+                        <div class="customer-autocomplete-meta">
+                            <div class="customer-autocomplete-name">${c.name}</div>
+                            <div class="customer-autocomplete-phone">${c.phone || 'Chưa có SĐT'}${petNames}</div>
+                        </div>
+                    </div>
+                    <div class="customer-autocomplete-badge">${c.tierName} • ${pts} điểm</div>
+                `;
+
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    selectAdjustCustomer(c);
+                });
+
+                adjustCustomerDropdown.appendChild(item);
+            });
+
+            adjustCustomerDropdown.style.display = 'block';
+        }
+
+        function selectAdjustCustomer(cust) {
+            selectedAdjustCustomer = cust;
+            if (adjustPhoneInput) {
+                adjustPhoneInput.value = `${cust.name} - ${cust.phone}`;
+            }
+            if (adjustPhoneCustomerHint) {
+                adjustPhoneCustomerHint.innerHTML = `
+                    <span>Khách hàng: <strong>${cust.name}</strong> (${cust.tierName})</span>
+                    <span>Số dư hiện tại: <strong>${(cust.points || 0).toLocaleString('vi-VN')} điểm</strong></span>
+                `;
+                adjustPhoneCustomerHint.style.display = 'flex';
+            }
+            if (adjustCustomerDropdown) {
+                adjustCustomerDropdown.style.display = 'none';
+            }
+        }
+
+        if (adjustPhoneInput) {
+            adjustPhoneInput.addEventListener('focus', () => {
+                renderAdjustCustomerDropdown(adjustPhoneInput.value);
+            });
+            adjustPhoneInput.addEventListener('input', () => {
+                selectedAdjustCustomer = null;
+                renderAdjustCustomerDropdown(adjustPhoneInput.value);
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.customer-autocomplete-wrapper') && adjustCustomerDropdown) {
+                adjustCustomerDropdown.style.display = 'none';
+            }
+        });
+
+        // Gắn sự kiện cho các chip gợi ý lý do điều chỉnh nhanh
+        document.querySelectorAll('#adjustReasonQuickTags .reason-quick-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                if (adjustReasonInput) {
+                    adjustReasonInput.value = chip.textContent.trim();
+                    adjustReasonInput.focus();
+                }
+            });
+        });
+
+        function openAdjustPointsModal(presetPhone = '') {
+            if (modalAdjust) {
+                modalAdjust.style.display = 'flex';
+                if (adjustCustomerDropdown) adjustCustomerDropdown.style.display = 'none';
+
+                if (presetPhone) {
+                    const clean = presetPhone.replace(/[^0-9]/g, '').trim();
+                    const found = Object.values(customerDatabase).find(c => 
+                        (c.phone && c.phone.replace(/[^0-9]/g, '').trim() === clean) ||
+                        c.id === presetPhone
+                    );
+                    if (found) {
+                        selectAdjustCustomer(found);
+                    } else if (adjustPhoneInput) {
+                        selectedAdjustCustomer = null;
+                        adjustPhoneInput.value = presetPhone;
+                        if (adjustPhoneCustomerHint) adjustPhoneCustomerHint.style.display = 'none';
+                    }
+                } else {
+                    selectedAdjustCustomer = null;
+                    if (adjustPhoneInput) adjustPhoneInput.value = '';
+                    if (adjustPhoneCustomerHint) adjustPhoneCustomerHint.style.display = 'none';
+                    const ptsInput = document.getElementById('adjustPointsVal');
+                    if (ptsInput) ptsInput.value = '';
+                    if (adjustReasonInput) adjustReasonInput.value = '';
+                }
+            }
+        }
 
         if (btnOpenAdjust && modalAdjust) {
             btnOpenAdjust.addEventListener('click', () => {
-                populateCustomerDatalists();
-                modalAdjust.style.display = 'flex';
+                openAdjustPointsModal();
             });
         }
+
         function closeAdjustModal() {
             if (modalAdjust) modalAdjust.style.display = 'none';
+            if (adjustCustomerDropdown) adjustCustomerDropdown.style.display = 'none';
         }
+
         if (btnCloseAdjust) btnCloseAdjust.addEventListener('click', closeAdjustModal);
         if (btnCancelAdjust) btnCancelAdjust.addEventListener('click', closeAdjustModal);
-        
-        // Gợi ý thông tin khách hàng thời gian thực khi nhập Tên hoặc SĐT điều chỉnh điểm
-        const adjustPhoneInput = document.getElementById('adjustPhone');
-        if (adjustPhoneInput) {
-            function handleAdjustLookup() {
-                const raw = (adjustPhoneInput.value || '').trim();
-                const hint = document.getElementById('adjustPhoneCustomerHint');
-                if (!hint) return;
-
-                if (!raw) {
-                    hint.style.display = 'none';
-                    return;
-                }
-
-                let clean = raw.replace(/[^0-9]/g, '').trim();
-                let matched = null;
-
-                if (raw.includes(' - ')) {
-                    const [nPart, pPart] = raw.split(' - ').map(s => s.trim().toLowerCase());
-                    matched = Object.values(customerDatabase).find(c => 
-                        (c.phone && c.phone.toLowerCase() === pPart) || 
-                        (c.name && c.name.toLowerCase() === nPart)
-                    );
-                    if (matched && matched.phone) {
-                        adjustPhoneInput.value = matched.phone;
-                        clean = matched.phone.replace(/[^0-9]/g, '').trim();
-                    }
-                } else if (clean.length >= 9) {
-                    matched = Object.values(customerDatabase).find(c => c.phone && c.phone.replace(/[^0-9]/g, '').trim() === clean);
-                } else {
-                    matched = Object.values(customerDatabase).find(c => c.name && c.name.toLowerCase().includes(raw.toLowerCase()));
-                }
-
-                if (matched) {
-                    hint.innerHTML = `Khách hàng: <strong>${matched.name}</strong> (${matched.tierName}) — Số dư: <strong>${(matched.points || 0).toLocaleString('vi-VN')} pts</strong>`;
-                    hint.style.display = 'block';
-                } else {
-                    hint.style.display = 'none';
-                }
-            }
-
-            adjustPhoneInput.addEventListener('input', handleAdjustLookup);
-            adjustPhoneInput.addEventListener('change', handleAdjustLookup);
-        }
 
         if (formAdjust) {
             formAdjust.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const phone = document.getElementById('adjustPhone')?.value || '';
+                const phoneVal = (adjustPhoneInput?.value || '').trim();
                 const type = document.getElementById('adjustType')?.value || 'ADD';
                 const pts = parseInt(document.getElementById('adjustPointsVal')?.value || '0', 10);
-                const reason = (document.getElementById('adjustReason')?.value || '').trim();
+                const reason = (adjustReasonInput?.value || '').trim();
 
                 if (pts <= 0) {
                     showToast('Vui lòng nhập số điểm lớn hơn 0!', 'warning');
@@ -1863,21 +1958,25 @@
                     return;
                 }
 
-                // Tìm khách hàng có số điện thoại hoặc tên này
-                const cleanPhone = phone.replace(/[^0-9]/g, '').trim();
-                let matchedCust = Object.values(customerDatabase).find(c => 
-                    (cleanPhone.length >= 9 && c.phone && c.phone.replace(/[^0-9]/g, '').trim() === cleanPhone) ||
-                    (c.name && c.name.toLowerCase() === phone.toLowerCase().trim())
-                );
-                if (!matchedCust && phone.includes(' - ')) {
-                    const [nPart, pPart] = phone.split(' - ').map(s => s.trim().toLowerCase());
-                    matchedCust = Object.values(customerDatabase).find(c => 
-                        (c.phone && c.phone.toLowerCase() === pPart) || 
-                        (c.name && c.name.toLowerCase() === nPart)
-                    );
-                }
+                // Xác định khách hàng mục tiêu
+                let matchedCust = selectedAdjustCustomer;
                 if (!matchedCust) {
-                    showToast(`Không tìm thấy khách hàng với thông tin "${phone}"! Vui lòng chọn từ danh sách gợi ý.`, 'warning');
+                    const cleanPhone = phoneVal.replace(/[^0-9]/g, '').trim();
+                    matchedCust = Object.values(customerDatabase).find(c => 
+                        (cleanPhone.length >= 9 && c.phone && c.phone.replace(/[^0-9]/g, '').trim() === cleanPhone) ||
+                        (c.name && c.name.toLowerCase() === phoneVal.toLowerCase())
+                    );
+                    if (!matchedCust && phoneVal.includes(' - ')) {
+                        const [nPart, pPart] = phoneVal.split(' - ').map(s => s.trim().toLowerCase());
+                        matchedCust = Object.values(customerDatabase).find(c => 
+                            (c.phone && c.phone.toLowerCase() === pPart) || 
+                            (c.name && c.name.toLowerCase() === nPart)
+                        );
+                    }
+                }
+
+                if (!matchedCust) {
+                    showToast(`Không tìm thấy khách hàng với thông tin "${phoneVal}"! Vui lòng chọn từ danh sách gợi ý.`, 'warning');
                     return;
                 }
 
@@ -1897,7 +1996,7 @@
                     const newBalance = type === 'ADD' ? (currentBalance + pts) : (currentBalance - pts);
                     const ptsSigned = type === 'ADD' ? pts : -pts;
 
-                    // 1. Cập nhật số điểm trong customer_membership
+                    // 1. Cập nhật số điểm trong customer_membership trực tiếp lên Supabase
                     if (custDbId) {
                         const { error: memErr } = await client
                             .from('customer_membership')
@@ -1912,7 +2011,7 @@
                             if (upsertErr) throw upsertErr;
                         }
 
-                        // 2. Ghi nhật ký giao dịch điểm vào paw_point_transaction
+                        // 2. Ghi nhật ký giao dịch điểm vào paw_point_transaction trên Supabase
                         const { error: transactionError } = await client.from('paw_point_transaction').insert({
                             customer_id: custDbId,
                             points: ptsSigned,
@@ -1922,7 +2021,7 @@
                         if (transactionError) throw transactionError;
                     }
 
-                    // Nạp lại toàn bộ dữ liệu từ Supabase
+                    // Nạp lại toàn bộ dữ liệu thời gian thực từ Supabase
                     await loadCustomersModuleData();
                     renderCustomersTable();
                     updateCustomerKPIs();
@@ -1933,10 +2032,10 @@
                         renderDrawerCustomerProfile(matchedCust.id);
                     }
 
-                    showToast(`Đã ${type === 'ADD' ? 'cộng' : 'trừ'} ${pts} Pawpoint cho khách hàng ${matchedCust.name}! Số dư mới: ${newBalance.toLocaleString('vi-VN')} pts`, 'success');
+                    showToast(`Đã ${type === 'ADD' ? 'cộng' : 'trừ'} ${pts.toLocaleString('vi-VN')} Pawpoint cho khách hàng ${matchedCust.name}! Số dư mới: ${newBalance.toLocaleString('vi-VN')} điểm`, 'success');
                     formAdjust.reset();
-                    const hint = document.getElementById('adjustPhoneCustomerHint');
-                    if (hint) hint.style.display = 'none';
+                    selectedAdjustCustomer = null;
+                    if (adjustPhoneCustomerHint) adjustPhoneCustomerHint.style.display = 'none';
                     closeAdjustModal();
                 } catch (err) {
                     console.error('[Customers] Lỗi điều chỉnh điểm:', err);
@@ -2237,6 +2336,16 @@
         if (btnCloseAddPet) btnCloseAddPet.addEventListener('click', closeAddPetModal);
         if (btnCancelAddPet) btnCancelAddPet.addEventListener('click', closeAddPetModal);
 
+        document.querySelectorAll('#addPetBreedChips .reason-quick-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const input = document.getElementById('addPetBreed');
+                if (input) {
+                    input.value = chip.textContent.trim();
+                    input.focus();
+                }
+            });
+        });
+
         if (formAddPet) {
             formAddPet.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -2453,9 +2562,12 @@
             sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-list');
             sessionStorage.setItem('pawpal_admin_active_module', 'Bán hàng');
             showToast(`Đã thiết lập thông tin lên đơn cho ${cust.name}, chuyển sang phân hệ Bán hàng!`);
-            setTimeout(() => {
+            const btn = document.querySelector('.sidebar-menu-btn[data-title="Bán hàng"]');
+            if (btn) {
+                btn.click();
+            } else {
                 window.location.hash = '#tab-order-list';
-            }, 300);
+            }
         });
 
         document.querySelector('.btn-link-complaint')?.addEventListener('click', () => {
@@ -2744,8 +2856,8 @@
                 item.custName || '',
                 item.phone || '',
                 item.type === 'ADD' ? 'Cộng điểm' : 'Trừ điểm',
-                (item.type === 'ADD' ? '+' : '-') + item.points + ' pts',
-                Number(item.balance).toLocaleString('vi-VN') + ' pts',
+                (item.type === 'ADD' ? '+' : '-') + item.points + ' điểm',
+                Number(item.balance).toLocaleString('vi-VN') + ' điểm',
                 item.reason || ''
             ]);
 

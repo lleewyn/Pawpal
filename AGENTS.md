@@ -46,6 +46,23 @@
     * *Modal Danh sách / Đánh giá sản phẩm / Lịch sử / Bộ lọc nhiều chip*: `width: 720px - 760px; max-width: 95vw;` để đảm bảo thanh tóm tắt chỉ số, các nút lọc và nội dung hiển thị dàn hàng ngang thoáng đãng, triệt tiêu hoàn toàn hiện tượng rớt dòng chật chội.
     * *Modal Bảng ma trận / Soạn thảo / Hồ sơ mở rộng*: `width: 880px - 1000px; max-width: 96vw;`
   - **Đa địa chỉ & 1 địa chỉ mặc định**: Hỗ trợ 1 khách hàng có thể lưu nhiều địa chỉ nhận hàng, có radio chọn đúng 1 "Địa chỉ mặc định" (thẻ mặc định có viền xanh `#C3DEC7`, nền `#F4FAF6`), các địa chỉ khác là địa chỉ phụ (có nút text `Xóa`). Nút `Thêm địa chỉ` text-only màu xanh thương hiệu `#236B48`.
+* **Chuẩn Hóa Ô Tìm Kiếm, Chọn Thực Thể & Gợi Ý Trong Modal (Custom Autocomplete Popover & Suggestion Chips)**:
+  - **Cấm 100% sử dụng thẻ `<datalist>` mặc định của trình duyệt**: Tuyệt đối không dùng `<datalist>` vì gây popup thô kệch, không đồng bộ với hệ thống, không kiểm soát được vị trí và đè lấp che khuất các ô nhập liệu bên dưới.
+  - **Bắt buộc dùng Custom Autocomplete Popover đồng bộ hệ thống (`.customer-autocomplete-popover`)**:
+    * Khung bọc `.customer-autocomplete-wrapper` có `position: relative; width: 100%;`.
+    * Popover nằm ngay dưới ô nhập (`position: absolute; top: calc(100% + 4px); left: 0; right: 0;`), bo góc chuẩn 9px (`border-radius: var(--admin-radius);`), viền mảnh `--border-neutral: #ECF2EE;`, đổ bóng thanh thoát `box-shadow: 0 10px 28px rgba(35, 107, 72, 0.14);`, cuộn tối đa `max-height: 240px; overscroll-behavior: contain;`, `z-index: 2500;`.
+    * Mỗi dòng mục chọn (`.customer-autocomplete-item`):
+      - Avatar hình tròn 50% (`border-radius: 50%`) mang chữ cái viết tắt hoặc màu sắc thương hiệu (`background-color: #DCEEE2; color: #165335;`).
+      - Tên thực thể in đậm rõ nét (`font-weight: 600; color: #203A2C;`).
+      - Dòng thông tin phụ: Số điện thoại, mã định danh, hoặc tên bé cưng (`color: #4F7A65; font-size: 11.5px;`).
+      - Huy hiệu bên phải: Hạng thẻ & Điểm (ví dụ: `Bạc • 150 điểm`), giống loài, hoặc trạng thái.
+      - Hover / Active: Đổi màu nền xanh xô thơm nhẹ `#EEF5F1`, chuyển động mượt mà.
+    * Khi bấm chọn: Điền dữ liệu chính xác, tự động đóng popover, và hiển thị thẻ tóm tắt xác nhận lựa chọn (`.adjust-customer-selected-card`): Nền `#EEF5F1`, bo góc 9px, chữ Forest Green `#236B48`, hiển thị rõ đối tượng đã chọn.
+  - **Chip Gợi Ý Một Chạm (Recommendation / Quick Chips - `.reason-quick-chip`)**:
+    * Các ô nhập lý do, ghi chú, phân loại thường gặp trong Modal nên trang bị một hàng chip gợi ý bên dưới (ví dụ: `Bù sự cố trễ hẹn`, `Tặng điểm tri ân`, `Thu hồi do hủy đơn`...).
+    * Dạng nút phẳng không viền, nền `#EEF5F1`, hover `#DCEEE2`, bo góc 9px, chữ Forest Green `#236B48`, bấm một chạm là điền ngay nội dung mà không cần gõ bàn phím.
+  - **Chống Tràn Cắt Chữ Ở Ô Chọn Dropdown (`select`)**:
+    * Nhãn tùy chọn trong thẻ `select` phải viết tự nhiên, ngắn gọn và gãy gọn (ví dụ: `Cộng điểm`, `Trừ điểm`), tuyệt đối không đính kèm các câu giải thích dài trong ngoặc đơn làm tràn chiều ngang cột gây cắt chữ thành `Cộn...`.
 
 ---
 

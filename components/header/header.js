@@ -5,7 +5,11 @@
 (function() {
     function getCurrentUser() {
         try {
-            return JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+            const user = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+            if (user && (user.system_role === 'ADMIN' || user.system_role === 'STAFF' || user.system_role === 'MANAGER' || user.role === 'admin' || user.role === 'staff')) {
+                return null;
+            }
+            return user;
         } catch {
             return null;
         }
@@ -529,10 +533,15 @@
         }
     });
 
-    function handleGlobalLogout(e) {
+    async function handleGlobalLogout(e) {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
+        }
+        const client = window.getSupabaseClient?.() || window.SupabaseClient;
+        if (client) {
+            const { error } = await client.auth.signOut();
+            if (error) { console.error('[Header] Không thể đăng xuất:', error.message); return; }
         }
         try {
             localStorage.removeItem('pawpal_current_user');

@@ -46,8 +46,7 @@
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
                     <div class="search-box-wrapper">
-                        <input type="text" class="admin-input search-input" id="custSearchInput" placeholder="Tìm SĐT, Họ tên, Bé cưng, Email..." list="customerSearchDatalist" autocomplete="off">
-                        <datalist id="customerSearchDatalist"></datalist>
+                        <input type="text" class="admin-input search-input" id="custSearchInput" placeholder="Tìm SĐT, Họ tên, Bé cưng, Email..." autocomplete="off">
                     </div>
                     <div class="filter-actions-right">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportCustomerReport">Xuất file</button>
@@ -431,8 +430,14 @@
                 </div>
                 <div class="form-group mb-3">
                     <label class="form-label">Giống loài bé cưng</label>
-                    <input type="text" class="admin-input" id="quickAddPetBreed" placeholder="Ví dụ: Corgi, Poodle, Mèo ALN..." list="quickAddBreedDatalist" autocomplete="off">
-                    <datalist id="quickAddBreedDatalist"></datalist>
+                    <input type="text" class="admin-input" id="quickAddPetBreed" placeholder="Ví dụ: Corgi, Poodle, Mèo ALN..." autocomplete="off">
+                    <div class="adjust-reason-quick-tags" id="quickAddBreedChips">
+                        <button type="button" class="reason-quick-chip">Poodle</button>
+                        <button type="button" class="reason-quick-chip">Corgi</button>
+                        <button type="button" class="reason-quick-chip">Golden</button>
+                        <button type="button" class="reason-quick-chip">Phốc sóc</button>
+                        <button type="button" class="reason-quick-chip">Mèo ALN</button>
+                    </div>
                 </div>
                 <div class="form-group mb-3">
                     <label class="form-label">Địa chỉ nhận hàng ban đầu</label>
@@ -451,24 +456,26 @@
          MODAL 2: ĐIỀU CHỈNH ĐIỂM THƯỞNG ĐỀN BÙ SỰ CỐ
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalAdjustPoints" style="display: none;">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card" style="width: 580px; max-width: 94vw;">
             <div class="admin-modal-header">
                 <span class="admin-modal-title">Điều chỉnh Pawpoint</span>
                 <button type="button" class="btn-modal-close" id="btnCloseAdjustPoints">Đóng</button>
             </div>
             <form id="formAdjustPoints">
-                <div class="form-group mb-3">
-                    <label class="form-label">Khách hàng hoặc Số điện thoại (*)</label>
-                    <input type="text" class="admin-input" id="adjustPhone" placeholder="Nhập tên hoặc SĐT khách cần điều chỉnh điểm..." list="adjustCustomerDatalist" required autocomplete="off">
-                    <datalist id="adjustCustomerDatalist"></datalist>
-                    <div id="adjustPhoneCustomerHint" style="font-size: 12.5px; color: var(--admin-primary); margin-top: 5px; display: none;"></div>
+                <div class="form-group mb-3 customer-autocomplete-wrapper">
+                    <label class="form-label">Khách hàng hoặc số điện thoại (*)</label>
+                    <div style="position: relative; width: 100%;">
+                        <input type="text" class="admin-input" id="adjustPhone" placeholder="Nhập tên hoặc số điện thoại khách cần điều chỉnh điểm..." required autocomplete="off">
+                        <div class="customer-autocomplete-popover" id="adjustCustomerDropdown" style="display: none;"></div>
+                    </div>
+                    <div id="adjustPhoneCustomerHint" class="adjust-customer-selected-card" style="display: none;"></div>
                 </div>
                 <div class="form-row-two-col mb-3">
                     <div class="form-group">
                         <label class="form-label">Loại điều chỉnh</label>
                         <select class="admin-select" id="adjustType">
-                            <option value="ADD">Cộng điểm (Thưởng hoặc bù sự cố)</option>
-                            <option value="SUB">Trừ điểm (Thu hồi hoặc đổi quà thủ công)</option>
+                            <option value="ADD">Cộng điểm</option>
+                            <option value="SUB">Trừ điểm</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -478,15 +485,15 @@
                 </div>
                 <div class="form-group mb-4">
                     <label class="form-label">Lý do điều chỉnh (*)</label>
-                    <input type="text" class="admin-input" id="adjustReason" list="adjustReasonDatalist" placeholder="Nhập lý do điều chỉnh..." required>
-                    <datalist id="adjustReasonDatalist">
-                        <option value="Bù sự cố dịch vụ Spa / Hotel trễ hẹn"></option>
-                        <option value="Bù sự cố giao hàng chậm / sản phẩm lỗi"></option>
-                        <option value="Tặng điểm tri ân khách hàng thân thiết"></option>
-                        <option value="Thu hồi điểm do hủy đơn hàng / hoàn tiền"></option>
-                        <option value="Khách đổi quà tặng trực tiếp tại quầy"></option>
-                        <option value="Điều chỉnh sai lệch số dư điểm"></option>
-                    </datalist>
+                    <input type="text" class="admin-input" id="adjustReason" placeholder="Nhập hoặc chọn lý do điều chỉnh..." required autocomplete="off">
+                    <div class="adjust-reason-quick-tags" id="adjustReasonQuickTags">
+                        <button type="button" class="reason-quick-chip">Bù sự cố trễ hẹn</button>
+                        <button type="button" class="reason-quick-chip">Bù giao hàng chậm</button>
+                        <button type="button" class="reason-quick-chip">Tặng điểm tri ân</button>
+                        <button type="button" class="reason-quick-chip">Thu hồi do hủy đơn</button>
+                        <button type="button" class="reason-quick-chip">Đổi quà tại quầy</button>
+                        <button type="button" class="reason-quick-chip">Điều chỉnh sai lệch điểm</button>
+                    </div>
                 </div>
                 <div class="modal-actions-footer">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAdjustPoints">Hủy bỏ</button>
@@ -588,8 +595,14 @@
                 <div class="form-row-two-col mb-3">
                     <div class="form-group">
                         <label class="form-label">Giống loài</label>
-                        <input type="text" class="admin-input" id="addPetBreed" placeholder="Ví dụ: Poodle, Corgi, Golden, Mèo Anh..." list="petBreedDatalist" autocomplete="off">
-                        <datalist id="petBreedDatalist"></datalist>
+                        <input type="text" class="admin-input" id="addPetBreed" placeholder="Ví dụ: Poodle, Corgi, Golden, Mèo Anh..." autocomplete="off">
+                        <div class="adjust-reason-quick-tags" id="addPetBreedChips">
+                            <button type="button" class="reason-quick-chip">Poodle</button>
+                            <button type="button" class="reason-quick-chip">Corgi</button>
+                            <button type="button" class="reason-quick-chip">Golden</button>
+                            <button type="button" class="reason-quick-chip">Phốc sóc</button>
+                            <button type="button" class="reason-quick-chip">Mèo ALN</button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Cân nặng (kg)</label>

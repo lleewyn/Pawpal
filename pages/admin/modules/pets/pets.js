@@ -1213,10 +1213,10 @@
                     const lowAlert = pet.alert.toLowerCase();
                     if (lowAlert.includes('cắn') || lowAlert.includes('dữ') || lowAlert.includes('hung') || lowAlert.includes('nguy hiểm') || lowAlert.includes('cảnh báo:')) {
                         alertRowClass = 'row-alert-critical';
-                        alertHtml = `<span class="alert-indicator text-danger" title="${pet.alert}">• ${pet.alert}</span>`;
+                        alertHtml = `<span class="alert-indicator text-danger" title="${pet.alert}">• ${String(pet.alert).split(' • ').join('<br>• ')}</span>`;
                     } else {
                         alertRowClass = 'row-alert-warning';
-                        alertHtml = `<span class="alert-indicator text-warning" title="${pet.alert}">• ${pet.alert}</span>`;
+                        alertHtml = `<span class="alert-indicator text-warning" title="${pet.alert}">• ${String(pet.alert).split(' • ').join('<br>• ')}</span>`;
                     }
                 }
 
@@ -1632,26 +1632,35 @@
         const btnConfirmSendPrintCollar = document.getElementById('btnConfirmSendPrintCollar');
 
         // Autocomplete tìm kiếm chủ nuôi
+        const newPetOwnerSelectedCard = document.getElementById('newPetOwnerSelectedCard');
+
+        // Autocomplete tìm kiếm chủ nuôi (Chuẩn AGENTS.md)
         if (newPetOwnerInput && newPetOwnerDropdown) {
             function updateOwnerAutocomplete(query) {
                 const q = query.toLowerCase().trim();
                 const allCusts = Object.values(customersData);
                 const matched = allCusts.filter(c => 
-                    !q || c.name.toLowerCase().includes(q) || c.phone.includes(q) || c.id.toLowerCase().includes(q)
-                );
+                    !q || c.name.toLowerCase().includes(q) || (c.phone && c.phone.includes(q)) || c.id.toLowerCase().includes(q)
+                ).slice(0, 15);
 
                 if (matched.length === 0) {
-                    newPetOwnerDropdown.innerHTML = '<div class="autocomplete-empty">Không tìm thấy khách hàng. Bấm "+ Thêm nhanh chủ nuôi" để tạo mới!</div>';
+                    newPetOwnerDropdown.innerHTML = '<div class="autocomplete-empty">Không tìm thấy khách hàng. Bấm "Thêm nhanh chủ nuôi" để tạo mới!</div>';
                 } else {
-                    newPetOwnerDropdown.innerHTML = matched.map(c => `
-                        <div class="autocomplete-item" data-id="${c.id}" data-name="${c.name}" data-phone="${c.phone}" data-tier="${c.tier || 'Khách mới'}">
-                            <div>
-                                <span class="autocomplete-item-name">${c.name}</span>
-                                <span style="font-size: 11.5px; color: var(--text-muted); margin-left: 6px;">(${c.tier || 'Khách mới'})</span>
+                    newPetOwnerDropdown.innerHTML = matched.map(c => {
+                        const initial = (c.name || 'K').trim().charAt(0).toUpperCase();
+                        return `
+                            <div class="autocomplete-item" data-id="${c.id}" data-name="${c.name}" data-phone="${c.phone || ''}" data-tier="${c.tier || 'Khách mới'}">
+                                <div class="autocomplete-item-info">
+                                    <div class="autocomplete-avatar">${initial}</div>
+                                    <div class="autocomplete-meta">
+                                        <div class="autocomplete-item-name">${c.name}</div>
+                                        <div class="autocomplete-item-phone">${c.phone || 'Chưa có SĐT'} • ${c.id}</div>
+                                    </div>
+                                </div>
+                                <div class="autocomplete-item-badge">Hạng ${c.tier || 'Khách mới'}</div>
                             </div>
-                            <span class="autocomplete-item-phone">${c.phone} • ${c.id}</span>
-                        </div>
-                    `).join('');
+                        `;
+                    }).join('');
                 }
                 newPetOwnerDropdown.style.display = 'block';
             }
@@ -1673,7 +1682,14 @@
                     const custTier = item.getAttribute('data-tier');
 
                     if (newPetOwnerHidden) newPetOwnerHidden.value = custId;
-                    newPetOwnerInput.value = `${custName} - ${custPhone} (Hạng ${custTier})`;
+                    newPetOwnerInput.value = `${custName} - ${custPhone}`;
+                    if (newPetOwnerSelectedCard) {
+                        newPetOwnerSelectedCard.innerHTML = `
+                            <span>Chủ sở hữu: <strong>${custName}</strong> (${custPhone || 'Chưa có SĐT'})</span>
+                            <span>Hạng: <strong>${custTier}</strong></span>
+                        `;
+                        newPetOwnerSelectedCard.style.display = 'flex';
+                    }
                     newPetOwnerDropdown.style.display = 'none';
                 }
             });
@@ -1684,6 +1700,27 @@
                 }
             });
         }
+
+        // Gắn sự kiện cho các chip gợi ý một chạm trong các modal
+        function bindPetModalChips(containerId, inputId) {
+            document.querySelectorAll(`#${containerId} .reason-quick-chip`).forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const input = document.getElementById(inputId);
+                    if (input) {
+                        input.value = chip.textContent.trim();
+                        input.focus();
+                    }
+                });
+            });
+        }
+
+        bindPetModalChips('newPetBreedChips', 'newPetBreed');
+        bindPetModalChips('newPetAlertChips', 'newPetAlert');
+        bindPetModalChips('newPetAllergyChips', 'newPetAllergy');
+        bindPetModalChips('editPetBreedChips', 'editPetBreed');
+        bindPetModalChips('editPetAlertChips', 'editPetAlert');
+        bindPetModalChips('editPetAllergyChips', 'editPetAllergy');
+        bindPetModalChips('newVaccinePlaceChips', 'newVaccinePlace');
 
         // Mở popup Thêm nhanh chủ nuôi
         if (btnOpenQuickAddOwnerModal && modalQuickAddOwner) {
@@ -1849,11 +1886,17 @@
         // Mở modal tiếp nhận
         if (btnOpenAddPet && modalAddPet) {
             btnOpenAddPet.addEventListener('click', () => {
+                if (newPetOwnerInput) newPetOwnerInput.value = '';
+                if (newPetOwnerHidden) newPetOwnerHidden.value = '';
+                if (newPetOwnerSelectedCard) newPetOwnerSelectedCard.style.display = 'none';
                 modalAddPet.classList.add('open');
             });
 
             if (sessionStorage.getItem('pawpal_admin_pet_open_add_modal') === 'true') {
                 sessionStorage.removeItem('pawpal_admin_pet_open_add_modal');
+                if (newPetOwnerInput) newPetOwnerInput.value = '';
+                if (newPetOwnerHidden) newPetOwnerHidden.value = '';
+                if (newPetOwnerSelectedCard) newPetOwnerSelectedCard.style.display = 'none';
                 modalAddPet.classList.add('open');
             }
         }
@@ -1905,6 +1948,18 @@
                 try {
                     const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                     if (client) {
+                        const { data: duplicatePets, error: duplicateCheckError } = await client
+                            .from('pet_profile')
+                            .select('id, pet_name')
+                            .eq('customer_id', ownerCustId)
+                            .ilike('pet_name', name)
+                            .limit(1);
+                        if (duplicateCheckError) throw duplicateCheckError;
+                        if (duplicatePets?.length) {
+                            showToast(`Chủ nuôi đã có bé cưng tên "${name}". Vui lòng dùng tên khác.`, 'warning');
+                            nameInput?.focus();
+                            return;
+                        }
                         const insertPayload = {
                             customer_id: ownerCustId,
                             pet_code: newPetId,
@@ -2930,6 +2985,9 @@
                 const petAvatarEl = document.getElementById('appDiaryPetAvatar');
                 if (petAvatarEl) petAvatarEl.src = afterSrc || '/assets/images/publics/dogcute1.jpg';
 
+                const avatarWrapEl = document.getElementById('appDiaryAvatarWrap');
+                const avatarLiveDotEl = document.getElementById('appDiaryAvatarLiveDot');
+
                 const petNameEl = document.getElementById('appDiaryPetName');
                 if (petNameEl) petNameEl.textContent = petName;
 
@@ -2940,25 +2998,45 @@
                 const petMetaEl = document.getElementById('appDiaryPetMeta');
                 if (petMetaEl && subTexts[0]) {
                     const parts = subTexts[0].split('•');
+                    const species = parts[0]?.trim() || 'Chó • Poodle';
                     petMetaEl.innerHTML = `
-                        <span>${parts[0]?.trim() || 'Chó • Poodle'}</span>
-                        <span>•</span>
-                        <span>5.2 kg</span>
-                        <span>•</span>
-                        <span>2 tuổi</span>
+                        <span class="preview-pet-meta-tag">${species}</span>
+                        <span class="preview-pet-meta-tag">5.2 kg</span>
+                        <span class="preview-pet-meta-tag">2 tuổi</span>
                     `;
                 }
 
-                // Live status badge
-                const liveBadgeEl = document.getElementById('appDiaryLiveBadge');
+                // Live status banner (Đồng bộ chuẩn PawPal Sen App)
+                const liveBannerEl = document.getElementById('appDiaryLiveBanner');
+                const liveTextEl = document.getElementById('appDiaryLiveText');
+                const liveDotEl = document.getElementById('appDiaryLivePulseDot');
                 const currentStatus = document.getElementById('wbStatusBadge')?.textContent || 'Đang làm';
-                if (liveBadgeEl) {
-                    liveBadgeEl.textContent = currentStatus === 'Hoàn thiện' ? 'Đã hoàn tất' : 'Đang làm Spa';
-                    liveBadgeEl.style.background = currentStatus === 'Hoàn thiện' ? '#DCEEE2' : '#F5E8D3';
-                    liveBadgeEl.style.color = currentStatus === 'Hoàn thiện' ? '#165335' : '#734718';
+                const isFinished = currentStatus === 'Hoàn thiện' || currentStatus === 'Đã hoàn tất';
+
+                if (avatarWrapEl) {
+                    if (isFinished) {
+                        avatarWrapEl.classList.remove('avatar-in-spa');
+                    } else {
+                        avatarWrapEl.classList.add('avatar-in-spa');
+                    }
+                }
+                if (avatarLiveDotEl) {
+                    avatarLiveDotEl.style.display = isFinished ? 'none' : 'block';
                 }
 
-                // Service info
+                if (liveBannerEl && liveTextEl) {
+                    if (isFinished) {
+                        liveBannerEl.classList.add('status-finished');
+                        liveTextEl.textContent = 'Đã hoàn tất';
+                        if (liveDotEl) liveDotEl.style.display = 'none';
+                    } else {
+                        liveBannerEl.classList.remove('status-finished');
+                        liveTextEl.textContent = 'Đang làm Spa';
+                        if (liveDotEl) liveDotEl.style.display = 'inline-block';
+                    }
+                }
+
+                // Service info & Live Stepper (Đồng bộ 100% User Diary)
                 const serviceNameEl = document.getElementById('appDiaryServiceName');
                 if (serviceNameEl) {
                     if (subTexts[0] && subTexts[0].includes('Dịch vụ:')) {
@@ -2973,6 +3051,36 @@
                     const today = new Date();
                     const dStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
                     serviceDateEl.textContent = dStr;
+                }
+
+                const stepperBadgeEl = document.getElementById('appDiaryStepperBadge');
+                const progressBarEl = document.getElementById('appDiaryProgressBar');
+                const step1El = document.getElementById('appDiaryStep1');
+                const step2El = document.getElementById('appDiaryStep2');
+                const step3El = document.getElementById('appDiaryStep3');
+                const step4El = document.getElementById('appDiaryStep4');
+
+                if (isFinished) {
+                    if (stepperBadgeEl) {
+                        stepperBadgeEl.className = 'preview-stepper-status-badge status-finished';
+                        stepperBadgeEl.textContent = 'Đã hoàn tất';
+                    }
+                    if (progressBarEl) progressBarEl.style.width = '84%';
+                    if (step1El) { step1El.className = 'preview-stepper-step done'; step1El.querySelector('.preview-step-circle').innerHTML = '<span>✓</span>'; }
+                    if (step2El) { step2El.className = 'preview-stepper-step done'; step2El.querySelector('.preview-step-circle').innerHTML = '<span>✓</span>'; }
+                    if (step3El) { step3El.className = 'preview-stepper-step done'; step3El.querySelector('.preview-step-circle').innerHTML = '<span>✓</span>'; }
+                    if (step4El) { step4El.className = 'preview-stepper-step done'; step4El.querySelector('.preview-step-circle').innerHTML = '<span>✓</span>'; }
+                } else {
+                    if (stepperBadgeEl) {
+                        stepperBadgeEl.className = 'preview-stepper-status-badge';
+                        stepperBadgeEl.textContent = 'Tiến trình trực tiếp';
+                    }
+                    // Đang thực hiện ở bước 3 (Cắt tỉa & Spa)
+                    if (progressBarEl) progressBarEl.style.width = '56%';
+                    if (step1El) { step1El.className = 'preview-stepper-step done'; step1El.querySelector('.preview-step-circle').innerHTML = '<span>✓</span>'; }
+                    if (step2El) { step2El.className = 'preview-stepper-step done'; step2El.querySelector('.preview-step-circle').innerHTML = '<span>✓</span>'; }
+                    if (step3El) { step3El.className = 'preview-stepper-step active'; step3El.querySelector('.preview-step-circle').innerHTML = '<span>3</span>'; }
+                    if (step4El) { step4El.className = 'preview-stepper-step pending'; step4El.querySelector('.preview-step-circle').innerHTML = '<span>4</span>'; }
                 }
 
                 // Images
@@ -3012,6 +3120,18 @@
                     groomerName = subTexts[1].split('KTV:')[1]?.trim() || 'KTV Hoàng Tuấn';
                 }
                 if (techTitleEl) techTitleEl.textContent = `Lời dặn dò từ chuyên viên (${groomerName}):`;
+
+                if (document.getElementById('appDiaryStep1Staff')) document.getElementById('appDiaryStep1Staff').textContent = `Chăm sóc: ${groomerName}`;
+                if (document.getElementById('appDiaryStep2Staff')) document.getElementById('appDiaryStep2Staff').textContent = `Chăm sóc: ${groomerName}`;
+                if (document.getElementById('appDiaryStep3Staff')) document.getElementById('appDiaryStep3Staff').textContent = `Chăm sóc: ${groomerName}`;
+
+                const isCat = (subTexts[0] || '').toLowerCase().includes('mèo') || petName.toLowerCase().includes('mèo');
+                const step1ImgEl = document.getElementById('appDiaryStep1Img');
+                const step2ImgEl = document.getElementById('appDiaryStep2Img');
+                const step3ImgEl = document.getElementById('appDiaryStep3Img');
+                if (step1ImgEl) step1ImgEl.src = isCat ? '/assets/images/services/spa/process/chai_long_meo1.jpeg' : '/assets/images/services/spa/process/process_chai_long_chai_long.jpg';
+                if (step2ImgEl) step2ImgEl.src = isCat ? '/assets/images/services/spa/process/tam_meo.jpg' : '/assets/images/services/spa/process/tam_cho1.jpg';
+                if (step3ImgEl) step3ImgEl.src = isCat ? '/assets/images/services/spa/process/process_cat_long_cat_long_meo.jpg' : '/assets/images/services/spa/process/process_cat_long_cat_long.jpg';
 
                 if (document.getElementById('appDiaryMessage')) document.getElementById('appDiaryMessage').textContent = message;
 

@@ -709,10 +709,10 @@
         // Quản lý Deep Breadcrumb
         if (deepBreadcrumbEl) {
             if (subtabId === 'tab-service-detail') {
-                const booking = bookingsData.find(b => b.id === selectedBookingId);
+                const booking = bookingsData.find(b => b.id === selectedBookingId || b.dbId === selectedBookingId);
                 const code = booking ? booking.id : selectedBookingId;
                 deepBreadcrumbEl.innerHTML = `<span class="breadcrumb-separator">/</span> <span class="breadcrumb-detail-name">${code}</span>`;
-                renderBookingDetail(selectedBookingId);
+                renderBookingDetail(code);
             } else {
                 deepBreadcrumbEl.innerHTML = '';
             }
@@ -1142,8 +1142,9 @@
     // 5. RENDER HỒ SƠ CHI TIẾT 360° (SUB-TAB 2)
     // ==========================================================================
     function renderBookingDetail(bookingId) {
-        const booking = bookingsData.find(b => b.id === bookingId) || bookingsData[0];
+        const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId) || bookingsData[0];
         if (!booking) return;
+        selectedBookingId = booking.id;
 
         // Headline và Meta
         const codeEl = document.getElementById('detailBookingCode');

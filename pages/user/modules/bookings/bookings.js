@@ -1,58 +1,16 @@
 
 import { API } from '/scripts/api/api.js';
+import { updateCustomerBooking } from '/scripts/shared/customer-booking.mjs';
+import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
 
 
 
-async function cancelOnSupabase(bookingId) {
+async function changeOnSupabase(bookingId, changes) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db) return;
-    try {
-        const booking = allBookings.find(b => String(b.id) === String(bookingId) || String(b._id) === String(bookingId));
-        const supabaseId = booking?._supabaseId;
-        if (supabaseId) {
-            await db.from('appointment').update({ appointment_status: 'da_huy' }).eq('id', supabaseId);
-        }
-    } catch (err) {
-        console.warn('[Bookings] cancelOnSupabase error:', err.message);
-    }
+    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    const booking = allBookings.find(b => String(b.id) === String(bookingId) || String(b._id) === String(bookingId));
+    return updateCustomerBooking(db, user, booking, changes);
 }
-
-async function rescheduleOnSupabase(bookingId, date, time) {
-    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db) return;
-    try {
-        const booking = allBookings.find(b => String(b.id) === String(bookingId) || String(b._id) === String(bookingId));
-        const supabaseId = booking?._supabaseId;
-        if (supabaseId) {
-            await db.from('appointment').update({
-                appointment_date: date,
-                appointment_time: time + ':00',
-                appointment_status: 'cho_xac_nhan',
-            }).eq('id', supabaseId);
-        }
-    } catch (err) {
-        console.warn('[Bookings] rescheduleOnSupabase error:', err.message);
-    }
-}
-
-export const statusLabels = {
-    dang_giu_cho:  'Đang giữ chỗ',
-    cho_xac_nhan:  'Chờ xác nhận',
-    da_xac_nhan:   'Đã xác nhận',
-    da_check_in:   'Đã tiếp nhận',
-    dang_thuc_hien:'Đang thực hiện',
-    da_hoan_tat:   'Hoàn thành',
-    da_huy:        'Đã hủy',
-    da_het_han:    'Đã hết hạn',
-    vang_mat:      'Vắng mặt',
-    pending:       'Chờ xác nhận',
-    upcoming:      'Đã xác nhận',
-    confirmed:     'Đã xác nhận',
-    accepted:      'Đã tiếp nhận',
-    'in-progress': 'Đang thực hiện',
-    completed:     'Hoàn thành',
-    cancelled:     'Đã hủy'
-};
 
 const statusAliases = {
     pending: ['pending', 'cho_xac_nhan', 'dang_giu_cho'],
@@ -122,6 +80,12 @@ function escapeHtml(text) {
 }
 
 let isInitRunning = false;
+let bookingsLoadVersion = 0;
+let stopBookingsRealtime;
+export function dispose() {
+    ++bookingsLoadVersion;
+    stopBookingsRealtime?.();
+}
 
 export async function init() {
     if (isInitRunning) return;
@@ -133,6 +97,12 @@ export async function init() {
         }
         initFilterTabs();
         await loadBookings('all');
+        const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        stopBookingsRealtime = watchCustomerTables(client, user?.id, ['appointment'], () => {
+            const active = document.querySelector('.booking-filter-tab.active, .filter-tab.active');
+            loadBookings(active?.dataset.status || 'all');
+        });
     } finally {
         isInitRunning = false;
     }
@@ -155,41 +125,15 @@ function initFilterTabs() {
 }
 
 async function loadBookings(status) {
+    const loadVersion = ++bookingsLoadVersion;
     try {
-        const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || { id: 'USER-001', phone: '0901234567' };
-
-        await API.initData();
-        const remoteBookings = currentUser ? await API.getUserBookings(currentUser) : [];
-        const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-        
-        const userPhone = String(currentUser?.phone || '').trim();
-        const userId = String(currentUser?.id || '').trim();
-
-        const matchingLocalBookings = localBookings.filter(b => {
-            const bUserId = String(b.userId || '');
-            const bPhone = String(b.ownerPhone || b.phone || '');
-            if (userId && (bUserId === userId || bUserId === 'USER-001')) return true;
-            if (userPhone && bPhone === userPhone) return true;
-            if (!userId && !userPhone) return true;
-            return false;
-        });
-
-        const bookingMap = new Map();
-        matchingLocalBookings.forEach(b => {
-            const key = String(b.id || b.appointment_code || b._supabaseId || '');
-            if (key) bookingMap.set(key, b);
-        });
-
-        (remoteBookings || []).forEach(b => {
-            const key = String(b.id || b.appointment_code || b._supabaseId || '');
-            if (key) {
-                const existing = bookingMap.get(key);
-                bookingMap.set(key, { ...b, ...(existing || {}) });
-            }
-        });
-
-        allBookings = Array.from(bookingMap.values());
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        if (!currentUser) throw new Error('Vui lòng đăng nhập để xem lịch hẹn.');
+        const liveBookings = await API.getUserBookings(currentUser);
+        if (loadVersion !== bookingsLoadVersion) return;
+        allBookings = liveBookings;
         const userPets = currentUser ? await API.getUserPets(currentUser) : [];
+        if (loadVersion !== bookingsLoadVersion) return;
         
         currentPetMap = new Map();
         (Array.isArray(userPets) ? userPets : []).forEach((pet) => {
@@ -202,10 +146,16 @@ async function loadBookings(status) {
 
         renderBookings(status);
     } catch (error) {
+        if (loadVersion !== bookingsLoadVersion) return;
         console.error('Cannot load bookings:', error);
         allBookings = [];
         currentPetMap = new Map();
         renderBookings(status);
+        const empty = document.getElementById('emptyState');
+        if (empty) {
+            empty.style.display = '';
+            empty.textContent = 'Không thể tải lịch hẹn. Vui lòng thử lại.';
+        }
     }
 }
 
@@ -627,69 +577,18 @@ function openQuickCancelModal(booking) {
     const modal = new bootstrap.Modal(modalEl);
     modal.show();
 
-    modalEl.querySelector('#quickConfirmCancelBtn').addEventListener('click', async () => {
-        // Cập nhật số lần hủy của người dùng
-        if (currentUser) {
-            currentUser.cancelCount = (Number(currentUser.cancelCount) || 0) + 1;
-            if (currentUser.cancelCount > 3) {
-                currentUser.booking_locked = true;
-            }
-            localStorage.setItem('pawpal_current_user', JSON.stringify(currentUser));
-
-            try {
-                const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
-                const uIdx = users.findIndex(u => u.id === currentUser.id || u.phone === currentUser.phone);
-                if (uIdx !== -1) {
-                    users[uIdx].cancelCount = currentUser.cancelCount;
-                    users[uIdx].booking_locked = currentUser.booking_locked;
-                    localStorage.setItem('pawpal_users', JSON.stringify(users));
-                }
-            } catch (_) {}
-        }
-
+    modalEl.querySelector('#quickConfirmCancelBtn').addEventListener('click', async (event) => {
+        const button = event.currentTarget;
+        if (button.disabled) return;
+        button.disabled = true;
         try {
-            const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-            const idx = bookings.findIndex((b) => String(b.id || b._id) === String(bookingId));
-            if (idx !== -1) {
-                bookings[idx].status = 'cancelled';
-                bookings[idx].cancelCount = (bookings[idx].cancelCount || 0) + 1;
-                localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
-            }
-        } catch (_) {}
+            await changeOnSupabase(bookingId, { appointment_status: 'CANCELLED' });
+            modal.hide();
+            showToast('Đã hủy lịch hẹn thành công', 'success');
+            await loadBookings(document.querySelector('.filter-tab.active')?.dataset.status || 'all');
+        } catch (error) { showToast(error.message, 'error'); }
+        finally { button.disabled = false; }
 
-        // Tạo thông báo xác nhận hủy lịch cho Khách hàng
-        try {
-            const userNotifs = JSON.parse(localStorage.getItem('pawpal_notifications') || '[]');
-            userNotifs.unshift({
-                id: `notif-${Date.now()}`,
-                userId: currentUser?.id,
-                title: 'Xác nhận hủy lịch hẹn',
-                message: `Lịch hẹn #${booking.id || booking.code} của bé ${petName} đã được hủy thành công.`,
-                createdAt: new Date().toISOString(),
-                type: 'booking_cancelled',
-                read: false
-            });
-            localStorage.setItem('pawpal_notifications', JSON.stringify(userNotifs));
-        } catch (_) {}
-
-        // Gửi thông báo đến Admin
-        try {
-            const adminNotifs = JSON.parse(localStorage.getItem('pawpal_admin_notifications') || '[]');
-            adminNotifs.unshift({
-                id: `admin-notif-${Date.now()}`,
-                type: 'booking_cancelled',
-                title: 'Khách hàng hủy lịch hẹn',
-                content: `Khách hàng ${currentUser?.name || booking.ownerName || 'vãng lai'} (${currentUser?.phone || booking.ownerPhone}) vừa hủy ca hẹn #${booking.id || booking.code}.`,
-                createdAt: new Date().toISOString(),
-                read: false
-            });
-            localStorage.setItem('pawpal_admin_notifications', JSON.stringify(adminNotifs));
-        } catch (_) {}
-
-        await cancelOnSupabase(bookingId);
-        modal.hide();
-        showToast('Đã hủy lịch hẹn thành công!', 'success');
-        loadBookings(document.querySelector('.filter-tab.active')?.dataset.status || 'all');
     });
 }
 
@@ -719,25 +618,7 @@ function openQuickRescheduleModal(booking) {
     const bookingId = booking.id || booking._id || '';
 
     const configSlots = (window.PawPalBookingConfig?.slots) || ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
-    const configStaffs = (window.PawPalBookingConfig?.staffs) || [
-        { name: 'Phân bổ ngẫu nhiên', desc: 'PawPal tự động chọn nhân viên trống lịch', id: 'random' },
-        { name: 'Nguyễn Minh An',     desc: 'Chuyên viên Spa • 3 năm kinh nghiệm',      id: 'staff1' },
-        { name: 'Trần An Nhiên',      desc: 'Bảo mẫu Hotel • Cực kỳ nhẹ nhàng',         id: 'staff2' },
-        { name: 'Lê Hoàng Tiến',     desc: 'Chuyên viên cắt tỉa Grooming',              id: 'staff3' }
-    ];
     const slotOptions = configSlots.map((slot) => `<button type="button" class="quick-slot-btn" data-slot="${slot}">${slot}</button>`).join('');
-    const staffOptions = configStaffs.map((s) => {
-        const initials = s.name === 'Phân bổ ngẫu nhiên' ? 'NG' : s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-        return `
-            <div class="quick-staff-btn" data-staff="${s.name}" tabindex="0" role="button"
-                style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;text-align:left;">
-                <div style="width:36px;height:36px;border-radius:50%;background:var(--color-primary-light,#e8f5e9);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:var(--color-primary-dark,#2e7d32);flex-shrink:0;">${initials}</div>
-                <div>
-                    <div style="font-weight:700;font-size:0.88rem;color:var(--color-text-dark,#1e293b);">${s.name}</div>
-                    <div style="font-size:0.75rem;color:#64748b;">${s.desc}</div>
-                </div>
-            </div>`;
-    }).join('');
     const minDate = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
     const modalEl = document.createElement('div');
@@ -753,14 +634,12 @@ function openQuickRescheduleModal(booking) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted small mb-3">${isHotelBooking ? 'Pet Hotel chỉ cần đổi ngày, không cần chọn giờ hay nhân viên.' : `Chọn ngày, giờ và nhân viên mới cho lịch <strong>${serviceName}</strong> của <strong>${petName}</strong>.`}</p>
+                    <p class="text-muted small mb-3">${isHotelBooking ? 'Pet Hotel chỉ cần đổi ngày, không cần chọn giờ hay nhân viên.' : `Chọn ngày và giờ mới cho lịch <strong>${serviceName}</strong> của <strong>${petName}</strong>.`}</p>
                     <label class="form-label fw-semibold">Chọn ngày</label>
                     <input type="date" id="quickRescheduleDate" class="form-control mb-3" min="${minDate}">
                     ${isHotelBooking ? '' : `
                     <label class="form-label fw-semibold">Chọn giờ</label>
                     <div class="d-flex flex-wrap gap-2 mb-3" id="quickRescheduleSlots">${slotOptions}</div>
-                    <label class="form-label fw-semibold">Chọn nhân viên</label>
-                    <div class="mb-3" id="quickRescheduleStaffs" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:12px;">${staffOptions}</div>
                     `}
                 </div>
                 <div class="modal-footer">
@@ -776,18 +655,14 @@ function openQuickRescheduleModal(booking) {
 
     let selectedDate = '';
     let selectedSlot = isHotelBooking ? '' : '';
-    let selectedStaff = isHotelBooking ? 'Bảo mẫu khách sạn' : '';
     const refreshState = () => {
         if (!isHotelBooking) {
-            modalEl.querySelectorAll('.quick-slot-btn, .quick-staff-btn').forEach((btn) => btn.classList.remove('active'));
+            modalEl.querySelectorAll('.quick-slot-btn').forEach((btn) => btn.classList.remove('active'));
             modalEl.querySelectorAll('.quick-slot-btn').forEach((btn) => {
                 if (btn.dataset.slot === selectedSlot) btn.classList.add('active');
             });
-            modalEl.querySelectorAll('.quick-staff-btn').forEach((btn) => {
-                if (btn.dataset.staff === selectedStaff) btn.classList.add('active');
-            });
         }
-        modalEl.querySelector('#quickConfirmRescheduleBtn').disabled = isHotelBooking ? !selectedDate : !(selectedDate && selectedSlot && selectedStaff);
+        modalEl.querySelector('#quickConfirmRescheduleBtn').disabled = isHotelBooking ? !selectedDate : !(selectedDate && selectedSlot);
     };
 
     modalEl.querySelector('#quickRescheduleDate').addEventListener('change', (e) => {
@@ -798,36 +673,21 @@ function openQuickRescheduleModal(booking) {
         modalEl.querySelectorAll('.quick-slot-btn').forEach((btn) => {
             btn.addEventListener('click', () => { selectedSlot = btn.dataset.slot; refreshState(); });
         });
-        modalEl.querySelectorAll('.quick-staff-btn').forEach((btn) => {
-            btn.addEventListener('click', () => { selectedStaff = btn.dataset.staff; refreshState(); });
-        });
     }
 
-    modalEl.querySelector('#quickConfirmRescheduleBtn').addEventListener('click', async () => {
+    modalEl.querySelector('#quickConfirmRescheduleBtn').addEventListener('click', async (event) => {
+        const button = event.currentTarget;
+        if (button.disabled) return;
+        button.disabled = true;
         try {
-            const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-            const idx = bookings.findIndex((b) => String(b.id || b._id) === String(bookingId));
-            if (idx !== -1) {
-                bookings[idx].date = selectedDate;
-                if (!isHotelBooking) {
-                    bookings[idx].time = selectedSlot;
-                    bookings[idx].timeStart = selectedSlot;
-                    bookings[idx].staff = selectedStaff;
-                } else {
-                    bookings[idx].time = '';
-                    bookings[idx].timeStart = '';
-                    bookings[idx].timeEnd = '';
-                    bookings[idx].staff = 'Bảo mẫu khách sạn';
-                }
-                bookings[idx].changeCount = (bookings[idx].changeCount || 0) + 1;
-                localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
-            }
-        } catch (_) {}
+            await changeOnSupabase(bookingId, { appointment_date: selectedDate,
+                ...(selectedSlot ? { appointment_time: selectedSlot + ':00' } : {}), appointment_status: 'PENDING' });
+            modal.hide();
+            showToast('Đã đổi lịch hẹn thành công', 'success');
+            await loadBookings(document.querySelector('.filter-tab.active')?.dataset.status || 'all');
+        } catch (error) { showToast(error.message, 'error'); }
+        finally { button.disabled = false; }
 
-        await rescheduleOnSupabase(bookingId, selectedDate, selectedSlot);
-        modal.hide();
-        showToast('Đã đổi lịch hẹn thành công!', 'success');
-        loadBookings(document.querySelector('.filter-tab.active')?.dataset.status || 'all');
     });
 }
 

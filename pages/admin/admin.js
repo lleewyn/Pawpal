@@ -64,40 +64,35 @@ if (typeof window !== 'undefined') {
 
 function getAdminSessionUser() {
     try {
-        const raw = localStorage.getItem('pawpal_current_user') 
-                 || sessionStorage.getItem('pawpal_current_user')
-                 || localStorage.getItem('pawpal_user')
-                 || sessionStorage.getItem('pawpal_user');
+        const raw = sessionStorage.getItem('pawpal_admin_user') 
+                 || localStorage.getItem('pawpal_admin_user');
         if (raw) {
             const user = typeof raw === 'string' ? JSON.parse(raw) : raw;
-            if (user && (user.id || user.phone || user.name || user.email)) {
+            // Bảo mật nghiêm ngặt: Tuyệt đối không cho phép tài khoản Khách hàng truy cập Admin
+            if (user && (user.role === 'customer' || user.system_role === 'CUSTOMER')) {
+                sessionStorage.removeItem('pawpal_admin_user');
+                localStorage.removeItem('pawpal_admin_user');
+                return null;
+            }
+            if (user && (user.id || user.auth_user_id || user.email)) {
                 return user;
             }
         }
     } catch (e) {}
-
-    // Tài khoản quản trị viên mặc định để đảm bảo luôn truy cập mượt mà
-    const defaultAdmin = {
-        id: 'ADM-001',
-        name: 'Quản trị viên PawPal',
-        phone: '0901234567',
-        email: 'admin@pawpal.vn',
-        role: 'admin',
-        position: 'Quản trị viên'
-    };
-    try {
-        localStorage.setItem('pawpal_current_user', JSON.stringify(defaultAdmin));
-        sessionStorage.setItem('pawpal_current_user', JSON.stringify(defaultAdmin));
-    } catch (e) {}
-    return defaultAdmin;
+    return null;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     const adminUser = getAdminSessionUser();
+    if (!adminUser) {
+        window.location.replace('/admin/login');
+        return;
+    }
     const headerUserTag = document.querySelector('.header-user-tag');
     if (headerUserTag && adminUser) {
         const name = adminUser.name || adminUser.full_name;
-        headerUserTag.textContent = name ? `${name} (Quản trị)` : 'Quản trị viên';
+        const roleLabel = adminUser.system_role === 'ADMIN' ? 'Quản trị' : (adminUser.position || 'Nhân sự');
+        headerUserTag.textContent = name ? `${name} (${roleLabel})` : 'Quản trị viên';
     }
     const sidebarBtns = document.querySelectorAll('.sidebar-menu-btn');
     const moduleTitleEl = document.getElementById('headerModuleTitle');
@@ -689,21 +684,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Nút Đăng xuất ở chân Sidebar
     const btnSidebarLogout = document.getElementById('btnSidebarLogout');
     if (btnSidebarLogout) {
-        btnSidebarLogout.addEventListener('click', () => {
+        btnSidebarLogout.addEventListener('click', async () => {
             try {
                 sessionStorage.removeItem('pawpal_admin_active_module');
+                sessionStorage.removeItem('pawpal_admin_user');
                 sessionStorage.removeItem('pawpal_current_user');
                 sessionStorage.removeItem('pawpal_user_role');
+                localStorage.removeItem('pawpal_admin_user');
                 localStorage.removeItem('pawpal_current_user');
                 if (window.PawpalStorage && typeof window.PawpalStorage.remove === 'function') {
+                    window.PawpalStorage.remove('pawpal_admin_user');
                     window.PawpalStorage.remove('pawpal_current_user');
                 }
                 const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                 if (client && client.auth && typeof client.auth.signOut === 'function') {
-                    client.auth.signOut();
+                    await client.auth.signOut();
                 }
             } catch (e) {}
-            window.location.replace('/pages/public/login/login.html');
+            window.location.replace('/admin/login');
         });
     }
 

@@ -1,1654 +1,205 @@
-function getUsers() {
-    return JSON.parse(localStorage.getItem('pawpal_users') || '[]');
-}
-
-function saveUsers(users) {
-    localStorage.setItem('pawpal_users', JSON.stringify(users));
-}
-
-function getCurrentUser() {
-    try {
-        return JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-    } catch {
-        return null;
+/** Customer authentication: credentials and OTP are verified by the server. */
+(function () {
+    const byId = id => document.getElementById(id);
+    const value = id => byId(id)?.value.trim() || '';
+    const password = id => byId(id)?.value || '';
+    const auth = () => window.PawpalCustomerAuth;
+    const validPhone = phone => /^0\d{9}$/.test(phone);
+    const validPassword = pass => /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/s.test(pass) && pass.length <= 128;
+    let challenge = null;
+    let timer;
+    let busy = false;
+    const sections = ['loginForm', 'registerForm', 'otpSection', 'forgotPhoneSection', 'forgotOtpSection', 'forgotNewPasswordSection', 'congratsSection', 'setupPasswordSection', 'setupExpiredSection'];
+    function notice(message, error = false) {
+        const container = byId('toastContainer');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = 'toast-custom show ' + (error ? 'toast-error' : 'toast-success');
+        toast.setAttribute('role', 'alert');
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 6000);
     }
-}
-
-function setCurrentUser(user) {
-    try {
-        if (user) {
-            localStorage.setItem('pawpal_current_user', JSON.stringify(user));
-            sessionStorage.setItem('pawpal_current_user', JSON.stringify(user));
-        } else {
-            localStorage.removeItem('pawpal_current_user');
-            sessionStorage.removeItem('pawpal_current_user');
+    function show(id) {
+        for (const name of sections) {
+            const element = byId(name);
+            if (!element) continue;
+            element.classList.toggle('d-none', name !== id);
+            element.classList.toggle('active-form', name === id && ['loginForm', 'registerForm'].includes(name));
+            element.style.opacity = name === id ? '1' : '';
         }
-    } catch(e) {}
-    document.dispatchEvent(new CustomEvent('auth_state_changed', { detail: user }));
-}
-
-function ensureUserId(user) {
-    if (!user) return user;
-    if (!user.id) {
-        user.id = 'usr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+        if (byId('authTabs')) byId('authTabs').style.display = ['loginForm', 'registerForm'].includes(id) ? 'flex' : 'none';
     }
-    return user;
-}
-
-function getLoginRedirectUrl(user) {
-    const params = new URLSearchParams(window.location.search);
-    const redirect = params.get('redirect');
-    if (redirect && redirect.startsWith('/') && !redirect.includes('//')) {
-        return redirect;
+    function clearChallenge() { challenge = null; clearInterval(timer); }
+    function renderTestCode(result, register) {
+        document.getElementById('authTestOtp')?.remove();
+        if (result.testMode !== true || !/^\d{6}$/.test(String(result.testCode || ''))) return;
+        const note = document.createElement('p');
+        note.id = 'authTestOtp';
+        note.className = 'text-muted';
+        note.textContent = `Mã thử nghiệm: ${result.testCode}. Chỉ dùng cho tài khoản thử nghiệm.`;
+        byId(register ? 'otpSection' : 'forgotOtpSection')?.prepend(note);
     }
-    const role = String(user?.role || user?.user_role || user?.position || user?.user_metadata?.role || '').toLowerCase();
-    if (['admin', 'administrator', 'quản trị viên', 'quan tri vien', 'staff'].includes(role)) {
-        return '/pages/admin/index.html';
+    async function run(button, operation) {
+        if (busy) return;
+        busy = true;
+        if (button) button.disabled = true;
+        try { await operation(); }
+        catch (error) { notice(error.message || 'Không thể xử lý yêu cầu.', true); }
+        finally { busy = false; if (button) button.disabled = false; }
     }
-    return '/pages/user/#profile';
-}
-
-async function supabaseLogin(phone, password) {
-    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db) return { success: false, offline: true };
-
-    try {
-        const { data: customers, error } = await db
-            .from('customer')
-            .select(`
-                id,
-                email,
-                phone_main,
-                account_status,
-                is_temporary,
-                password_hash,
-                customer_profile (
-                    full_name,
-                    gender,
-                    date_of_birth
-                ),
-                customer_membership (
-                    total_paw_points,
-                    membership_tier (
-                        tier_name,
-                        discount_percent
-                    )
-                )
-            `)
-            .eq('phone_main', phone)
-            .eq('password_hash', password)
-            .limit(1);
-
-        if (error) {
-            console.error('[Login] supabaseLogin query error:', error.message);
-        }
-
-        if (customers && customers.length > 0) {
-            const c = customers[0];
-
-            if (c.account_status !== 'ACTIVE') {
-                return { success: false, error: 'account_inactive' };
-            }
-
-            const isTemp = c.is_temporary !== undefined ? Boolean(c.is_temporary) : (!c.password_hash);
-            if (isTemp) {
-                return { success: false, error: 'wrong_password' };
-            }
-
-            const profile    = Array.isArray(c.customer_profile) ? (c.customer_profile[0] || {}) : (c.customer_profile || {});
-            const membership = Array.isArray(c.customer_membership) ? (c.customer_membership[0] || {}) : (c.customer_membership || {});
-            const tier       = membership.membership_tier || {};
-
-            let userRole = 'customer';
-            try {
-                const { data: staffMatch } = await db
-                    .from('staff')
-                    .select('id, full_name, role, specialization, status')
-                    .or(`phone_number.eq.${phone},phone.eq.${phone}`)
-                    .limit(1);
-                if (staffMatch && staffMatch.length > 0 && staffMatch[0].status !== 'locked') {
-                    const st = staffMatch[0];
-                    const r = (st.role || '').toLowerCase();
-                    userRole = (r.includes('admin') || r.includes('quản trị')) ? 'admin' : 'staff';
-                }
-            } catch (e) {}
-
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('redirect')?.includes('admin') || c.email?.includes('admin') || c.email?.includes('@pawpal.vn')) {
-                userRole = 'admin';
-            }
-
-            const user = {
-                id:           c.id,
-                name:         String(profile.full_name || '').trim() || c.phone_main,
-                phone:        c.phone_main,
-                email:        c.email || '',
-                password:     password,
-                role:         userRole,
-                is_temporary: false,
-                points:       membership.total_paw_points || 0,
-                tier:         tier.tier_name || 'Đồng',
-                gender:       profile.gender || '',
-                dob:          profile.date_of_birth || '',
-                _source:      'supabase',
-            };
-
-            console.log('[Login] Login từ SUPABASE DATABASE — user:', user.name, '| phone:', user.phone, '| role:', user.role);
-            return { success: true, user };
-        }
-
-        // Kiểm tra trong bảng nhân viên staff nếu không tìm thấy trong customer
-        try {
-            const { data: staffList, error: staffErr } = await db
-                .from('staff')
-                .select('*')
-                .or(`phone_number.eq.${phone},phone.eq.${phone}`)
-                .limit(1);
-
-            if (!staffErr && staffList && staffList.length > 0) {
-                const s = staffList[0];
-                if (s.status === 'locked' || s.status === 'RESIGNED') {
-                    return { success: false, error: 'account_inactive' };
-                }
-                const r = (s.role || '').toLowerCase();
-                const userRole = (r.includes('admin') || r.includes('quản trị')) ? 'admin' : 'staff';
-                const user = {
-                    id:           s.id,
-                    name:         s.full_name || 'Nhân viên PawPal',
-                    phone:        s.phone_number || s.phone || phone,
-                    email:        s.email || '',
-                    password:     password,
-                    role:         userRole,
-                    position:     s.role || 'Quản trị viên',
-                    is_temporary: false,
-                    _source:      'supabase',
-                };
-                return { success: true, user };
-            }
-        } catch (e) {}
-
-        return { success: false, error: 'wrong_password' };
-
-    } catch (err) {
-        console.error('[Login] supabaseLogin exception:', err);
-        return { success: false, error: err.message };
+    function resetInputs(selector) {
+        const inputs = [...document.querySelectorAll(selector)];
+        inputs.forEach((input, index) => { input.value = ''; input.disabled = index > 0; });
+        inputs[0]?.focus();
     }
-}
-
-async function supabaseResolveUserByPhone(phone) {
-    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db || !phone) return null;
-
-    try {
-        const { data: customers, error } = await db
-            .from('customer')
-            .select(`
-                id,
-                email,
-                phone_main,
-                account_status,
-                is_temporary,
-                password_hash,
-                customer_profile (
-                    full_name,
-                    gender,
-                    date_of_birth
-                ),
-                customer_membership (
-                    total_paw_points,
-                    membership_tier (
-                        tier_name,
-                        discount_percent
-                    )
-                )
-            `)
-            .eq('phone_main', phone)
-            .limit(1);
-
-        if (!error && customers && customers.length > 0) {
-            const c = customers[0];
-            const profile    = Array.isArray(c.customer_profile) ? (c.customer_profile[0] || {}) : (c.customer_profile || {});
-            const membership = Array.isArray(c.customer_membership) ? (c.customer_membership[0] || {}) : (c.customer_membership || {});
-            const tier       = membership.membership_tier || {};
-            const isTemp = c.is_temporary !== undefined ? Boolean(c.is_temporary) : (!c.password_hash || c.account_status === 'INACTIVE');
-
-            let userRole = 'customer';
-            try {
-                const { data: staffMatch } = await db
-                    .from('staff')
-                    .select('id, full_name, role, specialization, status')
-                    .or(`phone_number.eq.${phone},phone.eq.${phone}`)
-                    .limit(1);
-                if (staffMatch && staffMatch.length > 0) {
-                    const st = staffMatch[0];
-                    const r = (st.role || '').toLowerCase();
-                    userRole = (r.includes('admin') || r.includes('quản trị')) ? 'admin' : 'staff';
-                }
-            } catch (e) {}
-
-            return {
-                id:           c.id,
-                name:         String(profile.full_name || '').trim() || c.phone_main,
-                phone:        c.phone_main,
-                email:        c.email || '',
-                password:     c.password_hash || '',
-                role:         userRole,
-                is_temporary: isTemp,
-                points:       membership.total_paw_points || 0,
-                tier:         tier.tier_name || 'Đồng',
-                gender:       profile.gender || '',
-                dob:          profile.date_of_birth || '',
-                _source:      'supabase',
-            };
-        }
-
-        // Kiểm tra trong bảng nhân viên staff nếu không tìm thấy trong customer
-        try {
-            const { data: staffList } = await db
-                .from('staff')
-                .select('*')
-                .or(`phone_number.eq.${phone},phone.eq.${phone}`)
-                .limit(1);
-
-            if (staffList && staffList.length > 0) {
-                const s = staffList[0];
-                const r = (s.role || '').toLowerCase();
-                const userRole = (r.includes('admin') || r.includes('quản trị')) ? 'admin' : 'staff';
-                return {
-                    id:           s.id,
-                    name:         s.full_name || 'Nhân viên PawPal',
-                    phone:        s.phone_number || s.phone || phone,
-                    email:        s.email || '',
-                    password:     s.password_hash || '',
-                    role:         userRole,
-                    position:     s.role || 'Quản trị viên',
-                    is_temporary: false,
-                    _source:      'supabase',
-                };
-            }
-        } catch (e) {}
-
-        return null;
-    } catch (err) {
-        console.warn('[Login] supabaseResolveUserByPhone exception:', err);
-        return null;
-    }
-}
-
-function normalizePetSpecies(species) {
-    const value = String(species || '').trim().toLowerCase();
-    if (!value) return 'other';
-    if (['dog', 'chó', 'cho', 'canine'].includes(value)) return 'dog';
-    if (['cat', 'mèo', 'meo', 'feline'].includes(value)) return 'cat';
-    return value;
-}
-
-function buildGuestPetFromUser(user, fallbackPhone = null) {
-    const pet = user?.pet;
-    if (!pet || typeof pet !== 'object') return null;
-
-    const petName = String(pet.name || pet.pet_name || '').trim();
-    if (!petName) return null;
-
-    return {
-        id: pet.id || `guest-pet-${String(fallbackPhone || user?.phone || Date.now())}`,
-        userId: user?.id || fallbackPhone || user?.phone || null,
-        name: petName,
-        species: normalizePetSpecies(pet.species),
-        otherSpecies: pet.otherSpecies || '',
-        breed: pet.breed || '',
-        gender: pet.gender || '',
-        dateOfBirth: pet.dateOfBirth || pet.dob || pet.date_of_birth || '',
-        color: pet.color || '',
-        weight: pet.weight || '',
-        avatar: pet.avatar || pet.avatar_url || '',
-        allergies: pet.allergies || '',
-        notes: pet.notes || '',
-        isArchived: false,
-        createdAt: pet.createdAt || new Date().toISOString(),
-    };
-}
-
-function buildPetFromBooking(booking, fallbackPhone = null) {
-    if (!booking) return null;
-
-    const petName = String(booking.petName || booking.pet_name || booking.pet || '').trim();
-    if (!petName) return null;
-
-    const species = normalizePetSpecies(booking.petType || booking.petSpecies || booking.species || booking.pet_type);
-    const breed = String(booking.petBreed || booking.pet_breed || '').trim();
-    const weight = booking.petWeight || booking.pet_weight || '';
-    const phone = String(fallbackPhone || booking.ownerPhone || booking.userPhone || booking.phone || '').trim();
-
-    return {
-        id: booking.petId || booking.pet_id || `guest-booking-pet-${phone || Date.now()}`,
-        userId: booking.userId || phone || null,
-        name: petName,
-        species,
-        otherSpecies: booking.petTypeOther || '',
-        breed,
-        gender: booking.petGender || '',
-        dateOfBirth: booking.petDob || booking.petDateOfBirth || '',
-        color: booking.petColor || '',
-        weight,
-        avatar: booking.petAvatar || '',
-        allergies: booking.petNote || booking.petAllergies || '',
-        notes: booking.petNote || '',
-        isArchived: false,
-        createdAt: booking.createdAt || booking.created_at || new Date().toISOString(),
-    };
-}
-
-async function migrateGuestPetsToMember(user, fallbackPhone = null) {
-    if (!user) return Promise.resolve();
-    const phone = String(fallbackPhone || user.phone || '').trim();
-    if (!phone) return Promise.resolve();
-
-    const normPhone = phone.replace(/\s+/g, '');
-    const memberId = user.id;
-
-    console.log(`[Migration] Bắt đầu di chuyển dữ liệu vãng lai sang thành viên cho SĐT: ${normPhone}, ID: ${memberId}`);
-
-    // 1. DI CHUYỂN BÉ CƯNG (pawpal_pets & pet_profile)
-    try {
-        let localPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-        let localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-
-        // Thu thập pet từ bookings nếu chưa có trong pawpal_pets
-        localBookings.forEach(b => {
-            const bPhone = String(b.ownerPhone || b.userPhone || b.phone || '').trim().replace(/\s+/g, '');
-            if (bPhone === normPhone) {
-                const bPetName = String(b.petName || '').trim();
-                if (bPetName) {
-                    const exists = localPets.some(p => {
-                        const pPhone = String(p.ownerPhone || p.phone || '').trim().replace(/\s+/g, '');
-                        return (pPhone === normPhone || String(p.userId) === String(memberId)) &&
-                               String(p.name || '').trim().toLowerCase() === bPetName.toLowerCase();
-                    });
-                    if (!exists) {
-                        const built = buildPetFromBooking(b, normPhone);
-                        if (built) {
-                            built.userId = memberId;
-                            built.ownerPhone = normPhone;
-                            localPets.push(built);
-                        }
-                    }
-                }
-            }
-        });
-
-        // Cập nhật và khử trùng lặp các pet của SĐT này
-        const memberPetsMap = new Map();
-        const otherPets = [];
-
-        localPets.forEach(p => {
-            const pPhone = String(p.ownerPhone || p.phone || '').trim().replace(/\s+/g, '');
-            const isUserPet = (pPhone === normPhone) || (String(p.userId) === String(memberId)) || (String(p.userId) === normPhone);
-
-            if (isUserPet) {
-                const petName = String(p.name || 'Bé cưng').trim().toLowerCase();
-                const petSpecies = normalizePetSpecies(p.species);
-                const key = `${petName}_${petSpecies}`;
-
-                if (!memberPetsMap.has(key)) {
-                    memberPetsMap.set(key, {
-                        ...p,
-                        userId: memberId,
-                        ownerPhone: normPhone,
-                        ownerName: user.name || p.ownerName,
-                        isArchived: false,
-                        updatedAt: new Date().toISOString()
-                    });
-                } else {
-                    const existing = memberPetsMap.get(key);
-                    existing.weight = p.weight || existing.weight;
-                    existing.breed = p.breed || existing.breed;
-                    existing.avatar = p.avatar || existing.avatar;
-                    existing.notes = p.notes || existing.notes;
-                    existing.allergies = p.allergies || existing.allergies;
-                }
-            } else {
-                otherPets.push(p);
-            }
-        });
-
-        const mergedPets = [...Array.from(memberPetsMap.values()), ...otherPets];
-        localStorage.setItem('pawpal_pets', JSON.stringify(mergedPets));
-        console.log(`[Migration] Đã liên kết ${memberPetsMap.size} bé cưng cho thành viên.`);
-
-        // Đồng bộ Supabase pet_profile nếu có
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (db) {
-            try {
-                const { data: custData } = await db.from('customer').select('id').eq('phone_main', normPhone).limit(1);
-                if (custData && custData.length > 0) {
-                    const supCustId = custData[0].id;
-                    await db.from('pet_profile').update({ customer_id: supCustId }).eq('status', 'ACTIVE').is('customer_id', null);
-                }
-            } catch (supPetErr) {
-                console.warn('[Migration] Supabase pet_profile update error:', supPetErr.message);
-            }
-        }
-    } catch (petErr) {
-        console.error('[Migration] Lỗi khi di chuyển thú cưng:', petErr);
-    }
-
-    // 2. DI CHUYỂN LỊCH HẸN DỊCH VỤ (pawpal_bookings & appointment)
-    try {
-        let bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-        let updatedBookingCount = 0;
-        bookings = bookings.map(b => {
-            const bPhone = String(b.ownerPhone || b.userPhone || b.phone || '').trim().replace(/\s+/g, '');
-            if (bPhone === normPhone) {
-                updatedBookingCount++;
-                return {
-                    ...b,
-                    userId: memberId,
-                    ownerPhone: normPhone,
-                    ownerName: user.name || b.ownerName
-                };
-            }
-            return b;
-        });
-        localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
-        console.log(`[Migration] Đã liên kết ${updatedBookingCount} lịch hẹn cho thành viên.`);
-
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (db) {
-            try {
-                const { data: custData } = await db.from('customer').select('id').eq('phone_main', normPhone).limit(1);
-                if (custData && custData.length > 0) {
-                    const supCustId = custData[0].id;
-                    await db.from('appointment').update({ customer_id: supCustId }).is('customer_id', null);
-                }
-            } catch (supAppErr) {
-                console.warn('[Migration] Supabase appointment update error:', supAppErr.message);
-            }
-        }
-    } catch (bErr) {
-        console.error('[Migration] Lỗi khi di chuyển lịch hẹn:', bErr);
-    }
-
-    // 3. DI CHUYỂN ĐƠN HÀNG (pawpal_orders & sales_order)
-    try {
-        let orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-        let updatedOrderCount = 0;
-        orders = orders.map(o => {
-            const oPhone = String(o.shipping?.phone || o.userPhone || o.guestPhone || o.phone || '').trim().replace(/\s+/g, '');
-            if (oPhone === normPhone) {
-                updatedOrderCount++;
-                return {
-                    ...o,
-                    userId: memberId,
-                    userPhone: normPhone
-                };
-            }
-            return o;
-        });
-        localStorage.setItem('pawpal_orders', JSON.stringify(orders));
-        console.log(`[Migration] Đã liên kết ${updatedOrderCount} đơn hàng cho thành viên.`);
-
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (db) {
-            try {
-                const { data: custData } = await db.from('customer').select('id').eq('phone_main', normPhone).limit(1);
-                if (custData && custData.length > 0) {
-                    const supCustId = custData[0].id;
-                    await db.from('sales_order').update({ customer_id: supCustId }).is('customer_id', null);
-                }
-            } catch (supOrdErr) {
-                console.warn('[Migration] Supabase sales_order update error:', supOrdErr.message);
-            }
-        }
-    } catch (oErr) {
-        console.error('[Migration] Lỗi khi di chuyển đơn hàng:', oErr);
-    }
-
-    // 4. XÓA TOKEN TẠM CŨ CỦA KHÁCH
-    try {
-        const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');
-        const remainingTokens = tokens.filter(t => String(t.phone || '').trim().replace(/\s+/g, '') !== normPhone);
-        localStorage.setItem('pawpal_temp_tokens', JSON.stringify(remainingTokens));
-    } catch (_) {}
-
-    return Promise.resolve();
-}
-
-
-async function supabaseCheckPhone(phone) {
-    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db) return { exists: false, offline: true };
-
-    try {
-        const { data, error } = await db
-            .from('customer')
-            .select('id, account_status, is_temporary, password_hash')
-            .eq('phone_main', phone)
-            .limit(1);
-
-        if (error) return { exists: false, error: error.message };
-        if (!data || data.length === 0) return { exists: false };
-
-        const c = data[0];
-        const isTemp = c.is_temporary !== undefined ? Boolean(c.is_temporary) : (!c.password_hash || c.account_status === 'INACTIVE');
-        return {
-            exists: true,
-            isTemporary: isTemp,
+    function countdown(register, seconds = 60) {
+        clearInterval(timer);
+        const label = byId(register ? 'otpTimer' : 'forgotOtpTimer');
+        const button = byId(register ? 'btnResendOtp' : 'btnForgotResendOtp');
+        const ends = Date.now() + seconds * 1000;
+        if (button) button.disabled = true;
+        const tick = () => {
+            const left = Math.max(0, Math.ceil((ends - Date.now()) / 1000));
+            if (label) label.textContent = String(Math.floor(left / 60)).padStart(2, '0') + ':' + String(left % 60).padStart(2, '0');
+            if (!left) { clearInterval(timer); if (button) button.disabled = false; }
         };
-    } catch (err) {
-        return { exists: false, error: err.message };
+        tick(); timer = setInterval(tick, 1000);
     }
-}
-
-
-async function supabaseRegister(name, phone, password) {
-    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db) return { success: false, offline: true };
-
-    try {
-        const { data: existingCust, error: checkErr } = await db
-            .from('customer')
-            .select('id, password_hash, is_temporary, account_status')
-            .eq('phone_main', phone)
-            .limit(1);
-
-        if (checkErr) throw checkErr;
-
-        let customerId;
-
-        if (existingCust && existingCust.length > 0) {
-            const cust = existingCust[0];
-            const isTemp = cust.is_temporary !== undefined ? Boolean(cust.is_temporary) : (!cust.password_hash || cust.account_status === 'INACTIVE');
-            
-            // Nếu đã có mật khẩu và không phải là khách vãng lai => Tài khoản thành viên đã tồn tại
-            if (!isTemp && cust.password_hash) {
-                return { success: false, error: 'Số điện thoại này đã được đăng ký tài khoản.' };
-            }
-
-            // Nếu là khách vãng lai -> Thăng cấp thành Thành viên
-            const { error: updateErr } = await db
-                .from('customer')
-                .update({
-                    password_hash: password,
-                    is_temporary: false,
-                    account_status: 'ACTIVE',
-                    registered_at: new Date().toISOString()
-                })
-                .eq('id', cust.id);
-                
-            if (updateErr) throw updateErr;
-            customerId = cust.id;
-
-            // Cập nhật hoặc chèn tên cho Khách vãng lai
-            if (name) {
-                const { data: prof } = await db.from('customer_profile').select('id').eq('customer_id', customerId).limit(1);
-                if (prof && prof.length > 0) {
-                    await db.from('customer_profile').update({ full_name: name }).eq('customer_id', customerId);
-                } else {
-                    await db.from('customer_profile').insert({ customer_id: customerId, full_name: name });
-                }
-            }
-        } else {
-            // Chưa có dữ liệu gì => Tạo mới tài khoản thành viên hoàn toàn
-            const { data: newCustomers, error: custErr } = await db
-                .from('customer')
-                .insert({
-                    email:          null,
-                    password_hash:  password,
-                    account_status: 'ACTIVE',
-                    is_temporary:   false,
-                    phone_main:     phone,
-                    registered_at:  new Date().toISOString(),
-                })
-                .select('id')
-                .limit(1);
-
-            if (custErr) throw custErr;
-            customerId = newCustomers[0].id;
-
-            await db.from('customer_profile').insert({
-                customer_id: customerId,
-                full_name:   name,
+    async function sendOtp(phone, purpose) {
+        if (!validPhone(phone)) throw new Error('Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0.');
+        const result = await auth().request('otp/request', { phone, purpose });
+        clearChallenge();
+        challenge = { id: result.challengeId, phone, purpose, code: '' };
+        const register = purpose === 'register';
+        show(register ? 'otpSection' : 'forgotOtpSection');
+        renderTestCode(result, register);
+        if (byId('forgotPhone')) byId('forgotPhone').value = phone;
+        resetInputs(register ? '#otpSection .otp-input' : '.forgot-otp-input');
+        countdown(register, result.resendAfter);
+        notice(result.testMode === true ? 'Mã thử nghiệm đã sẵn sàng, có hiệu lực trong 5 phút.' : 'Đã gửi mã xác thực. Mã có hiệu lực trong 5 phút.');
+    }
+    async function finish(passwordValue, name) {
+        if (!challenge) throw new Error('Vui lòng yêu cầu mã xác thực mới.');
+        if (!validPassword(passwordValue)) throw new Error('Mật khẩu cần ít nhất 8 ký tự, một chữ số và một ký tự đặc biệt.');
+        const result = await auth().request('otp/complete', { challengeId: challenge.id, code: challenge.code, password: passwordValue, name });
+        await auth().accept(result);
+        clearChallenge();
+        for (const id of ['registerPassword', 'registerConfirmPassword', 'forgotNewPassword', 'forgotConfirmNewPassword']) if (byId(id)) byId(id).value = '';
+        notice('Xác thực và lưu mật khẩu thành công.');
+        window.location.href = '/user#profile';
+    }
+    function route() {
+        clearChallenge();
+        const params = new URLSearchParams(window.location.search);
+        const action = params.get('action') || window.location.hash.slice(1);
+        if (action === 'register') {
+            show('registerForm');
+            if (params.get('phone')) byId('registerPhone').value = params.get('phone');
+        } else if (['setup-password', 'guest-activate', 'guest-verify-otp'].includes(action)) {
+            // Legacy local activation tokens never authorize a password change.
+            show('forgotPhoneSection');
+            if (params.get('phone')) byId('forgotPhone').value = params.get('phone');
+            notice('Vui lòng xác thực số điện thoại bằng mã OTP để thiết lập mật khẩu.');
+        } else show('loginForm');
+        byId('tabLogin')?.classList.toggle('active', action !== 'register');
+        byId('tabRegister')?.classList.toggle('active', action === 'register');
+    }
+    function init() {
+        route();
+        const on = (id, event, callback) => byId(id)?.addEventListener(event, callback);
+        on('tabLogin', 'click', () => { history.pushState({}, '', '?action=login'); route(); });
+        on('tabRegister', 'click', () => { history.pushState({}, '', '?action=register'); route(); });
+        on('btnLoginContinue', 'click', () => run(byId('btnLoginContinue'), async () => {
+            const phone = value('loginPhone');
+            if (!validPhone(phone)) throw new Error('Vui lòng nhập số điện thoại hợp lệ.');
+            const result = await auth().request('lookup', { phone });
+            if (!result.exists) throw new Error('Số điện thoại chưa đăng ký. Vui lòng tạo tài khoản.');
+            byId('loginStepPhone').classList.add('d-none');
+            byId('loginStepSendOTP')?.classList.toggle('d-none', !result.isTemporary);
+            byId('loginStepPassword').classList.toggle('d-none', result.isTemporary);
+            if (byId('loginPhoneDisplay')) byId('loginPhoneDisplay').textContent = phone;
+            if (byId('loginOtpPhoneDisplay')) byId('loginOtpPhoneDisplay').textContent = phone;
+            if (!result.isTemporary) byId('loginPassword').focus();
+        }));
+        for (const id of ['btnChangePhone', 'btnChangePhoneOtp']) on(id, 'click', () => {
+            clearChallenge();
+            byId('loginStepPhone').classList.remove('d-none');
+            byId('loginStepPassword').classList.add('d-none');
+            byId('loginStepSendOTP')?.classList.add('d-none');
+        });
+        on('btnSendOTPGuest', 'click', () => run(byId('btnSendOTPGuest'), () => sendOtp(value('loginPhone'), 'activate')));
+        on('btnSkipGuestSetup', 'click', () => { window.location.href = '/'; });
+        on('loginForm', 'submit', event => {
+            event.preventDefault();
+            if (byId('loginStepPassword').classList.contains('d-none')) { byId('btnLoginContinue').click(); return; }
+            run(byId('btnLoginSubmit'), async () => {
+                const result = await auth().request('login', { phone: value('loginPhone'), password: password('loginPassword') });
+                await auth().accept(result);
+                byId('loginPassword').value = '';
+                const redirect = new URLSearchParams(location.search).get('redirect');
+                const target = redirect ? new URL(redirect, location.origin) : null;
+                location.href = target && target.origin === location.origin && !target.pathname.toLowerCase().includes('admin') ? target.href : '/user#profile';
             });
-        }
-
-        const { data: existingMembership } = await db.from('customer_membership').select('id').eq('customer_id', customerId).limit(1);
-        if (!existingMembership || existingMembership.length === 0) {
-            const { data: tiers } = await db
-                .from('membership_tier')
-                .select('id')
-                .eq('tier_name', 'Đồng')
-                .limit(1);
-
-            const tierId = tiers?.[0]?.id;
-            if (tierId) {
-                await db.from('customer_membership').insert({
-                    customer_id:        customerId,
-                    membership_tier_id: tierId,
-                    total_paw_points:   50,
+        });
+        const validateRegister = () => {
+            const pass = password('registerPassword');
+            byId('btnRegisterSubmit').disabled = !(value('registerName') && validPhone(value('registerPhone')) && validPassword(pass) && pass === password('registerConfirmPassword'));
+        };
+        for (const id of ['registerName', 'registerPhone', 'registerPassword', 'registerConfirmPassword']) on(id, 'input', validateRegister);
+        on('registerForm', 'submit', event => {
+            event.preventDefault();
+            run(byId('btnRegisterSubmit'), async () => {
+                if (!value('registerName') || !validPassword(password('registerPassword')) || password('registerPassword') !== password('registerConfirmPassword')) throw new Error('Vui lòng kiểm tra họ tên và mật khẩu.');
+                await sendOtp(value('registerPhone'), 'register');
+            });
+        });
+        for (const selector of ['#otpSection .otp-input', '.forgot-otp-input']) {
+            const inputs = [...document.querySelectorAll(selector)];
+            inputs.forEach((input, index) => {
+                input.addEventListener('input', () => {
+                    input.value = input.value.replace(/\D/g, '').slice(-1);
+                    if (!input.value) return;
+                    if (inputs[index + 1]) { inputs[index + 1].disabled = false; inputs[index + 1].focus(); return; }
+                    const code = inputs.map(i => i.value).join('');
+                    if (!challenge || code.length !== 6) return;
+                    challenge.code = code;
+                    if (challenge.purpose === 'register') run(null, async () => {
+                        try { await finish(password('registerPassword'), value('registerName')); }
+                        catch (error) { resetInputs('#otpSection .otp-input'); throw error; }
+                    });
+                    else show('forgotNewPasswordSection');
                 });
-            }
-        }
-
-        const user = {
-            id:           customerId,
-            name:         String(name || '').trim() || phone,
-            phone:        phone,
-            email:        '',
-            password:     password,
-            role:         'customer',
-            is_temporary: false,
-            points:       50,
-            tier:         'Đồng',
-            _source:      'supabase',
-        };
-
-        return { success: true, user };
-
-    } catch (err) {
-        console.error('[Login] supabaseRegister exception:', err);
-        return { success: false, error: err.message };
-    }
-}
-
-function handleLoginRouting() {
-    const params = new URLSearchParams(window.location.search);
-    const hash   = window.location.hash;
-
-    let action = params.get('action');
-    let token  = params.get('token');
-
-    if (!action && hash) {
-        const hashClean = hash.substring(1);
-        if (hashClean === 'register' || hashClean === 'login') {
-            action = hashClean;
-        } else if (hashClean.startsWith('setup-password')) {
-            action = 'setup-password';
-            const tokenMatch = hashClean.match(/token=([^&]+)/);
-            if (tokenMatch) token = tokenMatch[1];
-        }
-    }
-
-    const loginForm            = document.getElementById('loginForm');
-    const registerForm         = document.getElementById('registerForm');
-    const otpSection           = document.getElementById('otpSection');
-    const congratsSection      = document.getElementById('congratsSection');
-    const setupPasswordSection = document.getElementById('setupPasswordSection');
-    const setupExpiredSection  = document.getElementById('setupExpiredSection');
-    const authTabs             = document.getElementById('authTabs');
-
-    if (!loginForm) return;
-    
-    loginForm.classList.remove('active-form');
-    registerForm.classList.remove('active-form');
-    otpSection.classList.add('d-none');
-    congratsSection.classList.add('d-none');
-    setupPasswordSection.classList.add('d-none');
-    setupExpiredSection.classList.add('d-none');
-    authTabs.style.display = 'flex';
-
-    if (action === 'register') {
-        registerForm.classList.add('active-form');
-        document.getElementById('tabRegister').classList.add('active');
-        document.getElementById('tabLogin').classList.remove('active');
-
-        const phoneParamForRegister = params.get('phone') || null;
-        if (phoneParamForRegister) {
-            const regPhoneInput = document.getElementById('registerPhone');
-            if (regPhoneInput) {
-                regPhoneInput.value = phoneParamForRegister;
-                regPhoneInput.dispatchEvent(new Event('input'));
-            }
-        }
-        setTimeout(() => {
-            const regNameInput = document.getElementById('registerName');
-            const regPassInput = document.getElementById('registerPassword');
-            try {
-                if (regNameInput && !regNameInput.value.trim()) regNameInput.focus();
-                else if (regPassInput) regPassInput.focus();
-            } catch (e) { }
-        }, 60);
-
-    } else if (action === 'setup-password' && token) {
-        authTabs.style.display = 'none';
-        const tokens    = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
-        const tokenData = tokens.find(t => t.token === token);
-
-        if (tokenData) {
-            const timeElapsed = Date.now() - tokenData.createdAt;
-            const limit = 48 * 60 * 60 * 1000;
-            if (timeElapsed <= limit) {
-                setupPasswordSection.classList.remove('d-none');
-                setupPasswordSection.dataset.phone = tokenData.phone;
-                setupPasswordSection.dataset.token = token;
-            } else {
-                setupExpiredSection.classList.remove('d-none');
-            }
-        } else {
-            setupExpiredSection.classList.remove('d-none');
-        }
-
-    } else {
-        loginForm.classList.add('active-form');
-        document.getElementById('tabLogin').classList.add('active');
-        document.getElementById('tabRegister').classList.remove('active');
-    }
-
-    if (action === 'guest-activate' || action === 'guest-verify-otp') {
-        const phoneParam = params.get('phone') || null;
-        if (phoneParam && loginForm) {
-            authTabs.style.display = 'none';
-            const forgotOtpSection   = document.getElementById('forgotOtpSection');
-            const forgotPhoneSection = document.getElementById('forgotPhoneSection');
-            const loginStepPhone     = document.getElementById('loginStepPhone');
-            const loginStepPassword  = document.getElementById('loginStepPassword');
-            if (loginStepPhone)    loginStepPhone.style.display    = 'none';
-            if (loginStepPassword) loginStepPassword.style.display = 'none';
-            if (forgotPhoneSection) forgotPhoneSection.classList.add('d-none');
-
-            if (forgotOtpSection) {
-                forgotOtpSection.classList.remove('d-none');
-                forgotOtpSection.style.opacity = '1';
-                window.isGuestActivationFlow = true;
-                window.guestActivationPhone  = phoneParam;
-
-                const forgotPhoneInput = document.getElementById('forgotPhone');
-                if (forgotPhoneInput) forgotPhoneInput.value = phoneParam;
-
-                let titleText    = 'Xác thực kích hoạt tài khoản';
-                let subtitleText = 'Mã xác thực 6 số đã được gửi đến SĐT của bạn để kích hoạt tài khoản tạm.';
-                if (action === 'guest-verify-otp') {
-                    titleText    = 'Xác thực để đổi/hủy lịch';
-                    subtitleText = 'Mã xác thực 6 số đã được gửi đến SĐT của bạn để xác nhận danh tính.';
-                }
-                forgotOtpSection.querySelector('.form-title').textContent    = titleText;
-                forgotOtpSection.querySelector('.form-subtitle').textContent = subtitleText;
-
-                showToast('info', 'Mã OTP xác thực đã gửi về SMS: 555666', 6000);
-                if (typeof window.startForgotOtpTimerFn === 'function') window.startForgotOtpTimerFn();
-
-                const forgotOtpInputs = document.querySelectorAll('.forgot-otp-input');
-                if (forgotOtpInputs && forgotOtpInputs.length) {
-                    forgotOtpInputs.forEach((input, idx) => {
-                        input.value    = '';
-                        input.disabled = idx > 0;
-                    });
-                    forgotOtpInputs[0].focus();
-                }
-            }
-        }
-    }
-}
-
-function initAuthForms() {
-    const loginForm = document.getElementById('loginForm');
-    if (!loginForm) return;
-
-    const registerForm = document.getElementById('registerForm');
-    const authTabs     = document.getElementById('authTabs');
-    const tabLogin     = document.getElementById('tabLogin');
-    const tabRegister  = document.getElementById('tabRegister');
-
-    tabLogin.addEventListener('click', () => {
-        window.history.pushState({}, '', '?action=login');
-        handleLoginRouting();
-    });
-    tabRegister.addEventListener('click', () => {
-        window.history.pushState({}, '', '?action=register');
-        handleLoginRouting();
-    });
-
-    document.querySelectorAll('.btn-toggle-password').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const input = btn.previousElementSibling;
-            if (input.type === 'password') {
-                input.type = 'text';
-                btn.innerHTML = `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
-            } else {
-                input.type = 'password';
-                btn.innerHTML = `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
-            }
-        });
-    });
-
-    const btnLoginContinue  = document.getElementById('btnLoginContinue');
-    const loginStepPhone    = document.getElementById('loginStepPhone');
-    const loginStepPassword = document.getElementById('loginStepPassword');
-    const loginPhone        = document.getElementById('loginPhone');
-    const loginPhoneDisplay = document.getElementById('loginPhoneDisplay');
-    const btnChangePhone    = document.getElementById('btnChangePhone');
-    const loginPassword     = document.getElementById('loginPassword');
-
-    if (btnLoginContinue) {
-        btnLoginContinue.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const phoneVal = loginPhone.value.trim();
-            const feedback = document.getElementById('loginPhoneFeedback');
-
-            if (!/^0[0-9]{9}$/.test(phoneVal)) {
-                loginPhone.classList.add('is-invalid');
-                if (feedback) feedback.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
-                return;
-            }
-            loginPhone.classList.remove('is-invalid');
-            
-            const originalText = btnLoginContinue.innerHTML;
-            btnLoginContinue.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
-            btnLoginContinue.disabled = true;
-
-            try {
-                const user = await supabaseResolveUserByPhone(phoneVal);
-
-                if (!user) {
-                    showErrorBanner(
-                        'Số điện thoại chưa được đăng ký. Vui lòng <a href="?action=register" class="text-decoration-underline fw-bold" style="color:var(--color-danger);">Đăng ký ngay</a>',
-                        loginForm
-                    );
-                } else if (user.is_temporary) {
-                    loginStepPhone.classList.add('d-none');
-                    const loginStepSendOTP    = document.getElementById('loginStepSendOTP');
-                    const loginOtpPhoneDisplay = document.getElementById('loginOtpPhoneDisplay');
-                    if (loginOtpPhoneDisplay) loginOtpPhoneDisplay.textContent = phoneVal;
-                    if (loginStepSendOTP) loginStepSendOTP.classList.remove('d-none');
-
-                    const btnChangePhoneOtp = document.getElementById('btnChangePhoneOtp');
-                    if (btnChangePhoneOtp) {
-                        btnChangePhoneOtp.onclick = () => {
-                            loginStepSendOTP.classList.add('d-none');
-                            loginStepPhone.classList.remove('d-none');
-                            loginForm.classList.add('active-form');
-                            loginForm.style.opacity = '1';
-                            loginPhone.focus();
-                        };
-                    }
-
-                    const btnSendOTPGuest = document.getElementById('btnSendOTPGuest');
-                    if (btnSendOTPGuest) {
-                        btnSendOTPGuest.onclick = () => {
-                            loginForm.style.opacity = '0';
-                            setTimeout(() => {
-                                loginForm.classList.remove('active-form');
-                                if (authTabs) authTabs.style.display = 'none';
-
-                                const forgotOtpSection = document.getElementById('forgotOtpSection');
-                                forgotOtpSection.classList.remove('d-none');
-                                forgotOtpSection.style.opacity = '1';
-                                forgotOtpSection.querySelector('.form-title').textContent    = 'Xác thực kích hoạt tài khoản';
-                                forgotOtpSection.querySelector('.form-subtitle').textContent = 'Mã OTP đã được gửi đến SĐT của bạn.';
-
-                                window.isGuestActivationFlow = true;
-                                window.guestActivationPhone  = user.phone;
-
-                                showToast('info', 'Mã OTP xác thực: 555666', 15000);
-
-                                const forgotOtpInputs = document.querySelectorAll('.forgot-otp-input');
-                                forgotOtpInputs.forEach((input, idx) => {
-                                    input.value    = '';
-                                    input.disabled = idx > 0;
-                                });
-                                forgotOtpInputs[0].focus();
-
-                                if (typeof window.startForgotOtpTimerFn === 'function') window.startForgotOtpTimerFn();
-                            }, 300);
-                        };
-                    }
-
-                    const btnSkipGuestSetup = document.getElementById('btnSkipGuestSetup');
-                    if (btnSkipGuestSetup) {
-                        btnSkipGuestSetup.onclick = () => {
-                            window.location.href = '/pages/public/landing/landing.html';
-                        };
-                    }
-                } else {
-                    loginStepPhone.classList.add('d-none');
-                    loginStepPassword.classList.remove('d-none');
-                    if (loginPhoneDisplay) loginPhoneDisplay.textContent = phoneVal;
-                    loginPassword.focus();
-                }
-            } catch (err) {
-                console.error('Lỗi khi kiểm tra số điện thoại trên Supabase', err);
-                showErrorBanner('Đã có lỗi xảy ra. Vui lòng thử lại sau.', loginForm);
-            } finally {
-                btnLoginContinue.innerHTML = originalText;
-                btnLoginContinue.disabled = false;
-            }
-        });
-    }
-
-    if (btnChangePhone) {
-        btnChangePhone.addEventListener('click', () => {
-            loginStepPassword.classList.add('d-none');
-            loginStepPhone.classList.remove('d-none');
-            loginPassword.value = '';
-            const existingBanner = loginForm.querySelector('.auth-error-banner');
-            if (existingBanner) existingBanner.remove();
-        });
-    }
-
-    if (loginPassword) {
-        loginPassword.addEventListener('input', () => {
-            const b = loginForm.querySelector('.auth-error-banner');
-            if (b) b.remove();
-        });
-    }
-    if (loginPhone) {
-        loginPhone.addEventListener('input', () => {
-            const b = loginForm.querySelector('.auth-error-banner');
-            if (b) b.remove();
-            loginPhone.classList.remove('is-invalid');
-        });
-    }
-
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        if (loginStepPassword && loginStepPassword.classList.contains('d-none')) {
-            if (btnLoginContinue) btnLoginContinue.click();
-            return;
-        }
-
-        const phone    = loginPhone.value.trim();
-        const password = loginPassword.value;
-
-        if (!/^0[0-9]{9}$/.test(phone)) {
-            loginPhone.classList.add('is-invalid');
-            const feedback = document.getElementById('loginPhoneFeedback');
-            if (feedback) feedback.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
-            return;
-        }
-
-        if (window.SupabaseClient) {
-            const result = await supabaseLogin(phone, password);
-
-            if (!result.offline) {
-                if (result.success) {
-                    setCurrentUser(result.user);
-                    showToast('success', 'Đăng nhập thành công!', 2000);
-                    const targetUrl = getLoginRedirectUrl(result.user);
-                    setTimeout(() => {
-                        window.location.href = targetUrl;
-                    }, 1500);
-                    return;
-                }
-                if (result.error === 'wrong_password') {
-                    showErrorBanner(
-                        'Mật khẩu không đúng. Vui lòng thử lại hoặc <a href="#" id="inlineForgotLink" class="text-decoration-underline fw-bold" style="color:var(--color-danger);">quên mật khẩu?</a>',
-                        loginForm
-                    );
-                    return;
-                }
-                if (result.error === 'account_inactive') {
-                    showErrorBanner('Tài khoản đã bị khóa. Vui lòng liên hệ hỗ trợ.', loginForm);
-                    return;
-                }
-            }
-        }
-
-        console.warn('[Login] ⚠️ Dùng LOCAL STORAGE — Supabase không khả dụng hoặc chưa cấu hình');
-        const users       = getUsers();
-        const userByPhone = users.find(u => u.phone === phone);
-
-        if (!userByPhone) {
-            if (window.SupabaseClient) {
-                const check = await supabaseCheckPhone(phone);
-                if (!check.offline && !check.exists) {
-                    showErrorBanner(
-                        'Số điện thoại chưa được đăng ký. Vui lòng <a href="?action=register" class="text-decoration-underline fw-bold" style="color:var(--color-danger);">Đăng ký ngay</a>',
-                        loginForm
-                    );
-                    return;
-                }
-            }
-            showErrorBanner(
-                'Số điện thoại chưa được đăng ký. Vui lòng <a href="?action=register" class="text-decoration-underline fw-bold" style="color:var(--color-danger);">Đăng ký ngay</a>',
-                loginForm
-            );
-            return;
-        }
-
-        if (userByPhone.is_temporary) {
-            if (btnLoginContinue) btnLoginContinue.click();
-            return;
-        }
-
-        const user = users.find(u => u.phone === phone && u.password === password);
-        if (user) {
-            ensureUserId(user);
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('redirect')?.includes('admin')) {
-                user.role = 'admin';
-            }
-            setCurrentUser(user);
-            saveUsers(getUsers().map(u => u.phone === user.phone ? user : u));
-            showToast('success', 'Đăng nhập thành công!', 2000);
-            const targetUrl = getLoginRedirectUrl(user);
-            setTimeout(() => {
-                window.location.href = targetUrl;
-            }, 1500);
-        } else {
-            showErrorBanner(
-                'Mật khẩu không đúng. Vui lòng thử lại hoặc <a href="#" id="inlineForgotLink" class="text-decoration-underline fw-bold" style="color:var(--color-danger);">quên mật khẩu?</a>',
-                loginForm
-            );
-            setTimeout(() => {
-                const inlineForgotLink = document.getElementById('inlineForgotLink');
-                if (inlineForgotLink) {
-                    inlineForgotLink.addEventListener('click', (ev) => {
-                        ev.preventDefault();
-                        const triggerForgot = document.getElementById('triggerForgot');
-                        if (triggerForgot) triggerForgot.click();
-                    });
-                }
-            }, 100);
-        }
-    });
-
-    const regName            = document.getElementById('registerName');
-    const regPhone           = document.getElementById('registerPhone');
-    const regPassword        = document.getElementById('registerPassword');
-    const regConfirmPassword = document.getElementById('registerConfirmPassword');
-    const btnRegisterSubmit  = document.getElementById('btnRegisterSubmit');
-
-    if (regPhone) {
-        regPhone.addEventListener('blur', () => {
-            const v = regPhone.value.trim();
-            const fb = document.getElementById('registerPhoneFeedback');
-            if (v.length > 0 && !/^0[0-9]{9}$/.test(v)) {
-                regPhone.classList.add('is-invalid');
-                if (fb) {
-                    fb.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
-                    fb.style.display = 'block';
-                }
-            } else {
-                regPhone.classList.remove('is-invalid');
-                if (fb) fb.style.display = 'none';
-            }
-        });
-        regPhone.addEventListener('input', () => {
-            const v = regPhone.value.trim();
-            const fb = document.getElementById('registerPhoneFeedback');
-            if (/^0[0-9]{9}$/.test(v) || v.length === 0) {
-                regPhone.classList.remove('is-invalid');
-                if (fb) fb.style.display = 'none';
-            }
-        });
-    }
-
-    const pwdStrengthFill = document.getElementById('registerPasswordStrengthFill');
-    const pwdStrengthText = document.getElementById('registerPasswordStrengthText');
-    const pwdStrengthWrap = document.getElementById('registerPasswordStrength');
-
-    function assessPasswordStrength(pwd) {
-        let score = 0;
-        if (!pwd) return score;
-        if (pwd.length >= 8) score++;
-        if (/[0-9]/.test(pwd)) score++;
-        if (/[^A-Za-z0-9]/.test(pwd)) score++;
-        if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
-        return score;
-    }
-
-    function updatePasswordStrength(pwd) {
-        if (!pwdStrengthFill || !pwdStrengthText || !pwdStrengthWrap) return;
-        const score = assessPasswordStrength(pwd);
-        pwdStrengthWrap.classList.remove('d-none');
-        let pct = Math.min(100, (score / 4) * 100);
-        let color = '#f87171', text = 'Yếu';
-        if (score >= 3) { color = '#f59e0b'; text = 'Trung bình'; }
-        if (score >= 4) { color = '#10b981'; text = 'Mạnh'; }
-        if (score === 0) { pct = 0; text = 'Rỗng'; color = '#e5e7eb'; }
-        pwdStrengthFill.style.width      = pct + '%';
-        pwdStrengthFill.style.background = color;
-        pwdStrengthText.textContent      = text;
-    }
-
-    if (regPassword) {
-        regPassword.addEventListener('input', (e) => updatePasswordStrength(e.target.value));
-    }
-
-    function validateRegisterForm() {
-        const isNameValid = regName.value.trim().length > 0;
-        const isPhoneValid = /^0[0-9]{9}$/.test(regPhone.value.trim());
-        const passwordPolicy = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-        const isPasswordValid = passwordPolicy.test(regPassword.value);
-        const isConfirmValid  = regConfirmPassword.value === regPassword.value && regConfirmPassword.value !== '';
-
-        const phoneFb = document.getElementById('registerPhoneFeedback');
-        if (regPhone.value.trim().length > 0 && !isPhoneValid) {
-            regPhone.classList.add('is-invalid');
-            if (phoneFb) phoneFb.style.display = 'block';
-        } else {
-            regPhone.classList.remove('is-invalid');
-            if (phoneFb) phoneFb.style.display = 'none';
-        }
-
-        if (regPassword.value.length > 0 && !isPasswordValid) {
-            regPassword.classList.add('is-invalid');
-        } else {
-            regPassword.classList.remove('is-invalid');
-        }
-
-        if (regConfirmPassword.value.length > 0 && !isConfirmValid) {
-            regConfirmPassword.classList.add('is-invalid');
-        } else {
-            regConfirmPassword.classList.remove('is-invalid');
-        }
-
-        btnRegisterSubmit.disabled = !(isNameValid && isPhoneValid && isPasswordValid && isConfirmValid);
-    }
-
-    [regName, regPhone, regPassword, regConfirmPassword].forEach(input => {
-        input.addEventListener('input', validateRegisterForm);
-        input.addEventListener('blur',  validateRegisterForm);
-    });
-
-    const otpSection  = document.getElementById('otpSection');
-    const otpTimer    = document.getElementById('otpTimer');
-    const btnResendOtp = document.getElementById('btnResendOtp');
-    const otpInputs   = document.querySelectorAll('#otpSection .otp-input');
-    let otpCountdownInterval = null;
-
-    registerForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        let phoneAlreadyExists = false;
-
-        if (window.SupabaseClient) {
-            const check = await supabaseCheckPhone(regPhone.value.trim());
-            if (!check.offline) {
-                phoneAlreadyExists = check.exists && !check.isTemporary;
-            }
-        }
-
-        if (!phoneAlreadyExists) {
-            const users    = window.PawpalStorage.get(window.PawpalStorage.KEYS.USERS_DB, []);
-            const existing = users.find(u => u.phone === regPhone.value.trim());
-            if (existing && !existing.is_temporary) phoneAlreadyExists = true;
-        }
-
-        if (phoneAlreadyExists) {
-            showToast('error', 'Số điện thoại này đã được đăng ký tài khoản chính thức!');
-            return;
-        }
-
-        registerForm.style.opacity = '0';
-        registerForm.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => {
-            registerForm.classList.remove('active-form');
-            authTabs.style.display = 'none';
-            otpSection.classList.remove('d-none');
-            otpSection.style.opacity = '1';
-            otpInputs.forEach((input, idx) => { input.value = ''; input.disabled = idx > 0; });
-            otpInputs[0].focus();
-            showToast('info', 'Mã OTP xác thực đã gửi về SMS: 555666', 15000);
-            startOtpTimer();
-        }, 300);
-    });
-
-    otpInputs.forEach((input, index) => {
-        input.addEventListener('input', (e) => {
-            if (!/^[0-9]$/.test(e.target.value)) { e.target.value = ''; return; }
-            if (index < otpInputs.length - 1) {
-                otpInputs[index + 1].disabled = false;
-                otpInputs[index + 1].focus();
-            } else {
-                checkOtpSubmission();
-            }
-        });
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace') {
-                if (input.value === '') {
-                    if (index > 0) { otpInputs[index - 1].focus(); otpInputs[index].disabled = true; }
-                } else { input.value = ''; }
-            }
-        });
-    });
-
-    function startOtpTimer() {
-        if (otpCountdownInterval) clearInterval(otpCountdownInterval);
-        let duration = 10; 
-        btnResendOtp.disabled = true;
-        otpCountdownInterval = setInterval(() => {
-            const m = Math.floor(duration / 60), s = duration % 60;
-            otpTimer.textContent = `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
-            if (duration <= 0) { clearInterval(otpCountdownInterval); btnResendOtp.disabled = false; }
-            duration--;
-        }, 1000);
-    }
-
-    btnResendOtp.addEventListener('click', () => {
-        showToast('info', 'Mã OTP xác thực mới đã gửi lại: 555666', 15000);
-        startOtpTimer();
-        otpInputs.forEach((input, idx) => { input.value = ''; input.disabled = idx > 0; });
-        otpInputs[0].focus();
-    });
-
-    function checkOtpSubmission() {
-        let code = '';
-        otpInputs.forEach(i => code += i.value);
-        if (code === '555666') {
-            clearInterval(otpCountdownInterval);
-            showRegisterSuccess();
-        } else {
-            showToast('error', 'Mã OTP chưa chính xác. Vui lòng nhập 555666 để test');
-            otpInputs.forEach((input, idx) => { input.value = ''; if (idx > 0) input.disabled = true; });
-            otpInputs[0].focus();
-        }
-    }
-
-    async function showRegisterSuccess() {
-        otpSection.classList.add('d-none');
-        const congratsSection = document.getElementById('congratsSection');
-        congratsSection.classList.remove('d-none');
-
-        let newUser = null;
-
-        if (window.SupabaseClient) {
-            const result = await supabaseRegister(
-                regName.value.trim(),
-                regPhone.value.trim(),
-                regPassword.value
-            );
-            if (result.success) {
-                newUser = result.user;
-            }
-        }
-
-        if (!newUser) {
-            const users   = getUsers();
-            let userIdx   = users.findIndex(u => u.phone === regPhone.value.trim());
-            newUser = ensureUserId({
-                name: regName.value.trim(), phone: regPhone.value.trim(),
-                password: regPassword.value, role: 'customer', is_temporary: false, points: 50
-            });
-            if (userIdx !== -1) users[userIdx] = newUser; else users.push(newUser);
-            saveUsers(users);
-        }
-
-        setCurrentUser(newUser);
-        await migrateGuestPetsToMember(newUser, newUser.phone);
-
-        const counterEl = document.getElementById('pointsCounter');
-        let current = 0;
-        const stepTime = Math.abs(Math.floor(1500 / 50));
-        const timer = setInterval(() => {
-            current++;
-            counterEl.textContent = current;
-            if (current >= 50) {
-                clearInterval(timer);
-                setTimeout(() => { window.location.href = '/pages/user/#profile'; }, 2000);
-            }
-        }, stepTime);
-    }
-
-    const setupPasswordForm  = document.getElementById('setupPasswordForm');
-    const setupPass          = document.getElementById('setupPassword');
-    const setupConfirm       = document.getElementById('setupConfirmPassword');
-    const setupTermsCheckbox = document.getElementById('setupTermsCheckbox');
-    const btnSetupSubmit     = document.getElementById('btnSetupSubmit');
-
-    function validateSetupForm() {
-        const passwordPolicy = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-        const isPassValid    = passwordPolicy.test(setupPass.value);
-        const isConfirmValid = setupConfirm.value === setupPass.value;
-        const isTermsChecked = setupTermsCheckbox && setupTermsCheckbox.checked;
-
-        if (setupPass.value.length > 0 && !isPassValid)        setupPass.classList.add('is-invalid');
-        else                                                     setupPass.classList.remove('is-invalid');
-        if (setupConfirm.value.length > 0 && !isConfirmValid)  setupConfirm.classList.add('is-invalid');
-        else                                                     setupConfirm.classList.remove('is-invalid');
-
-        btnSetupSubmit.disabled = !(isPassValid && isConfirmValid && isTermsChecked);
-    }
-
-    if (setupPasswordForm) {
-        setupPass.addEventListener('input',    validateSetupForm);
-        setupConfirm.addEventListener('input', validateSetupForm);
-        if (setupTermsCheckbox) setupTermsCheckbox.addEventListener('change', validateSetupForm);
-
-        setupPasswordForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const phone = document.getElementById('setupPasswordSection').dataset.phone;
-            const token = document.getElementById('setupPasswordSection').dataset.token;
-            const users = getUsers();
-            
-            let idx = users.findIndex(u => u.phone === phone && u.is_temporary);
-            if (idx === -1) {
-                idx = users.findIndex(u => u.phone === phone);
-            }
-            
-            const supabaseUser = await supabaseResolveUserByPhone(phone);
-            
-            if (idx === -1 && !supabaseUser) {
-                showToast('error', 'Không tìm thấy thông tin tài khoản!');
-                return;
-            }
-
-            const localUser = idx !== -1 ? { ...users[idx] } : {};
-            
-            const activatedUser = ensureUserId({
-                ...localUser,
-                ...(supabaseUser || {}),
-                phone: phone,
-                password: setupPass.value,
-                name: (supabaseUser && supabaseUser.name === supabaseUser.phone && localUser.name && localUser.name !== localUser.phone) ? localUser.name : (supabaseUser?.name || localUser.name),
-                is_temporary: false,
-                points: ((supabaseUser?.points ?? localUser.points) || 0) + 50,
-                _source: supabaseUser ? 'supabase' : (localUser._source || 'local'),
-            });
-
-            if (idx !== -1) {
-                users[idx] = activatedUser;
-            } else {
-                users.push(activatedUser);
-            }
-            
-            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (db) {
-                try {
-                    const updateData = { password_hash: setupPass.value, account_status: 'ACTIVE', is_temporary: false };
-                    const { error: dbErr } = await db
-                        .from('customer')
-                        .update(updateData)
-                        .eq('phone_main', phone);
-                    if (dbErr) console.warn('[Login] Failed to update password on Supabase:', dbErr.message);
-                } catch (err) {
-                    console.error('[Login] Supabase update exception:', err);
-                }
-            }
-
-            saveUsers(users);
-            setCurrentUser(activatedUser);
-            await migrateGuestPetsToMember(activatedUser, phone);
-
-            const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
-            localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens.filter(t => t.token !== token)));
-
-            showToast('success', 'Kích hoạt tài khoản thành viên thành công! Bạn nhận thêm 50 điểm thưởng chào mừng.');
-            setTimeout(() => { window.location.href = '/pages/user/#profile'; }, 2000);
-        });
-    }
-
-    const btnRequestNewLink = document.getElementById('btnRequestNewLink');
-    if (btnRequestNewLink) {
-        btnRequestNewLink.addEventListener('click', () => {
-            const phone = document.getElementById('expiredPhone').value;
-            if (!/^0[0-9]{9}$/.test(phone)) {
-                showToast('error', 'Vui lòng nhập số điện thoại hợp lệ (10 số, bắt đầu bằng 0).');
-                return;
-            }
-            const token  = 'token-dynamic-' + Math.random().toString(36).substr(2, 9);
-            const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
-            tokens.push({ token, phone, createdAt: Date.now() });
-            localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
-            showToast('success', 'Đã gửi link mới qua SMS. Vui lòng kiểm tra điện thoại.', 6000);
-            console.log(`[SMS Simulation] ${window.location.origin}/pages/public/login/login.html?action=setup-password&token=${token}`);
-        });
-    }
-
-    const triggerForgot           = document.getElementById('triggerForgot');
-    const forgotPhoneSection      = document.getElementById('forgotPhoneSection');
-    const btnForgotBackToLogin    = document.getElementById('btnForgotBackToLogin');
-    const forgotPhoneForm         = document.getElementById('forgotPhoneForm');
-    const forgotPhone             = document.getElementById('forgotPhone');
-    const forgotOtpSection        = document.getElementById('forgotOtpSection');
-    const btnForgotOtpBack        = document.getElementById('btnForgotOtpBack');
-    const forgotOtpTimer          = document.getElementById('forgotOtpTimer');
-    const btnForgotResendOtp      = document.getElementById('btnForgotResendOtp');
-    const forgotOtpInputs         = document.querySelectorAll('.forgot-otp-input');
-    const forgotNewPasswordSection = document.getElementById('forgotNewPasswordSection');
-    const forgotNewPasswordForm   = document.getElementById('forgotNewPasswordForm');
-    const forgotNewPassword       = document.getElementById('forgotNewPassword');
-    const forgotConfirmNewPassword = document.getElementById('forgotConfirmNewPassword');
-    const btnForgotNewPasswordSubmit = document.getElementById('btnForgotNewPasswordSubmit');
-    let forgotOtpInterval = null;
-
-    if (triggerForgot && forgotPhoneSection) {
-        triggerForgot.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginForm.style.opacity = '0';
-            loginForm.style.transition = 'opacity 0.3s ease';
-            setTimeout(() => {
-                loginForm.classList.remove('active-form');
-                authTabs.style.display = 'none';
-                forgotPhoneSection.classList.remove('d-none');
-                forgotPhoneSection.style.opacity = '0';
-                forgotPhoneSection.style.transition = 'opacity 0.3s ease';
-                setTimeout(() => { forgotPhoneSection.style.opacity = '1'; forgotPhone.focus(); }, 50);
-            }, 300);
-        });
-
-        btnForgotBackToLogin.addEventListener('click', () => {
-            forgotPhoneSection.style.opacity = '0';
-            setTimeout(() => {
-                forgotPhoneSection.classList.add('d-none');
-                authTabs.style.display = 'flex';
-                loginForm.classList.add('active-form');
-                loginForm.style.opacity = '0';
-                setTimeout(() => { loginForm.style.opacity = '1'; }, 50);
-            }, 300);
-        });
-
-        forgotPhone.addEventListener('blur', () => {
-            const v = forgotPhone.value.trim();
-            if (v.length > 0 && !/^0[0-9]{9}$/.test(v)) forgotPhone.classList.add('is-invalid');
-            else forgotPhone.classList.remove('is-invalid');
-        });
-        forgotPhone.addEventListener('input', () => forgotPhone.classList.remove('is-invalid'));
-
-        forgotPhoneForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const phone = forgotPhone.value.trim();
-            if (!/^0[0-9]{9}$/.test(phone)) { forgotPhone.classList.add('is-invalid'); return; }
-
-            const users = getUsers();
-            if (!users.find(u => u.phone === phone)) {
-                showErrorBanner(
-                    'Số điện thoại chưa đăng ký. Vui lòng <a href="?action=register" class="text-decoration-underline fw-bold" style="color:var(--color-danger);">Đăng ký tài khoản mới</a>.',
-                    forgotPhoneForm
-                );
-                return;
-            }
-
-            forgotPhoneSection.classList.add('d-none');
-            forgotOtpSection.classList.remove('d-none');
-            forgotOtpSection.querySelector('.form-title').textContent    = 'Nhập mã xác thực';
-            forgotOtpSection.querySelector('.form-subtitle').textContent = 'Mã OTP 6 số đã được gửi đến SĐT của bạn.';
-            window.isGuestActivationFlow = false;
-
-            forgotOtpInputs.forEach((input, idx) => { input.value = ''; input.disabled = idx > 0; });
-            forgotOtpInputs[0].focus();
-            showToast('info', 'Mã OTP xác thực đã được gửi về SMS: 555666', 15000);
-            if (typeof window.startForgotOtpTimerFn === 'function') window.startForgotOtpTimerFn();
-        });
-
-        btnForgotOtpBack.addEventListener('click', () => {
-            forgotOtpSection.classList.add('d-none');
-            forgotPhoneSection.classList.remove('d-none');
-            if (forgotOtpInterval) clearInterval(forgotOtpInterval);
-        });
-
-        forgotOtpInputs.forEach((input, index) => {
-            input.addEventListener('input', (e) => {
-                if (!/^[0-9]$/.test(e.target.value)) { e.target.value = ''; return; }
-                if (index < forgotOtpInputs.length - 1) {
-                    forgotOtpInputs[index + 1].disabled = false;
-                    forgotOtpInputs[index + 1].focus();
-                } else {
-                    checkForgotOtpSubmission();
-                }
-            });
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Backspace') {
-                    if (input.value === '') {
-                        if (index > 0) { forgotOtpInputs[index - 1].focus(); forgotOtpInputs[index].disabled = true; }
-                    } else { input.value = ''; }
-                }
-            });
-        });
-
-        function startForgotOtpTimer() {
-            if (forgotOtpInterval) clearInterval(forgotOtpInterval);
-            let duration = 10; 
-            btnForgotResendOtp.disabled = true;
-            forgotOtpInterval = setInterval(() => {
-                const m = Math.floor(duration / 60), s = duration % 60;
-                forgotOtpTimer.textContent = `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
-                if (duration <= 0) { clearInterval(forgotOtpInterval); btnForgotResendOtp.disabled = false; }
-                duration--;
-            }, 1000);
-        }
-        window.startForgotOtpTimerFn = startForgotOtpTimer;
-
-        if (btnForgotResendOtp) {
-            btnForgotResendOtp.addEventListener('click', () => {
-                showToast('info', 'Mã OTP xác thực mới đã gửi lại: 555666', 15000);
-                startForgotOtpTimer();
-                forgotOtpInputs.forEach((input, idx) => { input.value = ''; input.disabled = idx > 0; });
-                forgotOtpInputs[0].focus();
+                input.addEventListener('keydown', event => {
+                    if (event.key === 'Backspace' && !input.value && inputs[index - 1]) inputs[index - 1].focus();
+                });
             });
         }
-
-        function checkForgotOtpSubmission() {
-            let code = '';
-            forgotOtpInputs.forEach(i => code += i.value);
-            if (code === '555666') {
-                clearInterval(forgotOtpInterval);
-                forgotOtpSection.classList.add('d-none');
-                if (window.isGuestActivationFlow) {
-                    showToast('success', 'Xác thực OTP thành công! Vui lòng thiết lập mật khẩu.');
-                    if (forgotPhone) forgotPhone.value = window.guestActivationPhone;
-                }
-                forgotNewPasswordSection.classList.remove('d-none');
-                if (forgotNewPassword) forgotNewPassword.focus();
-            } else {
-                showToast('error', 'Mã OTP chưa chính xác. Vui lòng nhập 555666 để test');
-                forgotOtpInputs.forEach((input, idx) => { input.value = ''; if (idx > 0) input.disabled = true; });
-                forgotOtpInputs[0].focus();
-            }
-        }
-
-        function validateForgotNewPasswordForm() {
-            const passwordPolicy  = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-            const isPassValid     = passwordPolicy.test(forgotNewPassword.value);
-            const isConfirmValid  = forgotConfirmNewPassword.value === forgotNewPassword.value;
-
-            if (forgotNewPassword.value.length > 0 && !isPassValid) forgotNewPassword.classList.add('is-invalid');
-            else forgotNewPassword.classList.remove('is-invalid');
-
-            if (forgotConfirmNewPassword.value.length > 0 && !isConfirmValid) forgotConfirmNewPassword.classList.add('is-invalid');
-            else forgotConfirmNewPassword.classList.remove('is-invalid');
-
-            btnForgotNewPasswordSubmit.disabled = !(isPassValid && isConfirmValid);
-        }
-        forgotNewPassword.addEventListener('input',        validateForgotNewPasswordForm);
-        forgotConfirmNewPassword.addEventListener('input', validateForgotNewPasswordForm);
-
-        forgotNewPasswordForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const phone   = forgotPhone.value.trim();
-            const users   = getUsers();
-            const isGuest = window.isGuestActivationFlow === true;
-            
-            let userIdx = -1;
-            if (isGuest) {
-                userIdx = users.findIndex(u => u.phone === phone && u.is_temporary);
-            }
-            if (userIdx === -1) {
-                userIdx = users.findIndex(u => u.phone === phone);
-            }
-            
-            const supabaseUser = await supabaseResolveUserByPhone(phone);
-
-            if (userIdx === -1 && !supabaseUser) return;
-
-            const localUser = userIdx !== -1 ? { ...users[userIdx] } : {};
-            const updatedUser = ensureUserId({
-                ...localUser,
-                ...(supabaseUser || {}),
-                phone: phone,
-                password: forgotNewPassword.value,
-                name: (supabaseUser && supabaseUser.name === supabaseUser.phone && localUser.name && localUser.name !== localUser.phone) ? localUser.name : (supabaseUser?.name || localUser.name),
-                is_temporary: isGuest ? false : Boolean(localUser.is_temporary),
-                points: isGuest ? ((supabaseUser?.points ?? localUser.points) || 0) + 50 : (localUser.points || supabaseUser?.points || 0),
-                _source: supabaseUser ? 'supabase' : (localUser._source || 'local'),
-            });
-
-            if (userIdx !== -1) {
-                users[userIdx] = updatedUser;
-            } else {
-                users.push(updatedUser);
-            }
-
-            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (db) {
-                try {
-                    const updateData = { password_hash: forgotNewPassword.value };
-                    if (isGuest) {
-                        updateData.account_status = 'ACTIVE';
-                        updateData.is_temporary = false;
-                    }
-                    
-                    const { error: dbErr } = await db
-                        .from('customer')
-                        .update(updateData)
-                        .eq('phone_main', phone);
-                        
-                    if (dbErr) console.warn('[Login] Failed to update password on Supabase:', dbErr.message);
-                    else console.log(`[Login] Supabase updated successfully for ${phone}`);
-                } catch (err) {
-                    console.error('[Login] Supabase update exception:', err);
-                }
-            }
-
-            saveUsers(users);
-
-            if (isGuest) {
-                setCurrentUser(updatedUser);
-                await migrateGuestPetsToMember(updatedUser, phone);
-                sessionStorage.setItem('guestVerifiedPhone', phone);
-                window.isGuestActivationFlow = false;
-                showToast('success', 'Kích hoạt thành công! Bạn nhận 50 Paw Points chào mừng 🎉', 3000);
-                setTimeout(() => { window.location.href = '/pages/user/#profile'; }, 2500);
-                return;
-            }
-
-            showToast('success', 'Đặt lại mật khẩu thành công! Đang chuyển hướng...', 2000);
-            setCurrentUser(updatedUser);
-            const targetUrl = getLoginRedirectUrl(updatedUser);
-            setTimeout(() => {
-                window.location.href = targetUrl;
-            }, 1500);
+        for (const id of ['btnResendOtp', 'btnForgotResendOtp']) on(id, 'click', () => {
+            const previous = challenge;
+            if (previous) run(byId(id), () => sendOtp(previous.phone, previous.purpose)).then(() => { if (challenge) byId(id).disabled = true; });
         });
-    } 
-} 
-
-function initLoginPage() {
-    handleLoginRouting();
-    initAuthForms();
-    document.addEventListener('click', (e) => {
-        const link = e.target.closest('a');
-        if (!link) return;
-        const href = link.getAttribute('href');
-        if (!href) return;
-
-        // Cho phép chuyển thẳng vào trang Quản trị
-        if (href.includes('/pages/admin/index.html') || href.includes('/pages/admin/')) {
-            return;
-        }
-
-        if (href.includes('login.html') && window.location.pathname.includes('login.html')) {
-            e.preventDefault();
-            window.history.pushState({}, '', href);
-            handleLoginRouting();
-        }
-    });
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initLoginPage);
-} else {
-    initLoginPage();
-}
-window.addEventListener('popstate', handleLoginRouting);
-
+        on('triggerForgot', 'click', event => { event.preventDefault(); clearChallenge(); show('forgotPhoneSection'); byId('forgotPhone').value = value('loginPhone'); });
+        on('forgotPhoneForm', 'submit', event => { event.preventDefault(); run(byId('forgotPhoneForm').querySelector('button[type=submit]'), () => sendOtp(value('forgotPhone'), 'reset')); });
+        for (const id of ['btnForgotBackToLogin', 'btnForgotOtpBack']) on(id, 'click', () => { clearChallenge(); show(id === 'btnForgotOtpBack' ? 'forgotPhoneSection' : 'loginForm'); });
+        const validateReset = () => { byId('btnForgotNewPasswordSubmit').disabled = !(validPassword(password('forgotNewPassword')) && password('forgotNewPassword') === password('forgotConfirmNewPassword')); };
+        for (const id of ['forgotNewPassword', 'forgotConfirmNewPassword']) on(id, 'input', validateReset);
+        on('forgotNewPasswordForm', 'submit', event => {
+            event.preventDefault();
+            run(byId('btnForgotNewPasswordSubmit'), async () => {
+                if (password('forgotNewPassword') !== password('forgotConfirmNewPassword')) throw new Error('Mật khẩu nhập lại chưa khớp.');
+                try { await finish(password('forgotNewPassword')); }
+                catch (error) { show('forgotOtpSection'); resetInputs('.forgot-otp-input'); throw error; }
+            });
+        });
+        on('btnRequestNewLink', 'click', () => { clearChallenge(); show('forgotPhoneSection'); });
+        document.querySelectorAll('.btn-toggle-password').forEach(button => button.addEventListener('click', () => {
+            const input = button.previousElementSibling;
+            if (!input) return;
+            input.type = input.type === 'password' ? 'text' : 'password';
+            button.setAttribute('aria-label', input.type === 'password' ? 'Hiện mật khẩu' : 'Ẩn mật khẩu');
+        }));
+        window.addEventListener('popstate', route);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();

@@ -570,7 +570,7 @@
                 <!-- CHỌN CHỦ NUÔI AUTOCOMPLETE THÔNG MINH -->
                 <div class="form-group">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <label class="form-label">Chủ sở hữu (Tìm theo SĐT hoặc Họ tên):</label>
+                        <label class="form-label">Chủ sở hữu (Tìm theo số điện thoại hoặc họ tên):</label>
                         <button type="button" class="btn-text-action" id="btnOpenQuickAddOwnerModal">Thêm nhanh chủ nuôi</button>
                     </div>
                     <div class="pet-owner-autocomplete-wrapper">
@@ -578,6 +578,7 @@
                         <input type="hidden" id="newPetOwner" value="">
                         <div class="autocomplete-dropdown" id="newPetOwnerDropdown" style="display: none;"></div>
                     </div>
+                    <div id="newPetOwnerSelectedCard" class="adjust-customer-selected-card" style="display: none;"></div>
                 </div>
 
                 <div class="form-row-two-col">
@@ -599,7 +600,15 @@
                 <div class="form-row-two-col">
                     <div class="form-group">
                         <label class="form-label">Giống loài:</label>
-                        <input type="text" class="admin-input" id="newPetBreed" placeholder="Ví dụ: Corgi, Poodle, Mèo ALN..." required>
+                        <input type="text" class="admin-input" id="newPetBreed" placeholder="Ví dụ: Corgi, Poodle, Mèo ALN..." required autocomplete="off">
+                        <div class="adjust-reason-quick-tags" id="newPetBreedChips">
+                            <button type="button" class="reason-quick-chip">Poodle</button>
+                            <button type="button" class="reason-quick-chip">Corgi</button>
+                            <button type="button" class="reason-quick-chip">Golden</button>
+                            <button type="button" class="reason-quick-chip">Phốc sóc</button>
+                            <button type="button" class="reason-quick-chip">Mèo ALN</button>
+                            <button type="button" class="reason-quick-chip">Mèo Ba Tư</button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Giới tính:</label>
@@ -649,19 +658,32 @@
                         </label>
                         <label class="checklist-checkbox-item">
                             <input type="checkbox" checked>
-                            <span>Lông không vón bết / không ve rận</span>
+                            <span>Lông không vón bết và không ve rận</span>
                         </label>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Cảnh báo an toàn (Tính hung dữ, cắn khi sấy...):</label>
-                    <input type="text" class="admin-input" id="newPetAlert" placeholder="Ví dụ: Cắn khi chạm đuôi, sợ sấy lớn...">
+                    <input type="text" class="admin-input" id="newPetAlert" placeholder="Ví dụ: Cắn khi chạm đuôi, sợ sấy lớn..." autocomplete="off">
+                    <div class="adjust-reason-quick-tags" id="newPetAlertChips">
+                        <button type="button" class="reason-quick-chip">Hiền lành</button>
+                        <button type="button" class="reason-quick-chip">Sợ sấy lớn</button>
+                        <button type="button" class="reason-quick-chip">Hay giật mình</button>
+                        <button type="button" class="reason-quick-chip">Cắn khi chạm đuôi</button>
+                        <button type="button" class="reason-quick-chip">Khó cắt móng</button>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Tiền sử dị ứng sữa tắm / thức ăn:</label>
-                    <input type="text" class="admin-input" id="newPetAllergy" placeholder="Ví dụ: Dị ứng tinh dầu tràm, dị ứng hải sản...">
+                    <label class="form-label">Tiền sử dị ứng sữa tắm hoặc thức ăn:</label>
+                    <input type="text" class="admin-input" id="newPetAllergy" placeholder="Ví dụ: Dị ứng tinh dầu tràm, dị ứng hải sản..." autocomplete="off">
+                    <div class="adjust-reason-quick-tags" id="newPetAllergyChips">
+                        <button type="button" class="reason-quick-chip">Không có dị ứng</button>
+                        <button type="button" class="reason-quick-chip">Dị ứng tinh dầu tràm</button>
+                        <button type="button" class="reason-quick-chip">Dị ứng hải sản</button>
+                        <button type="button" class="reason-quick-chip">Da nhạy cảm</button>
+                    </div>
                 </div>
 
                 <!-- IN THẺ ĐEO CỔ PREVIEW -->
@@ -906,15 +928,7 @@
                 <div class="form-group">
                     <label class="form-label">Chủ sở hữu:</label>
                     <select class="admin-select" id="editPetOwner">
-                        <option value="CUST-001">Nguyễn Văn An - 0912345678 (Hạng Vàng)</option>
-                        <option value="CUST-002">Lê Thị Bình - 0987654321 (Hạng Bạc)</option>
-                        <option value="CUST-003">Trần Khách Vãng Lai - 0933221100 (Khách mới)</option>
-                        <option value="CUST-004">Phạm Văn Vi Phạm - 0944556677 (Bị khóa)</option>
-                        <option value="CUST-005">Hoàng Minh Tuấn - 0903112233 (Hạng Vàng)</option>
-                        <option value="CUST-007">Vũ Đức Thắng - 0977889900 (Kim Cương)</option>
-                        <option value="CUST-008">Bùi Thu Trang - 0938776655 (Hạng Đồng)</option>
-                        <option value="CUST-009">Ngô Gia Bảo - 0909123890 (Hạng Bạc)</option>
-                        <option value="CUST-010">Đặng Thùy Linh - 0945678123 (Hạng Vàng)</option>
+                        <option value="">Chọn chủ sở hữu...</option>
                     </select>
                 </div>
 
@@ -937,7 +951,14 @@
                 <div class="form-row-two-col">
                     <div class="form-group">
                         <label class="form-label">Giống loài (*):</label>
-                        <input type="text" class="admin-input" id="editPetBreed" placeholder="Ví dụ: Corgi, Poodle..." required>
+                        <input type="text" class="admin-input" id="editPetBreed" placeholder="Ví dụ: Corgi, Poodle..." required autocomplete="off">
+                        <div class="adjust-reason-quick-tags" id="editPetBreedChips">
+                            <button type="button" class="reason-quick-chip">Poodle</button>
+                            <button type="button" class="reason-quick-chip">Corgi</button>
+                            <button type="button" class="reason-quick-chip">Golden</button>
+                            <button type="button" class="reason-quick-chip">Phốc sóc</button>
+                            <button type="button" class="reason-quick-chip">Mèo ALN</button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Giới tính:</label>
@@ -976,12 +997,25 @@
 
                 <div class="form-group">
                     <label class="form-label">Cảnh báo an toàn (Hiển thị nổi bật dải đỏ khi Groomer tiếp nhận):</label>
-                    <input type="text" class="admin-input" id="editPetAlert" placeholder="Ví dụ: Bé hay cắn khi chạm đuôi...">
+                    <input type="text" class="admin-input" id="editPetAlert" placeholder="Ví dụ: Bé hay cắn khi chạm đuôi..." autocomplete="off">
+                    <div class="adjust-reason-quick-tags" id="editPetAlertChips">
+                        <button type="button" class="reason-quick-chip">Hiền lành</button>
+                        <button type="button" class="reason-quick-chip">Sợ sấy lớn</button>
+                        <button type="button" class="reason-quick-chip">Hay giật mình</button>
+                        <button type="button" class="reason-quick-chip">Cắn khi chạm đuôi</button>
+                        <button type="button" class="reason-quick-chip">Khó cắt móng</button>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Tiền sử dị ứng sữa tắm / thức ăn / hóa chất:</label>
-                    <input type="text" class="admin-input" id="editPetAllergy" placeholder="Ví dụ: Dị ứng tinh dầu tràm, hải sản...">
+                    <label class="form-label">Tiền sử dị ứng sữa tắm, thức ăn hoặc hóa chất:</label>
+                    <input type="text" class="admin-input" id="editPetAllergy" placeholder="Ví dụ: Dị ứng tinh dầu tràm, hải sản..." autocomplete="off">
+                    <div class="adjust-reason-quick-tags" id="editPetAllergyChips">
+                        <button type="button" class="reason-quick-chip">Không có dị ứng</button>
+                        <button type="button" class="reason-quick-chip">Dị ứng tinh dầu tràm</button>
+                        <button type="button" class="reason-quick-chip">Dị ứng hải sản</button>
+                        <button type="button" class="reason-quick-chip">Da nhạy cảm</button>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -1110,16 +1144,16 @@
          MODAL 8: GHI NHẬN TIÊM CHỦNG VÀ DỊCH TỄ
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalAddVaccine">
-        <div class="admin-modal-card" style="width: 520px;">
+        <div class="admin-modal-card" style="width: 560px; max-width: 94vw;">
             <div class="admin-modal-header">
-                <span class="admin-modal-title">Ghi nhận sổ tiêm chủng và dịch tễ (Đối chiếu sổ)</span>
+                <span class="admin-modal-title">Ghi nhận sổ tiêm chủng và dịch tễ</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalAddVaccine">Đóng</button>
             </div>
             <form id="formAddVaccine" onsubmit="return false;">
                 <div class="form-group">
                     <label class="form-label">Loại vắc-xin hoặc dịch tễ ghi trên sổ (*):</label>
                     <select class="admin-select" id="newVaccineType" required>
-                        <option value="Vắc-xin phòng dại (Rabies)">Vắc-xin phòng dại (Rabies) - Khuyến nghị theo dõi sức khỏe</option>
+                        <option value="Vắc-xin phòng dại (Rabies)">Vắc-xin phòng dại (Rabies)</option>
                         <option value="Vắc-xin 7 bệnh cho Chó (Vanguard Plus 5/CV-L)">Vắc-xin 7 bệnh cho Chó (Vanguard Plus 5/CV-L)</option>
                         <option value="Vắc-xin 4 bệnh cho Mèo (PureVax / Felocell)">Vắc-xin 4 bệnh cho Mèo (PureVax / Felocell)</option>
                         <option value="Xổ giun định kỳ và Nhỏ gáy ve rận">Xổ giun định kỳ và Nhỏ gáy ve rận (NexGard / Revolution)</option>
@@ -1143,8 +1177,13 @@
                 </div>
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Nguồn đối chiếu hoặc Cơ sở tiêm ngoài:</label>
-                        <input type="text" class="admin-input" id="newVaccinePlace" placeholder="Ví dụ: Sổ tiêm đối chiếu, PK Thú y 24/7..." value="Sổ tiêm đối chiếu">
+                        <label class="form-label">Nguồn đối chiếu hoặc cơ sở tiêm ngoài:</label>
+                        <input type="text" class="admin-input" id="newVaccinePlace" placeholder="Ví dụ: Sổ tiêm đối chiếu, PK Thú y 24/7..." value="Sổ tiêm đối chiếu" autocomplete="off">
+                        <div class="adjust-reason-quick-tags" id="newVaccinePlaceChips">
+                            <button type="button" class="reason-quick-chip">Sổ tiêm đối chiếu</button>
+                            <button type="button" class="reason-quick-chip">PK Thú y 24/7</button>
+                            <button type="button" class="reason-quick-chip">Bệnh viện PetCare</button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Trạng thái:</label>
@@ -1171,7 +1210,7 @@
          MODAL 9: XEM TRƯỚC GIAO DIỆN NHẬT KÝ KHÁCH HÀNG (PAWPAL USER DIARY)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalPreviewAppDiary">
-        <div class="admin-modal-card preview-user-diary-modal-card" style="width: 680px; max-width: 95vw; padding: 0; overflow: hidden; background: #FAFDFB;">
+        <div class="admin-modal-card preview-user-diary-modal-card" style="width: 720px; max-width: 95vw; padding: 0; overflow: hidden; background: #F4FAF7;">
             <!-- MODAL HEADER -->
             <div style="padding: 16px 22px; border-bottom: 1px solid var(--border-neutral); display: flex; justify-content: space-between; align-items: center; background: #FFFFFF;">
                 <div>
@@ -1181,134 +1220,276 @@
                 <button type="button" class="btn-modal-close" data-close-modal="modalPreviewAppDiary" style="font-size: 14px; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 4px 8px;">✕</button>
             </div>
 
-            <!-- MODAL SCROLLABLE CONTENT (ĐỒNG BỘ 100% VỚI DIARY CỦA USER) -->
-            <div style="padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; max-height: 75vh; overflow-y: auto; overscroll-behavior: contain;">
+            <!-- MODAL SCROLLABLE CONTENT (ĐỒNG BỘ 100% VỚI DIARY CỦA USER APP) -->
+            <div class="preview-diary-scroll-area">
                 <!-- 1. THẺ THÔNG TIN BÉ CƯNG -->
-                <div class="preview-pet-info-card" style="background: #FFFFFF; border: 1px solid #DFEAE2; border-radius: var(--admin-radius); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="position: relative; width: 52px; height: 52px; border-radius: 50%; overflow: hidden; border: 2px solid #236B48; flex-shrink: 0;">
-                            <img src="/assets/images/publics/dogcute1.jpg" id="appDiaryPetAvatar" style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar">
-                            <span style="position: absolute; bottom: 2px; right: 2px; width: 9px; height: 9px; background: #22C55E; border: 2px solid #FFFFFF; border-radius: 50%;"></span>
+                <div class="preview-pet-info-card">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <div class="preview-avatar-wrapper avatar-in-spa" id="appDiaryAvatarWrap">
+                            <img src="/assets/images/publics/dogcute1.jpg" id="appDiaryPetAvatar" class="preview-pet-avatar" alt="Avatar">
+                            <span class="preview-avatar-live-indicator" id="appDiaryAvatarLiveDot" title="Bé đang được chăm sóc tại Spa"></span>
                         </div>
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <h3 style="font-size: 15.5px; font-weight: 700; color: #203A2C; margin: 0;" id="appDiaryPetName">Bé Milu</h3>
-                                <span style="font-size: 11px; font-weight: 600; padding: 2px 7px; background: #EEF5F1; color: #236B48; border-radius: var(--admin-radius);" id="appDiaryPetCode">PET-001</span>
+                        <div class="preview-pet-details">
+                            <div class="preview-pet-title-row">
+                                <h3 class="preview-pet-title-name" id="appDiaryPetName">Bé Milu</h3>
+                                <span class="preview-pet-code-pill" id="appDiaryPetCode">PET-001</span>
                             </div>
-                            <div style="font-size: 12px; color: #4F7A65; margin-top: 3px; display: flex; gap: 6px; align-items: center;" id="appDiaryPetMeta">
-                                <span>Chó • Poodle</span>
-                                <span>•</span>
-                                <span>5.2 kg</span>
-                                <span>•</span>
-                                <span>2 tuổi</span>
+                            <div class="preview-pet-tags" id="appDiaryPetMeta">
+                                <span class="preview-pet-meta-tag">Chó • Corgi</span>
+                                <span class="preview-pet-meta-tag">5.2 kg</span>
+                                <span class="preview-pet-meta-tag">2 tuổi</span>
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <span class="admin-badge badge-success" id="appDiaryLiveBadge" style="height: 24px; padding: 0 10px; border-radius: var(--admin-radius); font-size: 11.5px; font-weight: 600; background: #DCEEE2; color: #165335;">Đang làm Spa</span>
+                    <div class="preview-pet-info-right">
+                        <div class="preview-status-live-banner" id="appDiaryLiveBanner">
+                            <span class="preview-live-pulse-dot" id="appDiaryLivePulseDot"></span>
+                            <span id="appDiaryLiveText">Đang làm Spa</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- 2. THANH TIẾN TRÌNH DỊCH VỤ TRỰC TIẾP (LIVE SERVICE STEPPER) -->
-                <div class="preview-service-stepper-card" style="background: #FFFFFF; border: 1px solid #DFEAE2; border-radius: var(--admin-radius); padding: 14px 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <h4 style="font-size: 13.5px; font-weight: 700; color: #236B48; margin: 0;" id="appDiaryServiceName">Tắm sấy và Cắt tỉa tạo kiểu</h4>
-                            <span style="font-size: 12px; color: #4F7A65; font-weight: 500;" id="appDiaryServiceDate">2026-10-10</span>
+                <div class="preview-service-stepper-card">
+                    <div class="preview-stepper-header">
+                        <div class="preview-stepper-title-group">
+                            <div class="preview-stepper-service-name">
+                                <h4 id="appDiaryServiceName">Tắm sấy và Cắt tỉa tạo kiểu</h4>
+                            </div>
+                            <span class="preview-stepper-time-badge" id="appDiaryServiceDate">10/10/2026</span>
                         </div>
-                        <span class="admin-badge badge-success" style="font-size: 11px; background: #DCEEE2; color: #165335;">Tiến trình trực tiếp</span>
+                        <div class="preview-stepper-status-badge" id="appDiaryStepperBadge">
+                            Tiến trình trực tiếp
+                        </div>
                     </div>
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center;">
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #236B48; color: #ffffff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">✓</div>
-                            <span style="font-size: 11.5px; font-weight: 600; color: #203A2C;">Tiếp nhận</span>
-                            <span style="font-size: 10.5px; color: #4F7A65;">Check-in</span>
+
+                    <div class="preview-stepper-track-wrap">
+                        <div class="preview-stepper-progress-bar" id="appDiaryProgressBar" style="width: 56%;"></div>
+                        <div class="preview-stepper-steps">
+                            <div class="preview-stepper-step done" id="appDiaryStep1">
+                                <div class="preview-step-circle"><span>✓</span></div>
+                                <div class="preview-step-content">
+                                    <span class="preview-step-name">Tiếp nhận</span>
+                                    <span class="preview-step-desc">Khám và Check-in</span>
+                                </div>
+                            </div>
+                            <div class="preview-stepper-step done" id="appDiaryStep2">
+                                <div class="preview-step-circle"><span>✓</span></div>
+                                <div class="preview-step-content">
+                                    <span class="preview-step-name">Tắm và Sấy</span>
+                                    <span class="preview-step-desc">Thư giãn dịu nhẹ</span>
+                                </div>
+                            </div>
+                            <div class="preview-stepper-step active" id="appDiaryStep3">
+                                <div class="preview-step-circle"><span>3</span></div>
+                                <div class="preview-step-content">
+                                    <span class="preview-step-name">Cắt tỉa</span>
+                                    <span class="preview-step-desc">Tạo kiểu xinh xắn</span>
+                                </div>
+                            </div>
+                            <div class="preview-stepper-step pending" id="appDiaryStep4">
+                                <div class="preview-step-circle"><span>4</span></div>
+                                <div class="preview-step-content">
+                                    <span class="preview-step-name">Hoàn tất</span>
+                                    <span class="preview-step-desc">Sẵn sàng đón bé</span>
+                                </div>
+                            </div>
                         </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #236B48; color: #ffffff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">✓</div>
-                            <span style="font-size: 11.5px; font-weight: 600; color: #203A2C;">Tắm và Sấy</span>
-                            <span style="font-size: 10.5px; color: #4F7A65;">Thư giãn</span>
+                    </div>
+                </div>
+
+                <!-- 2.5. DÒNG THỜI GIAN CÁC BƯỚC CÓ ẢNH MINH CHỨNG (TIMELINE CHUẨN USER DIARY) -->
+                <div class="preview-timeline-section">
+                    <div class="preview-timeline-header">
+                        <h4 class="preview-timeline-title">Dòng thời gian</h4>
+                    </div>
+                    <div class="preview-timeline-wrapper" id="appDiaryTimelineWrapper">
+                        <!-- Mốc 1: Tiếp nhận và Check-in -->
+                        <div class="preview-story-card">
+                            <div class="preview-node-icon stage-receive" title="Tiếp nhận và Thăm khám">
+                                <span>01</span>
+                            </div>
+                            <div class="preview-story-body">
+                                <div class="preview-story-header">
+                                    <div class="preview-story-stage-info">
+                                        <span class="preview-story-stage-badge" style="background: #EEF5F1; color: #236B48;">Tiếp nhận và Thăm khám</span>
+                                        <span class="preview-story-timestamp">09:15</span>
+                                    </div>
+                                    <div class="preview-story-staff-tag">
+                                        <span id="appDiaryStep1Staff">Chăm sóc: KTV Hoàng Tuấn</span>
+                                    </div>
+                                </div>
+                                <h4 class="preview-story-title">Tiếp nhận và kiểm tra sức khỏe ban đầu</h4>
+                                <p class="preview-story-desc">Bé được cân đo, thăm khám tổng quát da lông và vệ sinh tai trước khi đưa vào phòng Spa.</p>
+                                <div class="preview-story-mood-pill">
+                                    <span style="font-weight: 600;">Tâm trạng bé:</span>
+                                    <span>Bé đã vào phòng chờ, tinh thần thoải mái và vui vẻ hợp tác.</span>
+                                </div>
+                                <div class="preview-story-photo-wrap">
+                                    <img src="/assets/images/services/spa/process/process_chai_long_chai_long.jpg" id="appDiaryStep1Img" class="preview-story-photo-img" alt="Tiếp nhận và thăm khám">
+                                    <div class="preview-story-photo-overlay">
+                                        <span>Phóng to</span>
+                                    </div>
+                                </div>
+                                <div class="preview-story-footer">
+                                    <button type="button" class="preview-btn-story-like">
+                                        <span>Yêu thích</span>
+                                        <span>(1)</span>
+                                    </button>
+                                    <button type="button" class="preview-btn-story-message">
+                                        <span>Nhắn dặn dò</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #236B48; color: #ffffff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">✓</div>
-                            <span style="font-size: 11.5px; font-weight: 600; color: #203A2C;">Cắt tỉa</span>
-                            <span style="font-size: 10.5px; color: #4F7A65;">Tạo kiểu</span>
+
+                        <!-- Mốc 2: Tắm và Sấy -->
+                        <div class="preview-story-card">
+                            <div class="preview-node-icon stage-bath" title="Tắm sạch và Sấy ấm">
+                                <span>02</span>
+                            </div>
+                            <div class="preview-story-body">
+                                <div class="preview-story-header">
+                                    <div class="preview-story-stage-info">
+                                        <span class="preview-story-stage-badge" style="background: #E0F2FE; color: #0369A1;">Tắm sạch và Sấy ấm</span>
+                                        <span class="preview-story-timestamp">09:45</span>
+                                    </div>
+                                    <div class="preview-story-staff-tag">
+                                        <span id="appDiaryStep2Staff">Chăm sóc: KTV Hoàng Tuấn</span>
+                                    </div>
+                                </div>
+                                <h4 class="preview-story-title">Tắm sạch dưỡng lông và sấy ấm thư giãn</h4>
+                                <p class="preview-story-desc">Sử dụng sữa tắm thảo dược dịu nhẹ an toàn, xoa bóp massage toàn thân và sấy khô kỹ vùng kẽ chân.</p>
+                                <div class="preview-story-mood-pill">
+                                    <span style="font-weight: 600;">Tâm trạng bé:</span>
+                                    <span>Bé rất sảng khoái với bọt sữa tắm thơm dịu và thích được sấy ấm.</span>
+                                </div>
+                                <div class="preview-story-photo-wrap">
+                                    <img src="/assets/images/services/spa/process/tam_cho1.jpg" id="appDiaryStep2Img" class="preview-story-photo-img" alt="Tắm sạch và sấy ấm">
+                                    <div class="preview-story-photo-overlay">
+                                        <span>Phóng to</span>
+                                    </div>
+                                </div>
+                                <div class="preview-story-footer">
+                                    <button type="button" class="preview-btn-story-like">
+                                        <span>Yêu thích</span>
+                                        <span>(2)</span>
+                                    </button>
+                                    <button type="button" class="preview-btn-story-message">
+                                        <span>Nhắn dặn dò</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #DCEEE2; color: #165335; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">4</div>
-                            <span style="font-size: 11.5px; font-weight: 600; color: #236B48;">Hoàn tất</span>
-                            <span style="font-size: 10.5px; color: #4F7A65;">Đón bé</span>
+
+                        <!-- Mốc 3: Cắt tỉa và Tạo kiểu -->
+                        <div class="preview-story-card">
+                            <div class="preview-node-icon stage-trim" title="Cắt tỉa và Tạo kiểu">
+                                <span>03</span>
+                            </div>
+                            <div class="preview-story-body">
+                                <div class="preview-story-header">
+                                    <div class="preview-story-stage-info">
+                                        <span class="preview-story-stage-badge" style="background: #FCE7F3; color: #BE185D;">Cắt tỉa và Tạo kiểu</span>
+                                        <span class="preview-story-timestamp">10:30</span>
+                                    </div>
+                                    <div class="preview-story-staff-tag">
+                                        <span id="appDiaryStep3Staff">Chăm sóc: KTV Hoàng Tuấn</span>
+                                    </div>
+                                </div>
+                                <h4 class="preview-story-title">Cắt tỉa tạo kiểu theo yêu cầu</h4>
+                                <p class="preview-story-desc">Tạo phom tròn xoe xinh xắn, bấm tỉa gọn gàng lông vùng đệm chân và vệ sinh tuyến hôi an toàn.</p>
+                                <div class="preview-story-mood-pill">
+                                    <span style="font-weight: 600;">Tâm trạng bé:</span>
+                                    <span>Ngoan ngoãn đứng yên cho chuyên viên cắt tỉa và chải chuốt.</span>
+                                </div>
+                                <div class="preview-story-photo-wrap">
+                                    <img src="/assets/images/services/spa/process/process_cat_long_cat_long.jpg" id="appDiaryStep3Img" class="preview-story-photo-img" alt="Cắt tỉa và tạo kiểu">
+                                    <div class="preview-story-photo-overlay">
+                                        <span>Phóng to</span>
+                                    </div>
+                                </div>
+                                <div class="preview-story-footer">
+                                    <button type="button" class="preview-btn-story-like">
+                                        <span>Yêu thích</span>
+                                        <span>(3)</span>
+                                    </button>
+                                    <button type="button" class="preview-btn-story-message">
+                                        <span>Nhắn dặn dò</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 3. THẺ TỔNG KẾT DỊCH VỤ VÀ BÀN GIAO BÉ (CARELOG SHOWCASE CARD) -->
-                <div class="carelog-showcase-card" style="background: #FFFFFF; border: 1px solid #DFEAE2; border-radius: var(--admin-radius); padding: 18px 20px; box-shadow: 0 2px 12px rgba(35, 107, 72, 0.04);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
-                        <h4 style="font-size: 14px; font-weight: 700; color: #236B48; margin: 0;">Tổng kết dịch vụ và Bàn giao bé</h4>
-                        <span class="showcase-badge-success" style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: var(--admin-radius); background: #DCEEE2; color: #165335;">Đã nghiệm thu</span>
+                <div class="preview-showcase-card">
+                    <div class="preview-showcase-header">
+                        <h4 class="preview-showcase-title">Tổng kết dịch vụ và Bàn giao bé</h4>
+                        <span class="preview-showcase-badge-success">Đã nghiệm thu</span>
                     </div>
 
                     <!-- LƯỚI ẢNH BEFORE & AFTER -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-                        <div style="position: relative; border-radius: var(--admin-radius); overflow: hidden; border: 1px solid #DFEAE2; background: #EEF5F1;">
-                            <span style="position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: var(--admin-radius); background: rgba(32, 58, 44, 0.85); color: #ffffff; z-index: 2;">Trước khi làm</span>
-                            <img src="/assets/images/publics/dogcute3.jpg" id="appDiaryImgBefore" style="width: 100%; height: 160px; object-fit: cover; display: block;" alt="Trước khi làm">
-                            <span style="position: absolute; bottom: 6px; right: 6px; font-size: 10.5px; font-weight: 600; background: rgba(255, 255, 255, 0.88); color: #236B48; padding: 2px 7px; border-radius: var(--admin-radius);">Phóng to</span>
+                    <div class="preview-before-after-grid">
+                        <div class="preview-photo-col">
+                            <span class="preview-photo-tag preview-tag-before">Trước khi làm</span>
+                            <img src="/assets/images/publics/dogcute3.jpg" id="appDiaryImgBefore" class="preview-photo-img" alt="Trước khi làm">
+                            <span class="preview-photo-overlay">Phóng to</span>
                         </div>
-                        <div style="position: relative; border-radius: var(--admin-radius); overflow: hidden; border: 1px solid #DFEAE2; background: #EEF5F1;">
-                            <span style="position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: var(--admin-radius); background: rgba(35, 107, 72, 0.90); color: #ffffff; z-index: 2;">Sau khi hoàn thiện</span>
-                            <img src="/assets/images/publics/dogcute1.jpg" id="appDiaryImgAfter" style="width: 100%; height: 160px; object-fit: cover; display: block;" alt="Sau khi làm">
-                            <span style="position: absolute; bottom: 6px; right: 6px; font-size: 10.5px; font-weight: 600; background: rgba(255, 255, 255, 0.88); color: #236B48; padding: 2px 7px; border-radius: var(--admin-radius);">Phóng to</span>
+                        <div class="preview-photo-col">
+                            <span class="preview-photo-tag preview-tag-after">Sau khi hoàn thiện</span>
+                            <img src="/assets/images/publics/dogcute1.jpg" id="appDiaryImgAfter" class="preview-photo-img" alt="Sau khi làm">
+                            <span class="preview-photo-overlay">Phóng to</span>
                         </div>
                     </div>
 
                     <!-- CHỨNG THỰC VỆ SINH 4 MỤC TIÊU CHUẨN -->
-                    <div style="background: #F4FAF6; border: 1px solid #DFEAE2; border-radius: var(--admin-radius); padding: 12px 14px; margin-bottom: 14px;">
-                        <div style="font-size: 12px; font-weight: 700; color: #236B48; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                    <div class="preview-hygiene-section">
+                        <div class="preview-hygiene-title">
                             <span>Chứng thực vệ sinh 4 mục tiêu chuẩn</span>
                             <span id="appDiaryHygieneScore" style="font-size: 11px; font-weight: 600; color: #165335;">4/4 mục đạt chuẩn</span>
                         </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                            <div style="display: flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid #ECF2EE; border-radius: var(--admin-radius); padding: 7px 10px; font-size: 12px; color: #203A2C;">
-                                <span id="appDiaryCheckEar" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #DCEEE2; color: #165335; border-radius: var(--admin-radius); font-size: 10.5px; font-weight: 700; flex-shrink: 0;">✓</span>
+                        <div class="preview-hygiene-grid">
+                            <div class="preview-hygiene-item">
+                                <span id="appDiaryCheckEar" class="preview-hygiene-item-check">✓</span>
                                 <span id="appDiaryItemEar">Vệ sinh tai sạch sẽ</span>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid #ECF2EE; border-radius: var(--admin-radius); padding: 7px 10px; font-size: 12px; color: #203A2C;">
-                                <span id="appDiaryCheckNail" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #DCEEE2; color: #165335; border-radius: var(--admin-radius); font-size: 10.5px; font-weight: 700; flex-shrink: 0;">✓</span>
+                            <div class="preview-hygiene-item">
+                                <span id="appDiaryCheckNail" class="preview-hygiene-item-check">✓</span>
                                 <span id="appDiaryItemNail">Cắt và mài móng an toàn</span>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid #ECF2EE; border-radius: var(--admin-radius); padding: 7px 10px; font-size: 12px; color: #203A2C;">
-                                <span id="appDiaryCheckAnal" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #DCEEE2; color: #165335; border-radius: var(--admin-radius); font-size: 10.5px; font-weight: 700; flex-shrink: 0;">✓</span>
+                            <div class="preview-hygiene-item">
+                                <span id="appDiaryCheckAnal" class="preview-hygiene-item-check">✓</span>
                                 <span id="appDiaryItemAnal">Vắt tuyến hôi sạch sẽ</span>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid #ECF2EE; border-radius: var(--admin-radius); padding: 7px 10px; font-size: 12px; color: #203A2C;">
-                                <span id="appDiaryCheckSkin" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #DCEEE2; color: #165335; border-radius: var(--admin-radius); font-size: 10.5px; font-weight: 700; flex-shrink: 0;">✓</span>
+                            <div class="preview-hygiene-item">
+                                <span id="appDiaryCheckSkin" class="preview-hygiene-item-check">✓</span>
                                 <span id="appDiaryItemSkin">Chăm sóc và dưỡng da lông</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- LỜI DẶN DÒ TỪ CHUYÊN VIÊN -->
-                    <div style="background: #FAF8F5; border: 1px solid #EBE4D8; border-radius: var(--admin-radius); padding: 12px 14px; margin-bottom: 14px;">
-                        <div style="font-size: 12px; font-weight: 700; color: #8C5E1B; margin-bottom: 4px;" id="appDiaryTechnicianTitle">Lời dặn dò từ chuyên viên (KTV Hoàng Tuấn):</div>
-                        <p style="font-size: 12.5px; color: #4A3B2C; margin: 0; line-height: 1.5;" id="appDiaryMessage">
+                    <div class="preview-technician-box">
+                        <div class="preview-technician-title" id="appDiaryTechnicianTitle">Lời dặn dò từ chuyên viên (KTV Hoàng Tuấn):</div>
+                        <p class="preview-technician-desc" id="appDiaryMessage">
                             Lông vùng tai bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.
                         </p>
                     </div>
 
                     <!-- ĐÁNH GIÁ CHẤT LƯỢNG DỊCH VỤ 5 SAO -->
-                    <div style="border-top: 1px solid #ECF2EE; padding-top: 14px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-                            <h5 style="font-size: 12.5px; font-weight: 700; color: #236B48; margin: 0;">Đánh giá chất lượng dịch vụ</h5>
-                            <div style="display: inline-flex; gap: 4px; align-items: center; font-size: 18px; color: #F59E0B; cursor: pointer;">
+                    <div class="preview-review-box">
+                        <div class="preview-review-header">
+                            <h5 class="preview-review-title">Đánh giá chất lượng dịch vụ</h5>
+                            <div class="preview-star-rating">
                                 <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
                             </div>
                         </div>
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <textarea class="admin-input" style="width: 100%; min-height: 60px; padding: 8px 10px; font-size: 12.5px; border-radius: var(--admin-radius); background: #FAFDFB;" placeholder="Chia sẻ cảm nhận của bạn về trải nghiệm của bé tại PawPal..." readonly></textarea>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <textarea class="preview-review-textarea" placeholder="Chia sẻ cảm nhận của bạn về trải nghiệm của bé tại PawPal..." readonly></textarea>
                             <div style="display: flex; justify-content: flex-end;">
-                                <button type="button" class="admin-btn admin-btn-primary" style="font-size: 12px; padding: 6px 14px; border-radius: var(--admin-radius);" disabled>Gửi đánh giá</button>
+                                <button type="button" class="preview-btn-submit-review">Gửi đánh giá</button>
                             </div>
                         </div>
                     </div>

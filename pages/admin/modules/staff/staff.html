@@ -212,6 +212,14 @@
                                 <span class="info-label">Trạng thái công tác:</span>
                                 <span class="info-value text-success" id="viewStaffWorkStatus">Đang làm việc</span>
                             </div>
+                            <div class="info-pair">
+                                <span class="info-label">Tài khoản Pawpal-er:</span>
+                                <span class="admin-badge" id="viewStaffAccountStatus">Chưa cấp</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Đăng nhập gần nhất:</span>
+                                <span class="info-value" id="viewStaffLastLogin">—</span>
+                            </div>
                         </div>
                     </div>
 
@@ -703,41 +711,93 @@
                         </select>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Vai trò hệ thống *</label>
-                        <select class="admin-select" id="staffInputRole">
-                            <option value="Receptionist">Receptionist</option>
-                            <option value="Groomer">Groomer</option>
-                            <option value="Caregiver">Caregiver</option>
-                            <option value="CSKH">CSKH</option>
-                            <option value="Driver">Driver</option>
-                            <option value="Admin">Admin</option>
-                        </select>
+                        <label class="form-label-clean">Chuyên môn / Ghi chú</label>
+                        <input type="text" class="admin-input" id="staffInputSpecialization" placeholder="Ví dụ: Cắt tỉa tạo kiểu Poodle, Spa chuyên sâu...">
                     </div>
                 </div>
 
-                <div class="detail-section-title" style="margin-top: 10px;">Thiết lập quyền truy cập</div>
-                <div class="permissions-grid">
+                <div class="detail-section-title" style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>Tài khoản đăng nhập hệ thống</span>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; cursor: pointer; text-transform: none; letter-spacing: normal;">
+                        <input type="checkbox" id="staffEnableAccountToggle" style="accent-color: var(--text-heading); cursor: pointer;">
+                        <span>Cấp tài khoản đăng nhập Pawpal-er</span>
+                    </label>
+                </div>
+
+                <!-- KHU VỰC CẤU HÌNH TÀI KHOẢN (ẨN KHI CHƯA CHỌN CẤP TÀI KHOẢN) -->
+                <div id="staffAccountConfigSection" style="display: none; margin-top: 8px;">
+                    <!-- DÒNG TRẠNG THÁI HIỆN TẠI (KHI ĐÃ CÓ TÀI KHOẢN) -->
+                    <div id="staffAccountStatusRow" style="display: none; align-items: center; justify-content: space-between; padding: 8px 12px; background-color: #EEF5F1; border-radius: 9px; margin-bottom: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                            <span style="color: var(--text-muted);">Trạng thái:</span>
+                            <span class="admin-badge" id="staffAccountStatusBadge">Chưa cấp tài khoản</span>
+                            <span id="staffAccountLastLoginText" style="color: var(--text-muted); font-size: 12px; margin-left: 6px;"></span>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="admin-btn admin-btn-secondary" id="btnStaffResetPasswordModal" style="height: 28px; padding: 0 10px; font-size: 12px;">Đặt lại mật khẩu</button>
+                            <button type="button" class="admin-btn admin-btn-secondary" id="btnStaffToggleLockAccount" style="height: 28px; padding: 0 10px; font-size: 12px;">Khóa tài khoản</button>
+                        </div>
+                    </div>
+
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Email công vụ đăng nhập *</label>
+                            <input type="email" class="admin-input" id="staffAccountEmail" placeholder="nv.ten@pawpal.vn">
+                        </div>
+                        <div class="form-group-item">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <label class="form-label-clean" id="staffAccountPasswordLabel">Mật khẩu khởi tạo *</label>
+                                <button type="button" class="text-btn" id="btnGenerateRandomStaffPass" style="background: none; border: none; color: var(--text-heading); font-size: 12px; cursor: pointer; padding: 0;">Tạo ngẫu nhiên</button>
+                            </div>
+                            <input type="text" class="admin-input" id="staffAccountPassword" placeholder="Tối thiểu 6 ký tự...">
+                        </div>
+                    </div>
+
+                    <div class="form-row-2col" style="margin-top: 10px;">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Vai trò hệ thống *</label>
+                            <select class="admin-select" id="staffAccountSystemRole">
+                                <option value="ADMIN">Quản trị viên (Toàn quyền hệ thống)</option>
+                                <option value="RECEPTIONIST">Lễ tân tiếp đón (Lịch hẹn và Tiếp nhận)</option>
+                                <option value="GROOMER" selected>Kỹ thuật viên grooming (Ca dịch vụ và Nhật ký)</option>
+                                <option value="CAREGIVER">Chuyên viên pet hotel (Lưu trú và Chăm sóc)</option>
+                                <option value="CSKH">Chăm sóc khách hàng (Hỗ trợ và Chatbot)</option>
+                                <option value="DRIVER">Tài xế taxi pet (Đưa đón thú cưng)</option>
+                                <option value="STAFF">Nhân viên nghiệp vụ chung</option>
+                            </select>
+                        </div>
+                        <div class="form-group-item" style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+                            <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: var(--text-main);">
+                                <input type="checkbox" id="staffMustChangePasswordCheckbox" checked style="accent-color: var(--text-heading); cursor: pointer;">
+                                <span>Bắt buộc đổi mật khẩu ở lần đăng nhập đầu tiên</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section-title" style="margin-top: 14px;">Thiết lập quyền truy cập chi tiết</div>
+                <div class="permissions-grid" id="staffPermissionsGrid">
                     <div class="permission-group">
-                        <div class="perm-group-title">Lịch hẹn</div>
+                        <div class="perm-group-title">Lịch hẹn và Tiếp nhận</div>
                         <label class="perm-checkbox"><input type="checkbox" value="view_booking"> Xem lịch hẹn</label>
-                        <label class="perm-checkbox"><input type="checkbox" value="confirm_booking"> Xác nhận lịch hẹn</label>
-                        <label class="perm-checkbox"><input type="checkbox" value="cancel_booking"> Hủy lịch hẹn</label>
+                        <label class="perm-checkbox"><input type="checkbox" value="confirm_booking"> Tiếp nhận và Xác nhận ca</label>
+                        <label class="perm-checkbox"><input type="checkbox" value="cancel_booking"> Hủy hoặc Chuyển ca hẹn</label>
                     </div>
                     <div class="permission-group">
-                        <div class="perm-group-title">Care Timeline</div>
-                        <label class="perm-checkbox"><input type="checkbox" value="update_image"> Cập nhật hình ảnh</label>
-                        <label class="perm-checkbox"><input type="checkbox" value="update_note"> Cập nhật ghi chú</label>
+                        <div class="perm-group-title">Nhật ký chăm sóc</div>
+                        <label class="perm-checkbox"><input type="checkbox" value="update_image"> Cập nhật hình ảnh thực tế</label>
+                        <label class="perm-checkbox"><input type="checkbox" value="update_note"> Ghi chú sức khỏe và Thể trạng</label>
                     </div>
                     <div class="permission-group">
-                        <div class="perm-group-title">Bán hàng</div>
-                        <label class="perm-checkbox"><input type="checkbox" value="create_order"> Tạo đơn hàng</label>
-                        <label class="perm-checkbox"><input type="checkbox" value="checkout"> Thanh toán</label>
+                        <div class="perm-group-title">Bán hàng và POS</div>
+                        <label class="perm-checkbox"><input type="checkbox" value="create_order"> Tạo đơn hàng tại quầy</label>
+                        <label class="perm-checkbox"><input type="checkbox" value="checkout"> Thu ngân và Thanh toán</label>
                     </div>
                     <div class="permission-group">
-                        <div class="perm-group-title">Quản trị</div>
-                        <label class="perm-checkbox"><input type="checkbox" value="manage_staff"> Quản lý nhân viên</label>
-                        <label class="perm-checkbox"><input type="checkbox" value="manage_promo"> Quản lý khuyến mãi</label>
-                        <label class="perm-checkbox"><input type="checkbox" value="manage_web"> Quản lý nội dung Web</label>
+                        <div class="perm-group-title">Quản trị và Vận hành</div>
+                        <label class="perm-checkbox"><input type="checkbox" value="manage_staff"> Quản lý hồ sơ nhân sự</label>
+                        <label class="perm-checkbox"><input type="checkbox" value="manage_schedule"> Điều phối ca làm việc</label>
+                        <label class="perm-checkbox"><input type="checkbox" value="manage_promo"> Cấu hình khuyến mãi</label>
                     </div>
                 </div>
             </div>

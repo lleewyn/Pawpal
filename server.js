@@ -10,6 +10,15 @@ const port = 3000;
 // Cho phép parse body JSON
 app.use(express.json());
 
+const customerAuthApi = require('./scripts/api/customer_auth.js');
+app.post('/api/customer/auth/guest', customerAuthApi.guest);
+app.post('/api/customer/auth/lookup', customerAuthApi.lookup);
+app.post('/api/customer/auth/login', customerAuthApi.login);
+app.post('/api/customer/auth/otp/request', customerAuthApi.requestOtp);
+app.post('/api/customer/auth/otp/complete', customerAuthApi.completeOtp);
+app.post('/api/customer/auth/me', customerAuthApi.me);
+app.post('/api/customer/auth/change-password', customerAuthApi.changePassword);
+
 // 1. Tự động chuyển hướng từ các link cũ có đuôi .html sang Clean URLs chuẩn
 const legacyRedirectMap = {
     '/pages/public/landing/landing.html': '/',
@@ -47,7 +56,18 @@ const legacyRedirectMap = {
     '/payment-failed.html': '/payment-failed',
     '/pages/shop/vnpay-sandbox/vnpay-sandbox.html': '/vnpay-sandbox',
     '/pages/shop/vnpay-sandbox/vnpay-sandbox': '/vnpay-sandbox',
-    '/vnpay-sandbox.html': '/vnpay-sandbox'
+    '/vnpay-sandbox.html': '/vnpay-sandbox',
+    '/pages/admin/index.html': '/admin',
+    '/pages/admin/index': '/admin',
+    '/pages/admin/admin.html': '/admin',
+    '/pages/admin/admin': '/admin',
+    '/pages/admin/login/login.html': '/admin/login',
+    '/pages/admin/login/login': '/admin/login',
+    '/pages/admin/login.html': '/admin/login',
+    '/pages/user/index.html': '/user',
+    '/pages/user/index': '/user',
+    '/pages/user/user.html': '/user',
+    '/pages/user/user': '/user'
 };
 
 app.use((req, res, next) => {
@@ -124,8 +144,12 @@ app.get('/return-guest/return-guest.html', (req, res) => res.sendFile(path.join(
 app.get('/return-guest.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/return-guest/return-guest.css')));
 app.get('/return-guest.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/return-guest/return-guest.js')));
 app.get('/user', (req, res) => res.sendFile(path.join(__dirname, 'pages/user/index.html')));
-app.get('/admin', (req, res) => res.redirect('/pages/admin/index.html'));
-app.get('/admin/', (req, res) => res.redirect('/pages/admin/index.html'));
+app.get('/admin/login', (req, res) => res.sendFile(path.join(__dirname, 'pages/admin/login/login.html')));
+app.get('/admin/login.html', (req, res) => res.redirect(301, '/admin/login'));
+app.get('/admin/login/login.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/admin/login/login.css')));
+app.get('/admin/login/login.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/admin/login/login.js')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'pages/admin/index.html')));
+app.get('/admin/', (req, res) => res.sendFile(path.join(__dirname, 'pages/admin/index.html')));
 app.get('/admin.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/admin/admin.css')));
 app.get('/admin.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/admin/admin.js')));
 app.use('/modules', express.static(path.join(__dirname, 'pages/admin/modules')));
@@ -154,6 +178,12 @@ app.post('/api/vnpay/create-payment-url', async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 });
+
+// Routes cho Phân hệ Quản trị Nhân sự: Cấp & Quản lý Tài khoản Đăng nhập
+const staffAuthApi = require('./scripts/api/staff_auth.js');
+app.post('/api/admin/staff/provision-account', staffAuthApi.provisionAccount);
+app.post('/api/admin/staff/reset-password', staffAuthApi.resetPassword);
+app.post('/api/admin/staff/toggle-account-status', staffAuthApi.toggleAccountStatus);
 
 app.listen(port, () => {
     console.log(`===========================================`);

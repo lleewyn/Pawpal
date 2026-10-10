@@ -5,23 +5,14 @@
 
 import { API } from '/scripts/api/api.js';
 import { getPets } from '/scripts/api/petService.js';
+import { applyProfileSnapshot, saveCustomerProfile } from '/scripts/shared/customer-profile.mjs';
 
 const CURRENT_USER_KEY = 'pawpal_current_user';
 const PAWPAL_USERS_KEY = 'pawpal_users_db';
 
 function getCurrentUser() {
     try {
-        return JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || {
-            id: 'USER-001',
-            name: 'Nguyễn Văn A',
-            phone: '0901234567',
-            email: 'quyen@gmail.com',
-            points: 120,
-            membershipTier: 'Bạc',
-            addresses: [
-                { id: 'addr-1', street: '123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh', isDefault: true }
-            ]
-        };
+        return JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || null;
     } catch (e) {
         return null;
     }
@@ -105,11 +96,11 @@ function getSupabaseClient() {
 }
 
 // Đồng bộ dữ liệu Profile từ Supabase Live Database
-async function syncUserProfileFromSupabase(user) {
+async function syncUserProfileFromSupabase(user, cache = true) {
     if (!user) return user;
     try {
         const client = getSupabaseClient();
-        if (!client) return user;
+        if (!client) throw new Error('Không thể kết nối dữ liệu hồ sơ.');
 
         let customerId = user.id;
         const phone = user.phone || user.phone_main || '';
@@ -133,6 +124,7 @@ async function syncUserProfileFromSupabase(user) {
                 client.from('customer_membership').select('*').eq('customer_id', customerId).maybeSingle(),
                 client.from('customer_address').select('*').eq('customer_id', customerId).order('is_default', { ascending: false })
             ]);
+            if (profRes.error || memRes.error || addrRes.error) throw new Error('Không thể tải hồ sơ mới nhất.');
 
             const profile = profRes.data || {};
             const membership = memRes.data || {};
@@ -164,19 +156,23 @@ async function syncUserProfileFromSupabase(user) {
                 email: custRecord.email || user.email || '',
                 status: custRecord.account_status || 'ACTIVE',
                 isLocked: custRecord.account_status === 'LOCKED',
-                points: Number(membership.current_points || user.points || 0),
-                pawPoints: Number(membership.current_points || user.points || 0),
+                points: Number(membership.total_paw_points ?? 0),
+                pawPoints: Number(membership.total_paw_points ?? 0),
                 membershipTier: tierMap[membership.tier_id] || user.membershipTier || 'Thành viên',
-                addresses: dbAddresses.length > 0 ? dbAddresses : (user.addresses || [])
+                addresses: dbAddresses
             };
 
-            setCurrentUser(updatedUser);
-            return updatedUser;
+            const snapshot = await client.rpc('customer_profile_snapshot');
+            if (snapshot.error) throw new Error('Không thể tải hồ sơ mới nhất.');
+            const freshUser = applyProfileSnapshot(updatedUser, snapshot.data);
+            if (cache) setCurrentUser(freshUser);
+            return freshUser;
         }
     } catch (err) {
         console.warn('[Profile] Lỗi đồng bộ dữ liệu từ Supabase:', err);
+        throw err;
     }
-    return user;
+    throw new Error('Không tìm thấy hồ sơ khách hàng.');
 }
 
 // 2. Tải và hiển thị dữ liệu Profile
@@ -332,22 +328,6 @@ async function loadUpcomingBooking(user) {
     }
 
     if (!upcoming) {
-        try {
-            const local = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-            const localUpcoming = local.find(b => !['cancelled', 'completed'].includes(String(b.status || '').toLowerCase()));
-            if (localUpcoming) {
-                upcoming = {
-                    id: localUpcoming.id,
-                    date: localUpcoming.date,
-                    time: localUpcoming.time || localUpcoming.schedule?.slot,
-                    serviceName: localUpcoming.serviceName || localUpcoming.service || 'Dịch vụ chăm sóc',
-                    petName: localUpcoming.petName || 'Bé cưng'
-                };
-            }
-        } catch (e) {}
-    }
-
-    if (!upcoming) {
         container.innerHTML = `
             <div class="p-3 text-muted d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <span>Bạn chưa có lịch hẹn dịch vụ nào sắp tới.</span>
@@ -419,13 +399,6 @@ async function loadRecentOrders(user) {
         }
     } catch (e) {
         console.warn('[Profile] Lỗi tải đơn hàng từ Supabase:', e);
-    }
-
-    if (orders.length === 0) {
-        try {
-            const local = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-            orders = local.slice(0, 3);
-        } catch (e) {}
     }
 
     if (!orders || orders.length === 0) {
@@ -522,6 +495,7 @@ function renderAddressesList() {
 }
 
 function initProfileEditModal(user) {
+    let editUser = user;
     const btnEdit = document.getElementById('btnEditProfile');
     const modalEl = document.getElementById('profileEditModal');
     const btnSave = document.getElementById('btnSaveProfile');
@@ -561,6 +535,7 @@ function initProfileEditModal(user) {
 
     btnEdit.addEventListener('click', () => {
         const currentUser = getCurrentUser() || user;
+        editUser = currentUser;
         const nameInput = document.getElementById('profileNameInput');
         const emailInput = document.getElementById('profileEmailInput');
         const phoneInput = document.getElementById('profilePhoneInput');
@@ -621,6 +596,7 @@ function initProfileEditModal(user) {
             tempAddresses.push({
                 id: 'addr-' + Date.now(),
                 street: fullStreet,
+                rawStreet: street,
                 province: city || '',
                 district: district || '',
                 isDefault: isFirst
@@ -642,99 +618,69 @@ function initProfileEditModal(user) {
             return;
         }
 
-        const currentUser = getCurrentUser() || user;
-        const defaultAddrObj = tempAddresses.find(a => a.isDefault) || tempAddresses[0];
+        const currentUser = editUser;
 
-        const updatedUser = {
-            ...currentUser,
-            name: nameVal,
-            fullName: nameVal,
-            email: emailVal,
-            phone: phoneVal,
-            addresses: tempAddresses,
-            address: defaultAddrObj ? (defaultAddrObj.street || defaultAddrObj.address) : ''
-        };
-
-        setCurrentUser(updatedUser);
-
-        // Lưu trực tiếp vào Supabase Live DB
-        try {
-            const client = getSupabaseClient();
-            if (client && currentUser.id) {
-                const customerId = currentUser.id;
-
-                // 1. Cập nhật bảng customer
-                await client.from('customer').update({
-                    email: emailVal,
-                    phone_main: phoneVal
-                }).eq('id', customerId);
-
-                // 2. Cập nhật bảng customer_profile
-                const { data: profData } = await client.from('customer_profile').select('id').eq('customer_id', customerId).maybeSingle();
-                if (profData) {
-                    await client.from('customer_profile').update({
-                        full_name: nameVal
-                    }).eq('customer_id', customerId);
-                } else {
-                    await client.from('customer_profile').insert({
-                        customer_id: customerId,
-                        full_name: nameVal
-                    });
-                }
-
-                // 3. Cập nhật sổ địa chỉ customer_address
-                await client.from('customer_address').delete().eq('customer_id', customerId);
-                if (tempAddresses.length > 0) {
-                    const addrRows = tempAddresses.map(a => ({
-                        customer_id: customerId,
-                        receiver_name: nameVal,
-                        receiver_phone: phoneVal,
-                        street_address: a.street || a.address || '',
-                        province: a.province || '',
-                        is_default: Boolean(a.isDefault)
-                    }));
-                    await client.from('customer_address').insert(addrRows);
-                }
-            }
-        } catch (dbErr) {
-            console.warn('[Profile] Lỗi cập nhật lên Supabase Live DB:', dbErr);
+        if (phoneVal !== currentUser.phone) {
+            showToast('error', 'Không thể thay số điện thoại đăng nhập tại đây');
+            return;
         }
-
-        // Đồng bộ ngược sang pawpal_admin_customers_data trong session
+        if (btnSave.disabled) return;
+        btnSave.disabled = true;
         try {
-            const rawAdminCustomers = sessionStorage.getItem('pawpal_admin_customers_data') || localStorage.getItem('pawpal_admin_customers_data');
-            if (rawAdminCustomers) {
-                const adminCusts = JSON.parse(rawAdminCustomers);
-                const cleanP = phoneVal.replace(/[^0-9]/g, '');
-                const matchedKey = Object.keys(adminCusts).find(k => {
-                    const c = adminCusts[k];
-                    return (c.phone && c.phone.replace(/[^0-9]/g, '') === cleanP) || (currentUser.id && c.id === currentUser.id);
-                });
-                if (matchedKey && adminCusts[matchedKey]) {
-                    adminCusts[matchedKey].name = nameVal;
-                    adminCusts[matchedKey].email = emailVal;
-                    adminCusts[matchedKey].phone = phoneVal;
-                    adminCusts[matchedKey].addresses = tempAddresses.map(a => ({
-                        address: a.street || a.address,
-                        isDefault: !!a.isDefault,
-                        label: a.label || (a.isDefault ? 'Nhà riêng' : 'Phụ')
-                    }));
-                    sessionStorage.setItem('pawpal_admin_customers_data', JSON.stringify(adminCusts));
-                    localStorage.setItem('pawpal_admin_customers_data', JSON.stringify(adminCusts));
-                }
-            }
-        } catch (e) {
-            console.warn('Lỗi đồng bộ sang admin customers:', e);
+            const updatedUser = await saveCustomerProfile(getSupabaseClient(), currentUser, {
+                name: nameVal, email: emailVal, addresses: tempAddresses
+            });
+            setCurrentUser(updatedUser);
+            user = updatedUser;
+            tempAddresses = updatedUser.addresses.map(a => ({ ...a }));
+            loadProfileData(updatedUser);
+            closeModal();
+            showToast('success', 'Cập nhật thông tin cá nhân thành công');
+        } catch (error) {
+            showToast('error', error.message || 'Không thể lưu hồ sơ. Vui lòng thử lại.');
+        } finally {
+            btnSave.disabled = false;
         }
-
-        loadProfileData(updatedUser);
-
-        closeModal();
-        showToast('success', 'Cập nhật thông tin cá nhân thành công!');
     });
 }
 
 let isInitRunning = false;
+let profileChannel;
+let profileClient;
+let refreshTimer;
+let refreshVersion = 0;
+let profileModal;
+
+export function dispose() {
+    clearTimeout(refreshTimer);
+    ++refreshVersion;
+    if (profileChannel && profileClient) profileClient.removeChannel(profileChannel);
+    profileChannel = null;
+    if (profileModal?.parentNode === document.body) profileModal.remove();
+    document.body.classList.remove('modal-open');
+}
+
+function watchProfile(user) {
+    profileClient = getSupabaseClient();
+    if (!profileClient?.channel) return;
+    const refresh = () => {
+        clearTimeout(refreshTimer);
+        const version = ++refreshVersion;
+        refreshTimer = setTimeout(async () => {
+            try {
+                const fresh = await syncUserProfileFromSupabase(user, false);
+                if (version !== refreshVersion) return;
+                setCurrentUser(fresh);
+                loadProfileData(fresh);
+            } catch { /* Keep the current view; a save still requires a matching revision. */ }
+        }, 200);
+    };
+    profileChannel = profileClient.channel(`customer-profile-${user.id}`);
+    for (const table of ['customer_profile', 'customer_address', 'customer_membership']) {
+        profileChannel.on('postgres_changes', { event: '*', schema: 'public', table, filter: `customer_id=eq.${user.id}` }, refresh);
+    }
+    profileChannel.on('postgres_changes', { event: '*', schema: 'public', table: 'customer', filter: `id=eq.${user.id}` }, refresh).subscribe();
+}
 
 // Hàm khởi tạo chính của module Profile
 export async function init() {
@@ -756,10 +702,10 @@ export async function init() {
 
         // Tải và hiển thị dữ liệu chuẩn một lần duy nhất
         loadProfileData(user);
-        loadMyPets(user);
-        loadUpcomingBooking(user);
-        loadRecentOrders(user);
+        await Promise.all([loadMyPets(user), loadUpcomingBooking(user), loadRecentOrders(user)]);
         initProfileEditModal(user);
+        profileModal = document.getElementById('profileEditModal');
+        watchProfile(user);
     } finally {
         isInitRunning = false;
     }

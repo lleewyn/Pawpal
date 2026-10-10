@@ -2368,72 +2368,26 @@ function normalizePhone(phone) {
 }
 
 async function createSupabaseCustomer(currentUser) {
-    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     const phone = normalizePhone(currentUser?.phone);
-    if (!db || !phone) return null;
-
+    if (!phone) return null;
     try {
-        const { data: inserted, error: insertError } = await db
-            .from('customer')
-            .insert({
-                email: null,
-                password_hash: null,
-                account_status: 'ACTIVE',
-                is_temporary: true,
-                phone_main: phone,
-                registered_at: new Date().toISOString(),
-            })
-            .select('id')
-            .limit(1);
-
-        if (insertError || !inserted?.length) {
-            console.warn('[Booking] Supabase customer create failed:', insertError?.message || 'no data');
-            return null;
-        }
-
-        const customerId = inserted[0].id;
-        if (currentUser.name) {
-            await db.from('customer_profile').insert({
-                customer_id: customerId,
-                full_name: resolveCurrentUserName(currentUser),
-                gender: 'OTHER'
-            });
-        }
-
-        return customerId;
-    } catch (err) {
-        console.warn('[Booking] Supabase customer create exception:', err.message);
+        const response = await fetch('/api/customer/auth/guest', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone, name: resolveCurrentUserName(currentUser) || 'Khách vãng lai' })
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.message || 'Không thể tạo hồ sơ khách.');
+        return result.customerId;
+    } catch (error) {
+        console.warn('[Booking] Không thể xác định hồ sơ khách:', error.message);
         return null;
     }
 }
 
 async function getSupabaseCustomerId(currentUser) {
     if (!currentUser) return null;
-    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db) return null;
     if (currentUser._source === 'supabase' && currentUser.id) return currentUser.id;
-    if (!currentUser.phone) return null;
-
-    try {
-        const { data, error } = await db
-            .from('customer')
-            .select('id')
-            .eq('phone_main', currentUser.phone)
-            .limit(1);
-        if (error) {
-            console.warn('[Booking] Supabase customer lookup failed:', error.message);
-            return null;
-        }
-
-        if (data?.length) {
-            return data[0].id;
-        }
-
-        return await createSupabaseCustomer(currentUser);
-    } catch (err) {
-        console.warn('[Booking] Supabase customer lookup exception:', err.message);
-        return null;
-    }
+    return createSupabaseCustomer(currentUser);
 }
 
 async function getSupabasePetId(db, customerId, petId) {

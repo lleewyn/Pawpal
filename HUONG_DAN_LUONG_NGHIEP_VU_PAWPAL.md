@@ -1,7 +1,7 @@
 # SỔ TAY VẬN HÀNH VÀ HƯỚNG DẪN LUỒNG NGHIỆP VỤ HỆ THỐNG QUẢN TRỊ PAWPAL-ER
 
 > **Dành cho:** Ban Quản lý cửa hàng, Lễ tân ca trực, Chuyên viên Chăm sóc khách hàng, Kỹ thuật viên Grooming / Spa, Nhân viên Khách sạn thú cưng và Thủ kho Bán lẻ.  
-> **Phiên bản:** 2.7 (Chuẩn hóa toàn diện Quy trình Xử lý Khiếu nại 3.16: Vòng đời Ticket 7 trạng thái, Phân cấp thẩm quyền bồi hoàn CSKH vs Quản lý, Tự động hóa Timers 48h/72h/3 ngày, Xử lý lần 2 khi đánh giá < 3 sao, Cơ chế Mở lại 7 ngày và Cảnh báo Trùng lặp theo `AGENTS.md`).
+> **Phiên bản:** 2.8 (Chuẩn hóa toàn diện Cơ chế Xác thực & Phân quyền Cách ly 2 Chiều: Cấp phát tài khoản công vụ từ phân hệ Nhân sự, Cổng Quản trị độc lập `/admin/login`, Triệt tiêu rò rỉ phiên Bi-directional Isolation, Quản lý Khóa tài khoản, Tuân thủ 100% `AGENTS.md` và Live Supabase Database).
 
 ---
 
@@ -15,13 +15,14 @@
    - [Luồng 5: Tiếp nhận khiếu nại tại quầy hoặc qua Hotline (Chống trùng Ticket và Tiếp nhận chưa xác minh)](#luồng-5-tiếp-nhận-khiếu-nại-tại-quầy-hoặc-qua-hotline-ngoại-tuyến)
    - [Luồng 6: Luồng tương tác khép kín giữa Trực chat AI và Phân hệ Khiếu nại (Closed-Loop Escalation)](#luồng-6-luồng-tương-tác-khép-kín-giữa-trực-chat-ai-và-phân-hệ-khiếu-nại-closed-loop-escalation)
    - [Luồng 7: Đồng bộ Dữ liệu và Điểm thưởng 2 chiều giữa Cổng Người dùng và Admin (2-Way User-Admin Lifecycle)](#luồng-7-đồng-bộ-dữ-liệu-và-điểm-thưởng-2-chiều-giữa-cổng-người-dùng-và-admin)
+   - [Luồng 8: Cấp phát tài khoản công vụ nội bộ, Quản trị phân quyền và Cách ly phiên 2 chiều (Staff Account Provisioning & Bi-directional Auth Isolation)](#luồng-8-cấp-phát-tài-khoản-công-vụ-nội-bộ-quản-trị-phân-quyền-và-cách-ly-phiên-2-chiều-staff-account-provisioning--bi-directional-auth-isolation)
 3. [Hướng dẫn chi tiết từng phân hệ chức năng](#3-hướng-dẫn-chi-tiết-từng-phân-hệ-chức-năng)
    - [3.1. Phân hệ Tổng quan (Dashboard)](#31-phân-hệ-tổng-quan-dashboard)
    - [3.2. Phân hệ Khách hàng (Customers - Chuẩn 3 Subtabs)](#32-phân-hệ-khách-hàng-customers)
    - [3.3. Phân hệ Thú cưng (Pets)](#33-phân-hệ-thú-cưng-pets)
    - [3.4. Phân hệ Dịch vụ (Services)](#34-phân-hệ-dịch-vụ-services)
    - [3.5. Phân hệ Bán hàng và Kho (Orders)](#35-phân-hệ-bán-hàng-và-kho-orders)
-   - [3.6. Phân hệ Nhân sự và Ca làm (Staff)](#36-phân-hệ-nhân-sự-và-ca-làm-staff)
+   - [3.6. Phân hệ Nhân sự và Ca làm (Staff - Quản trị Tài khoản & Phân quyền)](#36-phân-hệ-nhân-sự-và-ca-làm-staff)
    - [3.7. Phân hệ Khiếu nại và Hỗ trợ (Complaints)](#37-phân-hệ-khiếu-nại-và-hỗ-trợ-complaints)
    - [3.8. Phân hệ Trợ lý ảo Chatbot AI (Chatbot)](#38-phân-hệ-trợ-lý-ảo-chatbot-ai-chatbot)
    - [3.9. Phân hệ Cấu hình hệ thống (Settings)](#39-phân-hệ-cấu-hình-hệ-thống-settings)
@@ -307,6 +308,65 @@ sequenceDiagram
 
 ---
 
+### Luồng 8: Cấp phát tài khoản công vụ nội bộ, Quản trị phân quyền và Cách ly phiên 2 chiều (Staff Account Provisioning & Bi-directional Auth Isolation)
+*Quy trình cấp tài khoản độc quyền từ phân hệ Nhân sự, xác thực bảo mật tại Cổng Quản trị độc lập `/admin/login` và triệt tiêu 100% nguy cơ truy cập chéo giữa Cổng Quản trị và Cổng Khách hàng.*
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Quản trị viên Cấp cao
+    actor Staff as Nhân viên / Kỹ thuật viên
+    actor Khach as Khách hàng cá nhân
+    participant StaffMod as Phân hệ Nhân sự (Staff Module)
+    participant AuthAPI as Backend Auth API (Service Role)
+    participant SupaAuth as Supabase Auth (auth.users)
+    participant SupaDB as Cơ sở dữ liệu Live (public.staff / customer)
+    participant AdminPortal as Cổng Quản trị (/admin/login)
+    participant UserPortal as Cổng Khách hàng (/login)
+
+    Note over Admin,SupaDB: 1. Cấp tài khoản công vụ nội bộ (Staff Provisioning)
+    Admin->>StaffMod: Mở bảng Nhân sự -> Bấm '•••' -> Chọn 'Cấp tài khoản đăng nhập'
+    Admin->>StaffMod: Điền Email, Mật khẩu ban đầu, Vai trò (ADMIN/STAFF), Phân quyền phân hệ
+    StaffMod->>AuthAPI: Gửi POST /api/staff-auth/provision
+    AuthAPI->>SupaAuth: Tạo tài khoản công vụ (auth.admin.createUser)
+    SupaAuth-->>AuthAPI: Trả về auth_user_id
+    AuthAPI->>SupaDB: Ghi nhận auth_user_id, system_role, permissions, account_status: 'ACTIVE' vào public.staff
+    AuthAPI-->>StaffMod: Cấp tài khoản thành công -> Huy hiệu 'Đã cấp TK' (Muted Green)
+
+    Note over Staff,AdminPortal: 2. Nhân viên đăng nhập hợp lệ vào Cổng Quản trị
+    Staff->>AdminPortal: Truy cập /pages/admin/login/login.html -> Nhập Email và Mật khẩu
+    AdminPortal->>SupaAuth: Xác thực credentials (signInWithPassword)
+    SupaAuth-->>AdminPortal: Trả về user_id và session token
+    AdminPortal->>SupaDB: Kiểm tra quyền công vụ: SELECT * FROM staff WHERE auth_user_id = user_id
+    alt Hồ sơ hợp lệ & account_status == 'ACTIVE'
+        AdminPortal->>AdminPortal: Khởi tạo pawpal_admin_user (Không ảnh hưởng pawpal_current_user)
+        AdminPortal-->>Staff: Chuyển hướng vào Admin Dashboard (/pages/admin/admin.html)
+    else Tài khoản bị khóa (account_status == 'LOCKED')
+        AdminPortal->>SupaAuth: Gọi signOut() tức thì
+        AdminPortal-->>Staff: Báo lỗi đỏ: 'Tài khoản công vụ đã bị khóa. Vui lòng liên hệ Quản lý.'
+    end
+
+    Note over Staff,UserPortal: 3. Chặn rò rỉ: Nhân sự cố tình đăng nhập Cổng Khách hàng (/login)
+    Staff->>UserPortal: Nhập SĐT nhân viên (ví dụ: 0999999999) tại bước 1
+    UserPortal->>SupaDB: Kiểm tra SĐT trong public.staff vs public.customer
+    alt Phát hiện SĐT thuộc hồ sơ Nhân sự
+        UserPortal-->>Staff: CHẶN ĐỨNG 100%: 'Số điện thoại này thuộc tài khoản nội bộ Pawpal-er'
+        UserPortal-->>Staff: Hiển thị nút dẫn lối: 'Chuyển sang Cổng Quản trị' (Không cấp session Khách)
+    end
+    Note over Staff,UserPortal: Nếu nhân viên cố tình vào thẳng /user -> checkAuth() quét role, lập tức xóa sạch session và đá về /login
+
+    Note over Khach,AdminPortal: 4. Chặn rò rỉ: Khách hàng cố tình đăng nhập Cổng Quản trị (/admin/login)
+    Khach->>AdminPortal: Nhập Email và Mật khẩu tài khoản khách hàng
+    AdminPortal->>SupaAuth: Xác thực mật khẩu
+    AdminPortal->>SupaDB: Kiểm tra trong public.staff WHERE auth_user_id = user_id
+    alt Không tìm thấy trong public.staff (Khách hàng vãng lai/thành viên)
+        AdminPortal->>SupaAuth: signOut() ngay lập tức, hủy sạch token
+        AdminPortal-->>Khach: CHẶN ĐỨNG: 'Tài khoản không có thẩm quyền truy cập hệ thống Quản trị Pawpal-er.'
+    end
+```
+
+---
+
 ## 3. HƯỚNG DẪN CHI TIẾT TỪNG PHÂN HỆ CHỨC NĂNG
 
 ### 3.1. Phân hệ Tổng quan (Dashboard)
@@ -494,16 +554,20 @@ sequenceDiagram
 
 ---
 
-### 3.6. Phân hệ Nhân sự và Ca làm (Staff)
-*Quản lý danh sách nhân viên, xếp lịch ca trực, phân quyền nghiệp vụ và theo dõi đánh giá CSAT.*
+### 3.6. Phân hệ Nhân sự và Ca làm (Staff - Quản trị Tài khoản & Phân quyền)
+*Quản lý danh sách nhân viên, xếp lịch ca trực, cấp phát tài khoản công vụ nội bộ, phân quyền nghiệp vụ và theo dõi đánh giá CSAT.*
 
 - **Cấu trúc 4 Subtab chuyên sâu trên Header Bar**:
   1. *Danh sách nhân sự (`tab-staff-list`)*:
      - 4 Thẻ KPI nhân sự: Tổng nhân sự, Đang làm việc, Nghỉ phép / Tạm nghỉ, Đánh giá CSAT trung bình toàn chi nhánh.
-     - Bộ lọc vai trò: Lễ tân ca trực, Kỹ thuật viên Grooming / Spa, Chăm sóc Khách sạn Pet Hotel, Tài xế Pet Taxi, Quản lý chi nhánh.
-     - Bảng danh sách: Mã NV, Họ tên, Chức vụ, Số điện thoại, Ca làm việc hôm nay, Điểm CSAT, Trạng thái hoạt động.
+     - Bộ lọc vai trò và Trạng thái tài khoản công vụ: Lễ tân ca trực, Kỹ thuật viên Grooming / Spa, Chăm sóc Khách sạn Pet Hotel, Tài xế Pet Taxi, Quản lý chi nhánh; Lọc tài khoản: `Tất cả`, `Đã cấp TK`, `Chưa cấp TK`, `Bị khóa`.
+     - Bảng danh sách chuẩn `AGENTS.md`:
+       * *Cột dữ liệu*: Mã NV, Họ tên & Chức vụ, Vai trò hệ thống (`system_role`: ADMIN / STAFF), SĐT & Email công vụ, Trạng thái tài khoản (`Đã cấp TK` nền xanh nhạt, `Chưa cấp TK` nền xô thơm, `Bị khóa` nền đỏ đất), Ca làm việc hôm nay, Điểm CSAT, Tác vụ `•••`.
+       * *Menu tác vụ thả xuống `•••`*: `Xem hồ sơ 360°`, `Cấp tài khoản đăng nhập` (khi chưa cấp), `Đặt lại mật khẩu` (khi đã cấp), `Khóa / Mở khóa tài khoản`.
   2. *Hồ sơ nhân sự 360° (`tab-staff-profile`)*:
      - Thông tin cá nhân, hợp đồng lao động, chứng chỉ nghề nghiệp Grooming quốc tế.
+     - Khối thông tin định danh công vụ: Email đăng nhập nội bộ, `auth_user_id`, Vai trò hệ thống, Danh sách phân hệ được ủy quyền.
+     - Nút thao tác một chạm: `Đặt lại mật khẩu`, `Khóa tài khoản`, `Phân ca làm việc`.
      - Lịch sử ca làm việc, tổng số ca hoàn thành và nhật ký ghi nhận khen thưởng / nhắc nhở.
   3. *Lịch phân ca trực (`tab-staff-schedule`)*:
      - Bảng lịch phân ca theo Tuần và Ngày:
@@ -514,6 +578,21 @@ sequenceDiagram
   4. *Đánh giá CSAT và Hiệu suất KPI (`tab-staff-assessment`)*:
      - Thống kê tỷ lệ hài lòng của khách hàng (CSAT 1-5 sao) theo từng nhân sự.
      - Đánh giá năng suất: Số thú cưng đã chăm sóc, số đơn bán lẻ phụ kiện đã lập, thời gian hoàn thành ca trung bình.
+
+- **Quy trình Cấp phát Tài khoản và Quản trị Phân quyền Nhân sự (Staff Account Provisioning & IAM)**:
+  - **Modal Cấp tài khoản công vụ (`#modalProvisionAccount`)**:
+    * Nhập Email đăng nhập công vụ (khuyến nghị tên miền `@pawpal.vn`).
+    * Thiết lập Mật khẩu ban đầu (yêu cầu tối thiểu 8 ký tự, có chữ hoa, số và ký tự đặc biệt).
+    * Chọn Vai trò hệ thống (`system_role`): `ADMIN` (Toàn quyền quản trị) hoặc `STAFF` (Nhân viên vận hành theo ca).
+    * Phân quyền nghiệp vụ (`permissions`): Tích chọn các phân hệ được phép truy cập (`dashboard`, `customers`, `pets`, `services`, `orders`, `staff`, `complaints`, `chatbot`, `settings`).
+    * Tùy chọn bắt buộc đổi mật khẩu ở lần đăng nhập đầu tiên (`must_change_password`).
+  - **Modal Đặt lại mật khẩu (`#modalResetStaffPassword`)**:
+    * Cho phép Quản lý cấp mật khẩu mới trực tiếp khi nhân viên quên mật khẩu hoặc bàn giao ca.
+  - **Cơ chế Khóa / Mở khóa tài khoản công vụ (`toggleAccountStatus`)**:
+    * Khi nhân viên nghỉ việc, chuyển công tác hoặc có dấu hiệu vi phạm an toàn, Quản lý bấm "Khóa tài khoản" ➔ chuyển `account_status: 'LOCKED'`.
+    * Hệ thống vô hiệu hóa ngay tức thì phiên đăng nhập của nhân viên đó. Mở khóa sẽ hoàn trả trạng thái `ACTIVE`.
+  - **Bảo mật Service Role tuyệt đối (Zero-Key Leakage)**:
+    * Toàn bộ thao tác tạo tài khoản (`auth.admin.createUser`), cập nhật mật khẩu (`auth.admin.updateUserById`) được xử lý an toàn tại Backend Express API ([scripts/api/staff_auth.js](file:///d:/Aboutme/MyProject/Pawpal/scripts/api/staff_auth.js)) thông qua `SUPABASE_SERVICE_ROLE_KEY`. Phía Client Admin tuyệt đối không nắm giữ hay để lộ Service Key.
 
 ---
 
@@ -640,11 +719,11 @@ sequenceDiagram
 
 | Nhóm trạng thái | Gam màu chuẩn (`AGENTS.md`) | Màu nền | Màu chữ | Ví dụ hiển thị |
 | :--- | :--- | :--- | :--- | :--- |
-| **Tích cực / Hoàn thành** | Muted Forest Green | `#DCEEE2` | `#165335` | `Đang hoạt động`, `Đã xác nhận`, `Đã hoàn tất`, `Đã thanh toán`, `Còn hàng`, `Đã giải quyết` |
+| **Tích cực / Hoàn thành** | Muted Forest Green | `#DCEEE2` | `#165335` | `Đang hoạt động`, `Đã cấp TK`, `Đã xác nhận`, `Đã hoàn tất`, `Đã thanh toán`, `Còn hàng`, `Đã giải quyết` |
 | **Chờ duyệt / Lưu ý** | Warm Amber (Hổ phách dịu) | `#F5E8D3` | `#734718` | `Chờ xác nhận`, `Chờ xử lý`, `Đang chuẩn bị`, `Sắp hết hàng`, `Tạm dừng`, `Chờ khách phản hồi`, **`Chờ quản lý duyệt`** |
-| **Khẩn cấp / Tiêu cực** | Muted Earth Red (Đỏ đất) | `#F7DCDC` | `#8F2424` | `Đã hủy`, `Bị khóa`, `Hết hàng`, `Khiếu nại khẩn`, **`Đang xử lý lần 2`** |
+| **Khẩn cấp / Tiêu cực** | Muted Earth Red (Đỏ đất) | `#F7DCDC` | `#8F2424` | `Đã hủy`, `Bị khóa`, `Khóa công vụ`, `Hết hàng`, `Khiếu nại khẩn`, **`Đang xử lý lần 2`** |
 | **Tiến trình / Thông tin** | Muted Soft Blue (Xanh phấn) | `#DCEAF2` | `#20495E` | `Đang thực hiện`, `Đang giao hàng`, `Đang lưu trú Hotel`, `Đang xử lý`, `Chờ nhận hàng trả` |
-| **Trung tính / Mặc định** | Muted Sage Slate (Xám xô thơm)| `#E2ECE5` | `#2D483B` | `Bản nháp`, `Lưu trữ`, `Sắp tới`, `Đã đóng` |
+| **Trung tính / Mặc định** | Muted Sage Slate (Xám xô thơm)| `#E2ECE5` | `#2D483B` | `Chưa cấp TK`, `Bản nháp`, `Lưu trữ`, `Sắp tới`, `Đã đóng` |
 
 ### Quy tắc cảnh báo viền mép trái (`border-left`)
 - **Độc quyền duy nhất cho dòng dữ liệu bảng cần Alert**: Vạch đỏ 3px (`border-left: 3px solid #DC2626;` cho dòng có khiếu nại) hoặc vạch cam 3px (`#D97706;` cho dòng có lưu ý đặc biệt).
@@ -654,6 +733,8 @@ sequenceDiagram
 ---
 
 ## 5. CƠ CHẾ LƯU VÀ KHÔI PHỤC TRẠNG THÁI TOÀN HỆ THỐNG (STATE PERSISTENCE VÀ F5/RELOAD)
+
+### 5.1. Bảng điều hướng Subtabs và Trạng thái 9 Phân hệ
 
 Toàn bộ **9 phân hệ quản trị** của Pawpal-er đã được kiểm tra và chuẩn hóa 100% cơ chế lưu trữ liên thông giữa **URL Hash**, **`sessionStorage`** và **Bộ điều hướng Sidebar**:
 
@@ -668,6 +749,13 @@ Toàn bộ **9 phân hệ quản trị** của Pawpal-er đã được kiểm tr
 | **7. Khiếu nại** | `pawpal_admin_complaint_active_subtab` | `#tab-complaint-services`, `#tab-complaint-orders`, `#tab-complaint-detail` | Giữ nguyên Ticket đang xử lý (`pawpal_admin_complaint_selected_id`), biên bản đối thoại Chat Transcript và Deep Breadcrumb `/ [Mã Ticket]`. |
 | **8. Chatbot AI** | `pawpal_admin_chatbot_subtab` | `#tab-live-support`, `#tab-ai-copilot`, `#tab-chatbot-rules` | Giữ nguyên ca hội thoại đang trực tiếp trao đổi (`pawpal_admin_chatbot_conv_id`) và Deep Breadcrumb `/ [Tên khách]`. |
 | **9. Cấu hình** | `pawpal_admin_settings_subtab` | `#tab-banner-promos`, `#tab-content-management`, `#tab-system-config`, `#tab-audit-logs` | Giữ nguyên phân mục đang chỉnh sửa (Banner và Vouchers, Bài viết tin tức, Cấu hình hệ thống hoặc Nhật ký cấu hình). |
+
+### 5.2. Quản trị Phiên và Phân lập Bộ nhớ Xác thực (Bi-directional Session Isolation)
+
+| Khóa lưu trữ | Phạm vi áp dụng | Nội dung dữ liệu | Quy tắc bảo mật |
+| :--- | :--- | :--- | :--- |
+| **`pawpal_admin_user`** | **Cổng Quản trị Admin** (`/admin/login`, `/pages/admin/`) | Token xác thực, `auth_user_id`, Email nhân sự, Họ tên, Vai trò (`ADMIN`/`STAFF`), Mảng phân quyền (`permissions`). | Tuyệt đối không lưu vào `pawpal_current_user`. Đăng xuất tại Admin Shell sẽ xóa sạch key này và điều hướng về `/pages/admin/login/login.html`. |
+| **`pawpal_current_user`** | **Cổng Khách hàng** (`/login`, `/user/`) | Thông tin khách hàng cá nhân, SĐT chính, Hạng thành viên, Số dư điểm Pawpoint, Danh sách thú cưng. | Khách hàng không thể dùng key này để truy cập Admin Shell. Bất kỳ nỗ lực truy cập Admin nào đều bị chặn và chuyển hướng về Cổng Đăng nhập Quản trị. |
 
 *Quy tắc điều hướng Sidebar và Browser History:*
 - Khi bấm chuyển phân hệ trên Sidebar, URL Hash tự động cập nhật ngay lập tức theo phân mục đang làm việc của phân hệ đó.
