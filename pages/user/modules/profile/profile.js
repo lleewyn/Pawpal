@@ -162,17 +162,23 @@ async function syncUserProfileFromSupabase(user, cache = true) {
                 addresses: dbAddresses
             };
 
-            const snapshot = await client.rpc('customer_profile_snapshot');
-            if (snapshot.error) throw new Error('Không thể tải hồ sơ mới nhất.');
-            const freshUser = applyProfileSnapshot(updatedUser, snapshot.data);
+            let freshUser = updatedUser;
+            try {
+                const snapshot = await client.rpc('customer_profile_snapshot');
+                if (!snapshot.error && snapshot.data) {
+                    freshUser = applyProfileSnapshot(updatedUser, snapshot.data);
+                }
+            } catch (snapErr) {
+                console.warn('[Profile] RPC customer_profile_snapshot chưa sẵn sàng, dùng dữ liệu truy vấn trực tiếp');
+            }
             if (cache) setCurrentUser(freshUser);
             return freshUser;
         }
     } catch (err) {
         console.warn('[Profile] Lỗi đồng bộ dữ liệu từ Supabase:', err);
-        throw err;
+        return user;
     }
-    throw new Error('Không tìm thấy hồ sơ khách hàng.');
+    return user;
 }
 
 // 2. Tải và hiển thị dữ liệu Profile
@@ -696,8 +702,12 @@ export async function init() {
 
         // Đồng bộ thời gian thực từ Supabase Live Database trước khi render để tránh giật giao diện
         if (window.getSupabaseClient || window.SupabaseClient) {
-            const freshUser = await syncUserProfileFromSupabase(user);
-            if (freshUser) user = freshUser;
+            try {
+                const freshUser = await syncUserProfileFromSupabase(user);
+                if (freshUser) user = freshUser;
+            } catch (syncErr) {
+                console.warn('[Profile] Lỗi đồng bộ Supabase trong init:', syncErr);
+            }
         }
 
         // Tải và hiển thị dữ liệu chuẩn một lần duy nhất

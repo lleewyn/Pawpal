@@ -709,7 +709,7 @@
     <div class="admin-modal-backdrop" id="modalWeighPet">
         <div class="admin-modal-card">
             <div class="admin-modal-header">
-                <span class="admin-modal-title">Cân bé và Áp dụng ma trận giá dịch vụ</span>
+                <span class="admin-modal-title">Cân bé và áp dụng ma trận giá dịch vụ</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalWeighPet">Đóng</button>
             </div>
 
@@ -730,6 +730,17 @@
                     <input type="number" min="0.1" step="0.1" class="admin-input" id="weighPetNewWeight" value="8.6" required style="font-size: 18px; font-weight: 700; color: #236B48;">
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">Lý do hoặc ghi chú cân thể trọng:</label>
+                    <input type="text" class="admin-input" id="weighPetNote" placeholder="Ví dụ: Cân định kỳ hàng tháng, kiểm tra trước khi làm spa..." autocomplete="off">
+                    <div class="adjust-reason-quick-tags" id="weighPetNoteChips">
+                        <button type="button" class="reason-quick-chip">Cân định kỳ</button>
+                        <button type="button" class="reason-quick-chip">Trước khi tắm spa</button>
+                        <button type="button" class="reason-quick-chip">Kiểm tra vào hotel</button>
+                        <button type="button" class="reason-quick-chip">Sau đợt điều trị</button>
+                    </div>
+                </div>
+
                 <!-- BẢNG MA TRẬN GIÁ DỊCH VỤ TỰ ĐỘNG NHẢY -->
                 <div class="form-group">
                     <label class="form-label">Bảng ma trận giá dịch vụ tương ứng:</label>
@@ -747,7 +758,7 @@
                             <strong id="weighGroomPriceResult">350.000đ</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 4px 0;">
-                            <span>Đơn giá Phòng Pet Hotel / ngày:</span>
+                            <span>Đơn giá phòng Pet Hotel theo ngày:</span>
                             <strong id="weighHotelPriceResult">300.000đ</strong>
                         </div>
                     </div>
@@ -799,7 +810,7 @@
                     <div style="display: flex; gap: 16px; font-size: 13px;">
                         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                             <input type="radio" name="reminderChannel" value="ZALO" checked accent-color="#236B48">
-                            <span>Zalo ZNS / Official Account (Khuyên dùng)</span>
+                            <span>Zalo ZNS và Official Account (Khuyên dùng)</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                             <input type="radio" name="reminderChannel" value="SMS" accent-color="#236B48">
@@ -926,10 +937,13 @@
                 <input type="hidden" id="editPetCode" value="PET-001">
 
                 <div class="form-group">
-                    <label class="form-label">Chủ sở hữu:</label>
-                    <select class="admin-select" id="editPetOwner">
-                        <option value="">Chọn chủ sở hữu...</option>
-                    </select>
+                    <label class="form-label">Chủ sở hữu (Tìm theo số điện thoại hoặc họ tên):</label>
+                    <div class="pet-owner-autocomplete-wrapper">
+                        <input type="text" class="admin-input" id="editPetOwnerInput" placeholder="Nhập số điện thoại hoặc họ tên để tìm nhanh..." autocomplete="off">
+                        <input type="hidden" id="editPetOwner" value="">
+                        <div class="autocomplete-dropdown" id="editPetOwnerDropdown" style="display: none;"></div>
+                    </div>
+                    <div id="editPetOwnerSelectedCard" class="adjust-customer-selected-card" style="display: none;"></div>
                 </div>
 
                 <div class="form-row-two-col">
@@ -1078,7 +1092,7 @@
     <div class="admin-modal-backdrop" id="modalCollarTagPreview">
         <div class="admin-modal-card" style="width: 480px;">
             <div class="admin-modal-header">
-                <span class="admin-modal-title">Xem trước Thẻ đeo cổ và Thẻ chuồng (80mm)</span>
+                <span class="admin-modal-title">Xem trước thẻ đeo cổ và thẻ chuồng (80mm)</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalCollarTagPreview">Đóng</button>
             </div>
             
@@ -1155,8 +1169,8 @@
                     <select class="admin-select" id="newVaccineType" required>
                         <option value="Vắc-xin phòng dại (Rabies)">Vắc-xin phòng dại (Rabies)</option>
                         <option value="Vắc-xin 7 bệnh cho Chó (Vanguard Plus 5/CV-L)">Vắc-xin 7 bệnh cho Chó (Vanguard Plus 5/CV-L)</option>
-                        <option value="Vắc-xin 4 bệnh cho Mèo (PureVax / Felocell)">Vắc-xin 4 bệnh cho Mèo (PureVax / Felocell)</option>
-                        <option value="Xổ giun định kỳ và Nhỏ gáy ve rận">Xổ giun định kỳ và Nhỏ gáy ve rận (NexGard / Revolution)</option>
+                        <option value="Vắc-xin 4 bệnh cho Mèo (PureVax hoặc Felocell)">Vắc-xin 4 bệnh cho Mèo (PureVax hoặc Felocell)</option>
+                        <option value="Xổ giun định kỳ và Nhỏ gáy ve rận">Xổ giun định kỳ và Nhỏ gáy ve rận (NexGard hoặc Revolution)</option>
                         <option value="Tiêm phòng nấm da và ghẻ">Tiêm phòng nấm da và ghẻ</option>
                         <option value="Khác">Khác (Tự nhập tên vắc-xin)</option>
                     </select>

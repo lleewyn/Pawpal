@@ -10,14 +10,17 @@ const port = 3000;
 // Cho phép parse body JSON
 app.use(express.json());
 
-const customerAuthApi = require('./scripts/api/customer_auth.js');
-app.post('/api/customer/auth/guest', customerAuthApi.guest);
-app.post('/api/customer/auth/lookup', customerAuthApi.lookup);
-app.post('/api/customer/auth/login', customerAuthApi.login);
-app.post('/api/customer/auth/otp/request', customerAuthApi.requestOtp);
-app.post('/api/customer/auth/otp/complete', customerAuthApi.completeOtp);
-app.post('/api/customer/auth/me', customerAuthApi.me);
-app.post('/api/customer/auth/change-password', customerAuthApi.changePassword);
+const getCustomerAuth = () => {
+    delete require.cache[require.resolve('./scripts/api/customer_auth.js')];
+    return require('./scripts/api/customer_auth.js');
+};
+app.post('/api/customer/auth/guest', (req, res) => getCustomerAuth().guest(req, res));
+app.post('/api/customer/auth/lookup', (req, res) => getCustomerAuth().lookup(req, res));
+app.post('/api/customer/auth/login', (req, res) => getCustomerAuth().login(req, res));
+app.post('/api/customer/auth/otp/request', (req, res) => getCustomerAuth().requestOtp(req, res));
+app.post('/api/customer/auth/otp/complete', (req, res) => getCustomerAuth().completeOtp(req, res));
+app.post('/api/customer/auth/me', (req, res) => getCustomerAuth().me(req, res));
+app.post('/api/customer/auth/change-password', (req, res) => getCustomerAuth().changePassword(req, res));
 
 // 1. Tự động chuyển hướng từ các link cũ có đuôi .html sang Clean URLs chuẩn
 const legacyRedirectMap = {

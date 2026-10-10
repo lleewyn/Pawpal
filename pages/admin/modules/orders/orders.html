@@ -96,9 +96,9 @@
                 <div class="cod-reconcile-strip" id="codReconcileSummaryStrip" style="display: none;">
                     <div class="cod-strip-left">
                         <span class="cod-strip-title">Đối soát COD bưu cục:</span>
-                        <span class="cod-strip-highlight" id="dispCodPendingCount">3 đơn hàng</span>
+                        <span class="cod-strip-highlight" id="dispCodPendingCount">0 đơn hàng</span>
                         <span class="cod-strip-divider">•</span>
-                        <span>Tổng tiền thu hộ chờ về: <strong id="dispCodPendingAmount" class="text-heading">1.830.000 đ</strong></span>
+                        <span>Tổng tiền thu hộ chờ về: <strong id="dispCodPendingAmount" class="text-heading">0 đ</strong></span>
                     </div>
                     <div class="cod-strip-right">
                         <button type="button" class="btn-cod-quick-reconcile" id="btnQuickReconcileAllCod">Xác nhận đối soát toàn bộ</button>
@@ -334,23 +334,23 @@
         <div class="orders-kpi-grid" style="grid-template-columns: repeat(5, 1fr);">
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Tổng mặt hàng</span>
-                <span class="kpi-val" id="statTotalProducts">11</span>
+                <span class="kpi-val" id="statTotalProducts"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Đang còn hàng</span>
-                <span class="kpi-val text-success" id="statInStockProducts">8</span>
+                <span class="kpi-val text-success" id="statInStockProducts"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Sắp hết hàng</span>
-                <span class="kpi-val text-warning" id="statLowStockProducts">1</span>
+                <span class="kpi-val text-warning" id="statLowStockProducts"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Đã hết hàng</span>
-                <span class="kpi-val text-danger" id="statOutStockProducts">2</span>
+                <span class="kpi-val text-danger" id="statOutStockProducts"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Giá trị vốn tồn kho</span>
-                <span class="kpi-val" id="statTotalStockValue" style="color: #236B48; font-size: 16px;">48.500.000 đ</span>
+                <span class="kpi-val" id="statTotalStockValue" style="color: #236B48; font-size: 16px;"><span class="skeleton-kpi"></span></span>
             </div>
         </div>
 
@@ -435,15 +435,15 @@
         <div class="orders-kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Voucher đang chạy</span>
-                <span class="kpi-val text-success" id="statActiveVouchers">8</span>
+                <span class="kpi-val text-success" id="statActiveVouchers"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Lượt đã dùng hôm nay</span>
-                <span class="kpi-val" id="statVoucherUsedToday" style="color: #236B48;">42</span>
+                <span class="kpi-val" id="statVoucherUsedToday" style="color: #236B48;"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Voucher sắp hết hạn</span>
-                <span class="kpi-val text-warning" id="statExpiringVouchers">2</span>
+                <span class="kpi-val text-warning" id="statExpiringVouchers"><span class="skeleton-kpi"></span></span>
             </div>
         </div>
 
@@ -514,14 +514,15 @@
 
             <div class="modal-body-clean">
                 <div class="form-row-2col">
-                    <div class="form-group-item">
+                    <div class="form-group-item customer-autocomplete-wrapper">
                         <label class="form-label-clean">Số điện thoại khách hàng: <span style="color: #DC2626;">*</span></label>
-                        <input type="text" class="admin-input" id="createOrderPhone" placeholder="Nhập SĐT khách hàng..." maxlength="20">
+                        <input type="text" class="admin-input" id="createOrderPhone" placeholder="Nhập SĐT khách hàng..." maxlength="20" autocomplete="off">
+                        <div class="customer-autocomplete-popover" id="createOrderCustomerDropdown" style="display: none;"></div>
                         <div class="field-error-text" id="createOrderPhoneError" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean" id="createOrderNameLabel">Họ và tên khách hàng: <span id="createOrderNameRequiredStar" style="display: none; color: #DC2626;">*</span></label>
-                        <input type="text" class="admin-input" id="createOrderName" placeholder="Tên khách hàng (để trống nếu là khách lẻ)...">
+                        <input type="text" class="admin-input" id="createOrderName" placeholder="Tên khách hàng (để trống nếu là khách lẻ)..." autocomplete="off">
                         <div class="field-error-text" id="createOrderNameError" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                     </div>
                 </div>
@@ -589,10 +590,15 @@
                 <!-- KHU VỰC CHỌN SẢN PHẨM & GIỎ HÀNG NHIỀU MÓN (MULTI-ITEM POS CART) -->
                 <div class="pos-cart-section">
                     <label class="form-label-clean">Thêm mặt hàng vào giỏ hàng:</label>
-                    <div class="pos-add-item-bar" style="display: flex; gap: 8px; margin-bottom: 10px;">
-                        <select class="admin-select" id="createOrderProductSelect" style="flex: 1;">
-                            <option value="">-- Chọn mặt hàng từ kho --</option>
-                        </select>
+                    <div class="pos-add-item-bar" style="display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-start;">
+                        <div class="customer-autocomplete-wrapper" style="flex: 1; position: relative;">
+                            <input type="text" class="admin-input" id="createOrderProductSearchInput" placeholder="Tìm theo tên sản phẩm, mã SKU hoặc danh mục..." autocomplete="off" style="width: 100%;">
+                            <div class="customer-autocomplete-popover" id="createOrderProductDropdown" style="display: none;"></div>
+                            <input type="hidden" id="createOrderSelectedProductSku" value="">
+                            <select class="admin-select" id="createOrderProductSelect" style="display: none;">
+                                <option value="">-- Chọn mặt hàng từ kho --</option>
+                            </select>
+                        </div>
                         <input type="number" class="admin-input" id="createOrderQty" value="1" min="1" style="width: 70px; text-align: center;" title="Số lượng">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnPosAddToCart" style="white-space: nowrap; height: 36px; padding: 0 14px;">Thêm món</button>
                     </div>
@@ -621,13 +627,15 @@
                 </div>
 
                 <div class="form-row-2col">
-                    <div class="form-group-item">
+                    <div class="form-group-item customer-autocomplete-wrapper">
                         <label class="form-label-clean">Mã giảm giá Voucher:</label>
-                        <input type="text" class="admin-input" id="createOrderVoucherCode" placeholder="Ví dụ: PAWNEW10, FREESHIP...">
+                        <input type="text" class="admin-input" id="createOrderVoucherCode" placeholder="Nhập mã hoặc tìm khuyến mãi..." autocomplete="off">
+                        <div class="customer-autocomplete-popover" id="createOrderVoucherDropdown" style="display: none; min-width: 320px;"></div>
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Đổi điểm Pawpoint (100đ = 10k):</label>
                         <input type="number" class="admin-input" id="createOrderPointsInput" placeholder="Nhập số điểm muốn đổi..." min="0" step="50">
+                        <div class="points-quick-chips" id="createOrderPointsChips" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;"></div>
                     </div>
                 </div>
 

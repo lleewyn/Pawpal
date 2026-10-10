@@ -285,6 +285,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function loadModuleScripts(scriptPaths) {
+        document.querySelectorAll('.dynamic-module-script').forEach(el => el.remove());
+        const oldScript = document.getElementById('dynamic-module-script');
+        if (oldScript) oldScript.remove();
+
+        for (const src of scriptPaths) {
+            await new Promise((resolve) => {
+                const script = document.createElement('script');
+                script.className = 'dynamic-module-script';
+                script.src = src + (src.includes('?') ? '&' : '?') + 'v=' + Date.now();
+                script.onload = resolve;
+                script.onerror = () => {
+                    console.error('Lỗi nạp script:', src);
+                    resolve();
+                };
+                document.body.appendChild(script);
+            });
+        }
+    }
+
     // Nạp module tương ứng
     async function loadModule(moduleName) {
         if (!contentArea) return;
@@ -298,12 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const res = await fetch('modules/dashboard/dashboard.html?v=' + Date.now());
                 if (res.ok) {
                     contentArea.innerHTML = await res.text();
-                    const oldScript = document.getElementById('dynamic-module-script');
-                    if (oldScript) oldScript.remove();
-                    const script = document.createElement('script');
-                    script.id = 'dynamic-module-script';
-                    script.src = 'modules/dashboard/dashboard.js?v=' + Date.now();
-                    document.body.appendChild(script);
+                    await loadModuleScripts(['modules/dashboard/dashboard.js']);
                     return;
                 }
             } catch (err) {
@@ -319,17 +334,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     contentArea.innerHTML = html;
                     syncActiveSubtabPane(contentArea, moduleName);
                     
-                    // Khởi tạo Lucide
                     if (window.lucide) lucide.createIcons();
 
-                    // Tải và chạy script tương tác của module Khách hàng
-                    const oldScript = document.getElementById('dynamic-module-script');
-                    if (oldScript) oldScript.remove();
-
-                    const script = document.createElement('script');
-                    script.id = 'dynamic-module-script';
-                    script.src = 'modules/customers/customers.js?v=' + Date.now();
-                    document.body.appendChild(script);
+                    await loadModuleScripts([
+                        'modules/customers/customers.js',
+                        'modules/customers/subtabs/tab-customer-list.js',
+                        'modules/customers/subtabs/tab-customer-profile.js',
+                        'modules/customers/subtabs/tab-customer-pawpoint.js'
+                    ]);
                     return;
                 }
             } catch (err) {
@@ -347,13 +359,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (window.lucide) lucide.createIcons();
 
-                    const oldScript = document.getElementById('dynamic-module-script');
-                    if (oldScript) oldScript.remove();
-
-                    const script = document.createElement('script');
-                    script.id = 'dynamic-module-script';
-                    script.src = 'modules/pets/pets.js?v=' + Date.now();
-                    document.body.appendChild(script);
+                    await loadModuleScripts([
+                        'modules/pets/pets.js',
+                        'modules/pets/subtabs/tab-pet-list.js',
+                        'modules/pets/subtabs/tab-pet-profile.js',
+                        'modules/pets/subtabs/tab-pet-carelog.js',
+                        'modules/pets/subtabs/tab-pet-reminders.js'
+                    ]);
                     return;
                 }
             } catch (err) {
@@ -371,13 +383,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (window.lucide) lucide.createIcons();
 
-                    const oldScript = document.getElementById('dynamic-module-script');
-                    if (oldScript) oldScript.remove();
-
-                    const script = document.createElement('script');
-                    script.id = 'dynamic-module-script';
-                    script.src = 'modules/services/services.js?v=' + Date.now();
-                    document.body.appendChild(script);
+                    await loadModuleScripts([
+                        'modules/services/services.js',
+                        'modules/services/subtabs/tab-service-bookings.js',
+                        'modules/services/subtabs/tab-service-detail.js',
+                        'modules/services/subtabs/tab-service-catalog.js',
+                        'modules/services/subtabs/tab-service-reviews.js'
+                    ]);
                     return;
                 }
             } catch (err) {
@@ -395,13 +407,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (window.lucide) lucide.createIcons();
 
-                    const oldScript = document.getElementById('dynamic-module-script');
-                    if (oldScript) oldScript.remove();
-
-                    const script = document.createElement('script');
-                    script.id = 'dynamic-module-script';
-                    script.src = 'modules/orders/orders.js?v=' + Date.now();
-                    document.body.appendChild(script);
+                    await loadModuleScripts([
+                        'modules/orders/orders.js',
+                        'modules/orders/subtabs/tab-order-list.js',
+                        'modules/orders/subtabs/tab-order-detail.js',
+                        'modules/orders/subtabs/tab-order-products.js',
+                        'modules/orders/subtabs/tab-order-promos.js'
+                    ]);
                     return;
                 }
             } catch (err) {
@@ -419,13 +431,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (window.lucide) lucide.createIcons();
 
-                    const oldScript = document.getElementById('dynamic-module-script');
-                    if (oldScript) oldScript.remove();
-
-                    const script = document.createElement('script');
-                    script.id = 'dynamic-module-script';
-                    script.src = 'modules/staff/staff.js?v=' + Date.now();
-                    document.body.appendChild(script);
+                    await loadModuleScripts([
+                        'modules/staff/staff.js',
+                        'modules/staff/subtabs/tab-staff-list.js',
+                        'modules/staff/subtabs/tab-staff-profile.js',
+                        'modules/staff/subtabs/tab-staff-schedule.js',
+                        'modules/staff/subtabs/tab-staff-assessment.js'
+                    ]);
                     return;
                 }
             } catch (err) {
@@ -443,13 +455,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (window.lucide) lucide.createIcons();
 
-                    const oldScript = document.getElementById('dynamic-module-script');
-                    if (oldScript) oldScript.remove();
-
-                    const script = document.createElement('script');
-                    script.id = 'dynamic-module-script';
-                    script.src = 'modules/complaints/complaints.js?v=' + Date.now();
-                    document.body.appendChild(script);
+                    await loadModuleScripts([
+                        'modules/complaints/complaints.js',
+                        'modules/complaints/subtabs/tab-complaint-services.js',
+                        'modules/complaints/subtabs/tab-complaint-orders.js',
+                        'modules/complaints/subtabs/tab-complaint-detail.js'
+                    ]);
                     return;
                 }
             } catch (err) {
@@ -467,13 +478,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (window.lucide) lucide.createIcons();
 
-                    const oldScript = document.getElementById('dynamic-module-script');
-                    if (oldScript) oldScript.remove();
-
-                    const script = document.createElement('script');
-                    script.id = 'dynamic-module-script';
-                    script.src = 'modules/chatbot/chatbot.js?v=' + Date.now();
-                    document.body.appendChild(script);
+                    await loadModuleScripts([
+                        'modules/chatbot/chatbot.js',
+                        'modules/chatbot/subtabs/tab-chatbot-live.js',
+                        'modules/chatbot/subtabs/tab-chatbot-copilot.js',
+                        'modules/chatbot/subtabs/tab-chatbot-rules.js'
+                    ]);
                     return;
                 }
             } catch (err) {
@@ -491,13 +501,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (window.lucide) lucide.createIcons();
 
-                    const oldScript = document.getElementById('dynamic-module-script');
-                    if (oldScript) oldScript.remove();
-
-                    const script = document.createElement('script');
-                    script.id = 'dynamic-module-script';
-                    script.src = 'modules/settings/settings.js?v=' + Date.now();
-                    document.body.appendChild(script);
+                    await loadModuleScripts([
+                        'modules/settings/settings.js',
+                        'modules/settings/subtabs/tab-settings-banners.js',
+                        'modules/settings/subtabs/tab-settings-content.js',
+                        'modules/settings/subtabs/tab-settings-system.js',
+                        'modules/settings/subtabs/tab-settings-audit.js'
+                    ]);
                     return;
                 }
             } catch (err) {
@@ -768,8 +778,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Chuẩn hóa Empty state cho mọi phân hệ có tìm kiếm/bộ lọc.
     const ensureEmptyStateReset = (root = document) => {
         root.querySelectorAll('td, .empty-state, [class*="empty-state"]').forEach(node => {
-            if (node.querySelector('.global-reset-filters')) return;
+            if (node.querySelector('button, a, .global-reset-filters')) return;
             const text = (node.textContent || '').toLowerCase();
+            if (text.includes('xóa bộ lọc')) return;
             if (!text.includes('không tìm thấy') && !text.includes('không có dữ liệu')) return;
             const scope = node.closest('section, .admin-card, .module-content') || document;
             const hasControls = scope.querySelector('input[type="search"], input[type="text"], select');

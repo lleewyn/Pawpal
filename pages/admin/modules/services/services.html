@@ -87,11 +87,7 @@
                     <div class="filter-dropdown-group">
                         <label class="filter-label">Kỹ thuật viên:</label>
                         <select class="admin-select" id="serviceFilterStaff">
-                            <option value="ALL">Tất cả</option>
-                            <option value="Ngọc Anh">Ngọc Anh</option>
-                            <option value="Thu Thảo">Thu Thảo</option>
-                            <option value="Hoàng Nam">Hoàng Nam</option>
-                            <option value="Hữu Phúc">Hữu Phúc</option>
+                            <option value="ALL">Tất cả KTV</option>
                             <option value="UNASSIGNED">Chưa phân công</option>
                         </select>
                     </div>
@@ -300,7 +296,7 @@
                                     <span class="info-value" id="detailIntakeEyesEarsNose">Bình thường</span>
                                 </div>
                                 <div class="info-pair">
-                                    <span class="info-label">Vết xước / Sẹo có sẵn:</span>
+                                    <span class="info-label">Vết xước hoặc sẹo có sẵn:</span>
                                     <span class="info-value" id="detailIntakeWounds">Không có vết thương cũ</span>
                                 </div>
                                 <div class="info-pair">
@@ -393,7 +389,9 @@
                             <div class="carelog-add-title">Cập nhật bước mới:</div>
                             <div class="form-row-2col">
                                 <input type="text" class="admin-input" id="newLogStepTitle" placeholder="Tên bước (VD: Sấy tạo phồng)...">
-                                <input type="text" class="admin-input" id="newLogStepStaff" placeholder="Người thực hiện...">
+                                <select class="admin-select" id="newLogStepStaff">
+                                    <option value="">-- Chọn KTV thực hiện --</option>
+                                </select>
                             </div>
                             <input type="text" class="admin-input" id="newLogStepNote" placeholder="Ghi chú chi tiết cho chủ nuôi...">
                             
@@ -534,10 +532,6 @@
                         <label class="filter-label">KTV phụ trách:</label>
                         <select class="admin-select" id="reviewFilterStaff">
                             <option value="ALL">Tất cả KTV</option>
-                            <option value="Ngọc Anh">Ngọc Anh</option>
-                            <option value="Thu Thảo">Thu Thảo</option>
-                            <option value="Minh Khang">Minh Khang</option>
-                            <option value="Bảo Nam">Bảo Nam</option>
                         </select>
                     </div>
                     <div class="filter-dropdown-group">
@@ -591,6 +585,7 @@
                         <input type="text" class="admin-input" id="newBookingCustomer" placeholder="Nhập tên hoặc số điện thoại khách..." autocomplete="off">
                         <div class="customer-autocomplete-popover" id="bookingCustomerDropdown" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #FFFFFF; border: 1px solid #ECF2EE; border-radius: 9px; box-shadow: 0 10px 28px rgba(35, 107, 72, 0.14); z-index: 2500; max-height: 240px; overflow-y: auto;"></div>
                     </div>
+                    <div class="adjust-customer-selected-card" id="bookingSelectedCustomerCard" style="display: none;"></div>
                     <div class="field-error-text" id="errorNewBookingCustomer" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                 </div>
                 <div class="form-row-2col">
@@ -605,6 +600,7 @@
                             <input type="text" class="admin-input" id="newBookingPetName" placeholder="Tên bé cưng..." autocomplete="off">
                             <div class="customer-autocomplete-popover" id="bookingPetDropdown" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #FFFFFF; border: 1px solid #ECF2EE; border-radius: 9px; box-shadow: 0 10px 28px rgba(35, 107, 72, 0.14); z-index: 2500; max-height: 240px; overflow-y: auto;"></div>
                         </div>
+                        <div class="adjust-customer-selected-card" id="bookingSelectedPetCard" style="display: none;"></div>
                         <div class="field-error-text" id="errorNewBookingPetName" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                     </div>
                 </div>
@@ -721,7 +717,7 @@
 
                 <div class="form-row-2col">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Kỹ thuật viên / Tài xế phụ trách:</label>
+                        <label class="form-label-clean">Kỹ thuật viên hoặc tài xế phụ trách:</label>
                         <select class="admin-select" id="newBookingStaff">
                             <option value="">Chưa phân công (Phân công sau)</option>
                         </select>
@@ -738,10 +734,23 @@
                 <div class="form-group-item">
                     <label class="form-label-clean">Cảnh báo và Lưu ý sức khỏe thú cưng (nếu có):</label>
                     <input type="text" class="admin-input" id="newBookingPetAlert" placeholder="Ví dụ: Dị ứng xà phòng thơm, nhát nước, cắn khi chạm đuôi...">
+                    <div class="adjust-reason-quick-tags" id="quickBookingAlertChips">
+                        <button type="button" class="reason-quick-chip" data-target="newBookingPetAlert">Nhát nước</button>
+                        <button type="button" class="reason-quick-chip" data-target="newBookingPetAlert">Sợ tiếng máy sấy</button>
+                        <button type="button" class="reason-quick-chip" data-target="newBookingPetAlert">Dị ứng xà phòng thơm</button>
+                        <button type="button" class="reason-quick-chip" data-target="newBookingPetAlert">Cắn khi chạm chân sau</button>
+                        <button type="button" class="reason-quick-chip" data-target="newBookingPetAlert">Bé lớn tuổi cần nhẹ tay</button>
+                    </div>
                 </div>
                 <div class="form-group-item">
                     <label class="form-label-clean">Ghi chú thêm:</label>
                     <textarea class="admin-input" id="newBookingNotes" style="height: 60px; padding: 8px 14px;" placeholder="Yêu cầu riêng của khách hàng..."></textarea>
+                    <div class="adjust-reason-quick-tags" id="quickBookingNotesChips">
+                        <button type="button" class="reason-quick-chip" data-target="newBookingNotes">Khách đón trước 17h</button>
+                        <button type="button" class="reason-quick-chip" data-target="newBookingNotes">Tỉa tròn mặt Boo</button>
+                        <button type="button" class="reason-quick-chip" data-target="newBookingNotes">Giữ lại độ dài lông đuôi</button>
+                        <button type="button" class="reason-quick-chip" data-target="newBookingNotes">Chụp nhiều ảnh gửi Zalo</button>
+                    </div>
                 </div>
                 <div class="modal-footer-clean">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelCreateBooking">Hủy bỏ</button>
@@ -783,7 +792,7 @@
                 <div class="form-row-2col">
                     <div class="form-group-item">
                         <label class="form-label-clean">Loại thú cưng:</label>
-                        <input type="text" class="admin-input" id="formServicePetType" value="Chó / Mèo" required>
+                        <input type="text" class="admin-input" id="formServicePetType" value="Chó và Mèo" required>
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Thời lượng thực hiện:</label>
@@ -898,6 +907,13 @@
                 <div class="form-group-item">
                     <label class="form-label-clean">Chi tiết bổ sung:</label>
                     <textarea class="admin-input" id="cancelBookingReasonDetail" style="height: 60px; padding: 8px 14px;" placeholder="Ghi chú chi tiết nguyên nhân hủy..."></textarea>
+                    <div class="adjust-reason-quick-tags" id="quickCancelReasonChips">
+                        <button type="button" class="reason-quick-chip" data-target="cancelBookingReasonDetail">Khách đổi lịch sang ngày khác</button>
+                        <button type="button" class="reason-quick-chip" data-target="cancelBookingReasonDetail">Bé đang sốt hoặc mệt</button>
+                        <button type="button" class="reason-quick-chip" data-target="cancelBookingReasonDetail">Thời tiết mưa to</button>
+                        <button type="button" class="reason-quick-chip" data-target="cancelBookingReasonDetail">Kẹt xe trễ giờ hẹn</button>
+                        <button type="button" class="reason-quick-chip" data-target="cancelBookingReasonDetail">Khách đặt nhầm dịch vụ</button>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer-clean">
@@ -913,7 +929,7 @@
     <div class="admin-modal-overlay" id="modalReplyReview">
         <div class="admin-modal-card" style="width: 560px; max-width: 95vw;">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Phản hồi và Xử lý đánh giá dịch vụ</div>
+                <div class="modal-title-clean">Phản hồi và xử lý đánh giá dịch vụ</div>
                 <button type="button" class="modal-btn-close-text" id="btnCloseReplyReview">Đóng</button>
             </div>
             <form id="formReplyReview" class="modal-body-clean">
@@ -936,6 +952,12 @@
                         </select>
                     </div>
                     <textarea class="admin-input" id="replyContentText" style="height: 100px; padding: 10px 14px;" placeholder="Nhập câu trả lời lịch sự, chu đáo gửi tới khách hàng..." required></textarea>
+                    <div class="adjust-reason-quick-tags" id="quickReviewReplyChips">
+                        <button type="button" class="reason-quick-chip" data-target="replyContentText">PawPal chân thành cảm ơn quý khách đã tin yêu dịch vụ!</button>
+                        <button type="button" class="reason-quick-chip" data-target="replyContentText">Đội ngũ xin ghi nhận và sẽ nâng cấp quy trình ngay hôm nay.</button>
+                        <button type="button" class="reason-quick-chip" data-target="replyContentText">PawPal thành thật xin lỗi vì sự bất tiện này, quản lý sẽ liên hệ hỗ trợ chu đáo.</button>
+                        <button type="button" class="reason-quick-chip" data-target="replyContentText">Rất hân hạnh được đồng hành và chăm sóc bé cưng ở các lần hẹn tới!</button>
+                    </div>
                 </div>
 
                 <div class="form-group-item">
@@ -967,7 +989,7 @@
         <div class="admin-modal-card" style="width: 580px; max-width: 95vw;">
             <div class="modal-header-clean">
                 <div>
-                    <div class="modal-title-clean">Thêm phụ phí và Dịch vụ phát sinh (Zero-Dispute)</div>
+                    <div class="modal-title-clean">Thêm phụ phí và dịch vụ phát sinh</div>
                     <div id="surchargeBookingMeta" style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
                         Mã ca: BKG-1001 | Bé: Miu Con | KTV phụ trách: Ngọc Anh
                     </div>
@@ -983,7 +1005,7 @@
                         <option value="Phụ phí gỡ rối lông bết cấp 2 (nặng/toàn thân)|100000">Phụ phí gỡ rối lông bết cấp 2 (nặng/toàn thân) (+100.000 đ)</option>
                         <option value="Tắm thuốc y tế trị ve rận nấm da|80000">Tắm thuốc y tế trị ve rận nấm da (+80.000 đ)</option>
                         <option value="Vệ sinh tai nấm và viêm chuyên sâu|50000">Vệ sinh tai nấm và viêm chuyên sâu (+50.000 đ)</option>
-                        <option value="Phụ phí bé quá dữ / Cần KTV phụ tá hỗ trợ|60000">Phụ phí bé quá dữ / Cần KTV phụ tá hỗ trợ (+60.000 đ)</option>
+                        <option value="Phụ phí bé quá dữ hoặc cần KTV phụ tá hỗ trợ|60000">Phụ phí bé quá dữ hoặc cần KTV phụ tá hỗ trợ (+60.000 đ)</option>
                         <option value="Phụ phí chênh lệch khung cân nặng thực tế|50000">Phụ phí chênh lệch khung cân nặng thực tế (+50.000 đ)</option>
                         <option value="Cắt tỉa tạo kiểu chi tiết bổ sung|80000">Cắt tỉa tạo kiểu chi tiết bổ sung (+80.000 đ)</option>
                         <option value="Khách sạn: Quá giờ lưu chuồng (+40.000 đ/giờ)|40000">Khách sạn: Quá giờ lưu chuồng (+40.000 đ/giờ)</option>
@@ -993,7 +1015,7 @@
 
                 <div class="form-row-2col">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Tên phụ phí / dịch vụ:</label>
+                        <label class="form-label-clean">Tên phụ phí và dịch vụ:</label>
                         <input type="text" class="admin-input" id="surchargeNameInput" placeholder="VD: Gỡ rối lông bết nặng..." required>
                     </div>
                     <div class="form-group-item">
@@ -1008,8 +1030,8 @@
                         <select class="admin-select" id="surchargeCommissionSelect">
                             <option value="15" selected>15% (Mặc định)</option>
                             <option value="10">10% (Gói hỗ trợ nhẹ)</option>
-                            <option value="20">20% (Ca phức tạp / Bé dữ)</option>
-                            <option value="30">30% (Chuyên sâu y tế / Cấp cứu)</option>
+                            <option value="20">20% (Ca phức tạp hoặc bé dữ)</option>
+                            <option value="30">30% (Chuyên sâu y tế hoặc cấp cứu)</option>
                             <option value="0">0% (Không trích hoa hồng)</option>
                         </select>
                     </div>
@@ -1024,6 +1046,13 @@
                 <div class="form-group-item">
                     <label class="form-label-clean">Lý do và Mô tả hiện trạng phát sinh thực tế:</label>
                     <textarea class="admin-input" id="surchargeReasonInput" style="height: 60px; padding: 8px 14px;" placeholder="Ví dụ: Vùng lông sau tai và ngực bị bết cứng thành mảng, cần gỡ rối 25 phút trước khi tắm..." required></textarea>
+                    <div class="adjust-reason-quick-tags" id="quickSurchargeReasonChips">
+                        <button type="button" class="reason-quick-chip" data-target="surchargeReasonInput">Lông bết rối sau tai và ngực</button>
+                        <button type="button" class="reason-quick-chip" data-target="surchargeReasonInput">Ve rận và nấm da diện rộng</button>
+                        <button type="button" class="reason-quick-chip" data-target="surchargeReasonInput">Bé nhút nhát cần 2 KTV hỗ trợ</button>
+                        <button type="button" class="reason-quick-chip" data-target="surchargeReasonInput">Chênh lệch khung cân nặng thực tế</button>
+                        <button type="button" class="reason-quick-chip" data-target="surchargeReasonInput">Cắt tỉa tạo kiểu chi tiết bổ sung</button>
+                    </div>
                 </div>
 
                 <div class="form-row-2col">
@@ -1094,13 +1123,15 @@
             <form id="formEditCarelogStep" class="modal-body-clean">
                 <input type="hidden" id="editCarelogStepIndexHidden">
                 <div class="form-group-item">
-                    <label class="form-label-clean">Tên bước kỹ thuật / chăm sóc:</label>
+                    <label class="form-label-clean">Tên bước kỹ thuật hoặc chăm sóc:</label>
                     <input type="text" class="admin-input" id="editCarelogStepTitle" placeholder="Ví dụ: Tắm xả và Massage da..." required>
                 </div>
                 <div class="form-row-2col">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Người thực hiện / Kỹ thuật viên:</label>
-                        <input type="text" class="admin-input" id="editCarelogStepStaff" placeholder="Tên KTV phụ trách..." required>
+                        <label class="form-label-clean">Kỹ thuật viên phụ trách:</label>
+                        <select class="admin-select" id="editCarelogStepStaff" required>
+                            <option value="">-- Chọn KTV phụ trách --</option>
+                        </select>
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Thời gian ghi nhận:</label>
@@ -1172,7 +1203,9 @@
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Kỹ thuật viên thực hiện:</label>
-                        <input type="text" class="admin-input" id="accompanyingStaffInput" placeholder="VD: Hoàng Nam, Thu Thảo...">
+                        <select class="admin-select" id="accompanyingStaffSelect">
+                            <option value="">-- Chọn KTV thực hiện --</option>
+                        </select>
                     </div>
                 </div>
 
@@ -1197,7 +1230,7 @@
         <div class="admin-modal-card" style="width: 640px; max-width: 95vw;">
             <div class="modal-header-clean">
                 <div>
-                    <div class="modal-title-clean" id="intakeModalTitle">Biên bản tiếp nhận bé và Kiểm tra an toàn</div>
+                    <div class="modal-title-clean" id="intakeModalTitle">Biên bản tiếp nhận bé và kiểm tra an toàn</div>
                     <div id="intakePetSummary" style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
                         Mã ca: BKG-1001 | Bé: Miu Con | Chủ nuôi: Lê Lệ Quyên
                     </div>
@@ -1218,12 +1251,6 @@
                         <label class="form-label-clean">Kỹ thuật viên tiếp nhận ca:</label>
                         <select class="admin-select" id="intakeStaffSelect" required>
                             <option value="">-- Chọn KTV tiếp nhận --</option>
-                            <option value="Ngọc Anh">Ngọc Anh</option>
-                            <option value="Thu Thảo">Thu Thảo</option>
-                            <option value="Hoàng Nam">Hoàng Nam</option>
-                            <option value="Hữu Phúc">Hữu Phúc</option>
-                            <option value="Minh Tú">Minh Tú</option>
-                            <option value="Bảo Châu">Bảo Châu</option>
                         </select>
                     </div>
                 </div>
@@ -1249,10 +1276,10 @@
                                     <input type="checkbox" id="checkSkinNormal" checked> Da lông sạch sẽ
                                 </label>
                                 <label class="intake-check-item">
-                                    <input type="checkbox" id="checkSkinFleas"> Có ve rận / bọ chét
+                                    <input type="checkbox" id="checkSkinFleas"> Có ve rận hoặc bọ chét
                                 </label>
                                 <label class="intake-check-item">
-                                    <input type="checkbox" id="checkSkinFungus"> Có mảng nấm / viêm đỏ
+                                    <input type="checkbox" id="checkSkinFungus"> Có mảng nấm hoặc viêm đỏ
                                 </label>
                                 <label class="intake-check-item">
                                     <input type="checkbox" id="checkSkinMatted"> Lông bết rối nhiều
@@ -1268,26 +1295,26 @@
                                     <input type="checkbox" id="checkEyesEarsNormal" checked> Mắt tai bình thường
                                 </label>
                                 <label class="intake-check-item">
-                                    <input type="checkbox" id="checkEyesDischarge"> Đỏ mắt / nhiều rỉ ghèn
+                                    <input type="checkbox" id="checkEyesDischarge"> Đỏ mắt hoặc nhiều rỉ ghèn
                                 </label>
                                 <label class="intake-check-item">
-                                    <input type="checkbox" id="checkEarsInfection"> Sáp tai đen / viêm tai
+                                    <input type="checkbox" id="checkEarsInfection"> Sáp tai đen hoặc viêm tai
                                 </label>
                                 <label class="intake-check-item">
-                                    <input type="checkbox" id="checkNoseRunny"> Chảy nước mũi / hắt hơi
+                                    <input type="checkbox" id="checkNoseRunny"> Chảy nước mũi hoặc hắt hơi
                                 </label>
                             </div>
                         </div>
 
-                        <!-- Vùng 3: Vết trầy xước / Sẹo có sẵn -->
+                        <!-- Vùng 3: Vết trầy xước hoặc Sẹo có sẵn -->
                         <div class="intake-check-section">
-                            <div class="intake-section-subhead">3. Vết trầy xước / Sẹo có sẵn</div>
+                            <div class="intake-section-subhead">3. Vết trầy xước hoặc sẹo có sẵn</div>
                             <div class="intake-check-options">
                                 <label class="intake-check-item">
                                     <input type="checkbox" id="checkWoundNone" checked> Không có vết thương cũ
                                 </label>
                                 <label class="intake-check-item">
-                                    <input type="checkbox" id="checkWoundExisting"> Có vết trầy xước / sẹo cũ
+                                    <input type="checkbox" id="checkWoundExisting"> Có vết trầy xước hoặc sẹo cũ
                                 </label>
                             </div>
                             <input type="text" class="admin-input" id="intakeExistingWoundNote" placeholder="Ghi chú vị trí vết xước có sẵn (nếu có)..." style="margin-top: 6px; font-size: 12px; height: 32px;">
@@ -1298,13 +1325,13 @@
                             <div class="intake-section-subhead">4. Tâm lý và Tính khí</div>
                             <div class="intake-check-options">
                                 <label class="intake-check-item">
-                                    <input type="radio" name="intakeTemperamentRadio" value="Ngoan hiền" checked> Ngoan hiền / Thân thiện
+                                    <input type="radio" name="intakeTemperamentRadio" value="Ngoan hiền" checked> Ngoan hiền và thân thiện
                                 </label>
                                 <label class="intake-check-item">
-                                    <input type="radio" name="intakeTemperamentRadio" value="Nhút nhát"> Nhút nhát / Sợ nước và máy sấy
+                                    <input type="radio" name="intakeTemperamentRadio" value="Nhút nhát"> Nhút nhát hoặc sợ nước
                                 </label>
                                 <label class="intake-check-item">
-                                    <input type="radio" name="intakeTemperamentRadio" value="Dữ dằn"> Bồn chồn / Cần rọ mõm an toàn
+                                    <input type="radio" name="intakeTemperamentRadio" value="Dữ dằn"> Bồn chồn hoặc cần rọ mõm an toàn
                                 </label>
                             </div>
                         </div>
@@ -1319,13 +1346,13 @@
                             <input type="checkbox" class="check-belonging-item" value="Dây dắt"> Dây dắt
                         </label>
                         <label class="intake-check-item">
-                            <input type="checkbox" class="check-belonging-item" value="Lồng / Túi vận chuyển"> Lồng / Túi xách
+                            <input type="checkbox" class="check-belonging-item" value="Lồng hoặc túi vận chuyển"> Lồng hoặc túi xách
                         </label>
                         <label class="intake-check-item">
-                            <input type="checkbox" class="check-belonging-item" value="Quần áo / Yếm"> Quần áo / Yếm
+                            <input type="checkbox" class="check-belonging-item" value="Quần áo hoặc yếm"> Quần áo hoặc yếm
                         </label>
                         <label class="intake-check-item">
-                            <input type="checkbox" class="check-belonging-item" value="Thức ăn / Thuốc riêng"> Thức ăn / Thuốc riêng
+                            <input type="checkbox" class="check-belonging-item" value="Thức ăn hoặc thuốc riêng"> Thức ăn hoặc thuốc riêng
                         </label>
                     </div>
                     <textarea class="admin-input" id="intakeBelongingsInput" style="height: 52px; padding: 6px 12px; font-size: 12.5px;" placeholder="Mô tả cụ thể (ví dụ: 01 Dây dắt đỏ bản to, 01 Chuồng nhựa màu xanh)..."></textarea>
@@ -1367,7 +1394,7 @@
         <div class="admin-modal-card" style="width: 480px; max-width: 95vw;">
             <div class="modal-header-clean">
                 <div>
-                    <div class="modal-title-clean">Điều phối Kỹ thuật viên phụ trách</div>
+                    <div class="modal-title-clean">Điều phối kỹ thuật viên phụ trách</div>
                     <div id="changeStaffBookingMeta" style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
                         Mã ca: BKG-1001 (Miu Con) | KTV hiện tại: Ngọc Anh
                     </div>
@@ -1386,12 +1413,6 @@
                     <label class="form-label-clean">Chọn Kỹ thuật viên tiếp nhận mới:</label>
                     <select class="admin-select" id="changeStaffSelect" required>
                         <option value="">-- Chọn KTV mới --</option>
-                        <option value="Ngọc Anh">Ngọc Anh</option>
-                        <option value="Thu Thảo">Thu Thảo</option>
-                        <option value="Hoàng Nam">Hoàng Nam</option>
-                        <option value="Hữu Phúc">Hữu Phúc</option>
-                        <option value="Minh Tú">Minh Tú</option>
-                        <option value="Bảo Châu">Bảo Châu</option>
                     </select>
                     <div id="changeStaffWorkloadHint" style="display: none; margin-top: 6px; font-size: 12px; padding: 6px 10px; border-radius: var(--admin-radius);"></div>
                 </div>
@@ -1401,12 +1422,18 @@
                     <select class="admin-select" id="changeStaffPresetReason" style="margin-bottom: 6px;">
                         <option value="CUSTOM">-- Chọn lý do điều phối chuẩn hóa --</option>
                         <option value="KTV bận ca khẩn cấp hoặc lịch hẹn đột xuất">KTV bận ca khẩn cấp hoặc lịch hẹn đột xuất</option>
-                        <option value="Bé có tính khí nhút nhát / dữ dằn, cần KTV có chuyên môn cao hơn">Bé có tính khí nhút nhát / dữ dằn, cần KTV có chuyên môn cao hơn</option>
+                        <option value="Bé nhút nhát hoặc khó chịu, cần KTV chuyên môn cao hơn">Bé nhút nhát hoặc khó chịu, cần KTV chuyên môn cao hơn</option>
                         <option value="Khách hàng yêu cầu đổi KTV phụ trách">Khách hàng yêu cầu đổi KTV phụ trách</option>
                         <option value="Điều phối cân bằng tải công việc trong ca trực">Điều phối cân bằng tải công việc trong ca trực</option>
                         <option value="KTV gặp sự cố sức khỏe đột xuất">KTV gặp sự cố sức khỏe đột xuất</option>
                     </select>
                     <input type="text" class="admin-input" id="changeStaffReasonInput" placeholder="Nhập lý do chi tiết hoặc ghi chú bàn giao..." required>
+                    <div class="adjust-reason-quick-tags" id="quickChangeStaffChips">
+                        <button type="button" class="reason-quick-chip" data-target="changeStaffReasonInput">KTV bận ca khẩn cấp</button>
+                        <button type="button" class="reason-quick-chip" data-target="changeStaffReasonInput">Bé cần KTV tay nghề cao hơn</button>
+                        <button type="button" class="reason-quick-chip" data-target="changeStaffReasonInput">Khách quen yêu cầu đổi KTV</button>
+                        <button type="button" class="reason-quick-chip" data-target="changeStaffReasonInput">Điều phối cân bằng tải ca trực</button>
+                    </div>
                 </div>
 
                 <div class="form-group-item">
@@ -1436,7 +1463,7 @@
         <div class="admin-modal-card" style="width: 580px; max-width: 95vw;">
             <div class="modal-header-clean">
                 <div>
-                    <div class="modal-title-clean">Nghiệm thu ca dịch vụ và Bàn giao bé</div>
+                    <div class="modal-title-clean">Nghiệm thu ca dịch vụ và bàn giao bé</div>
                     <div id="completeBookingMeta" style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
                         Mã ca: BKG-1001 | Bé: Miu Con | Chủ nuôi: Lê Lệ Quyên
                     </div>
@@ -1486,7 +1513,7 @@
                         </div>
                         <div class="form-row-2col" style="margin-top: 6px; margin-bottom: 6px; gap: 8px;">
                             <div>
-                                <label style="font-size: 11.5px; color: var(--text-muted); display: block; margin-bottom: 2px;">Mã ưu đãi / Voucher:</label>
+                                <label style="font-size: 11.5px; color: var(--text-muted); display: block; margin-bottom: 2px;">Mã ưu đãi hoặc voucher:</label>
                                 <select class="admin-select" id="completeVoucherSelect" style="height: 32px; font-size: 12px; padding: 0 8px;">
                                     <option value="0" data-code="">-- Không dùng voucher --</option>
                                     <option value="50000" data-code="PAWSPA50">PAWSPA50 - Giảm 50.000 đ</option>
@@ -1505,7 +1532,7 @@
                             </div>
                         </div>
                         <div class="summary-row" style="padding: 3px 0; color: #15803D;">
-                            <span>Giảm giá / Ưu đãi thành viên:</span>
+                            <span>Giảm giá hoặc ưu đãi thành viên:</span>
                             <span id="completePriceDiscount" style="font-weight: 600;">-0 đ</span>
                         </div>
                         <div class="summary-row" style="border-top: 1px solid var(--border-neutral); margin-top: 6px; padding-top: 6px;">
@@ -1527,7 +1554,7 @@
                             <option value="Tiền mặt (Tại quầy)">Tiền mặt (Tại quầy)</option>
                             <option value="Chuyển khoản VietQR">Chuyển khoản VietQR</option>
                             <option value="Thẻ ngân hàng (POS)">Thẻ ngân hàng (POS)</option>
-                            <option value="Ví MoMo / VNPay">Ví MoMo / VNPay</option>
+                            <option value="Ví MoMo hoặc VNPay">Ví MoMo hoặc VNPay</option>
                             <option value="Đã thanh toán trước Online">Đã thanh toán trước Online</option>
                         </select>
                     </div>
@@ -1632,7 +1659,7 @@
                             <div><strong>Tên bé cưng:</strong> <span id="waiverPetName">Miu Con</span></div>
                             <div><strong>Loài và Giống:</strong> <span id="waiverPetBreed">Mèo Anh Lông Ngắn</span></div>
                             <div><strong>Cân nặng tiếp nhận:</strong> <span id="waiverPetWeight">4.2 kg</span></div>
-                            <div><strong>Tuổi / Giới tính:</strong> <span id="waiverPetAge">2 tuổi</span></div>
+                            <div><strong>Tuổi và Giới tính:</strong> <span id="waiverPetAge">2 tuổi</span></div>
                         </div>
                     </div>
 
@@ -1644,8 +1671,8 @@
                             <div><strong>Đánh giá thể trọng:</strong> <span id="waiverWeightEval">Đúng khung giá chuẩn</span></div>
                             <div><strong>Da và Lông:</strong> <span id="waiverSkinCoat">Sạch sẽ, không ve rận</span></div>
                             <div><strong>Mắt, Mũi và Tai:</strong> <span id="waiverEyesEars">Bình thường</span></div>
-                            <div><strong>Vết thương / Sẹo cũ:</strong> <span id="waiverWounds">Không có vết thương cũ</span></div>
-                            <div><strong>Tâm lý / Tính khí:</strong> <span id="waiverTemperament">Ngoan hiền</span></div>
+                            <div><strong>Vết thương hoặc sẹo cũ:</strong> <span id="waiverWounds">Không có vết thương cũ</span></div>
+                            <div><strong>Tâm lý và Tính khí:</strong> <span id="waiverTemperament">Ngoan hiền</span></div>
                         </div>
                         <div style="margin-top: 6px; font-size: 12px;">
                             <strong>Tư trang gửi lại quầy:</strong> <span id="waiverBelongings">01 Dây dắt đỏ</span>
@@ -1689,7 +1716,7 @@
                             <div class="sign-name" id="waiverStaffSignName">KTV. Nguyễn Ngọc Anh</div>
                         </div>
                         <div class="waiver-sign-col">
-                            <div class="sign-title">KHÁCH HÀNG / CHỦ NUÔI</div>
+                            <div class="sign-title">CHỦ NUÔI (KHÁCH HÀNG)</div>
                             <div class="sign-sub">(Ký xác nhận đồng ý điều khoản)</div>
                             <div class="sign-space"></div>
                             <div class="sign-name" id="waiverCustSignName">Lê Lệ Quyên</div>
@@ -1727,7 +1754,7 @@
                     <div class="channel-radio-group" style="display: flex; gap: 16px;">
                         <label class="intake-check-item" style="cursor: pointer;">
                             <input type="radio" name="pickupChannel" value="Zalo ZNS" checked>
-                            <strong>Zalo ZNS / OA</strong> (Khuyến nghị - Tiết kiệm và Tương tác cao)
+                            <strong>Zalo ZNS và OA</strong> (Khuyến nghị - Tiết kiệm và Tương tác cao)
                         </label>
                         <label class="intake-check-item" style="cursor: pointer;">
                             <input type="radio" name="pickupChannel" value="SMS Brandname">

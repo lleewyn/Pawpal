@@ -2283,4 +2283,41 @@
     font-weight: 500 !important;
     margin-top: 4px !important;
     line-height: 1.4 !important;
+}
+
+/* QUICK RECOMMENDATION CHIPS (.reason-quick-chip) & SELECTED ENTITY CARDS */
+.adjust-reason-quick-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.reason-quick-chip {
+    background-color: #EEF5F1;
+    border: none;
+    border-radius: var(--admin-radius, 9px);
+    padding: 4px 10px;
+    font-size: 12px;
+    color: var(--text-heading, #236B48);
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.15s ease;
+    line-height: 1.4;
+}
+
+.reason-quick-chip:hover {
+    background-color: #DCEEE2;
+}
+
+.adjust-customer-selected-card {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background-color: #EEF5F1;
+    border-radius: var(--admin-radius, 9px);
+    font-size: 12.5px;
+    color: var(--text-heading, #236B48);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
