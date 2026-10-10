@@ -773,11 +773,19 @@
     }
 
     function setupBookingModals() {
-        // Đóng các modal khi bấm nút hủy hoặc x
-        document.querySelectorAll('.modal-overlay .btn-modal-close, .modal-overlay .btn-close-modal, .modal-overlay .btn-cancel-modal').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const modal = btn.closest('.modal-overlay');
+        // Đóng các modal khi bấm nút Đóng, Hủy bỏ hoặc bấm ra ngoài overlay
+        document.querySelectorAll('.admin-modal-overlay .modal-btn-close-text, .admin-modal-overlay [id^="btnClose"], .admin-modal-overlay [id^="btnCancel"], .admin-modal-overlay [id^="btnDismiss"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const modal = btn.closest('.admin-modal-overlay');
                 if (modal) modal.classList.remove('active');
+            });
+        });
+
+        document.querySelectorAll('.admin-modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
             });
         });
 
@@ -793,11 +801,194 @@
         // Modal Thêm lịch hẹn mới
         const btnOpenCreateBooking = document.getElementById('btnOpenCreateBookingModal');
         const modalCreateBooking = document.getElementById('modalCreateBooking');
+        const btnCloseCreateBooking = document.getElementById('btnCloseCreateBooking');
+        const btnCancelCreateBooking = document.getElementById('btnCancelCreateBooking');
+        const formCreateBooking = document.getElementById('formCreateBooking');
+
+        const closeCreateModal = () => {
+            if (modalCreateBooking) modalCreateBooking.classList.remove('active');
+            if (formCreateBooking) formCreateBooking.reset();
+        };
+
         if (btnOpenCreateBooking && modalCreateBooking) {
             btnOpenCreateBooking.addEventListener('click', () => {
+                // Điền ngày hiện tại làm mặc định
+                const dateInput = document.getElementById('newBookingDate');
+                if (dateInput && !dateInput.value) {
+                    dateInput.value = new Date().toISOString().split('T')[0];
+                }
+                // Điền danh sách KTV vào select nếu chưa có
+                const staffSelect = document.getElementById('newBookingStaff');
+                const staffList = PawpalServices.state?.liveStaffList || [];
+                if (staffSelect && staffList.length > 0 && staffSelect.options.length <= 1) {
+                    staffList.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.full_name;
+                        opt.textContent = `${s.full_name} (${s.specialization || s.role || 'KTV'})`;
+                        staffSelect.appendChild(opt);
+                    });
+                }
                 modalCreateBooking.classList.add('active');
             });
         }
+
+        if (btnCloseCreateBooking) btnCloseCreateBooking.addEventListener('click', closeCreateModal);
+        if (btnCancelCreateBooking) btnCancelCreateBooking.addEventListener('click', closeCreateModal);
+
+        // Submit form tạo lịch hẹn
+        const btnSubmitCreateBooking = document.getElementById('btnSubmitCreateBooking');
+        if (btnSubmitCreateBooking) {
+            btnSubmitCreateBooking.addEventListener('click', async (e) => {
+                if (e) e.preventDefault();
+
+                const customer = (document.getElementById('newBookingCustomer')?.value || '').trim();
+                const phone = (document.getElementById('newBookingPhone')?.value || '').trim();
+                const petName = (document.getElementById('newBookingPetName')?.value || '').trim();
+                const category = document.getElementById('newBookingCategory')?.value || 'Spa';
+                const serviceSelect = document.getElementById('newBookingServiceSelect');
+                const serviceName = serviceSelect?.value || (category === 'Hotel' ? 'Phòng Deluxe' : (category === 'Taxi' ? 'Dịch Vụ Xe Đưa Đón Tận Nơi' : 'Gói Tắm Dưỡng Premium'));
+                const date = document.getElementById('newBookingDate')?.value || new Date().toISOString().split('T')[0];
+                const time = document.getElementById('newBookingTime')?.value || '09:00';
+                const staff = document.getElementById('newBookingStaff')?.value || 'Chưa phân công';
+                const petAlert = (document.getElementById('newBookingPetAlert')?.value || '').trim();
+                const note = (document.getElementById('newBookingNotes')?.value || '').trim();
+
+                if (!customer) {
+                    PawpalServices.showToast('Vui lòng nhập tên khách hàng!', 'warning');
+                    document.getElementById('newBookingCustomer')?.focus();
+                    return;
+                }
+                if (!petName) {
+                    PawpalServices.showToast('Vui lòng nhập tên bé cưng!', 'warning');
+                    document.getElementById('newBookingPetName')?.focus();
+                    return;
+                }
+
+                const newId = 'BKG-' + (2000 + Math.floor(Math.random() * 8000));
+                const newBooking = {
+                    id: newId,
+                    dbId: null,
+                    userId: 'CUST-NEW',
+                    customerName: customer,
+                    phone: phone || '—',
+                    petName: petName,
+                    petBreed: 'Thú cưng',
+                    petId: 'PET-NEW',
+                    petWeight: '5.0 kg',
+                    petAge: 'Chưa rõ',
+                    petAlert: petAlert || null,
+                    category: category,
+                    categoryName: category === 'Hotel' ? 'Pet Hotel' : (category === 'Taxi' ? 'Pet Taxi' : 'Spa và Grooming'),
+                    serviceName: serviceName,
+                    duration: '60 phút',
+                    date: date,
+                    time: time,
+                    staff: staff !== 'Chưa phân công' ? staff : null,
+                    price: 250000,
+                    total: 250000,
+                    paymentStatus: 'Chưa thu',
+                    status: 'pending',
+                    alertType: null,
+                    careLogs: [],
+                    timeline: [
+                        { title: 'Đặt lịch hẹn', time: time, desc: 'Tạo lịch tại quầy / qua điện thoại', done: true },
+                        { title: 'Tiếp nhận an toàn', time: '--:--', desc: 'Chưa tiếp nhận', done: false },
+                        { title: 'Thực hiện dịch vụ', time: '--:--', desc: serviceName, done: false },
+                        { title: 'Hoàn tất & Trả bé', time: '--:--', desc: 'Bàn giao cho chủ nuôi', done: false }
+                    ]
+                };
+
+                const bookingsData = PawpalServices.state?.bookingsData || [];
+                bookingsData.unshift(newBooking);
+
+                // Lưu vào Supabase
+                try {
+                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (client) {
+                        const { data: inserted } = await client.from('appointment').insert([{
+                            appointment_code: newId,
+                            appointment_date: date,
+                            appointment_time: time + ':00',
+                            appointment_status: 'CONFIRMED',
+                            payment_status: 'UNPAID',
+                            total_price: 250000,
+                            note: note || petAlert || null
+                        }]).select().single();
+                        if (inserted) newBooking.dbId = inserted.id;
+                    }
+                } catch (err) {
+                    console.warn('[PawpalServices] Lưu lịch hẹn mới vào CSDL:', err);
+                }
+
+                renderBookingsTable();
+                updateKPIs();
+                renderUpcomingBar();
+                closeCreateModal();
+                PawpalServices.showToast(`Đã thêm lịch hẹn ${newId} thành công!`);
+            });
+        }
+
+        // Tự động chuyển đổi các trường đặc thù theo Phân nhóm dịch vụ (Spa / Hotel / Taxi)
+        const catSelect = document.getElementById('newBookingCategory');
+        const hotelFields = document.getElementById('createBookingHotelFields');
+        const taxiFields = document.getElementById('createBookingTaxiFields');
+        const spaFields = document.getElementById('createBookingSpaFields');
+        const svcSelect = document.getElementById('newBookingServiceSelect');
+
+        function updateCategoryOptions() {
+            const val = catSelect ? catSelect.value : 'Spa';
+            if (hotelFields) hotelFields.style.display = (val === 'Hotel') ? 'block' : 'none';
+            if (taxiFields) taxiFields.style.display = (val === 'Taxi') ? 'block' : 'none';
+            if (spaFields) spaFields.style.display = (val === 'Spa') ? 'block' : 'none';
+
+            if (svcSelect) {
+                svcSelect.innerHTML = '<option value="">-- Chọn dịch vụ --</option>';
+                const servicesData = PawpalServices.state?.servicesData || [];
+                const targetGroup = val.toLowerCase();
+                const filtered = servicesData.filter(s => s.group === targetGroup || s.category === targetGroup);
+                if (filtered.length > 0) {
+                    filtered.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.name;
+                        opt.textContent = `${s.name} (${s.duration || '60p'})`;
+                        svcSelect.appendChild(opt);
+                    });
+                } else {
+                    const defaults = val === 'Hotel' 
+                        ? ['Phòng Standard (180k/đêm)', 'Phòng Deluxe (380k/đêm)', 'Luxury Suite (500k/đêm)']
+                        : (val === 'Taxi' 
+                            ? ['Dịch Vụ Xe Đưa Đón Tận Nơi 1 Chiều', 'Dịch Vụ Xe Đưa Đón 2 Chiều']
+                            : ['Gói Tắm Vệ Sinh Cơ Bản', 'Gói Tắm Dưỡng Premium', 'Grooming Cắt Tỉa Tạo Kiểu']);
+                    defaults.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d;
+                        opt.textContent = d;
+                        svcSelect.appendChild(opt);
+                    });
+                }
+            }
+        }
+        if (catSelect) catSelect.addEventListener('change', updateCategoryOptions);
+
+        // Chip gợi ý nhanh lý do / lưu ý
+        document.querySelectorAll('#quickBookingAlertChips .reason-quick-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const alertInp = document.getElementById('newBookingPetAlert');
+                if (alertInp) {
+                    const cur = alertInp.value.trim();
+                    alertInp.value = cur ? `${cur}, ${chip.textContent.trim()}` : chip.textContent.trim();
+                }
+            });
+        });
+        document.querySelectorAll('#quickBookingNotesChips .reason-quick-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const notesInp = document.getElementById('newBookingNotes');
+                if (notesInp) {
+                    const cur = notesInp.value.trim();
+                    notesInp.value = cur ? `${cur}, ${chip.textContent.trim()}` : chip.textContent.trim();
+                }
+            });
+        });
 
         // Xác nhận tiếp nhận an toàn
         const btnConfirmIntake = document.getElementById('btnSubmitIntakeRecord');

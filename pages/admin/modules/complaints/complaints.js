@@ -903,32 +903,6 @@
             moduleTitleEl.style.display = 'none';
         }
 
-        if (subtabsContainer) {
-            subtabsContainer.innerHTML = `
-                <button type="button" class="header-subtab-btn active" data-subtab="tab-complaint-services" style="position: relative;">
-                    Theo dịch vụ
-                    <span class="tab-badge-count" id="badgeServiceComplaintsCount" style="display: none;">0</span>
-                </button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-complaint-orders" style="position: relative;">
-                    Theo đơn hàng
-                    <span class="tab-badge-count" id="badgeOrderComplaintsCount" style="display: none;">0</span>
-                </button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-complaint-detail">Hồ sơ</button>
-            `;
-
-            subtabsContainer.querySelectorAll('.header-subtab-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const target = btn.getAttribute('data-subtab');
-                    if (target) {
-                        switchSubtab(target);
-                    }
-                });
-            });
-        }
-
         await loadComplaintsModuleData();
         setupComplaintsRealtimeChannel();
         updateComplaintsKpis();
@@ -936,13 +910,16 @@
 
         const currentHash = window.location.hash ? window.location.hash.substring(1) : '';
         const savedSubtab = sessionStorage.getItem('pawpal_admin_complaint_active_subtab');
-        let initialSubtab = (currentHash && document.getElementById('subtab-' + currentHash))
-            ? currentHash
-            : (savedSubtab && document.getElementById('subtab-' + savedSubtab))
-                ? savedSubtab
-                : 'tab-complaint-services';
+        const validTabs = ['tab-complaint-services', 'tab-complaint-orders', 'tab-complaint-detail'];
+        let initialSubtab = validTabs.includes(currentHash) ? currentHash : (validTabs.includes(savedSubtab) ? savedSubtab : 'tab-complaint-services');
 
         switchSubtab(initialSubtab);
+
+        window.addEventListener('admin:subtab-change', (e) => {
+            if (e.detail?.module === 'Khiếu nại' && validTabs.includes(e.detail.tabId)) {
+                switchSubtab(e.detail.tabId);
+            }
+        });
 
         // Khởi tạo các subtab con
         PawpalComplaints.subtabs.services?.init?.();

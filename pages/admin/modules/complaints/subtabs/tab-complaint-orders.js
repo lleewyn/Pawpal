@@ -102,6 +102,17 @@
         if (orderCurrentPage > totalPages) orderCurrentPage = totalPages || 1;
         if (orderCurrentPage < 1) orderCurrentPage = 1;
 
+        function clearOrderFilters() {
+            const searchInput = document.getElementById('orderSearchInput');
+            if (searchInput) searchInput.value = '';
+            const statusSelect = document.getElementById('orderFilterStatus');
+            if (statusSelect) statusSelect.value = 'ALL';
+            const prioritySelect = document.getElementById('orderFilterPriority');
+            if (prioritySelect) prioritySelect.value = 'ALL';
+            orderCurrentPage = 1;
+            renderOrderComplaintsTable();
+        }
+
         if (filtered.length === 0) {
             tbody.innerHTML = `
                 <tr>

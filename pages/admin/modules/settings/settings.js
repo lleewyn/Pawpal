@@ -671,7 +671,11 @@
         initTab = hash;
     } else if (VALID_SETTINGS_TABS.includes(savedTab)) {
         initTab = savedTab;
-    }
-
     switchSubtab(initTab);
+
+    window.addEventListener('admin:subtab-change', (e) => {
+        if (e.detail?.module === 'Cấu hình' && VALID_SETTINGS_TABS.includes(e.detail.tabId)) {
+            switchSubtab(e.detail.tabId);
+        }
+    });
 })();

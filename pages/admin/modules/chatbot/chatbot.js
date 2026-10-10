@@ -561,8 +561,11 @@
     if (VALID_CHATBOT_TABS.includes(hash)) {
         initTab = hash;
     } else if (VALID_CHATBOT_TABS.includes(savedTab)) {
-        initTab = savedTab;
-    }
-
     switchSubtab(initTab);
+
+    window.addEventListener('admin:subtab-change', (e) => {
+        if (e.detail?.module === 'Chatbot' && VALID_CHATBOT_TABS.includes(e.detail.tabId)) {
+            switchSubtab(e.detail.tabId);
+        }
+    });
 })();

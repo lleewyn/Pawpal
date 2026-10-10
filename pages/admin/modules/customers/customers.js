@@ -550,31 +550,12 @@
             moduleTitleEl.style.display = 'none';
         }
 
-        if (subtabsContainer) {
-            subtabsContainer.innerHTML = `
-                <button type="button" class="header-subtab-btn active" data-subtab="tab-list">Khách hàng</button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-profile">Hồ sơ</button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-pawpoint">Pawpoint</button>
-            `;
-
-            subtabsContainer.querySelectorAll('.header-subtab-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const targetSubtab = btn.getAttribute('data-subtab');
-                    PawpalCustomers.switchSubtab(targetSubtab, true);
-                });
-            });
-        }
-
-        const handleCustomersHashChange = () => {
-            const currentHash = window.location.hash ? window.location.hash.substring(1) : '';
-            const validTabs = ['tab-list', 'tab-profile', 'tab-pawpoint'];
-            if (validTabs.includes(currentHash)) {
-                PawpalCustomers.switchSubtab(currentHash, false);
+        const validTabs = ['tab-list', 'tab-profile', 'tab-pawpoint'];
+        window.addEventListener('admin:subtab-change', (e) => {
+            if (e.detail?.module === 'Khách hàng' && validTabs.includes(e.detail.tabId)) {
+                PawpalCustomers.switchSubtab(e.detail.tabId, false);
             }
-        };
-        window.addEventListener('hashchange', handleCustomersHashChange);
+        });
 
         // Nạp dữ liệu Supabase Live
         await PawpalCustomers.loadCustomersModuleData();

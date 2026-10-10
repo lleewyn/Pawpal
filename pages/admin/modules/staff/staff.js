@@ -361,28 +361,6 @@
             moduleTitleEl.style.display = 'none';
         }
 
-        if (subtabsContainer) {
-            subtabsContainer.innerHTML = `
-                <button type="button" class="header-subtab-btn active" data-subtab="tab-staff-list">Nhân sự</button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-staff-profile">Hồ sơ</button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-staff-schedule" style="position: relative;">
-                    Lịch làm việc
-                    <span class="tab-badge-count" id="schedulePendingBadge" style="display: none;">0</span>
-                </button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-staff-assessment">Đánh giá</button>
-            `;
-
-            subtabsContainer.querySelectorAll('.header-subtab-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const targetSubtab = btn.getAttribute('data-subtab');
-                    switchSubtab(targetSubtab, true);
-                });
-            });
-        }
-
         await loadStaffModuleData();
 
         if (PawpalStaff.subtabs.list?.renderStaffList) {
@@ -408,10 +386,9 @@
             switchSubtab('tab-staff-list', false);
         }
 
-        window.addEventListener('hashchange', () => {
-            const currentHash = window.location.hash ? window.location.hash.substring(1) : '';
-            if (validTabs.includes(currentHash)) {
-                switchSubtab(currentHash, false);
+        window.addEventListener('admin:subtab-change', (e) => {
+            if (e.detail?.module === 'Nhân sự' && validTabs.includes(e.detail.tabId)) {
+                switchSubtab(e.detail.tabId, false);
             }
         });
     }

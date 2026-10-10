@@ -4,6 +4,7 @@
 
     const PawpalSettings = window.PawpalSettings = window.PawpalSettings || {};
     PawpalSettings.subtabs = PawpalSettings.subtabs || {};
+    PawpalSettings.state = PawpalSettings.state || {};
 
     function showToast(msg, type) {
         if (PawpalSettings.showToast) PawpalSettings.showToast(msg, type);

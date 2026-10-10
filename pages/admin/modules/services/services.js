@@ -541,25 +541,7 @@
             moduleTitleEl.style.display = 'none';
         }
 
-        // Render 4 subtab lên Header Bar
-        if (subtabsContainer) {
-            subtabsContainer.innerHTML = `
-                <button type="button" class="header-subtab-btn active" data-subtab="tab-service-bookings">Lịch hẹn</button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-service-detail">Hồ sơ</button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-service-catalog">Bảng giá</button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-service-reviews">Đánh giá</button>
-            `;
-
-            subtabsContainer.querySelectorAll('.header-subtab-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const subtabId = btn.getAttribute('data-subtab');
-                    switchSubtab(subtabId, true);
-                });
-            });
-        }
+        const validTabs = ['tab-service-bookings', 'tab-service-detail', 'tab-service-catalog', 'tab-service-reviews'];
 
         // Tải dữ liệu ban đầu từ Supabase
         await loadServicesData();
@@ -581,7 +563,6 @@
         // Khôi phục subtab active từ URL hash hoặc sessionStorage
         const savedSubtab = sessionStorage.getItem('pawpal_admin_services_active_subtab');
         const hashSubtab = window.location.hash ? window.location.hash.substring(1) : '';
-        const validTabs = ['tab-service-bookings', 'tab-service-detail', 'tab-service-catalog', 'tab-service-reviews'];
 
         if (validTabs.includes(hashSubtab)) {
             switchSubtab(hashSubtab, false);
@@ -591,10 +572,9 @@
             switchSubtab('tab-service-bookings', false);
         }
 
-        window.addEventListener('hashchange', () => {
-            const currentHash = window.location.hash ? window.location.hash.substring(1) : '';
-            if (validTabs.includes(currentHash)) {
-                switchSubtab(currentHash, false);
+        window.addEventListener('admin:subtab-change', (e) => {
+            if (e.detail?.module === 'Dịch vụ' && validTabs.includes(e.detail.tabId)) {
+                switchSubtab(e.detail.tabId, false);
             }
         });
     }

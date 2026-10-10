@@ -660,29 +660,46 @@
                 console.warn('Lỗi khi nạp return_request từ Supabase:', errRma);
             }
 
-            const { data: orderData } = await client
-                .from('sales_order')
-                .select(`
-                    id, order_code, order_status, payment_status, total_amount, shipping_fee, discount_amount, note, created_at,
-                    customer (id, phone_main, customer_profile (full_name), customer_address (street_address, ward, district, province, city, is_default)),
-                    sales_order_detail (
-                        id, quantity, unit_price, discount_amount, subtotal,
-                        product (id, sku, product_name, image_urls, specs)
-                    ),
-                    payment (payment_method_id, payment_amount, transaction_status),
-                    delivery (carrier_name, tracking_code, tracking_number, delivery_status, note)
-                `)
-                .order('created_at', { ascending: false });
+            let orderData = null;
+            try {
+                const { data, error: orderErr } = await client
+                    .from('sales_order')
+                    .select(`
+                        id, order_code, order_status, payment_status, total_amount, note, created_at,
+                        customer (
+                            id, phone_main,
+                            customer_profile (full_name)
+                        ),
+                        shipping_address:customer_address!shipping_address_id (
+                            receiver_name, receiver_phone, province, street_address
+                        ),
+                        sales_order_detail (
+                            id, quantity, unit_price, discount_amount, subtotal,
+                            product (id, sku, product_name, image_urls, specs)
+                        ),
+                        payment (payment_method_id, amount, transaction_status)
+                    `)
+                    .order('created_at', { ascending: false });
+
+                if (orderErr) {
+                    console.error('[Orders Core] Lỗi truy vấn sales_order từ Supabase:', orderErr);
+                } else {
+                    orderData = data;
+                }
+            } catch (queryErr) {
+                console.error('[Orders Core] Lỗi ngoại lệ khi truy vấn sales_order:', queryErr);
+            }
 
             if (Array.isArray(orderData) && orderData.length > 0) {
                 currentOrdersList = orderData.map(o => {
                     const cust = o.customer || {};
                     const custProfile = Array.isArray(cust.customer_profile) ? cust.customer_profile[0] : (cust.customer_profile || {});
-                    const custAddresses = Array.isArray(cust.customer_address) ? cust.customer_address : [];
-                    const defAddr = custAddresses.find(a => a.is_default) || custAddresses[0];
+                    const shipAddr = o.shipping_address || {};
+                    const custName = custProfile.full_name || shipAddr.receiver_name || 'Khách hàng PawPal';
+                    const phone = cust.phone_main || shipAddr.receiver_phone || '0900000000';
                     let formattedAddr = 'Tại cửa hàng PawPal';
-                    if (defAddr) {
-                        formattedAddr = [defAddr.street_address, defAddr.ward, defAddr.district, defAddr.province || defAddr.city].filter(Boolean).join(', ');
+                    if (shipAddr.street_address || shipAddr.province) {
+                        formattedAddr = [shipAddr.street_address, shipAddr.province].filter(Boolean).join(', ');
                     }
 
                     const rawStatus = (o.order_status || 'PENDING').toLowerCase();
@@ -700,16 +717,25 @@
                         else if (pmId.includes('cash')) payMethod = 'cash';
                     }
 
+                    let calculatedDiscount = 0;
+                    let calculatedSubtotal = 0;
                     const prods = (o.sales_order_detail || []).map(d => {
                         const pr = d.product || {};
                         const pImgs = Array.isArray(pr.image_urls) ? pr.image_urls : (typeof pr.image_urls === 'string' && pr.image_urls ? pr.image_urls.split(',').map(s => s.trim()) : []);
+                        const qty = Number(d.quantity) || 1;
+                        const uPrice = Number(d.unit_price) || 0;
+                        const sub = Number(d.subtotal) || (uPrice * qty);
+                        const disc = Number(d.discount_amount) || 0;
+                        calculatedDiscount += disc;
+                        calculatedSubtotal += sub;
+
                         return {
                             sku: pr.sku || 'SKU-000',
                             name: pr.product_name || 'Sản phẩm PawPal',
                             spec: pr.specs || 'Tiêu chuẩn',
-                            price: d.unit_price || 0,
-                            quantity: d.quantity || 1,
-                            total: d.subtotal || (d.unit_price * d.quantity),
+                            price: uPrice,
+                            quantity: qty,
+                            total: sub,
                             image: pImgs[0] || '/assets/images/shop/products/tp-hat-01.png'
                         };
                     });
@@ -730,8 +756,8 @@
                         alertMessage = 'Chờ đối soát COD';
                     }
 
-                    const resolvedCarrier = o.delivery?.carrier_name || (rawStatus === 'shipping' || rawStatus === 'delivered' ? 'J&T Express' : 'Chưa phân công');
-                    const resolvedTracking = o.delivery?.tracking_code || o.delivery?.tracking_number || (rawStatus === 'shipping' || rawStatus === 'delivered' ? `JT${o.id.slice(0, 8).toUpperCase()}` : '--');
+                    const resolvedCarrier = (rawStatus === 'shipping' || rawStatus === 'delivered' ? 'J&T Express' : 'Chưa phân công');
+                    const resolvedTracking = (rawStatus === 'shipping' || rawStatus === 'delivered' ? `JT${o.id.slice(0, 8).toUpperCase()}` : '--');
 
                     const timeline = [
                         { title: 'Tạo đơn hàng thành công', time: formatTime(o.created_at) + ' - ' + formatDate(o.created_at), desc: 'Đơn hàng được ghi nhận vào hệ thống PawPal', done: true }
@@ -753,12 +779,16 @@
                         timeline.push({ title: 'Đã hủy đơn hàng', time: formatTime(o.created_at), desc: 'Đơn hàng bị hủy bởi quản trị viên hoặc khách yêu cầu', done: true });
                     }
 
+                    const orderTotal = Number(o.total_amount) || 0;
+                    const finalSubtotal = calculatedSubtotal || orderTotal;
+                    const shippingFee = Math.max(0, orderTotal + calculatedDiscount - finalSubtotal);
+
                     return {
                         id: o.order_code || `ORD-${o.id.slice(0, 8).toUpperCase()}`,
                         rawId: o.id,
-                        userId: cust.id || 'USER-001',
-                        customerName: custProfile.full_name || 'Khách hàng PawPal',
-                        phone: cust.phone_main || '0900000000',
+                        userId: cust.id || 'GUEST',
+                        customerName: custName,
+                        phone: phone,
                         address: formattedAddr,
                         status: rawStatus,
                         paymentStatus: mappedPaymentStatus,
@@ -766,17 +796,17 @@
                         carrier: resolvedCarrier,
                         trackingNumber: resolvedTracking,
                         createdAt: o.created_at,
-                        subtotal: (o.total_amount || 0) + (o.discount_amount || 0) - (o.shipping_fee || 0),
-                        shippingFee: o.shipping_fee || 0,
-                        discount: o.discount_amount || 0,
+                        subtotal: finalSubtotal,
+                        shippingFee: shippingFee,
+                        discount: calculatedDiscount,
                         pawPointsUsed: 0,
-                        total: o.total_amount || 0,
+                        total: orderTotal,
                         customerNote: o.note || '',
                         internalNote: '',
                         alertType: alertType,
                         alertMessage: alertMessage,
                         rmaInfo: rmaInfo,
-                        delivery: o.delivery,
+                        delivery: null,
                         products: prods,
                         timeline: timeline
                     };
@@ -816,6 +846,11 @@
     }
 
     function switchSubtab(targetSubtab, updateHistory = true) {
+        const validTabs = ['tab-order-list', 'tab-order-detail', 'tab-order-products', 'tab-order-promos'];
+        if (!validTabs.includes(targetSubtab)) {
+            targetSubtab = 'tab-order-list';
+        }
+
         const headerSubtabBtns = document.querySelectorAll('.header-subtab-btn');
         const subtabPanels = document.querySelectorAll('.subtab-content');
 
@@ -823,9 +858,17 @@
             btn.classList.toggle('active', btn.getAttribute('data-subtab') === targetSubtab);
         });
 
+        let matched = false;
         subtabPanels.forEach(panel => {
-            panel.classList.toggle('active', panel.id === `subtab-${targetSubtab}`);
+            const isMatch = panel.id === `subtab-${targetSubtab}`;
+            panel.classList.toggle('active', isMatch);
+            if (isMatch) matched = true;
         });
+
+        if (!matched && subtabPanels.length > 0) {
+            subtabPanels[0].classList.add('active');
+            targetSubtab = validTabs[0];
+        }
 
         if (targetSubtab === 'tab-order-detail') {
             const targetId = window.PawpalOrders.state.selectedOrderId || sessionStorage.getItem('pawpal_admin_order_selected_id') || currentOrdersList[0]?.id;
@@ -870,42 +913,22 @@
             moduleTitleEl.style.display = 'none';
         }
 
-        // Render 4 Sub-tabs trên Header Bar
-        if (subtabsContainer) {
-            subtabsContainer.innerHTML = `
-                <button type="button" class="header-subtab-btn active" data-subtab="tab-order-list">Đơn hàng</button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-order-detail">Hồ sơ</button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-order-products">Sản phẩm và Kho</button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-order-promos">Khuyến mãi</button>
-            `;
-        }
-
-        const headerSubtabBtns = document.querySelectorAll('.header-subtab-btn');
-        headerSubtabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const target = btn.getAttribute('data-subtab');
-                switchSubtab(target, true);
-            });
-        });
-
-        const handleOrdersHashChange = () => {
-            const currentHash = window.location.hash ? window.location.hash.substring(1) : '';
-            const validTabs = ['tab-order-list', 'tab-order-detail', 'tab-order-products', 'tab-order-promos'];
-            if (validTabs.includes(currentHash)) {
-                switchSubtab(currentHash, false);
-            }
-        };
-        window.addEventListener('hashchange', handleOrdersHashChange);
+        const validTabs = ['tab-order-list', 'tab-order-detail', 'tab-order-products', 'tab-order-promos'];
 
         // Khôi phục subtab từ hash hoặc sessionStorage
         const currentHash = window.location.hash ? window.location.hash.substring(1) : '';
         const savedTab = sessionStorage.getItem('pawpal_admin_order_subtab') || 'tab-order-list';
-        const targetTab = ['tab-order-list', 'tab-order-detail', 'tab-order-products', 'tab-order-promos'].includes(currentHash) ? currentHash : savedTab;
+        const targetTab = validTabs.includes(currentHash) ? currentHash : (validTabs.includes(savedTab) ? savedTab : 'tab-order-list');
 
         switchSubtab(targetTab, false);
+
+        // Lắng nghe sự kiện chuyển subtab từ router cha
+        window.addEventListener('admin:subtab-change', (e) => {
+            if (e.detail?.module === 'Bán hàng' && validTabs.includes(e.detail.tabId)) {
+                switchSubtab(e.detail.tabId, false);
+            }
+        });
+
         syncOrdersAndProductsFromSupabase();
     }
 

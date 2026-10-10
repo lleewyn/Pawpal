@@ -567,6 +567,9 @@
                 </table>
             </div>
         </div>
+
+        <!-- PHÂN TRANG NẰM NGOÀI BẢNG (KHÔNG NỀN, KHÔNG ĐÓNG KHUNG, CĂN GIỮA) -->
+        <div class="admin-pagination-container" id="servicesReviewsPagination" style="display: none;"></div>
     </section>
 
     <!-- ====================================================================
@@ -1875,6 +1878,27 @@
             <div class="modal-footer-clean">
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelServiceConfirm">Hủy bỏ</button>
                 <button type="button" class="admin-btn admin-btn-primary" id="btnAcceptServiceConfirm">Đồng ý</button>
+            </div>
+    <!-- ====================================================================
+         MODAL 16: PHẢN HỒI ĐÁNH GIÁ CỦA KHÁCH HÀNG
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalReplyReview">
+        <div class="admin-modal-card" style="width: 560px; max-width: 95vw;">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Phản hồi đánh giá của khách hàng</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseReplyReview">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div id="replyReviewCustomerInfo" style="font-weight: 600; color: #236B48; margin-bottom: 6px; font-size: 14px;"></div>
+                <div id="replyReviewComment" style="font-style: italic; color: #4F7A65; margin-bottom: 16px; font-size: 13px; line-height: 1.5; background: #EEF5F1; padding: 10px 14px; border-radius: 9px;"></div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Nội dung phản hồi từ PawPal:</label>
+                    <textarea class="admin-input" id="replyReviewText" rows="4" style="resize: vertical; min-height: 90px; width: 100%;" placeholder="Nhập câu trả lời lịch sự, chân thành gửi tới khách hàng..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelReplyReview">Hủy bỏ</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitReplyReview">Gửi phản hồi</button>
             </div>
         </div>
     </div>

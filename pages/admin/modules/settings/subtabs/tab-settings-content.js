@@ -4,6 +4,7 @@
 
     const PawpalSettings = window.PawpalSettings = window.PawpalSettings || {};
     PawpalSettings.subtabs = PawpalSettings.subtabs || {};
+    PawpalSettings.state = PawpalSettings.state || {};
 
     let currentArticlePage = 1;
     const ARTICLE_PAGE_SIZE = 10;

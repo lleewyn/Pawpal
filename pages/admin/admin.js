@@ -121,6 +121,10 @@ document.addEventListener('DOMContentLoaded', () => {
             button.classList.toggle('active', bTabId === tabId);
         });
         if (window.location.hash !== `#${tabId}`) history.pushState(null, '', `#${tabId}`);
+
+        window.dispatchEvent(new CustomEvent('admin:subtab-change', {
+            detail: { module: moduleName, tabId }
+        }));
     });
 
     const MODULE_SUBTABS_MAP = {
@@ -281,7 +285,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 targetSec.classList.add('active');
             } else if (sections[0]) {
                 sections[0].classList.add('active');
+                targetTabId = config.defaultTab || sections[0].id.replace('subtab-', '');
             }
+        }
+
+        if (targetTabId && window.location.hash !== '#' + targetTabId) {
+            try {
+                history.replaceState(null, '', '#' + targetTabId);
+            } catch (e) {}
         }
     }
 
@@ -625,15 +636,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     sidebarBtns.forEach(b => {
-        if (b.getAttribute('data-title') === initialModule) {
-            b.classList.add('active');
-        } else {
-            b.classList.remove('active');
-        }
+        b.classList.toggle('active', b.getAttribute('data-title') === initialModule);
     });
 
-    // Đảm bảo hash khớp với initialModule nếu hash rỗng
-    if (!window.location.hash) {
+    sessionStorage.setItem('pawpal_admin_active_module', initialModule);
+
+    // Nếu URL có hash hợp lệ cho initialModule, lưu ngay vào storage của module đó
+    const initialConfig = MODULE_SUBTABS_MAP[initialModule];
+    const cleanInitialHash = currentHash.replace('#', '');
+    if (initialConfig && initialConfig.subtabs.some(s => s.id === cleanInitialHash)) {
+        if (initialConfig.storageKey) sessionStorage.setItem(initialConfig.storageKey, cleanInitialHash);
+    } else if (!window.location.hash) {
         const defaultHash = getTargetHashForModule(initialModule);
         if (defaultHash) {
             try {
@@ -642,25 +655,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    sessionStorage.setItem('pawpal_admin_active_module', initialModule);
     loadModule(initialModule);
 
     // Lắng nghe thay đổi URL Hash liên phân hệ để chuyển module mượt mà
     window.addEventListener('hashchange', () => {
-        const targetMod = resolveModuleFromHash(window.location.hash);
+        const hash = window.location.hash || '';
+        const targetMod = resolveModuleFromHash(hash);
         const currentMod = sessionStorage.getItem('pawpal_admin_active_module');
+        const cleanHash = hash.replace('#', '');
+
         if (targetMod && targetMod !== currentMod) {
             sidebarBtns.forEach(b => {
-                if (b.getAttribute('data-title') === targetMod) {
-                    b.classList.add('active');
-                } else {
-                    b.classList.remove('active');
-                }
+                b.classList.toggle('active', b.getAttribute('data-title') === targetMod);
             });
             sessionStorage.setItem('pawpal_admin_active_module', targetMod);
+            const cfg = MODULE_SUBTABS_MAP[targetMod];
+            if (cfg && cfg.subtabs.some(s => s.id === cleanHash)) {
+                if (cfg.storageKey) sessionStorage.setItem(cfg.storageKey, cleanHash);
+            }
             loadModule(targetMod);
         } else if (targetMod) {
+            const cfg = MODULE_SUBTABS_MAP[targetMod];
+            if (cfg && cfg.subtabs.some(s => s.id === cleanHash)) {
+                if (cfg.storageKey) sessionStorage.setItem(cfg.storageKey, cleanHash);
+            }
             renderHeaderSubtabsInstant(targetMod);
+            syncActiveSubtabPane(contentArea, targetMod);
+            window.dispatchEvent(new CustomEvent('admin:subtab-change', {
+                detail: { module: targetMod, tabId: cleanHash }
+            }));
         }
     });
 
@@ -856,6 +879,47 @@ document.addEventListener('DOMContentLoaded', () => {
     ensureToolbarReset();
     ensureTableSkeleton();
     new MutationObserver(() => { ensureEmptyStateReset(); ensureToolbarReset(); ensureTableSkeleton(); }).observe(document.body, { childList: true, subtree: true });
+
+    // Global Modal Handler: Tự động đóng modal toàn hệ thống khi bấm nút Đóng, Hủy bỏ, click outside hoặc phím ESC
+    document.addEventListener('click', (e) => {
+        // 1. Click vào nút đóng header (.modal-btn-close-text, .modal-btn-close, .btn-close-modal, [data-dismiss="modal"])
+        const closeBtn = e.target.closest('.modal-btn-close-text, .modal-btn-close, .btn-close-modal, [data-dismiss="modal"]');
+        if (closeBtn) {
+            const modal = closeBtn.closest('.admin-modal-overlay');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+            return;
+        }
+
+        // 2. Click vào nút Hủy / Hủy bỏ ở footer modal
+        const cancelBtn = e.target.closest('.modal-footer-clean .admin-btn-secondary, .modal-footer .admin-btn-secondary, .modal-footer-clean [id^="btnCancel"], .modal-footer [id^="btnCancel"]');
+        if (cancelBtn) {
+            const btnText = (cancelBtn.textContent || '').trim().toLowerCase();
+            if (btnText === 'hủy bỏ' || btnText === 'hủy' || btnText === 'đóng' || cancelBtn.id.toLowerCase().includes('cancel') || cancelBtn.id.toLowerCase().includes('close')) {
+                const modal = cancelBtn.closest('.admin-modal-overlay');
+                if (modal) {
+                    modal.classList.remove('active');
+                }
+                return;
+            }
+        }
+
+        // 3. Click ngoài viền thẻ card (click vào chính overlay)
+        if (e.target.classList.contains('admin-modal-overlay')) {
+            e.target.classList.remove('active');
+        }
+    });
+
+    // Nhấn phím Escape để đóng modal đang mở
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' || e.key === 'Esc') {
+            const activeModal = document.querySelector('.admin-modal-overlay.active');
+            if (activeModal) {
+                activeModal.classList.remove('active');
+            }
+        }
+    });
 
     // Khởi tạo Lucide
     if (window.lucide) {

@@ -246,7 +246,7 @@
                     client.from('appointment').select('*, service:service_id(service_name), staff:staff_id(full_name)'),
                     client.from('care_log').select('*'),
                     client.from('pet_profile').select('*').order('created_at', { ascending: false }),
-                    client.from('pet_weight_history').select('*').order('measured_at', { ascending: false })
+                    Promise.resolve(client.from('pet_weight_history').select('*')).catch(() => ({ data: [] }))
                 ]);
 
                 const petWeightHistoryMap = {};
@@ -478,26 +478,6 @@
             moduleTitleEl.style.display = 'none';
         }
 
-        // Render 4 subtab lên Header Bar
-        if (subtabsContainer) {
-            subtabsContainer.innerHTML = `
-                <button type="button" class="header-subtab-btn active" data-subtab="tab-pet-list">Thú cưng</button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-pet-profile">Hồ sơ</button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-pet-carelog">Nhật ký</button>
-                <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-pet-reminders">Nhắc lịch</button>
-            `;
-
-            subtabsContainer.querySelectorAll('.header-subtab-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const targetSubtab = btn.getAttribute('data-subtab');
-                    switchSubtab(targetSubtab, true);
-                });
-            });
-        }
-
         // Tải dữ liệu ban đầu từ Supabase
         await loadPetsModuleData();
 
@@ -526,11 +506,10 @@
             switchSubtab('tab-pet-list', false);
         }
 
-        // Hash change listener
-        window.addEventListener('hashchange', () => {
-            const currentHash = window.location.hash ? window.location.hash.substring(1) : '';
-            if (validTabs.includes(currentHash)) {
-                switchSubtab(currentHash, false);
+        // Lắng nghe sự kiện đổi subtab từ router cha
+        window.addEventListener('admin:subtab-change', (e) => {
+            if (e.detail?.module === 'Thú cưng' && validTabs.includes(e.detail.tabId)) {
+                switchSubtab(e.detail.tabId, false);
             }
         });
     }

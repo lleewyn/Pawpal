@@ -4,6 +4,7 @@
 
     const PawpalSettings = window.PawpalSettings = window.PawpalSettings || {};
     PawpalSettings.subtabs = PawpalSettings.subtabs || {};
+    PawpalSettings.state = PawpalSettings.state || {};
 
     let bannerPage = 1;
     const SETTINGS_PAGE_SIZE = 10;

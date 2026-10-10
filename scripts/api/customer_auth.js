@@ -238,6 +238,9 @@ for (const name of ['guest', 'lookup', 'login', 'requestOtp', 'completeOtp', 'me
         try {
             if (process.env.PAWPAL_SMS_MODE === 'console' && !['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket?.remoteAddress)) return res.status(403).json({ success: false, message: 'Giả lập SMS chỉ cho phép truy cập từ máy local.' });
             return await configured()[name](req, res);
-        } catch { return res.status(503).json({ success: false, message: 'Chưa cấu hình dịch vụ xác thực. Vui lòng liên hệ quản trị viên.' }); }
+        } catch (err) {
+            console.error('[CustomerAuth Error]:', err?.message || err);
+            return res.status(503).json({ success: false, message: 'Chưa cấu hình dịch vụ xác thực. Vui lòng liên hệ quản trị viên.' });
+        }
     };
 }
