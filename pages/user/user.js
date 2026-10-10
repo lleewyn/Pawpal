@@ -613,17 +613,12 @@
 
         window.addEventListener('hashchange', handleRoute);
 
-        // Khởi động lần đầu
-        const initialHash = window.location.hash || sessionStorage.getItem('pawpal_user_active_tab');
-        if (initialHash) {
-            if (!window.location.hash && initialHash) {
-                window.location.hash = initialHash.startsWith('#') ? initialHash : `#${initialHash}`;
-            } else {
-                handleRoute();
-            }
-        } else {
-            window.location.hash = '#profile';
+        // Khởi động trực tiếp phân hệ mục tiêu ngay lập tức
+        const targetRoute = resolveRoute(window.location.hash || sessionStorage.getItem('pawpal_user_active_tab') || 'profile');
+        if (window.location.hash !== `#${targetRoute}`) {
+            window.history.replaceState(null, '', `#${targetRoute}`);
         }
+        handleRoute();
     }
 
     // 13. Đợi DOM và User-Sidebar sẵn sàng
@@ -647,7 +642,7 @@
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', startUserPortal);
+        document.addEventListener('DOMContentLoaded', startUserPortal, { once: true });
     } else {
         startUserPortal();
     }
