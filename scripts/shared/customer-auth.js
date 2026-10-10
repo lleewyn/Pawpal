@@ -5,16 +5,21 @@
         const { password, password_hash, ...safe } = user;
         return safe;
     }
-    // Remove previously cached plaintext credentials, including older account lists.
-    for (const storage of [localStorage, sessionStorage]) {
-        for (const key of ['pawpal_current_user', 'pawpal_users', 'pawpal_users_db']) {
-            try {
-                const data = JSON.parse(storage.getItem(key));
-                if (data) storage.setItem(key, JSON.stringify(Array.isArray(data) ? data.map(cleanUser) : cleanUser(data)));
-            } catch {}
+    // Remove previously cached plaintext credentials, safely handling storage restrictions
+    try {
+        const storages = [];
+        try { if (typeof window !== 'undefined' && window.localStorage) storages.push(window.localStorage); } catch {}
+        try { if (typeof window !== 'undefined' && window.sessionStorage) storages.push(window.sessionStorage); } catch {}
+        for (const storage of storages) {
+            for (const key of ['pawpal_current_user', 'pawpal_users', 'pawpal_users_db']) {
+                try {
+                    const data = JSON.parse(storage.getItem(key));
+                    if (data) storage.setItem(key, JSON.stringify(Array.isArray(data) ? data.map(cleanUser) : cleanUser(data)));
+                } catch {}
+            }
+            try { storage.removeItem('pawpal_temp_tokens'); } catch {}
         }
-        storage.removeItem('pawpal_temp_tokens');
-    }
+    } catch {}
     async function request(action, body = {}, authenticated = false) {
         const headers = { 'Content-Type': 'application/json' };
         if (authenticated) {

@@ -3,7 +3,33 @@
     const byId = id => document.getElementById(id);
     const value = id => byId(id)?.value.trim() || '';
     const password = id => byId(id)?.value || '';
-    const auth = () => window.PawpalCustomerAuth;
+    const auth = () => window.PawpalCustomerAuth || {
+        async request(action, body = {}, authenticated = false) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (authenticated) {
+                const client = window.getSupabaseClient?.() || window.SupabaseClient;
+                const { data } = await client?.auth.getSession() || {};
+                if (data?.session) headers.Authorization = `Bearer ${data.session.access_token}`;
+            }
+            const response = await fetch(`/api/customer/auth/${action}`, { method: 'POST', headers, body: JSON.stringify(body), cache: 'no-store' });
+            const result = await response.json();
+            if (!response.ok || !result.success) throw new Error(result.message || 'Không thể xử lý yêu cầu.');
+            return result;
+        },
+        async accept(result) {
+            if (result.session) {
+                const client = window.getSupabaseClient?.() || window.SupabaseClient;
+                if (client) await client.auth.setSession(result.session);
+            }
+            const user = result.user;
+            try {
+                localStorage.setItem('pawpal_current_user', JSON.stringify(user));
+                sessionStorage.setItem('pawpal_current_user', JSON.stringify(user));
+            } catch {}
+            document.dispatchEvent(new CustomEvent('auth_state_changed', { detail: user }));
+            return user;
+        }
+    };
     const validPhone = phone => /^0\d{9}$/.test(phone);
     const validPassword = pass => /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/s.test(pass) && pass.length <= 128;
     let challenge = null;
