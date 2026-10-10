@@ -1033,7 +1033,7 @@
         if (!pagContainer) return;
 
         // Nếu không có dữ liệu hoặc chỉ có 1 trang: ẩn hoặc vô hiệu hóa các nút vượt quá số lượng bản ghi thực tế
-        if (totalPages <= 1) {
+        if (totalPages === 0) {
             pagContainer.style.display = 'none';
             pagContainer.innerHTML = '';
             return;

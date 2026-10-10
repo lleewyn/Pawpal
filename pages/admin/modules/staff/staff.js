@@ -1276,6 +1276,7 @@
         function renderStaffList() {
             const tbody = document.getElementById('staffListTableBody');
             if (!tbody) return;
+            if (mockStaff.length === 0) return;
             tbody.innerHTML = '';
 
             const list = getFilteredStaffList();

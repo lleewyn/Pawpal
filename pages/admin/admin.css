@@ -427,7 +427,7 @@ body.admin-body {
 
 .header-module-title {
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 700 !important;
     color: var(--text-heading);
     letter-spacing: -0.2px;
 }
@@ -461,11 +461,12 @@ body.admin-body {
 .header-subtab-btn.active {
     background-color: transparent !important;
     color: var(--subtab-active-color) !important;
-    font-weight: 700;
+    font-weight: 700 !important;
     border: none !important;
 }
 
-.header-subtab-divider {
+.header-subtab-divider,
+.subtab-divider {
     color: var(--subtab-divider-color);
     font-size: 14px;
     font-weight: 400;
@@ -482,6 +483,25 @@ body.admin-body {
     background-color: transparent !important;
     color: var(--subtab-active-color) !important;
 }
+
+.admin-module-loading {
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+.admin-loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #DCEEE2;
+    border-top-color: #236B48;
+    border-radius: 50%;
+    animation: admin-spin .7s linear infinite;
+}
+@keyframes admin-spin { to { transform: rotate(360deg); } }
 
 /* ĐƯỜNG DẪN ĐI SÂU VÀO CẤP CON TRÊN HEADER BAR (NHỎ, MỜ, TINH GỌN) */
 .header-deep-breadcrumb {

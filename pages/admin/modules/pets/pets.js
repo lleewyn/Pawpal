@@ -1012,7 +1012,7 @@
 
             if (!paginationBar || !pageNumbersContainer) return;
 
-            if (totalItems <= PETS_PER_PAGE) {
+            if (totalItems === 0) {
                 paginationBar.style.display = totalItems === 0 ? 'none' : 'flex';
             } else {
                 paginationBar.style.display = 'flex';
@@ -2230,7 +2230,7 @@
 
             if (!paginationBar || !pageNumbersContainer) return;
 
-            if (totalItems <= REMINDERS_PER_PAGE) {
+            if (totalItems === 0) {
                 paginationBar.style.display = totalItems === 0 ? 'none' : 'flex';
             } else {
                 paginationBar.style.display = 'flex';

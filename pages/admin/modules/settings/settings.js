@@ -509,27 +509,50 @@
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
 
+        const VALID_SETTINGS_TABS = ['tab-banner-promos', 'tab-content-management', 'tab-system-config', 'tab-audit-logs'];
+
         function renderHeaderSubtabs(activeTabId) {
             if (!subtabsContainer) return;
-            subtabsContainer.innerHTML = `
-                <button type="button" class="header-subtab-btn ${activeTabId === 'tab-banner-promos' ? 'active' : ''}" data-tab="tab-banner-promos">Banner và Khuyến mãi</button>
-                <span class="subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn ${activeTabId === 'tab-content-management' ? 'active' : ''}" data-tab="tab-content-management">Bài viết</button>
-                <span class="subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn ${activeTabId === 'tab-system-config' ? 'active' : ''}" data-tab="tab-system-config">Cấu hình</button>
-                <span class="subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn ${activeTabId === 'tab-audit-logs' ? 'active' : ''}" data-tab="tab-audit-logs">Nhật ký</button>
-            `;
-
-            subtabsContainer.querySelectorAll('.header-subtab-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const tab = btn.getAttribute('data-tab');
-                    switchSubtab(tab);
-                });
+            if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Cấu hình') return;
+            const existingBtns = subtabsContainer.querySelectorAll('.header-subtab-btn');
+            const isSettingsBtns = existingBtns.length === 4 && Array.from(existingBtns).every(b => {
+                const t = b.getAttribute('data-tab') || b.getAttribute('data-subtab');
+                return VALID_SETTINGS_TABS.includes(t);
             });
+
+            if (isSettingsBtns) {
+                existingBtns.forEach(btn => {
+                    const tab = btn.getAttribute('data-tab') || btn.getAttribute('data-subtab');
+                    btn.classList.toggle('active', tab === activeTabId);
+                });
+                return;
+            }
+
+            subtabsContainer.innerHTML = `
+                <button type="button" class="header-subtab-btn ${activeTabId === 'tab-banner-promos' ? 'active' : ''}" data-subtab="tab-banner-promos" data-tab="tab-banner-promos">Banner và Khuyến mãi</button>
+                <span class="subtab-divider header-subtab-divider">|</span>
+                <button type="button" class="header-subtab-btn ${activeTabId === 'tab-content-management' ? 'active' : ''}" data-subtab="tab-content-management" data-tab="tab-content-management">Bài viết</button>
+                <span class="subtab-divider header-subtab-divider">|</span>
+                <button type="button" class="header-subtab-btn ${activeTabId === 'tab-system-config' ? 'active' : ''}" data-subtab="tab-system-config" data-tab="tab-system-config">Cấu hình</button>
+                <span class="subtab-divider header-subtab-divider">|</span>
+                <button type="button" class="header-subtab-btn ${activeTabId === 'tab-audit-logs' ? 'active' : ''}" data-subtab="tab-audit-logs" data-tab="tab-audit-logs">Nhật ký</button>
+            `;
         }
 
+        subtabsContainer?.addEventListener('click', (e) => {
+            if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Cấu hình') return;
+            const btn = e.target.closest('.header-subtab-btn');
+            if (!btn) return;
+            const tab = btn.getAttribute('data-tab') || btn.getAttribute('data-subtab');
+            if (tab && VALID_SETTINGS_TABS.includes(tab)) {
+                switchSubtab(tab);
+            }
+        });
+
         function switchSubtab(tabId) {
+            if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Cấu hình') return;
+            if (!VALID_SETTINGS_TABS.includes(tabId)) return;
+
             document.querySelectorAll('.settings-module-wrapper .subtab-content').forEach(sec => {
                 sec.classList.remove('active');
             });
@@ -615,12 +638,23 @@
         // -------------------------------------------------------------
         // 4. RENDER SUB-TAB 1: BANNER, VOUCHER, PAWPOINTS, NOTICES
         // -------------------------------------------------------------
+        let bannerPage = 1;
+        const SETTINGS_PAGE_SIZE = 10;
+        function renderSettingsPager(containerId, page, totalPages, onChange) {
+            const el = document.getElementById(containerId); if (!el) return;
+            if (totalPages < 1) { el.innerHTML = ''; return; }
+            el.innerHTML = `<button class="pagination-btn" ${page === 1 ? 'disabled' : ''} data-p="prev">&lt;</button>${Array.from({length: totalPages}, (_, i) => `<button class="pagination-btn ${i + 1 === page ? 'active' : ''}" data-p="${i + 1}">${i + 1}</button>`).join('')}<button class="pagination-btn" ${page === totalPages ? 'disabled' : ''} data-p="next">&gt;</button>`;
+            el.querySelectorAll('[data-p]').forEach(btn => btn.addEventListener('click', () => { const p = btn.dataset.p; onChange(p === 'prev' ? page - 1 : p === 'next' ? page + 1 : Number(p)); }));
+        }
         function renderBanners() {
             const container = document.getElementById('bannerCardsContainer');
             if (!container) return;
 
             container.innerHTML = '';
-            bannersList.forEach(b => {
+            const totalPages = Math.max(1, Math.ceil(bannersList.length / SETTINGS_PAGE_SIZE));
+            bannerPage = Math.min(bannerPage, totalPages);
+            const pageItems = bannersList.slice((bannerPage - 1) * SETTINGS_PAGE_SIZE, bannerPage * SETTINGS_PAGE_SIZE);
+            pageItems.forEach(b => {
                 const isExpiring = isBannerExpiring(b);
                 const card = document.createElement('div');
                 card.className = 'banner-item-card';
@@ -653,6 +687,7 @@
                 `;
                 container.appendChild(card);
             });
+            renderSettingsPager('bannerPaginationControls', bannerPage, totalPages, p => { bannerPage = p; renderBanners(); });
 
             // Bật/tắt banner (Update Supabase: cột status = 'dang_hien_thi' / 'tam_an')
             container.querySelectorAll('.btn-toggle-banner').forEach(btn => {
@@ -846,6 +881,7 @@
             currentActiveVoucherCode = null;
         }
 
+        let notificationPage = 1;
         function renderNotifications() {
             const container = document.getElementById('notificationsListContainer');
             if (!container) return;
@@ -869,7 +905,9 @@
                 }
             }
 
-            notificationsList.forEach(n => {
+            const totalPages = Math.max(1, Math.ceil(notificationsList.length / SETTINGS_PAGE_SIZE));
+            notificationPage = Math.min(notificationPage, totalPages);
+            notificationsList.slice((notificationPage - 1) * SETTINGS_PAGE_SIZE, notificationPage * SETTINGS_PAGE_SIZE).forEach(n => {
                 const isAct = n.status === 'active';
                 const statusBadge = isAct
                     ? '<span class="admin-badge badge-active">Đang hiện</span>'
@@ -892,6 +930,7 @@
                 `;
                 container.appendChild(row);
             });
+            renderSettingsPager('notificationPaginationControls', notificationPage, totalPages, p => { notificationPage = p; renderNotifications(); });
 
             // Bật/tắt thông báo trên Supabase (cột is_read)
             container.querySelectorAll('.btn-toggle-notice').forEach(btn => {
@@ -1151,6 +1190,7 @@
             }
         }
 
+        let auditPage = 1;
         function renderAuditLogs() {
             const tbody = document.getElementById('auditLogTableBody');
             if (!tbody) return;
@@ -1187,13 +1227,17 @@
                 return true;
             });
 
+            const totalPages = Math.max(1, Math.ceil(filtered.length / SETTINGS_PAGE_SIZE));
+            auditPage = Math.min(auditPage, totalPages);
+            renderSettingsPager('auditPaginationControls', auditPage, totalPages, p => { auditPage = p; renderAuditLogs(); });
+
             tbody.innerHTML = '';
             if (filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">Không tìm thấy nhật ký thay đổi nào phù hợp.</td></tr>`;
                 return;
             }
 
-            filtered.forEach(log => {
+            filtered.slice((auditPage - 1) * SETTINGS_PAGE_SIZE, auditPage * SETTINGS_PAGE_SIZE).forEach(log => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><span style="font-size: 12.5px; color: var(--text-muted);">${log.time}</span></td>

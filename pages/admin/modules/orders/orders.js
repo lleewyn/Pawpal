@@ -1695,7 +1695,7 @@
             const pagContainer = document.getElementById('ordersPagination');
             if (!pagContainer) return;
 
-            if (totalPages <= 1) {
+            if (totalPages === 0) {
                 pagContainer.style.display = 'none';
                 return;
             }
@@ -2408,7 +2408,7 @@
             const pagContainer = document.getElementById('productsPagination');
             if (!pagContainer) return;
 
-            if (totalPages <= 1) {
+            if (totalPages === 0) {
                 pagContainer.style.display = 'none';
                 return;
             }

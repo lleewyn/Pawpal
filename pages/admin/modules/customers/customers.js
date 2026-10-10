@@ -509,6 +509,8 @@
             return toUnaccent(sourceText).includes(toUnaccent(searchTerm));
         }
 
+        let pawpointCurrentPage = 1;
+        const PAWPOINT_PAGE_SIZE = 10;
         function renderPawpointHistory() {
             const tbody = document.getElementById('pawpointHistoryTbody');
             if (!tbody) return;
@@ -530,12 +532,27 @@
                 return matchQuery && matchType;
             });
 
+            const totalPages = Math.max(1, Math.ceil(filtered.length / PAWPOINT_PAGE_SIZE));
+            pawpointCurrentPage = Math.min(pawpointCurrentPage, totalPages);
+            const pageItems = filtered.slice((pawpointCurrentPage - 1) * PAWPOINT_PAGE_SIZE, pawpointCurrentPage * PAWPOINT_PAGE_SIZE);
+            const pager = document.getElementById('pawpointPaginationControls');
+            if (pager) {
+                pager.innerHTML = filtered.length > 0 ? `<button type="button" class="pagination-btn" ${pawpointCurrentPage === 1 ? 'disabled' : ''} data-pawpoint-page="prev">&lt;</button>${Array.from({length: totalPages}, (_, i) => `<button type="button" class="pagination-btn ${i + 1 === pawpointCurrentPage ? 'active' : ''}" data-pawpoint-page="${i + 1}">${i + 1}</button>`).join('')}<button type="button" class="pagination-btn" ${pawpointCurrentPage === totalPages ? 'disabled' : ''} data-pawpoint-page="next">&gt;</button>` : '';
+                pager.querySelectorAll('[data-pawpoint-page]').forEach(btn => btn.addEventListener('click', () => {
+                    const action = btn.dataset.pawpointPage;
+                    if (action === 'prev') pawpointCurrentPage = Math.max(1, pawpointCurrentPage - 1);
+                    else if (action === 'next') pawpointCurrentPage = Math.min(totalPages, pawpointCurrentPage + 1);
+                    else pawpointCurrentPage = Number(action);
+                    renderPawpointHistory();
+                }));
+            }
+
             if (filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">Không tìm thấy lịch sử biến động điểm phù hợp.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = filtered.map(item => {
+            tbody.innerHTML = pageItems.map(item => {
                 const sign = item.type === 'ADD' ? '+' : '-';
                 const colorClass = item.type === 'ADD' ? 'text-success' : 'text-danger';
                 return `
@@ -1345,7 +1362,7 @@
             const pagControls = document.getElementById('customerPaginationControls');
             if (!pagBar || !pagControls) return;
 
-            if (totalPages <= 1) {
+            if (totalPages === 0) {
                 pagBar.style.display = 'none';
                 return;
             }

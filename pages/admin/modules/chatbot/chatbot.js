@@ -433,11 +433,8 @@
                 };
             });
 
-            if (realConvList.length > 0) {
-                liveConversations = realConvList;
-            } else if (liveConversations.length === 0) {
-                liveConversations = fallbackConvList;
-            }
+            // Chỉ hiển thị các phiên hội thoại thực có trong Supabase.
+            liveConversations = realConvList;
 
             // Đồng bộ conversation đang chọn (hỗ trợ cả conv_id lẫn customer_id)
             const savedConvId = sessionStorage.getItem('pawpal_admin_chatbot_conv_id');
@@ -696,25 +693,48 @@
     const subtabsContainer = document.getElementById('headerSubtabsGroup');
     const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
 
+    const VALID_CHATBOT_TABS = ['tab-live-support', 'tab-ai-copilot', 'tab-chatbot-rules'];
+
     function renderHeaderSubtabs(activeTabId) {
         if (!subtabsContainer) return;
-        subtabsContainer.innerHTML = `
-            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-live-support' ? 'active' : ''}" data-tab="tab-live-support">Trực chat</button>
-            <span class="subtab-divider">|</span>
-            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-ai-copilot' ? 'active' : ''}" data-tab="tab-ai-copilot">Trợ lý AI</button>
-            <span class="subtab-divider">|</span>
-            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-chatbot-rules' ? 'active' : ''}" data-tab="tab-chatbot-rules">Quy định</button>
-        `;
-
-        subtabsContainer.querySelectorAll('.header-subtab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tab = btn.getAttribute('data-tab');
-                switchSubtab(tab);
-            });
+        if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Chatbot') return;
+        const existingBtns = subtabsContainer.querySelectorAll('.header-subtab-btn');
+        const isChatbotBtns = existingBtns.length === 3 && Array.from(existingBtns).every(b => {
+            const t = b.getAttribute('data-tab') || b.getAttribute('data-subtab');
+            return VALID_CHATBOT_TABS.includes(t);
         });
+
+        if (isChatbotBtns) {
+            existingBtns.forEach(btn => {
+                const tab = btn.getAttribute('data-tab') || btn.getAttribute('data-subtab');
+                btn.classList.toggle('active', tab === activeTabId);
+            });
+            return;
+        }
+
+        subtabsContainer.innerHTML = `
+            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-live-support' ? 'active' : ''}" data-subtab="tab-live-support" data-tab="tab-live-support">Trực chat</button>
+            <span class="subtab-divider header-subtab-divider">|</span>
+            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-ai-copilot' ? 'active' : ''}" data-subtab="tab-ai-copilot" data-tab="tab-ai-copilot">Trợ lý AI</button>
+            <span class="subtab-divider header-subtab-divider">|</span>
+            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-chatbot-rules' ? 'active' : ''}" data-subtab="tab-chatbot-rules" data-tab="tab-chatbot-rules">Quy định</button>
+        `;
     }
 
+    subtabsContainer?.addEventListener('click', (e) => {
+        if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Chatbot') return;
+        const btn = e.target.closest('.header-subtab-btn');
+        if (!btn) return;
+        const tab = btn.getAttribute('data-tab') || btn.getAttribute('data-subtab');
+        if (tab && VALID_CHATBOT_TABS.includes(tab)) {
+            switchSubtab(tab);
+        }
+    });
+
     function switchSubtab(tabId) {
+        if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Chatbot') return;
+        if (!VALID_CHATBOT_TABS.includes(tabId)) return;
+
         document.querySelectorAll('.chatbot-module-wrapper .subtab-content').forEach(sec => {
             sec.classList.remove('active');
         });
@@ -2794,7 +2814,7 @@
     function renderPaginationControls(containerId, currentPage, totalPages, onPageChange) {
         const container = document.getElementById(containerId);
         if (!container) return;
-        if (totalPages <= 1) {
+        if (totalPages === 0) {
             container.innerHTML = '';
             return;
         }
@@ -3561,6 +3581,15 @@
         if (!rulesHubInitialized) {
             setupRulesHubEventListeners();
             rulesHubInitialized = true;
+        }
+        const activeRulesBtn = document.querySelector('.rules-hub-tab-btn.active');
+        if (activeRulesBtn) {
+            currentRulesView = activeRulesBtn.getAttribute('data-rules-view') || currentRulesView;
+            document.querySelectorAll('.rules-view-panel').forEach(panel => {
+                const isTarget = panel.id === `rulesView${currentRulesView.charAt(0).toUpperCase()}${currentRulesView.slice(1)}`;
+                panel.style.display = isTarget ? 'flex' : 'none';
+                panel.classList.toggle('active', isTarget);
+            });
         }
         loadAllRulesDataFromSupabase();
     }

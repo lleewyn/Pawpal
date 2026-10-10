@@ -121,7 +121,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.admin-preview-content .subtab-content').forEach(section => {
             section.classList.toggle('active', section.id === `subtab-${tabId}`);
         });
-        document.querySelectorAll('.header-subtab-btn').forEach(button => button.classList.toggle('active', button === tabButton));
+        document.querySelectorAll('.header-subtab-btn').forEach(button => {
+            const bTabId = button.getAttribute('data-tab') || button.getAttribute('data-subtab');
+            button.classList.toggle('active', bTabId === tabId);
+        });
         if (window.location.hash !== `#${tabId}`) history.pushState(null, '', `#${tabId}`);
     });
 
@@ -146,8 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
             storageKey: 'pawpal_admin_pet_subtab',
             subtabs: [
                 { id: 'tab-pet-list', label: 'Thú cưng' },
-                { id: 'tab-pet-profile', label: 'Hồ sơ pet' },
-                { id: 'tab-pet-medical', label: 'Sổ tiêm' }
+                { id: 'tab-pet-profile', label: 'Hồ sơ' },
+                { id: 'tab-pet-carelog', label: 'Nhật ký' },
+                { id: 'tab-pet-reminders', label: 'Nhắc lịch' }
             ]
         },
         'Dịch vụ': {
@@ -156,9 +160,9 @@ document.addEventListener('DOMContentLoaded', () => {
             storageKey: 'pawpal_admin_services_active_subtab',
             subtabs: [
                 { id: 'tab-service-bookings', label: 'Lịch hẹn' },
-                { id: 'tab-service-catalog', label: 'Danh mục dịch vụ' },
-                { id: 'tab-service-pricing', label: 'Bảng giá' },
-                { id: 'tab-service-reports', label: 'Báo cáo dịch vụ' }
+                { id: 'tab-service-detail', label: 'Hồ sơ' },
+                { id: 'tab-service-catalog', label: 'Bảng giá' },
+                { id: 'tab-service-reviews', label: 'Đánh giá' }
             ]
         },
         'Bán hàng': {
@@ -167,9 +171,9 @@ document.addEventListener('DOMContentLoaded', () => {
             storageKey: 'pawpal_admin_order_subtab',
             subtabs: [
                 { id: 'tab-order-list', label: 'Đơn hàng' },
-                { id: 'tab-order-catalog', label: 'Danh mục sản phẩm' },
-                { id: 'tab-order-inventory', label: 'Tồn kho' },
-                { id: 'tab-order-reports', label: 'Báo cáo doanh thu' }
+                { id: 'tab-order-detail', label: 'Hồ sơ' },
+                { id: 'tab-order-products', label: 'Sản phẩm và Kho' },
+                { id: 'tab-order-promos', label: 'Khuyến mãi' }
             ]
         },
         'Nhân sự': {
@@ -177,10 +181,10 @@ document.addEventListener('DOMContentLoaded', () => {
             defaultTab: 'tab-staff-list',
             storageKey: 'pawpal_admin_staff_active_subtab',
             subtabs: [
-                { id: 'tab-staff-list', label: 'Nhân viên' },
-                { id: 'tab-staff-roster', label: 'Lịch trực KTV' },
-                { id: 'tab-staff-timesheet', label: 'Chấm công' },
-                { id: 'tab-staff-reports', label: 'Báo cáo hiệu suất' }
+                { id: 'tab-staff-list', label: 'Nhân sự' },
+                { id: 'tab-staff-profile', label: 'Hồ sơ' },
+                { id: 'tab-staff-schedule', label: 'Lịch làm việc' },
+                { id: 'tab-staff-assessment', label: 'Đánh giá' }
             ]
         },
         'Khiếu nại': {
@@ -198,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
             defaultTab: 'tab-live-support',
             storageKey: 'pawpal_admin_chatbot_subtab',
             subtabs: [
-                { id: 'tab-live-support', label: 'Hỗ trợ trực tuyến' },
+                { id: 'tab-live-support', label: 'Trực chat' },
                 { id: 'tab-ai-copilot', label: 'Trợ lý AI' },
                 { id: 'tab-chatbot-rules', label: 'Quy định' }
             ]
@@ -292,6 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Render tức thì Header Bar để triệt tiêu 100% hiện tượng chớp/load header
         renderHeaderSubtabsInstant(moduleName);
+        contentArea.innerHTML = '<div class="admin-module-loading" role="status" aria-live="polite"><span class="admin-loading-spinner"></span><span>Đang tải dữ liệu...</span></div>';
 
         if (moduleName === 'Dashboard') {
             try {
@@ -827,9 +832,21 @@ document.addEventListener('DOMContentLoaded', () => {
             update();
         });
     };
+    const ensureTableSkeleton = (root = document) => {
+        root.querySelectorAll('table tbody').forEach(tbody => {
+            if (tbody.children.length || tbody.dataset.loadingSkeleton === 'true') return;
+            const columns = tbody.closest('table')?.querySelectorAll('thead th').length || 1;
+            tbody.dataset.loadingSkeleton = 'true';
+            tbody.innerHTML = Array.from({ length: 3 }, (_, index) => {
+                const cells = Array.from({ length: columns }, () => '<td><span class="skeleton-text" style="width: ' + (55 + (index * 11)) + 'px;"></span></td>').join('');
+                return '<tr class="skeleton-row admin-auto-skeleton">' + cells + '</tr>';
+            }).join('');
+        });
+    };
     ensureEmptyStateReset();
     ensureToolbarReset();
-    new MutationObserver(() => { ensureEmptyStateReset(); ensureToolbarReset(); }).observe(document.body, { childList: true, subtree: true });
+    ensureTableSkeleton();
+    new MutationObserver(() => { ensureEmptyStateReset(); ensureToolbarReset(); ensureTableSkeleton(); }).observe(document.body, { childList: true, subtree: true });
 
     // Khởi tạo Lucide
     if (window.lucide) {

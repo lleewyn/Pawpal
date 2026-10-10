@@ -1488,7 +1488,7 @@
             const pagContainer = document.getElementById('servicePagination');
             if (!pagContainer) return;
 
-            if (totalPages <= 1) {
+            if (totalPages === 0) {
                 pagContainer.style.display = 'none';
                 pagContainer.innerHTML = '';
                 return;
@@ -1642,7 +1642,7 @@
 
             // Ẩn thanh phân trang khi kết quả rỗng hoặc chỉ có 1 trang duy nhất
             const pagContainer = document.getElementById('servicePagination');
-            if (filtered.length === 0 || totalPages <= 1) {
+            if (filtered.length === 0) {
                 if (pagContainer) {
                     pagContainer.style.display = 'none';
                     pagContainer.innerHTML = '';
