@@ -42,14 +42,35 @@
     }
 
     if (!checkAuth()) return;
-    try {
-        const result = await window.PawpalCustomerAuth.request('me', {}, true);
-        await window.PawpalCustomerAuth.accept(result);
-    } catch {
-        localStorage.removeItem('pawpal_current_user');
-        sessionStorage.removeItem('pawpal_current_user');
-        window.location.href = '/login';
-        return;
+    
+    // Đảm bảo window.PawpalCustomerAuth sẵn sàng
+    if (!window.PawpalCustomerAuth) {
+        await new Promise(resolve => {
+            if (window.PawpalCustomerAuth) return resolve();
+            let attempts = 0;
+            const check = setInterval(() => {
+                attempts++;
+                if (window.PawpalCustomerAuth || attempts > 20) {
+                    clearInterval(check);
+                    resolve();
+                }
+            }, 50);
+        });
+    }
+
+    if (window.PawpalCustomerAuth && window.PawpalCustomerAuth.request) {
+        try {
+            const result = await window.PawpalCustomerAuth.request('me', {}, true);
+            await window.PawpalCustomerAuth.accept(result);
+        } catch (err) {
+            if (err.message && (err.message.includes('hết hạn') || err.message.includes('đăng nhập lại') || err.message.includes('chưa hoạt động'))) {
+                localStorage.removeItem('pawpal_current_user');
+                sessionStorage.removeItem('pawpal_current_user');
+                window.location.href = '/login';
+                return;
+            }
+            console.warn('[UserPortal] Không thể làm mới hồ sơ từ máy chủ, dùng dữ liệu lưu trữ cục bộ:', err.message);
+        }
     }
 
     const { createLatestRenderer } = await import('/scripts/shared/latest-render.mjs');

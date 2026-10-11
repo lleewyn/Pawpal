@@ -116,8 +116,11 @@ function initReturnGuestPage() {
                 showToast('Xác thực số điện thoại thành công!', 'success');
             });
         } catch (fatalErr) {
-            console.error(fatalErr);
-            alert("Error in submit handler: " + fatalErr.message + "\n" + fatalErr.stack);
+            console.error('[ReturnGuest] Error in submit handler:', fatalErr);
+            if (errorBox) {
+                errorBox.classList.remove('d-none');
+                errorBox.textContent = 'Có lỗi xảy ra trong quá trình tra cứu. Vui lòng thử lại sau.';
+            }
             const btn = form.querySelector('button[type=submit]');
             if (btn) {
                 btn.disabled = false;

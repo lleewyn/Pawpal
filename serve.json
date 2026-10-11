@@ -125,6 +125,14 @@
       "destination": "/pages/public/return-guest/return-guest.html"
     },
     {
+      "source": "/user",
+      "destination": "/pages/user/index.html"
+    },
+    {
+      "source": "/user/",
+      "destination": "/pages/user/index.html"
+    },
+    {
       "source": "/pages/user",
       "destination": "/pages/user/index.html"
     },
