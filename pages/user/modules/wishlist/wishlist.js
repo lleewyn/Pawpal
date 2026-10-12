@@ -114,7 +114,7 @@ async function getWishlistItems() {
         }
     }
 
-    if (!finalProductIds.length && !finalServiceIds.length) {
+    if (!currentUser && !finalProductIds.length && !finalServiceIds.length) {
         const local = getLocalWishlistIds();
         finalProductIds = local.productIds;
         finalServiceIds = local.serviceIds;
@@ -122,11 +122,6 @@ async function getWishlistItems() {
 
     const allProducts = await loadAllProductsSafely();
     const allServices = await loadAllServicesSafely();
-
-    // Dữ liệu mẫu khởi tạo nếu danh sách yêu thích đang trống
-    if (!finalProductIds.length && !finalServiceIds.length && allProducts.length >= 4) {
-        finalProductIds = [allProducts[0]?.id, allProducts[1]?.id, allProducts[2]?.id, allProducts[3]?.id].filter(Boolean);
-    }
 
     const seenProducts = new Set();
     const products = finalProductIds.map((item) => {

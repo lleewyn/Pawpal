@@ -652,549 +652,563 @@
 
     <!-- MODAL: THÊM / CHỈNH SỬA NHÂN VIÊN -->
     <div class="admin-modal-overlay" id="staffModalOverlay">
-        <div class="admin-modal-card wide-modal">
-            <div class="modal-header-clean">
-                <div class="modal-title-clean" id="staffModalTitle">Thêm nhân viên mới</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelStaff">Đóng</button>
-            </div>
-            <div class="modal-body-clean">
-                <div class="detail-section-title" style="margin-top: 0;">Thông tin cá nhân</div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Họ và tên *</label>
-                        <input type="text" class="admin-input" id="staffInputName" placeholder="Ví dụ: Nguyễn Văn A" maxlength="100" autofocus>
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Số điện thoại *</label>
-                        <input type="text" class="admin-input" id="staffInputPhone" placeholder="10 chữ số...">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Email công việc *</label>
-                        <input type="email" class="admin-input" id="staffInputEmail" placeholder="abc@pawpal.vn">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Địa chỉ</label>
-                        <input type="text" class="admin-input" id="staffInputAddress" placeholder="Địa chỉ thường trú...">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Ngày sinh</label>
-                        <input type="date" class="admin-input" id="staffInputDob">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Ngày bắt đầu làm *</label>
-                        <input type="date" class="admin-input" id="staffInputJoinDate">
-                    </div>
+        <div class="admin-modal-card wide-modal" style="width: 740px; max-width: 95vw;">
+            <form id="staffModalForm" novalidate onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <div class="modal-header-clean">
+                    <div class="modal-title-clean" id="staffModalTitle">Thêm nhân viên mới</div>
+                    <button type="button" class="modal-btn-close-text" id="btnCancelStaff" data-close-modal="staffModalOverlay">Đóng</button>
                 </div>
-
-                <div class="detail-section-title" style="margin-top: 10px;">Thông tin công việc</div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Chức vụ *</label>
-                        <select class="admin-select" id="staffInputPosition">
-                            <option value="Quản trị viên">Quản trị viên</option>
-                            <option value="Lễ tân">Lễ tân</option>
-                            <option value="Groomer">Groomer</option>
-                            <option value="Chuyên viên Spa thú cưng">Chuyên viên Spa thú cưng</option>
-                            <option value="Bảo mẫu Pet Hotel">Bảo mẫu Pet Hotel</option>
-                            <option value="CSKH">CSKH</option>
-                            <option value="Tài xế Taxi Pet">Tài xế Taxi Pet</option>
-                        </select>
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Ca làm việc *</label>
-                        <select class="admin-select" id="staffInputShift" required>
-                            <option value="">Chọn ca làm việc</option>
-                            <option value="MORNING">Ca sáng</option>
-                            <option value="AFTERNOON">Ca chiều</option>
-                            <option value="EVENING">Ca tối</option>
-                            <option value="NIGHT">Ca khuya</option>
-                        </select>
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Chuyên môn / Ghi chú</label>
-                        <input type="text" class="admin-input" id="staffInputSpecialization" placeholder="Ví dụ: Cắt tỉa tạo kiểu Poodle, Spa chuyên sâu...">
-                    </div>
-                </div>
-
-                <div class="detail-section-title" style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center;">
-                    <span>Tài khoản đăng nhập hệ thống</span>
-                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; cursor: pointer; text-transform: none; letter-spacing: normal;">
-                        <input type="checkbox" id="staffEnableAccountToggle" style="accent-color: var(--text-heading); cursor: pointer;">
-                        <span>Cấp tài khoản đăng nhập Pawpal-er</span>
-                    </label>
-                </div>
-
-                <!-- KHU VỰC CẤU HÌNH TÀI KHOẢN (ẨN KHI CHƯA CHỌN CẤP TÀI KHOẢN) -->
-                <div id="staffAccountConfigSection" style="display: none; margin-top: 8px;">
-                    <!-- DÒNG TRẠNG THÁI HIỆN TẠI (KHI ĐÃ CÓ TÀI KHOẢN) -->
-                    <div id="staffAccountStatusRow" style="display: none; align-items: center; justify-content: space-between; padding: 8px 12px; background-color: #EEF5F1; border-radius: 9px; margin-bottom: 12px;">
-                        <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
-                            <span style="color: var(--text-muted);">Trạng thái:</span>
-                            <span class="admin-badge" id="staffAccountStatusBadge">Chưa cấp tài khoản</span>
-                            <span id="staffAccountLastLoginText" style="color: var(--text-muted); font-size: 12px; margin-left: 6px;"></span>
-                        </div>
-                        <div style="display: flex; gap: 8px;">
-                            <button type="button" class="admin-btn admin-btn-secondary" id="btnStaffResetPasswordModal" style="height: 28px; padding: 0 10px; font-size: 12px;">Đặt lại mật khẩu</button>
-                            <button type="button" class="admin-btn admin-btn-secondary" id="btnStaffToggleLockAccount" style="height: 28px; padding: 0 10px; font-size: 12px;">Khóa tài khoản</button>
-                        </div>
-                    </div>
-
+                <div class="modal-body-clean">
+                    <div class="detail-section-title" style="margin-top: 0;">Thông tin cá nhân</div>
                     <div class="form-row-2col">
                         <div class="form-group-item">
-                            <label class="form-label-clean">Email công vụ đăng nhập *</label>
-                            <input type="email" class="admin-input" id="staffAccountEmail" placeholder="nv.ten@pawpal.vn">
+                            <label class="form-label-clean">Họ và tên <span style="color: #DC2626;">*</span></label>
+                            <input type="text" class="admin-input" id="staffInputName" placeholder="Ví dụ: Nguyễn Văn A" maxlength="100" autofocus>
                         </div>
                         <div class="form-group-item">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <label class="form-label-clean" id="staffAccountPasswordLabel">Mật khẩu khởi tạo *</label>
-                                <button type="button" class="text-btn" id="btnGenerateRandomStaffPass" style="background: none; border: none; color: var(--text-heading); font-size: 12px; cursor: pointer; padding: 0;">Tạo ngẫu nhiên</button>
-                            </div>
-                            <input type="text" class="admin-input" id="staffAccountPassword" placeholder="Tối thiểu 6 ký tự...">
+                            <label class="form-label-clean">Số điện thoại <span style="color: #DC2626;">*</span></label>
+                            <input type="text" class="admin-input" id="staffInputPhone" placeholder="10 chữ số...">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Email công việc <span style="color: #DC2626;">*</span></label>
+                            <input type="email" class="admin-input" id="staffInputEmail" placeholder="abc@pawpal.vn">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Địa chỉ</label>
+                            <input type="text" class="admin-input" id="staffInputAddress" placeholder="Địa chỉ thường trú...">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ngày sinh</label>
+                            <input type="date" class="admin-input" id="staffInputDob">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ngày bắt đầu làm <span style="color: #DC2626;">*</span></label>
+                            <input type="date" class="admin-input" id="staffInputJoinDate">
                         </div>
                     </div>
 
-                    <div class="form-row-2col" style="margin-top: 10px;">
+                    <div class="detail-section-title" style="margin-top: 10px;">Thông tin công việc</div>
+                    <div class="form-row-2col">
                         <div class="form-group-item">
-                            <label class="form-label-clean">Vai trò hệ thống *</label>
-                            <select class="admin-select" id="staffAccountSystemRole">
-                                <option value="ADMIN">Quản trị viên (Toàn quyền hệ thống)</option>
-                                <option value="RECEPTIONIST">Lễ tân tiếp đón (Lịch hẹn và Tiếp nhận)</option>
-                                <option value="GROOMER" selected>Kỹ thuật viên grooming (Ca dịch vụ và Nhật ký)</option>
-                                <option value="CAREGIVER">Chuyên viên pet hotel (Lưu trú và Chăm sóc)</option>
-                                <option value="CSKH">Chăm sóc khách hàng (Hỗ trợ và Chatbot)</option>
-                                <option value="DRIVER">Tài xế taxi pet (Đưa đón thú cưng)</option>
-                                <option value="STAFF">Nhân viên nghiệp vụ chung</option>
+                            <label class="form-label-clean">Chức vụ <span style="color: #DC2626;">*</span></label>
+                            <select class="admin-select" id="staffInputPosition">
+                                <option value="Quản trị viên">Quản trị viên</option>
+                                <option value="Lễ tân tiếp đón">Lễ tân tiếp đón</option>
+                                <option value="Kỹ thuật viên grooming">Kỹ thuật viên grooming</option>
+                                <option value="Chuyên viên spa thú cưng">Chuyên viên spa thú cưng</option>
+                                <option value="Bảo mẫu lưu trú pet hotel">Bảo mẫu lưu trú pet hotel</option>
+                                <option value="Chăm sóc khách hàng">Chăm sóc khách hàng</option>
+                                <option value="Tài xế taxi pet">Tài xế taxi pet</option>
                             </select>
                         </div>
-                        <div class="form-group-item" style="display: flex; align-items: flex-end; padding-bottom: 8px;">
-                            <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: var(--text-main);">
-                                <input type="checkbox" id="staffMustChangePasswordCheckbox" checked style="accent-color: var(--text-heading); cursor: pointer;">
-                                <span>Bắt buộc đổi mật khẩu ở lần đăng nhập đầu tiên</span>
-                            </label>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ca làm việc <span style="color: #DC2626;">*</span></label>
+                            <select class="admin-select" id="staffInputShift" required>
+                                <option value="">Chọn ca làm việc</option>
+                                <option value="MORNING">Ca sáng</option>
+                                <option value="AFTERNOON">Ca chiều</option>
+                                <option value="EVENING">Ca tối</option>
+                                <option value="NIGHT">Ca khuya</option>
+                            </select>
+                        </div>
+                        <div class="form-group-item" style="grid-column: 1 / -1;">
+                            <label class="form-label-clean">Chuyên môn và ghi chú</label>
+                            <input type="text" class="admin-input" id="staffInputSpecialization" placeholder="Ví dụ: Cắt tỉa tạo kiểu Poodle, Spa chuyên sâu...">
+                        </div>
+                    </div>
+
+                    <div class="detail-section-title" style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>Tài khoản đăng nhập hệ thống</span>
+                        <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; cursor: pointer; text-transform: none; letter-spacing: normal;">
+                            <input type="checkbox" id="staffEnableAccountToggle" style="accent-color: var(--text-heading); cursor: pointer;">
+                            <span>Cấp tài khoản đăng nhập Pawpal-er</span>
+                        </label>
+                    </div>
+
+                    <!-- KHU VỰC CẤU HÌNH TÀI KHOẢN (ẨN KHI CHƯA CHỌN CẤP TÀI KHOẢN) -->
+                    <div id="staffAccountConfigSection" style="display: none; margin-top: 8px;">
+                        <!-- DÒNG TRẠNG THÁI HIỆN TẠI (KHI ĐÃ CÓ TÀI KHOẢN) -->
+                        <div id="staffAccountStatusRow" style="display: none; align-items: center; justify-content: space-between; padding: 8px 12px; background-color: #EEF5F1; border-radius: 9px; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                <span style="color: var(--text-muted);">Trạng thái:</span>
+                                <span class="admin-badge" id="staffAccountStatusBadge">Chưa cấp tài khoản</span>
+                                <span id="staffAccountLastLoginText" style="color: var(--text-muted); font-size: 12px; margin-left: 6px;"></span>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button type="button" class="admin-btn admin-btn-secondary" id="btnStaffResetPasswordModal" style="height: 28px; padding: 0 10px; font-size: 12px;">Đặt lại mật khẩu</button>
+                                <button type="button" class="admin-btn admin-btn-secondary" id="btnStaffToggleLockAccount" style="height: 28px; padding: 0 10px; font-size: 12px;">Khóa tài khoản</button>
+                            </div>
+                        </div>
+
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Email công vụ đăng nhập <span style="color: #DC2626;">*</span></label>
+                                <input type="email" class="admin-input" id="staffAccountEmail" placeholder="nv.ten@pawpal.vn">
+                            </div>
+                            <div class="form-group-item">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <label class="form-label-clean" id="staffAccountPasswordLabel">Mật khẩu khởi tạo <span style="color: #DC2626;">*</span></label>
+                                    <button type="button" class="text-btn" id="btnGenerateRandomStaffPass" style="background: none; border: none; color: var(--text-heading); font-size: 12px; cursor: pointer; padding: 0;">Tạo ngẫu nhiên</button>
+                                </div>
+                                <input type="text" class="admin-input" id="staffAccountPassword" placeholder="Tối thiểu 6 ký tự...">
+                            </div>
+                        </div>
+
+                        <div class="form-row-2col" style="margin-top: 10px;">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Vai trò hệ thống <span style="color: #DC2626;">*</span></label>
+                                <select class="admin-select" id="staffAccountSystemRole">
+                                    <option value="ADMIN">Quản trị viên (Toàn quyền hệ thống)</option>
+                                    <option value="RECEPTIONIST">Lễ tân tiếp đón (Lịch hẹn và tiếp nhận)</option>
+                                    <option value="GROOMER" selected>Kỹ thuật viên grooming (Ca dịch vụ và nhật ký)</option>
+                                    <option value="CAREGIVER">Bảo mẫu lưu trú pet hotel (Lưu trú và chăm sóc)</option>
+                                    <option value="CSKH">Chăm sóc khách hàng (Hỗ trợ và phản hồi)</option>
+                                    <option value="DRIVER">Tài xế taxi pet (Đưa đón thú cưng)</option>
+                                    <option value="STAFF">Nhân viên nghiệp vụ chung</option>
+                                </select>
+                            </div>
+                            <div class="form-group-item" style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+                                <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: var(--text-main);">
+                                    <input type="checkbox" id="staffMustChangePasswordCheckbox" checked style="accent-color: var(--text-heading); cursor: pointer;">
+                                    <span>Bắt buộc đổi mật khẩu ở lần đăng nhập đầu tiên</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section-title" style="margin-top: 14px;">Thiết lập quyền truy cập chi tiết</div>
+                    <div class="permissions-grid" id="staffPermissionsGrid">
+                        <div class="permission-group">
+                            <div class="perm-group-title">Lịch hẹn và Tiếp nhận</div>
+                            <label class="perm-checkbox"><input type="checkbox" value="view_booking"> Xem lịch hẹn</label>
+                            <label class="perm-checkbox"><input type="checkbox" value="confirm_booking"> Tiếp nhận và Xác nhận ca</label>
+                            <label class="perm-checkbox"><input type="checkbox" value="cancel_booking"> Hủy hoặc Chuyển ca hẹn</label>
+                        </div>
+                        <div class="permission-group">
+                            <div class="perm-group-title">Nhật ký chăm sóc</div>
+                            <label class="perm-checkbox"><input type="checkbox" value="update_image"> Cập nhật hình ảnh thực tế</label>
+                            <label class="perm-checkbox"><input type="checkbox" value="update_note"> Ghi chú sức khỏe và Thể trạng</label>
+                        </div>
+                        <div class="permission-group">
+                            <div class="perm-group-title">Bán hàng và POS</div>
+                            <label class="perm-checkbox"><input type="checkbox" value="create_order"> Tạo đơn hàng tại quầy</label>
+                            <label class="perm-checkbox"><input type="checkbox" value="checkout"> Thu ngân và Thanh toán</label>
+                        </div>
+                        <div class="permission-group">
+                            <div class="perm-group-title">Quản trị và Vận hành</div>
+                            <label class="perm-checkbox"><input type="checkbox" value="manage_staff"> Quản lý hồ sơ nhân sự</label>
+                            <label class="perm-checkbox"><input type="checkbox" value="manage_schedule"> Điều phối ca làm việc</label>
+                            <label class="perm-checkbox"><input type="checkbox" value="manage_promo"> Cấu hình khuyến mãi</label>
                         </div>
                     </div>
                 </div>
-
-                <div class="detail-section-title" style="margin-top: 14px;">Thiết lập quyền truy cập chi tiết</div>
-                <div class="permissions-grid" id="staffPermissionsGrid">
-                    <div class="permission-group">
-                        <div class="perm-group-title">Lịch hẹn và Tiếp nhận</div>
-                        <label class="perm-checkbox"><input type="checkbox" value="view_booking"> Xem lịch hẹn</label>
-                        <label class="perm-checkbox"><input type="checkbox" value="confirm_booking"> Tiếp nhận và Xác nhận ca</label>
-                        <label class="perm-checkbox"><input type="checkbox" value="cancel_booking"> Hủy hoặc Chuyển ca hẹn</label>
-                    </div>
-                    <div class="permission-group">
-                        <div class="perm-group-title">Nhật ký chăm sóc</div>
-                        <label class="perm-checkbox"><input type="checkbox" value="update_image"> Cập nhật hình ảnh thực tế</label>
-                        <label class="perm-checkbox"><input type="checkbox" value="update_note"> Ghi chú sức khỏe và Thể trạng</label>
-                    </div>
-                    <div class="permission-group">
-                        <div class="perm-group-title">Bán hàng và POS</div>
-                        <label class="perm-checkbox"><input type="checkbox" value="create_order"> Tạo đơn hàng tại quầy</label>
-                        <label class="perm-checkbox"><input type="checkbox" value="checkout"> Thu ngân và Thanh toán</label>
-                    </div>
-                    <div class="permission-group">
-                        <div class="perm-group-title">Quản trị và Vận hành</div>
-                        <label class="perm-checkbox"><input type="checkbox" value="manage_staff"> Quản lý hồ sơ nhân sự</label>
-                        <label class="perm-checkbox"><input type="checkbox" value="manage_schedule"> Điều phối ca làm việc</label>
-                        <label class="perm-checkbox"><input type="checkbox" value="manage_promo"> Cấu hình khuyến mãi</label>
-                    </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissStaffModal" data-close-modal="staffModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveStaff">Lưu nhân viên</button>
                 </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissStaffModal">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveStaff">Lưu nhân viên</button>
-            </div>
+            </form>
         </div>
     </div>
 
     <!-- MODAL: PHÂN CA LÀM VIỆC -->
     <div class="admin-modal-overlay" id="shiftModalOverlay">
-        <div class="admin-modal-card">
-            <div class="modal-header-clean">
-                <div class="modal-title-clean">Phân ca làm việc</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelShiftModal">Đóng</button>
-            </div>
-            <div class="modal-body-clean">
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Ngày làm việc</label>
-                        <input type="date" class="admin-input" id="shiftInputDate">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Ca làm việc</label>
-                        <select class="admin-select" id="shiftInputShift">
-                            <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
-                            <option value="AFTERNOON">Ca chiều (13:00 - 17:00)</option>
-                            <option value="EVENING">Ca tối (17:30 - 21:30)</option>
-                            <option value="NIGHT">Ca khuya (22:00 - 06:00)</option>
-                        </select>
-                    </div>
+        <div class="admin-modal-card" style="width: 580px; max-width: 94vw;">
+            <form id="shiftModalForm" novalidate onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <div class="modal-header-clean">
+                    <div class="modal-title-clean">Phân ca làm việc</div>
+                    <button type="button" class="modal-btn-close-text" id="btnCancelShiftModal" data-close-modal="shiftModalOverlay">Đóng</button>
                 </div>
-                
-                <div class="shift-assignment-grid">
-                    <div class="shift-col">
-                        <div class="detail-section-title">Nhân viên khả dụng</div>
-                        <div class="shift-staff-list" id="shiftAvailableStaff">
-                            <!-- JS Render -->
+                <div class="modal-body-clean">
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ngày làm việc <span style="color: #DC2626;">*</span></label>
+                            <input type="date" class="admin-input" id="shiftInputDate">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ca làm việc <span style="color: #DC2626;">*</span></label>
+                            <select class="admin-select" id="shiftInputShift">
+                                <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
+                                <option value="AFTERNOON">Ca chiều (13:00 - 17:00)</option>
+                                <option value="EVENING">Ca tối (17:30 - 21:30)</option>
+                                <option value="NIGHT">Ca khuya (22:00 - 06:00)</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="shift-col">
-                        <div class="detail-section-title">Đã phân vào ca</div>
-                        <div class="shift-staff-list" id="shiftAssignedStaff">
-                            <!-- JS Render -->
+                    
+                    <div class="shift-assignment-grid">
+                        <div class="shift-col">
+                            <div class="detail-section-title">Nhân viên khả dụng</div>
+                            <div class="shift-staff-list" id="shiftAvailableStaff">
+                                <!-- JS Render -->
+                            </div>
+                        </div>
+                        <div class="shift-col">
+                            <div class="detail-section-title">Đã phân vào ca</div>
+                            <div class="shift-staff-list" id="shiftAssignedStaff">
+                                <!-- JS Render -->
+                            </div>
                         </div>
                     </div>
+                    <div class="pet-safety-banner" id="shiftAlertBanner" style="display: none; margin-top: 10px;">
+                        <!-- Cảnh báo trùng ca -->
+                    </div>
                 </div>
-                <div class="pet-safety-banner" id="shiftAlertBanner" style="display: none; margin-top: 10px;">
-                    <!-- Cảnh báo trùng ca -->
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissShiftModal" data-close-modal="shiftModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveShift">Lưu phân ca</button>
                 </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissShiftModal">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveShift">Lưu lịch</button>
-            </div>
+            </form>
         </div>
     </div>
 
     <!-- MODAL: GHI NHẬN ĐÁNH GIÁ -->
     <div class="admin-modal-overlay" id="assessmentModalOverlay">
-        <div class="admin-modal-card">
-            <div class="modal-header-clean">
-                <div class="modal-title-clean">Ghi nhận đánh giá</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelAssessmentModal">Đóng</button>
-            </div>
-            <div class="modal-body-clean">
-                <div class="form-group-item">
-                    <label class="form-label-clean">Nhân viên *</label>
-                    <select class="admin-select" id="assessInputStaff">
-                        <!-- JS Render -->
-                    </select>
+        <div class="admin-modal-card" style="width: 580px; max-width: 94vw;">
+            <form id="assessmentModalForm" novalidate onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <div class="modal-header-clean">
+                    <div class="modal-title-clean">Ghi nhận đánh giá nghiệp vụ</div>
+                    <button type="button" class="modal-btn-close-text" id="btnCancelAssessmentModal" data-close-modal="assessmentModalOverlay">Đóng</button>
                 </div>
-                <div class="form-row-2col">
+                <div class="modal-body-clean">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Ngày kiểm tra *</label>
-                        <input type="date" class="admin-input" id="assessInputDate">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Loại kiểm tra *</label>
-                        <select class="admin-select" id="assessInputType">
-                            <option value="Grooming">Grooming</option>
-                            <option value="Spa">Spa</option>
-                            <option value="CSKH">CSKH</option>
-                            <option value="Taxi Pet">Taxi Pet</option>
-                            <option value="Lưu trú 24/7">Lưu trú 24/7</option>
-                            <option value="Sơ cứu an toàn">Sơ cứu và An toàn thú cưng</option>
+                        <label class="form-label-clean">Nhân viên <span style="color: #DC2626;">*</span></label>
+                        <select class="admin-select" id="assessInputStaff">
+                            <!-- JS Render -->
                         </select>
                     </div>
-                </div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Điểm đánh giá (0-100) *</label>
-                        <input type="number" class="admin-input" id="assessInputScore" min="0" max="100" placeholder="Nhập điểm...">
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ngày kiểm tra <span style="color: #DC2626;">*</span></label>
+                            <input type="date" class="admin-input" id="assessInputDate">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Loại kiểm tra <span style="color: #DC2626;">*</span></label>
+                            <select class="admin-select" id="assessInputType">
+                                <option value="Grooming">Grooming và cắt tỉa tạo kiểu</option>
+                                <option value="Spa">Chăm sóc spa và phục hồi lông da</option>
+                                <option value="CSKH">Chăm sóc khách hàng và tiếp nhận</option>
+                                <option value="Taxi Pet">Vận chuyển taxi pet an toàn</option>
+                                <option value="Lưu trú 24/7">Lưu trú và chăm sóc pet hotel</option>
+                                <option value="Sơ cứu an toàn">Sơ cứu và an toàn thú cưng</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Điểm đánh giá (0-100) <span style="color: #DC2626;">*</span></label>
+                            <input type="number" class="admin-input" id="assessInputScore" min="0" max="100" placeholder="Nhập điểm...">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Kết quả <span style="color: #DC2626;">*</span></label>
+                            <select class="admin-select" id="assessInputResult">
+                                <option value="PASS">Đạt tiêu chuẩn (≥ 80 điểm)</option>
+                                <option value="RETRAIN">Cần đào tạo lại (60 - 79 điểm)</option>
+                                <option value="FAIL">Không đạt (&lt; 60 điểm)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--text-muted); margin-top: -6px;">
+                        * Cơ chế an toàn tự động: Điểm &lt; 80 sẽ kích hoạt Khóa an toàn tay nghề. Điểm ≥ 80 tự động mở khóa nhận việc độc lập.
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Kết quả *</label>
-                        <select class="admin-select" id="assessInputResult">
-                            <option value="PASS">Đạt (≥ 80đ)</option>
-                            <option value="RETRAIN">Cần đào tạo (60 - 79đ)</option>
-                            <option value="FAIL">Không đạt (&lt; 60đ)</option>
-                        </select>
+                        <label class="form-label-clean">Ghi chú đào tạo</label>
+                        <textarea class="admin-input" id="assessInputNote" rows="3" placeholder="Nhận xét chi tiết..."></textarea>
                     </div>
                 </div>
-                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: -6px;">
-                    * Cơ chế an toàn tự động: Điểm &lt; 80 sẽ kích hoạt Khóa an toàn tay nghề. Điểm ≥ 80 tự động mở khóa nhận việc độc lập.
+                <div class="modal-footer-clean" style="justify-content: space-between;">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnSendAssessNotify">Lưu và gửi thông báo</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissAssessmentModal" data-close-modal="assessmentModalOverlay">Hủy</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnSaveAssessment">Lưu kết quả</button>
+                    </div>
                 </div>
-                <div class="form-group-item">
-                    <label class="form-label-clean">Ghi chú đào tạo</label>
-                    <textarea class="admin-input" id="assessInputNote" rows="3" placeholder="Nhận xét chi tiết..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer-clean" style="justify-content: space-between;">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnSendAssessNotify">Lưu và Gửi thông báo</button>
-                <div>
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissAssessmentModal">Hủy</button>
-                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveAssessment">Lưu kết quả</button>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 
     <!-- MODAL: TẠO ĐƠN XIN NGHỈ PHÉP VÀ ĐỀ XUẤT ĐỔI CA (PHASE 3) -->
     <div class="admin-modal-overlay" id="leaveSwapModalOverlay">
-        <div class="admin-modal-card">
-            <div class="modal-header-clean">
-                <div class="modal-title-clean">Đơn xin nghỉ phép và đổi ca</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelLeaveSwapModal">Đóng</button>
-            </div>
-            <div class="modal-body-clean">
-                <!-- SEGMENTED TABS: XIN NGHỈ PHÉP | ĐỔI CA LÀM VIỆC -->
-                <div class="form-subtab-group">
-                    <button type="button" class="form-subtab-btn active" id="btnTabModeLeave">Xin nghỉ phép</button>
-                    <span class="header-subtab-divider">|</span>
-                    <button type="button" class="form-subtab-btn" id="btnTabModeSwap">Đề xuất đổi ca</button>
+        <div class="admin-modal-card" style="width: 600px; max-width: 94vw;">
+            <form id="leaveSwapModalForm" novalidate onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <div class="modal-header-clean">
+                    <div class="modal-title-clean">Đơn xin nghỉ phép và đổi ca trực</div>
+                    <button type="button" class="modal-btn-close-text" id="btnCancelLeaveSwapModal" data-close-modal="leaveSwapModalOverlay">Đóng</button>
                 </div>
+                <div class="modal-body-clean">
+                    <!-- SEGMENTED TABS: XIN NGHỈ PHÉP | ĐỔI CA LÀM VIỆC -->
+                    <div class="form-subtab-group" style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+                        <button type="button" class="form-subtab-btn active" id="btnTabModeLeave" style="background: none; border: none; font-size: 13.5px; font-weight: 700; color: #236B48; cursor: pointer; padding: 0 0 4px 0; border-bottom: 2px solid #236B48;">Xin nghỉ phép</button>
+                        <span class="header-subtab-divider" style="color: #AEC8B9;">|</span>
+                        <button type="button" class="form-subtab-btn" id="btnTabModeSwap" style="background: none; border: none; font-size: 13.5px; font-weight: 500; color: #4F7A65; cursor: pointer; padding: 0 0 4px 0;">Đề xuất đổi ca</button>
+                    </div>
 
-                <!-- FORM XIN NGHỈ PHÉP -->
-                <div id="formSectionLeave">
-                    <div class="form-row-2col">
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Nhân viên xin nghỉ *</label>
-                            <select class="admin-select" id="leaveInputStaff">
-                                <!-- Render by JS -->
-                            </select>
+                    <!-- FORM XIN NGHỈ PHÉP -->
+                    <div id="formSectionLeave">
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Nhân viên xin nghỉ <span style="color: #DC2626;">*</span></label>
+                                <select class="admin-select" id="leaveInputStaff">
+                                    <!-- Render by JS -->
+                                </select>
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Loại nghỉ phép <span style="color: #DC2626;">*</span></label>
+                                <select class="admin-select" id="leaveInputType">
+                                    <option value="ANNUAL">Nghỉ phép năm</option>
+                                    <option value="SICK">Nghỉ ốm và khám bệnh</option>
+                                    <option value="PERSONAL">Việc riêng gia đình</option>
+                                    <option value="UNPAID">Nghỉ không lương</option>
+                                </select>
+                            </div>
                         </div>
+
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Từ ngày <span style="color: #DC2626;">*</span></label>
+                                <input type="date" class="admin-input" id="leaveInputStartDate">
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Đến ngày <span style="color: #DC2626;">*</span></label>
+                                <input type="date" class="admin-input" id="leaveInputEndDate">
+                            </div>
+                        </div>
+
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Phạm vi ca nghỉ <span style="color: #DC2626;">*</span></label>
+                                <select class="admin-select" id="leaveInputScope">
+                                    <option value="ALL">Cả ngày (Tất cả ca)</option>
+                                    <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
+                                    <option value="AFTERNOON">Ca chiều (13:00 - 17:00)</option>
+                                    <option value="EVENING">Ca tối (17:30 - 21:30)</option>
+                                    <option value="NIGHT">Ca khuya (22:00 - 06:00)</option>
+                                </select>
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Người trực thay thế (Tùy chọn)</label>
+                                <select class="admin-select" id="leaveInputReplacement">
+                                    <option value="">-- Chưa có người thay --</option>
+                                    <!-- Render by JS -->
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="form-group-item">
-                            <label class="form-label-clean">Loại nghỉ phép *</label>
-                            <select class="admin-select" id="leaveInputType">
-                                <option value="ANNUAL">Nghỉ phép năm</option>
-                                <option value="SICK">Nghỉ ốm và Khám bệnh</option>
-                                <option value="PERSONAL">Việc riêng gia đình</option>
-                                <option value="UNPAID">Nghỉ không lương</option>
-                            </select>
+                            <label class="form-label-clean">Lý do nghỉ phép <span style="color: #DC2626;">*</span></label>
+                            <input type="text" class="admin-input" id="leaveInputReason" placeholder="Ghi rõ lý do xin nghỉ phép...">
                         </div>
                     </div>
 
-                    <div class="form-row-2col">
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Từ ngày *</label>
-                            <input type="date" class="admin-input" id="leaveInputStartDate">
+                    <!-- FORM ĐỀ XUẤT ĐỔI CA -->
+                    <div id="formSectionSwap" style="display: none;">
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Nhân viên xin đổi (NV 1) <span style="color: #DC2626;">*</span></label>
+                                <select class="admin-select" id="swapInputStaffFrom">
+                                    <!-- Render by JS -->
+                                </select>
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Đổi với nhân viên (NV 2) <span style="color: #DC2626;">*</span></label>
+                                <select class="admin-select" id="swapInputStaffTo">
+                                    <!-- Render by JS -->
+                                </select>
+                            </div>
                         </div>
+
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Ngày xin đổi <span style="color: #DC2626;">*</span></label>
+                                <input type="date" class="admin-input" id="swapInputDateFrom">
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Ca hiện tại của NV 1 <span style="color: #DC2626;">*</span></label>
+                                <select class="admin-select" id="swapInputShiftFrom">
+                                    <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
+                                    <option value="AFTERNOON">Ca chiều (13:00 - 17:00)</option>
+                                    <option value="EVENING">Ca tối (17:30 - 21:30)</option>
+                                    <option value="NIGHT">Ca khuya (22:00 - 06:00)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Ngày đổi sang (hoặc trực bù) <span style="color: #DC2626;">*</span></label>
+                                <input type="date" class="admin-input" id="swapInputDateTo">
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Ca NV 1 sẽ nhận lại <span style="color: #DC2626;">*</span></label>
+                                <select class="admin-select" id="swapInputShiftTo">
+                                    <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
+                                    <option value="AFTERNOON">Ca chiều (13:00 - 17:00)</option>
+                                    <option value="EVENING">Ca tối (17:30 - 21:30)</option>
+                                    <option value="NIGHT">Ca khuya (22:00 - 06:00)</option>
+                                    <option value="NONE">Trực hộ (Không nhận ca bù)</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="form-group-item">
-                            <label class="form-label-clean">Đến ngày *</label>
-                            <input type="date" class="admin-input" id="leaveInputEndDate">
+                            <label class="form-label-clean">Lý do đổi ca <span style="color: #DC2626;">*</span></label>
+                            <input type="text" class="admin-input" id="swapInputReason" placeholder="Ghi rõ lý do cần đổi ca...">
                         </div>
                     </div>
 
-                    <div class="form-row-2col">
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Phạm vi ca nghỉ *</label>
-                            <select class="admin-select" id="leaveInputScope">
-                                <option value="ALL">Cả ngày (Tất cả ca)</option>
-                                <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
-                                <option value="AFTERNOON">Ca chiều (13:00 - 17:00)</option>
-                                <option value="EVENING">Ca tối (17:30 - 21:30)</option>
-                                <option value="NIGHT">Ca khuya (22:00 - 06:00)</option>
-                            </select>
-                        </div>
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Người trực thay thế (Tùy chọn)</label>
-                            <select class="admin-select" id="leaveInputReplacement">
-                                <option value="">-- Chưa có người thay --</option>
-                                <!-- Render by JS -->
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Lý do nghỉ phép *</label>
-                        <input type="text" class="admin-input" id="leaveInputReason" placeholder="Ghi rõ lý do xin nghỉ phép...">
+                    <div class="pet-safety-banner" id="leaveSwapAlertBanner" style="display: none; margin-top: 4px;">
+                        <!-- Cảnh báo thiếu hụt hoặc xung đột ca -->
                     </div>
                 </div>
-
-                <!-- FORM ĐỀ XUẤT ĐỔI CA -->
-                <div id="formSectionSwap" style="display: none;">
-                    <div class="form-row-2col">
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Nhân viên xin đổi (NV 1) *</label>
-                            <select class="admin-select" id="swapInputStaffFrom">
-                                <!-- Render by JS -->
-                            </select>
-                        </div>
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Đổi với nhân viên (NV 2) *</label>
-                            <select class="admin-select" id="swapInputStaffTo">
-                                <!-- Render by JS -->
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row-2col">
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Ngày xin đổi *</label>
-                            <input type="date" class="admin-input" id="swapInputDateFrom">
-                        </div>
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Ca hiện tại của NV 1 *</label>
-                            <select class="admin-select" id="swapInputShiftFrom">
-                                <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
-                                <option value="AFTERNOON">Ca chiều (13:00 - 17:00)</option>
-                                <option value="EVENING">Ca tối (17:30 - 21:30)</option>
-                                <option value="NIGHT">Ca khuya (22:00 - 06:00)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row-2col">
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Ngày đổi sang (hoặc trực bù) *</label>
-                            <input type="date" class="admin-input" id="swapInputDateTo">
-                        </div>
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Ca NV 1 sẽ nhận lại *</label>
-                            <select class="admin-select" id="swapInputShiftTo">
-                                <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
-                                <option value="AFTERNOON">Ca chiều (13:00 - 17:00)</option>
-                                <option value="EVENING">Ca tối (17:30 - 21:30)</option>
-                                <option value="NIGHT">Ca khuya (22:00 - 06:00)</option>
-                                <option value="NONE">Trực hộ (Không nhận ca bù)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Lý do đổi ca *</label>
-                        <input type="text" class="admin-input" id="swapInputReason" placeholder="Ghi rõ lý do cần đổi ca...">
+                <div class="modal-footer-clean" style="justify-content: space-between;">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissLeaveSwapModal" data-close-modal="leaveSwapModalOverlay">Hủy</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnSubmitLeavePending">Lưu đơn chờ duyệt</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnApproveLeaveImmediately">Duyệt ngay và áp dụng</button>
                     </div>
                 </div>
-
-                <div class="pet-safety-banner" id="leaveSwapAlertBanner" style="display: none; margin-top: 4px;">
-                    <!-- Cảnh báo thiếu hụt hoặc xung đột ca -->
-                </div>
-            </div>
-            <div class="modal-footer-clean" style="justify-content: space-between;">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissLeaveSwapModal">Hủy</button>
-                <div style="display: flex; gap: 8px;">
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnSubmitLeavePending">Lưu đơn chờ duyệt</button>
-                    <button type="button" class="admin-btn admin-btn-primary" id="btnApproveLeaveImmediately">Duyệt ngay và Áp dụng</button>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 
     <!-- MODAL: DANH SÁCH ĐƠN NGHỈ PHÉP VÀ ĐỔI CA (TRAY) -->
     <div class="admin-modal-overlay" id="leaveRequestsTrayModal">
-        <div class="admin-modal-card" style="width: 720px; max-width: 95vw;">
-            <div class="modal-header-clean">
-                <div class="modal-title-clean">Quản lý đơn xin nghỉ phép và đổi ca</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelLeaveRequestsTray">Đóng</button>
-            </div>
-            <div class="modal-body-clean">
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <button type="button" class="admin-btn-filter-toggle active" id="btnFilterReqAll">Tất cả</button>
-                        <button type="button" class="admin-btn-filter-toggle" id="btnFilterReqPending">Chờ duyệt (<span id="countFilterReqPending">2</span>)</button>
-                        <button type="button" class="admin-btn-filter-toggle" id="btnFilterReqApproved">Đã duyệt</button>
-                        <button type="button" class="admin-btn-filter-toggle" id="btnFilterReqRejected">Từ chối</button>
+        <div class="admin-modal-card" style="width: 740px; max-width: 95vw;">
+            <form id="leaveRequestsTrayForm" novalidate onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <div class="modal-header-clean">
+                    <div class="modal-title-clean">Quản lý đơn xin nghỉ phép và đổi ca</div>
+                    <button type="button" class="modal-btn-close-text" id="btnCancelLeaveRequestsTray" data-close-modal="leaveRequestsTrayModal">Đóng</button>
+                </div>
+                <div class="modal-body-clean">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <button type="button" class="admin-btn-filter-toggle active" id="btnFilterReqAll">Tất cả</button>
+                            <button type="button" class="admin-btn-filter-toggle" id="btnFilterReqPending">Chờ duyệt (<span id="countFilterReqPending">0</span>)</button>
+                            <button type="button" class="admin-btn-filter-toggle" id="btnFilterReqApproved">Đã duyệt</button>
+                            <button type="button" class="admin-btn-filter-toggle" id="btnFilterReqRejected">Từ chối</button>
+                        </div>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenLeaveModalFromTray">Tạo đơn mới</button>
                     </div>
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenLeaveModalFromTray">Tạo đơn mới</button>
-                </div>
 
-                <div class="leave-requests-list-container" id="leaveRequestsListContainer">
-                    <!-- Render by JS -->
+                    <div class="leave-requests-list-container" id="leaveRequestsListContainer" style="display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding: 4px 0;">
+                        <!-- Render by JS -->
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissLeaveRequestsTray">Đóng</button>
-            </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissLeaveRequestsTray" data-close-modal="leaveRequestsTrayModal">Đóng</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- MODAL: ĐIỀU PHỐI LẠI CA HẸN TỰ ĐỘNG (RE-ASSIGNMENT MODAL) -->
     <div class="admin-modal-overlay" id="reassignModalOverlay">
         <div class="admin-modal-card" style="width: 780px; max-width: 95vw;">
-            <div class="modal-header-clean">
-                <div class="modal-title-clean">Điều phối lại ca hẹn khi KTV tạm khóa hoặc nghỉ phép</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelReassignModal">Đóng</button>
-            </div>
-            <div class="modal-body-clean">
-                <div style="font-size: 13.5px; color: #DC2626; line-height: 1.5; margin-bottom: 12px;" id="reassignModalWarningText">
-                    Nhân viên đang có ca hẹn đã gán trước đó. Vui lòng chọn nhân sự thay thế để đảm bảo phục vụ khách hàng đúng giờ.
+            <form id="reassignModalForm" novalidate onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <div class="modal-header-clean">
+                    <div class="modal-title-clean">Điều phối lại ca hẹn khi KTV tạm khóa hoặc nghỉ phép</div>
+                    <button type="button" class="modal-btn-close-text" id="btnCancelReassignModal" data-close-modal="reassignModalOverlay">Đóng</button>
                 </div>
+                <div class="modal-body-clean">
+                    <div style="font-size: 13.5px; color: #DC2626; line-height: 1.5;" id="reassignModalWarningText">
+                        Nhân viên đang có ca hẹn đã gán trước đó. Vui lòng chọn nhân sự thay thế để đảm bảo phục vụ khách hàng đúng giờ.
+                    </div>
 
-                <div class="table-responsive-wrapper" style="max-height: 260px; overflow-y: auto;">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 100px;">Mã hẹn</th>
-                                <th style="width: 180px;">Khách hàng và Bé cưng</th>
-                                <th>Dịch vụ yêu cầu</th>
-                                <th style="width: 110px;">Khung giờ</th>
-                                <th style="width: 130px;">Phân công lại</th>
-                            </tr>
-                        </thead>
-                        <tbody id="reassignBookingsTableBody">
-                            <!-- Render by JS -->
-                        </tbody>
-                    </table>
-                </div>
+                    <div class="table-responsive-wrapper" style="max-height: 260px; overflow-y: auto;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 100px;">Mã hẹn</th>
+                                    <th style="width: 180px;">Khách hàng và bé cưng</th>
+                                    <th>Dịch vụ yêu cầu</th>
+                                    <th style="width: 110px;">Khung giờ</th>
+                                    <th style="width: 150px;">Phân công lại</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reassignBookingsTableBody">
+                                <!-- Render by JS -->
+                            </tbody>
+                        </table>
+                    </div>
 
-                <div class="form-group-item" style="margin-top: 14px;">
-                    <label class="form-label-clean">Chuyển nhanh tất cả ca hẹn sang:</label>
-                    <select class="admin-select" id="reassignSelectAllStaff">
-                        <!-- Render options by JS -->
-                    </select>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Chuyển nhanh tất cả ca hẹn sang</label>
+                        <select class="admin-select" id="reassignSelectAllStaff">
+                            <!-- Render options by JS -->
+                        </select>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer-clean" style="justify-content: space-between;">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissReassignModal">Bỏ qua (Chỉ khóa KTV)</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmReassign">Xác nhận chuyển giao ca</button>
-            </div>
+                <div class="modal-footer-clean" style="justify-content: space-between;">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissReassignModal" data-close-modal="reassignModalOverlay">Bỏ qua (chỉ khóa KTV)</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmReassign">Xác nhận chuyển giao ca</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- MODAL: GHI NHẬN SỰ CỐ CA TRỰC VÀ GIA HẠN THỜI GIAN (GIAI ĐOẠN 3: INCIDENT REPORT MODAL) -->
     <div class="admin-modal-overlay" id="incidentReportModalOverlay">
         <div class="admin-modal-card" style="width: 660px; max-width: 95vw;">
-            <div class="modal-header-clean">
-                <div class="modal-title-clean">Ghi nhận sự cố ca trực và cập nhật tiến độ</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelIncidentModal">Đóng</button>
-            </div>
-            <div class="modal-body-clean">
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Nhân sự phụ trách ca *</label>
-                        <select class="admin-select" id="incidentInputStaff">
-                            <!-- JS Render -->
-                        </select>
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Bàn / Ca dịch vụ liên quan *</label>
-                        <select class="admin-select" id="incidentInputBooking">
-                            <!-- JS Render -->
-                        </select>
-                    </div>
+            <form id="incidentReportModalForm" novalidate onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <div class="modal-header-clean">
+                    <div class="modal-title-clean">Ghi nhận sự cố ca trực và cập nhật tiến độ</div>
+                    <button type="button" class="modal-btn-close-text" id="btnCancelIncidentModal" data-close-modal="incidentReportModalOverlay">Đóng</button>
                 </div>
+                <div class="modal-body-clean">
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Nhân sự phụ trách ca <span style="color: #DC2626;">*</span></label>
+                            <select class="admin-select" id="incidentInputStaff">
+                                <!-- JS Render -->
+                            </select>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Bàn hoặc ca dịch vụ liên quan <span style="color: #DC2626;">*</span></label>
+                            <select class="admin-select" id="incidentInputBooking">
+                                <!-- JS Render -->
+                            </select>
+                        </div>
+                    </div>
 
-                <div class="form-row-2col">
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Phân loại sự cố <span style="color: #DC2626;">*</span></label>
+                            <select class="admin-select" id="incidentInputType">
+                                <option value="SKIN_ISSUE">Phát hiện vết thương hoặc bệnh ngoài da cũ</option>
+                                <option value="TIMING_DELAY">Bé nhút nhát hoặc lông rối cần thêm thời gian</option>
+                                <option value="TEMPERAMENT">Bé hung dữ cần 2 nhân sự phối hợp an toàn</option>
+                                <option value="EQUIPMENT">Sự cố thiết bị hoặc dụng cụ ca làm</option>
+                            </select>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Điều chỉnh thời gian hoàn tất</label>
+                            <select class="admin-select" id="incidentInputExtend">
+                                <option value="0">Đúng giờ (Không gia hạn)</option>
+                                <option value="15">+15 phút (Gia hạn hoàn tất)</option>
+                                <option value="30">+30 phút (Gia hạn hoàn tất)</option>
+                                <option value="45">+45 phút (Gia hạn hoàn tất)</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="form-group-item">
-                        <label class="form-label-clean">Phân loại sự cố *</label>
-                        <select class="admin-select" id="incidentInputType">
-                            <option value="SKIN_ISSUE">Phát hiện vết thương hoặc bệnh ngoài da cũ</option>
-                            <option value="TIMING_DELAY">Bé nhút nhát hoặc lông rối cần thêm thời gian</option>
-                            <option value="TEMPERAMENT">Bé hung dữ cần 2 nhân sự phối hợp an toàn</option>
-                            <option value="EQUIPMENT">Sự cố thiết bị hoặc dụng cụ ca làm</option>
+                        <label class="form-label-clean">Mức độ xử lý <span style="color: #DC2626;">*</span></label>
+                        <select class="admin-select" id="incidentInputSeverity">
+                            <option value="INTERNAL">Lưu ý nội bộ ca trực</option>
+                            <option value="PRE_NOTIFY">Thông báo trước cho khách hàng khi đến đón</option>
+                            <option value="URGENT">Chuyển quản lý hoặc lưu vết bảo vệ cửa hàng</option>
                         </select>
                     </div>
+
                     <div class="form-group-item">
-                        <label class="form-label-clean">Điều chỉnh thời gian hoàn tất</label>
-                        <select class="admin-select" id="incidentInputExtend">
-                            <option value="0">Đúng giờ (Không gia hạn)</option>
-                            <option value="15">+15 phút (Gia hạn hoàn tất)</option>
-                            <option value="30">+30 phút (Gia hạn hoàn tất)</option>
-                            <option value="45">+45 phút (Gia hạn hoàn tất)</option>
-                        </select>
+                        <label class="form-label-clean">Mô tả chi tiết sự cố và phương án xử lý</label>
+                        <textarea class="admin-input" id="incidentInputNote" rows="3" placeholder="Ghi nhận rõ tình trạng của bé cưng, vị trí nấm/vết thương hoặc lưu ý phối hợp an toàn..."></textarea>
                     </div>
                 </div>
-
-                <div class="form-group-item">
-                    <label class="form-label-clean">Mức độ xử lý *</label>
-                    <select class="admin-select" id="incidentInputSeverity">
-                        <option value="INTERNAL">Lưu ý nội bộ ca trực</option>
-                        <option value="PRE_NOTIFY">Thông báo trước cho khách hàng khi đến đón</option>
-                        <option value="URGENT">Chuyển quản lý / Lưu vết bảo vệ cửa hàng</option>
-                    </select>
+                <div class="modal-footer-clean" style="justify-content: space-between;">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissIncidentModal" data-close-modal="incidentReportModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveIncidentReport">Lưu biên bản và cập nhật tiến độ</button>
                 </div>
-
-                <div class="form-group-item">
-                    <label class="form-label-clean">Mô tả chi tiết sự cố và Phương án xử lý</label>
-                    <textarea class="admin-input" id="incidentInputNote" rows="3" placeholder="Ghi nhận rõ tình trạng của bé cưng, vị trí nấm/vết thương hoặc lưu ý phối hợp an toàn..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer-clean" style="justify-content: space-between;">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissIncidentModal">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveIncidentReport">Lưu biên bản và Cập nhật tiến độ</button>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -1211,19 +1225,21 @@
     <!-- MODAL: XÁC NHẬN THAO TÁC NHÂN SỰ (CUSTOM CONFIRM DIALOG) -->
     <div class="admin-modal-overlay" id="modalConfirmStaffAction">
         <div class="admin-modal-card" style="width: 480px; max-width: 92vw;">
-            <div class="modal-header-clean">
-                <div class="modal-title-clean" id="confirmStaffActionTitle">Xác nhận thao tác</div>
-                <button type="button" class="modal-btn-close-text" id="btnCloseConfirmStaffModal">Đóng</button>
-            </div>
-            <div class="modal-body-clean" style="padding-top: 10px; padding-bottom: 20px;">
-                <div id="confirmStaffActionMessage" style="font-size: 13.5px; color: var(--text-main); line-height: 1.6;">
-                    Bạn có chắc chắn muốn thực hiện thao tác này không?
+            <form id="confirmStaffActionForm" novalidate onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <div class="modal-header-clean">
+                    <div class="modal-title-clean" id="confirmStaffActionTitle">Xác nhận thao tác</div>
+                    <button type="button" class="modal-btn-close-text" id="btnCloseConfirmStaffModal" data-close-modal="modalConfirmStaffAction">Đóng</button>
                 </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelStaffConfirm">Hủy bỏ</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnAcceptStaffConfirm">Đồng ý</button>
-            </div>
+                <div class="modal-body-clean" style="padding-top: 6px; padding-bottom: 12px;">
+                    <div id="confirmStaffActionMessage" style="font-size: 13.5px; color: var(--text-main); line-height: 1.6;">
+                        Bạn có chắc chắn muốn thực hiện thao tác này không?
+                    </div>
+                </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelStaffConfirm" data-close-modal="modalConfirmStaffAction">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnAcceptStaffConfirm">Đồng ý</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

@@ -95,6 +95,8 @@
 
     // Khởi tạo các sự kiện giao diện cho Subtab Promos
     function initPromosEvents() {
+        document.getElementById('formCreateVoucher')?.addEventListener('submit', (e) => e.preventDefault());
+        document.getElementById('formVoucherAction')?.addEventListener('submit', (e) => e.preventDefault());
         document.getElementById('promoSearchInput')?.addEventListener('input', renderVouchersTable);
 
         // Mở modal tạo mã khuyến mãi
@@ -276,6 +278,21 @@
             renderVouchersTable();
             showToast(`Đã lưu thay đổi cho mã khuyến mãi "${code}" thành công!`, 'success');
         });
+
+        // Hỗ trợ kiểm thử tự động cho modal11 & modal12
+        if (window.location.search.includes('v=modal11')) {
+            setTimeout(() => {
+                document.getElementById('modalCreateVoucher')?.classList.add('active');
+            }, 600);
+        }
+        if (window.location.search.includes('v=modal12')) {
+            setTimeout(() => {
+                const list = getSharedVouchersList();
+                if (list.length > 0) {
+                    PawpalOrdersModule.openVoucherActionModal(list[0].code);
+                }
+            }, 600);
+        }
     }
 
     // Xuất các phương thức ra window.PawpalOrdersModule cho inline handlers

@@ -140,10 +140,16 @@
     }
 
     function openAssessmentModal(targetStaffId = null) {
-        const modal = document.getElementById('modalAssessmentForm');
+        const modal = document.getElementById('assessmentModalOverlay');
         if (!modal) return;
 
-        const staffSelect = document.getElementById('assessmentStaffSelect');
+        const staffSelect = document.getElementById('assessInputStaff');
+        const dateInput = document.getElementById('assessInputDate');
+        const typeSelect = document.getElementById('assessInputType');
+        const scoreInput = document.getElementById('assessInputScore');
+        const resultSelect = document.getElementById('assessInputResult');
+        const noteInput = document.getElementById('assessInputNote');
+
         const staffList = PawpalStaff.state?.mockStaff || [];
 
         if (staffSelect) {
@@ -151,6 +157,25 @@
                 <option value="${s.id}" ${s.id === targetStaffId ? 'selected' : ''}>${s.name} (${s.position})</option>
             `).join('');
         }
+
+        if (dateInput) {
+            dateInput.value = new Date().toISOString().split('T')[0];
+        }
+
+        if (scoreInput) {
+            scoreInput.value = 85;
+            scoreInput.oninput = () => {
+                const val = Number(scoreInput.value);
+                if (resultSelect) {
+                    if (val >= 80) resultSelect.value = 'PASS';
+                    else if (val >= 60) resultSelect.value = 'RETRAIN';
+                    else resultSelect.value = 'FAIL';
+                }
+            };
+        }
+
+        if (resultSelect) resultSelect.value = 'PASS';
+        if (noteInput) noteInput.value = '';
 
         modal.classList.add('active');
     }
@@ -177,6 +202,102 @@
         const btnOpenAdd = document.getElementById('btnOpenAddAssessmentModal');
         if (btnOpenAdd) {
             btnOpenAdd.addEventListener('click', () => openAssessmentModal());
+        }
+
+        function handleSaveAssessment(isNotify = false) {
+            const modal = document.getElementById('assessmentModalOverlay');
+            const staffId = document.getElementById('assessInputStaff')?.value;
+            const dateVal = document.getElementById('assessInputDate')?.value;
+            const typeVal = document.getElementById('assessInputType')?.value;
+            const scoreVal = document.getElementById('assessInputScore')?.value;
+            const resultVal = document.getElementById('assessInputResult')?.value;
+            const noteVal = document.getElementById('assessInputNote')?.value.trim();
+
+            if (!staffId || !dateVal || scoreVal === '') {
+                PawpalStaff.showToast('Vui lòng nhập đầy đủ thông tin đánh giá!', 'warning');
+                return;
+            }
+
+            const staffList = PawpalStaff.state?.mockStaff || [];
+            const staffObj = staffList.find(s => s.id === staffId);
+            const scoreNum = Number(scoreVal);
+
+            // Cập nhật điểm tay nghề nhân sự
+            if (staffObj) {
+                staffObj.skillScore = scoreNum;
+                staffObj.skillResult = resultVal;
+                staffObj.skillExam = resultVal === 'PASS' ? `Đạt (${scoreNum}đ)` : `Cần đào tạo (${scoreNum}đ)`;
+                staffObj.serviceLocked = resultVal !== 'PASS';
+            }
+
+            // Thêm bản ghi đánh giá mới
+            PawpalStaff.state.mockAssessments = PawpalStaff.state.mockAssessments || [];
+            const newId = `ASM-${String(PawpalStaff.state.mockAssessments.length + 1).padStart(3, '0')}`;
+            PawpalStaff.state.mockAssessments.unshift({
+                id: newId,
+                date: PawpalStaff.formatDateVN(dateVal),
+                staff_id: staffId,
+                name: staffObj ? staffObj.name : 'Nhân sự',
+                position: staffObj ? staffObj.position : 'Kỹ thuật viên',
+                type: typeVal === 'Grooming' ? 'Grooming' : (typeVal === 'Spa' ? 'Spa' : 'Chăm sóc'),
+                score: scoreNum,
+                result: resultVal,
+                evaluator: 'Lê Lệ Quyên',
+                note: noteVal || (resultVal === 'PASS' ? 'Thao tác chuẩn xác' : 'Cần đào tạo lại chuyên sâu')
+            });
+
+            currentAssessmentPage = 1;
+            renderAssessmentList();
+            updateAssessmentKPIs();
+            if (PawpalStaff.subtabs.list?.renderStaffList) PawpalStaff.subtabs.list.renderStaffList();
+            if (PawpalStaff.subtabs.list?.renderStaffAlertBar) PawpalStaff.subtabs.list.renderStaffAlertBar();
+
+            PawpalStaff.showToast(isNotify ? 'Đã lưu kết quả và gửi thông báo đến nhân sự!' : 'Đã ghi nhận kết quả đánh giá tay nghề!', 'success');
+            if (modal) modal.classList.remove('active');
+        }
+
+        const btnSaveAssess = document.getElementById('btnSaveAssessment');
+        if (btnSaveAssess) {
+            btnSaveAssess.addEventListener('click', () => handleSaveAssessment(false));
+        }
+
+        const btnSendNotify = document.getElementById('btnSendAssessNotify');
+        if (btnSendNotify) {
+            btnSendNotify.addEventListener('click', () => handleSaveAssessment(true));
+        }
+
+        // Đóng modal qua data-close-modal, backdrop click, Escape key
+        document.querySelectorAll('[data-close-modal="assessmentModalOverlay"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const modal = document.getElementById('assessmentModalOverlay');
+                if (modal) modal.classList.remove('active');
+            });
+        });
+
+        const assessmentModalOverlay = document.getElementById('assessmentModalOverlay');
+        if (assessmentModalOverlay) {
+            assessmentModalOverlay.addEventListener('click', (e) => {
+                if (e.target === assessmentModalOverlay) {
+                    assessmentModalOverlay.classList.remove('active');
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('assessmentModalOverlay');
+                if (modal && modal.classList.contains('active')) {
+                    modal.classList.remove('active');
+                }
+            }
+        });
+
+        // URL Auto-open v=modal3
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('v') === 'modal3' || urlParams.get('modal') === '3' || urlParams.get('modal') === 'assessment') {
+            setTimeout(() => {
+                openAssessmentModal();
+            }, 300);
         }
 
         renderAssessmentList();

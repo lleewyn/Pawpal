@@ -271,7 +271,8 @@
                 petsRes,
                 apptsRes,
                 ordersRes,
-                staffRes
+                staffRes,
+                productsRes
             ] = await Promise.all([
                 Promise.resolve(client.from('support_ticket').select('*').order('priority', { ascending: true }).order('created_at', { ascending: false })).catch(err => ({ data: [], error: err })),
                 Promise.resolve(client.from('support_ticket_message').select('*').order('created_at', { ascending: true })).catch(err => ({ data: [], error: err })),
@@ -280,7 +281,8 @@
                 Promise.resolve(client.from('pet_profile').select('*')).catch(err => ({ data: [], error: err })),
                 Promise.resolve(client.from('appointment').select('*, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false })).catch(err => ({ data: [], error: err })),
                 Promise.resolve(client.from('sales_order').select('*').order('created_at', { ascending: false })).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('staff').select('*')).catch(err => ({ data: [], error: err }))
+                Promise.resolve(client.from('staff').select('*')).catch(err => ({ data: [], error: err })),
+                Promise.resolve(client.from('product').select('id, product_name, sku, sale_price, status')).catch(err => ({ data: [], error: err }))
             ]);
 
             const tickets = (ticketsRes && ticketsRes.data) || [];
@@ -291,12 +293,14 @@
             const appointments = (apptsRes && apptsRes.data) || [];
             const orders = (ordersRes && ordersRes.data) || [];
             const staffList = (staffRes && staffRes.data) || [];
+            const products = (productsRes && productsRes.data) || [];
 
             PawpalComplaints.state.cachedAppointments = appointments;
             PawpalComplaints.state.cachedOrders = orders;
             PawpalComplaints.state.cachedCustomers = customers;
             PawpalComplaints.state.cachedProfiles = profiles;
             PawpalComplaints.state.cachedPets = pets;
+            PawpalComplaints.state.cachedProducts = products;
 
             // Map helpers
             const custMap = {};
@@ -925,6 +929,713 @@
         PawpalComplaints.subtabs.services?.init?.();
         PawpalComplaints.subtabs.orders?.init?.();
         PawpalComplaints.subtabs.detail?.init?.();
+
+        // Khởi tạo sự kiện Modal 1: Tiếp nhận khiếu nại
+        initCreateTicketModalEvents();
+
+        // Gắn sự kiện nút mở modal tạo khiếu nại dịch vụ và đơn hàng
+        const btnOpenServiceTicket = document.getElementById('btnOpenCreateServiceTicket');
+        if (btnOpenServiceTicket) {
+            btnOpenServiceTicket.addEventListener('click', () => openCreateTicketModal('service'));
+        }
+
+        const btnOpenOrderTicket = document.getElementById('btnOpenCreateOrderTicket');
+        if (btnOpenOrderTicket) {
+            btnOpenOrderTicket.addEventListener('click', () => openCreateTicketModal('order'));
+        }
+
+        // URL Auto-open v=modal1 hoặc modal=1 hoặc modal=create
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('v') === 'modal1' || urlParams.get('modal') === '1' || urlParams.get('modal') === 'create') {
+            setTimeout(() => {
+                openCreateTicketModal('service');
+            }, 300);
+        } else if (urlParams.get('v') === 'modal2' || urlParams.get('modal') === '2' || urlParams.get('modal') === 'resolve') {
+            setTimeout(() => {
+                switchSubtab('tab-complaint-detail');
+                PawpalComplaints.subtabs.detail?.openResolveModal?.();
+            }, 300);
+        } else if (urlParams.get('v') === 'modal3' || urlParams.get('modal') === '3' || urlParams.get('modal') === 'assign') {
+            setTimeout(() => {
+                switchSubtab('tab-complaint-detail');
+                openAssignHandlerModal();
+            }, 350);
+        } else if (urlParams.get('v') === 'modal4' || urlParams.get('modal') === '4' || urlParams.get('modal') === 'request') {
+            setTimeout(() => {
+                switchSubtab('tab-complaint-detail');
+                openRequestMoreInfoModal();
+            }, 350);
+        } else if (urlParams.get('v') === 'modal5' || urlParams.get('modal') === '5' || urlParams.get('modal') === 'preview') {
+            setTimeout(() => {
+                switchSubtab('tab-complaint-detail');
+                openImagePreviewModal();
+            }, 350);
+        }
+    }
+
+    // Modal 3 Orchestrator Helper
+    function openAssignHandlerModal() {
+        if (PawpalComplaints.subtabs.detail?.openAssignHandlerModal) {
+            return PawpalComplaints.subtabs.detail.openAssignHandlerModal();
+        }
+        const modal = document.getElementById('assignHandlerModalOverlay');
+        if (!modal) return;
+        const selectStaff = document.getElementById('selectAssignStaff');
+        if (selectStaff) {
+            selectStaff.innerHTML = `
+                <option value="Trần Văn Hùng (Groomer trưởng)">Trần Văn Hùng (Groomer trưởng)</option>
+                <option value="Lê Lệ Quyên (Quản lý chi nhánh)">Lê Lệ Quyên (Quản lý chi nhánh)</option>
+                <option value="Nguyễn Văn A (Kỹ thuật viên cao cấp)">Nguyễn Văn A (Kỹ thuật viên cao cấp)</option>
+                <option value="Trần Thị C (Chuyên viên chăm sóc)">Trần Thị C (Chuyên viên chăm sóc)</option>
+                <option value="Lê Hoàng Nam (Bác sĩ thú y)">Lê Hoàng Nam (Bác sĩ thú y)</option>
+                <option value="Nguyễn Thùy Trang (Tư vấn viên CSKH)">Nguyễn Thùy Trang (Tư vấn viên CSKH)</option>
+            `;
+        }
+        modal.classList.add('active');
+    }
+    PawpalComplaints.openAssignHandlerModal = openAssignHandlerModal;
+
+    // Modal 4 Orchestrator Helper
+    function openRequestMoreInfoModal() {
+        if (PawpalComplaints.subtabs.detail?.openRequestMoreInfoModal) {
+            return PawpalComplaints.subtabs.detail.openRequestMoreInfoModal();
+        }
+        const modal = document.getElementById('requestMoreInfoModalOverlay');
+        if (!modal) return;
+        const msgInput = document.getElementById('inputRequestMessage');
+        if (msgInput) msgInput.value = '';
+        modal.classList.add('active');
+    }
+    PawpalComplaints.openRequestMoreInfoModal = openRequestMoreInfoModal;
+
+    // Modal 5 Orchestrator Helper
+    function openImagePreviewModal(src, title, meta) {
+        if (PawpalComplaints.subtabs.detail?.openImagePreviewModal) {
+            return PawpalComplaints.subtabs.detail.openImagePreviewModal(src, title, meta);
+        }
+        const modal = document.getElementById('imagePreviewModalOverlay');
+        if (!modal) return;
+        const defaultSample = 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&auto=format&fit=crop&q=80';
+        const imgEl = document.getElementById('imagePreviewImg');
+        const titleEl = document.getElementById('imagePreviewTitle');
+        const metaEl = document.getElementById('imagePreviewMeta');
+        if (imgEl) imgEl.src = src || defaultSample;
+        if (titleEl && title) titleEl.textContent = title;
+        if (metaEl && meta) metaEl.textContent = meta;
+        modal.classList.add('active');
+    }
+    PawpalComplaints.openImagePreviewModal = openImagePreviewModal;
+
+    // ====================================================================
+    // ====================================================================
+    // MODAL 1: TIẾP NHẬN KHIẾU NẠI DỊCH VỤ / ĐƠN HÀNG (740px)
+    // Custom Autocomplete Popover & Smart Entity Auto-Fill (AGENTS.md)
+    // ====================================================================
+    function openCreateTicketModal(type = 'service') {
+        const modal = document.getElementById('createTicketModalOverlay');
+        if (!modal) return;
+
+        PawpalComplaints.state.currentTicketType = type;
+        PawpalComplaints.state.selectedCustomerId = null;
+        PawpalComplaints.state.selectedRefTransaction = null;
+
+        const titleEl = document.getElementById('createTicketModalTitle');
+        const labelRefIdEl = document.getElementById('labelTicketRefId');
+        const searchRefInput = document.getElementById('inputTicketRefSearch');
+        const selectRefIdEl = document.getElementById('selectTicketRefId');
+        const phoneInput = document.getElementById('inputTicketCustomerPhone');
+        const nameInput = document.getElementById('inputTicketCustomerName');
+        const prioritySelect = document.getElementById('selectTicketPriority');
+        const chkUnverified = document.getElementById('chkTicketUnverified');
+        const titleInput = document.getElementById('inputTicketTitle');
+        const contentInput = document.getElementById('inputTicketContent');
+        const warningBox = document.getElementById('ticketDuplicateWarningBox');
+        const previewsContainer = document.getElementById('createTicketPreviewsContainer');
+
+        const custCard = document.getElementById('ticketCustomerSelectedCard');
+        const refCard = document.getElementById('ticketRefSelectedCard');
+        const custDropdown = document.getElementById('ticketCustomerDropdown');
+        const nameDropdown = document.getElementById('ticketCustomerNameDropdown');
+        const refDropdown = document.getElementById('ticketRefDropdown');
+
+        if (custCard) custCard.style.display = 'none';
+        if (refCard) refCard.style.display = 'none';
+        if (custDropdown) custDropdown.style.display = 'none';
+        if (nameDropdown) nameDropdown.style.display = 'none';
+        if (refDropdown) refDropdown.style.display = 'none';
+
+        // Reset errors
+        document.querySelectorAll('#createTicketModalForm .field-error-text').forEach(el => {
+            el.textContent = '';
+            el.style.display = 'none';
+        });
+
+        if (titleEl) {
+            titleEl.textContent = type === 'order' ? 'Tiếp nhận khiếu nại đơn hàng' : 'Tiếp nhận khiếu nại dịch vụ';
+        }
+
+        if (labelRefIdEl) {
+            labelRefIdEl.innerHTML = type === 'order' 
+                ? 'Chọn đơn hàng liên quan <span style="color: #DC2626;">*</span>' 
+                : 'Chọn lịch hẹn liên quan <span style="color: #DC2626;">*</span>';
+        }
+
+        if (searchRefInput) {
+            searchRefInput.value = '';
+            searchRefInput.placeholder = type === 'order' ? 'Tìm mã đơn hàng hoặc tên sản phẩm...' : 'Tìm mã lịch hẹn hoặc tên dịch vụ...';
+        }
+        if (selectRefIdEl) selectRefIdEl.value = '';
+
+        // Reset form values
+        if (phoneInput) phoneInput.value = '';
+        if (nameInput) nameInput.value = '';
+        if (prioritySelect) prioritySelect.value = 'medium';
+        if (chkUnverified) chkUnverified.checked = false;
+        if (titleInput) titleInput.value = '';
+        if (contentInput) contentInput.value = '';
+        if (warningBox) warningBox.style.display = 'none';
+        if (previewsContainer) previewsContainer.innerHTML = '';
+
+        modal.classList.add('active');
+        if (phoneInput) phoneInput.focus();
+    }
+    PawpalComplaints.openCreateTicketModal = openCreateTicketModal;
+
+    function initCreateTicketModalEvents() {
+        const modal = document.getElementById('createTicketModalOverlay');
+        if (!modal) return;
+
+        const phoneInput = document.getElementById('inputTicketCustomerPhone');
+        const nameInput = document.getElementById('inputTicketCustomerName');
+        const searchRefInput = document.getElementById('inputTicketRefSearch');
+        const selectRefId = document.getElementById('selectTicketRefId');
+
+        const custDropdown = document.getElementById('ticketCustomerDropdown');
+        const nameDropdown = document.getElementById('ticketCustomerNameDropdown');
+        const refDropdown = document.getElementById('ticketRefDropdown');
+
+        const custSelectedCard = document.getElementById('ticketCustomerSelectedCard');
+        const custSelectedInfo = document.getElementById('ticketCustomerSelectedInfo');
+        const btnClearCustomer = document.getElementById('btnClearTicketCustomer');
+
+        const refSelectedCard = document.getElementById('ticketRefSelectedCard');
+        const refSelectedInfo = document.getElementById('ticketRefSelectedInfo');
+        const btnClearRef = document.getElementById('btnClearTicketRef');
+
+        const chkUnverified = document.getElementById('chkTicketUnverified');
+        const warningBox = document.getElementById('ticketDuplicateWarningBox');
+        const warningCode = document.getElementById('ticketDuplicateWarningCode');
+
+        // Close dropdowns helper
+        function hideAllDropdowns() {
+            if (custDropdown) custDropdown.style.display = 'none';
+            if (nameDropdown) nameDropdown.style.display = 'none';
+            if (refDropdown) refDropdown.style.display = 'none';
+        }
+
+        // Helper lấy danh sách khách hàng hợp nhất từ nhiều nguồn
+        function getUnifiedCustomerList() {
+            if (window.PawpalCustomers?.state?.db) {
+                const list = Object.values(window.PawpalCustomers.state.db);
+                if (list.length > 0) return list.map(c => ({
+                    id: c.dbId || c.id,
+                    name: c.name || 'Khách hàng',
+                    phone: (c.phone && c.phone !== '—') ? c.phone : '0901234567',
+                    email: c.email || '',
+                    petCount: (c.pets && c.pets.length) || 1,
+                    tier: c.tierName || 'Bạc'
+                }));
+            }
+
+            const customers = PawpalComplaints.state.cachedCustomers || [];
+            const profiles = PawpalComplaints.state.cachedProfiles || [];
+            const pets = PawpalComplaints.state.cachedPets || [];
+            const appts = PawpalComplaints.state.cachedAppointments || [];
+
+            const list = [];
+            const addedIds = new Set();
+
+            profiles.forEach((p, idx) => {
+                if (!p.customer_id) return;
+                addedIds.add(p.customer_id);
+                const relatedAppt = appts.find(a => a.customer_id === p.customer_id);
+                const phone = (p.phone || relatedAppt?.phone || `090${String(1000000 + idx * 7777).slice(0, 7)}`);
+                const petCount = pets.filter(pet => pet.customer_id === p.customer_id).length || 1;
+                list.push({
+                    id: p.customer_id,
+                    name: p.full_name || 'Khách hàng',
+                    phone: phone,
+                    email: p.email || '',
+                    petCount: petCount,
+                    tier: 'Bạc'
+                });
+            });
+
+            customers.forEach((c, idx) => {
+                if (addedIds.has(c.id)) return;
+                addedIds.add(c.id);
+                const phone = c.phone_main || c.phone || `091${String(2000000 + idx * 6666).slice(0, 7)}`;
+                const petCount = pets.filter(pet => pet.customer_id === c.id).length || 1;
+                list.push({
+                    id: c.id,
+                    name: c.full_name || c.note || 'Khách hàng thân thiết',
+                    phone: phone,
+                    email: c.email || '',
+                    petCount: petCount,
+                    tier: 'Thân thiết'
+                });
+            });
+
+            if (list.length === 0) {
+                return [
+                    { id: 'c1', name: 'Nguyễn Văn A', phone: '0901234567', petCount: 2, tier: 'Kim Cương' },
+                    { id: 'c2', name: 'Lê Lệ Quyên', phone: '0912345678', petCount: 1, tier: 'Vàng' },
+                    { id: 'c3', name: 'Trần Thị Bích', phone: '0987654321', petCount: 3, tier: 'Bạc' },
+                    { id: 'c4', name: 'Phạm Minh Tuấn', phone: '0933445566', petCount: 1, tier: 'Thân thiết' }
+                ];
+            }
+            return list;
+        }
+
+        // Helper render Customer Dropdown (100% Flat Text-Only)
+        function renderCustomerDropdown(targetDropdown, query, isPhoneSearch = false) {
+            if (!targetDropdown) return;
+            const q = (query || '').toLowerCase().trim();
+            const customers = getUnifiedCustomerList();
+
+            let matches = customers.filter(c => {
+                if (!q) return true;
+                const phone = (c.phone || '').toLowerCase();
+                const name = (c.name || '').toLowerCase();
+                const cleanQ = q.replace(/[^0-9a-z]/g, '');
+                const cleanPhone = phone.replace(/[^0-9a-z]/g, '');
+
+                if (isPhoneSearch) {
+                    return cleanPhone.includes(cleanQ) || name.includes(q);
+                }
+                return name.includes(q) || cleanPhone.includes(cleanQ);
+            }).slice(0, 8);
+
+            if (matches.length === 0) {
+                targetDropdown.innerHTML = `<div class="customer-autocomplete-empty">Không tìm thấy khách hàng phù hợp</div>`;
+                targetDropdown.style.display = 'block';
+                return;
+            }
+
+            targetDropdown.innerHTML = matches.map(c => {
+                const name = c.name;
+                const phone = c.phone;
+                const petBadge = c.petCount > 0 ? `${c.petCount} bé cưng` : '1 bé cưng';
+                return `
+                    <div class="customer-autocomplete-item" data-cust-id="${c.id}" data-cust-name="${name}" data-cust-phone="${phone}">
+                        <div class="customer-autocomplete-meta">
+                            <div class="customer-autocomplete-name">${name}</div>
+                            <div class="customer-autocomplete-phone">${phone}</div>
+                        </div>
+                        <span class="customer-autocomplete-badge">${petBadge}</span>
+                    </div>
+                `;
+            }).join('');
+            targetDropdown.style.display = 'block';
+
+            // Bind click item
+            targetDropdown.querySelectorAll('.customer-autocomplete-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const custId = item.dataset.custId;
+                    const custName = item.dataset.custName;
+                    const custPhone = item.dataset.custPhone;
+                    selectCustomer({ id: custId, name: custName, phone: custPhone });
+                });
+            });
+        }
+
+        // Chọn khách hàng & tự động liên kết (Smart Entity Relations)
+        function selectCustomer(cust) {
+            PawpalComplaints.state.selectedCustomerId = cust.id;
+            const name = cust.name || 'Khách hàng';
+            const phone = cust.phone || '';
+
+            if (phoneInput) phoneInput.value = phone;
+            if (nameInput) nameInput.value = name;
+
+            if (custSelectedCard && custSelectedInfo) {
+                custSelectedInfo.textContent = `Đã chọn: ${name} (${phone})`;
+                custSelectedCard.style.display = 'flex';
+            }
+            hideAllDropdowns();
+
+            // Tự động nạp & hiển thị gợi ý giao dịch của chính khách hàng này
+            if (searchRefInput && refDropdown) {
+                renderRefDropdown('', cust.id);
+            }
+        }
+
+        // Bỏ chọn khách hàng
+        function clearCustomer() {
+            PawpalComplaints.state.selectedCustomerId = null;
+            if (phoneInput) phoneInput.value = '';
+            if (nameInput) nameInput.value = '';
+            if (custSelectedCard) custSelectedCard.style.display = 'none';
+            hideAllDropdowns();
+            if (searchRefInput) searchRefInput.value = '';
+            if (selectRefId) selectRefId.value = '';
+            if (refSelectedCard) refSelectedCard.style.display = 'none';
+        }
+
+        if (btnClearCustomer) {
+            btnClearCustomer.addEventListener('click', (e) => {
+                e.stopPropagation();
+                clearCustomer();
+            });
+        }
+
+        // Helper render Reference Transaction Dropdown (100% Flat Text-Only)
+        function renderRefDropdown(query, filterCustomerId = null) {
+            if (!refDropdown) return;
+            const type = PawpalComplaints.state.currentTicketType || 'service';
+            const q = (query || '').toLowerCase().trim();
+
+            if (type === 'order') {
+                let orders = PawpalComplaints.state.cachedOrders || [];
+                if (orders.length === 0) {
+                    orders = [
+                        { id: 'ORD-1001', order_code: 'ORD-1001', customer_name: 'Nguyễn Văn A', total_amount: 350000, created_at: new Date().toISOString() },
+                        { id: 'ORD-1002', order_code: 'ORD-1002', customer_name: 'Lê Lệ Quyên', total_amount: 520000, created_at: new Date().toISOString() }
+                    ];
+                }
+                let filtered = orders.filter(o => {
+                    if (filterCustomerId && String(o.customer_id) !== String(filterCustomerId)) return false;
+                    if (!q) return true;
+                    const code = (o.order_code || o.id || '').toLowerCase();
+                    const cName = (o.customer_name || '').toLowerCase();
+                    return code.includes(q) || cName.includes(q);
+                }).slice(0, 8);
+
+                if (filtered.length === 0) {
+                    refDropdown.innerHTML = `<div class="customer-autocomplete-empty">Không có đơn hàng nào phù hợp</div>`;
+                    refDropdown.style.display = 'block';
+                    return;
+                }
+
+                refDropdown.innerHTML = filtered.map(o => {
+                    const code = o.order_code || o.id;
+                    const dateStr = o.created_at ? PawpalComplaints.formatDate(o.created_at) : '';
+                    const amtStr = o.total_amount ? Number(o.total_amount).toLocaleString('vi-VN') + ' đ' : '0 đ';
+                    const cName = o.customer_name || 'Khách hàng';
+                    return `
+                        <div class="customer-autocomplete-item" data-ref-id="${code}" data-cust-id="${o.customer_id || ''}" data-cust-name="${cName}">
+                            <div class="customer-autocomplete-meta">
+                                <div class="customer-autocomplete-name">[${code}] ${cName}</div>
+                                <div class="customer-autocomplete-phone">Ngày tạo: ${dateStr}</div>
+                            </div>
+                            <span class="customer-autocomplete-badge">${amtStr}</span>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                let appts = PawpalComplaints.state.cachedAppointments || [];
+                if (appts.length === 0) {
+                    appts = [
+                        { id: 'APP-1001', appointment_code: 'APP-1001', customer_name: 'Nguyễn Văn A', service_name: 'Cắt tỉa lông toàn diện', appointment_date: '2026-10-12', status: 'completed' },
+                        { id: 'APP-1002', appointment_code: 'APP-1002', customer_name: 'Lê Lệ Quyên', service_name: 'Tắm sấy vệ sinh thảo dược', appointment_date: '2026-10-11', status: 'completed' }
+                    ];
+                }
+                let filtered = appts.filter(a => {
+                    if (filterCustomerId && String(a.customer_id) !== String(filterCustomerId)) return false;
+                    if (!q) return true;
+                    const code = (a.appointment_code || a.id || '').toLowerCase();
+                    const cName = (a.customer_name || '').toLowerCase();
+                    const sName = (a.service?.service_name || a.service_type || a.service_name || '').toLowerCase();
+                    return code.includes(q) || cName.includes(q) || sName.includes(q) || (q === 'apt' && (code.startsWith('app') || code.startsWith('bkg')));
+                }).slice(0, 8);
+
+                if (filtered.length === 0) {
+                    refDropdown.innerHTML = `<div class="customer-autocomplete-empty">Không có lịch hẹn nào phù hợp</div>`;
+                    refDropdown.style.display = 'block';
+                    return;
+                }
+
+                refDropdown.innerHTML = filtered.map(a => {
+                    const code = a.appointment_code || a.id;
+                    const sName = a.service?.service_name || a.service_type || a.service_name || 'Dịch vụ spa';
+                    const dateStr = a.appointment_date || '';
+                    const cName = a.customer_name || 'Khách hàng';
+                    return `
+                        <div class="customer-autocomplete-item" data-ref-id="${code}" data-cust-id="${a.customer_id || ''}" data-cust-name="${cName}">
+                            <div class="customer-autocomplete-meta">
+                                <div class="customer-autocomplete-name">[${code}] ${cName}</div>
+                                <div class="customer-autocomplete-phone">${sName} (${dateStr})</div>
+                            </div>
+                            <span class="customer-autocomplete-badge">${a.status === 'completed' ? 'Đã hoàn tất' : 'Lịch hẹn'}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            refDropdown.style.display = 'block';
+
+            // Bind click item
+            refDropdown.querySelectorAll('.customer-autocomplete-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const refId = item.dataset.refId;
+                    const custId = item.dataset.custId;
+                    const custName = item.dataset.custName;
+                    selectRefTransaction(refId, custId, custName);
+                });
+            });
+        }
+
+        // Chọn giao dịch liên quan
+        function selectRefTransaction(refId, custId, custName) {
+            if (selectRefId) selectRefId.value = refId;
+            if (searchRefInput) searchRefInput.value = refId;
+
+            if (refSelectedCard && refSelectedInfo) {
+                refSelectedInfo.textContent = `Đã chọn giao dịch: ${refId} (${custName})`;
+                refSelectedCard.style.display = 'flex';
+            }
+            hideAllDropdowns();
+
+            // Nếu chưa có khách hàng, tự động điền khách hàng từ giao dịch (Smart Entity Auto-fill Reverse)
+            if (!PawpalComplaints.state.selectedCustomerId && custId) {
+                const customers = PawpalComplaints.state.cachedCustomers || [];
+                const matchedCust = customers.find(c => String(c.id) === String(custId));
+                if (matchedCust) {
+                    selectCustomer(matchedCust);
+                } else if (nameInput && !nameInput.value) {
+                    nameInput.value = custName;
+                }
+            }
+
+            // Kiểm tra trùng lặp ticket (Duplicate ticket warning)
+            if (warningBox) {
+                const allTickets = (PawpalComplaints.state.serviceComplaints || []).concat(PawpalComplaints.state.orderComplaints || []);
+                const duplicate = allTickets.find(t => (t.refId === refId || t.appointmentCode === refId || t.orderCode === refId) && t.status !== 'resolved' && t.status !== 'closed');
+                if (duplicate) {
+                    if (warningCode) warningCode.textContent = duplicate.id;
+                    warningBox.style.display = 'block';
+                } else {
+                    warningBox.style.display = 'none';
+                }
+            }
+        }
+
+        // Bỏ chọn giao dịch
+        function clearRefTransaction() {
+            if (selectRefId) selectRefId.value = '';
+            if (searchRefInput) searchRefInput.value = '';
+            if (refSelectedCard) refSelectedCard.style.display = 'none';
+            if (warningBox) warningBox.style.display = 'none';
+            hideAllDropdowns();
+        }
+
+        if (btnClearRef) {
+            btnClearRef.addEventListener('click', (e) => {
+                e.stopPropagation();
+                clearRefTransaction();
+            });
+        }
+
+        // Event listeners cho các ô input
+        if (phoneInput) {
+            phoneInput.addEventListener('input', () => {
+                renderCustomerDropdown(custDropdown, phoneInput.value, true);
+            });
+            phoneInput.addEventListener('focus', () => {
+                renderCustomerDropdown(custDropdown, phoneInput.value, true);
+            });
+        }
+
+        if (nameInput) {
+            nameInput.addEventListener('input', () => {
+                renderCustomerDropdown(nameDropdown, nameInput.value, false);
+            });
+            nameInput.addEventListener('focus', () => {
+                renderCustomerDropdown(nameDropdown, nameInput.value, false);
+            });
+        }
+
+        if (searchRefInput) {
+            searchRefInput.addEventListener('input', () => {
+                renderRefDropdown(searchRefInput.value, PawpalComplaints.state.selectedCustomerId);
+            });
+            searchRefInput.addEventListener('focus', () => {
+                renderRefDropdown(searchRefInput.value, PawpalComplaints.state.selectedCustomerId);
+            });
+        }
+
+        // Chưa xác minh giao dịch toggle
+        if (chkUnverified) {
+            chkUnverified.addEventListener('change', () => {
+                if (chkUnverified.checked) {
+                    clearRefTransaction();
+                    if (searchRefInput) {
+                        searchRefInput.disabled = true;
+                        searchRefInput.placeholder = 'Đã chọn: Chưa xác minh giao dịch (Tạo vé trước)';
+                    }
+                } else {
+                    if (searchRefInput) {
+                        searchRefInput.disabled = false;
+                        searchRefInput.placeholder = PawpalComplaints.state.currentTicketType === 'order' ? 'Tìm mã đơn hàng hoặc tên sản phẩm...' : 'Tìm mã lịch hẹn hoặc tên dịch vụ...';
+                    }
+                }
+            });
+        }
+
+        // Ẩn popover khi click ra ngoài
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.customer-autocomplete-wrapper')) {
+                hideAllDropdowns();
+            }
+        });
+
+        // Image upload trigger
+        const btnUpload = document.getElementById('btnTriggerUploadTicketFiles');
+        const fileInput = document.getElementById('inputTicketFiles');
+        const previewsContainer = document.getElementById('createTicketPreviewsContainer');
+        if (btnUpload && fileInput) {
+            btnUpload.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', () => {
+                if (!previewsContainer) return;
+                previewsContainer.innerHTML = '';
+                Array.from(fileInput.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.cssText = 'width: 60px; height: 60px; object-fit: cover; border-radius: 9px; border: 1px solid #ECF2EE;';
+                        previewsContainer.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+        }
+
+        // Save Ticket button
+        const btnSave = document.getElementById('btnSaveCreateTicket');
+        if (btnSave) {
+            btnSave.addEventListener('click', async () => {
+                const phone = (phoneInput?.value || '').trim();
+                const name = (nameInput?.value || '').trim();
+                const refId = selectRefId?.value || '';
+                const isUnverified = chkUnverified?.checked;
+                const title = (document.getElementById('inputTicketTitle')?.value || '').trim();
+                const content = (document.getElementById('inputTicketContent')?.value || '').trim();
+                const priority = document.getElementById('selectTicketPriority')?.value || 'medium';
+                const type = PawpalComplaints.state.currentTicketType || 'service';
+
+                let hasError = false;
+                const errPhone = document.getElementById('errorTicketCustomerPhone');
+                const errName = document.getElementById('errorTicketCustomerName');
+                const errRef = document.getElementById('errorTicketRefId');
+
+                if (!phone) {
+                    if (errPhone) { errPhone.textContent = 'Vui lòng nhập số điện thoại khách hàng.'; errPhone.style.display = 'block'; }
+                    hasError = true;
+                } else if (!/^[0-9]{9,11}$/.test(phone)) {
+                    if (errPhone) { errPhone.textContent = 'Số điện thoại không đúng định dạng.'; errPhone.style.display = 'block'; }
+                    hasError = true;
+                } else {
+                    if (errPhone) errPhone.style.display = 'none';
+                }
+
+                if (!name) {
+                    if (errName) { errName.textContent = 'Vui lòng nhập tên khách hàng.'; errName.style.display = 'block'; }
+                    hasError = true;
+                } else {
+                    if (errName) errName.style.display = 'none';
+                }
+
+                if (!isUnverified && !refId) {
+                    if (errRef) { 
+                        errRef.textContent = `Vui lòng chọn ${type === 'order' ? 'đơn hàng' : 'lịch hẹn'} liên quan hoặc tích Chưa xác minh giao dịch.`;
+                        errRef.style.display = 'block';
+                    }
+                    hasError = true;
+                } else {
+                    if (errRef) errRef.style.display = 'none';
+                }
+
+                if (!title) {
+                    PawpalComplaints.showToast('Vui lòng nhập tiêu đề khiếu nại.', 'warning');
+                    return;
+                }
+                if (!content) {
+                    PawpalComplaints.showToast('Vui lòng nhập nội dung phản ánh chi tiết.', 'warning');
+                    return;
+                }
+                if (hasError) return;
+
+                const newId = `TKT-${String(Math.floor(1000 + Math.random() * 9000))}`;
+                const now = new Date();
+                const createdAtStr = PawpalComplaints.formatDateTime(now);
+
+                const newTicket = {
+                    id: newId,
+                    rawId: newId,
+                    customerName: name,
+                    phone: phone,
+                    title: title,
+                    desc: content,
+                    priority: priority,
+                    status: 'new',
+                    createdAt: createdAtStr,
+                    createdAtRaw: now.toISOString(),
+                    refId: refId,
+                    unverified: isUnverified,
+                    staffAssigned: 'Chưa phân công',
+                    timeline: [
+                        {
+                            time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} - ${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`,
+                            author: `${name} (Khách hàng)`,
+                            title: 'Tiếp nhận khiếu nại',
+                            desc: content,
+                            isInternal: false
+                        }
+                    ]
+                };
+
+                if (type === 'order') {
+                    newTicket.orderCode = refId || 'ORD-NEW';
+                    newTicket.amount = 0;
+                    (PawpalComplaints.state.orderComplaints = PawpalComplaints.state.orderComplaints || []).unshift(newTicket);
+                    PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable?.();
+                } else {
+                    newTicket.appointmentCode = refId || 'APT-NEW';
+                    newTicket.serviceName = 'Dịch vụ spa';
+                    (PawpalComplaints.state.serviceComplaints = PawpalComplaints.state.serviceComplaints || []).unshift(newTicket);
+                    PawpalComplaints.subtabs.services?.renderServiceComplaintsTable?.();
+                }
+
+                PawpalComplaints.calculateSla?.(newTicket);
+                PawpalComplaints.saveComplaintsOverrides?.();
+                PawpalComplaints.updateComplaintsKpis?.();
+                PawpalComplaints.renderComplaintsAlertBar?.();
+
+                // Close modal
+                modal.classList.remove('active');
+                PawpalComplaints.showToast(`Đã tạo thành công khiếu nại ${newId}!`, 'success');
+            });
+        }
+
+        // Close handlers: data-close-modal, backdrop click, Escape key
+        document.querySelectorAll('[data-close-modal="createTicketModalOverlay"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                modal.classList.remove('active');
+            }
+        });
     }
 
     PawpalComplaints.init = initComplaintsModule;
@@ -935,3 +1646,4 @@
         initComplaintsModule();
     }
 })();
+

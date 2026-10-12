@@ -917,6 +917,10 @@ function initTestimonialsCarousel() {
     const nextBtn = document.querySelector('.testimonials-carousel-container .next-btn');
 
     if (!track || cards.length === 0 || !prevBtn || !nextBtn) return;
+    // SPA navigation also dispatches DOMContentLoaded after initApp().
+    // Initialize each track once so clones and navigation handlers stay in sync.
+    if (track.dataset.carouselReady === 'true') return;
+    track.dataset.carouselReady = 'true';
 
     const cardWidth = 320;
     const gap = 30;
@@ -1004,6 +1008,8 @@ function initExpertsCarousel() {
     const nextBtn = document.querySelector('.experts-carousel-container .next-btn');
 
     if (!track || cards.length === 0 || !prevBtn || !nextBtn) return;
+    if (track.dataset.carouselReady === 'true') return;
+    track.dataset.carouselReady = 'true';
 
     const cardWidth = 300;
     const gap = 30;

@@ -468,6 +468,10 @@
 
     // Khởi tạo các sự kiện giao diện cho Subtab Products
     function initProductsEvents() {
+        document.getElementById('formAddProduct')?.addEventListener('submit', (e) => e.preventDefault());
+        document.getElementById('formGoodsReceipt')?.addEventListener('submit', (e) => e.preventDefault());
+        document.getElementById('formStocktake')?.addEventListener('submit', (e) => e.preventDefault());
+
         document.getElementById('productSearchInput')?.addEventListener('input', () => {
             productsCurrentPage = 1;
             renderProductsTable();
@@ -827,6 +831,7 @@
         });
 
         // Xác nhận lưu điều chỉnh tồn kho
+        document.getElementById('formAdjustStock')?.addEventListener('submit', (e) => e.preventDefault());
         document.getElementById('btnSubmitAdjustStock')?.addEventListener('click', async () => {
             const sku = state.activeAdjustProductSku;
             const prod = (state.products || []).find(p => p.sku === sku);
@@ -1058,6 +1063,47 @@
                 showToast(`Đã chuyển trạng thái sản phẩm ${prod.sku} sang "${prod.status}".`, 'success');
             }
         });
+
+        // Hỗ trợ kiểm thử tự động cho modal9, modal10 & modal13
+        if (window.location.search.includes('v=modal9')) {
+            setTimeout(() => {
+                const prod = (state.products || [])[0];
+                if (prod) PawpalOrdersModule.openAdjustStockModal(prod.sku);
+            }, 600);
+        }
+        if (window.location.search.includes('v=modal10')) {
+            setTimeout(() => {
+                PawpalOrdersModule.openAddProductModal();
+            }, 600);
+        }
+        if (window.location.search.includes('v=modal13')) {
+            setTimeout(() => {
+                const prod = (state.products || [])[0];
+                if (prod) PawpalOrdersModule.openStockLogsModal(prod.sku);
+            }, 600);
+        }
+        if (window.location.search.includes('v=modal14')) {
+            setTimeout(() => {
+                PawpalOrdersModule.openGoodsReceiptModal();
+            }, 600);
+        }
+        if (window.location.search.includes('v=modal15')) {
+            setTimeout(() => {
+                PawpalOrdersModule.openStocktakeModal();
+            }, 600);
+        }
+        if (window.location.search.includes('v=modal16')) {
+            setTimeout(() => {
+                const prod = (state.products || [])[0];
+                if (prod) PawpalOrdersModule.openConfirmToggleStatusModal(prod.sku);
+            }, 600);
+        }
+        if (window.location.search.includes('v=modal18')) {
+            setTimeout(() => {
+                const prod = (state.products || [])[0];
+                if (prod) PawpalOrdersModule.openProductReviewsModal(prod.sku);
+            }, 600);
+        }
     }
 
     // Xuất ra window.PawpalOrdersModule cho inline handlers
@@ -1204,7 +1250,7 @@
         const newEl = document.getElementById('toggleStatusNewBadge');
         const descEl = document.getElementById('toggleStatusDescText');
 
-        if (subEl) subEl.textContent = `Mã SKU: ${prod.sku}`;
+        if (subEl) subEl.textContent = `Mã SKU ${prod.sku}`;
         if (nameEl) nameEl.textContent = prod.name;
         if (currEl) {
             currEl.innerHTML = isCurrentlySuspended 
@@ -1213,7 +1259,7 @@
         }
         if (newEl) {
             newEl.innerHTML = isCurrentlySuspended 
-                ? '<span class="admin-badge badge-paid">Còn hàng (Mở bán lại)</span>'
+                ? '<span class="admin-badge badge-paid">Mở bán lại</span>'
                 : '<span class="admin-badge badge-cancelled">Tạm ngưng kinh doanh</span>';
         }
         if (descEl) {
@@ -1236,7 +1282,7 @@
         const statusEl = document.getElementById('stockLogsStatusText');
         const tbody = document.getElementById('stockLogsTableBody');
 
-        if (subEl) subEl.textContent = `Mã SKU: ${prod.sku} • ${prod.name}`;
+        if (subEl) subEl.textContent = `Mã SKU ${prod.sku} • ${prod.name}`;
         if (totalEl) totalEl.textContent = `${prod.stock} món`;
         if (minEl) minEl.textContent = `${prod.minStock} món`;
         if (statusEl) {
@@ -1453,7 +1499,7 @@
         if (!prod) return;
 
         const titleEl = document.getElementById('productReviewsModalTitle');
-        if (titleEl) titleEl.textContent = `Đánh giá sản phẩm: ${prod.name}`;
+        if (titleEl) titleEl.textContent = `Đánh giá sản phẩm • ${prod.name}`;
 
         const bigScoreEl = document.getElementById('prodReviewsScoreBig');
         const descEl = document.getElementById('prodReviewsScoreDesc');
@@ -1571,7 +1617,7 @@
 
             const replyHtml = r.reply ? `
                 <div style="margin-top: 8px; font-size: 12.5px; line-height: 1.5; color: var(--text-main);">
-                    <span style="font-weight: 600; color: #236B48;">Phản hồi từ PawPal:</span> ${r.reply}
+                    <span style="font-weight: 600; color: #236B48;">Phản hồi từ PawPal</span> • ${r.reply}
                 </div>
             ` : `
                 <div style="margin-top: 8px;" id="replyBoxWrapper_${r.id}">
@@ -1591,7 +1637,7 @@
                             </div>
                             <div>
                                 <div style="font-weight: 600; font-size: 13.5px; color: var(--text-main);">${r.customerName}</div>
-                                <div style="font-size: 11.5px; color: var(--text-muted);">${r.date} • Phân loại: <span style="font-weight: 500; color: var(--text-main);">${r.variant}</span></div>
+                                <div style="font-size: 11.5px; color: var(--text-muted);">${r.date} • Phân loại <span style="font-weight: 500; color: var(--text-main);">${r.variant}</span></div>
                             </div>
                         </div>
                         <div style="font-weight: 700; color: #B45309; font-size: 12.5px;">${starsHtml}</div>

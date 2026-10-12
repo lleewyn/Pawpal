@@ -43,8 +43,13 @@
         }
 
         try {
+            const isAdminPortal = /^\/(?:admin(?:\/|$)|pages\/admin(?:\/|$))/i.test(window.location.pathname);
             window['SupabaseClient'] = window['supabase'].createClient(config.url, config.anonKey, {
-                auth: { persistSession: true, autoRefreshToken: true },
+                auth: {
+                    persistSession: true,
+                    autoRefreshToken: true,
+                    ...(isAdminPortal ? { storageKey: 'pawpal_admin_supabase_auth' } : {}),
+                },
             });
             setStatus(true, true, null);
             console.log('[SupabaseClient] Khởi tạo thành công ✓');

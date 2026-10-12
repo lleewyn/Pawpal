@@ -234,6 +234,7 @@
     // Khởi tạo các sự kiện giao diện cho Subtab Detail
     function initDetailEvents() {
         // Toggle hiển thị trường hoàn tiền trong modal RMA
+        document.getElementById('formReturnRefund')?.addEventListener('submit', (e) => e.preventDefault());
         document.getElementById('rmaSolutionType')?.addEventListener('change', (e) => {
             const isRefund = e.target.value === 'refund';
             const refundRow = document.getElementById('rmaRefundFieldsRow');

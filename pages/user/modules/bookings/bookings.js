@@ -12,6 +12,25 @@ async function changeOnSupabase(bookingId, changes) {
     return updateCustomerBooking(db, user, booking, changes);
 }
 
+export const statusLabels = {
+    dang_giu_cho: 'Đang giữ chỗ',
+    cho_xac_nhan: 'Chờ xác nhận',
+    da_xac_nhan: 'Đã xác nhận',
+    da_check_in: 'Đã tiếp nhận',
+    dang_thuc_hien: 'Đang thực hiện',
+    da_hoan_tat: 'Hoàn thành',
+    da_huy: 'Đã hủy',
+    da_het_han: 'Đã hết hạn',
+    vang_mat: 'Vắng mặt',
+    pending: 'Chờ xác nhận',
+    upcoming: 'Đã xác nhận',
+    confirmed: 'Đã xác nhận',
+    accepted: 'Đã tiếp nhận',
+    'in-progress': 'Đang thực hiện',
+    completed: 'Hoàn thành',
+    cancelled: 'Đã hủy'
+};
+
 const statusAliases = {
     pending: ['pending', 'cho_xac_nhan', 'dang_giu_cho'],
     confirmed: ['confirmed', 'upcoming', 'da_xac_nhan'],

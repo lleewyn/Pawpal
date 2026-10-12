@@ -280,7 +280,12 @@
             if (activeCheck) activeCheck.checked = true;
         }
 
-        overlay.style.display = 'flex';
+        if (PawpalChatbot.openModal) {
+            PawpalChatbot.openModal('modalFaqEditorOverlay');
+        } else if (overlay) {
+            overlay.classList.add('active');
+            overlay.style.display = 'flex';
+        }
     }
 
     // 2. TOXIC SHIELD PROFANITY FILTER TABLE
@@ -441,7 +446,12 @@
             if (activeCheck) activeCheck.checked = true;
         }
 
-        overlay.style.display = 'flex';
+        if (PawpalChatbot.openModal) {
+            PawpalChatbot.openModal('modalProfanityEditorOverlay');
+        } else if (overlay) {
+            overlay.classList.add('active');
+            overlay.style.display = 'flex';
+        }
     }
 
     // 3. CANNED RESPONSES TABLE
@@ -591,7 +601,12 @@
             if (activeCheck) activeCheck.checked = true;
         }
 
-        overlay.style.display = 'flex';
+        if (PawpalChatbot.openModal) {
+            PawpalChatbot.openModal('modalCannedEditorOverlay');
+        } else if (overlay) {
+            overlay.classList.add('active');
+            overlay.style.display = 'flex';
+        }
     }
 
     // 4. POLICY TABLE

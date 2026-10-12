@@ -349,13 +349,14 @@ html.booking-pre-step-4 #bookingStepper .step[data-step="4"] .step-circle {
 
 .booking-form .form-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 12px 16px;
     margin-bottom: 12px;
 }
 
 .booking-form .form-group {
     display: flex;
+    min-width: 0;
     flex-direction: column;
     gap: 4px;
     margin-bottom: 0;
@@ -383,6 +384,9 @@ html.booking-pre-step-4 #bookingStepper .step[data-step="4"] .step-circle {
 .booking-form .form-group textarea,
 .spa-schedule .form-group input,
 .hotel-date-range .form-group input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     padding: 8px 12px; 
     border: 1px solid rgba(42,89,68,0.15);
     border-radius: var(--card-border-radius);
@@ -619,7 +623,7 @@ html.booking-pre-step-4 #bookingStepper .step[data-step="4"] .step-circle {
 
 .staff-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
     gap: 14px;
 }
 
@@ -1381,7 +1385,8 @@ html.booking-pre-step-4 #bookingStepper .step[data-step="4"] .step-circle {
 
 @media (max-width: 640px) {
     .booking-step-panel { padding: 24px 18px; }
-    .form-row { grid-template-columns: 1fr; }
+    .booking-form .form-row,
+    .hotel-date-range .form-row { grid-template-columns: minmax(0, 1fr); }
     .booking-stepper { gap: 0; }
     .step-label { display: none; }
     .step-line { margin-bottom: 0; }
@@ -1478,7 +1483,7 @@ html.booking-pre-step-4 #bookingStepper .step[data-step="4"] .step-circle {
 /* ── Pet Selection Cards Grid ── */
 .pet-cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
     gap: 14px;
     margin-top: 12px;
 }

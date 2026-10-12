@@ -671,6 +671,7 @@
         initTab = hash;
     } else if (VALID_SETTINGS_TABS.includes(savedTab)) {
         initTab = savedTab;
+    }
     switchSubtab(initTab);
 
     window.addEventListener('admin:subtab-change', (e) => {

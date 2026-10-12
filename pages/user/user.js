@@ -63,13 +63,12 @@
             const result = await window.PawpalCustomerAuth.request('me', {}, true);
             await window.PawpalCustomerAuth.accept(result);
         } catch (err) {
-            if (err.message && (err.message.includes('hết hạn') || err.message.includes('đăng nhập lại') || err.message.includes('chưa hoạt động'))) {
-                localStorage.removeItem('pawpal_current_user');
-                sessionStorage.removeItem('pawpal_current_user');
-                window.location.href = '/login';
-                return;
-            }
-            console.warn('[UserPortal] Không thể làm mới hồ sơ từ máy chủ, dùng dữ liệu lưu trữ cục bộ:', err.message);
+            console.warn('[UserPortal] Không thể xác nhận phiên khách hàng:', err.message);
+            localStorage.removeItem('pawpal_current_user');
+            sessionStorage.removeItem('pawpal_current_user');
+            sessionStorage.setItem('pawpal_redirect_after_login', window.location.href);
+            window.location.href = '/login';
+            return;
         }
     }
 

@@ -211,32 +211,32 @@
             <div class="packing-slip-sheet">
                 <div class="slip-header-block">
                     <div>
-                        <div class="slip-brand-title">PAWPAL PET CARE</div>
+                        <div class="slip-brand-title">PawPal Pet Care</div>
                         <div class="slip-brand-sub">Hệ thống chăm sóc thú cưng toàn diện | Hotline: 1900-PAWPAL</div>
                         <div class="slip-brand-sub">Kho vận: 45 Lê Duẩn, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh</div>
                     </div>
                     <div class="slip-tracking-box">
                         <div class="slip-barcode-text">*${order.id}*</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">Mã vận đơn: <strong style="font-family: monospace; color: var(--text-main);">${trackingCode}</strong></div>
+                        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">Mã vận đơn <strong style="font-family: monospace; color: var(--text-main);">${trackingCode}</strong></div>
                         <div style="font-size: 11.5px; color: #236B48; font-weight: 600;">${carrierName}</div>
                     </div>
                 </div>
 
                 <div class="slip-info-grid">
                     <div class="slip-info-col">
-                        <span class="slip-info-label">NGƯỜI NHẬN HÀNG:</span>
+                        <span class="slip-info-label">Người nhận hàng</span>
                         <span class="slip-info-val strong">${order.customerName} - ${order.phone}</span>
                         <span class="slip-info-val">${customerAddr}</span>
                     </div>
                     <div class="slip-info-col">
-                        <span class="slip-info-label">THÔNG TIN ĐƠN HÀNG:</span>
-                        <span class="slip-info-val">Mã đơn: <strong style="color: #236B48;">${order.id}</strong> | Ngày đặt: ${dateFormatted}</span>
+                        <span class="slip-info-label">Thông tin đơn hàng</span>
+                        <span class="slip-info-val">Mã đơn <strong style="color: #236B48;">${order.id}</strong> | Ngày đặt ${dateFormatted}</span>
                         <span class="slip-info-val">Ghi chú: ${order.customerNote || 'Giao giờ hành chính, cho kiểm tra hàng'}</span>
                     </div>
                 </div>
 
                 <div>
-                    <div style="font-weight: 600; font-size: 12.5px; margin-bottom: 8px; color: var(--text-heading);">DANH SÁCH HÀNG CẦN ĐÓNG GÓI (PICK-LIST):</div>
+                    <div style="font-weight: 600; font-size: 12.5px; margin-bottom: 8px; color: var(--text-heading);">Danh sách hàng cần đóng gói</div>
                     <table class="slip-items-table">
                         <thead>
                             <tr>
@@ -255,7 +255,7 @@
                 </div>
 
                 <div class="slip-total-row">
-                    <span style="font-size: 13.5px;">Tổng cộng tiền hàng:</span>
+                    <span style="font-size: 13.5px;">Tổng cộng tiền hàng</span>
                     <span class="slip-total-amount">${formatVND(order.total)}</span>
                 </div>
 
@@ -315,14 +315,14 @@
             <div class="manifest-sheet">
                 <div class="slip-header-block" style="border-bottom: 2px solid var(--text-heading); padding-bottom: 16px; margin-bottom: 16px;">
                     <div>
-                        <div class="slip-brand-title">BẢNG KÊ BÀN GIAO HÀNG HÓA VẬN CHUYỂN</div>
-                        <div class="slip-brand-sub">Đơn vị gửi: CÔNG TY TNHH PAWPAL VIỆT NAM</div>
-                        <div class="slip-brand-sub">Kho xuất hàng: 45 Lê Duẩn, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh</div>
+                        <div class="slip-brand-title">Bảng kê bàn giao hàng hóa vận chuyển</div>
+                        <div class="slip-brand-sub">Đơn vị gửi Công ty TNHH PawPal Việt Nam</div>
+                        <div class="slip-brand-sub">Kho xuất hàng 45 Lê Duẩn, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh</div>
                     </div>
                     <div class="slip-tracking-box">
                         <div style="font-weight: 700; font-size: 14px; color: #236B48;">${manifestCode}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">Thời gian in: ${nowFormatted}</div>
-                        <div style="font-size: 12px; font-weight: 600; margin-top: 2px;">Đơn vị vận chuyển: ${carrierName}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">Thời gian in ${nowFormatted}</div>
+                        <div style="font-size: 12px; font-weight: 600; margin-top: 2px;">Đơn vị vận chuyển ${carrierName}</div>
                     </div>
                 </div>
 
@@ -346,10 +346,10 @@
 
                 <div class="slip-total-row" style="margin-top: 16px; border-top: 1px solid var(--border-neutral); padding-top: 12px;">
                     <div>
-                        <span>Tổng số đơn: <strong style="color: #236B48;">${ordersList.length}</strong> đơn hàng | Tổng số kiện: <strong>${totalItemsCount}</strong> kiện</span>
+                        <span>Tổng số đơn <strong style="color: #236B48;">${ordersList.length}</strong> đơn hàng | Tổng số kiện <strong>${totalItemsCount}</strong> kiện</span>
                     </div>
                     <div>
-                        <span>Tổng tiền thu hộ COD: <strong style="color: #B45309; font-size: 15px;">${formatVND(totalCodSum)}</strong></span>
+                        <span>Tổng tiền thu hộ COD <strong style="color: #B45309; font-size: 15px;">${formatVND(totalCodSum)}</strong></span>
                     </div>
                 </div>
 
@@ -363,7 +363,7 @@
                         <span class="slip-sign-note">(Ký, ghi rõ họ tên)</span>
                     </div>
                     <div class="slip-sign-col">
-                        <span class="slip-sign-title">Bưu tá tiếp nhận (${carrierName})</span>
+                        <span class="slip-sign-title">Bưu tá tiếp nhận - ${carrierName}</span>
                         <span class="slip-sign-note">(Ký, ghi rõ họ tên)</span>
                     </div>
                 </div>
@@ -930,6 +930,17 @@
         });
 
         syncOrdersAndProductsFromSupabase();
+
+        // Hỗ trợ kiểm thử tự động cho modal17
+        if (window.location.search.includes('v=modal17')) {
+            setTimeout(() => {
+                showOrderConfirmModal({
+                    title: 'Xác nhận thao tác',
+                    message: 'Bạn có chắc chắn muốn thực hiện thao tác này không? Hành động này sẽ được ghi nhận vào nhật ký hệ thống.',
+                    acceptText: 'Đồng ý'
+                });
+            }, 600);
+        }
     }
 
     // Export bridge cho window.PawpalOrdersModule
@@ -937,6 +948,7 @@
     window.PawpalOrdersModule.switchSubtab = switchSubtab;
     window.PawpalOrdersModule.syncOrdersAndProductsFromSupabase = syncOrdersAndProductsFromSupabase;
     window.PawpalOrdersModule.loadOrdersData = syncOrdersAndProductsFromSupabase;
+    window.PawpalOrdersModule.showOrderConfirmModal = showOrderConfirmModal;
 
     // Tự động khởi tạo sau khi tất cả script subtab nạp xong
     setTimeout(() => {

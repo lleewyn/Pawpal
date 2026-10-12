@@ -4,6 +4,29 @@ let filteredServices = [];
 let currentPage = 1;
 const itemsPerPage = 12;
 
+function servicesFilterState(restore = false) {
+    const key = 'pawpal_services_filters:' + new URLSearchParams(window.location.search).get('category');
+    const controls = [...document.querySelectorAll('#searchServiceInput, input[name="sortFilter"], input[name="categoryFilter"], input[name="petFilter"], input[name="priceBucketFilter"], #ratingAll, .rating-star-check')];
+    try {
+        if (restore) {
+            const saved = JSON.parse(sessionStorage.getItem(key) || 'null');
+            if (!Array.isArray(saved)) return;
+            controls.forEach(control => {
+                const value = saved.find(item => item.id === control.id && item.name === control.name && item.value === (control.type === 'text' || control.type === 'search' ? '' : control.value));
+                if (!value) return;
+                if (control.type === 'radio' || control.type === 'checkbox') control.checked = value.checked;
+                else control.value = value.text;
+            });
+        } else {
+            sessionStorage.setItem(key, JSON.stringify(controls.map(control => ({
+                id: control.id, name: control.name,
+                value: control.type === 'text' || control.type === 'search' ? '' : control.value,
+                text: control.value, checked: control.checked
+            }))));
+        }
+    } catch (error) { console.warn('Không thể lưu bộ lọc dịch vụ:', error); }
+}
+
 function getCurrentWishlistUser() {
     try { return JSON.parse(localStorage.getItem('pawpal_current_user')) || null; } catch { return null; }
 }
@@ -15,17 +38,26 @@ async function toggleServiceWishlist(btn, serviceId) {
         return;
     }
 
-    if (window.API && window.API.toggleWishlist) {
-        const res = await window.API.toggleWishlist(user.id, serviceId, true);
-        if (res && res.success) {
-            if (res.action === 'added') {
-                btn.classList.add('active');
-                showServiceWishlistToast('Đã thêm vào yêu thích ❤️');
-            } else {
-                btn.classList.remove('active');
-                showServiceWishlistToast('Đã bỏ khỏi yêu thích');
-            }
-        }
+    if (btn.disabled) return;
+    btn.disabled = true;
+    try {
+        if (!serviceId || serviceId === 'undefined') throw new Error('Không tìm thấy mã dịch vụ.');
+        const { API } = await import('/scripts/api/api.js');
+        const res = await API.toggleWishlist(user.id, serviceId, true);
+        if (!res?.success) throw new Error(res?.error || 'Không thể cập nhật yêu thích. Vui lòng thử lại.');
+        const added = res.action === 'added';
+        currentWishlistServiceIds = currentWishlistServiceIds.filter(id => String(id) !== String(serviceId));
+        if (added) currentWishlistServiceIds.push(String(serviceId));
+        btn.classList.toggle('active', added);
+        btn.setAttribute('aria-pressed', String(added));
+        showServiceWishlistToast(added ? 'Đã thêm vào yêu thích' : 'Đã bỏ khỏi yêu thích');
+    } catch (error) {
+        const needsServiceMigration = /product_id.*not-null|not-null.*product_id/i.test(error.message || '');
+        showServiceWishlistToast(needsServiceMigration
+            ? 'Cơ sở dữ liệu chưa hỗ trợ yêu thích dịch vụ. Cần cập nhật bảng yêu thích.'
+            : error.message);
+    } finally {
+        btn.disabled = false;
     }
 }
 
@@ -207,10 +239,12 @@ async function initServicesPage() {
 
     try {
         const u = getCurrentWishlistUser();
-        if (u && u.id && window.API && window.API.getUserWishlist) {
+        currentWishlistServiceIds = [];
+        if (u && u.id) {
             try {
-                const wl = await window.API.getUserWishlist(u.id);
-                if (wl && wl.serviceIds) currentWishlistServiceIds = wl.serviceIds;
+                const { API } = await import('/scripts/api/api.js');
+                const wl = await API.getUserWishlist(u.id);
+                if (wl && wl.serviceIds) currentWishlistServiceIds = wl.serviceIds.map(String);
             } catch(e) { console.warn('Failed to load wishlist services', e); }
         }
 
@@ -237,6 +271,7 @@ async function initServicesPage() {
                 if (catRadio) catRadio.checked = true;
             }
 
+            servicesFilterState(true);
             applyFilters();
             updateServicesFilterCount();
         } else {
@@ -269,7 +304,23 @@ function showErrorMessage() {
     }
 }
 
+function matchesServiceSearch(service, query) {
+    const normalize = value => String(value || '').normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd').toLowerCase().trim();
+    const keyword = normalize(query);
+    if (!keyword) return true;
+    const categoryKeywords = {
+        hotel: 'hotel', 'pet hotel': 'hotel', 'khach san': 'hotel', 'luu tru': 'hotel',
+        taxi: 'taxi', 'pet taxi': 'taxi', 'dua ruoc': 'taxi',
+        spa: 'spa', 'pet spa': 'spa'
+    };
+    const category = categoryKeywords[keyword];
+    if (category) return normalize(service.category) === category;
+    return normalize(service.name).includes(keyword) || normalize(service.description).includes(keyword);
+}
+
 window.applyFilters = function () {
+    servicesFilterState();
     const searchVal = document.getElementById('searchServiceInput')?.value.trim().toLowerCase() || '';
     const categoryFilter = document.querySelector('input[name="categoryFilter"]:checked')?.value || 'all';
     const petFilter = document.querySelector('input[name="petFilter"]:checked')?.value || 'all';
@@ -278,12 +329,7 @@ window.applyFilters = function () {
     const selectedRatings = [...document.querySelectorAll('.rating-star-check:checked')].map(c => parseInt(c.value));
 
     filteredServices = allServices.filter(service => {
-        let matchesSearch = true;
-        if (searchVal) {
-            const nameMatch = service.name.toLowerCase().includes(searchVal);
-            const descMatch = service.description.toLowerCase().includes(searchVal);
-            matchesSearch = nameMatch || descMatch;
-        }
+        const matchesSearch = matchesServiceSearch(service, searchVal);
 
         const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter;
 

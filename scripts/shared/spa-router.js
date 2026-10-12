@@ -85,6 +85,7 @@
         }, 150);
     }
 
+    let renderedPageUrl = new URL(window.location.href);
     async function spaNavigateTo(url, pushState = true) {
         try {
             const targetUrl = new URL(url, window.location.origin);
@@ -96,7 +97,7 @@
             }
 
             // Nếu cùng đường dẫn và query param
-            if (targetUrl.pathname === window.location.pathname && targetUrl.search === window.location.search) {
+            if (targetUrl.pathname === renderedPageUrl.pathname && targetUrl.search === renderedPageUrl.search) {
                 if (targetUrl.hash) {
                     window.location.hash = targetUrl.hash;
                 }
@@ -169,6 +170,7 @@
             currentMain.className = newMain.className;
             currentMain.id = newMain.id;
             currentMain.innerHTML = newMain.innerHTML;
+            renderedPageUrl = targetUrl;
 
             // Ép browser tính toán lại layout trước khi hiển thị
             void currentMain.offsetHeight;

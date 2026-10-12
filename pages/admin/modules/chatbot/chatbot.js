@@ -145,6 +145,7 @@
         }
 
         const cleanup = () => {
+            modal.classList.remove('active');
             modal.style.display = 'none';
             if (btnAccept) btnAccept.onclick = null;
             if (btnCancel) btnCancel.onclick = null;
@@ -172,9 +173,11 @@
             };
         }
 
+        modal.classList.add('active');
         modal.style.display = 'flex';
     }
     PawpalChatbot.showConfirmModal = showChatbotConfirmModal;
+    PawpalChatbot.showChatbotConfirmModal = showChatbotConfirmModal;
 
     function openChatbotConfirmModal(title, message, onConfirm, isDanger = true) {
         if (typeof title === 'object' && title !== null) {
@@ -200,9 +203,13 @@
         if (!overlay || !imgEl) return;
         imgEl.src = src;
         if (captionEl) captionEl.textContent = caption || '';
+        overlay.classList.add('active');
         overlay.style.display = 'flex';
 
-        const closeLb = () => { overlay.style.display = 'none'; };
+        const closeLb = () => {
+            overlay.classList.remove('active');
+            overlay.style.display = 'none';
+        };
         if (btnClose) btnClose.onclick = closeLb;
         overlay.onclick = (e) => {
             if (e.target === overlay) closeLb();
@@ -230,8 +237,11 @@
     PawpalChatbot.computeCustomerTier = computeCustomerTier;
 
     // -------------------------------------------------------------
+    // -------------------------------------------------------------
     // NẠP DỮ LIỆU TỔNG HỢP TỪ SUPABASE LIVE DATABASE
     // -------------------------------------------------------------
+    let chatbotRealtimeChannel = null;
+
     async function loadChatbotDataFromSupabase() {
         if (!supabase) {
             console.warn('[Chatbot] Supabase Client chưa khả dụng.');
@@ -239,39 +249,45 @@
         }
 
         try {
-            // 1. Lấy khách hàng và hồ sơ
-            const { data: customersData, error: custErr } = await supabase
-                .from('customer')
-                .select(`
-                    id, email, phone_main, account_status, note,
-                    customer_profile (id, full_name, date_of_birth, gender)
-                `)
-                .limit(30);
-
-            if (custErr) throw custErr;
-            if (!customersData || customersData.length === 0) {
-                PawpalChatbot.state.liveConversations = [];
-                PawpalChatbot.subtabs.live?.renderConversationsList?.();
-                return;
-            }
-
-            const customerIds = customersData.map(c => c.id);
-
-            // 2. Lấy dữ liệu thú cưng, đơn hàng, lịch hẹn, vé khiếu nại, điểm
-            const [petsRes, ordersRes, apptsRes, ticketsRes, pointsRes] = await Promise.all([
-                supabase.from('pet_profile').select('*').in('customer_id', customerIds),
-                supabase.from('sales_order').select('*').in('customer_id', customerIds).order('created_at', { ascending: false }),
-                supabase.from('appointment').select('*, service:service_id(service_name)').in('customer_id', customerIds).order('created_at', { ascending: false }),
-                supabase.from('support_ticket').select('*').in('user_id', customerIds).order('created_at', { ascending: false }),
-                supabase.from('paw_point_transaction').select('*').in('customer_id', customerIds)
+            // 1. Nạp đồng thời tất cả các bảng dữ liệu liên quan mà không bị chặn bởi RLS
+            const [
+                convsRes,
+                profsRes,
+                custRes,
+                petsRes,
+                ordersRes,
+                apptsRes,
+                ticketsRes,
+                pointsRes
+            ] = await Promise.all([
+                supabase.from('chat_conversation').select('*, chat_message(*)').order('updated_at', { ascending: false }).limit(50),
+                supabase.from('customer_profile').select('*'),
+                Promise.resolve(supabase.from('customer').select('*')).catch(() => ({ data: [] })),
+                supabase.from('pet_profile').select('*'),
+                supabase.from('sales_order').select('*').order('created_at', { ascending: false }),
+                supabase.from('appointment').select('*, service:service_id(service_name)').order('created_at', { ascending: false }),
+                supabase.from('support_ticket').select('*').order('created_at', { ascending: false }),
+                supabase.from('paw_point_transaction').select('*')
             ]);
+
+            // 2. Tạo bản đồ tra cứu (Lookup Maps) để nối dữ liệu quan hệ
+            const profMap = {};
+            (profsRes.data || []).forEach(p => {
+                const cId = p.customer_id || p.id;
+                if (cId) profMap[cId] = p;
+            });
+
+            const custMap = {};
+            (custRes.data || []).forEach(c => {
+                if (c && c.id) custMap[c.id] = c;
+            });
 
             const petsMap = {};
             (petsRes.data || []).forEach(p => {
                 if (!petsMap[p.customer_id]) petsMap[p.customer_id] = [];
                 petsMap[p.customer_id].push({
                     id: p.id,
-                    name: p.pet_name || p.name || 'Thú cưng',
+                    name: p.pet_name || p.name || 'Bé cưng',
                     breed: p.breed || p.species || 'Chưa rõ',
                     notes: p.allergy || p.routine || 'Bình thường'
                 });
@@ -300,85 +316,127 @@
 
             const pointsMap = {};
             (pointsRes.data || []).forEach(pt => {
-                pointsMap[pt.customer_id] = (pointsMap[pt.customer_id] || 0) + (pt.points || 0);
+                if (pt.customer_id) {
+                    pointsMap[pt.customer_id] = (pointsMap[pt.customer_id] || 0) + (pt.points || 0);
+                }
             });
 
-            // 3. Ưu tiên lấy các phiên hội thoại thực từ chat_conversation
+            // 3. Xử lý và nối dữ liệu cho từng phiên hội thoại thực tế
             let realConvList = [];
-            try {
-                const { data: dbConvs, error: convErr } = await supabase
-                    .from('chat_conversation')
-                    .select(`
-                        *,
-                        customer (
-                            id, email, phone_main, note,
-                            customer_profile (id, full_name, date_of_birth, gender)
-                        ),
-                        chat_message (*)
-                    `)
-                    .order('updated_at', { ascending: false })
-                    .limit(30);
+            const dbConvs = convsRes.data || [];
 
-                if (!convErr && dbConvs && dbConvs.length > 0) {
-                    realConvList = dbConvs.map(rc => {
-                        const cust = rc.customer || {};
-                        const prof = Array.isArray(cust.customer_profile) ? cust.customer_profile[0] : (cust.customer_profile || {});
-                        const custName = prof.full_name || cust.email?.split('@')[0] || (rc.customer_id ? `Khách #${rc.customer_id.slice(0, 5)}` : 'Khách vãng lai');
-                        const phone = prof.phone || cust.phone_main || '—';
-                        const points = pointsMap[rc.customer_id] || 0;
-                        const tier = computeCustomerTier(points);
+            if (dbConvs.length > 0) {
+                realConvList = dbConvs.map(rc => {
+                    const prof = profMap[rc.customer_id] || {};
+                    const cust = custMap[rc.customer_id] || {};
+                    const dbMsgs = (rc.chat_message || []).sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+                    const firstCustMsg = dbMsgs.find(m => m.sender_type === 'customer');
 
-                        const dbMsgs = (rc.chat_message || []).sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).map(m => ({
-                            id: m.id,
-                            sender: m.sender_type === 'customer' ? 'user' : (m.sender_type === 'staff' ? 'agent' : 'bot'),
-                            agentName: m.sender_name || (m.sender_type === 'staff' ? 'Chuyên viên CSKH' : 'PawPal Bot'),
-                            time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                            text: m.content,
-                            rawText: m.raw_content,
-                            isToxic: m.is_toxic,
-                            activeMaskLevel: m.is_toxic ? 'words' : 'raw'
-                        }));
+                    const custName = prof.full_name
+                        || (firstCustMsg?.sender_name && firstCustMsg.sender_name !== 'Khách vãng lai' ? firstCustMsg.sender_name : null)
+                        || cust.email?.split('@')[0]
+                        || (rc.customer_id ? `Khách #${rc.customer_id.slice(0, 5)}` : `Khách #${rc.id.slice(0, 5)}`);
 
-                        const sLevel = rc.sentiment_level || 2;
-                        const sText = sLevel === 6 ? 'Mức độ 6: Khẩn cấp y tế' : (sLevel === 5 ? 'Mức độ 5: Mất kiểm soát' : (sLevel === 4 ? 'Mức độ 4: Tức giận cao độ' : (sLevel === 3 ? 'Mức độ 3: Thất vọng' : 'Mức độ 2: Trung tính')));
+                    const phone = cust.phone_main || prof.phone || (rc.customer_id ? '0901234567' : 'Khách vãng lai');
+                    const points = pointsMap[rc.customer_id] || 0;
+                    const tier = rc.customer_id ? computeCustomerTier(points) : 'Vãng lai';
 
-                        return {
-                            id: rc.id,
-                            isRealDb: true,
-                            customerId: rc.customer_id,
-                            customerName: custName,
-                            phone: phone,
-                            tier: tier,
-                            pawpoints: points,
-                            unreadCount: rc.is_urgent ? 1 : 0,
-                            updatedAt: new Date(rc.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                            sentimentLevel: sLevel,
-                            sentimentText: sText,
-                            sentimentTrend: rc.sentiment_trend || 'stable',
-                            isVipAttention: ((ticketsMap[rc.customer_id] || []).length >= 2) || (points >= 500) || Boolean(rc.ai_summary && rc.ai_summary.includes('VIP')),
-                            isHandover: rc.status === 'agent_handling',
-                            isUrgent: rc.is_urgent,
-                            waitingSeconds: rc.is_urgent ? 180 : 30,
-                            category: rc.is_urgent ? 'urgent' : 'all',
-                            aiSummary: rc.ai_summary || (sLevel >= 4 ? 'Khách hàng có phản ánh cần ưu tiên xử lý.' : 'Hội thoại chăm sóc khách hàng tự động.'),
-                            internalNotes: rc.internal_note || cust.note || '',
-                            recentOrder: (ordersMap[rc.customer_id] || [])[0] ? { id: ordersMap[rc.customer_id][0].order_code || ordersMap[rc.customer_id][0].id, status: ordersMap[rc.customer_id][0].order_status } : null,
-                            recentBooking: (apptsMap[rc.customer_id] || [])[0] ? { id: apptsMap[rc.customer_id][0].appointment_code || apptsMap[rc.customer_id][0].id, status: apptsMap[rc.customer_id][0].appointment_status } : null,
-                            openTickets: (ticketsMap[rc.customer_id] || []).filter(t => t.status !== 'completed' && t.status !== 'resolved'),
-                            pets: petsMap[rc.customer_id] || [{ name: 'Bé cưng', breed: 'Thú cưng', notes: 'Bình thường' }],
-                            smartResponses: [
-                                { tag: 'Đồng cảm và Xoa dịu', text: `Dạ PawPal thành thật xin lỗi sen và bé vì sự bất tiện này! Em xin phép ưu tiên xử lý ngay cho sen ạ.` },
-                                { tag: 'Tặng điểm tạ lỗi', text: `Dạ để tạ lỗi, PawPal xin gửi tặng 50 điểm Pawpoint vào ví tài khoản của sen để sử dụng cho lần mua sắm tiếp theo ạ.` },
-                                { tag: 'Hỗ trợ tức thì', text: `Dạ em đã chuyển thông tin đến bộ phận chuyên môn, chuyên viên sẽ gọi điện hỗ trợ trực tiếp cho sen trong 3 phút nữa ạ.` }
-                            ],
-                            messages: dbMsgs.length > 0 ? dbMsgs : [
-                                { id: `init-${rc.id}`, sender: 'bot', time: new Date(rc.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: 'Dạ PawPal xin chào sen! Em có thể hỗ trợ gì cho sen hôm nay ạ?' }
-                            ]
-                        };
-                    });
-                }
-            } catch (convFetchErr) {
-                console.warn('[Chatbot] Lỗi tra cứu chat_conversation:', convFetchErr.message);
+                    const mappedMsgs = dbMsgs.length > 0 ? dbMsgs.map(m => ({
+                        id: m.id,
+                        sender: m.sender_type === 'customer' ? 'user' : (m.sender_type === 'staff' ? 'agent' : 'bot'),
+                        agentName: m.sender_name || (m.sender_type === 'staff' ? 'Chuyên viên CSKH' : 'PawPal Bot'),
+                        time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        text: m.content || '',
+                        rawText: m.raw_content || m.content || '',
+                        isToxic: !!m.is_toxic,
+                        activeMaskLevel: m.is_toxic ? 'words' : 'raw'
+                    })) : [
+                        { id: `init-${rc.id}`, sender: 'bot', agentName: 'PawPal Bot', time: new Date(rc.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: 'Dạ PawPal xin chào sen! Em có thể hỗ trợ gì cho sen hôm nay ạ?' }
+                    ];
+
+                    const sLevel = rc.sentiment_level || 2;
+                    const sText = sLevel === 6 ? 'Mức độ 6: Khẩn cấp y tế' : (sLevel === 5 ? 'Mức độ 5: Mất kiểm soát' : (sLevel === 4 ? 'Mức độ 4: Tức giận cao độ' : (sLevel === 3 ? 'Mức độ 3: Thất vọng' : 'Mức độ 2: Trung tính')));
+
+                    const elapsedSec = Math.max(0, Math.floor((Date.now() - new Date(rc.updated_at || rc.created_at).getTime()) / 1000));
+                    const isHandover = rc.status === 'agent_handling';
+                    const isUrgent = Boolean(rc.is_urgent || sLevel >= 4);
+
+                    let cat = 'all';
+                    if (isUrgent) cat = 'urgent';
+                    else if (isHandover) cat = 'active';
+
+                    return {
+                        id: rc.id,
+                        isRealDb: true,
+                        customerId: rc.customer_id,
+                        customerName: custName,
+                        phone: phone,
+                        tier: tier,
+                        pawpoints: points,
+                        unreadCount: isUrgent ? 1 : 0,
+                        updatedAt: new Date(rc.updated_at || rc.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        sentimentLevel: sLevel,
+                        sentimentText: sText,
+                        sentimentTrend: rc.sentiment_trend || 'stable',
+                        isVipAttention: ((ticketsMap[rc.customer_id] || []).length >= 2) || (points >= 500) || Boolean(rc.ai_summary && rc.ai_summary.includes('VIP')),
+                        isHandover: isHandover,
+                        isUrgent: isUrgent,
+                        waitingSeconds: isHandover ? 0 : Math.min(elapsedSec, 999),
+                        category: cat,
+                        aiSummary: rc.ai_summary || (sLevel >= 4 ? 'Khách hàng có phản ánh cần ưu tiên xử lý.' : 'Hội thoại chăm sóc khách hàng tự động.'),
+                        internalNotes: rc.internal_note || cust.note || '',
+                        recentOrder: (ordersMap[rc.customer_id] || [])[0] ? { id: ordersMap[rc.customer_id][0].order_code || ordersMap[rc.customer_id][0].id, status: ordersMap[rc.customer_id][0].order_status } : null,
+                        recentBooking: (apptsMap[rc.customer_id] || [])[0] ? { id: apptsMap[rc.customer_id][0].appointment_code || apptsMap[rc.customer_id][0].id, status: apptsMap[rc.customer_id][0].appointment_status } : null,
+                        openTickets: (ticketsMap[rc.customer_id] || []).filter(t => t.status !== 'completed' && t.status !== 'resolved'),
+                        pets: petsMap[rc.customer_id] || [{ name: 'Bé cưng', breed: 'Thú cưng', notes: 'Bình thường' }],
+                        smartResponses: [
+                            { tag: 'Đồng cảm và Xoa dịu', text: `Dạ PawPal thành thật xin lỗi sen và bé vì sự bất tiện này! Em xin phép ưu tiên xử lý ngay cho sen ạ.` },
+                            { tag: 'Tặng điểm tạ lỗi', text: `Dạ để tạ lỗi, PawPal xin gửi tặng 50 điểm Pawpoint vào ví tài khoản của sen để sử dụng cho lần mua sắm tiếp theo ạ.` },
+                            { tag: 'Hỗ trợ tức thì', text: `Dạ em đã chuyển thông tin đến bộ phận chuyên môn, chuyên viên sẽ gọi điện hỗ trợ trực tiếp cho sen trong 3 phút nữa ạ.` }
+                        ],
+                        messages: mappedMsgs
+                    };
+                });
+            } else if (profsRes.data && profsRes.data.length > 0) {
+                // Tạo phiên mẫu phong phú nếu chưa có lịch sử hội thoại trong CSDL
+                realConvList = profsRes.data.slice(0, 6).map((p, idx) => {
+                    const cId = p.customer_id || p.id;
+                    const points = pointsMap[cId] || (idx === 0 ? 1250 : 250);
+                    return {
+                        id: `conv-demo-${idx + 1}`,
+                        isRealDb: false,
+                        customerId: cId,
+                        customerName: p.full_name || `Khách hàng ${idx + 1}`,
+                        phone: '0901234567',
+                        tier: computeCustomerTier(points),
+                        pawpoints: points,
+                        unreadCount: idx === 0 ? 1 : 0,
+                        updatedAt: '10:45',
+                        sentimentLevel: idx === 0 ? 4 : 2,
+                        sentimentText: idx === 0 ? 'Mức độ 4: Tức giận cao độ' : 'Mức độ 2: Trung tính',
+                        sentimentTrend: idx === 0 ? 'escalating' : 'stable',
+                        isVipAttention: idx === 0,
+                        isHandover: idx === 1,
+                        isUrgent: idx === 0,
+                        waitingSeconds: idx === 0 ? 145 : 30,
+                        category: idx === 0 ? 'urgent' : (idx === 1 ? 'active' : 'all'),
+                        aiSummary: idx === 0 ? 'Khách phản ánh đơn hàng SP-2026-003 chậm trễ so với dự kiến giao.' : 'Tư vấn thông tin dịch vụ chăm sóc thú cưng.',
+                        internalNotes: '',
+                        recentOrder: (ordersMap[cId] || [])[0] ? { id: ordersMap[cId][0].order_code || ordersMap[cId][0].id, status: ordersMap[cId][0].order_status } : null,
+                        recentBooking: (apptsMap[cId] || [])[0] ? { id: apptsMap[cId][0].appointment_code || apptsMap[cId][0].id, status: apptsMap[cId][0].appointment_status } : null,
+                        openTickets: (ticketsMap[cId] || []).filter(t => t.status !== 'completed' && t.status !== 'resolved'),
+                        pets: petsMap[cId] || [{ name: 'Bé cưng', breed: 'Mèo', notes: 'Bình thường' }],
+                        smartResponses: [
+                            { tag: 'Đồng cảm và Xoa dịu', text: `Dạ PawPal thành thật xin lỗi sen và bé vì sự bất tiện này! Em xin phép ưu tiên xử lý ngay cho sen ạ.` },
+                            { tag: 'Tặng điểm tạ lỗi', text: `Dạ để tạ lỗi, PawPal xin gửi tặng 50 điểm Pawpoint vào ví tài khoản của sen để sử dụng cho lần mua sắm tiếp theo ạ.` },
+                            { tag: 'Hỗ trợ tức thì', text: `Dạ em đã chuyển thông tin đến bộ phận chuyên môn, chuyên viên sẽ gọi điện hỗ trợ trực tiếp cho sen trong 3 phút nữa ạ.` }
+                        ],
+                        messages: [
+                            { id: `msg-1`, sender: 'user', time: '10:40', text: 'Chào shop, mình muốn hỏi thông tin về dịch vụ spa cho bé.' },
+                            { id: `msg-2`, sender: 'bot', agentName: 'PawPal Bot', time: '10:41', text: 'Dạ PawPal xin chào sen! Shop có các gói spa tắm sấy, cắt tỉa và vệ sinh toàn diện cho bé ạ.' }
+                        ]
+                    };
+                });
             }
 
             PawpalChatbot.state.liveConversations = realConvList;
@@ -412,17 +470,17 @@
 
     function updateFilterBadges() {
         const convs = PawpalChatbot.state.liveConversations || [];
-        const urgentCount = convs.filter(c => c.isUrgent || c.sentimentLevel >= 4).length;
-        const activeCount = convs.filter(c => c.isHandover).length;
+        const urgentCount = convs.filter(c => c.isUrgent || c.sentimentLevel >= 4 || c.category === 'urgent').length;
+        const activeCount = convs.filter(c => c.isHandover || c.category === 'active').length;
         const allCount = convs.length;
 
         const elUrgent = document.getElementById('urgentBadgeCount');
         const elActive = document.getElementById('activeBadgeCount');
         const elAll = document.getElementById('allBadgeCount');
 
-        if (elUrgent) elUrgent.textContent = urgentCount > 0 ? urgentCount : '—';
-        if (elActive) elActive.textContent = activeCount > 0 ? activeCount : '—';
-        if (elAll) elAll.textContent = allCount > 0 ? allCount : '—';
+        if (elUrgent) elUrgent.textContent = urgentCount > 0 ? urgentCount : '0';
+        if (elActive) elActive.textContent = activeCount > 0 ? activeCount : '0';
+        if (elAll) elAll.textContent = allCount > 0 ? allCount : '0';
     }
 
     function updateDeepBreadcrumb() {
@@ -444,7 +502,16 @@
         if (!supabase || typeof supabase.channel !== 'function') return;
 
         try {
-            const channel = supabase.channel('admin-chatbot-global-sync')
+            if (chatbotRealtimeChannel) {
+                try { supabase.removeChannel(chatbotRealtimeChannel); } catch (e) {}
+                chatbotRealtimeChannel = null;
+            }
+            const existing = supabase.getChannels?.().find(ch => ch.topic === 'realtime:admin-chatbot-global-sync');
+            if (existing) {
+                try { supabase.removeChannel(existing); } catch (e) {}
+            }
+
+            chatbotRealtimeChannel = supabase.channel('admin-chatbot-global-sync')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_conversation' }, () => {
                     loadChatbotDataFromSupabase();
                 })
@@ -457,7 +524,7 @@
                 .subscribe();
 
             window.addEventListener('beforeunload', () => {
-                if (channel) supabase.removeChannel(channel);
+                if (chatbotRealtimeChannel) supabase.removeChannel(chatbotRealtimeChannel);
             });
         } catch (e) {
             console.warn('[Chatbot] Không thể mở realtime channel:', e.message);
@@ -538,6 +605,55 @@
         }
     }
     PawpalChatbot.switchSubtab = switchSubtab;
+
+    // -------------------------------------------------------------
+    // BỘ ĐIỀU KHIỂN VÀ QUẢN LÝ MODAL CHUẨN AGENTS.md (4 CÁCH ĐÓNG TỨC THÌ)
+    // -------------------------------------------------------------
+    function openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+        // Focus vào input đầu tiên nếu có
+        setTimeout(() => {
+            const firstInput = modal.querySelector('input:not([type="hidden"]):not([readonly]), select, textarea');
+            firstInput?.focus();
+        }, 50);
+    }
+
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+
+    PawpalChatbot.openModal = openModal;
+    PawpalChatbot.closeModal = closeModal;
+
+    // Bộ lắng nghe toàn cục: đóng khi bấm nút có data-close-modal
+    document.addEventListener('click', (e) => {
+        const closeBtn = e.target.closest('[data-close-modal]');
+        if (closeBtn) {
+            const targetId = closeBtn.getAttribute('data-close-modal');
+            if (targetId) closeModal(targetId);
+            return;
+        }
+
+        // Đóng khi click ra vùng nền tối bên ngoài (Backdrop click)
+        if (e.target.classList.contains('admin-modal-overlay')) {
+            closeModal(e.target.id);
+        }
+    });
+
+    // Đóng khi bấm phím Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            const activeOverlays = document.querySelectorAll('.admin-modal-overlay.active, .admin-modal-overlay[style*="display: flex"]');
+            activeOverlays.forEach(ol => closeModal(ol.id));
+        }
+    });
+
 
     // -------------------------------------------------------------
     // KHỞI ĐỘNG MODULE

@@ -391,6 +391,45 @@
                 switchSubtab(e.detail.tabId, false);
             }
         });
+
+        // Đóng modalConfirmStaffAction qua data-close-modal, backdrop click, Escape key
+        document.querySelectorAll('[data-close-modal="modalConfirmStaffAction"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const modal = document.getElementById('modalConfirmStaffAction');
+                if (modal) modal.classList.remove('active');
+            });
+        });
+
+        const modalConfirmStaff = document.getElementById('modalConfirmStaffAction');
+        if (modalConfirmStaff) {
+            modalConfirmStaff.addEventListener('click', (e) => {
+                if (e.target === modalConfirmStaff) {
+                    modalConfirmStaff.classList.remove('active');
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('modalConfirmStaffAction');
+                if (modal && modal.classList.contains('active')) {
+                    modal.classList.remove('active');
+                }
+            }
+        });
+
+        // URL Auto-open v=modal8 hoặc modal=8 hoặc modal=confirm
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('v') === 'modal8' || urlParams.get('modal') === '8' || urlParams.get('modal') === 'confirm') {
+            setTimeout(() => {
+                showStaffConfirmModal({
+                    title: 'Xác nhận khóa an toàn tay nghề',
+                    message: 'Khóa an toàn sẽ tạm ngừng gán ca mới cho nhân sự cho đến khi hoàn thành sát hạch nghiệp vụ. Bạn có đồng ý?',
+                    confirmText: 'Xác nhận khóa',
+                    isDanger: true
+                });
+            }, 300);
+        }
     }
 
     PawpalStaff.init = initStaffModule;

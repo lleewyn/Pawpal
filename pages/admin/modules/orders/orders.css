@@ -1225,8 +1225,6 @@
     font-size: 16px;
     font-weight: 700;
     color: #236B48;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
     line-height: 1.3;
 }
 
@@ -1360,7 +1358,7 @@
 
 /* MODAL BẢNG KÊ BÀN GIAO (MANIFEST MODAL) */
 .manifest-modal-card {
-    width: 820px;
+    width: 960px;
     max-width: 96vw;
     max-height: 90vh;
     display: flex;
@@ -1400,8 +1398,8 @@
    ========================================================================== */
 
 .rma-modal-card {
-    width: 640px;
-    max-width: 96vw;
+    width: 740px;
+    max-width: 95vw;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
@@ -1530,6 +1528,36 @@
 /* ==========================================================================
    GIAI ĐOẠN 1: POS CART MULTI-ITEM VÀ HÓA ĐƠN NHIỆT K80
    ========================================================================== */
+.pos-cart-table .btn-qty-mini {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: var(--admin-radius, 9px);
+    background-color: #EEF5F1;
+    color: #236B48;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transform: none !important;
+    transition: background-color 0.15s ease;
+}
+
+.pos-cart-table .btn-qty-mini:hover {
+    background-color: #DCEEE2;
+}
+
+.pos-cart-table .btn-qty-mini:focus-visible {
+    outline: 2px solid #236B48;
+    outline-offset: 2px;
+}
+
 .pos-cart-table th {
     border-bottom: 1px solid var(--border-neutral);
 }
@@ -1967,18 +1995,9 @@
     min-width: 0;
 }
 
-.customer-autocomplete-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background-color: #DCEEE2;
-    color: #165335;
-    font-weight: 700;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+.customer-autocomplete-avatar,
+.cust-auto-avatar {
+    display: none !important;
 }
 
 .customer-autocomplete-meta {

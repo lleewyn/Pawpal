@@ -66,7 +66,7 @@ export const API = {
                 weight: p.weight,
                 gender: p.gender,
                 note: p.note,
-                image: p.image_url || '/assets/images/placeholder.webp'
+                image: p.avatar_url || '/assets/images/placeholder.webp'
             }));
         } catch (err) {
             console.error('[API] Supabase getUserPets failed:', err);
@@ -90,7 +90,7 @@ export const API = {
                         service_name, service_category, estimated_duration,
                         service_price_matrix ( unit_price )
                     ),
-                    pet_profile ( id, pet_code, pet_name, breed, species, image_url )
+                    pet_profile ( id, pet_code, pet_name, breed, species, avatar_url )
                 `)
                 .eq('customer_id', customerId)
                 .order('appointment_date', { ascending: false });
@@ -144,7 +144,7 @@ export const API = {
                     petName:         pet?.pet_name      || '',
                     petBreed:        pet?.breed         || '',
                     petSpecies:      pet?.species       || '',
-                    petAvatar:       pet?.image_url     || '',
+                    petAvatar:       pet?.avatar_url    || '',
                     changeCount:     b.change_count     || 0,
                     note:            b.note             || '',
                     price:           b.total_price      || getPriceFromMatrix(srv?.service_price_matrix, pet?.species) || 0,
@@ -503,10 +503,12 @@ export const API = {
         if (!userId) return null;
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         
-        let { data: wl } = await db.from('wishlist').select('id').eq('customer_id', userId).maybeSingle();
+        if (!db) throw new Error('Chưa kết nối được dữ liệu yêu thích.');
+        let { data: wl, error: readError } = await db.from('wishlist').select('id').eq('customer_id', userId).maybeSingle();
+        if (readError) throw readError;
         if (!wl) {
             const { data: newWl, error } = await db.from('wishlist').insert({ customer_id: userId }).select('id').single();
-            if (error) return null;
+            if (error) throw error;
             wl = newWl;
         }
         return wl;
@@ -519,17 +521,18 @@ export const API = {
         if (!wl) return { success: false };
 
         const column = isService ? 'service_id' : 'product_id';
-        const { data: existing } = await db.from('wishlist_item')
+        const { data: existing, error: readError } = await db.from('wishlist_item')
             .select('id').eq('wishlist_id', wl.id).eq(column, itemId).maybeSingle();
+        if (readError) throw readError;
 
         if (existing) {
             const { error } = await db.from('wishlist_item').delete().eq('id', existing.id);
-            return { success: !error, action: 'removed' };
+            return { success: !error, action: 'removed', error: error?.message };
         } else {
             const insertData = { wishlist_id: wl.id };
             insertData[column] = itemId;
             const { error } = await db.from('wishlist_item').insert(insertData);
-            return { success: !error, action: 'added' };
+            return { success: !error, action: 'added', error: error?.message };
         }
     },
 

@@ -609,280 +609,308 @@
 
     <!-- MODAL: TẠO KHIẾU NẠI MỚI (DỊCH VỤ HOẶC ĐƠN HÀNG) -->
     <div class="admin-modal-overlay" id="createTicketModalOverlay">
-        <div class="admin-modal-card wide-modal">
-            <div class="modal-header-clean">
-                <div class="modal-title-clean" id="createTicketModalTitle">Tiếp nhận khiếu nại dịch vụ</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelCreateTicket">Đóng</button>
-            </div>
-            <div class="modal-body-clean">
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Số điện thoại khách hàng *</label>
-                        <input type="text" class="admin-input" id="inputTicketCustomerPhone" placeholder="Nhập 10 số điện thoại...">
-                        <div class="field-error-text" id="errorTicketCustomerPhone" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Tên khách hàng *</label>
-                        <input type="text" class="admin-input" id="inputTicketCustomerName" placeholder="Tự động điền theo SĐT hoặc nhập tên...">
-                        <div class="field-error-text" id="errorTicketCustomerName" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
-                    </div>
+        <div class="admin-modal-card wide-modal" style="width: 740px; max-width: 95vw;">
+            <form id="createTicketModalForm" novalidate onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <div class="modal-header-clean">
+                    <div class="modal-title-clean" id="createTicketModalTitle">Tiếp nhận khiếu nại dịch vụ</div>
+                    <button type="button" class="modal-btn-close-text" id="btnCancelCreateTicket" data-close-modal="createTicketModalOverlay">Đóng</button>
                 </div>
-
-                <div class="form-row-2col">
-                    <div class="form-group-item" id="groupTicketRefId">
-                        <label class="form-label-clean" id="labelTicketRefId">Chọn lịch hẹn liên quan *</label>
-                        <select class="admin-select" id="selectTicketRefId">
-                            <option value="">-- Chọn giao dịch --</option>
-                        </select>
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Mức độ ưu tiên *</label>
-                        <select class="admin-select" id="selectTicketPriority">
-                            <option value="medium">Trung bình</option>
-                            <option value="high">Cao (Khẩn cấp)</option>
-                            <option value="low">Thấp</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="margin-top: -8px; margin-bottom: 14px;">
-                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-muted); cursor: pointer;">
-                        <input type="checkbox" id="chkTicketUnverified" style="cursor: pointer;">
-                        Chưa xác minh giao dịch (Tạo vé tiếp nhận trước, liên kết giao dịch sau)
-                    </label>
-                </div>
-
-                <div class="ticket-duplicate-warning-box" id="ticketDuplicateWarningBox" style="display: none;">
-                    <strong>Cảnh báo:</strong> Giao dịch này đang có khiếu nại chưa đóng (<span id="ticketDuplicateWarningCode" style="font-weight: 700;"></span>). Chỉ tạo vé mới nếu đây là một sự cố hoàn toàn khác.
-                </div>
-
-                <div class="form-group-item">
-                    <label class="form-label-clean">Tiêu đề khiếu nại *</label>
-                    <input type="text" class="admin-input" id="inputTicketTitle" placeholder="Ví dụ: Bé trầy xước sau khi tắm sấy...">
-                </div>
-
-                <div class="form-group-item">
-                    <label class="form-label-clean">Nội dung phản ánh chi tiết *</label>
-                    <textarea class="admin-input" id="inputTicketContent" rows="3" placeholder="Mô tả cụ thể sự việc khách phản ánh..."></textarea>
-                </div>
-
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Nhân viên tiếp nhận</label>
-                        <input type="text" class="admin-input" id="inputTicketReceiver" value="Lê Lệ Quyên" readonly>
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Hình ảnh / Bằng chứng đính kèm</label>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <input type="file" id="inputTicketFiles" multiple accept="image/*" style="display: none;">
-                            <button type="button" class="admin-btn admin-btn-secondary" id="btnTriggerUploadTicketFiles" style="width: 100%;">Chọn ảnh từ máy tính hoặc điện thoại</button>
+                <div class="modal-body-clean">
+                    <div class="form-row-2col">
+                        <div class="form-group-item customer-autocomplete-wrapper">
+                            <label class="form-label-clean">Số điện thoại khách hàng <span style="color: #DC2626;">*</span></label>
+                            <input type="text" class="admin-input" id="inputTicketCustomerPhone" placeholder="Nhập 10 số điện thoại..." autocomplete="off">
+                            <div class="customer-autocomplete-popover" id="ticketCustomerDropdown" style="display: none;"></div>
+                            <div class="field-error-text" id="errorTicketCustomerPhone" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
                         </div>
-                        <div class="uploaded-previews-container" id="createTicketPreviewsContainer" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
+                        <div class="form-group-item customer-autocomplete-wrapper">
+                            <label class="form-label-clean">Tên khách hàng <span style="color: #DC2626;">*</span></label>
+                            <input type="text" class="admin-input" id="inputTicketCustomerName" placeholder="Tự động điền theo SĐT hoặc tìm tên..." autocomplete="off">
+                            <div class="customer-autocomplete-popover" id="ticketCustomerNameDropdown" style="display: none;"></div>
+                            <div class="field-error-text" id="errorTicketCustomerName" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
+                        </div>
+                    </div>
+
+                    <!-- THẺ TÓM TẮT XÁC NHẬN LỰA CHỌN KHÁCH HÀNG (AGENTS.MD) -->
+                    <div class="adjust-customer-selected-card" id="ticketCustomerSelectedCard" style="display: none; margin-top: -6px; margin-bottom: 6px;">
+                        <div id="ticketCustomerSelectedInfo">Đã chọn khách hàng</div>
+                        <button type="button" class="btn-clear-selection" id="btnClearTicketCustomer">✕ Bỏ chọn</button>
+                    </div>
+
+                    <div class="form-row-2col">
+                        <div class="form-group-item customer-autocomplete-wrapper" id="groupTicketRefId">
+                            <label class="form-label-clean" id="labelTicketRefId">Chọn lịch hẹn liên quan <span style="color: #DC2626;">*</span></label>
+                            <input type="text" class="admin-input" id="inputTicketRefSearch" placeholder="Tìm mã giao dịch hoặc chọn từ danh sách..." autocomplete="off">
+                            <input type="hidden" id="selectTicketRefId" value="">
+                            <div class="customer-autocomplete-popover" id="ticketRefDropdown" style="display: none;"></div>
+                            <!-- THẺ TÓM TẮT XÁC NHẬN LỰA CHỌN GIAO DỊCH (AGENTS.MD) -->
+                            <div class="adjust-customer-selected-card" id="ticketRefSelectedCard" style="display: none; margin-top: 6px;">
+                                <div id="ticketRefSelectedInfo">Đã chọn giao dịch</div>
+                                <button type="button" class="btn-clear-selection" id="btnClearTicketRef">✕ Bỏ chọn</button>
+                            </div>
+                            <div class="field-error-text" id="errorTicketRefId" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Mức độ ưu tiên <span style="color: #DC2626;">*</span></label>
+                            <select class="admin-select" id="selectTicketPriority">
+                                <option value="medium">Trung bình</option>
+                                <option value="high">Cao (Khẩn cấp)</option>
+                                <option value="low">Thấp</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: -8px; margin-bottom: 4px;">
+                        <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-muted); cursor: pointer;">
+                            <input type="checkbox" id="chkTicketUnverified" style="cursor: pointer;">
+                            Chưa xác minh giao dịch (Tạo vé tiếp nhận trước, liên kết giao dịch sau)
+                        </label>
+                    </div>
+
+                    <div class="ticket-duplicate-warning-box" id="ticketDuplicateWarningBox" style="display: none;">
+                        <strong>Cảnh báo:</strong> Giao dịch này đang có khiếu nại chưa đóng (<span id="ticketDuplicateWarningCode" style="font-weight: 700;"></span>). Chỉ tạo vé mới nếu đây là một sự cố hoàn toàn khác.
+                    </div>
+
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Tiêu đề khiếu nại <span style="color: #DC2626;">*</span></label>
+                        <input type="text" class="admin-input" id="inputTicketTitle" placeholder="Ví dụ: Bé trầy xước sau khi tắm sấy...">
+                    </div>
+
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Nội dung phản ánh chi tiết <span style="color: #DC2626;">*</span></label>
+                        <textarea class="admin-input" id="inputTicketContent" rows="3" placeholder="Mô tả cụ thể sự việc khách phản ánh..."></textarea>
+                    </div>
+
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Nhân viên tiếp nhận</label>
+                            <input type="text" class="admin-input" id="inputTicketReceiver" value="Lê Lệ Quyên" readonly>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Hình ảnh hoặc bằng chứng đính kèm</label>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="file" id="inputTicketFiles" multiple accept="image/*" style="display: none;">
+                                <button type="button" class="admin-btn admin-btn-secondary" id="btnTriggerUploadTicketFiles" style="width: 100%;">Chọn ảnh từ máy tính hoặc điện thoại</button>
+                            </div>
+                            <div class="uploaded-previews-container" id="createTicketPreviewsContainer" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissCreateTicket">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveCreateTicket">Tạo khiếu nại</button>
-            </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissCreateTicket" data-close-modal="createTicketModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveCreateTicket">Tạo khiếu nại</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- MODAL: CHỌN PHƯƠNG ÁN GIẢI QUYẾT -->
     <div class="admin-modal-overlay" id="resolveTicketModalOverlay">
-        <div class="admin-modal-card">
-            <div class="modal-header-clean">
-                <div class="modal-title-clean">Phương án giải quyết khiếu nại</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelResolveModal">Đóng</button>
-            </div>
-            <div class="modal-body-clean">
-                <div id="resolveManagerApprovalNotice" style="display: none; background: #F5E8D3; color: #734718; padding: 10px 14px; border-radius: var(--admin-radius, 9px); font-size: 12.5px; margin-bottom: 14px; line-height: 1.4;">
-                    <strong>Phân cấp thẩm quyền:</strong> Phương án hoàn tiền hoặc bồi hoàn vượt hạn mức CSKH (Hoàn tiền mặt/chuyển khoản, Voucher ≥ 100.000 VNĐ, hoặc Pawpoint &gt; 500 điểm) bắt buộc phải chuyển sang <strong>Chờ quản lý duyệt</strong>.
+        <div class="admin-modal-card" style="width: 580px; max-width: 94vw;">
+            <form id="resolveTicketModalForm" novalidate onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <div class="modal-header-clean">
+                    <div class="modal-title-clean">Phương án giải quyết khiếu nại</div>
+                    <button type="button" class="modal-btn-close-text" id="btnCancelResolveModal" data-close-modal="resolveTicketModalOverlay">Đóng</button>
                 </div>
-
-                <div class="form-group-item">
-                    <label class="form-label-clean">Chọn phương án giải quyết *</label>
-                    <select class="admin-select" id="selectResolveOption">
-                        <option value="explain">Giải thích và phản hồi khách hàng</option>
-                        <option value="redo_service">Thực hiện lại dịch vụ (Miễn phí)</option>
-                        <option value="change_staff">Đổi kỹ thuật viên chăm sóc</option>
-                        <option value="refund">Hoàn tiền (Một phần hoặc toàn bộ)</option>
-                        <option value="rma_exchange">Đổi sản phẩm mới (Tạo mã RMA)</option>
-                        <option value="rma_refund">Trả hàng và hoàn tiền (Tạo mã RMA)</option>
-                        <option value="reward_voucher">Tặng Voucher và Pawpoint bồi hoàn</option>
-                        <option value="reject">Từ chối khiếu nại</option>
-                    </select>
-                </div>
-
-                <!-- SUB-GROUP: QUY TRÌNH RMA (ĐỔI MỚI / TRẢ HÀNG) -->
-                <div id="groupResolveRma" style="display: none; background: #F8FAF9; padding: 14px; border-radius: var(--admin-radius); margin-bottom: 14px;">
-                    <div style="font-size: 13px; font-weight: 600; color: #236B48; margin-bottom: 10px;">Thông tin lệnh đổi trả RMA</div>
-                    <div class="form-row-2col">
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Mã RMA phát hành</label>
-                            <input type="text" class="admin-input" id="inputResolveRmaCode" readonly style="font-weight: 600; color: #236B48;">
-                        </div>
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Hình thức thu hồi hàng *</label>
-                            <select class="admin-select" id="selectResolveRmaPickup">
-                                <option value="Bưu tá Pawpal / GHN tới tận nơi lấy hàng">Bưu tá Pawpal / GHN tới tận nơi lấy hàng</option>
-                                <option value="Khách hàng tự gửi bưu điện về kho">Khách hàng tự gửi bưu điện về kho</option>
-                            </select>
-                        </div>
+                <div class="modal-body-clean">
+                    <div id="resolveManagerApprovalNotice" style="display: none; background: #F5E8D3; color: #734718; padding: 10px 14px; border-radius: var(--admin-radius, 9px); font-size: 12.5px; margin-bottom: 6px; line-height: 1.4;">
+                        <strong>Phân cấp thẩm quyền:</strong> Phương án hoàn tiền hoặc bồi hoàn vượt hạn mức CSKH (Hoàn tiền mặt/chuyển khoản, Voucher ≥ 100.000 VNĐ, hoặc Pawpoint &gt; 500 điểm) bắt buộc phải chuyển sang <strong>Chờ quản lý duyệt</strong>.
                     </div>
-                    <div class="form-group-item" style="margin-top: 10px;">
-                        <label class="form-label-clean">Kho tiếp nhận hàng hoàn</label>
-                        <select class="admin-select" id="selectResolveRmaWarehouse">
-                            <option value="Kho Pawpal Tân Bình (123 Hoàng Văn Thụ, Q. Tân Bình, TP.HCM)">Kho Pawpal Tân Bình (123 Hoàng Văn Thụ, Q. Tân Bình, TP.HCM)</option>
-                            <option value="Kho Pawpal Thủ Đức (45 Võ Văn Ngân, TP. Thủ Đức, TP.HCM)">Kho Pawpal Thủ Đức (45 Võ Văn Ngân, TP. Thủ Đức, TP.HCM)</option>
+
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Chọn phương án giải quyết <span style="color: #DC2626;">*</span></label>
+                        <select class="admin-select" id="selectResolveOption">
+                            <option value="explain">Giải thích và phản hồi khách hàng</option>
+                            <option value="redo_service">Thực hiện lại dịch vụ (Miễn phí)</option>
+                            <option value="change_staff">Đổi kỹ thuật viên chăm sóc</option>
+                            <option value="refund">Hoàn tiền (Một phần hoặc toàn bộ)</option>
+                            <option value="rma_exchange">Đổi sản phẩm mới (Tạo mã RMA)</option>
+                            <option value="rma_refund">Trả hàng và hoàn tiền (Tạo mã RMA)</option>
+                            <option value="reward_voucher">Tặng Voucher và Pawpoint bồi hoàn</option>
+                            <option value="reject">Từ chối khiếu nại</option>
                         </select>
                     </div>
-                    <div class="form-group-item" id="resolveRmaExchangeField" style="margin-top: 10px;">
-                        <label class="form-label-clean">Sản phẩm gửi bù mới *</label>
-                        <input type="text" class="admin-input" id="inputResolveRmaReplacement" placeholder="Ví dụ: Áo Ấm Mùa Đông Lót Lông Poodle (Size L)...">
-                    </div>
-                    <div class="form-group-item" id="resolveRmaRefundField" style="margin-top: 10px; display: none;">
-                        <label class="form-label-clean">Số tiền hoàn sau khi nhận hàng hoàn (VNĐ) *</label>
-                        <input type="number" class="admin-input" id="inputResolveRmaRefundAmount" placeholder="Ví dụ: 350000...">
-                    </div>
-                </div>
 
-                <!-- SUB-GROUP: LÀM LẠI DỊCH VỤ (REDO SERVICE) -->
-                <div id="groupResolveRedo" style="display: none; background: #F8FAF9; padding: 14px; border-radius: var(--admin-radius); margin-bottom: 14px;">
-                    <div style="font-size: 13px; font-weight: 600; color: #236B48; margin-bottom: 10px;">Đặt lịch hẹn chăm sóc bù (Chi phí 0đ)</div>
-                    <div class="form-row-2col">
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Thời gian hẹn làm bù *</label>
-                            <input type="text" class="admin-input" id="inputResolveRedoTime" placeholder="Ví dụ: 09:30 - 30/09/2026">
+                    <!-- SUB-GROUP: QUY TRÌNH RMA (ĐỔI MỚI / TRẢ HÀNG) -->
+                    <div id="groupResolveRma" style="display: none; border-top: 1px solid var(--border-neutral, #ECF2EE); padding-top: 14px; margin-bottom: 6px;">
+                        <div style="font-size: 13px; font-weight: 600; color: #236B48; margin-bottom: 10px;">Thông tin lệnh đổi trả RMA</div>
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Mã RMA phát hành</label>
+                                <input type="text" class="admin-input" id="inputResolveRmaCode" readonly style="font-weight: 600; color: #236B48;">
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Hình thức thu hồi hàng <span style="color: #DC2626;">*</span></label>
+                                <select class="admin-select" id="selectResolveRmaPickup">
+                                    <option value="Bưu tá Pawpal / GHN tới tận nơi lấy hàng">Bưu tá Pawpal / GHN tới tận nơi lấy hàng</option>
+                                    <option value="Khách hàng tự gửi bưu điện về kho">Khách hàng tự gửi bưu điện về kho</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Kỹ thuật viên chỉ định tiếp nhận *</label>
-                            <select class="admin-select" id="selectResolveRedoStaff">
-                                <option value="Trần Văn Hùng (Groomer trưởng)">Trần Văn Hùng (Groomer trưởng)</option>
-                                <option value="Lê Lệ Quyên (Quản lý chi nhánh)">Lê Lệ Quyên (Quản lý chi nhánh)</option>
-                                <option value="Nguyễn Văn A (Kỹ thuật viên cao cấp)">Nguyễn Văn A (Kỹ thuật viên cao cấp)</option>
+                        <div class="form-group-item" style="margin-top: 10px;">
+                            <label class="form-label-clean">Kho tiếp nhận hàng hoàn</label>
+                            <select class="admin-select" id="selectResolveRmaWarehouse">
+                                <option value="Kho Pawpal Tân Bình (123 Hoàng Văn Thụ, Q. Tân Bình, TP.HCM)">Kho Pawpal Tân Bình (123 Hoàng Văn Thụ, Q. Tân Bình, TP.HCM)</option>
+                                <option value="Kho Pawpal Thủ Đức (45 Võ Văn Ngân, TP. Thủ Đức, TP.HCM)">Kho Pawpal Thủ Đức (45 Võ Văn Ngân, TP. Thủ Đức, TP.HCM)</option>
                             </select>
                         </div>
-                    </div>
-                </div>
-
-                <!-- SUB-GROUP: BỒI HOÀN PAWPOINT VÀ VOUCHER -->
-                <div id="groupResolveReward" style="display: none; background: #F8FAF9; padding: 14px; border-radius: var(--admin-radius); margin-bottom: 14px;">
-                    <div style="font-size: 13px; font-weight: 600; color: #236B48; margin-bottom: 10px;">Bồi hoàn Pawpoint và Voucher</div>
-                    <div class="form-row-2col">
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Số điểm Pawpoint cộng bồi hoàn</label>
-                            <input type="number" class="admin-input" id="inputResolveRewardPoints" placeholder="Ví dụ: 200 (Tương đương 20.000đ)...">
+                        <div class="form-group-item customer-autocomplete-wrapper" id="resolveRmaExchangeField" style="margin-top: 10px;">
+                            <label class="form-label-clean">Sản phẩm gửi bù mới <span style="color: #DC2626;">*</span></label>
+                            <input type="text" class="admin-input" id="inputResolveRmaReplacement" placeholder="Tìm tên sản phẩm hoặc mã SKU..." autocomplete="off">
+                            <div class="customer-autocomplete-popover" id="resolveRmaProductDropdown" style="display: none;"></div>
+                            <!-- THẺ TÓM TẮT XÁC NHẬN SẢN PHẨM (AGENTS.MD) -->
+                            <div class="adjust-customer-selected-card" id="resolveRmaProductSelectedCard" style="display: none; margin-top: 6px;">
+                                <div id="resolveRmaProductSelectedInfo">Đã chọn sản phẩm</div>
+                                <button type="button" class="btn-clear-selection" id="btnClearResolveRmaProduct">✕ Bỏ chọn</button>
+                            </div>
                         </div>
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Mã Voucher tặng kèm</label>
-                            <input type="text" class="admin-input" id="inputResolveRewardVoucher" placeholder="Ví dụ: PAWPALCARE50 - Giảm 50%...">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SUB-GROUP: HOÀN TIỀN (REFUND) -->
-                <div id="groupResolveRefund" style="display: none; background: #F8FAF9; padding: 14px; border-radius: var(--admin-radius); margin-bottom: 14px;">
-                    <div style="font-size: 13px; font-weight: 600; color: #236B48; margin-bottom: 10px;">Thông tin hoàn tiền</div>
-                    <div class="form-row-2col">
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Số tiền hoàn (VNĐ) *</label>
-                            <input type="number" class="admin-input" id="inputResolveRefundAmount" placeholder="Ví dụ: 250000...">
-                        </div>
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Hình thức hoàn tiền *</label>
-                            <select class="admin-select" id="selectResolveRefundMethod">
-                                <option value="Chuyển khoản trực tiếp về số tài khoản khách hàng">Chuyển khoản trực tiếp về số tài khoản khách hàng</option>
-                                <option value="Hoàn vào ví điểm Pawpoint của khách hàng">Hoàn vào ví điểm Pawpoint của khách hàng</option>
-                                <option value="Hoàn tiền mặt trực tiếp tại quầy">Hoàn tiền mặt trực tiếp tại quầy</option>
-                            </select>
+                        <div class="form-group-item" id="resolveRmaRefundField" style="margin-top: 10px; display: none;">
+                            <label class="form-label-clean">Số tiền hoàn sau khi nhận hàng hoàn (VNĐ) <span style="color: #DC2626;">*</span></label>
+                            <input type="number" class="admin-input" id="inputResolveRmaRefundAmount" placeholder="Ví dụ: 350000...">
                         </div>
                     </div>
-                </div>
 
-                <div class="form-group-item">
-                    <label class="form-label-clean">Ghi chú và Lý do thực hiện phương án *</label>
-                    <textarea class="admin-input" id="inputResolveNote" rows="3" placeholder="Ghi rõ lý do và thỏa thuận đã đạt được với khách..."></textarea>
+                    <!-- SUB-GROUP: LÀM LẠI DỊCH VỤ (REDO SERVICE) -->
+                    <div id="groupResolveRedo" style="display: none; border-top: 1px solid var(--border-neutral, #ECF2EE); padding-top: 14px; margin-bottom: 6px;">
+                        <div style="font-size: 13px; font-weight: 600; color: #236B48; margin-bottom: 10px;">Đặt lịch hẹn chăm sóc bù (Chi phí 0đ)</div>
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Thời gian hẹn làm bù <span style="color: #DC2626;">*</span></label>
+                                <input type="text" class="admin-input" id="inputResolveRedoTime" placeholder="Ví dụ: 09:30 - 30/09/2026">
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Kỹ thuật viên chỉ định tiếp nhận <span style="color: #DC2626;">*</span></label>
+                                <select class="admin-select" id="selectResolveRedoStaff">
+                                    <option value="Trần Văn Hùng (Groomer trưởng)">Trần Văn Hùng (Groomer trưởng)</option>
+                                    <option value="Lê Lệ Quyên (Quản lý chi nhánh)">Lê Lệ Quyên (Quản lý chi nhánh)</option>
+                                    <option value="Nguyễn Văn A (Kỹ thuật viên cao cấp)">Nguyễn Văn A (Kỹ thuật viên cao cấp)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-GROUP: BỒI HOÀN PAWPOINT VÀ VOUCHER -->
+                    <div id="groupResolveReward" style="display: none; border-top: 1px solid var(--border-neutral, #ECF2EE); padding-top: 14px; margin-bottom: 6px;">
+                        <div style="font-size: 13px; font-weight: 600; color: #236B48; margin-bottom: 10px;">Bồi hoàn Pawpoint và Voucher</div>
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Số điểm Pawpoint cộng bồi hoàn</label>
+                                <input type="number" class="admin-input" id="inputResolveRewardPoints" placeholder="Ví dụ: 200 (Tương đương 20.000đ)...">
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Mã Voucher tặng kèm</label>
+                                <input type="text" class="admin-input" id="inputResolveRewardVoucher" placeholder="Ví dụ: PAWPALCARE50 - Giảm 50%...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-GROUP: HOÀN TIỀN (REFUND) -->
+                    <div id="groupResolveRefund" style="display: none; border-top: 1px solid var(--border-neutral, #ECF2EE); padding-top: 14px; margin-bottom: 6px;">
+                        <div style="font-size: 13px; font-weight: 600; color: #236B48; margin-bottom: 10px;">Thông tin hoàn tiền</div>
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Số tiền hoàn (VNĐ) <span style="color: #DC2626;">*</span></label>
+                                <input type="number" class="admin-input" id="inputResolveRefundAmount" placeholder="Ví dụ: 250000...">
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Hình thức hoàn tiền <span style="color: #DC2626;">*</span></label>
+                                <select class="admin-select" id="selectResolveRefundMethod">
+                                    <option value="Chuyển khoản trực tiếp về số tài khoản khách hàng">Chuyển khoản trực tiếp về số tài khoản khách hàng</option>
+                                    <option value="Hoàn vào ví điểm Pawpoint của khách hàng">Hoàn vào ví điểm Pawpoint của khách hàng</option>
+                                    <option value="Hoàn tiền mặt trực tiếp tại quầy">Hoàn tiền mặt trực tiếp tại quầy</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Ghi chú và lý do thực hiện phương án <span style="color: #DC2626;">*</span></label>
+                        <textarea class="admin-input" id="inputResolveNote" rows="3" placeholder="Ghi rõ lý do và thỏa thuận đã đạt được với khách..."></textarea>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissResolveModal">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmResolveTicket">Xác nhận và Cập nhật Ticket</button>
-            </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissResolveModal" data-close-modal="resolveTicketModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmResolveTicket">Xác nhận giải quyết</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- MODAL: CHUYỂN NGƯỜI PHỤ TRÁCH TICKET -->
     <div class="admin-modal-overlay" id="assignHandlerModalOverlay">
-        <div class="admin-modal-card">
-            <div class="modal-header-clean">
-                <div class="modal-title-clean">Chuyển người phụ trách xử lý</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelAssignHandler">Đóng</button>
-            </div>
-            <div class="modal-body-clean">
-                <div class="form-group-item">
-                    <label class="form-label-clean">Nhân viên tiếp nhận mới *</label>
-                    <select class="admin-select" id="selectAssignStaff">
-                        <!-- Render by JS from mockStaff -->
-                    </select>
+        <div class="admin-modal-card" style="width: 540px; max-width: 92vw;">
+            <form id="assignHandlerModalForm" novalidate onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <div class="modal-header-clean">
+                    <div class="modal-title-clean">Chuyển người phụ trách xử lý</div>
+                    <button type="button" class="modal-btn-close-text" id="btnCancelAssignHandler" data-close-modal="assignHandlerModalOverlay">Đóng</button>
                 </div>
-                <div class="form-group-item">
-                    <label class="form-label-clean">Lý do chuyển giao và Dặn dò chuyên môn *</label>
-                    <textarea class="admin-input" id="inputAssignNote" rows="3" placeholder="Nhập lý do chuyển giao hoặc hướng dẫn xử lý tiếp theo..."></textarea>
+                <div class="modal-body-clean">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Nhân viên tiếp nhận mới <span style="color: #DC2626;">*</span></label>
+                        <select class="admin-select" id="selectAssignStaff">
+                            <!-- Nạp động qua JS từ danh sách nhân sự -->
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Lý do chuyển giao và dặn dò chuyên môn <span style="color: #DC2626;">*</span></label>
+                        <textarea class="admin-input" id="inputAssignNote" rows="3" placeholder="Nhập lý do chuyển giao hoặc hướng dẫn xử lý tiếp theo..."></textarea>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissAssignHandler">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmAssignHandler">Xác nhận chuyển giao</button>
-            </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissAssignHandler" data-close-modal="assignHandlerModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmAssignHandler">Xác nhận chuyển giao</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- MODAL: YÊU CẦU BỔ SUNG THÔNG TIN -->
     <div class="admin-modal-overlay" id="requestMoreInfoModalOverlay">
-        <div class="admin-modal-card">
-            <div class="modal-header-clean">
-                <div class="modal-title-clean">Gửi yêu cầu bổ sung thông tin</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelRequestInfo">Đóng</button>
-            </div>
-            <div class="modal-body-clean">
-                <div class="form-group-item">
-                    <label class="form-label-clean">Kênh liên hệ khách hàng *</label>
-                    <select class="admin-select" id="selectRequestChannel">
-                        <option value="zalo">Tin nhắn Zalo OA</option>
-                        <option value="sms">Tin nhắn SMS Brandname</option>
-                        <option value="call">Ghi nhận cuộc gọi tư vấn</option>
-                        <option value="email">Thư điện tử (Email)</option>
-                    </select>
+        <div class="admin-modal-card" style="width: 560px; max-width: 94vw;">
+            <form id="requestMoreInfoModalForm" novalidate onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <div class="modal-header-clean">
+                    <div class="modal-title-clean">Gửi yêu cầu bổ sung thông tin</div>
+                    <button type="button" class="modal-btn-close-text" id="btnCancelRequestInfo" data-close-modal="requestMoreInfoModalOverlay">Đóng</button>
                 </div>
-                <div class="form-group-item">
-                    <label class="form-label-clean">Nội dung tin nhắn yêu cầu *</label>
-                    <textarea class="admin-input" id="inputRequestMessage" rows="4" placeholder="Nhập nội dung gửi cho khách hàng..."></textarea>
+                <div class="modal-body-clean">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Kênh liên hệ khách hàng <span style="color: #DC2626;">*</span></label>
+                        <select class="admin-select" id="selectRequestChannel">
+                            <option value="zalo">Tin nhắn Zalo OA</option>
+                            <option value="sms">Tin nhắn SMS Brandname</option>
+                            <option value="call">Ghi nhận cuộc gọi tư vấn</option>
+                            <option value="email">Thư điện tử (Email)</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Nội dung tin nhắn yêu cầu <span style="color: #DC2626;">*</span></label>
+                        <textarea class="admin-input" id="inputRequestMessage" rows="4" placeholder="Nhập nội dung gửi cho khách hàng..."></textarea>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                        Trạng thái khiếu nại sẽ tự động chuyển sang "Chờ phản hồi khách hàng" sau khi gửi yêu cầu.
+                    </div>
                 </div>
-                <div style="font-size: 11.5px; color: var(--text-muted);">
-                    * Trạng thái Ticket sẽ tự động chuyển sang "Chờ phản hồi khách hàng" sau khi gửi yêu cầu.
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissRequestInfo" data-close-modal="requestMoreInfoModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSendRequestInfo">Gửi yêu cầu</button>
                 </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissRequestInfo">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSendRequestInfo">Gửi yêu cầu</button>
-            </div>
+            </form>
         </div>
     </div>
 
     <!-- MODAL: XEM ẢNH BẰNG CHỨNG PHÓNG TO (LIGHTBOX) -->
-    <div class="admin-modal-overlay" id="imagePreviewModalOverlay" style="display: none; z-index: 99999;">
-        <div class="admin-modal-card" style="max-width: 680px; width: 92vw; padding: 22px 26px;">
+    <div class="admin-modal-overlay" id="imagePreviewModalOverlay">
+        <div class="admin-modal-card" style="width: 680px; max-width: 95vw; padding: 22px 26px;">
             <div class="modal-header-clean" style="margin-bottom: 14px;">
                 <div class="modal-title-clean" id="imagePreviewTitle">Chi tiết hình ảnh bằng chứng</div>
-                <button type="button" class="modal-btn-close-text" id="btnCloseImagePreview">Đóng</button>
+                <button type="button" class="modal-btn-close-text" id="btnCloseImagePreview" data-close-modal="imagePreviewModalOverlay">Đóng</button>
             </div>
-            <div class="image-preview-body" style="background: rgba(238, 245, 241, 0.5); border-radius: 9px; padding: 14px; display: flex; align-items: center; justify-content: center; min-height: 280px; max-height: 60vh; overflow: hidden;">
+            <div class="image-preview-body" style="background: rgba(238, 245, 241, 0.5); border: 1px solid var(--border-neutral, #ECF2EE); border-radius: var(--admin-radius, 9px); padding: 14px; display: flex; align-items: center; justify-content: center; min-height: 280px; max-height: 60vh; overflow: hidden;">
                 <img id="imagePreviewImg" src="" alt="Bằng chứng khiếu nại" style="max-width: 100%; max-height: 56vh; object-fit: contain; border-radius: 6px;">
             </div>
             <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: var(--text-muted);">
-                <span id="imagePreviewMeta">Ảnh xác minh hệ thống</span>
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissImagePreview">Đóng xem ảnh</button>
+                <span id="imagePreviewMeta">Ảnh xác minh từ hồ sơ sự cố</span>
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissImagePreview" data-close-modal="imagePreviewModalOverlay">Đóng</button>
             </div>
         </div>
     </div>

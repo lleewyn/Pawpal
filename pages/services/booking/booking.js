@@ -1661,7 +1661,7 @@ function renderStaff() {
             : `<span style="color: #DC2626; font-size: 0.76rem; font-weight: 500;">${staff.desc}</span>`;
 
         return `
-            <div class="staff-card ${isSelected} ${disabledClass}" data-name="${staff.name}" data-available="${staff.isAvailable ? '1' : '0'}" tabindex="0" role="button" ${!staff.isAvailable ? 'style="opacity: 0.55; cursor: not-allowed;"' : ''}>
+            <div class="staff-card ${isSelected} ${disabledClass}" data-id="${staff.id}" data-name="${staff.name}" data-available="${staff.isAvailable ? '1' : '0'}" tabindex="0" role="button" ${!staff.isAvailable ? 'style="opacity: 0.55; cursor: not-allowed;"' : ''}>
                 <div class="staff-card-avatar" ${!staff.isAvailable ? 'style="background: #E5E7EB; color: #9CA3AF;"' : ''}>${initials}</div>
                 <div class="staff-card-info">
                     <span class="staff-select-name">${staff.name}</span>
@@ -2098,7 +2098,25 @@ function setupConfirmation() {
     }
 }
 
+let bookingSubmitRunning = false;
+let bookingSubmitCompleted = false;
 async function processBookingSubmit() {
+    if (bookingSubmitRunning || bookingSubmitCompleted) return;
+    bookingSubmitRunning = true;
+    try {
+        await persistBookingSubmit();
+        bookingSubmitCompleted = true;
+    } catch (error) {
+        console.error('[Booking] Đặt lịch thất bại:', error);
+        alert(error.message || 'Không thể lưu lịch hẹn. Vui lòng thử lại.');
+        const button = document.getElementById('confirmBookingBtn');
+        if (button) { button.disabled = false; button.textContent = 'Xác nhận đặt lịch'; }
+    } finally {
+        bookingSubmitRunning = false;
+    }
+}
+
+async function persistBookingSubmit() {
     const confirmBtn = document.getElementById('confirmBookingBtn');
 
     if (confirmBtn) {
@@ -2178,6 +2196,7 @@ async function processBookingSubmit() {
     let finalBookingId = newBookingId;
     let customerId = currentUser ? currentUser.id : null;
 
+    if (!(window.getSupabaseClient?.() || window.SupabaseClient)) throw new Error('Chưa kết nối được cơ sở dữ liệu. Lịch hẹn chưa được lưu.');
     if (window.getSupabaseClient || window.SupabaseClient) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         const dbUser = currentUser || { phone: bookingState.ownerPhone, name: bookingState.ownerName };
@@ -2219,6 +2238,7 @@ async function processBookingSubmit() {
         bookingRecord.petId = finalPetId;
 
         const synced = await insertBookingToSupabase(bookingRecord, dbUser);
+        if (!synced?.id) throw new Error('Không thể lưu lịch hẹn vào hệ thống. Vui lòng thử lại.');
         if (synced) {
             bookingRecord._supabaseId = synced.id;
             bookingRecord.appointment_code = synced.appointment_code || bookingRecord.appointment_code;
@@ -2386,7 +2406,11 @@ async function createSupabaseCustomer(currentUser) {
 
 async function getSupabaseCustomerId(currentUser) {
     if (!currentUser) return null;
-    if (currentUser._source === 'supabase' && currentUser.id) return currentUser.id;
+    if (currentUser.id && !currentUser.is_temporary) {
+        const { resolveAuthenticatedCustomerId } = await import('/scripts/shared/customer-identity.mjs');
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        return resolveAuthenticatedCustomerId(db, currentUser);
+    }
     return createSupabaseCustomer(currentUser);
 }
 
@@ -2399,6 +2423,7 @@ async function getSupabasePetId(db, customerId, petId) {
             const { data, error } = await db.from('pet_profile')
                 .select('id')
                 .eq('id', petId)
+                .eq('customer_id', customerId)
                 .limit(1);
             if (!error && data?.length) return data[0].id;
         }
@@ -2441,17 +2466,20 @@ async function getSupabaseServiceId(db, serviceId) {
 
 async function insertBookingToSupabase(bookingRecord, currentUser) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db || !currentUser) return null;
+    if (!db || !currentUser) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
 
     const customerId = await getSupabaseCustomerId(currentUser);
     if (!customerId) {
         console.warn('[Booking] Không tìm hoặc tạo được customer Supabase cho', currentUser.phone);
-        return null;
+        throw new Error('Không xác định được hồ sơ khách hàng. Lịch hẹn chưa được lưu.');
     }
 
-    const serviceId = await getSupabaseServiceId(db, selectedService?.serviceId || selectedService?.id);
+    const serviceId = await getSupabaseServiceId(db, selectedService?.dbId || selectedService?.serviceId || selectedService?.id);
     const petId = await getSupabasePetId(db, customerId, bookingRecord.petId);
-    const staffId = 'd0000000-5555-5555-5555-555555555555';
+    if (!serviceId || !petId) throw new Error('Không xác định được dịch vụ hoặc bé cưng đã chọn. Lịch hẹn chưa được lưu.');
+    const selectedStaffCard = document.querySelector('.staff-card.selected');
+    const selectedStaffId = selectedStaffCard?.dataset.id;
+    const staffId = selectedStaffId && selectedStaffId !== 'random' ? selectedStaffId : null;
     const appointmentCode = bookingRecord.appointment_code || `APP-${Date.now()}`;
     const appointmentTime = bookingRecord.timeStart ? `${bookingRecord.timeStart}:00` : null;
 
@@ -2475,12 +2503,12 @@ async function insertBookingToSupabase(bookingRecord, currentUser) {
         const { data, error } = await db.from('appointment').insert([payload]).select();
         if (error || !data?.length) {
             console.warn('[Booking] Supabase insert failed:', error?.message || 'no data');
-            return null;
+            throw new Error(error?.message || 'Cơ sở dữ liệu chưa trả về lịch hẹn đã lưu.');
         }
         return data[0];
     } catch (err) {
         console.warn('[Booking] Supabase insert exception:', err.message);
-        return null;
+        throw err;
     }
 }
 

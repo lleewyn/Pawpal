@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const serviceId = urlParams.get('id') || urlParams.get('service') || urlParams.get('serviceId');
 
     if (!serviceId) {
-        window.location.href = '../services.html';
+        window.location.href = '/services';
         return;
     }
 
@@ -71,7 +71,7 @@ function showNotFound() {
             <div class="container-xl text-center" style="padding: 100px 20px;">
                 <h2 style="color: var(--sd-primary); font-family: var(--font-heading); margin-bottom: 20px;">Không tìm thấy dịch vụ</h2>
                 <p style="color: var(--sd-text-muted); margin-bottom: 24px;">Dịch vụ này không tồn tại hoặc đã tạm dừng nhận lịch.</p>
-                <a href="../services.html" class="btn-book-service-now" style="max-width: 260px; margin: 0 auto; display: inline-block;">Quay lại danh sách dịch vụ</a>
+                <a href="/services" class="btn-book-service-now" style="max-width: 260px; margin: 0 auto; display: inline-block;">Quay lại danh sách dịch vụ</a>
             </div>
         `;
     }

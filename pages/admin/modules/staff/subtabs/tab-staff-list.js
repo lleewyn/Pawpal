@@ -293,71 +293,153 @@
         }
     }
 
+    function parseToInputDate(dateStr) {
+        if (!dateStr) return '';
+        const s = String(dateStr).trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+        const match = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+        if (match) return `${match[3]}-${match[2]}-${match[1]}`;
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+        return '';
+    }
+
     function openStaffModal(staffId = null) {
-        const modal = document.getElementById('modalStaffForm');
+        const modal = document.getElementById('staffModalOverlay');
         if (!modal) return;
         const staffList = PawpalStaff.state?.mockStaff || [];
         const staff = staffId ? staffList.find(s => s.id === staffId || s.rawId === staffId) : null;
 
-        const titleEl = document.getElementById('modalStaffFormTitle');
-        if (titleEl) titleEl.textContent = staff ? 'Chỉnh sửa hồ sơ nhân sự' : 'Thêm nhân sự mới';
+        const titleEl = document.getElementById('staffModalTitle');
+        if (titleEl) titleEl.textContent = staff ? 'Chỉnh sửa hồ sơ nhân viên' : 'Thêm nhân viên mới';
 
-        const nameInput = document.getElementById('staffFormName');
-        const phoneInput = document.getElementById('staffFormPhone');
-        const emailInput = document.getElementById('staffFormEmail');
-        const roleSelect = document.getElementById('staffFormRole');
-        const shiftSelect = document.getElementById('staffFormShift');
-        const statusSelect = document.getElementById('staffFormStatus');
-        const noteInput = document.getElementById('staffFormNote');
+        const nameInput = document.getElementById('staffInputName');
+        const phoneInput = document.getElementById('staffInputPhone');
+        const emailInput = document.getElementById('staffInputEmail');
+        const addrInput = document.getElementById('staffInputAddress');
+        const dobInput = document.getElementById('staffInputDob');
+        const joinDateInput = document.getElementById('staffInputJoinDate');
+        const posSelect = document.getElementById('staffInputPosition');
+        const shiftSelect = document.getElementById('staffInputShift');
+        const specInput = document.getElementById('staffInputSpecialization');
+
+        const enableAccountToggle = document.getElementById('staffEnableAccountToggle');
+        const accountSection = document.getElementById('staffAccountConfigSection');
+        const accountStatusRow = document.getElementById('staffAccountStatusRow');
+        const accountEmailInput = document.getElementById('staffAccountEmail');
+        const accountPassInput = document.getElementById('staffAccountPassword');
 
         if (staff) {
+            modal.setAttribute('data-editing-id', staff.id);
             if (nameInput) nameInput.value = staff.name || '';
             if (phoneInput) phoneInput.value = staff.phone || '';
             if (emailInput) emailInput.value = staff.email || '';
-            if (roleSelect) roleSelect.value = staff.role || 'Groomer';
+            if (addrInput) addrInput.value = staff.address || '';
+            if (dobInput) dobInput.value = parseToInputDate(staff.dob) || '1998-01-01';
+            if (joinDateInput) joinDateInput.value = parseToInputDate(staff.join_date) || '2024-01-01';
+            if (posSelect) posSelect.value = staff.position || 'Kỹ thuật viên grooming';
             if (shiftSelect) shiftSelect.value = staff.shift || 'MORNING';
-            if (statusSelect) statusSelect.value = staff.status || 'ACTIVE';
-            if (noteInput) noteInput.value = staff.note || '';
-            modal.setAttribute('data-editing-id', staff.id);
+            if (specInput) specInput.value = staff.note || '';
+
+            if (enableAccountToggle) enableAccountToggle.checked = true;
+            if (accountSection) accountSection.style.display = 'block';
+            if (accountStatusRow) accountStatusRow.style.display = 'flex';
+            if (accountEmailInput) accountEmailInput.value = staff.email || '';
+            if (accountPassInput) accountPassInput.value = '';
         } else {
+            modal.removeAttribute('data-editing-id');
             if (nameInput) nameInput.value = '';
             if (phoneInput) phoneInput.value = '';
             if (emailInput) emailInput.value = '';
-            if (roleSelect) roleSelect.value = 'Groomer';
+            if (addrInput) addrInput.value = '';
+            if (dobInput) dobInput.value = '1998-01-01';
+            if (joinDateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                joinDateInput.value = today;
+            }
+            if (posSelect) posSelect.value = 'Kỹ thuật viên grooming';
             if (shiftSelect) shiftSelect.value = 'MORNING';
-            if (statusSelect) statusSelect.value = 'ACTIVE';
-            if (noteInput) noteInput.value = '';
-            modal.removeAttribute('data-editing-id');
+            if (specInput) specInput.value = '';
+
+            if (enableAccountToggle) enableAccountToggle.checked = false;
+            if (accountSection) accountSection.style.display = 'none';
+            if (accountStatusRow) accountStatusRow.style.display = 'none';
+            if (accountEmailInput) accountEmailInput.value = '';
+            if (accountPassInput) accountPassInput.value = '';
         }
 
         modal.classList.add('active');
     }
 
     function openReassignModal(staffId) {
-        const staffList = PawpalStaff.state?.mockStaff || [];
-        const staff = staffList.find(s => s.id === staffId);
-        if (!staff) return;
+        const modal = document.getElementById('reassignModalOverlay');
+        if (!modal) return;
 
-        PawpalStaff.showStaffConfirmModal({
-            title: staff.serviceLocked ? 'Mở khóa nhận lịch' : 'Khóa an toàn nhận lịch',
-            message: staff.serviceLocked
-                ? `Bạn có chắc muốn mở khóa nhận việc cho nhân viên ${staff.name}?`
-                : `Khóa an toàn sẽ tạm ngừng gán ca mới cho ${staff.name} cho đến khi hoàn thành kỳ sát hạch. Bạn có đồng ý?`,
-            confirmText: staff.serviceLocked ? 'Mở khóa' : 'Khóa nhận việc',
-            isDanger: !staff.serviceLocked,
-            onConfirm: async () => {
-                staff.serviceLocked = !staff.serviceLocked;
-                try {
-                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                    if (client && staff.rawId) {
-                        await client.from('staff').update({ service_locked: staff.serviceLocked }).eq('id', staff.rawId);
-                    }
-                } catch (e) {}
-                renderStaffList();
-                renderStaffAlertBar();
-                PawpalStaff.showToast(staff.serviceLocked ? `Đã tạm khóa nhận việc của ${staff.name}!` : `Đã mở khóa nhận việc cho ${staff.name}!`);
-            }
-        });
+        const staffList = PawpalStaff.state?.mockStaff || [];
+        const currentStaff = staffList.find(s => s.id === staffId) || staffList[0] || { id: 'EMP-001', name: 'Nhân viên', position: 'Kỹ thuật viên' };
+        
+        modal.setAttribute('data-target-staff-id', currentStaff.id);
+
+        const warningText = document.getElementById('reassignModalWarningText');
+        if (warningText) {
+            warningText.innerHTML = `Nhân viên <strong>${currentStaff.name} (${currentStaff.id})</strong> đang có các ca hẹn dịch vụ trong ngày. Vui lòng phân công lại nhân sự để tránh gián đoạn dịch vụ.`;
+        }
+
+        // Danh sách KTV khả dụng khác để thay thế
+        const availableReplacements = staffList.filter(s => s.id !== currentStaff.id && s.status !== 'PAUSE' && !s.serviceLocked);
+
+        // Nạp options vào dropdown chuyển nhanh tất cả
+        const selectAllStaff = document.getElementById('reassignSelectAllStaff');
+        if (selectAllStaff) {
+            selectAllStaff.innerHTML = '<option value="">-- Chọn nhân sự thay thế cho tất cả ca --</option>' + 
+                availableReplacements.map(s => `<option value="${s.id}">${s.name} (${s.position})</option>`).join('');
+        }
+
+        // Mock danh sách ca hẹn cần điều phối
+        const mockBookings = [
+            { id: 'BK-8902', customerName: 'Trần Minh Anh', petName: 'Bơ (Poodle)', service: 'Grooming cắt tỉa tạo kiểu', time: '09:00 - 10:30' },
+            { id: 'BK-8905', customerName: 'Lê Hoàng Nam', petName: 'Miu (Mèo Anh lông ngắn)', service: 'Tắm spa khử mùi và sấy', time: '14:00 - 15:00' }
+        ];
+
+        const tbody = document.getElementById('reassignBookingsTableBody');
+        if (tbody) {
+            tbody.innerHTML = mockBookings.map(b => `
+                <tr>
+                    <td style="font-weight: 600; color: var(--text-heading);">${b.id}</td>
+                    <td>
+                        <div style="font-weight: 600; color: var(--text-main);">${b.petName}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted);">${b.customerName}</div>
+                    </td>
+                    <td><span class="admin-badge badge-primary">${b.service}</span></td>
+                    <td style="font-weight: 500;">${b.time}</td>
+                    <td>
+                        <select class="admin-select reassign-select-row" data-booking-id="${b.id}" style="height: 32px; padding: 2px 8px; font-size: 12px;">
+                            <option value="">-- Chọn KTV --</option>
+                            ${availableReplacements.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+                        </select>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Khi thay đổi dropdown chuyển nhanh tất cả -> áp dụng cho tất cả hàng
+        if (selectAllStaff) {
+            selectAllStaff.onchange = () => {
+                const selectedVal = selectAllStaff.value;
+                if (selectedVal) {
+                    modal.querySelectorAll('.reassign-select-row').forEach(sel => {
+                        sel.value = selectedVal;
+                    });
+                }
+            };
+        }
+
+        modal.classList.add('active');
     }
 
     function initStaffListSubtab() {
@@ -441,22 +523,45 @@
             });
         }
 
-        // Submit form nhân sự
-        const btnSubmitStaffForm = document.getElementById('btnSubmitStaffForm');
-        if (btnSubmitStaffForm) {
-            btnSubmitStaffForm.addEventListener('click', async () => {
-                const modal = document.getElementById('modalStaffForm');
-                const editingId = modal?.getAttribute('data-editing-id');
-                const name = document.getElementById('staffFormName')?.value.trim();
-                const phone = document.getElementById('staffFormPhone')?.value.trim();
-                const email = document.getElementById('staffFormEmail')?.value.trim();
-                const role = document.getElementById('staffFormRole')?.value;
-                const shift = document.getElementById('staffFormShift')?.value;
-                const status = document.getElementById('staffFormStatus')?.value;
-                const note = document.getElementById('staffFormNote')?.value.trim();
+        // Toggle cấu hình tài khoản
+        const enableAccountToggle = document.getElementById('staffEnableAccountToggle');
+        const accountSection = document.getElementById('staffAccountConfigSection');
+        if (enableAccountToggle && accountSection) {
+            enableAccountToggle.addEventListener('change', () => {
+                accountSection.style.display = enableAccountToggle.checked ? 'block' : 'none';
+            });
+        }
 
-                if (!name || !phone) {
-                    PawpalStaff.showToast('Vui lòng nhập đầy đủ họ tên và số điện thoại!', 'warning');
+        // Tạo mật khẩu ngẫu nhiên
+        const btnGenPass = document.getElementById('btnGenerateRandomStaffPass');
+        const staffPassInput = document.getElementById('staffAccountPassword');
+        if (btnGenPass && staffPassInput) {
+            btnGenPass.addEventListener('click', () => {
+                const chars = 'abcdefghijkmnpqrstuvwxyz23456789!@#$%';
+                let pass = '';
+                for (let i = 0; i < 8; i++) pass += chars[Math.floor(Math.random() * chars.length)];
+                staffPassInput.value = pass;
+            });
+        }
+
+        // Submit form nhân sự
+        const btnSaveStaff = document.getElementById('btnSaveStaff');
+        if (btnSaveStaff) {
+            btnSaveStaff.addEventListener('click', async () => {
+                const modal = document.getElementById('staffModalOverlay');
+                const editingId = modal?.getAttribute('data-editing-id');
+                const name = document.getElementById('staffInputName')?.value.trim();
+                const phone = document.getElementById('staffInputPhone')?.value.trim();
+                const email = document.getElementById('staffInputEmail')?.value.trim();
+                const address = document.getElementById('staffInputAddress')?.value.trim();
+                const dob = document.getElementById('staffInputDob')?.value;
+                const joinDate = document.getElementById('staffInputJoinDate')?.value;
+                const position = document.getElementById('staffInputPosition')?.value;
+                const shift = document.getElementById('staffInputShift')?.value;
+                const specialization = document.getElementById('staffInputSpecialization')?.value.trim();
+
+                if (!name || !phone || !email || !shift) {
+                    PawpalStaff.showToast('Vui lòng điền đầy đủ các thông tin bắt buộc!', 'warning');
                     return;
                 }
 
@@ -471,10 +576,9 @@
                                     full_name: name,
                                     phone_number: phone,
                                     email: email,
-                                    role: role,
+                                    address: address,
                                     shift: shift,
-                                    status: status === 'ACTIVE' ? 'active' : (status === 'LEAVE' ? 'leave' : 'locked'),
-                                    specialization: note
+                                    specialization: specialization
                                 }).eq('id', staff.rawId);
                             }
                         } else {
@@ -482,10 +586,10 @@
                                 full_name: name,
                                 phone_number: phone,
                                 email: email,
-                                role: role,
+                                address: address,
                                 shift: shift,
                                 status: 'active',
-                                specialization: note
+                                specialization: specialization
                             });
                         }
                     }
@@ -493,12 +597,138 @@
                     console.error('Error saving staff:', e);
                 }
 
+                // Cập nhật mock state đồng bộ
+                if (editingId) {
+                    const staff = (PawpalStaff.state?.mockStaff || []).find(s => s.id === editingId);
+                    if (staff) {
+                        staff.name = name;
+                        staff.phone = phone;
+                        staff.email = email;
+                        staff.address = address;
+                        staff.position = position;
+                        staff.shift = shift;
+                        staff.note = specialization;
+                    }
+                } else {
+                    const newId = `EMP-${String((PawpalStaff.state?.mockStaff || []).length + 1).padStart(3, '0')}`;
+                    PawpalStaff.state?.mockStaff?.unshift({
+                        id: newId,
+                        name: name,
+                        phone: phone,
+                        email: email,
+                        address: address,
+                        position: position,
+                        shift: shift,
+                        status: 'ACTIVE',
+                        skillScore: 90,
+                        skillResult: 'PASS',
+                        skillExam: 'Đạt (90đ)',
+                        note: specialization,
+                        join_date: PawpalStaff.formatDateVN(joinDate)
+                    });
+                }
+
                 await PawpalStaff.loadStaffModuleData();
                 renderStaffList();
                 renderStaffAlertBar();
-                PawpalStaff.showToast(editingId ? 'Đã cập nhật hồ sơ nhân sự!' : 'Đã thêm nhân sự mới thành công!');
+                PawpalStaff.showToast(editingId ? 'Đã cập nhật hồ sơ nhân sự!' : 'Đã thêm nhân viên mới thành công!');
                 if (modal) modal.classList.remove('active');
             });
+        }
+
+        // Xử lý xác nhận điều phối lại ca hẹn (Modal 6)
+        const btnConfirmReassign = document.getElementById('btnConfirmReassign');
+        if (btnConfirmReassign) {
+            btnConfirmReassign.addEventListener('click', () => {
+                const modal = document.getElementById('reassignModalOverlay');
+                const staffId = modal?.getAttribute('data-target-staff-id');
+                const staffList = PawpalStaff.state?.mockStaff || [];
+                const staff = staffList.find(s => s.id === staffId);
+                if (staff) {
+                    staff.serviceLocked = true;
+                    staff.status = 'PAUSE';
+                }
+                PawpalStaff.showToast('Đã điều phối lại toàn bộ ca hẹn và tạm khóa KTV an toàn!', 'success');
+                if (modal) modal.classList.remove('active');
+                renderStaffList();
+                renderStaffAlertBar();
+            });
+        }
+
+        const btnDismissReassign = document.getElementById('btnDismissReassignModal');
+        if (btnDismissReassign) {
+            btnDismissReassign.addEventListener('click', () => {
+                const modal = document.getElementById('reassignModalOverlay');
+                const staffId = modal?.getAttribute('data-target-staff-id');
+                const staffList = PawpalStaff.state?.mockStaff || [];
+                const staff = staffList.find(s => s.id === staffId);
+                if (staff) {
+                    staff.serviceLocked = true;
+                    staff.status = 'PAUSE';
+                }
+                PawpalStaff.showToast('Đã tạm khóa KTV! Ca hẹn chuyển vào hàng chờ điều phối.', 'info');
+                if (modal) modal.classList.remove('active');
+                renderStaffList();
+                renderStaffAlertBar();
+            });
+        }
+
+        // Đóng modal qua data-close-modal, click backdrop, và phím Escape
+        document.querySelectorAll('[data-close-modal="staffModalOverlay"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const modal = document.getElementById('staffModalOverlay');
+                if (modal) modal.classList.remove('active');
+            });
+        });
+
+        document.querySelectorAll('[data-close-modal="reassignModalOverlay"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const modal = document.getElementById('reassignModalOverlay');
+                if (modal) modal.classList.remove('active');
+            });
+        });
+
+        const staffModalOverlay = document.getElementById('staffModalOverlay');
+        if (staffModalOverlay) {
+            staffModalOverlay.addEventListener('click', (e) => {
+                if (e.target === staffModalOverlay) {
+                    staffModalOverlay.classList.remove('active');
+                }
+            });
+        }
+
+        const reassignModalOverlay = document.getElementById('reassignModalOverlay');
+        if (reassignModalOverlay) {
+            reassignModalOverlay.addEventListener('click', (e) => {
+                if (e.target === reassignModalOverlay) {
+                    reassignModalOverlay.classList.remove('active');
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modalStaff = document.getElementById('staffModalOverlay');
+                if (modalStaff && modalStaff.classList.contains('active')) {
+                    modalStaff.classList.remove('active');
+                }
+                const modalReassign = document.getElementById('reassignModalOverlay');
+                if (modalReassign && modalReassign.classList.contains('active')) {
+                    modalReassign.classList.remove('active');
+                }
+            }
+        });
+
+        // Hỗ trợ kiểm thử tự động qua URL parameter v=modal1 hoặc v=modal6
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('v') === 'modal1' || urlParams.get('modal') === '1' || urlParams.get('modal') === 'staff') {
+            setTimeout(() => {
+                openStaffModal();
+            }, 300);
+        } else if (urlParams.get('v') === 'modal6' || urlParams.get('modal') === '6' || urlParams.get('modal') === 'reassign') {
+            setTimeout(() => {
+                openReassignModal('EMP-001');
+            }, 300);
         }
 
         renderStaffList();

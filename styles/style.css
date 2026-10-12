@@ -936,7 +936,7 @@ html {
 }
 
 .notification-menu-wrapper .notification-badge {
-    top: -8px;
+    top: -13px;
     right: -10px;
     transform: translate(0, 0);
 }

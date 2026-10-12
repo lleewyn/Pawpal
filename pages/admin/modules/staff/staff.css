@@ -1088,7 +1088,8 @@
 }
 
 .admin-modal-card.wide-modal {
-    width: 720px;
+    width: 740px;
+    max-width: 95vw;
 }
 
 .modal-header-clean {
@@ -1200,7 +1201,7 @@
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius);
     padding: 8px;
-    background-color: #F8FAF9;
+    background-color: transparent;
 }
 
 .shift-staff-item {
@@ -1209,7 +1210,7 @@
     align-items: center;
     background-color: #FFFFFF;
     padding: 8px 10px;
-    border-radius: calc(var(--admin-radius) - 2px);
+    border-radius: var(--admin-radius);
     border: 1px solid var(--border-neutral);
     font-size: 13px;
 }
@@ -1233,9 +1234,9 @@
     background: transparent;
     border: 1px solid #C3DEC7;
     color: #236B48;
-    padding: 4px 8px;
-    border-radius: calc(var(--admin-radius) - 4px);
-    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: var(--admin-radius);
+    font-size: 11.5px;
     font-weight: 600;
     cursor: pointer;
 }
