@@ -417,6 +417,10 @@
     PawpalPets.updateBreadcrumb = updateBreadcrumb;
 
     function switchSubtab(targetSubtab, updateHistory = true) {
+        window.scrollTo(0, 0);
+        const contentArea = document.querySelector('.admin-preview-content');
+        if (contentArea) contentArea.scrollTop = 0;
+
         const headerSubtabBtns = document.querySelectorAll('.header-subtab-btn');
         const subtabPanels = document.querySelectorAll('.subtab-content');
 
@@ -505,6 +509,36 @@
         } else {
             switchSubtab('tab-pet-list', false);
         }
+
+        // Bộ xử lý đóng modal toàn cục cho phân hệ Thú cưng (Hỗ trợ nút Đóng, Hủy, click backdrop và phím Escape)
+        document.addEventListener('click', (e) => {
+            const closeBtn = e.target.closest('[data-close-modal]');
+            if (closeBtn) {
+                e.preventDefault();
+                const modalId = closeBtn.getAttribute('data-close-modal');
+                const targetModal = document.getElementById(modalId);
+                if (targetModal) {
+                    targetModal.classList.remove('open');
+                    targetModal.classList.remove('show');
+                }
+                return;
+            }
+
+            if (e.target.classList.contains('admin-modal-backdrop') && e.target.classList.contains('open')) {
+                e.target.classList.remove('open');
+                e.target.classList.remove('show');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const openModal = document.querySelector('.admin-modal-backdrop.open');
+                if (openModal) {
+                    openModal.classList.remove('open');
+                    openModal.classList.remove('show');
+                }
+            }
+        });
 
         // Lắng nghe sự kiện đổi subtab từ router cha
         window.addEventListener('admin:subtab-change', (e) => {

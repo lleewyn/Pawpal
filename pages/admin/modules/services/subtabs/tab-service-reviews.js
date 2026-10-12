@@ -217,6 +217,14 @@
         });
     }
 
+    // Mẫu câu phản hồi theo chuẩn dịch vụ PawPal
+    const REVIEW_REPLY_PRESETS = {
+        'PRESET_THANK_5': 'PawPal chân thành cảm ơn quý khách đã tin yêu và lựa chọn dịch vụ của chúng tôi! Rất hân hạnh được đồng hành và chăm sóc bé cưng ở các lần hẹn tới.',
+        'PRESET_ACK_4': 'PawPal trân trọng cảm ơn sự tin tưởng và góp ý quý báu của quý khách. Đội ngũ xin ghi nhận và sẽ không ngừng cải tiến nâng cao chất lượng dịch vụ hơn nữa.',
+        'PRESET_APOLOGY_LOW': 'PawPal thành thật cáo lỗi cùng quý khách và bé vì trải nghiệm chưa trọn vẹn này. Quản lý phụ trách sẽ liên hệ trực tiếp để lắng nghe và có phương án chăm sóc hỗ trợ chu đáo nhất.',
+        'PRESET_EXPLAIN': 'PawPal xin ghi nhận phản ánh của quý khách. Do đặc thù tình trạng lông và sức khỏe của bé trong ca thực tế, đội ngũ sẽ kiểm tra lại nhật ký ca làm việc và giải thích chi tiết tới quý khách ngay.'
+    };
+
     // Mở modal phản hồi đánh giá
     function openReplyReviewModal(reviewId) {
         const reviewsData = PawpalServices.state?.reviewsData || [];
@@ -224,18 +232,41 @@
         const modal = document.getElementById('modalReplyReview');
         if (!modal || !review) return;
 
-        const infoEl = document.getElementById('replyReviewCustomerInfo');
-        const commentEl = document.getElementById('replyReviewComment');
+        const headerMetaEl = document.getElementById('reviewModalHeaderMeta') || document.getElementById('replyReviewCustomerInfo');
+        const commentEl = document.getElementById('reviewModalCustomerComment') || document.getElementById('replyReviewComment');
+        const staffMetaEl = document.getElementById('reviewModalStaffMeta');
         const textInput = document.getElementById('replyReviewText');
+        const hiddenId = document.getElementById('replyReviewIdHidden');
+        const presetSelect = document.getElementById('replyPresetSelect');
+        const voucherSelect = document.getElementById('replyVoucherSelect');
+        const btnEscalate = document.getElementById('btnEscalateToComplaint');
 
-        if (infoEl) {
-            infoEl.textContent = `${review.customerName} • ${review.serviceName} (${review.rating} sao)`;
+        const starNum = Number(review.rating) || 5;
+        if (headerMetaEl) {
+            headerMetaEl.textContent = `${review.customerName} • ${review.bookingId || review.id} • ${starNum}.0 ★ (${review.serviceName})`;
         }
         if (commentEl) {
-            commentEl.textContent = `"${review.comment}"`;
+            commentEl.textContent = `"${review.comment || 'Khách không để lại nhận xét bằng lời.'}"`;
+        }
+        if (staffMetaEl) {
+            staffMetaEl.textContent = `KTV phụ trách: ${review.staff || 'Chưa phân công'}`;
+        }
+        if (hiddenId) {
+            hiddenId.value = reviewId;
         }
         if (textInput) {
             textInput.value = review.replyText || '';
+        }
+        if (presetSelect) {
+            presetSelect.value = 'CUSTOM';
+        }
+        if (voucherSelect) {
+            voucherSelect.value = 'NONE';
+        }
+
+        // Hiện nút Chuyển thành khiếu nại nếu đánh giá <= 3 sao
+        if (btnEscalate) {
+            btnEscalate.style.display = starNum <= 3 ? 'inline-block' : 'none';
         }
 
         modal.setAttribute('data-review-id', reviewId);
@@ -329,6 +360,51 @@
             });
         });
 
+        // Dropdown mẫu câu trả lời chuyên nghiệp
+        const presetSelect = document.getElementById('replyPresetSelect');
+        if (presetSelect) {
+            presetSelect.addEventListener('change', () => {
+                const textInput = document.getElementById('replyReviewText');
+                if (textInput && REVIEW_REPLY_PRESETS[presetSelect.value]) {
+                    textInput.value = REVIEW_REPLY_PRESETS[presetSelect.value];
+                    textInput.focus();
+                }
+            });
+        }
+
+        // Chip gợi ý một chạm tự điền câu trả lời nhanh
+        const quickChips = document.getElementById('quickReviewReplyChips');
+        if (quickChips) {
+            quickChips.querySelectorAll('.reason-quick-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const textInput = document.getElementById('replyReviewText');
+                    if (textInput) {
+                        textInput.value = chip.textContent.trim();
+                        textInput.focus();
+                    }
+                });
+            });
+        }
+
+        // Nút Chuyển thành khiếu nại (đối với đánh giá <= 3 sao)
+        const btnEscalate = document.getElementById('btnEscalateToComplaint');
+        if (btnEscalate) {
+            btnEscalate.addEventListener('click', () => {
+                const modal = document.getElementById('modalReplyReview');
+                const rId = modal?.getAttribute('data-review-id');
+                const reviewsData = PawpalServices.state?.reviewsData || [];
+                const review = reviewsData.find(r => r.id === rId);
+
+                const refCode = review?.bookingId || rId || 'đánh giá';
+                if (PawpalServices.showToast) {
+                    PawpalServices.showToast(`Đã chuyển ${refCode} sang phân hệ giải quyết khiếu nại dịch vụ!`, 'success');
+                } else {
+                    alert(`Đã chuyển ${refCode} sang phân hệ giải quyết khiếu nại dịch vụ!`);
+                }
+                closeReplyReviewModal();
+            });
+        }
+
         // Nút Đóng / Hủy modal phản hồi
         const btnClose = document.getElementById('btnCloseReplyReview');
         if (btnClose) btnClose.addEventListener('click', closeReplyReviewModal);
@@ -371,7 +447,7 @@
                     renderReviewsTable();
                     updateReviewKPIs();
                     if (PawpalServices.showToast) {
-                        PawpalServices.showToast('Đã lưu phản hồi đánh giá thành công!');
+                        PawpalServices.showToast('Đã gửi phản hồi đánh giá thành công!');
                     }
                     closeReplyReviewModal();
                 }

@@ -109,6 +109,8 @@
         modal.classList.add('active');
     }
 
+    PawpalServices.showConfirmModal = showServiceConfirmModal;
+
     function getStatusBadge(status) {
         switch (status) {
             case 'pending':
@@ -559,6 +561,10 @@
             PawpalServices.subtabs.reviews.renderReviewsTable();
             PawpalServices.subtabs.reviews.updateReviewKPIs();
         }
+        if (PawpalServices.subtabs.detail?.renderBookingDetail) {
+            const bId = sessionStorage.getItem('pawpal_admin_service_selected_id') || PawpalServices.state.selectedBookingId;
+            PawpalServices.subtabs.detail.renderBookingDetail(bId);
+        }
 
         // Khôi phục subtab active từ URL hash hoặc sessionStorage
         const savedSubtab = sessionStorage.getItem('pawpal_admin_services_active_subtab');
@@ -575,6 +581,32 @@
         window.addEventListener('admin:subtab-change', (e) => {
             if (e.detail?.module === 'Dịch vụ' && validTabs.includes(e.detail.tabId)) {
                 switchSubtab(e.detail.tabId, false);
+            }
+        });
+
+        // BỘ LẮNG NGHE ĐÓNG MODAL 4 CHIỀU TOÀN CỤC CHUẨN RULE AGENTS.MD
+        document.addEventListener('click', (e) => {
+            const closeBtn = e.target.closest('[data-close-modal]');
+            if (closeBtn) {
+                const modalId = closeBtn.getAttribute('data-close-modal');
+                const modalEl = document.getElementById(modalId);
+                if (modalEl) {
+                    modalEl.classList.remove('active');
+                    if (modalEl.style) modalEl.style.display = 'none';
+                }
+            }
+            if (e.target.classList.contains('admin-modal-overlay')) {
+                e.target.classList.remove('active');
+                if (e.target.style) e.target.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.admin-modal-overlay.active').forEach(m => {
+                    m.classList.remove('active');
+                    if (m.style) m.style.display = 'none';
+                });
             }
         });
     }

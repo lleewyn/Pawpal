@@ -56,7 +56,7 @@
 
                 <div class="filter-row-bottom">
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Hạng thẻ:</label>
+                        <label class="filter-label">Hạng thẻ</label>
                         <select class="admin-select" id="custFilterTier">
                             <option value="ALL">Tất cả</option>
                             <option value="SILVER">Bạc</option>
@@ -66,11 +66,11 @@
                     </div>
 
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Trạng thái:</label>
+                        <label class="filter-label">Trạng thái</label>
                         <select class="admin-select" id="custFilterStatus">
                             <option value="ALL">Tất cả</option>
-                            <option value="ACTIVE">Hoạt động</option>
-                            <option value="TEMP">Tạm thời</option>
+                            <option value="ACTIVE">Thành viên</option>
+                            <option value="TEMP">Vãng lai</option>
                             <option value="LOCKED">Bị khóa</option>
                         </select>
                     </div>
@@ -363,7 +363,7 @@
                     </div>
                 </div>
                 <div class="pawpoint-toolbar" style="padding: 10px 16px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-neutral);">
-                    <input type="text" class="admin-input" id="pawpointSearchInput" placeholder="Tìm theo tên hoặc SĐT..." list="customerSearchDatalist" autocomplete="off" style="max-width: 240px; height: 32px; font-size: 13px;">
+                    <input type="text" class="admin-input" id="pawpointSearchInput" placeholder="Tìm theo tên hoặc SĐT..." autocomplete="off" style="max-width: 240px; height: 32px; font-size: 13px;">
                     <select class="admin-select" id="pawpointFilterType" style="max-width: 150px; height: 32px; font-size: 13px;">
                         <option value="ALL">Tất cả giao dịch</option>
                         <option value="ADD">Cộng điểm</option>
@@ -389,21 +389,21 @@
     </section>
 
     <!-- ====================================================================
-         MODAL 1: TIẾP NHẬN TẠI QUẦY (QUICK ADD)
+         MODAL 1: THÊM KHÁCH HÀNG (QUICK ADD)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalAddCustomer" style="display: none;">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card" style="width: 580px; max-width: 94vw;">
             <div class="admin-modal-header">
-                <span class="admin-modal-title">Tiếp nhận tại quầy</span>
-                <button type="button" class="btn-modal-close" id="btnCloseAddCustomer">Đóng</button>
+                <span class="admin-modal-title">Thêm khách hàng</span>
+                <button type="button" class="btn-modal-close" id="btnCloseAddCustomer" data-close-modal="modalAddCustomer">Đóng</button>
             </div>
-            <form id="formAddCustomerQuick">
+            <form id="formAddCustomerQuick" onsubmit="return false;">
                 <div class="form-group mb-3">
-                    <label class="form-label">Họ và tên khách hàng</label>
-                    <input type="text" class="admin-input" id="quickAddName" placeholder="Nhập họ tên...">
+                    <label class="form-label">Họ và tên khách hàng <span style="color: #DC2626;">*</span></label>
+                    <input type="text" class="admin-input" id="quickAddName" placeholder="Nhập họ tên..." required>
                 </div>
                 <div class="form-group mb-3">
-                    <label class="form-label">Số điện thoại (*)</label>
+                    <label class="form-label">Số điện thoại <span style="color: #DC2626;">*</span></label>
                     <input type="tel" class="admin-input" id="quickAddPhone" placeholder="0901234567 (Bắt buộc 10 số)" required>
                     <div id="quickAddPhoneAlert" style="display: none; font-size: 12.5px; color: #DC2626; margin-top: 6px; padding: 6px 10px; border-radius: var(--admin-radius); background: #FEE2E2;">
                         Số điện thoại này đã thuộc về khách hàng <strong id="quickAddDupName"></strong> (<span id="quickAddDupId"></span>).
@@ -429,14 +429,10 @@
                     </div>
                 </div>
                 <div class="form-group mb-3">
-                    <label class="form-label">Giống loài bé cưng</label>
-                    <input type="text" class="admin-input" id="quickAddPetBreed" placeholder="Ví dụ: Corgi, Poodle, Mèo ALN..." autocomplete="off">
-                    <div class="adjust-reason-quick-tags" id="quickAddBreedChips">
-                        <button type="button" class="reason-quick-chip">Poodle</button>
-                        <button type="button" class="reason-quick-chip">Corgi</button>
-                        <button type="button" class="reason-quick-chip">Golden</button>
-                        <button type="button" class="reason-quick-chip">Phốc sóc</button>
-                        <button type="button" class="reason-quick-chip">Mèo ALN</button>
+                    <label class="form-label">Giống loài</label>
+                    <div class="pet-field-autocomplete-wrapper">
+                        <input type="text" class="admin-input" id="quickAddPetBreed" placeholder="Ví dụ: Corgi, Poodle, Mèo ALN..." autocomplete="off">
+                        <div class="autocomplete-dropdown" id="quickAddPetBreedDropdown" style="display: none;"></div>
                     </div>
                 </div>
                 <div class="form-group mb-3">
@@ -445,8 +441,8 @@
                 </div>
 
                 <div class="modal-actions-footer">
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAddCustomer">Hủy bỏ</button>
-                    <button type="submit" class="admin-btn admin-btn-primary">Lưu và Cấp tài khoản</button>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAddCustomer" data-close-modal="modalAddCustomer">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitAddCustomer">Lưu khách hàng</button>
                 </div>
             </form>
         </div>
@@ -459,11 +455,11 @@
         <div class="admin-modal-card" style="width: 580px; max-width: 94vw;">
             <div class="admin-modal-header">
                 <span class="admin-modal-title">Điều chỉnh Pawpoint</span>
-                <button type="button" class="btn-modal-close" id="btnCloseAdjustPoints">Đóng</button>
+                <button type="button" class="btn-modal-close" id="btnCloseAdjustPoints" data-close-modal="modalAdjustPoints">Đóng</button>
             </div>
-            <form id="formAdjustPoints">
+            <form id="formAdjustPoints" onsubmit="return false;">
                 <div class="form-group mb-3 customer-autocomplete-wrapper">
-                    <label class="form-label">Khách hàng hoặc số điện thoại (*)</label>
+                    <label class="form-label">Khách hàng hoặc số điện thoại <span style="color: #DC2626;">*</span></label>
                     <div style="position: relative; width: 100%;">
                         <input type="text" class="admin-input" id="adjustPhone" placeholder="Nhập tên hoặc số điện thoại khách cần điều chỉnh điểm..." required autocomplete="off">
                         <div class="customer-autocomplete-popover" id="adjustCustomerDropdown" style="display: none;"></div>
@@ -479,12 +475,12 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Số điểm Pawpoint (*)</label>
+                        <label class="form-label">Số điểm Pawpoint <span style="color: #DC2626;">*</span></label>
                         <input type="number" min="1" class="admin-input" id="adjustPointsVal" placeholder="Ví dụ: 50" required>
                     </div>
                 </div>
                 <div class="form-group mb-4">
-                    <label class="form-label">Lý do điều chỉnh (*)</label>
+                    <label class="form-label">Lý do điều chỉnh <span style="color: #DC2626;">*</span></label>
                     <input type="text" class="admin-input" id="adjustReason" placeholder="Nhập hoặc chọn lý do điều chỉnh..." required autocomplete="off">
                     <div class="adjust-reason-quick-tags" id="adjustReasonQuickTags">
                         <button type="button" class="reason-quick-chip">Bù sự cố trễ hẹn</button>
@@ -496,8 +492,8 @@
                     </div>
                 </div>
                 <div class="modal-actions-footer">
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAdjustPoints">Hủy bỏ</button>
-                    <button type="submit" class="admin-btn admin-btn-primary">Xác nhận điều chỉnh</button>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAdjustPoints" data-close-modal="modalAdjustPoints">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitAdjustPoints">Xác nhận điều chỉnh</button>
                 </div>
             </form>
         </div>
@@ -507,20 +503,20 @@
          MODAL 3: CHỈNH SỬA HỒ SƠ KHÁCH HÀNG (EDIT PROFILE)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalEditCustomer" style="display: none;">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card" style="width: 600px; max-width: 94vw;">
             <div class="admin-modal-header">
                 <span class="admin-modal-title">Chỉnh sửa hồ sơ khách hàng</span>
-                <button type="button" class="btn-modal-close" id="btnCloseEditCustomer">Đóng</button>
+                <button type="button" class="btn-modal-close" id="btnCloseEditCustomer" data-close-modal="modalEditCustomer">Đóng</button>
             </div>
-            <form id="formEditCustomer">
+            <form id="formEditCustomer" onsubmit="return false;">
                 <input type="hidden" id="editCustId" value="CUST-001">
                 <div class="form-group mb-3">
-                    <label class="form-label">Họ và tên khách hàng (*)</label>
+                    <label class="form-label">Họ và tên khách hàng <span style="color: #DC2626;">*</span></label>
                     <input type="text" class="admin-input" id="editCustFullName" placeholder="Nhập họ tên..." required>
                 </div>
                 <div class="form-row-two-col mb-3">
                     <div class="form-group">
-                        <label class="form-label">Số điện thoại (*)</label>
+                        <label class="form-label">Số điện thoại <span style="color: #DC2626;">*</span></label>
                         <input type="tel" class="admin-input" id="editCustPhone" placeholder="0901234567 (10 số)" required>
                     </div>
                     <div class="form-group">
@@ -543,7 +539,7 @@
                     </div>
                 </div>
                 <div class="form-group mb-3">
-                    <label class="form-label">Hạng thành viên (Đặc cách / Điều chỉnh)</label>
+                    <label class="form-label">Hạng thành viên</label>
                     <select class="admin-select" id="editCustTier">
                         <option value="SILVER">Bạc</option>
                         <option value="GOLD">Vàng</option>
@@ -561,8 +557,8 @@
                 </div>
 
                 <div class="modal-actions-footer">
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelEditCustomer">Hủy bỏ</button>
-                    <button type="submit" class="admin-btn admin-btn-primary">Lưu thay đổi</button>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelEditCustomer" data-close-modal="modalEditCustomer">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitEditCustomer">Lưu thay đổi</button>
                 </div>
             </form>
         </div>
@@ -572,19 +568,19 @@
          MODAL 4: THÊM THÚ CƯNG MỚI (ADD PET)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalAddPet" style="display: none;">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card" style="width: 740px; max-width: 95vw;">
             <div class="admin-modal-header">
                 <span class="admin-modal-title">Thêm bé cưng cho khách hàng</span>
-                <button type="button" class="btn-modal-close" id="btnCloseAddPet">Đóng</button>
+                <button type="button" class="btn-modal-close" id="btnCloseAddPet" data-close-modal="modalAddPet">Đóng</button>
             </div>
-            <form id="formAddPet">
+            <form id="formAddPet" onsubmit="return false;">
                 <div class="form-row-two-col mb-3">
                     <div class="form-group">
-                        <label class="form-label">Tên bé cưng (*)</label>
+                        <label class="form-label">Tên bé cưng <span style="color: #DC2626;">*</span></label>
                         <input type="text" class="admin-input" id="addPetName" placeholder="Ví dụ: Bé Bông, Bé Miu..." required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Loài (*)</label>
+                        <label class="form-label">Loài thú cưng <span style="color: #DC2626;">*</span></label>
                         <select class="admin-select" id="addPetSpecies">
                             <option value="Chó">Chó</option>
                             <option value="Mèo">Mèo</option>
@@ -614,13 +610,13 @@
                     <input type="text" class="admin-input" id="addPetVaccine" placeholder="Ví dụ: Đã tiêm dại và 7 bệnh mũi 2...">
                 </div>
                 <div class="form-group mb-4">
-                    <label class="form-label">Lưu ý an toàn / Cảnh báo sức khỏe</label>
+                    <label class="form-label">Cảnh báo an toàn</label>
                     <input type="text" class="admin-input" id="addPetAlert" placeholder="Ví dụ: Dị ứng sữa tắm hoa hồng, sợ sấy...">
                 </div>
 
                 <div class="modal-actions-footer">
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAddPet">Hủy bỏ</button>
-                    <button type="submit" class="admin-btn admin-btn-primary">Lưu bé cưng</button>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAddPet" data-close-modal="modalAddPet">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitAddPet">Lưu bé cưng</button>
                 </div>
             </form>
         </div>
@@ -630,20 +626,20 @@
          MODAL 5: CHỈNH SỬA THÔNG TIN THÚ CƯNG (EDIT PET)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalEditPet" style="display: none;">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card" style="width: 740px; max-width: 95vw;">
             <div class="admin-modal-header">
                 <span class="admin-modal-title">Chỉnh sửa thông tin bé cưng</span>
-                <button type="button" class="btn-modal-close" id="btnCloseEditPet">Đóng</button>
+                <button type="button" class="btn-modal-close" id="btnCloseEditPet" data-close-modal="modalEditPet">Đóng</button>
             </div>
-            <form id="formEditPet">
+            <form id="formEditPet" onsubmit="return false;">
                 <input type="hidden" id="editPetId" value="">
                 <div class="form-row-two-col mb-3">
                     <div class="form-group">
-                        <label class="form-label">Tên bé cưng (*)</label>
+                        <label class="form-label">Tên bé cưng <span style="color: #DC2626;">*</span></label>
                         <input type="text" class="admin-input" id="editPetName" placeholder="Ví dụ: Bé Bông, Bé Miu..." required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Loài (*)</label>
+                        <label class="form-label">Loài thú cưng <span style="color: #DC2626;">*</span></label>
                         <select class="admin-select" id="editPetSpecies">
                             <option value="Chó">Chó</option>
                             <option value="Mèo">Mèo</option>
@@ -654,7 +650,7 @@
                 <div class="form-row-two-col mb-3">
                     <div class="form-group">
                         <label class="form-label">Giống loài</label>
-                        <input type="text" class="admin-input" id="editPetBreed" placeholder="Ví dụ: Poodle, Corgi, Golden, Mèo Anh..." list="petBreedDatalist" autocomplete="off">
+                        <input type="text" class="admin-input" id="editPetBreed" placeholder="Ví dụ: Poodle, Corgi, Golden, Mèo Anh..." autocomplete="off">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Cân nặng (kg)</label>
@@ -666,13 +662,13 @@
                     <input type="text" class="admin-input" id="editPetVaccine" placeholder="Ví dụ: Đã tiêm dại và 7 bệnh mũi 2...">
                 </div>
                 <div class="form-group mb-4">
-                    <label class="form-label">Lưu ý an toàn / Cảnh báo sức khỏe</label>
+                    <label class="form-label">Cảnh báo an toàn</label>
                     <input type="text" class="admin-input" id="editPetAlert" placeholder="Ví dụ: Dị ứng sữa tắm hoa hồng, sợ sấy...">
                 </div>
 
                 <div class="modal-actions-footer">
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelEditPet">Hủy bỏ</button>
-                    <button type="submit" class="admin-btn admin-btn-primary">Lưu cập nhật</button>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelEditPet" data-close-modal="modalEditPet">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitEditPet">Lưu cập nhật</button>
                 </div>
             </form>
         </div>
@@ -682,16 +678,16 @@
          MODAL 6: XÁC NHẬN HÀNH ĐỘNG KHÁCH HÀNG (CUSTOM CONFIRM MODAL)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalConfirmCustomerAction" style="display: none;">
-        <div class="admin-modal-card" style="max-width: 440px;">
+        <div class="admin-modal-card" style="width: 480px; max-width: 92vw;">
             <div class="admin-modal-header" style="border-bottom: none; padding-bottom: 0;">
                 <span class="admin-modal-title" id="custConfirmTitle">Xác nhận thao tác</span>
-                <button type="button" class="btn-modal-close" id="btnCloseCustConfirm">Đóng</button>
+                <button type="button" class="btn-modal-close" id="btnCloseCustConfirm" data-close-modal="modalConfirmCustomerAction">Đóng</button>
             </div>
             <div style="padding: 16px 0 24px; font-size: 13.5px; color: var(--text-main); line-height: 1.5;" id="custConfirmMessage">
                 Bạn có chắc chắn muốn thực hiện hành động này không?
             </div>
             <div class="modal-actions-footer" style="border-top: none; padding-top: 0;">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelCustConfirm">Hủy bỏ</button>
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelCustConfirm" data-close-modal="modalConfirmCustomerAction">Hủy</button>
                 <button type="button" class="admin-btn admin-btn-primary" id="btnAcceptCustConfirm">Xác nhận</button>
             </div>
         </div>

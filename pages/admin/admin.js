@@ -83,6 +83,21 @@ function getAdminSessionUser() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Tắt tính năng tự khôi phục vị trí cuộn của trình duyệt để triệt tiêu 100% hiện tượng trôi Header bar
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    // Khóa cứng cửa sổ window tại vị trí đỉnh để Header và Sidebar Brand luôn cố định tuyệt đối
+    window.addEventListener('scroll', () => {
+        if (window.scrollY !== 0 || window.scrollX !== 0) {
+            window.scrollTo(0, 0);
+        }
+    }, { passive: false });
+
     const adminUser = getAdminSessionUser();
     if (!adminUser) {
         window.location.replace('/admin/login');
@@ -322,6 +337,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Render tức thì Header Bar để triệt tiêu 100% hiện tượng chớp/load header
         renderHeaderSubtabsInstant(moduleName);
+        window.scrollTo(0, 0);
+        if (contentArea) contentArea.scrollTop = 0;
         contentArea.innerHTML = '<div class="admin-module-loading" role="status" aria-live="polite"><span class="admin-loading-spinner"></span><span>Đang tải dữ liệu...</span></div>';
 
         if (moduleName === 'Dashboard') {

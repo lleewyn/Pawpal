@@ -575,6 +575,15 @@
         }
 
         if (formEdit) {
+
+        const btnSubmitEdit = document.getElementById('btnSubmitEditCustomer');
+        if (btnSubmitEdit && formEdit) {
+            btnSubmitEdit.addEventListener('click', () => {
+                if (formEdit.requestSubmit) formEdit.requestSubmit();
+                else formEdit.dispatchEvent(new Event('submit', { cancelable: true }));
+            });
+        }
+
             formEdit.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const custId = document.getElementById('editCustId')?.value || 'CUST-001';
@@ -680,6 +689,15 @@
         });
 
         if (formAddPet) {
+
+        const btnSubmitAddPet = document.getElementById('btnSubmitAddPet');
+        if (btnSubmitAddPet && formAddPet) {
+            btnSubmitAddPet.addEventListener('click', () => {
+                if (formAddPet.requestSubmit) formAddPet.requestSubmit();
+                else formAddPet.dispatchEvent(new Event('submit', { cancelable: true }));
+            });
+        }
+
             formAddPet.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const petName = document.getElementById('addPetName')?.value || 'Bé cưng';
@@ -739,6 +757,15 @@
         if (btnCancelEditPet) btnCancelEditPet.addEventListener('click', closeEditPetModal);
 
         if (formEditPet) {
+
+        const btnSubmitEditPet = document.getElementById('btnSubmitEditPet');
+        if (btnSubmitEditPet && formEditPet) {
+            btnSubmitEditPet.addEventListener('click', () => {
+                if (formEditPet.requestSubmit) formEditPet.requestSubmit();
+                else formEditPet.dispatchEvent(new Event('submit', { cancelable: true }));
+            });
+        }
+
             formEditPet.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!currentEditingPetCustId || currentEditPetIndex === null) return;

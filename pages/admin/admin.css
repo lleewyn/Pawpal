@@ -165,6 +165,7 @@ body.admin-body {
     height: var(--header-height);
     box-sizing: border-box;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .brand-title {
@@ -399,6 +400,8 @@ body.admin-body {
     display: flex;
     flex-direction: column;
     height: 100%;
+    min-height: 0;
+    min-width: 0;
     overflow: hidden;
     background-color: var(--canvas-bg);
     overscroll-behavior: none;
@@ -408,6 +411,7 @@ body.admin-body {
 .admin-header {
     height: var(--header-height);
     min-height: var(--header-height);
+    flex-shrink: 0;
     background-color: var(--surface-white);
     border-bottom: 1px solid var(--border-neutral);
     display: flex;
@@ -416,6 +420,7 @@ body.admin-body {
     padding: 0 24px;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    z-index: 100;
 }
 
 .admin-header-left {
@@ -539,6 +544,8 @@ body.admin-body {
 
 .admin-preview-content {
     flex: 1;
+    min-height: 0;
+    min-width: 0;
     padding: 20px 24px;
     overflow-y: auto;
     overscroll-behavior: contain;

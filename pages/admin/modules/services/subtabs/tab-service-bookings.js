@@ -68,6 +68,9 @@
                 <button type="button" class="dropdown-item" data-action="intake-safety">
                     Tiếp nhận an toàn
                 </button>
+                <button type="button" class="dropdown-item" data-action="add-surcharge">
+                    Thêm phụ phí
+                </button>
                 <button type="button" class="dropdown-item" data-action="change-staff">
                     Điều phối KTV
                 </button>
@@ -726,43 +729,388 @@
         }
     }
 
+    function checkIntakeWeightDiscrepancy(origWeight) {
+        const weightInput = document.getElementById('intakePetWeightInput');
+        const alertBox = document.getElementById('intakeWeightAlertBox');
+        const alertText = document.getElementById('intakeWeightAlertText');
+        if (!weightInput || !alertBox || !alertText) return;
+
+        const currentWeight = parseFloat(weightInput.value) || origWeight;
+        const diff = Math.round((currentWeight - origWeight) * 10) / 10;
+
+        if (diff >= 0.5) {
+            alertBox.style.display = 'block';
+            alertText.textContent = `Bé vượt ${diff} kg so với đăng ký (${origWeight} kg ➔ ${currentWeight} kg), chênh lệch phân khúc cân nặng!`;
+        } else if (diff <= -0.5) {
+            alertBox.style.display = 'block';
+            alertText.textContent = `Bé nhẹ hơn ${Math.abs(diff)} kg so với đăng ký (${origWeight} kg ➔ ${currentWeight} kg).`;
+        } else {
+            alertBox.style.display = 'none';
+        }
+    }
+
+    function renderIntakeProofPreview() {
+        const previewList = document.getElementById('intakeProofPreviewList');
+        if (!previewList) return;
+        previewList.innerHTML = '';
+        intakeProofImagesTemp.forEach((url, idx) => {
+            const thumb = document.createElement('div');
+            thumb.className = 'intake-proof-item';
+            thumb.style.position = 'relative';
+            thumb.innerHTML = `
+                <img src="${url}" alt="Bằng chứng tiếp nhận" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);">
+                <span class="btn-del-proof" style="position: absolute; top: -5px; right: -5px; background: #DC2626; color: #fff; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">✕</span>
+            `;
+            thumb.querySelector('.btn-del-proof').addEventListener('click', () => {
+                intakeProofImagesTemp.splice(idx, 1);
+                renderIntakeProofPreview();
+            });
+            previewList.appendChild(thumb);
+        });
+    }
+
     function openIntakeModal(bookingId, mode = 'intake') {
-        const modal = document.getElementById('modalIntakeSafety');
+        const modal = document.getElementById('modalEditIntakeInfo') || document.getElementById('modalIntakeSafety');
         if (!modal) return;
-        modal.classList.add('active');
+
+        const bookingsData = PawpalServices.state?.bookingsData || [];
+        const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
         modal.setAttribute('data-booking-id', bookingId);
+
+        const modeHidden = document.getElementById('intakeModalMode');
+        if (modeHidden) modeHidden.value = mode;
+
+        const titleEl = document.getElementById('intakeModalTitle');
+        const submitBtn = document.getElementById('intakeModalSubmitBtn') || document.getElementById('btnSubmitIntakeRecord');
+        const summaryEl = document.getElementById('intakePetSummary');
+
+        if (titleEl) {
+            titleEl.textContent = mode === 'edit' ? 'Biên bản tiếp nhận bé và kiểm tra an toàn' : 'Tiếp nhận bé và kiểm tra an toàn';
+        }
+        if (submitBtn) {
+            submitBtn.textContent = mode === 'edit' ? 'Lưu biên bản tiếp nhận' : 'Xác nhận tiếp nhận và bắt đầu ca';
+        }
+
+        if (summaryEl && booking) {
+            summaryEl.textContent = `Mã ca: ${booking.id} • Bé: ${booking.petName || 'Bé cưng'} • Chủ nuôi: ${booking.customerName || 'Khách hàng'}`;
+        }
+
+        // Nạp danh sách KTV vào select
+        const staffSelect = document.getElementById('intakeStaffSelect');
+        if (staffSelect) {
+            const staffList = PawpalServices.state?.liveStaffList || [];
+            staffSelect.innerHTML = '<option value="">-- Chọn KTV tiếp nhận --</option>';
+            staffList.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.full_name;
+                opt.textContent = s.full_name;
+                staffSelect.appendChild(opt);
+            });
+            if (booking && booking.staff) {
+                staffSelect.value = booking.staff;
+            }
+        }
+
+        // Cân nặng ban đầu & Cân nặng thực tế
+        const origWeightVal = booking ? (parseFloat(booking.originalWeight) || parseFloat(booking.petWeight) || 4.2) : 4.2;
+        const origWeightLabel = document.getElementById('intakeOriginalWeightLabel');
+        if (origWeightLabel) {
+            origWeightLabel.textContent = `(Đăng ký: ${origWeightVal} kg)`;
+        }
+
+        const weightInput = document.getElementById('intakePetWeightInput');
+        if (weightInput) {
+            weightInput.value = booking?.intakeRecord?.actualWeight || origWeightVal;
+            weightInput.oninput = () => checkIntakeWeightDiscrepancy(origWeightVal);
+        }
+
+        checkIntakeWeightDiscrepancy(origWeightVal);
+
+        // Nạp dữ liệu checklist ngoại quan
+        const intake = booking?.intakeRecord || {};
+        const setCheck = (id, val) => { const el = document.getElementById(id); if (el) el.checked = Boolean(val); };
+
+        setCheck('checkSkinNormal', intake.skinCoat ? intake.skinCoat.includes('Sạch sẽ') || intake.skinCoat.includes('sạch sẽ') : true);
+        setCheck('checkSkinFleas', intake.skinCoat ? intake.skinCoat.includes('ve rận') : false);
+        setCheck('checkSkinFungus', intake.skinCoat ? intake.skinCoat.includes('nấm') : false);
+        setCheck('checkSkinMatted', intake.skinCoat ? intake.skinCoat.includes('rối') : false);
+
+        setCheck('checkEyesEarsNormal', intake.eyesEars ? intake.eyesEars.includes('bình thường') || intake.eyesEars.includes('Bình thường') : true);
+        setCheck('checkEyesDischarge', intake.eyesEars ? intake.eyesEars.includes('ghèn') || intake.eyesEars.includes('Đỏ mắt') : false);
+        setCheck('checkEarsInfection', intake.eyesEars ? intake.eyesEars.includes('viêm tai') || intake.eyesEars.includes('Sáp tai') : false);
+        setCheck('checkNoseRunny', intake.eyesEars ? intake.eyesEars.includes('mũi') : false);
+
+        const hasWounds = intake.wounds && !intake.wounds.includes('Không có');
+        setCheck('checkWoundNone', !hasWounds);
+        setCheck('checkWoundExisting', hasWounds);
+
+        const woundNote = document.getElementById('intakeExistingWoundNote');
+        if (woundNote) woundNote.value = intake.woundNote || '';
+
+        const tempRadios = document.querySelectorAll('input[name="intakeTemperamentRadio"]');
+        tempRadios.forEach(r => {
+            r.checked = (r.value === (intake.temperament || 'Ngoan hiền'));
+        });
+
+        const belongingsInput = document.getElementById('intakeBelongingsInput');
+        if (belongingsInput) belongingsInput.value = intake.belongingsNote || '';
+        document.querySelectorAll('.check-belonging-item').forEach(cb => {
+            cb.checked = intake.belongings ? intake.belongings.includes(cb.value) : false;
+        });
+
+        // Bằng chứng ảnh
+        intakeProofImagesTemp = Array.isArray(intake.proofPhotos) ? [...intake.proofPhotos] : [];
+        renderIntakeProofPreview();
+
+        modal.classList.add('active');
     }
 
     function openChangeStaffModal(bookingId) {
         const modal = document.getElementById('modalChangeStaff');
         if (!modal) return;
-        modal.classList.add('active');
+
+        const bookingsData = PawpalServices.state?.bookingsData || [];
+        const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
         modal.setAttribute('data-booking-id', bookingId);
+
+        const currentStaffName = booking?.staff || 'Ngọc Anh';
+
+        // Meta thông tin ca
+        const metaEl = document.getElementById('changeStaffBookingMeta');
+        if (metaEl) {
+            metaEl.textContent = `Mã ca: ${booking?.id || bookingId} (${booking?.petName || 'Bé cưng'}) • KTV hiện tại: ${currentStaffName}`;
+        }
+
+        const currentNameEl = document.getElementById('changeStaffCurrentName');
+        if (currentNameEl) {
+            currentNameEl.textContent = currentStaffName;
+        }
+
+        // Nạp danh sách KTV mới vào select (loại trừ KTV hiện tại)
+        const staffSelect = document.getElementById('changeStaffSelect');
+        if (staffSelect) {
+            const staffList = PawpalServices.state?.liveStaffList || [];
+            staffSelect.innerHTML = '<option value="">-- Chọn KTV mới --</option>';
+            staffList.forEach(s => {
+                if (s.full_name !== currentStaffName) {
+                    const opt = document.createElement('option');
+                    opt.value = s.full_name;
+                    opt.textContent = `${s.full_name} (${s.specialty || 'KTV Spa'})`;
+                    staffSelect.appendChild(opt);
+                }
+            });
+            // Nếu chưa có KTV nào khác trong danh sách, nạp danh sách mẫu
+            if (staffSelect.options.length <= 1) {
+                const sampleStaffs = ['Trần Minh Hoàng', 'Hoàng Bảo Vy', 'Nguyễn Văn Đạt', 'Lê Khánh Linh'];
+                sampleStaffs.forEach(name => {
+                    if (name !== currentStaffName) {
+                        const opt = document.createElement('option');
+                        opt.value = name;
+                        opt.textContent = `${name} (KTV Chuyên sâu)`;
+                        staffSelect.appendChild(opt);
+                    }
+                });
+            }
+        }
+
+        // Reset lý do
+        const presetReason = document.getElementById('changeStaffPresetReason');
+        if (presetReason) presetReason.value = 'CUSTOM';
+
+        const reasonInp = document.getElementById('changeStaffReasonInput');
+        if (reasonInp) reasonInp.value = '';
+
+        const hintEl = document.getElementById('changeStaffWorkloadHint');
+        if (hintEl) hintEl.style.display = 'none';
+
+        modal.classList.add('active');
     }
 
     function openSurchargeModal(bookingId) {
         const modal = document.getElementById('modalAddSurcharge');
         if (!modal) return;
-        modal.classList.add('active');
+
+        const bookingsData = PawpalServices.state?.bookingsData || [];
+        const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
+
+        const metaEl = document.getElementById('surchargeBookingMeta');
+        if (metaEl) {
+            if (booking) {
+                metaEl.textContent = `Mã ca: ${booking.id} • Bé: ${booking.petName || 'Bé cưng'} • KTV phụ trách: ${booking.staff || 'Chưa phân công'}`;
+            } else {
+                metaEl.textContent = `Mã ca: ${bookingId}`;
+            }
+        }
+
+        const form = document.getElementById('formAddSurcharge');
+        if (form) form.reset();
+
+        const presetSelect = document.getElementById('surchargePresetSelect');
+        if (presetSelect) presetSelect.value = 'CUSTOM';
+
+        const commissionEarnedEl = document.getElementById('surchargeCommissionEarned');
+        if (commissionEarnedEl) commissionEarnedEl.textContent = '0 đ';
+
+        const previewList = document.getElementById('surchargeProofPreviewList');
+        if (previewList) previewList.innerHTML = '';
+        surchargeProofImagesTemp = [];
+
         modal.setAttribute('data-booking-id', bookingId);
+        modal.classList.add('active');
+    }
+
+    function renderCompleteProofPreview() {
+        const previewList = document.getElementById('completeProofPreviewList');
+        if (!previewList) return;
+        previewList.innerHTML = '';
+        completeProofImagesTemp.forEach((url, idx) => {
+            const thumb = document.createElement('div');
+            thumb.className = 'intake-proof-item';
+            thumb.style.position = 'relative';
+            thumb.innerHTML = `
+                <img src="${url}" alt="Ảnh thành phẩm" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);">
+                <span class="btn-del-proof" style="position: absolute; top: -5px; right: -5px; background: #DC2626; color: #fff; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">✕</span>
+            `;
+            thumb.querySelector('.btn-del-proof').addEventListener('click', () => {
+                completeProofImagesTemp.splice(idx, 1);
+                renderCompleteProofPreview();
+            });
+            previewList.appendChild(thumb);
+        });
+    }
+
+    function calculateCompleteTotal(booking) {
+        if (!booking) return { finalTotal: 250000, totalDiscount: 0, earnedPoints: 25 };
+        const basePrice = booking.price || booking.basePrice || 250000;
+        const accompanyingTotal = (booking.accompanyingServices || []).reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+        const surchargeTotal = (booking.surcharges || []).reduce((sum, item) => sum + (Number(item.amount) || 0), 0) + (booking.surchargePrice || 0);
+        const subtotal = basePrice + accompanyingTotal + surchargeTotal;
+
+        const voucherVal = parseFloat(document.getElementById('completeVoucherSelect')?.value || 0);
+        let voucherDiscount = 0;
+        if (voucherVal > 0 && voucherVal < 1) {
+            voucherDiscount = Math.round(subtotal * voucherVal);
+        } else if (voucherVal >= 1) {
+            voucherDiscount = voucherVal;
+        }
+
+        const pointsVal = parseInt(document.getElementById('completePointsSelect')?.value || 0, 10);
+        const pointsDiscount = pointsVal * 100; // 100 điểm = 10.000 đ
+
+        const totalDiscount = voucherDiscount + pointsDiscount;
+        const finalTotal = Math.max(0, subtotal - totalDiscount);
+        const earnedPoints = Math.floor(finalTotal / 10000);
+
+        const formatCurrency = PawpalServices.formatCurrency || (num => `${num.toLocaleString('vi-VN')} đ`);
+
+        const discEl = document.getElementById('completePriceDiscount');
+        const totalEl = document.getElementById('completePriceTotal');
+        const pointsEl = document.getElementById('completeEarnedPointsText');
+
+        if (discEl) discEl.textContent = totalDiscount > 0 ? `-${formatCurrency(totalDiscount)}` : '-0 đ';
+        if (totalEl) totalEl.textContent = formatCurrency(finalTotal);
+        if (pointsEl) pointsEl.textContent = `+${earnedPoints} Pawpoint`;
+
+        return { finalTotal, totalDiscount, earnedPoints };
     }
 
     function openCompleteBookingModal(bookingId) {
         const modal = document.getElementById('modalCompleteBooking');
         if (!modal) return;
-        modal.classList.add('active');
+
+        const bookingsData = PawpalServices.state?.bookingsData || [];
+        const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
         modal.setAttribute('data-booking-id', bookingId);
+
+        const formatCurrency = PawpalServices.formatCurrency || (num => `${num.toLocaleString('vi-VN')} đ`);
+
+        // Meta thông tin ca
+        const metaEl = document.getElementById('completeBookingMeta');
+        if (metaEl && booking) {
+            metaEl.textContent = `Mã ca: ${booking.id} • Bé: ${booking.petName || 'Bé cưng'} • Chủ nuôi: ${booking.customerName || 'Khách hàng'}`;
+        }
+
+        // Tiến độ Care-Log
+        const progressEl = document.getElementById('completeStepsProgressText');
+        if (progressEl) {
+            const logs = booking?.carelogs || booking?.careLogs || [];
+            if (logs.length > 0) {
+                const doneCount = logs.filter(l => l.completed).length;
+                progressEl.textContent = `${doneCount}/${logs.length} bước đã thực hiện (${Math.round((doneCount / logs.length) * 100)}%)`;
+                progressEl.style.color = doneCount === logs.length ? '#16A34A' : '#D97706';
+            } else {
+                progressEl.textContent = 'Quy trình đã hoàn tất nghiệm thu';
+                progressEl.style.color = '#16A34A';
+            }
+        }
+
+        // Tư trang đã gửi
+        const belongingsDesc = document.getElementById('completeBelongingsDesc');
+        if (belongingsDesc) {
+            const b = booking?.intakeRecord;
+            const bText = b?.belongingsNote || (Array.isArray(b?.belongings) && b.belongings.length > 0 ? b.belongings.join(', ') : '');
+            belongingsDesc.textContent = bText ? `Tư trang gửi lại: ${bText}` : 'Không có đồ dùng gửi lại quầy lúc tiếp nhận.';
+        }
+
+        // Nạp các khoản chi phí
+        const basePrice = booking?.price || booking?.basePrice || 250000;
+        const accompanyingTotal = (booking?.accompanyingServices || []).reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+        const surchargeTotal = (booking?.surcharges || []).reduce((sum, item) => sum + (Number(item.amount) || 0), 0) + (booking?.surchargePrice || 0);
+
+        const baseEl = document.getElementById('completePriceBase');
+        const accEl = document.getElementById('completePriceAccompanying');
+        const addonsEl = document.getElementById('completePriceAddons');
+
+        if (baseEl) baseEl.textContent = formatCurrency(basePrice);
+        if (accEl) accEl.textContent = accompanyingTotal > 0 ? `+${formatCurrency(accompanyingTotal)}` : '+0 đ';
+        if (addonsEl) addonsEl.textContent = surchargeTotal > 0 ? `+${formatCurrency(surchargeTotal)}` : '+0 đ';
+
+        // Reset voucher và điểm
+        const voucherSelect = document.getElementById('completeVoucherSelect');
+        const pointsSelect = document.getElementById('completePointsSelect');
+        if (voucherSelect) voucherSelect.value = '0';
+        if (pointsSelect) pointsSelect.value = '0';
+
+        calculateCompleteTotal(booking);
+
+        if (voucherSelect) {
+            voucherSelect.onchange = () => calculateCompleteTotal(booking);
+        }
+        if (pointsSelect) {
+            pointsSelect.onchange = () => calculateCompleteTotal(booking);
+        }
+
+        // Reset ảnh thành phẩm
+        completeProofImagesTemp = [];
+        renderCompleteProofPreview();
+
+        modal.classList.add('active');
     }
 
+    let currentCancelingBookingId = null;
+
     function openCancelModal(bookingId) {
-        PawpalServices.showServiceConfirmModal({
-            title: 'Hủy lịch hẹn dịch vụ',
-            message: `Bạn có chắc chắn muốn hủy lịch hẹn ${bookingId}?`,
-            acceptText: 'Hủy lịch',
-            onAccept: () => {
-                updateBookingStatus(bookingId, 'cancelled');
-            }
-        });
+        const modal = document.getElementById('modalCancelBooking');
+        if (!modal) return;
+
+        currentCancelingBookingId = bookingId;
+        const codeDisplay = document.getElementById('cancelBookingCodeDisplay');
+        if (codeDisplay) {
+            codeDisplay.textContent = bookingId;
+        }
+
+        const reasonSelect = document.getElementById('cancelBookingReasonSelect');
+        if (reasonSelect) {
+            reasonSelect.value = 'Khách bận đột xuất';
+        }
+
+        const reasonDetail = document.getElementById('cancelBookingReasonDetail');
+        if (reasonDetail) {
+            reasonDetail.value = '';
+        }
+
+        modal.classList.add('active');
+        modal.style.display = 'flex';
     }
 
     function escalateBookingToComplaint(bookingId) {
@@ -789,12 +1137,171 @@
             });
         });
 
-        // Modal Lịch trực KTV
+        // ====================================================================
+        // MODAL 14: LỊCH TRỰC VÀ ĐIỀU PHỐI KỸ THUẬT VIÊN
+        // ====================================================================
+        function renderStaffScheduleModal(shiftFilter = 'ALL') {
+            const grid = document.getElementById('staffScheduleGrid');
+            const totalStaffEl = document.getElementById('summaryTotalStaffCount');
+            const totalAssignedEl = document.getElementById('summaryTotalAssignedBookings');
+            const avgCapacityEl = document.getElementById('summaryAvgCapacity');
+            const overloadedEl = document.getElementById('summaryOverloadedCount');
+            if (!grid) return;
+
+            const liveStaff = PawpalServices.state?.liveStaffList || [];
+            const defaultStaffList = [
+                { id: 'STF-01', name: 'Nguyễn Ngọc Anh', role: 'Senior Groomer', shift: 'MORNING' },
+                { id: 'STF-02', name: 'Trần Văn Nhân Viên', role: 'Junior Groomer', shift: 'MORNING' },
+                { id: 'STF-03', name: 'Lê Thu Trang', role: 'Senior Groomer', shift: 'AFTERNOON' },
+                { id: 'STF-04', name: 'Phạm Minh Trí', role: 'Grooming Master', shift: 'AFTERNOON' },
+                { id: 'STF-05', name: 'Vũ Hoàng Nam', role: 'Bather Specialist', shift: 'EVENING' },
+                { id: 'STF-06', name: 'Đặng Thảo Vy', role: 'Pet Care Associate', shift: 'EVENING' }
+            ];
+
+            const staffList = liveStaff.length > 0 
+                ? liveStaff.map((s, idx) => ({
+                    id: s.id || `STF-0${idx + 1}`,
+                    name: s.full_name || s.name,
+                    role: s.role || 'Kỹ thuật viên',
+                    shift: idx % 3 === 0 ? 'MORNING' : (idx % 3 === 1 ? 'AFTERNOON' : 'EVENING')
+                }))
+                : defaultStaffList;
+
+            const bookings = PawpalServices.state?.bookingsData || [];
+            
+            // Lọc theo ca
+            const filteredStaff = shiftFilter === 'ALL' 
+                ? staffList 
+                : staffList.filter(s => s.shift === shiftFilter);
+
+            let totalAssigned = 0;
+            let overloadedCount = 0;
+
+            const cardsHtml = filteredStaff.map(staff => {
+                const assignedBookings = bookings.filter(b => (b.staff || '').toLowerCase().includes(staff.name.toLowerCase()) || staff.name.toLowerCase().includes((b.staff || '').toLowerCase()));
+                const count = assignedBookings.length || Math.floor(Math.random() * 3) + 1;
+                totalAssigned += count;
+                const maxCap = 4;
+                const capPct = Math.min(100, Math.round((count / maxCap) * 100));
+                if (capPct >= 100) overloadedCount++;
+
+                const statusClass = capPct >= 100 ? 'danger' : (capPct >= 75 ? 'warning' : '');
+                const initials = staff.name.split(' ').map(w => w[0]).slice(-2).join('').toUpperCase();
+
+                const shiftLabel = staff.shift === 'MORNING' ? 'Ca sáng (08:00 - 12:00)' : (staff.shift === 'AFTERNOON' ? 'Ca chiều (13:00 - 17:00)' : 'Ca tối (17:00 - 21:00)');
+
+                return `
+                    <div class="ktv-schedule-card">
+                        <div class="ktv-schedule-card-header">
+                            <div class="ktv-schedule-avatar">${initials}</div>
+                            <div class="ktv-schedule-info">
+                                <div class="ktv-schedule-name">${staff.name}</div>
+                                <div class="ktv-schedule-role">${staff.role} • ${shiftLabel}</div>
+                            </div>
+                            <span class="admin-badge ${capPct >= 100 ? 'badge-danger' : (capPct >= 75 ? 'badge-warning' : 'badge-success')}">
+                                ${count}/${maxCap} ca (${capPct}%)
+                            </span>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-muted);">
+                                <span>Tiến độ tải ca trong ngày</span>
+                                <span>${count >= maxCap ? 'Đầy tải' : 'Sẵn sàng nhận thêm'}</span>
+                            </div>
+                            <div class="ktv-workload-bar-wrap">
+                                <div class="ktv-workload-bar-fill ${statusClass}" style="width: ${capPct}%;"></div>
+                            </div>
+                        </div>
+                        <div class="ktv-assigned-bookings-list">
+                            ${assignedBookings.length > 0 ? assignedBookings.slice(0, 3).map(b => `
+                                <div class="ktv-assigned-booking-chip">
+                                    <span style="font-weight: 600; color: #203A2C;">${b.id} • ${b.petName || 'Bé cưng'}</span>
+                                    <span style="color: var(--text-muted);">${b.time || '10:00'} (${b.service || 'Spa'})</span>
+                                </div>
+                            `).join('') : `
+                                <div style="font-size: 11.5px; color: var(--text-muted); font-style: italic; padding: 4px 0;">
+                                    Chưa có ca được chỉ định trong khung giờ này.
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            grid.innerHTML = cardsHtml;
+
+            if (totalStaffEl) totalStaffEl.textContent = filteredStaff.length;
+            if (totalAssignedEl) totalAssignedEl.textContent = `${totalAssigned} ca`;
+            if (avgCapacityEl) {
+                const avg = filteredStaff.length > 0 ? Math.round((totalAssigned / (filteredStaff.length * 4)) * 100) : 0;
+                avgCapacityEl.textContent = `${avg}%`;
+            }
+            if (overloadedEl) overloadedEl.textContent = overloadedCount;
+        }
+
+        // Gắn sự kiện tab ca trực trong Modal 14
+        document.querySelectorAll('.staff-shift-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.staff-shift-tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const shift = btn.getAttribute('data-shift-filter') || 'ALL';
+                renderStaffScheduleModal(shift);
+            });
+        });
+
+        // Nút Quản lý nhân sự trong Modal 14
+        const btnNavStaff = document.getElementById('btnNavToStaffModule');
+        if (btnNavStaff) {
+            btnNavStaff.addEventListener('click', () => {
+                const modal = document.getElementById('modalStaffSchedule');
+                if (modal) modal.classList.remove('active');
+                const staffNav = document.querySelector('.sidebar-menu-btn[data-title="Nhân sự"]');
+                if (staffNav) staffNav.click();
+            });
+        }
+
+        // Nút mở Modal Lịch trực KTV
         const btnOpenStaffSchedule = document.getElementById('btnOpenStaffScheduleModal');
         const modalStaffSchedule = document.getElementById('modalStaffSchedule');
         if (btnOpenStaffSchedule && modalStaffSchedule) {
             btnOpenStaffSchedule.addEventListener('click', () => {
+                renderStaffScheduleModal('ALL');
                 modalStaffSchedule.classList.add('active');
+            });
+        }
+
+        // Modal 3: Xác nhận Hủy lịch hẹn
+        const quickCancelChips = document.querySelectorAll('#quickCancelReasonChips .reason-quick-chip');
+        const cancelReasonDetail = document.getElementById('cancelBookingReasonDetail');
+        quickCancelChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                if (cancelReasonDetail) {
+                    cancelReasonDetail.value = chip.textContent.trim();
+                    cancelReasonDetail.focus();
+                }
+            });
+        });
+
+        const btnConfirmCancel = document.getElementById('btnConfirmCancelBooking');
+        if (btnConfirmCancel) {
+            btnConfirmCancel.addEventListener('click', async () => {
+                if (!currentCancelingBookingId) return;
+
+                const reasonSelect = document.getElementById('cancelBookingReasonSelect');
+                const reasonDetail = document.getElementById('cancelBookingReasonDetail');
+                const reasonText = (reasonSelect?.value || 'Khách bận đột xuất') + (reasonDetail?.value ? ` - ${reasonDetail.value.trim()}` : '');
+
+                const bookingToCancel = currentCancelingBookingId;
+                updateBookingStatus(bookingToCancel, 'cancelled');
+
+                const modal = document.getElementById('modalCancelBooking');
+                if (modal) {
+                    modal.classList.remove('active');
+                    modal.style.display = 'none';
+                }
+
+                if (PawpalServices.showToast) {
+                    PawpalServices.showToast(`Đã hủy lịch hẹn ${bookingToCancel} thành công! Lý do: ${reasonText}`);
+                }
             });
         }
 
@@ -808,6 +1315,26 @@
         const closeCreateModal = () => {
             if (modalCreateBooking) modalCreateBooking.classList.remove('active');
             if (formCreateBooking) formCreateBooking.reset();
+            const hotelF = document.getElementById('createBookingHotelFields');
+            const taxiF = document.getElementById('createBookingTaxiFields');
+            const spaF = document.getElementById('createBookingSpaFields');
+            if (hotelF) hotelF.style.display = 'none';
+            if (taxiF) taxiF.style.display = 'none';
+            if (spaF) spaF.style.display = 'none';
+
+            const cCard = document.getElementById('bookingSelectedCustomerCard');
+            const pCard = document.getElementById('bookingSelectedPetCard');
+            const sCard = document.getElementById('bookingSelectedServiceCard');
+            if (cCard) cCard.style.display = 'none';
+            if (pCard) pCard.style.display = 'none';
+            if (sCard) sCard.style.display = 'none';
+
+            const cDrop = document.getElementById('bookingCustomerDropdown');
+            const pDrop = document.getElementById('bookingPetDropdown');
+            const sDrop = document.getElementById('bookingServiceDropdown');
+            if (cDrop) cDrop.style.display = 'none';
+            if (pDrop) pDrop.style.display = 'none';
+            if (sDrop) sDrop.style.display = 'none';
         };
 
         if (btnOpenCreateBooking && modalCreateBooking) {
@@ -828,6 +1355,10 @@
                         staffSelect.appendChild(opt);
                     });
                 }
+                // Điền danh mục và danh sách gói dịch vụ tương ứng
+                if (catSelect && !catSelect.value) catSelect.value = 'Spa';
+                updateCategoryOptions();
+
                 modalCreateBooking.classList.add('active');
             });
         }
@@ -928,47 +1459,414 @@
             });
         }
 
-        // Tự động chuyển đổi các trường đặc thù theo Phân nhóm dịch vụ (Spa / Hotel / Taxi)
+        // ====================================================================
+        // QUẢN LÝ PHÂN NHÓM DỊCH VỤ (SPA / HOTEL / TAXI)
+        // ====================================================================
         const catSelect = document.getElementById('newBookingCategory');
         const hotelFields = document.getElementById('createBookingHotelFields');
         const taxiFields = document.getElementById('createBookingTaxiFields');
         const spaFields = document.getElementById('createBookingSpaFields');
-        const svcSelect = document.getElementById('newBookingServiceSelect');
+
+        function isGroomingService(serviceName) {
+            if (!serviceName) return false;
+            const s = serviceName.toLowerCase();
+            return s.includes('tỉa') || s.includes('cắt') || s.includes('tạo kiểu') || s.includes('grooming') || s.includes('style') || s.includes('nhuộm');
+        }
+
+        function updateGroomingFields() {
+            const val = catSelect ? catSelect.value : 'Spa';
+            const svcName = serviceHidden ? serviceHidden.value : '';
+            if (spaFields) {
+                spaFields.style.display = (val === 'Spa' && isGroomingService(svcName)) ? 'block' : 'none';
+            }
+        }
 
         function updateCategoryOptions() {
             const val = catSelect ? catSelect.value : 'Spa';
             if (hotelFields) hotelFields.style.display = (val === 'Hotel') ? 'block' : 'none';
             if (taxiFields) taxiFields.style.display = (val === 'Taxi') ? 'block' : 'none';
-            if (spaFields) spaFields.style.display = (val === 'Spa') ? 'block' : 'none';
-
-            if (svcSelect) {
-                svcSelect.innerHTML = '<option value="">-- Chọn dịch vụ --</option>';
-                const servicesData = PawpalServices.state?.servicesData || [];
-                const targetGroup = val.toLowerCase();
-                const filtered = servicesData.filter(s => s.group === targetGroup || s.category === targetGroup);
-                if (filtered.length > 0) {
-                    filtered.forEach(s => {
-                        const opt = document.createElement('option');
-                        opt.value = s.name;
-                        opt.textContent = `${s.name} (${s.duration || '60p'})`;
-                        svcSelect.appendChild(opt);
-                    });
-                } else {
-                    const defaults = val === 'Hotel' 
-                        ? ['Phòng Standard (180k/đêm)', 'Phòng Deluxe (380k/đêm)', 'Luxury Suite (500k/đêm)']
-                        : (val === 'Taxi' 
-                            ? ['Dịch Vụ Xe Đưa Đón Tận Nơi 1 Chiều', 'Dịch Vụ Xe Đưa Đón 2 Chiều']
-                            : ['Gói Tắm Vệ Sinh Cơ Bản', 'Gói Tắm Dưỡng Premium', 'Grooming Cắt Tỉa Tạo Kiểu']);
-                    defaults.forEach(d => {
-                        const opt = document.createElement('option');
-                        opt.value = d;
-                        opt.textContent = d;
-                        svcSelect.appendChild(opt);
-                    });
-                }
-            }
+            
+            // Reset lựa chọn gói dịch vụ cụ thể khi đổi nhóm dịch vụ
+            if (serviceInput) serviceInput.value = '';
+            if (serviceHidden) serviceHidden.value = '';
+            if (serviceSelectedCard) serviceSelectedCard.style.display = 'none';
+            updateGroomingFields();
         }
         if (catSelect) catSelect.addEventListener('change', updateCategoryOptions);
+
+        // ====================================================================
+        // CUSTOM AUTOCOMPLETE POPOVER: KHÁCH HÀNG (100% FLAT TEXT-ONLY)
+        // ====================================================================
+        const customerInput = document.getElementById('newBookingCustomer');
+        const customerDropdown = document.getElementById('bookingCustomerDropdown');
+        const customerSelectedCard = document.getElementById('bookingSelectedCustomerCard');
+        const phoneInput = document.getElementById('newBookingPhone');
+        let selectedCustomerObj = null;
+
+        function getAllCustomersList() {
+            // 1. Ưu tiên lấy từ phân hệ khách hàng nếu đã nạp
+            if (window.PawpalCustomers?.state?.customerDatabase) {
+                const list = Object.values(window.PawpalCustomers.state.customerDatabase);
+                if (list.length > 0) return list;
+            }
+
+            // 2. Lấy từ liveCustomerDirectory trong phân hệ Dịch vụ
+            const live = PawpalServices.state?.liveCustomerDirectory || [];
+            if (live.length > 0) {
+                return live.map(c => {
+                    const prof = Array.isArray(c.customer_profile) ? (c.customer_profile[0] || {}) : (c.customer_profile || {});
+                    const pets = Array.isArray(c.pet_profile) ? c.pet_profile : [];
+                    return {
+                        id: c.id,
+                        name: prof.full_name || c.full_name || 'Khách hàng PawPal',
+                        phone: c.phone_main || '',
+                        tierName: c.membership_tier ? `Hạng ${c.membership_tier}` : (prof.tier ? `Hạng ${prof.tier}` : 'Thành viên'),
+                        pets: pets.map(p => ({
+                            name: p.pet_name,
+                            species: p.species || 'Thú cưng',
+                            breed: p.breed || 'Chưa rõ giống',
+                            weight: p.weight || '',
+                            allergy: p.allergy || ''
+                        }))
+                    };
+                });
+            }
+
+            // 3. Lấy từ danh sách lịch hẹn hiện hữu (Bookings data)
+            const bData = PawpalServices.state?.bookingsData || [];
+            const custMap = {};
+            bData.forEach(b => {
+                if (b.customerName && !custMap[b.customerName]) {
+                    custMap[b.customerName] = {
+                        id: b.userId || b.id,
+                        name: b.customerName,
+                        phone: b.phone && b.phone !== '—' ? b.phone : '0901234567',
+                        tierName: 'Thành viên',
+                        pets: b.petName ? [{
+                            name: b.petName,
+                            species: 'Thú cưng',
+                            breed: b.petBreed || 'Poodle',
+                            weight: b.petWeight ? parseFloat(b.petWeight) : 4.5,
+                            allergy: b.petAlert || ''
+                        }] : []
+                    };
+                }
+            });
+            return Object.values(custMap);
+        }
+
+        function renderCustomerAutocomplete(query = '') {
+            if (!customerDropdown) return;
+            const q = (query || '').toLowerCase().trim();
+            const customers = getAllCustomersList();
+            
+            const matches = customers.filter(c => {
+                if (!q) return true;
+                const name = (c.name || '').toLowerCase();
+                const phone = (c.phone || '').replace(/[^0-9]/g, '');
+                const cleanQ = q.replace(/[^0-9]/g, '');
+                const matchPhone = cleanQ && phone.includes(cleanQ);
+                const matchName = name.includes(q);
+                const matchPets = (c.pets || []).some(p => (p.name || '').toLowerCase().includes(q));
+                return matchName || matchPhone || matchPets;
+            }).slice(0, 15);
+
+            if (matches.length === 0) {
+                customerDropdown.innerHTML = '<div style="padding: 10px 14px; color: var(--text-muted); font-size: 12.5px; text-align: center;">Không tìm thấy khách hàng phù hợp</div>';
+                customerDropdown.style.display = 'block';
+                return;
+            }
+
+            customerDropdown.innerHTML = '';
+            matches.forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'customer-autocomplete-item';
+                const name = c.name || 'Khách vãng lai';
+                const phone = c.phone || 'Chưa có SĐT';
+                const petList = (c.pets && c.pets.length > 0) 
+                    ? ` • Bé: ${c.pets.map(p => p.name).join(', ')}` 
+                    : '';
+                const tier = c.tierName || 'Thành viên';
+
+                // 100% FLAT TEXT-ONLY: CẤM ICON / AVATAR TRÒN THEO RULE AGENTS.MD
+                item.innerHTML = `
+                    <div class="customer-autocomplete-meta" style="flex: 1;">
+                        <div class="customer-autocomplete-name" style="font-weight: 600; color: #203A2C; font-size: 13.5px;">${name}</div>
+                        <div class="customer-autocomplete-phone" style="color: #4F7A65; font-size: 11.5px; margin-top: 2px;">${phone}${petList}</div>
+                    </div>
+                    <div class="customer-autocomplete-pets" style="font-size: 11.5px; color: #236B48; background: #EEF5F1; padding: 2px 8px; border-radius: 9px; font-weight: 500;">
+                        ${tier}
+                    </div>
+                `;
+
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    selectCustomerItem(c);
+                });
+
+                customerDropdown.appendChild(item);
+            });
+
+            customerDropdown.style.display = 'block';
+        }
+
+        function selectCustomerItem(c) {
+            selectedCustomerObj = c;
+            const name = c.name || '';
+            const phone = c.phone || '';
+            if (customerInput) customerInput.value = name;
+            if (phoneInput && phone) phoneInput.value = phone;
+
+            if (customerSelectedCard) {
+                customerSelectedCard.innerHTML = `
+                    <span>Đã chọn: <strong>${name}</strong> (${phone || 'Chưa có SĐT'})</span>
+                    <button type="button" class="btn-clear-selection" style="background: none; border: none; color: #236B48; font-size: 12px; cursor: pointer; font-weight: 600; padding: 0 4px;">✕ Bỏ chọn</button>
+                `;
+                customerSelectedCard.style.display = 'flex';
+                customerSelectedCard.querySelector('.btn-clear-selection')?.addEventListener('click', () => {
+                    selectedCustomerObj = null;
+                    if (customerInput) customerInput.value = '';
+                    customerSelectedCard.style.display = 'none';
+                });
+            }
+
+            if (customerDropdown) customerDropdown.style.display = 'none';
+
+            // Tự động gợi ý thú cưng đầu tiên của khách này
+            if (c.pets && c.pets.length > 0) {
+                selectPetItem(c.pets[0]);
+            }
+        }
+
+        if (customerInput) {
+            customerInput.addEventListener('focus', () => renderCustomerAutocomplete(customerInput.value));
+            customerInput.addEventListener('input', () => renderCustomerAutocomplete(customerInput.value));
+        }
+
+        // ====================================================================
+        // CUSTOM AUTOCOMPLETE POPOVER: BÉ CƯNG (100% FLAT TEXT-ONLY)
+        // ====================================================================
+        const petInput = document.getElementById('newBookingPetName');
+        const petDropdown = document.getElementById('bookingPetDropdown');
+        const petSelectedCard = document.getElementById('bookingSelectedPetCard');
+        const petAlertInput = document.getElementById('newBookingPetAlert');
+
+        function renderPetAutocomplete(query = '') {
+            if (!petDropdown) return;
+            const q = (query || '').toLowerCase().trim();
+            let petList = [];
+
+            if (selectedCustomerObj && selectedCustomerObj.pets && selectedCustomerObj.pets.length > 0) {
+                petList = selectedCustomerObj.pets;
+            } else if (selectedCustomerObj && selectedCustomerObj.pet_profile && selectedCustomerObj.pet_profile.length > 0) {
+                petList = selectedCustomerObj.pet_profile;
+            } else {
+                petList = PawpalServices.state?.livePetDirectory || [];
+            }
+
+            const matches = petList.filter(p => {
+                const name = (p.pet_name || p.name || '').toLowerCase();
+                const breed = (p.breed || '').toLowerCase();
+                const species = (p.species || '').toLowerCase();
+                return !q || name.includes(q) || breed.includes(q) || species.includes(q);
+            }).slice(0, 15);
+
+            if (matches.length === 0) {
+                petDropdown.innerHTML = '<div style="padding: 10px 14px; color: var(--text-muted); font-size: 12.5px; text-align: center;">Không tìm thấy bé cưng phù hợp</div>';
+                petDropdown.style.display = 'block';
+                return;
+            }
+
+            petDropdown.innerHTML = '';
+            matches.forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'customer-autocomplete-item';
+                const pName = p.pet_name || p.name || 'Bé cưng';
+                const details = `${p.species || 'Thú cưng'} • ${p.breed || 'Chưa rõ giống'}${p.weight ? ` • ${p.weight} kg` : ''}`;
+                const ownerName = p.customer?.customer_profile?.full_name ? `Chủ: ${p.customer.customer_profile.full_name}` : (selectedCustomerObj?.name ? `Chủ: ${selectedCustomerObj.name}` : 'Bé cưng');
+
+                item.innerHTML = `
+                    <div class="customer-autocomplete-meta" style="flex: 1;">
+                        <div class="customer-autocomplete-name" style="font-weight: 600; color: #203A2C; font-size: 13.5px;">${pName}</div>
+                        <div class="customer-autocomplete-phone" style="color: #4F7A65; font-size: 11.5px; margin-top: 2px;">${details}</div>
+                    </div>
+                    <div class="customer-autocomplete-pets" style="font-size: 11.5px; color: #236B48; background: #EEF5F1; padding: 2px 8px; border-radius: 9px; font-weight: 500;">
+                        ${ownerName}
+                    </div>
+                `;
+
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    selectPetItem(p);
+                });
+
+                petDropdown.appendChild(item);
+            });
+
+            petDropdown.style.display = 'block';
+        }
+
+        function selectPetItem(p) {
+            const petNameStr = p.pet_name || p.name || 'Bé cưng';
+            if (petInput) petInput.value = petNameStr;
+            if (p.allergy && petAlertInput && !petAlertInput.value) {
+                petAlertInput.value = p.allergy;
+            }
+
+            if (petSelectedCard) {
+                petSelectedCard.innerHTML = `
+                    <span>Đã chọn bé: <strong>${petNameStr}</strong> (${p.breed || p.species || 'Thú cưng'})</span>
+                    <button type="button" class="btn-clear-selection" style="background: none; border: none; color: #236B48; font-size: 12px; cursor: pointer; font-weight: 600; padding: 0 4px;">✕ Bỏ chọn</button>
+                `;
+                petSelectedCard.style.display = 'flex';
+                petSelectedCard.querySelector('.btn-clear-selection')?.addEventListener('click', () => {
+                    if (petInput) petInput.value = '';
+                    petSelectedCard.style.display = 'none';
+                });
+            }
+
+            if (petDropdown) petDropdown.style.display = 'none';
+
+            // Nếu chưa chọn chủ mà pet có thông tin chủ, tự động điền luôn chủ
+            if (!selectedCustomerObj && p.customer) {
+                const custName = p.customer.customer_profile?.full_name;
+                const custPhone = p.customer.phone_main;
+                if (custName && customerInput && !customerInput.value) customerInput.value = custName;
+                if (custPhone && phoneInput && !phoneInput.value) phoneInput.value = custPhone;
+            }
+        }
+
+        if (petInput) {
+            petInput.addEventListener('focus', () => renderPetAutocomplete(petInput.value));
+            petInput.addEventListener('input', () => renderPetAutocomplete(petInput.value));
+        }
+
+        // ====================================================================
+        // CUSTOM AUTOCOMPLETE POPOVER: GÓI DỊCH VỤ CỤ THỂ (100% FLAT TEXT-ONLY)
+        // ====================================================================
+        const serviceInput = document.getElementById('newBookingServiceInput');
+        const serviceHidden = document.getElementById('newBookingServiceSelect');
+        const serviceDropdown = document.getElementById('bookingServiceDropdown');
+        const serviceSelectedCard = document.getElementById('bookingSelectedServiceCard');
+
+        function getServicesForCategory(categoryVal) {
+            const val = String(categoryVal || 'Spa').toLowerCase();
+            const servicesData = PawpalServices.state?.servicesData || [];
+            const filtered = servicesData.filter(s => {
+                const grp = String(s.group || s.category || '').toLowerCase();
+                return grp === val || grp.includes(val);
+            });
+
+            if (filtered.length > 0) {
+                return filtered.map(s => ({
+                    name: s.name,
+                    duration: s.duration || '60 phút',
+                    price: s.prices?.under5 ? `Từ ${s.prices.under5} đ` : 'Liên hệ',
+                    desc: s.desc || ''
+                }));
+            }
+
+            if (val === 'hotel') {
+                return [
+                    { name: 'Phòng Standard (STD-01)', duration: 'Theo ngày', price: '180.000 đ/ngày', desc: 'Chuồng inox sạch sẽ, điều hòa' },
+                    { name: 'Phòng Deluxe (DLX-04)', duration: 'Theo ngày', price: '380.000 đ/ngày', desc: 'Phòng gỗ máy lạnh 24/7, vận động' },
+                    { name: 'Phòng VIP Penthouse (VIP-02)', duration: 'Theo ngày', price: '500.000 đ/ngày', desc: 'Camera riêng 24/7, thực đơn riêng' }
+                ];
+            } else if (val === 'taxi') {
+                return [
+                    { name: 'Dịch Vụ Xe Đưa Đón 2 Chiều Khứ Hồi', duration: 'Linh hoạt', price: 'Từ 120.000 đ', desc: 'Đón tận nơi và đưa về sau khi xong' },
+                    { name: 'Dịch Vụ Xe Đưa Đón 1 Chiều Đến Quầy', duration: 'Linh hoạt', price: 'Từ 70.000 đ', desc: 'Đón tận nơi giao đến PawPal' },
+                    { name: 'Dịch Vụ Xe Đưa Đón 1 Chiều Về Nhà', duration: 'Linh hoạt', price: 'Từ 70.000 đ', desc: 'Chở bé từ PawPal về tận nhà' }
+                ];
+            } else {
+                return [
+                    { name: 'Gói Tắm Vệ Sinh Cơ Bản', duration: '45 phút', price: 'Từ 120.000 đ', desc: 'Tắm, sấy, vệ sinh tai, cắt móng' },
+                    { name: 'Gói Tắm Dưỡng Premium', duration: '60 phút', price: 'Từ 180.000 đ', desc: 'Dưỡng lông mềm mượt, massage thư giãn' },
+                    { name: 'Grooming Cắt Tỉa Tạo Kiểu', duration: '90 phút', price: 'Từ 250.000 đ', desc: 'Cắt tỉa theo form, tạo kiểu mặt tròn' },
+                    { name: 'Tắm Trị Liệu Thảo Dược', duration: '60 phút', price: 'Từ 200.000 đ', desc: 'Trị ve rận nấm da, xoa dịu kích ứng' }
+                ];
+            }
+        }
+
+        function renderServiceAutocomplete(query = '') {
+            if (!serviceDropdown) return;
+            const catVal = catSelect ? catSelect.value : 'Spa';
+            const allServices = getServicesForCategory(catVal);
+            const q = (query || '').toLowerCase().trim();
+
+            const matches = allServices.filter(s => {
+                const name = s.name.toLowerCase();
+                const desc = (s.desc || '').toLowerCase();
+                return !q || name.includes(q) || desc.includes(q);
+            });
+
+            if (matches.length === 0) {
+                serviceDropdown.innerHTML = '<div style="padding: 10px 14px; color: var(--text-muted); font-size: 12.5px; text-align: center;">Không tìm thấy gói dịch vụ phù hợp</div>';
+                serviceDropdown.style.display = 'block';
+                return;
+            }
+
+            serviceDropdown.innerHTML = '';
+            matches.forEach(s => {
+                const item = document.createElement('div');
+                item.className = 'customer-autocomplete-item';
+
+                item.innerHTML = `
+                    <div class="customer-autocomplete-meta" style="flex: 1;">
+                        <div class="customer-autocomplete-name" style="font-weight: 600; color: #203A2C; font-size: 13.5px;">${s.name}</div>
+                        <div class="customer-autocomplete-phone" style="color: #4F7A65; font-size: 11.5px; margin-top: 2px;">${s.duration}${s.desc ? ` • ${s.desc}` : ''}</div>
+                    </div>
+                    <div class="customer-autocomplete-pets" style="font-size: 11.5px; color: #236B48; background: #EEF5F1; padding: 2px 8px; border-radius: 9px; font-weight: 500;">
+                        ${s.price}
+                    </div>
+                `;
+
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    selectServiceItem(s);
+                });
+
+                serviceDropdown.appendChild(item);
+            });
+
+            serviceDropdown.style.display = 'block';
+        }
+
+        function selectServiceItem(s) {
+            if (serviceInput) serviceInput.value = s.name;
+            if (serviceHidden) serviceHidden.value = s.name;
+            updateGroomingFields();
+
+            if (serviceSelectedCard) {
+                serviceSelectedCard.innerHTML = `
+                    <span>Đã chọn: <strong>${s.name}</strong> (${s.duration})</span>
+                    <button type="button" class="btn-clear-selection" style="background: none; border: none; color: #236B48; font-size: 12px; cursor: pointer; font-weight: 600; padding: 0 4px;">✕ Bỏ chọn</button>
+                `;
+                serviceSelectedCard.style.display = 'flex';
+                serviceSelectedCard.querySelector('.btn-clear-selection')?.addEventListener('click', () => {
+                    if (serviceInput) serviceInput.value = '';
+                    if (serviceHidden) serviceHidden.value = '';
+                    serviceSelectedCard.style.display = 'none';
+                    updateGroomingFields();
+                });
+            }
+
+            if (serviceDropdown) serviceDropdown.style.display = 'none';
+        }
+
+        if (serviceInput) {
+            serviceInput.addEventListener('focus', () => renderServiceAutocomplete(serviceInput.value));
+            serviceInput.addEventListener('input', () => renderServiceAutocomplete(serviceInput.value));
+        }
+
+        // Tự động đóng dropdown khi click chuột ra ngoài
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.customer-autocomplete-wrapper')) {
+                if (customerDropdown) customerDropdown.style.display = 'none';
+                if (petDropdown) petDropdown.style.display = 'none';
+                if (serviceDropdown) serviceDropdown.style.display = 'none';
+            }
+        });
 
         // Chip gợi ý nhanh lý do / lưu ý
         document.querySelectorAll('#quickBookingAlertChips .reason-quick-chip').forEach(chip => {
@@ -990,31 +1888,222 @@
             });
         });
 
-        // Xác nhận tiếp nhận an toàn
-        const btnConfirmIntake = document.getElementById('btnSubmitIntakeRecord');
+        // ====================================================================
+        // MODAL 8: BIÊN BẢN TIẾP NHẬN BÉ VÀ KIỂM TRA AN TOÀN TẠI QUẦY (ZERO-CLAIM)
+        // ====================================================================
+        const btnAddIntakePhoto = document.getElementById('btnAddProofPhotoBtn');
+        const intakePhotoInput = document.getElementById('intakeProofFileInput');
+        if (btnAddIntakePhoto && intakePhotoInput) {
+            btnAddIntakePhoto.addEventListener('click', () => intakePhotoInput.click());
+            intakePhotoInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files || []);
+                files.forEach(file => {
+                    const url = URL.createObjectURL(file);
+                    intakeProofImagesTemp.push(url);
+                });
+                renderIntakeProofPreview();
+            });
+        }
+
+        const btnConfirmIntake = document.getElementById('intakeModalSubmitBtn') || document.getElementById('btnSubmitIntakeRecord');
         if (btnConfirmIntake) {
             btnConfirmIntake.addEventListener('click', () => {
-                const modal = document.getElementById('modalIntakeSafety');
+                const modal = document.getElementById('modalEditIntakeInfo') || document.getElementById('modalIntakeSafety');
                 const bookingId = modal?.getAttribute('data-booking-id');
-                if (bookingId) {
-                    updateBookingStatus(bookingId, 'in_progress');
-                    if (modal) modal.classList.remove('active');
+                const bookingsData = PawpalServices.state?.bookingsData || [];
+                const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
+                if (!booking) return;
+
+                const actualWeight = parseFloat(document.getElementById('intakePetWeightInput')?.value) || parseFloat(booking.petWeight) || 4.2;
+                const staff = document.getElementById('intakeStaffSelect')?.value || booking.staff || 'Ngọc Anh';
+
+                // Lấy thông tin checklist
+                const skinList = [];
+                if (document.getElementById('checkSkinNormal')?.checked) skinList.push('Sạch sẽ');
+                if (document.getElementById('checkSkinFleas')?.checked) skinList.push('Có ve rận');
+                if (document.getElementById('checkSkinFungus')?.checked) skinList.push('Mảng nấm');
+                if (document.getElementById('checkSkinMatted')?.checked) skinList.push('Lông bết rối');
+
+                const eyesEarsList = [];
+                if (document.getElementById('checkEyesEarsNormal')?.checked) eyesEarsList.push('Bình thường');
+                if (document.getElementById('checkEyesDischarge')?.checked) eyesEarsList.push('Đỏ mắt/ghèn');
+                if (document.getElementById('checkEarsInfection')?.checked) eyesEarsList.push('Viêm tai');
+                if (document.getElementById('checkNoseRunny')?.checked) eyesEarsList.push('Chảy nước mũi');
+
+                const woundNone = document.getElementById('checkWoundNone')?.checked;
+                const woundNote = document.getElementById('intakeExistingWoundNote')?.value || '';
+                const woundsStr = woundNone ? 'Không có vết thương cũ' : (woundNote ? `Có vết thương cũ: ${woundNote}` : 'Có vết trầy xước hoặc sẹo cũ');
+
+                const selectedTemp = document.querySelector('input[name="intakeTemperamentRadio"]:checked')?.value || 'Ngoan hiền';
+
+                const belongings = [];
+                document.querySelectorAll('.check-belonging-item:checked').forEach(cb => belongings.push(cb.value));
+                const belongingsNote = document.getElementById('intakeBelongingsInput')?.value || '';
+
+                booking.staff = staff;
+                booking.petWeight = `${actualWeight} kg`;
+                booking.intakeRecord = {
+                    actualWeight: actualWeight,
+                    skinCoat: skinList.join(', ') || 'Bình thường',
+                    eyesEars: eyesEarsList.join(', ') || 'Bình thường',
+                    wounds: woundsStr,
+                    woundNote: woundNote,
+                    temperament: selectedTemp,
+                    belongings: belongings,
+                    belongingsNote: belongingsNote,
+                    proofPhotos: [...intakeProofImagesTemp],
+                    recordedAt: new Date().toISOString()
+                };
+
+                // Nếu có tick tự động cộng phụ phí cân nặng
+                const autoAddSurcharge = document.getElementById('checkAutoAddWeightSurcharge')?.checked;
+                const origWeight = parseFloat(booking.originalWeight || booking.petWeight || 4.2);
+                if (autoAddSurcharge && (actualWeight - origWeight >= 0.5)) {
+                    if (!booking.surcharges) booking.surcharges = [];
+                    const exists = booking.surcharges.some(s => s.name.includes('Phụ phí chênh lệch phân khúc cân nặng'));
+                    if (!exists) {
+                        booking.surcharges.push({
+                            name: 'Phụ phí chênh lệch phân khúc cân nặng',
+                            amount: 50000,
+                            reason: `Cân nặng thực tế ${actualWeight} kg vượt mức đăng ký ${origWeight} kg`,
+                            proofImages: []
+                        });
+                    }
+                }
+
+                const mode = document.getElementById('intakeModalMode')?.value || 'intake';
+                if (mode === 'intake') {
+                    updateBookingStatus(booking.id, 'in_progress');
+                    PawpalServices.showToast('Đã tiếp nhận bé và bắt đầu ca dịch vụ!');
+                } else {
+                    PawpalServices.showToast('Đã cập nhật biên bản tiếp nhận an toàn!');
+                }
+
+                if (PawpalServices.subtabs.detail?.renderBookingDetail) {
+                    PawpalServices.subtabs.detail.renderBookingDetail(booking.id);
+                }
+                renderBookingsTable();
+
+                if (modal) modal.classList.remove('active');
+            });
+        }
+
+        // ====================================================================
+        // MODAL 10: NGHIỆM THU CA DỊCH VỤ VÀ BÀN GIAO BÉ (CHECKOUT DESK)
+        // ====================================================================
+        const btnAddCompletePhoto = document.getElementById('btnAddCompletePhotoBtn');
+        const completePhotoInput = document.getElementById('completeProofFileInput');
+        if (btnAddCompletePhoto && completePhotoInput) {
+            btnAddCompletePhoto.addEventListener('click', () => completePhotoInput.click());
+            completePhotoInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files || []);
+                files.forEach(file => {
+                    const url = URL.createObjectURL(file);
+                    completeProofImagesTemp.push(url);
+                });
+                renderCompleteProofPreview();
+            });
+        }
+
+        const btnSubmitComplete = document.getElementById('completeModalSubmitBtn') || document.getElementById('btnSubmitCompleteBooking');
+        if (btnSubmitComplete) {
+            btnSubmitComplete.addEventListener('click', async () => {
+                const modal = document.getElementById('modalCompleteBooking');
+                const bookingId = modal?.getAttribute('data-booking-id');
+                const bookingsData = PawpalServices.state?.bookingsData || [];
+                const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
+                if (!booking) return;
+
+                const checkQuality = document.getElementById('completeCheckQuality');
+                const checkBelongings = document.getElementById('completeCheckBelongings');
+                if (checkQuality && !checkQuality.checked) {
+                    PawpalServices.showToast('Vui lòng xác nhận đạt tiêu chuẩn quy trình chăm sóc!', 'warning');
+                    return;
+                }
+                if (checkBelongings && !checkBelongings.checked) {
+                    PawpalServices.showToast('Vui lòng xác nhận đã trao trả đầy đủ tư trang cho khách!', 'warning');
+                    return;
+                }
+
+                const payMethod = document.getElementById('completePaymentMethodSelect')?.value || 'Tiền mặt (Tại quầy)';
+                const isPaid = document.getElementById('completeCheckPaid')?.checked;
+
+                const { finalTotal, totalDiscount, earnedPoints } = calculateCompleteTotal(booking);
+                booking.total = finalTotal;
+                booking.voucherDiscount = totalDiscount;
+                booking.earnedPoints = earnedPoints;
+                booking.paymentStatus = isPaid ? `Đã thanh toán (${payMethod})` : 'Chưa thanh toán';
+
+                // Đánh dấu hoàn tất toàn bộ các bước trong carelog
+                const logs = booking.carelogs || booking.careLogs || [];
+                logs.forEach(l => l.completed = true);
+
+                // Cập nhật trạng thái
+                updateBookingStatus(booking.id, 'completed');
+
+                // Lưu ảnh thành phẩm
+                if (completeProofImagesTemp.length > 0) {
+                    booking.afterServicePhotos = [...completeProofImagesTemp];
+                }
+
+                try {
+                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (client && booking.dbId) {
+                        await client.from('appointment').update({
+                            status: 'completed',
+                            total_amount: finalTotal,
+                            payment_status: isPaid ? 'paid' : 'pending'
+                        }).eq('id', booking.dbId);
+                    }
+                } catch (e) {}
+
+                renderBookingsTable();
+                if (PawpalServices.subtabs.detail?.renderBookingDetail) {
+                    PawpalServices.subtabs.detail.renderBookingDetail(booking.id);
+                }
+                PawpalServices.showToast(`Đã hoàn tất ca dịch vụ và xuất phiếu bàn giao bé! (${PawpalServices.formatCurrency(finalTotal)})`);
+                if (modal) modal.classList.remove('active');
+            });
+        }
+
+        // ====================================================================
+        // MODAL 9: ĐIỀU PHỐI KỸ THUẬT VIÊN (STAFF REASSIGNMENT)
+        // ====================================================================
+        const changeStaffSelect = document.getElementById('changeStaffSelect');
+        const changeStaffHint = document.getElementById('changeStaffWorkloadHint');
+        if (changeStaffSelect && changeStaffHint) {
+            changeStaffSelect.addEventListener('change', () => {
+                const staffName = changeStaffSelect.value;
+                if (!staffName) {
+                    changeStaffHint.style.display = 'none';
+                    return;
+                }
+                changeStaffHint.style.display = 'block';
+                changeStaffHint.style.background = '#EEF5F1';
+                changeStaffHint.style.color = '#236B48';
+                changeStaffHint.textContent = `KTV ${staffName}: Đang sẵn sàng tiếp nhận ca (Tải hiện tại: 1 ca đang xử lý).`;
+            });
+        }
+
+        const presetReasonSelect = document.getElementById('changeStaffPresetReason');
+        const reasonInput = document.getElementById('changeStaffReasonInput');
+        if (presetReasonSelect && reasonInput) {
+            presetReasonSelect.addEventListener('change', () => {
+                const val = presetReasonSelect.value;
+                if (val && val !== 'CUSTOM') {
+                    reasonInput.value = val;
                 }
             });
         }
 
-        // Xác nhận hoàn thành ca làm
-        const btnSubmitComplete = document.getElementById('btnSubmitCompleteBooking');
-        if (btnSubmitComplete) {
-            btnSubmitComplete.addEventListener('click', () => {
-                const modal = document.getElementById('modalCompleteBooking');
-                const bookingId = modal?.getAttribute('data-booking-id');
-                if (bookingId) {
-                    updateBookingStatus(bookingId, 'completed');
-                    if (modal) modal.classList.remove('active');
+        document.querySelectorAll('#quickChangeStaffChips .reason-quick-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                if (reasonInput) {
+                    reasonInput.value = chip.textContent.trim();
+                    reasonInput.focus();
                 }
             });
-        }
+        });
 
         // Xác nhận đổi KTV
         const btnSubmitChangeStaff = document.getElementById('btnSubmitChangeStaff');
@@ -1023,14 +2112,44 @@
                 const modal = document.getElementById('modalChangeStaff');
                 const bookingId = modal?.getAttribute('data-booking-id');
                 const newStaff = document.getElementById('changeStaffSelect')?.value;
+                const reason = document.getElementById('changeStaffReasonInput')?.value?.trim();
+
                 if (!newStaff) {
                     PawpalServices.showToast('Vui lòng chọn KTV mới!', 'warning');
                     return;
                 }
+                if (!reason) {
+                    PawpalServices.showToast('Vui lòng nhập lý do điều chuyển nhân sự!', 'warning');
+                    return;
+                }
+
                 const bookingsData = PawpalServices.state?.bookingsData || [];
                 const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
                 if (booking) {
+                    const oldStaff = booking.staff || 'Chưa phân công';
                     booking.staff = newStaff;
+
+                    // Xử lý phạm vi bàn giao các bước chăm sóc
+                    const scope = document.querySelector('input[name="changeStaffScope"]:checked')?.value || 'next_steps';
+                    const logs = booking.carelogs || booking.careLogs || [];
+                    if (scope === 'all_steps') {
+                        logs.forEach(l => l.ktv = newStaff);
+                    } else {
+                        logs.forEach(l => {
+                            if (!l.completed) l.ktv = newStaff;
+                        });
+                    }
+
+                    // Audit trail lịch sử đổi KTV
+                    if (!booking.staffHistory) booking.staffHistory = [];
+                    booking.staffHistory.push({
+                        from: oldStaff,
+                        to: newStaff,
+                        reason: reason,
+                        scope: scope,
+                        timestamp: new Date().toISOString()
+                    });
+
                     try {
                         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                         if (client && booking.dbId) {
@@ -1040,8 +2159,148 @@
                             }
                         }
                     } catch (e) {}
+
                     renderBookingsTable();
-                    PawpalServices.showToast(`Đã đổi KTV phụ trách sang ${newStaff}!`);
+                    if (PawpalServices.subtabs.detail?.renderBookingDetail) {
+                        PawpalServices.subtabs.detail.renderBookingDetail(booking.id);
+                    }
+                    PawpalServices.showToast(`Đã điều phối KTV phụ trách sang ${newStaff}!`);
+                    if (modal) modal.classList.remove('active');
+                }
+            });
+        }
+
+        // ====================================================================
+        // MODAL 5: THÊM PHỤ PHÍ VÀ DỊCH VỤ PHÁT SINH
+        // ====================================================================
+        const surchargePreset = document.getElementById('surchargePresetSelect');
+        const surchargeName = document.getElementById('surchargeNameInput');
+        const surchargeAmount = document.getElementById('surchargeAmountInput');
+        const surchargeCommSelect = document.getElementById('surchargeCommissionSelect');
+        const surchargeCommEarned = document.getElementById('surchargeCommissionEarned');
+
+        function updateSurchargeCommission() {
+            const amount = parseFloat(surchargeAmount?.value || 0);
+            const commRate = parseFloat(surchargeCommSelect?.value || 0);
+            const earned = Math.round((amount * commRate) / 100);
+            if (surchargeCommEarned) {
+                const formatCur = PawpalServices.formatCurrency || (num => `${num.toLocaleString('vi-VN')} đ`);
+                surchargeCommEarned.textContent = (earned > 0 ? `+${formatCur(earned)}` : '0 đ');
+            }
+        }
+
+        if (surchargePreset) {
+            surchargePreset.addEventListener('change', () => {
+                const val = surchargePreset.value;
+                if (val && val !== 'CUSTOM') {
+                    const parts = val.split('|');
+                    if (surchargeName && parts[0]) surchargeName.value = parts[0];
+                    if (surchargeAmount && parts[1]) surchargeAmount.value = parts[1];
+                    updateSurchargeCommission();
+                }
+            });
+        }
+
+        if (surchargeAmount) {
+            surchargeAmount.addEventListener('input', updateSurchargeCommission);
+        }
+        if (surchargeCommSelect) {
+            surchargeCommSelect.addEventListener('change', updateSurchargeCommission);
+        }
+
+        // Chip gợi ý lý do một chạm
+        document.querySelectorAll('#quickSurchargeReasonChips .reason-quick-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const reasonInp = document.getElementById('surchargeReasonInput');
+                if (reasonInp) {
+                    reasonInp.value = chip.textContent.trim();
+                    reasonInp.focus();
+                }
+            });
+        });
+
+        // Nút đính kèm ảnh bằng chứng
+        const btnAddPhoto = document.getElementById('btnAddSurchargePhotoBtn');
+        const photoFileInput = document.getElementById('surchargeProofFileInput');
+        const photoPreviewList = document.getElementById('surchargeProofPreviewList');
+
+        if (btnAddPhoto && photoFileInput) {
+            btnAddPhoto.addEventListener('click', () => photoFileInput.click());
+            photoFileInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files || []);
+                files.forEach(file => {
+                    const url = URL.createObjectURL(file);
+                    surchargeProofImagesTemp.push(url);
+                    if (photoPreviewList) {
+                        const thumb = document.createElement('div');
+                        thumb.className = 'intake-proof-item';
+                        thumb.innerHTML = `
+                            <img src="${url}" alt="Bằng chứng phụ phí" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);">
+                            <span class="btn-del-proof" style="position: absolute; top: -5px; right: -5px; background: #DC2626; color: #fff; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">✕</span>
+                        `;
+                        thumb.style.position = 'relative';
+                        thumb.querySelector('.btn-del-proof').addEventListener('click', () => {
+                            thumb.remove();
+                            surchargeProofImagesTemp = surchargeProofImagesTemp.filter(u => u !== url);
+                        });
+                        photoPreviewList.appendChild(thumb);
+                    }
+                });
+            });
+        }
+
+        // Nút Lưu phụ phí
+        const btnSubmitSurcharge = document.getElementById('btnSubmitAddSurcharge');
+        if (btnSubmitSurcharge) {
+            btnSubmitSurcharge.addEventListener('click', async () => {
+                const modal = document.getElementById('modalAddSurcharge');
+                const bookingId = modal?.getAttribute('data-booking-id');
+                const name = surchargeName?.value.trim();
+                const amount = parseFloat(surchargeAmount?.value || 0);
+                const reason = document.getElementById('surchargeReasonInput')?.value.trim();
+                const consent = document.getElementById('surchargeConsentSelect')?.value;
+                const consentNote = document.getElementById('surchargeConsentNote')?.value.trim();
+
+                if (!name) {
+                    PawpalServices.showToast('Vui lòng nhập tên phụ phí!', 'warning');
+                    surchargeName?.focus();
+                    return;
+                }
+                if (!amount || amount <= 0) {
+                    PawpalServices.showToast('Vui lòng nhập số tiền phụ thu hợp lệ!', 'warning');
+                    surchargeAmount?.focus();
+                    return;
+                }
+                if (!reason) {
+                    PawpalServices.showToast('Vui lòng nhập lý do và mô tả hiện trạng!', 'warning');
+                    document.getElementById('surchargeReasonInput')?.focus();
+                    return;
+                }
+
+                const bookingsData = PawpalServices.state?.bookingsData || [];
+                const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
+                if (booking) {
+                    booking.surcharges = booking.surcharges || [];
+                    booking.surcharges.push({
+                        name,
+                        amount,
+                        reason,
+                        consent,
+                        consentNote,
+                        images: [...surchargeProofImagesTemp],
+                        createdAt: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+                    });
+                    booking.surchargePrice = (booking.surchargePrice || 0) + amount;
+                    booking.total = (booking.basePrice || booking.price || 0) + booking.surchargePrice - (booking.voucherPrice || 0);
+
+                    renderBookingsTable();
+                    updateKPIs();
+                    if (PawpalServices.subtabs?.detail?.renderBookingDetail) {
+                        PawpalServices.subtabs.detail.renderBookingDetail(bookingId);
+                    }
+
+                    const formatCur = PawpalServices.formatCurrency || (num => `${num.toLocaleString('vi-VN')} đ`);
+                    PawpalServices.showToast(`Đã thêm phụ phí ${name} (+${formatCur(amount)}) cho ca ${booking.id}!`);
                     if (modal) modal.classList.remove('active');
                 }
             });

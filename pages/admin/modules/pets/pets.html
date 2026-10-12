@@ -44,7 +44,7 @@
 
                 <div class="filter-row-bottom">
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Loài:</label>
+                        <label class="filter-label">Loài</label>
                         <select class="admin-select" id="petFilterSpecies">
                             <option value="ALL">Tất cả</option>
                             <option value="dog">Chó</option>
@@ -55,7 +55,7 @@
                     </div>
 
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Giống loài:</label>
+                        <label class="filter-label">Giống loài</label>
                         <select class="admin-select" id="petFilterBreed">
                             <option value="ALL">Tất cả</option>
                             <option value="Corgi">Corgi</option>
@@ -68,7 +68,7 @@
                     </div>
 
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Cân nặng:</label>
+                        <label class="filter-label">Cân nặng</label>
                         <select class="admin-select" id="petFilterWeight">
                             <option value="ALL">Tất cả</option>
                             <option value="under5">Dưới 5kg</option>
@@ -79,7 +79,7 @@
                     </div>
 
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Tiêm chủng:</label>
+                        <label class="filter-label">Tiêm chủng</label>
                         <select class="admin-select" id="petFilterVaccine">
                             <option value="ALL">Tất cả</option>
                             <option value="VACCINATED">Đã tiêm đủ</option>
@@ -453,7 +453,7 @@
 
                 <!-- LỜI NHẮN DẶN DÒ CHỦ NUÔI -->
                 <div class="form-group">
-                    <label class="form-label">Lời nhắn dặn dò chủ nuôi (Đồng bộ tức thì sang app của khách):</label>
+                    <label class="form-label">Lời nhắn dặn dò chủ nuôi</label>
                     <textarea class="admin-input textarea-note" rows="2" id="wbOwnerMessage" placeholder="Ví dụ: Lông vùng nách bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà; tai sạch sẽ thơm tho.">Lông vùng nách bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.</textarea>
                 </div>
 
@@ -506,7 +506,7 @@
 
                 <div class="filter-row-bottom">
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Loại nhắc lịch:</label>
+                        <label class="filter-label">Loại nhắc lịch</label>
                         <select class="admin-select" id="reminderFilterType">
                             <option value="ALL">Tất cả</option>
                             <option value="BATH">Tắm sấy định kỳ (quá 14 ngày)</option>
@@ -518,7 +518,7 @@
                     </div>
 
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Trạng thái:</label>
+                        <label class="filter-label">Trạng thái</label>
                         <select class="admin-select" id="reminderFilterStatus">
                             <option value="ALL">Tất cả</option>
                             <option value="UNSENT">Chưa gửi</option>
@@ -557,12 +557,12 @@
     </section>
 
     <!-- ====================================================================
-         MODAL 1: TIẾP NHẬN BÉ CƯNG TẠI QUẦY (THÊM BÉ MỚI)
+         MODAL 1: THÊM BÉ CƯNG MỚI
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalAddPet">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card wide-modal" style="width: 760px; max-width: 95vw;">
             <div class="admin-modal-header">
-                <span class="admin-modal-title">Tiếp nhận bé cưng tại quầy</span>
+                <span class="admin-modal-title">Thêm bé cưng</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalAddPet">Đóng</button>
             </div>
 
@@ -570,7 +570,7 @@
                 <!-- CHỌN CHỦ NUÔI AUTOCOMPLETE THÔNG MINH -->
                 <div class="form-group">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <label class="form-label">Chủ sở hữu (Tìm theo số điện thoại hoặc họ tên):</label>
+                        <label class="form-label">Chủ sở hữu <span style="color: #DC2626;">*</span></label>
                         <button type="button" class="btn-text-action" id="btnOpenQuickAddOwnerModal">Thêm nhanh chủ nuôi</button>
                     </div>
                     <div class="pet-owner-autocomplete-wrapper">
@@ -583,11 +583,11 @@
 
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Tên bé cưng:</label>
+                        <label class="form-label">Tên bé cưng <span style="color: #DC2626;">*</span></label>
                         <input type="text" class="admin-input" id="newPetName" placeholder="Ví dụ: Milu, Đậu Đậu..." required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Loài thú cưng:</label>
+                        <label class="form-label">Loài thú cưng <span style="color: #DC2626;">*</span></label>
                         <select class="admin-select" id="newPetSpecies" required>
                             <option value="dog">Chó</option>
                             <option value="cat">Mèo</option>
@@ -599,19 +599,14 @@
 
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Giống loài:</label>
-                        <input type="text" class="admin-input" id="newPetBreed" placeholder="Ví dụ: Corgi, Poodle, Mèo ALN..." required autocomplete="off">
-                        <div class="adjust-reason-quick-tags" id="newPetBreedChips">
-                            <button type="button" class="reason-quick-chip">Poodle</button>
-                            <button type="button" class="reason-quick-chip">Corgi</button>
-                            <button type="button" class="reason-quick-chip">Golden</button>
-                            <button type="button" class="reason-quick-chip">Phốc sóc</button>
-                            <button type="button" class="reason-quick-chip">Mèo ALN</button>
-                            <button type="button" class="reason-quick-chip">Mèo Ba Tư</button>
+                        <label class="form-label">Giống loài <span style="color: #DC2626;">*</span></label>
+                        <div class="pet-field-autocomplete-wrapper">
+                            <input type="text" class="admin-input" id="newPetBreed" placeholder="Ví dụ: Corgi, Poodle, Mèo ALN..." required autocomplete="off">
+                            <div class="autocomplete-dropdown" id="newPetBreedDropdown" style="display: none;"></div>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Giới tính:</label>
+                        <label class="form-label">Giới tính</label>
                         <select class="admin-select" id="newPetGender">
                             <option value="male">Đực</option>
                             <option value="female">Cái</option>
@@ -621,22 +616,25 @@
 
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Cân nặng tại quầy (kg):</label>
+                        <label class="form-label">Cân nặng (kg) <span style="color: #DC2626;">*</span></label>
                         <input type="number" min="0.1" step="0.1" class="admin-input" id="newPetWeight" placeholder="Ví dụ: 6.5" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Ngày sinh (Dự kiến):</label>
+                        <label class="form-label">Ngày sinh</label>
                         <input type="date" class="admin-input" id="newPetDob" max="2026-10-09">
                     </div>
                 </div>
 
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Màu lông:</label>
-                        <input type="text" class="admin-input" id="newPetColor" placeholder="Ví dụ: Vàng trắng, Xám khói...">
+                        <label class="form-label">Màu lông</label>
+                        <div class="pet-field-autocomplete-wrapper">
+                            <input type="text" class="admin-input" id="newPetColor" placeholder="Ví dụ: Vàng trắng, Xám khói..." autocomplete="off">
+                            <div class="autocomplete-dropdown" id="newPetColorDropdown" style="display: none;"></div>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Xác nhận tiêm phòng (Sổ tiêm):</label>
+                        <label class="form-label">Xác nhận tiêm phòng</label>
                         <select class="admin-select" id="newPetVaccinated">
                             <option value="true">Đã tiêm đủ dại và bệnh truyền nhiễm</option>
                             <option value="false">Chưa xác nhận tiêm</option>
@@ -644,60 +642,19 @@
                     </div>
                 </div>
 
-                <!-- CHECKLIST SƠ BỘ TẠI QUẦY -->
                 <div class="form-group">
-                    <label class="form-label">Kiểm tra thể trạng ban đầu tại quầy:</label>
-                    <div class="checklist-card-grid">
-                        <label class="checklist-checkbox-item">
-                            <input type="checkbox" checked>
-                            <span>Da lông không trầy xước</span>
-                        </label>
-                        <label class="checklist-checkbox-item">
-                            <input type="checkbox" checked>
-                            <span>Tai sạch, không viêm</span>
-                        </label>
-                        <label class="checklist-checkbox-item">
-                            <input type="checkbox" checked>
-                            <span>Lông không vón bết và không ve rận</span>
-                        </label>
-                    </div>
+                    <label class="form-label">Cảnh báo an toàn</label>
+                    <input type="text" class="admin-input" id="newPetAlert" placeholder="Ví dụ: Cắn khi chạm đuôi, sợ sấy lớn...">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Cảnh báo an toàn (Tính hung dữ, cắn khi sấy...):</label>
-                    <input type="text" class="admin-input" id="newPetAlert" placeholder="Ví dụ: Cắn khi chạm đuôi, sợ sấy lớn..." autocomplete="off">
-                    <div class="adjust-reason-quick-tags" id="newPetAlertChips">
-                        <button type="button" class="reason-quick-chip">Hiền lành</button>
-                        <button type="button" class="reason-quick-chip">Sợ sấy lớn</button>
-                        <button type="button" class="reason-quick-chip">Hay giật mình</button>
-                        <button type="button" class="reason-quick-chip">Cắn khi chạm đuôi</button>
-                        <button type="button" class="reason-quick-chip">Khó cắt móng</button>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Tiền sử dị ứng sữa tắm hoặc thức ăn:</label>
-                    <input type="text" class="admin-input" id="newPetAllergy" placeholder="Ví dụ: Dị ứng tinh dầu tràm, dị ứng hải sản..." autocomplete="off">
-                    <div class="adjust-reason-quick-tags" id="newPetAllergyChips">
-                        <button type="button" class="reason-quick-chip">Không có dị ứng</button>
-                        <button type="button" class="reason-quick-chip">Dị ứng tinh dầu tràm</button>
-                        <button type="button" class="reason-quick-chip">Dị ứng hải sản</button>
-                        <button type="button" class="reason-quick-chip">Da nhạy cảm</button>
-                    </div>
-                </div>
-
-                <!-- IN THẺ ĐEO CỔ PREVIEW -->
-                <div class="collar-tag-preview">
-                    <div style="flex: 1;">
-                        <div style="font-size: 13px; font-weight: 700; color: var(--text-heading);">Thẻ đeo cổ chống thất lạc PawPal</div>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Tự động in thẻ mã QR và số điện thoại chủ kèm tên bé khi bấm lưu tiếp nhận.</div>
-                    </div>
-                    <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnPreviewCollarTagFromAdd">Xem trước thẻ in (80mm)</button>
+                    <label class="form-label">Tiền sử dị ứng</label>
+                    <input type="text" class="admin-input" id="newPetAllergy" placeholder="Ví dụ: Dị ứng tinh dầu tràm, dị ứng hải sản...">
                 </div>
 
                 <div class="modal-actions-footer">
                     <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalAddPet">Hủy</button>
-                    <button type="submit" class="admin-btn admin-btn-primary" id="btnSubmitAddPet">Lưu hồ sơ tiếp nhận</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitAddPet">Lưu bé cưng</button>
                 </div>
             </form>
         </div>
@@ -707,31 +664,31 @@
          MODAL 2: CÂN BÉ VÀ ÁP DỤNG MA TRẬN GIÁ DỊCH VỤ
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalWeighPet">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card" style="width: 540px; max-width: 92vw;">
             <div class="admin-modal-header">
-                <span class="admin-modal-title">Cân bé và áp dụng ma trận giá dịch vụ</span>
+                <span class="admin-modal-title">Cân bé và áp dụng bảng giá</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalWeighPet">Đóng</button>
             </div>
 
             <form id="formWeighPet" onsubmit="return false;">
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Tên bé cưng:</label>
+                        <label class="form-label">Tên bé cưng</label>
                         <input type="text" class="admin-input" id="weighPetName" value="Milu" readonly style="background-color: #F1F5F3;">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Cân nặng trước đó:</label>
+                        <label class="form-label">Cân nặng trước đó</label>
                         <input type="text" class="admin-input" id="weighPetOldWeight" value="8.5 kg" readonly style="background-color: #F1F5F3;">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Cân nặng thực tế vừa cân tại quầy (kg):</label>
+                    <label class="form-label">Cân nặng thực tế (kg) <span style="color: #DC2626;">*</span></label>
                     <input type="number" min="0.1" step="0.1" class="admin-input" id="weighPetNewWeight" value="8.6" required style="font-size: 18px; font-weight: 700; color: #236B48;">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Lý do hoặc ghi chú cân thể trọng:</label>
+                    <label class="form-label">Lý do hoặc ghi chú cân thể trọng</label>
                     <input type="text" class="admin-input" id="weighPetNote" placeholder="Ví dụ: Cân định kỳ hàng tháng, kiểm tra trước khi làm spa..." autocomplete="off">
                     <div class="adjust-reason-quick-tags" id="weighPetNoteChips">
                         <button type="button" class="reason-quick-chip">Cân định kỳ</button>
@@ -743,8 +700,8 @@
 
                 <!-- BẢNG MA TRẬN GIÁ DỊCH VỤ TỰ ĐỘNG NHẢY -->
                 <div class="form-group">
-                    <label class="form-label">Bảng ma trận giá dịch vụ tương ứng:</label>
-                    <div style="border: 1px solid var(--border-neutral); border-radius: var(--admin-radius); padding: 12px; background-color: #FAFCFA; font-size: 13px;">
+                    <label class="form-label">Bảng ma trận giá dịch vụ tương ứng</label>
+                    <div style="border: 1px solid var(--border-neutral); border-radius: var(--admin-radius); padding: 12px; background-color: transparent; font-size: 13px;">
                         <div style="display: flex; justify-content: space-between; padding: 4px 0;">
                             <span>Phân khúc cân nặng:</span>
                             <strong id="weighTierResult" style="color: #236B48;">5 - 10 kg</strong>
@@ -766,7 +723,7 @@
 
                 <div class="modal-actions-footer">
                     <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalWeighPet">Hủy</button>
-                    <button type="submit" class="admin-btn admin-btn-primary" id="btnSubmitWeigh">Lưu cân nặng mới</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitWeigh">Lưu cân nặng</button>
                 </div>
             </form>
         </div>
@@ -776,7 +733,7 @@
          MODAL 3: GỬI TIN NHẮN ZALO / SMS CHĂM SÓC ĐỊNH KỲ
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalSendReminder">
-        <div class="admin-modal-card" style="width: 540px;">
+        <div class="admin-modal-card" style="width: 540px; max-width: 92vw;">
             <div class="admin-modal-header">
                 <span class="admin-modal-title">Gửi tin nhắn chăm sóc định kỳ</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalSendReminder">Đóng</button>
@@ -785,17 +742,17 @@
             <form id="formSendReminder" onsubmit="return false;">
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Khách hàng nhận tin:</label>
+                        <label class="form-label">Khách hàng nhận tin</label>
                         <input type="text" class="admin-input" id="reminderModalOwner" value="Nguyễn Văn An" readonly style="background-color: #F1F5F3;">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Bé cưng:</label>
+                        <label class="form-label">Bé cưng</label>
                         <input type="text" class="admin-input" id="reminderModalPet" value="Milu" readonly style="background-color: #F1F5F3;">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Chọn mẫu tin nhắn chăm sóc (Template):</label>
+                    <label class="form-label">Chọn mẫu tin nhắn chăm sóc</label>
                     <select class="admin-select" id="reminderTemplateSelect">
                         <option value="SPA_BATH">Mẫu 1: Nhắc tắm sấy và vệ sinh định kỳ (Tặng voucher 10% Spa)</option>
                         <option value="GROOM">Mẫu 2: Nhắc cắt tỉa tạo kiểu lông (Chải lông xả rối và cắt móng)</option>
@@ -806,11 +763,11 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Kênh gửi tin nhắn:</label>
+                    <label class="form-label">Kênh gửi tin nhắn</label>
                     <div style="display: flex; gap: 16px; font-size: 13px;">
                         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                             <input type="radio" name="reminderChannel" value="ZALO" checked accent-color="#236B48">
-                            <span>Zalo ZNS và Official Account (Khuyên dùng)</span>
+                            <span>Zalo ZNS và Official Account</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                             <input type="radio" name="reminderChannel" value="SMS" accent-color="#236B48">
@@ -821,7 +778,7 @@
 
                 <div class="form-group">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <label class="form-label" style="margin-bottom: 0;">Nội dung tin nhắn gửi khách:</label>
+                        <label class="form-label" style="margin-bottom: 0;">Nội dung tin nhắn gửi khách</label>
                         <button type="button" class="btn-text-action" id="btnCopyReminderText">Sao chép nội dung</button>
                     </div>
                     <textarea class="admin-input textarea-note" rows="4" id="reminderMessageContent">PawPal mến chào Sen Nguyễn Văn An! Bé Milu đã hơn 2 tuần chưa ghé spa làm đẹp rồi đó ạ. PawPal gửi tặng bé voucher ưu đãi 10% dịch vụ Spa trong tuần này. Sen đặt lịch ngay cho bé nhé!</textarea>
@@ -833,7 +790,7 @@
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalSendReminder">Hủy</button>
-                        <button type="submit" class="admin-btn admin-btn-primary" id="btnSubmitSendReminder">Gửi tin nhắn ngay</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitSendReminder">Gửi tin nhắn</button>
                     </div>
                 </div>
             </form>
@@ -844,14 +801,14 @@
          MODAL 4: CHI TIẾT NHẬT KÝ CHĂM SÓC (BEFORE / AFTER VÀ CHECKLIST)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalViewCareLogDetail">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card" style="width: 720px; max-width: 95vw;">
             <div class="admin-modal-header">
                 <span class="admin-modal-title" id="carelogModalTitle">Chi tiết ca làm: Tắm sấy dưỡng ẩm và Cắt mài móng</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalViewCareLogDetail">Đóng</button>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 16px;">
-                <div style="font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-neutral); padding-bottom: 8px;">
+                <div style="font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <span id="carelogModalTime">Thời gian: 25/09/2026 14:30</span> • <span id="carelogModalGroomer">KTV: Hoàng Tuấn</span>
                     </div>
@@ -927,7 +884,7 @@
          MODAL 5: CHỈNH SỬA HỒ SƠ THÚ CƯNG (EDIT PET PROFILE)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalEditPetProfile">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card wide-modal" style="width: 760px; max-width: 95vw;">
             <div class="admin-modal-header">
                 <span class="admin-modal-title">Chỉnh sửa hồ sơ bé cưng</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalEditPetProfile">Đóng</button>
@@ -937,7 +894,7 @@
                 <input type="hidden" id="editPetCode" value="PET-001">
 
                 <div class="form-group">
-                    <label class="form-label">Chủ sở hữu (Tìm theo số điện thoại hoặc họ tên):</label>
+                    <label class="form-label">Chủ sở hữu</label>
                     <div class="pet-owner-autocomplete-wrapper">
                         <input type="text" class="admin-input" id="editPetOwnerInput" placeholder="Nhập số điện thoại hoặc họ tên để tìm nhanh..." autocomplete="off">
                         <input type="hidden" id="editPetOwner" value="">
@@ -948,11 +905,11 @@
 
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Tên bé cưng (*):</label>
+                        <label class="form-label">Tên bé cưng <span style="color: #DC2626;">*</span></label>
                         <input type="text" class="admin-input" id="editPetName" placeholder="Tên bé cưng..." required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Loài thú cưng (*):</label>
+                        <label class="form-label">Loài thú cưng <span style="color: #DC2626;">*</span></label>
                         <select class="admin-select" id="editPetSpecies" required>
                             <option value="dog">Chó</option>
                             <option value="cat">Mèo</option>
@@ -964,18 +921,14 @@
 
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Giống loài (*):</label>
-                        <input type="text" class="admin-input" id="editPetBreed" placeholder="Ví dụ: Corgi, Poodle..." required autocomplete="off">
-                        <div class="adjust-reason-quick-tags" id="editPetBreedChips">
-                            <button type="button" class="reason-quick-chip">Poodle</button>
-                            <button type="button" class="reason-quick-chip">Corgi</button>
-                            <button type="button" class="reason-quick-chip">Golden</button>
-                            <button type="button" class="reason-quick-chip">Phốc sóc</button>
-                            <button type="button" class="reason-quick-chip">Mèo ALN</button>
+                        <label class="form-label">Giống loài <span style="color: #DC2626;">*</span></label>
+                        <div class="pet-field-autocomplete-wrapper">
+                            <input type="text" class="admin-input" id="editPetBreed" placeholder="Ví dụ: Corgi, Poodle..." required autocomplete="off">
+                            <div class="autocomplete-dropdown" id="editPetBreedDropdown" style="display: none;"></div>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Giới tính:</label>
+                        <label class="form-label">Giới tính</label>
                         <select class="admin-select" id="editPetGender">
                             <option value="Đực">Đực</option>
                             <option value="Cái">Cái</option>
@@ -985,22 +938,25 @@
 
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Cân nặng hiện tại (kg):</label>
+                        <label class="form-label">Cân nặng (kg) <span style="color: #DC2626;">*</span></label>
                         <input type="number" step="0.1" class="admin-input" id="editPetWeight" placeholder="Ví dụ: 8.5" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Ngày sinh:</label>
+                        <label class="form-label">Ngày sinh</label>
                         <input type="date" class="admin-input" id="editPetDob">
                     </div>
                 </div>
 
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Màu lông:</label>
-                        <input type="text" class="admin-input" id="editPetColor" placeholder="Ví dụ: Vàng trắng, Xám tro...">
+                        <label class="form-label">Màu lông</label>
+                        <div class="pet-field-autocomplete-wrapper">
+                            <input type="text" class="admin-input" id="editPetColor" placeholder="Ví dụ: Vàng trắng, Xám tro..." autocomplete="off">
+                            <div class="autocomplete-dropdown" id="editPetColorDropdown" style="display: none;"></div>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Trạng thái hồ sơ:</label>
+                        <label class="form-label">Trạng thái hồ sơ</label>
                         <select class="admin-select" id="editPetStatus">
                             <option value="Đang nuôi">Đang nuôi</option>
                             <option value="Lưu trú Hotel">Lưu trú Hotel</option>
@@ -1010,36 +966,23 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Cảnh báo an toàn (Hiển thị nổi bật dải đỏ khi Groomer tiếp nhận):</label>
-                    <input type="text" class="admin-input" id="editPetAlert" placeholder="Ví dụ: Bé hay cắn khi chạm đuôi..." autocomplete="off">
-                    <div class="adjust-reason-quick-tags" id="editPetAlertChips">
-                        <button type="button" class="reason-quick-chip">Hiền lành</button>
-                        <button type="button" class="reason-quick-chip">Sợ sấy lớn</button>
-                        <button type="button" class="reason-quick-chip">Hay giật mình</button>
-                        <button type="button" class="reason-quick-chip">Cắn khi chạm đuôi</button>
-                        <button type="button" class="reason-quick-chip">Khó cắt móng</button>
-                    </div>
+                    <label class="form-label">Cảnh báo an toàn</label>
+                    <input type="text" class="admin-input" id="editPetAlert" placeholder="Ví dụ: Bé hay cắn khi chạm đuôi...">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Tiền sử dị ứng sữa tắm, thức ăn hoặc hóa chất:</label>
-                    <input type="text" class="admin-input" id="editPetAllergy" placeholder="Ví dụ: Dị ứng tinh dầu tràm, hải sản..." autocomplete="off">
-                    <div class="adjust-reason-quick-tags" id="editPetAllergyChips">
-                        <button type="button" class="reason-quick-chip">Không có dị ứng</button>
-                        <button type="button" class="reason-quick-chip">Dị ứng tinh dầu tràm</button>
-                        <button type="button" class="reason-quick-chip">Dị ứng hải sản</button>
-                        <button type="button" class="reason-quick-chip">Da nhạy cảm</button>
-                    </div>
+                    <label class="form-label">Tiền sử dị ứng</label>
+                    <input type="text" class="admin-input" id="editPetAllergy" placeholder="Ví dụ: Dị ứng tinh dầu tràm, hải sản...">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Tập tính và lưu ý chăm sóc:</label>
+                    <label class="form-label">Tập tính và lưu ý</label>
                     <textarea class="admin-input textarea-note" rows="3" id="editPetNotes" placeholder="Ghi chú sở thích, tính cách bé cưng..."></textarea>
                 </div>
 
                 <div class="modal-actions-footer">
                     <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalEditPetProfile">Hủy</button>
-                    <button type="submit" class="admin-btn admin-btn-primary" id="btnSubmitEditPetProfile">Lưu thay đổi</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitEditPetProfile">Lưu thay đổi</button>
                 </div>
             </form>
         </div>
@@ -1049,23 +992,23 @@
          MODAL 6: THÊM NHANH CHỦ NUÔI TẠI QUẦY TIẾP NHẬN
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalQuickAddOwner">
-        <div class="admin-modal-card" style="width: 500px;">
+        <div class="admin-modal-card" style="width: 500px; max-width: 92vw;">
             <div class="admin-modal-header">
-                <span class="admin-modal-title">Thêm nhanh khách hàng mới</span>
+                <span class="admin-modal-title">Thêm nhanh chủ nuôi</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalQuickAddOwner">Đóng</button>
             </div>
             <form id="formQuickAddOwner" onsubmit="return false;">
                 <div class="form-group">
-                    <label class="form-label">Họ và tên khách hàng (*):</label>
+                    <label class="form-label">Họ và tên khách hàng <span style="color: #DC2626;">*</span></label>
                     <input type="text" class="admin-input" id="quickOwnerName" placeholder="Ví dụ: Hoàng Mai Ly" required>
                 </div>
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Số điện thoại (*):</label>
+                        <label class="form-label">Số điện thoại <span style="color: #DC2626;">*</span></label>
                         <input type="tel" class="admin-input" id="quickOwnerPhone" placeholder="Ví dụ: 0988112233" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Hạng thành viên:</label>
+                        <label class="form-label">Hạng thành viên</label>
                         <select class="admin-select" id="quickOwnerTier">
                             <option value="Khách mới">Khách mới</option>
                             <option value="Đồng">Hạng Đồng</option>
@@ -1075,12 +1018,12 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Địa chỉ liên hệ:</label>
+                    <label class="form-label">Địa chỉ liên hệ</label>
                     <input type="text" class="admin-input" id="quickOwnerAddress" placeholder="Ví dụ: 45 Lê Duẩn, Bến Nghé, Quận 1">
                 </div>
                 <div class="modal-actions-footer">
                     <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalQuickAddOwner">Hủy</button>
-                    <button type="submit" class="admin-btn admin-btn-primary" id="btnSubmitQuickAddOwner">Lưu và Chọn ngay</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitQuickAddOwner">Lưu chủ nuôi</button>
                 </div>
             </form>
         </div>
@@ -1090,9 +1033,9 @@
          MODAL 7: XEM TRƯỚC VÀ IN THẺ ĐEO CỔ / THẺ CHUỒNG (NHÃN NHIỆT 80MM)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalCollarTagPreview">
-        <div class="admin-modal-card" style="width: 480px;">
+        <div class="admin-modal-card" style="width: 480px; max-width: 92vw;">
             <div class="admin-modal-header">
-                <span class="admin-modal-title">Xem trước thẻ đeo cổ và thẻ chuồng (80mm)</span>
+                <span class="admin-modal-title">Xem trước thẻ đeo cổ và thẻ chuồng</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalCollarTagPreview">Đóng</button>
             </div>
             
@@ -1149,7 +1092,7 @@
 
             <div class="modal-actions-footer" style="margin-top: 20px;">
                 <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalCollarTagPreview">Đóng</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmSendPrintCollar">Xác nhận gửi lệnh in nhiệt</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmSendPrintCollar">In thẻ đeo cổ</button>
             </div>
         </div>
     </div>
@@ -1165,33 +1108,33 @@
             </div>
             <form id="formAddVaccine" onsubmit="return false;">
                 <div class="form-group">
-                    <label class="form-label">Loại vắc-xin hoặc dịch tễ ghi trên sổ (*):</label>
+                    <label class="form-label">Loại vắc-xin hoặc dịch tễ ghi trên sổ <span style="color: #DC2626;">*</span></label>
                     <select class="admin-select" id="newVaccineType" required>
-                        <option value="Vắc-xin phòng dại (Rabies)">Vắc-xin phòng dại (Rabies)</option>
-                        <option value="Vắc-xin 7 bệnh cho Chó (Vanguard Plus 5/CV-L)">Vắc-xin 7 bệnh cho Chó (Vanguard Plus 5/CV-L)</option>
-                        <option value="Vắc-xin 4 bệnh cho Mèo (PureVax hoặc Felocell)">Vắc-xin 4 bệnh cho Mèo (PureVax hoặc Felocell)</option>
-                        <option value="Xổ giun định kỳ và Nhỏ gáy ve rận">Xổ giun định kỳ và Nhỏ gáy ve rận (NexGard hoặc Revolution)</option>
+                        <option value="Vắc-xin phòng dại">Vắc-xin phòng dại</option>
+                        <option value="Vắc-xin 7 bệnh cho chó">Vắc-xin 7 bệnh cho chó</option>
+                        <option value="Vắc-xin 4 bệnh cho mèo">Vắc-xin 4 bệnh cho mèo</option>
+                        <option value="Xổ giun định kỳ và nhỏ gáy ve rận">Xổ giun định kỳ và nhỏ gáy ve rận</option>
                         <option value="Tiêm phòng nấm da và ghẻ">Tiêm phòng nấm da và ghẻ</option>
-                        <option value="Khác">Khác (Tự nhập tên vắc-xin)</option>
+                        <option value="Khác">Khác</option>
                     </select>
                 </div>
                 <div class="form-group" id="groupCustomVaccineName" style="display: none;">
-                    <label class="form-label">Tên mũi tiêm tùy chỉnh (*):</label>
+                    <label class="form-label">Tên mũi tiêm tùy chỉnh <span style="color: #DC2626;">*</span></label>
                     <input type="text" class="admin-input" id="newCustomVaccineName" placeholder="Ví dụ: Vắc-xin Ho cũi chó...">
                 </div>
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Ngày tiêm gần nhất (*):</label>
+                        <label class="form-label">Ngày tiêm gần nhất <span style="color: #DC2626;">*</span></label>
                         <input type="date" class="admin-input" id="newVaccineDate" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Ngày tái chủng dự kiến:</label>
+                        <label class="form-label">Ngày tái chủng dự kiến</label>
                         <input type="date" class="admin-input" id="newVaccineNextDate">
                     </div>
                 </div>
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Nguồn đối chiếu hoặc cơ sở tiêm ngoài:</label>
+                        <label class="form-label">Nguồn đối chiếu hoặc cơ sở tiêm ngoài</label>
                         <input type="text" class="admin-input" id="newVaccinePlace" placeholder="Ví dụ: Sổ tiêm đối chiếu, PK Thú y 24/7..." value="Sổ tiêm đối chiếu" autocomplete="off">
                         <div class="adjust-reason-quick-tags" id="newVaccinePlaceChips">
                             <button type="button" class="reason-quick-chip">Sổ tiêm đối chiếu</button>
@@ -1200,7 +1143,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Trạng thái:</label>
+                        <label class="form-label">Trạng thái</label>
                         <select class="admin-select" id="newVaccineStatus">
                             <option value="Đã tiêm đủ">Đã tiêm đủ</option>
                             <option value="Đã thực hiện">Đã thực hiện</option>
@@ -1211,7 +1154,7 @@
                 </div>
                 <div class="modal-actions-footer">
                     <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalAddVaccine">Hủy</button>
-                    <button type="submit" class="admin-btn admin-btn-primary" id="btnSubmitAddVaccine">Lưu vào hồ sơ bé</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitAddVaccine">Lưu sổ tiêm</button>
                 </div>
             </form>
         </div>
@@ -1227,11 +1170,8 @@
         <div class="admin-modal-card preview-user-diary-modal-card" style="width: 720px; max-width: 95vw; padding: 0; overflow: hidden; background: #F4FAF7;">
             <!-- MODAL HEADER -->
             <div style="padding: 16px 22px; border-bottom: 1px solid var(--border-neutral); display: flex; justify-content: space-between; align-items: center; background: #FFFFFF;">
-                <div>
-                    <div style="font-size: 15px; font-weight: 700; color: var(--text-heading);">Xem trước giao diện nhật ký khách hàng</div>
-                    <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">Mô phỏng hiển thị trên cổng thành viên PawPal Sen App</div>
-                </div>
-                <button type="button" class="btn-modal-close" data-close-modal="modalPreviewAppDiary" style="font-size: 14px; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 4px 8px;">✕</button>
+                <span class="admin-modal-title">Xem trước giao diện nhật ký khách hàng</span>
+                <button type="button" class="btn-modal-close" data-close-modal="modalPreviewAppDiary">Đóng</button>
             </div>
 
             <!-- MODAL SCROLLABLE CONTENT (ĐỒNG BỘ 100% VỚI DIARY CỦA USER APP) -->
@@ -1512,7 +1452,7 @@
 
             <!-- MODAL FOOTER -->
             <div style="padding: 12px 20px; background: #FFFFFF; border-top: 1px solid var(--border-neutral); display: flex; justify-content: flex-end;">
-                <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalPreviewAppDiary">Đóng xem trước</button>
+                <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalPreviewAppDiary">Đóng</button>
             </div>
         </div>
     </div>
@@ -1521,12 +1461,11 @@
          MODAL 10: THƯ VIỆN CHỌN ẢNH THỰC TẾ CA LÀM
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalSelectPhoto">
-        <div class="admin-modal-card" style="width: 540px;">
+        <div class="admin-modal-card" style="width: 540px; max-width: 92vw;">
             <div class="admin-modal-header">
                 <span class="admin-modal-title" id="selectPhotoModalTitle">Chọn ảnh thực tế</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalSelectPhoto">Đóng</button>
             </div>
-            <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px;">Nhấp chọn một ảnh dưới đây để cập nhật vào ca làm việc:</div>
             
             <div class="photo-picker-grid" id="photoPickerGrid">
                 <!-- Danh sách ảnh thumbnail được nạp động từ javascript -->
@@ -1557,7 +1496,7 @@
                 Bạn có chắc chắn muốn thực hiện thao tác này không?
             </div>
             <div class="modal-actions-footer">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelPetConfirm" data-close-modal="modalConfirmPetAction">Hủy bỏ</button>
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelPetConfirm" data-close-modal="modalConfirmPetAction">Hủy</button>
                 <button type="button" class="admin-btn admin-btn-primary" id="btnAcceptPetConfirm">Đồng ý</button>
             </div>
         </div>

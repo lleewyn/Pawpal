@@ -36,33 +36,53 @@
 * **Khóa Cố Định Màn Hình & Triệt Tiêu Cuộn Nảy (Viewport Lock & Anti-Overscroll)**:
   - `html, body.admin-body`: BẮT BUỘC áp dụng `height: 100%; width: 100%; overflow: hidden; overscroll-behavior: none; overscroll-behavior-y: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;` để khóa cứng toàn bộ khung màn hình ngoài, triệt tiêu 100% hiện tượng lướt quá tay bị hở mép trên/dưới (Rubber-band scroll bounce).
   - Khung nội dung cuộn bên trong (`.admin-preview-content`, Drawer, Modal card): Áp dụng `overscroll-behavior: contain;` để khi cuộn chạm đỉnh/đáy sẽ dừng dứt khoát tại chỗ, không bao giờ truyền sự kiện cuộn làm nảy hay rung giật khung layout chính.
-* **Avatar Cá Nhân Luôn Là Hình Tròn (`border-radius: 50%`)**:
-  - Toàn bộ avatar hiển thị hình đại diện hoặc chữ cái viết tắt của Kỹ thuật viên, Nhân viên, Khách hàng, Quản trị viên (`.staff-avatar-initials`, `.customer-avatar`, `.user-avatar`...) BẮT BUỘC có `border-radius: 50%;` hình tròn hoàn hảo, tạo sự phân biệt trực quan sinh động so với hình khối bo góc 9px của khung thẻ và nút bấm.
+* **Avatar Cá Nhân Trong Bảng & Hồ Sơ Luôn Là Hình Tròn (`border-radius: 50%`)**:
+  - Toàn bộ avatar hiển thị hình đại diện hoặc chữ cái viết tắt của Kỹ thuật viên, Nhân viên, Khách hàng, Quản trị viên trong bảng dữ liệu hoặc drawer (`.staff-avatar-initials`, `.customer-avatar`, `.user-avatar`...) BẮT BUỘC có `border-radius: 50%;` hình tròn hoàn hảo, tạo sự phân biệt trực quan sinh động so với hình khối bo góc 9px của khung thẻ và nút bấm.
 * **Bố Cục Modal & Tiêu Chuẩn Kích Thước (Modal Layout & Width Standards)**:
   - **Khoảng cách thoáng & Không kẻ ngang**: Modal có padding `26px 30px;`, các nhóm trường cách đều `gap: 16px;`. Tuyệt đối không kẻ đường viền xám 100% cắt ngang chia vụn vặt ở Header và Footer của Modal (`border-bottom: none; border-top: none;`).
   - **Tiêu chuẩn chiều rộng Modal (Width Standards)**:
     * *Modal xác nhận / Hộp thoại ngắn*: `width: 480px - 540px; max-width: 92vw;`
+    * *Modal Form nhỏ / Thêm nhanh thực thể (Thêm nhanh chủ nuôi, Cân nặng, Hẹn giờ)*: `width: 500px - 540px; max-width: 92vw;`
     * *Modal Form chuẩn (Thêm khách, Sổ địa chỉ, Thêm dịch vụ)*: `width: 560px - 600px; max-width: 94vw;`
-    * *Modal Danh sách / Đánh giá sản phẩm / Lịch sử / Bộ lọc nhiều chip*: `width: 720px - 760px; max-width: 95vw;` để đảm bảo thanh tóm tắt chỉ số, các nút lọc và nội dung hiển thị dàn hàng ngang thoáng đãng, triệt tiêu hoàn toàn hiện tượng rớt dòng chật chội.
+    * *Modal Danh sách / Thêm bé cưng 2 cột / Đánh giá sản phẩm / Lịch sử / Bộ lọc nhiều chip*: `width: 720px - 760px; max-width: 95vw;` để đảm bảo các trường 2 cột dàn hàng ngang thoáng đãng, thanh tóm tắt chỉ số và các nút lọc không bị rớt dòng chật chội.
     * *Modal Bảng ma trận / Soạn thảo / Hồ sơ mở rộng*: `width: 880px - 1000px; max-width: 96vw;`
   - **Đa địa chỉ & 1 địa chỉ mặc định**: Hỗ trợ 1 khách hàng có thể lưu nhiều địa chỉ nhận hàng, có radio chọn đúng 1 "Địa chỉ mặc định" (thẻ mặc định có viền xanh `#C3DEC7`, nền `#F4FAF6`), các địa chỉ khác là địa chỉ phụ (có nút text `Xóa`). Nút `Thêm địa chỉ` text-only màu xanh thương hiệu `#236B48`.
+  - **Chuẩn Hóa Bộ Ba Nút Thao Tác Trong Modal (Đóng, Hủy, Lưu - Modal Action Standards)**:
+    * *Nút Đóng và Hủy*: BẮT BUỘC sử dụng thuộc tính `data-close-modal="[modalId]"` và được điều khiển bởi bộ lắng nghe sự kiện toàn cục. Đảm bảo hỗ trợ đồng thời 4 hình thức đóng tức thì: bấm nút "Đóng" (`.btn-modal-close`), bấm nút "Hủy" (`.admin-btn-secondary`), click vào vùng nền tối backdrop bên ngoài modal-card, và nhấn phím `Escape`.
+    * *Nút Lưu & Form Submit*: Nút "Lưu" BẮT BUỘC đặt `type="button"` (viết `Lưu bé cưng`, `Lưu chủ nuôi`, `Lưu thay đổi`... theo Sentence Case), tuyệt đối không để `type="submit"` không kiểm soát. Thẻ `<form>` BẮT BUỘC có `onsubmit="return false;"` và trong JS chặn `form.addEventListener('submit', (e) => e.preventDefault());` để triệt tiêu hoàn toàn hiện tượng reload trang web làm mất dữ liệu hoặc xung đột request bất đồng bộ (async API) với Supabase.
+    * *Modal Con Tạo Nhanh Thực Thể (Sub-Modal Quick Creation)*: Khi tạo nhanh thực thể phụ (ví dụ: Thêm nhanh chủ nuôi từ modal Thêm bé cưng): Sau khi lưu thành công vào CSDL, hệ thống phải **tự động chọn ngay thực thể đó** cho form chính, reset form con và tự động đóng modal con, không bắt người dùng phải tìm kiếm lại từ đầu. Cột `email` của khách tạo nhanh tại quầy BẮT BUỘC để `null` (không dùng chuỗi rỗng `''` gây vi phạm UNIQUE constraint trong Supabase).
 * **Chuẩn Hóa Ô Tìm Kiếm, Chọn Thực Thể & Gợi Ý Trong Modal (Custom Autocomplete Popover & Suggestion Chips)**:
   - **Cấm 100% sử dụng thẻ `<datalist>` mặc định của trình duyệt**: Tuyệt đối không dùng `<datalist>` vì gây popup thô kệch, không đồng bộ với hệ thống, không kiểm soát được vị trí và đè lấp che khuất các ô nhập liệu bên dưới.
-  - **Bắt buộc dùng Custom Autocomplete Popover đồng bộ hệ thống (`.customer-autocomplete-popover`)**:
-    * Khung bọc `.customer-autocomplete-wrapper` có `position: relative; width: 100%;`.
+  - **Bắt buộc dùng Custom Autocomplete Popover đồng bộ hệ thống (`.autocomplete-dropdown`, `.customer-autocomplete-popover`)**:
+    * Khung bọc `.pet-field-autocomplete-wrapper`, `.customer-autocomplete-wrapper` có `position: relative; width: 100%;`.
     * Popover nằm ngay dưới ô nhập (`position: absolute; top: calc(100% + 4px); left: 0; right: 0;`), bo góc chuẩn 9px (`border-radius: var(--admin-radius);`), viền mảnh `--border-neutral: #ECF2EE;`, đổ bóng thanh thoát `box-shadow: 0 10px 28px rgba(35, 107, 72, 0.14);`, cuộn tối đa `max-height: 240px; overscroll-behavior: contain;`, `z-index: 2500;`.
-    * Mỗi dòng mục chọn (`.customer-autocomplete-item`):
-      - Avatar hình tròn 50% (`border-radius: 50%`) mang chữ cái viết tắt hoặc màu sắc thương hiệu (`background-color: #DCEEE2; color: #165335;`).
-      - Tên thực thể in đậm rõ nét (`font-weight: 600; color: #203A2C;`).
-      - Dòng thông tin phụ: Số điện thoại, mã định danh, hoặc tên bé cưng (`color: #4F7A65; font-size: 11.5px;`).
-      - Huy hiệu bên phải: Hạng thẻ & Điểm (ví dụ: `Bạc • 150 điểm`), giống loài, hoặc trạng thái.
+    * **Tuyệt Đối Không Để Icon / Avatar Hình Tròn Trong Autocomplete Popover (100% Flat Text-Only)**: Trong các mục lựa chọn dropdown (chọn chủ nuôi, giống loài, màu lông...), triệt tiêu hoàn toàn các icon hay avatar tròn mang chữ cái viết tắt (`.autocomplete-avatar`). Trình bày 100% thuần chữ phẳng:
+      - Bên trái: Tên thực thể in đậm rõ nét (`font-weight: 600; color: #203A2C;`), dòng thông tin phụ bên dưới (Số điện thoại, mã định danh, số bé cưng đang nuôi, hoặc phân loài) dùng chữ mỏng nhẹ (`color: #4F7A65; font-size: 11.5px;`).
+      - Bên phải: Huy hiệu badge (`Hạng Bạc`, `Phổ biến`, `7 bé trong tiệm`...).
       - Hover / Active: Đổi màu nền xanh xô thơm nhẹ `#EEF5F1`, chuyển động mượt mà.
-    * Khi bấm chọn: Điền dữ liệu chính xác, tự động đóng popover, và hiển thị thẻ tóm tắt xác nhận lựa chọn (`.adjust-customer-selected-card`): Nền `#EEF5F1`, bo góc 9px, chữ Forest Green `#236B48`, hiển thị rõ đối tượng đã chọn.
+    * Khi bấm chọn: Điền dữ liệu chính xác, tự động đóng popover, và hiển thị thẻ tóm tắt xác nhận lựa chọn: Nền `#EEF5F1`, bo góc 9px, chữ Forest Green `#236B48`, có nút text `✕ Bỏ chọn`.
+  - **Liên Kết Thực Thể & Tự Động Điền Thông Minh Trong Form/Modal (Smart Entity Auto-Fill Relations)**:
+    * *Khi chọn Khách hàng*: BẮT BUỘC **tự động điền ngay Số điện thoại (SĐT)** của khách hàng vào ô SĐT tương ứng; tự động nạp danh sách thú cưng của khách đó vào ô Bé cưng (tự điền bé đầu tiên nếu có, điền tiền sử/dị ứng/cảnh báo an toàn vào ô Cảnh báo sức khỏe). Hiển thị thẻ tóm tắt xác nhận lựa chọn (`.adjust-customer-selected-card`, nền `#EEF5F1`, chữ Forest Green `#236B48`, có nút text `✕ Bỏ chọn`).
+    * *Khi chọn Bé cưng trước*: Nếu ô khách hàng và SĐT đang trống, hệ thống phải tự động điền ngược lại tên Chủ nuôi và Số điện thoại của chủ nuôi vào các ô tương ứng.
+  - **Chọn Gói Dịch Vụ Cụ Thể & Hiển Thị Trường Đặc Thù Có Điều Kiện (Searchable Service Autocomplete & Conditional Fields)**:
+    * *Ô chọn Gói dịch vụ cụ thể*: BẮT BUỘC sử dụng Custom Autocomplete Popover (hoặc ô tìm kiếm có danh sách sổ xuống với Tên gói in đậm, Thời lượng/mô tả và Mức giá khởi điểm bên phải), tuyệt đối không để thẻ `select` trơ trọi một dòng rỗng hoặc không có dữ liệu khi mở modal.
+    * *Hiển thị trường đặc thù có điều kiện (Conditional Dynamic Fields)*: Các khối trường mang tính đặc thù riêng biệt theo dịch vụ (ví dụ: *Yêu cầu tạo hình và Grooming* - kiểu dáng tạo hình, cấp độ KTV): Mặc định BẮT BUỘC **ẨN**, CHỈ ĐƯỢC PHÉP HIỂN THỊ khi người dùng chọn đúng dịch vụ có liên quan đến cắt tỉa / tạo kiểu (chứa các từ khóa *Grooming*, *Cắt tỉa*, *Tạo kiểu*, *Style*...). Tuyệt đối không để hiện tràn lan khi khách chỉ tắm vệ sinh cơ bản, gửi khách sạn Pet Hotel hay gọi Pet Taxi. Tương tự, thông tin Pet Hotel (ngày/giờ trả phòng, chuồng) và Pet Taxi (địa chỉ đón/trả, km) chỉ hiển thị đúng khi chọn nhóm dịch vụ tương ứng.
+  - **Lọc Sạch Dữ Liệu Rác Trong Gợi Ý CSDL (Database Autocomplete Sanitization)**:
+    * Dữ liệu gợi ý sổ xuống từ Supabase phải qua bộ lọc làm sạch: Loại bỏ các chuỗi rỗng, chuỗi chỉ chứa số (như `7`, ID kỹ thuật), hoặc các giá trị mặc định vô nghĩa (`Chưa rõ`, `Chưa cập nhật`, `unknown`, `null`, `undefined`).
+  - **Triệt Tiêu Sự Dư Thừa Giữa Autocomplete Popover và Quick Chips**:
+    * Khi một trường nhập liệu đã được trang bị Autocomplete Popover sổ xuống từ CSDL (như Giống loài, Chủ sở hữu...): **TUYỆT ĐỐI KHÔNG bố trí thêm hàng chip gợi ý (`.reason-quick-chip`) bên dưới**. Dropdown sổ xuống đã đáp ứng trọn vẹn việc tìm và chọn nhanh, hàng chip nằm dưới sẽ bị đè che khuất và gây dư thừa vị trí trên màn hình.
+  - **Tự Do Nhập Liệu Cho Các Trường Cá Nhân Hóa (Custom Text Input For Personalized Fields)**:
+    * Các trường mang tính đặc thù riêng biệt theo từng thực thể như "Cảnh báo an toàn", "Tiền sử dị ứng", "Ghi chú tập tính", "Lưu ý cá nhân"...: BẮT BUỘC để dạng ô nhập tự do (`<input type="text" class="admin-input">` hoặc `textarea`), không ép dùng dropdown popover hay áp đặt các nút chip gò bó, đảm bảo người quản trị tự do ghi chép chính xác tình trạng thực tế.
   - **Chip Gợi Ý Một Chạm (Recommendation / Quick Chips - `.reason-quick-chip`)**:
-    * Các ô nhập lý do, ghi chú, phân loại thường gặp trong Modal nên trang bị một hàng chip gợi ý bên dưới (ví dụ: `Bù sự cố trễ hẹn`, `Tặng điểm tri ân`, `Thu hồi do hủy đơn`...).
+    * Chỉ sử dụng cho các ô nhập lý do biến động số dư, ghi chú điều chỉnh kho, phân loại xử lý khiếu nại (ví dụ: `Bù sự cố trễ hẹn`, `Tặng điểm tri ân`, `Thu hồi do hủy đơn`...).
     * Dạng nút phẳng không viền, nền `#EEF5F1`, hover `#DCEEE2`, bo góc 9px, chữ Forest Green `#236B48`, bấm một chạm là điền ngay nội dung mà không cần gõ bàn phím.
   - **Chống Tràn Cắt Chữ Ở Ô Chọn Dropdown (`select`)**:
     * Nhãn tùy chọn trong thẻ `select` phải viết tự nhiên, ngắn gọn và gãy gọn (ví dụ: `Cộng điểm`, `Trừ điểm`), tuyệt đối không đính kèm các câu giải thích dài trong ngoặc đơn làm tràn chiều ngang cột gây cắt chữ thành `Cộn...`.
+* **Quy Chuẩn Nhãn Trường Dữ Liệu & Đánh Dấu Bắt Buộc (Clean Form Labels & Red Asterisk)**:
+  - **Triệt tiêu dấu hai chấm `:` ở cuối nhãn trường**: Toàn bộ nhãn trường dữ liệu trong form, modal (`.form-label`, `.filter-label`) KHÔNG dùng dấu hai chấm `:` ở cuối để giao diện phẳng, thanh thoát và hiện đại (viết `Họ và tên chủ nuôi`, `Số điện thoại`, `Loài thú cưng`, `Ghi chú`... thay vì `Họ và tên chủ nuôi:`, `Số điện thoại:`).
+  - **Trường bắt buộc giữ dấu sao `*` màu đỏ**: Đối với trường bắt buộc nhập (`required`), giữ dấu sao `*` màu đỏ (`color: #DC2626; font-weight: 700;` hoặc `<span style="color: #DC2626;">*</span>`) đặt ngay sát sau chữ, không có dấu hai chấm `:`.
+  - *Ví dụ chuẩn*: `<label class="form-label">Họ và tên chủ nuôi <span style="color: #DC2626;">*</span></label>`, `<label class="form-label">Số điện thoại <span style="color: #DC2626;">*</span></label>`, `<label class="form-label">Địa chỉ liên hệ</label>`.
+  - **TUYỆT ĐỐI KHÔNG bỏ dấu sao trong ngoặc đơn và không đính kèm dấu `:`**: Cấm viết kiểu `(*)`, `*:`, `(*):` hoặc `(bắt buộc)`. Trình bày dấu `*` đỏ thanh lịch, tinh gọn và chuẩn mực.
 
 ---
 
@@ -179,4 +199,46 @@
   - Khi CSDL chưa có dữ liệu hoặc danh sách trả về rỗng, giao diện hiển thị đúng trạng thái trống (Empty State) sạch sẽ và trang nhã, tuyệt đối không tự ý fallback về file `.json` hay tự ý tạo các mảng mock tĩnh chứa tên giả.
 * **Đồng bộ thời gian thực (Supabase Realtime Channel)**:
   - Mọi thao tác thêm/sửa/xóa đều được ghi trực tiếp vào các bảng Supabase tương ứng (`staff`, `staff_schedule`, `appointment`, `customer`, `pet`, `service`, `orders`, `order_items`, `review`, `audit_log`...) và tự động lắng nghe Realtime Channel để cập nhật giao diện tức thì.
+
+---
+
+## 7. QUY TẮC FORM, MODAL & LIÊN KẾT THỰC THỂ THÔNG MINH (INTELLIGENT ENTITY AUTOCOMPLETE & CONDITIONAL FIELDS)
+
+* **Chuẩn Hóa Ô Tìm Kiếm Thực Thể Bằng Custom Autocomplete Popover**:
+  - Mọi form/modal khi nhập hoặc chọn thực thể (Khách hàng, Bé cưng, Gói dịch vụ cụ thể, Sản phẩm, Nhân viên/KTV) **BẮT BUỘC sử dụng Custom Autocomplete Popover** đồng bộ hệ thống (`.customer-autocomplete-popover`, `.service-autocomplete-popover`...).
+  - **Cấm 100% sử dụng thẻ `<datalist>` hoặc thẻ `<select>` trần thô** cho các danh sách lớn hoặc có liên kết dữ liệu phức tạp.
+  - **100% Flat Text-Only (Tuyệt đối không có icon hay avatar tròn lồng trong danh sách popover)**: Trình bày thuần chữ phẳng, tên in đậm rõ nét, dòng thông tin phụ mỏng nhẹ (`font-size: 11.5px; color: #4F7A65;`), bên phải có badge định danh nhẹ nhàng (Hạng thành viên, thời lượng, giá tiền).
+
+* **Liên Kết Thực Thể & Tự Động Điền Thông Minh 2 Chiều (Two-Way Smart Auto-Fill)**:
+  - **Khi chọn Khách hàng**:
+    * Tự động điền ngay Số điện thoại (SĐT) vào ô tương ứng (ví dụ: `#newBookingPhone`), không bắt người quản trị phải gõ lại SĐT thủ công.
+    * Tự động nạp và lọc danh sách bé cưng thuộc sở hữu của khách hàng đó vào ô chọn Bé cưng.
+    * Tự động điền cảnh báo an toàn / tiền sử lưu ý của khách hàng nếu có.
+  - **Khi chọn Bé cưng trước**:
+    * Hệ thống tự động truy xuất và điền ngược lại thông tin Chủ nuôi và Số điện thoại vào form (nếu các ô này đang trống).
+  - **Khi chọn Gói dịch vụ cụ thể**:
+    * Popover hiển thị tên gói dịch vụ, thời lượng thực hiện và mức giá niêm yết rõ ràng.
+    * Tự động cập nhật thời lượng và giá tiền dự kiến vào form.
+  - **Thẻ xác nhận lựa chọn (`Selected Entity Confirmation Card`)**:
+    * Ngay khi chọn một thực thể (khách hàng, dịch vụ...), ẩn ô tìm kiếm hoặc hiển thị thẻ xác nhận xanh dịu: Nền xanh xô thơm `#EEF5F1`, bo góc 9px, chữ Forest Green `#236B48`, có nút text `✕ Bỏ chọn`.
+    * Khi bấm `✕ Bỏ chọn`: Xóa giá trị đã chọn, xóa các trường phụ thuộc tự điền (như SĐT), mở lại ô tìm kiếm và focus để người dùng chọn lại.
+
+* **Hiển Thị Trường Đặc Thù Có Điều Kiện (Conditional Dynamic Fields)**:
+  - Toàn bộ các nhóm trường đặc thù (như *Yêu cầu tạo hình và Grooming*, *Kiểu cắt tỉa*, *Chỉ định dụng cụ*, *Ghi chú lưu chuồng Khách sạn*...) **MẶC ĐỊNH BẮT BUỘC ẨN**.
+  - **Chỉ hiển thị khi thỏa mãn điều kiện dịch vụ liên quan**: Khối trường chỉ được kích hoạt hiển thị khi người dùng chọn Nhóm dịch vụ (Spa & Grooming) VÀ Gói dịch vụ cụ thể có liên quan trực tiếp đến cắt tỉa / tạo kiểu / nhuộm lông.
+  - Khi người dùng chuyển sang các dịch vụ khác (Tắm vệ sinh cơ bản, Lưu chuồng, Khám sức khỏe), khối trường tạo hình BẮT BUỘC tự động ẩn đi và xóa dữ liệu thừa.
+
+* **Quy Chuẩn Nhãn Trường & Bộ Ba Nút Thao Tác Trong Modal**:
+  - **Triệt tiêu 100% dấu hai chấm `:` ở cuối nhãn**: Ghi `Họ và tên khách hàng`, `Số điện thoại`, `Gói dịch vụ cụ thể`, `Ngày hẹn` (không ghi `Họ và tên:`).
+  - **Sao đỏ `*` cho trường bắt buộc**: Dùng `<span style="color: #DC2626;">*</span>` đặt ngay sát sau chữ. Tuyệt đối không dùng `(*)`, `*:`, `(*):` hoặc `(bắt buộc)`.
+  - **Bộ ba nút thao tác**: Nút Đóng và Hủy BẮT BUỘC có thuộc tính `data-close-modal="[modalId]"`, hỗ trợ đóng 4 chiều (nút Đóng, nút Hủy, click backdrop, phím Escape). Nút Lưu BẮT BUỘC đặt `type="button"` và viết theo Sentence Case (`Lưu lịch hẹn`, `Lưu dịch vụ`). Form có `onsubmit="return false;"`.
+
+---
+
+## 8. NGUYÊN TẮC RÀ SOÁT & PHÁT TRIỂN TỪNG BƯỚC (STEP-BY-STEP REVIEW PRINCIPLE)
+
+* **Tuyệt Đối Không Dùng Lệnh Sửa Hàng Loạt Nhiều Modal Cùng Lúc**:
+  - Không được dùng các script thay thế mù hoặc sửa gộp tất cả modal trong một lượt mà không qua xem xét.
+* **Quy Trình Nghiệm Thu Từng Modal Một (One Modal At A Time)**:
+  - Bắt buộc thực hiện tuần tự: Phân tích từng modal -> Thống nhất các trường dữ liệu -> Áp dụng đúng toàn bộ quy tắc thiết kế & nghiệp vụ -> Kiểm tra trực quan bằng hình ảnh/browser -> Báo cáo người dùng nghiệm thu xong mới chuyển sang modal kế tiếp.
 

@@ -274,6 +274,15 @@
         if (btnCancelAdjust) btnCancelAdjust.addEventListener('click', closeAdjustModal);
 
         if (formAdjust) {
+
+        const btnSubmitAdjust = document.getElementById('btnSubmitAdjustPoints');
+        if (btnSubmitAdjust && formAdjust) {
+            btnSubmitAdjust.addEventListener('click', () => {
+                if (formAdjust.requestSubmit) formAdjust.requestSubmit();
+                else formAdjust.dispatchEvent(new Event('submit', { cancelable: true }));
+            });
+        }
+
             formAdjust.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const phoneVal = (adjustPhoneInput?.value || '').trim();

@@ -235,12 +235,20 @@
                 alertBadgeHtml = `<span class="alert-indicator text-warning">• ${alertPet.name}: ${alertPet.alertNote}</span>`;
             }
 
-            let statusBadgeHtml = '<span class="admin-badge badge-success">Đang hoạt động</span>';
+            let statusBadgeHtml = '<span class="admin-badge badge-success">Thành viên</span>';
             if (isLocked) {
                 statusBadgeHtml = '<span class="admin-badge badge-danger">Bị khóa</span>';
             } else if (c.status === 'TEMP') {
-                statusBadgeHtml = '<span class="admin-badge badge-neutral">Tạm thời</span>';
+                statusBadgeHtml = '<span class="admin-badge badge-neutral">Vãng lai</span>';
             }
+
+            const subCellHtml = c.status === 'TEMP'
+                ? 'Khách vãng lai tại quầy'
+                : (c.email && c.email !== 'Chưa cập nhật' ? c.email : 'Thành viên');
+
+            const tierPointsHtml = c.status === 'TEMP'
+                ? `<span class="admin-badge badge-neutral">Vãng lai</span><span class="points-val" style="color: var(--text-muted); opacity: 0.6;">0 điểm</span>`
+                : `<span class="admin-badge ${c.tierBadgeClass || 'badge-tier-silver'}">${c.tierName || 'Bạc'}</span><span class="points-val">${(c.points || 0).toLocaleString('vi-VN')} điểm</span>`;
 
             return `
                 <tr class="${rowLockedClass} ${rowComplaintClass}" data-id="${c.id}">
@@ -249,15 +257,14 @@
                         <div class="user-name-cell">
                             <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="${c.id}">${c.name}</a>
                         </div>
-                        <div class="user-sub-cell">${c.email && c.email !== 'Chưa cập nhật' ? c.email : 'Khách tiếp nhận tại quầy'}</div>
+                        <div class="user-sub-cell">${subCellHtml}</div>
                     </td>
                     <td><strong>${c.phone}</strong></td>
                     <td>
                         ${formatCustomerPetsCell(c.pets)}
                     </td>
                     <td>
-                        <span class="admin-badge ${c.tierBadgeClass || 'badge-tier-silver'}">${c.tierName || 'Bạc'}</span>
-                        <span class="points-val">${(c.points || 0).toLocaleString('vi-VN')} điểm</span>
+                        ${tierPointsHtml}
                     </td>
                     <td>${alertBadgeHtml}</td>
                     <td>${statusBadgeHtml}</td>
@@ -525,15 +532,91 @@
         if (btnCloseAdd) btnCloseAdd.addEventListener('click', closeAddModal);
         if (btnCancelAdd) btnCancelAdd.addEventListener('click', closeAddModal);
 
-        document.querySelectorAll('#quickAddBreedChips .reason-quick-chip').forEach(chip => {
-            chip.addEventListener('click', () => {
-                const input = document.getElementById('quickAddPetBreed');
-                if (input) {
-                    input.value = chip.textContent.trim();
-                    input.focus();
+        // Autocomplete Giống loài thông minh từ CSDL cho Modal Thêm khách hàng
+        const quickAddBreedInput = document.getElementById('quickAddPetBreed');
+        const quickAddBreedDropdown = document.getElementById('quickAddPetBreedDropdown');
+        const quickAddSpeciesSelect = document.getElementById('quickAddPetSpecies');
+
+        if (quickAddBreedInput && quickAddBreedDropdown) {
+            const popularBreedsMap = {
+                'DOG': ['Corgi', 'Poodle', 'Golden Retriever', 'Phốc sóc', 'Pug', 'Husky', 'Shiba Inu', 'Beagle', 'Alaska', 'Samoyed', 'Chó cỏ / Ta'],
+                'CAT': ['Mèo Anh lông ngắn (ALN)', 'Mèo Anh lông dài (ALD)', 'Mèo Ba Tư', 'Mèo Ragdoll', 'Mèo Xiêm', 'Mèo Bengal', 'Mèo Sphynx', 'Mèo Ta / Mướp'],
+                'OTHER': ['Thỏ kiểng', 'Hamster Bear', 'Bọ ú (Guinea Pig)', 'Sóc bay Úc', 'Chinchilla']
+            };
+
+            function getBreedsList() {
+                const rawSp = (quickAddSpeciesSelect?.value || 'DOG').toUpperCase();
+                const spKey = rawSp === 'CAT' ? 'CAT' : (rawSp === 'OTHER' ? 'OTHER' : 'DOG');
+                const baseList = popularBreedsMap[spKey] || popularBreedsMap['DOG'];
+
+                // Tổng hợp thêm giống loài từ các bé cưng hiện có trong CSDL
+                const dbCounts = {};
+                const allCustomers = Object.values(PawpalCustomers.state?.customerDatabase || {});
+                allCustomers.forEach(cust => {
+                    (cust.pets || []).forEach(pet => {
+                        const br = (pet.breed || '').trim();
+                        if (!br || /^\d+$/.test(br) || /^(chưa rõ|chưa cập nhật|unknown|khác|undefined|null)$/i.test(br)) return;
+                        dbCounts[br] = (dbCounts[br] || 0) + 1;
+                    });
+                });
+
+                const allBreeds = Array.from(new Set([...Object.keys(dbCounts), ...baseList]));
+                return allBreeds.map(name => ({
+                    name,
+                    count: dbCounts[name] || 0,
+                    speciesLabel: spKey === 'CAT' ? 'Giống mèo' : (spKey === 'OTHER' ? 'Thú cưng nhỏ' : 'Giống cún')
+                })).sort((a, b) => b.count - a.count);
+            }
+
+            function renderBreedDropdown(query) {
+                const q = (query || '').toLowerCase().trim();
+                const list = getBreedsList().filter(b => !q || b.name.toLowerCase().includes(q));
+
+                if (list.length === 0) {
+                    quickAddBreedDropdown.innerHTML = '<div class="autocomplete-empty">Không tìm thấy giống có sẵn. Bạn có thể tự do gõ tên giống mới!</div>';
+                } else {
+                    quickAddBreedDropdown.innerHTML = list.map(b => {
+                        const badgeText = b.count > 0 ? `${b.count} bé trong tiệm` : 'Phổ biến';
+                        return `
+                            <div class="autocomplete-item" data-value="${b.name}">
+                                <div class="autocomplete-meta">
+                                    <div class="autocomplete-item-name">${b.name}</div>
+                                    <div class="autocomplete-item-phone">${b.speciesLabel}</div>
+                                </div>
+                                <div class="autocomplete-item-badge">${badgeText}</div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                quickAddBreedDropdown.style.display = 'block';
+            }
+
+            quickAddBreedInput.addEventListener('focus', () => renderBreedDropdown(quickAddBreedInput.value));
+            quickAddBreedInput.addEventListener('input', () => renderBreedDropdown(quickAddBreedInput.value));
+
+            quickAddBreedDropdown.addEventListener('click', (e) => {
+                const item = e.target.closest('.autocomplete-item');
+                if (item) {
+                    quickAddBreedInput.value = item.getAttribute('data-value');
+                    quickAddBreedDropdown.style.display = 'none';
                 }
             });
-        });
+
+            if (quickAddSpeciesSelect) {
+                quickAddSpeciesSelect.addEventListener('change', () => {
+                    if (quickAddBreedDropdown.style.display === 'block') {
+                        renderBreedDropdown(quickAddBreedInput.value);
+                    }
+                });
+            }
+
+            // Đóng dropdown khi click ra ngoài
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.pet-field-autocomplete-wrapper')) {
+                    quickAddBreedDropdown.style.display = 'none';
+                }
+            });
+        }
 
         if (quickAddPhoneInput) {
             quickAddPhoneInput.addEventListener('input', () => {
@@ -570,6 +653,15 @@
         }
 
         if (formAdd) {
+
+        const btnSubmitAdd = document.getElementById('btnSubmitAddCustomer');
+        if (btnSubmitAdd && formAdd) {
+            btnSubmitAdd.addEventListener('click', () => {
+                if (formAdd.requestSubmit) formAdd.requestSubmit();
+                else formAdd.dispatchEvent(new Event('submit', { cancelable: true }));
+            });
+        }
+
             formAdd.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (dupFoundCustId) {

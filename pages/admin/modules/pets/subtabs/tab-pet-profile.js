@@ -413,6 +413,57 @@
             }
         });
 
+        // Bắt sự kiện chọn nhanh lý do cân thể trọng một chạm
+        const weighPetNote = document.getElementById('weighPetNote');
+        const weighChips = document.querySelectorAll('#weighPetNoteChips .reason-quick-chip');
+        weighChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                if (weighPetNote) {
+                    weighPetNote.value = chip.textContent.trim();
+                }
+            });
+        });
+
+        // Xử lý mở Modal 4: Chi tiết ca làm việc (modalViewCareLogDetail)
+        const modalViewCareLogDetail = document.getElementById('modalViewCareLogDetail');
+        document.addEventListener('click', (e) => {
+            const btnViewCarelog = e.target.closest('.btn-view-carelog-modal');
+            if (btnViewCarelog && modalViewCareLogDetail) {
+                const careId = btnViewCarelog.getAttribute('data-care-id') || 'CL-001';
+                const currentPetId = sessionStorage.getItem('pawpal_admin_pet_id');
+                const pet = PawpalPets.state?.petsData?.[currentPetId];
+                const careItem = pet?.carelogs?.find(c => c.careId === careId) || {
+                    careId,
+                    service: 'Tắm sấy dưỡng ẩm và Cắt mài móng',
+                    time: '25/09/2026 14:30',
+                    ktv: 'Hoàng Tuấn',
+                    imgBefore: '/assets/images/publics/dogcute3.jpg',
+                    imgAfter: '/assets/images/publics/dogcute1.jpg',
+                    checkText: '4/4 mục đạt chuẩn',
+                    appStatus: 'Đã gửi app cho chủ',
+                    message: 'Lông vùng tai bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.'
+                };
+
+                const titleEl = document.getElementById('carelogModalTitle');
+                const timeEl = document.getElementById('carelogModalTime');
+                const groomerEl = document.getElementById('carelogModalGroomer');
+                const badgeEl = document.getElementById('carelogModalBadge');
+                const beforeImg = document.getElementById('carelogModalImgBefore');
+                const afterImg = document.getElementById('carelogModalImgAfter');
+                const messageEl = document.getElementById('carelogModalMessage');
+
+                if (titleEl) titleEl.textContent = `Chi tiết ca làm: ${careItem.service}`;
+                if (timeEl) timeEl.textContent = `Thời gian: ${careItem.time}`;
+                if (groomerEl) groomerEl.textContent = `KTV: ${careItem.ktv}`;
+                if (badgeEl) badgeEl.textContent = careItem.appStatus;
+                if (beforeImg) beforeImg.src = careItem.imgBefore;
+                if (afterImg) afterImg.src = careItem.imgAfter;
+                if (messageEl) messageEl.textContent = careItem.message || 'Lông vùng tai bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.';
+
+                modalViewCareLogDetail.classList.add('open');
+            }
+        });
+
         if (btnSubmitWeigh) {
             btnSubmitWeigh.addEventListener('click', async (event) => {
                 event.preventDefault();
@@ -479,8 +530,14 @@
             });
         }
 
+        const formEditPetProfile = document.getElementById('formEditPetProfile');
+        if (formEditPetProfile) {
+            formEditPetProfile.addEventListener('submit', (e) => e.preventDefault());
+        }
+
         if (btnSubmitEditPet) {
-            btnSubmitEditPet.addEventListener('click', async () => {
+            btnSubmitEditPet.addEventListener('click', async (e) => {
+                if (e) e.preventDefault();
                 const pet = PawpalPets.state.petsData?.[currentEditingPetCode];
                 if (!pet) return;
 
@@ -544,8 +601,103 @@
                     openPetProfile(currentEditingPetCode);
                 }
 
-                PawpalPets.showToast(`Đã cập nhật thành công hồ sơ của bé ${name}!`);
-                if (modalEditPet) modalEditPet.classList.remove('open');
+                PawpalPets.showToast(`Đã cập nhật thành công hồ sơ của bé ${name}!`, 'success');
+                if (modalEditPet) {
+                    modalEditPet.classList.remove('open');
+                    modalEditPet.classList.remove('show');
+                }
+            });
+        }
+
+        // Khởi tạo Autocomplete CSDL cho Modal Chỉnh sửa hồ sơ
+        if (PawpalPets.setupBreedAutocomplete) {
+            PawpalPets.setupBreedAutocomplete(
+                document.getElementById('editPetBreed'),
+                document.getElementById('editPetBreedDropdown'),
+                document.getElementById('editPetSpecies')
+            );
+            PawpalPets.setupColorAutocomplete(
+                document.getElementById('editPetColor'),
+                document.getElementById('editPetColorDropdown')
+            );
+        }
+
+        const editPetOwnerInput = document.getElementById('editPetOwnerInput');
+        const editPetOwnerDropdown = document.getElementById('editPetOwnerDropdown');
+        const editPetOwnerHidden = document.getElementById('editPetOwner');
+        const editPetOwnerCard = document.getElementById('editPetOwnerSelectedCard');
+
+        if (editPetOwnerInput && editPetOwnerDropdown) {
+            function updateEditOwnerAutocomplete(query) {
+                const q = (query || '').toLowerCase().trim();
+                const customersData = PawpalPets.state?.customersData || {};
+                const petsData = PawpalPets.state?.petsData || {};
+                const allCusts = Object.values(customersData);
+
+                const custPetCounts = {};
+                Object.values(petsData).forEach(p => {
+                    if (p.customerId) custPetCounts[p.customerId] = (custPetCounts[p.customerId] || 0) + 1;
+                    if (p.ownerName) custPetCounts[p.ownerName] = (custPetCounts[p.ownerName] || 0) + 1;
+                });
+
+                const matched = allCusts.filter(c => 
+                    !q || c.name.toLowerCase().includes(q) || (c.phone && c.phone.includes(q))
+                ).slice(0, 15);
+
+                if (matched.length === 0) {
+                    editPetOwnerDropdown.innerHTML = '<div class="autocomplete-empty">Không tìm thấy khách hàng.</div>';
+                } else {
+                    editPetOwnerDropdown.innerHTML = matched.map(c => {
+                        const pCount = custPetCounts[c.id] || custPetCounts[c.name] || 0;
+                        const petInfoStr = pCount > 0 ? `${pCount} bé cưng` : 'Khách hàng';
+                        return `
+                            <div class="autocomplete-item" data-id="${c.id}" data-name="${c.name}" data-phone="${c.phone || ''}" data-tier="${c.tier || 'Khách mới'}">
+                                <div class="autocomplete-meta">
+                                    <div class="autocomplete-item-name">${c.name}</div>
+                                    <div class="autocomplete-item-phone">${c.phone || 'Chưa có SĐT'} • ${petInfoStr}</div>
+                                </div>
+                                <div class="autocomplete-item-badge">Hạng ${c.tier || 'Khách mới'}</div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                editPetOwnerDropdown.style.display = 'block';
+            }
+
+            editPetOwnerInput.addEventListener('focus', () => updateEditOwnerAutocomplete(editPetOwnerInput.value));
+            editPetOwnerInput.addEventListener('input', () => updateEditOwnerAutocomplete(editPetOwnerInput.value));
+
+            editPetOwnerDropdown.addEventListener('click', (e) => {
+                const item = e.target.closest('.autocomplete-item');
+                if (item) {
+                    const custId = item.getAttribute('data-id');
+                    const custName = item.getAttribute('data-name');
+                    const custPhone = item.getAttribute('data-phone');
+                    const custTier = item.getAttribute('data-tier');
+
+                    if (editPetOwnerHidden) editPetOwnerHidden.value = custId;
+                    editPetOwnerInput.value = `${custName} - ${custPhone}`;
+                    if (editPetOwnerCard) {
+                        editPetOwnerCard.innerHTML = `
+                            <span>Chủ sở hữu: <strong>${custName}</strong> (${custPhone || 'Chưa có SĐT'})</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span>Hạng: <strong>${custTier}</strong></span>
+                                <button type="button" class="btn-clear-selected-owner" style="background: none; border: none; color: #DC2626; font-size: 11.5px; cursor: pointer; padding: 0 4px; font-weight: 600;">✕ Bỏ chọn</button>
+                            </div>
+                        `;
+                        editPetOwnerCard.style.display = 'flex';
+                        const btnClear = editPetOwnerCard.querySelector('.btn-clear-selected-owner');
+                        if (btnClear) {
+                            btnClear.addEventListener('click', (ev) => {
+                                ev.stopPropagation();
+                                if (editPetOwnerHidden) editPetOwnerHidden.value = '';
+                                if (editPetOwnerInput) editPetOwnerInput.value = '';
+                                editPetOwnerCard.style.display = 'none';
+                            });
+                        }
+                    }
+                    editPetOwnerDropdown.style.display = 'none';
+                }
             });
         }
 
@@ -572,6 +724,17 @@
             });
         }
 
+        // Bắt sự kiện chọn nhanh cơ sở đối chiếu sổ tiêm một chạm
+        const newVaccinePlace = document.getElementById('newVaccinePlace');
+        const vaccinePlaceChips = document.querySelectorAll('#newVaccinePlaceChips .reason-quick-chip');
+        vaccinePlaceChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                if (newVaccinePlace) {
+                    newVaccinePlace.value = chip.textContent.trim();
+                }
+            });
+        });
+
         if (btnSubmitAddVaccine) {
             btnSubmitAddVaccine.addEventListener('click', async () => {
                 const currentPetId = sessionStorage.getItem('pawpal_admin_pet_id');
@@ -581,7 +744,7 @@
                     return;
                 }
 
-                let title = newVaccineTypeSelect?.value || 'Vắc-xin phòng dại (Rabies)';
+                let title = newVaccineTypeSelect?.value || 'Vắc-xin phòng dại';
                 if (title === 'Khác') {
                     title = document.getElementById('newCustomVaccineName')?.value.trim() || 'Mũi tiêm dịch tễ';
                 }

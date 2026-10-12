@@ -348,19 +348,55 @@
             }
 
             const freshDb = {};
-            if (Array.isArray(custRes.data) && custRes.data.length > 0) {
-                custRes.data.forEach((c, idx) => {
+
+            // Hợp nhất danh sách khách hàng từ bảng customer và customer_profile để nạp đầy đủ 100% CSDL
+            const customerIdSet = new Set();
+            const unifiedCustomers = [];
+
+            if (Array.isArray(custRes.data)) {
+                custRes.data.forEach(c => {
+                    if (c && c.id) {
+                        customerIdSet.add(c.id);
+                        unifiedCustomers.push(c);
+                    }
+                });
+            }
+
+            if (Array.isArray(profRes.data)) {
+                profRes.data.forEach(p => {
+                    if (p && p.customer_id && !customerIdSet.has(p.customer_id)) {
+                        customerIdSet.add(p.customer_id);
+                        unifiedCustomers.push({
+                            id: p.customer_id,
+                            full_name: p.full_name,
+                            is_profile_only: true
+                        });
+                    }
+                });
+            }
+
+            if (unifiedCustomers.length > 0) {
+                unifiedCustomers.forEach((c, idx) => {
                     const custKey = `CUST-${String(idx + 1).padStart(3, '0')}`;
                     const prof = profMap[c.id] || {};
                     const mem = memMap[c.id] || {};
                     const points = mem.total_paw_points || 0;
 
-                    let tier = 'SILVER';
-                    let tierName = 'Bạc';
-                    let tierBadge = 'badge-tier-silver';
-                    if (points >= 3000) { tier = 'DIAMOND'; tierName = 'Kim Cương'; tierBadge = 'badge-tier-diamond'; }
-                    else if (points >= 1000) { tier = 'GOLD'; tierName = 'Vàng'; tierBadge = 'badge-tier-gold'; }
-                    else if (points >= 300) { tier = 'SILVER'; tierName = 'Bạc'; tierBadge = 'badge-tier-silver'; }
+                    const hasMembership = !!memMap[c.id];
+                    const isWalkInName = /vãng lai|vang lai/i.test(prof.full_name || c.full_name || '');
+                    const isTemp = Boolean(c.is_temporary || !hasMembership || isWalkInName);
+
+                    let tier = 'NONE';
+                    let tierName = 'Vãng lai';
+                    let tierBadge = 'badge-neutral';
+                    if (!isTemp) {
+                        tier = 'SILVER';
+                        tierName = 'Bạc';
+                        tierBadge = 'badge-tier-silver';
+                        if (points >= 3000) { tier = 'DIAMOND'; tierName = 'Kim Cương'; tierBadge = 'badge-tier-diamond'; }
+                        else if (points >= 1000) { tier = 'GOLD'; tierName = 'Vàng'; tierBadge = 'badge-tier-gold'; }
+                        else if (points >= 300) { tier = 'SILVER'; tierName = 'Bạc'; tierBadge = 'badge-tier-silver'; }
+                    }
 
                     const addrs = addrMap[c.id] || [];
                     if (addrs.length === 0) {
@@ -379,24 +415,27 @@
                     }
 
                     let isLocked = c.account_status === 'LOCKED';
-                    let isTemp = c.is_temporary;
+
+                    // Xác định số điện thoại ưu tiên: c.phone_main -> số người nhận trong sổ địa chỉ -> '—'
+                    const phoneVal = c.phone_main || addrs.find(a => a.receiverPhone)?.receiverPhone || '—';
 
                     freshDb[custKey] = {
                         id: custKey,
                         dbId: c.id,
-                        name: prof.full_name || ('Khách hàng ' + (c.phone_main || '')),
-                        phone: c.phone_main || '—',
-                        email: c.email || 'Chưa cập nhật',
+                        name: prof.full_name || c.full_name || ('Khách hàng ' + (phoneVal !== '—' ? phoneVal : custKey)),
+                        phone: phoneVal,
+                        email: c.email || (prof.email || 'Chưa cập nhật'),
                         gender: (prof.gender === 'FEMALE' || prof.gender === 'Nữ') ? 'Nữ' : ((prof.gender === 'MALE' || prof.gender === 'Nam') ? 'Nam' : 'Khác'),
                         dob: prof.date_of_birth ? PawpalCustomers.formatDate(prof.date_of_birth) : 'Chưa cập nhật',
                         dobRaw: prof.date_of_birth || '',
                         tier,
                         tierName,
                         tierBadgeClass: tierBadge,
-                        points,
+                        points: isTemp ? 0 : points,
+                        isMember: !isTemp,
                         status: isLocked ? 'LOCKED' : (isTemp ? 'TEMP' : 'ACTIVE'),
-                        authStatus: isLocked ? 'Tài khoản bị khóa' : (isTemp ? 'Chưa kích hoạt' : 'Đã kích hoạt'),
-                        note: c.note || 'Khách hàng Pawpal Pet Center.',
+                        authStatus: isLocked ? 'Tài khoản bị khóa' : (isTemp ? 'Khách vãng lai' : 'Đã kích hoạt'),
+                        note: c.note || (isTemp ? 'Khách vãng lai tiếp nhận dịch vụ tại quầy.' : 'Khách hàng thành viên Pawpal Pet Center.'),
                         emergencyAlert: emergency,
                         addresses: addrs,
                         pets: cPets,
@@ -600,6 +639,41 @@
         }
 
         setupCustomersRealtimeSubscription();
+
+        // Bộ xử lý đóng modal toàn cục cho phân hệ Khách hàng (Hỗ trợ nút Đóng, Hủy, click backdrop và phím Escape)
+        document.addEventListener('click', (e) => {
+            const closeBtn = e.target.closest('[data-close-modal]');
+            if (closeBtn) {
+                e.preventDefault();
+                const modalId = closeBtn.getAttribute('data-close-modal');
+                const targetModal = document.getElementById(modalId);
+                if (targetModal) {
+                    targetModal.style.display = 'none';
+                    targetModal.classList.remove('open');
+                    targetModal.classList.remove('show');
+                }
+                return;
+            }
+
+            if (e.target.classList.contains('admin-modal-backdrop') && (e.target.style.display === 'flex' || e.target.classList.contains('open'))) {
+                e.target.style.display = 'none';
+                e.target.classList.remove('open');
+                e.target.classList.remove('show');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.admin-modal-backdrop').forEach(m => {
+                    if (m.style.display === 'flex' || m.classList.contains('open')) {
+                        m.style.display = 'none';
+                        m.classList.remove('open');
+                        m.classList.remove('show');
+                    }
+                });
+            }
+        });
+
 
         if (window.lucide) {
             lucide.createIcons();

@@ -668,14 +668,27 @@
         const btnOpenQuickAddOwnerModal = document.getElementById('btnOpenQuickAddOwnerModal');
         const btnSubmitQuickAddOwner = document.getElementById('btnSubmitQuickAddOwner');
 
-        // Autocomplete chủ nuôi
+        // ====================================================================
+        // HỆ THỐNG AUTOCOMPLETE POPOVER KẾT NỐI TRỰC TIẾP TỪ CSDL SUPABASE
+        // ====================================================================
+
+        // 1. Autocomplete Chủ sở hữu - Hiển thị số lượng thú cưng đang sở hữu (loại bỏ UUID thô)
         if (newPetOwnerInput && newPetOwnerDropdown) {
             function updateOwnerAutocomplete(query) {
                 const q = (query || '').toLowerCase().trim();
                 const customersData = PawpalPets.state?.customersData || {};
+                const petsData = PawpalPets.state?.petsData || {};
                 const allCusts = Object.values(customersData);
+
+                // Tính tổng số lượng bé cưng thuộc từng chủ nuôi từ CSDL
+                const custPetCounts = {};
+                Object.values(petsData).forEach(p => {
+                    if (p.customerId) custPetCounts[p.customerId] = (custPetCounts[p.customerId] || 0) + 1;
+                    if (p.ownerName) custPetCounts[p.ownerName] = (custPetCounts[p.ownerName] || 0) + 1;
+                });
+
                 const matched = allCusts.filter(c => 
-                    !q || c.name.toLowerCase().includes(q) || (c.phone && c.phone.includes(q)) || c.id.toLowerCase().includes(q)
+                    !q || c.name.toLowerCase().includes(q) || (c.phone && c.phone.includes(q))
                 ).slice(0, 15);
 
                 if (matched.length === 0) {
@@ -683,14 +696,13 @@
                 } else {
                     newPetOwnerDropdown.innerHTML = matched.map(c => {
                         const initial = (c.name || 'K').trim().charAt(0).toUpperCase();
+                        const pCount = custPetCounts[c.id] || custPetCounts[c.name] || 0;
+                        const petInfoStr = pCount > 0 ? `${pCount} bé cưng` : 'Khách hàng';
                         return `
                             <div class="autocomplete-item" data-id="${c.id}" data-name="${c.name}" data-phone="${c.phone || ''}" data-tier="${c.tier || 'Khách mới'}">
-                                <div class="autocomplete-item-info">
-                                    <div class="autocomplete-avatar">${initial}</div>
-                                    <div class="autocomplete-meta">
-                                        <div class="autocomplete-item-name">${c.name}</div>
-                                        <div class="autocomplete-item-phone">${c.phone || 'Chưa có SĐT'} • ${c.id}</div>
-                                    </div>
+                                <div class="autocomplete-meta">
+                                    <div class="autocomplete-item-name">${c.name}</div>
+                                    <div class="autocomplete-item-phone">${c.phone || 'Chưa có SĐT'} • ${petInfoStr}</div>
                                 </div>
                                 <div class="autocomplete-item-badge">Hạng ${c.tier || 'Khách mới'}</div>
                             </div>
@@ -735,24 +747,194 @@
                     newPetOwnerDropdown.style.display = 'none';
                 }
             });
+        }
 
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.pet-owner-autocomplete-wrapper')) {
-                    newPetOwnerDropdown.style.display = 'none';
+        // 2. Autocomplete Giống loài kết nối CSDL theo Loài thú cưng được chọn
+        function setupBreedAutocomplete(inputEl, dropdownEl, speciesSelectEl) {
+            if (!inputEl || !dropdownEl) return;
+
+            const popularBreedsBySpecies = {
+                'dog': ['Poodle', 'Corgi', 'Golden', 'Phốc sóc', 'Pug', 'Husky', 'Alaska', 'Shiba', 'Samoyed', 'Chihuahua', 'Lạp xưởng', 'Bull Pháp', 'Becgie', 'Pomeranian'],
+                'cat': ['Mèo ALN', 'Mèo Ba Tư', 'Mèo Anh lông dài', 'Mèo Xiêm', 'Ragdoll', 'Mèo Nga', 'Mèo Bengal', 'Mèo Scottish Fold', 'Mèo Sphynx', 'Mèo Mướp', 'Mèo Mun'],
+                'rabbit': ['Thỏ Minilop', 'Thỏ New Zealand', 'Thỏ Lionhead', 'Thỏ Hà Lan', 'Thỏ cảnh Rex'],
+                'other': ['Hamster Bear', 'Hamster Winter White', 'Bọ ú Guinea Pig', 'Nhím kiểng', 'Sóc bay']
+            };
+
+            function getBreedsData() {
+                const sp = (speciesSelectEl?.value || 'dog').toLowerCase();
+                const petsData = PawpalPets.state?.petsData || {};
+                const dbCounts = {};
+
+                Object.values(petsData).forEach(p => {
+                    const pSp = (p.species || 'dog').toLowerCase();
+                    const br = (p.breed || '').trim();
+                    // Lọc bỏ chuỗi rỗng, số hoặc từ khóa không xác định
+                    if (!br) return;
+                    if (/^\d+$/.test(br)) return;
+                    if (/^(chưa rõ|chưa cập nhật|unknown|khác|undefined|null)$/i.test(br)) return;
+
+                    if (pSp === sp) {
+                        dbCounts[br] = (dbCounts[br] || 0) + 1;
+                    }
+                });
+
+                const baseList = popularBreedsBySpecies[sp] || popularBreedsBySpecies['dog'];
+                const allBreeds = Array.from(new Set([...Object.keys(dbCounts), ...baseList]));
+
+                return allBreeds.map(name => ({
+                    name,
+                    count: dbCounts[name] || 0,
+                    speciesName: sp === 'cat' ? 'Giống mèo' : (sp === 'dog' ? 'Giống cún' : 'Thú cưng nhỏ')
+                })).sort((a, b) => b.count - a.count);
+            }
+
+            function renderDropdown(query) {
+                const q = (query || '').toLowerCase().trim();
+                const breeds = getBreedsData().filter(b => !q || b.name.toLowerCase().includes(q));
+
+                if (breeds.length === 0) {
+                    dropdownEl.innerHTML = '<div class="autocomplete-empty">Không tìm thấy giống loài phù hợp. Bạn có thể tự nhập tên giống mới!</div>';
+                } else {
+                    dropdownEl.innerHTML = breeds.map(b => {
+                        const badgeText = b.count > 0 ? `${b.count} bé trong tiệm` : 'Phổ biến';
+                        return `
+                            <div class="autocomplete-item" data-value="${b.name}">
+                                <div class="autocomplete-meta">
+                                    <div class="autocomplete-item-name">${b.name}</div>
+                                    <div class="autocomplete-item-phone">${b.speciesName}</div>
+                                </div>
+                                <div class="autocomplete-item-badge">${badgeText}</div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                dropdownEl.style.display = 'block';
+            }
+
+            inputEl.addEventListener('focus', () => renderDropdown(inputEl.value));
+            inputEl.addEventListener('input', () => renderDropdown(inputEl.value));
+
+            dropdownEl.addEventListener('click', (e) => {
+                const item = e.target.closest('.autocomplete-item');
+                if (item) {
+                    inputEl.value = item.getAttribute('data-value');
+                    dropdownEl.style.display = 'none';
+                }
+            });
+
+            if (speciesSelectEl) {
+                speciesSelectEl.addEventListener('change', () => {
+                    if (dropdownEl.style.display === 'block') renderDropdown(inputEl.value);
+                });
+            }
+        }
+
+        // 3. Autocomplete Màu lông tổng hợp từ CSDL
+        function setupColorAutocomplete(inputEl, dropdownEl) {
+            if (!inputEl || !dropdownEl) return;
+
+            const baseColors = [
+                'Vàng trắng', 'Xám khói', 'Nâu đỏ', 'Đen tuyền', 'Trắng kem',
+                'Tam thể', 'Bicolor', 'Xám tro', 'Vàng kem', 'Nâu socola',
+                'Vằn vện Tabby', 'Trắng tuyết', 'Tricolor', 'Xám xanh', 'Đốm đen trắng'
+            ];
+
+            function getColorsData() {
+                const petsData = PawpalPets.state?.petsData || {};
+                const dbCounts = {};
+
+                Object.values(petsData).forEach(p => {
+                    const c = (p.color || '').trim();
+                    if (!c) return;
+                    if (/^\d+$/.test(c)) return;
+                    if (/^(chưa rõ|chưa cập nhật|unknown|khác|undefined|null)$/i.test(c)) return;
+                    dbCounts[c] = (dbCounts[c] || 0) + 1;
+                });
+
+                const allColors = Array.from(new Set([...Object.keys(dbCounts), ...baseColors]));
+                return allColors.map(name => ({
+                    name,
+                    count: dbCounts[name] || 0
+                })).sort((a, b) => b.count - a.count);
+            }
+
+            function renderDropdown(query) {
+                const q = (query || '').toLowerCase().trim();
+                const colors = getColorsData().filter(c => !q || c.name.toLowerCase().includes(q));
+
+                if (colors.length === 0) {
+                    dropdownEl.innerHTML = '<div class="autocomplete-empty">Không có màu có sẵn. Bạn có thể tự nhập màu mới!</div>';
+                } else {
+                    dropdownEl.innerHTML = colors.map(c => {
+                        const badgeText = c.count > 0 ? `${c.count} bé` : 'Màu phổ biến';
+                        return `
+                            <div class="autocomplete-item" data-value="${c.name}">
+                                <div class="autocomplete-meta">
+                                    <div class="autocomplete-item-name">${c.name}</div>
+                                    <div class="autocomplete-item-phone">Màu sắc bộ lông</div>
+                                </div>
+                                <div class="autocomplete-item-badge">${badgeText}</div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                dropdownEl.style.display = 'block';
+            }
+
+            inputEl.addEventListener('focus', () => renderDropdown(inputEl.value));
+            inputEl.addEventListener('input', () => renderDropdown(inputEl.value));
+
+            dropdownEl.addEventListener('click', (e) => {
+                const item = e.target.closest('.autocomplete-item');
+                if (item) {
+                    inputEl.value = item.getAttribute('data-value');
+                    dropdownEl.style.display = 'none';
                 }
             });
         }
 
+        // Khởi tạo các Autocomplete cho Modal Thêm bé cưng
+        setupBreedAutocomplete(
+            document.getElementById('newPetBreed'),
+            document.getElementById('newPetBreedDropdown'),
+            document.getElementById('newPetSpecies')
+        );
+        setupColorAutocomplete(
+            document.getElementById('newPetColor'),
+            document.getElementById('newPetColorDropdown')
+        );
+
+        // Xuất các hàm setup ra namespace để subtab hồ sơ (Modal chỉnh sửa) dùng chung
+        PawpalPets.setupBreedAutocomplete = setupBreedAutocomplete;
+        PawpalPets.setupColorAutocomplete = setupColorAutocomplete;
+
+        // Đóng toàn bộ dropdown popover khi nhấp ra ngoài
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.pet-owner-autocomplete-wrapper') && !e.target.closest('.pet-field-autocomplete-wrapper')) {
+                document.querySelectorAll('.autocomplete-dropdown').forEach(dd => {
+                    dd.style.display = 'none';
+                });
+            }
+        });
+
         // Mở popup Thêm nhanh chủ nuôi
         if (btnOpenQuickAddOwnerModal && modalQuickAddOwner) {
             btnOpenQuickAddOwnerModal.addEventListener('click', () => {
+                const formQuick = document.getElementById('formQuickAddOwner');
+                if (formQuick) formQuick.reset();
                 modalQuickAddOwner.classList.add('open');
             });
         }
 
         // Lưu tạo nhanh chủ nuôi trực tiếp vào Supabase
+        const formQuickAddOwner = document.getElementById('formQuickAddOwner');
+        if (formQuickAddOwner) {
+            formQuickAddOwner.addEventListener('submit', (e) => e.preventDefault());
+        }
+
         if (btnSubmitQuickAddOwner) {
-            btnSubmitQuickAddOwner.addEventListener('click', async () => {
+            btnSubmitQuickAddOwner.addEventListener('click', async (e) => {
+                if (e) e.preventDefault();
                 const name = document.getElementById('quickOwnerName')?.value.trim();
                 const phone = document.getElementById('quickOwnerPhone')?.value.trim();
                 const tier = document.getElementById('quickOwnerTier')?.value || 'Khách mới';
@@ -765,44 +947,92 @@
 
                 try {
                     const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                    if (client) {
-                        const { data: newCust, error: custErr } = await client.from('customer').insert({
-                            phone_main: phone,
-                            email: '',
-                            account_status: 'ACTIVE'
-                        }).select().single();
+                    if (!client) {
+                        PawpalPets.showToast('Không có kết nối tới cơ sở dữ liệu Supabase.', 'danger');
+                        return;
+                    }
 
-                        if (custErr) {
-                            console.error('Supabase create customer error:', custErr);
-                            PawpalPets.showToast('Lỗi tạo chủ nuôi: ' + custErr.message, 'danger');
-                            return;
-                        }
+                    const activationToken = (window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`).replace(/-/g, '');
+                    const activationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-                        if (newCust) {
-                            await client.from('customer_profile').insert({
-                                customer_id: newCust.id,
-                                full_name: name
+                    const { data: newCust, error: custErr } = await client.from('customer').insert({
+                        email: null,
+                        phone_main: phone,
+                        account_status: 'ACTIVE',
+                        is_temporary: true,
+                        note: 'Khách tạo nhanh tại quầy tiếp nhận thú cưng.',
+                        activation_token: activationToken,
+                        activation_token_expires_at: activationExpiresAt
+                    }).select().single();
+
+                    if (custErr || !newCust) {
+                        console.error('Supabase create customer error:', custErr);
+                        PawpalPets.showToast('Lỗi tạo chủ nuôi: ' + (custErr?.message || 'Không thể tạo tài khoản'), 'danger');
+                        return;
+                    }
+
+                    await client.from('customer_profile').insert({
+                        customer_id: newCust.id,
+                        full_name: name,
+                        gender: 'OTHER'
+                    });
+
+                    await client.from('customer_membership').insert({
+                        customer_id: newCust.id,
+                        total_paw_points: 0
+                    });
+
+                    if (address) {
+                        await client.from('customer_address').insert({
+                            customer_id: newCust.id,
+                            receiver_name: name,
+                            receiver_phone: phone,
+                            street_address: address,
+                            is_default: true
+                        });
+                    }
+
+                    if (!PawpalPets.state.customersData) PawpalPets.state.customersData = {};
+                    PawpalPets.state.customersData[newCust.id] = {
+                        id: newCust.id,
+                        name: name,
+                        phone: phone,
+                        tier: tier,
+                        address: address
+                    };
+
+                    if (newPetOwnerHidden) newPetOwnerHidden.value = newCust.id;
+                    if (newPetOwnerInput) newPetOwnerInput.value = `${name} - ${phone}`;
+
+                    if (newPetOwnerSelectedCard) {
+                        newPetOwnerSelectedCard.innerHTML = `
+                            <span>Chủ sở hữu: <strong>${name}</strong> (${phone})</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span>Hạng: <strong>${tier}</strong></span>
+                                <button type="button" class="btn-clear-selected-new-owner" style="background: none; border: none; color: #DC2626; font-size: 11.5px; cursor: pointer; padding: 0 4px; font-weight: 600;">✕ Bỏ chọn</button>
+                            </div>
+                        `;
+                        newPetOwnerSelectedCard.style.display = 'flex';
+                        const btnClear = newPetOwnerSelectedCard.querySelector('.btn-clear-selected-new-owner');
+                        if (btnClear) {
+                            btnClear.addEventListener('click', (ev) => {
+                                ev.stopPropagation();
+                                if (newPetOwnerHidden) newPetOwnerHidden.value = '';
+                                if (newPetOwnerInput) newPetOwnerInput.value = '';
+                                newPetOwnerSelectedCard.style.display = 'none';
                             });
-
-                            if (!PawpalPets.state.customersData) PawpalPets.state.customersData = {};
-                            PawpalPets.state.customersData[newCust.id] = {
-                                id: newCust.id,
-                                name: name,
-                                phone: phone,
-                                tier: tier,
-                                address: address
-                            };
-
-                            if (newPetOwnerHidden) newPetOwnerHidden.value = newCust.id;
-                            if (newPetOwnerInput) newPetOwnerInput.value = `${name} - ${phone} (Hạng ${tier})`;
-
-                            if (modalQuickAddOwner) modalQuickAddOwner.classList.remove('open');
-                            PawpalPets.showToast(`Đã tạo nhanh khách hàng ${name} thành công!`);
                         }
                     }
+
+                    if (modalQuickAddOwner) {
+                        modalQuickAddOwner.classList.remove('open');
+                        modalQuickAddOwner.classList.remove('show');
+                    }
+                    if (formQuickAddOwner) formQuickAddOwner.reset();
+                    PawpalPets.showToast(`Đã thêm thành công chủ nuôi ${name}!`, 'success');
                 } catch (err) {
                     console.error('Create quick owner exception:', err);
-                    PawpalPets.showToast('Lỗi khi lưu khách hàng vào CSDL: ' + err.message, 'danger');
+                    PawpalPets.showToast('Lỗi khi lưu chủ nuôi vào CSDL: ' + err.message, 'danger');
                 }
             });
         }
@@ -868,8 +1098,14 @@
         }
 
         // Submit form tiếp nhận bé mới trực tiếp vào Supabase
+        const formAddPet = document.getElementById('formAddPet');
+        if (formAddPet) {
+            formAddPet.addEventListener('submit', (e) => e.preventDefault());
+        }
+
         if (btnSubmitAddPet) {
-            btnSubmitAddPet.addEventListener('click', async () => {
+            btnSubmitAddPet.addEventListener('click', async (e) => {
+                if (e) e.preventDefault();
                 const nameInput = document.getElementById('newPetName');
                 const name = nameInput?.value.trim() || '';
                 if (!name) {
@@ -890,6 +1126,12 @@
                 if (!ownerCustId || !customersData[ownerCustId]) {
                     const firstCustId = Object.keys(customersData)[0];
                     ownerCustId = firstCustId || null;
+                }
+
+                if (!ownerCustId) {
+                    PawpalPets.showToast('Vui lòng chọn hoặc thêm nhanh chủ sở hữu cho bé cưng.', 'warning');
+                    newPetOwnerInput?.focus();
+                    return;
                 }
 
                 const species = document.getElementById('newPetSpecies')?.value || 'dog';
@@ -937,7 +1179,7 @@
                             date_of_birth: dob || null,
                             weight: weight,
                             color: color,
-                            routine: alertText ? `Cảnh báo: ${alertText}` : 'Tiếp nhận mới tại quầy.',
+                            routine: alertText ? `Cảnh báo: ${alertText}` : 'Hồ sơ tạo mới.',
                             allergy: allergy,
                             vaccination_history: 'Đã tiêm phòng định kỳ',
                             avatar_url: species === 'cat' ? '/assets/images/publics/catcute5.jpg' : '/assets/images/publics/dogcute3.jpg',
@@ -966,27 +1208,18 @@
                         renderPetsTable();
                         updatePetKPIs();
 
-                        const savedPetObj = PawpalPets.state?.petsData?.[newPetId] || {
-                            name: name,
-                            code: newPetId,
-                            speciesBreed: speciesBreedStr,
-                            weight: `${weight} kg`,
-                            gender: gender,
-                            ownerName: customersData[ownerCustId]?.name || 'Khách hàng',
-                            ownerPhone: customersData[ownerCustId]?.phone || '0900000000',
-                            alert: alertText
-                        };
-
-                        PawpalPets.showToast(`Tiếp nhận bé ${name} (${newPetId}) thành công!`);
-                        if (modalAddPet) modalAddPet.classList.remove('open');
-
-                        setTimeout(() => {
-                            openCollarTagPreview(savedPetObj);
-                        }, 300);
+                        PawpalPets.showToast(`Thêm bé ${name} (${newPetId}) thành công!`, 'success');
+                        if (modalAddPet) {
+                            modalAddPet.classList.remove('open');
+                            modalAddPet.classList.remove('show');
+                        }
+                        if (formAddPet) formAddPet.reset();
+                        if (newPetOwnerHidden) newPetOwnerHidden.value = '';
+                        if (newPetOwnerSelectedCard) newPetOwnerSelectedCard.style.display = 'none';
                     }
                 } catch (err) {
                     console.error('Add pet exception:', err);
-                    PawpalPets.showToast('Lỗi khi tiếp nhận bé cưng: ' + err.message, 'danger');
+                    PawpalPets.showToast('Lỗi khi thêm bé cưng: ' + err.message, 'danger');
                 }
             });
         }

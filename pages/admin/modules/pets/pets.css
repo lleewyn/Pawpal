@@ -1065,6 +1065,39 @@
     box-shadow: 0 16px 40px rgba(26, 43, 35, 0.16);
 }
 
+.admin-modal-card.wide-modal,
+#modalAddPet .admin-modal-card,
+#modalEditPetProfile .admin-modal-card {
+    width: 760px;
+    max-width: 95vw;
+}
+
+.checklist-card-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 20px;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.checklist-checkbox-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: var(--text-main);
+    cursor: pointer;
+    user-select: none;
+}
+
+.checklist-checkbox-item input[type="checkbox"] {
+    accent-color: #236B48;
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+    margin: 0;
+}
+
 .admin-modal-header {
     display: flex;
     justify-content: space-between;
@@ -2353,7 +2386,8 @@
 /* ==========================================================================
    AUTOCOMPLETE POPOVER CHUẨN HỆ THỐNG PAWPAL-ER
    ========================================================================== */
-.pet-owner-autocomplete-wrapper {
+.pet-owner-autocomplete-wrapper,
+.pet-field-autocomplete-wrapper {
     position: relative;
     width: 100%;
 }
