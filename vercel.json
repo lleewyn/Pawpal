@@ -7,6 +7,16 @@
       "source": "/",
       "destination": "/pages/public/landing/landing.html",
       "permanent": false
+    },
+    {
+      "source": "/pages/admin/login.html",
+      "destination": "/admin/login",
+      "permanent": false
+    },
+    {
+      "source": "/pages/admin/admin.html",
+      "destination": "/admin",
+      "permanent": false
     }
   ],
   "rewrites": [
@@ -219,28 +229,60 @@
       "destination": "/pages/user/settings/settings.html"
     },
     {
+      "source": "/admin",
+      "destination": "/pages/admin/index.html"
+    },
+    {
+      "source": "/admin/",
+      "destination": "/pages/admin/index.html"
+    },
+    {
+      "source": "/admin/login",
+      "destination": "/pages/admin/login/login.html"
+    },
+    {
+      "source": "/admin/login/",
+      "destination": "/pages/admin/login/login.html"
+    },
+    {
+      "source": "/admin/login/login.css",
+      "destination": "/pages/admin/login/login.css"
+    },
+    {
+      "source": "/admin/login/login.js",
+      "destination": "/pages/admin/login/login.js"
+    },
+    {
+      "source": "/admin.css",
+      "destination": "/pages/admin/admin.css"
+    },
+    {
+      "source": "/admin.js",
+      "destination": "/pages/admin/admin.js"
+    },
+    {
+      "source": "/modules/:path*",
+      "destination": "/pages/admin/modules/:path*"
+    },
+    {
+      "source": "/admin/modules/:path*",
+      "destination": "/pages/admin/modules/:path*"
+    },
+    {
+      "source": "/pages/admin",
+      "destination": "/pages/admin/index.html"
+    },
+    {
+      "source": "/pages/admin/",
+      "destination": "/pages/admin/index.html"
+    },
+    {
       "source": "/pages/admin/index",
-      "destination": "/pages/admin/index/index.html"
+      "destination": "/pages/admin/index.html"
     },
     {
-      "source": "/pages/admin/bookings",
-      "destination": "/pages/admin/bookings/bookings.html"
-    },
-    {
-      "source": "/pages/admin/care-log",
-      "destination": "/pages/admin/care-log/care-log.html"
-    },
-    {
-      "source": "/pages/admin/orders",
-      "destination": "/pages/admin/orders/orders.html"
-    },
-    {
-      "source": "/pages/admin/products",
-      "destination": "/pages/admin/products/products.html"
-    },
-    {
-      "source": "/pages/admin/users",
-      "destination": "/pages/admin/users/users.html"
+      "source": "/pages/admin/login",
+      "destination": "/pages/admin/login/login.html"
     },
     {
       "source": "/pages/public/blog-detail",

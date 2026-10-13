@@ -324,7 +324,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261013_r9';
+    const MODULE_SCRIPT_VERSION = '20261013_r10';
+
+    function resolveModulePath(path) {
+        if (!path) return path;
+        if (path.startsWith('/') || path.startsWith('http')) return path;
+        return '/pages/admin/' + path;
+    }
 
     async function loadModuleScripts(scriptPaths) {
         // Chỉ load script chưa từng được load — KHÔNG xóa/tạo lại script đã có
@@ -335,13 +341,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const script = document.createElement('script');
             script.className = 'dynamic-module-script';
             script.async = false; // Bắt buộc thực thi tuần tự theo đúng thứ tự khai báo trong mảng
-            script.src = src + (src.includes('?') ? '&' : '?') + 'v=' + MODULE_SCRIPT_VERSION;
+            const fullSrc = resolveModulePath(src);
+            script.src = fullSrc + (fullSrc.includes('?') ? '&' : '?') + 'v=' + MODULE_SCRIPT_VERSION;
             script.onload = () => {
                 _moduleScriptsLoaded.add(src);
                 resolve();
             };
             script.onerror = () => {
-                console.error('Lỗi nạp script:', src);
+                console.error('Lỗi nạp script:', fullSrc);
                 resolve();
             };
             document.body.appendChild(script);
@@ -356,19 +363,21 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchModuleHtml(modCfg.html).catch(() => {});
         // Prefetch scripts vào HTTP cache của trình duyệt (0ms khi click thật)
         modCfg.scripts.filter(s => !_moduleScriptsLoaded.has(s)).forEach(src => {
-            fetch(src + (src.includes('?') ? '&' : '?') + 'v=' + MODULE_SCRIPT_VERSION, { priority: 'low' }).catch(() => {});
+            const fullSrc = resolveModulePath(src);
+            fetch(fullSrc + (fullSrc.includes('?') ? '&' : '?') + 'v=' + MODULE_SCRIPT_VERSION, { priority: 'low' }).catch(() => {});
         });
     }
 
     // Fetch HTML module với in-memory cache — không gọi lại server khi quay về
     async function fetchModuleHtml(url) {
-        if (_moduleHtmlCache.has(url)) {
-            return _moduleHtmlCache.get(url);
+        const fullUrl = resolveModulePath(url);
+        if (_moduleHtmlCache.has(fullUrl)) {
+            return _moduleHtmlCache.get(fullUrl);
         }
-        const res = await fetch(url + '?v=' + MODULE_SCRIPT_VERSION);
+        const res = await fetch(fullUrl + (fullUrl.includes('?') ? '&' : '?') + 'v=' + MODULE_SCRIPT_VERSION);
         if (!res.ok) return null;
         const html = await res.text();
-        _moduleHtmlCache.set(url, html);
+        _moduleHtmlCache.set(fullUrl, html);
         return html;
     }
 
