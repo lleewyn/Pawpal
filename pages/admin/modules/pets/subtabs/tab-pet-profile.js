@@ -213,7 +213,7 @@
         const ownerLinkEl = document.getElementById('drawerPetOwnerLink');
         if (ownerLinkEl) {
             ownerLinkEl.textContent = pet.custId
-                ? `${pet.ownerName} (${pet.ownerPhone})`
+                ? `${pet.ownerName}${pet.ownerPhone ? ` (${pet.ownerPhone})` : ''}`
                 : 'Chưa có thông tin chủ nuôi';
             ownerLinkEl.setAttribute('data-cust-id', pet.custId || '');
         }
@@ -319,7 +319,7 @@
             if (editPetOwnerInput) editPetOwnerInput.value = `${currentCust.name} - ${currentCust.phone || 'Chưa có SĐT'}`;
             if (editPetOwnerCard) {
                 editPetOwnerCard.innerHTML = `
-                    <span>Chủ sở hữu: <strong>${currentCust.name}</strong> (${currentCust.phone || 'Chưa có SĐT'})</span>
+                    <span>Chủ sở hữu: <strong>${currentCust.name}</strong>${currentCust.phone ? ` (${currentCust.phone})` : ''}</span>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span>Hạng: <strong>${currentCust.tier || 'Khách mới'}</strong></span>
                         <button type="button" class="btn-clear-selected-owner" style="background: none; border: none; color: #DC2626; font-size: 11.5px; cursor: pointer; padding: 0 4px; font-weight: 600;">✕ Bỏ chọn</button>
@@ -688,7 +688,7 @@
                     editPetOwnerInput.value = `${custName} - ${custPhone}`;
                     if (editPetOwnerCard) {
                         editPetOwnerCard.innerHTML = `
-                            <span>Chủ sở hữu: <strong>${custName}</strong> (${custPhone || 'Chưa có SĐT'})</span>
+                            <span>Chủ sở hữu: <strong>${custName}</strong>${custPhone ? ` (${custPhone})` : ''}</span>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <span>Hạng: <strong>${custTier}</strong></span>
                                 <button type="button" class="btn-clear-selected-owner" style="background: none; border: none; color: #DC2626; font-size: 11.5px; cursor: pointer; padding: 0 4px; font-weight: 600;">✕ Bỏ chọn</button>

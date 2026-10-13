@@ -19,13 +19,20 @@
             return;
         }
         delete tbody.dataset.loadingSkeleton;
-        const pets = new Map(Object.values(PawpalPets.state.petsData || {}).map(pet => [pet.rawId, pet]));
+        // Nhật ký cũ có thể tham chiếu pet_code (PET-001), còn dữ liệu mới dùng
+        // UUID rawId; lập chỉ mục cả hai để luôn nối được bé và chủ nuôi.
+        const pets = new Map();
+        Object.values(PawpalPets.state.petsData || {}).forEach(pet => {
+            if (pet.rawId) pets.set(String(pet.rawId), pet);
+            if (pet.code) pets.set(String(pet.code), pet);
+        });
         const customers = PawpalPets.state.customersData || {};
         const appointments = new Map((PawpalPets.state.appointments || []).map(a => [a.id, a]));
         const query = document.getElementById('petCarelogSearch')?.value.trim() || '';
         const logs = (PawpalPets.state.careLogs || []).map(log => {
             const appointment = appointments.get(log.appointment_id);
-            const pet = pets.get(log.pet_id || appointment?.pet_id);
+            const petRef = log.pet_id || appointment?.pet_id;
+            const pet = pets.get(String(petRef || ''));
             const owner = customers[pet?.custId || appointment?.customer_id];
             return {log, pet, owner};
         }).filter(({log,pet,owner}) => !query || [pet?.name,pet?.code,owner?.name,owner?.phone,log.description,log.health_status].some(value => PawpalPets.matchSearch(value || '', query)))

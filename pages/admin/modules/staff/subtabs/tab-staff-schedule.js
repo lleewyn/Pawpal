@@ -19,6 +19,10 @@
             const badge=document.getElementById('quota'+label+'Badge');if(badge)badge.textContent='';
         });
         const active=document.getElementById('liveWorkstationsActiveCount');if(active)active.textContent='Chưa có dữ liệu bàn dịch vụ';
+        const dayWrapper = document.getElementById('scheduleDayViewWrapper');
+        const weekWrapper = document.getElementById('scheduleWeekViewWrapper');
+        if (dayWrapper) dayWrapper.style.display = currentScheduleView === 'DAY' ? '' : 'none';
+        if (weekWrapper) weekWrapper.style.display = currentScheduleView === 'WEEK' ? '' : 'none';
         if (currentScheduleView === 'DAY') {
             renderScheduleDayTable();
         } else {

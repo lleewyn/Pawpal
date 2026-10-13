@@ -596,7 +596,9 @@
                 if (Array.isArray(voucherData)) {
                     const vouchersList = voucherData.map(v => {
                         const isPct = v.type === 'percentage' || v.type === 'percent';
-                        const discountVal = isPct ? `${v.discount_value}%` : formatVND(v.discount_value);
+                        const rawDiscount = Number(v.discount_value) || 0;
+                        const safeDiscount = isPct ? Math.min(100, Math.max(0, rawDiscount)) : Math.max(0, rawDiscount);
+                        const discountVal = isPct ? `${safeDiscount}%` : formatVND(safeDiscount);
                         let expFormatted = '31/12/2026';
                         if (v.end_date) {
                             const expD = new Date(v.end_date);
@@ -605,15 +607,16 @@
                             }
                         }
                         return {
-                            code: v.voucher_code,
+                            code: String(v.voucher_code || '').trim().replace(/[^A-Za-z0-9_-]/g, ''),
+                            dbCode: v.voucher_code,
                             name: v.voucher_name || v.description,
                             title: v.voucher_name || v.description,
                             type: isPct ? 'percent' : 'fixed',
                             target: 'Shop',
-                            value: v.discount_value,
+                            value: safeDiscount,
                             discount: discountVal,
-                            minOrder: v.minimum_order_amount || 0,
-                            points: v.required_points || 0,
+                            minOrder: Math.max(0, Number(v.minimum_order_amount) || 0),
+                            points: Math.max(0, Number(v.required_points) || 0),
                             startsAt: v.start_date,
                             endsAt: v.end_date,
                             validDate: expFormatted,

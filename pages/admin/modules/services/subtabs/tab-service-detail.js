@@ -33,7 +33,7 @@
         if (codeEl) codeEl.textContent = booking.id;
         if (metaEl) {
             if (booking.category === 'Hotel') {
-                metaEl.textContent = `Lưu trú: ${booking.checkInDate || booking.date} ➔ ${booking.checkOutDate || '2026-07-04'} (${booking.nights || 3} đêm) | Phòng: ${booking.roomCode || 'DLX-04'} | Cơ sở: ${booking.branch || 'PawPal Quận 1'}`;
+                metaEl.textContent = `Lưu trú: ${booking.checkInDate || booking.date} ➔ ${booking.checkOutDate || 'Chưa cập nhật'} (${booking.nights || 'Chưa cập nhật'} đêm) | Phòng: ${booking.roomCode || 'Chưa cập nhật'} | Cơ sở: ${booking.branch || 'PawPal Quận 1'}`;
             } else if (booking.category === 'Taxi') {
                 const shortPickup = booking.pickupAddress ? (booking.pickupAddress.length > 22 ? booking.pickupAddress.substring(0, 22) + '...' : booking.pickupAddress) : 'Đón tận nơi';
                 metaEl.textContent = `Giờ đón: ${booking.time} - ${booking.date} | ${booking.tripType || '2 chiều'} | Lộ trình: ${shortPickup} ➔ Q.1 | Cơ sở: ${booking.branch || 'PawPal Quận 1'}`;
@@ -182,7 +182,7 @@
                     <div class="info-grid-2col">
                         <div class="info-pair">
                             <span class="info-label">Thời gian lưu trú:</span>
-                            <span class="info-value" style="font-weight: 600; color: #236B48;">${booking.checkInDate || booking.date} (${booking.checkInTime || '08:00'}) ➔ ${booking.checkOutDate || '2026-07-04'} (${booking.checkOutTime || '10:00'})</span>
+                    <span class="info-value" style="font-weight: 600; color: #236B48;">${booking.checkInDate || booking.date} (${booking.checkInTime || '08:00'}) ➔ ${booking.checkOutDate || 'Chưa cập nhật'} (${booking.checkOutTime || 'Chưa cập nhật'})</span>
                         </div>
                         <div class="info-pair">
                             <span class="info-label">Tổng thời lượng:</span>

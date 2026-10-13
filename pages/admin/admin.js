@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261013_r10';
+    const MODULE_SCRIPT_VERSION = '20261014_r11';
 
     function resolveModulePath(path) {
         if (!path) return path;
@@ -531,6 +531,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (modCfg && modCfg.postLoad) {
                 try { await modCfg.postLoad(); } catch (e) { console.warn(`[Admin] postLoad ${moduleName}:`, e); }
             }
+            if (moduleName === 'Cấu hình' && !window.PawpalSettings) {
+                const articleBody = activeEl.querySelector('#articlesTableBody');
+                if (articleBody && articleBody.querySelector('.skeleton-text')) {
+                    articleBody.removeAttribute('data-loading-skeleton');
+                    articleBody.innerHTML = '<tr><td colspan="8" style="padding:28px;text-align:center;color:var(--text-muted);">Không thể khởi tạo cấu hình. Vui lòng tải lại trang.</td></tr>';
+                }
+            }
 
             // Dispatch event để module JS biết tab đã active trở lại
             window.dispatchEvent(new CustomEvent('admin:module-show', { detail: { module: moduleName } }));
@@ -587,6 +594,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     _moduleDomCache.set(moduleName, moduleWrapper);
                     _currentModule = moduleName;
                     await loadModuleScripts(modCfg.scripts);
+                    // Một script có thể đã được đánh dấu loaded dù gặp lỗi runtime trước khi
+                    // đăng ký namespace. Với Cấu hình, thử nạp lại core một lần để tránh
+                    // giữ bảng ở skeleton vô hạn khi chuyển tab bằng hash.
+                    if (moduleName === 'Cấu hình' && !window.PawpalSettings) {
+                        const settingsCore = 'modules/settings/settings.js';
+                        _moduleScriptsLoaded.delete(settingsCore);
+                        document.querySelectorAll('script.dynamic-module-script').forEach(script => {
+                            if (script.src.includes('/modules/settings/settings.js')) script.remove();
+                        });
+                        await loadModuleScripts([settingsCore]);
+                        if (!window.PawpalSettings) {
+                            const articleBody = moduleWrapper.querySelector('#articlesTableBody');
+                            if (articleBody) {
+                                articleBody.removeAttribute('data-loading-skeleton');
+                                articleBody.innerHTML = '<tr><td colspan="8" style="padding:28px;text-align:center;color:var(--text-muted);">Không thể khởi tạo cấu hình. Vui lòng tải lại trang.</td></tr>';
+                            }
+                        }
+                    }
                     if (loadRevision !== moduleLoadRevision) return;
                     if (thisLoadId !== _activeModuleLoadId) return;
                     if (modCfg.postLoad) {

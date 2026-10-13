@@ -237,7 +237,7 @@
                       total_price, 
                       note, 
                       customer:customer_id (id, phone_main, customer_profile (full_name)), 
-                      pet_profile:pet_id (id, pet_code, pet_name, species, breed, weight, date_of_birth, allergy, vaccination_history, routine, avatar_url), 
+                      pet_profile:pet_id (id, customer_id, pet_code, pet_name, species, breed, weight, date_of_birth, allergy, vaccination_history, routine, avatar_url, customer:customer_id (id, phone_main, customer_profile (full_name))),
                       service:service_id (id, service_code, service_name, service_category, estimated_duration, checklist, benefits, amenities), 
                       staff:staff_id (id, full_name, role)
                   `)
@@ -282,6 +282,12 @@
 
             for (const result of [appRes, svcRes, revRes]) { if (result.error) throw result.error; }
             const careLogs = (!careLogRes.error && careLogRes.data) ? careLogRes.data : [];
+            const getCustomerProfileName = (customer) => {
+                const profile = customer?.customer_profile;
+                if (Array.isArray(profile)) return profile.find(p => p?.full_name)?.full_name || '';
+                return profile?.full_name || '';
+            };
+            const customerLookup = new Map((custRes.data || []).map(customer => [customer.id, customer]));
 
             if (!appRes.error && Array.isArray(appRes.data)) {
                 PawpalServices.state.bookingsData = appRes.data.map((item, idx) => {
@@ -298,12 +304,14 @@
                     else if (s === 'COMPLETED') status = 'completed';
                     else if (s === 'CANCELLED') status = 'cancelled';
 
-                    const customerName = item.customer?.customer_profile?.full_name || 'Khách vãng lai';
-                    const phone = item.customer?.phone_main || '—';
+                    const linkedCustomer = item.customer || item.pet_profile?.customer || customerLookup.get(item.customer_id) || customerLookup.get(item.pet_profile?.customer_id);
+                    const customerName = getCustomerProfileName(linkedCustomer) || 'Khách vãng lai';
+                    const phone = linkedCustomer?.phone_main || '—';
                     const petName = item.pet_profile?.pet_name || 'Pet cưng';
                     const petBreed = item.pet_profile?.breed || 'Thú cưng';
                     const serviceName = item.service?.service_name || 'Dịch vụ Spa';
-                    const staff = item.staff?.full_name || null;
+                    const rawStaffName = item.staff?.full_name || '';
+                    const staff = rawStaffName && !rawStaffName.includes('@') ? rawStaffName : null;
                     const petWeight = Number(item.pet_profile?.weight) > 0 ? `${item.pet_profile.weight} kg` : 'Chưa cập nhật';
                     const petAllergy = item.pet_profile?.allergy && !/^(không|none)$/i.test(item.pet_profile.allergy.trim()) ? item.pet_profile.allergy : (item.note && item.note.toLowerCase().includes('dị ứng') ? item.note : null);
 
@@ -401,7 +409,7 @@
                         id: 'REV-' + (100 + i),
                         dbId: r.id,
                         bookingId: '—',
-                        customerName: r.customer?.customer_profile?.full_name || 'Khách hàng PawPal',
+                        customerName: getCustomerProfileName(r.customer) || 'Khách hàng PawPal',
                         phone: r.customer?.phone_main || '—',
                         serviceName: sName || 'Dịch vụ Spa và Grooming',
                         category: cat,

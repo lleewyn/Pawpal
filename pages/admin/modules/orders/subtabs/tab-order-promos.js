@@ -271,7 +271,7 @@
                 const updatePayload = { is_active: isAct };
                 if (formattedEndDate) updatePayload.end_date = formattedEndDate;
 
-                const { error } = await client.from('voucher').update(updatePayload).eq('voucher_code', code);
+                const { error } = await client.from('voucher').update(updatePayload).eq('voucher_code', voucher.dbCode || code);
                 if (error) throw error;
             } catch (errUpVouDb) {
                 console.error('Lỗi khi cập nhật voucher trên Supabase:', errUpVouDb);

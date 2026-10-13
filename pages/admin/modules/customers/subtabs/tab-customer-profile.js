@@ -337,10 +337,18 @@
         if (headlinePhoneBadge) headlinePhoneBadge.textContent = data.phone;
 
         // Nút thao tác một chạm Gọi điện, Zalo
+        const phoneDigits = String(data.phone || '').replace(/\D/g, '');
+        const hasValidPhone = phoneDigits.length >= 9 && phoneDigits.length <= 11;
         const btnCall = document.querySelector('.drawer-action-buttons a[href^="tel:"]');
         const btnZalo = document.querySelector('.drawer-action-buttons a[href*="zalo.me"]');
-        if (btnCall) btnCall.href = `tel:${data.phone}`;
-        if (btnZalo) btnZalo.href = `https://zalo.me/${data.phone}`;
+        if (btnCall) {
+            btnCall.style.display = hasValidPhone ? '' : 'none';
+            if (hasValidPhone) btnCall.href = `tel:${phoneDigits}`;
+        }
+        if (btnZalo) {
+            btnZalo.style.display = hasValidPhone ? '' : 'none';
+            if (hasValidPhone) btnZalo.href = `https://zalo.me/${phoneDigits}`;
+        }
 
         // Banner cảnh báo khẩn cấp
         const banner = document.getElementById('custEmergencyBanner');
@@ -367,9 +375,9 @@
         const authStatusEl = document.getElementById('profileValAuthStatus');
         if (authStatusEl) {
             const authBadgeClass = data.status === 'LOCKED' ? 'badge-danger' : (data.status === 'TEMP' ? 'badge-warning' : 'badge-success');
-            authStatusEl.innerHTML = `<span class="admin-badge ${authBadgeClass}">${data.status === 'LOCKED' ? 'Tài khoản bị khóa' : (data.status === 'TEMP' ? 'Tài khoản tạm' : 'Đang hoạt động')}</span><button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnResendSmsToken" style="font-size: 11.5px; padding: 3px 8px;">Gửi lại SMS</button>`;
+            authStatusEl.innerHTML = `<span class="admin-badge ${authBadgeClass}">${data.status === 'LOCKED' ? 'Tài khoản bị khóa' : (data.status === 'TEMP' ? 'Tài khoản tạm' : 'Đang hoạt động')}</span>${hasValidPhone ? '<button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnResendSmsToken" style="font-size: 11.5px; padding: 3px 8px;">Gửi lại SMS</button>' : ''}`;
             authStatusEl.querySelector('#btnResendSmsToken')?.addEventListener('click', () => {
-                PawpalCustomers.showToast(`Đã gửi lại tin nhắn SMS chứa liên kết tạo mật khẩu đến số ${data.phone}!`);
+                PawpalCustomers.showToast(`Đã gửi lại tin nhắn SMS chứa liên kết tạo mật khẩu đến số ${phoneDigits}.`);
             });
         }
 
@@ -480,6 +488,20 @@
         if (document.getElementById('editCustId')) document.getElementById('editCustId').value = currentId;
         if (document.getElementById('editCustFullName')) document.getElementById('editCustFullName').value = data.name || '';
         if (document.getElementById('editCustPhone')) document.getElementById('editCustPhone').value = data.phone || '';
+        // Khách vãng lai/tài khoản tạm có thể chưa có số điện thoại; chỉ bắt buộc
+        // SĐT đối với hồ sơ thành viên để không chặn việc sửa các trường khác.
+        const editPhoneInput = document.getElementById('editCustPhone');
+        const editPhoneLabel = editPhoneInput?.closest('.form-group')?.querySelector('label');
+        const isTemporaryCustomer = data.status === 'TEMP' || data.isMember === false;
+        if (editPhoneInput) {
+            editPhoneInput.required = !isTemporaryCustomer;
+            editPhoneInput.setCustomValidity('');
+        }
+        if (editPhoneLabel) {
+            editPhoneLabel.innerHTML = isTemporaryCustomer
+                ? 'Số điện thoại'
+                : 'Số điện thoại <span style="color: #DC2626;">*</span>';
+        }
         if (document.getElementById('editCustEmail')) document.getElementById('editCustEmail').value = data.email || '';
         if (document.getElementById('editCustGender')) document.getElementById('editCustGender').value = data.gender || 'Nam';
         if (document.getElementById('editCustTier')) document.getElementById('editCustTier').value = data.tier || 'GOLD';
@@ -603,6 +625,12 @@
 
                 const custObj = PawpalCustomers.state.customerDatabase?.[custId];
                 const custDbId = custObj?.dbId;
+                const isTemporaryCustomer = custObj?.status === 'TEMP' || custObj?.isMember === false;
+                const phoneDigits = newPhone.replace(/\D/g, '');
+                if (!isTemporaryCustomer && (phoneDigits.length < 9 || phoneDigits.length > 11)) {
+                    PawpalCustomers.showToast('Vui lòng nhập số điện thoại hợp lệ từ 9 đến 11 số!', 'warning');
+                    return;
+                }
 
                 const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                 if (!client) {

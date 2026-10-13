@@ -329,14 +329,17 @@
                     petsRes.data.forEach((p, idx) => {
                         const code = p.pet_code || `PET-${String(idx + 1).padStart(3, '0')}`;
                         const spec = (p.species || 'dog').toLowerCase();
-                        const br = p.breed || 'Chưa cập nhật';
+                        // Không đưa mã số/giá trị placeholder vào tên giống hiển thị.
+                        const rawBreed = String(p.breed || '').trim();
+                        const invalidBreed = !rawBreed || /^\d+$/.test(rawBreed) || /^(?:null|undefined|unknown|chưa rõ|chưa cập nhật)$/i.test(rawBreed);
+                        const br = invalidBreed ? 'Chưa cập nhật' : rawBreed;
                         const specBreed = `${speciesNameMap[spec] || 'Chó'} ${br}`.trim();
                         const wNum = Number(p.weight);
                         const allg = p.allergy && p.allergy !== 'Không' ? p.allergy : '';
                         const isArch = p.status === 'INACTIVE' || p.status === 'ARCHIVED';
                         
                         const ownerObj = custMap[p.customer_id] || {};
-                        const ownerName = ownerObj.name || 'Khách hàng PawPal';
+                        const ownerName = ownerObj.name || 'Chưa cập nhật chủ nuôi';
                         const routine = p.routine || '';
                         const allergyText = allg ? `Dị ứng: ${allg}` : '';
                         const routineAlert = routine.trim() && routine.trim() !== 'Tiếp nhận mới tại quầy.'

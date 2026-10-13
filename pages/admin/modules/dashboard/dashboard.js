@@ -779,7 +779,7 @@
             document.querySelectorAll('[data-calendar-view]').forEach((button) => {
                 const active = button.dataset.calendarView === calendarView;
                 button.classList.toggle('is-active', active);
-                button.setAttribute('aria-pressed', String(active));
+                button.setAttribute('aria-selected', String(active));
             });
             calendarAgenda?.classList.toggle('is-week-view', calendarView === 'week');
             calendarAgenda?.classList.toggle('is-day-view', calendarView === 'day');
@@ -963,6 +963,19 @@
         const btnService = document.getElementById('btnQuickBookingService');
         const btnOrder = document.getElementById('btnQuickCreateOrder');
 
+        const openCreateFormAfterNavigation = (moduleName, buttonId) => {
+            const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
+                .find(button => button.getAttribute('data-title') === moduleName);
+            if (!target) return;
+
+            window.addEventListener('admin:module-show', (event) => {
+                if (event.detail?.module === moduleName) {
+                    document.getElementById(buttonId)?.click();
+                }
+            }, { once: true });
+            target.click();
+        };
+
         if (btnPet) {
             btnPet.addEventListener('click', () => {
                 sessionStorage.setItem('pawpal_admin_pet_subtab', 'tab-pet-list');
@@ -976,20 +989,14 @@
         if (btnService) {
             btnService.addEventListener('click', () => {
                 sessionStorage.setItem('pawpal_admin_services_active_subtab', 'tab-service-bookings');
-                sessionStorage.setItem('pawpal_admin_service_open_create_modal', 'true');
-                const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
-                    .find(b => b.getAttribute('data-title') === 'Dịch vụ');
-                if (target) target.click();
+                openCreateFormAfterNavigation('Dịch vụ', 'btnOpenCreateBookingModal');
             });
         }
 
         if (btnOrder) {
             btnOrder.addEventListener('click', () => {
                 sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-list');
-                sessionStorage.setItem('pawpal_admin_order_open_create_modal', 'true');
-                const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
-                    .find(b => b.getAttribute('data-title') === 'Bán hàng');
-                if (target) target.click();
+                openCreateFormAfterNavigation('Bán hàng', 'btnOpenCreateOrderModal');
             });
         }
     }
@@ -1057,15 +1064,33 @@
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) closeBookingQuickModal();
             });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.style.display !== 'none') {
+                    closeBookingQuickModal();
+                }
+            });
         }
 
         if (btnGo) {
             btnGo.addEventListener('click', () => {
+                const booking = currentSelectedQuickBooking;
                 closeBookingQuickModal();
                 sessionStorage.setItem('pawpal_admin_services_active_subtab', 'tab-service-detail');
-                if (currentSelectedQuickBooking) {
-                    const targetCode = currentSelectedQuickBooking.appointmentCode || currentSelectedQuickBooking.id;
+                if (booking) {
+                    const targetCode = booking.appointmentCode || booking.id;
                     sessionStorage.setItem('pawpal_admin_service_selected_id', targetCode);
+                    window.addEventListener('admin:module-show', async (event) => {
+                        if (event.detail?.module === 'Dịch vụ') {
+                            const services = window.PawpalServices;
+                            await services?.loadServicesData?.();
+                            if (services?.state?.bookingsData?.some(item => item.id === targetCode || item.dbId === booking.id)) {
+                                services.openBookingDetail(targetCode);
+                            } else {
+                                services?.switchSubtab?.('tab-service-bookings');
+                                services?.showToast?.('Không tìm thấy ca dịch vụ tương ứng.', 'warning');
+                            }
+                        }
+                    }, { once: true });
                 }
                 const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
                     .find(b => b.getAttribute('data-title') === 'Dịch vụ');

@@ -11,13 +11,27 @@
     let activeMoreBtn = null;
     let dupFoundCustId = null;
 
+    function sanitizePetDescriptor(value) {
+        const normalized = String(value ?? '').trim();
+        if (!normalized || /^\d+$/.test(normalized)) return '';
+        const lowered = normalized.toLowerCase();
+        if (['chưa rõ', 'chưa cập nhật', 'unknown', 'null', 'undefined'].includes(lowered)) return '';
+        if (lowered === 'cat') return 'Mèo';
+        if (lowered === 'dog') return 'Chó';
+        return normalized;
+    }
+
+    function getPetDescriptor(pet) {
+        return sanitizePetDescriptor(pet?.breed) || sanitizePetDescriptor(pet?.species) || '—';
+    }
+
     function formatCustomerPetsCell(pets) {
         if (!pets || pets.length === 0) {
             return `<span class="customer-pet-sub">Chưa có thú cưng</span>`;
         }
         if (pets.length === 1) {
             const p = pets[0];
-            const breedText = p.breed || (p.species === 'CAT' || p.species === 'Mèo' ? 'Mèo' : 'Chó');
+            const breedText = getPetDescriptor(p);
             return `
                 <div class="customer-pet-cell">${p.name}</div>
                 <div class="customer-pet-sub">${breedText}</div>
@@ -25,8 +39,9 @@
         }
         const mainPet = pets[0];
         const moreCount = pets.length - 1;
-        const allBreeds = pets.map(p => p.breed || (p.species === 'CAT' || p.species === 'Mèo' ? 'Mèo' : 'Chó')).filter(Boolean).join(', ');
-        const fullTooltip = pets.map(p => `${p.name} (${p.breed || p.species})`).join(', ');
+        const cleanDescriptors = pets.map(getPetDescriptor).filter(value => value !== '—');
+        const allBreeds = [...new Set(cleanDescriptors)].join(', ') || '—';
+        const fullTooltip = pets.map(p => `${p.name} (${getPetDescriptor(p)})`).join(', ');
 
         return `
             <div class="customer-pet-cell">${mainPet.name} <span class="customer-pet-more">(+${moreCount} bé)</span></div>
@@ -826,38 +841,49 @@
             } else if (action === 'toggle-lock') {
                 const custObj = PawpalCustomers.state.customerDatabase[custId];
                 if (!custObj || !custObj.dbId) return;
-
-                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                if (!client) {
-                    PawpalCustomers.showToast('Lỗi kết nối CSDL Supabase!', 'danger');
-                    return;
-                }
-
                 const isLocking = custObj.status !== 'LOCKED';
                 const newStatus = isLocking ? 'LOCKED' : 'ACTIVE';
-
-                (async () => {
-                    try {
-                        const { error: lockErr } = await client
-                            .from('customer')
-                            .update({ account_status: newStatus })
-                            .eq('id', custObj.dbId);
-
-                        if (lockErr) {
-                            console.error('[Customers] Lỗi cập nhật trạng thái:', lockErr);
-                            PawpalCustomers.showToast('Không thể cập nhật trạng thái tài khoản trên CSDL!', 'danger');
+                PawpalCustomers.showCustomerConfirmModal({
+                    title: isLocking ? 'Khóa tài khoản khách hàng' : 'Mở khóa tài khoản khách hàng',
+                    message: isLocking
+                        ? `Bạn có chắc chắn muốn khóa tài khoản của <strong>${custObj.name}</strong>? Khách hàng sẽ không thể đăng nhập cho đến khi được mở khóa.`
+                        : `Bạn có chắc chắn muốn mở khóa tài khoản của <strong>${custObj.name}</strong>?`,
+                    acceptText: isLocking ? 'Khóa tài khoản' : 'Mở khóa tài khoản',
+                    onAccept: async () => {
+                        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                        if (!client) {
+                            PawpalCustomers.showToast('Không thể kết nối cơ sở dữ liệu.', 'danger');
                             return;
                         }
+                        try {
+                            const { data: updatedCustomer, error: lockErr } = await client
+                                .from('customer')
+                                .update({ account_status: newStatus })
+                                .eq('id', custObj.dbId)
+                                .select('id, account_status')
+                                .maybeSingle();
 
-                        await PawpalCustomers.loadCustomersModuleData();
-                        renderCustomersTable();
-                        updateCustomerKPIs();
-                        PawpalCustomers.showToast(isLocking ? `Đã khóa tài khoản khách hàng ${custObj.name}!` : `Đã mở khóa tài khoản khách hàng ${custObj.name}!`, 'success');
-                    } catch (err) {
-                        console.error('[Customers] Lỗi cập nhật trạng thái:', err);
-                        PawpalCustomers.showToast('Đã xảy ra lỗi khi cập nhật trạng thái!', 'danger');
+                            if (lockErr || !updatedCustomer || updatedCustomer.account_status !== newStatus) {
+                                if (lockErr) console.error('[Customers] Lỗi cập nhật trạng thái:', lockErr);
+                                PawpalCustomers.showToast('Không thể cập nhật trạng thái tài khoản trên cơ sở dữ liệu.', 'danger');
+                                return;
+                            }
+
+                            await PawpalCustomers.loadCustomersModuleData({ force: true });
+                            const refreshedCustomer = PawpalCustomers.state.customerDatabase?.[custId];
+                            if (!refreshedCustomer || refreshedCustomer.status !== newStatus) {
+                                PawpalCustomers.showToast('Trạng thái chưa được đồng bộ. Vui lòng tải lại và thử lại.', 'danger');
+                                return;
+                            }
+                            renderCustomersTable();
+                            updateCustomerKPIs();
+                            PawpalCustomers.showToast(isLocking ? `Đã khóa tài khoản khách hàng ${custObj.name}.` : `Đã mở khóa tài khoản khách hàng ${custObj.name}.`, 'success');
+                        } catch (err) {
+                            console.error('[Customers] Lỗi cập nhật trạng thái:', err);
+                            PawpalCustomers.showToast('Đã xảy ra lỗi khi cập nhật trạng thái.', 'danger');
+                        }
                     }
-                })();
+                });
             }
         });
 
@@ -967,6 +993,7 @@
 
         if (btnComplaintStripFilter) {
             btnComplaintStripFilter.addEventListener('click', () => {
+                if (filterStatusSelect) filterStatusSelect.value = 'ALL';
                 currentCustomerFilter = 'COMPLAINT';
                 if (btnFilterComplaint) btnFilterComplaint.classList.add('active');
                 document.querySelectorAll('.customers-kpi-grid .kpi-card-clickable').forEach(c => {
@@ -989,11 +1016,13 @@
                 if (btnFilterComplaint) {
                     btnFilterComplaint.classList.toggle('active', filter === 'COMPLAINT');
                 }
+                if (searchInput) searchInput.value = '';
+                if (filterTierSelect) filterTierSelect.value = 'ALL';
                 if (filterStatusSelect) {
-                    if (filter === 'ALL') filterStatusSelect.value = 'ALL';
-                    else if (filter === 'LOCKED') filterStatusSelect.value = 'LOCKED';
+                    if (filter === 'LOCKED') filterStatusSelect.value = 'LOCKED';
                     else if (filter === 'TEMP') filterStatusSelect.value = 'TEMP';
                     else if (filter === 'MEMBER') filterStatusSelect.value = 'ACTIVE';
+                    else filterStatusSelect.value = 'ALL';
                 }
                 currentCustomerPage = 1;
                 renderCustomersTable();

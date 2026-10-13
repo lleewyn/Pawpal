@@ -339,7 +339,7 @@
                         </div>
                         <div class="pet-sub-cell">${pet.gender || 'Đực'} • ${pet.dob || ''}</div>
                     </td>
-                    <td>${pet.speciesBreed || pet.breed || 'Chó'}</td>
+                    <td>${pet.breed || 'Chưa cập nhật'}</td>
                     <td><strong>${pet.weight}</strong></td>
                     <td>
                         <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="${pet.custId || 'CUST-001'}">${pet.ownerName || 'Chủ nuôi'}</a>
