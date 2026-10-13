@@ -1353,6 +1353,45 @@
     letter-spacing: 1px;
 }
 
+#servicesBookingTable .btn-booking-action-more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 4px 8px;
+    border: none;
+    border-radius: var(--admin-radius);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 17px;
+    line-height: 1;
+    letter-spacing: 1px;
+    box-shadow: none;
+    cursor: pointer;
+}
+
+#servicesBookingTable .btn-booking-action-more:hover,
+#servicesBookingTable .btn-booking-action-more:focus-visible {
+    background: #EEF5F1;
+    color: #236B48;
+}
+
+#servicesReviewTable .service-review-content-cell {
+    width: 260px;
+    min-width: 220px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+#servicesReviewTable .service-review-content-cell > div {
+    max-width: 260px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
 .review-comment-box {
     display: flex;
     flex-direction: column;

@@ -129,49 +129,13 @@
     }
 
     function isBookingUpcoming(booking) {
-        if (!booking) return false;
-        const status = booking.status ? String(booking.status).toLowerCase() : '';
-        if (status === 'completed' || status === 'cancelled') return false;
-        if (status === 'in_progress') return true;
-
-        const dateVal = booking.date || booking.appointment_date;
-        const timeVal = booking.time || booking.appointment_time;
-
-        if (dateVal && timeVal) {
-            try {
-                const now = new Date();
-                const dStr = String(dateVal).split('T')[0];
-                const dParts = dStr.split('-');
-                const tParts = String(timeVal).split(':');
-
-                if (dParts.length === 3 && tParts.length >= 2) {
-                    const bYear = parseInt(dParts[0], 10);
-                    const bMonth = parseInt(dParts[1], 10) - 1;
-                    const bDay = parseInt(dParts[2], 10);
-                    const bHour = parseInt(tParts[0], 10);
-                    const bMinute = parseInt(tParts[1], 10);
-
-                    const bDate = new Date(bYear, bMonth, bDay, bHour, bMinute, 0);
-
-                    if (!isNaN(bDate.getTime())) {
-                        const isSameDay = (
-                            bDate.getFullYear() === now.getFullYear() &&
-                            bDate.getMonth() === now.getMonth() &&
-                            bDate.getDate() === now.getDate()
-                        );
-                        if (isSameDay) {
-                            const diffMinutes = (bDate.getTime() - now.getTime()) / (1000 * 60);
-                            if (diffMinutes >= -30 && diffMinutes <= 60) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            } catch (e) {}
-        }
-
-        if (booking.alertType === 'upcoming') return true;
-        return false;
+        if (!booking || !['pending','confirmed'].includes(String(booking.status || '').toLowerCase())) return false;
+        const date = booking.date || booking.appointment_date;
+        const time = booking.time || booking.appointment_time;
+        if (!date || !time) return false;
+        const scheduledAt = Date.parse(`${String(date).slice(0,10)}T${String(time).slice(0,5)}:00+07:00`);
+        const remaining = scheduledAt - Date.now();
+        return Number.isFinite(scheduledAt) && remaining >= 0 && remaining <= 3600000;
     }
 
     function getServiceSlaInfo(booking) {
@@ -250,7 +214,7 @@
 
     async function loadServicesData({ force = false } = {}) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) return;
+        if (!db) { PawpalServices.state.loadError = 'Không thể kết nối cơ sở dữ liệu.'; return; }
 
         // Bỏ qua fetch lại nếu dữ liệu còn mới (< 90s) và đã có dữ liệu trong state
         if (!force && Date.now() - _servicesLastFetchedAt < SERVICES_CACHE_TTL_MS && PawpalServices.state.bookingsData.length > 0) {
@@ -259,6 +223,7 @@
         }
 
         try {
+            PawpalServices.state.loadError = null;
             console.log('[PawpalServices] Đang nạp dữ liệu từ Supabase Live Database...');
             const [appRes, svcRes, priceRes, revRes, careLogRes, staffRes, custRes, petRes] = await Promise.all([
                 db.from('appointment')
@@ -283,7 +248,8 @@
                 db.from('service_price_matrix')
                   .select('*'),
                 db.from('review')
-                  .select('id, rating, review_content, review_type, created_at, shop_reply, customer:customer_id(id, customer_profile(full_name)), service:service_id(id, service_name)')
+                  .select('id, rating, review_content, review_type, created_at, shop_reply, customer:customer_id(id, phone_main, customer_profile(full_name)), service:service_id(id, service_name)')
+                  .eq('review_type', 'SERVICE')
                   .order('created_at', { ascending: false }),
                 db.from('care_log')
                   .select('*, care_action(*), care_log_media(*)'),
@@ -314,14 +280,16 @@
                   .order('pet_name', { ascending: true })
             ]);
 
+            for (const result of [appRes, svcRes, revRes]) { if (result.error) throw result.error; }
             const careLogs = (!careLogRes.error && careLogRes.data) ? careLogRes.data : [];
 
-            if (!appRes.error && appRes.data && appRes.data.length > 0) {
+            if (!appRes.error && Array.isArray(appRes.data)) {
                 PawpalServices.state.bookingsData = appRes.data.map((item, idx) => {
                     let cat = 'Spa';
-                    const catRaw = item.service?.service_category || '';
-                    if (catRaw === 'PET_HOTEL' || catRaw.includes('HOTEL')) cat = 'Hotel';
-                    else if (catRaw === 'PET_TAXI' || catRaw.includes('TAXI')) cat = 'Taxi';
+                    const catRaw = String(item.service?.service_category || '').toUpperCase();
+                    const serviceLabel = item.service?.service_name || '';
+                    if (catRaw.includes('HOTEL') || /phòng|hotel|suite/i.test(serviceLabel)) cat = 'Hotel';
+                    else if (catRaw.includes('TAXI') || /taxi|đưa đón/i.test(serviceLabel)) cat = 'Taxi';
 
                     let status = 'pending';
                     const s = String(item.appointment_status || '').toUpperCase();
@@ -336,10 +304,10 @@
                     const petBreed = item.pet_profile?.breed || 'Thú cưng';
                     const serviceName = item.service?.service_name || 'Dịch vụ Spa';
                     const staff = item.staff?.full_name || null;
-                    const petWeight = item.pet_profile?.weight ? `${item.pet_profile.weight} kg` : '4.5 kg';
-                    const petAllergy = item.pet_profile?.allergy || (item.note && item.note.toLowerCase().includes('dị ứng') ? item.note : null);
+                    const petWeight = Number(item.pet_profile?.weight) > 0 ? `${item.pet_profile.weight} kg` : 'Chưa cập nhật';
+                    const petAllergy = item.pet_profile?.allergy && !/^(không|none)$/i.test(item.pet_profile.allergy.trim()) ? item.pet_profile.allergy : (item.note && item.note.toLowerCase().includes('dị ứng') ? item.note : null);
 
-                    const relatedLogs = careLogs.filter(cl => cl.appointment_id === item.id || cl.pet_id === item.pet_profile?.id);
+                    const relatedLogs = careLogs.filter(cl => cl.appointment_id === item.id);
 
                     return {
                         id: item.appointment_code || 'BKG-' + (1000 + idx),
@@ -351,14 +319,14 @@
                         petBreed,
                         petId: item.pet_profile?.pet_code || 'PET-001',
                         petWeight,
-                        petAge: item.pet_profile?.date_of_birth ? '2 tuổi' : 'Chưa rõ',
+                        petAge: item.pet_profile?.date_of_birth ? (() => { const months = Math.floor((Date.now()-Date.parse(item.pet_profile.date_of_birth))/2629800000); return months >= 12 ? `${Math.floor(months/12)} tuổi` : months >= 0 ? `${months} tháng` : 'Chưa cập nhật'; })() : 'Chưa cập nhật',
                         petAlert: petAllergy,
                         category: cat,
                         categoryName: cat === 'Hotel' ? 'Pet Hotel' : (cat === 'Taxi' ? 'Pet Taxi' : 'Spa và Grooming'),
                         serviceName,
                         duration: item.service?.estimated_duration ? `${item.service.estimated_duration} phút` : '60 phút',
-                        date: item.appointment_date || '2026-07-10',
-                        time: item.appointment_time ? item.appointment_time.substring(0, 5) : '09:00',
+                        date: item.appointment_date || '',
+                        time: item.appointment_time ? item.appointment_time.substring(0, 5) : '',
                         staff,
                         price: item.total_price || 0,
                         total: item.total_price || 0,
@@ -366,17 +334,12 @@
                         status,
                         alertType: isBookingUpcoming({ status, date: item.appointment_date, time: item.appointment_time }) ? 'upcoming' : null,
                         careLogs: relatedLogs,
-                        timeline: [
-                            { title: 'Đặt lịch hẹn', time: item.appointment_time ? item.appointment_time.substring(0, 5) : '09:00', desc: 'Khách hàng đặt trực tuyến', done: true },
-                            { title: 'Tiếp nhận an toàn', time: '09:15', desc: 'KTV kiểm tra da lông, mắt tai', done: status === 'in_progress' || status === 'completed' },
-                            { title: 'Thực hiện dịch vụ', time: '09:30', desc: serviceName, done: status === 'in_progress' || status === 'completed' },
-                            { title: 'Hoàn tất & Trả bé', time: '10:30', desc: 'Bàn giao cho chủ nuôi', done: status === 'completed' }
-                        ]
+                        timeline: relatedLogs.map(log => ({title: log.description || 'Ghi nhận chăm sóc',time: log.recorded_at || log.created_at || '',desc: log.health_status || '',done: true}))
                     };
                 });
             }
 
-            if (!svcRes.error && svcRes.data && svcRes.data.length > 0) {
+            if (!svcRes.error && Array.isArray(svcRes.data)) {
                 const priceMatrix = priceRes.data || [];
                 PawpalServices.state.servicesData = svcRes.data.map(svc => {
                     let group = 'spa';
@@ -427,7 +390,7 @@
                 });
             }
 
-            if (!revRes.error && revRes.data && revRes.data.length > 0) {
+            if (!revRes.error && Array.isArray(revRes.data)) {
                 PawpalServices.state.reviewsData = revRes.data.map((r, i) => {
                     let cat = 'Spa';
                     const sName = r.service?.service_name || '';
@@ -437,14 +400,14 @@
                     return {
                         id: 'REV-' + (100 + i),
                         dbId: r.id,
-                        bookingId: r.appointment_id ? ('BKG-' + r.appointment_id.slice(0, 4)) : 'BKG-100' + (i % 8 + 1),
+                        bookingId: '—',
                         customerName: r.customer?.customer_profile?.full_name || 'Khách hàng PawPal',
-                        phone: r.customer?.phone_main || '0901234567',
+                        phone: r.customer?.phone_main || '—',
                         serviceName: sName || 'Dịch vụ Spa và Grooming',
                         category: cat,
-                        staff: 'Ngọc Anh',
+                        staff: 'Chưa có thông tin',
                         rating: r.rating || 5,
-                        comment: r.review_content || 'Dịch vụ rất chu đáo và tận tâm.',
+                        comment: r.review_content || '—',
                         status: r.shop_reply ? 'replied' : 'pending',
                         replyText: r.shop_reply || ''
                     };
@@ -460,8 +423,21 @@
             if (petRes && !petRes.error && Array.isArray(petRes.data)) {
                 PawpalServices.state.livePetDirectory = petRes.data;
             }
+            const ratings = new Map();
+            (revRes.data || []).forEach(review => {
+                const value = Number(review.rating);
+                if (!review.service?.id || !Number.isFinite(value) || value < 1 || value > 5) return;
+                const values = ratings.get(review.service.id) || [];
+                values.push(value); ratings.set(review.service.id, values);
+            });
+            PawpalServices.state.servicesData.forEach(service => {
+                const values = ratings.get(service.dbId) || [];
+                service.averageRating = values.length ? values.reduce((sum,rating)=>sum+rating,0)/values.length : null;
+            });
+            PawpalServices.state.isLoaded = true;
             _servicesLastFetchedAt = Date.now();
         } catch (err) {
+            PawpalServices.state.loadError = 'Không thể tải dữ liệu dịch vụ. Vui lòng tải lại trang.';
             console.error('[PawpalServices] Lỗi kết nối Supabase:', err);
         }
     }
@@ -469,6 +445,7 @@
 
     // Quản lý Header Subtabs & Breadcrumb
     function updateBreadcrumb(bookingCode) {
+        if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Dịch vụ') return;
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
         if (!deepBreadcrumbEl) return;
         if (bookingCode) {
@@ -483,6 +460,7 @@
     PawpalServices.updateBreadcrumb = updateBreadcrumb;
 
     function switchSubtab(subtabId, updateHistory = true) {
+        if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Dịch vụ') return;
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
 
         if (subtabsContainer) {
@@ -491,7 +469,9 @@
             });
         }
 
-        document.querySelectorAll('.subtab-content').forEach(section => {
+        const root = document.getElementById('subtab-tab-service-bookings')?.closest('.admin-module-wrapper');
+        if (!root || sessionStorage.getItem('pawpal_admin_active_module') !== 'Dịch vụ') return;
+        root.querySelectorAll('.subtab-content').forEach(section => {
             section.classList.toggle('active', section.id === 'subtab-' + subtabId);
         });
 

@@ -271,7 +271,7 @@
         const intakeContentBox = document.getElementById('detailIntakeContentContainer');
         const btnEditIntake = document.getElementById('btnEditIntakeSafety');
 
-        if (booking.status === 'pending') {
+        if (!booking.intakeRecord) {
             if (intakeEmptyNotice) intakeEmptyNotice.style.display = 'block';
             if (intakeContentBox) intakeContentBox.style.display = 'none';
         } else {
@@ -459,12 +459,7 @@
         const timelineContainer = document.getElementById('detailTimelineContainer');
         if (!timelineContainer) return;
 
-        const timelineData = booking.timeline || [
-            { title: 'Đặt lịch hẹn', time: booking.time || '09:00', desc: 'Khách hàng đặt trực tuyến', done: true },
-            { title: 'Tiếp nhận an toàn', time: '09:15', desc: 'KTV kiểm tra da lông, mắt tai', done: booking.status === 'in_progress' || booking.status === 'completed' },
-            { title: 'Thực hiện dịch vụ', time: '09:30', desc: booking.serviceName, done: booking.status === 'in_progress' || booking.status === 'completed' },
-            { title: 'Hoàn tất & Trả bé', time: '10:30', desc: 'Bàn giao cho chủ nuôi', done: booking.status === 'completed' }
-        ];
+        const timelineData = booking.timeline || [];
 
         timelineContainer.innerHTML = timelineData.map((step, idx) => `
             <div class="timeline-step-item ${step.done ? 'step-done' : ''}">
@@ -571,38 +566,9 @@
         if (!carelogsContainer) return;
 
         let logs = booking.carelogs || booking.careLogs || [];
-        if (!logs || logs.length === 0) {
-            logs = [
-                {
-                    step_name: 'Tiếp nhận và kiểm tra an toàn da lông',
-                    description: 'Kiểm tra vết xước, ve rận, cân đo thể trạng trước khi làm dịch vụ',
-                    ktv: booking.staff || 'Ngọc Anh',
-                    recorded_at: '2026-10-12T09:15:00',
-                    completed: true,
-                    note: 'Bé khỏe mạnh, không phát hiện vết thương hở',
-                    images: ['https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=400&q=80']
-                },
-                {
-                    step_name: 'Tắm xả thảo dược và massage da',
-                    description: 'Tắm sạch bụi bẩn, xả dưỡng làm tơi lông và massage thư giãn',
-                    ktv: booking.staff || 'Ngọc Anh',
-                    recorded_at: '2026-10-12T09:40:00',
-                    completed: true,
-                    note: 'Bé ngoan, rất thích nước ấm',
-                    images: []
-                },
-                {
-                    step_name: 'Sấy tạo phồng và chải tơi lông',
-                    description: 'Sấy ấm ở mức gió tiêu chuẩn, chải tơi phồng chuẩn bị cắt tỉa',
-                    ktv: booking.staff || 'Ngọc Anh',
-                    recorded_at: '2026-10-12T10:15:00',
-                    completed: booking.status === 'completed',
-                    note: 'Lông khô 100%, chuẩn bị tạo kiểu',
-                    images: []
-                }
-            ];
-            booking.carelogs = logs;
-            booking.careLogs = logs;
+        if (!logs.length) {
+            carelogsContainer.innerHTML = '<div style="color:var(--text-muted);padding:12px 0;">Chưa có nhật ký chăm sóc cho ca dịch vụ này.</div>';
+            return;
         }
 
         carelogsContainer.innerHTML = logs.map((log, idx) => `

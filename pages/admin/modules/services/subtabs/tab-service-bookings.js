@@ -131,7 +131,9 @@
         const bookingsData = PawpalServices.state?.bookingsData || [];
         const isBookingUpcoming = PawpalServices.isBookingUpcoming || (() => false);
 
-        const total = bookingsData.length;
+        if (!PawpalServices.state.isLoaded) return;
+        const today = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+        const total = bookingsData.filter(booking => booking.date?.slice(0,10) === today).length;
         const pending = bookingsData.filter(b => b.status === 'pending').length;
         const upcoming = bookingsData.filter(isBookingUpcoming).length;
         const inProgress = bookingsData.filter(b => b.status === 'in_progress').length;
@@ -192,6 +194,15 @@
         closeBookingGlobalDropdown();
         const tbody = document.getElementById('servicesBookingTableBody');
         if (!tbody) return;
+        if (PawpalServices.state.loadError || !PawpalServices.state.isLoaded) {
+            if (PawpalServices.state.loadError) {
+                delete tbody.dataset.loadingSkeleton;
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:28px;">Không thể tải dữ liệu dịch vụ. Vui lòng tải lại trang.</td></tr>';
+            }
+            return;
+        }
+        delete tbody.dataset.loadingSkeleton;
+
 
         const bookingsData = PawpalServices.state?.bookingsData || [];
         const toUnaccent = PawpalServices.toUnaccent || (str => str);
@@ -306,7 +317,7 @@
                 serviceCellHtml = `
                     <div style="font-weight: 500; color: var(--text-main);">${item.serviceName}</div>
                     <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
-                        ${item.roomCode || 'DLX-04'} • ${item.nights || 3} đêm • ${item.dietPlan ? 'Pate tươi' : 'Ăn theo yêu cầu'}
+                        ${[item.roomCode, item.nights ? `${item.nights} đêm` : '', item.dietPlan].filter(Boolean).join(' • ')}
                     </div>
                 `;
                 datetimeCellHtml = `
@@ -318,7 +329,7 @@
                 serviceCellHtml = `
                     <div style="font-weight: 500; color: var(--text-main);">${item.serviceName}</div>
                     <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
-                        ${shortPickup} ➔ Q.1 (${item.distanceKm || 4.2}km)
+                        ${shortPickup}${item.dropoffAddress ? ` ➔ ${item.dropoffAddress}` : ''}${item.distanceKm ? ` (${item.distanceKm} km)` : ''}
                     </div>
                 `;
                 datetimeCellHtml = `

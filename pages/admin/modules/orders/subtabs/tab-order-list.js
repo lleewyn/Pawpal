@@ -120,8 +120,15 @@
     function renderOrdersTable() {
         const tbody = document.getElementById('ordersTableBody');
         if (!tbody) return;
+        if (state.ordersError) {
+            delete tbody.dataset.loadingSkeleton;
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:28px;color:var(--text-muted);">Không thể tải dữ liệu. Vui lòng tải lại trang.</td></tr>';
+            return;
+        }
+
 
         const ordersList = state.orders || [];
+        if (!state.ordersLoaded) return;
 
         // Cập nhật 6 thẻ KPI nhanh
         const statTotalOrdersEl = document.getElementById('statTotalOrders');
@@ -131,7 +138,7 @@
         const statCompletedOrdersEl = document.getElementById('statCompletedOrders');
         const statCancelledOrdersEl = document.getElementById('statCancelledOrders');
 
-        if (statTotalOrdersEl) statTotalOrdersEl.textContent = ordersList.length;
+        if (statTotalOrdersEl) statTotalOrdersEl.textContent = ordersList.filter(order => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(order.createdAt)) === new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())).length;
         if (statPendingOrdersEl) statPendingOrdersEl.textContent = ordersList.filter(o => o.status === 'pending').length;
         if (statPreparingOrdersEl) statPreparingOrdersEl.textContent = ordersList.filter(o => o.status === 'confirmed').length;
         if (statShippingOrdersEl) statShippingOrdersEl.textContent = ordersList.filter(o => o.status === 'shipping' || o.status === 'delivered').length;

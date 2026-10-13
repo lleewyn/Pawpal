@@ -61,6 +61,12 @@
     }
 
     function renderAssessmentList() {
+        if (PawpalStaff.state.loadError) {
+            const target=document.getElementById('assessmentTableBody');
+            if(target)target.innerHTML='<tr><td colspan="9" style="padding:28px;text-align:center;">Không thể tải dữ liệu nhân sự. Vui lòng tải lại trang.</td></tr>';
+            return;
+        }
+        if (!PawpalStaff.state.isLoaded) return;
         const tbody = document.getElementById('assessmentListTableBody') || document.getElementById('assessmentTableBody');
         updateAssessmentKPIs();
         if (!tbody) return;
@@ -141,6 +147,7 @@
     }
 
     function updateAssessmentKPIs() {
+        if (!PawpalStaff.state.isLoaded) return;
         const assessments = PawpalStaff.state?.mockAssessments || [];
         const staffList = PawpalStaff.state?.mockStaff || [];
         const totalStaff = staffList.length;

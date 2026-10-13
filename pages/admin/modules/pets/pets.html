@@ -203,7 +203,7 @@
                     </button>
                     <button type="button" class="drawer-tab-btn" data-drawertab="ptab-carelog">
                         <span>Nhật ký chăm sóc</span>
-                        <span class="tab-badge-count">2</span>
+                        <span class="tab-badge-count" style="display: none;">0</span>
                     </button>
                     <button type="button" class="drawer-tab-btn" data-drawertab="ptab-history">Lịch sử dịch vụ</button>
                 </div>
@@ -249,15 +249,17 @@
                                             <th>Ghi nhận bởi</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="petWeightHistoryTbody">
-                                        <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 16px;">Đang tải lịch sử cân nặng...</td></tr>
+                                    <tbody id="petWeightHistoryTbody" data-loading-skeleton="true">
+                                        <tr class="skeleton-row"><td><span class="skeleton-text" style="width: 80px;"></span></td><td><span class="skeleton-text" style="width: 60px;"></span></td><td><span class="skeleton-text" style="width: 100px;"></span></td><td><span class="skeleton-text" style="width: 120px;"></span></td></tr>
+                                        <tr class="skeleton-row"><td><span class="skeleton-text" style="width: 85px;"></span></td><td><span class="skeleton-text" style="width: 55px;"></span></td><td><span class="skeleton-text" style="width: 95px;"></span></td><td><span class="skeleton-text" style="width: 110px;"></span></td></tr>
+                                        <tr class="skeleton-row"><td><span class="skeleton-text" style="width: 75px;"></span></td><td><span class="skeleton-text" style="width: 65px;"></span></td><td><span class="skeleton-text" style="width: 105px;"></span></td><td><span class="skeleton-text" style="width: 130px;"></span></td></tr>
                                     </tbody>
                                 </table>
                             </div>
 
                             <div style="margin-top: 14px;">
                                 <h4 class="detail-box-title">Ghi chú kỹ thuật Groomer</h4>
-                                <textarea class="admin-input textarea-note" rows="3" id="petGroomerNotes">Cắt tỉa mặt tròn gấu bông, cạo đệm chân và vệ sinh tuyến hôi kỹ. Dùng dầu tắm yến mạch dịu nhẹ tránh kích ứng da.</textarea>
+                                <textarea class="admin-input textarea-note" rows="3" id="petGroomerNotes"></textarea>
                                 <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
                                     <button type="button" class="admin-btn admin-btn-primary btn-sm" id="btnSaveGroomerNotes">Lưu ghi chú</button>
                                 </div>
@@ -329,166 +331,41 @@
          SUB-TAB 3: NHẬT KÝ CHĂM SÓC (BÀN LÀM VIỆC GROOMER VÀ HOTEL)
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-pet-carelog">
-        <div class="carelog-workbench-grid">
-            <!-- CỘT TRÁI: DANH SÁCH CA LÀM VIỆC TRONG NGÀY -->
-            <div class="workbench-queue-column">
-                <div class="queue-column-header">
-                    <h4 class="detail-box-title" style="margin-bottom: 0;">Ca làm việc hôm nay</h4>
-                    <span class="admin-badge badge-success">4 ca</span>
-                </div>
-
-                <div class="workbench-queue-list">
-                    <div class="queue-card-item active" data-care-id="CL-001">
-                        <div class="queue-card-head">
-                            <span class="queue-pet-name">Bé Milu</span>
-                            <span class="admin-badge badge-warning">Đang làm</span>
-                        </div>
-                        <div class="queue-card-sub">Chó Corgi • Dịch vụ: Tắm sấy toàn diện</div>
-                        <div class="queue-card-sub">Chủ: Nguyễn Văn An • KTV: Hoàng Tuấn</div>
-                    </div>
-
-                    <div class="queue-card-item" data-care-id="CL-002">
-                        <div class="queue-card-head">
-                            <span class="queue-pet-name">Bé Trà Sữa</span>
-                            <span class="admin-badge badge-success">Hoàn thiện</span>
-                        </div>
-                        <div class="queue-card-sub">Chó Poodle Toy • Dịch vụ: Cắt tỉa gấu bông</div>
-                        <div class="queue-card-sub">Chủ: Hoàng Minh Tuấn • KTV: Đỗ Hương</div>
-                    </div>
-
-                    <div class="queue-card-item" data-care-id="CL-003">
-                        <div class="queue-card-head">
-                            <span class="queue-pet-name">Bé Bông</span>
-                            <span class="admin-badge badge-warning">Đang làm</span>
-                        </div>
-                        <div class="queue-card-sub">Mèo ta • Dịch vụ: Vệ sinh tai móng</div>
-                        <div class="queue-card-sub">Chủ: Trần Khách Vãng Lai • KTV: Hoàng Tuấn</div>
-                    </div>
-
-                    <div class="queue-card-item" data-care-id="CL-004">
-                        <div class="queue-card-head">
-                            <span class="queue-pet-name">Bé Mimi</span>
-                            <span class="admin-badge badge-neutral">Phòng Hotel #03</span>
-                        </div>
-                        <div class="queue-card-sub">Mèo Anh lông ngắn • Khẩu phần ăn chiều</div>
-                    </div>
+        <div class="admin-card customer-master-card">
+            <div class="table-toolbar-section">
+                <div class="filter-row-top">
+                    <h4 class="detail-box-title" style="margin-bottom: 0;">Nhật ký chăm sóc</h4>
+                    <input type="text" class="admin-input" id="petCarelogSearch" placeholder="Tìm bé cưng, chủ nuôi hoặc nội dung" autocomplete="off" style="max-width: 360px;">
                 </div>
             </div>
-
-            <!-- CỘT PHẢI: FORM CẬP NHẬT NHẬT KÝ CA LÀM VIỆC -->
-            <div class="workbench-form-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-neutral); padding-bottom: 12px;">
-                    <div>
-                        <h4 class="detail-box-title" style="margin-bottom: 2px;" id="wbFormTitle">Cập nhật nhật ký ca: Bé Milu</h4>
-                        <div style="font-size: 12.5px; color: var(--text-muted);" id="wbFormSub">Giống loài: Chó Corgi • Mã lịch hẹn: BK-2609-01 • Chủ sở hữu: Nguyễn Văn An (0912345678)</div>
-                    </div>
-                    <span class="admin-badge badge-warning" id="wbStatusBadge">Đang làm</span>
-                </div>
-
-                <!-- TẢI ẢNH TRƯỚC VÀ SAU -->
-                <div>
-                    <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 8px;">Ảnh chụp thực tế ca làm:</div>
-                    <div class="upload-photos-container">
-                        <div class="photo-upload-placeholder" id="btnUploadBeforePhoto">
-                            <img src="/assets/images/publics/dogcute3.jpg" id="wbBeforeImgPreview" alt="Ảnh Trước">
-                            <span style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 4px;">Ảnh trước</span>
-                        </div>
-
-                        <div class="photo-upload-placeholder" id="btnUploadAfterPhoto">
-                            <img src="/assets/images/publics/dogcute1.jpg" id="wbAfterImgPreview" alt="Ảnh Sau">
-                            <span style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 4px;">Ảnh sau</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CHECKLIST VỆ SINH 4 MỤC KÈM ẢNH CHỨNG MINH -->
-                <div>
-                    <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 8px;">Checklist vệ sinh 4 mục kèm ảnh chụp kiểm chứng:</div>
-                    <div class="checklist-items-detailed-grid">
-                        <div class="checklist-detail-row">
-                            <label class="checklist-check-label">
-                                <input type="checkbox" id="chkEar" checked>
-                                <span>1. Vệ sinh tai sạch sẽ, không viêm</span>
-                            </label>
-                            <div class="checklist-photo-slot">
-                                <img src="/assets/images/publics/cat5.jpg" class="checklist-thumb-img" id="thumbEarImg" alt="Tai">
-                                <span class="btn-change-check-photo" title="Tải ảnh kiểm chứng">Đổi ảnh</span>
-                            </div>
-                        </div>
-
-                        <div class="checklist-detail-row">
-                            <label class="checklist-check-label">
-                                <input type="checkbox" id="chkNail" checked>
-                                <span>2. Móng cắt mài tròn nhẵn</span>
-                            </label>
-                            <div class="checklist-photo-slot">
-                                <img src="/assets/images/publics/handpaw.jpg" class="checklist-thumb-img" id="thumbNailImg" alt="Móng">
-                                <span class="btn-change-check-photo" title="Tải ảnh kiểm chứng">Đổi ảnh</span>
-                            </div>
-                        </div>
-
-                        <div class="checklist-detail-row">
-                            <label class="checklist-check-label">
-                                <input type="checkbox" id="chkAnal" checked>
-                                <span>3. Tuyến hôi đã vắt sạch sẽ</span>
-                            </label>
-                            <div class="checklist-photo-slot">
-                                <img src="/assets/images/publics/spa.jpg" class="checklist-thumb-img" id="thumbAnalImg" alt="Tuyến hôi">
-                                <span class="btn-change-check-photo" title="Tải ảnh kiểm chứng">Đổi ảnh</span>
-                            </div>
-                        </div>
-
-                        <div class="checklist-detail-row">
-                            <label class="checklist-check-label">
-                                <input type="checkbox" id="chkSkin" checked>
-                                <span>4. Da lông sạch, không nấm ve</span>
-                            </label>
-                            <div class="checklist-photo-slot">
-                                <img src="/assets/images/publics/pet2.jpg" class="checklist-thumb-img" id="thumbSkinImg" alt="Da lông">
-                                <span class="btn-change-check-photo" title="Tải ảnh kiểm chứng">Đổi ảnh</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- LỜI NHẮN DẶN DÒ CHỦ NUÔI -->
-                <div class="form-group">
-                    <label class="form-label">Lời nhắn dặn dò chủ nuôi</label>
-                    <textarea class="admin-input textarea-note" rows="2" id="wbOwnerMessage" placeholder="Ví dụ: Lông vùng nách bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà; tai sạch sẽ thơm tho.">Lông vùng nách bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.</textarea>
-                </div>
-
-                <div class="carelog-actions-footer">
-                    <button type="button" class="admin-btn admin-btn-secondary carelog-preview-btn" id="btnPreviewCustomerDiary">Xem trước giao diện khách</button>
-                    <div class="carelog-primary-actions">
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnSaveDraftCareLog">Lưu bản nháp</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnCompleteAndSendCareLog">Hoàn thiện và Gửi</button>
-                    </div>
-                </div>
+            <div class="table-responsive-wrapper">
+                <table class="admin-table">
+                    <thead><tr><th>Thời gian</th><th>Bé cưng</th><th>Chủ nuôi</th><th>Nội dung nhật ký</th><th>Tình trạng sức khỏe</th></tr></thead>
+                    <tbody id="petCarelogsListTbody"></tbody>
+                </table>
             </div>
         </div>
+        <div class="admin-pagination-bar"><div class="pagination-controls" id="petCarelogsPagination"></div></div>
     </section>
 
-    <!-- ====================================================================
-         SUB-TAB 4: NHẮC LỊCH ĐỊNH KỲ (CHĂM SÓC KHÁCH HÀNG CHỦ ĐỘNG)
-         ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-pet-reminders">
         <!-- BỘ 4 THẺ SỐ LIỆU NHẮC HẸN CHU KỲ CHĂM SÓC -->
         <div class="reminder-kpi-grid">
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Quá 14 ngày chưa tắm sấy</span>
-                <span class="kpi-val text-warning" id="remKpiValBath">—</span>
+                <span class="kpi-val text-warning" id="remKpiValBath"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Quá 30 ngày chưa cắt tỉa lông</span>
-                <span class="kpi-val text-danger" id="remKpiValGroom">—</span>
+                <span class="kpi-val text-danger" id="remKpiValGroom"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Khách quen gửi Pet Hotel</span>
-                <span class="kpi-val text-success" id="remKpiValHotel">—</span>
+                <span class="kpi-val text-success" id="remKpiValHotel"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Cảnh báo sổ tiêm ngoài cho Hotel</span>
-                <span class="kpi-val" id="remKpiValVaccineAlert" style="color: #D97706;">—</span>
+                <span class="kpi-val" id="remKpiValVaccineAlert" style="color: #D97706;"><span class="skeleton-kpi"></span></span>
             </div>
         </div>
 

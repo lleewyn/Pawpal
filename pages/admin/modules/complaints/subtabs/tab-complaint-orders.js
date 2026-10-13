@@ -70,6 +70,10 @@
     function renderOrderComplaintsTable() {
         const tbody = document.getElementById('orderComplaintsTableBody');
         if (!tbody) return;
+        if (PawpalComplaints.state.loadError) { delete tbody.dataset.loadingSkeleton; tbody.innerHTML='<tr><td colspan="12" style="padding:28px;text-align:center;">Không thể tải khiếu nại. Vui lòng tải lại trang.</td></tr>';return; }
+        if (!PawpalComplaints.state.isLoaded) return;
+        delete tbody.dataset.loadingSkeleton;
+
         tbody.innerHTML = '';
 
         const orderComplaints = PawpalComplaints.state?.orderComplaints || [];
@@ -137,35 +141,57 @@
             else priorityBadge = '<span class="admin-badge badge-neutral">Bình thường</span>';
 
             let statusBadge = '';
-            if (item.status === 'open') statusBadge = '<span class="admin-badge badge-warning">Chờ tiếp nhận</span>';
-            else if (item.status === 'in_progress') statusBadge = '<span class="admin-badge badge-info">Đang xử lý</span>';
+            if (item.status === 'open' || item.status === 'new') statusBadge = '<span class="admin-badge badge-warning">Chưa xử lý</span>';
+            else if (item.status === 'in_progress' || item.status === 'processing') statusBadge = '<span class="admin-badge badge-info">Đang xử lý</span>';
+            else if (item.status === 'waiting_return') statusBadge = '<span class="admin-badge badge-neutral">Chờ hàng trả</span>';
+            else if (item.status === 'waiting_manager_approval') statusBadge = '<span class="admin-badge badge-warning">Chờ duyệt</span>';
+            else if (item.status === 'reprocessing') statusBadge = '<span class="admin-badge badge-danger">Xử lý lại</span>';
             else if (item.status === 'resolved' || item.status === 'closed') statusBadge = '<span class="admin-badge badge-success">Đã giải quyết</span>';
             else statusBadge = '<span class="admin-badge badge-neutral">Đang xử lý</span>';
+
+            let slaClass = 'sla-normal';
+            if (item.slaStatus === 'OVERDUE') slaClass = 'sla-overdue';
+            else if (item.slaStatus === 'URGENT') slaClass = 'sla-urgent';
+            else if (item.slaStatus === 'DONE') slaClass = 'sla-done';
+            const slaBadge = `<span class="sla-badge ${slaClass}">${escapeHtml(item.slaRemainingText || 'Bình thường')}</span>`;
+
+            const issueTypeMap = {
+                'wrong_item': 'Sai sản phẩm',
+                'missing_item': 'Thiếu hàng',
+                'damaged': 'Hư hỏng bể vỡ',
+                'quality': 'Chất lượng',
+                'delivery': 'Giao trễ hạn',
+                'return_request': 'Yêu cầu đổi trả',
+                'payment': 'Thanh toán'
+            };
+            const issueTypeName = issueTypeMap[item.issueType] || (item.issueType || 'Sự cố đơn hàng');
 
             const alertBorderClass = (item.priority === 'high' || item.slaStatus === 'OVERDUE') ? 'row-alert-danger' : '';
 
             return `
                 <tr class="${alertBorderClass}" data-ticket-id="${item.id}">
-                    <td style="font-weight: 600;">
+                    <td style="font-weight: 600; white-space: nowrap;">
                         <a href="javascript:void(0)" class="user-link-text btn-open-order-complaint-detail" data-ticket-id="${item.id}">${item.id}</a>
                     </td>
-                    <td>${item.createdAt || '—'}</td>
                     <td>
-                        <div style="font-weight: 600; color: var(--text-main);">${escapeHtml(item.customerName)}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted);">${item.phone || ''}</div>
+                        <div style="font-weight: 600; color: var(--text-main); white-space: nowrap;">${escapeHtml(item.customerName)}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted);">${escapeHtml(item.phone || '')}</div>
                     </td>
                     <td>
-                        <div style="font-weight: 500;">Mã đơn: ${item.orderId || '—'}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted);">${item.paymentMethod || 'COD'}</div>
+                        <span style="font-weight: 500; font-size: 12px; color: var(--text-muted); white-space: nowrap;">${escapeHtml(item.orderId || '—')}</span>
                     </td>
-                    <td style="max-width: 260px; font-size: 12.5px;">
-                        <div style="font-weight: 600; color: var(--text-heading);">${escapeHtml(item.title)}</div>
-                        <div style="color: var(--text-muted); font-size: 11.5px; margin-top: 2px;">${escapeHtml(item.content || '').substring(0, 60)}...</div>
+                    <td>
+                        <div style="font-weight: 500; max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(item.productName || 'Sản phẩm đơn hàng')}">${escapeHtml(item.productName || 'Sản phẩm đơn hàng')}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted); white-space: nowrap;">${escapeHtml(item.productSku || '')}</div>
                     </td>
-                    <td style="text-align: center;">${priorityBadge}</td>
-                    <td style="text-align: center;">${statusBadge}</td>
-                    <td>${item.staffAssigned || 'Chưa phân công'}</td>
-                    <td style="text-align: center;">
+                    <td style="white-space: nowrap;">${issueTypeName}</td>
+                    <td style="white-space: nowrap;">${escapeHtml(item.customerDemand || 'Đổi sản phẩm mới')}</td>
+                    <td style="text-align: center; white-space: nowrap;">${priorityBadge}</td>
+                    <td style="text-align: center; white-space: nowrap;">${slaBadge}</td>
+                    <td style="white-space: nowrap;">${escapeHtml(item.staffAssigned || 'Chưa phân công')}</td>
+                    <td style="white-space: nowrap; font-size: 12px; color: var(--text-muted);">${item.createdAt || '—'}</td>
+                    <td style="text-align: center; white-space: nowrap;">${statusBadge}</td>
+                    <td style="text-align: center; white-space: nowrap;">
                         <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-order-complaint-detail" data-ticket-id="${item.id}">Xử lý</button>
                     </td>
                 </tr>

@@ -40,6 +40,7 @@
     }
 
     function updateBannerKpis() {
+        if (!PawpalSettings.state.isLoaded) return;
         const bannersList = PawpalSettings.state?.bannersList || [];
         const vouchersList = PawpalSettings.state?.vouchersList || [];
 
@@ -271,6 +272,9 @@
     function renderVouchers() {
         const tbody = document.getElementById('vouchersTableBody');
         if (!tbody) return;
+        if (PawpalSettings.state.loadError) {delete tbody.dataset.loadingSkeleton;tbody.innerHTML=`<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" style="padding:28px;text-align:center;">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;return;}
+        if (!PawpalSettings.state.isLoaded) return;
+        delete tbody.dataset.loadingSkeleton;
 
         const vouchersList = PawpalSettings.state?.vouchersList || [];
         const keyword = (document.getElementById('searchVoucherInput')?.value || '').toLowerCase().trim();

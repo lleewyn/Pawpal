@@ -53,17 +53,11 @@
     // DATA STORE 100% TRỰC TIẾP TỪ SUPABASE LIVE DATABASE (RULE 6)
     // ====================================================================
     function getSharedVouchersList() {
-        try {
-            const raw = sessionStorage.getItem('pawpal_settings_vouchers');
-            if (raw) {
-                const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed)) return parsed;
-            }
-        } catch (e) {}
-        return [];
+        return window.PawpalOrders?.state?.vouchers || [];
     }
 
     function persistSharedVouchersData(vouchers) {
+        if (window.PawpalOrders?.state) window.PawpalOrders.state.vouchers = vouchers || [];
         try {
             sessionStorage.setItem('pawpal_settings_vouchers', JSON.stringify(vouchers || []));
         } catch (e) {}
@@ -517,7 +511,7 @@
 
         try {
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!client) return;
+            if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
 
             console.log('[Orders Core] Đang nạp dữ liệu Bán hàng, Kho, Voucher & Đổi trả từ Supabase...');
 
@@ -534,7 +528,7 @@
             }
 
             // 2. Nạp kho hàng & sản phẩm từ CSDL Supabase
-            const { data: prodData } = await client
+            const { data: prodData, error: productsError } = await client
                 .from('product')
                 .select(`
                     id, sku, product_name, unit, cost_price, sale_price,
@@ -546,7 +540,8 @@
                 `)
                 .order('sku');
 
-            if (Array.isArray(prodData) && prodData.length > 0) {
+            if (productsError) throw productsError;
+            if (Array.isArray(prodData)) {
                 currentProductsList = prodData.map(p => {
                     const catObj = p.product_category || {};
                     const invObj = Array.isArray(p.inventory) ? p.inventory[0] : (p.inventory || {});
@@ -566,6 +561,8 @@
                         spec: p.specs || 'Tiêu chuẩn',
                         badge: p.badge || (stockVal === 0 ? 'Hết hàng' : 'Bán chạy'),
                         costPrice: p.cost_price || 0,
+                        rating: p.rating,
+                        reviewCount: p.review_count,
                         price: p.sale_price || 0,
                         originalPrice: Math.round((p.sale_price || 0) * 1.15),
                         memberPrice: Math.round((p.sale_price || 0) * 0.925),
@@ -574,7 +571,7 @@
                         images: imgs.length > 0 ? imgs.join(', ') : '/assets/images/shop/products/tp-hat-01.png',
                         image: imgs[0] || '/assets/images/shop/products/tp-hat-01.png',
                         status: stockVal === 0 ? 'Hết hàng' : (stockVal <= minStockVal ? 'Sắp hết' : (p.status === 'INACTIVE' ? 'Tạm ngưng' : 'Còn hàng')),
-                        rating: p.rating || 5.0,
+                        rating: p.rating,
                         reviewCount: p.review_count || 0,
                         hasVariants: false,
                         variants: []
@@ -584,17 +581,19 @@
                 persistProductsData();
 
                 window.PawpalOrders.updateCategoryFilterDropdown(dbCategories);
+                window.PawpalOrders.state.productsLoaded = true;
                 window.PawpalOrders.renderProductsTable();
             }
 
             // 3. Nạp danh sách Voucher từ CSDL Supabase
             try {
-                const { data: voucherData } = await client
+                const { data: voucherData, error: vouchersError } = await client
                     .from('voucher')
                     .select('*')
                     .order('created_at', { ascending: false });
 
-                if (Array.isArray(voucherData) && voucherData.length > 0) {
+                if (vouchersError) throw vouchersError;
+                if (Array.isArray(voucherData)) {
                     const vouchersList = voucherData.map(v => {
                         const isPct = v.type === 'percentage' || v.type === 'percent';
                         const discountVal = isPct ? `${v.discount_value}%` : formatVND(v.discount_value);
@@ -615,17 +614,22 @@
                             discount: discountVal,
                             minOrder: v.minimum_order_amount || 0,
                             points: v.required_points || 0,
+                            startsAt: v.start_date,
+                            endsAt: v.end_date,
                             validDate: expFormatted,
                             expiry: expFormatted,
                             limit: v.max_usage || 100,
                             used: v.usage_count || 0,
-                            status: v.is_active ? 'active' : 'paused'
+                            status: v.end_date && Date.parse(v.end_date) < Date.now() ? 'expired' : (v.is_active ? 'active' : 'paused')
                         };
                     });
+                    window.PawpalOrders.state.vouchersLoaded = true;
                     persistSharedVouchersData(vouchersList);
                     window.PawpalOrders.renderVouchersTable();
                 }
             } catch (errVou) {
+                window.PawpalOrders.state.vouchersError = true;
+                window.PawpalOrders.renderVouchersTable();
                 console.warn('Lỗi khi nạp voucher từ Supabase:', errVou);
             }
 
@@ -690,15 +694,17 @@
                     .order('created_at', { ascending: false });
 
                 if (orderErr) {
+                    window.PawpalOrders.state.ordersError = true;
                     console.error('[Orders Core] Lỗi truy vấn sales_order từ Supabase:', orderErr);
                 } else {
                     orderData = data;
                 }
             } catch (queryErr) {
+                window.PawpalOrders.state.ordersError = true;
                 console.error('[Orders Core] Lỗi ngoại lệ khi truy vấn sales_order:', queryErr);
             }
 
-            if (Array.isArray(orderData) && orderData.length > 0) {
+            if (Array.isArray(orderData)) {
                 currentOrdersList = orderData.map(o => {
                     const cust = o.customer || {};
                     const custProfile = Array.isArray(cust.customer_profile) ? cust.customer_profile[0] : (cust.customer_profile || {});
@@ -772,19 +778,19 @@
                     ];
 
                     if (['confirmed', 'shipping', 'delivered', 'completed'].includes(rawStatus)) {
-                        timeline.push({ title: 'Đã xác nhận đơn hàng', time: formatTime(o.created_at), desc: 'Nhân viên đã duyệt đơn và xuất kho đóng gói', done: true });
+                        timeline.push({ title: 'Đã xác nhận đơn hàng', time: 'Chưa ghi nhận thời gian', desc: 'Nhân viên đã duyệt đơn và xuất kho đóng gói', done: true });
                     }
                     if (['shipping', 'delivered', 'completed'].includes(rawStatus)) {
-                        timeline.push({ title: 'Đã bàn giao vận chuyển', time: formatTime(o.created_at), desc: `Đã bàn giao cho ${resolvedCarrier}. Mã vận đơn: ${resolvedTracking}`, done: true });
+                        timeline.push({ title: 'Đã bàn giao vận chuyển', time: 'Chưa ghi nhận thời gian', desc: `Đã bàn giao cho ${resolvedCarrier}. Mã vận đơn: ${resolvedTracking}`, done: true });
                     }
                     if (['delivered', 'completed'].includes(rawStatus)) {
-                        timeline.push({ title: 'Đã giao hàng thành công', time: formatTime(o.created_at), desc: 'Khách hàng đã nhận đủ sản phẩm', done: true });
+                        timeline.push({ title: 'Đã giao hàng thành công', time: 'Chưa ghi nhận thời gian', desc: 'Khách hàng đã nhận đủ sản phẩm', done: true });
                     }
                     if (rawStatus === 'completed') {
-                        timeline.push({ title: 'Hoàn tất đơn hàng', time: formatTime(o.created_at), desc: 'Đơn hàng đã hoàn thành và cộng điểm Pawpoint', done: true });
+                        timeline.push({ title: 'Hoàn tất đơn hàng', time: 'Chưa ghi nhận thời gian', desc: 'Đơn hàng đã hoàn thành và cộng điểm Pawpoint', done: true });
                     }
                     if (rawStatus === 'cancelled') {
-                        timeline.push({ title: 'Đã hủy đơn hàng', time: formatTime(o.created_at), desc: 'Đơn hàng bị hủy bởi quản trị viên hoặc khách yêu cầu', done: true });
+                        timeline.push({ title: 'Đã hủy đơn hàng', time: 'Chưa ghi nhận thời gian', desc: 'Đơn hàng bị hủy bởi quản trị viên hoặc khách yêu cầu', done: true });
                     }
 
                     const orderTotal = Number(o.total_amount) || 0;
@@ -823,19 +829,23 @@
                 window.PawpalOrders.state.orders = currentOrdersList;
                 persistOrdersData();
 
+                window.PawpalOrders.state.ordersLoaded = true;
                 window.PawpalOrders.renderOrdersTable();
-                if (window.PawpalOrders.state.selectedOrderId) {
-                    window.PawpalOrders.renderOrderDetail(window.PawpalOrders.state.selectedOrderId);
-                }
+                window.PawpalOrders.renderOrderDetail(window.PawpalOrders.state.selectedOrderId || currentOrdersList[0]?.id);
             }
 
             if (window.PawpalOrders.controllers.list?.loadPosCustomerDirectory) {
                 window.PawpalOrders.controllers.list.loadPosCustomerDirectory();
             }
 
+            window.PawpalOrders.renderOrdersTable();
             _ordersLastFetchedAt = Date.now();
             console.log(`[Orders Core] Đã đồng bộ thành công từ Supabase: ${currentOrdersList.length} đơn hàng, ${currentProductsList.length} sản phẩm.`);
         } catch (e) {
+            ['orders','products','vouchers'].forEach(key => { if (!window.PawpalOrders.state[key+'Loaded']) window.PawpalOrders.state[key+'Error'] = true; });
+            window.PawpalOrders.renderOrdersTable();
+            window.PawpalOrders.renderProductsTable();
+            window.PawpalOrders.renderVouchersTable();
             console.warn('[Orders Core] Lỗi đồng bộ từ Supabase:', e);
         }
     }
@@ -861,7 +871,9 @@
         }
 
         const headerSubtabBtns = document.querySelectorAll('.header-subtab-btn');
-        const subtabPanels = document.querySelectorAll('.subtab-content');
+        if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Bán hàng') return;
+        const root = document.getElementById('subtab-tab-order-list')?.closest('.admin-module-wrapper');
+        const subtabPanels = root?.querySelectorAll('.subtab-content') || [];
 
         headerSubtabBtns.forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-subtab') === targetSubtab);

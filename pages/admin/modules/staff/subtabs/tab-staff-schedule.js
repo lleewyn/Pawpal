@@ -6,9 +6,19 @@
     PawpalStaff.subtabs = PawpalStaff.subtabs || {};
 
     let currentScheduleView = 'DAY';
-    let currentScheduleDate = new Date().toISOString().split('T')[0];
+    let currentScheduleDate = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 
     function renderScheduleTable() {
+        if (!PawpalStaff.state.isLoaded) return;
+        const picker = document.getElementById('scheduleDatePicker');
+        if (picker && !picker.value) picker.value = currentScheduleDate;
+        ['Morning','Afternoon','Evening','Night'].forEach((label,i)=>{
+            const shift=['MORNING','AFTERNOON','EVENING','NIGHT'][i];
+            const count=Object.values(PawpalStaff.state.mockRoster?.[currentScheduleDate] || {}).filter(shifts=>shifts.includes(shift)).length;
+            const el=document.getElementById('quota'+label+'Count');if(el)el.textContent=`${count} nhân sự`;
+            const badge=document.getElementById('quota'+label+'Badge');if(badge)badge.textContent='';
+        });
+        const active=document.getElementById('liveWorkstationsActiveCount');if(active)active.textContent='Chưa có dữ liệu bàn dịch vụ';
         if (currentScheduleView === 'DAY') {
             renderScheduleDayTable();
         } else {
@@ -36,11 +46,11 @@
         }
 
         tbody.innerHTML = staffList.map(staff => {
-            const dayRoster = (roster[currentScheduleDate] && roster[currentScheduleDate][staff.id]) || [staff.shift];
-            const isMorning = dayRoster.includes('MORNING') || staff.shift === 'MORNING' || staff.shift === 'FULL_TIME';
-            const isAfternoon = dayRoster.includes('AFTERNOON') || staff.shift === 'AFTERNOON' || staff.shift === 'FULL_TIME';
-            const isEvening = dayRoster.includes('EVENING') || staff.shift === 'EVENING';
-            const isNight = dayRoster.includes('NIGHT') || staff.shift === 'NIGHT';
+            const dayRoster = (roster[currentScheduleDate] && roster[currentScheduleDate][staff.id]) || [];
+            const isMorning = dayRoster.includes('MORNING') || staff.shift === 'FULL_TIME';
+            const isAfternoon = dayRoster.includes('AFTERNOON') || staff.shift === 'FULL_TIME';
+            const isEvening = dayRoster.includes('EVENING');
+            const isNight = dayRoster.includes('NIGHT');
             const isLeave = dayRoster.includes('LEAVE') || staff.status === 'LEAVE';
 
             let totalHours = 0;
@@ -102,18 +112,11 @@
         if (!tbody) return;
         const staffList = PawpalStaff.state?.mockStaff || [];
 
-        tbody.innerHTML = staffList.map(staff => `
-            <tr>
-                <td style="font-weight: 600;">${staff.name}</td>
-                <td>Ca sáng</td>
-                <td>Ca sáng</td>
-                <td>Ca chiều</td>
-                <td>Ca chiều</td>
-                <td>Nghỉ phép</td>
-                <td>Ca sáng</td>
-                <td>Ca chiều</td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = staffList.map(staff => `<tr><td>${staff.name}</td>${Array.from({length:7},(_,i)=>{
+            const date = new Date(currentScheduleDate+'T00:00:00+07:00'); date.setUTCDate(date.getUTCDate()+i);
+            const key = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
+            return `<td>${(PawpalStaff.state.mockRoster?.[key]?.[staff.id] || []).join(', ') || '—'}</td>`;
+        }).join('')}</tr>`).join('');
     }
 
     function renderLiveWorkstations() {
@@ -122,7 +125,22 @@
         const workstations = PawpalStaff.state?.mockWorkstations || [];
 
         if (workstations.length === 0) {
-            container.innerHTML = '<div style="color: var(--text-muted); padding: 12px;">Đang tải trạng thái bàn làm việc...</div>';
+            if (!PawpalStaff.state?.isLoaded) {
+                container.innerHTML = Array.from({ length: 4 }, () => `
+                    <div class="workstation-card idle" style="pointer-events: none;">
+                        <div class="workstation-header">
+                            <span class="skeleton-text" style="width: 55px;"></span>
+                            <span class="skeleton-badge"></span>
+                        </div>
+                        <div class="workstation-body" style="margin-top: 8px;">
+                            <span class="skeleton-text" style="width: 85%; margin-bottom: 5px;"></span>
+                            <span class="skeleton-text" style="width: 60%; height: 11px;"></span>
+                        </div>
+                    </div>
+                `).join('');
+                return;
+            }
+            container.innerHTML = '<div style="color: var(--text-muted); padding: 12px; font-size: 13px;">Chưa có dữ liệu bàn làm việc trong ngày.</div>';
             return;
         }
 
@@ -151,46 +169,7 @@
         const countPendingEl = document.getElementById('countFilterReqPending');
         const trayPendingCountEl = document.getElementById('trayPendingCount');
 
-        // Dữ liệu mẫu ban đầu nếu mảng rỗng
-        if (!PawpalStaff.state.mockLeaveSwapRequests || PawpalStaff.state.mockLeaveSwapRequests.length === 0) {
-            PawpalStaff.state.mockLeaveSwapRequests = [
-                {
-                    id: 'REQ-101',
-                    type: 'LEAVE',
-                    staffId: 'EMP-002',
-                    staffName: 'Lê Thị Bình',
-                    position: 'Kỹ thuật viên grooming',
-                    date: '28/09/2026',
-                    shift: 'Ca sáng (08:00 - 12:00)',
-                    reason: 'Khám sức khỏe định kỳ',
-                    status: 'PENDING'
-                },
-                {
-                    id: 'REQ-102',
-                    type: 'SWAP',
-                    staffId: 'EMP-003',
-                    staffName: 'Hoàng Nam',
-                    swapWithName: 'Hữu Phúc',
-                    position: 'Kỹ thuật viên grooming',
-                    date: '29/09/2026',
-                    shift: 'Đổi ca chiều sang ca sáng',
-                    reason: 'Trùng lịch gia đình cần hỗ trợ',
-                    status: 'PENDING'
-                },
-                {
-                    id: 'REQ-103',
-                    type: 'LEAVE',
-                    staffId: 'EMP-004',
-                    staffName: 'Phạm Thu Trang',
-                    position: 'Bảo mẫu lưu trú pet hotel',
-                    date: '25/09/2026',
-                    shift: 'Cả ngày',
-                    reason: 'Việc gia đình đã báo trước',
-                    status: 'APPROVED'
-                }
-            ];
-        }
-
+        PawpalStaff.state.mockLeaveSwapRequests ||= [];
         const requests = PawpalStaff.state.mockLeaveSwapRequests;
         const pendingCount = requests.filter(r => r.status === 'PENDING').length;
 
@@ -415,7 +394,7 @@
         if (swapToSelect) swapToSelect.innerHTML = staffOptions;
 
         // Set ngày mặc định
-        const todayStr = currentScheduleDate || new Date().toISOString().split('T')[0];
+        const todayStr = currentScheduleDate || new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
         const nextDay = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
         const leaveStart = document.getElementById('leaveInputStartDate');
@@ -792,6 +771,9 @@
     window.addEventListener('pawpal:staff-data-loaded', () => {
         renderScheduleTable();
     });
+
+    const datePicker = document.getElementById('scheduleDatePicker');
+    datePicker?.addEventListener('change',()=>{if(datePicker.value){currentScheduleDate=datePicker.value;renderScheduleTable();}});
 
     PawpalStaff.subtabs.schedule = {
         init: initScheduleSubtab,

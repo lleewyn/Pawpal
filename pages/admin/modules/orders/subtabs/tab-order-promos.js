@@ -15,9 +15,21 @@
     function renderVouchersTable() {
         const tbody = document.getElementById('vouchersTableBody');
         if (!tbody) return;
+        if (state.vouchersError) {
+            delete tbody.dataset.loadingSkeleton;
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:28px;color:var(--text-muted);">Không thể tải dữ liệu. Vui lòng tải lại trang.</td></tr>';
+            return;
+        }
+
 
         const searchVal = (document.getElementById('promoSearchInput')?.value || '').trim();
         const vouchersList = getSharedVouchersList();
+        if (!state.vouchersLoaded) return;
+        delete tbody.dataset.loadingSkeleton;
+        const running = vouchersList.filter(v=>['active','Đang chạy'].includes(v.status) && (!v.endsAt || Date.parse(v.endsAt)>=Date.now()) && (!v.startsAt || Date.parse(v.startsAt)<=Date.now()));
+        const metrics = {statActiveVouchers:running.length,statVoucherUsedToday:'—',statExpiringVouchers:running.filter(v=>v.endsAt && Date.parse(v.endsAt)-Date.now()<=7*86400000).length};
+        Object.entries(metrics).forEach(([id,value])=>{const el=document.getElementById(id);if(el)el.textContent=value;});
+
 
         const filtered = vouchersList.filter(v => {
             if (searchVal) {
@@ -31,7 +43,7 @@
         if (filtered.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 36px; color: var(--text-muted); font-size: 13.5px;">
+                    <td colspan="9" style="text-align: center; padding: 36px; color: var(--text-muted); font-size: 13.5px;">
                         Không tìm thấy chương trình khuyến mãi nào phù hợp.
                     </td>
                 </tr>
@@ -64,8 +76,11 @@
                     </td>
                     <td>
                         <div style="font-weight: 700; color: #B45309;">${v.discount || (v.type === 'percent' ? v.value + '%' : formatVND(v.value))}</div>
-                        <div class="sub-meta-text">Đơn tối thiểu: ${typeof v.minOrder === 'number' ? formatVND(v.minOrder) : v.minOrder}</div>
+
                     </td>
+                    <td>${formatVND(Number(v.minOrder)||0)}</td>
+                    <td>${Number(v.points)||0}</td>
+                    <td>${v.validDate || v.expiry || "—"}</td>
                     <td>
                         <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
                             <span>${usedVal} / ${limitVal}</span>
@@ -75,10 +90,7 @@
                             <div style="width: ${pct}%; height: 100%; background-color: #236B48; border-radius: 9px;"></div>
                         </div>
                     </td>
-                    <td>
-                        <div>${v.validDate || v.expiry}</div>
-                        <div class="sub-meta-text">Đổi bằng: ${v.points ? (typeof v.points === 'number' ? v.points + ' Pawpoint' : v.points) : 'Miễn phí'}</div>
-                    </td>
+
                     <td>${statusBadge}</td>
                     <td style="text-align: center;">
                         <button type="button" class="btn-action-trigger" onclick="PawpalOrdersModule.openVoucherActionModal('${v.code}')">•••</button>

@@ -213,18 +213,19 @@
 
         try {
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!client) return;
+            if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
 
             const { data: staffData, error: staffErr } = await client
                 .from('staff')
                 .select('*')
                 .order('created_at', { ascending: true });
 
-            if (!staffErr && Array.isArray(staffData) && staffData.length > 0) {
+            if (staffErr) throw staffErr;
+            if (Array.isArray(staffData)) {
                 PawpalStaff.state.mockStaff = staffData.map((s, idx) => {
                     const formattedRole = mapDbRoleToStaffRole(s.role, s.specialization);
                     const formattedPosition = mapDbRoleToPosition(s.role, s.specialization);
-                    const joinDateFormatted = s.hire_date ? formatDateVN(s.hire_date) : '01/01/2024';
+                    const joinDateFormatted = s.hire_date ? formatDateVN(s.hire_date) : 'Chưa cập nhật';
                     const code = `EMP-${String(idx + 1).padStart(3, '0')}`;
 
                     return {
@@ -233,18 +234,18 @@
                         name: s.full_name || 'Nhân viên PawPal',
                         position: formattedPosition,
                         role: formattedRole,
-                        phone: s.phone_number || s.phone || '0901234567',
-                        email: s.email || `${(s.full_name || 'staff').toLowerCase().replace(/[^a-z0-9]/g, '')}@pawpal.vn`,
-                        shift: s.shift || (idx % 2 === 0 ? 'MORNING' : 'AFTERNOON'),
+                        phone: s.phone_number || s.phone || '—',
+                        email: s.email || 'Chưa cập nhật',
+                        shift: s.shift || '',
                         status: s.status === 'locked' ? 'RESIGNED' : (s.status === 'leave' ? 'LEAVE' : (s.status === 'pause' ? 'PAUSE' : 'ACTIVE')),
                         join_date: joinDateFormatted,
-                        dob: s.dob ? formatDateVN(s.dob) : '01/01/1998',
-                        address: s.address || 'TP. Hồ Chí Minh',
+                        dob: s.dob ? formatDateVN(s.dob) : 'Chưa cập nhật',
+                        address: s.address || 'Chưa cập nhật',
                         branch_name: 'Chi nhánh Quận 1',
                         avatar: `/assets/images/staff/emp-00${(idx % 6) + 1}.jpg`,
-                        skillScore: s.skill_score || 90,
-                        skillResult: (s.skill_score || 90) >= 80 ? 'PASS' : ((s.skill_score || 90) >= 60 ? 'RETRAIN' : 'FAIL'),
-                        skillExam: (s.skill_score || 90) >= 80 ? `Đạt (${s.skill_score || 90}đ)` : `Cần đào tạo (${s.skill_score || 90}đ)`,
+                        skillScore: s.skill_score ?? null,
+                        skillResult: s.skill_score == null ? null : (s.skill_score >= 80 ? 'PASS' : (s.skill_score >= 60 ? 'RETRAIN' : 'FAIL')),
+                        skillExam: s.skill_score == null ? 'Chưa đánh giá' : `${s.skill_score}/100`,
                         serviceLocked: Boolean(s.service_locked || s.serviceLocked),
                         note: s.specialization || '',
                         requested_count: 8,
@@ -253,29 +254,23 @@
                 });
             }
 
-            // Tạo danh sách assessments mẫu đồng bộ
-            if (PawpalStaff.state.mockAssessments.length === 0 && PawpalStaff.state.mockStaff.length > 0) {
-                PawpalStaff.state.mockAssessments = PawpalStaff.state.mockStaff.map((s, i) => ({
-                    id: `ASM-${String(i + 1).padStart(3, '0')}`,
-                    date: `${String(20 - (i % 8)).padStart(2, '0')}/09/2026`,
-                    staff_id: s.id,
-                    name: s.name,
-                    position: s.position,
-                    type: s.role === 'Groomer' ? 'Grooming' : 'Chăm sóc',
-                    score: s.skillScore || 85,
-                    result: s.skillResult || 'PASS',
-                    evaluator: 'Lê Lệ Quyên',
-                    note: s.skillResult === 'PASS' ? 'Thao tác chuẩn xác' : 'Cần đào tạo lại'
-                }));
-            }
-
-            // Bàn làm việc workstations
-            PawpalStaff.state.mockWorkstations = [
-                { id: 'WS-01', name: 'Bàn Grooming 01', status: 'IN_SERVICE', staffName: 'Nguyễn Văn An', customerName: 'Trần Thị Mai', petName: 'Milu (Poodle)', serviceName: 'Tắm sấy tạo kiểu' },
-                { id: 'WS-02', name: 'Bàn Grooming 02', status: 'IDLE', staffName: 'Lê Thị Bình', customerName: '', petName: '', serviceName: '' },
-                { id: 'WS-03', name: 'Phòng Spa Thảo dược', status: 'IN_SERVICE', staffName: 'Hoàng Nam', customerName: 'Phạm Thu Trang', petName: 'Mimi (Mèo ALN)', serviceName: 'Spa sục khoáng' },
-                { id: 'WS-04', name: 'Bàn Grooming 04', status: 'IDLE', staffName: 'Hữu Phúc', customerName: '', petName: '', serviceName: '' }
-            ];
+            PawpalStaff.state.mockAssessments = [];
+            PawpalStaff.state.mockWorkstations = [];
+            PawpalStaff.state.mockLeaveSwapRequests = [];
+            const {data:schedules,error:scheduleError} = await client.from('staff_schedule').select('*');
+            PawpalStaff.state.scheduleError = Boolean(scheduleError);
+            PawpalStaff.state.schedules = schedules || [];
+            PawpalStaff.state.mockRoster = {};
+            (schedules || []).forEach(row => {
+                const date = String(row.schedule_date || row.work_date || row.date || row.start_time || '').slice(0,10);
+                const staff = PawpalStaff.state.mockStaff.find(staff => staff.rawId === row.staff_id);
+                const shift = row.shift || row.shift_type;
+                if (!staff || !date || !shift) return;
+                const roster = PawpalStaff.state.mockRoster[date] ||= {};
+                (roster[staff.id] ||= []).push(shift);
+            });
+            PawpalStaff.state.isLoaded = true;
+            PawpalStaff.state.loadError = null;
 
             if (PawpalStaff.state.mockStaff.length > 0 && !PawpalStaff.state.mockStaff.some(s => s.id === PawpalStaff.state.selectedStaffId)) {
                 PawpalStaff.state.selectedStaffId = PawpalStaff.state.mockStaff[0].id;
@@ -291,6 +286,8 @@
             _staffLastFetchedAt = Date.now();
             window.dispatchEvent(new CustomEvent('pawpal:staff-data-loaded', { detail: { count: PawpalStaff.state.mockStaff.length } }));
         } catch (err) {
+            PawpalStaff.state.loadError = 'Không thể tải dữ liệu nhân sự.';
+            window.dispatchEvent(new CustomEvent('pawpal:staff-data-loaded'));
             console.error('[PawpalStaff] Lỗi kết nối CSDL Supabase:', err);
         }
     }
@@ -319,7 +316,8 @@
             });
         }
 
-        document.querySelectorAll('.subtab-content').forEach(section => {
+        if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Nhân sự') return;
+        document.getElementById('subtab-tab-staff-list')?.closest('.admin-module-wrapper')?.querySelectorAll('.subtab-content').forEach(section => {
             section.classList.toggle('active', section.id === `subtab-${targetSubtab}`);
         });
 

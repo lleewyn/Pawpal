@@ -16,9 +16,15 @@
     // Cập nhật 4 thẻ thống kê KPI Đánh giá dịch vụ
     function updateReviewKPIs() {
         const reviewsData = PawpalServices.state?.reviewsData || [];
+        const isLoaded = Boolean(PawpalServices.state?.isLoaded);
+
+        // Giữ nguyên skeleton-kpi khi chưa nạp xong
+        if (!isLoaded && reviewsData.length === 0) {
+            return;
+        }
+
         const total = reviewsData.length;
-        
-        let avgRating = '—';
+        let avgRating = '0.0 / 5.0';
         if (total > 0) {
             const sumStars = reviewsData.reduce((acc, r) => acc + (Number(r.rating) || 5), 0);
             avgRating = (sumStars / total).toFixed(1) + ' / 5.0';
@@ -44,6 +50,12 @@
         if (!tbody) return;
 
         const reviewsData = PawpalServices.state?.reviewsData || [];
+        const isLoaded = Boolean(PawpalServices.state?.isLoaded);
+        if (PawpalServices.state?.loadError) {
+            delete tbody.dataset.loadingSkeleton;
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:28px;">Không thể tải đánh giá dịch vụ. Vui lòng tải lại trang.</td></tr>';
+            return;
+        }
         const toUnaccent = PawpalServices.toUnaccent || (str => {
             if (!str) return '';
             return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -86,10 +98,28 @@
             return true;
         });
 
-        // Xóa thuộc tính loading skeleton nếu có
-        delete tbody.dataset.loadingSkeleton;
-
         if (filtered.length === 0) {
+            if (!isLoaded) {
+                tbody.dataset.loadingSkeleton = 'true';
+                tbody.innerHTML = Array.from({ length: 4 }, (_, i) => `
+                    <tr class="skeleton-row admin-auto-skeleton">
+                        <td><span class="skeleton-text" style="width: 80px;"></span></td>
+                        <td>
+                            <span class="skeleton-text" style="width: 100px; margin-bottom: 4px;"></span>
+                            <span class="skeleton-text" style="width: 70px; height: 11px;"></span>
+                        </td>
+                        <td><span class="skeleton-text" style="width: 110px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 70px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 80px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 140px;"></span></td>
+                        <td><span class="skeleton-badge"></span></td>
+                        <td style="text-align: center;"><span class="skeleton-text" style="width: 24px;"></span></td>
+                    </tr>
+                `).join('');
+                return;
+            }
+
+            delete tbody.dataset.loadingSkeleton;
             tbody.innerHTML = `
                 <tr>
                     <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 36px 16px; font-size: 13.5px; border-left: 3px solid transparent;">
@@ -100,6 +130,9 @@
             renderReviewsPagination(0);
             return;
         }
+
+        // Xóa thuộc tính loading skeleton nếu có
+        delete tbody.dataset.loadingSkeleton;
 
         const totalPages = Math.ceil(filtered.length / REVIEWS_PAGE_SIZE);
         if (reviewCurrentPage > totalPages) reviewCurrentPage = totalPages;
@@ -132,7 +165,7 @@
                     <td style="color: #D97706; font-size: 13.5px; letter-spacing: 1px; white-space: nowrap;">
                         ${starsHtml} <span style="font-size: 12px; font-weight: 600; color: var(--text-main); margin-left: 2px;">${starNum}★</span>
                     </td>
-                    <td style="max-width: 260px; font-size: 12.5px; line-height: 1.45;">
+                    <td class="service-review-content-cell" style="max-width: 260px; font-size: 12.5px; line-height: 1.45;">
                         <div style="color: var(--text-main);">${r.comment || 'Khách không để lại nhận xét bằng lời.'}</div>
                         ${isReplied ? `
                             <div style="margin-top: 6px; padding: 4px 8px; background: #EEF5F1; border-radius: 6px; font-size: 11.5px; color: #236B48;">

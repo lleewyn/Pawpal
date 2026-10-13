@@ -27,9 +27,28 @@
     const RULES_PAGE_SIZE = 10;
     let rulesHubInitialized = false;
 
+    const ruleLoads = {};
+    const ruleTableIds = ['faqTableBody','profanityTableBody','cannedTableBody','compPolicyTableBody','handoverRuleTableBody','matrixTableBody'];
+    function canRenderRule(tbody) {
+        const status=ruleLoads[tbody.id];
+        if(status==='ready'){delete tbody.dataset.loadingSkeleton;return true;}
+        if(status==='error'){
+            delete tbody.dataset.loadingSkeleton;
+            const columns=tbody.closest('table')?.querySelectorAll('thead th').length || 1;
+            tbody.innerHTML=`<tr><td colspan="${columns}" style="text-align:center;padding:28px;">Không thể tải quy định này. Vui lòng tải lại trang.</td></tr>`;
+        } else if(!tbody.querySelector('.skeleton-row')) window.PawpalAdmin?.renderTableSkeleton?.(tbody);
+        return false;
+    }
+
     async function loadAllRulesDataFromSupabase() {
-        if (!supabase) return;
+        if (!supabase) { ruleTableIds.forEach(id=>{ruleLoads[id]='error';});renderActiveRulesView();return; }
         try {
+            ruleTableIds.forEach(id=>{ruleLoads[id]='loading';});
+            ['badgeFaqCount','badgeProfanityCount','badgeCannedCount','badgePolicyCount','badgeMatrixCount'].forEach(id=>{
+                const element=document.getElementById(id);
+                if(element)element.innerHTML='<span class="skeleton-text" style="width:20px;height:12px;"></span>';
+            });
+            renderActiveRulesView();
             const [faqRes, profRes, cannedRes, compRes, handRes, matRes] = await Promise.all([
                 supabase.from('chatbot_knowledge_faq').select('*').order('priority', { ascending: true }).order('created_at', { ascending: false }),
                 supabase.from('chatbot_profanity_filter').select('*').order('created_at', { ascending: false }),
@@ -39,6 +58,7 @@
                 supabase.from('chatbot_scenario_matrix').select('*').order('created_at', { ascending: true })
             ]);
 
+            [faqRes,profRes,cannedRes,compRes,handRes,matRes].forEach((result,index)=>{ruleLoads[ruleTableIds[index]]=result.error ? 'error' : 'ready';});
             if (faqRes && faqRes.data) rulesFaqData = faqRes.data;
             if (profRes && profRes.data) rulesProfanityData = profRes.data;
             if (cannedRes && cannedRes.data) rulesCannedData = cannedRes.data;
@@ -50,6 +70,8 @@
             populateRulesCategories();
             renderActiveRulesView();
         } catch (err) {
+            ruleTableIds.forEach(id=>{ruleLoads[id]='error';});
+            renderActiveRulesView();
             console.error('[Chatbot Rules Hub] Lỗi nạp dữ liệu từ Supabase:', err);
         }
     }
@@ -130,6 +152,7 @@
     function renderFaqTable() {
         const tbody = document.getElementById('faqTableBody');
         if (!tbody) return;
+        if (!canRenderRule(tbody)) return;
 
         const searchVal = (document.getElementById('inputFaqSearch')?.value || '').toLowerCase().trim();
         const catVal = document.getElementById('selectFaqCategoryFilter')?.value || 'all';
@@ -292,6 +315,7 @@
     function renderProfanityTable() {
         const tbody = document.getElementById('profanityTableBody');
         if (!tbody) return;
+        if (!canRenderRule(tbody)) return;
 
         const searchVal = (document.getElementById('inputProfanitySearch')?.value || '').toLowerCase().trim();
         const sevVal = document.getElementById('selectProfanitySeverityFilter')?.value || 'all';
@@ -458,6 +482,7 @@
     function renderCannedTable() {
         const tbody = document.getElementById('cannedTableBody');
         if (!tbody) return;
+        if (!canRenderRule(tbody)) return;
 
         const searchVal = (document.getElementById('inputCannedSearch')?.value || '').toLowerCase().trim();
         const catVal = document.getElementById('selectCannedCategoryFilter')?.value || 'all';
@@ -621,6 +646,7 @@
 
             const tbody = document.getElementById('compPolicyTableBody');
             if (!tbody) return;
+        if (!canRenderRule(tbody)) return;
 
             const filtered = rulesCompPolicyData.filter(item => {
                 return !searchVal ||
@@ -664,6 +690,7 @@
 
             const tbody = document.getElementById('handoverRuleTableBody');
             if (!tbody) return;
+        if (!canRenderRule(tbody)) return;
 
             const filtered = rulesHandoverRuleData.filter(item => {
                 return !searchVal ||
@@ -707,6 +734,7 @@
     function renderMatrixTable() {
         const tbody = document.getElementById('matrixTableBody');
         if (!tbody) return;
+        if (!canRenderRule(tbody)) return;
 
         const searchVal = (document.getElementById('inputMatrixSearch')?.value || '').toLowerCase().trim();
         const statusVal = document.getElementById('selectMatrixStatusFilter')?.value || 'all';

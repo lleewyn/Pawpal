@@ -2,7 +2,7 @@
     <!-- ====================================================================
          SUB-TAB 1: KHIẾU NẠI DỊCH VỤ
          ==================================================================== -->
-    <section class="subtab-content active" id="subtab-tab-complaint-services">
+    <section class="subtab-content active" id="subtab-tab-complaint-services"><p class="complaint-unclassified-notice" hidden style="color:var(--text-muted);"></p>
         <!-- 5 THẺ THỐNG KÊ KPI NHANH -->
         <div class="complaints-kpi-grid">
             <div class="admin-card kpi-card kpi-card-clickable" data-service-kpi="new">
@@ -73,6 +73,7 @@
                             <option value="spa">Spa và Grooming</option>
                             <option value="hotel">Pet Hotel</option>
                             <option value="taxi">Pet Taxi</option>
+                            <option value="contact">Liên hệ và Hỗ trợ chung</option>
                         </select>
                     </div>
 
@@ -102,13 +103,7 @@
 
                     <div class="filter-dropdown-group">
                         <label class="filter-label">Nhân viên phụ trách:</label>
-                        <select class="admin-select" id="serviceFilterStaff">
-                            <option value="ALL">Tất cả</option>
-                            <option value="Nguyễn Văn A">Nguyễn Văn A</option>
-                            <option value="Lê Lệ Quyên">Lê Lệ Quyên</option>
-                            <option value="Trần Thị B">Trần Thị B</option>
-                            <option value="unassigned">Chưa phân công</option>
-                        </select>
+                        <select class="admin-select" id="serviceFilterStaff"><option value="ALL">Tất cả</option><option value="Chưa phân công">Chưa phân công</option></select>
                     </div>
                 </div>
             </div>
@@ -120,10 +115,10 @@
                         <tr>
                             <th>Mã khiếu nại</th>
                             <th>Khách hàng</th>
-                            <th>Pet</th>
+                            <th>Thú cưng</th>
                             <th>Mã lịch hẹn</th>
                             <th>Dịch vụ</th>
-                            <th>Nội dung và Vấn đề</th>
+                            <th>Nội dung và vấn đề</th>
                             <th>Mức độ</th>
                             <th>Hạn xử lý (SLA)</th>
                             <th>Nhân viên phụ trách</th>
@@ -146,32 +141,32 @@
     <!-- ====================================================================
          SUB-TAB 2: KHIẾU NẠI ĐƠN HÀNG
          ==================================================================== -->
-    <section class="subtab-content" id="subtab-tab-complaint-orders">
+    <section class="subtab-content" id="subtab-tab-complaint-orders"><p class="complaint-unclassified-notice" hidden style="color:var(--text-muted);"></p>
         <!-- 6 THẺ THỐNG KÊ KPI NHANH -->
         <div class="complaints-kpi-grid order-kpi-grid">
             <div class="admin-card kpi-card kpi-card-clickable" data-order-kpi="new">
                 <span class="kpi-label">Chưa xử lý</span>
-                <span class="kpi-val" id="statOrderNew">4</span>
+                <span class="kpi-val" id="statOrderNew"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-order-kpi="processing">
                 <span class="kpi-label">Đang xử lý</span>
-                <span class="kpi-val text-warning" id="statOrderProcessing">6</span>
+                <span class="kpi-val text-warning" id="statOrderProcessing"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-order-kpi="return_request">
                 <span class="kpi-label">Yêu cầu đổi và trả</span>
-                <span class="kpi-val text-neutral" id="statOrderRMA">3</span>
+                <span class="kpi-val text-neutral" id="statOrderRMA"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-order-kpi="waiting_return">
                 <span class="kpi-label">Chờ khách gửi hàng</span>
-                <span class="kpi-val" style="color: #0369A1;" id="statOrderWaitingReturn">2</span>
+                <span class="kpi-val" style="color: #0369A1;" id="statOrderWaitingReturn"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-order-kpi="refunding">
                 <span class="kpi-label">Đang hoàn tiền</span>
-                <span class="kpi-val" style="color: #6D28D9;" id="statOrderRefunding">1</span>
+                <span class="kpi-val" style="color: #6D28D9;" id="statOrderRefunding"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-order-kpi="overdue">
                 <span class="kpi-label">Quá hạn xử lý</span>
-                <span class="kpi-val text-danger" id="statOrderOverdue">1</span>
+                <span class="kpi-val text-danger" id="statOrderOverdue"><span class="skeleton-kpi"></span></span>
             </div>
         </div>
 
@@ -253,12 +248,7 @@
 
                     <div class="filter-dropdown-group">
                         <label class="filter-label">Nhân viên phụ trách:</label>
-                        <select class="admin-select" id="orderFilterStaff">
-                            <option value="ALL">Tất cả</option>
-                            <option value="Phạm Thị D">Phạm Thị D</option>
-                            <option value="Lê Lệ Quyên">Lê Lệ Quyên</option>
-                            <option value="unassigned">Chưa phân công</option>
-                        </select>
+                        <select class="admin-select" id="orderFilterStaff"><option value="ALL">Tất cả</option><option value="Chưa phân công">Chưa phân công</option></select>
                     </div>
                 </div>
             </div>
@@ -297,6 +287,7 @@
          SUB-TAB 3: HỒ SƠ TICKET 360°
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-complaint-detail">
+<div id="complaintDetailPlaceholder" class="admin-card" style="padding:28px;"><span class="skeleton-text" style="width:180px;height:24px;"></span><div class="skeleton-box" style="width:100%;height:160px;margin-top:20px;"></div></div><div id="complaintDetailData" style="display:none;">
         <div class="admin-card complaint-detail-container">
             <!-- THANH THAO TÁC MỘT CHẠM ĐẦU CHI TIẾT -->
             <div class="complaint-detail-header-bar">
@@ -605,7 +596,9 @@
                 </div>
             </div>
         </div>
-    </section>
+
+</div>
+</section>
 
     <!-- MODAL: TẠO KHIẾU NẠI MỚI (DỊCH VỤ HOẶC ĐƠN HÀNG) -->
     <div class="admin-modal-overlay" id="createTicketModalOverlay">

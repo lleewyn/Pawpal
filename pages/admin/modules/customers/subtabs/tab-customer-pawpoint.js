@@ -12,6 +12,16 @@
     function renderPawpointHistory() {
         const tbody = document.getElementById('pawpointHistoryTbody');
         if (!tbody) return;
+        if (!PawpalCustomers.state.hasLoadedCustomers) {
+            if (PawpalCustomers.state.listLoadStatus === 'error') {
+                delete tbody.dataset.loadingSkeleton;
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">Không thể tải lịch sử Pawpoint. Vui lòng tải lại trang.</td></tr>';
+            } else if (!tbody.querySelector('.skeleton-row')) {
+                window.PawpalAdmin?.renderTableSkeleton?.(tbody, { columns: 5 });
+            }
+            return;
+        }
+        delete tbody.dataset.loadingSkeleton;
 
         const query = (document.getElementById('pawpointSearchInput')?.value || '').trim();
         const filterType = document.getElementById('pawpointFilterType')?.value || 'ALL';

@@ -122,6 +122,9 @@
 
         // Nếu dữ liệu đang tải và chưa có bản ghi: giữ nguyên skeleton animation
         if (petsList.length === 0 && !PawpalPets.state?.isLoaded) {
+            if (PawpalPets.state?.loadError) {
+                [statTotal, statDog, statCat, statOther, statAlert].forEach(element => { if (element) element.textContent = '—'; });
+            }
             return;
         }
 
@@ -259,15 +262,32 @@
         renderPetPagination(totalItems, totalPages);
 
         if (totalItems === 0) {
+            if (PawpalPets.state?.loadError) {
+                delete tbody.dataset.loadingSkeleton;
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 30px; color: var(--text-muted);">Không thể tải danh sách thú cưng. Vui lòng tải lại trang.</td></tr>';
+                return;
+            }
             if (!PawpalPets.state?.isLoaded) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 40px 16px; font-size: 13.5px;">
-                            <span class="admin-loading-spinner" style="display: inline-block; width: 16px; height: 16px; border: 2px solid #ECF2EE; border-top-color: #236B48; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px;"></span>
-                            Đang nạp danh sách bé cưng từ cơ sở dữ liệu...
+                tbody.dataset.loadingSkeleton = 'true';
+                tbody.innerHTML = Array.from({ length: 5 }, (_, i) => `
+                    <tr class="skeleton-row admin-auto-skeleton">
+                        <td style="text-align: center;"><span class="skeleton-avatar"></span></td>
+                        <td><span class="skeleton-text" style="width: ${65 + (i % 2) * 10}px;"></span></td>
+                        <td>
+                            <span class="skeleton-text" style="width: ${85 + (i % 3) * 15}px; margin-bottom: 5px;"></span>
+                            <span class="skeleton-text" style="width: 55px; height: 11px;"></span>
                         </td>
+                        <td><span class="skeleton-text" style="width: ${95 + (i % 2) * 20}px;"></span></td>
+                        <td><span class="skeleton-text" style="width: 45px;"></span></td>
+                        <td>
+                            <span class="skeleton-text" style="width: ${100 + (i % 3) * 15}px; margin-bottom: 5px;"></span>
+                            <span class="skeleton-text" style="width: 75px; height: 11px;"></span>
+                        </td>
+                        <td><span class="skeleton-text" style="width: 40px;"></span></td>
+                        <td><span class="skeleton-badge"></span></td>
+                        <td style="text-align: center;"><span class="skeleton-text" style="width: 20px;"></span></td>
                     </tr>
-                `;
+                `).join('');
                 return;
             }
 

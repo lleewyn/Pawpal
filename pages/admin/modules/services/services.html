@@ -104,17 +104,7 @@
                 <table class="admin-table" id="servicesBookingTable">
                     <thead>
                         <tr>
-                            <th>Mã lịch hẹn</th>
-                            <th>Khách hàng</th>
-                            <th>Thú cưng</th>
-                            <th>Loại dịch vụ</th>
-                            <th>Dịch vụ đã đặt</th>
-                            <th>Ngày và Giờ hẹn</th>
-                            <th>Kỹ thuật viên</th>
-                            <th>Tổng tiền</th>
-                            <th>Trạng thái</th>
-                            <th>Cảnh báo</th>
-                            <th style="text-align: center; width: 60px;">Thao tác</th>
+                            <th>Mã lịch hẹn</th><th>Ngày và giờ hẹn</th><th>Khách hàng</th><th>Thú cưng</th><th>Dịch vụ đã đặt</th><th>Kỹ thuật viên</th><th>Tổng tiền</th><th>Thanh toán</th><th>Trạng thái</th><th>Cảnh báo</th><th>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="servicesBookingTableBody">
@@ -484,19 +474,19 @@
         <div class="services-kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
             <div class="admin-card kpi-card kpi-card-clickable" data-review-filter="ALL">
                 <span class="kpi-label">Điểm đánh giá trung bình</span>
-                <span class="kpi-val" id="statAvgRating" style="color: #B45309;">—</span>
+                <span class="kpi-val" id="statAvgRating" style="color: #B45309;"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-review-filter="ALL">
                 <span class="kpi-label">Tổng lượt đánh giá</span>
-                <span class="kpi-val" id="statTotalReviews">—</span>
+                <span class="kpi-val" id="statTotalReviews"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-review-filter="pending">
                 <span class="kpi-label">Chưa phản hồi</span>
-                <span class="kpi-val text-warning" id="statPendingReviews">—</span>
+                <span class="kpi-val text-warning" id="statPendingReviews"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card kpi-card-clickable" data-review-filter="low_rating">
                 <span class="kpi-label">Cảnh báo (1-3 sao)</span>
-                <span class="kpi-val text-danger" id="statLowRatingReviews">—</span>
+                <span class="kpi-val text-danger" id="statLowRatingReviews"><span class="skeleton-kpi"></span></span>
             </div>
         </div>
 

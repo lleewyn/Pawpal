@@ -9,205 +9,29 @@
     const REMINDERS_PER_PAGE = 10;
     let currentSendingReminderId = 'REM-001';
 
-    const defaultRemindersData = [
-        {
-            id: 'REM-001',
-            petId: 'PET-001',
-            petName: 'Bé Milu',
-            speciesBreed: 'Chó Corgi',
-            ownerName: 'Nguyễn Văn An',
-            ownerPhone: '0912345678',
-            custId: 'CUST-001',
-            type: 'BATH',
-            typeText: 'Quá 18 ngày chưa tắm sấy',
-            typeBadgeClass: 'badge-warning',
-            typeBadgeStyle: '',
-            lastDateText: '09/09/2026 (18 ngày trước)',
-            status: 'UNSENT',
-            statusText: 'Chưa gửi',
-            statusBadgeClass: 'badge-neutral'
-        },
-        {
-            id: 'REM-002',
-            petId: 'PET-003',
-            petName: 'Bé Boss',
-            speciesBreed: 'Chó Golden Retriever',
-            ownerName: 'Lê Thị Bình',
-            ownerPhone: '0987654321',
-            custId: 'CUST-002',
-            type: 'GROOM',
-            typeText: 'Quá 36 ngày chưa chải lông và cắt móng',
-            typeBadgeClass: 'badge-danger',
-            typeBadgeStyle: '',
-            lastDateText: '22/08/2026 (36 ngày trước)',
-            status: 'SENT',
-            statusText: 'Đã gửi Zalo hôm qua',
-            statusBadgeClass: 'badge-success'
-        },
-        {
-            id: 'REM-003',
-            petId: 'PET-002',
-            petName: 'Bé Mimi',
-            speciesBreed: 'Mèo Anh lông ngắn',
-            ownerName: 'Nguyễn Văn An',
-            ownerPhone: '0912345678',
-            custId: 'CUST-001',
-            type: 'HOTEL',
-            typeText: 'Gửi Pet Hotel cuối tuần',
-            typeBadgeClass: 'badge-tier-gold',
-            typeBadgeStyle: '',
-            lastDateText: 'Khách quen gửi thứ 7 hằng tuần',
-            status: 'UNSENT',
-            statusText: 'Chưa gửi',
-            statusBadgeClass: 'badge-neutral'
-        },
-        {
-            id: 'REM-004',
-            petId: 'PET-005',
-            petName: 'Bé Trà Sữa',
-            speciesBreed: 'Chó Poodle Toy',
-            ownerName: 'Hoàng Minh Tuấn',
-            ownerPhone: '0903112233',
-            custId: 'CUST-005',
-            type: 'GROOM',
-            typeText: 'Quá 32 ngày chưa cắt tỉa lông tạo kiểu',
-            typeBadgeClass: 'badge-danger',
-            typeBadgeStyle: '',
-            lastDateText: '26/08/2026 (32 ngày trước)',
-            status: 'UNSENT',
-            statusText: 'Chưa gửi',
-            statusBadgeClass: 'badge-neutral'
-        },
-        {
-            id: 'REM-005',
-            petId: 'PET-007',
-            petName: 'Bé Mochi',
-            speciesBreed: 'Phốc Sóc (Pomeranian)',
-            ownerName: 'Bùi Thu Trang',
-            ownerPhone: '0938776655',
-            custId: 'CUST-008',
-            type: 'BATH',
-            typeText: 'Quá 16 ngày chưa tắm sấy',
-            typeBadgeClass: 'badge-warning',
-            typeBadgeStyle: '',
-            lastDateText: '12/09/2026 (16 ngày trước)',
-            status: 'SENT',
-            statusText: 'Đã gửi Zalo sáng nay',
-            statusBadgeClass: 'badge-success'
-        },
-        {
-            id: 'REM-006',
-            petId: 'PET-009',
-            petName: 'Bé Đậu Đậu',
-            speciesBreed: 'Poodle Standard',
-            ownerName: 'Đặng Thùy Linh',
-            ownerPhone: '0945678123',
-            custId: 'CUST-010',
-            type: 'HOTEL',
-            typeText: 'Gửi Pet Hotel cuối tuần',
-            typeBadgeClass: 'badge-tier-gold',
-            typeBadgeStyle: '',
-            lastDateText: 'Khách quen đặt phòng cuối tuần',
-            status: 'UNSENT',
-            statusText: 'Chưa gửi',
-            statusBadgeClass: 'badge-neutral'
-        },
-        {
-            id: 'REM-007',
-            petId: 'PET-004',
-            petName: 'Bé Cún Lu',
-            speciesBreed: 'Chó cỏ lai',
-            ownerName: 'Trần Đình Trọng',
-            ownerPhone: '0977889900',
-            custId: 'CUST-004',
-            type: 'HOTEL_VACCINE',
-            typeText: 'Cảnh báo sổ tiêm ngoài quá hạn trước khi nhận Hotel',
-            typeBadgeClass: 'badge-danger',
-            typeBadgeStyle: 'color: #8F2424; background: #F7DCDC;',
-            lastDateText: 'Sổ tiêm ngoài quá hạn: 15/10/2025',
-            status: 'UNSENT',
-            statusText: 'Cần nhắc chủ',
-            statusBadgeClass: 'badge-warning'
-        },
-        {
-            id: 'REM-008',
-            petId: 'PET-006',
-            petName: 'Bé Bông',
-            speciesBreed: 'Mèo Ba Tư lông dài',
-            ownerName: 'Phan Tuyết Mai',
-            ownerPhone: '0911223344',
-            custId: 'CUST-007',
-            type: 'GROOM',
-            typeText: 'Quá 40 ngày chưa chải xả rối và cạo đệm chân',
-            typeBadgeClass: 'badge-danger',
-            typeBadgeStyle: '',
-            lastDateText: '20/08/2026 (40 ngày trước)',
-            status: 'UNSENT',
-            statusText: 'Chưa gửi',
-            statusBadgeClass: 'badge-neutral'
-        },
-        {
-            id: 'REM-009',
-            petId: 'PET-010',
-            petName: 'Bé Kem',
-            speciesBreed: 'Chó Samoyed tuyết',
-            ownerName: 'Vũ Đức Thành',
-            ownerPhone: '0988776655',
-            custId: 'CUST-009',
-            type: 'BATH',
-            typeText: 'Mùa rụng lông cần tắm sấy xả tơ chuyên sâu',
-            typeBadgeClass: 'badge-warning',
-            typeBadgeStyle: '',
-            lastDateText: '05/09/2026 (24 ngày trước)',
-            status: 'UNSENT',
-            statusText: 'Chưa gửi',
-            statusBadgeClass: 'badge-neutral'
-        },
-        {
-            id: 'REM-010',
-            petId: 'PET-008',
-            petName: 'Bé Bơ',
-            speciesBreed: 'Thỏ Minilop',
-            ownerName: 'Nguyễn Văn An',
-            ownerPhone: '0912345678',
-            custId: 'CUST-001',
-            type: 'SHOP_REFILL',
-            typeText: 'Dự đoán hết cỏ Timothy và hạt nén dinh dưỡng',
-            typeBadgeClass: 'badge-neutral',
-            typeBadgeStyle: '',
-            lastDateText: 'Mua đơn gần nhất: 29/08/2026',
-            status: 'UNSENT',
-            statusText: 'Chưa gửi',
-            statusBadgeClass: 'badge-neutral'
-        }
-    ];
-
     function getRemindersData() {
-        const saved = sessionStorage.getItem('pawpal_admin_pet_reminders');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                if (Array.isArray(parsed)) {
-                    const seen = new Set();
-                    return parsed.filter(item => {
-                        const key = `${item.petId || item.petName}|${item.type || item.typeText}`;
-                        if (seen.has(key)) return false;
-                        seen.add(key);
-                        return true;
-                    });
-                }
-            } catch(e) {}
+        const reminders = [];
+        const today = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+        const todayTime = Date.parse(today + 'T00:00:00+07:00');
+        const completed = (PawpalPets.state.appointments || []).filter(a => a.appointment_status === 'COMPLETED');
+        for (const pet of Object.values(PawpalPets.state.petsData || {})) {
+            if (pet.isArchived) continue;
+            const history = completed.filter(a => a.pet_id === pet.rawId);
+            for (const rule of [{type:'BATH',days:14,pattern:/tắm|bath/i,label:'chưa tắm sấy'}, {type:'GROOM',days:30,pattern:/cắt tỉa|groom|tạo kiểu|style/i,label:'chưa cắt tỉa'}]) {
+                const last = history.filter(a => rule.pattern.test(a.service?.service_name || '')).sort((a,b) => String(b.appointment_date).localeCompare(String(a.appointment_date)))[0];
+                if (!last?.appointment_date) continue;
+                const days = Math.floor((todayTime - Date.parse(last.appointment_date.slice(0,10)+'T00:00:00+07:00'))/86400000);
+                if (!Number.isFinite(days) || days <= rule.days) continue;
+                reminders.push({id:`${pet.rawId}:${rule.type}`,petId:pet.code,petName:pet.name,speciesBreed:pet.speciesBreed,ownerName:pet.ownerName,ownerPhone:pet.ownerPhone,custId:pet.custId,type:rule.type,typeText:`Quá ${days} ngày ${rule.label}`,typeBadgeClass:'badge-warning',typeBadgeStyle:'',lastDateText:PawpalPets.formatDate(last.appointment_date),status:'UNSENT',statusText:'Chưa ghi nhận gửi tin',statusBadgeClass:'badge-neutral'});
+            }
         }
-        return JSON.parse(JSON.stringify(defaultRemindersData));
+        return reminders;
     }
-
-    let remindersData = getRemindersData();
-
-    function persistRemindersData() {
-        sessionStorage.setItem('pawpal_admin_pet_reminders', JSON.stringify(remindersData));
-    }
+    let remindersData = [];
 
     function updateReminderKPIs() {
+        if (!PawpalPets.state.isLoaded && !PawpalPets.state.loadError) return;
+        remindersData = getRemindersData();
         const kpiBathEl = document.getElementById('remKpiValBath');
         const kpiGroomEl = document.getElementById('remKpiValGroom');
         const kpiHotelEl = document.getElementById('remKpiValHotel');
@@ -288,6 +112,14 @@
         const reminderFilterStatus = document.getElementById('reminderFilterStatus');
 
         if (!reminderTableTbody) return;
+        if (!PawpalPets.state.isLoaded || PawpalPets.state.loadError) {
+            if (PawpalPets.state.loadError) reminderTableTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;">Không thể tải nhắc lịch. Vui lòng tải lại trang.</td></tr>';
+            else if (!reminderTableTbody.querySelector('.skeleton-row')) window.PawpalAdmin?.renderTableSkeleton?.(reminderTableTbody, {columns:6});
+            return;
+        }
+        remindersData = getRemindersData();
+        delete reminderTableTbody.dataset.loadingSkeleton;
+        updateReminderKPIs();
         const query = (reminderSearchInput?.value || '').trim();
         const typeFilter = reminderFilterType?.value || 'ALL';
         const statusFilter = reminderFilterStatus?.value || 'ALL';
@@ -418,9 +250,9 @@
                 currentSendingReminderId = btnReminder.getAttribute('data-rem-id') || 'REM-001';
                 const currentItem = remindersData.find(r => r.id === currentSendingReminderId);
 
-                const pet = btnReminder.getAttribute('data-pet') || 'Milu';
-                const owner = btnReminder.getAttribute('data-owner') || 'Nguyễn Văn An';
-                const phone = btnReminder.getAttribute('data-phone') || '0912345678';
+                const pet = btnReminder.getAttribute('data-pet') || 'Bé cưng';
+                const owner = btnReminder.getAttribute('data-owner') || 'Chủ nuôi';
+                const phone = btnReminder.getAttribute('data-phone') || '';
 
                 const ownerInput = document.getElementById('reminderModalOwner');
                 const petInput = document.getElementById('reminderModalPet');
@@ -475,49 +307,14 @@
             });
         }
 
-        if (btnSubmitSendReminder) {
-            btnSubmitSendReminder.addEventListener('click', () => {
-                const targetRem = remindersData.find(r => r.id === currentSendingReminderId);
-                if (targetRem) {
-                    targetRem.status = 'SENT';
-                    targetRem.statusText = 'Đã gửi Zalo vừa xong';
-                    targetRem.statusBadgeClass = 'badge-success';
-                    persistRemindersData();
-                }
-                renderRemindersTable();
-                updateReminderKPIs();
-                PawpalPets.showToast(`Đã gửi tin nhắn chăm sóc thành công tới chủ nuôi bé ${targetRem ? targetRem.petName : ''} qua Zalo Official Account!`);
-                if (modalSendReminder) modalSendReminder.classList.remove('open');
-            });
-        }
-
-        if (btnBatchSend) {
-            btnBatchSend.addEventListener('click', () => {
-                const unsentList = remindersData.filter(r => r.status === 'UNSENT');
-                if (unsentList.length === 0) {
-                    PawpalPets.showToast('Tất cả khách hàng trong danh sách đã được gửi tin nhắn chăm sóc gần đây!');
-                    return;
-                }
-
-                PawpalPets.showPetConfirmModal({
-                    title: 'Gửi tin nhắn chăm sóc Zalo ZNS',
-                    message: `Bạn có chắc chắn muốn gửi tin nhắn chăm sóc tự động qua Zalo ZNS cho ${unsentList.length} bé cưng đang đến chu kỳ làm đẹp?`,
-                    confirmText: 'Gửi tin nhắn Zalo',
-                    onConfirm: () => {
-                        unsentList.forEach(r => {
-                            r.status = 'SENT';
-                            r.statusText = 'Đã gửi Zalo vừa xong';
-                            r.statusBadgeClass = 'badge-success';
-                        });
-                        persistRemindersData();
-                        renderRemindersTable();
-                        updateReminderKPIs();
-                        PawpalPets.showToast(`Đã gửi tin nhắn chăm sóc đồng loạt thành công tới ${unsentList.length} chủ nuôi qua Zalo Official Account!`, 'success');
-                    }
-                });
-            });
-        }
+        btnSubmitSendReminder?.addEventListener('click', () => {
+            PawpalPets.showToast('Mở Zalo và gửi nội dung đã sao chép cho chủ nuôi.', 'info');
+        });
+        btnBatchSend?.addEventListener('click', () => {
+            PawpalPets.showToast('Chưa kết nối dịch vụ gửi tin đồng loạt. Vui lòng mở Zalo của từng chủ nuôi.', 'info');
+        });
     }
+    window.addEventListener('pawpal:pets-data-loaded', () => { renderRemindersTable(); updateReminderKPIs(); });
 
     PawpalPets.subtabs.reminders = {
         init: initRemindersTab,

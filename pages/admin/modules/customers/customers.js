@@ -10,6 +10,8 @@
         pawpointHistory: []
     };
     PawpalCustomers.subtabs = PawpalCustomers.subtabs || {};
+    PawpalCustomers.state.listLoadStatus = 'idle';
+    PawpalCustomers.state.hasLoadedCustomers = false;
 
     // 1. FORMATTERS CHUẨN HÓA TOÀN HỆ THỐNG
     PawpalCustomers.formatDateTime = window.formatDateTime || function(d) {
@@ -128,7 +130,9 @@
     const subtabPanels = document.querySelectorAll('.subtab-content');
 
     PawpalCustomers.updateBreadcrumb = function(custName) {
+        if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Khách hàng') return;
         if (!deepBreadcrumbEl) return;
+        if (!document.getElementById('subtab-tab-profile')?.classList.contains('active')) custName = null;
         if (custName) {
             deepBreadcrumbEl.innerHTML = `
                 <span class="breadcrumb-separator">/</span>
@@ -140,8 +144,11 @@
     };
 
     PawpalCustomers.switchSubtab = function(targetSubtab, updateHistory = true) {
+        const root = document.getElementById('subtab-tab-list')?.closest('.admin-module-wrapper');
+        if (!root || sessionStorage.getItem('pawpal_admin_active_module') !== 'Khách hàng') return;
+        if (!root.querySelector(`#subtab-${targetSubtab}`)) return;
         const btns = document.querySelectorAll('.header-subtab-btn');
-        const panels = document.querySelectorAll('.subtab-content');
+        const panels = root.querySelectorAll('.subtab-content');
 
         btns.forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-subtab') === targetSubtab);
@@ -185,17 +192,27 @@
     let _custLastFetchedAt = 0;
     const CUST_CACHE_TTL_MS = 90_000;
 
-    PawpalCustomers.loadCustomersModuleData = async function({ force = false } = {}) {
+    let customerLoadPromise = null;
+    PawpalCustomers.loadCustomersModuleData = function(options = {}) {
+        if (customerLoadPromise) return customerLoadPromise;
+        customerLoadPromise = loadCustomersModuleData(options).finally(() => {
+            customerLoadPromise = null;
+        });
+        return customerLoadPromise;
+    };
+
+    async function loadCustomersModuleData({ force = false } = {}) {
         try {
+            PawpalCustomers.state.listLoadStatus = 'loading';
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (!client) {
-                console.warn('[Customers] Supabase client not initialized.');
-                return;
+                throw new Error('Supabase client not initialized.');
             }
 
-            // Sử dụng cache nếu dữ liệu còn mới và không yêu cầu làm mới bắt buộc
-            if (!force && Date.now() - _custLastFetchedAt < CUST_CACHE_TTL_MS) {
+            // Sử dụng cache nếu dữ liệu còn mới và đã có ít nhất 1 khách hàng
+            if (!force && Date.now() - _custLastFetchedAt < CUST_CACHE_TTL_MS && Object.keys(PawpalCustomers.state.customerDatabase || {}).length > 0) {
                 console.log('[Customers] Dùng cache, bỏ qua fetch.');
+                PawpalCustomers.state.listLoadStatus = 'loaded';
                 return;
             }
 
@@ -222,7 +239,7 @@
                 client.from('paw_point_transaction').select('id, customer_id, points, balance_after, description, created_at').order('created_at', { ascending: false }).limit(500)
             ]);
 
-            _custLastFetchedAt = Date.now();
+            if (custRes.error) throw custRes.error;
 
 
             const profMap = {};
@@ -494,10 +511,26 @@
             }
 
             PawpalCustomers.populateCustomerDatalists();
+            _custLastFetchedAt = Date.now();
+            PawpalCustomers.state.hasLoadedCustomers = true;
+            PawpalCustomers.state.listLoadStatus = 'loaded';
+
+            if (PawpalCustomers.subtabs.list?.renderCustomersTable) {
+                PawpalCustomers.subtabs.list.renderCustomersTable();
+                PawpalCustomers.subtabs.list.updateCustomerKPIs();
+                if (PawpalCustomers.subtabs.list.renderComplaintBar) {
+                    PawpalCustomers.subtabs.list.renderComplaintBar();
+                }
+            }
         } catch (err) {
+            PawpalCustomers.state.listLoadStatus = 'error';
             console.error('[Customers] Lỗi nạp dữ liệu từ Supabase:', err);
+            PawpalCustomers.subtabs.list?.renderCustomersTable?.();
+            PawpalCustomers.subtabs.list?.updateCustomerKPIs?.();
+            PawpalCustomers.subtabs.pawpoint?.renderPawpointHistory?.();
+            PawpalCustomers.subtabs.profile?.renderDrawerCustomerProfile?.(sessionStorage.getItem('pawpal_admin_customer_id'));
         }
-    };
+    }
 
     PawpalCustomers.populateCustomerDatalists = function() {
         const searchDatalist = document.getElementById('customerSearchDatalist');
@@ -643,9 +676,7 @@
             PawpalCustomers.subtabs.profile.renderDrawerCustomerProfile(savedCustId);
         }
 
-        if (initialSubtab !== 'tab-list') {
-            PawpalCustomers.switchSubtab(initialSubtab);
-        }
+        PawpalCustomers.switchSubtab(initialSubtab, false);
 
         const savedDrawerTab = sessionStorage.getItem('pawpal_admin_customer_drawertab');
         if (savedDrawerTab && document.getElementById(savedDrawerTab) && PawpalCustomers.subtabs.profile) {
@@ -693,6 +724,20 @@
             lucide.createIcons();
         }
     }
+
+    PawpalCustomers.init = initCustomersModule;
+
+    window.addEventListener('admin:module-show', (e) => {
+        if (e.detail?.module === 'Khách hàng') {
+            if (PawpalCustomers.subtabs?.list?.renderCustomersTable) {
+                PawpalCustomers.subtabs.list.renderCustomersTable();
+                PawpalCustomers.subtabs.list.updateCustomerKPIs();
+                if (PawpalCustomers.subtabs.list.renderComplaintBar) {
+                    PawpalCustomers.subtabs.list.renderComplaintBar();
+                }
+            }
+        }
+    });
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initCustomersModule);

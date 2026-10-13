@@ -244,6 +244,9 @@
 
     async function loadChatbotDataFromSupabase() {
         if (!supabase) {
+            PawpalChatbot.state.liveLoadError = 'Không thể kết nối dữ liệu hội thoại.';
+            PawpalChatbot.subtabs.live?.renderConversationsList?.();
+            PawpalChatbot.subtabs.live?.renderCurrentChat?.();
             console.warn('[Chatbot] Supabase Client chưa khả dụng.');
             return;
         }
@@ -270,6 +273,8 @@
                 supabase.from('paw_point_transaction').select('*')
             ]);
 
+            if (convsRes.error) throw convsRes.error;
+            PawpalChatbot.state.liveLoadError = null;
             // 2. Tạo bản đồ tra cứu (Lookup Maps) để nối dữ liệu quan hệ
             const profMap = {};
             (profsRes.data || []).forEach(p => {
@@ -456,6 +461,7 @@
             updateFilterBadges();
 
             // Cập nhật subtab Trực chat
+            PawpalChatbot.state.liveLoaded = true;
             PawpalChatbot.subtabs.live?.renderConversationsList?.();
             PawpalChatbot.subtabs.live?.renderCurrentChat?.();
 
@@ -463,6 +469,9 @@
             updateDeepBreadcrumb();
 
         } catch (err) {
+            PawpalChatbot.state.liveLoadError = 'Không thể tải hội thoại. Vui lòng tải lại trang.';
+            PawpalChatbot.subtabs.live?.renderConversationsList?.();
+            PawpalChatbot.subtabs.live?.renderCurrentChat?.();
             console.error('[Chatbot] Lỗi nạp dữ liệu từ Supabase:', err);
         }
     }
@@ -486,6 +495,8 @@
     function updateDeepBreadcrumb() {
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
         if (!deepBreadcrumbEl) return;
+        const currentMod = sessionStorage.getItem('pawpal_admin_active_module');
+        if (currentMod !== 'Chatbot') return; // Không can thiệp nếu người dùng đang ở phân hệ khác
         const activeTabId = sessionStorage.getItem('pawpal_admin_chatbot_subtab') || 'tab-live-support';
 
         if (activeTabId === 'tab-live-support' && PawpalChatbot.state.currentConversation) {

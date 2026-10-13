@@ -19,6 +19,7 @@
     }
 
     function updateStaffKpis() {
+        if (!PawpalStaff.state.isLoaded) return;
         const staffList = PawpalStaff.state?.mockStaff || [];
         const total = staffList.length;
         const active = staffList.filter(s => s.status === 'ACTIVE').length;
@@ -144,6 +145,12 @@
     }
 
     function renderStaffList() {
+        if (PawpalStaff.state.loadError) {
+            const target=document.getElementById('staffListTableBody');
+            if(target)target.innerHTML='<tr><td colspan="8" style="padding:28px;text-align:center;">Không thể tải dữ liệu nhân sự. Vui lòng tải lại trang.</td></tr>';
+            return;
+        }
+        if (!PawpalStaff.state.isLoaded) return;
         updateStaffKpis();
         const tbody = document.getElementById('staffListTableBody');
         if (!tbody) return;
@@ -194,10 +201,10 @@
             else if (staff.status === 'PAUSE') statusBadge = '<span class="admin-badge badge-neutral">Tạm nghỉ</span>';
             else statusBadge = '<span class="admin-badge badge-danger">Nghỉ việc</span>';
 
-            let shiftText = staff.shift === 'MORNING' ? 'Ca sáng' : staff.shift === 'AFTERNOON' ? 'Ca chiều' : staff.shift === 'EVENING' ? 'Ca tối' : staff.shift === 'NIGHT' ? 'Ca khuya' : 'Toàn thời gian';
+            let shiftText = staff.shift === 'MORNING' ? 'Ca sáng' : staff.shift === 'AFTERNOON' ? 'Ca chiều' : staff.shift === 'EVENING' ? 'Ca tối' : staff.shift === 'NIGHT' ? 'Ca khuya' : 'Chưa phân ca';
 
             let skillText = '';
-            if (staff.skillResult === 'PASS') {
+            if (!staff.skillResult) { skillText = '<span>Chưa đánh giá</span>'; } else if (staff.skillResult === 'PASS') {
                 skillText = `<span style="color: var(--text-main); font-size: 13px;">${staff.skillExam || 'Đạt tiêu chuẩn'}</span>`;
             } else if (staff.skillResult === 'RETRAIN') {
                 skillText = `<span class="alert-indicator text-warning" style="font-weight: 500;">• ${staff.skillExam || 'Cần đào tạo lại'}</span>`;
@@ -207,7 +214,7 @@
 
             let lockStatusText = staff.serviceLocked
                 ? `<div style="font-size: 11.5px; color: #DC2626; font-weight: 500; margin-top: 2px;">• Tạm khóa nhận việc</div>`
-                : `<div style="font-size: 11.5px; color: var(--text-muted); font-weight: 500; margin-top: 2px;">• Sẵn sàng nhận lịch</div>`;
+                : `<div style="font-size: 11.5px; color: var(--text-muted); font-weight: 500; margin-top: 2px;"></div>`;
 
             const tr = document.createElement('tr');
 

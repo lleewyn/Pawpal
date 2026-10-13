@@ -356,14 +356,16 @@
         try {
             const client = getSupabaseClient();
             if (client) {
-                await client.from('app_setting').upsert([{
+                await client.from('pawpal_setting').upsert([{
                     setting_key: 'system_config',
                     setting_value: JSON.stringify(newCfg),
+                    setting_type: 'json',
+                    description: 'Cấu hình vận hành hệ thống Pawpal',
                     updated_at: new Date().toISOString()
                 }], { onConflict: 'setting_key' });
             }
         } catch (e) {
-            console.warn('[Settings] Chưa lưu app_setting trên Supabase:', e.message);
+            console.warn('[Settings] Chưa lưu pawpal_setting trên Supabase:', e.message);
         }
     }
     PawpalSettings.persistSystemConfig = persistSystemConfig;
@@ -404,27 +406,29 @@
 
         try {
             const [
-                { data: bannersData },
-                { data: vouchersData },
-                { data: blogsData },
-                { data: notifsData },
-                { data: auditsData },
-                { data: appSettingsData },
-                { data: servicesData },
-                { data: productsData },
-                { data: categoriesData }
+                { data: bannersData, error: bannersError },
+                { data: vouchersData, error: vouchersError },
+                { data: blogsData, error: blogsError },
+                { data: notifsData, error: notifsError },
+                { data: auditsData, error: auditsError },
+                { data: appSettingsData, error: appSettingsError },
+                { data: servicesData, error: servicesError },
+                { data: productsData, error: productsError },
+                { data: categoriesData, error: categoriesError }
             ] = await Promise.all([
                 client.from('banner').select('*').order('created_at', { ascending: false }),
                 client.from('voucher').select('*').order('created_at', { ascending: false }),
                 client.from('blog_post').select('*').order('created_at', { ascending: false }),
-                client.from('notification').select('*').order('created_at', { ascending: false }),
+                client.from('notification').select('*').order('sent_at', { ascending: false }),
                 client.from('audit_log').select('*').order('created_at', { ascending: false }).limit(40),
-                client.from('app_setting').select('*'),
-                client.from('service').select('id, name, base_price, duration_minutes').order('name'),
-                client.from('product').select('id, name, sale_price').order('name').limit(50),
+                client.from('pawpal_setting').select('*'),
+                client.from('service').select('id, service_code, service_name, estimated_duration').order('service_name'),
+                client.from('product').select('id, sku, product_name, sale_price').order('product_name').limit(50),
                 client.from('blog_category').select('id, category_name').order('category_name')
             ]);
 
+            const error=[bannersError,vouchersError,blogsError,notifsError,auditsError,appSettingsError,servicesError,productsError,categoriesError].find(Boolean);
+            if(error)throw error;
             const banners = bannersData || [];
             const vouchers = vouchersData || [];
             const blogs = blogsData || [];
@@ -436,10 +440,11 @@
             PawpalSettings.state.productsList = productsData || [];
             PawpalSettings.state.blogCategoriesList = (categoriesData || []).filter(c => c && c.category_name && c.category_name.trim());
 
-            // Đọc cấu hình vận hành từ app_setting
+            // Đọc cấu hình vận hành từ pawpal_setting
             if (appSettingsData && appSettingsData.length > 0) {
                 appSettingsData.forEach(row => {
                     if (row.setting_key === 'system_config' && row.setting_value) {
+                        PawpalSettings.state.hasSystemConfig = true;
                         try {
                             PawpalSettings.state.systemConfig = JSON.parse(row.setting_value);
                         } catch {}
@@ -471,7 +476,7 @@
                 const code = v.voucher_code || v.code || 'PAWPALCARE';
                 const name = v.voucher_name || v.name || ('Voucher ' + code);
                 const isPercent = (v.type === 'percentage' || v.type === 'percent' || !!v.discount_percent);
-                const val = Number(v.discount_value || v.discount_amount || v.discount_percent || 30000);
+                const val = Number(v.discount_value ?? v.discount_amount ?? v.discount_percent ?? 0);
                 let endDateStr = v.end_date ? ('Đến ' + formatDate(v.end_date)) : 'Đến 2026-12-31';
 
                 let target = 'Shop';
@@ -486,7 +491,7 @@
                 if (v.is_active === false) status = 'paused';
                 const maxUse = Number(v.max_usage || v.total_usage_limit || 200);
                 const curUse = Number(v.usage_count || v.current_usage_count || 0);
-                if (maxUse && curUse >= maxUse) status = 'expired';
+                if ((v.end_date && Date.parse(v.end_date)<Date.now()) || (maxUse && curUse>=maxUse)) status='expired';
 
                 return {
                     id: v.id,
@@ -505,13 +510,7 @@
 
             // 3. Map Blog / Articles
             PawpalSettings.state.articlesList = blogs.map(a => {
-                let categoryName = 'Mẹo chăm sóc';
-                const tLower = (a.title || '').toLowerCase();
-                if (tLower.includes('chó') || tLower.includes('cún')) categoryName = 'Chó';
-                else if (tLower.includes('mèo')) categoryName = 'Mèo';
-                else if (tLower.includes('dinh dưỡng') || tLower.includes('ăn')) categoryName = 'Dinh dưỡng';
-                else if (tLower.includes('spa') || tLower.includes('grooming')) categoryName = 'Grooming';
-                else if (tLower.includes('sức khỏe') || tLower.includes('sốc nhiệt')) categoryName = 'Y tế';
+                const categoryName = (categoriesData || []).find(category=>category.id===a.category_id)?.category_name || 'Chưa phân loại';
 
                 let status = 'published';
                 const sUpper = (a.status || '').toUpperCase();
@@ -552,30 +551,17 @@
                     return {
                         time: timeStr,
                         actor: 'Quản trị viên (Admin)',
-                        targetModules: l.entity_name ? `Phân hệ ${l.entity_name}` : 'Hệ thống',
+                        targetModules: ({product:'Bán hàng',sales_order:'Bán hàng',voucher:'Khuyến mãi',customer:'Khách hàng',pet_profile:'Thú cưng',service:'Dịch vụ',appointment:'Dịch vụ',staff:'Nhân sự',blog_post:'Bài viết',pawpal_setting:'Cấu hình'})[l.entity_name] || 'Hệ thống',
                         actionText: l.description || l.action || 'Thao tác cấu hình hệ thống',
                         status: 'Đã đồng bộ SSOT'
                     };
                 });
             } else {
-                PawpalSettings.state.auditLogsList = [
-                    {
-                        time: '29/09/2026 14:15',
-                        actor: 'Quản trị viên (Admin)',
-                        targetModules: 'Khách hàng và Bán hàng',
-                        actionText: 'Tỷ lệ PawPoints: 1 điểm = 100 VNĐ (Khấu trừ thanh toán)',
-                        status: 'Đã đồng bộ SSOT'
-                    },
-                    {
-                        time: '28/09/2026 09:30',
-                        actor: 'Quản trị viên (Admin)',
-                        targetModules: 'Dịch vụ và Nhân sự',
-                        actionText: 'Thời gian hủy miễn phí: 2 giờ → 4 giờ',
-                        status: 'Đã đồng bộ SSOT'
-                    }
-                ];
+                PawpalSettings.state.auditLogsList = [];
             }
 
+            PawpalSettings.state.isLoaded = true;
+            PawpalSettings.state.loadError = null;
             // Gọi render cập nhật các subtab
             PawpalSettings.subtabs.banners?.renderBanners?.();
             PawpalSettings.subtabs.banners?.renderVouchers?.();
@@ -591,6 +577,10 @@
             updateSafeModeUI();
 
         } catch (err) {
+            PawpalSettings.state.loadError = 'Không thể tải cấu hình. Vui lòng tải lại trang.';
+            PawpalSettings.subtabs.content?.renderArticles?.();
+            PawpalSettings.subtabs.banners?.renderVouchers?.();
+            PawpalSettings.subtabs.audit?.renderAuditLogs?.();
             console.error('[Settings] Lỗi nạp dữ liệu từ Supabase:', err);
         }
     }
@@ -610,6 +600,7 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'blog_post' }, () => loadSettingsModuleData())
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'notification' }, () => loadSettingsModuleData())
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'audit_log' }, () => loadSettingsModuleData())
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'pawpal_setting' }, () => loadSettingsModuleData())
                 .subscribe();
 
             window.addEventListener('beforeunload', () => {
@@ -628,31 +619,14 @@
 
     function renderHeaderSubtabs(activeTabId) {
         if (!subtabsContainer) return;
-        if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Cấu hình') return;
+        const currentMod = sessionStorage.getItem('pawpal_admin_active_module');
+        if (currentMod !== 'Cấu hình') return;
 
         const existingBtns = subtabsContainer.querySelectorAll('.header-subtab-btn');
-        const isSettingsBtns = existingBtns.length === 4 && Array.from(existingBtns).every(b => {
-            const t = b.getAttribute('data-tab') || b.getAttribute('data-subtab');
-            return VALID_SETTINGS_TABS.includes(t);
+        existingBtns.forEach(btn => {
+            const tab = btn.getAttribute('data-tab') || btn.getAttribute('data-subtab');
+            btn.classList.toggle('active', tab === activeTabId);
         });
-
-        if (isSettingsBtns) {
-            existingBtns.forEach(btn => {
-                const tab = btn.getAttribute('data-tab') || btn.getAttribute('data-subtab');
-                btn.classList.toggle('active', tab === activeTabId);
-            });
-            return;
-        }
-
-        subtabsContainer.innerHTML = `
-            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-banner-promos' ? 'active' : ''}" data-subtab="tab-banner-promos" data-tab="tab-banner-promos">Banner và Khuyến mãi</button>
-            <span class="subtab-divider header-subtab-divider">|</span>
-            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-content-management' ? 'active' : ''}" data-subtab="tab-content-management" data-tab="tab-content-management">Bài viết</button>
-            <span class="subtab-divider header-subtab-divider">|</span>
-            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-system-config' ? 'active' : ''}" data-subtab="tab-system-config" data-tab="tab-system-config">Cấu hình</button>
-            <span class="subtab-divider header-subtab-divider">|</span>
-            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-audit-logs' ? 'active' : ''}" data-subtab="tab-audit-logs" data-tab="tab-audit-logs">Nhật ký</button>
-        `;
     }
 
     subtabsContainer?.addEventListener('click', (e) => {
@@ -669,9 +643,12 @@
         if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Cấu hình') return;
         if (!VALID_SETTINGS_TABS.includes(tabId)) return;
 
-        document.querySelectorAll('#contentArea .subtab-content').forEach(sec => {
-            sec.classList.remove('active');
-        });
+        const container = document.getElementById('contentArea') || document.querySelector('.admin-preview-content');
+        if (container) {
+            container.querySelectorAll('.subtab-content').forEach(sec => {
+                sec.classList.remove('active');
+            });
+        }
 
         const activeSec = document.getElementById(`subtab-${tabId}`);
         if (activeSec) activeSec.classList.add('active');
@@ -725,13 +702,28 @@
     document.getElementById('btnCancelImpactModal')?.addEventListener('click', closeImpactModalHandler);
 
     // -------------------------------------------------------------
-    // KHỞI ĐỘNG MODULE
+    // KHỞI ĐỘNG MODULE & EXPORT LIFECYCLE CHUẨN
     // -------------------------------------------------------------
+    PawpalSettings.init = async function() {
+        await loadSettingsModuleData();
+        const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
+        const savedTab = sessionStorage.getItem('pawpal_admin_settings_subtab');
+        let initTab = 'tab-banner-promos';
+        if (VALID_SETTINGS_TABS.includes(hash)) {
+            initTab = hash;
+        } else if (VALID_SETTINGS_TABS.includes(savedTab)) {
+            initTab = savedTab;
+        }
+        switchSubtab(initTab);
+    };
+
     setupSettingsRealtimeChannel();
     loadSettingsModuleData();
 
     window.addEventListener('focus', () => {
-        loadSettingsModuleData();
+        if (sessionStorage.getItem('pawpal_admin_active_module') === 'Cấu hình') {
+            loadSettingsModuleData();
+        }
     });
 
     const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
@@ -747,6 +739,17 @@
     window.addEventListener('admin:subtab-change', (e) => {
         if (e.detail?.module === 'Cấu hình' && VALID_SETTINGS_TABS.includes(e.detail.tabId)) {
             switchSubtab(e.detail.tabId);
+        }
+    });
+
+    window.addEventListener('admin:module-show', (e) => {
+        if (e.detail?.module === 'Cấu hình') {
+            const h = window.location.hash ? window.location.hash.replace('#', '') : '';
+            const s = sessionStorage.getItem('pawpal_admin_settings_subtab');
+            let t = 'tab-banner-promos';
+            if (VALID_SETTINGS_TABS.includes(h)) t = h;
+            else if (VALID_SETTINGS_TABS.includes(s)) t = s;
+            switchSubtab(t);
         }
     });
 })();

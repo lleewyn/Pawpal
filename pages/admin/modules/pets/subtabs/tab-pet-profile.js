@@ -178,9 +178,13 @@
         }
     }
 
-    function openPetProfile(petId) {
+    function openPetProfile(petId, navigate = true) {
         const pet = PawpalPets.state.petsData?.[petId];
-        if (!pet) return;
+        if (!pet) {
+            const name = document.getElementById('drawerPetName');
+            if (name) name.textContent = PawpalPets.state.loadError ? 'Không thể tải hồ sơ thú cưng' : 'Chưa có hồ sơ thú cưng';
+            return;
+        }
         
         const avatarEl = document.getElementById('drawerPetAvatar');
         if (avatarEl) avatarEl.src = pet.avatar;
@@ -232,7 +236,7 @@
 
         const groomerNotesEl = document.getElementById('petGroomerNotes');
         if (groomerNotesEl) {
-            groomerNotesEl.value = pet.groomerNotes || 'Cắt tỉa mặt tròn gấu bông, cạo đệm chân và vệ sinh tuyến hôi kỹ. Dùng dầu tắm yến mạch dịu nhẹ tránh kích ứng da.';
+            groomerNotesEl.value = pet.groomerNotes || '';
         }
 
         const alertBanner = document.getElementById('drawerPetAlertBanner');
@@ -247,11 +251,16 @@
         }
 
         renderPetSubtabs(pet);
+        const carelogCount = document.querySelector('[data-drawertab="ptab-carelog"] .tab-badge-count');
+        if (carelogCount) {
+            carelogCount.textContent = (pet.carelogs || []).length;
+            carelogCount.style.display = pet.carelogs?.length ? '' : 'none';
+        }
 
         sessionStorage.setItem('pawpal_admin_pet_id', pet.code);
         sessionStorage.setItem('pawpal_admin_pet_name', pet.name);
 
-        PawpalPets.switchSubtab('tab-pet-profile');
+        if (navigate) PawpalPets.switchSubtab('tab-pet-profile');
     }
 
     function updatePriceMatrix(weight) {

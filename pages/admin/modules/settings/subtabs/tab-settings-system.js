@@ -16,6 +16,14 @@
     }
 
     function renderSystemConfigCards() {
+        const root=document.getElementById('subtab-tab-system-config');
+        if (!PawpalSettings.state.isLoaded || !PawpalSettings.state.hasSystemConfig) {
+            root?.querySelectorAll('.info-value, [id^="disp"]').forEach(el=>{
+                if(!PawpalSettings.state.isLoaded)el.innerHTML='<span class="skeleton-text" style="width:120px;"></span>';
+                else el.textContent='Chưa có cấu hình được lưu';
+            });
+            return;
+        }
         const cfg = PawpalSettings.state?.systemConfig;
         if (!cfg) return;
 
@@ -506,21 +514,8 @@
             const momoBadge = document.getElementById('pingMomoBadge');
             const vnpayBadge = document.getElementById('pingVnpayBadge');
 
-            if (ghnBadge) { ghnBadge.className = 'admin-badge badge-warning'; ghnBadge.textContent = 'Đang đo ping...'; }
-            if (momoBadge) { momoBadge.className = 'admin-badge badge-warning'; momoBadge.textContent = 'Đang đo ping...'; }
-            if (vnpayBadge) { vnpayBadge.className = 'admin-badge badge-warning'; vnpayBadge.textContent = 'Đang đo ping...'; }
-
-            setTimeout(() => {
-                const ghnPing = Math.floor(Math.random() * 8) + 15;
-                const momoPing = Math.floor(Math.random() * 10) + 20;
-                const vnpayPing = Math.floor(Math.random() * 12) + 24;
-
-                if (ghnBadge) { ghnBadge.className = 'admin-badge badge-active'; ghnBadge.textContent = `Trực tuyến (${ghnPing}ms)`; }
-                if (momoBadge) { momoBadge.className = 'admin-badge badge-active'; momoBadge.textContent = `Trực tuyến (${momoPing}ms)`; }
-                if (vnpayBadge) { vnpayBadge.className = 'admin-badge badge-active'; vnpayBadge.textContent = `Trực tuyến (${vnpayPing}ms)`; }
-
-                showToast(`Live Healthcheck: GHN (${ghnPing}ms), MoMo (${momoPing}ms), VNPay (${vnpayPing}ms). Kênh kết nối thông suốt!`, 'success');
-            }, 350);
+            [ghnBadge,momoBadge,vnpayBadge].forEach(badge=>{if(badge){badge.className='admin-badge badge-neutral';badge.textContent='Chưa kiểm chứng kết nối';}});
+            showToast('Chưa có đầu nối kiểm tra kết nối thực tế cho các đối tác.', 'info');
         });
 
         // Safe mode UI & Toggle

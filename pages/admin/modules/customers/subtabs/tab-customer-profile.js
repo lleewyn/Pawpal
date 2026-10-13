@@ -302,31 +302,28 @@
 
     // Render toàn bộ Hồ sơ khách hàng trong Drawer
     function renderDrawerCustomerProfile(custId) {
-        let data = PawpalCustomers.state.customerDatabase?.[custId];
-        if (!data) {
-            data = {
-                id: custId,
-                name: 'Khách hàng ' + custId,
-                phone: '0900000000',
-                email: 'khachhang@email.com',
-                gender: 'Nam',
-                dob: '01/01/1990',
-                tier: 'SILVER',
-                tierName: 'Bạc',
-                tierBadgeClass: 'badge-tier-silver',
-                points: 0,
-                status: 'ACTIVE',
-                authStatus: 'Đã kích hoạt',
-                note: 'Chưa có ghi chú đặc biệt.',
-                emergencyAlert: null,
-                addresses: [{ address: 'Tiếp nhận trực tiếp tại quầy Pawpal Pet Center', isDefault: true }],
-                pets: [],
-                orders: [],
-                bookings: [],
-                complaints: []
-            };
-            PawpalCustomers.state.customerDatabase[custId] = data;
+        const content = document.getElementById('customerProfileData');
+        const placeholder = document.getElementById('customerProfilePlaceholder');
+        const state = PawpalCustomers.state;
+        const data = state.customerDatabase?.[custId];
+        if (!state.hasLoadedCustomers || !data) {
+            if (content) content.hidden = true;
+            if (placeholder) {
+                placeholder.hidden = false;
+                const loading = !state.hasLoadedCustomers && state.listLoadStatus !== 'error';
+                placeholder.setAttribute('aria-busy', String(loading));
+                if (!loading) placeholder.textContent = state.listLoadStatus === 'error'
+                    ? 'Không thể tải hồ sơ khách hàng. Vui lòng tải lại trang.'
+                    : 'Không tìm thấy hồ sơ khách hàng.';
+            }
+            PawpalCustomers.updateBreadcrumb(null);
+            return;
         }
+        if (placeholder) {
+            placeholder.hidden = true;
+            placeholder.setAttribute('aria-busy', 'false');
+        }
+        if (content) content.hidden = false;
 
         // Headline
         const headlineName = document.getElementById('drawerCustomerName');

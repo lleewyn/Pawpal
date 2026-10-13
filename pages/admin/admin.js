@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261013_r7';
+    const MODULE_SCRIPT_VERSION = '20261013_r9';
 
     async function loadModuleScripts(scriptPaths) {
         // Chỉ load script chưa từng được load — KHÔNG xóa/tạo lại script đã có
@@ -383,9 +383,19 @@ document.addEventListener('DOMContentLoaded', () => {
             html: 'modules/customers/customers.html',
             scripts: ['modules/customers/customers.js', 'modules/customers/subtabs/tab-customer-list.js', 'modules/customers/subtabs/tab-customer-profile.js', 'modules/customers/subtabs/tab-customer-pawpoint.js'],
             postLoad: async () => {
+                if (window.PawpalCustomers?.loadCustomersModuleData) {
+                    await window.PawpalCustomers.loadCustomersModuleData();
+                }
+                const customers = window.PawpalCustomers;
+                customers?.subtabs?.pawpoint?.renderPawpointHistory?.();
+                const profileId = sessionStorage.getItem('pawpal_admin_customer_id') || Object.keys(customers?.state?.customerDatabase || {})[0];
+                customers?.subtabs?.profile?.renderDrawerCustomerProfile?.(profileId);
                 if (window.PawpalCustomers?.subtabs?.list?.renderCustomersTable) {
                     window.PawpalCustomers.subtabs.list.renderCustomersTable();
                     window.PawpalCustomers.subtabs.list.updateCustomerKPIs();
+                    if (window.PawpalCustomers.subtabs.list.renderComplaintBar) {
+                        window.PawpalCustomers.subtabs.list.renderComplaintBar();
+                    }
                 }
             }
         },
@@ -425,7 +435,15 @@ document.addEventListener('DOMContentLoaded', () => {
         'Khiếu nại':  {
             html: 'modules/complaints/complaints.html',
             scripts: ['modules/complaints/complaints.js', 'modules/complaints/subtabs/tab-complaint-services.js', 'modules/complaints/subtabs/tab-complaint-orders.js', 'modules/complaints/subtabs/tab-complaint-detail.js'],
-            postLoad: async () => { if (window.PawpalComplaints?.init) await window.PawpalComplaints.init(); }
+            postLoad: async () => {
+                if (window.PawpalComplaints?.init) {
+                    await window.PawpalComplaints.init();
+                } else if (window.PawpalComplaints?.loadComplaintsModuleData) {
+                    await window.PawpalComplaints.loadComplaintsModuleData();
+                }
+                window.PawpalComplaints?.subtabs?.services?.renderServiceComplaintsTable?.();
+                window.PawpalComplaints?.subtabs?.orders?.renderOrderComplaintsTable?.();
+            }
         },
         'Chatbot':    {
             html: 'modules/chatbot/chatbot.html',
@@ -435,57 +453,123 @@ document.addEventListener('DOMContentLoaded', () => {
         'Cấu hình':   {
             html: 'modules/settings/settings.html',
             scripts: ['modules/settings/settings.js', 'modules/settings/subtabs/tab-settings-banners.js', 'modules/settings/subtabs/tab-settings-content.js', 'modules/settings/subtabs/tab-settings-system.js', 'modules/settings/subtabs/tab-settings-audit.js'],
-            postLoad: async () => { if (window.PawpalSettings?.init) await window.PawpalSettings.init(); }
+            postLoad: async () => {
+                if (window.PawpalSettings?.init) {
+                    await window.PawpalSettings.init();
+                } else if (window.PawpalSettings?.loadSettingsModuleData) {
+                    await window.PawpalSettings.loadSettingsModuleData();
+                }
+            }
         },
     };
 
+    let _activeModuleLoadId = 0;
+
     // Nạp module tương ứng — dùng DOM cache để chuyển tab tức thì 0ms (Zero-Wait)
+    let moduleLoadRevision = 0;
     async function loadModule(moduleName) {
+        const loadRevision = ++moduleLoadRevision;
         if (!contentArea) return;
-        if (_currentModule === moduleName) return; // Không reload cùng module
+        const thisLoadId = ++_activeModuleLoadId;
+
+        // Cập nhật module active
+        sessionStorage.setItem('pawpal_admin_active_module', moduleName);
+        sidebarBtns.forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-title') === moduleName);
+        });
 
         // Render tức thì Header Bar để triệt tiêu 100% hiện tượng chớp/load header
         renderHeaderSubtabsInstant(moduleName);
         window.scrollTo(0, 0);
         if (contentArea) contentArea.scrollTop = 0;
 
+        // Xóa sạch deep breadcrumb cũ để tránh rác từ các phân hệ khác (ví dụ: Khách #0254d từ Chatbot)
+        if (deepBreadcrumbEl) deepBreadcrumbEl.innerHTML = '';
+
+        // Nếu module hiện tại đã gắn đúng vào contentArea thì chỉ cần đồng bộ subtab
+        if (_currentModule === moduleName && _moduleDomCache.has(moduleName)) {
+            const activeEl = _moduleDomCache.get(moduleName);
+            if (activeEl && activeEl.parentNode === contentArea) {
+                if (moduleName !== 'Dashboard') syncActiveSubtabPane(activeEl, moduleName);
+                return;
+            }
+        }
+
         // ── 1. Tháo (detach) module hiện tại khỏi contentArea (giữ nguyên DOM và state trong cache) ──
-        if (_currentModule && _moduleDomCache.has(_currentModule)) {
+        if (_currentModule && _currentModule !== moduleName && _moduleDomCache.has(_currentModule)) {
             const currentEl = _moduleDomCache.get(_currentModule);
             if (currentEl && currentEl.parentNode === contentArea) {
                 contentArea.removeChild(currentEl);
             }
         }
-        contentArea.innerHTML = '';
 
         // ── 2. Nếu module đã có DOM cache → gắn lại vào contentArea ngay lập tức (0ms) ───────────
         if (_moduleDomCache.has(moduleName)) {
             const cachedEl = _moduleDomCache.get(moduleName);
-            cachedEl.style.display = '';
-            contentArea.appendChild(cachedEl);
+            if (cachedEl.parentNode !== contentArea) {
+                contentArea.innerHTML = '';
+                cachedEl.style.display = '';
+                contentArea.appendChild(cachedEl);
+            }
             _currentModule = moduleName;
             
             // Đồng bộ subtab active theo hash
             if (moduleName !== 'Dashboard') syncActiveSubtabPane(cachedEl, moduleName);
             if (window.lucide) lucide.createIcons();
             
+            // Chạy postLoad để dữ liệu hiển thị đúng nhất
+            const modCfg = MODULE_CONFIG[moduleName];
+            if (modCfg && modCfg.postLoad) {
+                try { await modCfg.postLoad(); } catch (e) { console.warn(`[Admin] postLoad ${moduleName}:`, e); }
+            }
+
             // Dispatch event để module JS biết tab đã active trở lại
             window.dispatchEvent(new CustomEvent('admin:module-show', { detail: { module: moduleName } }));
             return;
         }
 
-        // ── 3. Lần đầu load: Hiện spinner, tải HTML + scripts ─────────────────
+        // ── 3. Lần đầu load: Hiện khung Skeleton Shell cấu trúc hoàn chỉnh thay cho spinner chữ thô ──
+        contentArea.innerHTML = '';
         const moduleWrapper = document.createElement('div');
         moduleWrapper.className = 'admin-module-wrapper';
         moduleWrapper.style.width = '100%';
         moduleWrapper.style.height = '100%';
-        moduleWrapper.innerHTML = '<div class="admin-module-loading" role="status" aria-live="polite"><span class="admin-loading-spinner"></span><span>Đang tải dữ liệu...</span></div>';
+        moduleWrapper.innerHTML = `
+            <div class="admin-module-skeleton-shell" aria-busy="true" aria-label="Đang nạp dữ liệu">
+                <div class="shell-kpi-grid">
+                    <div class="shell-kpi-card"><span class="skeleton-text" style="width: 90px; height: 12px;"></span><span class="skeleton-kpi"></span></div>
+                    <div class="shell-kpi-card"><span class="skeleton-text" style="width: 100px; height: 12px;"></span><span class="skeleton-kpi"></span></div>
+                    <div class="shell-kpi-card"><span class="skeleton-text" style="width: 85px; height: 12px;"></span><span class="skeleton-kpi"></span></div>
+                    <div class="shell-kpi-card"><span class="skeleton-text" style="width: 110px; height: 12px;"></span><span class="skeleton-kpi"></span></div>
+                    <div class="shell-kpi-card"><span class="skeleton-text" style="width: 95px; height: 12px;"></span><span class="skeleton-kpi"></span></div>
+                </div>
+                <div class="shell-master-card">
+                    <div class="shell-toolbar">
+                        <span class="skeleton-text" style="width: 280px; height: 36px; border-radius: var(--admin-radius);"></span>
+                        <div style="display: flex; gap: 8px;">
+                            <span class="skeleton-pill"></span>
+                            <span class="skeleton-pill"></span>
+                        </div>
+                    </div>
+                    <table class="admin-table" style="width: 100%;">
+                        <tbody>
+                            <tr class="skeleton-row"><td><span class="skeleton-text" style="width: 70px;"></span></td><td><span class="skeleton-text" style="width: 130px;"></span></td><td><span class="skeleton-text" style="width: 90px;"></span></td><td><span class="skeleton-badge"></span></td></tr>
+                            <tr class="skeleton-row"><td><span class="skeleton-text" style="width: 80px;"></span></td><td><span class="skeleton-text" style="width: 150px;"></span></td><td><span class="skeleton-text" style="width: 100px;"></span></td><td><span class="skeleton-badge"></span></td></tr>
+                            <tr class="skeleton-row"><td><span class="skeleton-text" style="width: 65px;"></span></td><td><span class="skeleton-text" style="width: 120px;"></span></td><td><span class="skeleton-text" style="width: 85px;"></span></td><td><span class="skeleton-badge"></span></td></tr>
+                            <tr class="skeleton-row"><td><span class="skeleton-text" style="width: 90px;"></span></td><td><span class="skeleton-text" style="width: 140px;"></span></td><td><span class="skeleton-text" style="width: 110px;"></span></td><td><span class="skeleton-badge"></span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
         contentArea.appendChild(moduleWrapper);
 
         const modCfg = MODULE_CONFIG[moduleName];
         if (modCfg) {
             try {
                 const html = await fetchModuleHtml(modCfg.html);
+                if (loadRevision !== moduleLoadRevision) return;
+                if (thisLoadId !== _activeModuleLoadId) return; // Bị hủy bởi thao tác chuyển phân hệ mới hơn
                 if (html) {
                     moduleWrapper.innerHTML = html;
                     if (moduleName !== 'Dashboard') syncActiveSubtabPane(moduleWrapper, moduleName);
@@ -494,7 +578,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     _moduleDomCache.set(moduleName, moduleWrapper);
                     _currentModule = moduleName;
                     await loadModuleScripts(modCfg.scripts);
-                    if (modCfg.postLoad) await modCfg.postLoad();
+                    if (loadRevision !== moduleLoadRevision) return;
+                    if (thisLoadId !== _activeModuleLoadId) return;
+                    if (modCfg.postLoad) {
+                        try { await modCfg.postLoad(); } catch (err) { console.warn(`[Admin] postLoad ${moduleName}:`, err); }
+                    }
+                    if (loadRevision !== moduleLoadRevision) return;
+                    if (moduleName !== 'Dashboard') syncActiveSubtabPane(moduleWrapper, moduleName);
+                    window.dispatchEvent(new CustomEvent('admin:module-show', { detail: { module: moduleName } }));
                     return;
                 }
             } catch (err) {
@@ -865,15 +956,38 @@ document.addEventListener('DOMContentLoaded', () => {
             update();
         });
     };
+    const renderTableSkeleton = (tbody, { columns = null, rows = 4 } = {}) => {
+        if (!tbody) return;
+        const colCount = columns || tbody.closest('table')?.querySelectorAll('thead th').length || 6;
+        tbody.dataset.loadingSkeleton = 'true';
+        tbody.innerHTML = Array.from({ length: rows }, (_, index) => {
+            const cells = Array.from({ length: colCount }, (__, cIdx) => {
+                if (cIdx === 0 && colCount >= 6) {
+                    return '<td style="text-align: center;"><span class="skeleton-avatar"></span></td>';
+                }
+                const width = Math.min(160, Math.max(50, 60 + ((cIdx * 23 + index * 17) % 75)));
+                return `<td><span class="skeleton-text" style="width: ${width}px;"></span></td>`;
+            }).join('');
+            return `<tr class="skeleton-row admin-auto-skeleton">${cells}</tr>`;
+        }).join('');
+    };
+
+    window.PawpalAdmin = window.PawpalAdmin || {};
+    window.PawpalAdmin.renderTableSkeleton = renderTableSkeleton;
+
     const ensureTableSkeleton = (root = document) => {
         root.querySelectorAll('table tbody').forEach(tbody => {
-            if (tbody.children.length || tbody.dataset.loadingSkeleton === 'true') return;
-            const columns = tbody.closest('table')?.querySelectorAll('thead th').length || 1;
-            tbody.dataset.loadingSkeleton = 'true';
-            tbody.innerHTML = Array.from({ length: 3 }, (_, index) => {
-                const cells = Array.from({ length: columns }, () => '<td><span class="skeleton-text" style="width: ' + (55 + (index * 11)) + 'px;"></span></td>').join('');
-                return '<tr class="skeleton-row admin-auto-skeleton">' + cells + '</tr>';
-            }).join('');
+            if (tbody.dataset.loadingSkeleton === 'true') return;
+            const textContent = (tbody.textContent || '').trim().toLowerCase();
+            const isTextLoading = tbody.children.length === 1 && (
+                textContent.includes('đang tải') ||
+                textContent.includes('đang nạp') ||
+                textContent.includes('đang kiểm tra') ||
+                textContent.includes('loading')
+            );
+            if (!tbody.children.length || isTextLoading) {
+                renderTableSkeleton(tbody, { rows: 4 });
+            }
         });
     };
     ensureEmptyStateReset();

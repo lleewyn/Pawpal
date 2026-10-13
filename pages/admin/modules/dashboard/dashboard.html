@@ -48,16 +48,16 @@
                 <div>
                     <h2 class="dashboard-widget-title">Ưu tiên xử lý</h2>
                 </div>
-                <span class="admin-badge badge-neutral" id="dashboardPriorityCount">Đang tải...</span>
+                <span class="admin-badge badge-neutral" id="dashboardPriorityCount"><span class="skeleton-badge" style="width: 36px; height: 14px;"></span></span>
             </div>
             <div class="dashboard-priority-list">
                 <button type="button" class="dashboard-priority-row" id="dashboardPriorityComplaints" data-action="complaints" data-dashboard-module="Khiếu nại">
-                    <span><strong>Khiếu nại chờ xử lý</strong><small id="dashboardComplaintsSub">Đang kiểm tra...</small></span>
-                    <span class="admin-badge badge-neutral" id="dashboardComplaintsBadge">0</span>
+                    <span><strong>Khiếu nại chờ xử lý</strong><small id="dashboardComplaintsSub"><span class="skeleton-text" style="width: 140px; height: 11px; display: inline-block;"></span></small></span>
+                    <span class="admin-badge badge-neutral" id="dashboardComplaintsBadge"><span class="skeleton-badge" style="width: 18px; height: 14px;"></span></span>
                 </button>
                 <button type="button" class="dashboard-priority-row" id="dashboardPriorityOrders" data-action="orders" data-dashboard-module="Bán hàng">
-                    <span><strong>Đơn hàng chờ duyệt</strong><small id="dashboardOrdersSub">Đang kiểm tra...</small></span>
-                    <span class="admin-badge badge-neutral" id="dashboardOrdersBadge">0</span>
+                    <span><strong>Đơn hàng chờ duyệt</strong><small id="dashboardOrdersSub"><span class="skeleton-text" style="width: 130px; height: 11px; display: inline-block;"></span></small></span>
+                    <span class="admin-badge badge-neutral" id="dashboardOrdersBadge"><span class="skeleton-badge" style="width: 18px; height: 14px;"></span></span>
                 </button>
             </div>
             <div class="dashboard-widget-header dashboard-stock-heading">
@@ -67,7 +67,18 @@
                 <button type="button" class="dashboard-text-link" id="btnDashboardViewAllStock" data-dashboard-module="Bán hàng">Xem kho</button>
             </div>
             <div class="dashboard-stock-list" id="dashboardStockList">
-                <div style="padding: 12px; font-size: 13px; color: var(--text-muted);">Đang kiểm tra tồn kho...</div>
+                <div class="dashboard-stock-item" style="pointer-events: none; padding: 10px 0; border-bottom: 1px solid var(--border-neutral); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;"><span class="skeleton-text" style="width: 130px; margin-bottom: 4px;"></span><span class="skeleton-text" style="width: 70px; height: 10px;"></span></div>
+                    <span class="skeleton-badge"></span>
+                </div>
+                <div class="dashboard-stock-item" style="pointer-events: none; padding: 10px 0; border-bottom: 1px solid var(--border-neutral); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;"><span class="skeleton-text" style="width: 110px; margin-bottom: 4px;"></span><span class="skeleton-text" style="width: 65px; height: 10px;"></span></div>
+                    <span class="skeleton-badge"></span>
+                </div>
+                <div class="dashboard-stock-item" style="pointer-events: none; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;"><span class="skeleton-text" style="width: 140px; margin-bottom: 4px;"></span><span class="skeleton-text" style="width: 80px; height: 10px;"></span></div>
+                    <span class="skeleton-badge"></span>
+                </div>
             </div>
         </section>
 

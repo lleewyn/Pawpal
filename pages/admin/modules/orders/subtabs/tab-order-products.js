@@ -43,12 +43,23 @@
     function renderProductsTable() {
         const tbody = document.getElementById('productsTableBody');
         if (!tbody) return;
+        if (state.productsError) {
+            delete tbody.dataset.loadingSkeleton;
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:28px;color:var(--text-muted);">Không thể tải dữ liệu. Vui lòng tải lại trang.</td></tr>';
+            return;
+        }
+
 
         const searchVal = (document.getElementById('productSearchInput')?.value || '').trim();
         const catVal = document.getElementById('productFilterCategory')?.value || 'ALL';
         const stockStatusVal = document.getElementById('productFilterStockStatus')?.value || 'ALL';
 
         const productsList = state.products || [];
+        if (!state.productsLoaded) return;
+        const metrics = {statTotalProducts:productsList.length,statInStockProducts:productsList.filter(p=>p.stock>0).length,statLowStockProducts:productsList.filter(p=>p.stock>0 && p.stock<=p.minStock).length,statOutStockProducts:productsList.filter(p=>p.stock===0).length,statTotalStockValue:formatVND(productsList.reduce((sum,p)=>sum+(Number(p.stock)||0)*(Number(p.costPrice)||0),0))};
+        Object.entries(metrics).forEach(([id,value])=>{const el=document.getElementById(id);if(el)el.textContent=value;});
+        delete tbody.dataset.loadingSkeleton;
+
 
         const filtered = productsList.filter(p => {
             if (catVal !== 'ALL' && p.category !== catVal) return false;
@@ -78,7 +89,7 @@
         if (pagedProducts.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 36px; color: var(--text-muted); font-size: 13.5px;">
+                    <td colspan="12" style="text-align: center; padding: 36px; color: var(--text-muted); font-size: 13.5px;">
                         Không tìm thấy sản phẩm nào trong kho phù hợp với điều kiện tìm kiếm.
                     </td>
                 </tr>
@@ -122,18 +133,19 @@
                         </div>
                     </td>
                     <td>${p.category}</td>
+                    <td>—</td>
                     <td>
                         <div style="font-weight: 600; color: var(--text-heading);">${formatVND(p.price)}</div>
                         <div class="sub-meta-text">Vốn: ${formatVND(p.costPrice || 0)}</div>
                     </td>
+                    <td>${Number(p.reviewCount)>0 ? Number(p.rating).toFixed(1) : "—"}</td>
                     <td>
                         <div style="font-weight: 700; font-size: 13.5px;">${p.stock} <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">${p.unit || 'món'}</span></div>
                         <div class="sub-meta-text">Ngưỡng: ${p.minStock}</div>
                     </td>
-                    <td>
-                        <div>${stockBadge}</div>
-                        <div style="margin-top: 3px;">${alertDot}</div>
-                    </td>
+                    <td>—</td><td>—</td>
+                    <td>${alertDot}</td>
+                    <td>${stockBadge}</td>
                     <td style="text-align: center;">
                         <button type="button" class="btn-action-trigger" onclick="PawpalOrdersModule.openStockActionMenu(event, '${p.sku}')">•••</button>
                     </td>

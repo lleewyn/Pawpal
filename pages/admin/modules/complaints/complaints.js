@@ -260,11 +260,7 @@
                 }
             }
             if (!client) {
-                console.warn('[Complaints] Supabase client không khả dụng sau khi chờ.');
-                updateComplaintsKpis();
-                PawpalComplaints.subtabs.services?.renderServiceComplaintsTable();
-                PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable();
-                return;
+                throw new Error('Không thể kết nối cơ sở dữ liệu.');
             }
 
             // Sử dụng cache nếu dữ liệu còn mới
@@ -287,21 +283,24 @@
                 staffRes,
                 productsRes
             ] = await Promise.all([
-                Promise.resolve(client.from('support_ticket').select('id, user_id, title, status, priority, created_at, updated_at').order('priority', { ascending: true }).order('created_at', { ascending: false })).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('support_ticket_message').select('id, ticket_id, sender_type, content, created_at').order('created_at', { ascending: true })).catch(err => ({ data: [], error: err })),
+                Promise.resolve(client.from('support_ticket').select('*').order('priority', { ascending: true }).order('created_at', { ascending: false })).catch(err => ({ data: [], error: err })),
+                Promise.resolve(client.from('support_ticket_message').select('*').order('created_at', { ascending: true })).catch(err => ({ data: [], error: err })),
                 Promise.resolve(client.from('customer').select('id, email, phone_main, account_status')).catch(err => ({ data: [], error: err })),
                 Promise.resolve(client.from('customer_profile').select('customer_id, full_name, gender')).catch(err => ({ data: [], error: err })),
                 Promise.resolve(client.from('pet_profile').select('id, customer_id, pet_code, pet_name, species, breed, avatar_url')).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('appointment').select('id, appointment_code, customer_id, appointment_date, appointment_status, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false }).limit(400)).catch(err => ({ data: [], error: err })),
+                Promise.resolve(client.from('appointment').select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_status, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false }).limit(400)).catch(err => ({ data: [], error: err })),
                 Promise.resolve(client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(400)).catch(err => ({ data: [], error: err })),
                 Promise.resolve(client.from('staff').select('id, full_name, role, account_status')).catch(err => ({ data: [], error: err })),
                 Promise.resolve(client.from('product').select('id, product_name, sku, sale_price, status')).catch(err => ({ data: [], error: err }))
             ]);
 
-            _complLastFetchedAt = Date.now();
+            PawpalComplaints.state.loadError = null;
+            for (const result of [ticketsRes,messagesRes,staffRes]) { if (result.error) throw result.error; }
+            PawpalComplaints.state.unclassifiedTickets = [];
 
 
             const tickets = (ticketsRes && ticketsRes.data) || [];
+
             const messages = (messagesRes && messagesRes.data) || [];
             const customers = (customersRes && customersRes.data) || [];
             const profiles = (profilesRes && profilesRes.data) || [];
@@ -371,23 +370,39 @@
                 localOverridesMap = JSON.parse(localStorage.getItem('pawpal_complaint_overrides') || '{}');
             } catch (e) {}
 
-            tickets.forEach((t, idx) => {
+            tickets.forEach((record, idx) => {
+                const t = {...record,user_id:record.customer_id || record.user_id,title:record.subject || record.title};
                 const ticketMsgs = msgMap[t.id] || [];
-                const userMsg = ticketMsgs.find(m => m.sender_type === 'user') || ticketMsgs[0];
-                const cskhMsgs = ticketMsgs.filter(m => m.sender_type === 'cskh');
+                const userMsg = ticketMsgs.find(m => ['user','khach_hang'].includes(m.sender_type)) || ticketMsgs[0];
+                const cskhMsgs = ticketMsgs.filter(m => ['cskh','nhan_vien'].includes(m.sender_type));
                 const lastCskhMsg = cskhMsgs.length > 0 ? cskhMsgs[cskhMsgs.length - 1] : null;
 
-                const cData = custMap[t.user_id] || (t.user_id ? customers.find(c => c.id === t.user_id || c.phone_main === t.user_id || c.phone === t.user_id) : null);
-                const custId = cData ? cData.id : t.user_id;
-                const pData = custId ? (profMap[custId] || profiles.find(p => p.customer_id === custId)) : null;
+                let cData = custMap[t.user_id] || (t.user_id ? customers.find(c => c.id === t.user_id || c.phone_main === t.user_id || c.phone === t.user_id) : null);
+                let custId = cData ? cData.id : t.user_id;
+                let pData = custId ? (profMap[custId] || profiles.find(p => p.customer_id === custId)) : null;
 
-                const customerName = (pData && pData.full_name) || (cData && (cData.note || cData.phone_main || cData.email)) || (t.user_id ? `Khách hàng ${String(t.user_id).slice(-4)}` : 'Khách vãng lai');
-                const phone = (cData && (cData.phone_main || cData.phone)) || (pData && pData.phone) || '0901234567';
+                let customerName = (pData && pData.full_name) || (cData && (cData.note || cData.phone_main || cData.email));
+                if (!customerName && t.title && t.title.toLowerCase().startsWith('liên hệ từ ')) {
+                    customerName = t.title.replace(/^liên hệ từ\s*/i, '').trim();
+                }
+                if (!customerName && t.user_id) {
+                    customerName = `Khách hàng ${String(t.user_id).slice(-4)}`;
+                }
+                if (!customerName) customerName = 'Khách vãng lai';
+
+                let phone = (cData && (cData.phone_main || cData.phone)) || (pData && pData.phone);
+                if (!phone || phone === '—') {
+                    if (userMsg && userMsg.content) {
+                        const matchPhone = userMsg.content.match(/(0[35789]\d{8})/);
+                        if (matchPhone) phone = matchPhone[1];
+                    }
+                }
+                if (!phone) phone = '—';
 
                 const timeline = [];
                 if (ticketMsgs.length > 0) {
                     ticketMsgs.forEach(m => {
-                        const isUser = m.sender_type === 'user';
+                        const isUser = ['user','khach_hang'].includes(m.sender_type);
                         const authorName = isUser ? `${customerName} (Khách hàng)` : `${m.agent_name || (lastCskhMsg ? lastCskhMsg.agent_name : 'CSKH PawPal')} (CSKH)`;
                         const dateObj = m.created_at ? new Date(m.created_at) : new Date();
                         const timeStr = `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')} - ${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()}`;
@@ -415,39 +430,43 @@
 
                 let normPriority = 'medium';
                 const pLower = (t.priority || '').toLowerCase();
-                if (pLower.includes('cao') || pLower === 'high') normPriority = 'high';
-                else if (pLower.includes('thấp') || pLower === 'low') normPriority = 'low';
+                if (pLower.includes('cao') || pLower === 'high' || pLower==='khan_cap') normPriority = 'high';
+                else if (pLower.includes('thấp') || pLower === 'low' || pLower === 'thap') normPriority = 'low';
 
                 let normStatus = 'new';
                 const sLower = (t.status || '').toLowerCase();
                 if (sLower === 'pending' || sLower === 'new') normStatus = 'new';
-                else if (sLower === 'processing' || sLower === 'in_progress') normStatus = 'processing';
-                else if (sLower === 'waiting_customer') normStatus = 'waiting_customer';
+                else if (sLower === 'processing' || sLower === 'in_progress' || sLower==='dang_xu_ly') normStatus = 'processing';
+                else if (sLower === 'waiting_customer' || sLower==='cho_khach_hang') normStatus = 'waiting_customer';
                 else if (sLower === 'waiting_manager_approval') normStatus = 'waiting_manager_approval';
                 else if (sLower === 'reprocessing') normStatus = 'reprocessing';
                 else if (sLower === 'waiting_return') normStatus = 'waiting_return';
                 else if (sLower === 'refunding') normStatus = 'refunding';
-                else if (sLower === 'completed' || sLower === 'resolved') normStatus = 'resolved';
-                else if (sLower === 'closed') normStatus = 'closed';
+                else if (sLower === 'completed' || sLower === 'resolved' || sLower==='da_giai_quyet') normStatus = 'resolved';
+                else if (sLower === 'closed' || sLower==='da_dong' || sLower==='tu_choi') normStatus = 'closed';
 
                 if (t.rating && Number(t.rating) < 3 && normStatus === 'resolved') {
                     normStatus = 'reprocessing';
                 }
 
-                const staffAssigned = lastCskhMsg && lastCskhMsg.agent_name ? lastCskhMsg.agent_name : (normStatus === 'new' ? 'Chưa phân công' : 'Lê Lệ Quyên');
+                const staffAssigned = lastCskhMsg?.agent_name || staffList.find(staff=>staff.id===t.assigned_staff_id)?.full_name || 'Chưa phân công';
                 const ov = localOverridesMap[t.id];
 
-                const tType = (t.type || '').toLowerCase();
-                const isService = ['booking', 'service', 'health', 'spa', 'hotel', 'taxi'].includes(tType) || (!['payment', 'order', 'product', 'wrong_item', 'damaged', 'quality', 'return_request', 'missing_item'].includes(tType) && idx % 2 === 0);
+                const tType = String(t.type || t.ticket_type || t.category || '').toLowerCase();
+                const ref = t.appointment_id || t.sales_order_id || t.order_id || ov?.refId;
+                const serviceRef = appointments.find(a=>a.id===ref || a.appointment_code===ref);
+                const orderRef = orders.find(o=>o.id===ref || o.order_code===ref);
+                const isOrder = Boolean(orderRef) || ['payment','order','product','wrong_item','damaged','quality','return_request','missing_item','don_hang','thanh_toan','san_pham','hoan_tien'].includes(tType);
+                const isService = !isOrder;
 
                 if (isService) {
-                    let appt = null;
+                    let appt = serviceRef || null;
                     if (ov && ov.refId) {
                         appt = appointments.find(a => a.id === ov.refId || a.appointment_code === ov.refId);
                     }
                     if (!appt) {
                         const custAppts = custId ? (apptMap['cust_' + custId] || []) : [];
-                        appt = custAppts[0] || appointments[idx % appointments.length] || null;
+                        appt = serviceRef || null;
                     }
 
                     let pet = null;
@@ -456,25 +475,26 @@
                     }
                     if (!pet) {
                         const custPets = custId ? (petMap['cust_' + custId] || []) : [];
-                        pet = custPets[0] || pets[idx % pets.length] || null;
+                        pet = appt?.pet_id ? pets.find(p=>p.id===appt.pet_id) : null;
                     }
 
-                    const sType = (tType === 'health' || tType === 'spa' || tType === 'hotel' || tType === 'taxi') ? tType : (appt && appt.service_type ? appt.service_type : 'spa');
-                    const petDisplayBreed = pet ? `${pet.breed || pet.species || 'Thú cưng'} • ${pet.weight || '4.5'} kg` : 'Mèo Anh Lông Ngắn • 4.2 kg';
-                    const petDisplayNotes = pet ? (pet.allergy && pet.allergy !== 'Không' ? `Dị ứng: ${pet.allergy}. ${pet.routine || ''}` : (pet.routine || 'Không có tiền sử dị ứng.')) : 'Không có tiền sử dị ứng.';
+                    const isContactOrOther = ['contact', 'other', 'test', 'lien_he', 'khac'].includes(tType);
+                    const sType = ['health', 'spa', 'hotel', 'taxi'].includes(tType) ? tType : (appt && appt.service_type ? appt.service_type : (isContactOrOther ? 'contact' : 'spa'));
+                    const petDisplayBreed = pet ? `${pet.breed || pet.species || 'Thú cưng'} • ${pet.weight || '4.5'} kg` : (isContactOrOther ? 'Chưa xác định' : 'Mèo Anh Lông Ngắn • 4.2 kg');
+                    const petDisplayNotes = pet ? (pet.allergy && pet.allergy !== 'Không' ? `Dị ứng: ${pet.allergy}. ${pet.routine || ''}` : (pet.routine || 'Không có tiền sử dị ứng.')) : (isContactOrOther ? 'Chưa có thông tin bé cưng' : 'Không có tiền sử dị ứng.');
 
                     const serviceItem = {
                         id: t.ticket_code || t.id,
                         rawId: t.id,
                         customerName: customerName,
                         phone: phone,
-                        petName: pet ? (pet.pet_name || pet.name) : 'Miu Con',
+                        petName: pet ? (pet.pet_name || pet.name) : (isContactOrOther ? '—' : 'Miu Con'),
                         petBreed: petDisplayBreed,
                         petNotes: petDisplayNotes,
-                        bookingId: appt ? (appt.appointment_code || appt.id) : `BKG-${1001 + idx}`,
+                        bookingId: appt ? (appt.appointment_code || appt.id) : (isContactOrOther ? '—' : `BKG-${1001 + idx}`),
                         serviceType: sType,
-                        serviceName: appt && appt.service ? appt.service.service_name : (t.title || 'Gói Dịch Vụ Chăm Sóc Thú Cưng'),
-                        staffExecuted: appt && appt.staff ? `${appt.staff.full_name} (Chi nhánh trung tâm)` : 'Ngọc Anh (Chi nhánh Quận 1)',
+                        serviceName: appt && appt.service ? appt.service.service_name : (isContactOrOther ? 'Hỗ trợ và Phản ánh chung' : (t.title || 'Gói Dịch Vụ Chăm Sóc Thú Cưng')),
+                        staffExecuted: appt && appt.staff ? `${appt.staff.full_name} (Chi nhánh trung tâm)` : (isContactOrOther ? 'Bộ phận CSKH' : 'Ngọc Anh (Chi nhánh Quận 1)'),
                         title: t.title || 'Khiếu nại ca dịch vụ',
                         content: userMsg ? userMsg.content : (t.title || 'Khách phản ánh về dịch vụ'),
                         priority: normPriority,
@@ -503,13 +523,13 @@
                     calculateSla(serviceItem);
                     serviceComplaints.push(serviceItem);
                 } else {
-                    let order = null;
+                    let order = orderRef || null;
                     if (ov && ov.refId) {
                         order = orders.find(o => o.id === ov.refId || o.order_code === ov.refId);
                     }
                     if (!order) {
                         const custOrders = custId ? (orderMap['cust_' + custId] || []) : [];
-                        order = custOrders[0] || orders[idx % orders.length] || null;
+                        order = orderRef || null;
                     }
 
                     let issueType = 'wrong_item';
@@ -604,15 +624,46 @@
                 PawpalComplaints.state.currentActiveTicket = serviceComplaints[0] || orderComplaints[0] || null;
             }
 
+            PawpalComplaints.state.isLoaded = true;
+            _complLastFetchedAt = Date.now();
+            ['serviceFilterStaff','orderFilterStaff'].forEach(id=>{
+                const select=document.getElementById(id);if(!select)return;
+                const value=select.value;
+                select.innerHTML='<option value="ALL">Tất cả</option><option value="Chưa phân công">Chưa phân công</option>'+staffList.filter(staff=>staff.full_name).map(staff=>`<option value="${escapeHtml(staff.full_name)}">${escapeHtml(staff.full_name)}</option>`).join('');
+                if(Array.from(select.options).some(option=>option.value===value))select.value=value;
+            });
+            document.querySelectorAll('.complaint-unclassified-notice').forEach(el=>{
+                const tickets=PawpalComplaints.state.unclassifiedTickets;
+                el.hidden=!tickets.length;
+                el.textContent=tickets.length ? `${tickets.length} khiếu nại chưa có loại hoặc liên kết giao dịch: ${tickets.map(t=>t.title || t.id).join('; ')}` : '';
+            });
+
+            // Tự động kích hoạt render bảng dữ liệu và cập nhật KPIs
+            updateComplaintsKpis();
+            renderComplaintsAlertBar();
+            PawpalComplaints.subtabs.services?.renderServiceComplaintsTable?.();
+            PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable?.();
+            const currentSelectedTicketId = PawpalComplaints.state.currentTicketId || PawpalComplaints.state.currentActiveTicket?.id;
+            if (currentSelectedTicketId && PawpalComplaints.subtabs.detail?.renderTicketDetail) {
+                PawpalComplaints.subtabs.detail.renderTicketDetail(currentSelectedTicketId);
+            }
+
             console.log(`[Complaints] Nạp thành công từ Supabase: ${serviceComplaints.length} khiếu nại dịch vụ, ${orderComplaints.length} khiếu nại đơn hàng.`);
         } catch (err) {
-            console.error('[Complaints] Lỗi nạp dữ liệu từ Supabase:', err);
+            PawpalComplaints.state.loadError = 'Không thể tải khiếu nại. Vui lòng tải lại trang.';
+            console.error('[Complaints] Lỗi nạp dữ liệu từ Supabase:', err.message || String(err), err.code || '');
         }
     }
     PawpalComplaints.loadComplaintsModuleData = loadComplaintsModuleData;
 
     // Cập nhật KPIs & Badge
     function updateComplaintsKpis() {
+        if (PawpalComplaints.state.loadError) {
+            document.getElementById('subtab-tab-complaint-services')?.querySelectorAll('.kpi-val').forEach(el=>{el.textContent='—';});
+            document.getElementById('subtab-tab-complaint-orders')?.querySelectorAll('.kpi-val').forEach(el=>{el.textContent='—';});
+            return;
+        }
+        if (!PawpalComplaints.state.isLoaded) return;
         const { serviceComplaints, orderComplaints } = PawpalComplaints.state;
         serviceComplaints.forEach(calculateSla);
         orderComplaints.forEach(calculateSla);
@@ -820,6 +871,7 @@
 
     // Điều phối Subtab
     function switchSubtab(targetSubtab) {
+        if(sessionStorage.getItem('pawpal_admin_active_module') !== 'Khiếu nại')return;
         const headerSubtabBtns = document.querySelectorAll('#headerSubtabsGroup .header-subtab-btn');
         headerSubtabBtns.forEach(btn => {
             if (btn.getAttribute('data-subtab') === targetSubtab) {
@@ -829,7 +881,8 @@
             }
         });
 
-        const sections = document.querySelectorAll('.subtab-content');
+        if(sessionStorage.getItem('pawpal_admin_active_module') !== 'Khiếu nại')return;
+        const sections = document.getElementById('subtab-tab-complaint-services')?.closest('.admin-module-wrapper')?.querySelectorAll('.subtab-content') || [];
         sections.forEach(sec => {
             if (sec.id === `subtab-${targetSubtab}`) {
                 sec.classList.add('active');
@@ -847,7 +900,8 @@
         } else if (targetSubtab === 'tab-complaint-detail') {
             const ticketId = PawpalComplaints.state.currentTicketId || 'TKT-001';
             PawpalComplaints.subtabs.detail?.renderTicketDetail(ticketId);
-            updateBreadcrumb(ticketId);
+            const selected=[...PawpalComplaints.state.serviceComplaints,...PawpalComplaints.state.orderComplaints].find(t=>t.id===PawpalComplaints.state.currentTicketId);
+            updateBreadcrumb(selected?.id || null);
         }
 
         sessionStorage.setItem('pawpal_admin_complaint_active_subtab', targetSubtab);
@@ -1582,9 +1636,39 @@
                 }
                 if (hasError) return;
 
-                const newId = `TKT-${String(Math.floor(1000 + Math.random() * 9000))}`;
+                let targetCustomerId = PawpalComplaints.state.selectedCustomerId || null;
+                if (!targetCustomerId && phone) {
+                    const foundCust = (PawpalComplaints.state.cachedCustomers || []).find(c => c.phone_main === phone || c.phone === phone);
+                    if (foundCust) targetCustomerId = foundCust.id;
+                }
+
+                let newId = `TKT-${String(Math.floor(1000 + Math.random() * 9000))}`;
                 const now = new Date();
                 const createdAtStr = PawpalComplaints.formatDateTime(now);
+
+                let client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client) {
+                    try {
+                        const insertPayload = {
+                            title: title,
+                            type: type === 'order' ? 'order' : 'service',
+                            priority: priority === 'high' ? 'Cao' : (priority === 'low' ? 'Thấp' : 'Trung bình'),
+                            status: 'pending',
+                            user_id: targetCustomerId
+                        };
+                        const { data: insertedTickets, error: insertErr } = await client.from('support_ticket').insert([insertPayload]).select();
+                        if (!insertErr && insertedTickets && insertedTickets[0]) {
+                            newId = insertedTickets[0].id;
+                            await client.from('support_ticket_message').insert([{
+                                ticket_id: newId,
+                                sender_type: 'user',
+                                content: content
+                            }]);
+                        }
+                    } catch (dbErr) {
+                        console.warn('[Complaints] Không thể lưu trực tiếp lên Supabase:', dbErr);
+                    }
+                }
 
                 const newTicket = {
                     id: newId,
@@ -1631,6 +1715,8 @@
                 // Close modal
                 modal.classList.remove('active');
                 PawpalComplaints.showToast(`Đã tạo thành công khiếu nại ${newId}!`, 'success');
+
+                await loadComplaintsModuleData({ force: true });
             });
         }
 

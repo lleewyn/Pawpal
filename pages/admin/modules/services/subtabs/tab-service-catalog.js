@@ -247,6 +247,15 @@
     function renderCatalogTable() {
         const tbody = document.getElementById('servicesCatalogTableBody');
         if (!tbody) return;
+        if (PawpalServices.state.loadError || !PawpalServices.state.isLoaded) {
+            if (PawpalServices.state.loadError) {
+                delete tbody.dataset.loadingSkeleton;
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:28px;">Không thể tải dữ liệu dịch vụ. Vui lòng tải lại trang.</td></tr>';
+            }
+            return;
+        }
+        delete tbody.dataset.loadingSkeleton;
+
 
         const servicesData = PawpalServices.state?.servicesData || [];
         const toUnaccent = PawpalServices.toUnaccent || (str => str);
@@ -317,7 +326,7 @@
                         <button type="button" class="btn-view-sop-pill btn-view-service-sop" data-service-code="${svc.code || svc.id}" title="Xem quy trình chuẩn SOP">${stepCount} bước</button>
                     </td>
                     <td>
-                        <span style="font-size: 12.5px; font-weight: 600; color: #D97706;">5.0 ★</span>
+                        <span style="font-size: 12.5px; font-weight: 600; color: #D97706;">${svc.averageRating != null ? svc.averageRating.toFixed(1) + ' ★' : '—'}</span>
                     </td>
                     <td style="text-align: center;">
                         <span class="admin-badge ${isHidden ? 'badge-neutral' : 'badge-success'}">${svc.status || 'Đang phục vụ'}</span>

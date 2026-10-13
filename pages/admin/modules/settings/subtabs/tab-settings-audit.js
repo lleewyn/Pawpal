@@ -22,6 +22,9 @@
     function renderAuditLogs() {
         const tbody = document.getElementById('auditLogTableBody');
         if (!tbody) return;
+        if (PawpalSettings.state.loadError) {delete tbody.dataset.loadingSkeleton;tbody.innerHTML=`<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" style="padding:28px;text-align:center;">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;return;}
+        if (!PawpalSettings.state.isLoaded) return;
+        delete tbody.dataset.loadingSkeleton;
 
         const auditLogsList = PawpalSettings.state?.auditLogsList || [];
         const isSafeModeLocked = PawpalSettings.state?.isSafeModeLocked;

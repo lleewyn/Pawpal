@@ -51,7 +51,9 @@
 .skeleton-box,
 .skeleton-kpi,
 .skeleton-text,
-.skeleton-avatar {
+.skeleton-avatar,
+.skeleton-badge,
+.skeleton-pill {
     background-color: #E2ECE5;
     border-radius: 9px;
     display: inline-block;
@@ -60,10 +62,22 @@
 }
 
 .skeleton-kpi {
-    width: 60px;
+    width: 64px;
     height: 28px;
     border-radius: 9px;
     margin-top: 2px;
+}
+
+.skeleton-badge {
+    width: 48px;
+    height: 20px;
+    border-radius: 9px;
+}
+
+.skeleton-pill {
+    width: 80px;
+    height: 24px;
+    border-radius: 9px;
 }
 
 .skeleton-text {
@@ -83,6 +97,52 @@
     padding: 16px 14px !important;
     border-bottom: 1px solid var(--border-neutral);
     background-color: transparent !important;
+}
+
+.skeleton-card-block {
+    background-color: var(--surface-white);
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    padding: 16px;
+}
+
+.admin-module-skeleton-shell {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.admin-module-skeleton-shell .shell-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+}
+
+.admin-module-skeleton-shell .shell-kpi-card {
+    background: var(--surface-white);
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-module-skeleton-shell .shell-master-card {
+    background: var(--surface-white);
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.admin-module-skeleton-shell .shell-toolbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
 }
 
 @keyframes skeletonPulse {

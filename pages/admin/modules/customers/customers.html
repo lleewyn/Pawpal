@@ -154,16 +154,30 @@
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-profile">
         <div class="profile-drawer-container admin-card">
+            <div id="customerProfilePlaceholder" role="status" aria-busy="true" style="padding: 24px;">
+                <span class="skeleton-text" style="width: 180px; height: 24px;"></span>
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 24px;">
+                    <div style="display: grid; gap: 20px;">
+                        <span class="skeleton-text" style="width: 75%;"></span>
+                        <span class="skeleton-text" style="width: 90%;"></span>
+                        <span class="skeleton-text" style="width: 60%;"></span>
+                        <span class="skeleton-text" style="width: 80%;"></span>
+                        <span class="skeleton-text" style="width: 70%;"></span>
+                    </div>
+                    <span class="skeleton-box" style="width: 100%; height: 160px;"></span>
+                </div>
+            </div>
+            <div id="customerProfileData" hidden>
             <!-- THANH THAO TÁC MỘT CHẠM TRÊN ĐẦU DRAWER -->
             <div class="profile-quick-actions-bar">
                 <div class="drawer-user-headline">
-                    <span class="headline-name" id="drawerCustomerName">Nguyễn Văn An</span>
-                    <span class="admin-badge badge-tier-gold" id="drawerCustomerTier">Vàng</span>
-                    <span class="admin-badge badge-success">0912345678</span>
+                    <span class="headline-name" id="drawerCustomerName">—</span>
+                    <span class="admin-badge badge-tier-gold" id="drawerCustomerTier">—</span>
+                    <span class="admin-badge badge-success">—</span>
                 </div>
                 <div class="drawer-action-buttons">
-                    <a href="tel:0912345678" class="action-btn-pill">Gọi điện</a>
-                    <a href="https://zalo.me/0912345678" target="_blank" class="action-btn-pill">Zalo</a>
+                    <a href="tel:" class="action-btn-pill">Gọi điện</a>
+                    <a href="https://zalo.me/" target="_blank" class="action-btn-pill">Zalo</a>
                     <button type="button" class="action-btn-pill btn-link-service">Đặt lịch</button>
                     <button type="button" class="action-btn-pill btn-link-order">Lên đơn</button>
                     <button type="button" class="action-btn-pill btn-link-complaint text-danger">Khiếu nại</button>
@@ -171,8 +185,8 @@
             </div>
 
             <!-- BANNER CẢNH BÁO KHẨN CẤP -->
-            <div class="emergency-alert-banner" id="custEmergencyBanner">
-                <span class="alert-text" id="custEmergencyAlertText">Khách hàng đang có vé khiếu nại mức độ Cao chưa giải quyết (Mã: TK-008 - Bé Lu bị trầy móng chân). Cần giải quyết dứt điểm trước khi nhận giao dịch mới!</span>
+            <div class="emergency-alert-banner" id="custEmergencyBanner" style="display: none;">
+                <span class="alert-text" id="custEmergencyAlertText"></span>
             </div>
 
             <!-- 5 TAB CON CHI TIẾT BÊN TRONG HỒ SƠ -->
@@ -181,15 +195,15 @@
                 <button type="button" class="drawer-tab-btn" data-drawertab="dtab-pets">Thú cưng</button>
                 <button type="button" class="drawer-tab-btn" data-drawertab="dtab-orders">
                     <span>Đơn hàng</span>
-                    <span class="tab-badge-count" id="badgeCountOrders">1</span>
+                    <span class="tab-badge-count" id="badgeCountOrders" style="display: none;">0</span>
                 </button>
                 <button type="button" class="drawer-tab-btn" data-drawertab="dtab-bookings">
                     <span>Lịch hẹn</span>
-                    <span class="tab-badge-count" id="badgeCountBookings">1</span>
+                    <span class="tab-badge-count" id="badgeCountBookings" style="display: none;">0</span>
                 </button>
                 <button type="button" class="drawer-tab-btn" data-drawertab="dtab-complaints">
                     <span>Khiếu nại</span>
-                    <span class="tab-badge-count" id="badgeCountComplaints">1</span>
+                    <span class="tab-badge-count" id="badgeCountComplaints" style="display: none;">0</span>
                 </button>
             </div>
 
@@ -203,36 +217,29 @@
                                 <h4 class="detail-box-title" style="margin-bottom: 0;">Hồ sơ cá nhân</h4>
                                 <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnOpenEditProfileModal">Sửa hồ sơ</button>
                             </div>
-                            <div class="data-pair-row"><span class="data-key">Mã định danh:</span><span class="data-val" id="profileValCustId">CUST-001</span></div>
-                            <div class="data-pair-row"><span class="data-key">Họ và tên:</span><span class="data-val" id="profileValFullName">Nguyễn Văn An</span></div>
-                            <div class="data-pair-row"><span class="data-key">Số điện thoại:</span><span class="data-val" id="profileValPhone">0912345678</span></div>
-                            <div class="data-pair-row"><span class="data-key">Email:</span><span class="data-val" id="profileValEmail">an.nguyen@email.com</span></div>
-                            <div class="data-pair-row"><span class="data-key">Giới tính:</span><span class="data-val" id="profileValGender">Nam</span></div>
-                            <div class="data-pair-row"><span class="data-key">Ngày sinh:</span><span class="data-val" id="profileValDob">15/08/1992</span></div>
+                            <div class="data-pair-row"><span class="data-key">Mã định danh:</span><span class="data-val" id="profileValCustId">—</span></div>
+                            <div class="data-pair-row"><span class="data-key">Họ và tên:</span><span class="data-val" id="profileValFullName">—</span></div>
+                            <div class="data-pair-row"><span class="data-key">Số điện thoại:</span><span class="data-val" id="profileValPhone">—</span></div>
+                            <div class="data-pair-row"><span class="data-key">Email:</span><span class="data-val" id="profileValEmail">—</span></div>
+                            <div class="data-pair-row"><span class="data-key">Giới tính:</span><span class="data-val" id="profileValGender">—</span></div>
+                            <div class="data-pair-row"><span class="data-key">Ngày sinh:</span><span class="data-val" id="profileValDob">—</span></div>
                             <div class="data-pair-row" style="align-items: flex-start; padding: 10px 0;">
                                 <span class="data-key" style="margin-top: 3px;">Sổ địa chỉ:</span>
                                 <div class="data-val" id="profileValAddressContainer" style="display: flex; flex-direction: column; gap: 8px; flex: 1;">
-                                    <div class="drawer-address-row">
-                                        <span class="admin-badge badge-success" style="font-size: 11px; padding: 2px 7px;">Mặc định</span>
-                                        <span>120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP.HCM</span>
-                                    </div>
-                                    <div class="drawer-address-row" style="color: var(--text-muted);">
-                                        <span class="admin-badge badge-neutral" style="font-size: 11px; padding: 2px 7px;">Phụ</span>
-                                        <span>Toà nhà Bitexco, 2 Hải Triều, Bến Nghé, Quận 1, TP.HCM</span>
-                                    </div>
+                                    <span>—</span>
                                 </div>
                             </div>
                             <div class="data-pair-row" style="border-bottom: none; padding-top: 10px;">
                                 <span class="data-key">Tài khoản và SMS:</span>
                                 <span class="data-val" id="profileValAuthStatus" style="display: flex; align-items: center; gap: 8px;">
-                                    <span class="admin-badge badge-success">Đã kích hoạt</span>
+                                    <span class="admin-badge badge-success">—</span>
                                     <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnResendSmsToken" style="font-size: 11.5px; padding: 3px 8px;">Gửi lại SMS</button>
                                 </span>
                             </div>
                         </div>
                         <div class="detail-box">
                             <h4 class="detail-box-title">Ghi chú</h4>
-                            <textarea class="admin-input textarea-note" id="drawerCustNote" rows="5" placeholder="Ghi chú sở thích, tính cách khách hàng...">Khách hàng thân thiết từ 2024. Rất yêu quý bé Lu (Poodle). Khách yêu cầu thợ cắt tỉa nhẹ nhàng, không xịt nước hoa nồng.</textarea>
+                            <textarea class="admin-input textarea-note" id="drawerCustNote" rows="5" placeholder="Ghi chú sở thích, tính cách khách hàng..."></textarea>
                             <div style="display: flex; justify-content: flex-end; margin-top: auto; padding-top: 8px;">
                                 <button type="button" class="admin-btn admin-btn-primary" id="btnSaveCustomerNote" style="font-size: 13px; padding: 8px 18px;">Lưu ghi chú</button>
                             </div>
@@ -307,6 +314,7 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
             </div>
         </div>
     </section>

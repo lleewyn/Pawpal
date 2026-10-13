@@ -198,7 +198,10 @@
     PawpalPets.state = {
         petsData: {},
         customersData: {},
-        isLoaded: false
+        isLoaded: false,
+        loadError: null,
+        appointments: [],
+        careLogs: []
     };
 
     // Cache TTL 90 giây — không fetch lại khi chuyển phân hệ
@@ -216,19 +219,38 @@
 
         _petsFetchPromise = (async () => {
             try {
+                PawpalPets.state.loadError = null;
                 const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                if (!client) return;
+                if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
 
+                const loadCareLogs = async () => {
+                    const logs = [];
+                    for (let offset = 0; ; offset += 1000) {
+                        const result = await client.from('care_log').select('id, appointment_id, pet_id, description, health_status, recorded_at, created_at').order('id').range(offset, offset + 999);
+                        if (result.error) return result;
+                        logs.push(...(result.data || []));
+                        if ((result.data || []).length < 1000) return { data: logs, error: null };
+                    }
+                };
                 // Tải song song 100% tất cả bảng dữ liệu (Triệt tiêu hoàn toàn Waterfall)
                 const [custAccRes, custProfRes, apptsRes, careLogsRes, petsRes, weightHistoryRes] = await Promise.all([
                     client.from('customer').select('id, email, phone_main, account_status'),
                     client.from('customer_profile').select('id, customer_id, full_name, gender'),
                     client.from('appointment').select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_time, appointment_status, total_price, service:service_id(service_name), staff:staff_id(full_name)').limit(500),
-                    client.from('care_log').select('id, appointment_id, pet_id, description, health_status, recorded_at, created_at').limit(300),
+                    loadCareLogs(),
                     client.from('pet_profile').select('id, customer_id, pet_code, pet_name, avatar_url, species, breed, gender, date_of_birth, color, routine, weight, vaccination_history, allergy, status, created_at').order('created_at', { ascending: false }),
                     Promise.resolve(client.from('pet_weight_history').select('id, pet_id, weight, measured_at, recorded_by_name, created_at')).catch(() => ({ data: [] }))
                 ]);
-                _petsLastFetchedAt = Date.now();
+                for (const result of [custAccRes, custProfRes, apptsRes, careLogsRes, petsRes]) {
+                    if (result.error) throw result.error;
+                }
+                const profiles = new Map((custProfRes.data || []).map(profile => [profile.customer_id, profile]));
+                const custMap = Object.fromEntries((custAccRes.data || []).map(customer => [customer.id, {
+                    id: customer.id,
+                    name: profiles.get(customer.id)?.full_name || 'Chưa cập nhật tên',
+                    phone: customer.phone_main || '',
+                    email: customer.email || ''
+                }]));
 
                 const petWeightHistoryMap = {};
                 if (Array.isArray(weightHistoryRes.data)) {
@@ -257,8 +279,8 @@
                         
                         const sName = app.service?.service_name || 'Dịch vụ Spa và Grooming';
                         const appDate = app.appointment_date ? formatDate(app.appointment_date) : '';
-                        const appTime = app.appointment_time ? app.appointment_time.slice(0, 5) : '14:00';
-                        const priceStr = app.total_price ? Number(app.total_price).toLocaleString('vi-VN') + 'đ' : '250.000đ';
+                        const appTime = app.appointment_time ? app.appointment_time.slice(0, 5) : '';
+                        const priceStr = app.total_price != null ? Number(app.total_price).toLocaleString('vi-VN') + 'đ' : 'Chưa cập nhật';
                         
                         let stText = 'Chờ xác nhận';
                         if (app.appointment_status === 'COMPLETED') stText = 'Đã hoàn thành';
@@ -271,7 +293,7 @@
                             rawId: app.id,
                             service: sName,
                             time: `${appDate} ${appTime}`,
-                            weight: '5.0 kg',
+                            weight: 'Chưa ghi nhận',
                             price: priceStr,
                             status: stText
                         });
@@ -288,12 +310,12 @@
                         const logTime = cl.recorded_at ? formatDateTime(cl.recorded_at) : '';
                         petCareLogsMap[pId].push({
                             time: logTime,
-                            service: cl.description || 'Tắm sấy dưỡng ẩm và Vệ sinh định kỳ',
+                            service: cl.description || 'Chưa có ghi chú',
                             ktv: 'Kỹ thuật viên PawPal',
-                            imgBefore: '/assets/images/publics/dogcute3.jpg',
-                            imgAfter: '/assets/images/publics/dogcute1.jpg',
-                            checkText: cl.health_status ? `Tình trạng: ${cl.health_status}` : '4/4 mục đạt chuẩn',
-                            appStatus: 'Đã gửi app cho chủ',
+                            imgBefore: '',
+                            imgAfter: '',
+                            checkText: cl.health_status ? `Tình trạng: ${cl.health_status}` : 'Chưa ghi nhận',
+                            appStatus: 'Đã ghi nhận',
                             careId: cl.id
                         });
                     });
@@ -331,15 +353,15 @@
                         const dobFormatted = p.date_of_birth ? formatDate(p.date_of_birth) : 'Chưa cập nhật';
                         const weightLogs = petWeightHistoryMap[p.id] || [];
 
-                        const vaccinesList = [
+                        const vaccinesList = p.vaccination_history ? [
                             {
                                 title: 'Vắc-xin phòng dại và bệnh truyền nhiễm định kỳ',
                                 status: p.vaccination_history && !p.vaccination_history.toLowerCase().includes('chưa') ? 'Đã tiêm đủ' : 'Chưa cập nhật',
-                                date: p.vaccination_history || 'Đã tiêm phòng đầy đủ',
+                                date: p.vaccination_history,
                                 nextDate: 'Hằng năm',
                                 place: 'Sổ tiêm đối chiếu tại quầy'
                             }
-                        ];
+                        ] : [];
 
                         petsMap[code] = {
                             id: code,
@@ -357,7 +379,7 @@
                             color: p.color || 'Chưa cập nhật',
                             allergy: allg || 'Không',
                             allergies: allg,
-                            notes: routine || 'Bé ngoan, hợp tác khi làm dịch vụ.',
+                            notes: routine || '',
                             alert: alertParts.join(' • '),
                             ownerName: ownerName,
                             ownerPhone: ownerObj.phone || '',
@@ -375,11 +397,17 @@
                     });
                 }
                 PawpalPets.state.petsData = petsMap;
+                PawpalPets.state.customersData = custMap;
+                PawpalPets.state.appointments = apptsRes.data || [];
+                PawpalPets.state.careLogs = careLogsRes.data || [];
                 PawpalPets.state.isLoaded = true;
+                _petsLastFetchedAt = Date.now();
             } catch (err) {
+                PawpalPets.state.loadError = 'Không thể tải dữ liệu thú cưng. Vui lòng tải lại trang.';
                 console.warn('[PawpalPets] Lỗi tải dữ liệu Supabase:', err);
             } finally {
                 _petsFetchPromise = null;
+                window.dispatchEvent(new CustomEvent('pawpal:pets-data-loaded'));
             }
         })();
 
@@ -389,8 +417,10 @@
 
     // Quản lý Header Subtabs & Breadcrumb
     function updateBreadcrumb(petName) {
+        if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Thú cưng') return;
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
         if (!deepBreadcrumbEl) return;
+        if (!document.getElementById('subtab-tab-pet-profile')?.classList.contains('active')) petName = null;
         if (petName) {
             deepBreadcrumbEl.innerHTML = `
                 <span class="breadcrumb-separator">/</span>
@@ -407,8 +437,11 @@
         const contentArea = document.querySelector('.admin-preview-content');
         if (contentArea) contentArea.scrollTop = 0;
 
+        const root = document.getElementById('subtab-tab-pet-list')?.closest('.admin-module-wrapper');
+        if (!root || sessionStorage.getItem('pawpal_admin_active_module') !== 'Thú cưng') return;
+        if (!root.querySelector(`#subtab-${targetSubtab}`)) return;
         const headerSubtabBtns = document.querySelectorAll('.header-subtab-btn');
-        const subtabPanels = document.querySelectorAll('.subtab-content');
+        const subtabPanels = root.querySelectorAll('.subtab-content');
 
         headerSubtabBtns.forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-subtab') === targetSubtab);
@@ -482,9 +515,27 @@
         if (PawpalPets.subtabs.reminders?.renderRemindersTable) {
             PawpalPets.subtabs.reminders.renderRemindersTable();
         }
+        const savedPetId = sessionStorage.getItem('pawpal_admin_pet_id');
+        const petId = PawpalPets.state.petsData[savedPetId] ? savedPetId : Object.keys(PawpalPets.state.petsData)[0];
+        PawpalPets.subtabs.profile?.openPetProfile?.(petId, false);
 
         if (_isPetsInit) return; // Đã gắn event listeners rồi, không gắn lặp lại
         _isPetsInit = true;
+        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (client?.channel) {
+            const channel = client.channel('admin-pets-live');
+            const refresh = async () => {
+                await loadPetsModuleData({ force: true });
+                PawpalPets.subtabs.list?.renderPetsTable?.();
+                PawpalPets.subtabs.list?.updatePetKPIs?.();
+                const selected = sessionStorage.getItem('pawpal_admin_pet_id');
+                PawpalPets.subtabs.profile?.openPetProfile?.(PawpalPets.state.petsData[selected] ? selected : Object.keys(PawpalPets.state.petsData)[0], false);
+            };
+            ['pet_profile', 'customer', 'customer_profile', 'appointment', 'care_log', 'pet_weight_history'].forEach(table => {
+                channel.on('postgres_changes', { event: '*', schema: 'public', table }, refresh);
+            });
+            channel.subscribe();
+        }
 
         // Khôi phục subtab active từ URL hash hoặc sessionStorage
         const savedSubtab = sessionStorage.getItem('pawpal_admin_pet_subtab');

@@ -24,106 +24,17 @@
     }
 
     function renderStaffProfile(staffId) {
-        const staffList = PawpalStaff.state?.mockStaff || [];
-        const staff = staffList.find(s => s.id === staffId || s.rawId === staffId) || staffList[0];
-        if (!staff) return;
-
-        PawpalStaff.state.selectedStaffId = staff.id;
-        sessionStorage.setItem('pawpal_admin_staff_selected_id', staff.id);
-
-        if (PawpalStaff.updateBreadcrumb) {
-            PawpalStaff.updateBreadcrumb(staff.name);
-        }
-
-        // Cập nhật Headline hồ sơ
-        const nameEl = document.getElementById('staffProfileHeadlineName');
-        const codeEl = document.getElementById('staffProfileHeadlineCode');
-        const posEl = document.getElementById('staffProfileHeadlinePosition');
-        const statusEl = document.getElementById('staffProfileHeadlineStatus');
-        const avatarEl = document.getElementById('staffProfileHeadlineAvatar');
-
-        if (nameEl) nameEl.textContent = staff.name;
-        if (codeEl) codeEl.textContent = staff.id;
-        if (posEl) posEl.textContent = staff.position;
-        if (avatarEl) {
-            avatarEl.src = staff.avatar || '/assets/images/staff/emp-001.jpg';
-            avatarEl.style.borderRadius = '50%';
-        }
-        if (statusEl) {
-            let statusText = 'Đang làm việc';
-            let badgeClass = 'badge-success';
-            if (staff.status === 'LEAVE') { statusText = 'Nghỉ phép'; badgeClass = 'badge-warning'; }
-            else if (staff.status === 'PAUSE') { statusText = 'Tạm nghỉ'; badgeClass = 'badge-neutral'; }
-            else if (staff.status === 'RESIGNED') { statusText = 'Nghỉ việc'; badgeClass = 'badge-danger'; }
-            statusEl.className = `admin-badge ${badgeClass}`;
-            statusEl.textContent = statusText;
-        }
-
-        // Tab 1: Tổng quan
-        const phoneEl = document.getElementById('spOverviewPhone');
-        const emailEl = document.getElementById('spOverviewEmail');
-        const branchEl = document.getElementById('spOverviewBranch');
-        const joinDateEl = document.getElementById('spOverviewJoinDate');
-        const dobEl = document.getElementById('spOverviewDob');
-        const addressEl = document.getElementById('spOverviewAddress');
-        const skillScoreEl = document.getElementById('spOverviewSkillScore');
-        const lockStatusEl = document.getElementById('spOverviewLockStatus');
-
-        if (phoneEl) phoneEl.textContent = staff.phone || '—';
-        if (emailEl) emailEl.textContent = staff.email || '—';
-        if (branchEl) branchEl.textContent = staff.branch_name || 'Chi nhánh Quận 1';
-        if (joinDateEl) joinDateEl.textContent = staff.join_date || '—';
-        if (dobEl) dobEl.textContent = staff.dob || '—';
-        if (addressEl) addressEl.textContent = staff.address || 'TP. Hồ Chí Minh';
-        if (skillScoreEl) skillScoreEl.textContent = `${staff.skillScore || 90}/100 điểm (${staff.skillExam || 'Đạt tiêu chuẩn'})`;
-        if (lockStatusEl) {
-            lockStatusEl.textContent = staff.serviceLocked ? 'Đang tạm khóa nhận việc' : 'Sẵn sàng nhận lịch hẹn';
-            lockStatusEl.className = staff.serviceLocked ? 'text-danger' : 'text-success';
-        }
-
-        // Tab 2: Lịch trực & Chấm công
-        const shiftEl = document.getElementById('spScheduleShift');
-        if (shiftEl) {
-            shiftEl.textContent = staff.shift === 'MORNING' ? 'Ca sáng (07:30 - 15:30)' : (staff.shift === 'AFTERNOON' ? 'Ca chiều (13:30 - 21:30)' : 'Ca tối');
-        }
-
-        // Tab 3: Hiệu suất & CSAT
-        const csatScoreEl = document.getElementById('spPerformanceCsatScore');
-        const completedCountEl = document.getElementById('spPerformanceCompletedCount');
-        const reviewsContainer = document.getElementById('spPerformanceReviewsList');
-
-        if (csatScoreEl) csatScoreEl.textContent = '5.0 / 5.0 ★';
-        if (completedCountEl) completedCountEl.textContent = `${staff.requested_count || 8} ca phục vụ`;
-
-        if (reviewsContainer) {
-            const reviews = staff.customer_reviews || [];
-            if (reviews.length === 0) {
-                reviewsContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; padding: 12px 0;">Chưa có nhận xét từ khách hàng.</div>';
-            } else {
-                reviewsContainer.innerHTML = reviews.map(r => `
-                    <div class="staff-review-card" style="padding: 10px 0; border-bottom: 1px solid var(--border-neutral);">
-                        <div style="display: flex; justify-content: space-between; font-size: 12.5px;">
-                            <strong>${r.customer_name}</strong>
-                            <span style="color: #D97706;">${'★'.repeat(r.rating || 5)}</span>
-                        </div>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${r.service_name} • ${r.date}</div>
-                        <div style="font-size: 12.5px; margin-top: 4px;">"${escapeHtml(r.comment)}"</div>
-                    </div>
-                `).join('');
-            }
-        }
-
-        // Tab 4: Tài khoản hệ thống
-        const sysRoleEl = document.getElementById('spAccountSystemRole');
-        const accStatusEl = document.getElementById('spAccountStatus');
-        const lastLoginEl = document.getElementById('spAccountLastLogin');
-
-        if (sysRoleEl) sysRoleEl.textContent = staff.system_role === 'ADMIN' ? 'Quản trị viên (ADMIN)' : 'Nhân sự (STAFF)';
-        if (accStatusEl) {
-            accStatusEl.textContent = staff.account_status === 'ACTIVE' ? 'Đã kích hoạt' : 'Chưa cấp tài khoản';
-            accStatusEl.className = staff.account_status === 'ACTIVE' ? 'admin-badge badge-success' : 'admin-badge badge-neutral';
-        }
-        if (lastLoginEl) lastLoginEl.textContent = staff.last_login_at || 'Chưa đăng nhập';
+        if (!PawpalStaff.state.isLoaded) return;
+        const staff = (PawpalStaff.state.mockStaff || []).find(s=>s.id===staffId || s.rawId===staffId) || PawpalStaff.state.mockStaff[0];
+        const root = document.getElementById('subtab-tab-staff-profile');
+        if (!root) return;
+        const status = {ACTIVE:'Đang làm việc',LEAVE:'Nghỉ phép',PAUSE:'Tạm nghỉ',RESIGNED:'Nghỉ việc'}[staff?.status] || 'Chưa cập nhật';
+        const values = {viewStaffName:staff?.name || 'Chưa có nhân viên',viewStaffFullName:staff?.name,viewStaffCode:staff?.id,viewStaffId:staff?.id,viewStaffPosition:staff?.position,viewStaffJobTitle:staff?.position,viewStaffPhone:staff?.phone,viewStaffEmail:staff?.email,viewStaffDob:staff?.dob,viewStaffJoinDate:staff?.join_date,viewStaffAddress:staff?.address,viewStaffRole:staff?.role,viewStaffStatusBadge:status,viewStaffWorkStatus:status,viewStaffCurrentShift:{MORNING:'Ca sáng',AFTERNOON:'Ca chiều',EVENING:'Ca tối',NIGHT:'Ca khuya'}[staff?.shift] || 'Chưa phân ca'};
+        root.querySelectorAll('[id^="viewStaff"]').forEach(el => {
+            if (el.id==='viewStaffCustomerReviewsList' || el.id==='viewStaffAssessmentHistory') el.textContent='Chưa có dữ liệu được ghi nhận.';
+            else if(el.id!=='viewStaffSafetyBadge') el.textContent=values[el.id] || '—';
+        });
+        if (staff) { PawpalStaff.state.selectedStaffId=staff.id; PawpalStaff.updateBreadcrumb?.(staff.name); }
     }
 
     function initStaffProfileSubtab() {

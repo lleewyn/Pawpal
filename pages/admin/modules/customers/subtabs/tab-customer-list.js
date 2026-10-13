@@ -44,6 +44,14 @@
     }
 
     function updateCustomerKPIs() {
+        if (!PawpalCustomers.state.hasLoadedCustomers) {
+            if (PawpalCustomers.state.listLoadStatus !== 'error') return;
+            ['custStatTotal', 'custStatMember', 'custStatGuest', 'custStatLocked', 'custStatComplaint'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = '—';
+            });
+            return;
+        }
         const totalEl = document.getElementById('custStatTotal');
         const memberEl = document.getElementById('custStatMember');
         const guestEl = document.getElementById('custStatGuest');
@@ -138,6 +146,14 @@
     function renderCustomersTable() {
         const tbody = document.getElementById('customerTableTbody');
         if (!tbody) return;
+        if (!PawpalCustomers.state.hasLoadedCustomers) {
+            if (PawpalCustomers.state.listLoadStatus === 'error') {
+                delete tbody.dataset.loadingSkeleton;
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">Không thể tải danh sách khách hàng. Vui lòng tải lại trang.</td></tr>';
+            }
+            return;
+        }
+        delete tbody.dataset.loadingSkeleton;
 
         const query = (document.getElementById('custSearchInput')?.value || '').trim();
         const selectedTier = document.getElementById('custFilterTier')?.value || 'ALL';
@@ -985,6 +1001,10 @@
         });
 
         document.getElementById('btnExportCustomerReport')?.addEventListener('click', exportCustomersToCSV);
+
+        renderCustomersTable();
+        updateCustomerKPIs();
+        renderComplaintBar();
     }
 
     PawpalCustomers.subtabs.list = {

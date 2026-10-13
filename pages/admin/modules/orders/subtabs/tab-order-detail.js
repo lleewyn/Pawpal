@@ -13,6 +13,16 @@
 
     // Render chi tiết đơn hàng 360°
     function renderOrderDetail(orderId) {
+        const loading = document.getElementById('orderDetailLoading');
+        const content = document.getElementById('orderDetailData');
+        if (!state.ordersLoaded || state.ordersError) {
+            if (content) content.style.display = 'none';
+            if (loading) { loading.style.display = ''; if (state.ordersError) loading.textContent = 'Không thể tải hồ sơ đơn hàng. Vui lòng tải lại trang.'; }
+            return;
+        }
+        if (loading) loading.style.display = 'none';
+        if (content) content.style.display = '';
+
         const ordersList = state.orders || [];
         const order = ordersList.find(o => o.id === orderId) || ordersList[0];
 

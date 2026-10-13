@@ -193,6 +193,12 @@
     function renderConversationsList() {
         const container = document.getElementById('conversationsListContainer');
         if (!container) return;
+        if (PawpalChatbot.state.liveLoadError) { container.textContent=PawpalChatbot.state.liveLoadError; return; }
+        if (!PawpalChatbot.state.liveLoaded) {
+            if (!container.querySelector('.skeleton-text')) container.innerHTML=Array.from({length:3},()=>'<div style="padding:16px;"><span class="skeleton-text" style="width:65%;"></span><span class="skeleton-text" style="width:90%;margin-top:10px;"></span></div>').join('');
+            return;
+        }
+
 
         const liveConversations = PawpalChatbot.state?.liveConversations || [];
         const currentFilterTab = PawpalChatbot.state?.currentFilterTab || 'all';
@@ -304,8 +310,21 @@
     }
 
     function renderCurrentChat() {
+        const timeline=document.getElementById('chatMessagesTimeline');
+        const info=document.getElementById('chatCustomerInfoData');
+        const placeholder=document.getElementById('chatCustomerInfoLoading');
+        const ready=PawpalChatbot.state.liveLoaded && !PawpalChatbot.state.liveLoadError && PawpalChatbot.state.currentConversation;
+        if(info)info.style.display=ready ? '' : 'none';
+        if(placeholder){placeholder.style.display=ready ? 'none' : '';if(PawpalChatbot.state.liveLoadError)placeholder.textContent=PawpalChatbot.state.liveLoadError;else if(PawpalChatbot.state.liveLoaded && !ready)placeholder.textContent='Chưa chọn hội thoại.';}
+
+        if (PawpalChatbot.state.liveLoadError) { if(timeline)timeline.textContent=PawpalChatbot.state.liveLoadError; return; }
+        if (!PawpalChatbot.state.liveLoaded) {
+            if(timeline)timeline.innerHTML='<div role="status" aria-label="Đang tải hội thoại" style="padding:24px;"><span class="skeleton-text" style="width:65%;"></span><span class="skeleton-text" style="width:85%;margin-top:16px;"></span></div>';
+            return;
+        }
+
         const currentConversation = PawpalChatbot.state?.currentConversation;
-        if (!currentConversation) return;
+        if (!currentConversation) { if(timeline)timeline.textContent="Chọn một hội thoại để xem nội dung."; return; }
 
         if (currentConversation.id) {
             subscribeToConversationRoom(currentConversation.id);

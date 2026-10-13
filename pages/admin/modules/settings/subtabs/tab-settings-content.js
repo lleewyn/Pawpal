@@ -23,6 +23,7 @@
     }
 
     function updateArticleKpis() {
+        if (!PawpalSettings.state.isLoaded) return;
         const articlesList = PawpalSettings.state?.articlesList || [];
         const total = articlesList.length;
         const pub = articlesList.filter(a => a.status === 'published').length;
@@ -63,6 +64,9 @@
     function renderArticles() {
         const tbody = document.getElementById('articlesTableBody');
         if (!tbody) return;
+        if (PawpalSettings.state.loadError) {delete tbody.dataset.loadingSkeleton;tbody.innerHTML=`<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" style="padding:28px;text-align:center;">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;return;}
+        if (!PawpalSettings.state.isLoaded) return;
+        delete tbody.dataset.loadingSkeleton;
 
         const articlesList = PawpalSettings.state?.articlesList || [];
         const keyword = (document.getElementById('searchArticleInput')?.value || '').toLowerCase().trim();

@@ -71,7 +71,7 @@
                         <span class="copilot-msg-time">${timeStr}</span>
                     </div>
                     <div class="copilot-msg-bubble" style="color: var(--text-muted); font-style: italic;">
-                        Đang truy vấn Supabase RAG và suy luận câu trả lời...
+<div role="status" aria-label="Đang chuẩn bị câu trả lời"><span class="skeleton-text" style="width:180px;"></span><span class="skeleton-text" style="display:block;width:260px;margin-top:10px;"></span></div>
                     </div>
                 </div>
             `;
