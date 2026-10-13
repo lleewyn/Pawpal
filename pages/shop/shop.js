@@ -525,6 +525,7 @@ function renderShopSkeletons(count = 8) {
 }
 
 async function initShop() {
+    initMobileFilter();
     console.log('=== SHOP PAGE LOADING ===');
     renderShopSkeletons(8);
     
@@ -663,9 +664,14 @@ function initSuggestionsSidebar() {
 function initCategoryGrid() {
     const categoryCards = document.querySelectorAll('.category-card');
     categoryCards.forEach(card => {
+        if (card.dataset.categoryBound === 'true') return;
+        card.dataset.categoryBound = 'true';
         card.addEventListener('click', (e) => {
             e.preventDefault();
             const category = card.dataset.category;
+            // Category shortcuts start a fresh browse, just like clearing the
+            // filters before selecting the same sidebar category.
+            document.getElementById('btnClearFilters')?.click();
             state.filters.category = category === 'all' ? 'all' : [category];
             state.currentPage = 1;
 
@@ -1217,10 +1223,13 @@ function initMobileFilter() {
     const shopSidebar = document.getElementById('shopSidebar');
     const closeShopSidebar = document.getElementById('closeShopSidebar');
     if (!btnMobileFilter || !mobileFilterOverlay || !shopSidebar || !closeShopSidebar) return;
+    if (btnMobileFilter.dataset.drawerBound === 'true') return;
+    btnMobileFilter.dataset.drawerBound = 'true';
     
     function openDrawer() {
         if (!isCompactShopLayout()) return;
         shopSidebar.classList.add('show');
+        btnMobileFilter.setAttribute('aria-expanded', 'true');
         mobileFilterOverlay.hidden = false;
         requestAnimationFrame(() => mobileFilterOverlay.classList.add('show'));
         document.body.classList.add('shop-filter-open');
@@ -1234,6 +1243,7 @@ function initMobileFilter() {
             }
         }, 350);
         shopSidebar.classList.remove('show');
+        btnMobileFilter.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('shop-filter-open');
     }
     

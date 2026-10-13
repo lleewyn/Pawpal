@@ -1104,7 +1104,7 @@ body.buy-now-modal-open {
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.5);
-    z-index: 1100;
+    z-index: 11000;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -1112,6 +1112,10 @@ body.buy-now-modal-open {
 .mobile-filter-overlay.show {
     opacity: 1;
     pointer-events: auto;
+}
+
+.mobile-filter-overlay[hidden] {
+    display: none;
 }
 
 .sidebar-close-btn {
@@ -1170,7 +1174,7 @@ body.buy-now-modal-open {
         border-radius: 0 24px 24px 0;
         transform: translateX(-104%);
         transition: transform 0.3s ease;
-        z-index: 1200;
+        z-index: 11001;
         box-shadow: 16px 0 40px rgba(15, 34, 25, 0.18);
     }
 

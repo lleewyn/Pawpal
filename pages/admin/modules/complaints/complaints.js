@@ -242,10 +242,14 @@
     }
     PawpalComplaints.saveComplaintsOverrides = saveComplaintsOverrides;
 
+    // Cache TTL 90 giây — không fetch lại khi chuyển phân hệ
+    let _complLastFetchedAt = 0;
+    const COMPL_CACHE_TTL_MS = 90_000;
+
     // ====================================================================
     // DATA STORE 100% TRỰC TIẾP TỪ SUPABASE LIVE DATABASE (ZERO JSON MOCK)
     // ====================================================================
-    async function loadComplaintsModuleData() {
+    async function loadComplaintsModuleData({ force = false } = {}) {
         try {
             let client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (!client) {
@@ -263,6 +267,15 @@
                 return;
             }
 
+            // Sử dụng cache nếu dữ liệu còn mới
+            if (!force && Date.now() - _complLastFetchedAt < COMPL_CACHE_TTL_MS) {
+                console.log('[Complaints] Dùng cache, bỏ qua fetch.');
+                updateComplaintsKpis();
+                PawpalComplaints.subtabs.services?.renderServiceComplaintsTable();
+                PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable();
+                return;
+            }
+
             const [
                 ticketsRes,
                 messagesRes,
@@ -274,16 +287,19 @@
                 staffRes,
                 productsRes
             ] = await Promise.all([
-                Promise.resolve(client.from('support_ticket').select('*').order('priority', { ascending: true }).order('created_at', { ascending: false })).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('support_ticket_message').select('*').order('created_at', { ascending: true })).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('customer').select('*')).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('customer_profile').select('*')).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('pet_profile').select('*')).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('appointment').select('*, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false })).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('sales_order').select('*').order('created_at', { ascending: false })).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('staff').select('*')).catch(err => ({ data: [], error: err })),
+                Promise.resolve(client.from('support_ticket').select('id, user_id, title, status, priority, created_at, updated_at').order('priority', { ascending: true }).order('created_at', { ascending: false })).catch(err => ({ data: [], error: err })),
+                Promise.resolve(client.from('support_ticket_message').select('id, ticket_id, sender_type, content, created_at').order('created_at', { ascending: true })).catch(err => ({ data: [], error: err })),
+                Promise.resolve(client.from('customer').select('id, email, phone_main, account_status')).catch(err => ({ data: [], error: err })),
+                Promise.resolve(client.from('customer_profile').select('customer_id, full_name, gender')).catch(err => ({ data: [], error: err })),
+                Promise.resolve(client.from('pet_profile').select('id, customer_id, pet_code, pet_name, species, breed, avatar_url')).catch(err => ({ data: [], error: err })),
+                Promise.resolve(client.from('appointment').select('id, appointment_code, customer_id, appointment_date, appointment_status, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false }).limit(400)).catch(err => ({ data: [], error: err })),
+                Promise.resolve(client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(400)).catch(err => ({ data: [], error: err })),
+                Promise.resolve(client.from('staff').select('id, full_name, role, account_status')).catch(err => ({ data: [], error: err })),
                 Promise.resolve(client.from('product').select('id, product_name, sku, sale_price, status')).catch(err => ({ data: [], error: err }))
             ]);
+
+            _complLastFetchedAt = Date.now();
+
 
             const tickets = (ticketsRes && ticketsRes.data) || [];
             const messages = (messagesRes && messagesRes.data) || [];

@@ -245,9 +245,18 @@
     PawpalServices.getAlertBadge = getAlertBadge;
 
     // Nạp dữ liệu 100% Supabase Live Database
-    async function loadServicesData() {
+    let _servicesLastFetchedAt = 0;
+    const SERVICES_CACHE_TTL_MS = 90_000;
+
+    async function loadServicesData({ force = false } = {}) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db) return;
+
+        // Bỏ qua fetch lại nếu dữ liệu còn mới (< 90s) và đã có dữ liệu trong state
+        if (!force && Date.now() - _servicesLastFetchedAt < SERVICES_CACHE_TTL_MS && PawpalServices.state.bookingsData.length > 0) {
+            console.log('[PawpalServices] Dùng cache in-memory, bỏ qua fetch.');
+            return;
+        }
 
         try {
             console.log('[PawpalServices] Đang nạp dữ liệu từ Supabase Live Database...');
@@ -451,6 +460,7 @@
             if (petRes && !petRes.error && Array.isArray(petRes.data)) {
                 PawpalServices.state.livePetDirectory = petRes.data;
             }
+            _servicesLastFetchedAt = Date.now();
         } catch (err) {
             console.error('[PawpalServices] Lỗi kết nối Supabase:', err);
         }

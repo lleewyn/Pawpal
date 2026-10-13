@@ -202,7 +202,15 @@
         return 'Kỹ thuật viên Grooming';
     }
 
-    async function loadStaffModuleData() {
+    let _staffLastFetchedAt = 0;
+    const STAFF_CACHE_TTL_MS = 90_000;
+
+    async function loadStaffModuleData({ force = false } = {}) {
+        if (!force && Date.now() - _staffLastFetchedAt < STAFF_CACHE_TTL_MS && PawpalStaff.state.mockStaff.length > 0) {
+            console.log('[PawpalStaff] Dùng cache in-memory, bỏ qua fetch.');
+            return;
+        }
+
         try {
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (!client) return;
@@ -272,6 +280,16 @@
             if (PawpalStaff.state.mockStaff.length > 0 && !PawpalStaff.state.mockStaff.some(s => s.id === PawpalStaff.state.selectedStaffId)) {
                 PawpalStaff.state.selectedStaffId = PawpalStaff.state.mockStaff[0].id;
             }
+
+            if (PawpalStaff.subtabs?.list?.updateStaffKpis) {
+                PawpalStaff.subtabs.list.updateStaffKpis();
+            }
+            if (PawpalStaff.subtabs?.assessment?.updateAssessmentKPIs) {
+                PawpalStaff.subtabs.assessment.updateAssessmentKPIs();
+            }
+
+            _staffLastFetchedAt = Date.now();
+            window.dispatchEvent(new CustomEvent('pawpal:staff-data-loaded', { detail: { count: PawpalStaff.state.mockStaff.length } }));
         } catch (err) {
             console.error('[PawpalStaff] Lỗi kết nối CSDL Supabase:', err);
         }

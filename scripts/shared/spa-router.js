@@ -88,7 +88,7 @@
     let renderedPageUrl = new URL(window.location.href);
     async function spaNavigateTo(url, pushState = true) {
         try {
-            const targetUrl = new URL(url, window.location.origin);
+            let targetUrl = new URL(url, window.location.origin);
 
             // Bỏ qua trang admin và trang user có router riêng
             if (targetUrl.pathname.startsWith('/admin') || targetUrl.pathname.startsWith('/pages/admin')) {
@@ -127,6 +127,11 @@
             }
 
             const html = await res.text();
+            if (res.redirected) {
+                const canonicalUrl = new URL(res.url);
+                canonicalUrl.hash = targetUrl.hash;
+                targetUrl = canonicalUrl;
+            }
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
 
@@ -327,13 +332,13 @@
         if (path.includes('/pages/user/') || path.includes('/user/')) return;
 
         let matched = null;
-        if (path === '/' || path === '/landing' || path.endsWith('/index.html') || path === '') {
+        if (path === '/' || path === '/landing' || path === '/index.html' || path === '') {
             matched = nav.querySelector('a.nav-link[href="/"]') || nav.querySelector('a.nav-link[href*="landing"]');
-        } else if (path.startsWith('/services') || path.includes('service-detail') || path.startsWith('/booking')) {
+        } else if (path.startsWith('/services') || path.startsWith('/pages/services/') || path.includes('service-detail') || path.startsWith('/booking')) {
             matched = nav.querySelector('a.nav-link[href="/services"]') || nav.querySelector('a.nav-link[href*="services"]');
         } else if (path.startsWith('/shop') || path.includes('product-detail') || path.startsWith('/cart') || path.startsWith('/checkout')) {
             matched = nav.querySelector('a.nav-link[href="/shop"]') || nav.querySelector('a.nav-link[href*="shop"]');
-        } else if (path.startsWith('/blog') || path.includes('cam-nang')) {
+        } else if (path.startsWith('/blog') || path.startsWith('/pages/public/blog') || path.includes('cam-nang')) {
             matched = nav.querySelector('a.nav-link[href="/blog"]') || nav.querySelector('a.nav-link[href*="blog"]');
         } else if (path.startsWith('/contact') || path.includes('lien-he')) {
             matched = nav.querySelector('a.nav-link[href="/contact"]') || nav.querySelector('a.nav-link[href*="contact"]');

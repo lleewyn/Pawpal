@@ -61,11 +61,21 @@
     }
 
     function renderAssessmentList() {
-        const tbody = document.getElementById('assessmentTableBody');
+        const tbody = document.getElementById('assessmentListTableBody') || document.getElementById('assessmentTableBody');
+        updateAssessmentKPIs();
         if (!tbody) return;
         const assessments = PawpalStaff.state?.mockAssessments || [];
+        const searchInput = document.getElementById('assessmentSearchInput');
+        const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        const toUnaccent = PawpalStaff.toUnaccent || (str => str);
 
         let filtered = assessments.filter(item => {
+            if (query) {
+                const qUnaccent = toUnaccent(query);
+                const matchName = toUnaccent(item.name || '').includes(qUnaccent) || (item.name || '').toLowerCase().includes(query);
+                const matchId = (item.staff_id || '').toLowerCase().includes(query) || (item.id || '').toLowerCase().includes(query);
+                if (!matchName && !matchId) return false;
+            }
             if (assessmentFilterType !== 'ALL' && item.type !== assessmentFilterType) return false;
             if (assessmentFilterResult !== 'ALL' && item.result !== assessmentFilterResult) return false;
             return true;
@@ -78,7 +88,7 @@
         if (filtered.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 28px 16px; color: var(--text-muted); font-size: 13.5px;">
+                    <td colspan="9" style="text-align: center; padding: 28px 16px; color: var(--text-muted); font-size: 13.5px;">
                         Không có kết quả sát hạch nào phù hợp với bộ lọc hiện tại.
                     </td>
                 </tr>
@@ -102,41 +112,53 @@
 
             return `
                 <tr>
-                    <td style="font-weight: 600;">${item.id}</td>
-                    <td>${item.date}</td>
+                    <td style="font-weight: 600;">${item.date}</td>
+                    <td style="font-weight: 600;">${item.staff_id || item.id}</td>
                     <td>
                         <div style="font-weight: 600; color: var(--text-heading);">${item.name}</div>
                         <div style="font-size: 11.5px; color: var(--text-muted);">${item.position}</div>
                     </td>
                     <td>${item.type}</td>
-                    <td style="font-weight: 600;">${item.score}/100</td>
+                    <td style="font-weight: 600; text-align: center;">${item.score}/100</td>
                     <td style="text-align: center;">${resultBadge}</td>
                     <td>${item.evaluator || 'Hội đồng chuyên môn'}</td>
                     <td style="max-width: 200px; font-size: 12px; color: var(--text-muted);">${item.note || '—'}</td>
+                    <td style="text-align: center;">
+                        <button type="button" class="btn-action-trigger btn-reassess-trigger" data-staff-id="${item.staff_id || ''}" style="border: none; background: none; color: #236B48; cursor: pointer; font-size: 12.5px; font-weight: 600;">Đánh giá</button>
+                    </td>
                 </tr>
             `;
         }).join('');
 
+        tbody.querySelectorAll('.btn-reassess-trigger').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const sId = btn.getAttribute('data-staff-id');
+                openAssessmentModal(sId);
+            });
+        });
+
         renderAssessmentPagination(totalPages);
-        updateAssessmentKPIs();
     }
 
     function updateAssessmentKPIs() {
         const assessments = PawpalStaff.state?.mockAssessments || [];
+        const staffList = PawpalStaff.state?.mockStaff || [];
+        const totalStaff = staffList.length;
         const total = assessments.length;
         const pass = assessments.filter(a => a.result === 'PASS').length;
         const retrain = assessments.filter(a => a.result === 'RETRAIN').length;
         const fail = assessments.filter(a => a.result === 'FAIL').length;
+        const notAssessed = Math.max(0, totalStaff - total);
 
-        const statTotal = document.getElementById('statAssessmentTotal');
-        const statPass = document.getElementById('statAssessmentPass');
-        const statRetrain = document.getElementById('statAssessmentRetrain');
-        const statFail = document.getElementById('statAssessmentFail');
+        const statTotal = document.getElementById('statAssessed') || document.getElementById('statAssessmentTotal');
+        const statPassEl = document.getElementById('statPass') || document.getElementById('statAssessmentPass');
+        const statRetrainEl = document.getElementById('statRetrain') || document.getElementById('statAssessmentRetrain');
+        const statNotAssessedEl = document.getElementById('statNotAssessed') || document.getElementById('statAssessmentFail');
 
         if (statTotal) statTotal.textContent = total;
-        if (statPass) statPass.textContent = pass;
-        if (statRetrain) statRetrain.textContent = retrain;
-        if (statFail) statFail.textContent = fail;
+        if (statPassEl) statPassEl.textContent = pass;
+        if (statRetrainEl) statRetrainEl.textContent = retrain;
+        if (statNotAssessedEl) statNotAssessedEl.textContent = notAssessed;
     }
 
     function openAssessmentModal(targetStaffId = null) {
@@ -181,6 +203,24 @@
     }
 
     function initAssessmentSubtab() {
+        const searchInput = document.getElementById('assessmentSearchInput');
+        const clearBtn = document.getElementById('btnClearAssessmentSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                if (clearBtn) clearBtn.style.display = searchInput.value ? 'inline-flex' : 'none';
+                currentAssessmentPage = 1;
+                renderAssessmentList();
+            });
+        }
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                if (searchInput) searchInput.value = '';
+                clearBtn.style.display = 'none';
+                currentAssessmentPage = 1;
+                renderAssessmentList();
+            });
+        }
+
         const typeFilter = document.getElementById('assessmentFilterType');
         if (typeFilter) {
             typeFilter.addEventListener('change', () => {
@@ -302,6 +342,11 @@
 
         renderAssessmentList();
     }
+
+    window.addEventListener('pawpal:staff-data-loaded', () => {
+        renderAssessmentList();
+        updateAssessmentKPIs();
+    });
 
     PawpalStaff.subtabs.assessment = {
         init: initAssessmentSubtab,

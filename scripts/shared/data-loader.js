@@ -660,11 +660,11 @@ async function loadBlogCategories() {
     }
 }
 
-async function loadBlogs() {
-    if (dataCache.blogs) return dataCache.blogs;
+async function loadBlogs(forceRefresh = false) {
+    if (!forceRefresh && dataCache.blogs?.length) return dataCache.blogs;
 
     try {
-        const db = window.SupabaseClient;
+        const db = window.getSupabaseClient?.() || window.SupabaseClient;
         if (!db) throw new Error('Supabase client is not initialized');
 
         const { data, error } = await db.from('blog_post').select('*, blog_category(category_name)').eq('status', 'PUBLISHED').order('publish_at', { ascending: false });
@@ -692,7 +692,7 @@ async function loadBlogs() {
         return formatted;
     } catch (error) {
         console.error('Error fetching blogs:', error);
-        return [];
+        throw error;
     }
 }
 

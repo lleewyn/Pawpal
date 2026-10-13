@@ -2511,7 +2511,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(15, 30, 22, 0.45);
+    background-color: rgba(32, 58, 44, 0.45);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     z-index: 2000;
@@ -2521,6 +2521,7 @@
     padding: 20px;
     opacity: 0;
     transition: opacity 0.2s ease;
+    overscroll-behavior: contain;
 }
 
 .admin-modal-overlay.active {
@@ -2529,9 +2530,9 @@
 }
 
 .admin-modal-card {
-    background: var(--surface-white, #FFFFFF);
+    background-color: #FFFFFF;
     border-radius: var(--admin-radius, 9px);
-    box-shadow: 0 16px 40px rgba(35, 107, 72, 0.16);
+    box-shadow: 0 16px 40px rgba(26, 43, 35, 0.16);
     border: 1px solid var(--border-neutral, #ECF2EE);
     max-height: 90vh;
     overflow-y: auto;

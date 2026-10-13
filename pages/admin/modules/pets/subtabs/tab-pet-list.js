@@ -119,6 +119,12 @@
 
         const petsData = PawpalPets.state?.petsData || {};
         const petsList = Object.values(petsData);
+
+        // Nếu dữ liệu đang tải và chưa có bản ghi: giữ nguyên skeleton animation
+        if (petsList.length === 0 && !PawpalPets.state?.isLoaded) {
+            return;
+        }
+
         const activePets = petsList.filter(p => p.status !== 'Lưu trữ');
 
         if (statTotal) statTotal.textContent = activePets.length;
@@ -253,6 +259,18 @@
         renderPetPagination(totalItems, totalPages);
 
         if (totalItems === 0) {
+            if (!PawpalPets.state?.isLoaded) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 40px 16px; font-size: 13.5px;">
+                            <span class="admin-loading-spinner" style="display: inline-block; width: 16px; height: 16px; border: 2px solid #ECF2EE; border-top-color: #236B48; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px;"></span>
+                            Đang nạp danh sách bé cưng từ cơ sở dữ liệu...
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
             tbody.innerHTML = `
                 <tr>
                     <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 36px 16px; font-size: 13.5px;">
@@ -652,6 +670,10 @@
 
         // Setup Cân bé
         setupWeighModal();
+
+        // Luôn render bảng thú cưng và cập nhật KPI ngay khi khởi tạo subtab
+        renderPetsTable();
+        updatePetKPIs();
     }
 
     function setupAddPetModal() {

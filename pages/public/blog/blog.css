@@ -526,7 +526,7 @@
    ========================================================================== */
 .magazine-layout-grid {
     display: grid;
-    grid-template-columns: 1fr 340px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
     gap: 28px;
     align-items: start;
 }
@@ -538,6 +538,7 @@
 }
 
 .magazine-articles-column {
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 18px;
@@ -751,12 +752,17 @@
    4. EDITORIAL SIDEBAR
    ========================================================================== */
 .magazine-sidebar {
+    min-width: 0;
+    align-self: start;
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-.sidebar-widget {
+.magazine-sidebar .sidebar-widget {
+    min-width: 0;
+    flex-shrink: 0;
+    overflow-wrap: anywhere;
     background: #FFFFFF;
     border: 1px solid #ECF2EE;
     border-radius: 12px;
@@ -764,7 +770,7 @@
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
 }
 
-.widget-title {
+.magazine-sidebar .widget-title {
     font-family: var(--font-heading, 'Lora', serif);
     font-size: 16.5px;
     font-weight: 700;
@@ -773,13 +779,13 @@
 }
 
 /* Trending Top 5 List */
-.trending-list {
+.magazine-sidebar .trending-list {
     display: flex;
     flex-direction: column;
     gap: 14px;
 }
 
-.trending-row-item {
+.magazine-sidebar .trending-row-item {
     display: flex;
     align-items: flex-start;
     gap: 12px;
@@ -788,11 +794,11 @@
     transition: color 0.15s ease;
 }
 
-.trending-row-item:last-child {
+.magazine-sidebar .trending-row-item:last-child {
     padding-bottom: 0;
 }
 
-.trending-rank-num {
+.magazine-sidebar .trending-rank-num {
     font-size: 18px;
     font-weight: 800;
     color: #E5A93C;
@@ -802,12 +808,12 @@
     font-family: var(--font-heading, 'Lora', serif);
 }
 
-.trending-row-info {
+.magazine-sidebar .trending-row-info {
     flex: 1;
     min-width: 0;
 }
 
-.trending-row-title {
+.magazine-sidebar .trending-row-title {
     font-size: 13.5px;
     font-weight: 600;
     color: #203A2C;
@@ -819,23 +825,23 @@
     overflow: hidden;
 }
 
-.trending-row-item:hover .trending-row-title {
+.magazine-sidebar .trending-row-item:hover .trending-row-title {
     color: #236B48;
 }
 
-.trending-row-meta {
+.magazine-sidebar .trending-row-meta {
     font-size: 11px;
     color: #718E80;
 }
 
 /* Popular Tag Cloud */
-.popular-tags-cloud {
+.magazine-sidebar .popular-tags-cloud {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
 }
 
-.tag-cloud-btn {
+.magazine-sidebar .tag-cloud-btn {
     background: #F8FAF9;
     border: 1px solid #ECF2EE;
     color: #4F7A65;
@@ -847,14 +853,18 @@
     transition: all 0.15s ease;
 }
 
-.tag-cloud-btn:hover {
+.magazine-sidebar .tag-cloud-btn:hover {
     background: #FDF4E5;
     border-color: #E5A93C;
     color: #8F5E15;
 }
 
 /* Sidebar Promo Recommendation */
-.sidebar-promo-card {
+.magazine-sidebar .sidebar-promo-card {
+    position: static;
+    display: block;
+    min-height: 0;
+    width: 100%;
     background: #F4FAF6;
     border: 1px solid #C3DEC7;
     border-radius: 9px;
@@ -862,7 +872,7 @@
     text-align: center;
 }
 
-.promo-badge {
+.magazine-sidebar .promo-badge {
     display: inline-block;
     font-size: 10.5px;
     font-weight: 700;
@@ -874,7 +884,7 @@
     margin-bottom: 8px;
 }
 
-.promo-card-title {
+.magazine-sidebar .promo-card-title {
     font-size: 14.5px;
     font-weight: 700;
     color: #236B48;
@@ -882,20 +892,20 @@
     line-height: 1.35;
 }
 
-.promo-card-desc {
+.magazine-sidebar .promo-card-desc {
     font-size: 12px;
     color: #4F7A65;
     line-height: 1.45;
     margin: 0 0 12px 0;
 }
 
-.promo-card-actions {
+.magazine-sidebar .promo-card-actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 8px;
 }
 
-.btn-sidebar-cta {
+.magazine-sidebar .btn-sidebar-cta {
     background: #E5A93C;
     color: #FFFFFF;
     font-size: 12px;
@@ -907,13 +917,13 @@
     transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.btn-sidebar-cta:hover {
+.magazine-sidebar .btn-sidebar-cta:hover {
     background: #D49629;
     color: #FFFFFF;
     box-shadow: 0 4px 12px rgba(229, 169, 60, 0.35);
 }
 
-.btn-sidebar-outline {
+.magazine-sidebar .btn-sidebar-outline {
     background: #FFFFFF;
     color: #236B48;
     border: 1px solid #236B48;
@@ -926,37 +936,37 @@
     transition: all 0.2s ease;
 }
 
-.btn-sidebar-outline:hover {
+.magazine-sidebar .btn-sidebar-outline:hover {
     background: #236B48;
     color: #FFFFFF;
 }
 
 /* Newsletter Widget */
-.newsletter-card {
+.magazine-sidebar .newsletter-card {
     text-align: center;
 }
 
-.newsletter-title {
+.magazine-sidebar .newsletter-title {
     font-size: 15px;
     font-weight: 700;
     color: #236B48;
     margin: 0 0 4px 0;
 }
 
-.newsletter-desc {
+.magazine-sidebar .newsletter-desc {
     font-size: 12px;
     color: #4F7A65;
     line-height: 1.45;
     margin: 0 0 12px 0;
 }
 
-.newsletter-form {
+.magazine-sidebar .newsletter-form {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.newsletter-form input {
+.magazine-sidebar .newsletter-form input {
     width: 100%;
     padding: 8px 12px;
     font-size: 12.5px;
@@ -965,11 +975,11 @@
     outline: none;
 }
 
-.newsletter-form input:focus {
+.magazine-sidebar .newsletter-form input:focus {
     border-color: #E5A93C;
 }
 
-.btn-newsletter-submit {
+.magazine-sidebar .btn-newsletter-submit {
     background: #E5A93C;
     color: #FFFFFF;
     border: none;
@@ -981,7 +991,7 @@
     transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.btn-newsletter-submit:hover {
+.magazine-sidebar .btn-newsletter-submit:hover {
     background: #D49629;
     box-shadow: 0 4px 12px rgba(229, 169, 60, 0.35);
 }

@@ -74,71 +74,7 @@ async function initBlogDetail() {
             }
         }
 
-        if (!blogs || blogs.length === 0) {
-            // Fallback mock blogs if DataLoader fails
-            blogs = [
-                {
-                    id: 1,
-                    title: 'Có nên tắm cho chó vào mùa mưa? Bí quyết giữ Boss luôn thơm tho và sạch sẽ',
-                    slug: 'co-nen-tam-cho-cho-vao-mua-mua',
-                    categorySlug: 'tips',
-                    categoryName: 'Chăm sóc và Tắm sấy',
-                    date: '2026-07-24',
-                    readingTime: '5 phút đọc',
-                    viewCount: 2450,
-                    author: 'BS. Lê Minh Hoàng (PawPal Care)',
-                    thumbnail: '/assets/images/publics/dog1.png',
-                    summary: 'Mùa mưa ẩm ướt là thời điểm vi khuẩn và nấm da trên thú cưng phát triển mạnh mẽ nhất.',
-                    content: `
-                        <p class="lead">Mùa mưa với độ ẩm không khí tăng cao kèm thời tiết ẩm ướt thất thường là môi trường lý tưởng để các loại vi khuẩn, nấm mốc và ký sinh trùng trên da lông chó phát triển mạnh mẽ.</p>
-                        
-                        <h2>1. Chó có thực sự cần tắm vào mùa mưa không?</h2>
-                        <p>Nhiều phụ huynh nuôi thú cưng thường có tâm lý ngại tắm cho Boss vào những ngày mưa gió vì sợ bé bị cảm lạnh hoặc lông lâu khô gây mùi hôi khó chịu. Tuy nhiên, theo các chuyên gia da liễu thú y tại PawPal, việc giữ vệ sinh sạch sẽ cho bé trong mùa mưa lại càng quan trọng gấp bội.</p>
-                        <p>Khi các bé ra ngoài đi dạo hoặc sinh hoạt, nước mưa chứa hàm lượng axit nhẹ kèm bùn đất bám vào kẽ chân, bụng và lớp lông tơ. Nếu không được làm sạch kịp thời, đây sẽ là nguyên nhân hàng đầu gây nên các bệnh viêm da tiếp xúc, nấm móng và viêm da mủ.</p>
-
-                        <div class="expert-tip-box">
-                            <div class="expert-tip-box-title">Lời khuyên từ Bác sĩ Thú y PawPal:</div>
-                            Vào mùa mưa, bạn không nhất thiết phải tắm ướt toàn thân mỗi ngày, nhưng bắt buộc phải rửa sạch và sấy khô 4 bàn chân kèm phần lông bụng của bé ngay sau mỗi lần ra ngoài trời mưa về.
-                        </div>
-
-                        <h2>2. Bao lâu thì nên tắm cho chó một lần trong mùa ẩm?</h2>
-                        <p>Tần suất tắm lý tưởng cho chó trong mùa mưa phụ thuộc vào môi trường sống và giống loài của bé:</p>
-                        <ul>
-                            <li><strong>Chó nuôi trong nhà điều hòa:</strong> Nên tắm định kỳ 7 - 10 ngày/lần bằng dầu tắm dưỡng ẩm dịu nhẹ.</li>
-                            <li><strong>Chó vận động ngoài trời nhiều:</strong> Khoảng 5 - 7 ngày/lần. Nếu bé bị dính bùn đất bẩn, có thể tắm sớm hơn nhưng cần sấy khô tuyệt đối.</li>
-                            <li><strong>Chó có làn da nhạy cảm hoặc đang điều trị nấm:</strong> Tuân thủ phác đồ dầu tắm trị liệu chuyên dụng 2 lần/tuần theo chỉ định của bác sĩ.</li>
-                        </ul>
-
-                        <h2>3. Những lưu ý "sống còn" khi tắm và sấy lông mùa mưa</h2>
-                        <p>Để đảm bảo an toàn tối đa cho sức khỏe đường hô hấp của bé, phụ huynh cần đặc biệt ghi nhớ 4 nguyên tắc sau:</p>
-                        <ol>
-                            <li><strong>Dùng nước ấm vừa phải (36 - 38°C):</strong> Tuyệt đối không dùng nước lạnh vì có thể gây sốc nhiệt và hạ thân nhiệt đột ngột.</li>
-                            <li><strong>Sấy khô 100% tận chân lông:</strong> Không để lông ẩm tự khô trong không khí mùa mưa. Sử dụng máy sấy chuyên dụng chế độ gió ấm vừa phải, kết hợp chải tơi lông từ lớp trong ra ngoài.</li>
-                            <li><strong>Vệ sinh và nhỏ dung dịch lau tai:</strong> Nước đọng trong ống tai kết hợp độ ẩm cao rất dễ gây viêm tai giữa và tích tụ rận tai.</li>
-                            <li><strong>Vắt tuyến hôi đúng kỹ thuật:</strong> Giúp loại bỏ triệt để mùi hôi khó chịu và ngăn ngừa áp-xe tuyến hậu môn.</li>
-                        </ol>
-
-                        <h2>4. Giải pháp thay thế tiện lợi: Bọt tắm khô và Dịch vụ Spa chuyên nghiệp</h2>
-                        <p>Trong những ngày mưa dầm liên tục hoặc khi bé đang trong thời gian tiêm phòng, bọt tắm khô organic là giải pháp "cứu cánh" tuyệt vời giúp khử mùi, làm sạch bụi bẩn mà không cần xả lại với nước.</p>
-                        <p>Ngoài ra, nếu gia đình không có đủ trang thiết bị sấy công suất lớn hoặc dụng cụ khử khuẩn chuyên dụng, bạn có thể đưa bé đến các cơ sở Spa của PawPal để được đội ngũ Groomer chuyên nghiệp chăm sóc trọn gói với phòng sấy ion ấm bảo vệ sức khỏe tối đa.</p>
-                    `
-                },
-                {
-                    id: 2,
-                    title: 'Chế độ dinh dưỡng khoa học giúp mèo cưng giảm rụng lông và mượt mà',
-                    slug: 'che-do-dinh-duong-giup-meo-giam-rung-long',
-                    categorySlug: 'dinh-duong',
-                    categoryName: 'Dinh dưỡng chuẩn y khoa',
-                    date: '2026-07-20',
-                    readingTime: '4 phút đọc',
-                    viewCount: 1980,
-                    author: 'ThS. Nguyễn Thị Mai',
-                    thumbnail: '/assets/images/publics/cat2.png',
-                    summary: 'Tìm hiểu các nhóm chất dinh dưỡng thiết yếu như Omega 3-6, Biotin và Kẽm giúp phục hồi nang lông cho mèo.',
-                    content: '<p>Lông mèo rụng nhiều là nỗi lo thường trực của nhiều gia đình. Cùng PawPal khám phá bí quyết bổ sung dinh dưỡng chuẩn khoa học...</p>'
-                }
-            ];
-        }
+        blogs = Array.isArray(blogs) ? blogs : [];
 
         // Find target blog
         let blog = null;
@@ -193,6 +129,7 @@ async function initBlogDetail() {
         }
 
         // Render Page Title & Breadcrumbs
+        blog.title = String(blog.title || '').normalize('NFC');
         document.title = `${blog.title} - PawPal Blog`;
         
         const breadcrumbTitle = document.getElementById('breadcrumbCurrentTitle');
@@ -221,7 +158,7 @@ async function initBlogDetail() {
         const metaStatsEl = document.getElementById('blogMetaStats');
         if (metaStatsEl) {
             const readingTime = blog.readingTime || (Math.max(2, Math.ceil((blog.content || '').length / 1000)) + ' phút đọc');
-            const views = (blog.viewCount || 1280).toLocaleString('vi-VN');
+            const views = (Math.max(0, Number(blog.viewCount ?? blog.view_count) || 0)).toLocaleString('vi-VN');
             metaStatsEl.textContent = `${formatDateVN(blog.date)} • ${readingTime} • ${views} lượt xem`;
         }
 
@@ -334,7 +271,7 @@ async function initBlogDetail() {
         trendingContainer.innerHTML = topTrending.map((b, i) => {
             const num = (i + 1).toString().padStart(2, '0');
             const url = `/pages/public/blog-detail/blog-detail.html?slug=${encodeURIComponent(b.slug)}`;
-            const views = (b.viewCount || 1000).toLocaleString('vi-VN');
+            const views = (Math.max(0, Number(b.viewCount ?? b.view_count) || 0)).toLocaleString('vi-VN');
             return `
                 <a href="${url}" class="trending-item-row">
                     <span class="trending-num-badge">${num}</span>

@@ -1049,6 +1049,40 @@
         });
 
         // ====================================================================
+        // HELPER TRUY XUẤT HỘI THOẠI AN TOÀN CHO CÁC MODAL THAO TÁC
+        // ====================================================================
+        const defaultMockFallback = {
+            id: 'conv-fallback-01',
+            customerId: 'KH-001',
+            customerName: 'Lê Lệ Quyên',
+            phone: '0901234567',
+            tier: 'Kim Cương',
+            pawpoints: 1250,
+            recentOrder: { id: 'SP-2026-003', status: 'Chờ giao hàng' },
+            recentBooking: { id: 'BKG-1001', status: 'Đã hoàn tất' },
+            openTickets: [],
+            pets: [{ name: 'Bé Miu Con', breed: 'Mèo Anh Lông Ngắn', notes: 'Dị ứng phấn hoa' }],
+            messages: [
+                { id: 'msg-fb-1', sender: 'user', time: '10:40', text: 'Shop ơi kiểm tra giúp mình đơn hàng SP-2026-003 với!' },
+                { id: 'msg-fb-2', sender: 'agent', agentName: 'CSKH PawPal', time: '10:41', text: 'Dạ PawPal xin chào sen, em kiểm tra ngay cho gia đình mình đây ạ!' }
+            ],
+            aiSummary: 'Khách hàng thắc mắc thời gian giao hàng đơn SP-2026-003.'
+        };
+
+        function getCurrentConversationSafe() {
+            if (PawpalChatbot.state?.currentConversation) {
+                return PawpalChatbot.state.currentConversation;
+            }
+            if (PawpalChatbot.state?.liveConversations && PawpalChatbot.state.liveConversations.length > 0) {
+                PawpalChatbot.state.currentConversation = PawpalChatbot.state.liveConversations[0];
+                return PawpalChatbot.state.currentConversation;
+            }
+            PawpalChatbot.state = PawpalChatbot.state || {};
+            PawpalChatbot.state.currentConversation = defaultMockFallback;
+            return defaultMockFallback;
+        }
+
+        // ====================================================================
         // MODAL 1: TẶNG ĐIỂM PAWPOINT BỒI HOÀN
         // ====================================================================
         const btnOpenReward = document.getElementById('btnRewardPoints');
@@ -1057,8 +1091,7 @@
         const inputPoints = document.getElementById('inputCustomRewardPoints');
 
         btnOpenReward?.addEventListener('click', () => {
-            const currentConversation = PawpalChatbot.state?.currentConversation;
-            if (!currentConversation) return;
+            const currentConversation = getCurrentConversationSafe();
             if (rewardCustName) rewardCustName.value = currentConversation.customerName;
             PawpalChatbot.openModal?.('rewardPointsModalOverlay');
         });
@@ -1074,8 +1107,7 @@
         });
 
         btnConfirmReward?.addEventListener('click', async () => {
-            const currentConversation = PawpalChatbot.state?.currentConversation;
-            if (!currentConversation) return;
+            const currentConversation = getCurrentConversationSafe();
 
             const pts = parseInt(inputPoints?.value, 10) || 50;
             const selectReason = document.getElementById('selectRewardReason');
@@ -1134,7 +1166,7 @@
         const btnClearSelectedRef = document.getElementById('btnClearSelectedRef');
 
         function getSuggestedTransactions() {
-            const currentConversation = PawpalChatbot.state?.currentConversation;
+            const currentConversation = getCurrentConversationSafe();
             const list = [];
             if (currentConversation?.recentOrder) {
                 list.push({
@@ -1221,8 +1253,7 @@
         });
 
         btnOpenConvert?.addEventListener('click', () => {
-            const currentConversation = PawpalChatbot.state?.currentConversation;
-            if (!currentConversation) return;
+            const currentConversation = getCurrentConversationSafe();
 
             const defCode = currentConversation.recentOrder ? currentConversation.recentOrder.id : (currentConversation.recentBooking ? currentConversation.recentBooking.id : '');
             if (defCode) {
@@ -1242,8 +1273,7 @@
         const closeConvertModal = () => { PawpalChatbot.closeModal?.('convertTicketModalOverlay'); };
 
         btnConfirmConvert?.addEventListener('click', async () => {
-            const currentConversation = PawpalChatbot.state?.currentConversation;
-            if (!currentConversation) return;
+            const currentConversation = getCurrentConversationSafe();
 
             const title = inputConvertTitle?.value.trim() || 'Khiếu nại chuyển từ kênh chat trực tuyến';
             const selectCat = document.getElementById('selectConvertTicketCategory');
@@ -1341,8 +1371,7 @@
         const inputEscalateNotes = document.getElementById('inputEscalateNotes');
 
         btnOpenEscalate?.addEventListener('click', () => {
-            const currentConversation = PawpalChatbot.state?.currentConversation;
-            if (!currentConversation) return;
+            const currentConversation = getCurrentConversationSafe();
             if (escalateCustName) escalateCustName.value = currentConversation.customerName;
             if (inputEscalateNotes) inputEscalateNotes.value = '';
             PawpalChatbot.openModal?.('escalateManagerModalOverlay');
@@ -1351,8 +1380,7 @@
         const closeEscalateModal = () => { PawpalChatbot.closeModal?.('escalateManagerModalOverlay'); };
 
         btnConfirmEscalate?.addEventListener('click', () => {
-            const currentConversation = PawpalChatbot.state?.currentConversation;
-            if (!currentConversation) return;
+            const currentConversation = getCurrentConversationSafe();
 
             const targetSelect = document.getElementById('selectEscalateTarget');
             const targetName = targetSelect ? targetSelect.options[targetSelect.selectedIndex].text : 'Quản lý Chi nhánh';
@@ -1464,18 +1492,27 @@
         selectCannedCategory?.addEventListener('change', renderCannedLibrary);
 
         // ====================================================================
+        // ====================================================================
         // MODAL 5: TRA CỨU VẬN ĐƠN HỎA TỐC BƯU TÁ
         // ====================================================================
-        const linkRecentOrder = document.getElementById('linkRecentOrder');
         const btnSendTrackingCardToChat = document.getElementById('btnSendTrackingCardToChat');
 
-        linkRecentOrder?.addEventListener('click', () => {
-            PawpalChatbot.openModal?.('orderTrackingModalOverlay');
+        // Lắng nghe sự kiện click link tra cứu đơn hàng & xem camera an ninh (Event Delegation toàn diện)
+        document.addEventListener('click', (e) => {
+            const orderLink = e.target.closest('#linkRecentOrder, .btn-jump-order');
+            if (orderLink) {
+                PawpalChatbot.openModal?.('orderTrackingModalOverlay');
+            }
+            const bookingLink = e.target.closest('#linkRecentBooking, .btn-jump-booking');
+            if (bookingLink) {
+                const cameraTimeEl = document.getElementById('cameraCurrentTime');
+                if (cameraTimeEl) cameraTimeEl.textContent = new Date().toLocaleTimeString();
+                PawpalChatbot.openModal?.('petCameraModalOverlay');
+            }
         });
 
         btnSendTrackingCardToChat?.addEventListener('click', () => {
-            const currentConversation = PawpalChatbot.state?.currentConversation;
-            if (!currentConversation) return;
+            const currentConversation = getCurrentConversationSafe();
 
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             currentConversation.messages.push({
@@ -1495,18 +1532,10 @@
         // ====================================================================
         // MODAL 6: CAMERA AN NINH PHÒNG THÚ CƯNG
         // ====================================================================
-        const linkRecentBooking = document.getElementById('linkRecentBooking');
         const btnSendCameraSnapshotToChat = document.getElementById('btnSendCameraSnapshotToChat');
 
-        linkRecentBooking?.addEventListener('click', () => {
-            const cameraTimeEl = document.getElementById('cameraCurrentTime');
-            if (cameraTimeEl) cameraTimeEl.textContent = new Date().toLocaleTimeString();
-            PawpalChatbot.openModal?.('petCameraModalOverlay');
-        });
-
         btnSendCameraSnapshotToChat?.addEventListener('click', () => {
-            const currentConversation = PawpalChatbot.state?.currentConversation;
-            if (!currentConversation) return;
+            const currentConversation = getCurrentConversationSafe();
 
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             currentConversation.messages.push({
@@ -1534,8 +1563,7 @@
         const checkboxSendCsat = document.getElementById('checkboxSendCsatSurvey');
 
         function openResolveModal() {
-            const currentConversation = PawpalChatbot.state?.currentConversation;
-            if (!currentConversation) return;
+            const currentConversation = getCurrentConversationSafe();
             if (resolveCustomerNameInput) resolveCustomerNameInput.value = currentConversation.customerName;
             if (textareaResolveNotes) textareaResolveNotes.value = '';
             PawpalChatbot.openModal?.('modalResolveChatOverlay');
@@ -1546,8 +1574,7 @@
         btnHeaderResolve?.addEventListener('click', openResolveModal);
 
         btnConfirmResolve?.addEventListener('click', async () => {
-            const currentConversation = PawpalChatbot.state?.currentConversation;
-            if (!currentConversation) return;
+            const currentConversation = getCurrentConversationSafe();
 
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const reasonText = selectResolveReason ? selectResolveReason.options[selectResolveReason.selectedIndex].text : 'Đã giải quyết yêu cầu';

@@ -506,7 +506,15 @@
     };
 
     // Đồng bộ Supabase Live Database
-    async function syncOrdersAndProductsFromSupabase() {
+    let _ordersLastFetchedAt = 0;
+    const ORDERS_CACHE_TTL_MS = 90_000;
+
+    async function syncOrdersAndProductsFromSupabase({ force = false } = {}) {
+        if (!force && Date.now() - _ordersLastFetchedAt < ORDERS_CACHE_TTL_MS && currentOrdersList.length > 0) {
+            console.log('[Orders Core] Dùng cache in-memory, bỏ qua fetch.');
+            return;
+        }
+
         try {
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (!client) return;
@@ -825,6 +833,7 @@
                 window.PawpalOrders.controllers.list.loadPosCustomerDirectory();
             }
 
+            _ordersLastFetchedAt = Date.now();
             console.log(`[Orders Core] Đã đồng bộ thành công từ Supabase: ${currentOrdersList.length} đơn hàng, ${currentProductsList.length} sản phẩm.`);
         } catch (e) {
             console.warn('[Orders Core] Lỗi đồng bộ từ Supabase:', e);

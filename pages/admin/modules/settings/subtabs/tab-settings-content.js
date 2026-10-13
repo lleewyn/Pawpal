@@ -28,16 +28,19 @@
         const pub = articlesList.filter(a => a.status === 'published').length;
         const draft = articlesList.filter(a => a.status === 'draft').length;
         const hidden = articlesList.filter(a => a.status === 'hidden').length;
+        const totalViews = articlesList.reduce((sum, a) => sum + (Number(a.views) || 0), 0);
 
         const tEl = document.getElementById('statTotalArticles');
         const pEl = document.getElementById('statPublishedArticles');
         const dEl = document.getElementById('statDraftArticles');
         const hEl = document.getElementById('statHiddenArticles');
+        const vEl = document.getElementById('statTotalViews');
 
         if (tEl) tEl.textContent = total;
         if (pEl) pEl.textContent = pub;
         if (dEl) dEl.textContent = draft;
         if (hEl) hEl.textContent = hidden;
+        if (vEl) vEl.textContent = totalViews.toLocaleString('vi-VN');
     }
 
     function openArticleActionMenu(triggerBtn, articleId) {
@@ -146,22 +149,66 @@
         updateArticleKpis();
     }
 
+    // Nạp danh mục bài viết động từ CSDL Supabase (Chuẩn AGENTS.MD: Lọc sạch chuỗi rỗng/rác)
+    function populateBlogCategories() {
+        const catFilterEl = document.getElementById('filterArticleCategory');
+        const catInputEl = document.getElementById('inputArticleCategory');
+
+        const dbCategories = PawpalSettings.state?.blogCategoriesList || [];
+        const validCategories = [];
+        dbCategories.forEach(c => {
+            const name = (c.category_name || '').trim();
+            if (name && name !== 'Chưa rõ' && name !== 'unknown' && name !== 'null' && Number.isNaN(Number(name))) {
+                if (!validCategories.some(vc => vc.name.toLowerCase() === name.toLowerCase())) {
+                    validCategories.push({ id: c.id, name: name });
+                }
+            }
+        });
+
+        const defaultNames = ['Chó cưng', 'Mèo cưng', 'Dinh dưỡng', 'Grooming và Spa', 'Mẹo chăm sóc'];
+        if (validCategories.length === 0) {
+            defaultNames.forEach(d => validCategories.push({ id: null, name: d }));
+        }
+
+        if (catFilterEl) {
+            const currentVal = catFilterEl.value;
+            catFilterEl.innerHTML = '<option value="all">Tất cả danh mục</option>' +
+                validCategories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+            if (currentVal && validCategories.some(c => c.name === currentVal)) {
+                catFilterEl.value = currentVal;
+            } else {
+                catFilterEl.value = 'all';
+            }
+        }
+
+        if (catInputEl) {
+            const currentVal = catInputEl.value;
+            catInputEl.innerHTML = validCategories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+            if (currentVal && validCategories.some(c => c.name === currentVal)) {
+                catInputEl.value = currentVal;
+            }
+        }
+    }
+
     function initContentSubtab() {
         // Lọc Bài viết
         document.getElementById('searchArticleInput')?.addEventListener('input', renderArticles);
         document.getElementById('filterArticleCategory')?.addEventListener('change', () => { currentArticlePage = 1; renderArticles(); });
         document.getElementById('filterArticleStatus')?.addEventListener('change', () => { currentArticlePage = 1; renderArticles(); });
 
+        // Nạp danh mục động
+        populateBlogCategories();
+
         // Modal Tạo Bài Viết Mới
-        const articleModal = document.getElementById('articleModalOverlay');
         document.getElementById('btnOpenCreateArticleModal')?.addEventListener('click', () => {
-            if (articleModal) articleModal.style.display = 'flex';
+            populateBlogCategories();
+            PawpalSettings.openModal?.('articleModalOverlay');
         });
         document.getElementById('btnCancelArticleModal')?.addEventListener('click', () => {
-            if (articleModal) articleModal.style.display = 'none';
+            PawpalSettings.closeModal?.('articleModalOverlay');
         });
         document.getElementById('btnDismissArticleModal')?.addEventListener('click', () => {
-            if (articleModal) articleModal.style.display = 'none';
+            PawpalSettings.closeModal?.('articleModalOverlay');
         });
 
         document.getElementById('btnSaveArticle')?.addEventListener('click', async () => {
@@ -204,7 +251,7 @@
                 }]);
                 if (error) throw error;
                 await logSystemAudit('INSERT', 'blog_post', `Tạo bài viết mới: "${title}"`);
-                if (articleModal) articleModal.style.display = 'none';
+                PawpalSettings.closeModal?.('articleModalOverlay');
                 await PawpalSettings.loadSettingsModuleData?.();
                 renderArticles();
                 showToast('Đã lưu bài viết và đồng bộ dữ liệu sang tri thức RAG của Chatbot!', 'success');
@@ -215,9 +262,8 @@
         });
 
         // Modal RAG
-        const ragModal = document.getElementById('articleRagModalOverlay');
         const closeRagModalHandler = () => {
-            if (ragModal) ragModal.style.display = 'none';
+            PawpalSettings.closeModal?.('articleRagModalOverlay');
         };
         document.getElementById('btnCancelRagModal')?.addEventListener('click', closeRagModalHandler);
         document.getElementById('btnDismissRagModal')?.addEventListener('click', closeRagModalHandler);
@@ -261,7 +307,7 @@
             }
 
             closeArticleActionMenu();
-            if (ragModal) ragModal.style.display = 'flex';
+            PawpalSettings.openModal?.('articleRagModalOverlay');
         });
 
         // Nạp và đồng bộ vào Chatbot
@@ -372,7 +418,8 @@
     PawpalSettings.subtabs.content = {
         init: initContentSubtab,
         renderArticles,
-        updateArticleKpis
+        updateArticleKpis,
+        populateBlogCategories
     };
 
     if (document.readyState === 'loading') {

@@ -12,130 +12,6 @@ let currentSort = 'latest';
 let currentPage = 1;
 const itemsPerPage = 6;
 
-// Fallback high-quality editorial articles if DB is empty or lacks variety
-const FALLBACK_EDITORIAL_BLOGS = [
-    {
-        id: 101,
-        title: 'Có nên tắm cho chó thường xuyên vào mùa hè nắng nóng?',
-        slug: 'co-nen-tam-cho-cho-thuong-xuyen-vao-mua-he',
-        summary: 'Tắm quá nhiều có thể làm mất lớp dầu tự nhiên bảo vệ da lông của cún. Tìm hiểu tần suất tắm chuẩn y khoa và mẹo giữ mát cho bé.',
-        categoryName: 'Kiến thức chăm sóc',
-        categorySlug: 'tips',
-        petTarget: 'cho',
-        petTargetLabel: 'Chó cưng',
-        thumbnail: '/assets/images/publics/spa.jpg',
-        date: '2026-07-24',
-        readingTime: '5 phút đọc',
-        viewCount: 1420,
-        author: 'Bác sĩ Thú y Pawpal'
-    },
-    {
-        id: 102,
-        title: 'Chế độ dinh dưỡng chuẩn cho mèo con từ 2 đến 6 tháng tuổi',
-        slug: 'che-do-dinh-duong-cho-meo-con',
-        summary: 'Hướng dẫn cân bằng đạm, canxi, taurine và lượng calo cần thiết để khung xương và hệ tiêu hóa của mèo con phát triển tối ưu.',
-        categoryName: 'Dinh dưỡng và Khẩu phần',
-        categorySlug: 'dinh-duong',
-        petTarget: 'meo',
-        petTargetLabel: 'Mèo con',
-        thumbnail: '/assets/images/publics/catcute2.jpg',
-        date: '2026-07-20',
-        readingTime: '4 phút đọc',
-        viewCount: 1850,
-        author: 'Chuyên gia Dinh dưỡng'
-    },
-    {
-        id: 103,
-        title: 'Cách xử lý và phòng tránh búi lông ở mèo cưng hiệu quả',
-        slug: 'cach-xu-ly-bui-long-o-meo',
-        summary: 'Búi lông tích tụ trong dạ dày có thể gây tắc ruột nguy hiểm. Mẹo chải lông, chọn cỏ mèo và gel tiêu lông chuẩn xác.',
-        categoryName: 'Sức khỏe và Y tế',
-        categorySlug: 'suc-khoe',
-        petTarget: 'meo',
-        petTargetLabel: 'Mèo cưng',
-        thumbnail: '/assets/images/publics/catcute6.jpg',
-        date: '2026-07-18',
-        readingTime: '4 phút đọc',
-        viewCount: 1290,
-        author: 'Đội ngũ Y tế Pawpal'
-    },
-    {
-        id: 104,
-        title: '5 Lệnh huấn luyện cơ bản giúp cún cưng nghe lời tại nhà',
-        slug: '5-lenh-huan-luyen-co-ban-cho-cun',
-        summary: 'Ngồi, nằm, bắt tay, dừng lại và đi vệ sinh đúng chỗ bằng phương pháp củng cố tích cực (Positive Reinforcement).',
-        categoryName: 'Huấn luyện và Tập tính',
-        categorySlug: 'huan-luyen',
-        petTarget: 'cho',
-        petTargetLabel: 'Chó cưng',
-        thumbnail: '/assets/images/publics/dogcute5.jpg',
-        date: '2026-07-15',
-        readingTime: '6 phút đọc',
-        viewCount: 2150,
-        author: 'Huấn luyện viên Pawpal'
-    },
-    {
-        id: 105,
-        title: 'Lịch tiêm phòng và tẩy giun định kỳ đầy đủ cho chó mèo',
-        slug: 'lich-tiem-phong-va-tay-giun-dinh-ky',
-        summary: 'Chi tiết các mũi vắc xin 5 trong 1, 7 trong 1, phòng dại và sổ giun định kỳ để bảo vệ bé khỏi các dịch bệnh nguy hiểm.',
-        categoryName: 'Sức khỏe và Y tế',
-        categorySlug: 'suc-khoe',
-        petTarget: 'all',
-        petTargetLabel: 'Chó và Mèo',
-        thumbnail: '/assets/images/publics/pet2.jpg',
-        date: '2026-07-10',
-        readingTime: '5 phút đọc',
-        viewCount: 1680,
-        author: 'Bác sĩ Thú y Pawpal'
-    },
-    {
-        id: 106,
-        title: 'Ưu đãi tháng 7: Giảm 20% gói Spa tắm dưỡng lông thảo mộc',
-        slug: 'uu-dai-thang-7-spa-tam-duong-long',
-        summary: 'Chương trình tri ân mùa hè dành cho mọi bé cưng khi đặt lịch trải nghiệm dịch vụ Grooming và Spa chuyên sâu tại Pawpal.',
-        categoryName: 'Khuyến mãi và Sự kiện',
-        categorySlug: 'promo',
-        petTarget: 'all',
-        petTargetLabel: 'Chó và Mèo',
-        thumbnail: '/assets/images/publics/spa.jpg',
-        date: '2026-07-05',
-        readingTime: '2 phút đọc',
-        viewCount: 940,
-        author: 'Pawpal Care'
-    },
-    {
-        id: 107,
-        title: 'Dấu hiệu nhận biết sớm bệnh viêm tai ở chó mèo và cách vệ sinh',
-        slug: 'dau-hieu-viem-tai-o-cho-meo',
-        summary: 'Bé gãi tai liên tục, lắc đầu hoặc có mùi hôi? Hướng dẫn cách dùng dung dịch rửa tai chuyên dụng an toàn.',
-        categoryName: 'Sức khỏe và Y tế',
-        categorySlug: 'suc-khoe',
-        petTarget: 'all',
-        petTargetLabel: 'Chó và Mèo',
-        thumbnail: '/assets/images/publics/catcute8.jpg',
-        date: '2026-07-01',
-        readingTime: '4 phút đọc',
-        viewCount: 1120,
-        author: 'Bác sĩ Thú y Pawpal'
-    },
-    {
-        id: 108,
-        title: 'Khám phá không gian Khách sạn thú cưng Pawpal Pet Hotel chuẩn 5 sao',
-        slug: 'kham-pha-khach-san-thu-cung-pawpal',
-        summary: 'Phòng ốc riêng tư, camera 24/7, máy lọc không khí và chế độ dinh dưỡng cá nhân hóa cho từng bé khi chủ vắng nhà.',
-        categoryName: 'Tin tức Pawpal',
-        categorySlug: 'news',
-        petTarget: 'all',
-        petTargetLabel: 'Chó và Mèo',
-        thumbnail: '/assets/images/publics/dogcute1.jpg',
-        date: '2026-06-28',
-        readingTime: '3 phút đọc',
-        viewCount: 1540,
-        author: 'Pawpal Magazine'
-    }
-];
-
 function normalizeText(value) {
     return (value || '')
         .toLowerCase()
@@ -158,23 +34,18 @@ async function loadAndPrepareBlogs() {
     let rawBlogs = [];
     if (window.DataLoader && typeof window.DataLoader.loadBlogs === 'function') {
         try {
-            rawBlogs = await window.DataLoader.loadBlogs();
+            rawBlogs = await window.DataLoader.loadBlogs(true);
         } catch (e) {
-            console.warn('Could not load from DB, using fallback articles', e);
+            console.error('Không thể tải bài viết từ CSDL:', e);
+            const title = document.getElementById('articlesCountTitle');
+            if (title) title.textContent = 'Không thể tải bài viết';
+            const grid = document.getElementById('articlesCardGrid');
+            if (grid) grid.innerHTML = '<p>Không thể tải bài viết. Vui lòng tải lại trang để thử lại.</p>';
+            return;
         }
     }
 
-    if (!rawBlogs || rawBlogs.length === 0) {
-        rawBlogs = FALLBACK_EDITORIAL_BLOGS;
-    } else {
-        // Merge with fallback data to ensure rich, beautiful categories
-        const existingTitles = new Set(rawBlogs.map(b => b.title));
-        FALLBACK_EDITORIAL_BLOGS.forEach(fb => {
-            if (!existingTitles.has(fb.title)) {
-                rawBlogs.push(fb);
-            }
-        });
-    }
+    rawBlogs = Array.isArray(rawBlogs) ? rawBlogs : [];
 
     // Enhance blogs with metadata
     allBlogs = rawBlogs.map((b, idx) => {
@@ -197,7 +68,7 @@ async function loadAndPrepareBlogs() {
         }
 
         const readTime = b.readingTime || (b.content ? Math.max(3, Math.ceil(b.content.length / 900)) + ' phút đọc' : '4 phút đọc');
-        const viewCount = b.viewCount || (1200 + (idx * 173) % 1500);
+        const viewCount = Math.max(0, Number(b.viewCount ?? b.view_count) || 0);
 
         return {
             ...b,
@@ -308,6 +179,9 @@ function renderSidebarWidgets() {
  * 3. COMBINED FILTERS & SEARCH
  */
 function applyCombinedFilters() {
+    try {
+        sessionStorage.setItem('pawpal_blog_filters', JSON.stringify({ currentCategory, currentPetTarget, currentKeyword, currentSort }));
+    } catch {}
     const normKeyword = normalizeText(currentKeyword);
 
     filteredBlogs = allBlogs.filter(b => {
@@ -472,6 +346,13 @@ function initEventListeners() {
             catTabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             currentCategory = tab.dataset.cat || 'all';
+            if (currentCategory === 'all') {
+                currentPetTarget = 'all';
+                currentKeyword = '';
+                const search = document.getElementById('blogSearchInput');
+                if (search) search.value = '';
+                document.querySelectorAll('#blogPetChips .pet-chip-btn').forEach(chip => chip.classList.toggle('active', chip.dataset.pet === 'all'));
+            }
             applyCombinedFilters();
         });
     });
@@ -520,7 +401,7 @@ function initEventListeners() {
         tagBtn.addEventListener('click', () => {
             const tag = tagBtn.dataset.tag;
             if (searchInput) searchInput.value = tagBtn.textContent.replace('#', '');
-            currentKeyword = tag;
+            currentKeyword = String(tag || '').replace(/-/g, ' ');
             applyCombinedFilters();
             document.getElementById('blogFilterSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
@@ -547,6 +428,7 @@ function initEventListeners() {
             document.querySelectorAll('#blogCategoryTabs .cat-tab-btn').forEach((t, i) => t.classList.toggle('active', i === 0));
             document.querySelectorAll('#blogPetChips .pet-chip-btn').forEach((c, i) => c.classList.toggle('active', i === 0));
             applyCombinedFilters();
+            if (!allBlogs.length) loadAndPrepareBlogs();
         });
     }
 
@@ -571,9 +453,25 @@ function initEventListeners() {
     }
 }
 
-window.initBlog = function() {
-    loadAndPrepareBlogs();
+window.initBlog = async function() {
+    const root = document.getElementById('blogCategoryTabs');
+    if (!root || root.dataset.blogReady === 'true') return;
+    root.dataset.blogReady = 'true';
+    try {
+        const saved = JSON.parse(sessionStorage.getItem('pawpal_blog_filters') || 'null');
+        if (saved) {
+            currentCategory = saved.currentCategory || 'all';
+            currentPetTarget = saved.currentPetTarget || 'all';
+            currentKeyword = saved.currentKeyword || '';
+            currentSort = saved.currentSort || 'latest';
+            const search = document.getElementById('blogSearchInput');
+            if (search) search.value = currentKeyword;
+            document.querySelectorAll('#blogCategoryTabs .cat-tab-btn').forEach(tab => tab.classList.toggle('active', tab.dataset.cat === currentCategory));
+            document.querySelectorAll('#blogPetChips .pet-chip-btn').forEach(chip => chip.classList.toggle('active', chip.dataset.pet === currentPetTarget));
+        }
+    } catch {}
     initEventListeners();
+    await loadAndPrepareBlogs();
 };
 
 if (document.readyState === 'loading') {

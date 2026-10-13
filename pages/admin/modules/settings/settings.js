@@ -202,9 +202,60 @@
         });
 
         pendingImpactCallback = onConfirm;
+        modal.classList.add('active');
         modal.style.display = 'flex';
     }
     PawpalSettings.openImpactConfirmationModal = openImpactConfirmationModal;
+
+    // Helper: Điều khiển Modal toàn cục chuẩn AGENTS.md (Hỗ trợ 4 hình thức đóng tức thì)
+    function openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+        const firstInput = modal.querySelector('input:not([type="hidden"]), select, textarea');
+        if (firstInput) {
+            setTimeout(() => firstInput.focus(), 60);
+        }
+    }
+    PawpalSettings.openModal = openModal;
+
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+    PawpalSettings.closeModal = closeModal;
+
+    // Bộ lắng nghe sự kiện đóng modal toàn cục (4 hình thức đóng tức thì)
+    document.addEventListener('click', (e) => {
+        // 1. Nút có data-close-modal
+        const closeBtn = e.target.closest('[data-close-modal]');
+        if (closeBtn) {
+            const mId = closeBtn.getAttribute('data-close-modal');
+            if (mId) closeModal(mId);
+            return;
+        }
+
+        // 2. Click vùng nền tối backdrop bên ngoài modal-card
+        if (e.target.classList.contains('admin-modal-overlay')) {
+            e.target.classList.remove('active');
+            e.target.style.display = 'none';
+        }
+    });
+
+    // 3. Phím Escape đóng tức thì modal đang mở
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.admin-modal-overlay').forEach(m => {
+                if (m.classList.contains('active') || (m.style.display && m.style.display !== 'none')) {
+                    m.classList.remove('active');
+                    m.style.display = 'none';
+                }
+            });
+        }
+    });
 
     // Helper: Ghi nhật ký cấu hình vào bảng audit_log Supabase
     async function logSystemAudit(action, entityName, description) {
@@ -358,14 +409,20 @@
                 { data: blogsData },
                 { data: notifsData },
                 { data: auditsData },
-                { data: appSettingsData }
+                { data: appSettingsData },
+                { data: servicesData },
+                { data: productsData },
+                { data: categoriesData }
             ] = await Promise.all([
                 client.from('banner').select('*').order('created_at', { ascending: false }),
                 client.from('voucher').select('*').order('created_at', { ascending: false }),
                 client.from('blog_post').select('*').order('created_at', { ascending: false }),
                 client.from('notification').select('*').order('created_at', { ascending: false }),
                 client.from('audit_log').select('*').order('created_at', { ascending: false }).limit(40),
-                client.from('app_setting').select('*')
+                client.from('app_setting').select('*'),
+                client.from('service').select('id, name, base_price, duration_minutes').order('name'),
+                client.from('product').select('id, name, sale_price').order('name').limit(50),
+                client.from('blog_category').select('id, category_name').order('category_name')
             ]);
 
             const banners = bannersData || [];
@@ -373,6 +430,11 @@
             const blogs = blogsData || [];
             const notifs = notifsData || [];
             const audits = auditsData || [];
+
+            // Lưu dữ liệu thực thể hỗ trợ tìm kiếm vào state
+            PawpalSettings.state.servicesList = servicesData || [];
+            PawpalSettings.state.productsList = productsData || [];
+            PawpalSettings.state.blogCategoriesList = (categoriesData || []).filter(c => c && c.category_name && c.category_name.trim());
 
             // Đọc cấu hình vận hành từ app_setting
             if (appSettingsData && appSettingsData.length > 0) {
@@ -518,8 +580,11 @@
             PawpalSettings.subtabs.banners?.renderBanners?.();
             PawpalSettings.subtabs.banners?.renderVouchers?.();
             PawpalSettings.subtabs.banners?.renderZeroMissAlerts?.();
+            PawpalSettings.subtabs.banners?.updateBannerKpis?.();
             PawpalSettings.subtabs.banners?.renderNotifications?.();
             PawpalSettings.subtabs.content?.renderArticles?.();
+            PawpalSettings.subtabs.content?.updateArticleKpis?.();
+            PawpalSettings.subtabs.content?.populateBlogCategories?.();
             PawpalSettings.subtabs.system?.renderSystemConfigCards?.();
             PawpalSettings.subtabs.audit?.renderAuditLogs?.();
 
@@ -626,12 +691,17 @@
         // Kích hoạt subtab lifecycle
         if (tabId === 'tab-banner-promos') {
             PawpalSettings.subtabs.banners?.init?.();
+            PawpalSettings.subtabs.banners?.updateBannerKpis?.();
+            PawpalSettings.subtabs.banners?.renderZeroMissAlerts?.();
         } else if (tabId === 'tab-content-management') {
             PawpalSettings.subtabs.content?.init?.();
+            PawpalSettings.subtabs.content?.updateArticleKpis?.();
         } else if (tabId === 'tab-system-config') {
             PawpalSettings.subtabs.system?.init?.();
+            PawpalSettings.subtabs.system?.renderSystemConfigCards?.();
         } else if (tabId === 'tab-audit-logs') {
             PawpalSettings.subtabs.audit?.init?.();
+            PawpalSettings.subtabs.audit?.renderAuditLogs?.();
         }
     }
     PawpalSettings.switchSubtab = switchSubtab;

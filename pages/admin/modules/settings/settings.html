@@ -241,7 +241,7 @@
                 </div>
                 <div class="filter-row-bottom">
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Danh mục:</label>
+                        <label class="filter-label">Danh mục</label>
                         <select class="admin-select" id="filterArticleCategory" style="width: 155px;">
                             <option value="all">Tất cả danh mục</option>
                             <option value="Chó">Chó cưng</option>
@@ -252,7 +252,7 @@
                         </select>
                     </div>
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Trạng thái:</label>
+                        <label class="filter-label">Trạng thái</label>
                         <select class="admin-select" id="filterArticleStatus" style="width: 145px;">
                             <option value="all">Tất cả trạng thái</option>
                             <option value="published">Công khai</option>
@@ -555,43 +555,48 @@
     <div class="admin-modal-overlay" id="bannerModalOverlay">
         <div class="admin-modal-card">
             <div class="modal-header-clean">
-                <div class="modal-title-clean" id="bannerModalTitle">Thêm Banner Quảng cáo</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelBannerModal">Đóng</button>
+                <div class="modal-title-clean" id="bannerModalTitle">Thêm banner quảng cáo</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelBannerModal" data-close-modal="bannerModalOverlay">Đóng</button>
             </div>
-            <div class="modal-body-clean">
-                <div class="form-group-item">
-                    <label class="form-label-clean">Tiêu đề Banner *</label>
-                    <input type="text" class="admin-input" id="inputBannerTitle" placeholder="Ví dụ: Ưu đãi Spa Mùa Hè 30%">
-                </div>
-                <div class="form-group-item">
-                    <label class="form-label-clean">Ảnh Banner URL *</label>
-                    <input type="text" class="admin-input" id="inputBannerImage" placeholder="Nhập đường dẫn ảnh hoặc tên tệp...">
-                </div>
-                <div class="form-row-2col">
+            <form novalidate onsubmit="return false;">
+                <div class="modal-body-clean">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Nút kêu gọi (CTA)</label>
-                        <input type="text" class="admin-input" id="inputBannerCta" placeholder="Ví dụ: Đặt lịch ngay">
+                        <label class="form-label-clean">Tiêu đề banner <span style="color: #DC2626;">*</span></label>
+                        <input type="text" class="admin-input" id="inputBannerTitle" placeholder="Ví dụ: Ưu đãi Spa Mùa Hè 30%">
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Đường dẫn điều hướng</label>
-                        <input type="text" class="admin-input" id="inputBannerUrl" placeholder="Ví dụ: /pages/public/services/">
+                        <label class="form-label-clean">Ảnh banner URL <span style="color: #DC2626;">*</span></label>
+                        <input type="text" class="admin-input" id="inputBannerImage" placeholder="Nhập đường dẫn ảnh hoặc tên tệp...">
+                    </div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Nút kêu gọi</label>
+                            <input type="text" class="admin-input" id="inputBannerCta" placeholder="Ví dụ: Đặt lịch ngay">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Đường dẫn điều hướng</label>
+                            <div class="settings-autocomplete-wrapper">
+                                <input type="text" class="admin-input" id="inputBannerUrl" placeholder="Chọn hoặc nhập đường dẫn..." autocomplete="off">
+                                <div class="settings-autocomplete-popover" id="bannerUrlDropdown"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ngày bắt đầu</label>
+                            <input type="date" class="admin-input" id="inputBannerStartDate">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ngày kết thúc</label>
+                            <input type="date" class="admin-input" id="inputBannerEndDate">
+                        </div>
                     </div>
                 </div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Ngày bắt đầu</label>
-                        <input type="date" class="admin-input" id="inputBannerStartDate">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Ngày kết thúc</label>
-                        <input type="date" class="admin-input" id="inputBannerEndDate">
-                    </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissBannerModal" data-close-modal="bannerModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveBanner">Lưu banner</button>
                 </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissBannerModal">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveBanner">Lưu Banner</button>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -599,97 +604,99 @@
     <div class="admin-modal-overlay" id="voucherModalOverlay">
         <div class="admin-modal-card">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Tạo Voucher Khuyến mãi</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelVoucherModal">Đóng</button>
+                <div class="modal-title-clean">Tạo voucher khuyến mãi</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelVoucherModal" data-close-modal="voucherModalOverlay">Đóng</button>
             </div>
-            <div class="modal-body-clean">
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <label class="form-label-clean">Mã Voucher *</label>
-                            <button type="button" class="btn-text-action" id="btnAutoGenerateVoucherCode">Tạo mã tự động</button>
+            <form novalidate onsubmit="return false;">
+                <div class="modal-body-clean">
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <label class="form-label-clean">Mã voucher <span style="color: #DC2626;">*</span></label>
+                                <button type="button" class="btn-text-action" id="btnAutoGenerateVoucherCode">Tạo mã tự động</button>
+                            </div>
+                            <input type="text" class="admin-input" id="inputVoucherCode" placeholder="Ví dụ: PAWPAL30K" style="text-transform: uppercase;">
                         </div>
-                        <input type="text" class="admin-input" id="inputVoucherCode" placeholder="Ví dụ: PAWPAL30K" style="text-transform: uppercase;">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Tên chương trình <span style="color: #DC2626;">*</span></label>
+                            <input type="text" class="admin-input" id="inputVoucherName" placeholder="Tên chương trình ưu đãi...">
+                        </div>
                     </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Tên chương trình *</label>
-                        <input type="text" class="admin-input" id="inputVoucherName" placeholder="Tên chương trình ưu đãi...">
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Loại ưu đãi</label>
+                            <select class="admin-select" id="inputVoucherType">
+                                <option value="fixed">Giảm số tiền cố định (VNĐ)</option>
+                                <option value="percent">Giảm theo phần trăm (%)</option>
+                            </select>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Giá trị giảm <span style="color: #DC2626;">*</span></label>
+                            <input type="number" class="admin-input" id="inputVoucherValue" placeholder="30000 hoặc 15">
+                        </div>
                     </div>
-                </div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Loại ưu đãi</label>
-                        <select class="admin-select" id="inputVoucherType">
-                            <option value="fixed">Giảm số tiền cố định (VNĐ)</option>
-                            <option value="percent">Giảm theo phần trăm (%)</option>
-                        </select>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Đơn hàng tối thiểu (VNĐ)</label>
+                            <input type="number" class="admin-input" id="inputVoucherMinOrder" value="0">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Số lượt phát hành</label>
+                            <input type="number" class="admin-input" id="inputVoucherLimit" value="100">
+                        </div>
                     </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Giá trị giảm *</label>
-                        <input type="number" class="admin-input" id="inputVoucherValue" placeholder="30000 hoặc 15">
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Đối tượng áp dụng</label>
+                            <select class="admin-select" id="inputVoucherTarget">
+                                <option value="System">Toàn hệ thống</option>
+                                <option value="Spa">Dịch vụ Spa và Grooming</option>
+                                <option value="Hotel">Pet Hotel</option>
+                                <option value="Shop">Mua sản phẩm</option>
+                            </select>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Hạng thành viên</label>
+                            <select class="admin-select" id="inputVoucherTier">
+                                <option value="all">Tất cả khách hàng</option>
+                                <option value="Silver">Hạng Bạc trở lên</option>
+                                <option value="Gold">Hạng Vàng trở lên</option>
+                                <option value="VIP">Hạng Kim Cương (VIP)</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Đơn hàng tối thiểu (VNĐ)</label>
-                        <input type="number" class="admin-input" id="inputVoucherMinOrder" value="0">
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ngày bắt đầu</label>
+                            <input type="date" class="admin-input" id="inputVoucherStart">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ngày kết thúc</label>
+                            <input type="date" class="admin-input" id="inputVoucherEnd">
+                        </div>
                     </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Số lượt phát hành</label>
-                        <input type="number" class="admin-input" id="inputVoucherLimit" value="100">
-                    </div>
-                </div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Đối tượng áp dụng</label>
-                        <select class="admin-select" id="inputVoucherTarget">
-                            <option value="System">Toàn hệ thống</option>
-                            <option value="Spa">Dịch vụ Spa và Grooming</option>
-                            <option value="Hotel">Pet Hotel</option>
-                            <option value="Shop">Mua sản phẩm</option>
-                        </select>
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Hạng thành viên</label>
-                        <select class="admin-select" id="inputVoucherTier">
-                            <option value="all">Tất cả khách hàng</option>
-                            <option value="Silver">Hạng Bạc trở lên</option>
-                            <option value="Gold">Hạng Vàng trở lên</option>
-                            <option value="VIP">Hạng Kim Cương (VIP)</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Ngày bắt đầu</label>
-                        <input type="date" class="admin-input" id="inputVoucherStart">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Ngày kết thúc</label>
-                        <input type="date" class="admin-input" id="inputVoucherEnd">
-                    </div>
-                </div>
 
-                <!-- KHUNG XEM TRƯỚC VOUCHER THỜI GIAN THỰC (GIAI ĐOẠN 3) -->
-                <div class="voucher-preview-wrapper">
-                    <div class="voucher-preview-label">Xem trước Voucher hiển thị đến Khách hàng:</div>
-                    <div class="voucher-live-card" id="voucherLivePreview">
-                        <div class="voucher-card-left">
-                            <span class="voucher-badge-target" id="prevTarget">Toàn hệ thống</span>
-                            <span class="voucher-code-disp" id="prevCode">PAWPAL30K</span>
-                        </div>
-                        <div class="voucher-card-right">
-                            <div class="voucher-name-disp" id="prevName">Tên chương trình ưu đãi</div>
-                            <div class="voucher-discount-disp" id="prevDiscount">Giảm 30.000 VNĐ</div>
-                            <div class="voucher-condition-disp" id="prevCondition">Đơn tối thiểu: 0 VNĐ</div>
+                    <!-- KHUNG XEM TRƯỚC VOUCHER THỜI GIAN THỰC -->
+                    <div class="voucher-preview-wrapper">
+                        <div class="voucher-preview-label">Xem trước voucher hiển thị đến khách hàng</div>
+                        <div class="voucher-live-card" id="voucherLivePreview">
+                            <div class="voucher-card-left">
+                                <span class="voucher-badge-target" id="prevTarget">Toàn hệ thống</span>
+                                <span class="voucher-code-disp" id="prevCode">PAWPAL30K</span>
+                            </div>
+                            <div class="voucher-card-right">
+                                <div class="voucher-name-disp" id="prevName">Tên chương trình ưu đãi</div>
+                                <div class="voucher-discount-disp" id="prevDiscount">Giảm 30.000 VNĐ</div>
+                                <div class="voucher-condition-disp" id="prevCondition">Đơn tối thiểu: 0 VNĐ</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissVoucherModal">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveVoucher">Tạo Voucher</button>
-            </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissVoucherModal" data-close-modal="voucherModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveVoucher">Tạo voucher</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -697,39 +704,41 @@
     <div class="admin-modal-overlay" id="pawpointsModalOverlay">
         <div class="admin-modal-card">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Cấu hình Chính sách PawPoints</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelPawpointsModal">Đóng</button>
+                <div class="modal-title-clean">Cấu hình chính sách Pawpoint</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelPawpointsModal" data-close-modal="pawpointsModalOverlay">Đóng</button>
             </div>
-            <div class="modal-body-clean">
-                <div class="form-group-item">
-                    <label class="form-label-clean">Giá trị 1 điểm quy đổi (VNĐ) *</label>
-                    <input type="number" class="admin-input" id="inputCfgPointValue" value="100">
+            <form novalidate onsubmit="return false;">
+                <div class="modal-body-clean">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Giá trị 1 điểm quy đổi (VNĐ) <span style="color: #DC2626;">*</span></label>
+                        <input type="number" class="admin-input" id="inputCfgPointValue" value="100">
+                    </div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Điểm thưởng đăng ký</label>
+                            <input type="number" class="admin-input" id="inputCfgRegisterPoints" value="50">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Thưởng đơn hàng đầu</label>
+                            <input type="number" class="admin-input" id="inputCfgFirstOrderPoints" value="100">
+                        </div>
+                    </div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Thưởng đặt lịch đầu</label>
+                            <input type="number" class="admin-input" id="inputCfgFirstBookingPoints" value="100">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Điểm sinh nhật khách</label>
+                            <input type="number" class="admin-input" id="inputCfgBirthdayPoints" value="200">
+                        </div>
+                    </div>
                 </div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Điểm thưởng đăng ký</label>
-                        <input type="number" class="admin-input" id="inputCfgRegisterPoints" value="50">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Thưởng đơn hàng đầu</label>
-                        <input type="number" class="admin-input" id="inputCfgFirstOrderPoints" value="100">
-                    </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissPawpointsModal" data-close-modal="pawpointsModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSavePawpointsPolicy">Lưu chính sách</button>
                 </div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Thưởng đặt lịch đầu</label>
-                        <input type="number" class="admin-input" id="inputCfgFirstBookingPoints" value="100">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Điểm sinh nhật khách</label>
-                        <input type="number" class="admin-input" id="inputCfgBirthdayPoints" value="200">
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissPawpointsModal">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSavePawpointsPolicy">Lưu chính sách</button>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -737,35 +746,37 @@
     <div class="admin-modal-overlay" id="notificationModalOverlay">
         <div class="admin-modal-card">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Thêm Thông báo Website</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelNoticeModal">Đóng</button>
+                <div class="modal-title-clean">Thêm thông báo website</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelNoticeModal" data-close-modal="notificationModalOverlay">Đóng</button>
             </div>
-            <div class="modal-body-clean">
-                <div class="form-group-item">
-                    <label class="form-label-clean">Nội dung thông báo *</label>
-                    <textarea class="admin-input" id="inputNoticeContent" rows="3" placeholder="Nhập thông báo gửi khách hàng..."></textarea>
-                </div>
-                <div class="form-row-2col">
+            <form novalidate onsubmit="return false;">
+                <div class="modal-body-clean">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Kiểu hiển thị</label>
-                        <select class="admin-select" id="inputNoticeType">
-                            <option value="topbar">Top-bar đầu trang</option>
-                            <option value="popup">Popup giữa màn hình</option>
-                        </select>
+                        <label class="form-label-clean">Nội dung thông báo <span style="color: #DC2626;">*</span></label>
+                        <textarea class="admin-input" id="inputNoticeContent" rows="3" placeholder="Nhập thông báo gửi khách hàng..."></textarea>
                     </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Trạng thái kích hoạt</label>
-                        <select class="admin-select" id="inputNoticeStatus">
-                            <option value="active">Kích hoạt ngay</option>
-                            <option value="inactive">Tạm tắt</option>
-                        </select>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Kiểu hiển thị</label>
+                            <select class="admin-select" id="inputNoticeType">
+                                <option value="topbar">Top-bar đầu trang</option>
+                                <option value="popup">Popup giữa màn hình</option>
+                            </select>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Trạng thái kích hoạt</label>
+                            <select class="admin-select" id="inputNoticeStatus">
+                                <option value="active">Kích hoạt ngay</option>
+                                <option value="inactive">Tạm tắt</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissNoticeModal">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveNotice">Lưu thông báo</button>
-            </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissNoticeModal" data-close-modal="notificationModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveNotice">Lưu thông báo</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -774,46 +785,48 @@
         <div class="admin-modal-card wide-modal">
             <div class="modal-header-clean">
                 <div class="modal-title-clean" id="articleModalTitle">Soạn thảo bài viết mới</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelArticleModal">Đóng</button>
+                <button type="button" class="modal-btn-close-text" id="btnCancelArticleModal" data-close-modal="articleModalOverlay">Đóng</button>
             </div>
-            <div class="modal-body-clean">
-                <div class="form-group-item">
-                    <label class="form-label-clean">Tiêu đề bài viết *</label>
-                    <input type="text" class="admin-input" id="inputArticleTitle" placeholder="Tiêu đề bài viết hấp dẫn...">
-                </div>
-                <div class="form-row-2col">
+            <form novalidate onsubmit="return false;">
+                <div class="modal-body-clean">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Danh mục *</label>
-                        <select class="admin-select" id="inputArticleCategory">
-                            <option value="Chó">Chó cưng</option>
-                            <option value="Mèo">Mèo cưng</option>
-                            <option value="Dinh dưỡng">Dinh dưỡng</option>
-                            <option value="Grooming">Grooming và Spa</option>
-                            <option value="Mẹo chăm sóc">Mẹo chăm sóc</option>
-                        </select>
+                        <label class="form-label-clean">Tiêu đề bài viết <span style="color: #DC2626;">*</span></label>
+                        <input type="text" class="admin-input" id="inputArticleTitle" placeholder="Tiêu đề bài viết hấp dẫn...">
+                    </div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Danh mục <span style="color: #DC2626;">*</span></label>
+                            <select class="admin-select" id="inputArticleCategory">
+                                <option value="Chó">Chó cưng</option>
+                                <option value="Mèo">Mèo cưng</option>
+                                <option value="Dinh dưỡng">Dinh dưỡng</option>
+                                <option value="Grooming">Grooming và Spa</option>
+                                <option value="Mẹo chăm sóc">Mẹo chăm sóc</option>
+                            </select>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Trạng thái xuất bản</label>
+                            <select class="admin-select" id="inputArticleStatus">
+                                <option value="published">Công khai ngay</option>
+                                <option value="draft">Lưu bản nháp</option>
+                                <option value="hidden">Tạm ẩn</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Trạng thái xuất bản</label>
-                        <select class="admin-select" id="inputArticleStatus">
-                            <option value="published">Công khai ngay</option>
-                            <option value="draft">Lưu bản nháp</option>
-                            <option value="hidden">Tạm ẩn</option>
-                        </select>
+                        <label class="form-label-clean">Tóm tắt ngắn <span style="color: #DC2626;">*</span></label>
+                        <textarea class="admin-input" id="inputArticleSummary" rows="2" placeholder="Tóm tắt ngắn 1-2 câu hiển thị ở danh sách bài viết..."></textarea>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Nội dung chi tiết bài viết <span style="color: #DC2626;">*</span></label>
+                        <textarea class="admin-input" id="inputArticleContent" rows="6" placeholder="Nội dung cẩm nang chia sẻ kiến thức chăm sóc thú cưng..."></textarea>
                     </div>
                 </div>
-                <div class="form-group-item">
-                    <label class="form-label-clean">Tóm tắt ngắn *</label>
-                    <textarea class="admin-input" id="inputArticleSummary" rows="2" placeholder="Tóm tắt ngắn 1-2 câu hiển thị ở danh sách bài viết..."></textarea>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissArticleModal" data-close-modal="articleModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveArticle">Xuất bản bài viết</button>
                 </div>
-                <div class="form-group-item">
-                    <label class="form-label-clean">Nội dung chi tiết bài viết *</label>
-                    <textarea class="admin-input" id="inputArticleContent" rows="6" placeholder="Nội dung cẩm nang chia sẻ kiến thức chăm sóc thú cưng..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissArticleModal">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveArticle">Xuất bản bài viết</button>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -822,58 +835,60 @@
         <div class="admin-modal-card wide-modal">
             <div class="modal-header-clean">
                 <div class="modal-title-clean">Cấu hình thông tin cửa hàng và chi nhánh</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelStoreProfileModal">Đóng</button>
+                <button type="button" class="modal-btn-close-text" id="btnCancelStoreProfileModal" data-close-modal="storeProfileModalOverlay">Đóng</button>
             </div>
-            <div class="modal-body-clean">
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Tên thương hiệu *</label>
-                        <input type="text" class="admin-input" id="inputStoreBrandName" value="PawPal Pet Center">
+            <form novalidate onsubmit="return false;">
+                <div class="modal-body-clean">
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Tên thương hiệu <span style="color: #DC2626;">*</span></label>
+                            <input type="text" class="admin-input" id="inputStoreBrandName" value="PawPal Pet Center">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Tên công ty pháp lý</label>
+                            <input type="text" class="admin-input" id="inputStoreCompanyName" value="CÔNG TY CỔ PHẦN PAWPAL VIỆT NAM">
+                        </div>
+                    </div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Hotline tiếp nhận 24/7 <span style="color: #DC2626;">*</span></label>
+                            <input type="text" class="admin-input" id="inputStoreHotline" value="1900 888 999">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Số điện thoại khẩn cấp</label>
+                            <input type="text" class="admin-input" id="inputStoreEmergency" value="0901 234 567">
+                        </div>
+                    </div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Email CSKH tiếp nhận</label>
+                            <input type="email" class="admin-input" id="inputStoreEmail" value="cskh@pawpal.vn">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Mã số thuế (MST xuất VAT)</label>
+                            <input type="text" class="admin-input" id="inputStoreTaxId" value="0316889988">
+                        </div>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Tên công ty pháp lý</label>
-                        <input type="text" class="admin-input" id="inputStoreCompanyName" value="CÔNG TY CỔ PHẦN PAWPAL VIỆT NAM">
+                        <label class="form-label-clean">Địa chỉ trụ sở và cơ sở chính <span style="color: #DC2626;">*</span></label>
+                        <input type="text" class="admin-input" id="inputStoreAddress" value="120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP. Hồ Chí Minh">
+                    </div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Liên kết Zalo OA</label>
+                            <input type="text" class="admin-input" id="inputStoreZalo" value="https://zalo.me/0901234567">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Liên kết Fanpage Facebook</label>
+                            <input type="text" class="admin-input" id="inputStoreFacebook" value="https://facebook.com/pawpalvietnam">
+                        </div>
                     </div>
                 </div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Hotline tiếp nhận 24/7 *</label>
-                        <input type="text" class="admin-input" id="inputStoreHotline" value="1900 888 999">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Số điện thoại khẩn cấp</label>
-                        <input type="text" class="admin-input" id="inputStoreEmergency" value="0901 234 567">
-                    </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissStoreProfileModal" data-close-modal="storeProfileModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveStoreProfile">Lưu thông tin cửa hàng</button>
                 </div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Email CSKH tiếp nhận</label>
-                        <input type="email" class="admin-input" id="inputStoreEmail" value="cskh@pawpal.vn">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Mã số thuế (MST xuất VAT)</label>
-                        <input type="text" class="admin-input" id="inputStoreTaxId" value="0316889988">
-                    </div>
-                </div>
-                <div class="form-group-item">
-                    <label class="form-label-clean">Địa chỉ trụ sở / Cơ sở chính *</label>
-                    <input type="text" class="admin-input" id="inputStoreAddress" value="120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP. Hồ Chí Minh">
-                </div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Liên kết Zalo OA</label>
-                        <input type="text" class="admin-input" id="inputStoreZalo" value="https://zalo.me/0901234567">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Liên kết Fanpage Facebook</label>
-                        <input type="text" class="admin-input" id="inputStoreFacebook" value="https://facebook.com/pawpalvietnam">
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissStoreProfileModal">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveStoreProfile">Lưu thông tin cửa hàng</button>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -882,62 +897,64 @@
         <div class="admin-modal-card">
             <div class="modal-header-clean">
                 <div class="modal-title-clean">Cấu hình cổng thanh toán</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelPaymentModal">Đóng</button>
+                <button type="button" class="modal-btn-close-text" id="btnCancelPaymentModal" data-close-modal="paymentConfigModalOverlay">Đóng</button>
             </div>
-            <div class="modal-body-clean">
-                <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">Trạng thái Bật/Tắt các Cổng thanh toán:</div>
-                <div class="form-row-2col" style="margin-bottom: 12px;">
-                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
-                        <input type="checkbox" id="toggleCodEnabled" checked>
-                        <span>Thanh toán COD</span>
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
-                        <input type="checkbox" id="toggleBankEnabled" checked>
-                        <span>QR Banking</span>
-                    </label>
-                </div>
-                <div class="form-row-2col" style="margin-bottom: 16px;">
-                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
-                        <input type="checkbox" id="toggleMomoEnabled" checked>
-                        <span>Ví điện tử MoMo</span>
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
-                        <input type="checkbox" id="toggleVnpayEnabled" checked>
-                        <span>Cổng VNPay</span>
-                    </label>
-                </div>
+            <form novalidate onsubmit="return false;">
+                <div class="modal-body-clean">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">Trạng thái bật/tắt các cổng thanh toán</div>
+                    <div class="form-row-2col" style="margin-bottom: 12px;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
+                            <input type="checkbox" id="toggleCodEnabled" checked>
+                            <span>Thanh toán COD</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
+                            <input type="checkbox" id="toggleBankEnabled" checked>
+                            <span>QR Banking</span>
+                        </label>
+                    </div>
+                    <div class="form-row-2col" style="margin-bottom: 16px;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
+                            <input type="checkbox" id="toggleMomoEnabled" checked>
+                            <span>Ví điện tử MoMo</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
+                            <input type="checkbox" id="toggleVnpayEnabled" checked>
+                            <span>Cổng VNPay</span>
+                        </label>
+                    </div>
 
-                <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px;">
-                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">Thông tin thụ hưởng Chuyển khoản QR:</div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Ngân hàng thụ hưởng QR Banking</label>
-                        <select class="admin-select" id="inputPaymentBank">
-                            <option value="vietcombank">Vietcombank - Ngân hàng Ngoại thương</option>
-                            <option value="techcombank">Techcombank - Ngân hàng Kỹ thương</option>
-                            <option value="mb">MB Bank - Ngân hàng Quân đội</option>
-                            <option value="acb">ACB - Ngân hàng Á Châu</option>
-                        </select>
-                    </div>
-                    <div class="form-row-2col">
+                    <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px;">
+                        <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">Thông tin thụ hưởng chuyển khoản QR</div>
                         <div class="form-group-item">
-                            <label class="form-label-clean">Số tài khoản</label>
-                            <input type="text" class="admin-input" id="inputPaymentAccNo" value="999888666">
+                            <label class="form-label-clean">Ngân hàng thụ hưởng QR Banking</label>
+                            <select class="admin-select" id="inputPaymentBank">
+                                <option value="vietcombank">Vietcombank - Ngân hàng Ngoại thương</option>
+                                <option value="techcombank">Techcombank - Ngân hàng Kỹ thương</option>
+                                <option value="mb">MB Bank - Ngân hàng Quân đội</option>
+                                <option value="acb">ACB - Ngân hàng Á Châu</option>
+                            </select>
+                        </div>
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Số tài khoản</label>
+                                <input type="text" class="admin-input" id="inputPaymentAccNo" value="999888666">
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Chủ tài khoản</label>
+                                <input type="text" class="admin-input" id="inputPaymentAccHolder" value="CONG TY CP PAWPAL VIET NAM">
+                            </div>
                         </div>
                         <div class="form-group-item">
-                            <label class="form-label-clean">Chủ tài khoản</label>
-                            <input type="text" class="admin-input" id="inputPaymentAccHolder" value="CONG TY CP PAWPAL VIET NAM">
+                            <label class="form-label-clean">Cú pháp chuyển khoản mặc định</label>
+                            <input type="text" class="admin-input" id="inputPaymentSyntax" value="PAWPAL [MA_DON_HANG] [SDT]">
                         </div>
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Cú pháp chuyển khoản mặc định</label>
-                        <input type="text" class="admin-input" id="inputPaymentSyntax" value="PAWPAL [MA_DON_HANG] [SDT]">
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissPaymentModal">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSavePaymentConfig">Lưu cấu hình</button>
-            </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissPaymentModal" data-close-modal="paymentConfigModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSavePaymentConfig">Lưu cấu hình</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -946,57 +963,59 @@
         <div class="admin-modal-card wide-modal">
             <div class="modal-header-clean">
                 <div class="modal-title-clean">Cấu hình đơn vị giao hàng và biểu phí vận chuyển</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelShippingModal">Đóng</button>
+                <button type="button" class="modal-btn-close-text" id="btnCancelShippingModal" data-close-modal="shippingConfigModalOverlay">Đóng</button>
             </div>
-            <div class="modal-body-clean">
-                <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">1. Chính sách Biểu phí giao hàng áp dụng cho Khách hàng:</div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Mức đơn Miễn phí giao hàng (VNĐ) *</label>
-                        <input type="number" class="admin-input" id="inputFreeShippingThreshold" value="300000" placeholder="Ví dụ: 300000">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Phí giao hàng nội thành (VNĐ) *</label>
-                        <input type="number" class="admin-input" id="inputInnerCityFee" value="25000">
-                    </div>
-                </div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Phí giao hàng ngoại tỉnh (VNĐ) *</label>
-                        <input type="number" class="admin-input" id="inputOuterCityFee" value="35000">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Phí giao hỏa tốc 2 giờ (VNĐ)</label>
-                        <input type="number" class="admin-input" id="inputExpressFee" value="45000">
-                    </div>
-                </div>
-
-                <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px; margin-top: 6px;">
-                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">2. Tích hợp Đối tác vận chuyển 3PL:</div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Đơn vị vận chuyển chính</label>
-                        <select class="admin-select" id="inputShippingProvider">
-                            <option value="ghn">Giao Hàng Nhanh (GHN Express)</option>
-                            <option value="ghtk">Giao Hàng Tiết Kiệm (GHTK)</option>
-                            <option value="grab">GrabExpress Siêu Tốc</option>
-                        </select>
+            <form novalidate onsubmit="return false;">
+                <div class="modal-body-clean">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">1. Chính sách biểu phí giao hàng áp dụng cho khách hàng</div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Mức đơn miễn phí giao hàng (VNĐ) <span style="color: #DC2626;">*</span></label>
+                            <input type="number" class="admin-input" id="inputFreeShippingThreshold" value="300000" placeholder="Ví dụ: 300000">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Phí giao hàng nội thành (VNĐ) <span style="color: #DC2626;">*</span></label>
+                            <input type="number" class="admin-input" id="inputInnerCityFee" value="25000">
+                        </div>
                     </div>
                     <div class="form-row-2col">
                         <div class="form-group-item">
-                            <label class="form-label-clean">Shop ID</label>
-                            <input type="text" class="admin-input" id="inputShippingShopId" value="PAWPAL_Q1_STORE">
+                            <label class="form-label-clean">Phí giao hàng ngoại tỉnh (VNĐ) <span style="color: #DC2626;">*</span></label>
+                            <input type="number" class="admin-input" id="inputOuterCityFee" value="35000">
                         </div>
                         <div class="form-group-item">
-                            <label class="form-label-clean">API Secret Token</label>
-                            <input type="password" class="admin-input" id="inputShippingApiKey" value="ghn_prod_secret_token_12345">
+                            <label class="form-label-clean">Phí giao hỏa tốc 2 giờ (VNĐ)</label>
+                            <input type="number" class="admin-input" id="inputExpressFee" value="45000">
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px; margin-top: 6px;">
+                        <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">2. Tích hợp đối tác vận chuyển 3PL</div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Đơn vị vận chuyển chính</label>
+                            <select class="admin-select" id="inputShippingProvider">
+                                <option value="ghn">Giao Hàng Nhanh (GHN Express)</option>
+                                <option value="ghtk">Giao Hàng Tiết Kiệm (GHTK)</option>
+                                <option value="grab">GrabExpress Siêu Tốc</option>
+                            </select>
+                        </div>
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Shop ID</label>
+                                <input type="text" class="admin-input" id="inputShippingShopId" value="PAWPAL_Q1_STORE">
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">API Secret Token</label>
+                                <input type="password" class="admin-input" id="inputShippingApiKey" value="ghn_prod_secret_token_12345">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissShippingModal">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveShippingConfig">Lưu cấu hình giao hàng</button>
-            </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissShippingModal" data-close-modal="shippingConfigModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveShippingConfig">Lưu cấu hình giao hàng</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1005,87 +1024,89 @@
         <div class="admin-modal-card wide-modal">
             <div class="modal-header-clean">
                 <div class="modal-title-clean">Chính sách đặt lịch, giờ mở cửa và Pet Hotel</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelBookingPolicyModal">Đóng</button>
+                <button type="button" class="modal-btn-close-text" id="btnCancelBookingPolicyModal" data-close-modal="bookingPolicyModalOverlay">Đóng</button>
             </div>
-            <div class="modal-body-clean">
-                <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">1. Khung giờ phục vụ chi nhánh:</div>
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Ngày thường (Thứ 2 - Thứ 6)</label>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <input type="time" class="admin-input" id="inputWeekdayOpen" value="08:00">
-                            <span>đến</span>
-                            <input type="time" class="admin-input" id="inputWeekdayClose" value="20:00">
+            <form novalidate onsubmit="return false;">
+                <div class="modal-body-clean">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">1. Khung giờ phục vụ chi nhánh</div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ngày thường (Thứ 2 - Thứ 6)</label>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="time" class="admin-input" id="inputWeekdayOpen" value="08:00">
+                                <span>đến</span>
+                                <input type="time" class="admin-input" id="inputWeekdayClose" value="20:00">
+                            </div>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Cuối tuần (Thứ 7 - Chủ Nhật)</label>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="time" class="admin-input" id="inputWeekendOpen" value="08:00">
+                                <span>đến</span>
+                                <input type="time" class="admin-input" id="inputWeekendClose" value="21:00">
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Cuối tuần (Thứ 7 - Chủ Nhật)</label>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <input type="time" class="admin-input" id="inputWeekendOpen" value="08:00">
-                            <span>đến</span>
-                            <input type="time" class="admin-input" id="inputWeekendClose" value="21:00">
-                        </div>
-                    </div>
-                </div>
 
-                <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px; margin-top: 6px;">
-                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">2. Quy định Lưu trú Khách sạn thú cưng (Pet Hotel):</div>
-                    <div class="form-row-2col">
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Giờ Check-in quy định</label>
-                            <input type="time" class="admin-input" id="inputHotelCheckIn" value="14:00">
+                    <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px; margin-top: 6px;">
+                        <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">2. Quy định lưu trú khách sạn thú cưng (Pet Hotel)</div>
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Giờ Check-in quy định</label>
+                                <input type="time" class="admin-input" id="inputHotelCheckIn" value="14:00">
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Giờ Check-out quy định</label>
+                                <input type="time" class="admin-input" id="inputHotelCheckOut" value="12:00">
+                            </div>
                         </div>
                         <div class="form-group-item">
-                            <label class="form-label-clean">Giờ Check-out quy định</label>
-                            <input type="time" class="admin-input" id="inputHotelCheckOut" value="12:00">
+                            <label class="form-label-clean">Phụ phí trả phòng trễ sau 12:00 (VNĐ / nửa ngày)</label>
+                            <input type="number" class="admin-input" id="inputHotelLateFee" value="100000">
                         </div>
                     </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Phụ phí trả phòng trễ sau 12:00 (VNĐ / nửa ngày)</label>
-                        <input type="number" class="admin-input" id="inputHotelLateFee" value="100000">
-                    </div>
-                </div>
 
-                <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px; margin-top: 6px;">
-                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">3. Quy tắc Đặt lịch Spa và Hủy ca:</div>
-                    <div class="form-row-2col">
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Công suất tối đa (Số bé / Khung giờ) *</label>
-                            <input type="number" class="admin-input" id="inputSlotCapacity" value="4">
+                    <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px; margin-top: 6px;">
+                        <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">3. Quy tắc đặt lịch Spa và hủy ca</div>
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Công suất tối đa (số bé / khung giờ) <span style="color: #DC2626;">*</span></label>
+                                <input type="number" class="admin-input" id="inputSlotCapacity" value="4">
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Thời gian hủy miễn phí trước ca (giờ)</label>
+                                <input type="number" class="admin-input" id="inputFreeCancelHours" value="4">
+                            </div>
                         </div>
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Thời gian hủy miễn phí trước ca (giờ)</label>
-                            <input type="number" class="admin-input" id="inputFreeCancelHours" value="4">
-                        </div>
-                    </div>
-                    <div class="form-row-2col">
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Phí hủy muộn (VNĐ)</label>
-                            <input type="number" class="admin-input" id="inputLateCancelFee" value="50000">
-                        </div>
-                        <div class="form-group-item">
-                            <label class="form-label-clean">Tùy chọn nhân viên yêu thích</label>
-                            <select class="admin-select" id="inputAllowPickStaff">
-                                <option value="yes">Cho phép khách chỉ định nhân viên chăm sóc</option>
-                                <option value="no">Hệ thống tự động xếp ca ngẫu nhiên</option>
-                            </select>
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Phí hủy muộn (VNĐ)</label>
+                                <input type="number" class="admin-input" id="inputLateCancelFee" value="50000">
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Tùy chọn nhân viên yêu thích</label>
+                                <select class="admin-select" id="inputAllowPickStaff">
+                                    <option value="yes">Cho phép khách chỉ định nhân viên chăm sóc</option>
+                                    <option value="no">Hệ thống tự động xếp ca ngẫu nhiên</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissBookingPolicyModal">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveBookingPolicy">Lưu chính sách và Giờ mở cửa</button>
-            </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissBookingPolicyModal" data-close-modal="bookingPolicyModalOverlay">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveBookingPolicy">Lưu chính sách và giờ mở cửa</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- MODAL 9: XÁC NHẬN TÁC ĐỘNG ĐA PHÂN HỆ (SSOT IMPACT CONFIRMATION - GIAI ĐOẠN 2) -->
+    <!-- MODAL 10: XÁC NHẬN TÁC ĐỘNG ĐA PHÂN HỆ (SSOT IMPACT CONFIRMATION) -->
     <div class="admin-modal-overlay" id="impactConfirmModalOverlay">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card" style="width: 540px; max-width: 92vw;">
             <div class="modal-header-clean">
                 <div class="modal-title-clean">Xác nhận thay đổi cấu hình hệ thống</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelImpactModal">Đóng</button>
+                <button type="button" class="modal-btn-close-text" id="btnCancelImpactModal" data-close-modal="impactConfirmModalOverlay">Đóng</button>
             </div>
             <div class="modal-body-clean">
                 <div id="impactModalDesc" style="font-size: 13.5px; color: var(--text-main); line-height: 1.5;">
@@ -1096,18 +1117,18 @@
                 </div>
             </div>
             <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissImpactModal">Hủy bỏ</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmAndSyncImpact">Xác nhận và Đồng bộ ngay</button>
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissImpactModal" data-close-modal="impactConfirmModalOverlay">Hủy bỏ</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmAndSyncImpact">Xác nhận và đồng bộ ngay</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 10: TÓM TẮT TRI THỨC AI CHATBOT (RAG TRÍCH XUẤT - GIAI ĐOẠN 3) -->
+    <!-- MODAL 11: TÓM TẮT TRI THỨC AI CHATBOT (RAG TRÍCH XUẤT) -->
     <div class="admin-modal-overlay" id="articleRagModalOverlay">
         <div class="admin-modal-card">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Tri thức AI Chatbot (RAG Trích xuất)</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelRagModal">Đóng</button>
+                <div class="modal-title-clean">Tri thức AI Chatbot (RAG trích xuất)</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelRagModal" data-close-modal="articleRagModalOverlay">Đóng</button>
             </div>
             <div class="modal-body-clean">
                 <div class="rag-info-banner">
@@ -1131,18 +1152,18 @@
                 </div>
             </div>
             <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissRagModal">Đóng</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSyncRagArticle">Đồng bộ lại vào Chatbot</button>
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissRagModal" data-close-modal="articleRagModalOverlay">Đóng</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSyncRagArticle">Đồng bộ lại vào chatbot</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 11: XÁC NHẬN THAO TÁC CẤU HÌNH (CUSTOM CONFIRM DIALOG) -->
+    <!-- MODAL 12: XÁC NHẬN THAO TÁC CẤU HÌNH (CUSTOM CONFIRM DIALOG) -->
     <div class="admin-modal-overlay" id="modalConfirmSettingsAction">
         <div class="admin-modal-card" style="width: 480px; max-width: 92vw;">
             <div class="modal-header-clean">
                 <div class="modal-title-clean" id="confirmSettingsActionTitle">Xác nhận thao tác</div>
-                <button type="button" class="modal-btn-close-text" id="btnCloseConfirmSettingsModal">Đóng</button>
+                <button type="button" class="modal-btn-close-text" id="btnCloseConfirmSettingsModal" data-close-modal="modalConfirmSettingsAction">Đóng</button>
             </div>
             <div class="modal-body-clean" style="padding-top: 10px; padding-bottom: 20px;">
                 <div id="confirmSettingsActionMessage" style="font-size: 13.5px; color: var(--text-main); line-height: 1.6;">
@@ -1150,7 +1171,7 @@
                 </div>
             </div>
             <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelSettingsConfirm">Hủy bỏ</button>
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelSettingsConfirm" data-close-modal="modalConfirmSettingsAction">Hủy bỏ</button>
                 <button type="button" class="admin-btn admin-btn-primary" id="btnAcceptSettingsConfirm">Đồng ý</button>
             </div>
         </div>

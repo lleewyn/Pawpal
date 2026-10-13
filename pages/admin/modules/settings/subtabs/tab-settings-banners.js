@@ -39,6 +39,34 @@
         return false;
     }
 
+    function updateBannerKpis() {
+        const bannersList = PawpalSettings.state?.bannersList || [];
+        const vouchersList = PawpalSettings.state?.vouchersList || [];
+
+        const totalVouchers = vouchersList.length;
+        const activeVouchers = vouchersList.filter(v => v.status === 'active').length;
+        const activeBanners = bannersList.filter(b => b.status === 'active').length;
+
+        const expiringBanners = bannersList.filter(isBannerExpiring);
+        const exhaustedVouchers = vouchersList.filter(v => v.used >= v.limit);
+        const lowStockVouchers = vouchersList.filter(v => v.status === 'active' && v.limit - v.used <= 10 && v.used < v.limit);
+        const totalAlerts = expiringBanners.length + exhaustedVouchers.length + lowStockVouchers.length;
+
+        const statTotalVouchersEl = document.getElementById('statTotalVouchers');
+        const statActiveVouchersEl = document.getElementById('statActiveVouchers');
+        const statActiveBannersEl = document.getElementById('statActiveBanners');
+        const statZeroMissAlertsEl = document.getElementById('statZeroMissAlerts');
+        const kpiPointRateEl = document.getElementById('kpiPointRate');
+
+        if (statTotalVouchersEl) statTotalVouchersEl.textContent = totalVouchers;
+        if (statActiveVouchersEl) statActiveVouchersEl.textContent = activeVouchers;
+        if (statActiveBannersEl) statActiveBannersEl.textContent = activeBanners;
+        if (statZeroMissAlertsEl) statZeroMissAlertsEl.textContent = totalAlerts;
+
+        const pointVal = PawpalSettings.state?.systemConfig?.pawpointsPolicy?.pointValueVnd || 100;
+        if (kpiPointRateEl) kpiPointRateEl.textContent = `1đ = ${Number(pointVal).toLocaleString('vi-VN')}đ`;
+    }
+
     function renderZeroMissAlerts() {
         const bannersList = PawpalSettings.state?.bannersList || [];
         const vouchersList = PawpalSettings.state?.vouchersList || [];
@@ -47,43 +75,38 @@
         const exhaustedVouchers = vouchersList.filter(v => v.used >= v.limit);
         const lowStockVouchers = vouchersList.filter(v => v.status === 'active' && v.limit - v.used <= 10 && v.used < v.limit);
 
-        const strip = document.getElementById('zeroMissAlertStrip');
-        const tagContainer = document.getElementById('zeroMissAlertTags');
-        const totalCountEl = document.getElementById('zeroMissTotalCount');
-
         const totalIssues = expiringBanners.length + exhaustedVouchers.length + lowStockVouchers.length;
-        if (totalCountEl) totalCountEl.textContent = totalIssues;
 
-        if (totalIssues === 0) {
-            if (strip) strip.style.display = 'none';
-            return;
+        // Cập nhật giá trị 5 thẻ KPI
+        updateBannerKpis();
+
+        const strip = document.getElementById('settingsAlertBar');
+        const alertMsg = document.getElementById('alertStripMessage');
+        const btnFilter = document.getElementById('btnFilterZeroMiss');
+
+        if (alertMsg) {
+            if (totalIssues > 0) {
+                const parts = [];
+                if (expiringBanners.length > 0) parts.push(`${expiringBanners.length} banner sắp hết hạn`);
+                if (exhaustedVouchers.length > 0) parts.push(`${exhaustedVouchers.length} voucher hết sạch lượt`);
+                if (lowStockVouchers.length > 0) parts.push(`${lowStockVouchers.length} voucher sắp hết lượt`);
+                alertMsg.textContent = `Phát hiện ${totalIssues} mục cần xử lý gấp: ${parts.join(', ')}.`;
+                if (strip) {
+                    strip.style.display = 'flex';
+                }
+                if (btnFilter) {
+                    btnFilter.style.display = 'inline-block';
+                }
+            } else {
+                alertMsg.textContent = 'Hệ thống ổn định: Toàn bộ Voucher và Banner chiến dịch đang vận hành đúng tiến độ.';
+                if (strip) {
+                    strip.style.display = 'flex';
+                }
+                if (btnFilter) {
+                    btnFilter.style.display = 'none';
+                }
+            }
         }
-
-        if (strip) strip.style.display = 'flex';
-        if (!tagContainer) return;
-
-        tagContainer.innerHTML = '';
-
-        expiringBanners.forEach(b => {
-            const tag = document.createElement('span');
-            tag.className = 'alert-item-tag';
-            tag.innerHTML = `<strong>Banner:</strong> ${b.title} (Hết hạn trong 24h)`;
-            tagContainer.appendChild(tag);
-        });
-
-        exhaustedVouchers.forEach(v => {
-            const tag = document.createElement('span');
-            tag.className = 'alert-item-tag';
-            tag.innerHTML = `<strong>Voucher:</strong> ${v.code} (Hết sạch lượt ${v.used}/${v.limit})`;
-            tagContainer.appendChild(tag);
-        });
-
-        lowStockVouchers.forEach(v => {
-            const tag = document.createElement('span');
-            tag.className = 'alert-item-tag';
-            tag.innerHTML = `<strong>Voucher:</strong> ${v.code} (Sắp hết: còn ${v.limit - v.used} lượt)`;
-            tagContainer.appendChild(tag);
-        });
     }
 
     function renderSettingsPager(containerId, page, totalPages, onChange) {
@@ -469,13 +492,12 @@
 
     // Modal Banner (Thêm / Sửa)
     function openBannerModal(banner) {
-        const bannerModal = document.getElementById('bannerModalOverlay');
         editingBannerId = banner?.id || null;
         const titleEl = document.getElementById('bannerModalTitle');
         const saveBtn = document.getElementById('btnSaveBanner');
 
-        if (titleEl) titleEl.textContent = editingBannerId ? 'Sửa Banner' : 'Thêm Banner Quảng cáo';
-        if (saveBtn) saveBtn.textContent = editingBannerId ? 'Lưu thay đổi' : 'Lưu Banner';
+        if (titleEl) titleEl.textContent = editingBannerId ? 'Sửa banner' : 'Thêm banner quảng cáo';
+        if (saveBtn) saveBtn.textContent = editingBannerId ? 'Lưu thay đổi' : 'Lưu banner';
 
         const values = {
             inputBannerTitle: banner?.title || '',
@@ -490,18 +512,159 @@
             if (el) el.value = val;
         });
 
-        if (bannerModal) bannerModal.style.display = 'flex';
+        if (PawpalSettings.openModal) PawpalSettings.openModal('bannerModalOverlay');
     }
 
     function resetBannerModal() {
         editingBannerId = null;
         const titleEl = document.getElementById('bannerModalTitle');
         const saveBtn = document.getElementById('btnSaveBanner');
-        if (titleEl) titleEl.textContent = 'Thêm Banner Quảng cáo';
-        if (saveBtn) saveBtn.textContent = 'Lưu Banner';
+        if (titleEl) titleEl.textContent = 'Thêm banner quảng cáo';
+        if (saveBtn) saveBtn.textContent = 'Lưu banner';
         ['inputBannerTitle','inputBannerImage','inputBannerCta','inputBannerUrl','inputBannerStartDate','inputBannerEndDate'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
+        });
+        const dropdown = document.getElementById('bannerUrlDropdown');
+        if (dropdown) { dropdown.style.display = 'none'; dropdown.innerHTML = ''; }
+    }
+
+    // Gợi ý tìm kiếm điểm đến thông minh 100% Flat Text-Only (AGENTS.MD)
+    function initBannerUrlAutocomplete() {
+        const input = document.getElementById('inputBannerUrl');
+        const dropdown = document.getElementById('bannerUrlDropdown');
+        if (!input || !dropdown) return;
+
+        function getDestinations() {
+            const items = [
+                {
+                    title: 'Trang Dịch vụ Spa và Grooming',
+                    sub: 'Trang danh sách dịch vụ và bảng giá chi tiết',
+                    url: '/pages/public/services/',
+                    badge: 'Trang đích'
+                },
+                {
+                    title: 'Trang Cửa hàng Pet Shop',
+                    sub: 'Mua sắm phụ kiện, thức ăn và vật dụng thú cưng',
+                    url: '/pages/public/shop/',
+                    badge: 'Trang đích'
+                },
+                {
+                    title: 'Trang Đặt lịch hẹn Chăm sóc',
+                    sub: 'Cổng đặt lịch hẹn online cho khách',
+                    url: '/pages/public/booking/',
+                    badge: 'Trang đích'
+                },
+                {
+                    title: 'Trang Cẩm nang và Kiến thức thú cưng',
+                    sub: 'Blog chia sẻ kinh nghiệm chăm sóc thú cưng',
+                    url: '/pages/public/blog/',
+                    badge: 'Trang đích'
+                },
+                {
+                    title: 'Trang Ưu đãi Hội viên Pawpoints',
+                    sub: 'Quy chế tích điểm và đổi voucher',
+                    url: '/pages/public/services/pawpoints.html',
+                    badge: 'Trang đích'
+                }
+            ];
+
+            // Thêm các Dịch vụ thực tế từ CSDL Supabase
+            const services = PawpalSettings.state?.servicesList || [];
+            services.forEach(s => {
+                const name = (s.name || s.service_name || '').trim();
+                if (!name || name === 'Chưa rõ' || name === 'null' || !Number.isNaN(Number(name))) return;
+                const price = typeof s.price === 'number' ? `${s.price.toLocaleString('vi-VN')} đ` : '';
+                const dur = s.duration ? `${s.duration} phút` : '';
+                const subParts = [dur, price].filter(Boolean).join(' • ');
+                items.push({
+                    title: name,
+                    sub: subParts || 'Dịch vụ chăm sóc thú cưng',
+                    url: `/pages/public/services/index.html?service_id=${s.id}`,
+                    badge: 'Dịch vụ'
+                });
+            });
+
+            // Thêm các Sản phẩm thực tế từ CSDL Supabase
+            const products = PawpalSettings.state?.productsList || [];
+            products.forEach(p => {
+                const name = (p.name || p.product_name || '').trim();
+                if (!name || name === 'Chưa rõ' || name === 'null' || !Number.isNaN(Number(name))) return;
+                const price = typeof p.price === 'number' ? `${p.price.toLocaleString('vi-VN')} đ` : '';
+                const sku = p.sku ? `SKU: ${p.sku}` : '';
+                const subParts = [sku, price].filter(Boolean).join(' • ');
+                items.push({
+                    title: name,
+                    sub: subParts || 'Sản phẩm tại cửa hàng',
+                    url: `/pages/public/shop/index.html?product_id=${p.id}`,
+                    badge: 'Sản phẩm'
+                });
+            });
+
+            // Thêm các Bài viết thực tế từ CSDL Supabase
+            const articles = PawpalSettings.state?.articlesList || [];
+            articles.forEach(a => {
+                const title = (a.title || '').trim();
+                if (!title) return;
+                items.push({
+                    title: title,
+                    sub: a.category ? `Chuyên mục: ${a.category}` : 'Bài viết cẩm nang',
+                    url: `/pages/public/blog/index.html?post_id=${a.id}`,
+                    badge: 'Bài viết'
+                });
+            });
+
+            return items;
+        }
+
+        function renderDropdown(filterText = '') {
+            const query = filterText.toLowerCase().trim();
+            const allItems = getDestinations();
+            const filtered = query
+                ? allItems.filter(item =>
+                    item.title.toLowerCase().includes(query) ||
+                    item.url.toLowerCase().includes(query) ||
+                    item.sub.toLowerCase().includes(query)
+                  )
+                : allItems.slice(0, 8);
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="settings-autocomplete-empty">Không tìm thấy kết quả phù hợp. Bạn có thể tự gõ đường dẫn tùy chỉnh.</div>';
+                dropdown.style.display = 'block';
+                return;
+            }
+
+            dropdown.innerHTML = filtered.map(item => `
+                <div class="settings-autocomplete-item" data-url="${item.url}">
+                    <div class="settings-autocomplete-meta">
+                        <span class="settings-autocomplete-title">${item.title}</span>
+                        <span class="settings-autocomplete-sub">${item.sub}</span>
+                    </div>
+                    <span class="settings-autocomplete-badge">${item.badge}</span>
+                </div>
+            `).join('');
+
+            dropdown.style.display = 'block';
+
+            dropdown.querySelectorAll('.settings-autocomplete-item').forEach(itemEl => {
+                itemEl.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    const url = itemEl.getAttribute('data-url');
+                    if (url) {
+                        input.value = url;
+                    }
+                    dropdown.style.display = 'none';
+                });
+            });
+        }
+
+        input.addEventListener('focus', () => renderDropdown(input.value));
+        input.addEventListener('input', () => renderDropdown(input.value));
+
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
         });
     }
 
@@ -585,10 +748,9 @@
         });
 
         // Modal Banner events
-        const bannerModal = document.getElementById('bannerModalOverlay');
         document.getElementById('btnOpenBannerModal')?.addEventListener('click', () => { resetBannerModal(); openBannerModal(); });
-        document.getElementById('btnCancelBannerModal')?.addEventListener('click', () => { if (bannerModal) bannerModal.style.display = 'none'; });
-        document.getElementById('btnDismissBannerModal')?.addEventListener('click', () => { if (bannerModal) bannerModal.style.display = 'none'; });
+        document.getElementById('btnCancelBannerModal')?.addEventListener('click', () => PawpalSettings.closeModal?.('bannerModalOverlay'));
+        document.getElementById('btnDismissBannerModal')?.addEventListener('click', () => PawpalSettings.closeModal?.('bannerModalOverlay'));
         document.getElementById('btnSaveBanner')?.addEventListener('click', async () => {
             const title = document.getElementById('inputBannerTitle')?.value.trim();
             const imageUrl = document.getElementById('inputBannerImage')?.value.trim();
@@ -616,7 +778,7 @@
                     if (error) throw error;
                     await logSystemAudit('INSERT', 'banner', `Thêm Banner mới: "${title}"`);
                 }
-                if (bannerModal) bannerModal.style.display = 'none';
+                PawpalSettings.closeModal?.('bannerModalOverlay');
                 await PawpalSettings.loadSettingsModuleData?.();
                 renderBanners();
                 renderZeroMissAlerts();
@@ -629,17 +791,14 @@
         });
 
         // Modal Voucher events
-        const voucherModal = document.getElementById('voucherModalOverlay');
         const openVoucherHandler = () => {
-            if (voucherModal) {
-                voucherModal.style.display = 'flex';
-                updateVoucherLivePreview();
-            }
+            PawpalSettings.openModal?.('voucherModalOverlay');
+            updateVoucherLivePreview();
         };
         document.getElementById('btnOpenVoucherModal')?.addEventListener('click', openVoucherHandler);
         document.getElementById('btnOpenVoucherModalHeader')?.addEventListener('click', openVoucherHandler);
-        document.getElementById('btnCancelVoucherModal')?.addEventListener('click', () => { if (voucherModal) voucherModal.style.display = 'none'; });
-        document.getElementById('btnDismissVoucherModal')?.addEventListener('click', () => { if (voucherModal) voucherModal.style.display = 'none'; });
+        document.getElementById('btnCancelVoucherModal')?.addEventListener('click', () => PawpalSettings.closeModal?.('voucherModalOverlay'));
+        document.getElementById('btnDismissVoucherModal')?.addEventListener('click', () => PawpalSettings.closeModal?.('voucherModalOverlay'));
 
         // Tự động sinh mã voucher
         document.getElementById('btnAutoGenerateVoucherCode')?.addEventListener('click', () => {
@@ -809,15 +968,14 @@
         });
 
         // PawPoints Modal
-        const pawpointsModal = document.getElementById('pawpointsModalOverlay');
         const openPawpointsHandler = () => {
-            if (pawpointsModal) pawpointsModal.style.display = 'flex';
+            PawpalSettings.openModal?.('pawpointsModalOverlay');
         };
         document.getElementById('btnOpenPawpointsModal')?.addEventListener('click', openPawpointsHandler);
         document.getElementById('btnEditPawpointsLink')?.addEventListener('click', openPawpointsHandler);
         document.getElementById('btnEditPawpointsSubLink')?.addEventListener('click', openPawpointsHandler);
-        document.getElementById('btnCancelPawpointsModal')?.addEventListener('click', () => { if (pawpointsModal) pawpointsModal.style.display = 'none'; });
-        document.getElementById('btnDismissPawpointsModal')?.addEventListener('click', () => { if (pawpointsModal) pawpointsModal.style.display = 'none'; });
+        document.getElementById('btnCancelPawpointsModal')?.addEventListener('click', () => PawpalSettings.closeModal?.('pawpointsModalOverlay'));
+        document.getElementById('btnDismissPawpointsModal')?.addEventListener('click', () => PawpalSettings.closeModal?.('pawpointsModalOverlay'));
 
         document.getElementById('btnSavePawpointsPolicy')?.addEventListener('click', () => {
             if (PawpalSettings.state?.isSafeModeLocked) {
@@ -842,7 +1000,7 @@
                     if (kpiEl) kpiEl.textContent = `1đ = ${parsedVal.toLocaleString('vi-VN')}đ`;
                     const dispReg = document.getElementById('dispRegisterPoints');
                     if (dispReg) dispReg.textContent = `+${regPts} điểm`;
-                    if (pawpointsModal) pawpointsModal.style.display = 'none';
+                    PawpalSettings.closeModal?.('pawpointsModalOverlay');
 
                     if (PawpalSettings.state?.systemConfig) {
                         PawpalSettings.state.systemConfig.pawpointsPolicy = {
@@ -861,14 +1019,13 @@
         });
 
         // Notifications Modal
-        const noticeModal = document.getElementById('notificationModalOverlay');
         const openNoticeHandler = () => {
-            if (noticeModal) noticeModal.style.display = 'flex';
+            PawpalSettings.openModal?.('notificationModalOverlay');
         };
         document.getElementById('btnOpenNotificationModal')?.addEventListener('click', openNoticeHandler);
         document.getElementById('btnAddNoticeLink')?.addEventListener('click', openNoticeHandler);
-        document.getElementById('btnCancelNoticeModal')?.addEventListener('click', () => { if (noticeModal) noticeModal.style.display = 'none'; });
-        document.getElementById('btnDismissNoticeModal')?.addEventListener('click', () => { if (noticeModal) noticeModal.style.display = 'none'; });
+        document.getElementById('btnCancelNoticeModal')?.addEventListener('click', () => PawpalSettings.closeModal?.('notificationModalOverlay'));
+        document.getElementById('btnDismissNoticeModal')?.addEventListener('click', () => PawpalSettings.closeModal?.('notificationModalOverlay'));
 
         document.getElementById('btnSaveNotice')?.addEventListener('click', async () => {
             const content = document.getElementById('inputNoticeContent')?.value.trim();
@@ -902,6 +1059,9 @@
             }
         });
 
+        // Khởi tạo autocomplete gợi ý URL điều hướng cho Modal Banner
+        initBannerUrlAutocomplete();
+
         // Render ban đầu
         renderBanners();
         renderVouchers();
@@ -914,6 +1074,7 @@
         renderBanners,
         renderVouchers,
         renderZeroMissAlerts,
+        updateBannerKpis,
         renderNotifications,
         openBannerModal,
         resetBannerModal

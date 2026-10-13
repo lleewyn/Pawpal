@@ -129,10 +129,10 @@
             if (zaloInput) zaloInput.value = si.zaloUrl || 'https://zalo.me/0901234567';
             if (fbInput) fbInput.value = si.facebookUrl || 'https://facebook.com/pawpalvietnam';
 
-            if (storeModal) storeModal.style.display = 'flex';
+            PawpalSettings.openModal?.('storeProfileModalOverlay');
         });
 
-        const closeStoreModalHandler = () => { if (storeModal) storeModal.style.display = 'none'; };
+        const closeStoreModalHandler = () => { PawpalSettings.closeModal?.('storeProfileModalOverlay'); };
         document.getElementById('btnCancelStoreProfileModal')?.addEventListener('click', closeStoreModalHandler);
         document.getElementById('btnDismissStoreProfileModal')?.addEventListener('click', closeStoreModalHandler);
 
@@ -186,7 +186,7 @@
                         await PawpalSettings.persistSystemConfig?.(cfg);
                     }
 
-                    if (storeModal) storeModal.style.display = 'none';
+                    PawpalSettings.closeModal?.('storeProfileModalOverlay');
 
                     await logSystemAudit('UPDATE', 'store_profile', `Cập nhật thông tin cửa hàng: Hotline ${hotline}, Email ${email}`);
                     await PawpalSettings.loadSettingsModuleData?.();
@@ -220,10 +220,10 @@
             if (accHolderInput) accHolderInput.value = pm.bank?.accountHolder || 'CONG TY CP PAWPAL VIET NAM';
             if (syntaxInput) syntaxInput.value = pm.bank?.syntax || '';
 
-            if (paymentModal) paymentModal.style.display = 'flex';
+            PawpalSettings.openModal?.('paymentConfigModalOverlay');
         });
 
-        const closePaymentModalHandler = () => { if (paymentModal) paymentModal.style.display = 'none'; };
+        const closePaymentModalHandler = () => { PawpalSettings.closeModal?.('paymentConfigModalOverlay'); };
         document.getElementById('btnCancelPaymentModal')?.addEventListener('click', closePaymentModalHandler);
         document.getElementById('btnDismissPaymentModal')?.addEventListener('click', closePaymentModalHandler);
 
@@ -276,7 +276,7 @@
                         await PawpalSettings.persistSystemConfig?.(cfg);
                     }
 
-                    if (paymentModal) paymentModal.style.display = 'none';
+                    PawpalSettings.closeModal?.('paymentConfigModalOverlay');
 
                     await logSystemAudit('UPDATE', 'payment', `Cấu hình thanh toán: COD (${codEn ? 'Bật' : 'Tắt'}), Bank (${bankEn ? 'Bật' : 'Tắt'}), MoMo (${momoEn ? 'Bật' : 'Tắt'}), VNPay (${vnpayEn ? 'Bật' : 'Tắt'})`);
                     await PawpalSettings.loadSettingsModuleData?.();
@@ -306,10 +306,10 @@
             if (shopIdInput) shopIdInput.value = sp.shopId || 'PAWPAL_Q1_STORE';
             if (apiKeyInput) apiKeyInput.value = sp.apiKey || 'ghn_prod_secret_token_12345';
 
-            if (shippingModal) shippingModal.style.display = 'flex';
+            PawpalSettings.openModal?.('shippingConfigModalOverlay');
         });
 
-        const closeShippingModalHandler = () => { if (shippingModal) shippingModal.style.display = 'none'; };
+        const closeShippingModalHandler = () => { PawpalSettings.closeModal?.('shippingConfigModalOverlay'); };
         document.getElementById('btnCancelShippingModal')?.addEventListener('click', closeShippingModalHandler);
         document.getElementById('btnDismissShippingModal')?.addEventListener('click', closeShippingModalHandler);
 
@@ -364,7 +364,7 @@
                         await PawpalSettings.persistSystemConfig?.(cfg);
                     }
 
-                    if (shippingModal) shippingModal.style.display = 'none';
+                    PawpalSettings.closeModal?.('shippingConfigModalOverlay');
 
                     await logSystemAudit('UPDATE', 'shipping', `Cập nhật biểu phí giao hàng: Freeship từ ${freeThreshold.toLocaleString('vi-VN')} VNĐ, Đối tác ${partnerNameMap[provider] || 'GHN'}`);
                     await PawpalSettings.loadSettingsModuleData?.();
@@ -409,10 +409,10 @@
             if (lateCancelFeeInput) lateCancelFeeInput.value = bp.lateCancelFee || 50000;
             if (allowPickStaffSelect) allowPickStaffSelect.value = bp.allowPickStaff ? 'yes' : 'no';
 
-            if (bookingPolicyModal) bookingPolicyModal.style.display = 'flex';
+            PawpalSettings.openModal?.('bookingPolicyModalOverlay');
         });
 
-        const closeBookingModalHandler = () => { if (bookingPolicyModal) bookingPolicyModal.style.display = 'none'; };
+        const closeBookingModalHandler = () => { PawpalSettings.closeModal?.('bookingPolicyModalOverlay'); };
         document.getElementById('btnCancelBookingPolicyModal')?.addEventListener('click', closeBookingModalHandler);
         document.getElementById('btnDismissBookingPolicyModal')?.addEventListener('click', closeBookingModalHandler);
 
@@ -489,7 +489,7 @@
                         await PawpalSettings.persistSystemConfig?.(cfg);
                     }
 
-                    if (bookingPolicyModal) bookingPolicyModal.style.display = 'none';
+                    PawpalSettings.closeModal?.('bookingPolicyModalOverlay');
 
                     await logSystemAudit('UPDATE', 'booking_policy', `Chính sách đặt lịch: Giờ mở cửa ${wkOpen}-${wkClose}, Hủy miễn phí trước ${freeHours}h, Phí trễ ${lateFee.toLocaleString('vi-VN')} đ`);
                     await PawpalSettings.loadSettingsModuleData?.();

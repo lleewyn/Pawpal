@@ -878,8 +878,8 @@
 /* MODAL TRI THỨC AI CHATBOT (RAG TRÍCH XUẤT) */
 .rag-info-banner {
     padding: 12px 14px;
-    background-color: #F2F7F4;
-    border: 1px solid var(--border-neutral);
+    background-color: #EEF5F1;
+    border: none;
     border-radius: var(--admin-radius);
     display: flex;
     flex-direction: column;
@@ -913,36 +913,218 @@
     color: var(--text-main);
     line-height: 1.6;
     padding: 12px 14px;
-    background-color: #F8FAF9;
+    background-color: #EEF5F1;
     border-radius: var(--admin-radius);
-    border: 1px solid var(--border-neutral);
+    border: none;
     white-space: pre-line;
 }
 
-.admin-modal-overlay#voucherModalOverlay .admin-modal-card {
+/* ==========================================================================
+   BỐ CỤC MODAL & TIÊU CHUẨN KÍCH THƯỚC (AGENTS.MD STANDARD)
+   - Nền trắng tinh solid #FFFFFF, bo góc cố định 9px, viền mảnh #ECF2EE
+   - Triệt tiêu đường kẻ ngang cắt xén header và footer (border-bottom: none; border-top: none;)
+   - Hỗ trợ class .active và 4 hình thức đóng tức thì
+   ========================================================================== */
+.admin-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(32, 58, 44, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    overscroll-behavior: contain;
+}
+
+.admin-modal-overlay.active {
+    display: flex !important;
+    opacity: 1 !important;
+}
+
+.admin-modal-card {
+    background-color: #FFFFFF;
+    border-radius: var(--admin-radius, 9px);
+    box-shadow: 0 16px 40px rgba(26, 43, 35, 0.16);
+    border: 1px solid var(--border-neutral, #ECF2EE);
+    max-height: 90vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 26px 30px;
     width: 560px;
+    max-width: 94vw;
+}
+
+.admin-modal-card.wide-modal {
+    width: 740px;
     max-width: 95vw;
 }
 
-.admin-modal-overlay#voucherModalOverlay .modal-body-clean {
-    padding: 20px 16px;
+.modal-header-clean {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    border-bottom: none;
 }
 
-.admin-modal-overlay#voucherModalOverlay .form-row-2col {
+.modal-title-clean {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-heading, #236B48);
+}
+
+.modal-btn-close-text {
+    background: none;
+    border: none;
+    color: var(--text-muted, #4F7A65);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.modal-btn-close-text:hover {
+    color: var(--text-main, #203A2C);
+    background-color: #EEF5F1;
+}
+
+.modal-body-clean {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-footer-clean {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 22px;
+    border-top: none;
+}
+
+.form-row-2col {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 16px;
-    margin-bottom: 14px;
 }
 
-.admin-modal-overlay#voucherModalOverlay .form-group-item {
+.form-group-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     min-width: 0;
 }
 
+.form-label-clean {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main, #203A2C);
+}
+
 @media (max-width: 700px) {
-    .admin-modal-overlay#voucherModalOverlay .form-row-2col {
+    .form-row-2col {
         grid-template-columns: 1fr;
         gap: 14px;
     }
+}
+
+/* ==========================================================================
+   CUSTOM AUTOCOMPLETE POPOVER (CHUẨN 100% FLAT TEXT-ONLY AGENTS.MD)
+   - Popover nằm ngay dưới ô nhập, bo góc 9px, bóng mờ thanh thoát
+   - 100% Flat text-only: Bên trái tên in đậm, dòng phụ 11.5px; bên phải badge
+   - Hover đổi nền sang xanh xô thơm #EEF5F1, triệt tiêu icon/avatar tròn
+   ========================================================================== */
+.settings-autocomplete-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.settings-autocomplete-popover {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-neutral, #ECF2EE);
+    border-radius: var(--admin-radius, 9px);
+    box-shadow: 0 10px 28px rgba(35, 107, 72, 0.14);
+    z-index: 2500;
+    max-height: 240px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.settings-autocomplete-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid #F4FAF6;
+    background: transparent;
+}
+
+.settings-autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.settings-autocomplete-item:hover,
+.settings-autocomplete-item.active {
+    background-color: #EEF5F1;
+}
+
+.settings-autocomplete-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.settings-autocomplete-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main, #203A2C);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.settings-autocomplete-sub {
+    font-size: 11.5px;
+    color: var(--text-muted, #4F7A65);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.settings-autocomplete-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: #236B48;
+    background-color: #EEF5F1;
+    padding: 2px 8px;
+    border-radius: 9px;
+    white-space: nowrap;
+    margin-left: 8px;
+}
+
+.settings-autocomplete-empty {
+    padding: 12px;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--text-muted, #4F7A65);
 }
 

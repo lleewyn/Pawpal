@@ -197,57 +197,38 @@
     // State chung
     PawpalPets.state = {
         petsData: {},
-        customersData: {}
+        customersData: {},
+        isLoaded: false
     };
 
+    // Cache TTL 90 giây — không fetch lại khi chuyển phân hệ
+    let _petsLastFetchedAt = 0;
+    const PETS_CACHE_TTL_MS = 90_000;
+    let _petsFetchPromise = null;
+
     // Nạp dữ liệu 100% Supabase Live Database
-    async function loadPetsModuleData() {
-        try {
-            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (client) {
-                // 1. Nạp khách hàng
-                const [custAccRes, custProfRes] = await Promise.all([
-                    client.from('customer').select('*'),
-                    client.from('customer_profile').select('*')
+    async function loadPetsModuleData({ force = false } = {}) {
+        if (_petsFetchPromise) return _petsFetchPromise;
+
+        if (!force && Date.now() - _petsLastFetchedAt < PETS_CACHE_TTL_MS) {
+            return;
+        }
+
+        _petsFetchPromise = (async () => {
+            try {
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!client) return;
+
+                // Tải song song 100% tất cả bảng dữ liệu (Triệt tiêu hoàn toàn Waterfall)
+                const [custAccRes, custProfRes, apptsRes, careLogsRes, petsRes, weightHistoryRes] = await Promise.all([
+                    client.from('customer').select('id, email, phone_main, account_status'),
+                    client.from('customer_profile').select('id, customer_id, full_name, gender'),
+                    client.from('appointment').select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_time, appointment_status, total_price, service:service_id(service_name), staff:staff_id(full_name)').limit(500),
+                    client.from('care_log').select('id, appointment_id, pet_id, description, health_status, recorded_at, created_at').limit(300),
+                    client.from('pet_profile').select('id, customer_id, pet_code, pet_name, avatar_url, species, breed, gender, date_of_birth, color, routine, weight, vaccination_history, allergy, status, created_at').order('created_at', { ascending: false }),
+                    Promise.resolve(client.from('pet_weight_history').select('id, pet_id, weight, measured_at, recorded_by_name, created_at')).catch(() => ({ data: [] }))
                 ]);
-
-                const custMap = {};
-                if (Array.isArray(custAccRes.data)) {
-                    custAccRes.data.forEach(c => {
-                        custMap[c.id] = {
-                            id: c.id,
-                            email: c.email || '',
-                            phone: c.phone_main || '',
-                            name: 'Khách hàng PawPal',
-                            tier: 'Khách mới'
-                        };
-                    });
-                }
-
-                if (Array.isArray(custProfRes.data)) {
-                    custProfRes.data.forEach(cp => {
-                        if (custMap[cp.customer_id]) {
-                            custMap[cp.customer_id].name = cp.full_name || custMap[cp.customer_id].name;
-                        } else {
-                            custMap[cp.customer_id] = {
-                                id: cp.customer_id,
-                                email: '',
-                                phone: '',
-                                name: cp.full_name || 'Khách hàng PawPal',
-                                tier: 'Khách mới'
-                            };
-                        }
-                    });
-                }
-                PawpalPets.state.customersData = custMap;
-
-                // 2. Nạp lịch hẹn, nhật ký, thú cưng, lịch sử cân nặng
-                const [apptsRes, careLogsRes, petsRes, weightHistoryRes] = await Promise.all([
-                    client.from('appointment').select('*, service:service_id(service_name), staff:staff_id(full_name)'),
-                    client.from('care_log').select('*'),
-                    client.from('pet_profile').select('*').order('created_at', { ascending: false }),
-                    Promise.resolve(client.from('pet_weight_history').select('*')).catch(() => ({ data: [] }))
-                ]);
+                _petsLastFetchedAt = Date.now();
 
                 const petWeightHistoryMap = {};
                 if (Array.isArray(weightHistoryRes.data)) {
@@ -394,10 +375,15 @@
                     });
                 }
                 PawpalPets.state.petsData = petsMap;
+                PawpalPets.state.isLoaded = true;
+            } catch (err) {
+                console.warn('[PawpalPets] Lỗi tải dữ liệu Supabase:', err);
+            } finally {
+                _petsFetchPromise = null;
             }
-        } catch (err) {
-            console.warn('[PawpalPets] Lỗi tải dữ liệu Supabase:', err);
-        }
+        })();
+
+        return _petsFetchPromise;
     }
     PawpalPets.loadPetsModuleData = loadPetsModuleData;
 
@@ -471,7 +457,7 @@
             switchSubtab('tab-pet-profile');
         }
     }
-    PawpalPets.openPetProfile = openPetProfile;
+    let _isPetsInit = false;
 
     async function initPetsModule() {
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
@@ -496,6 +482,9 @@
         if (PawpalPets.subtabs.reminders?.renderRemindersTable) {
             PawpalPets.subtabs.reminders.renderRemindersTable();
         }
+
+        if (_isPetsInit) return; // Đã gắn event listeners rồi, không gắn lặp lại
+        _isPetsInit = true;
 
         // Khôi phục subtab active từ URL hash hoặc sessionStorage
         const savedSubtab = sessionStorage.getItem('pawpal_admin_pet_subtab');
@@ -551,9 +540,8 @@
     PawpalPets.init = initPetsModule;
     window.initPetsModule = initPetsModule;
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initPetsModule);
-    } else {
+    // Chỉ tự khởi động nếu module chạy độc lập mà không qua router admin.js
+    if (!window._pawpalAdminLoaded && !document.querySelector('.admin-layout')) {
         initPetsModule();
     }
 })();

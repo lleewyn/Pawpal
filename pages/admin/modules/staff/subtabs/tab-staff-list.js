@@ -18,19 +18,42 @@
             .replace(/'/g, '&#39;');
     }
 
+    function updateStaffKpis() {
+        const staffList = PawpalStaff.state?.mockStaff || [];
+        const total = staffList.length;
+        const active = staffList.filter(s => s.status === 'ACTIVE').length;
+        const leave = staffList.filter(s => s.status === 'LEAVE').length;
+        const pause = staffList.filter(s => s.status === 'PAUSE').length;
+        const retrain = staffList.filter(s => s.skillResult === 'RETRAIN' || s.skillResult === 'FAIL' || s.serviceLocked).length;
+
+        const totalEl = document.getElementById('statTotalStaff');
+        const activeEl = document.getElementById('statActiveStaff');
+        const leaveEl = document.getElementById('statLeaveStaff');
+        const pauseEl = document.getElementById('statPauseStaff');
+        const retrainEl = document.getElementById('statRetrainStaff');
+
+        if (totalEl) totalEl.textContent = total;
+        if (activeEl) activeEl.textContent = active;
+        if (leaveEl) leaveEl.textContent = leave;
+        if (pauseEl) pauseEl.textContent = pause;
+        if (retrainEl) retrainEl.textContent = retrain;
+    }
+
     function getFilteredStaffList() {
         const staffList = PawpalStaff.state?.mockStaff || [];
         const searchInput = document.getElementById('staffSearchInput');
-        const roleFilter = document.getElementById('staffFilterRole');
+        const roleFilter = document.getElementById('staffFilterPosition') || document.getElementById('staffFilterRole');
         const shiftFilter = document.getElementById('staffFilterShift');
         const statusFilter = document.getElementById('staffFilterStatus');
-        const retrainToggle = document.getElementById('staffFilterRetrainOnly');
+        const retrainToggle = document.getElementById('btnFilterRetrainOnly') || document.getElementById('staffFilterRetrainOnly');
+        const lockToggle = document.getElementById('btnFilterLockOnly');
 
         const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
         const role = roleFilter ? roleFilter.value : 'ALL';
         const shift = shiftFilter ? shiftFilter.value : 'ALL';
         const status = statusFilter ? statusFilter.value : 'ALL';
         const isRetrainOnly = retrainToggle ? retrainToggle.classList.contains('active') : false;
+        const isLockOnly = lockToggle ? lockToggle.classList.contains('active') : false;
 
         const toUnaccent = PawpalStaff.toUnaccent || (str => str);
 
@@ -45,7 +68,14 @@
                 if (!matchName && !matchId && !matchPhone && !matchEmail && !matchPos) return false;
             }
 
-            if (role !== 'ALL' && s.role !== role) return false;
+            if (role !== 'ALL') {
+                const sRole = (s.role || '').toLowerCase();
+                const sPos = (s.position || '').toLowerCase();
+                const rLower = role.toLowerCase();
+                const matchRole = sRole.includes(rLower) || sPos.includes(rLower) || (role === 'MEDICAL_CAREGIVER' && (sRole.includes('vet') || sRole.includes('caregiver') || sPos.includes('bác sĩ') || sPos.includes('bảo mẫu')));
+                if (!matchRole) return false;
+            }
+
             if (shift !== 'ALL' && s.shift !== shift) return false;
             if (status !== 'ALL' && s.status !== status) return false;
 
@@ -53,6 +83,10 @@
                 if (s.skillResult !== 'RETRAIN' && s.skillResult !== 'FAIL' && !s.serviceLocked) {
                     return false;
                 }
+            }
+
+            if (isLockOnly && !s.serviceLocked) {
+                return false;
             }
 
             return true;
@@ -110,11 +144,23 @@
     }
 
     function renderStaffList() {
+        updateStaffKpis();
         const tbody = document.getElementById('staffListTableBody');
         if (!tbody) return;
         const staffList = PawpalStaff.state?.mockStaff || [];
-        if (staffList.length === 0) return;
         tbody.innerHTML = '';
+
+        if (staffList.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 28px 16px; color: var(--text-muted); font-size: 13.5px;">
+                        Chưa có dữ liệu nhân sự.
+                    </td>
+                </tr>
+            `;
+            renderStaffPagination(0);
+            return;
+        }
 
         const list = getFilteredStaffList();
         const totalPages = Math.ceil(list.length / STAFF_PAGE_SIZE);
@@ -201,16 +247,26 @@
 
     function clearAllStaffFilters() {
         const searchInput = document.getElementById('staffSearchInput');
-        const roleFilter = document.getElementById('staffFilterRole');
+        const roleFilter = document.getElementById('staffFilterPosition') || document.getElementById('staffFilterRole');
         const shiftFilter = document.getElementById('staffFilterShift');
         const statusFilter = document.getElementById('staffFilterStatus');
-        const retrainToggle = document.getElementById('staffFilterRetrainOnly');
+        const retrainToggle = document.getElementById('btnFilterRetrainOnly') || document.getElementById('staffFilterRetrainOnly');
+        const lockToggle = document.getElementById('btnFilterLockOnly');
+        const clearBtn = document.getElementById('btnStaffClearFilters');
+        const clearSearchBtn = document.getElementById('btnClearStaffSearch');
 
         if (searchInput) searchInput.value = '';
         if (roleFilter) roleFilter.value = 'ALL';
         if (shiftFilter) shiftFilter.value = 'ALL';
         if (statusFilter) statusFilter.value = 'ALL';
         if (retrainToggle) retrainToggle.classList.remove('active');
+        if (lockToggle) lockToggle.classList.remove('active');
+        if (clearBtn) clearBtn.style.display = 'none';
+        if (clearSearchBtn) clearSearchBtn.style.display = 'none';
+
+        document.querySelectorAll('.staff-kpi-grid .kpi-card-clickable').forEach(c => {
+            c.classList.toggle('active', c.getAttribute('data-kpi-filter') === 'ALL');
+        });
 
         currentStaffPage = 1;
         renderStaffList();
@@ -272,7 +328,7 @@
     }
 
     function renderStaffAlertBar() {
-        const bar = document.getElementById('staffAlertStrip');
+        const bar = document.getElementById('staffAlertBar') || document.getElementById('staffAlertStrip');
         if (!bar) return;
         const staffList = PawpalStaff.state?.mockStaff || [];
 
@@ -283,13 +339,22 @@
         }
 
         bar.style.display = 'flex';
-        const container = bar.querySelector('.staff-alert-items');
+        const container = document.getElementById('staffAlertItemsContainer') || bar.querySelector('.alert-strip-items') || bar.querySelector('.staff-alert-items');
         if (container) {
             container.innerHTML = retrainList.map(s => `
-                <div class="alert-item-tag" data-staff-id="${s.id}">
-                    <strong>${s.name}</strong> (${s.position}) - ${s.serviceLocked ? 'Khóa nhận lịch' : 'Cần đào tạo lại'}
+                <div class="alert-item-tag" data-staff-id="${s.id}" style="cursor: pointer;">
+                    <strong>${escapeHtml(s.name)}</strong> (${escapeHtml(s.position)}) - ${s.serviceLocked ? 'Khóa nhận việc' : 'Cần đào tạo lại'}
                 </div>
             `).join('');
+
+            container.querySelectorAll('.alert-item-tag').forEach(tag => {
+                tag.addEventListener('click', () => {
+                    const sId = tag.getAttribute('data-staff-id');
+                    if (sId && PawpalStaff.openStaffProfile) {
+                        PawpalStaff.openStaffProfile(sId);
+                    }
+                });
+            });
         }
     }
 
@@ -444,14 +509,26 @@
 
     function initStaffListSubtab() {
         const searchInput = document.getElementById('staffSearchInput');
+        const clearSearchBtn = document.getElementById('btnClearStaffSearch');
         if (searchInput) {
             searchInput.addEventListener('input', () => {
+                if (clearSearchBtn) {
+                    clearSearchBtn.style.display = searchInput.value ? 'inline-flex' : 'none';
+                }
+                currentStaffPage = 1;
+                renderStaffList();
+            });
+        }
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', () => {
+                if (searchInput) searchInput.value = '';
+                clearSearchBtn.style.display = 'none';
                 currentStaffPage = 1;
                 renderStaffList();
             });
         }
 
-        const roleFilter = document.getElementById('staffFilterRole');
+        const roleFilter = document.getElementById('staffFilterPosition') || document.getElementById('staffFilterRole');
         if (roleFilter) {
             roleFilter.addEventListener('change', () => {
                 currentStaffPage = 1;
@@ -470,17 +547,76 @@
         const statusFilter = document.getElementById('staffFilterStatus');
         if (statusFilter) {
             statusFilter.addEventListener('change', () => {
+                // Đồng bộ active KPI card
+                const val = statusFilter.value;
+                document.querySelectorAll('.staff-kpi-grid .kpi-card-clickable').forEach(c => {
+                    c.classList.toggle('active', c.getAttribute('data-kpi-filter') === val);
+                });
                 currentStaffPage = 1;
                 renderStaffList();
             });
         }
 
-        const retrainToggle = document.getElementById('staffFilterRetrainOnly');
+        const retrainToggle = document.getElementById('btnFilterRetrainOnly') || document.getElementById('staffFilterRetrainOnly');
         if (retrainToggle) {
             retrainToggle.addEventListener('click', () => {
                 retrainToggle.classList.toggle('active');
+                document.querySelectorAll('.staff-kpi-grid .kpi-card-clickable').forEach(c => {
+                    if (c.getAttribute('data-kpi-filter') === 'RETRAIN') {
+                        c.classList.toggle('active', retrainToggle.classList.contains('active'));
+                    }
+                });
                 currentStaffPage = 1;
                 renderStaffList();
+            });
+        }
+
+        const lockToggle = document.getElementById('btnFilterLockOnly');
+        if (lockToggle) {
+            lockToggle.addEventListener('click', () => {
+                lockToggle.classList.toggle('active');
+                currentStaffPage = 1;
+                renderStaffList();
+            });
+        }
+
+        const clearFiltersBtn = document.getElementById('btnStaffClearFilters');
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', clearAllStaffFilters);
+        }
+
+        // Lọc tương tác bằng thẻ KPI
+        const kpiCards = document.querySelectorAll('.staff-kpi-grid .kpi-card-clickable');
+        kpiCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const filter = card.getAttribute('data-kpi-filter');
+                kpiCards.forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+
+                const statusSelect = document.getElementById('staffFilterStatus');
+                const retrainBtn = document.getElementById('btnFilterRetrainOnly') || document.getElementById('staffFilterRetrainOnly');
+
+                if (filter === 'ALL') {
+                    if (statusSelect) statusSelect.value = 'ALL';
+                    if (retrainBtn) retrainBtn.classList.remove('active');
+                } else if (filter === 'RETRAIN') {
+                    if (statusSelect) statusSelect.value = 'ALL';
+                    if (retrainBtn) retrainBtn.classList.add('active');
+                } else {
+                    if (statusSelect) statusSelect.value = filter;
+                    if (retrainBtn) retrainBtn.classList.remove('active');
+                }
+                currentStaffPage = 1;
+                renderStaffList();
+            });
+        });
+
+        // Nút lọc nhanh trên thanh cảnh báo
+        const btnFilterAlertQuick = document.getElementById('btnFilterStaffAlertQuick');
+        if (btnFilterAlertQuick) {
+            btnFilterAlertQuick.addEventListener('click', () => {
+                const retrainCard = document.querySelector('.staff-kpi-grid [data-kpi-filter="RETRAIN"]');
+                if (retrainCard) retrainCard.click();
             });
         }
 
@@ -491,7 +627,7 @@
         }
 
         // Xuất file CSV nhân sự
-        const btnExportStaff = document.getElementById('btnExportStaffReport');
+        const btnExportStaff = document.getElementById('btnExportStaff') || document.getElementById('btnExportStaffReport');
         if (btnExportStaff) {
             btnExportStaff.addEventListener('click', () => {
                 const staffList = PawpalStaff.state?.mockStaff || [];
@@ -735,10 +871,16 @@
         renderStaffAlertBar();
     }
 
+    window.addEventListener('pawpal:staff-data-loaded', () => {
+        renderStaffList();
+        renderStaffAlertBar();
+    });
+
     PawpalStaff.subtabs.list = {
         init: initStaffListSubtab,
         renderStaffList,
         renderStaffAlertBar,
+        updateStaffKpis,
         openStaffModal,
         openReassignModal
     };

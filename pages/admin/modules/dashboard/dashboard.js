@@ -10,13 +10,6 @@
  */
 
 (function initDashboard() {
-    try {
-        history.replaceState(null, '', '#tab-dashboard');
-    } catch (e) {
-        window.location.hash = 'tab-dashboard';
-    }
-    sessionStorage.setItem('pawpal_admin_active_module', 'Dashboard');
-
     function getSupabaseClient() {
         return window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     }
@@ -49,77 +42,99 @@
     let liveStaffMap = new Map();
     let liveServicesMap = new Map();
 
-    async function loadDashboardData() {
-        try {
-            const client = getSupabaseClient();
-            if (!client) {
-                console.warn('[Dashboard] Supabase client chưa sẵn sàng.');
-                return;
-            }
+    // Cache TTL 90 giây — không fetch lại nếu dữ liệu còn mới
+    let _dashLastFetchedAt = 0;
+    const DASH_CACHE_TTL_MS = 90_000;
+    let _dashFetchPromise = null;
+    // Ghi nhớ thời điểm tab bị ẩn — chỉ reload sau 5 phút bỏ qua
+    let _dashHiddenAt = 0;
+    const DASH_FOCUS_RELOAD_AFTER_MS = 5 * 60_000;
 
-            const [
-                ordersRes,
-                apptsRes,
-                ticketsRes,
-                productsRes,
-                custCountRes,
-                petCountRes,
-                profilesRes,
-                petsRes,
-                staffRes,
-                servicesRes,
-                chatsRes
-            ] = await Promise.all([
-                client.from('sales_order').select('*').order('created_at', { ascending: false }),
-                client.from('appointment').select('*').order('appointment_date', { ascending: false }),
-                client.from('support_ticket').select('*').order('created_at', { ascending: false }),
-                client.from('product').select('id, product_name, sku, sale_price, status, inventory(*)'),
-                client.from('customer').select('id', { count: 'exact', head: true }),
-                client.from('pet_profile').select('id', { count: 'exact', head: true }),
-                client.from('customer_profile').select('customer_id, full_name, phone'),
-                client.from('pet_profile').select('id, pet_name, customer_id, species, breed'),
-                client.from('staff').select('id, full_name, role, status'),
-                client.from('service').select('id, service_name, base_price'),
-                client.from('chat_conversation').select('id, status, created_at')
-            ]);
+    async function loadDashboardData({ force = false } = {}) {
+        if (_dashFetchPromise) return _dashFetchPromise;
 
-            liveSalesOrders = ordersRes.data || [];
-            liveAppointments = apptsRes.data || [];
-            liveTickets = ticketsRes.data || [];
-            liveProducts = productsRes.data || [];
-            liveStaffList = staffRes.data || [];
-            liveChatConversations = chatsRes.data || [];
-            liveCustomersCount = custCountRes.count !== null && custCountRes.count !== undefined ? custCountRes.count : 0;
-            livePetsCount = petCountRes.count !== null && petCountRes.count !== undefined ? petCountRes.count : 0;
-
-            // Maps tra cứu nhanh
-            const profiles = profilesRes.data || [];
-            liveProfilesMap.clear();
-            profiles.forEach(p => {
-                if (p.customer_id) liveProfilesMap.set(p.customer_id, p);
-            });
-
-            const pets = petsRes.data || [];
-            livePetsMap.clear();
-            pets.forEach(pet => {
-                livePetsMap.set(pet.id, pet);
-            });
-
-            liveStaffMap.clear();
-            liveStaffList.forEach(s => {
-                liveStaffMap.set(s.id, s.full_name);
-            });
-
-            const services = servicesRes.data || [];
-            liveServicesMap.clear();
-            services.forEach(srv => {
-                liveServicesMap.set(srv.id, srv.service_name);
-            });
-
-            console.log(`[Dashboard] Nạp dữ liệu thực tế thành công: ${liveSalesOrders.length} đơn, ${liveAppointments.length} lịch hẹn, ${liveTickets.length} ticket, ${liveProducts.length} sản phẩm, ${liveCustomersCount} khách, ${livePetsCount} bé.`);
-        } catch (err) {
-            console.error('[Dashboard] Lỗi nạp dữ liệu từ Supabase:', err);
+        // Bỏ qua nếu dữ liệu còn trong TTL và không force
+        if (!force && Date.now() - _dashLastFetchedAt < DASH_CACHE_TTL_MS) {
+            return;
         }
+
+        _dashFetchPromise = (async () => {
+            try {
+                const client = getSupabaseClient();
+                if (!client) {
+                    console.warn('[Dashboard] Supabase client chưa sẵn sàng.');
+                    return;
+                }
+
+                const [
+                    ordersRes,
+                    apptsRes,
+                    ticketsRes,
+                    productsRes,
+                    custCountRes,
+                    petCountRes,
+                    profilesRes,
+                    petsRes,
+                    staffRes,
+                    servicesRes,
+                    chatsRes
+                ] = await Promise.all([
+                    // Chỉ SELECT cột cần thiết — đúng theo schema Supabase
+                    client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(500),
+                    client.from('appointment').select('id, appointment_code, customer_id, staff_id, service_id, appointment_date, appointment_time, appointment_status, total_price').order('appointment_date', { ascending: false }).limit(500),
+                    client.from('support_ticket').select('id, user_id, title, status, priority, created_at').order('created_at', { ascending: false }).limit(200),
+                    client.from('product').select('id, product_name, sku, status, stock, inventory(quantity_in_stock, quantity_on_hand, stock_qty, minimum_stock, safety_stock_level)'),
+                    client.from('customer').select('id', { count: 'exact', head: true }),
+                    client.from('pet_profile').select('id', { count: 'exact', head: true }),
+                    client.from('customer_profile').select('customer_id, full_name'),
+                    client.from('pet_profile').select('id, pet_name, customer_id, species, breed'),
+                    client.from('staff').select('id, full_name, role, account_status'),
+                    client.from('service').select('id, service_name'),
+                    client.from('chat_conversation').select('id, status, created_at').limit(200)
+                ]);
+
+                _dashLastFetchedAt = Date.now();
+
+                liveSalesOrders = ordersRes.data || [];
+                liveAppointments = apptsRes.data || [];
+                liveTickets = ticketsRes.data || [];
+                liveProducts = productsRes.data || [];
+                liveStaffList = staffRes.data || [];
+                liveChatConversations = chatsRes.data || [];
+                liveCustomersCount = custCountRes.count !== null && custCountRes.count !== undefined ? custCountRes.count : 0;
+                livePetsCount = petCountRes.count !== null && petCountRes.count !== undefined ? petCountRes.count : 0;
+
+                // Maps tra cứu nhanh
+                const profiles = profilesRes.data || [];
+                liveProfilesMap.clear();
+                profiles.forEach(p => {
+                    if (p.customer_id) liveProfilesMap.set(p.customer_id, p);
+                });
+
+                const pets = petsRes.data || [];
+                livePetsMap.clear();
+                pets.forEach(pet => {
+                    livePetsMap.set(pet.id, pet);
+                });
+
+                liveStaffMap.clear();
+                liveStaffList.forEach(s => {
+                    liveStaffMap.set(s.id, s.full_name);
+                });
+
+                const services = servicesRes.data || [];
+                liveServicesMap.clear();
+                services.forEach(srv => {
+                    liveServicesMap.set(srv.id, srv.service_name);
+                });
+            } catch (err) {
+                console.error('[Dashboard] Lỗi nạp dữ liệu từ Supabase:', err);
+            } finally {
+                _dashFetchPromise = null;
+            }
+        })();
+
+        return _dashFetchPromise;
     }
 
     // -------------------------------------------------------------
@@ -1117,7 +1132,22 @@
     // ====================================================================
     // KHỞI ĐỘNG CHÍNH THỨC TOÀN BỘ DASHBOARD
     // ====================================================================
+    let _isDashboardInit = false;
+
     async function startDashboard() {
+        if (_isDashboardInit) {
+            // Đã khởi tạo DOM và event listeners — chỉ re-render dữ liệu
+            if (Date.now() - _dashLastFetchedAt >= DASH_CACHE_TTL_MS) {
+                await loadDashboardData({ force: true });
+            }
+            renderDashboardKPIs();
+            renderDashboardStockList();
+            renderRevenueChart();
+            renderChatbotAndStaffMetrics();
+            return;
+        }
+
+        _isDashboardInit = true;
         await loadDashboardData();
         renderDashboardKPIs();
         renderDashboardStockList();
@@ -1129,8 +1159,18 @@
         bindModuleNavigation();
         setupDashboardRealtimeSync();
 
+        window.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                _dashHiddenAt = Date.now();
+            }
+        });
+
         window.addEventListener('focus', async () => {
-            await loadDashboardData();
+            // Chỉ reload nếu tab đã bị ẩn tối thiểu 5 phút
+            const hiddenDuration = Date.now() - _dashHiddenAt;
+            if (_dashHiddenAt === 0 || hiddenDuration < DASH_FOCUS_RELOAD_AFTER_MS) return;
+            _dashHiddenAt = 0;
+            await loadDashboardData({ force: true });
             renderDashboardKPIs();
             renderDashboardStockList();
             renderRevenueChart();
@@ -1138,5 +1178,17 @@
         });
     }
 
-    startDashboard();
+    window.PawpalDashboard = {
+        init: startDashboard,
+        loadDashboardData,
+        renderDashboardKPIs,
+        renderDashboardStockList,
+        renderRevenueChart,
+        setupDashboardCalendar
+    };
+
+    // Chỉ tự khởi động nếu module được load độc lập mà không qua router admin.js
+    if (!window._pawpalAdminLoaded && !document.querySelector('.admin-layout')) {
+        startDashboard();
+    }
 })();

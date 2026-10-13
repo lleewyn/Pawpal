@@ -114,7 +114,7 @@ function initActiveNav() {
 
     let matched = null;
 
-    if (currentPath === '/' || currentPath.endsWith('/landing') || currentPath.includes('landing') || currentPath.endsWith('/index.html')) {
+    if (currentPath === '/' || currentPath.endsWith('/landing') || currentPath.includes('landing') || currentPath === '/index.html') {
         matched = navList.querySelector('a.nav-link[href="/"]') || navList.querySelector('a.nav-link[href*="landing"]');
     } else if (
         currentPath.includes('/services') ||

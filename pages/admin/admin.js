@@ -115,6 +115,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
     const contentArea = document.querySelector('.admin-preview-content');
 
+    // ====================================================================
+    // MODULE HTML CACHE — Lưu HTML đã tải để không fetch lại khi quay về
+    // ====================================================================
+    const _moduleHtmlCache = new Map();
+
+    // ====================================================================
+    // MODULE DOM CACHE — Giữ nguyên DOM đã render, chuyển module = show/hide
+    // ====================================================================
+    const _moduleDomCache = new Map();   // moduleName → HTMLElement
+    const _moduleScriptsLoaded = new Set(); // src string đã load → không load lại
+    let _currentModule = null;
+
     // Header subtabs are rendered by the shell and may be replaced when a
     // module script initializes. Delegate the click so every render remains
     // functional, including the Cấu hình tabs.
@@ -311,235 +323,182 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function loadModuleScripts(scriptPaths) {
-        document.querySelectorAll('.dynamic-module-script').forEach(el => el.remove());
-        const oldScript = document.getElementById('dynamic-module-script');
-        if (oldScript) oldScript.remove();
+    // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
+    const MODULE_SCRIPT_VERSION = '20261013_r7';
 
-        for (const src of scriptPaths) {
-            await new Promise((resolve) => {
-                const script = document.createElement('script');
-                script.className = 'dynamic-module-script';
-                script.src = src + (src.includes('?') ? '&' : '?') + 'v=' + Date.now();
-                script.onload = resolve;
-                script.onerror = () => {
-                    console.error('Lỗi nạp script:', src);
-                    resolve();
-                };
-                document.body.appendChild(script);
-            });
-        }
+    async function loadModuleScripts(scriptPaths) {
+        // Chỉ load script chưa từng được load — KHÔNG xóa/tạo lại script đã có
+        const missing = scriptPaths.filter(src => !_moduleScriptsLoaded.has(src));
+        if (!missing.length) return;
+
+        await Promise.all(missing.map(src => new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.className = 'dynamic-module-script';
+            script.async = false; // Bắt buộc thực thi tuần tự theo đúng thứ tự khai báo trong mảng
+            script.src = src + (src.includes('?') ? '&' : '?') + 'v=' + MODULE_SCRIPT_VERSION;
+            script.onload = () => {
+                _moduleScriptsLoaded.add(src);
+                resolve();
+            };
+            script.onerror = () => {
+                console.error('Lỗi nạp script:', src);
+                resolve();
+            };
+            document.body.appendChild(script);
+        })));
     }
 
-    // Nạp module tương ứng
+    // Prefetch HTML + Script của một module vào cache trong nền (không render, không chạy init)
+    async function prefetchModule(moduleName) {
+        const modCfg = MODULE_CONFIG[moduleName];
+        if (!modCfg) return;
+        // Prefetch HTML vào in-memory cache
+        fetchModuleHtml(modCfg.html).catch(() => {});
+        // Prefetch scripts vào HTTP cache của trình duyệt (0ms khi click thật)
+        modCfg.scripts.filter(s => !_moduleScriptsLoaded.has(s)).forEach(src => {
+            fetch(src + (src.includes('?') ? '&' : '?') + 'v=' + MODULE_SCRIPT_VERSION, { priority: 'low' }).catch(() => {});
+        });
+    }
+
+    // Fetch HTML module với in-memory cache — không gọi lại server khi quay về
+    async function fetchModuleHtml(url) {
+        if (_moduleHtmlCache.has(url)) {
+            return _moduleHtmlCache.get(url);
+        }
+        const res = await fetch(url + '?v=' + MODULE_SCRIPT_VERSION);
+        if (!res.ok) return null;
+        const html = await res.text();
+        _moduleHtmlCache.set(url, html);
+        return html;
+    }
+
+    // Bảng cấu hình tất cả modules — dùng chung cho loadModule & prefetchModule
+    const MODULE_CONFIG = {
+        'Dashboard':  {
+            html: 'modules/dashboard/dashboard.html',
+            scripts: ['modules/dashboard/dashboard.js'],
+            postLoad: async () => { if (window.PawpalDashboard?.init) await window.PawpalDashboard.init(); }
+        },
+        'Khách hàng': {
+            html: 'modules/customers/customers.html',
+            scripts: ['modules/customers/customers.js', 'modules/customers/subtabs/tab-customer-list.js', 'modules/customers/subtabs/tab-customer-profile.js', 'modules/customers/subtabs/tab-customer-pawpoint.js'],
+            postLoad: async () => {
+                if (window.PawpalCustomers?.subtabs?.list?.renderCustomersTable) {
+                    window.PawpalCustomers.subtabs.list.renderCustomersTable();
+                    window.PawpalCustomers.subtabs.list.updateCustomerKPIs();
+                }
+            }
+        },
+        'Thú cưng':   {
+            html: 'modules/pets/pets.html',
+            scripts: ['modules/pets/pets.js', 'modules/pets/subtabs/tab-pet-list.js', 'modules/pets/subtabs/tab-pet-profile.js', 'modules/pets/subtabs/tab-pet-carelog.js', 'modules/pets/subtabs/tab-pet-reminders.js'],
+            postLoad: async () => {
+                if (window.PawpalPets?.init) await window.PawpalPets.init();
+                if (window.PawpalPets?.subtabs?.list?.renderPetsTable) {
+                    window.PawpalPets.subtabs.list.renderPetsTable();
+                    window.PawpalPets.subtabs.list.updatePetKPIs();
+                }
+            }
+        },
+        'Dịch vụ':    {
+            html: 'modules/services/services.html',
+            scripts: ['modules/services/services.js', 'modules/services/subtabs/tab-service-bookings.js', 'modules/services/subtabs/tab-service-detail.js', 'modules/services/subtabs/tab-service-catalog.js', 'modules/services/subtabs/tab-service-reviews.js'],
+            postLoad: async () => {
+                if (window.PawpalServices?.subtabs?.bookings?.renderBookingsTable) {
+                    window.PawpalServices.subtabs.bookings.renderBookingsTable();
+                    window.PawpalServices.subtabs.bookings.updateKPIs();
+                }
+            }
+        },
+        'Bán hàng':   {
+            html: 'modules/orders/orders.html',
+            scripts: ['modules/orders/orders.js', 'modules/orders/subtabs/tab-order-list.js', 'modules/orders/subtabs/tab-order-detail.js', 'modules/orders/subtabs/tab-order-products.js', 'modules/orders/subtabs/tab-order-promos.js'],
+            postLoad: async () => {
+                if (window.PawpalOrders?.renderOrdersTable) window.PawpalOrders.renderOrdersTable();
+            }
+        },
+        'Nhân sự':    {
+            html: 'modules/staff/staff.html',
+            scripts: ['modules/staff/staff.js', 'modules/staff/subtabs/tab-staff-list.js', 'modules/staff/subtabs/tab-staff-profile.js', 'modules/staff/subtabs/tab-staff-schedule.js', 'modules/staff/subtabs/tab-staff-assessment.js'],
+            postLoad: async () => { if (window.PawpalStaff?.init) await window.PawpalStaff.init(); }
+        },
+        'Khiếu nại':  {
+            html: 'modules/complaints/complaints.html',
+            scripts: ['modules/complaints/complaints.js', 'modules/complaints/subtabs/tab-complaint-services.js', 'modules/complaints/subtabs/tab-complaint-orders.js', 'modules/complaints/subtabs/tab-complaint-detail.js'],
+            postLoad: async () => { if (window.PawpalComplaints?.init) await window.PawpalComplaints.init(); }
+        },
+        'Chatbot':    {
+            html: 'modules/chatbot/chatbot.html',
+            scripts: ['modules/chatbot/chatbot.js', 'modules/chatbot/subtabs/tab-chatbot-live.js', 'modules/chatbot/subtabs/tab-chatbot-copilot.js', 'modules/chatbot/subtabs/tab-chatbot-rules.js'],
+            postLoad: async () => { if (window.PawpalChatbot?.init) await window.PawpalChatbot.init(); }
+        },
+        'Cấu hình':   {
+            html: 'modules/settings/settings.html',
+            scripts: ['modules/settings/settings.js', 'modules/settings/subtabs/tab-settings-banners.js', 'modules/settings/subtabs/tab-settings-content.js', 'modules/settings/subtabs/tab-settings-system.js', 'modules/settings/subtabs/tab-settings-audit.js'],
+            postLoad: async () => { if (window.PawpalSettings?.init) await window.PawpalSettings.init(); }
+        },
+    };
+
+    // Nạp module tương ứng — dùng DOM cache để chuyển tab tức thì 0ms (Zero-Wait)
     async function loadModule(moduleName) {
         if (!contentArea) return;
+        if (_currentModule === moduleName) return; // Không reload cùng module
 
         // Render tức thì Header Bar để triệt tiêu 100% hiện tượng chớp/load header
         renderHeaderSubtabsInstant(moduleName);
         window.scrollTo(0, 0);
         if (contentArea) contentArea.scrollTop = 0;
-        contentArea.innerHTML = '<div class="admin-module-loading" role="status" aria-live="polite"><span class="admin-loading-spinner"></span><span>Đang tải dữ liệu...</span></div>';
 
-        if (moduleName === 'Dashboard') {
-            try {
-                const res = await fetch('modules/dashboard/dashboard.html?v=' + Date.now());
-                if (res.ok) {
-                    contentArea.innerHTML = await res.text();
-                    await loadModuleScripts(['modules/dashboard/dashboard.js']);
-                    return;
-                }
-            } catch (err) {
-                console.error('Không thể load modules/dashboard/dashboard.html:', err);
+        // ── 1. Tháo (detach) module hiện tại khỏi contentArea (giữ nguyên DOM và state trong cache) ──
+        if (_currentModule && _moduleDomCache.has(_currentModule)) {
+            const currentEl = _moduleDomCache.get(_currentModule);
+            if (currentEl && currentEl.parentNode === contentArea) {
+                contentArea.removeChild(currentEl);
             }
         }
+        contentArea.innerHTML = '';
 
-        if (moduleName === 'Khách hàng') {
-            try {
-                const res = await fetch('modules/customers/customers.html?v=' + Date.now());
-                if (res.ok) {
-                    const html = await res.text();
-                    contentArea.innerHTML = html;
-                    syncActiveSubtabPane(contentArea, moduleName);
-                    
-                    if (window.lucide) lucide.createIcons();
-
-                    await loadModuleScripts([
-                        'modules/customers/customers.js',
-                        'modules/customers/subtabs/tab-customer-list.js',
-                        'modules/customers/subtabs/tab-customer-profile.js',
-                        'modules/customers/subtabs/tab-customer-pawpoint.js'
-                    ]);
-                    return;
-                }
-            } catch (err) {
-                console.error('Không thể load modules/customers/customers.html:', err);
-            }
+        // ── 2. Nếu module đã có DOM cache → gắn lại vào contentArea ngay lập tức (0ms) ───────────
+        if (_moduleDomCache.has(moduleName)) {
+            const cachedEl = _moduleDomCache.get(moduleName);
+            cachedEl.style.display = '';
+            contentArea.appendChild(cachedEl);
+            _currentModule = moduleName;
+            
+            // Đồng bộ subtab active theo hash
+            if (moduleName !== 'Dashboard') syncActiveSubtabPane(cachedEl, moduleName);
+            if (window.lucide) lucide.createIcons();
+            
+            // Dispatch event để module JS biết tab đã active trở lại
+            window.dispatchEvent(new CustomEvent('admin:module-show', { detail: { module: moduleName } }));
+            return;
         }
 
-        if (moduleName === 'Thú cưng') {
-            try {
-                const res = await fetch('modules/pets/pets.html?v=' + Date.now());
-                if (res.ok) {
-                    const html = await res.text();
-                    contentArea.innerHTML = html;
-                    syncActiveSubtabPane(contentArea, moduleName);
-                    
-                    if (window.lucide) lucide.createIcons();
+        // ── 3. Lần đầu load: Hiện spinner, tải HTML + scripts ─────────────────
+        const moduleWrapper = document.createElement('div');
+        moduleWrapper.className = 'admin-module-wrapper';
+        moduleWrapper.style.width = '100%';
+        moduleWrapper.style.height = '100%';
+        moduleWrapper.innerHTML = '<div class="admin-module-loading" role="status" aria-live="polite"><span class="admin-loading-spinner"></span><span>Đang tải dữ liệu...</span></div>';
+        contentArea.appendChild(moduleWrapper);
 
-                    await loadModuleScripts([
-                        'modules/pets/pets.js',
-                        'modules/pets/subtabs/tab-pet-list.js',
-                        'modules/pets/subtabs/tab-pet-profile.js',
-                        'modules/pets/subtabs/tab-pet-carelog.js',
-                        'modules/pets/subtabs/tab-pet-reminders.js'
-                    ]);
+        const modCfg = MODULE_CONFIG[moduleName];
+        if (modCfg) {
+            try {
+                const html = await fetchModuleHtml(modCfg.html);
+                if (html) {
+                    moduleWrapper.innerHTML = html;
+                    if (moduleName !== 'Dashboard') syncActiveSubtabPane(moduleWrapper, moduleName);
+                    if (window.lucide) lucide.createIcons();
+                    // Lưu DOM module này vào cache ngay lập tức để chuyển tab tức thì 0ms
+                    _moduleDomCache.set(moduleName, moduleWrapper);
+                    _currentModule = moduleName;
+                    await loadModuleScripts(modCfg.scripts);
+                    if (modCfg.postLoad) await modCfg.postLoad();
                     return;
                 }
             } catch (err) {
-                console.error('Không thể load modules/pets/pets.html:', err);
-            }
-        }
-
-        if (moduleName === 'Dịch vụ') {
-            try {
-                const res = await fetch('modules/services/services.html?v=' + Date.now());
-                if (res.ok) {
-                    const html = await res.text();
-                    contentArea.innerHTML = html;
-                    syncActiveSubtabPane(contentArea, moduleName);
-                    
-                    if (window.lucide) lucide.createIcons();
-
-                    await loadModuleScripts([
-                        'modules/services/services.js',
-                        'modules/services/subtabs/tab-service-bookings.js',
-                        'modules/services/subtabs/tab-service-detail.js',
-                        'modules/services/subtabs/tab-service-catalog.js',
-                        'modules/services/subtabs/tab-service-reviews.js'
-                    ]);
-                    return;
-                }
-            } catch (err) {
-                console.error('Không thể load modules/services/services.html:', err);
-            }
-        }
-
-        if (moduleName === 'Bán hàng') {
-            try {
-                const res = await fetch('modules/orders/orders.html?v=' + Date.now());
-                if (res.ok) {
-                    const html = await res.text();
-                    contentArea.innerHTML = html;
-                    syncActiveSubtabPane(contentArea, moduleName);
-                    
-                    if (window.lucide) lucide.createIcons();
-
-                    await loadModuleScripts([
-                        'modules/orders/orders.js',
-                        'modules/orders/subtabs/tab-order-list.js',
-                        'modules/orders/subtabs/tab-order-detail.js',
-                        'modules/orders/subtabs/tab-order-products.js',
-                        'modules/orders/subtabs/tab-order-promos.js'
-                    ]);
-                    return;
-                }
-            } catch (err) {
-                console.error('Không thể load modules/orders/orders.html:', err);
-            }
-        }
-
-        if (moduleName === 'Nhân sự') {
-            try {
-                const res = await fetch('modules/staff/staff.html?v=' + Date.now());
-                if (res.ok) {
-                    const html = await res.text();
-                    contentArea.innerHTML = html;
-                    syncActiveSubtabPane(contentArea, moduleName);
-                    
-                    if (window.lucide) lucide.createIcons();
-
-                    await loadModuleScripts([
-                        'modules/staff/staff.js',
-                        'modules/staff/subtabs/tab-staff-list.js',
-                        'modules/staff/subtabs/tab-staff-profile.js',
-                        'modules/staff/subtabs/tab-staff-schedule.js',
-                        'modules/staff/subtabs/tab-staff-assessment.js'
-                    ]);
-                    return;
-                }
-            } catch (err) {
-                console.error('Không thể load modules/staff/staff.html:', err);
-            }
-        }
-
-        if (moduleName === 'Khiếu nại') {
-            try {
-                const res = await fetch('modules/complaints/complaints.html?v=' + Date.now());
-                if (res.ok) {
-                    const html = await res.text();
-                    contentArea.innerHTML = html;
-                    syncActiveSubtabPane(contentArea, moduleName);
-                    
-                    if (window.lucide) lucide.createIcons();
-
-                    await loadModuleScripts([
-                        'modules/complaints/complaints.js',
-                        'modules/complaints/subtabs/tab-complaint-services.js',
-                        'modules/complaints/subtabs/tab-complaint-orders.js',
-                        'modules/complaints/subtabs/tab-complaint-detail.js'
-                    ]);
-                    return;
-                }
-            } catch (err) {
-                console.error('Không thể load modules/complaints/complaints.html:', err);
-            }
-        }
-
-        if (moduleName === 'Chatbot') {
-            try {
-                const res = await fetch('modules/chatbot/chatbot.html?v=' + Date.now());
-                if (res.ok) {
-                    const html = await res.text();
-                    contentArea.innerHTML = html;
-                    syncActiveSubtabPane(contentArea, moduleName);
-                    
-                    if (window.lucide) lucide.createIcons();
-
-                    await loadModuleScripts([
-                        'modules/chatbot/chatbot.js',
-                        'modules/chatbot/subtabs/tab-chatbot-live.js',
-                        'modules/chatbot/subtabs/tab-chatbot-copilot.js',
-                        'modules/chatbot/subtabs/tab-chatbot-rules.js'
-                    ]);
-                    return;
-                }
-            } catch (err) {
-                console.error('Không thể load modules/chatbot/chatbot.html:', err);
-            }
-        }
-
-        if (moduleName === 'Cấu hình') {
-            try {
-                const res = await fetch('modules/settings/settings.html?v=' + Date.now());
-                if (res.ok) {
-                    const html = await res.text();
-                    contentArea.innerHTML = html;
-                    syncActiveSubtabPane(contentArea, moduleName);
-                    
-                    if (window.lucide) lucide.createIcons();
-
-                    await loadModuleScripts([
-                        'modules/settings/settings.js',
-                        'modules/settings/subtabs/tab-settings-banners.js',
-                        'modules/settings/subtabs/tab-settings-content.js',
-                        'modules/settings/subtabs/tab-settings-system.js',
-                        'modules/settings/subtabs/tab-settings-audit.js'
-                    ]);
-                    return;
-                }
-            } catch (err) {
-                console.error('Không thể load modules/settings/settings.html:', err);
+                console.error(`Không thể load module ${moduleName}:`, err);
             }
         }
         if (moduleTitleEl) {
@@ -548,12 +507,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (subtabsContainer) subtabsContainer.innerHTML = '';
         if (deepBreadcrumbEl) deepBreadcrumbEl.innerHTML = '';
-        contentArea.innerHTML = `
+        moduleWrapper.innerHTML = `
             <div class="admin-card" style="padding: 32px; text-align: center; color: var(--text-muted);">
                 <div style="font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 8px;">Phân hệ ${moduleName}</div>
                 <div>Đang sẵn sàng triển khai theo thứ tự duyệt của bạn.</div>
             </div>
         `;
+        _moduleDomCache.set(moduleName, moduleWrapper);
+        _currentModule = moduleName;
         if (window.lucide) lucide.createIcons();
     }
 
@@ -608,8 +569,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return '';
     }
 
-    // Gắn sự kiện click sidebar
+    // Gắn sự kiện click và hover prefetch sidebar
     sidebarBtns.forEach(btn => {
+        // Hover → prefetch ngay (tải trước HTML + script trong nền, không render)
+        btn.addEventListener('mouseenter', () => {
+            const title = btn.getAttribute('data-title');
+            if (title && title !== _currentModule) {
+                prefetchModule(title);
+            }
+        }, { passive: true });
+
         btn.addEventListener('click', () => {
             const title = btn.getAttribute('data-title');
             const currentMod = sessionStorage.getItem('pawpal_admin_active_module');
@@ -673,6 +642,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     loadModule(initialModule);
+    
+    // Tải trước toàn bộ 9 template HTML và scripts của các phân hệ quan trọng trong nền
+    // Giúp khi bấm sang phân hệ mới, HTML & scripts đã có sẵn trong memory/disk cache (0ms network)
+    setTimeout(() => {
+        Object.values(MODULE_CONFIG).forEach(cfg => {
+            if (cfg && cfg.html) fetchModuleHtml(cfg.html).catch(() => {});
+        });
+        prefetchModule('Dashboard');
+        prefetchModule('Thú cưng');
+        prefetchModule('Dịch vụ');
+        prefetchModule('Bán hàng');
+        prefetchModule('Khách hàng');
+    }, 1200);
 
     // Lắng nghe thay đổi URL Hash liên phân hệ để chuyển module mượt mà
     window.addEventListener('hashchange', () => {
@@ -697,7 +679,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (cfg.storageKey) sessionStorage.setItem(cfg.storageKey, cleanHash);
             }
             renderHeaderSubtabsInstant(targetMod);
-            syncActiveSubtabPane(contentArea, targetMod);
+            // Dùng moduleWrapper từ DOM cache nếu có, không thì fallback contentArea
+            const modEl = _moduleDomCache.get(targetMod) || contentArea;
+            syncActiveSubtabPane(modEl, targetMod);
             window.dispatchEvent(new CustomEvent('admin:subtab-change', {
                 detail: { module: targetMod, tabId: cleanHash }
             }));

@@ -181,11 +181,21 @@
     };
 
     // 4. DATA LOADER 100% TỪ SUPABASE LIVE DATABASE (ZERO JSON MOCK)
-    PawpalCustomers.loadCustomersModuleData = async function() {
+    // Cache TTL 90 giây — không fetch lại khi chuyển qua lại giữa các phân hệ
+    let _custLastFetchedAt = 0;
+    const CUST_CACHE_TTL_MS = 90_000;
+
+    PawpalCustomers.loadCustomersModuleData = async function({ force = false } = {}) {
         try {
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (!client) {
                 console.warn('[Customers] Supabase client not initialized.');
+                return;
+            }
+
+            // Sử dụng cache nếu dữ liệu còn mới và không yêu cầu làm mới bắt buộc
+            if (!force && Date.now() - _custLastFetchedAt < CUST_CACHE_TTL_MS) {
+                console.log('[Customers] Dùng cache, bỏ qua fetch.');
                 return;
             }
 
@@ -200,16 +210,20 @@
                 ticketsRes,
                 pointsTxRes
             ] = await Promise.all([
-                client.from('customer').select('*').order('created_at', { ascending: false }),
-                client.from('customer_profile').select('*'),
-                client.from('customer_membership').select('*'),
-                client.from('customer_address').select('*'),
-                client.from('pet_profile').select('*'),
-                client.from('sales_order').select('*').order('created_at', { ascending: false }),
-                client.from('appointment').select('*, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false }),
-                client.from('support_ticket').select('*').order('created_at', { ascending: false }),
-                client.from('paw_point_transaction').select('*').order('created_at', { ascending: false })
+                // Chỉ SELECT cột cần thiết — đúng theo schema Supabase
+                client.from('customer').select('id, email, phone_main, account_status, is_temporary, created_at').order('created_at', { ascending: false }),
+                client.from('customer_profile').select('id, customer_id, full_name, gender, date_of_birth'),
+                client.from('customer_membership').select('customer_id, total_paw_points'),
+                client.from('customer_address').select('id, customer_id, receiver_name, receiver_phone, street_address, province, is_default'),
+                client.from('pet_profile').select('id, customer_id, pet_code, pet_name, species, breed, weight, vaccination_history, allergy, routine, date_of_birth, avatar_url'),
+                client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(600),
+                client.from('appointment').select('id, appointment_code, customer_id, appointment_date, appointment_time, appointment_status, total_price, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false }).limit(600),
+                client.from('support_ticket').select('id, user_id, title, status, priority, created_at').order('created_at', { ascending: false }).limit(300),
+                client.from('paw_point_transaction').select('id, customer_id, points, balance_after, description, created_at').order('created_at', { ascending: false }).limit(500)
             ]);
+
+            _custLastFetchedAt = Date.now();
+
 
             const profMap = {};
             if (Array.isArray(profRes.data)) {

@@ -107,13 +107,13 @@ body.blog-detail-body {
 }
 
 .blog-hero-title {
-    font-family: 'DM Sans', serif;
+    font-family: 'DM Sans', Arial, sans-serif;
     font-size: 34px;
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1.35;
     color: var(--bd-text-heading);
     margin: 12px 0 20px 0;
-    letter-spacing: -0.5px;
+    letter-spacing: normal;
 }
 
 @media (max-width: 768px) {

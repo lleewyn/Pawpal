@@ -19,34 +19,62 @@
     }
 
     function renderScheduleDayTable() {
-        const tbody = document.getElementById('scheduleDayTableBody');
+        const tbody = document.getElementById('scheduleTableBody') || document.getElementById('scheduleDayTableBody');
         if (!tbody) return;
         const staffList = PawpalStaff.state?.mockStaff || [];
         const roster = PawpalStaff.state?.mockRoster || {};
 
+        if (staffList.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 28px 16px; color: var(--text-muted); font-size: 13.5px;">
+                        Chưa có dữ liệu phân ca nhân sự.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
         tbody.innerHTML = staffList.map(staff => {
             const dayRoster = (roster[currentScheduleDate] && roster[currentScheduleDate][staff.id]) || [staff.shift];
-            const shiftStr = dayRoster.map(sh => {
-                if (sh === 'MORNING') return 'Ca sáng (07:30 - 15:30)';
-                if (sh === 'AFTERNOON') return 'Ca chiều (13:30 - 21:30)';
-                if (sh === 'EVENING') return 'Ca tối (17:00 - 22:00)';
-                if (sh === 'LEAVE') return 'Nghỉ phép';
-                return 'Nghỉ ca';
-            }).join(', ');
+            const isMorning = dayRoster.includes('MORNING') || staff.shift === 'MORNING' || staff.shift === 'FULL_TIME';
+            const isAfternoon = dayRoster.includes('AFTERNOON') || staff.shift === 'AFTERNOON' || staff.shift === 'FULL_TIME';
+            const isEvening = dayRoster.includes('EVENING') || staff.shift === 'EVENING';
+            const isNight = dayRoster.includes('NIGHT') || staff.shift === 'NIGHT';
+            const isLeave = dayRoster.includes('LEAVE') || staff.status === 'LEAVE';
+
+            let totalHours = 0;
+            if (isLeave) {
+                totalHours = 0;
+            } else {
+                if (isMorning) totalHours += 4;
+                if (isAfternoon) totalHours += 4;
+                if (isEvening) totalHours += 4;
+                if (isNight) totalHours += 8;
+            }
+
+            const renderShiftCell = (active, shiftName) => {
+                if (isLeave) return '<span style="color: var(--text-muted);">—</span>';
+                if (active) {
+                    return `<span class="shift-cell-pill pill-active" style="background: #EEF5F1; color: #236B48; font-weight: 600; padding: 3px 8px; border-radius: 6px; font-size: 12px; display: inline-block;">Có ca</span>`;
+                }
+                return '<span style="color: #AEC8B9;">—</span>';
+            };
 
             return `
                 <tr>
                     <td style="font-weight: 600;">${staff.id}</td>
                     <td>
-                        <div style="font-weight: 600; color: var(--text-heading);">${staff.name}</div>
+                        <div style="font-weight: 600; color: var(--text-heading); cursor: pointer;" class="btn-view-profile" data-id="${staff.id}">${staff.name}</div>
                         <div style="font-size: 11.5px; color: var(--text-muted);">${staff.position}</div>
                     </td>
-                    <td>${shiftStr}</td>
+                    <td style="text-align: center;">${renderShiftCell(isMorning, 'MORNING')}</td>
+                    <td style="text-align: center;">${renderShiftCell(isAfternoon, 'AFTERNOON')}</td>
+                    <td style="text-align: center;">${renderShiftCell(isEvening, 'EVENING')}</td>
+                    <td style="text-align: center;">${renderShiftCell(isNight, 'NIGHT')}</td>
                     <td style="text-align: center;">
-                        <span class="admin-badge ${staff.status === 'ACTIVE' ? 'badge-success' : 'badge-warning'}">${staff.status === 'ACTIVE' ? 'Đang làm' : 'Vắng mặt'}</span>
-                    </td>
-                    <td style="text-align: center;">
-                        <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-edit-shift" data-staff-id="${staff.id}">Đổi ca</button>
+                        <span style="font-weight: 600; color: ${totalHours > 8 ? '#DC2626' : 'var(--text-heading)'};">${totalHours.toFixed(1)}h</span>
+                        <button type="button" class="btn-edit-shift" data-staff-id="${staff.id}" style="margin-left: 6px; background: none; border: none; color: #236B48; text-decoration: underline; font-size: 11.5px; cursor: pointer;">Đổi</button>
                     </td>
                 </tr>
             `;
@@ -56,6 +84,15 @@
             btn.addEventListener('click', () => {
                 const sId = btn.getAttribute('data-staff-id');
                 openShiftModal(currentScheduleDate, 'MORNING', sId);
+            });
+        });
+
+        tbody.querySelectorAll('.btn-view-profile').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const sId = btn.getAttribute('data-id');
+                if (sId && PawpalStaff.openStaffProfile) {
+                    PawpalStaff.openStaffProfile(sId);
+                }
             });
         });
     }
@@ -751,6 +788,10 @@
 
         renderScheduleTable();
     }
+
+    window.addEventListener('pawpal:staff-data-loaded', () => {
+        renderScheduleTable();
+    });
 
     PawpalStaff.subtabs.schedule = {
         init: initScheduleSubtab,
