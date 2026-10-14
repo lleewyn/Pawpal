@@ -127,7 +127,10 @@
             show('forgotPhoneSection');
             if (params.get('phone')) byId('forgotPhone').value = params.get('phone');
             notice('Vui lòng xác thực số điện thoại bằng mã OTP để thiết lập mật khẩu.');
-        } else show('loginForm');
+        } else {
+            show('loginForm');
+            if (params.get('phone') && byId('loginPhone')) byId('loginPhone').value = params.get('phone');
+        }
         byId('tabLogin')?.classList.toggle('active', action !== 'register');
         byId('tabRegister')?.classList.toggle('active', action === 'register');
     }

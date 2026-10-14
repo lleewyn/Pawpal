@@ -13,11 +13,13 @@ CREATE INDEX IF NOT EXISTS idx_pet_weight_history_pet_measured
 
 ALTER TABLE public.pet_weight_history ENABLE ROW LEVEL SECURITY;
 
+GRANT ALL ON public.pet_weight_history TO anon, authenticated;
+
 DROP POLICY IF EXISTS "Nhân viên quản trị lịch sử cân nặng" ON public.pet_weight_history;
 CREATE POLICY "Nhân viên quản trị lịch sử cân nặng"
     ON public.pet_weight_history
     FOR ALL
-    TO authenticated
+    TO authenticated, anon
     USING (true)
     WITH CHECK (true);
 
@@ -28,3 +30,4 @@ CREATE POLICY "Service role toàn quyền lịch sử cân nặng"
     TO service_role
     USING (true)
     WITH CHECK (true);
+

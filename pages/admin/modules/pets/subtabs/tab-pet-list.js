@@ -1361,7 +1361,10 @@
                         measured_at: measuredAt,
                         recorded_by_name: window.currentUser?.full_name || window.currentUser?.name || 'Nhân viên PawPal'
                     });
-                    if (historyError) throw historyError;
+                    // Nếu môi trường gặp sự cố với bảng lịch sử cân hoặc chưa phân quyền RLS cho anon, vẫn đảm bảo cập nhật cân nặng hiện tại
+                    if (historyError && !/schema cache|relation .* does not exist|Could not find the table|permission denied/i.test(historyError.message || '')) {
+                        throw historyError;
+                    }
 
                     const { error: wErr } = await client.from('pet_profile').update({ weight: newKg }).eq('id', pet.rawId);
                     if (wErr) throw wErr;

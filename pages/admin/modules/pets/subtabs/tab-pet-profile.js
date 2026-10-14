@@ -405,9 +405,11 @@
         document.addEventListener('click', (e) => {
             const btnWeigh = e.target.closest('.btn-open-weigh-modal');
             if (btnWeigh) {
-                currentWeighingPetId = btnWeigh.getAttribute('data-id') || sessionStorage.getItem('pawpal_admin_pet_id') || 'PET-001';
-                const pet = PawpalPets.state.petsData?.[currentWeighingPetId];
+                const profileCode = document.getElementById('drawerPetCode')?.textContent?.trim();
+                currentWeighingPetId = btnWeigh.getAttribute('data-id') || sessionStorage.getItem('pawpal_admin_pet_id') || profileCode || 'PET-001';
+                const pet = PawpalPets.state.petsData?.[currentWeighingPetId] || (profileCode ? PawpalPets.state.petsData?.[profileCode] : null);
                 if (!pet) return;
+                currentWeighingPetId = pet.code || currentWeighingPetId;
                 
                 const weighPetName = document.getElementById('weighPetName');
                 const weighOldWeight = document.getElementById('weighPetOldWeight');
@@ -501,7 +503,10 @@
                         measured_at: measuredAt,
                         recorded_by_name: window.currentUser?.full_name || window.currentUser?.name || 'Nhân viên PawPal'
                     });
-                    if (historyError) throw historyError;
+                    // Một số môi trường chưa chạy migration hoặc chưa phân quyền RLS cho anon; vẫn cập nhật cân hiện tại.
+                    if (historyError && !/schema cache|relation .* does not exist|Could not find the table|permission denied/i.test(historyError.message || '')) {
+                        throw historyError;
+                    }
 
                     const { error: wErr } = await client.from('pet_profile').update({ weight: newKg }).eq('id', pet.rawId);
                     if (wErr) throw wErr;
@@ -561,7 +566,12 @@
                 const alertText = document.getElementById('editPetAlert')?.value || '';
                 const allergy = document.getElementById('editPetAllergy')?.value || '';
                 const notes = document.getElementById('editPetNotes')?.value || '';
-                const ownerCustId = document.getElementById('editPetOwner')?.value || pet.custId;
+                const ownerCustId = document.getElementById('editPetOwner')?.value || '';
+
+                if (!ownerCustId) {
+                    PawpalPets.showToast('Bắt buộc chọn chủ nuôi trước khi lưu hồ sơ bé cưng.', 'warning');
+                    return;
+                }
 
                 let dbStatus = 'ACTIVE';
                 if (status === 'Lưu trú Hotel' || status === 'HOTEL') dbStatus = 'HOTEL';

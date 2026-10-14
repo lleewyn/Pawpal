@@ -134,15 +134,16 @@
         PawpalCustomers.showToast(`Đã xuất lịch sử ${filteredHistory.length} giao dịch Pawpoint theo bộ lọc hiện tại ra file CSV!`);
     }
 
-    // Modal Điều chỉnh Pawpoint
-    const modalAdjust = document.getElementById('modalAdjustPoints');
-    const adjustPhoneInput = document.getElementById('adjustPhone');
-    const adjustCustomerDropdown = document.getElementById('adjustCustomerDropdown');
-    const adjustPhoneCustomerHint = document.getElementById('adjustPhoneCustomerHint');
-    const adjustReasonInput = document.getElementById('adjustReason');
+    // Helpers truy xuất DOM động (tránh lỗi cache phần tử rỗng khi script tải trước HTML)
+    const getAdjustModal = () => document.getElementById('modalAdjustPoints');
+    const getAdjustPhoneInput = () => document.getElementById('adjustPhone');
+    const getAdjustCustomerDropdown = () => document.getElementById('adjustCustomerDropdown');
+    const getAdjustPhoneCustomerHint = () => document.getElementById('adjustPhoneCustomerHint');
+    const getAdjustReasonInput = () => document.getElementById('adjustReason');
 
     function renderAdjustCustomerDropdown(filterText = '') {
-        if (!adjustCustomerDropdown) return;
+        const dropdown = getAdjustCustomerDropdown();
+        if (!dropdown) return;
         const q = (filterText || '').toLowerCase().trim();
         const allCustomers = Object.values(PawpalCustomers.state.customerDatabase || {});
 
@@ -158,25 +159,23 @@
         }).slice(0, 15);
 
         if (matches.length === 0) {
-            adjustCustomerDropdown.innerHTML = '<div class="customer-autocomplete-empty">Không tìm thấy khách hàng phù hợp</div>';
-            adjustCustomerDropdown.style.display = 'block';
+            dropdown.innerHTML = '<div class="customer-autocomplete-empty">Không tìm thấy khách hàng phù hợp</div>';
+            dropdown.style.display = 'block';
             return;
         }
 
-        adjustCustomerDropdown.innerHTML = '';
+        dropdown.innerHTML = '';
         matches.forEach(c => {
             const item = document.createElement('div');
             item.className = 'customer-autocomplete-item';
-            const initial = (c.name || 'K').trim().charAt(0).toUpperCase();
             const pts = (c.points || 0).toLocaleString('vi-VN');
             const petNames = (c.pets && c.pets.length > 0) ? ` • Bé: ${c.pets.map(p => p.name).join(', ')}` : '';
 
             item.innerHTML = `
                 <div class="customer-autocomplete-info">
-                    <div class="customer-autocomplete-avatar">${initial}</div>
                     <div class="customer-autocomplete-meta">
-                        <div class="customer-autocomplete-name">${c.name}</div>
-                        <div class="customer-autocomplete-phone">${c.phone || 'Chưa có SĐT'}${petNames}</div>
+                        <div class="customer-autocomplete-name" style="font-weight: 600; color: #203A2C;">${c.name}</div>
+                        <div class="customer-autocomplete-phone" style="color: #4F7A65; font-size: 11.5px;">${c.phone || 'Chưa có SĐT'}${petNames}</div>
                     </div>
                 </div>
                 <div class="customer-autocomplete-badge">${c.tierName} • ${pts} điểm</div>
@@ -187,34 +186,60 @@
                 selectAdjustCustomer(c);
             });
 
-            adjustCustomerDropdown.appendChild(item);
+            dropdown.appendChild(item);
         });
 
-        adjustCustomerDropdown.style.display = 'block';
+        dropdown.style.display = 'block';
+    }
+
+    function clearAdjustCustomerSelection() {
+        selectedAdjustCustomer = null;
+        const phoneInput = getAdjustPhoneInput();
+        if (phoneInput) phoneInput.value = '';
+        const hint = getAdjustPhoneCustomerHint();
+        if (hint) {
+            hint.innerHTML = '';
+            hint.style.display = 'none';
+        }
+        const dropdown = getAdjustCustomerDropdown();
+        if (dropdown) dropdown.style.display = 'none';
     }
 
     function selectAdjustCustomer(cust) {
         selectedAdjustCustomer = cust;
-        if (adjustPhoneInput) {
-            adjustPhoneInput.value = `${cust.name} - ${cust.phone}`;
+        const phoneInput = getAdjustPhoneInput();
+        if (phoneInput) {
+            phoneInput.value = `${cust.name} - ${cust.phone}`;
         }
-        if (adjustPhoneCustomerHint) {
-            adjustPhoneCustomerHint.innerHTML = `
-                <span>Khách hàng: <strong>${cust.name}</strong> (${cust.tierName})</span>
-                <span>Số dư hiện tại: <strong>${(cust.points || 0).toLocaleString('vi-VN')} điểm</strong></span>
+        const hint = getAdjustPhoneCustomerHint();
+        if (hint) {
+            hint.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div>
+                        <span>Khách hàng: <strong>${cust.name}</strong> (${cust.tierName})</span>
+                        <span style="margin-left: 12px;">Số dư hiện tại: <strong>${(cust.points || 0).toLocaleString('vi-VN')} điểm</strong></span>
+                    </div>
+                    <button type="button" class="btn-clear-selected-customer" style="background: none; border: none; color: #236B48; font-size: 12px; font-weight: 600; cursor: pointer; padding: 2px 6px;">✕ Bỏ chọn</button>
+                </div>
             `;
-            adjustPhoneCustomerHint.style.display = 'flex';
+            hint.style.display = 'flex';
+            hint.querySelector('.btn-clear-selected-customer')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                clearAdjustCustomerSelection();
+                getAdjustPhoneInput()?.focus();
+            });
         }
-        if (adjustCustomerDropdown) {
-            adjustCustomerDropdown.style.display = 'none';
-        }
+        const dropdown = getAdjustCustomerDropdown();
+        if (dropdown) dropdown.style.display = 'none';
     }
 
     function openAdjustPointsModal(presetPhone = '') {
-        const modal = document.getElementById('modalAdjustPoints');
+        const modal = getAdjustModal();
         if (modal) {
             modal.style.display = 'flex';
-            if (adjustCustomerDropdown) adjustCustomerDropdown.style.display = 'none';
+            const dropdown = getAdjustCustomerDropdown();
+            if (dropdown) dropdown.style.display = 'none';
 
             if (presetPhone) {
                 const clean = presetPhone.replace(/[^0-9]/g, '').trim();
@@ -224,184 +249,210 @@
                 );
                 if (found) {
                     selectAdjustCustomer(found);
-                } else if (adjustPhoneInput) {
-                    selectedAdjustCustomer = null;
-                    adjustPhoneInput.value = presetPhone;
-                    if (adjustPhoneCustomerHint) adjustPhoneCustomerHint.style.display = 'none';
+                } else {
+                    const phoneInput = getAdjustPhoneInput();
+                    if (phoneInput) {
+                        selectedAdjustCustomer = null;
+                        phoneInput.value = presetPhone;
+                        const hint = getAdjustPhoneCustomerHint();
+                        if (hint) hint.style.display = 'none';
+                    }
                 }
             } else {
-                selectedAdjustCustomer = null;
-                if (adjustPhoneInput) adjustPhoneInput.value = '';
-                if (adjustPhoneCustomerHint) adjustPhoneCustomerHint.style.display = 'none';
+                clearAdjustCustomerSelection();
                 const ptsInput = document.getElementById('adjustPointsVal');
                 if (ptsInput) ptsInput.value = '';
-                if (adjustReasonInput) adjustReasonInput.value = '';
+                const reasonInput = getAdjustReasonInput();
+                if (reasonInput) reasonInput.value = '';
             }
         }
     }
 
     function closeAdjustModal() {
-        const modal = document.getElementById('modalAdjustPoints');
+        const modal = getAdjustModal();
         if (modal) modal.style.display = 'none';
-        if (adjustCustomerDropdown) adjustCustomerDropdown.style.display = 'none';
+        const dropdown = getAdjustCustomerDropdown();
+        if (dropdown) dropdown.style.display = 'none';
     }
 
-    function initPawpointTab() {
-        const btnOpenAdjust = document.getElementById('btnOpenAdjustPointsModal');
-        const btnCloseAdjust = document.getElementById('btnCloseAdjustPoints');
-        const btnCancelAdjust = document.getElementById('btnCancelAdjustPoints');
-        const formAdjust = document.getElementById('formAdjustPoints');
+    async function handleAdjustPointsSubmit() {
+        const phoneInput = getAdjustPhoneInput();
+        const phoneVal = (phoneInput?.value || '').trim();
+        const type = document.getElementById('adjustType')?.value || 'ADD';
+        const pts = parseInt(document.getElementById('adjustPointsVal')?.value || '0', 10);
+        const reasonInput = getAdjustReasonInput();
+        const reason = (reasonInput?.value || '').trim();
 
-        if (adjustPhoneInput) {
-            adjustPhoneInput.addEventListener('focus', () => {
-                renderAdjustCustomerDropdown(adjustPhoneInput.value);
-            });
-            adjustPhoneInput.addEventListener('input', () => {
-                selectedAdjustCustomer = null;
-                renderAdjustCustomerDropdown(adjustPhoneInput.value);
-            });
+        if (pts <= 0 || isNaN(pts)) {
+            PawpalCustomers.showToast('Vui lòng nhập số điểm lớn hơn 0!', 'warning');
+            return;
+        }
+        if (!reason) {
+            PawpalCustomers.showToast('Vui lòng nhập hoặc chọn lý do điều chỉnh điểm.', 'warning');
+            return;
         }
 
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.customer-autocomplete-wrapper') && adjustCustomerDropdown) {
-                adjustCustomerDropdown.style.display = 'none';
+        let matchedCust = selectedAdjustCustomer;
+        if (!matchedCust) {
+            const cleanPhone = phoneVal.replace(/[^0-9]/g, '').trim();
+            matchedCust = Object.values(PawpalCustomers.state.customerDatabase || {}).find(c => 
+                (cleanPhone.length >= 9 && c.phone && c.phone.replace(/[^0-9]/g, '').trim() === cleanPhone) ||
+                (c.name && c.name.toLowerCase() === phoneVal.toLowerCase())
+            );
+            if (!matchedCust && phoneVal.includes(' - ')) {
+                const [nPart, pPart] = phoneVal.split(' - ').map(s => s.trim().toLowerCase());
+                matchedCust = Object.values(PawpalCustomers.state.customerDatabase || {}).find(c => 
+                    (c.phone && c.phone.toLowerCase() === pPart) || 
+                    (c.name && c.name.toLowerCase() === nPart)
+                );
+            }
+        }
+
+        if (!matchedCust) {
+            PawpalCustomers.showToast(`Không tìm thấy khách hàng với thông tin "${phoneVal}"! Vui lòng chọn từ danh sách gợi ý.`, 'warning');
+            return;
+        }
+
+        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!client) {
+            PawpalCustomers.showToast('Lỗi kết nối CSDL Supabase!', 'danger');
+            return;
+        }
+
+        try {
+            const custDbId = matchedCust.dbId;
+            const currentBalance = Number(matchedCust.points) || 0;
+            if (type === 'SUB' && pts > currentBalance) {
+                PawpalCustomers.showToast('Số điểm trừ không được vượt quá số dư hiện tại.', 'warning');
+                return;
+            }
+            const newBalance = type === 'ADD' ? (currentBalance + pts) : (currentBalance - pts);
+            const ptsSigned = type === 'ADD' ? pts : -pts;
+
+            if (custDbId) {
+                const { data: updatedMembership, error: memErr } = await client
+                    .from('customer_membership')
+                    .update({ total_paw_points: newBalance })
+                    .eq('customer_id', custDbId)
+                    .select('customer_id, total_paw_points')
+                    .maybeSingle();
+
+                if (memErr || !updatedMembership || Number(updatedMembership.total_paw_points) !== newBalance) {
+                    console.warn('[Customers] Lỗi cập nhật customer_membership, thử upsert:', memErr);
+                    const { error: upsertErr } = await client
+                        .from('customer_membership')
+                        .upsert({ customer_id: custDbId, total_paw_points: newBalance });
+                    if (upsertErr) throw upsertErr;
+                }
+
+                const { error: transactionError } = await client.from('paw_point_transaction').insert({
+                    customer_id: custDbId,
+                    reward_rule_id: '92222222-2222-2222-2222-222222222222',
+                    points: ptsSigned,
+                    balance_after: newBalance,
+                    description: reason
+                });
+                if (transactionError) throw transactionError;
+            }
+
+            await PawpalCustomers.loadCustomersModuleData({ force: true });
+            if (PawpalCustomers.subtabs.list) {
+                PawpalCustomers.subtabs.list.renderCustomersTable();
+                PawpalCustomers.subtabs.list.updateCustomerKPIs();
+            }
+            renderPawpointHistory();
+
+            const currentOpenCustId = sessionStorage.getItem('pawpal_admin_customer_id');
+            if (currentOpenCustId === matchedCust.id && PawpalCustomers.subtabs.profile) {
+                PawpalCustomers.subtabs.profile.renderDrawerCustomerProfile(matchedCust.id);
+            }
+
+            PawpalCustomers.showToast(`Đã ${type === 'ADD' ? 'cộng' : 'trừ'} ${pts.toLocaleString('vi-VN')} Pawpoint cho khách hàng ${matchedCust.name}! Số dư mới: ${newBalance.toLocaleString('vi-VN')} điểm`, 'success');
+            const formAdjust = document.getElementById('formAdjustPoints');
+            if (formAdjust) formAdjust.reset();
+            clearAdjustCustomerSelection();
+            closeAdjustModal();
+        } catch (err) {
+            console.error('[Customers] Lỗi điều chỉnh điểm:', err);
+            PawpalCustomers.showToast('Đã xảy ra lỗi khi điều chỉnh điểm!', 'danger');
+        }
+    }
+
+    let _hasAttachedPawpointDelegates = false;
+    function initPawpointTab() {
+        renderPawpointHistory();
+        if (_hasAttachedPawpointDelegates) return;
+        _hasAttachedPawpointDelegates = true;
+
+        // Xử lý autocomplete khách hàng
+        document.addEventListener('focusin', (e) => {
+            if (e.target && e.target.id === 'adjustPhone') {
+                renderAdjustCustomerDropdown(e.target.value);
             }
         });
 
-        document.querySelectorAll('#adjustReasonQuickTags .reason-quick-chip').forEach(chip => {
-            chip.addEventListener('click', () => {
-                if (adjustReasonInput) {
-                    adjustReasonInput.value = chip.textContent.trim();
-                    adjustReasonInput.focus();
-                }
-            });
+        document.addEventListener('input', (e) => {
+            if (e.target && e.target.id === 'adjustPhone') {
+                selectedAdjustCustomer = null;
+                renderAdjustCustomerDropdown(e.target.value);
+            }
         });
 
-        if (btnOpenAdjust) {
-            btnOpenAdjust.addEventListener('click', () => openAdjustPointsModal());
-        }
-        if (btnCloseAdjust) btnCloseAdjust.addEventListener('click', closeAdjustModal);
-        if (btnCancelAdjust) btnCancelAdjust.addEventListener('click', closeAdjustModal);
+        document.addEventListener('click', (e) => {
+            // Đóng autocomplete popover khi click ngoài
+            if (!e.target.closest('.customer-autocomplete-wrapper')) {
+                const dd = getAdjustCustomerDropdown();
+                if (dd) dd.style.display = 'none';
+            }
 
-        if (formAdjust) {
-
-        const btnSubmitAdjust = document.getElementById('btnSubmitAdjustPoints');
-        if (btnSubmitAdjust && formAdjust) {
-            btnSubmitAdjust.addEventListener('click', () => {
-                if (formAdjust.requestSubmit) formAdjust.requestSubmit();
-                else formAdjust.dispatchEvent(new Event('submit', { cancelable: true }));
-            });
-        }
-
-            formAdjust.addEventListener('submit', async (e) => {
+            // Chọn nhanh lý do từ quick chips
+            const chip = e.target.closest('#adjustReasonQuickTags .reason-quick-chip');
+            if (chip) {
                 e.preventDefault();
-                const phoneVal = (adjustPhoneInput?.value || '').trim();
-                const type = document.getElementById('adjustType')?.value || 'ADD';
-                const pts = parseInt(document.getElementById('adjustPointsVal')?.value || '0', 10);
-                const reason = (adjustReasonInput?.value || '').trim();
-
-                if (pts <= 0) {
-                    PawpalCustomers.showToast('Vui lòng nhập số điểm lớn hơn 0!', 'warning');
-                    return;
+                const reasonInput = getAdjustReasonInput();
+                if (reasonInput) {
+                    reasonInput.value = chip.textContent.trim();
+                    reasonInput.focus();
                 }
-                if (!reason) {
-                    PawpalCustomers.showToast('Vui lòng nhập lý do điều chỉnh điểm.', 'warning');
-                    return;
-                }
+            }
 
-                let matchedCust = selectedAdjustCustomer;
-                if (!matchedCust) {
-                    const cleanPhone = phoneVal.replace(/[^0-9]/g, '').trim();
-                    matchedCust = Object.values(PawpalCustomers.state.customerDatabase || {}).find(c => 
-                        (cleanPhone.length >= 9 && c.phone && c.phone.replace(/[^0-9]/g, '').trim() === cleanPhone) ||
-                        (c.name && c.name.toLowerCase() === phoneVal.toLowerCase())
-                    );
-                    if (!matchedCust && phoneVal.includes(' - ')) {
-                        const [nPart, pPart] = phoneVal.split(' - ').map(s => s.trim().toLowerCase());
-                        matchedCust = Object.values(PawpalCustomers.state.customerDatabase || {}).find(c => 
-                            (c.phone && c.phone.toLowerCase() === pPart) || 
-                            (c.name && c.name.toLowerCase() === nPart)
-                        );
-                    }
-                }
+            // Nút mở modal điều chỉnh
+            if (e.target.closest('#btnOpenAdjustPointsModal')) {
+                e.preventDefault();
+                openAdjustPointsModal();
+            }
 
-                if (!matchedCust) {
-                    PawpalCustomers.showToast(`Không tìm thấy khách hàng với thông tin "${phoneVal}"! Vui lòng chọn từ danh sách gợi ý.`, 'warning');
-                    return;
-                }
+            // Nút đóng modal
+            if (e.target.closest('#btnCloseAdjustPoints') || e.target.closest('#btnCancelAdjustPoints')) {
+                e.preventDefault();
+                closeAdjustModal();
+            }
 
-                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                if (!client) {
-                    PawpalCustomers.showToast('Lỗi kết nối CSDL Supabase!', 'danger');
-                    return;
-                }
+            // Nút xác nhận điều chỉnh
+            if (e.target.closest('#btnSubmitAdjustPoints')) {
+                e.preventDefault();
+                handleAdjustPointsSubmit();
+            }
 
-                try {
-                    const custDbId = matchedCust.dbId;
-                    const currentBalance = Number(matchedCust.points) || 0;
-                    if (type === 'SUB' && pts > currentBalance) {
-                        PawpalCustomers.showToast('Số điểm trừ không được vượt quá số dư hiện tại.', 'warning');
-                        return;
-                    }
-                    const newBalance = type === 'ADD' ? (currentBalance + pts) : (currentBalance - pts);
-                    const ptsSigned = type === 'ADD' ? pts : -pts;
+            // Nút xuất CSV
+            if (e.target.closest('#btnExportPawpointHistory')) {
+                e.preventDefault();
+                exportPawpointHistoryToCSV();
+            }
+        });
 
-                    if (custDbId) {
-                        const { error: memErr } = await client
-                            .from('customer_membership')
-                            .update({ total_paw_points: newBalance })
-                            .eq('customer_id', custDbId);
+        // Tìm kiếm và lọc bảng lịch sử Pawpoint
+        document.addEventListener('input', (e) => {
+            if (e.target && e.target.id === 'pawpointSearchInput') {
+                renderPawpointHistory();
+            }
+        });
 
-                        if (memErr) {
-                            console.warn('[Customers] Lỗi cập nhật customer_membership, thử upsert:', memErr);
-                            const { error: upsertErr } = await client
-                                .from('customer_membership')
-                                .upsert({ customer_id: custDbId, total_paw_points: newBalance });
-                            if (upsertErr) throw upsertErr;
-                        }
-
-                        const { error: transactionError } = await client.from('paw_point_transaction').insert({
-                            customer_id: custDbId,
-                            points: ptsSigned,
-                            balance_after: newBalance,
-                            description: reason
-                        });
-                        if (transactionError) throw transactionError;
-                    }
-
-                    await PawpalCustomers.loadCustomersModuleData();
-                    if (PawpalCustomers.subtabs.list) {
-                        PawpalCustomers.subtabs.list.renderCustomersTable();
-                        PawpalCustomers.subtabs.list.updateCustomerKPIs();
-                    }
-                    renderPawpointHistory();
-
-                    const currentOpenCustId = sessionStorage.getItem('pawpal_admin_customer_id');
-                    if (currentOpenCustId === matchedCust.id && PawpalCustomers.subtabs.profile) {
-                        PawpalCustomers.subtabs.profile.renderDrawerCustomerProfile(matchedCust.id);
-                    }
-
-                    PawpalCustomers.showToast(`Đã ${type === 'ADD' ? 'cộng' : 'trừ'} ${pts.toLocaleString('vi-VN')} Pawpoint cho khách hàng ${matchedCust.name}! Số dư mới: ${newBalance.toLocaleString('vi-VN')} điểm`, 'success');
-                    formAdjust.reset();
-                    selectedAdjustCustomer = null;
-                    if (adjustPhoneCustomerHint) adjustPhoneCustomerHint.style.display = 'none';
-                    closeAdjustModal();
-                } catch (err) {
-                    console.error('[Customers] Lỗi điều chỉnh điểm:', err);
-                    PawpalCustomers.showToast('Đã xảy ra lỗi khi điều chỉnh điểm!', 'danger');
-                }
-            });
-        }
-
-        const pawpointSearchInput = document.getElementById('pawpointSearchInput');
-        if (pawpointSearchInput) {
-            pawpointSearchInput.addEventListener('input', renderPawpointHistory);
-        }
-        const pawpointFilterType = document.getElementById('pawpointFilterType');
-        if (pawpointFilterType) {
-            pawpointFilterType.addEventListener('change', renderPawpointHistory);
-        }
-        document.getElementById('btnExportPawpointHistory')?.addEventListener('click', exportPawpointHistoryToCSV);
+        document.addEventListener('change', (e) => {
+            if (e.target && e.target.id === 'pawpointFilterType') {
+                renderPawpointHistory();
+            }
+        });
     }
 
     // Đăng ký subtab vào namespace

@@ -56,26 +56,34 @@ function initReturnGuestPage() {
 
             const normPhone = normalizePhone(phone);
 
+            const btn = form.querySelector('button[type=submit]');
+            if (btn) {
+                btn.disabled    = true;
+                btn.textContent = 'Đang kiểm tra...';
+            }
+
             // Kiểm tra xem số điện thoại có thuộc về tài khoản Thành viên chính thức không
-            const member = isRegisteredMember(normPhone);
+            const member = await isRegisteredMember(normPhone);
             if (member) {
+                if (btn) {
+                    btn.disabled    = false;
+                    btn.textContent = 'Tìm kiếm';
+                }
                 if (resultsEl) resultsEl.classList.add('d-none');
                 if (errorBox) {
                     errorBox.classList.remove('d-none');
                     errorBox.innerHTML = `
-                        <div class="alert-member-prompt" style="padding:16px 20px; background:#f4f9f6; border-radius:9px; border:1px solid #c3dec7; color:#203a2c; text-align:left;">
-                            <div style="font-weight:700; color:#236b48; font-size:1.05rem; margin-bottom:6px;">Số điện thoại đã được đăng ký thành viên</div>
-                            <div style="font-size:0.92rem; margin-bottom:14px; color:#4f7a65;">Số điện thoại <strong>${esc(phone)}</strong> thuộc tài khoản thành viên Pawpal. Vui lòng đăng nhập để xem đầy đủ hồ sơ, lịch hẹn và quản lý đơn hàng của bạn.</div>
-                            <a href="/pages/public/login/login.html?phone=${encodeURIComponent(normPhone)}" class="btn-cta" style="display:inline-block; padding:8px 20px; text-decoration:none; border-radius:9px;">Đăng nhập ngay</a>
+                        <div class="alert-member-prompt" style="padding:18px 22px; background:#f4f9f6; border-radius:9px; border:1px solid #c3dec7; color:#203a2c; text-align:left;">
+                            <div style="font-weight:700; color:#236b48; font-size:1.05rem; margin-bottom:8px;">Số điện thoại đã được đăng ký Thành viên</div>
+                            <div style="font-size:0.92rem; margin-bottom:14px; color:#4f7a65; line-height: 1.5;">Số điện thoại <strong>${esc(phone)}</strong> thuộc tài khoản thành viên chính thức Pawpal. Trang tra cứu này chỉ phục vụ cho khách vãng lai. Vui lòng đăng nhập để xem đầy đủ hồ sơ, lịch hẹn và hưởng trọn quyền lợi tích điểm.</div>
+                            <a href="/login?phone=${encodeURIComponent(normPhone)}" class="btn-cta" style="display:inline-block; padding:9px 22px; text-decoration:none; border-radius:9px; font-weight:600;">Đăng nhập ngay</a>
                         </div>
                     `;
                 }
                 return;
             }
 
-            const btn = form.querySelector('button[type=submit]');
             if (btn) {
-                btn.disabled    = true;
                 btn.textContent = 'Đang tìm...';
             }
 
@@ -137,18 +145,40 @@ if (document.readyState === 'loading') {
     initReturnGuestPage();
 }
 
-function isRegisteredMember(normPhone) {
+async function isRegisteredMember(normPhone) {
+    if (!normPhone) return false;
+    try {
+        const res = await fetch('/api/customer/auth/lookup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: normPhone })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.exists) {
+                // Thành viên chính thức: isMember = true hoặc isTemporary = false
+                return Boolean(data.isMember || data.isTemporary === false);
+            }
+            if (data.success && !data.exists) {
+                return false;
+            }
+        }
+    } catch (err) {
+        console.warn('[ReturnGuest] Backend lookup check failed, falling back:', err);
+    }
+
+    // Dự phòng khi offline / môi trường test local không qua backend
     try {
         const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
         const found = users.find(u => normalizePhone(u.phone) === normPhone && (!u.is_temporary || u.password));
-        if (found) return found;
+        if (found) return true;
 
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (currentUser && normalizePhone(currentUser.phone) === normPhone && !currentUser.is_temporary) {
-            return currentUser;
+            return true;
         }
     } catch (_) {}
-    return null;
+    return false;
 }
 
 function resolveAppUrl(path) {
@@ -315,6 +345,10 @@ function mapOrderStatus(status) {
 function renderResults(bookings, orders) {
     const tabsEl = document.getElementById('rg-tabs');
     const listEl = document.getElementById('rg-list');
+    const setupBtn = document.getElementById('rg-banner-setup-btn');
+    if (setupBtn && rgVerifiedPhone) {
+        setupBtn.href = `/login?phone=${encodeURIComponent(rgVerifiedPhone)}`;
+    }
 
     tabsEl.innerHTML = `
         <button class="rg-tab active" data-filter="all">Tất cả (${bookings.length + orders.length})</button>
@@ -1318,7 +1352,7 @@ function showUpsellModal(phone) {
 
         document.getElementById('rg-upsell-setup').addEventListener('click', () => {
             modal.hide();
-            showQuickSetupPasswordModal(phone);
+            window.location.href = `/login?phone=${encodeURIComponent(normalizePhone(phone))}`;
         });
         document.getElementById('rg-upsell-skip').addEventListener('click', () => {
             modal.hide();

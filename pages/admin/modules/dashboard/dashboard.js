@@ -26,6 +26,27 @@
         return `${year}-${month}-${day}`;
     }
 
+    // Chuẩn hóa cả kiểu DATE (YYYY-MM-DD) và TIMESTAMP từ Supabase về cùng một khóa ngày.
+    // Nếu không chuẩn hóa, các lịch hẹn có timestamp sẽ bị bỏ sót khỏi KPI và lịch.
+    function toDateKey(value) {
+        if (!value) return '';
+        if (value instanceof Date) {
+            const year = value.getFullYear();
+            const month = String(value.getMonth() + 1).padStart(2, '0');
+            const day = String(value.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        const raw = String(value);
+        const isoDate = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (isoDate) return isoDate[1];
+        const parsed = new Date(raw);
+        if (Number.isNaN(parsed.getTime())) return '';
+        const year = parsed.getFullYear();
+        const month = String(parsed.getMonth() + 1).padStart(2, '0');
+        const day = String(parsed.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     // ====================================================================
     // DATA STORE 100% TRỰC TIẾP TỪ SUPABASE LIVE DATABASE (ZERO JSON MOCK)
     // ====================================================================
@@ -83,7 +104,8 @@
                     client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(500),
                     client.from('appointment').select('id, appointment_code, customer_id, staff_id, service_id, appointment_date, appointment_time, appointment_status, total_price').order('appointment_date', { ascending: false }).limit(500),
                     client.from('support_ticket').select('id, user_id, title, status, priority, created_at').order('created_at', { ascending: false }).limit(200),
-                    client.from('product').select('id, product_name, sku, status, stock, inventory(quantity_in_stock, quantity_on_hand, stock_qty, minimum_stock, safety_stock_level)'),
+                    // Giống schema đang dùng ở tab Sản phẩm: chỉ lấy các cột tồn tại trong inventory.
+                    client.from('product').select('id, product_name, sku, status, stock, inventory(quantity_in_stock, minimum_stock)'),
                     client.from('customer').select('id', { count: 'exact', head: true }),
                     client.from('pet_profile').select('id', { count: 'exact', head: true }),
                     client.from('customer_profile').select('customer_id, full_name'),
@@ -99,13 +121,30 @@
                 liveAppointments = apptsRes.data || [];
                 liveTickets = ticketsRes.data || [];
                 liveProducts = productsRes.data || [];
+                // Nếu quan hệ lồng inventory không được expose ở môi trường hiện tại,
+                // tải hai bảng riêng để Dashboard vẫn phản ánh đúng tồn kho thật.
+                if (productsRes.error || liveProducts.length === 0) {
+                    const [productFallback, inventoryFallback] = await Promise.all([
+                        client.from('product').select('id, product_name, sku, status'),
+                        client.from('inventory').select('product_id, quantity_in_stock, minimum_stock')
+                    ]);
+                    if (!productFallback.error) {
+                        const inventoryByProduct = new Map((inventoryFallback.data || []).map(inv => [inv.product_id, inv]));
+                        liveProducts = (productFallback.data || []).map(product => ({
+                            ...product,
+                            inventory: inventoryByProduct.get(product.id) || null
+                        }));
+                    }
+                }
                 liveStaffList = staffRes.data || [];
                 liveChatConversations = chatsRes.data || [];
-                liveCustomersCount = custCountRes.count !== null && custCountRes.count !== undefined ? custCountRes.count : 0;
+                const profiles = profilesRes.data || [];
+                liveCustomersCount = custCountRes.count !== null && custCountRes.count !== undefined && custCountRes.count > 0
+                    ? custCountRes.count
+                    : profiles.length;
                 livePetsCount = petCountRes.count !== null && petCountRes.count !== undefined ? petCountRes.count : 0;
 
                 // Maps tra cứu nhanh
-                const profiles = profilesRes.data || [];
                 liveProfilesMap.clear();
                 profiles.forEach(p => {
                     if (p.customer_id) liveProfilesMap.set(p.customer_id, p);
@@ -159,7 +198,7 @@
 
         const todayServiceRevenue = liveAppointments
             .filter(a => {
-                const isToday = a.appointment_date === todayStr;
+                const isToday = toDateKey(a.appointment_date) === todayStr;
                 const s = (a.appointment_status || '').toUpperCase();
                 return isToday && (s === 'COMPLETED' || s === 'DA_HOAN_THANH');
             })
@@ -169,7 +208,7 @@
 
         // 2. Lịch hẹn hôm nay (chỉ đếm ca chưa bị hủy)
         const todayBookingsCount = liveAppointments.filter(a => {
-            const isToday = a.appointment_date === todayStr;
+            const isToday = toDateKey(a.appointment_date) === todayStr;
             const s = (a.appointment_status || '').toUpperCase();
             return isToday && s !== 'CANCELLED' && s !== 'DA_HUY';
         }).length;
@@ -401,7 +440,7 @@
                 .filter(o => o.created_at && o.created_at.substring(0, 10) === dateStr)
                 .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
             const apptSum = completedAppts
-                .filter(a => (a.appointment_date === dateStr || (a.created_at && a.created_at.substring(0, 10) === dateStr)))
+                .filter(a => (toDateKey(a.appointment_date) === dateStr || toDateKey(a.created_at) === dateStr))
                 .reduce((sum, a) => sum + (parseFloat(a.total_price || a.price || 0) || 0), 0);
             return (orderSum + apptSum) / 100000; // Đơn vị: 100k
         });
@@ -535,13 +574,6 @@
                     notes: a.note || 'Chăm sóc dịu nhẹ, đúng quy trình an toàn.'
                 };
             });
-        }
-
-        function toDateKey(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
         }
 
         function dateFromKey(key) {
@@ -893,7 +925,7 @@
         const assignedStaffToday = new Set(
             liveAppointments
                 .filter(a => {
-                    const isToday = a.appointment_date === todayStr;
+                    const isToday = toDateKey(a.appointment_date) === todayStr;
                     const s = (a.appointment_status || '').toUpperCase();
                     return isToday && a.staff_id && s !== 'CANCELLED' && s !== 'DA_HUY';
                 })

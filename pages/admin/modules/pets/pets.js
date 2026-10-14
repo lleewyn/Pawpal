@@ -232,6 +232,11 @@
                         if ((result.data || []).length < 1000) return { data: logs, error: null };
                     }
                 };
+                const loadWeightHistory = async () => {
+                    const request = client.from('pet_weight_history').select('id, pet_id, weight, measured_at, recorded_by_name, created_at');
+                    const timeout = new Promise(resolve => setTimeout(() => resolve({ data: [], error: { message: 'Lịch sử cân nặng chưa phản hồi kịp thời.' } }), 5000));
+                    return Promise.race([request, timeout]);
+                };
                 // Tải song song 100% tất cả bảng dữ liệu (Triệt tiêu hoàn toàn Waterfall)
                 const [custAccRes, custProfRes, apptsRes, careLogsRes, petsRes, weightHistoryRes] = await Promise.all([
                     client.from('customer').select('id, email, phone_main, account_status'),
@@ -239,7 +244,7 @@
                     client.from('appointment').select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_time, appointment_status, total_price, service:service_id(service_name), staff:staff_id(full_name)').limit(500),
                     loadCareLogs(),
                     client.from('pet_profile').select('id, customer_id, pet_code, pet_name, avatar_url, species, breed, gender, date_of_birth, color, routine, weight, vaccination_history, allergy, status, created_at').order('created_at', { ascending: false }),
-                    Promise.resolve(client.from('pet_weight_history').select('id, pet_id, weight, measured_at, recorded_by_name, created_at')).catch(() => ({ data: [] }))
+                    loadWeightHistory().catch(() => ({ data: [] }))
                 ]);
                 for (const result of [custAccRes, custProfRes, apptsRes, careLogsRes, petsRes]) {
                     if (result.error) throw result.error;
@@ -383,6 +388,7 @@
                             allergy: allg || 'Không',
                             allergies: allg,
                             notes: routine || '',
+                            groomerNotes: routine || '',
                             alert: alertParts.join(' • '),
                             ownerName: ownerName,
                             ownerPhone: ownerObj.phone || '',

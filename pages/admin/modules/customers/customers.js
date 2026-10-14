@@ -445,7 +445,9 @@
                         emergency = `Ticket ${pendingComp.id} · ${pendingComp.status}: ${pendingComp.issue}`;
                     }
 
-                    let isLocked = c.account_status === 'LOCKED';
+                    const rawAccountStatus = String(c.account_status || '').toLowerCase();
+                    // CSDL demo dùng enum tiếng Việt; vẫn hỗ trợ các bản ghi cũ dùng mã tiếng Anh.
+                    let isLocked = c.account_status === 'LOCKED' || rawAccountStatus === 'da_khoa';
 
                     // Xác định số điện thoại ưu tiên: c.phone_main -> số người nhận trong sổ địa chỉ -> '—'
                     const phoneVal = c.phone_main || addrs.find(a => a.receiverPhone)?.receiverPhone || '—';
@@ -453,6 +455,7 @@
                     freshDb[custKey] = {
                         id: custKey,
                         dbId: c.id,
+                        accountStatusRaw: c.account_status,
                         name: prof.full_name || c.full_name || ('Khách hàng ' + (phoneVal !== '—' ? phoneVal : custKey)),
                         phone: phoneVal,
                         email: c.email || (prof.email || 'Chưa cập nhật'),
@@ -653,6 +656,7 @@
             PawpalCustomers.subtabs.list.renderComplaintBar();
         }
         if (PawpalCustomers.subtabs.pawpoint) {
+            PawpalCustomers.subtabs.pawpoint.init?.();
             PawpalCustomers.subtabs.pawpoint.renderPawpointHistory();
         }
 

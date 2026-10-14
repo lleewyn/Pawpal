@@ -82,7 +82,9 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
         lookup: wrap(async (req, res) => {
             await limit(`lookup:${req.ip}`, 30, 60000);
             const c = await customer(phoneLocal(req.body.phone));
-            res.json({ success: true, exists: !!c, isTemporary: !!c?.is_temporary });
+            const isMember = Boolean(c && !c.is_temporary && c.auth_user_id);
+            const isTemporary = Boolean(c && (c.is_temporary || !c.auth_user_id));
+            res.json({ success: true, exists: !!c, isMember, isTemporary });
         }),
         login: wrap(async (req, res) => {
             await limit(`login-ip:${req.ip}`, 30, 600000);

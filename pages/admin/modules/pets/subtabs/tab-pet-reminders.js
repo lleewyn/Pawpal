@@ -159,6 +159,7 @@
 
         reminderTableTbody.innerHTML = pagedReminders.map(item => {
             const isAlertRow = (item.type === 'HOTEL_VACCINE');
+            const canContact = Boolean(item.custId && String(item.ownerPhone || '').replace(/\D/g, '').length >= 9);
             const borderStyle = isAlertRow ? 'border-left: 3px solid #D97706;' : 'border-left: 3px solid transparent;';
 
             return `
@@ -188,8 +189,9 @@
                             data-rem-id="${item.id}"
                             data-pet="${item.petName}"
                             data-owner="${item.ownerName}"
-                            data-phone="${item.ownerPhone}">
-                            ${item.status === 'SENT' ? 'Gửi lại' : 'Gửi tin'}
+                            data-phone="${item.ownerPhone}"
+                            ${canContact ? '' : 'disabled title="Chưa có chủ nuôi hoặc số điện thoại hợp lệ"'}>
+                            ${canContact ? (item.status === 'SENT' ? 'Gửi lại' : 'Gửi tin') : 'Thiếu liên hệ'}
                         </button>
                         <button type="button" class="admin-btn admin-btn-primary btn-sm btn-quick-book-spa" 
                             data-id="${item.petId}" 
@@ -253,6 +255,10 @@
                 const pet = btnReminder.getAttribute('data-pet') || 'Bé cưng';
                 const owner = btnReminder.getAttribute('data-owner') || 'Chủ nuôi';
                 const phone = btnReminder.getAttribute('data-phone') || '';
+                if (!currentItem?.custId || phone.replace(/\D/g, '').length < 9) {
+                    PawpalPets.showToast('Chưa có chủ nuôi hoặc số điện thoại hợp lệ để gửi nhắc lịch.', 'warning');
+                    return;
+                }
 
                 const ownerInput = document.getElementById('reminderModalOwner');
                 const petInput = document.getElementById('reminderModalPet');

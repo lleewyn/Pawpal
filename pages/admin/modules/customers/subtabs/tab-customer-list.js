@@ -842,7 +842,13 @@
                 const custObj = PawpalCustomers.state.customerDatabase[custId];
                 if (!custObj || !custObj.dbId) return;
                 const isLocking = custObj.status !== 'LOCKED';
-                const newStatus = isLocking ? 'LOCKED' : 'ACTIVE';
+                // Theo CSDLdemo, customer.account_status dùng enum dang_hoat_dong/tam_khoa/da_khoa.
+                // Giữ tương thích với dữ liệu cũ dùng ACTIVE/LOCKED.
+                const usesVietnameseStatus = ['dang_hoat_dong', 'tam_khoa', 'da_khoa'].includes(String(custObj.accountStatusRaw || '').toLowerCase());
+                const newStatus = isLocking
+                    ? (usesVietnameseStatus ? 'da_khoa' : 'LOCKED')
+                    : (usesVietnameseStatus ? 'dang_hoat_dong' : 'ACTIVE');
+                const expectedUiStatus = isLocking ? 'LOCKED' : 'ACTIVE';
                 PawpalCustomers.showCustomerConfirmModal({
                     title: isLocking ? 'Khóa tài khoản khách hàng' : 'Mở khóa tài khoản khách hàng',
                     message: isLocking
@@ -856,14 +862,12 @@
                             return;
                         }
                         try {
-                            const { data: updatedCustomer, error: lockErr } = await client
+                            const { error: lockErr } = await client
                                 .from('customer')
                                 .update({ account_status: newStatus })
-                                .eq('id', custObj.dbId)
-                                .select('id, account_status')
-                                .maybeSingle();
+                                .eq('id', custObj.dbId);
 
-                            if (lockErr || !updatedCustomer || updatedCustomer.account_status !== newStatus) {
+                            if (lockErr) {
                                 if (lockErr) console.error('[Customers] Lỗi cập nhật trạng thái:', lockErr);
                                 PawpalCustomers.showToast('Không thể cập nhật trạng thái tài khoản trên cơ sở dữ liệu.', 'danger');
                                 return;
@@ -871,7 +875,7 @@
 
                             await PawpalCustomers.loadCustomersModuleData({ force: true });
                             const refreshedCustomer = PawpalCustomers.state.customerDatabase?.[custId];
-                            if (!refreshedCustomer || refreshedCustomer.status !== newStatus) {
+                            if (!refreshedCustomer || refreshedCustomer.status !== expectedUiStatus) {
                                 PawpalCustomers.showToast('Trạng thái chưa được đồng bộ. Vui lòng tải lại và thử lại.', 'danger');
                                 return;
                             }

@@ -27,7 +27,9 @@ Với mỗi tab: kiểm tra tải dữ liệu/skeleton/trống/lỗi; bấm từ
 3. “Đặt lịch Spa và Hotel” và “Lên đơn bán lẻ” mở đúng form sau khi chuyển phân hệ.
 4. “Chuyển sang ca Dịch vụ” mở đúng hồ sơ ca vừa chọn, kể cả khi phân hệ Dịch vụ đang tải dữ liệu.
 
-**Chưa kiểm thử:** các nút ưu tiên/nhìn tồn kho còn lại, lịch tuần khi có ca, “Xem tất cả”, “Xem hội thoại”, hành vi backdrop của modal, dữ liệu KPI đối chiếu Supabase, giao diện màn hình hẹp và trạng thái API lỗi.
+**Đã kiểm thử bổ sung:** nút “Khiếu nại chờ xử lý” mở `tab-complaint-services`; nút “Xem hội thoại” mở `tab-live-support`; lịch tuần hiển thị các ngày có lịch hẹn; console không ghi nhận lỗi/warning trong lượt kiểm thử.
+
+**Còn giới hạn:** chưa thể xác nhận backdrop của modal vì ngày có dấu lịch không trả về ca chi tiết trong dữ liệu hiện tại; màn hình hẹp và lỗi API cần môi trường mô phỏng riêng. Tồn kho vẫn cần đối chiếu quan hệ `product` và `inventory`.
 
 ## Khách hàng / Danh sách — đã kiểm thử vòng chức năng
 
@@ -42,11 +44,38 @@ Với mỗi tab: kiểm tra tải dữ liệu/skeleton/trống/lỗi; bấm từ
 
 **Chưa kiểm thử:** lưu mới/sửa khách, điều chỉnh điểm và bước xác nhận khóa/mở khóa trên bản ghi QA riêng; tổ hợp lỗi Supabase; responsive; backdrop modal. Không tạo dữ liệu thử trong vòng này.
 
-## Khách hàng / Pawpoint — đã kiểm thử vòng đọc và modal
+### Kiểm thử ghi dữ liệu bổ sung (14/10/2026)
 
-**Đạt:** tải chính sách hạng thẻ; tải lịch sử giao dịch Pawpoint từ dữ liệu hiện có; bộ lọc Tất cả/Cộng điểm/Trừ điểm; phân trang; mở modal Điều chỉnh Pawpoint; ô Khách hàng hoặc số điện thoại hiển thị custom autocomplete có tên, SĐT, thú cưng, hạng và số dư; chip lý do điền nhanh; loại điều chỉnh Cộng điểm/Trừ điểm; nút Đóng/Hủy đóng modal. Không xác nhận điều chỉnh để tránh ghi dữ liệu thật.
+- Lưu ghi chú trên hồ sơ `CUST-002` báo thành công và giữ nguyên sau khi tải lại hồ sơ.
+- Luồng khóa tài khoản mở đúng menu và modal xác nhận, nhưng sau khi xác nhận trạng thái vẫn là `Thành viên` và tải lại danh sách không hiển thị `Bị khóa`. Cần xử lý lỗi đồng bộ thao tác `account_status` trước khi đánh dấu đạt; chưa thực hiện thao tác mở khóa vì bản ghi không chuyển sang trạng thái khóa.
 
-**Chưa kiểm thử:** xuất file; xác nhận cộng/trừ điểm trên bản ghi QA; kiểm tra lỗi số điểm âm/0, khách không tồn tại, lỗi Supabase; responsive và backdrop modal.
+## Khách hàng / Pawpoint — đã kiểm thử chức năng sử dụng và điều chỉnh điểm (14/10/2026)
+
+**Đạt:**
+- Tải bảng chính sách 3 hạng thẻ (Bạc, Vàng, Kim Cương) kèm mức chi tiêu và chiết khấu.
+- Tải lịch sử biến động Pawpoint từ Supabase live database; bộ lọc Tất cả / Cộng điểm / Trừ điểm; tìm kiếm theo tên, SĐT, lý do; phân trang căn giữa ngoài bảng.
+- Xuất file CSV lịch sử giao dịch hoạt động với định dạng chuẩn UTF-8 BOM kèm tên file theo ngày.
+- Mở modal "Điều chỉnh Pawpoint" từ nút trong header bảng lịch sử hoặc từ menu tác vụ từng khách hàng trong bảng danh sách.
+- Ô tìm kiếm khách hàng: Custom autocomplete popover dạng 100% phẳng thuần chữ (đã triệt tiêu avatar/icon tròn viết tắt theo chuẩn AGENTS.md), hiển thị rõ tên in đậm, SĐT, bé cưng, hạng thẻ và số dư điểm hiện tại.
+- Thẻ tóm tắt xác nhận lựa chọn khách hàng hiển thị thông tin rõ ràng kèm nút `✕ Bỏ chọn` (bấm một chạm để xóa lựa chọn và đưa con trỏ về ô tìm kiếm).
+- Kiểm tra tính hợp lệ dữ liệu: chặn điểm $\le 0$, chặn trường lý do trống, chặn trừ điểm vượt quá số dư hiện tại của khách hàng.
+- Nút chip một chạm điền nhanh lý do (`Bù sự cố trễ hẹn`, `Bù giao hàng chậm`, `Tặng điểm tri ân`, `Thu hồi do hủy đơn`, `Đổi quà tại quầy`, `Điều chỉnh sai lệch điểm`) hoạt động mượt mà qua cơ chế event delegation.
+- Thao tác ghi dữ liệu sử dụng điểm (Trừ điểm - SUB) và Điều chỉnh cộng điểm (ADD):
+  - Cập nhật số dư trong bảng `customer_membership.total_paw_points`.
+  - Ghi bản ghi biến động lịch sử vào bảng `paw_point_transaction` trên Supabase (kèm liên kết `reward_rule_id`).
+  - Tự động bỏ qua cache 90 giây (`force: true`) để nạp ngay số dư mới và dòng lịch sử vừa tạo lên đầu bảng.
+  - Hiển thị Toast thông báo thành công xanh lá (`Đã trừ/cộng X Pawpoint cho khách hàng... Số dư mới: Y điểm`).
+  - Đồng bộ cập nhật ngay lên bảng danh sách khách hàng và Drawer hồ sơ 360° nếu đang mở.
+  - Đã thực hiện thao tác hoàn nguyên (cộng điểm bù lại) trên bản ghi thử nghiệm để bảo toàn số dư thực tế trong CSDL.
+  - Kiểm tra F5 / tải lại trang: dữ liệu lịch sử và số dư được lưu trữ bền vững từ CSDL Supabase.
+
+**Lỗi đã phát hiện và sửa trong lượt kiểm thử:**
+1. **Thiếu `reward_rule_id` khi ghi lịch sử**: Bảng `paw_point_transaction` trên Supabase có ràng buộc Not-Null đối với cột `reward_rule_id`. Code cũ chỉ gửi `customer_id, points, balance_after, description` dẫn đến lỗi `23502` khiến giao dịch bị hủy và báo lỗi đỏ. Đã bổ sung mã quy tắc mặc định hợp lệ của hệ thống để đảm bảo ghi nhận thành công 100%.
+2. **Bộ nhớ đệm dữ liệu ngăn cập nhật tức thì**: Hàm `loadCustomersModuleData()` có cơ chế cache 90s, sau khi lưu điểm thành công nếu không truyền `{ force: true }` thì bảng lịch sử vẫn dùng dữ liệu cũ. Đã thêm cờ `force: true` sau khi điều chỉnh điểm.
+3. **Lỗi lưu tham chiếu phần tử DOM tĩnh (Stale DOM Reference)**: Các biến `adjustReasonInput`, `adjustPhoneInput` trước đây lưu tĩnh ở phạm vi script dẫn đến việc bấm chip lý do không điền được nội dung khi DOM được render lại. Đã chuyển toàn bộ sang hàm getter động và cơ chế Event Delegation trên `document`.
+4. **Vi phạm chuẩn Text-Only trong Autocomplete**: Dropdown chọn khách hàng trước đây có icon avatar tròn `.customer-autocomplete-avatar` mang chữ cái viết tắt; đã loại bỏ hoàn toàn và bổ sung nút `✕ Bỏ chọn` vào thẻ tóm tắt theo quy chuẩn AGENTS.md.
+
+**Chưa kiểm thử:** Mô phỏng mất mạng khi đang submit API Supabase; hiển thị trên màn hình siêu hẹp (mobile responsive dưới 360px).
 
 ## Thú cưng / Danh sách — đã kiểm thử vòng tải và lọc
 
@@ -247,3 +276,19 @@ Theo góp ý giao diện, cột `Loài và Giống` trong bảng danh sách hi�
 **Nhật ký:** KPI, trạng thái khóa an toàn, tìm kiếm, lọc phân hệ, bảng audit và phân trang tải đúng; hiện có 1 bản ghi đồng bộ SSOT từ Bán hàng.
 
 **Chưa kiểm thử:** mở khóa, lưu các modal cấu hình và kiểm tra kết nối đối tác vì là thao tác thay đổi hoặc gọi nghiệp vụ thật.
+
+## Dashboard — kiểm thử bổ sung trực tiếp
+
+**Đạt thêm:** nút Xem kho điều hướng đúng sang Bán hàng / Sản phẩm và Kho; nút Xem tất cả trong lịch điều hướng đúng sang Dịch vụ / Lịch hẹn; chuyển chế độ lịch Tuần và Ngày cập nhật trạng thái chọn đúng khi Dashboard đã hoạt động.
+
+**Lưu ý dữ liệu:** Dashboard hiện hiển thị Tổng khách hàng = 0, Lịch hẹn hôm nay = 0 và Tồn kho ổn định dù các phân hệ tương ứng có dữ liệu; cần đối chiếu truy vấn KPI Dashboard với Supabase. Lịch có các ngày đánh dấu có hẹn nhưng agenda hôm nay báo trống, cần rà soát quy đổi múi giờ/ngày.
+
+**Chưa kiểm thử:** các nút tạo lịch/đơn, Xem hội thoại, Xem tất cả khi có lịch thật, tồn kho có sản phẩm sắp hết, modal backdrop/responsive và KPI đối chiếu toàn bộ.
+## Dashboard — rà soát bổ sung (14/10/2026)
+
+- Đã đối chiếu lại sau khi tải mới màn hình: KPI Tổng khách hàng hiển thị 13, Tổng bé cưng 52; dữ liệu không còn rơi về 0 khi bảng `customer` không trả count nhưng `customer_profile` có dữ liệu.
+- Đã chuẩn hóa khóa ngày cho `appointment_date` ở dạng DATE và TIMESTAMP, áp dụng cho KPI lịch hẹn, doanh thu dịch vụ, lịch tháng/tuần/ngày và tỷ lệ phân ca. Việc này tránh bỏ sót lịch do so sánh chuỗi nguyên trạng.
+- Kiểm thử lại các điểm điều hướng Dashboard: `Xem kho` mở `tab-order-products`, `Xem tất cả` mở `tab-service-bookings`; các nút cảnh báo và ưu tiên vẫn có điều hướng đúng.
+- Trạng thái hiện tại: Dashboard tải được dữ liệu thật (14 khiếu nại, 52 bé, 13 khách, 24 phiên chatbot). Kho đang hiển thị trạng thái trống vì truy vấn tồn kho chưa trả sản phẩm; cần rà soát schema quan hệ `inventory` nếu dữ liệu sản phẩm thực tế đang có.
+- Đối chiếu trực tiếp tab Sản phẩm cho thấy CSDL có 37 mặt hàng, 36 còn hàng, 1 sắp hết và 1 hết hàng. Vì vậy dòng “chưa có sản phẩm” trên Dashboard là lỗi đồng bộ truy vấn, không phải dữ liệu rỗng. Đã phát hiện truy vấn Dashboard đang yêu cầu cột `stock`/các cột inventory không dùng trong truy vấn chuẩn của tab Sản phẩm; đã thêm fallback truy vấn `product` và `inventory` riêng để tiếp tục xử lý.
+
