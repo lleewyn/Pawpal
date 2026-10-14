@@ -37,11 +37,18 @@ function initReturnGuestPage() {
     if (form.dataset.rgBound === 'true') return;
     form.dataset.rgBound = 'true';
 
+    const memberCard = document.getElementById('rg-member-card');
+    const memberPhone = document.getElementById('rg-member-phone');
+    const memberLoginLink = document.getElementById('rg-member-login-link');
+
     if (errorBox) errorBox.classList.add('d-none');
+    if (memberCard) memberCard.classList.add('d-none');
     if (resultsEl) resultsEl.classList.add('d-none');
 
     phoneInput.addEventListener('input', (e) => {
         const currentNorm = normalizePhone(e.target.value);
+        if (errorBox) errorBox.classList.add('d-none');
+        if (memberCard) memberCard.classList.add('d-none');
         if (rgVerifiedPhone && currentNorm !== rgVerifiedPhone) {
             rgVerifiedPhone = null;
             if (resultsEl) resultsEl.classList.add('d-none');
@@ -55,6 +62,9 @@ function initReturnGuestPage() {
             if (!phone) return;
 
             const normPhone = normalizePhone(phone);
+
+            if (errorBox) errorBox.classList.add('d-none');
+            if (memberCard) memberCard.classList.add('d-none');
 
             const btn = form.querySelector('button[type=submit]');
             if (btn) {
@@ -70,15 +80,10 @@ function initReturnGuestPage() {
                     btn.textContent = 'Tìm kiếm';
                 }
                 if (resultsEl) resultsEl.classList.add('d-none');
-                if (errorBox) {
-                    errorBox.classList.remove('d-none');
-                    errorBox.innerHTML = `
-                        <div class="alert-member-prompt" style="padding:18px 22px; background:#f4f9f6; border-radius:9px; border:1px solid #c3dec7; color:#203a2c; text-align:left;">
-                            <div style="font-weight:700; color:#236b48; font-size:1.05rem; margin-bottom:8px;">Số điện thoại đã được đăng ký Thành viên</div>
-                            <div style="font-size:0.92rem; margin-bottom:14px; color:#4f7a65; line-height: 1.5;">Số điện thoại <strong>${esc(phone)}</strong> thuộc tài khoản thành viên chính thức Pawpal. Trang tra cứu này chỉ phục vụ cho khách vãng lai. Vui lòng đăng nhập để xem đầy đủ hồ sơ, lịch hẹn và hưởng trọn quyền lợi tích điểm.</div>
-                            <a href="/login?phone=${encodeURIComponent(normPhone)}" class="btn-cta" style="display:inline-block; padding:9px 22px; text-decoration:none; border-radius:9px; font-weight:600;">Đăng nhập ngay</a>
-                        </div>
-                    `;
+                if (memberCard) {
+                    if (memberPhone) memberPhone.textContent = phone;
+                    if (memberLoginLink) memberLoginLink.href = `/login?phone=${encodeURIComponent(normPhone)}`;
+                    memberCard.classList.remove('d-none');
                 }
                 return;
             }

@@ -232,26 +232,31 @@
     <main class="rg-page">
         <div class="container-xl">
             <div class="rg-card">
-                <h1 class="rg-title">Tra cứu lịch dịch vụ | đơn hàng</h1>
+                <h1 class="rg-title">Tra cứu lịch dịch vụ và đơn hàng</h1>
 
                 <form id="rg-form" class="rg-form">
-                    <label class="rg-label" for="rg-phone">Số điện thoại *</label>
+                    <label class="rg-label" for="rg-phone">Số điện thoại <span style="color: #dc2626; font-weight: 700;">*</span></label>
                     <div class="rg-form-row">
                         <input type="tel" id="rg-phone" class="rg-input" placeholder="Ví dụ: 0901234567" required>
                         <button type="submit" class="btn-cta rg-search-btn">Tìm kiếm</button>
                     </div>
-                    <div class="rg-error d-none" id="rg-error" >
+                    <div class="rg-error d-none" id="rg-error">
                         Chưa tìm thấy kết quả nào với số điện thoại này. Vui lòng kiểm tra lại.
+                    </div>
+                    <div class="rg-member-card d-none" id="rg-member-card">
+                        <h4 class="rg-member-title">Số điện thoại đã được đăng ký thành viên</h4>
+                        <p class="rg-member-desc">Số điện thoại <strong id="rg-member-phone"></strong> thuộc tài khoản thành viên chính thức Pawpal. Trang này chỉ phục vụ khách vãng lai tra cứu nhanh. Vui lòng đăng nhập để xem trọn vẹn thông tin và quyền lợi thành viên.</p>
+                        <a href="/login" id="rg-member-login-link" class="btn-cta rg-member-btn">Đăng nhập ngay</a>
                     </div>
                 </form>
 
                 <section id="rg-results" class="d-none">
-                    <div id="rg-guest-upsell-banner" class="rg-guest-banner mb-3 p-3" style="background:#f4f9f6; border-radius:9px; border:1px solid #c3dec7; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-                        <div style="flex:1; min-width:250px;">
-                            <div style="font-weight:700; color:#236b48; font-size:0.95rem; margin-bottom:3px;">Bạn đang tra cứu dưới tư cách Khách vãng lai</div>
-                            <div style="font-size:0.87rem; color:#4f7a65;">Thiết lập mật khẩu để tự động liên kết đơn hàng, tích lũy điểm PawPoints và nhận ngay 50 điểm chào mừng.</div>
+                    <div id="rg-guest-upsell-banner" class="rg-guest-banner">
+                        <div>
+                            <div class="rg-guest-banner-title">Bạn đang tra cứu dưới tư cách Khách vãng lai</div>
+                            <div class="rg-guest-banner-desc">Thiết lập mật khẩu để tự động liên kết đơn hàng vào tài khoản chính thức và nhận 50 PawPoints chào mừng.</div>
                         </div>
-                        <a id="rg-banner-setup-btn" href="/login" class="btn-cta" style="padding:8px 18px; font-size:0.88rem; text-decoration:none; white-space:nowrap; border-radius:9px;">Thiết lập mật khẩu</a>
+                        <a id="rg-banner-setup-btn" href="/login" class="btn-cta rg-guest-banner-btn">Thiết lập mật khẩu</a>
                     </div>
                     <h3 class="rg-results-title">Kết quả tìm thấy</h3>
                     <div class="rg-tabs" id="rg-tabs"></div>
