@@ -149,42 +149,74 @@
 
 .rg-tabs {
     display: flex;
-    gap: 4px;
-    border-bottom: 2px solid var(--color-border);
-    margin-bottom: 20px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    border-bottom: none;
 }
 
 .rg-tab {
     padding: 8px 16px;
     border: none;
-    background: none;
-    font-family: var(--font-body);
-    font-size: var(--fs-small);
+    background: transparent;
+    font-size: 0.95rem;
     font-weight: 500;
-    color: var(--color-text-light);
+    color: #4F7A65;
     cursor: pointer;
     position: relative;
-    transition: color 0.15s ease;
+    border-radius: 9px;
+    transition: all 0.15s ease;
 }
 
 .rg-tab:hover {
-    color: var(--color-primary);
+    color: #236B48;
+    background: #EEF5F1;
 }
 
 .rg-tab.active {
-    color: var(--color-primary);
+    color: #236B48;
     font-weight: 700;
+    background: #EEF5F1;
+    border-bottom: 2px solid #236B48;
+    border-radius: 9px 9px 0 0;
 }
 
 .rg-tab.active::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: var(--color-primary);
-    border-radius: 3px 3px 0 0;
+    display: none;
+}
+
+.rg-status-chips {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.rg-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    background: #EEF5F1;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    color: #236B48;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.rg-chip:hover {
+    background: #DCEEE2;
+    color: #236B48;
+}
+
+.rg-chip.active {
+    background: #236B48;
+    border-color: #236B48;
+    color: #FFFFFF;
+    font-weight: 600;
 }
 
 .rg-list {

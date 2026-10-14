@@ -349,10 +349,98 @@ function mapOrderStatus(status) {
 
 function renderResults(bookings, orders) {
     const tabsEl = document.getElementById('rg-tabs');
+    const chipsEl = document.getElementById('rg-status-chips');
     const listEl = document.getElementById('rg-list');
     const setupBtn = document.getElementById('rg-banner-setup-btn');
     if (setupBtn && rgVerifiedPhone) {
         setupBtn.href = `/login?phone=${encodeURIComponent(rgVerifiedPhone)}`;
+    }
+
+    let currentTab = 'all';
+    let currentStatus = 'all';
+
+    const statusOptions = {
+        all: [
+            { id: 'all', label: 'Tất cả' },
+            { id: 'pending', label: 'Chờ xác nhận', statuses: ['pending'] },
+            { id: 'processing', label: 'Đang thực hiện / Giao hàng', statuses: ['confirmed', 'accepted', 'in-progress', 'preparing', 'shipping'] },
+            { id: 'completed', label: 'Đã hoàn thành', statuses: ['completed', 'delivered'] },
+            { id: 'cancelled', label: 'Đã hủy', statuses: ['cancelled', 'returned', 'return_pending'] },
+        ],
+        booking: [
+            { id: 'all', label: 'Tất cả dịch vụ' },
+            { id: 'pending', label: 'Chờ xác nhận', statuses: ['pending'] },
+            { id: 'confirmed', label: 'Đã xác nhận', statuses: ['confirmed', 'accepted', 'upcoming'] },
+            { id: 'in-progress', label: 'Đang thực hiện', statuses: ['in-progress'] },
+            { id: 'completed', label: 'Hoàn thành', statuses: ['completed'] },
+            { id: 'cancelled', label: 'Đã hủy', statuses: ['cancelled'] },
+        ],
+        order: [
+            { id: 'all', label: 'Tất cả đơn hàng' },
+            { id: 'pending', label: 'Chờ xác nhận', statuses: ['pending'] },
+            { id: 'preparing', label: 'Chờ lấy hàng', statuses: ['preparing'] },
+            { id: 'shipping', label: 'Đang giao', statuses: ['shipping'] },
+            { id: 'delivered', label: 'Đã giao', statuses: ['delivered', 'completed'] },
+            { id: 'cancelled', label: 'Đã hủy', statuses: ['cancelled'] },
+            { id: 'returned', label: 'Đổi trả', statuses: ['returned', 'return_pending'] },
+        ]
+    };
+
+    function applyFilter() {
+        const items = listEl.querySelectorAll('.rg-item');
+        let visibleCount = 0;
+        const currentOpts = statusOptions[currentTab] || [];
+        const activeOpt = currentOpts.find(o => o.id === currentStatus);
+        const matchStatuses = activeOpt?.statuses || null;
+
+        items.forEach(item => {
+            const itemType = item.dataset.type;
+            const itemStatus = item.dataset.status;
+
+            const typeMatch = (currentTab === 'all' || itemType === currentTab);
+            let statusMatch = true;
+            if (currentStatus !== 'all' && matchStatuses) {
+                statusMatch = matchStatuses.includes(itemStatus);
+            }
+
+            const visible = typeMatch && statusMatch;
+            item.classList.toggle('d-none', !visible);
+            if (visible) visibleCount++;
+        });
+
+        let emptyEl = document.getElementById('rg-filter-empty');
+        if (visibleCount === 0) {
+            if (!emptyEl) {
+                emptyEl = document.createElement('div');
+                emptyEl.id = 'rg-filter-empty';
+                emptyEl.className = 'p-4 text-center text-muted';
+                emptyEl.style.cssText = 'background:#F9FBFA; border-radius:9px; border:1px solid #ECF2EE; font-size:0.92rem; margin-top:12px;';
+                emptyEl.textContent = 'Không tìm thấy mục nào phù hợp với bộ lọc đã chọn.';
+                listEl.appendChild(emptyEl);
+            }
+            emptyEl.classList.remove('d-none');
+        } else if (emptyEl) {
+            emptyEl.classList.add('d-none');
+        }
+    }
+
+    function renderStatusChips() {
+        if (!chipsEl) return;
+        const opts = statusOptions[currentTab] || [];
+        chipsEl.innerHTML = opts.map(opt => `
+            <button type="button" class="rg-chip ${opt.id === currentStatus ? 'active' : ''}" data-status="${opt.id}">
+                ${opt.label}
+            </button>
+        `).join('');
+
+        chipsEl.querySelectorAll('.rg-chip').forEach(btn => {
+            btn.addEventListener('click', () => {
+                chipsEl.querySelectorAll('.rg-chip').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentStatus = btn.dataset.status;
+                applyFilter();
+            });
+        });
     }
 
     tabsEl.innerHTML = `
@@ -364,16 +452,20 @@ function renderResults(bookings, orders) {
         btn.addEventListener('click', () => {
             tabsEl.querySelectorAll('.rg-tab').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            const f = btn.dataset.filter;
-            listEl.querySelectorAll('.rg-item').forEach(item => {
-                item.classList.toggle('d-none', !(f === 'all' || item.dataset.type === f));
-            });
+            currentTab = btn.dataset.filter;
+            currentStatus = 'all';
+            renderStatusChips();
+            applyFilter();
         });
     });
+
+    renderStatusChips();
 
     listEl.innerHTML =
         bookings.map(b => buildBookingCard(b)).join('') +
         orders.map(o => buildOrderCard(o)).join('');
+
+    applyFilter();
 }
 
 function badge(statusMap, status) {
@@ -476,7 +568,7 @@ function buildBookingCard(b) {
     const cancelClass = resolvedStatus === 'cancelled' ? ' rg-item-cancelled' : '';
 
     return `
-    <div class="rg-item${cancelClass}" data-type="booking">
+    <div class="rg-item${cancelClass}" data-type="booking" data-status="${resolvedStatus}">
         <div class="rg-item-header">
             <div>
                 <h4 class="rg-item-name">${service}</h4>
@@ -557,7 +649,7 @@ function buildOrderCard(o) {
     const cancelClass = normalizedStatus === 'cancelled' ? ' rg-item-cancelled' : '';
 
     return `
-    <div class="rg-item${cancelClass}" data-type="order">
+    <div class="rg-item${cancelClass}" data-type="order" data-status="${normalizedStatus}">
         <div class="rg-item-header">
             <div>
                 <h4 class="rg-item-name">Đơn hàng: ${esc(o.id)}</h4>
