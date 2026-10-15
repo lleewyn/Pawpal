@@ -512,7 +512,18 @@ async function loadBookingConfig() {
     }
 }
 
+function finishBookingLoading() {
+    const main = document.querySelector('.booking-main');
+    if (!main) return;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        main.classList.remove('booking-loading');
+        main.setAttribute('aria-busy', 'false');
+        setTimeout(() => main.querySelector('.booking-skeleton')?.remove(), 260);
+    }));
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+    try {
     console.log('=== BOOKING MODULE INITIALIZING ===');
 
     setupStepActions();
@@ -673,6 +684,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     await restoreBookingSession();
+    if (!allServices.length) throw new Error('No services available');
+    } catch (error) {
+        console.error('Không thể khởi tạo đặt lịch:', error);
+        const layout = document.querySelector('.booking-layout');
+        if (layout) layout.innerHTML = '<div class="py-5 text-center" role="status"><p>Chưa thể tải thông tin đặt lịch. Vui lòng tải lại trang.</p><a href="/services">Quay lại danh sách dịch vụ</a></div>';
+    } finally {
+        finishBookingLoading();
+    }
 });
 
 function resolveCurrentUserName(user) {
@@ -1232,11 +1251,24 @@ function setupScheduleSelection() {
     const checkInInput = document.getElementById('checkInDate');
     const checkOutInput = document.getElementById('checkOutDate');
     const bookingDateInput = document.getElementById('bookingDate');
+    const quickChips = document.querySelectorAll('.quick-date-chip');
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const getOffsetDateStr = (offsetDays) => {
+        const d = new Date();
+        d.setDate(d.getDate() + offsetDays);
+        return d.toISOString().split('T')[0];
+    };
+
+    const todayStr = getOffsetDateStr(0);
     if (checkInInput) checkInInput.min = todayStr;
     if (checkOutInput) checkOutInput.min = todayStr;
-    if (bookingDateInput) bookingDateInput.min = todayStr;
+    if (bookingDateInput) {
+        bookingDateInput.min = todayStr;
+        if (!bookingState.date) {
+            bookingState.date = todayStr;
+        }
+        bookingDateInput.value = bookingState.date;
+    }
 
     const timeslotGrid = document.getElementById('timeslotGrid');
     const staffList = document.getElementById('staffList');
@@ -1248,6 +1280,36 @@ function setupScheduleSelection() {
             el.style.pointerEvents = locked ? 'none' : '';
         });
     }
+
+    function syncQuickChips(currentDateStr) {
+        quickChips.forEach(chip => {
+            const offset = parseInt(chip.dataset.offset || '0', 10);
+            const targetDate = getOffsetDateStr(offset);
+            if (currentDateStr === targetDate) {
+                chip.classList.add('active');
+            } else {
+                chip.classList.remove('active');
+            }
+        });
+    }
+
+    // Initialize chip active state
+    syncQuickChips(bookingState.date || todayStr);
+
+    quickChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            const offset = parseInt(chip.dataset.offset || '0', 10);
+            const selectedDate = getOffsetDateStr(offset);
+            if (bookingDateInput) bookingDateInput.value = selectedDate;
+            bookingState.date = selectedDate;
+            syncQuickChips(selectedDate);
+            setScheduleLocked(false);
+            renderTimeslots();
+            renderStaff();
+            validateStep3();
+            saveBookingSession();
+        });
+    });
 
     const hasDate = Boolean(bookingState.date);
     setScheduleLocked(!hasDate);
@@ -1298,6 +1360,7 @@ function setupScheduleSelection() {
     if (bookingDateInput) {
         bookingDateInput.addEventListener('change', () => {
             bookingState.date = bookingDateInput.value;
+            syncQuickChips(bookingDateInput.value);
             setScheduleLocked(!bookingDateInput.value);
             renderTimeslots();
             renderStaff();
@@ -1782,6 +1845,18 @@ function setupStepActions() {
                 document.getElementById('spaSchedule').classList.remove('d-none');
                 const spaDateGroup = document.querySelector('#spaSchedule .booking-date');
                 if (spaDateGroup) spaDateGroup.classList.remove('d-none');
+
+                const bookingDateInput = document.getElementById('bookingDate');
+                if (!bookingState.date) {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    bookingState.date = todayStr;
+                    if (bookingDateInput) bookingDateInput.value = todayStr;
+                }
+                const timeslotGrid = document.getElementById('timeslotGrid');
+                const staffList = document.getElementById('staffList');
+                if (timeslotGrid) { timeslotGrid.style.opacity = ''; timeslotGrid.style.pointerEvents = ''; }
+                if (staffList) { staffList.style.opacity = ''; staffList.style.pointerEvents = ''; }
+
                 renderTimeslots();
                 renderStaff();
             }
