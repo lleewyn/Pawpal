@@ -132,7 +132,7 @@ function setupGuestActivationCard(order) {
 
     card.classList.remove('d-none');
     phoneDisplay.textContent = phone;
-    activateLink.href = `/pages/public/login/login.html?action=guest-activate&phone=${encodeURIComponent(phone)}`;
+    activateLink.href = `/login?action=guest-activate&phone=${encodeURIComponent(phone)}`;
 }
 
 function setupTrackingLink(order) {
@@ -144,7 +144,7 @@ function setupTrackingLink(order) {
 
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     const isLoggedInUser = Boolean(currentUser && (currentUser.id || currentUser.phone) && !currentUser.is_temporary);
-    const isSamePhone = currentUser && order.shipping && currentUser.phone === order.shipping.phone;
+    const guestPhone = order?.shipping?.phone || (currentUser?.phone) || '';
 
     trackBtns.forEach(btn => {
         const id = order.id || order.orderId || order.orderID || orderIdFrom(order);
@@ -155,7 +155,9 @@ function setupTrackingLink(order) {
                 btn.href = '/pages/user/#orders';
             }
         } else {
-            btn.href = '/pages/public/return-guest/return-guest.html';
+            btn.href = guestPhone
+                ? `/return-guest?phone=${encodeURIComponent(guestPhone)}`
+                : '/return-guest';
         }
     });
 }

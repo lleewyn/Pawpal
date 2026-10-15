@@ -763,3 +763,143 @@ Toàn bộ **9 phân hệ quản trị** của Pawpal-er đã được kiểm tr
 
 ---
 *Tài liệu được biên soạn và cập nhật tự động theo tiêu chuẩn hệ thống quản trị Pawpal-er.*
+
+
+Searched for "SUPABASE_URL"
+Viewed supabase-client.js:1-40
+Viewed .env:1-14
+Created check_customers.js
+Ran command: `node scratch/check_customers.js`
+Created check_customers.js
+Ran command: `node scratch/check_customers.js`
+Created inspect_activity.js
+Ran command: `node scratch/inspect_activity.js`
+Used tool: manage_task
+Used tool: manage_task
+Used tool: manage_task
+Viewed return-guest.js:50-140
+Viewed vercel.json:1-60
+Viewed customer-auth.js:1-26
+Viewed package.json:1-16
+Viewed server.js:1-80
+Searched for "rg-upsell"
+Viewed return-guest.js:1280-1340
+Viewed return-guest.js:1340-1420
+Viewed return-guest.js:1425-1480
+Viewed login.html:30-100
+Searched for "loginStepSendOTP"
+Searched for "id="loginForm""
+Searched for "id="login"
+Viewed login.html:200-300
+Created sync_guest_demo.js
+Ran command: `node scratch/sync_guest_demo.js`
+Searched for "rpc("
+Viewed customer_auth.js:80-90
+Edited customer_auth.js
+Viewed return-guest.js:1300-1375
+Viewed return-guest.js:51-85
+Viewed return-guest.js:135-160
+Edited return-guest.js
+Viewed return-guest.js:145-175
+Edited return-guest.js
+Viewed return-guest.js:1335-1385
+Edited return-guest.js
+Searched for "upsell"
+Viewed return-guest.js:210-260
+Viewed return-guest.js:300-360
+Viewed return-guest.js:360-410
+Viewed return-guest.html:240-264
+Edited return-guest.html
+Viewed return-guest.js:100-130
+Viewed return-guest.js:355-380
+Edited return-guest.js
+Viewed login.js:118-140
+Edited login.js
+Created test_lookup.js
+Ran command: `node scratch/test_lookup.js`
+Used tool: manage_task
+Used tool: manage_task
+Created check_staff.js
+Ran command: `node scratch/check_staff.js`
+
+Tôi đã tiến hành kiểm tra toàn bộ cơ sở dữ liệu và hoàn tất cập nhật mã nguồn để giải quyết triệt để việc phân biệt giữa **Khách hàng vãng lai** và **Thành viên chính thức**.
+
+---
+
+### 1. Báo cáo danh sách tài khoản hiện có trong Cơ sở dữ liệu
+
+Dựa trên dữ liệu thực tế được truy vấn trực tiếp từ bảng `customer`, `customer_profile`, `customer_membership` và `auth.users`:
+
+#### A. Nhóm Khách hàng vãng lai (Guest - `is_temporary = true`, chưa liên kết tài khoản Auth)
+Các tài khoản này được tạo tự động khi khách đặt lịch hẹn hoặc mua hàng ngoài trang công khai, **được phép tra cứu tại trang `/return-guest`**:
+
+| STT | Số điện thoại | Họ và tên | Trạng thái hồ sơ | Đơn hàng / Lịch hẹn đã có |
+| :---: | :---: | :---: | :---: | :---: |
+| 1 | `0935359797` | Lê Khanh | Vãng lai (Chưa tạo mật khẩu) | 1 Lịch hẹn |
+| 2 | `0963963963` | Khách vãng lai | Vãng lai (Chưa tạo mật khẩu) | 1 Đơn hàng |
+| 3 | `0774561495` | Khách vãng lai | Vãng lai (Chưa tạo mật khẩu) | Đã phát sinh giao dịch |
+| 4 | `0935358685` | Khách vãng lai | Vãng lai (Chưa tạo mật khẩu) | Đã phát sinh giao dịch |
+| 5 | `0987654333` | Khách vãng lai | Vãng lai (Chưa tạo mật khẩu) | Đã phát sinh giao dịch |
+| 6 | `0111115555...` | Khách test | Vãng lai (Chưa tạo mật khẩu) | Đã phát sinh giao dịch |
+| 7 | `5` | Khách test | Vãng lai (Chưa tạo mật khẩu) | Đã phát sinh giao dịch |
+
+---
+
+#### B. Nhóm Thành viên chính thức (Member - `is_temporary = false`, đã có tài khoản Auth)
+Các tài khoản này **BỊ CHẶN tại trang tra cứu `/return-guest`** (khi nhập SĐT hệ thống sẽ báo đã là thành viên và điều hướng sang Đăng nhập):
+
+| STT | Số điện thoại | Họ và tên | Hạng | Điểm PawPoint | Trạng thái đăng nhập |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| 1 | `0987654321` | Khách Demo | Đồng | 0 | Đã kích hoạt Auth |
+| 2 | `0901234567` | Lê Lệ Quyên | Bạc | 1.050 | Đã kích hoạt Auth |
+| 3 | `0972163376` | Nguyễn Lê Nhật Khanh | Bạc | 780 | Đã kích hoạt Auth |
+| 4 | `0798833157` | Nguyễn Thị Bích Phượng | Đồng | 0 | Đã kích hoạt Auth |
+| 5 | `0912345678` | Trần Thị Bích | Đồng | 0 | Đã kích hoạt Auth |
+| 6 | `0774561497` | Lê Lệ Quyên | Đồng | 0 | Đã kích hoạt Auth |
+| 7 | `0834562948` | Nguyễn Lê Thi | Đồng | 20 | Đã kích hoạt Auth |
+| 8 | `0987123456` | Khách hàng | Đồng | 50 | Đã kích hoạt Auth |
+| 9 | `0987987987` | Khách hàng | Đồng | 50 | Đã kích hoạt Auth |
+| 10 | `0935358686` | Quyen | Đồng | 0 | Đã kích hoạt Auth |
+| 11 | `0935359696` | La La | Đồng | 0 | Đã kích hoạt Auth |
+| 12 | `0123456799` | Meo | Đồng | 0 | Đã kích hoạt Auth |
+| 13 | `0123456788` | Khách hàng | Đồng | 0 | Đã kích hoạt Auth |
+| 14 | `0987789987` | Khách hàng | Đồng | 0 | Đã kích hoạt Auth |
+| 15 | `0834567899` | Khách hàng | Đồng | 0 | Đã kích hoạt Auth |
+| 16 | `0394923949` | Khách hàng | Đồng | 0 | Đã kích hoạt Auth |
+| 17 | `0900000000` | Quản trị viên | Kim Cương | 4.990 | Đã kích hoạt Auth |
+
+> **Lưu ý về số điện thoại Nhân sự nội bộ (`staff`):**
+> Ba số điện thoại: `0999888777` (Nguyễn Thị Chăm Sóc), `0123456789` và `0999999999` đang tồn tại trong bảng `staff`. Cơ chế bảo mật cách ly của Pawpal sẽ từ chối đăng nhập các số này tại cổng khách hàng để ngăn ngừa rò rỉ quyền hạn nhân viên.
+
+---
+
+### 2. Các nội dung vừa được cập nhật trong mã nguồn
+
+1. **Chuẩn hóa API tra cứu định danh [scripts/api/customer_auth.js](file:///d:/Aboutme/MyProject/Pawpal/scripts/api/customer_auth.js):**
+   - Bổ sung trường `isMember` và tính toán chính xác `isTemporary`: Một tài khoản chỉ được coi là thành viên khi `is_temporary = false` **VÀ** đã tồn tại `auth_user_id`.
+   - Nếu tài khoản chưa có thông tin xác thực, API trả về `isTemporary: true`, cho phép thực hiện luồng kích hoạt tạo mật khẩu.
+
+2. **Khóa chặn Thành viên tại trang tra cứu [pages/public/return-guest/return-guest.js](file:///d:/Aboutme/MyProject/Pawpal/pages/public/return-guest/return-guest.js):**
+   - Loại bỏ hoàn toàn việc đọc `localStorage` cũ gây sai lệch.
+   - Khi bấm **Tìm kiếm**: Hệ thống gọi API kiểm tra trạng thái trên CSDL. Nếu là Thành viên chính thức (`isMember: true`), hệ thống **chặn ngay lập tức** và hiển thị hộp cảnh báo:
+     > *"Số điện thoại đã được đăng ký Thành viên. Số điện thoại [SĐT] thuộc tài khoản thành viên chính thức Pawpal. Trang tra cứu này chỉ phục vụ cho khách vãng lai. Vui lòng đăng nhập để xem đầy đủ hồ sơ, lịch hẹn và hưởng trọn quyền lợi tích điểm."* kèm nút **[Đăng nhập ngay]**.
+   - Nếu là Khách vãng lai: Tiến hành gửi OTP và hiển thị danh sách đơn hàng/lịch hẹn.
+
+3. **Thêm Banner khuyến khích tạo mật khẩu (Không ép buộc) [pages/public/return-guest/return-guest.html](file:///d:/Aboutme/MyProject/Pawpal/pages/public/return-guest/return-guest.html):**
+   - Ngay phía trên bảng kết quả tra cứu của khách vãng lai, hiển thị banner tinh tế:
+     > *"Bạn đang tra cứu dưới tư cách Khách vãng lai. Thiết lập mật khẩu để tự động liên kết đơn hàng, tích lũy điểm PawPoints và nhận ngay 50 điểm chào mừng."* kèm nút **[Thiết lập mật khẩu]**.
+
+4. **Tự động chuyển tiếp SĐT sang trang Đăng nhập [pages/public/login/login.js](file:///d:/Aboutme/MyProject/Pawpal/pages/public/login/login.js):**
+   - Khi khách vãng lai bấm nút chuyển từ trang tra cứu sang `/login?phone=...`, ô SĐT được tự động điền sẵn.
+   - Khách bấm **Tiếp tục** -> Hệ thống nhận diện đây là khách vãng lai -> Hiển thị màn hình thiết lập mật khẩu qua mã OTP -> Sau khi nhập OTP và mật khẩu mới, toàn bộ dữ liệu đơn cũ được giữ nguyên, tài khoản đổi thành Thành viên chính thức và nhận 50 điểm PawPoint chào mừng.
+
+---
+
+### 3. Hướng dẫn thử nghiệm nhanh
+
+1. **Thử nghiệm chặn Thành viên:**
+   - Truy cập `/return-guest`, nhập SĐT thành viên: `0901234567` hoặc `0987654321`.
+   - **Kết quả:** Hệ thống báo tài khoản đã là thành viên và chặn tra cứu, yêu cầu đăng nhập.
+2. **Thử nghiệm Khách vãng lai:**
+   - Truy cập `/return-guest`, nhập SĐT vãng lai: `0935359797` hoặc `0963963963`.
+   - **Kết quả:** Cho phép xác thực OTP để tra cứu đơn/lịch hẹn, hiển thị banner mời nâng cấp tài khoản thành viên.

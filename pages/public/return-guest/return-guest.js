@@ -141,6 +141,17 @@ function initReturnGuestPage() {
             }
         }
     });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialPhone = urlParams.get('phone');
+    if (initialPhone && phoneInput && !phoneInput.value) {
+        phoneInput.value = initialPhone;
+        setTimeout(() => {
+            if (form && !form.querySelector('button[type=submit]')?.disabled) {
+                form.dispatchEvent(new Event('submit', { cancelable: true }));
+            }
+        }, 120);
+    }
 }
 window.initReturnGuestPage = initReturnGuestPage;
 
@@ -190,8 +201,6 @@ function resolveAppUrl(path) {
     return new URL(path, window.location.href).href;
 }
 
-
-
 function normalizePhone(p) {
     return String(p || '').replace(/\D/g, '').replace(/^84/, '0');
 }
@@ -202,7 +211,8 @@ async function loadSupabaseGuestResults(phone) {
 
     const normPhone = normalizePhone(phone);
     try {
-        const { data: orderRows, error: orderError } = await db
+        let orderRows = [];
+        const { data: oByCustomer, error: oError1 } = await db
             .from('sales_order')
             .select(`
                 id,
@@ -213,14 +223,37 @@ async function loadSupabaseGuestResults(phone) {
                 created_at,
                 updated_at,
                 note,
-                customer_address!inner ( receiver_name, receiver_phone, street_address, province ),
+                customer!inner ( phone_main ),
+                customer_address ( receiver_name, receiver_phone, street_address, province ),
                 sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product ( id, product_name, sku, image_urls ) )
             `)
-            .eq('customer_address.receiver_phone', normPhone)
+            .eq('customer.phone_main', normPhone)
             .order('created_at', { ascending: false });
 
-        if (orderError) {
-            console.warn('[ReturnGuest] Supabase order lookup failed:', orderError.message || orderError);
+        if (!oError1 && Array.isArray(oByCustomer) && oByCustomer.length > 0) {
+            orderRows = oByCustomer;
+        } else {
+            const { data: oByAddr, error: oError2 } = await db
+                .from('sales_order')
+                .select(`
+                    id,
+                    order_code,
+                    order_status,
+                    payment_status,
+                    total_amount,
+                    created_at,
+                    updated_at,
+                    note,
+                    customer_address!inner ( receiver_name, receiver_phone, street_address, province ),
+                    sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product ( id, product_name, sku, image_urls ) )
+                `)
+                .eq('customer_address.receiver_phone', normPhone)
+                .order('created_at', { ascending: false });
+
+            if (oByAddr) orderRows = oByAddr;
+            if (oError2) {
+                console.warn('[ReturnGuest] Supabase order lookup failed:', oError2.message || oError2);
+            }
         }
 
         const { data: bookingRows, error: bookingError } = await db

@@ -41,11 +41,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             memberActions.classList.add('d-none');
         }
 
-        const setupLink = document.querySelector('#passwordSetupCard a.btn-cta');
+        const setupLink = document.getElementById('btnGuestActivateBooking') || document.querySelector('#passwordSetupCard a.btn-cta');
         if (setupLink) {
             setupLink.href = targetPhone
-                ? `/pages/public/login/login.html?action=guest-activate&phone=${encodeURIComponent(targetPhone)}`
-                : `/pages/public/login/login.html?action=guest-activate`;
+                ? `/login?action=guest-activate&phone=${encodeURIComponent(targetPhone)}`
+                : `/login?action=guest-activate`;
+        }
+
+        const lookupLink = document.getElementById('btnGuestLookupBooking');
+        if (lookupLink) {
+            lookupLink.href = targetPhone
+                ? `/return-guest?phone=${encodeURIComponent(targetPhone)}`
+                : `/return-guest`;
         }
     } else {
         const passwordSetupCard = document.getElementById('passwordSetupCard');

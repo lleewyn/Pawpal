@@ -255,20 +255,19 @@
             </div>
 
             <div class="password-setup-card" id="passwordSetupCard">
-                <h4 class="setup-title"> Thiết lập mật khẩu thành viên</h4>
-                <p class="setup-desc">Để theo dõi nhật ký chăm sóc của bé cưng, tự hủy lịch hẹn trực tuyến, và nhận ngay
-                    <strong>50 Paw Points</strong> thưởng tích lũy cho lần sau.
-                </p>
+                <h4 class="setup-title">Thiết lập mật khẩu thành viên</h4>
+                <p class="setup-desc">Khuyến khích thiết lập mật khẩu để theo dõi nhật ký chăm sóc của bé cưng, tự quản lý lịch hẹn trực tuyến và nhận ngay <strong>50 Paw Points</strong> thưởng tích lũy (không bắt buộc).</p>
 
                 <div class="setup-actions">
-                    <a href="/pages/public/login/login.html" class="btn-cta btn-setup-submit">Thiết lập mật khẩu ngay</a>
-                    <a href="/pages/public/landing/landing.html" class="btn-green-outline btn-setup-skip">Bỏ qua</a>
+                    <a href="/login?action=guest-activate" class="btn-cta btn-setup-submit" id="btnGuestActivateBooking">Thiết lập mật khẩu ngay</a>
+                    <a href="/return-guest" class="btn-green-outline" id="btnGuestLookupBooking">Tra cứu lịch hẹn</a>
+                    <a href="/" class="btn-green-outline btn-setup-skip">Về trang chủ</a>
                 </div>
             </div>
 
-            <div class="member-actions d-none d-flex gap-3 justify-content-center mt-4" id="memberActions" >
+            <div class="member-actions d-none d-flex gap-3 justify-content-center mt-4" id="memberActions">
                 <a href="/pages/user/#bookings" class="btn-cta m-0">Xem lịch hẹn của tôi</a>
-                <a href="/pages/public/landing/landing.html" class="btn-green-outline m-0">Về trang chủ</a>
+                <a href="/" class="btn-green-outline m-0">Về trang chủ</a>
             </div>
         </div>
     </main>
