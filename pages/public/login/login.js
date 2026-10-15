@@ -35,7 +35,7 @@
     let challenge = null;
     let timer;
     let busy = false;
-    const sections = ['loginForm', 'registerForm', 'otpSection', 'forgotPhoneSection', 'forgotOtpSection', 'forgotNewPasswordSection', 'congratsSection', 'setupPasswordSection', 'setupExpiredSection'];
+    const sections = ['loginForm', 'registerForm', 'otpSection', 'forgotPhoneSection', 'forgotOtpSection', 'forgotNewPasswordSection', 'congratsSection', 'setupPasswordSection', 'setupExpiredSection', 'alreadyLoggedInSection'];
     function notice(message, error = false) {
         const container = byId('toastContainer');
         if (!container) return;
@@ -115,8 +115,43 @@
         notice('Xác thực và lưu mật khẩu thành công.');
         window.location.href = '/user#profile';
     }
+    function checkLoggedIn() {
+        try {
+            const u = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            if (u && !u.is_temporary && !u.system_role && u.role !== 'admin' && u.role !== 'staff') {
+                const params = new URLSearchParams(window.location.search);
+                const targetPhone = params.get('phone');
+                if (targetPhone && targetPhone !== u.phone) {
+                    show('alreadyLoggedInSection');
+                    if (byId('loggedInNameDisplay')) byId('loggedInNameDisplay').textContent = u.name || u.full_name || 'Khách hàng';
+                    if (byId('loggedInPhoneDisplay')) byId('loggedInPhoneDisplay').textContent = u.phone || '';
+                    if (byId('loggedInAvatarDisplay')) byId('loggedInAvatarDisplay').textContent = (String(u.name || u.full_name || 'K').trim()).charAt(0).toUpperCase();
+                    if (byId('loggedInSwitchNote')) {
+                        byId('loggedInSwitchNote').textContent = `Bạn đang muốn truy cập cho số điện thoại ${targetPhone}. Vui lòng đăng xuất tài khoản hiện tại trước.`;
+                    }
+                    return true;
+                }
+                const redirect = params.get('redirect');
+                const target = redirect ? new URL(redirect, location.origin) : null;
+                const dest = target && target.origin === location.origin && !target.pathname.toLowerCase().includes('admin')
+                    ? target.href
+                    : '/user#profile';
+                show('alreadyLoggedInSection');
+                if (byId('loggedInNameDisplay')) byId('loggedInNameDisplay').textContent = u.name || u.full_name || 'Khách hàng';
+                if (byId('loggedInPhoneDisplay')) byId('loggedInPhoneDisplay').textContent = u.phone || '';
+                if (byId('loggedInAvatarDisplay')) byId('loggedInAvatarDisplay').textContent = (String(u.name || u.full_name || 'K').trim()).charAt(0).toUpperCase();
+                if (byId('loggedInSwitchNote')) {
+                    byId('loggedInSwitchNote').textContent = 'Bạn đã đăng nhập thành công. Đang chuyển hướng về trang cá nhân...';
+                }
+                window.location.replace(dest);
+                return true;
+            }
+        } catch (e) {}
+        return false;
+    }
     function route() {
         clearChallenge();
+        if (checkLoggedIn()) return;
         const params = new URLSearchParams(window.location.search);
         const action = params.get('action') || window.location.hash.slice(1);
         if (action === 'register') {
@@ -137,6 +172,15 @@
     function init() {
         route();
         const on = (id, event, callback) => byId(id)?.addEventListener(event, callback);
+        on('btnLogoutFromLogin', 'click', async () => {
+            try {
+                const client = window.getSupabaseClient?.() || window.SupabaseClient;
+                if (client) await client.auth.signOut();
+            } catch {}
+            localStorage.removeItem('pawpal_current_user');
+            sessionStorage.removeItem('pawpal_current_user');
+            window.location.reload();
+        });
         on('tabLogin', 'click', () => { history.pushState({}, '', '?action=login'); route(); });
         on('tabRegister', 'click', () => { history.pushState({}, '', '?action=register'); route(); });
         on('btnLoginContinue', 'click', () => run(byId('btnLoginContinue'), async () => {
