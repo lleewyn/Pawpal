@@ -112,6 +112,11 @@
     margin-top: 20px;
 }
 
+.setup-actions .btn-cta,
+.setup-actions .btn-green-outline {
+    border-radius: var(--border-radius-pill, 50px) !important;
+}
+
 .btn-setup-submit {
     flex: 2;
     min-width: 180px;
@@ -120,7 +125,7 @@
     font-weight: 600;
     text-align: center;
     text-decoration: none;
-    border-radius: 9px;
+    border-radius: var(--border-radius-pill, 50px);
 }
 
 .btn-setup-skip {
@@ -130,7 +135,7 @@
     font-size: 0.9rem;
     text-align: center;
     text-decoration: none;
-    border-radius: 9px;
+    border-radius: var(--border-radius-pill, 50px);
 }
 
 .member-actions {
