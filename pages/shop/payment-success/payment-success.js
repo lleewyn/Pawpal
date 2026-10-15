@@ -95,11 +95,13 @@ async function resolveOrderData(orderId, fallbackOrder) {
                 price: item.unit_price || 0,
             })),
             pricing: {
-                subtotal: row.subtotal || 0,
-                shippingFee: row.shipping_fee || 0,
+                subtotal: localOrder?.pricing?.subtotal || 
+                          (row.sales_order_detail || []).reduce((acc, item) => acc + ((item.unit_price || 0) * (item.quantity || 1)), 0) || 
+                          row.total_amount || 0,
+                shippingFee: localOrder?.pricing?.shippingFee || 0,
                 pointsDiscount: localOrder?.pricing?.pointsDiscount || 0,
                 voucherDiscount: localOrder?.pricing?.voucherDiscount || 0,
-                grandTotal: row.total_amount || 0,
+                grandTotal: row.total_amount || localOrder?.pricing?.grandTotal || 0,
             },
         };
     } catch (err) {
