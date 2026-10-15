@@ -893,3 +893,15 @@
     background: #1A5438;
 }
 
+
+/* Loading keeps checkout controls unavailable until initialization completes. */
+.checkout-page { position: relative; }
+.checkout-skeleton { position: absolute; top: 0; left: 0; right: 0; z-index: 1; padding-top: 48px; pointer-events: none; }
+.checkout-page > .checkout-main-container, .checkout-skeleton { transition: opacity 240ms ease, visibility 240ms ease; }
+.checkout-loading > .checkout-main-container { opacity: 0; visibility: hidden; pointer-events: none; }
+.checkout-page:not(.checkout-loading) > .checkout-skeleton { opacity: 0; visibility: hidden; }
+.checkout-skeleton-grid { display: grid; grid-template-columns: 7fr 5fr; gap: 24px; }
+.checkout-skeleton-panel { display: flex; flex-direction: column; gap: 20px; padding: 24px; margin-bottom: 24px; border-radius: 9px; background: #fff; }
+.checkout-loading { min-height: 760px; }
+@media(max-width: 991px) { .checkout-skeleton-grid { grid-template-columns: 1fr; } }
+@media(prefers-reduced-motion: reduce) { .checkout-page > .checkout-main-container, .checkout-skeleton { transition: none; } .checkout-skeleton .pawpal-skeleton { animation: none !important; } }

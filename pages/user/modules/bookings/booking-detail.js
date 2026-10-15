@@ -85,22 +85,37 @@ function getBookingIdFromUrl() {
     return null;
 }
 
+function showBookingLoadError(message) {
+    const container = document.querySelector('.booking-detail-module-container');
+    if (!container) return;
+    container.innerHTML = '<div class="text-center py-5" role="status"><p class="text-muted"></p><a href="#bookings">Quay lại danh sách lịch hẹn</a></div>';
+    container.querySelector('p').textContent = message;
+}
+
 let isInitRunning = false;
 
 export async function init() {
     if (isInitRunning) return;
     isInitRunning = true;
+    const loadingContainer = document.querySelector('.booking-detail-module-container');
     try {
         const bookingId = getBookingIdFromUrl();
 
         if (!bookingId) {
-            showToast('Không tìm thấy thông tin lịch hẹn', 'error');
-            setTimeout(() => { window.location.hash = '#bookings'; }, 1500);
+            showBookingLoadError('Không tìm thấy mã lịch hẹn.');
             return;
         }
 
         await loadBookingDetail(bookingId);
+    } catch (error) {
+        console.error('[BookingDetail] Không thể tải lịch hẹn:', error);
+        showBookingLoadError('Không thể tải chi tiết lịch hẹn. Vui lòng tải lại trang.');
     } finally {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            loadingContainer?.classList.remove('booking-detail-loading');
+            loadingContainer?.setAttribute('aria-busy', 'false');
+            setTimeout(() => loadingContainer?.querySelector('.booking-detail-skeleton')?.remove(), 260);
+        }));
         isInitRunning = false;
     }
 }
@@ -120,8 +135,7 @@ async function loadBookingDetail(bookingId) {
     currentBooking = allList.find((b) => String(b.id || b._id || b._supabaseId) === String(bookingId) || b.code === bookingId || b.appointment_code === bookingId);
 
     if (!currentBooking) {
-        showToast('Không tìm thấy lịch hẹn này', 'error');
-        setTimeout(() => { window.location.hash = '#bookings'; }, 1500);
+        showBookingLoadError('Không tìm thấy lịch hẹn này.');
         return;
     }
 
@@ -158,7 +172,7 @@ async function loadBookingDetail(bookingId) {
 
     awardBookingLoyaltyPoints(currentBooking, currentUser);
 
-    if (window.location.hash === '#service-review') {
+    if (window.location.hash === '#service-review' || window.location.hash.includes('section=service-review')) {
         setTimeout(() => {
             const target = document.getElementById('serviceReviewSection')
                         || document.querySelector('.service-review-section');
@@ -244,7 +258,7 @@ function renderBookingDetail(booking) {
         const isCompleted = normalizedStatus === 'completed';
         complaintSection.classList.toggle('d-none', !isCompleted);
         if (isCompleted) {
-            complaintLink.href = `/pages/user/support-create/support-create.html?type=service&bookingId=${encodeURIComponent(booking.id)}`;
+            complaintLink.href = `#support-create?type=service&bookingId=${encodeURIComponent(booking.id)}`;
         }
     }
 }
@@ -828,7 +842,7 @@ function confirmCancelBooking(onDone) {
     if (onDone) {
         setTimeout(onDone, 800);
     } else {
-        setTimeout(() => { window.location.href = '../bookings/bookings.html'; }, 1500);
+        setTimeout(() => { window.location.hash = '#bookings'; }, 1500);
     }
 }
 

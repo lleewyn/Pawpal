@@ -220,6 +220,12 @@ async function loadOrderDetail() {
             return;
         }
         
+        window.pawpalCurrentOrderForReturn = currentOrder;
+        const supportReturn = document.getElementById('btnOrderReturnSupport');
+        if (supportReturn) {
+            supportReturn.hidden = !['delivered', 'completed'].includes(currentOrder.status);
+            supportReturn.onclick = () => window.openRMADrawer(currentOrder.id);
+        }
         checkAutoComplete();
         
         renderOrderHeader();
@@ -235,7 +241,7 @@ async function loadOrderDetail() {
             window.setUserSubBreadcrumb('#' + currentOrder.id, 'order-detail');
         }
 
-        const searchParams = new URLSearchParams(window.location.search);
+        const searchParams = new URLSearchParams(window.location.hash.split('?')[1] || window.location.search);
         if (searchParams.get('pay') === 'now') {
             setTimeout(() => {
                 payNow();
@@ -252,7 +258,7 @@ async function loadOrderDetail() {
             ReviewHandler.init(currentOrder.id, products);
             scrollToReviewAnchor();
 
-            if (window.location.hash.includes('#reviews') && ReviewHandler.hasOrderReviewed(currentOrder.id)) {
+            if ((window.location.hash.includes('#reviews') || window.location.hash.includes('section=reviews')) && ReviewHandler.hasOrderReviewed(currentOrder.id)) {
                 setTimeout(() => showOrderReviewsModal(currentOrder.id), 300);
             }
 
@@ -574,7 +580,7 @@ function renderActions() {
             // Nút Yêu cầu đổi trả
             if (alreadyReturned) {
                 buttons.push(`
-                    <a href="/pages/user/return-detail/return-detail.html?orderId=${currentOrder.id}" class="btn-track-order text-decoration-none">
+                    <a href="#return-detail?orderId=${encodeURIComponent(currentOrder.id)}" class="btn-track-order text-decoration-none">
                         Chi tiết đổi trả
                     </a>
                 `);
@@ -588,7 +594,7 @@ function renderActions() {
 
             // Nút Phản ánh đơn
             buttons.push(`
-                <a href="/pages/user/support-create/support-create.html?type=order&orderId=${encodeURIComponent(currentOrder.id)}" class="btn-green-outline text-decoration-none" title="Gửi phản ánh hoặc khiếu nại về đơn hàng này">
+                <a href="#support-create?type=order&orderId=${encodeURIComponent(currentOrder.id)}" class="btn-green-outline text-decoration-none" title="Gửi phản ánh hoặc khiếu nại về đơn hàng này">
                     Phản ánh đơn
                 </a>
             `);
@@ -611,6 +617,7 @@ function renderActions() {
         }
 
         case 'completed': {
+
             const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
             const alreadyReturned = returnsList.some(r => r.orderId === currentOrder.id);
 
@@ -620,7 +627,7 @@ function renderActions() {
 
             if (alreadyReturned) {
                 buttons.push(`
-                    <a href="/pages/user/return-detail/return-detail.html?orderId=${currentOrder.id}" class="btn-track-order text-decoration-none">
+                    <a href="#return-detail?orderId=${encodeURIComponent(currentOrder.id)}" class="btn-track-order text-decoration-none">
                         Chi tiết đổi trả
                     </a>
                 `);
@@ -628,7 +635,7 @@ function renderActions() {
 
             // Nút Phản ánh đơn
             buttons.push(`
-                <a href="/pages/user/support-create/support-create.html?type=order&orderId=${encodeURIComponent(currentOrder.id)}" class="btn-green-outline text-decoration-none" title="Gửi phản ánh hoặc khiếu nại về đơn hàng này">
+                <a href="#support-create?type=order&orderId=${encodeURIComponent(currentOrder.id)}" class="btn-green-outline text-decoration-none" title="Gửi phản ánh hoặc khiếu nại về đơn hàng này">
                     Phản ánh đơn
                 </a>
             `);
@@ -689,7 +696,7 @@ function renderActions() {
             const rma = rmaList.find(r => String(r.orderId) === String(currentOrder.id));
             if (rma) {
                 buttons.push(`
-                    <a href="/pages/user/return-detail/return-detail.html?orderId=${currentOrder.id}" class="btn-track-order text-decoration-none">
+                    <a href="#return-detail?orderId=${encodeURIComponent(currentOrder.id)}" class="btn-track-order text-decoration-none">
                         Theo dõi đổi trả
                     </a>
                 `);
@@ -1227,12 +1234,12 @@ function cancelOrder() {
                 : 'Khách hàng đã hủy đơn hàng'
         });
         saveOrderToLocalStorage(currentOrder);
-        window.location.href = '/pages/user/orders/orders.html';
+        window.location.hash = '#orders';
     });
 }
 
 function scrollToReviewAnchor() {
-    if (window.location.hash !== '#reviews') return;
+    if (!window.location.hash.includes('#reviews') && !window.location.hash.includes('section=reviews')) return;
 
     const target = document.getElementById('reviews') || document.querySelector('.order-reviews-heading');
     if (!target) {
@@ -1659,7 +1666,7 @@ function updateCartBadgeCount() {
 }
 
 function showError(message) {
-    const container = document.getElementById('products-list') || document.querySelector('.order-detail-card') || document.querySelector('.order-detail-module-container');
+    const container = document.querySelector('.order-detail-module-container');
     if (container) {
         container.innerHTML = `
             <div class="empty-state text-center py-5">
@@ -1741,6 +1748,7 @@ let isInitRunning = false;
 export async function initOrderDetail() {
     if (isInitRunning) return;
     isInitRunning = true;
+    const loadingContainer = document.querySelector('.order-detail-module-container');
     try {
         const params = new URLSearchParams(window.location.search);
         let guestParam = params.get('guest');
@@ -1751,7 +1759,15 @@ export async function initOrderDetail() {
         isGuest = guestParam === 'true';
         
         await loadOrderDetail();
+    } catch (error) {
+        console.error('[OrderDetail] Không thể khởi tạo:', error);
+        showError('Không thể tải chi tiết đơn hàng. Vui lòng tải lại trang.');
     } finally {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            loadingContainer?.classList.remove('user-order-loading');
+            loadingContainer?.setAttribute('aria-busy', 'false');
+            setTimeout(() => loadingContainer?.querySelector('.user-order-skeleton')?.remove(), 260);
+        }));
         isInitRunning = false;
     }
 }

@@ -178,8 +178,9 @@
                     { name: 'Hóa đơn VAT và Đơn hàng', note: `Đồng bộ Mã số thuế ${taxId} và Tên công ty xuất hóa đơn` }
                 ],
                 onConfirm: async () => {
-                    const cfg = PawpalSettings.state?.systemConfig;
-                    if (cfg) {
+                    try {
+                        const cfg = PawpalSettings.state?.systemConfig;
+                        if (!cfg) throw new Error('Chưa khởi tạo cấu hình hệ thống.');
                         cfg.storeInfo = {
                             brandName: brand,
                             companyName: company,
@@ -192,15 +193,16 @@
                             facebookUrl: fb
                         };
                         await PawpalSettings.persistSystemConfig?.(cfg);
+                        PawpalSettings.closeModal?.('storeProfileModalOverlay');
+                        await logSystemAudit('UPDATE', 'store_profile', `Cập nhật thông tin cửa hàng: Hotline ${hotline}, Email ${email}`);
+                        await PawpalSettings.loadSettingsModuleData?.();
+                        renderSystemConfigCards();
+                        PawpalSettings.subtabs.audit?.renderAuditLogs?.();
+                        showToast('Đã cập nhật thông tin cửa hàng và đồng bộ sang User Portal thành công!', 'success');
+                    } catch (e) {
+                        console.error('[Settings] Lưu thông tin cửa hàng thất bại:', e);
+                        showToast(`Không thể lưu thông tin cửa hàng: ${e?.message || 'Lỗi cơ sở dữ liệu'}`, 'error');
                     }
-
-                    PawpalSettings.closeModal?.('storeProfileModalOverlay');
-
-                    await logSystemAudit('UPDATE', 'store_profile', `Cập nhật thông tin cửa hàng: Hotline ${hotline}, Email ${email}`);
-                    await PawpalSettings.loadSettingsModuleData?.();
-                    renderSystemConfigCards();
-                    PawpalSettings.subtabs.audit?.renderAuditLogs?.();
-                    showToast('Đã cập nhật thông tin cửa hàng và đồng bộ sang User Portal thành công!', 'success');
                 }
             });
         });

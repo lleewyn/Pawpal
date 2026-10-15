@@ -152,7 +152,7 @@ function setupTrackingLink(order) {
         const id = order.id || order.orderId || order.orderID || orderIdFrom(order);
         if (isLoggedInUser) {
             if (id) {
-                btn.href = `/pages/user/#orders?id=${encodeURIComponent(id)}`;
+                btn.href = `/user#order-detail?id=${encodeURIComponent(id)}`;
             } else {
                 btn.href = '/pages/user/#orders';
             }

@@ -1,3 +1,4 @@
+@import url("./order-detail.css");
 
 
 .info-card {
@@ -430,3 +431,18 @@
         grid-template-columns: 1fr;
     }
 }
+
+.return-detail-module-container { position: relative; }
+.return-detail-skeleton { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.return-detail-module-container > * { transition: opacity 240ms ease, visibility 240ms ease; }
+.return-detail-loading { min-height: 640px; }
+.return-detail-loading > :not(.return-detail-skeleton) { visibility: hidden; opacity: 0; pointer-events: none; }
+.return-detail-module-container:not(.return-detail-loading) > .return-detail-skeleton { visibility: hidden; opacity: 0; }
+.return-detail-skeleton-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+.return-detail-skeleton-panel { display: flex; flex-direction: column; gap: 18px; padding: 22px; margin-bottom: 24px; background: #fff; border-radius: 9px; }
+@media(max-width: 991px) { .return-detail-skeleton-grid { grid-template-columns: 1fr; } }
+@media(prefers-reduced-motion: reduce) { .return-detail-module-container > * { transition: none; } .return-detail-skeleton .pawpal-skeleton { animation: none !important; } }
+
+/* Keep the return form above the shared fixed header and floating controls. */
+.rma-drawer-overlay { z-index: 20000; }
+.rma-drawer { z-index: 20001; overscroll-behavior: contain; }

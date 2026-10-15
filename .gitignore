@@ -10,3 +10,4 @@ dist
 .eslintcache
 scratch/
 *-verified.png
+artifacts/

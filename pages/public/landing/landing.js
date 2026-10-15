@@ -275,10 +275,20 @@ document.addEventListener('DOMContentLoaded', function() {
         await new Promise(r => setTimeout(r, 100));
         attempts++;
     }
-    if (!window.DataLoader) return;
-
-    const products = await window.DataLoader.loadProducts();
-    if (!products || !products.length) return;
+    let products;
+    try {
+        if (!window.DataLoader) throw new Error('DataLoader unavailable');
+        products = await window.DataLoader.loadProducts();
+        if (!products?.length) {
+            grid.innerHTML = '<p class="text-muted">Chưa có sản phẩm.</p>';
+            return;
+        }
+    } catch (error) {
+        grid.innerHTML = '<p class="text-muted" role="status">Không thể tải sản phẩm. Vui lòng tải lại trang.</p>';
+        return;
+    } finally {
+        grid.setAttribute('aria-busy', 'false');
+    }
 
     const featured = products
         .filter(p => p.stock > 0)
@@ -433,16 +443,25 @@ document.addEventListener('DOMContentLoaded', function() {
 (async function() {
     const svcGrid = document.getElementById('svcLandingGrid');
     const svcTabBar = document.getElementById('svcTabBar');
-    if (!svcGrid || !window.DataLoader) return;
+    if (!svcGrid) return;
 
     let services = [];
     try {
+        let attempts = 0;
+        while (!window.DataLoader && attempts++ < 20) await new Promise(resolve => setTimeout(resolve, 100));
+        if (!window.DataLoader) throw new Error('DataLoader unavailable');
         services = await window.DataLoader.loadServices();
     } catch(e) {
         console.error('Failed to load services', e);
+        svcGrid.innerHTML = '<p class="text-muted" role="status">Không thể tải dịch vụ. Vui lòng tải lại trang.</p>';
+        return;
+    } finally {
+        svcGrid.setAttribute('aria-busy', 'false');
+    }
+    if (!services?.length) {
+        svcGrid.innerHTML = '<p class="text-muted">Chưa có dịch vụ.</p>';
         return;
     }
-    if (!services || !services.length) return;
 
     const renderServices = (items) => {
         svcGrid.innerHTML = items.map(s => {

@@ -16,6 +16,7 @@
         cachedCustomers: [],
         cachedProfiles: [],
         cachedPets: [],
+        cachedStaff: [],
         currentActiveTicket: null,
         currentTicketType: 'service', // 'service' hoặc 'order'
         currentTicketId: sessionStorage.getItem('pawpal_admin_complaint_selected_id') || 'TKT-001'
@@ -315,6 +316,7 @@
             PawpalComplaints.state.cachedCustomers = customers;
             PawpalComplaints.state.cachedProfiles = profiles;
             PawpalComplaints.state.cachedPets = pets;
+            PawpalComplaints.state.cachedStaff = staffList;
             PawpalComplaints.state.cachedProducts = products;
 
             // Map helpers
@@ -1052,14 +1054,9 @@
         if (!modal) return;
         const selectStaff = document.getElementById('selectAssignStaff');
         if (selectStaff) {
-            selectStaff.innerHTML = `
-                <option value="Trần Văn Hùng (Groomer trưởng)">Trần Văn Hùng (Groomer trưởng)</option>
-                <option value="Lê Lệ Quyên (Quản lý chi nhánh)">Lê Lệ Quyên (Quản lý chi nhánh)</option>
-                <option value="Nguyễn Văn A (Kỹ thuật viên cao cấp)">Nguyễn Văn A (Kỹ thuật viên cao cấp)</option>
-                <option value="Trần Thị C (Chuyên viên chăm sóc)">Trần Thị C (Chuyên viên chăm sóc)</option>
-                <option value="Lê Hoàng Nam (Bác sĩ thú y)">Lê Hoàng Nam (Bác sĩ thú y)</option>
-                <option value="Nguyễn Thùy Trang (Tư vấn viên CSKH)">Nguyễn Thùy Trang (Tư vấn viên CSKH)</option>
-            `;
+            const staff = PawpalComplaints.state?.cachedStaff || [];
+            selectStaff.innerHTML = staff.filter(s => s?.full_name)
+                .map(s => `<option value="${escapeHtml(s.full_name)}">${escapeHtml(s.full_name)}</option>`).join('');
         }
         modal.classList.add('active');
     }
@@ -1583,7 +1580,8 @@
 
         // Save Ticket button
         const btnSave = document.getElementById('btnSaveCreateTicket');
-        if (btnSave) {
+        if (btnSave && btnSave.dataset.createTicketBound !== 'true') {
+            btnSave.dataset.createTicketBound = 'true';
             btnSave.addEventListener('click', async () => {
                 const phone = (phoneInput?.value || '').trim();
                 const name = (nameInput?.value || '').trim();
@@ -1647,27 +1645,32 @@
                 const createdAtStr = PawpalComplaints.formatDateTime(now);
 
                 let client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                if (client) {
-                    try {
-                        const insertPayload = {
-                            title: title,
-                            type: type === 'order' ? 'order' : 'service',
-                            priority: priority === 'high' ? 'Cao' : (priority === 'low' ? 'Thấp' : 'Trung bình'),
-                            status: 'pending',
-                            user_id: targetCustomerId
-                        };
-                        const { data: insertedTickets, error: insertErr } = await client.from('support_ticket').insert([insertPayload]).select();
-                        if (!insertErr && insertedTickets && insertedTickets[0]) {
-                            newId = insertedTickets[0].id;
-                            await client.from('support_ticket_message').insert([{
-                                ticket_id: newId,
-                                sender_type: 'user',
-                                content: content
-                            }]);
-                        }
-                    } catch (dbErr) {
-                        console.warn('[Complaints] Không thể lưu trực tiếp lên Supabase:', dbErr);
-                    }
+                if (!client) {
+                    PawpalComplaints.showToast('Không xác định được kết nối Supabase để tạo khiếu nại.', 'error');
+                    return;
+                }
+                try {
+                    const insertPayload = {
+                        title: title,
+                        type: type === 'order' ? 'order' : 'service',
+                        priority: priority === 'high' ? 'Cao' : (priority === 'low' ? 'Thấp' : 'Trung bình'),
+                        status: 'pending',
+                        user_id: targetCustomerId
+                    };
+                    const { data: insertedTickets, error: insertErr } = await client.from('support_ticket').insert([insertPayload]).select();
+                    if (insertErr) throw insertErr;
+                    if (!insertedTickets?.[0]?.id) throw new Error('CSDL không trả về mã khiếu nại mới.');
+                    newId = insertedTickets[0].id;
+                    const { error: messageErr } = await client.from('support_ticket_message').insert([{
+                        ticket_id: newId,
+                        sender_type: 'user',
+                        content: content
+                    }]);
+                    if (messageErr) throw messageErr;
+                } catch (dbErr) {
+                    console.error('[Complaints] Không thể tạo khiếu nại trên Supabase:', dbErr);
+                    PawpalComplaints.showToast(`Không thể tạo khiếu nại: ${dbErr?.message || 'Lỗi CSDL'}`, 'error');
+                    return;
                 }
 
                 const newTicket = {

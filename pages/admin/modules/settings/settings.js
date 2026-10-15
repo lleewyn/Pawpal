@@ -356,16 +356,18 @@
         try {
             const client = getSupabaseClient();
             if (client) {
-                await client.from('pawpal_setting').upsert([{
+                const { error } = await client.from('pawpal_setting').upsert([{
                     setting_key: 'system_config',
                     setting_value: JSON.stringify(newCfg),
                     setting_type: 'json',
                     description: 'Cấu hình vận hành hệ thống Pawpal',
                     updated_at: new Date().toISOString()
                 }], { onConflict: 'setting_key' });
+                if (error) throw error;
             }
         } catch (e) {
-            console.warn('[Settings] Chưa lưu pawpal_setting trên Supabase:', e.message);
+            console.error('[Settings] Không thể lưu pawpal_setting trên Supabase:', e.message);
+            throw e;
         }
     }
     PawpalSettings.persistSystemConfig = persistSystemConfig;
@@ -446,8 +448,16 @@
                     if (row.setting_key === 'system_config' && row.setting_value) {
                         PawpalSettings.state.hasSystemConfig = true;
                         try {
-                            PawpalSettings.state.systemConfig = JSON.parse(row.setting_value);
-                        } catch {}
+                            let parsed = row.setting_value;
+                            if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+                            // Một số schema jsonb có thể trả về chuỗi JSON lồng thêm một lớp.
+                            if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+                            if (parsed && typeof parsed === 'object') {
+                                PawpalSettings.state.systemConfig = parsed;
+                            }
+                        } catch (e) {
+                            console.error('[Settings] Không đọc được system_config:', e.message);
+                        }
                     }
                 });
             }

@@ -1588,3 +1588,8 @@ body.buy-now-modal-open {
 body.buy-now-modal-open {
     overflow: hidden;
 }
+
+.suggestion-skeleton { pointer-events: none; }
+.suggestions-ready > * { animation: shopSuggestionReveal 240ms ease both; }
+@keyframes shopSuggestionReveal { from { opacity: 0; } to { opacity: 1; } }
+@media(prefers-reduced-motion: reduce) { .suggestions-ready > *, .suggestion-skeleton .pawpal-skeleton { animation: none !important; } }

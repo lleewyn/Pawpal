@@ -10,6 +10,12 @@ import { applyProfileSnapshot, saveCustomerProfile } from '/scripts/shared/custo
 const CURRENT_USER_KEY = 'pawpal_current_user';
 const PAWPAL_USERS_KEY = 'pawpal_users_db';
 
+function normalizeProfileEmail(value) {
+    if (typeof value !== 'string') return '';
+    const email = value.trim();
+    return /^(null|undefined)$/i.test(email) ? '' : email;
+}
+
 function getCurrentUser() {
     try {
         return JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || null;
@@ -153,7 +159,7 @@ async function syncUserProfileFromSupabase(user, cache = true) {
                 name: profile.full_name || user.name || 'Khách hàng',
                 fullName: profile.full_name || user.name || 'Khách hàng',
                 phone: custRecord.phone_main || user.phone || '',
-                email: custRecord.email || user.email || '',
+                email: normalizeProfileEmail(custRecord.email) || normalizeProfileEmail(user.email),
                 status: custRecord.account_status || 'ACTIVE',
                 isLocked: custRecord.account_status === 'LOCKED',
                 points: Number(membership.total_paw_points ?? 0),
@@ -208,7 +214,7 @@ async function loadProfileData(user) {
     if (nameEl) nameEl.textContent = user.name || user.fullName || '-';
 
     const emailEl = document.getElementById('profileEmail');
-    if (emailEl) emailEl.textContent = user.email || 'Chưa cập nhật';
+    if (emailEl) emailEl.textContent = normalizeProfileEmail(user.email) || 'Chưa cập nhật';
 
     const phoneEl = document.getElementById('profilePhone');
     if (phoneEl) phoneEl.textContent = user.phone || '-';
@@ -230,7 +236,7 @@ async function loadProfileData(user) {
     if (nameInput) nameInput.value = user.name || user.fullName || '';
 
     const emailInput = document.getElementById('profileEmailInput');
-    if (emailInput) emailInput.value = user.email || '';
+    if (emailInput) emailInput.value = normalizeProfileEmail(user.email);
 
     const phoneInput = document.getElementById('profilePhoneInput');
     if (phoneInput) phoneInput.value = user.phone || '';
@@ -373,7 +379,7 @@ async function loadUpcomingBooking(user) {
                 </div>
             </div>
             <div class="booking-actions">
-                <a href="#bookings" class="btn-booking-detail-action">Xem chi tiết</a>
+                <a href="#booking-detail?id=${encodeURIComponent(upcoming.code || upcoming.id)}" class="btn-booking-detail-action">Xem chi tiết</a>
             </div>
         </div>
     `;
@@ -394,7 +400,8 @@ async function loadRecentOrders(user) {
                 .order('created_at', { ascending: false })
                 .limit(3);
 
-            if (!error && data && data.length > 0) {
+            if (error) throw error;
+            if (data && data.length > 0) {
                 orders = data.map(o => ({
                     code: o.order_code || `#${o.id}`,
                     total: Number(o.total_amount || 0),
@@ -405,6 +412,8 @@ async function loadRecentOrders(user) {
         }
     } catch (e) {
         console.warn('[Profile] Lỗi tải đơn hàng từ Supabase:', e);
+        container.innerHTML = '<p class="text-muted p-3" role="status">Không thể tải đơn hàng gần đây. Vui lòng tải lại trang.</p>';
+        return;
     }
 
     if (!orders || orders.length === 0) {
@@ -547,7 +556,7 @@ function initProfileEditModal(user) {
         const phoneInput = document.getElementById('profilePhoneInput');
 
         if (nameInput) nameInput.value = currentUser.name || currentUser.fullName || '';
-        if (emailInput) emailInput.value = currentUser.email || '';
+        if (emailInput) emailInput.value = normalizeProfileEmail(currentUser.email);
         if (phoneInput) phoneInput.value = currentUser.phone || '';
 
         // Clone addresses
@@ -694,7 +703,11 @@ export async function init() {
     isInitRunning = true;
     try {
         let user = getCurrentUser();
-        if (!user) return;
+        if (!user) {
+            const overview = document.getElementById('paneOverview');
+            if (overview) overview.innerHTML = '<p class="text-muted py-4" role="status">Vui lòng đăng nhập để xem tổng quan tài khoản.</p>';
+            return;
+        }
 
         if (typeof window.setUserSubBreadcrumb === 'function') {
             window.setUserSubBreadcrumb('', 'profile');
@@ -711,8 +724,23 @@ export async function init() {
         }
 
         // Tải và hiển thị dữ liệu chuẩn một lần duy nhất
-        loadProfileData(user);
-        await Promise.all([loadMyPets(user), loadUpcomingBooking(user), loadRecentOrders(user)]);
+        await loadProfileData(user);
+        ['welcomeName', 'statPoints', 'statAccountType', 'profileName', 'profileEmail', 'profilePhone', 'profileAddress'].forEach(id => document.getElementById(id)?.classList.add('profile-data-ready'));
+        await Promise.allSettled([
+            loadMyPets(user).catch(error => {
+                console.warn('[Profile] Lỗi tải thú cưng:', error);
+                const count = document.getElementById('statPetsCount');
+                if (count) count.textContent = '—';
+                const pets = document.getElementById('myPetsContainerHorizontal');
+                if (pets) pets.textContent = 'Không thể tải danh sách bé cưng.';
+            }).finally(() => document.getElementById('statPetsCount')?.classList.add('profile-data-ready')),
+            loadUpcomingBooking(user),
+            loadRecentOrders(user).finally(() => {
+                const orders = document.getElementById('recentOrdersContainer');
+                orders?.setAttribute('aria-busy', 'false');
+                orders?.classList.add('profile-data-ready');
+            })
+        ]);
         initProfileEditModal(user);
         profileModal = document.getElementById('profileEditModal');
         watchProfile(user);

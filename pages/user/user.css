@@ -316,3 +316,40 @@ body.user-drawer-open .user-detail-drawer {
     display: none !important;
 }
 
+
+.user-drawer-skeleton-card { display: flex; flex-direction: column; gap: 16px; padding: 18px 0; }
+.user-drawer-skeleton { pointer-events: none; }
+@media(prefers-reduced-motion: reduce) { .user-drawer-skeleton .pawpal-skeleton { animation: none !important; } }
+
+.user-route-skeleton { display: flex; flex-direction: column; gap: 20px; min-height: 440px; }
+.user-route-skeleton-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.user-route-skeleton-panel { background: rgba(255,255,255,.7); border-radius: 9px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.user-route-skeleton-row { display: flex; justify-content: space-between; gap: 20px; padding: 12px 0; }
+.user-route-ready { animation: userRouteReveal 240ms ease both; }
+@keyframes userRouteReveal { from { opacity: 0; } to { opacity: 1; } }
+@media(max-width: 575px) { .user-route-skeleton-stats { grid-template-columns: 1fr; } }
+@media(prefers-reduced-motion: reduce) { .user-route-ready, .user-route-skeleton .pawpal-skeleton { animation: none !important; } }
+
+/* Shared actions on account detail pages. */
+.detail-header-actions { flex-wrap: wrap; }
+.user-detail-header-button {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 7px 12px;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    background: #EEF5F1;
+    color: #236B48;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: background-color 160ms ease;
+}
+.user-detail-header-button:hover { background: #DCEEE2; }
+.user-detail-header-button:focus-visible { outline: 2px solid #236B48; outline-offset: 2px; }
+.user-detail-header-button[hidden] { display: none; }

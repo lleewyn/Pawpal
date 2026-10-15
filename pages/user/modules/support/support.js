@@ -353,7 +353,7 @@ export function initSupportTickets() {
                             <div class="ticket-context-card">
                                 <div class="context-card-header">
                                     <span class="context-type-badge">Đơn hàng Shop liên quan</span>
-                                    ${ticket.context.orderId ? `<a href="../order-detail/order-detail.html?orderId=${encodeURIComponent(ticket.context.orderId)}" class="context-link-btn">Xem chi tiết đơn này &rarr;</a>` : ''}
+                                    ${ticket.context.orderId ? `<a href="#order-detail?id=${encodeURIComponent(ticket.context.orderId)}" class="context-link-btn">Xem chi tiết đơn này &rarr;</a>` : ''}
                                 </div>
                                 <div class="context-specs">
                                     ${ticket.context.orderId ? `
@@ -762,7 +762,8 @@ export function initSupportTickets() {
                 }
 
                 createTicketForm.reset();
-                window.location.href = '../support-tickets/support-tickets.html';
+                window.location.hash = '#support';
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
             });
         }
 

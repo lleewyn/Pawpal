@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261014_r21';
+    const MODULE_SCRIPT_VERSION = '20261015_r43';
 
     function resolveModulePath(path) {
         if (!path) return path;
@@ -1075,6 +1075,14 @@ document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
     }
 });
+
+
+
+
+
+
+
+
 
 
 

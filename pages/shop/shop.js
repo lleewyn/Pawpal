@@ -528,6 +528,12 @@ async function initShop() {
     initMobileFilter();
     console.log('=== SHOP PAGE LOADING ===');
     renderShopSkeletons(8);
+    const suggestionsList = document.getElementById('suggestionsList');
+    if (suggestionsList) {
+        suggestionsList.setAttribute('aria-busy', 'true');
+        suggestionsList.classList.remove('suggestions-ready');
+        suggestionsList.innerHTML = Array.from({ length: 5 }, () => `<div class="suggestion-card suggestion-skeleton" aria-hidden="true"><div class="pawpal-skeleton" style="width:60px;height:60px;flex-shrink:0"></div><div class="suggestion-info" style="gap:10px"><div class="pawpal-skeleton" style="width:90%;height:14px"></div><div class="pawpal-skeleton" style="width:65%;height:14px"></div><div class="pawpal-skeleton" style="width:45%;height:16px"></div></div></div>`).join('');
+    }
     
     try {
         console.log('Loading products from DataLoader...');
@@ -602,7 +608,10 @@ async function initShop() {
     } catch (error) {
         console.error(' Error loading products:', error);
         state.isLoading = false;
-        
+        if (suggestionsList) {
+            suggestionsList.innerHTML = '<p class="text-muted p-3" role="status">Không thể tải sản phẩm gợi ý. Vui lòng tải lại trang.</p>';
+            suggestionsList.setAttribute('aria-busy', 'false');
+        }
         const grid = document.getElementById('productsGrid');
         if (grid) {
             grid.innerHTML = `
@@ -629,6 +638,9 @@ if (document.readyState === 'loading') {
 
 function initSuggestionsSidebar() {
     const suggestionsList = document.getElementById('suggestionsList');
+    if (!suggestionsList) return;
+    suggestionsList.setAttribute('aria-busy', 'false');
+    suggestionsList.classList.add('suggestions-ready');
     
     const suggestions = state.products
         .filter(p => p.inStock)
@@ -640,7 +652,7 @@ function initSuggestionsSidebar() {
         .slice(0, 8);
     
     if (suggestions.length === 0) {
-        suggestionsList.innerHTML = '<p style="text-align:center;color:#888;padding:20px;">Đang tải...</p>';
+        suggestionsList.innerHTML = '<p class="text-muted p-3" role="status">Chưa có sản phẩm gợi ý.</p>';
         return;
     }
     

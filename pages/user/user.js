@@ -12,8 +12,7 @@
 
         if (!currentUser) {
             sessionStorage.setItem('pawpal_redirect_after_login', window.location.href);
-            alert('Vui lòng đăng nhập để truy cập trang này');
-            window.location.href = '/login';
+            window.location.replace('/login');
             return false;
         }
 
@@ -376,6 +375,12 @@
         const config = ROUTE_CONFIG[routeKey] || ROUTE_CONFIG['profile'];
         updateBreadcrumb(routeKey);
         highlightActiveSidebar(routeKey);
+        contentContainer.setAttribute('aria-busy', 'true');
+        contentContainer.innerHTML = `<div class="user-route-skeleton" role="status" aria-label="Đang tải nội dung">
+            <div class="pawpal-skeleton" style="width:38%;height:28px"></div>
+            <div class="user-route-skeleton-stats">${Array.from({ length: 3 }, () => `<div class="user-route-skeleton-panel" aria-hidden="true"><div class="pawpal-skeleton" style="width:50%;height:24px"></div><div class="pawpal-skeleton" style="width:75%;height:14px"></div></div>`).join('')}</div>
+            <div class="user-route-skeleton-panel" aria-hidden="true">${Array.from({ length: 5 }, () => `<div class="user-route-skeleton-row"><div class="pawpal-skeleton" style="width:65%;height:18px"></div><div class="pawpal-skeleton" style="width:20%;height:18px"></div></div>`).join('')}</div>
+        </div>`;
 
         // Nạp trực tiếp module chuẩn từ modules/ để tránh hiện tượng tải 2 bước
         if (config.modulePath) {
@@ -388,7 +393,11 @@
                         contentContainer.innerHTML = `<div class="user-module-view">${html}</div>`;
                         if (config.moduleCss) loadModuleCss(config.moduleCss);
                         if (config.moduleScript) await loadModuleScript(config.moduleScript, true);
-                        if (window.lucide) window.lucide.createIcons();
+                        if (moduleRenderer.isCurrent(ticket)) {
+                            contentContainer.setAttribute('aria-busy', 'false');
+                            contentContainer.querySelector('.user-module-view')?.classList.add('user-route-ready');
+                            if (window.lucide) window.lucide.createIcons();
+                        }
                     });
                     return;
                 }
@@ -398,10 +407,12 @@
         }
 
         // Trường hợp không tìm thấy
-        await moduleRenderer.commit(ticket, () => { contentContainer.innerHTML = `
-            <div class="card p-5 text-center border-0 shadow-sm rounded-4">
-                <h4 class="text-danger mb-2">Phân hệ đang được hoàn thiện</h4>
-                <p class="text-muted">Chúng tôi đang cập nhật phân hệ ${config.breadcrumb}. Vui lòng quay lại sau.</p>
+        await moduleRenderer.commit(ticket, () => {
+            contentContainer.setAttribute('aria-busy', 'false');
+            contentContainer.innerHTML = `
+            <div class="card p-5 text-center border-0 shadow-sm rounded-4" role="status">
+                <h4 class="text-danger mb-2">Không thể tải nội dung</h4>
+                <p class="text-muted">Vui lòng tải lại trang hoặc chọn phân hệ khác.</p>
                 <div><a href="#profile" class="btn btn-outline-success btn-sm px-3">Quay lại tổng quan</a></div>
             </div>
         `; });
@@ -414,75 +425,61 @@
     const drawerTitleEl = document.getElementById('drawerHeaderTitle');
     const btnDrawerClose = document.getElementById('btnUserDrawerClose');
 
+    let drawerRequest = 0;
     async function openDetailDrawer(type, id) {
         if (!detailDrawer || !detailDrawerBody) return;
-
+        const ticket = ++drawerRequest;
         document.body.classList.add('user-drawer-open');
-        if (detailDrawerBackdrop) detailDrawerBackdrop.hidden = false;
-
-        detailDrawerBody.innerHTML = `
-            <div class="user-module-loading-box">
-                <div class="spinner-border text-success" role="status"></div>
-                <p class="mt-3 text-muted">Đang tải thông tin chi tiết...</p>
-            </div>
-        `;
-
-        if (type === 'order') {
-            if (drawerTitleEl) drawerTitleEl.textContent = `Chi tiết đơn hàng #${id}`;
-            try {
-                const res = await fetch(`/pages/user/modules/orders/order-detail.html?v=${Date.now()}`);
-                if (res.ok) {
-                    const text = await res.text();
-                    const doc = new DOMParser().parseFromString(text, 'text/html');
-                    const mainContent = doc.querySelector('.order-detail-main') || doc.body;
-                    detailDrawerBody.innerHTML = mainContent.innerHTML;
-
-                    // Tải CSS chi tiết đơn hàng
-                    loadModuleCss('/pages/user/modules/orders/order-detail.css');
-
-                    // Thiết lập URL param ảo cho order-detail.js đọc đúng mã đơn
-                    window.history.replaceState(null, '', `?id=${encodeURIComponent(id)}`);
-
-                    // Nạp script chi tiết đơn hàng
-                    await loadModuleScript('/pages/user/modules/orders/order-detail.js', true);
-                    if (window.lucide) window.lucide.createIcons();
-                }
-            } catch (err) {
-                console.error('[user.js] Lỗi tải chi tiết đơn hàng:', err);
-                detailDrawerBody.innerHTML = '<div class="alert alert-danger p-3">Không thể tải thông tin đơn hàng này.</div>';
-            }
-        } else if (type === 'booking') {
-            if (drawerTitleEl) drawerTitleEl.textContent = `Chi tiết lịch hẹn #${id}`;
-            try {
-                const res = await fetch(`/pages/user/modules/bookings/booking-detail.html?v=${Date.now()}`);
-                if (res.ok) {
-                    const text = await res.text();
-                    const doc = new DOMParser().parseFromString(text, 'text/html');
-                    const mainContent = doc.querySelector('.booking-detail-content') || doc.body;
-                    detailDrawerBody.innerHTML = mainContent.innerHTML;
-
-                    // Tải CSS chi tiết lịch hẹn
-                    loadModuleCss('/pages/user/modules/bookings/booking-detail.css');
-
-                    window.history.replaceState(null, '', `?id=${encodeURIComponent(id)}`);
-                    await loadModuleScript('/pages/user/modules/bookings/booking-detail.js', true);
-                    if (window.lucide) window.lucide.createIcons();
-                }
-            } catch (err) {
-                console.error('[user.js] Lỗi tải chi tiết lịch hẹn:', err);
-                detailDrawerBody.innerHTML = '<div class="alert alert-danger p-3">Không thể tải thông tin lịch hẹn này.</div>';
-            }
+        detailDrawer.setAttribute('aria-hidden', 'false');
+        detailDrawerBackdrop.hidden = false;
+        drawerTitleEl.textContent = type === 'order' ? 'Tóm tắt đơn hàng' : 'Tóm tắt lịch hẹn';
+        detailDrawerBody.setAttribute('aria-busy', 'true');
+        detailDrawerBody.innerHTML = `<div role="status" aria-label="Đang tải thông tin chi tiết">${Array.from({length:3},()=>'<div class="user-drawer-skeleton-card"><div class="pawpal-skeleton" style="width:65%;height:20px"></div><div class="pawpal-skeleton" style="width:100%;height:64px"></div></div>').join('')}</div>`;
+        try {
+            const { API } = await import('/scripts/api/api.js');
+            const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            if (!user) throw new Error('Vui lòng đăng nhập.');
+            const items = type === 'order' ? await API.getUserOrders(user.id) : await API.getUserBookings(user);
+            if (ticket !== drawerRequest) return;
+            const item = items.find(row => [row.id, row.code, row._supabaseId, row.order_code, row.appointment_code].some(value => String(value) === String(id)));
+            if (!item) throw new Error('Không tìm thấy thông tin.');
+            const content = document.createElement('div');
+            content.className = 'user-route-ready';
+            const rows = type === 'order'
+                ? [['Mã đơn', item.id], ['Trạng thái', ({pending:'Chờ xác nhận',confirmed:'Đã xác nhận',shipping:'Đang giao',delivered:'Đã giao',completed:'Hoàn thành',cancelled:'Đã hủy'})[item.status] || 'Đang xử lý'], ['Tổng tiền', new Intl.NumberFormat('vi-VN', {style:'currency',currency:'VND'}).format(item.pricing?.total ?? item.total ?? 0)], ...((item.products || item.items || []).map(product => [product.name || product.title || 'Sản phẩm', `Số lượng: ${product.quantity || 1}`]))]
+                : [['Mã lịch hẹn', item.id], ['Bé cưng', item.petName], ['Dịch vụ', item.serviceName || item.service], ['Ngày hẹn', item.date], ['Giờ hẹn', item.timeStart || item.time]];
+            rows.forEach(([label, value]) => {
+                const row = document.createElement('p');
+                const heading = document.createElement('strong');
+                heading.textContent = label + ': ';
+                row.append(heading, document.createTextNode(String(value ?? '—')));
+                content.append(row);
+            });
+            detailDrawerBody.replaceChildren(content);
+        } catch (error) {
+            if (ticket !== drawerRequest) return;
+            const status = document.createElement('p');
+            status.setAttribute('role', 'status');
+            status.textContent = error.message || 'Không thể tải thông tin. Vui lòng thử lại.';
+            detailDrawerBody.replaceChildren(status);
+        } finally {
+            if (ticket === drawerRequest) detailDrawerBody.setAttribute('aria-busy', 'false');
         }
     }
-
     function closeDetailDrawer() {
+        ++drawerRequest;
         document.body.classList.remove('user-drawer-open');
+        detailDrawer?.setAttribute('aria-hidden', 'true');
+        detailDrawerBody?.setAttribute('aria-busy', 'false');
         if (detailDrawerBackdrop) detailDrawerBackdrop.hidden = true;
-
-        // Xóa query param tạm thời trong URL
-        const cleanUrl = window.location.pathname + window.location.hash.split('?')[0];
-        window.history.replaceState(null, '', cleanUrl);
     }
+    document.addEventListener('click', event => {
+        const button = event.target.closest('[data-open-detail-drawer]');
+        if (!button) return;
+        const params = new URLSearchParams(window.location.hash.split('?')[1] || window.location.search);
+        const id = params.get('id') || params.get('orderId') || params.get('bookingId');
+        if (id) openDetailDrawer(button.dataset.openDetailDrawer, id);
+    });
 
     if (btnDrawerClose) btnDrawerClose.addEventListener('click', closeDetailDrawer);
     if (detailDrawerBackdrop) detailDrawerBackdrop.addEventListener('click', closeDetailDrawer);
@@ -635,8 +632,9 @@
 
         // Khởi động trực tiếp phân hệ mục tiêu ngay lập tức
         const targetRoute = resolveRoute(window.location.hash || sessionStorage.getItem('pawpal_user_active_tab') || 'profile');
-        if (window.location.hash !== `#${targetRoute}`) {
-            window.history.replaceState(null, '', `#${targetRoute}`);
+        const routeQuery = window.location.hash.includes('?') ? window.location.hash.slice(window.location.hash.indexOf('?')) : '';
+        if (window.location.hash !== `#${targetRoute}${routeQuery}`) {
+            window.history.replaceState(null, '', `#${targetRoute}${routeQuery}`);
         }
         handleRoute();
     }

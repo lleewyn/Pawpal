@@ -1,7 +1,31 @@
 
 let currentRmaOrder = null;
 
-function openRMADrawer(orderId) {
+async function openRMADrawer(orderId) {
+    try {
+        let stylesheet = document.getElementById('return-drawer-styles');
+        if (!stylesheet) {
+            stylesheet = document.createElement('link');
+            stylesheet.id = 'return-drawer-styles';
+            stylesheet.rel = 'stylesheet';
+            stylesheet.href = '/pages/user/modules/orders/return-detail.css';
+            await new Promise((resolve, reject) => {
+                stylesheet.onload = resolve;
+                stylesheet.onerror = reject;
+                document.head.appendChild(stylesheet);
+            });
+        } else if (!stylesheet.sheet) {
+            await new Promise((resolve, reject) => {
+                stylesheet.addEventListener('load', resolve, {once:true});
+                stylesheet.addEventListener('error', reject, {once:true});
+            });
+        }
+    } catch (error) {
+        document.getElementById('return-drawer-styles')?.remove();
+        console.error('[ReturnHandler] Không thể tải giao diện:', error);
+        return;
+    }
+    currentRmaOrder = window.pawpalCurrentOrderForReturn?.id === orderId ? window.pawpalCurrentOrderForReturn : null;
     if (typeof ordersState !== 'undefined' && ordersState.allOrders) {
         currentRmaOrder = ordersState.allOrders.find(o => o.id === orderId);
     }
@@ -109,7 +133,7 @@ function openRMADrawer(orderId) {
                 <!-- Submit Area -->
                 <div class="rma-form-group" style="margin-top: 10px;">
                     <button class="rma-btn-submit" id="rma-submit-btn">Gửi yêu cầu đổi trả</button>
-                    <p style="font-size: 0.75rem; text-align: center; color: var(--color-text-light); margin: 6px 0 0 0;">Yêu cầu sẽ được kiểm duyệt trong vòng 24 giờ làm việc</p>
+                    <p style="font-size: 0.75rem; text-align: center; color: var(--color-text-light); margin: 6px 0 0 0;">Yêu cầu cần được kiểm duyệt theo chính sách đổi trả trước khi thực hiện</p>
                 </div>
             </div>
         </div>
@@ -246,37 +270,34 @@ function setupDrawerListeners() {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
         const customerId = currentUser ? currentUser.id : null;
 
-        if (db) {
-            try {
-                const { data: rData, error: rErr } = await db.from('return_request').insert([{
-                    sales_order_id: currentRmaOrder._supabaseId || currentRmaOrder.id,
-                    customer_id: customerId,
-                    reason: reason,
-                    return_type: returnType.toUpperCase(),
-                    request_status: 'REVIEWING',
-                    description: returnData.description,
-                    refund_account: returnData.refundAccount
-                }]).select();
-
-                if (rErr) throw rErr;
-                
-                if (rData && rData.length > 0) {
-                    const newRmaId = rData[0].id;
-                    returnData.rmaId = newRmaId; // Đồng bộ ID từ DB để lưu vào localStorage fallback
-
-                    const details = returnData.products.map(p => ({
-                        return_request_id: newRmaId,
-                        product_id: p.id,
-                        quantity: p.quantity,
-                        unit_price: p.price
-                    }));
-
-                    const { error: dErr } = await db.from('return_request_detail').insert(details);
-                    if (dErr) throw dErr;
-                }
-            } catch (err) {
-                console.error('[ReturnHandler] Lỗi khi tạo RMA trên Supabase:', err);
-            }
+        try {
+            if (!db || !customerId) throw new Error('Vui lòng đăng nhập và thử lại.');
+            const orderLookup = await db.from('sales_order').select('id').eq('order_code', currentRmaOrder.id).eq('customer_id', customerId).maybeSingle();
+            if (orderLookup.error) throw orderLookup.error;
+            const orderUuid = currentRmaOrder._supabaseId || orderLookup.data?.id;
+            if (!orderUuid) throw new Error('Không tìm thấy đơn hàng.');
+            const lineResult = await db.from('sales_order_detail').select('*').eq('order_id', orderUuid);
+            if (lineResult.error) throw lineResult.error;
+            const details = returnData.products.map(product => {
+                const line = lineResult.data.find(item => item.product_id === product.id || item.product_variant?.product_id === product.id || (product.variantId && item.product_variant_id === product.variantId));
+                if (!line) throw new Error('Không tìm thấy sản phẩm trong đơn hàng.');
+                return { ...(line.product_variant_id ? {product_variant_id:line.product_variant_id} : {product_id:line.product_id}), quantity: product.quantity, unit_price: product.price };
+            });
+            const { data: request, error } = await db.from('return_request').insert({
+                sales_order_id: orderUuid, customer_id: customerId, reason,
+                return_type: returnType.toUpperCase(),
+                request_status: 'PENDING', description: returnData.description
+            }).select('id').single();
+            if (error) throw error;
+            const detailResult = await db.from('return_request_detail').insert(details.map(detail => ({ ...detail, return_request_id: request.id })));
+            if (detailResult.error) throw detailResult.error;
+        } catch (error) {
+            console.error('[ReturnHandler] Không thể gửi yêu cầu:', error);
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            warningEl.textContent = 'Không thể gửi yêu cầu đổi trả. Vui lòng thử lại sau.';
+            warningEl.style.display = 'block';
+            return;
         }
 
 
@@ -296,7 +317,7 @@ function setupDrawerListeners() {
             }, 200);
         } else {
             setTimeout(() => {
-                window.location.href = `/pages/user/return-detail/return-detail.html?orderId=${currentRmaOrder.id}`;
+                window.location.hash = `#return-detail?orderId=${encodeURIComponent(currentRmaOrder.id)}`;
             }, 100);
         }
     });

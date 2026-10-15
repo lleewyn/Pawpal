@@ -381,7 +381,7 @@ function initFab() {
                 const data = JSON.parse(jsonStr);
                 const st = data.status || 'Đã xác nhận';
                 const statusBadge = (st === 'Hoàn thành' || st === 'Đang thực hiện') ? 'badge-active' : (st === 'Đã hủy' ? 'badge-danger' : 'badge-info');
-                return `<div class="fab-rich-card fab-rich-card--booking"><div class="fab-rich-card-header"><span class="fab-rich-card-tag">Lịch hẹn dịch vụ</span><span class="admin-badge ${statusBadge}">${st}</span></div><div class="fab-rich-card-body"><div class="fab-rich-card-title">${data.service || 'Chăm sóc thú cưng'}</div><div class="fab-rich-card-desc">Bé: <strong>${data.pet || 'Bé cưng'}</strong> • Giờ hẹn: <strong>${data.time || 'Hôm nay'}</strong></div></div><a href="/pages/services/booking.html" class="fab-rich-card-action">Xem chi tiết lịch hẹn</a></div>`;
+                return `<div class="fab-rich-card fab-rich-card--booking"><div class="fab-rich-card-header"><span class="fab-rich-card-tag">Lịch hẹn dịch vụ</span><span class="admin-badge ${statusBadge}">${st}</span></div><div class="fab-rich-card-body"><div class="fab-rich-card-title">${data.service || 'Chăm sóc thú cưng'}</div><div class="fab-rich-card-desc">Bé: <strong>${data.pet || 'Bé cưng'}</strong> • Giờ hẹn: <strong>${data.time || 'Hôm nay'}</strong></div></div><a href="/user#bookings" class="fab-rich-card-action">Xem lịch hẹn</a></div>`;
             } catch(e) { return match; }
         });
 
@@ -1419,4 +1419,4 @@ if (document.readyState !== 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
         setTimeout(initFab, 0);
     });
-}
+}

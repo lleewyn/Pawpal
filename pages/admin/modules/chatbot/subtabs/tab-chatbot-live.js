@@ -1019,25 +1019,46 @@
         adminAttachPreviewRemove?.addEventListener('click', clearAdminAttachment);
 
         // Lưu ghi chú nội bộ
-        document.getElementById('btnSaveChatInternalNote')?.addEventListener('click', async () => {
+        const saveNoteButton = document.getElementById('btnSaveChatInternalNote');
+        if (saveNoteButton && saveNoteButton.dataset.noteBound !== 'true') {
+            saveNoteButton.dataset.noteBound = 'true';
+            saveNoteButton.addEventListener('click', async () => {
             const currentConversation = PawpalChatbot.state?.currentConversation;
             if (!currentConversation) return;
 
             const note = document.getElementById('chatInternalNoteInput')?.value || '';
             currentConversation.internalNotes = note;
 
-            if (supabase && currentConversation.customerId) {
-                try {
-                    await supabase
+            if (!supabase) {
+                PawpalChatbot.showToast?.('Không xác định được phiên chat để lưu ghi chú.', 'error');
+                return;
+            }
+            try {
+                const conversationId = await ensureRealConversation(currentConversation);
+                if (!conversationId) throw new Error('Missing conversation id');
+                const { data: savedConversation, error: conversationError } = await supabase
+                    .from('chat_conversation')
+                    .update({ internal_note: note })
+                    .eq('id', conversationId)
+                    .select('id, internal_note')
+                    .single();
+                if (conversationError) throw conversationError;
+                if (!savedConversation || savedConversation.internal_note !== note) throw new Error('Saved note could not be verified');
+                if (currentConversation.customerId && !currentConversation.isRealDb) {
+                    const { error: customerError } = await supabase
                         .from('customer')
-                        .update({ note: note })
+                        .update({ note })
                         .eq('id', currentConversation.customerId);
-                } catch (e) {
-                    console.error('Lỗi khi lưu note vào Supabase:', e);
+                    if (customerError) throw customerError;
                 }
+            } catch (e) {
+                console.error('Lỗi khi lưu note vào Supabase:', e);
+                PawpalChatbot.showToast?.(`Không thể lưu ghi chú: ${e?.message || 'Lỗi CSDL hoặc quyền truy cập'}`, 'error');
+                return;
             }
             PawpalChatbot.showToast?.('Đã lưu ghi chú nội bộ an toàn trên Supabase Live DB!', 'success');
-        });
+            });
+        }
 
         // Smart Suggestions carousel
         document.getElementById('btnSuggestPrev')?.addEventListener('click', () => {

@@ -248,7 +248,7 @@
         </nav>
     </header>
 
-    <main class="blog-detail-main">
+    <main class="blog-detail-main blog-loading" aria-busy="true">
         <!-- Hero Header Wrapper with Warm Soft Green Tint -->
         <header class="blog-detail-header-wrapper">
             <div class="container-xl">
@@ -261,7 +261,7 @@
                     </ol>
                 </nav>
 
-                <div class="blog-hero-content">
+                <div class="blog-hero-content"><div class="blog-loading-placeholder blog-hero-placeholder" role="status" aria-label="Đang tải bài viết"><div class="pawpal-skeleton" style="width:25%;height:24px"></div><div class="pawpal-skeleton" style="width:90%;height:48px"></div><div class="pawpal-skeleton" style="width:60%;height:48px"></div><div class="pawpal-skeleton" style="width:45%;height:40px"></div><div class="pawpal-skeleton blog-cover-placeholder"></div></div>
                     <!-- Category Chip -->
                     <div class="blog-hero-cat-wrap mb-2" id="blogHeroCatWrap">
                         <span class="blog-hero-category-chip" id="blogCategoryBadge">Cẩm nang</span>
@@ -307,9 +307,9 @@
                 
                 <!-- Left Column: Article Body -->
                 <div class="col-lg-8">
-                    <article class="blog-article-content" id="blog-content">
+                    <div class="blog-body-loading-wrapper"><div class="blog-loading-placeholder" role="status" aria-label="Đang tải nội dung bài viết"><div class="pawpal-skeleton" style="width:95%;height:18px"></div><div class="pawpal-skeleton" style="width:100%;height:18px"></div><div class="pawpal-skeleton" style="width:85%;height:18px"></div><div class="pawpal-skeleton" style="width:98%;height:18px"></div><div class="pawpal-skeleton" style="width:90%;height:18px"></div><div class="pawpal-skeleton" style="width:100%;height:18px"></div><div class="pawpal-skeleton" style="width:75%;height:18px"></div><div class="pawpal-skeleton" style="width:95%;height:18px"></div></div><article class="blog-article-content" id="blog-content">
                         <!-- Loaded dynamically by JS -->
-                    </article>
+                    </article></div>
 
                     <!-- Article Tags & Expert Author Box -->
                     <div class="blog-footer-meta mt-4 pt-3">

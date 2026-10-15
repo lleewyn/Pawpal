@@ -5,40 +5,40 @@ async function loadReturnRequestFromSupabase(orderId) {
     if (!db || !orderId) return null;
 
     try {
-        const { data, error } = await db
-            .from('return_request')
-            .select(`
-                id,
-                sales_order_id,
-                customer_id,
-                reason,
-                return_type,
-                request_status,
-                created_at,
-                updated_at,
-                refund_account,
-                description,
-                return_request_detail (
-                    id,
-                    product_id,
-                    quantity,
-                    unit_price,
-                    product ( id, product_name, image_urls )
-                )
-            `)
-            .eq('sales_order_id', orderId)
-            .limit(1)
-            .maybeSingle();
+        let resolvedOrderId = orderId;
+        if (!/^[0-9a-f-]{36}$/i.test(orderId)) {
+            const lookup = await db.from('sales_order').select('id').eq('order_code', orderId).maybeSingle();
+            if (lookup.error) throw lookup.error;
+            if (!lookup.data) return null;
+            resolvedOrderId = lookup.data.id;
+        }
+        const { data, error } = await db.from('return_request')
+            .select('*, return_request_detail(*)')
+            .eq('sales_order_id', resolvedOrderId)
+            .order('created_at', { ascending: false }).limit(1).maybeSingle();
+        if (data?.return_request_detail?.length) {
+            for (const detail of data.return_request_detail) {
+                if (detail.product_variant_id) {
+                    const result = await db.from('product_variant').select('*, product(*)').eq('id', detail.product_variant_id).maybeSingle();
+                    if (result.error) throw result.error;
+                    detail.product = result.data?.product;
+                } else if (detail.product_id) {
+                    const result = await db.from('product').select('*').eq('id', detail.product_id).maybeSingle();
+                    if (result.error) throw result.error;
+                    detail.product = result.data;
+                }
+            }
+        }
 
         if (error) {
             console.warn('[ReturnDetail] Supabase lookup error:', error.message || error);
-            return null;
+            throw error;
         }
 
         return data || null;
     } catch (err) {
         console.warn('[ReturnDetail] Supabase fetch exception:', err);
-        return null;
+        throw err;
     }
 }
 
@@ -75,9 +75,9 @@ function normalizeReturnRequestRow(row) {
         orderId: row.sales_order_id || '',
         rmaId: row.id || '',
         createdAt: row.created_at || new Date().toISOString(),
-        status: String(row.request_status || 'placed').toLowerCase(),
+        status: ({PENDING:'reviewing',RESOLVED:'completed',APPROVED:'approved',REJECTED:'rejected',cho_xu_ly:'reviewing',dang_xu_ly:'reviewing',da_duyet:'approved',da_hoan_tat:'completed',da_tu_choi:'rejected',da_huy:'cancelled'})[row.request_status] || String(row.request_status || 'placed').toLowerCase(),
         reason: row.reason || 'change_mind',
-        type: String(row.return_type || 'exchange').toLowerCase(),
+        type: ['hoan_tien', 'refund'].includes(String(row.return_type).toLowerCase()) ? 'refund' : 'exchange',
         description: row.description || '',
         refundAccount: row.refund_account || '',
         products,
@@ -96,8 +96,7 @@ async function initReturnDetail() {
     }
 
     if (!orderId) {
-        alert('Không tìm thấy mã đơn hàng.');
-        window.location.hash = '#orders';
+        showReturnLoadError('Không tìm thấy mã đơn hàng.');
         return;
     }
 
@@ -111,8 +110,7 @@ async function initReturnDetail() {
     }
 
     if (!rmaData) {
-        alert('Không tìm thấy yêu cầu đổi trả cho đơn hàng này.');
-        window.location.hash = '#orders';
+        showReturnLoadError('Không tìm thấy yêu cầu đổi trả cho đơn hàng này.');
         return;
     }
 
@@ -125,14 +123,6 @@ async function initReturnDetail() {
             price: 0,
             total: 0
         }];
-    }
-
-    if (rmaData.status === 'completed' && rmaData.type === 'refund' && !rmaData.pointsDeducted) {
-        deductPointsForRefund(rmaData);
-        if (window.getSupabaseClient) {
-            const db = window.getSupabaseClient();
-            db.from('return_request').update({ points_deducted: true }).eq('rma_id', rmaData.rmaId).then();
-        }
     }
 
     document.getElementById('rma-id-title').textContent = `Yêu cầu đổi trả #${rmaData.rmaId}`;
@@ -223,14 +213,30 @@ async function initReturnDetail() {
     }).join('');
 }
 
+function showReturnLoadError(message) {
+    const container = document.querySelector('.return-detail-module-container');
+    if (!container) return;
+    container.innerHTML = '<div class="text-center py-5" role="status"><p class="text-muted"></p><a href="#orders">Quay lại danh sách đơn hàng</a></div>';
+    container.querySelector('p').textContent = message;
+}
+
 let isInitRunning = false;
 
 export async function init() {
     if (isInitRunning) return;
     isInitRunning = true;
+    const loadingContainer = document.querySelector('.return-detail-module-container');
     try {
         await initReturnDetail();
+    } catch (error) {
+        console.error('[ReturnDetail] Không thể tải yêu cầu:', error);
+        showReturnLoadError('Không thể tải yêu cầu đổi trả. Vui lòng tải lại trang.');
     } finally {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            loadingContainer?.classList.remove('return-detail-loading');
+            loadingContainer?.setAttribute('aria-busy', 'false');
+            setTimeout(() => loadingContainer?.querySelector('.return-detail-skeleton')?.remove(), 260);
+        }));
         isInitRunning = false;
     }
 }

@@ -3,6 +3,8 @@
  */
 
 let currentFilter = 'all';
+let wishlistRenderVersion = 0;
+export function dispose() { ++wishlistRenderVersion; }
 
 function getCurrentUser() {
     if (typeof window.getCurrentUser === 'function') {
@@ -223,11 +225,35 @@ function bindTabs() {
 }
 
 async function renderWishlist() {
+    const version = ++wishlistRenderVersion;
+    const filter = currentFilter;
     const skeletonEl = document.getElementById('wishlistSkeleton');
-    const items = await getWishlistItems();
-    if (skeletonEl) skeletonEl.remove();
+    const container = document.querySelector('.wishlist-module-container');
+    skeletonEl?.classList.remove('d-none');
+    document.getElementById('wishlistGrid')?.classList.add('d-none');
+    document.getElementById('emptyWishlist')?.classList.add('d-none');
+    container?.setAttribute('aria-busy', 'true');
+    let items;
+    try {
+        items = await getWishlistItems();
+    } catch (error) {
+        if (version !== wishlistRenderVersion || !container?.isConnected) return;
+        console.error('[Wishlist] Không thể tải danh sách:', error);
+        const grid = document.getElementById('wishlistGrid');
+        if (grid) {
+            grid.innerHTML = '<p class="text-muted py-4" role="status">Không thể tải danh sách yêu thích. Vui lòng thử lại hoặc tải lại trang.</p>';
+            grid.classList.remove('d-none');
+        }
+        return;
+    } finally {
+        if (version === wishlistRenderVersion) {
+            skeletonEl?.classList.add('d-none');
+            container?.setAttribute('aria-busy', 'false');
+        }
+    }
+    if (version !== wishlistRenderVersion || !container?.isConnected) return;
 
-    const filteredItems = currentFilter === 'all' ? items : items.filter((item) => item.type === currentFilter);
+    const filteredItems = filter === 'all' ? items : items.filter((item) => item.type === filter);
     const emptyState = document.getElementById('emptyWishlist');
     const grid = document.getElementById('wishlistGrid');
     const countSpan = document.getElementById('wishlistCount');

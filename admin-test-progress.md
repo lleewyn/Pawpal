@@ -247,13 +247,15 @@ Theo góp ý giao diện, cột `Loài và Giống` trong bảng danh sách hi�
 
 **Chưa kiểm thử:** lưu sửa hồ sơ trên bản ghi QA; các nút Đặt lịch/Lên đơn/Khiếu nại đến bước submit; lưu ghi chú; sửa/xóa thú cưng; gửi SMS; backdrop và lỗi API. Không thực hiện thao tác ghi dữ liệu thật.
 
-## Chatbot — đã kiểm thử vòng đọc và lọc
+## Chatbot — đã kiểm thử vòng đọc, lọc và thao tác trực tiếp
 
 **Đạt:** tab Trực chat tải được danh sách 24 hội thoại và khung hội thoại hiện tại; bộ đếm Xử lý ngay 5, Đang chat 3, Tất cả 24; lọc Đang chat hiển thị 3 hội thoại, lọc Xử lý ngay hiển thị 5 hội thoại; tìm kiếm theo tên khách lọc đúng kết quả; chuyển qua tab Trợ lý AI và Quy định tải đúng nội dung, FAQ 91 bản ghi cùng bộ lọc, phân trang và thao tác đọc.
 
 **Lưu ý dữ liệu:** nhiều hội thoại là khách vãng lai/mã khách thử nghiệm, nội dung bot lặp lại và SLA quá hạn; đây là dữ liệu cần làm sạch/đối soát, chưa thấy lỗi logic trong bộ lọc.
 
-**Chưa kiểm thử:** gửi tin, tiếp nhận/trả lại AI, hoàn tất ca, lưu ghi chú, tạo khiếu nại/tặng điểm/chuyển cấp, đồng bộ tri thức và chỉnh sửa FAQ vì đều là thao tác ghi dữ liệu thật.
+**Đã kiểm thử ghi dữ liệu trực tiếp (15/10/2026):** gửi tin nhắn nhân viên vào `chat_message`, chuyển ca về AI (`bot_handling`) và tiếp nhận lại (`agent_handling`); sau mỗi thao tác tải lại trang, nội dung và trạng thái vẫn giữ đúng từ Supabase. Ghi chú nội bộ đã sửa để hội thoại dựng từ `customer_profile` tự tạo/nối bản ghi `chat_conversation`, cập nhật `internal_note`, đọc lại bản ghi sau khi lưu và chỉ báo thành công khi xác minh được giá trị; đã kiểm tra F5 giữ đúng ghi chú.
+
+**Chưa kiểm thử:** hoàn tất ca, tạo khiếu nại/tặng điểm/chuyển cấp, đồng bộ tri thức và chỉnh sửa FAQ vì đều là thao tác nghiệp vụ ghi dữ liệu thật.
 
 ## Chatbot / Quy định — đã kiểm thử vòng đọc và lọc
 

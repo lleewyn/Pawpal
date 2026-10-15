@@ -6,6 +6,7 @@
     PawpalComplaints.subtabs = PawpalComplaints.subtabs || {};
 
     let orderCurrentPage = 1;
+    let currentOrderQuickFilter = 'ALL';
     const ITEMS_PER_PAGE = 10;
 
     function escapeHtml(str) {
@@ -80,10 +81,14 @@
         const searchInput = document.getElementById('orderSearchInput');
         const statusSelect = document.getElementById('orderFilterStatus');
         const prioritySelect = document.getElementById('orderFilterPriority');
+        const issueSelect = document.getElementById('orderFilterIssue');
+        const staffSelect = document.getElementById('orderFilterStaff');
 
         const searchTerm = (searchInput && searchInput.value) ? searchInput.value.trim().toLowerCase() : '';
         const selectedStatus = statusSelect ? statusSelect.value : 'ALL';
         const selectedPriority = prioritySelect ? prioritySelect.value : 'ALL';
+        const selectedIssue = issueSelect ? issueSelect.value : 'ALL';
+        const selectedStaff = staffSelect ? staffSelect.value : 'ALL';
 
         const filtered = orderComplaints.filter(item => {
             if (searchTerm) {
@@ -98,6 +103,14 @@
 
             if (selectedStatus !== 'ALL' && item.status !== selectedStatus) return false;
             if (selectedPriority !== 'ALL' && item.priority !== selectedPriority) return false;
+            if (selectedIssue !== 'ALL' && item.issueType !== selectedIssue) return false;
+            if (selectedStaff !== 'ALL' && (item.staffAssigned || 'Chưa phân công') !== selectedStaff) return false;
+            if (currentOrderQuickFilter === 'UNASSIGNED' && item.staffAssigned !== 'Chưa phân công') return false;
+            if (currentOrderQuickFilter === 'WAITING_MANAGER' && item.status !== 'waiting_manager_approval') return false;
+            if (currentOrderQuickFilter === 'REPROCESSING' && item.status !== 'reprocessing') return false;
+            if (currentOrderQuickFilter === 'OVERDUE' && item.slaStatus !== 'OVERDUE') return false;
+            if (currentOrderQuickFilter === 'HIGH' && item.priority !== 'high') return false;
+            if (currentOrderQuickFilter === 'MY' && item.staffAssigned !== 'Trần Văn Nhân Viên') return false;
 
             return true;
         });
@@ -113,6 +126,9 @@
             if (statusSelect) statusSelect.value = 'ALL';
             const prioritySelect = document.getElementById('orderFilterPriority');
             if (prioritySelect) prioritySelect.value = 'ALL';
+            if (issueSelect) issueSelect.value = 'ALL';
+            if (staffSelect) staffSelect.value = 'ALL';
+            currentOrderQuickFilter = 'ALL';
             orderCurrentPage = 1;
             renderOrderComplaintsTable();
         }
@@ -228,6 +244,24 @@
 
         const prioritySelect = document.getElementById('orderFilterPriority');
         if (prioritySelect) prioritySelect.addEventListener('change', () => { orderCurrentPage = 1; renderOrderComplaintsTable(); });
+        const issueSelect = document.getElementById('orderFilterIssue');
+        if (issueSelect) issueSelect.addEventListener('change', () => { orderCurrentPage = 1; renderOrderComplaintsTable(); });
+        const staffSelect = document.getElementById('orderFilterStaff');
+        if (staffSelect) staffSelect.addEventListener('change', () => { orderCurrentPage = 1; renderOrderComplaintsTable(); });
+
+        document.querySelectorAll('#orderQuickChips [data-filter]').forEach(chip => {
+            chip.addEventListener('click', () => {
+                currentOrderQuickFilter = chip.dataset.filter || 'ALL';
+                document.querySelectorAll('#orderQuickChips [data-filter]').forEach(c => c.classList.toggle('active', c === chip));
+                orderCurrentPage = 1;
+                renderOrderComplaintsTable();
+            });
+        });
+        document.getElementById('btnFilterUrgentOrder')?.addEventListener('click', () => {
+            currentOrderQuickFilter = 'OVERDUE';
+            orderCurrentPage = 1;
+            renderOrderComplaintsTable();
+        });
 
         // Nút xuất file CSV
         const btnExport = document.getElementById('btnExportOrderComplaints');

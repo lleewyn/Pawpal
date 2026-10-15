@@ -989,3 +989,19 @@ body.blog-detail-body {
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+/* Keep metadata and article content covered until one complete render is ready. */
+.blog-hero-content, .blog-body-loading-wrapper { position: relative; }
+.blog-loading-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 20px; z-index: 1; pointer-events: none; }
+.blog-loading .blog-body-loading-wrapper { min-height: 340px; }
+.blog-hero-placeholder { padding-top: 4px; }
+.blog-cover-placeholder { width: 100%; height: 380px; flex-shrink: 0; }
+.blog-hero-content > *, .blog-body-loading-wrapper > * { transition: opacity 240ms ease, visibility 240ms ease; }
+.blog-loading .blog-hero-content > :not(.blog-loading-placeholder),
+.blog-loading .blog-body-loading-wrapper > :not(.blog-loading-placeholder) { visibility: hidden; opacity: 0; pointer-events: none; }
+.blog-detail-main:not(.blog-loading) .blog-loading-placeholder { visibility: hidden; opacity: 0; }
+@media(max-width: 767px) { .blog-cover-placeholder { height: 240px; } }
+@media(prefers-reduced-motion: reduce) {
+    .blog-hero-content > *, .blog-body-loading-wrapper > * { transition: none; }
+    .blog-loading-placeholder .pawpal-skeleton { animation: none !important; }
+}

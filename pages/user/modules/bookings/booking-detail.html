@@ -1,12 +1,13 @@
+<style>.booking-detail-loading > :not(.booking-detail-skeleton) { opacity: 0; visibility: hidden; pointer-events: none; }</style>
 <!-- modules/bookings/booking-detail.html - Chi tiết lịch hẹn dịch vụ (Chuẩn AGENTS.md: 9px radius, Flat Solid, Text-Only) -->
-<div class="booking-detail-module-container pawpal-smooth-entrance">
+<div class="booking-detail-module-container booking-detail-loading" aria-busy="true"><div class="booking-detail-skeleton" role="status" aria-label="Đang tải chi tiết lịch hẹn"><div class="pawpal-skeleton mb-4" style="width:40%;height:28px"></div><div class="booking-detail-skeleton-grid"><div><div class="booking-detail-skeleton-panel"><div class="pawpal-skeleton" style="width:60%;height:22px"></div><div class="pawpal-skeleton" style="width:100%;height:64px"></div><div class="pawpal-skeleton" style="width:80%;height:16px"></div><div class="pawpal-skeleton" style="width:50%;height:18px"></div></div><div class="booking-detail-skeleton-panel"><div class="pawpal-skeleton" style="width:60%;height:22px"></div><div class="pawpal-skeleton" style="width:100%;height:64px"></div><div class="pawpal-skeleton" style="width:80%;height:16px"></div><div class="pawpal-skeleton" style="width:50%;height:18px"></div></div></div><div><div class="booking-detail-skeleton-panel"><div class="pawpal-skeleton" style="width:60%;height:22px"></div><div class="pawpal-skeleton" style="width:100%;height:64px"></div><div class="pawpal-skeleton" style="width:80%;height:16px"></div><div class="pawpal-skeleton" style="width:50%;height:18px"></div></div><div class="booking-detail-skeleton-panel"><div class="pawpal-skeleton" style="width:60%;height:22px"></div><div class="pawpal-skeleton" style="width:100%;height:64px"></div><div class="pawpal-skeleton" style="width:80%;height:16px"></div><div class="pawpal-skeleton" style="width:50%;height:18px"></div></div></div></div></div>
 
     <!-- Thanh điều hướng đầu trang -->
     <div class="detail-top-nav mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <a href="#bookings" class="btn-back-link">
             ← Danh sách lịch hẹn
         </a>
-        <div class="detail-header-actions d-flex align-items-center gap-2">
+        <div class="detail-header-actions d-flex align-items-center gap-2"><button type="button" class="user-detail-header-button" data-open-detail-drawer="booking">Xem tóm tắt</button>
             <span class="admin-badge badge-pending" id="headerStatusBadge">Đang tải...</span>
         </div>
     </div>

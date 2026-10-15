@@ -15,6 +15,24 @@ let galleryImages = [];
 let currentImageIndex = 0;
 let autoSlideTimer = null;
 
+function finishServiceLoading(selector, message) {
+    document.querySelectorAll(selector).forEach(section => {
+        if (message) {
+            const status = document.createElement('p');
+            status.className = 'text-muted py-4';
+            status.setAttribute('role', 'status');
+            status.textContent = message;
+            section.replaceChildren(status);
+        }
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            section.classList.remove('sd-loading');
+            section.setAttribute('aria-busy', 'false');
+            const placeholder = section.querySelector(':scope > .sd-loading-placeholder');
+            if (placeholder) setTimeout(() => placeholder.remove(), 260);
+        }));
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const serviceId = urlParams.get('id') || urlParams.get('service') || urlParams.get('serviceId');
@@ -48,12 +66,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             try { setupTimelineAndBenefits(); } catch (e) { console.warn('setupTimelineAndBenefits error:', e); }
             try { setupAmenities(); } catch (e) { console.warn('setupAmenities error:', e); }
             try { setupFAQs(); } catch (e) { console.warn('setupFAQs error:', e); }
-            try { await setupReviews(); } catch (e) { console.warn('setupReviews error:', e); }
+            try { setupConfigurator(); recalculatePrice(); } catch (e) { console.warn('setupConfigurator error:', e); }
+            finishServiceLoading('.service-detail-layout, .service-tabs-section');
+            setupReviews().catch(e => {
+                console.warn('setupReviews error:', e);
+                finishServiceLoading('.service-reviews-section', 'Không thể tải đánh giá. Vui lòng tải lại trang.');
+            }).finally(() => finishServiceLoading('.service-reviews-section'));
             try { setupStickyBarTrigger(); } catch (e) { console.warn('setupStickyBarTrigger error:', e); }
             try { setupWishlistAndShare(); } catch (e) { console.warn('setupWishlistAndShare error:', e); }
             try { setupRelatedServices(); } catch (e) { console.warn('setupRelatedServices error:', e); }
-            try { setupConfigurator(); } catch (e) { console.warn('setupConfigurator error:', e); }
-            try { recalculatePrice(); } catch (e) { console.warn('recalculatePrice error:', e); }
+
         } else {
             console.error('DataLoader not initialized');
             showNotFound();
@@ -562,7 +584,7 @@ async function setupReviews() {
                 rawReviews = dynamicReviews;
             }
         } catch (err) {
-            console.warn('Could not load dynamic reviews:', err);
+            throw err;
         }
     }
 
@@ -570,58 +592,7 @@ async function setupReviews() {
         rawReviews = serviceData.reviews;
     }
 
-    if (rawReviews.length === 0) {
-        rawReviews = [
-            {
-                customerName: 'Trần Thị Bích',
-                tier: 'gold',
-                tierName: 'Hội viên Vàng',
-                rating: 5,
-                createdAt: '2026-06-18',
-                variant: 'Dưới 5kg',
-                content: 'Các bạn nhân viên cắt tỉa rất đẹp, đúng ý mình. Bé Miu về nhà vui vẻ lắm, không bị stress.',
-                media: ['/assets/images/services/spa.png'],
-                hasMedia: true,
-                shopReply: 'Cảm ơn chị Bích đã luôn tin tưởng PawPal! Chúc bé cưng luôn ngoan và khỏe mạnh, hẹn gặp lại chị và bé trong lần làm đẹp tới ạ.'
-            },
-            {
-                customerName: 'Trần Thị Bích',
-                tier: 'silver',
-                tierName: 'Hội viên Bạc',
-                rating: 4,
-                createdAt: '2026-06-10',
-                variant: '5 - 10kg',
-                content: 'Bé cún nhà mình thơm tho suốt cả tuần luôn, đỉnh thật sự.',
-                media: ['/assets/images/services/hotel.png'],
-                hasMedia: true,
-                shopReply: 'PawPal cảm ơn chị Bích đã dành lời khen ngợi cho đội ngũ Groomer. PawPal sẽ luôn nỗ lực giữ vững chất lượng phục vụ tốt nhất ạ!'
-            },
-            {
-                customerName: 'Khách Vãng Lai Demo',
-                tier: 'member',
-                tierName: 'Thành viên',
-                rating: 5,
-                createdAt: '2026-05-28',
-                variant: '10 - 20kg',
-                content: 'Rất chuyên nghiệp! Lông bé nhà mình rối nùi mà các bạn gỡ được hết không bị cắt lẹm. 10 điểm!',
-                media: [],
-                hasMedia: false,
-                shopReply: 'PawPal xin cảm ơn đánh giá tuyệt vời của bạn ạ!'
-            },
-            {
-                customerName: 'Lê Hoàng Anh',
-                tier: 'member',
-                tierName: 'Thành viên',
-                rating: 4,
-                createdAt: '2026-05-20',
-                variant: 'Dưới 5kg',
-                content: 'Chất lượng dịch vụ xứng đáng với giá tiền. Không gian phòng Spa sạch sẽ, máy sấy êm ái không làm bé bị giật mình.',
-                media: [],
-                hasMedia: false,
-                shopReply: 'PawPal cảm ơn anh Hoàng Anh đã tin tưởng và đồng hành cùng PawPal ạ.'
-            }
-        ];
-    }
+
 
     // Determine available variant options for this service
     let availableVariants = [];

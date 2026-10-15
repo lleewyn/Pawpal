@@ -118,13 +118,17 @@ async function initBlogDetail() {
             }
         }
 
-        if (!blog && blogs.length > 0) {
+        if (!blog && !slug && !idParam && blogs.length > 0) {
             blog = blogs[0];
         }
 
         if (!blog) {
             document.getElementById('blog-title').textContent = 'Bài viết không tồn tại';
             document.getElementById('blog-content').innerHTML = '<p class="text-center py-5">Không tìm thấy bài viết này. Hãy quay lại danh sách Cẩm nang.</p>';
+            document.getElementById('breadcrumbCurrentTitle').textContent = 'Không tìm thấy bài viết';
+            document.querySelector('.blog-hero-meta')?.setAttribute('hidden', '');
+            document.getElementById('blogHeroCatWrap')?.setAttribute('hidden', '');
+            document.getElementById('blog-hero-cover')?.replaceChildren();
             return;
         }
 
@@ -448,7 +452,22 @@ async function initBlogDetail() {
     setupReadingProgress();
     setupSidebarSearch();
     setupComments();
-    await loadBlogData();
+    try {
+        await loadBlogData();
+    } catch (error) {
+        console.error('Không thể tải bài viết:', error);
+        document.getElementById('blog-title').textContent = 'Không thể tải bài viết';
+        document.getElementById('blog-content').innerHTML = '<p role="status">Vui lòng tải lại trang hoặc quay lại danh sách Cẩm nang.</p>';
+        document.querySelector('.blog-hero-meta')?.setAttribute('hidden', '');
+        document.getElementById('blog-hero-cover')?.replaceChildren();
+    } finally {
+        const main = document.querySelector('.blog-detail-main');
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            main?.classList.remove('blog-loading');
+            main?.setAttribute('aria-busy', 'false');
+            setTimeout(() => document.querySelectorAll('.blog-loading-placeholder').forEach(el => el.remove()), 260);
+        }));
+    }
 }
 
 if (document.readyState === 'loading') {

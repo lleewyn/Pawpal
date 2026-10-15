@@ -1,6 +1,13 @@
 
 (function (global) {
     'use strict';
+    if (!document.getElementById('order-review-form-styles')) {
+        const stylesheet = document.createElement('link');
+        stylesheet.id = 'order-review-form-styles';
+        stylesheet.rel = 'stylesheet';
+        stylesheet.href = '/pages/user/modules/orders/review-form.css';
+        document.head.appendChild(stylesheet);
+    }
 
     const DRAFT_KEY_PREFIX  = 'pawpal_review_draft_';
     const REVIEWS_KEY       = 'pawpal_reviews';
@@ -217,7 +224,7 @@
         const rows = products.map(p => buildProductRowHTML(p, draft)).join('');
 
         return `
-        <div class="batch-review-section" id="batch-review-section-${orderId}">
+        <div class="batch-review-section${products.length === 1 ? ' batch-review-single-product' : ''}" id="batch-review-section-${orderId}">
             <!-- Offline banner -->
             <div class="review-offline-banner" id="batch-offline-banner" role="alert">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -240,7 +247,6 @@
             <div class="batch-submit-wrap">
                 <button type="button" class="btn-batch-submit" id="batch-submit-btn-${orderId}">
                     Gửi tất cả đánh giá
-                </button>
                 </button>
                 <p class="batch-submit-hint">
                     &#9733; Mỗi sản phẩm đã được đặt 5 sao mặc định — bạn có thể thay đổi hoặc để nguyên

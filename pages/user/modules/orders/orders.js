@@ -315,7 +315,7 @@ function createOrderCard(order) {
     // 1. Phản ánh / Khiếu nại đơn hàng (Tại Đã giao hoặc Hoàn thành)
     if (isDelivered || isCompleted) {
         actionButtonsHtml += `
-            <a class="btn-order-action btn-action-complaint" href="/pages/user/support-create/support-create.html?type=order&orderId=${encodeURIComponent(orderId)}" onclick="event.stopPropagation()" title="Gửi phản ánh hoặc khiếu nại về đơn hàng này">
+            <a class="btn-order-action btn-action-complaint" href="#support-create?type=order&orderId=${encodeURIComponent(orderId)}" onclick="event.stopPropagation()" title="Gửi phản ánh hoặc khiếu nại về đơn hàng này">
                 Phản ánh đơn
             </a>
         `;
@@ -335,7 +335,7 @@ function createOrderCard(order) {
     // - Khách chỉ được tạo yêu cầu đổi/trả mới khi ở trạng thái Đã giao (trong thời hạn 7 ngày)
     if (alreadyReturned) {
         actionButtonsHtml += `
-            <a href="/pages/user/index.html#return-detail?orderId=${encodeURIComponent(orderId)}" class="btn-order-action btn-action-modify" onclick="event.stopPropagation()">
+            <a href="#return-detail?orderId=${encodeURIComponent(orderId)}" class="btn-order-action btn-action-modify" onclick="event.stopPropagation()">
                 Chi tiết đổi trả
             </a>
         `;
@@ -377,7 +377,7 @@ function createOrderCard(order) {
     if (isDelivered || isCompleted) {
         if (!orderAlreadyReviewed) {
             actionButtonsHtml += `
-                <a class="btn-order-action btn-action-review" href="/pages/user/index.html#order-detail?id=${encodeURIComponent(orderId)}#reviews" onclick="event.stopPropagation()">
+                <a class="btn-order-action btn-action-review" href="#order-detail?id=${encodeURIComponent(orderId)}&section=reviews" onclick="event.stopPropagation()">
                     Đánh giá
                 </a>
             `;
@@ -419,7 +419,7 @@ function createOrderCard(order) {
         `;
     }
 
-    const detailUrl = `/pages/user/index.html#order-detail?id=${encodeURIComponent(orderId)}`;
+    const detailUrl = `#order-detail?id=${encodeURIComponent(orderId)}`;
 
     return `
         <article class="order-card pawpal-smooth-entrance status-${normalizedStatus}" data-order-id="${orderId}">
@@ -463,7 +463,7 @@ function showEmptyState(message) {
         <div class="empty-state">
             <h4 class="empty-title">Chưa có đơn hàng nào</h4>
             <p class="empty-desc">${escapeHtml(message || 'Các đơn mua sắm vật phẩm và phụ kiện cho bé cưng sẽ hiển thị tại đây')}</p>
-            <a href="/pages/shop/catalog/catalog.html" class="btn-order-primary-cta">+ Mua sắm cho bé ngay</a>
+            <a href="/shop" class="btn-order-primary-cta">+ Mua sắm cho bé ngay</a>
         </div>
     `;
     const pagination = document.getElementById('pagination');
@@ -1047,7 +1047,7 @@ async function openOrderPaymentModal(orderId) {
         return;
     }
 
-    window.location.href = `/pages/user/order-detail/order-detail.html?id=${orderId}&pay=now`;
+    window.location.href = `#order-detail?id=${encodeURIComponent(orderId)}&pay=now`;
 }
 window.openOrderPaymentModal = openOrderPaymentModal;
 
@@ -1220,7 +1220,7 @@ export async function initOrders() {
         }
 
         // Kiểm tra tab ban đầu từ URL parameter (ví dụ ?status=pending_payment hoặc ?tab=pending_payment)
-        const urlParams = new URLSearchParams(window.location.search);
+        const urlParams = new URLSearchParams(window.location.hash.split('?')[1] || window.location.search);
         const initialStatus = urlParams.get('status') || urlParams.get('tab');
         if (initialStatus) {
             ordersState.currentTab = initialStatus;

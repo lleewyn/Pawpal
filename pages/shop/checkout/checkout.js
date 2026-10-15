@@ -119,6 +119,16 @@ function getCheckoutUserAddresses(user) {
 
 
 
+function finishCheckoutLoading() {
+    const page = document.querySelector('.checkout-page');
+    if (!page) return;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        page.classList.remove('checkout-loading');
+        page.setAttribute('aria-busy', 'false');
+        setTimeout(() => page.querySelector('.checkout-skeleton')?.remove(), 260);
+    }));
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         checkoutState.user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
@@ -166,10 +176,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         setupEventListeners();
-        
+        finishCheckoutLoading();
     } catch (error) {
         console.error('Error initializing checkout:', error);
-        showToast('Có lỗi xảy ra khi tải trang', 'error');
+        const content = document.querySelector('.checkout-main-container');
+        if (content) content.innerHTML = '<div class="py-5 text-center" role="status"><p>Không thể tải thông tin thanh toán. Vui lòng tải lại trang.</p><a href="/cart">Quay lại giỏ hàng</a></div>';
+        finishCheckoutLoading();
     }
 });
 

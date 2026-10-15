@@ -19,6 +19,9 @@
         const syncRagBtn = document.getElementById('btnSyncRagData');
 
         if (!sendBtn || !inputArea || !messagesArea) return;
+        if (sendBtn.dataset.copilotBound === 'true') return;
+        sendBtn.dataset.copilotBound = 'true';
+        let isSending = false;
 
         function appendUserMessage(text) {
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -81,8 +84,11 @@
         }
 
         async function handleSend() {
+            if (isSending) return;
             const text = inputArea.value.trim();
             if (!text) return;
+            isSending = true;
+            sendBtn.disabled = true;
             appendUserMessage(text);
             inputArea.value = '';
 
@@ -129,6 +135,9 @@
                 const thinkingEl = document.getElementById(thinkingId);
                 if (thinkingEl) thinkingEl.remove();
                 appendAiResponse(`Dạ Copilot đã ghi nhận yêu cầu: "${text}". Hệ thống đang xử lý tác vụ tương ứng trên Supabase Live DB.`);
+            } finally {
+                isSending = false;
+                sendBtn.disabled = false;
             }
         }
 

@@ -705,3 +705,10 @@
 
 .rg-timeline-dot-urgent { background: var(--color-danger, #dc3545) !important; }
 .rg-timeline-title-urgent { color: var(--color-danger, #dc3545) !important; }
+
+/* Care-log placeholders follow the spacing of timeline entries. */
+.rg-carelog-skeleton { padding: 8px 12px; }
+.rg-carelog-skeleton-entry { display: flex; flex-direction: column; gap: 12px; padding: 12px 0 24px; }
+.rg-carelog-loaded { animation: rgCarelogReveal 240ms ease both; }
+@keyframes rgCarelogReveal { from { opacity: 0; } to { opacity: 1; } }
+@media(prefers-reduced-motion: reduce) { .rg-carelog-loaded, .rg-carelog-skeleton .pawpal-skeleton { animation: none !important; } }

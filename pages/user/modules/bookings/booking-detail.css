@@ -263,3 +263,14 @@
     color: #991B1B;
     cursor: pointer;
 }
+
+.booking-detail-module-container { position: relative; }
+.booking-detail-skeleton { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.booking-detail-module-container > * { transition: opacity 240ms ease, visibility 240ms ease; }
+.booking-detail-loading { min-height: 640px; }
+.booking-detail-loading > :not(.booking-detail-skeleton) { opacity: 0; visibility: hidden; pointer-events: none; }
+.booking-detail-module-container:not(.booking-detail-loading) > .booking-detail-skeleton { opacity: 0; visibility: hidden; }
+.booking-detail-skeleton-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+.booking-detail-skeleton-panel { display: flex; flex-direction: column; gap: 18px; padding: 22px; margin-bottom: 24px; background: #fff; border-radius: 9px; }
+@media(max-width: 991px) { .booking-detail-skeleton-grid { grid-template-columns: 1fr; } }
+@media(prefers-reduced-motion: reduce) { .booking-detail-module-container > * { transition: none; } .booking-detail-skeleton .pawpal-skeleton { animation: none !important; } }

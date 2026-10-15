@@ -972,6 +972,8 @@ function showOTPModal(phone, onSuccess, purposeText = 'xác thực quyền truy 
     });
 }
 
+let guestCareLogRequestId = 0;
+
 window.handleGuestViewCareLog = async function(bookingId) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) {
@@ -981,7 +983,20 @@ window.handleGuestViewCareLog = async function(bookingId) {
 
     const modal = getOrCreateGuestCareLogModal();
     const timelineWrapper = document.getElementById('guestCareLogTimeline');
-    timelineWrapper.innerHTML = '<div class="text-center p-4"><div class="spinner-border text-primary" role="status"></div></div>';
+    const requestId = String(++guestCareLogRequestId);
+    timelineWrapper.dataset.requestId = requestId;
+    timelineWrapper.setAttribute('aria-busy', 'true');
+    timelineWrapper.innerHTML = `<div class="rg-carelog-skeleton" role="status" aria-label="Đang tải nhật ký chăm sóc">${Array.from({ length: 3 }, () => `
+        <div class="rg-carelog-skeleton-entry" aria-hidden="true">
+            <div class="pawpal-skeleton" style="width:38%;height:14px"></div>
+            <div class="pawpal-skeleton" style="width:65%;height:20px"></div>
+            <div class="pawpal-skeleton" style="width:95%;height:16px"></div>
+            <div class="pawpal-skeleton" style="width:48%;height:12px"></div>
+        </div>`).join('')}</div>`;
+    const renderTimeline = html => {
+        if (timelineWrapper.dataset.requestId !== requestId) return;
+        timelineWrapper.innerHTML = `<div class="rg-carelog-loaded">${html}</div>`;
+    };
     
     const booking = (rgLastSearchState.bookings || []).find(b => b.id === bookingId) || (rgLastSearchState.bookings || []).find(b => b._supabaseId === bookingId);
     if (booking) {
@@ -993,10 +1008,10 @@ window.handleGuestViewCareLog = async function(bookingId) {
     try {
         const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i.test(bookingId);
         if (!isUUID) {
-            timelineWrapper.innerHTML = `
+            renderTimeline(`
                 <div class="text-center p-4 text-muted">
                     Chưa có nhật ký chăm sóc nào được ghi nhận cho dịch vụ này.
-                </div>`;
+                </div>`);
             return;
         }
 
@@ -1018,14 +1033,14 @@ window.handleGuestViewCareLog = async function(bookingId) {
         }
 
         if (!data || data.length === 0) {
-            timelineWrapper.innerHTML = `
+            renderTimeline(`
                 <div class="text-center p-4 text-muted">
                     Chưa có nhật ký chăm sóc nào được ghi nhận cho dịch vụ này.
-                </div>`;
+                </div>`);
             return;
         }
 
-        timelineWrapper.innerHTML = data.map(log => {
+        renderTimeline(data.map(log => {
             const time = new Date(log.recorded_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
             const date = new Date(log.recorded_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
             const mediaUrl = log.care_log_media?.[0]?.media_url;
@@ -1049,12 +1064,14 @@ window.handleGuestViewCareLog = async function(bookingId) {
                     </div>
                 </div>
             `;
-        }).join('');
+        }).join(''));
     } catch (err) {
-        timelineWrapper.innerHTML = `
+        renderTimeline(`
             <div class="text-center p-4 text-danger">
                 Lỗi khi tải nhật ký chăm sóc. Vui lòng thử lại sau.
-            </div>`;
+            </div>`);
+    } finally {
+        if (timelineWrapper.dataset.requestId === requestId) timelineWrapper.setAttribute('aria-busy', 'false');
     }
 }
 

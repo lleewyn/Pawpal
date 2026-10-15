@@ -158,10 +158,20 @@
             show('registerForm');
             if (params.get('phone')) byId('registerPhone').value = params.get('phone');
         } else if (['setup-password', 'guest-activate', 'guest-verify-otp'].includes(action)) {
-            // Legacy local activation tokens never authorize a password change.
-            show('forgotPhoneSection');
-            if (params.get('phone')) byId('forgotPhone').value = params.get('phone');
-            notice('Vui lòng xác thực số điện thoại bằng mã OTP để thiết lập mật khẩu.');
+            const phone = params.get('phone');
+            if (phone && validPhone(phone)) {
+                show('loginForm');
+                if (byId('loginPhone')) byId('loginPhone').value = phone;
+                byId('loginStepPhone')?.classList.add('d-none');
+                byId('loginStepSendOTP')?.classList.remove('d-none');
+                byId('loginStepPassword')?.classList.add('d-none');
+                if (byId('loginOtpPhoneDisplay')) byId('loginOtpPhoneDisplay').textContent = phone;
+                notice('Số điện thoại này có tài khoản tạm. Vui lòng thiết lập mật khẩu để kích hoạt.');
+            } else {
+                show('forgotPhoneSection');
+                if (phone && byId('forgotPhone')) byId('forgotPhone').value = phone;
+                notice('Vui lòng xác thực số điện thoại bằng mã OTP để thiết lập mật khẩu.');
+            }
         } else {
             show('loginForm');
             if (params.get('phone') && byId('loginPhone')) byId('loginPhone').value = params.get('phone');

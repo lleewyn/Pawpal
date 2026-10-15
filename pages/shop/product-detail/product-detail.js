@@ -1,24 +1,48 @@
 
 let currentLoadedProduct = null;
 let cachedProducts = [];
+function finishProductLoading(selector, message) {
+    document.querySelectorAll(selector).forEach(section => {
+        if (message) {
+            const status = document.createElement('p');
+            status.className = 'container text-muted py-4';
+            status.setAttribute('role', 'status');
+            status.textContent = message;
+            section.replaceChildren(status);
+        }
+        // Commit the loading frame before revealing already-populated content.
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            section.classList.remove('pd-loading');
+            section.setAttribute('aria-busy', 'false');
+            const placeholder = section.querySelector(':scope > .pd-loading-placeholder');
+            if (placeholder) setTimeout(() => placeholder.remove(), 260);
+        }));
+    });
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
         
+        let attempts = 0;
+        while (!window.DataLoader && attempts++ < 20) await new Promise(resolve => setTimeout(resolve, 100));
+        if (!productId || !window.DataLoader) throw new Error('Product unavailable');
         if (productId && window.DataLoader) {
             const products = await window.DataLoader.loadProducts();
             cachedProducts = Array.isArray(products) ? products : [];
             const product = products.find(p => p.id.toString() === productId);
             if (product) {
-                currentLoadedProduct = product;
                 renderProductDetails(product);
+                currentLoadedProduct = product;
+                finishProductLoading('.product-detail-section, .product-tabs-section, .you-may-like-section, .related-products-section');
             }
         }
 
     } catch (e) {
         console.error('Failed to load product data:', e);
+    } finally {
+        if (!currentLoadedProduct) finishProductLoading('.pd-loading', 'Không thể tải sản phẩm. Vui lòng kiểm tra đường dẫn hoặc tải lại trang.');
     }
 
     const addToCartBtn = document.getElementById('addToCartBtn');
@@ -825,7 +849,7 @@ async function addProductToCart(product, quantity) {
 }
 
 async function updateCartBadge() {
-    if (typeof window.updateCartBadge === 'function') {
+    if (typeof window.updateCartBadge === 'function' && window.updateCartBadge !== updateCartBadge) {
         window.updateCartBadge();
         return;
     }
@@ -1421,7 +1445,12 @@ function renderProductDetails(product) {
             });
 
             window.renderReviewsPage();
-        });
+        }).catch(error => {
+            console.error('Failed to load product reviews:', error);
+            finishProductLoading('.product-reviews-section', 'Không thể tải đánh giá. Vui lòng tải lại trang.');
+        }).finally(() => finishProductLoading('.product-reviews-section'));
+    } else {
+        finishProductLoading('.product-reviews-section', 'Không thể tải đánh giá. Vui lòng tải lại trang.');
     }
 
     renderProductVariants(product);

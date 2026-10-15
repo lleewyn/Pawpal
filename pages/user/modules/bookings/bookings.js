@@ -292,7 +292,7 @@ function createBookingCard(booking) {
     // 1. Phản ánh dịch vụ
     if (normalizedStatus === 'completed') {
         actionButtonsHtml += `
-            <a class="btn-booking-action btn-action-complaint" href="../support-create/support-create.html?type=service&bookingId=${encodeURIComponent(bookingId)}" onclick="event.stopPropagation()" title="Gửi phản ánh hoặc khiếu nại ca dịch vụ này">
+            <a class="btn-booking-action btn-action-complaint" href="#support-create?type=service&bookingId=${encodeURIComponent(bookingId)}" onclick="event.stopPropagation()" title="Gửi phản ánh hoặc khiếu nại ca dịch vụ này">
                 Phản ánh dịch vụ
             </a>
         `;
@@ -324,7 +324,7 @@ function createBookingCard(booking) {
     if (normalizedStatus === 'completed') {
         if (!alreadyReviewed) {
             actionButtonsHtml += `
-                <a class="btn-booking-action btn-action-review" href="#booking-detail?id=${encodeURIComponent(bookingId)}#service-review" onclick="event.stopPropagation()">
+                <a class="btn-booking-action btn-action-review" href="#booking-detail?id=${encodeURIComponent(bookingId)}&section=service-review" onclick="event.stopPropagation()">
                     Đánh giá
                 </a>
             `;

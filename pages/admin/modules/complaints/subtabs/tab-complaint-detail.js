@@ -63,6 +63,7 @@
             let statusText = 'Đang xử lý';
             let badgeClass = 'badge-info';
             if (ticket.status === 'open') { statusText = 'Chờ tiếp nhận'; badgeClass = 'badge-warning'; }
+            else if (ticket.status === 'waiting_customer') { statusText = 'Chờ phản hồi khách hàng'; badgeClass = 'badge-neutral'; }
             else if (ticket.status === 'resolved' || ticket.status === 'closed') { statusText = 'Đã giải quyết'; badgeClass = 'badge-success'; }
             statusBadgeEl.className = `admin-badge ${badgeClass}`;
             statusBadgeEl.textContent = statusText;
@@ -101,7 +102,20 @@
         const container = document.getElementById('viewTicketTimeline');
         if (!container) return;
 
-        const messages = ticket.messages || [];
+        // Tin nhắn từ Supabase dùng `messages`; các cập nhật nội bộ trong phiên
+        // dùng `timeline`. Gộp cả hai để bản ghi vừa lưu hiển thị ngay và sau reload.
+        const messages = [
+            ...(ticket.messages || []),
+            ...(ticket.timeline || []).map(item => ({
+                content: item.desc,
+                sender_type: item.isInternal ? 'nhan_vien' : 'cskh',
+                is_staff: true,
+                created_at: item.created_at || null
+            }))
+        ].filter((msg, index, list) => list.findIndex(other =>
+            String(other.content || other.message_body || '') === String(msg.content || msg.message_body || '') &&
+            String(other.created_at || '') === String(msg.created_at || '')
+        ) === index);
         if (messages.length === 0) {
             container.innerHTML = '<div style="color: var(--text-muted); padding: 16px; text-align: center; font-size: 13px;">Chưa có trao đổi nào trong ticket này.</div>';
             return;
@@ -296,7 +310,8 @@
 
         // Nút xác nhận giải quyết trong Modal 2
         const btnConfirmResolve = document.getElementById('btnConfirmResolveTicket');
-        if (btnConfirmResolve) {
+        if (btnConfirmResolve && btnConfirmResolve.dataset.resolveBound !== 'true') {
+            btnConfirmResolve.dataset.resolveBound = 'true';
             btnConfirmResolve.addEventListener('click', async () => {
                 const modal = document.getElementById('resolveTicketModalOverlay');
                 const ticketId = PawpalComplaints.state?.currentTicketId;
@@ -331,13 +346,20 @@
                     });
                 }
 
-                // Đồng bộ cập nhật trạng thái lên Supabase nếu có ID thực
+                // Đồng bộ cập nhật trạng thái lên Supabase trước khi xác nhận thành công.
                 const clientResolve = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                if (clientResolve && ticket.rawId) {
-                    clientResolve.from('support_ticket').update({
-                        status: needsManager ? 'processing' : 'completed',
-                        updated_at: new Date().toISOString()
-                    }).eq('id', ticket.rawId).then(() => {}).catch(e => console.warn('[Complaints] Update resolve status error:', e));
+                if (!clientResolve || !ticket.rawId) {
+                    PawpalComplaints.showToast('Không xác định được kết nối hoặc mã khiếu nại để lưu trạng thái.', 'error');
+                    return;
+                }
+                const { error: resolveError } = await clientResolve.from('support_ticket').update({
+                    status: needsManager ? 'processing' : 'completed',
+                    updated_at: new Date().toISOString()
+                }).eq('id', ticket.rawId);
+                if (resolveError) {
+                    console.error('[Complaints] Update resolve status error:', resolveError);
+                    PawpalComplaints.showToast(`Không thể cập nhật trạng thái: ${resolveError.message || 'Lỗi CSDL'}`, 'error');
+                    return;
                 }
 
                 PawpalComplaints.saveComplaintsOverrides?.();
@@ -384,7 +406,8 @@
         }
 
         const btnConfirmAssign = document.getElementById('btnConfirmAssignHandler');
-        if (btnConfirmAssign) {
+        if (btnConfirmAssign && btnConfirmAssign.dataset.assignBound !== 'true') {
+            btnConfirmAssign.dataset.assignBound = 'true';
             btnConfirmAssign.addEventListener('click', async () => {
                 const modal = document.getElementById('assignHandlerModalOverlay');
                 const ticketId = PawpalComplaints.state?.currentTicketId;
@@ -410,6 +433,25 @@
                         desc: `Chuyển giao từ ${oldStaff} sang ${newStaff}. Dặn dò: ${note}`,
                         isInternal: true
                     });
+                }
+
+                const clientAssign = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!clientAssign || !ticket?.rawId) {
+                    PawpalComplaints.showToast('Không xác định được kết nối hoặc mã khiếu nại để lưu người phụ trách.', 'error');
+                    return;
+                }
+                // support_ticket không có cột assigned_staff_id; lưu phân công như một
+                // nhật ký nghiệp vụ, agent_name được dùng để hiển thị người phụ trách.
+                const { error: assignError } = await clientAssign.from('support_ticket_message').insert([{
+                    ticket_id: ticket.rawId,
+                    sender_type: 'cskh',
+                    content: `[Phân công] ${note}`,
+                    agent_name: newStaff
+                }]);
+                if (assignError) {
+                    console.error('[Complaints] Update assigned staff error:', assignError);
+                    PawpalComplaints.showToast(`Không thể lưu người phụ trách: ${assignError.message || 'Lỗi CSDL'}`, 'error');
+                    return;
                 }
 
                 PawpalComplaints.saveComplaintsOverrides?.();
@@ -459,16 +501,22 @@
                 const ticketId = PawpalComplaints.state?.currentTicketId;
                 if (!ticketId) return;
 
-                try {
-                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                    if (client) {
-                        await client.from('support_ticket_message').insert({
-                            ticket_id: ticketId,
-                            sender_role: 'STAFF',
-                            message_body: text
-                        });
-                    }
-                } catch (e) {}
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!client) {
+                    PawpalComplaints.showToast('Không xác định được kết nối để gửi phản hồi.', 'error');
+                    return;
+                }
+                const { error: sendError } = await client.from('support_ticket_message').insert([{
+                    ticket_id: ticketId,
+                    sender_type: 'cskh',
+                    content: text,
+                    agent_name: 'Lê Lệ Quyên'
+                }]);
+                if (sendError) {
+                    console.error('[Complaints] Gửi phản hồi lỗi:', sendError);
+                    PawpalComplaints.showToast(`Không thể gửi phản hồi: ${sendError.message || 'Lỗi CSDL'}`, 'error');
+                    return;
+                }
 
                 messageInput.value = '';
                 PawpalComplaints.showToast('Đã gửi phản hồi tới khách hàng!');
@@ -484,7 +532,8 @@
         }
 
         const btnSendReqInfo = document.getElementById('btnSendRequestInfo');
-        if (btnSendReqInfo) {
+        if (btnSendReqInfo && btnSendReqInfo.dataset.requestInfoBound !== 'true') {
+            btnSendReqInfo.dataset.requestInfoBound = 'true';
             btnSendReqInfo.addEventListener('click', async () => {
                 const modal = document.getElementById('requestMoreInfoModalOverlay');
                 const ticketId = PawpalComplaints.state?.currentTicketId;
@@ -506,6 +555,31 @@
 
                 const allTickets = (PawpalComplaints.state.serviceComplaints || []).concat(PawpalComplaints.state.orderComplaints || []);
                 const ticket = allTickets.find(t => t.id === ticketId || t.rawId === ticketId);
+                const clientRequest = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!clientRequest || !ticket?.rawId) {
+                    PawpalComplaints.showToast('Không xác định được kết nối hoặc mã khiếu nại để lưu yêu cầu.', 'error');
+                    return;
+                }
+                const { error: requestMessageError } = await clientRequest.from('support_ticket_message').insert([{
+                    ticket_id: ticket.rawId,
+                    sender_type: 'cskh',
+                    content: `[${channelLabel}] ${message}`,
+                    agent_name: 'Lê Lệ Quyên'
+                }]);
+                if (requestMessageError) {
+                    console.error('[Complaints] Lưu yêu cầu bổ sung lỗi:', requestMessageError);
+                    PawpalComplaints.showToast(`Không thể lưu yêu cầu: ${requestMessageError.message || 'Lỗi CSDL'}`, 'error');
+                    return;
+                }
+                const { error: requestStatusError } = await clientRequest.from('support_ticket').update({
+                    status: 'waiting_customer',
+                    updated_at: new Date().toISOString()
+                }).eq('id', ticket.rawId);
+                if (requestStatusError) {
+                    console.error('[Complaints] Cập nhật trạng thái chờ khách lỗi:', requestStatusError);
+                    PawpalComplaints.showToast(`Không thể cập nhật trạng thái: ${requestStatusError.message || 'Lỗi CSDL'}`, 'error');
+                    return;
+                }
                 if (ticket) {
                     ticket.status = 'waiting_customer';
                     ticket.waitingCustomerSince = new Date().toISOString();
@@ -584,6 +658,8 @@
         // ====================================================================
         const btnSubmitReply = document.getElementById('btnSubmitReply');
         if (btnSubmitReply) {
+            if (btnSubmitReply.dataset.replyBound === 'true') return;
+            btnSubmitReply.dataset.replyBound = 'true';
             btnSubmitReply.addEventListener('click', async () => {
                 const textarea = document.getElementById('replyContentInput');
                 const content = (textarea?.value || '').trim();
@@ -604,6 +680,30 @@
                 const now = new Date();
                 const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} - ${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
 
+                // Ghi trực tiếp vào Supabase và chỉ cập nhật giao diện sau khi insert thành công.
+                const clientMsg = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (!clientMsg || !ticket.rawId) {
+                    PawpalComplaints.showToast('Không xác định được kết nối hoặc mã khiếu nại để lưu nhật ký.', 'error');
+                    return;
+                }
+                try {
+                        const { error: messageError } = await clientMsg.from('support_ticket_message').insert([{
+                            ticket_id: ticket.rawId,
+                            sender_type: isInternal ? 'nhan_vien' : 'cskh',
+                            content: content,
+                            agent_name: 'Lê Lệ Quyên'
+                        }]);
+                        if (messageError) throw messageError;
+                        const { error: ticketError } = await clientMsg.from('support_ticket').update({
+                            updated_at: now.toISOString()
+                        }).eq('id', ticket.rawId);
+                        if (ticketError) throw ticketError;
+                    } catch (e) {
+                        console.error('[Complaints] Lưu tin nhắn Supabase lỗi:', e);
+                        PawpalComplaints.showToast(`Không thể lưu nhật ký: ${e?.message || 'Lỗi CSDL hoặc quyền truy cập'}`, 'error');
+                        return;
+                }
+
                 if (!ticket.timeline) ticket.timeline = [];
                 ticket.timeline.unshift({
                     time: timeStr,
@@ -612,25 +712,6 @@
                     desc: content,
                     isInternal: isInternal
                 });
-
-                // Lưu vào Supabase message nếu có
-                const clientMsg = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                if (clientMsg && ticket.rawId) {
-                    try {
-                        await clientMsg.from('support_ticket_message').insert([{
-                            ticket_id: ticket.rawId,
-                            sender_type: isInternal ? 'nhan_vien' : 'cskh',
-                            content: content,
-                            agent_name: 'Lê Lệ Quyên'
-                        }]);
-                        await clientMsg.from('support_ticket').update({
-                            updated_at: now.toISOString()
-                        }).eq('id', ticket.rawId);
-                    } catch (e) {
-                        console.warn('[Complaints] Lưu tin nhắn Supabase lỗi:', e);
-                    }
-                }
-
                 PawpalComplaints.saveComplaintsOverrides?.();
                 renderTicketDetail(ticketId);
                 if (textarea) textarea.value = '';
@@ -648,14 +729,8 @@
 
         const selectStaff = document.getElementById('selectAssignStaff');
         if (selectStaff) {
-            selectStaff.innerHTML = `
-                <option value="Trần Văn Hùng (Groomer trưởng)">Trần Văn Hùng (Groomer trưởng)</option>
-                <option value="Lê Lệ Quyên (Quản lý chi nhánh)">Lê Lệ Quyên (Quản lý chi nhánh)</option>
-                <option value="Nguyễn Văn A (Kỹ thuật viên cao cấp)">Nguyễn Văn A (Kỹ thuật viên cao cấp)</option>
-                <option value="Trần Thị C (Chuyên viên chăm sóc)">Trần Thị C (Chuyên viên chăm sóc)</option>
-                <option value="Lê Hoàng Nam (Bác sĩ thú y)">Lê Hoàng Nam (Bác sĩ thú y)</option>
-                <option value="Nguyễn Thùy Trang (Tư vấn viên CSKH)">Nguyễn Thùy Trang (Tư vấn viên CSKH)</option>
-            `;
+            const staff = PawpalComplaints.state?.cachedStaff || [];
+            selectStaff.innerHTML = staff.filter(s => s?.full_name).map(s => `<option value="${PawpalComplaints.escapeHtml(s.full_name)}">${PawpalComplaints.escapeHtml(s.full_name)}</option>`).join('');
         }
 
         const noteInput = document.getElementById('inputAssignNote');

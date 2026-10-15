@@ -1478,3 +1478,18 @@
     background: var(--sd-primary-hover);
     color: #FFFFFF;
 }
+/* Preserve real layout while service data is loading, then crossfade. */
+:has(> .sd-loading-placeholder) { position: relative; }
+.sd-loading-placeholder { position: absolute; inset: 0; z-index: 1; background: #f4faf7; padding: 20px; border-radius: 9px; overflow: hidden; pointer-events: none; }
+:has(> .sd-loading-placeholder) > * { transition: opacity 240ms ease, visibility 240ms ease; }
+.sd-loading > :not(.sd-loading-placeholder) { opacity: 0; visibility: hidden; pointer-events: none; }
+.sd-loading > .sd-loading-placeholder { opacity: 1; visibility: visible; }
+:not(.sd-loading) > .sd-loading-placeholder { opacity: 0; visibility: hidden; }
+.sd-skeleton-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.sd-skeleton-photo { height: 420px; width: 100%; }
+.sd-skeleton-lines { display: flex; flex-direction: column; gap: 24px; }
+@media (max-width: 991px) { .sd-skeleton-grid { grid-template-columns: 1fr; } .sd-skeleton-photo { height: 300px; } }
+@media (prefers-reduced-motion: reduce) {
+    :has(> .sd-loading-placeholder) > * { transition: none; }
+    .sd-loading-placeholder .pawpal-skeleton { animation: none !important; }
+}
