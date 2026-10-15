@@ -525,6 +525,12 @@ async function handleAddToCart() {
         return;
     }
 
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    if (!currentUser || !currentUser.id || currentUser.is_temporary) {
+        showToast('Vui lòng đăng nhập để sử dụng giỏ hàng, hoặc bấm "Mua ngay"', 'warning');
+        return;
+    }
+
     const itemToAdd = {
         ...product,
         price: selectedVariantState.price || product.price,
@@ -583,6 +589,11 @@ function handleBuyNow() {
 async function handleCardAddToCart(product) {
     if (!product || !product.inStock) {
         showToast('Sản phẩm không khả dụng', 'error');
+        return;
+    }
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    if (!currentUser || !currentUser.id || currentUser.is_temporary) {
+        showToast('Vui lòng đăng nhập để sử dụng giỏ hàng, hoặc bấm "Mua ngay"', 'warning');
         return;
     }
     const groups = getProductAttributeGroups(product);
