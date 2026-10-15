@@ -231,39 +231,66 @@
 
     <main class="rg-page">
         <div class="container-xl">
-            <div class="rg-card">
-                <h1 class="rg-title">Tra cứu lịch dịch vụ và đơn hàng</h1>
+            <!-- 1. Hero Search Hub -->
+            <div class="rg-search-hub">
+                <div class="rg-hero-badge">Cổng tra cứu vãng lai</div>
+                <h1 class="rg-title">Tra cứu đơn hàng và dịch vụ</h1>
+                <p class="rg-subtitle">Dành riêng cho khách vãng lai kiểm tra tiến độ đơn hàng và lịch chăm sóc thú cưng nhanh chóng mà không cần đăng nhập.</p>
 
                 <form id="rg-form" class="rg-form">
-                    <label class="rg-label" for="rg-phone">Số điện thoại <span style="color: #dc2626; font-weight: 700;">*</span></label>
                     <div class="rg-form-row">
-                        <input type="tel" id="rg-phone" class="rg-input" placeholder="Ví dụ: 0901234567" required>
+                        <div class="rg-input-wrapper">
+                            <svg class="rg-input-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            </svg>
+                            <input type="tel" id="rg-phone" class="rg-input" placeholder="Nhập số điện thoại đặt hàng (ví dụ: 0901234567)" required>
+                        </div>
                         <button type="submit" class="btn-cta rg-search-btn">Tìm kiếm</button>
                     </div>
+
                     <div class="rg-error d-none" id="rg-error">
                         Chưa tìm thấy kết quả nào với số điện thoại này. Vui lòng kiểm tra lại.
                     </div>
+
                     <div class="rg-member-card d-none" id="rg-member-card">
-                        <h4 class="rg-member-title">Số điện thoại đã được đăng ký thành viên</h4>
-                        <p class="rg-member-desc">Số điện thoại <strong id="rg-member-phone"></strong> thuộc tài khoản thành viên chính thức Pawpal. Trang này chỉ phục vụ khách vãng lai tra cứu nhanh. Vui lòng đăng nhập để xem trọn vẹn thông tin và quyền lợi thành viên.</p>
-                        <a href="/login" id="rg-member-login-link" class="btn-cta rg-member-btn">Đăng nhập ngay</a>
+                        <div class="rg-member-card-content">
+                            <div>
+                                <h4 class="rg-member-title">Số điện thoại đã thuộc tài khoản thành viên</h4>
+                                <p class="rg-member-desc">Số điện thoại <strong id="rg-member-phone"></strong> là thành viên chính thức của Pawpal. Vui lòng đăng nhập để xem trọn vẹn thông tin và quyền lợi tích điểm.</p>
+                            </div>
+                            <a href="/login" id="rg-member-login-link" class="btn-cta rg-member-btn">Đăng nhập ngay</a>
+                        </div>
                     </div>
                 </form>
+            </div>
 
-                <section id="rg-results" class="d-none">
-                    <div id="rg-guest-upsell-banner" class="rg-guest-banner">
-                        <div>
-                            <div class="rg-guest-banner-title">Bạn đang tra cứu dưới tư cách Khách vãng lai</div>
-                            <div class="rg-guest-banner-desc">Thiết lập mật khẩu để tự động liên kết đơn hàng vào tài khoản chính thức và nhận 50 PawPoints chào mừng.</div>
-                        </div>
-                        <a id="rg-banner-setup-btn" href="/login" class="btn-cta rg-guest-banner-btn">Thiết lập mật khẩu</a>
+            <!-- 2. Khu vực kết quả tra cứu -->
+            <section id="rg-results" class="rg-results-card d-none">
+                <!-- Header kết quả + Slim Banner vãng lai nằm ngang hàng -->
+                <div class="rg-results-header">
+                    <div class="rg-results-heading-group">
+                        <h2 class="rg-results-title">Kết quả tra cứu</h2>
                     </div>
-                    <h3 class="rg-results-title">Kết quả tìm thấy</h3>
+
+                    <!-- Banner vãng lai mỏng nhẹ thanh lịch, không chắn ngang tầm nhìn -->
+                    <div id="rg-guest-upsell-banner" class="rg-guest-banner-slim">
+                        <div class="rg-guest-banner-text">
+                            <span class="rg-guest-tag">Khách vãng lai</span>
+                            <span>Thiết lập mật khẩu nhận ngay <strong>50 PawPoints</strong></span>
+                        </div>
+                        <a id="rg-banner-setup-btn" href="/login" class="rg-guest-banner-action">Tạo mật khẩu ➜</a>
+                    </div>
+                </div>
+
+                <!-- Tabs & Chips Filter -->
+                <div class="rg-filter-bar">
                     <div class="rg-tabs" id="rg-tabs"></div>
                     <div class="rg-status-chips" id="rg-status-chips"></div>
-                    <div class="rg-list" id="rg-list"></div>
-                </section>
-            </div>
+                </div>
+
+                <!-- Danh sách đơn hàng / dịch vụ -->
+                <div class="rg-list" id="rg-list"></div>
+            </section>
         </div>
     </main>
 
