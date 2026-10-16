@@ -41,7 +41,6 @@
         return badWords.some(w => lowerText.includes(w));
     }
 
-    const GEMINI_API_KEY = "AIzaSyDWkR8qFUKBmpu3GZi2GP2OYQpA-TUSkcg";
     let conversationHistory = [];
 
     async function processChatInput(userInput, onReplyCallback) {
@@ -92,11 +91,6 @@
                 },
                 body: JSON.stringify({ messages: conversationHistory })
             });
-
-            const apiKeyUsed = response.headers.get('X-API-Key-Used');
-            if (apiKeyUsed) {
-                console.log(`[PawPal AI] Đang sử dụng API Key bắt đầu bằng: ${apiKeyUsed}...`);
-            }
 
             const data = await response.json();
 

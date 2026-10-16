@@ -2,8 +2,23 @@ require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { createClient } = require('@supabase/supabase-js');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+async function getApiKey() {
+    try {
+        const { data, error } = await supabase
+            .from('api_keys')
+            .select('key_value')
+            .eq('provider', 'gemini')
+            .eq('is_active', true);
+        if (!error && data && data.length > 0) {
+            return data[0].key_value;
+        }
+    } catch (e) {
+        console.warn('Không thể đọc api_keys từ database:', e.message);
+    }
+    return process.env.GEMINI_API_KEY;
+}
 
 const knowledgeBase = [
     {
@@ -30,6 +45,12 @@ const knowledgeBase = [
 
 async function runEmbedding() {
     console.log("Starting Embedding Process...");
+    const apiKey = await getApiKey();
+    if (!apiKey) {
+        console.error("Không tìm thấy Gemini API Key khả dụng.");
+        return;
+    }
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-embedding-2" });
 
     for (const doc of knowledgeBase) {

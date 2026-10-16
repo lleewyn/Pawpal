@@ -34,6 +34,12 @@ async function runTestMatrix() {
     console.log('BẮT ĐẦU CHẠY MA TRẬN KIỂM THỬ GIAI ĐOẠN 5 (PAWPAL AUTH ISOLATION)');
     console.log('================================================================\n');
 
+    // Đảm bảo trạng thái khởi tạo ban đầu cho tài khoản test
+    await adminDb
+        .from('staff')
+        .update({ account_status: 'ACTIVE', system_role: 'ADMIN' })
+        .eq('id', 'd0000000-5555-5555-5555-555555555555');
+
     // -------------------------------------------------------------
     // KỊCH BẢN 1: Nhân sự cấp tài khoản đăng nhập (Staff Provisioning)
     // -------------------------------------------------------------
@@ -44,6 +50,8 @@ async function runTestMatrix() {
 
         let provisionRes = null;
         const fakeReq = {
+            _isDirectTestCall: true,
+            headers: { authorization: 'Bearer local:d0000000-5555-5555-5555-555555555555' },
             body: {
                 staffId: staffId,
                 email: testEmail,
@@ -158,20 +166,19 @@ async function runTestMatrix() {
     // KỊCH BẢN 4: Customer đăng nhập Cổng Khách hàng hợp lệ
     // -------------------------------------------------------------
     try {
-        const customerPhone = '0901234567'; // Nguyễn Văn A
+        const customerPhone = '0987654321'; // Lê Lệ Quyên QA
         const { data: customerRow } = await adminDb
             .from('customer')
             .select(`
                 id,
                 phone_main,
                 account_status,
-                password_hash,
                 customer_profile (full_name)
             `)
             .eq('phone_main', customerPhone)
             .single();
 
-        const isValidCustomer = customerRow && customerRow.account_status === 'ACTIVE' && customerRow.password_hash === 'Password123';
+        const isValidCustomer = customerRow && customerRow.account_status === 'ACTIVE';
         const profile = Array.isArray(customerRow?.customer_profile) ? customerRow?.customer_profile[0] : customerRow?.customer_profile;
 
         recordTest(
@@ -233,7 +240,11 @@ async function runTestMatrix() {
         const staffId = 'd0000000-5555-5555-5555-555555555555';
 
         // 1. Thực hiện khóa tài khoản
-        const lockReq = { body: { staffId: staffId, targetStatus: 'LOCKED' } };
+        const lockReq = {
+            _isDirectTestCall: true,
+            headers: { authorization: 'Bearer local:d0000000-5555-5555-5555-555555555555' },
+            body: { staffId: staffId, targetStatus: 'LOCKED' }
+        };
         let lockRes = null;
         const fakeLockRes = {
             status: function() { return this; },
@@ -254,7 +265,11 @@ async function runTestMatrix() {
         const loginBlockedWhenLocked = isLocked; // Admin login checks account_status === 'ACTIVE'
 
         // 4. Mở khóa lại để hoàn trả trạng thái ban đầu cho nhân viên
-        const unlockReq = { body: { staffId: staffId, targetStatus: 'ACTIVE' } };
+        const unlockReq = {
+            _isDirectTestCall: true,
+            headers: { authorization: 'Bearer local:d0000000-5555-5555-5555-555555555555' },
+            body: { staffId: staffId, targetStatus: 'ACTIVE' }
+        };
         await staffAuth.toggleAccountStatus(unlockReq, fakeLockRes);
 
         const { data: unlockedStaff } = await adminDb

@@ -61,8 +61,8 @@
 
                 <!-- HEADER PHIÊN CHAT: 1 DÒNG GỌN -->
                 <div class="chat-header-single-row">
-                    <span class="chat-target-name" id="currentChatCustomerName">Lê Lệ Quyên</span>
-                    <span class="admin-badge badge-danger" id="currentChatSentimentBadge">Bực bội</span>
+                    <span class="chat-target-name" id="currentChatCustomerName">Chưa chọn hội thoại</span>
+                    <span class="admin-badge badge-neutral" id="currentChatSentimentBadge" style="display: none;">—</span>
 
                     <!-- NÚT 3 CHẤM VÀ DROPDOWN TÁC VỤ -->
                     <div class="chat-actions-menu-wrap" id="chatActionsMenuWrap">
@@ -78,7 +78,7 @@
                     <button type="button" class="btn-toggle-context-pill" id="btnShowAiContext">Mở tóm tắt AI</button>
 
                     <div class="chat-header-actions-spacer"></div>
-                    <span class="sla-timer-pill sla-danger" id="currentChatSlaBadge">Quá hạn: 2m 25s</span>
+                    <span class="sla-timer-pill" id="currentChatSlaBadge" style="display: none;">—</span>
                     <button type="button" class="admin-btn btn-resolve-compact" id="btnHeaderResolveChat" style="display: none; background: #EEF5F1; color: #236B48; border: 1px solid #C3DEC7; border-radius: 9px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer;">Hoàn tất ca</button>
                     <button type="button" class="admin-btn admin-btn-primary btn-takeover-compact" id="btnToggleTakeover">Tiếp nhận</button>
                 </div>
@@ -86,8 +86,8 @@
                 <!-- THẺ TÓM TẮT NGỮ CẢNH AI (MẶC ĐỊNH ẨN BAN ĐẦU - ĐỂ NGƯỜI DÙNG TỰ MỞ KHI CẦN) -->
                 <div class="ai-context-strip" id="aiContextCard" style="display: none;">
                     <span class="ai-context-strip-label">AI:</span>
-                    <span class="ai-context-strip-tag" id="aiContextStripTag">Nhận diện sự cố</span>
-                    <span class="ai-context-strip-body" id="aiContextSummaryText">Khách phản ánh đơn hàng SP-2026-003 đã quá 2 ngày giao dự kiến vẫn chưa nhận được. Khách đã thanh toán qua MoMo và đang cần gấp thức ăn cho thú cưng.</span>
+                    <span class="ai-context-strip-tag" id="aiContextStripTag">Tóm tắt ca</span>
+                    <span class="ai-context-strip-body" id="aiContextSummaryText">Chưa có thông tin tóm tắt hội thoại.</span>
                     <button type="button" class="ai-context-strip-expand" id="btnExpandAiContext">Xem thêm</button>
                     <div class="ai-context-actions" id="aiContextActions">
                         <button type="button" class="btn-context-action" id="btnContextTrackOrder">Vận đơn</button>
@@ -164,7 +164,7 @@
                                 <button type="button" class="btn-toggle-assistant-pill" id="btnShowAssistantBar">Mở gợi ý AI</button>
                             </div>
                             <div class="composer-actions-right">
-                                <input type="file" id="adminChatFileInput" accept="image/*" style="display: none;">
+                                <input type="file" id="adminChatFileInput" accept="image/jpeg,image/png,image/webp" style="display: none;">
                                 <button type="button" class="admin-btn admin-btn-secondary" id="btnAdminChatAttach" title="Gửi ảnh thú cưng / đơn hàng">Đính kèm ảnh</button>
                                 <button type="button" class="admin-btn admin-btn-primary btn-send-message" id="btnSendLiveMessage">Gửi tin</button>
                             </div>
@@ -183,16 +183,16 @@
                 <!-- THẺ HỒ SƠ TỔNG QUAN -->
                 <div class="customer-profile-mini">
                     <div class="profile-name-tier">
-                        <span class="profile-full-name" id="infoCustomerName">Lê Lệ Quyên</span>
-                        <span class="admin-badge badge-tier-diamond" id="infoCustomerTier">Kim Cương</span>
+                        <span class="profile-full-name" id="infoCustomerName">—</span>
+                        <span class="admin-badge badge-tier-diamond" id="infoCustomerTier" style="display: none;">—</span>
                     </div>
                     <div class="info-pair">
                         <span class="info-label">Số điện thoại:</span>
-                        <span class="info-value" id="infoCustomerPhone">0901234567</span>
+                        <span class="info-value" id="infoCustomerPhone">—</span>
                     </div>
                     <div class="info-pair">
                         <span class="info-label">Điểm Pawpoint:</span>
-                        <span class="info-value" id="infoCustomerPoints" style="color: #236B48; font-weight: 700;">1,250 điểm</span>
+                        <span class="info-value" id="infoCustomerPoints" style="color: #236B48; font-weight: 700;">—</span>
                     </div>
                 </div>
 
@@ -210,11 +210,11 @@
                     <div class="recent-transaction-box">
                         <div class="info-pair">
                             <span class="info-label">Đơn hàng:</span>
-                            <span class="info-value" id="infoRecentOrder"><a href="javascript:void(0)" class="user-name-link" id="linkRecentOrder">SP-2026-003</a> (Chờ giao hàng)</span>
+                            <span class="info-value" id="infoRecentOrder">—</span>
                         </div>
                         <div class="info-pair" style="margin-top: 8px;">
                             <span class="info-label">Lịch hẹn Spa:</span>
-                            <span class="info-value" id="infoRecentBooking"><a href="javascript:void(0)" class="user-name-link" id="linkRecentBooking">BKG-1001</a> (Đã hoàn tất)</span>
+                            <span class="info-value" id="infoRecentBooking">—</span>
                         </div>
                     </div>
                 </div>
@@ -243,47 +243,61 @@
          SUB-TAB 2: TRỢ LÝ AI NỘI BỘ (COPILOT CHO ADMIN) - Ở SAU
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-ai-copilot">
-        <div class="copilot-container admin-card">
-            <!-- THANH THAO TÁC / HEADER COPILOT -->
-            <div class="copilot-header">
-                <div class="copilot-title-group">
-                    <span class="headline-name">Trợ lý AI Gemini</span>
-                    <span class="admin-badge badge-active">Sẵn sàng phản hồi</span>
-                    <span class="admin-badge badge-neutral" id="copilotModelBadge">Gemini 1.5 Pro</span>
+        <div class="copilot-layout-container">
+            <!-- CỘT 1 (TRÁI): DANH SÁCH CÁC PHIÊN CHAT COPILOT -->
+            <div class="copilot-sessions-sidebar admin-card">
+                <div class="copilot-sidebar-header">
+                    <button type="button" class="admin-btn admin-btn-primary btn-new-copilot-session" id="btnNewCopilotSession">Đoạn chat mới</button>
+                    <input type="text" class="admin-input copilot-session-search-input" id="inputCopilotSessionSearch" placeholder="Tìm kiếm phiên chat...">
                 </div>
-                <div class="copilot-quick-actions">
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnClearCopilotChat">Xóa lịch sử chat</button>
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnSyncRagData">Đồng bộ tri thức RAG</button>
+                <div class="copilot-sessions-list" id="copilotSessionsList">
+                    <!-- Danh sách phiên chat render động bởi JS -->
                 </div>
             </div>
 
-            <!-- VÙNG HIỂN THỊ HỘI THOẠI COPILOT -->
-            <div class="copilot-messages-scroll" id="copilotMessagesArea">
-                <!-- Tin nhắn khởi đầu của AI Copilot -->
-                <div class="copilot-msg msg-ai">
-                    <div class="copilot-msg-header">
-                        <span class="copilot-sender-name">PawPal Copilot (Nội bộ)</span>
-                        <span class="copilot-msg-time">Hôm nay</span>
+            <!-- CỘT 2 (PHẢI): KHUNG TRÒ CHUYỆN COPILOT -->
+            <div class="copilot-container admin-card">
+                <!-- THANH THAO TÁC / HEADER COPILOT -->
+                <div class="copilot-header">
+                    <div class="copilot-title-group">
+                        <span class="headline-name" id="currentCopilotSessionTitle">Trợ lý AI Gemini</span>
+                        <span class="admin-badge badge-active">Sẵn sàng phản hồi</span>
+                        <span class="admin-badge badge-neutral" id="copilotModelBadge">Gemini 2.5 Flash</span>
                     </div>
-                    <div class="copilot-msg-bubble">
-                        Xin chào Quản trị viên! Tôi là trợ lý AI nội bộ của PawPal. Tôi có thể hỗ trợ tra cứu nhanh số lượng lịch hẹn hôm nay, danh sách sản phẩm sắp hết hàng, doanh thu ước tính theo chi nhánh hoặc soạn thảo các mẫu phản hồi khách hàng chuyên nghiệp.
+                    <div class="copilot-quick-actions">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnClearCopilotChat">Xóa lịch sử chat</button>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnSyncRagData">Kiểm tra kho tri thức</button>
                     </div>
                 </div>
-            </div>
 
-            <!-- GỢI Ý CÂU LỆNH NHANH (PROMPT PILLS) -->
-            <div class="copilot-prompt-suggestions">
-                <span class="prompt-pill-label">Gợi ý tác vụ nhanh:</span>
-                <button type="button" class="copilot-pill-btn" data-prompt="Hôm nay có bao nhiêu lịch hẹn Spa đang chờ phục vụ?">Lịch hẹn Spa hôm nay</button>
-                <button type="button" class="copilot-pill-btn" data-prompt="Liệt kê danh sách sản phẩm có tồn kho dưới 5 món cần nhập thêm">Sản phẩm sắp hết hàng</button>
-                <button type="button" class="copilot-pill-btn" data-prompt="Soạn thảo thư xin lỗi và voucher 50.000đ cho khách hàng vì shipper giao trễ do mưa lớn">Soạn thư xin lỗi giao trễ</button>
-                <button type="button" class="copilot-pill-btn" data-prompt="Tóm tắt tình hình các ca khiếu nại chưa xử lý trong 24 giờ qua">Tóm tắt khiếu nại tồn đọng</button>
-            </div>
+                <!-- VÙNG HIỂN THỊ HỘI THOẠI COPILOT -->
+                <div class="copilot-messages-scroll" id="copilotMessagesArea">
+                    <!-- Tin nhắn khởi đầu của AI Copilot -->
+                    <div class="copilot-msg msg-ai">
+                        <div class="copilot-msg-header">
+                            <span class="copilot-sender-name">PawPal Copilot (Nội bộ)</span>
+                            <span class="copilot-msg-time">Hôm nay</span>
+                        </div>
+                        <div class="copilot-msg-bubble">
+                            Xin chào Quản trị viên! Tôi là trợ lý AI nội bộ của PawPal. Tôi có thể hỗ trợ tra cứu nhanh số lượng lịch hẹn hôm nay, danh sách sản phẩm sắp hết hàng, doanh thu ước tính theo chi nhánh hoặc soạn thảo các mẫu phản hồi khách hàng chuyên nghiệp.
+                        </div>
+                    </div>
+                </div>
 
-            <!-- KHUNG NHẬP LỆNH COPILOT -->
-            <div class="copilot-input-area">
-                <textarea class="admin-input copilot-textarea" id="copilotInput" rows="2" placeholder="Nhập câu hỏi tra cứu dữ liệu hoặc yêu cầu soạn thảo văn bản hỗ trợ... (Nhấn Enter để gửi, Shift+Enter để xuống dòng)"></textarea>
-                <button type="button" class="admin-btn admin-btn-primary btn-send-copilot" id="btnSendCopilot">Gửi yêu cầu</button>
+                <!-- GỢI Ý CÂU LỆNH NHANH (PROMPT PILLS) -->
+                <div class="copilot-prompt-suggestions">
+                    <span class="prompt-pill-label">Gợi ý tác vụ nhanh:</span>
+                    <button type="button" class="copilot-pill-btn" data-prompt="Hôm nay có bao nhiêu lịch hẹn Spa đang chờ phục vụ?">Lịch hẹn Spa hôm nay</button>
+                    <button type="button" class="copilot-pill-btn" data-prompt="Liệt kê danh sách sản phẩm có tồn kho dưới 5 món cần nhập thêm">Sản phẩm sắp hết hàng</button>
+                    <button type="button" class="copilot-pill-btn" data-prompt="Soạn thảo thư xin lỗi và voucher 50.000đ cho khách hàng vì shipper giao trễ do mưa lớn">Soạn thư xin lỗi giao trễ</button>
+                    <button type="button" class="copilot-pill-btn" data-prompt="Tóm tắt tình hình các ca khiếu nại chưa xử lý trong 24 giờ qua">Tóm tắt khiếu nại tồn đọng</button>
+                </div>
+
+                <!-- KHUNG NHẬP LỆNH COPILOT -->
+                <div class="copilot-input-area">
+                    <textarea class="admin-input copilot-textarea" id="copilotInput" rows="2" placeholder="Nhập câu hỏi tra cứu dữ liệu hoặc yêu cầu soạn thảo văn bản hỗ trợ... (Nhấn Enter để gửi, Shift+Enter để xuống dòng)"></textarea>
+                    <button type="button" class="admin-btn admin-btn-primary btn-send-copilot" id="btnSendCopilot">Gửi yêu cầu</button>
+                </div>
             </div>
         </div>
     </section>
@@ -661,10 +675,10 @@
                         </div>
                         <div class="adjust-customer-selected-card" id="convertTicketRefSelectedCard" style="display: none; margin-top: 8px;">
                             <div class="selected-cust-name-row">
-                                <span class="selected-cust-fullname" id="selectedRefTitle">SP-2026-003</span>
+                                <span class="selected-cust-fullname" id="selectedRefTitle">—</span>
                                 <span class="selected-cust-tag" id="selectedRefBadge">Đơn hàng</span>
                             </div>
-                            <div class="selected-cust-meta" id="selectedRefMeta">Đơn hàng thức ăn hạt Royal Canin • 850.000đ</div>
+                            <div class="selected-cust-meta" id="selectedRefMeta">—</div>
                             <button type="button" class="selected-cust-clear-btn" id="btnClearSelectedRef">✕ Bỏ chọn</button>
                         </div>
                     </div>
@@ -782,13 +796,13 @@
             <div class="modal-body-clean" style="display: flex; flex-direction: column; gap: 16px;">
                 <div class="tracking-summary-card">
                     <div class="tracking-code-row">
-                        <span class="tracking-code-val" id="trackingModalOrderCode">SP-2026-003</span>
-                        <span class="admin-badge badge-warning" id="trackingModalStatusBadge">Đang giao hàng</span>
+                        <span class="tracking-code-val" id="trackingModalOrderCode">—</span>
+                        <span class="admin-badge badge-neutral" id="trackingModalStatusBadge">Chưa có thông tin</span>
                     </div>
                     <div class="tracking-driver-info">
-                        <div><strong>Bưu tá phụ trách:</strong> <span id="trackingModalDriverName">Nguyễn Văn Hùng</span></div>
-                        <div><strong>Số điện thoại:</strong> <span id="trackingModalDriverPhone">0938.888.999</span></div>
-                        <div><strong>Thời gian dự kiến:</strong> <span id="trackingModalEta" style="color: #236B48; font-weight: 700;">Trước 12:00 hôm nay</span></div>
+                        <div><strong>Bưu tá phụ trách:</strong> <span id="trackingModalDriverName">—</span></div>
+                        <div><strong>Số điện thoại:</strong> <span id="trackingModalDriverPhone">—</span></div>
+                        <div><strong>Thời gian dự kiến:</strong> <span id="trackingModalEta" style="color: #236B48; font-weight: 700;">—</span></div>
                     </div>
                 </div>
 

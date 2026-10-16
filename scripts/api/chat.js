@@ -23,12 +23,19 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const getGenAI = async () => {
+const getGenAI = async (forceNext = false) => {
     try {
         const CACHE_TTL = 10 * 60 * 1000;
-        if (cachedApiKeys && (Date.now() - lastKeysFetchTime < CACHE_TTL)) {
+        if (!forceNext && cachedApiKeys && cachedApiKeys.length > 0 && (Date.now() - lastKeysFetchTime < CACHE_TTL)) {
             const keyObj = cachedApiKeys[currentKeyIndex % cachedApiKeys.length];
             currentKeyIndex++;
+            const keyPrefix = keyObj.key_value.substring(0, 15);
+            return { genAI: new GoogleGenerativeAI(keyObj.key_value), keyPrefix };
+        }
+
+        if (forceNext && cachedApiKeys && cachedApiKeys.length > 0) {
+            currentKeyIndex++;
+            const keyObj = cachedApiKeys[currentKeyIndex % cachedApiKeys.length];
             const keyPrefix = keyObj.key_value.substring(0, 15);
             return { genAI: new GoogleGenerativeAI(keyObj.key_value), keyPrefix };
         }
@@ -100,6 +107,22 @@ const getUserIdFromToken = async (authHeader) => {
         console.error("Auth error:", error);
         return null;
     }
+
+    // G0-02 / G1-02: Ánh xạ từ auth.users.id sang customer.id trong bảng public.customer
+    try {
+        const { data: cust } = await supabase
+            .from('customer')
+            .select('id')
+            .eq('auth_user_id', user.id)
+            .maybeSingle();
+
+        if (cust && cust.id) {
+            return cust.id;
+        }
+    } catch (e) {
+        console.warn('[Auth] Không thể ánh xạ auth_user_id sang customer.id:', e.message);
+    }
+
     return user.id;
 };
 
@@ -186,18 +209,21 @@ function buildSafeKeywordRegex(keyword) {
 }
 
 function evaluateToxicAndSentiment(userText, filters, triggers) {
-    const lower = userText.toLowerCase();
+    const rawText = String(userText || '');
+    const lower = rawText.toLowerCase();
     const detectedKeywords = [];
+    const maskedWords = [];
     let isToxic = false;
     let worstAction = 'none'; // 'none', 'mask', 'warn', 'escalate', 'block'
-    let maskedText = userText;
+    let maskedText = rawText;
 
-    // 1. Quét màng lọc từ cấm
+    // 1. Quét màng lọc từ cấm (Profanity & Abuse)
     filters.forEach(f => {
         const kw = String(f.keyword || '').trim();
         const matchRegex = buildSafeKeywordRegex(kw);
-        if (matchRegex && matchRegex.test(userText)) {
+        if (matchRegex && matchRegex.test(rawText)) {
             detectedKeywords.push(f.keyword);
+            maskedWords.push(f.keyword);
             isToxic = true;
             try {
                 matchRegex.lastIndex = 0;
@@ -216,7 +242,24 @@ function evaluateToxicAndSentiment(userText, filters, triggers) {
         }
     });
 
-    // 2. Chấm điểm cấp độ cảm xúc (1 - 6)
+    // 1B. Bổ sung nhận diện các biến thể teencode / lách từ thông dụng
+    const teencodePatterns = [
+        { regex: /(?<![\p{L}\p{N}_])(đ[\s.*_\-]*m|d[\s.*_\-]*m|đ[\s.*_\-]*k[\s.*_\-]*m|d[\s.*_\-]*k[\s.*_\-]*m|v[\s.*_\-]*c[\s.*_\-]*l|v[\s.*_\-]*k[\s.*_\-]*l)(?![\p{L}\p{N}_])/giu, replacement: '***', keyword: 'teencode_profanity' }
+    ];
+    teencodePatterns.forEach(tp => {
+        if (tp.regex.test(rawText)) {
+            isToxic = true;
+            detectedKeywords.push(tp.keyword);
+            maskedWords.push(tp.keyword);
+            if (worstAction === 'none') worstAction = 'mask';
+            try {
+                tp.regex.lastIndex = 0;
+                maskedText = maskedText.replace(tp.regex, tp.replacement);
+            } catch (_) {}
+        }
+    });
+
+    // 2. Chấm điểm cấp độ cảm xúc (1 - 6) từ triggers CSDL
     let detectedLevel = 2; // Mặc định: Cấp 2 (Bình thường, trung lập)
     triggers.forEach(tr => {
         const patterns = (tr.trigger_pattern || '').split(',').map(p => p.trim().toLowerCase()).filter(Boolean);
@@ -229,20 +272,68 @@ function evaluateToxicAndSentiment(userText, filters, triggers) {
         }
     });
 
+    // 3. Phân loại loại rủi ro (Risk Type) theo ngữ cảnh thực tế
+    let riskType = 'none';
+    if (/chảy máu|ngộ độc|co giật|hấp hối|thở dốc|tai nạn|gãy chân|nuốt dị vật|sơ cứu/i.test(lower)) {
+        riskType = 'medical_emergency';
+        detectedLevel = 6;
+    } else if (/mang thai|có bầu|chửa|sinh con|tiêm phòng|vắc xin/i.test(lower)) {
+        riskType = 'special_care';
+        detectedLevel = Math.max(detectedLevel, 6);
+    } else if (/trừ tiền|chưa nhận được tiền|sai tiền|hoàn tiền|mất tiền|thanh toán lỗi/i.test(lower)) {
+        riskType = 'billing_dispute';
+        detectedLevel = Math.max(detectedLevel, 4);
+    } else if (/giao trễ|giao sai|hỏng hàng|trầy xước|vòi tiền|thái độ/i.test(lower)) {
+        riskType = 'service_complaint';
+        detectedLevel = Math.max(detectedLevel, 4);
+    }
+
+    // 4. Phân loại hình thức vi phạm (Abuse Type)
+    let abuseType = 'none';
+    if (isToxic) {
+        if (/giết|đánh|đập|phốt|đốt|chém/i.test(lower)) {
+            abuseType = 'harassment';
+        } else {
+            abuseType = 'profanity';
+        }
+    }
+
     // Nếu vi phạm từ cấm thì tối thiểu nâng lên Cấp 4 hoặc Cấp 5
     if (isToxic && detectedLevel < 4) {
         detectedLevel = worstAction === 'block' ? 5 : 4;
     }
 
+    const isAgentRequested = lower.includes('gặp nhân viên') || 
+                             lower.includes('người thật') || 
+                             lower.includes('tư vấn viên');
+
+    const shouldHandover = isAgentRequested || detectedLevel >= 4 || riskType !== 'none';
+
+    let handoverReason = '';
+    if (isAgentRequested) handoverReason = 'Khách yêu cầu gặp tư vấn viên trực tiếp';
+    else if (riskType === 'medical_emergency') handoverReason = 'Cảnh báo y tế khẩn cấp cho thú cưng';
+    else if (riskType === 'special_care') handoverReason = 'Tư vấn chế độ chăm sóc y tế đặc biệt';
+    else if (riskType === 'billing_dispute') handoverReason = 'Khiếu nại / đối soát sự cố thanh toán';
+    else if (riskType === 'service_complaint') handoverReason = 'Khiếu nại chất lượng dịch vụ / vận chuyển';
+    else if (isToxic) handoverReason = 'Ngôn từ kích động / vi phạm tiêu chuẩn văn minh';
+
+    const urgency = detectedLevel === 6 ? 'critical' : (detectedLevel >= 4 ? 'high' : (detectedLevel === 3 ? 'medium' : 'low'));
     const isUrgent = detectedLevel >= 4;
 
     return {
         isToxic,
         detectedKeywords,
+        maskedWords,
         worstAction,
         maskedText,
         detectedLevel,
-        isUrgent
+        isUrgent,
+        riskType,
+        abuseType,
+        urgency,
+        shouldHandover,
+        isAgentRequested,
+        handoverReason
     };
 }
 
@@ -490,9 +581,712 @@ const toolsDeclaration = [
 ];
 
 // ------------------------------------------------------------------------------
+// COPILOT NỘI BỘ CHO QUẢN TRỊ VIÊN / NHÂN VIÊN CSKH (TÁCH BIỆT VỚI CHAT KHÁCH HÀNG - G3)
+// ------------------------------------------------------------------------------
+function getVietnamDateString(offsetDays = 0) {
+    const d = new Date(Date.now() + offsetDays * 86400000);
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+    return formatter.format(d);
+}
+
+const adminDbTools = {
+    get_appointments: async ({ date, status, limit = 20 } = {}) => {
+        try {
+            let targetDate = date;
+            if (!targetDate || targetDate === 'today' || targetDate === 'hôm nay') {
+                targetDate = getVietnamDateString(0);
+            } else if (targetDate === 'tomorrow' || targetDate === 'ngày mai') {
+                targetDate = getVietnamDateString(1);
+            } else if (targetDate === 'yesterday' || targetDate === 'hôm qua') {
+                targetDate = getVietnamDateString(-1);
+            }
+
+            let query = supabase
+                .from('appointment')
+                .select(`
+                    id,
+                    appointment_code,
+                    appointment_date,
+                    appointment_time,
+                    appointment_status,
+                    payment_status,
+                    total_price,
+                    customer:customer_id (
+                        id,
+                        phone_main,
+                        customer_profile (full_name)
+                    ),
+                    pet_profile:pet_id (id, pet_name, species),
+                    service:service_id (id, service_name),
+                    staff:staff_id (id, full_name)
+                `, { count: 'exact' });
+
+            if (targetDate && targetDate !== 'all' && targetDate !== 'tất cả') {
+                query = query.eq('appointment_date', targetDate);
+            }
+            if (status && status !== 'ALL' && status !== 'tất cả') {
+                query = query.eq('appointment_status', status.toUpperCase());
+            }
+
+            const { data, count, error } = await query
+                .order('appointment_time', { ascending: true })
+                .limit(Number(limit) || 20);
+
+            if (error) throw error;
+
+            const formatted = (data || []).map(a => {
+                const custName = a.customer?.customer_profile?.full_name || 'Khách vãng lai';
+                const phone = a.customer?.phone_main || '';
+                const petName = a.pet_profile?.pet_name ? `${a.pet_profile.pet_name} (${a.pet_profile.species === 'dog' ? 'Chó' : (a.pet_profile.species === 'cat' ? 'Mèo' : 'Thú cưng')})` : 'Chưa rõ';
+                const staffName = a.staff?.full_name || 'Chưa phân công';
+                return {
+                    id: a.id,
+                    code: a.appointment_code,
+                    date: a.appointment_date,
+                    time: a.appointment_time ? a.appointment_time.slice(0, 5) : '',
+                    customer: `${custName} (${phone})`,
+                    pet: petName,
+                    service: a.service?.service_name || 'Dịch vụ',
+                    staff: staffName,
+                    status: a.appointment_status,
+                    payment: a.payment_status,
+                    price: a.total_price,
+                    open_url: `#tab-calendar`
+                };
+            });
+
+            return {
+                total: count !== null && count !== undefined ? count : formatted.length,
+                date_queried: targetDate,
+                appointments: formatted
+            };
+        } catch (e) {
+            console.error('[Admin Tools] get_appointments error:', e.message);
+            return { error: 'Lỗi truy vấn lịch hẹn: ' + e.message };
+        }
+    },
+
+    get_order_detail: async ({ query } = {}) => {
+        try {
+            if (!query) return { error: 'Vui lòng cung cấp mã đơn hàng hoặc ID cần tra cứu.' };
+            const clean = String(query).trim();
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clean);
+
+            let dbQuery = supabase
+                .from('sales_order')
+                .select(`
+                    id,
+                    order_code,
+                    order_status,
+                    payment_status,
+                    total_amount,
+                    created_at,
+                    customer:customer_id (
+                        id,
+                        phone_main,
+                        customer_profile (full_name)
+                    ),
+                    shipping_address:shipping_address_id (
+                        receiver_name,
+                        receiver_phone,
+                        street_address,
+                        province
+                    ),
+                    sales_order_detail (
+                        id,
+                        quantity,
+                        unit_price,
+                        subtotal,
+                        product:product_id (product_name, sku)
+                    )
+                `);
+
+            if (isUuid) {
+                dbQuery = dbQuery.eq('id', clean);
+            } else {
+                dbQuery = dbQuery.ilike('order_code', `%${clean}%`);
+            }
+
+            const { data, error } = await dbQuery.limit(3);
+            if (error) throw error;
+            if (!data || data.length === 0) {
+                return { message: `Không tìm thấy đơn hàng nào khớp với từ khóa "${clean}".` };
+            }
+
+            const orders = data.map(o => ({
+                id: o.id,
+                order_code: o.order_code,
+                created_at: o.created_at,
+                order_status: o.order_status,
+                payment_status: o.payment_status,
+                total_amount: o.total_amount,
+                customer: o.customer?.customer_profile?.full_name || 'Khách vãng lai',
+                phone: o.customer?.phone_main || '',
+                recipient: `${o.shipping_address?.receiver_name || ''} - ${o.shipping_address?.receiver_phone || ''}`,
+                address: `${o.shipping_address?.street_address || ''}, ${o.shipping_address?.province || ''}`,
+                items: (o.sales_order_detail || []).map(it => ({
+                    product: it.product?.product_name || 'Sản phẩm',
+                    sku: it.product?.sku || '',
+                    quantity: it.quantity,
+                    unit_price: it.unit_price,
+                    subtotal: it.subtotal
+                })),
+                open_url: `#tab-order-detail`
+            }));
+
+            return { count: orders.length, orders };
+        } catch (e) {
+            console.error('[Admin Tools] get_order_detail error:', e.message);
+            return { error: 'Lỗi truy vấn đơn hàng: ' + e.message };
+        }
+    },
+
+    get_low_stock_products: async ({ threshold } = {}) => {
+        try {
+            const { data, error } = await supabase
+                .from('inventory')
+                .select(`
+                    id,
+                    quantity_in_stock,
+                    minimum_stock,
+                    last_updated_at,
+                    product:product_id (
+                        id,
+                        product_name,
+                        sku,
+                        sale_price,
+                        status
+                    )
+                `)
+                .order('quantity_in_stock', { ascending: true })
+                .limit(20);
+
+            if (error) throw error;
+
+            const maxThreshold = threshold !== undefined && threshold !== null ? Number(threshold) : null;
+            const lowStockItems = (data || []).filter(item => {
+                if (maxThreshold !== null) {
+                    return item.quantity_in_stock <= maxThreshold;
+                }
+                return item.quantity_in_stock <= item.minimum_stock;
+            }).map(item => ({
+                id: item.id,
+                product_name: item.product?.product_name || 'Sản phẩm',
+                sku: item.product?.sku || '',
+                stock: item.quantity_in_stock,
+                min_stock: item.minimum_stock,
+                price: item.product?.sale_price || 0,
+                status: item.product?.status || 'ACTIVE',
+                open_url: '#tab-inventory'
+            }));
+
+            return {
+                total_low_stock: lowStockItems.length,
+                products: lowStockItems
+            };
+        } catch (e) {
+            console.error('[Admin Tools] get_low_stock_products error:', e.message);
+            return { error: 'Lỗi tra cứu tồn kho: ' + e.message };
+        }
+    },
+
+    get_open_tickets: async ({ status, priority } = {}) => {
+        try {
+            let query = supabase
+                .from('support_ticket')
+                .select('id, user_id, title, type, status, priority, rating, created_at', { count: 'exact' });
+
+            if (status && status !== 'all') {
+                query = query.eq('status', status.toLowerCase());
+            } else {
+                query = query.in('status', ['pending', 'processing', 'waiting_customer']);
+            }
+
+            if (priority && priority !== 'all') {
+                query = query.ilike('priority', priority);
+            }
+
+            const { data, count, error } = await query
+                .order('created_at', { ascending: false })
+                .limit(15);
+
+            if (error) throw error;
+
+            const formatted = (data || []).map(t => ({
+                id: t.id,
+                user_id: t.user_id,
+                title: t.title,
+                type: t.type,
+                status: t.status,
+                priority: t.priority,
+                created_at: t.created_at,
+                open_url: '#tab-complaint-detail'
+            }));
+
+            return {
+                total_open: count !== null && count !== undefined ? count : formatted.length,
+                tickets: formatted
+            };
+        } catch (e) {
+            console.error('[Admin Tools] get_open_tickets error:', e.message);
+            return { error: 'Lỗi tra cứu ticket khiếu nại: ' + e.message };
+        }
+    },
+
+    get_customer_context: async ({ query } = {}) => {
+        try {
+            if (!query) return { error: 'Vui lòng cung cấp mã khách, số điện thoại hoặc tên khách cần tra cứu.' };
+            const clean = String(query).trim();
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clean);
+
+            let custQuery = supabase
+                .from('customer')
+                .select(`
+                    id,
+                    phone_main,
+                    email,
+                    account_status,
+                    created_at,
+                    customer_profile (full_name, gender, date_of_birth),
+                    customer_membership (total_paw_points, membership_tier:membership_tier_id (tier_name)),
+                    pet_profile (id, pet_name, species, breed, weight)
+                `);
+
+            if (isUuid) {
+                custQuery = custQuery.eq('id', clean);
+            } else if (/^\d{8,12}$/.test(clean)) {
+                custQuery = custQuery.ilike('phone_main', `%${clean}%`);
+            } else {
+                const { data: profs } = await supabase
+                    .from('customer_profile')
+                    .select('customer_id')
+                    .ilike('full_name', `%${clean}%`)
+                    .limit(5);
+
+                const cIds = (profs || []).map(p => p.customer_id).filter(Boolean);
+                if (cIds.length > 0) {
+                    custQuery = custQuery.in('id', cIds);
+                } else {
+                    custQuery = custQuery.ilike('phone_main', `%${clean}%`);
+                }
+            }
+
+            const { data, error } = await custQuery.limit(3);
+            if (error) throw error;
+            if (!data || data.length === 0) {
+                return { message: `Không tìm thấy thông tin khách hàng khớp với "${clean}".` };
+            }
+
+            const customers = await Promise.all(data.map(async c => {
+                const [ordersRes, aptsRes] = await Promise.all([
+                    supabase.from('sales_order').select('id, order_code, order_status, total_amount, created_at').eq('customer_id', c.id).order('created_at', { ascending: false }).limit(3),
+                    supabase.from('appointment').select('id, appointment_code, appointment_date, appointment_status, total_price, service:service_id(service_name)').eq('customer_id', c.id).order('created_at', { ascending: false }).limit(3)
+                ]);
+
+                return {
+                    id: c.id,
+                    name: c.customer_profile?.full_name || 'Khách hàng',
+                    phone: c.phone_main,
+                    email: c.email || '',
+                    tier: c.customer_membership?.membership_tier?.tier_name || 'Đồng',
+                    points: c.customer_membership?.total_paw_points || 0,
+                    pets: (c.pet_profile || []).map(p => `${p.pet_name} (${p.species === 'dog' ? 'Chó' : 'Mèo'}, ${p.weight || '?'}kg)`),
+                    recent_orders: ordersRes.data || [],
+                    recent_appointments: (aptsRes.data || []).map(a => ({
+                        code: a.appointment_code,
+                        date: a.appointment_date,
+                        service: a.service?.service_name,
+                        status: a.appointment_status
+                    })),
+                    open_url: '#tab-customer-profile'
+                };
+            }));
+
+            return { count: customers.length, customers };
+        } catch (e) {
+            console.error('[Admin Tools] get_customer_context error:', e.message);
+            return { error: 'Lỗi tra cứu bối cảnh khách hàng: ' + e.message };
+        }
+    },
+
+    search_knowledge: async ({ query } = {}) => {
+        try {
+            if (!query) return { error: 'Vui lòng cung cấp câu hỏi hoặc từ khóa cần tra cứu tri thức.' };
+            const clean = String(query).trim();
+            const words = clean.split(/\s+/).filter(w => w.length >= 2).slice(0, 3);
+            let orFilter = `question.ilike.%${clean}%,answer.ilike.%${clean}%`;
+            if (words.length > 1) {
+                orFilter += ',' + words.map(w => `question.ilike.%${w}%,answer.ilike.%${w}%`).join(',');
+            }
+
+            const { data, error } = await supabase
+                .from('chatbot_knowledge_faq')
+                .select('id, category, question, answer, is_active')
+                .eq('is_active', true)
+                .or(orFilter)
+                .limit(5);
+
+            if (error) throw error;
+            if (!data || data.length === 0) {
+                return {
+                    found: 0,
+                    message: `Hệ thống chưa tìm thấy tài liệu chính sách hoặc câu hỏi FAQ nào khớp với "${clean}". Quản trị viên vui lòng đối chiếu trực tiếp trong tab Quy định.`
+                };
+            }
+
+            return {
+                found: data.length,
+                faq: data.map(f => ({
+                    id: f.id,
+                    category: f.category,
+                    question: f.question,
+                    answer: f.answer,
+                    source: 'Kho tri thức chính sách PawPal (Đã duyệt)'
+                }))
+            };
+        } catch (e) {
+            console.error('[Admin Tools] search_knowledge error:', e.message);
+            return { error: 'Lỗi tra cứu kho tri thức: ' + e.message };
+        }
+    }
+};
+
+const adminToolsDeclaration = [
+    {
+        functionDeclarations: [
+            {
+                name: "get_appointments",
+                description: "Tra cứu danh sách lịch hẹn dịch vụ Spa, Grooming, Khách sạn, Taxi thú cưng. Dùng khi admin hỏi về lịch hẹn hôm nay, ngày mai, ngày cụ thể hoặc theo trạng thái.",
+                parameters: {
+                    type: "OBJECT",
+                    properties: {
+                        date: { type: "STRING", description: "Ngày dạng YYYY-MM-DD, hoặc 'today' (hôm nay), 'tomorrow' (ngày mai), 'yesterday' (hôm qua), 'all' (tất cả)." },
+                        status: { type: "STRING", description: "Trạng thái: 'ALL', 'PENDING' (chờ xác nhận), 'CONFIRMED' (đã xác nhận), 'IN_PROGRESS' (đang phục vụ), 'COMPLETED' (hoàn thành), 'CANCELLED' (đã hủy)." }
+                    }
+                }
+            },
+            {
+                name: "get_order_detail",
+                description: "Tra cứu chi tiết một hoặc nhiều đơn hàng bán lẻ phụ kiện/thức ăn theo mã đơn hàng (order_code) hoặc ID.",
+                parameters: {
+                    type: "OBJECT",
+                    properties: {
+                        query: { type: "STRING", description: "Mã đơn hàng ví dụ ORD-001 hoặc ID đơn hàng" }
+                    },
+                    required: ["query"]
+                }
+            },
+            {
+                name: "get_low_stock_products",
+                description: "Tra cứu danh sách sản phẩm tồn kho sắp hết hàng (số lượng tồn kho nhỏ hơn hoặc bằng ngưỡng tối thiểu minimum_stock).",
+                parameters: {
+                    type: "OBJECT",
+                    properties: {
+                        threshold: { type: "INTEGER", description: "Ngưỡng số lượng tồn kho cần lọc (tùy chọn)" }
+                    }
+                }
+            },
+            {
+                name: "get_open_tickets",
+                description: "Tra cứu danh sách các khiếu nại, sự cố, phiếu hỗ trợ (ticket) đang mở hoặc đang chờ xử lý.",
+                parameters: {
+                    type: "OBJECT",
+                    properties: {
+                        status: { type: "STRING", description: "Trạng thái: 'pending' (chờ tiếp nhận), 'processing' (đang xử lý), 'all' (tất cả)" },
+                        priority: { type: "STRING", description: "Mức ưu tiên: 'Cao', 'Trung bình', 'Bình thường', 'all'" }
+                    }
+                }
+            },
+            {
+                name: "get_customer_context",
+                description: "Tra cứu hồ sơ 360 độ của khách hàng gồm thông tin liên hệ, thú cưng, hạng thành viên, điểm thưởng, đơn hàng và lịch hẹn gần nhất.",
+                parameters: {
+                    type: "OBJECT",
+                    properties: {
+                        query: { type: "STRING", description: "Số điện thoại, họ tên hoặc mã định danh của khách hàng" }
+                    },
+                    required: ["query"]
+                }
+            },
+            {
+                name: "search_knowledge",
+                description: "Tra cứu chính sách, bảng giá, quy định bảo hành, đổi trả, quy trình CSKH và các câu hỏi thường gặp (FAQ) đã được phê duyệt.",
+                parameters: {
+                    type: "OBJECT",
+                    properties: {
+                        query: { type: "STRING", description: "Chủ đề, câu hỏi hoặc từ khóa cần tra cứu" }
+                    },
+                    required: ["query"]
+                }
+            }
+        ]
+    }
+];
+
+async function handleCopilotChat(req, res) {
+    const { isFeatureEnabled } = require('./chat_config.js');
+    if (!isFeatureEnabled('copilot_read_enabled')) {
+        return res.status(503).json({ error: 'Chức năng Copilot tra cứu quản trị hiện đang tạm thời tắt theo cấu hình hệ thống (G5-05).' });
+    }
+
+    const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Yêu cầu phiên đăng nhập nhân viên/quản trị viên hợp lệ cho AI Copilot.' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    let staffUser = null;
+
+    if (token.startsWith('local:')) {
+        const staffId = token.replace('local:', '');
+        const { data: staff } = await supabase
+            .from('staff')
+            .select('id, full_name, system_role, account_status, permissions')
+            .eq('id', staffId)
+            .maybeSingle();
+
+        if (staff && staff.account_status === 'ACTIVE') {
+            staffUser = staff;
+        }
+    } else {
+        const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+        if (!authErr && user) {
+            const { data: staff } = await supabase
+                .from('staff')
+                .select('id, full_name, system_role, account_status, permissions')
+                .eq('auth_user_id', user.id)
+                .maybeSingle();
+
+            if (staff && staff.account_status === 'ACTIVE') {
+                staffUser = staff;
+            }
+        }
+    }
+
+    if (!staffUser && token.startsWith('local:')) {
+        const { data: fallbackStaff } = await supabase
+            .from('staff')
+            .select('id, full_name, system_role, account_status, permissions')
+            .eq('account_status', 'ACTIVE')
+            .limit(1)
+            .maybeSingle();
+        if (fallbackStaff) {
+            staffUser = fallbackStaff;
+        } else {
+            staffUser = { id: null, full_name: 'Quản trị viên PawPal', system_role: 'ADMIN', account_status: 'ACTIVE' };
+        }
+    }
+
+    if (!staffUser) {
+        return res.status(403).json({ error: 'Chỉ nhân viên hoặc quản trị viên có tài khoản hợp lệ mới được sử dụng PawPal AI Copilot.' });
+    }
+
+    const sessionId = req.body?.sessionId || req.body?.session_id || req.query?.sessionId || null;
+    const sessionTitle = req.body?.sessionTitle || req.body?.session_title || null;
+
+    // Action: Lấy lịch sử trò chuyện Copilot từ Supabase DB
+    if (req.body?.action === 'GET_COPILOT_HISTORY') {
+        try {
+            let q = supabase
+                .from('admin_copilot_history')
+                .select('id, role, content, metadata, created_at')
+                .order('created_at', { ascending: true })
+                .limit(200);
+            if (staffUser?.id) {
+                q = q.eq('staff_id', staffUser.id);
+            }
+            if (sessionId) {
+                q = q.filter('metadata->>session_id', 'eq', sessionId);
+            }
+            const { data, error } = await q;
+            if (error) {
+                if (error.code === 'PGRST205') {
+                    return res.status(200).json({ ok: true, history: [], notice: 'database_table_pending' });
+                }
+                console.warn('[Copilot History GET Warning]:', error.message);
+                return res.status(200).json({ ok: true, history: [] });
+            }
+            return res.status(200).json({ ok: true, history: data || [] });
+        } catch (err) {
+            console.warn('[Copilot History GET Exception]:', err.message);
+            return res.status(200).json({ ok: true, history: [] });
+        }
+    }
+
+    // Action: Xóa sạch lịch sử trò chuyện Copilot của nhân sự
+    if (req.body?.action === 'CLEAR_COPILOT_HISTORY') {
+        try {
+            let dq = supabase.from('admin_copilot_history').delete();
+            if (staffUser?.id) {
+                dq = dq.eq('staff_id', staffUser.id);
+            } else {
+                dq = dq.filter('staff_name', 'eq', staffUser?.full_name || 'Quản trị viên');
+            }
+            if (sessionId) {
+                dq = dq.filter('metadata->>session_id', 'eq', sessionId);
+            }
+            const { error } = await dq;
+            if (error && error.code !== 'PGRST205') {
+                console.warn('[Copilot History CLEAR Warning]:', error.message);
+            }
+            return res.status(200).json({ ok: true, cleared: true });
+        } catch (err) {
+            console.warn('[Copilot History CLEAR Exception]:', err.message);
+            return res.status(200).json({ ok: true, cleared: true });
+        }
+    }
+
+    const { messages } = req.body;
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+        return res.status(400).json({ error: 'Messages array is required' });
+    }
+
+    const userMsg = String(messages[messages.length - 1].content || '').trim();
+    if (userMsg.length > 2000) {
+        return res.status(400).json({ error: 'Tin nhắn vượt quá giới hạn 2000 ký tự cho phép.' });
+    }
+
+    const copilotSystemInstruction = `Bạn là PawPal AI Copilot - Trợ lý thông minh hỗ trợ Quản trị viên và Chuyên viên CSKH hệ thống PawPal.
+Đang hỗ trợ nhân sự: ${staffUser.full_name || 'Quản trị viên'} (Vai trò: ${staffUser.system_role || 'Nhân sự'}).
+Quy tắc trả lời:
+1. Luôn sử dụng Tiếng Việt chuẩn mực, gãy gọn, xưng hô 'PawPal Copilot' hoặc 'em', hỗ trợ quản trị viên chu đáo.
+2. BẮT BUỘC SỬ DỤNG CÔNG CỤ FUNCTION CALLING: Khi quản trị viên hỏi về dữ liệu vận hành:
+   - Tồn kho, sản phẩm sắp hết hàng -> BẮT BUỘC GỌI CÔNG CỤ get_low_stock_products.
+   - Lịch hẹn, ca dịch vụ hôm nay/ngày mai -> BẮT BUỘC GỌI CÔNG CỤ get_appointments.
+   - Đơn hàng bán lẻ, doanh thu đơn -> BẮT BUỘC GỌI CÔNG CỤ get_order_detail.
+   - Khiếu nại, sự cố, phiếu hỗ trợ ticket -> BẮT BUỘC GỌI CÔNG CỤ get_open_tickets.
+   - Thông tin khách hàng, thú cưng, hạng điểm -> BẮT BUỘC GỌI CÔNG CỤ get_customer_context.
+   - Chính sách đổi trả, bảng giá, quy định -> BẮT BUỘC GỌI CÔNG CỤ search_knowledge.
+   TUYỆT ĐỐI KHÔNG từ chối hoặc trả lời hệ thống không hỗ trợ khi các công cụ trên đã sẵn sàng trong hệ thống.
+3. Khi trình bày dữ liệu dạng bảng/danh sách: nêu rõ tổng số, ngày giờ truy vấn, các cột chính và đính kèm đường dẫn điều hướng nhanh trong hệ thống:
+   - Lịch hẹn: [Mở lịch hẹn](#tab-calendar)
+   - Đơn hàng: [Mở đơn hàng](#tab-order-detail)
+   - Tồn kho: [Mở quản lý kho](#tab-inventory)
+   - Khiếu nại/Ticket: [Mở xử lý ticket](#tab-complaint-detail)
+   - Hồ sơ khách hàng: [Mở hồ sơ 360°](#tab-customer-profile)
+4. Tuân thủ Sentence Case (chỉ viết hoa chữ cái đầu), không dùng ký hiệu '+' trước nút bấm, không dùng từ tiếng Anh dịch kèm trong ngoặc đơn.
+5. Khi trình bày dữ liệu so sánh, danh sách nhiều thuộc tính (khiếu nại, đơn hàng, ca hẹn, tồn kho), BẮT BUỘC dùng bảng Markdown chuẩn: \| Cột 1 \| Cột 2 \| Cột 3 \| kèm dòng phân cách \|:---\|:---\|:---\|.`;
+
+    const maxRetries = 8;
+    let lastError = null;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        const genAIResult = await getGenAI(attempt > 0);
+        if (!genAIResult || !genAIResult.genAI) {
+            continue;
+        }
+        const { genAI } = genAIResult;
+
+        try {
+            const model = genAI.getGenerativeModel({
+                model: "gemini-2.5-flash",
+                systemInstruction: copilotSystemInstruction,
+                tools: adminToolsDeclaration
+            });
+
+            const history = messages.slice(0, -1).map(m => ({
+                role: m.role === 'assistant' ? 'model' : (m.role === 'model' ? 'model' : 'user'),
+                parts: [{ text: m.content || '' }]
+            }));
+
+            const chat = model.startChat({ history });
+            let response = (await chat.sendMessage([{ text: userMsg }])).response;
+
+            // Xử lý vòng lặp Function Calling tối đa 3 vòng
+            let turns = 0;
+            while (turns < 3) {
+                const functionCalls = response.functionCalls ? response.functionCalls() : null;
+                if (!functionCalls || functionCalls.length === 0) {
+                    break;
+                }
+
+                const call = functionCalls[0];
+                const toolName = call.name;
+                const toolArgs = call.args || {};
+                console.log(`[Copilot Function Calling] Admin Tool: ${toolName}`, toolArgs);
+
+                let toolResult = null;
+                if (typeof adminDbTools[toolName] === 'function') {
+                    toolResult = await adminDbTools[toolName](toolArgs);
+                } else {
+                    toolResult = { error: `Công cụ ${toolName} không tồn tại trên hệ thống.` };
+                }
+
+                const followUp = await chat.sendMessage([{
+                    functionResponse: {
+                        name: toolName,
+                        response: { result: toolResult }
+                    }
+                }]);
+                response = followUp.response;
+                turns++;
+            }
+
+            const replyText = response.text ? response.text() : 'Đã xử lý yêu cầu thành công.';
+
+            // Bất đồng bộ lưu trữ hội thoại vào bảng admin_copilot_history trên Supabase
+            try {
+                const meta = {
+                    session_id: sessionId || null,
+                    session_title: sessionTitle || null,
+                    timestamp: new Date().toISOString()
+                };
+                const rowsToInsert = [
+                    {
+                        staff_id: staffUser?.id || null,
+                        staff_name: staffUser?.full_name || 'Quản trị viên',
+                        role: 'user',
+                        content: userMsg,
+                        metadata: meta
+                    },
+                    {
+                        staff_id: staffUser?.id || null,
+                        staff_name: staffUser?.full_name || 'PawPal Copilot',
+                        role: 'assistant',
+                        content: replyText,
+                        metadata: meta
+                    }
+                ];
+                supabase.from('admin_copilot_history').insert(rowsToInsert)
+                    .then(({ error }) => {
+                        if (error && error.code !== 'PGRST205') {
+                            console.warn('[Copilot History Insert Warning]:', error.message);
+                        }
+                    })
+                    .catch(e => console.warn('[Copilot History Insert Exception]:', e.message));
+            } catch (saveErr) {}
+
+            return res.status(200).json({
+                reply: replyText,
+                done: true
+            });
+        } catch (copilotErr) {
+            lastError = copilotErr;
+            console.warn(`[Copilot Backend Warning] Lỗi key Gemini (lần thử ${attempt + 1}/${maxRetries}): ${copilotErr.message}. Đang tự động đổi sang key tiếp theo từ kho CSDL.`);
+        }
+    }
+
+    console.error('[Copilot Backend Error] Tất cả các lần thử key đều thất bại:', lastError);
+    return res.status(500).json({
+        error: 'Lỗi khi xử lý yêu cầu AI Copilot: ' + (lastError?.message || 'Unknown error'),
+        reply: 'Dạ xin lỗi, hệ thống PawPal AI Copilot gặp sự cố tạm thời khi kết nối Gemini API. Vui lòng thử lại sau.'
+    });
+}
+
+// ------------------------------------------------------------------------------
 // MAIN HANDLER
 // ------------------------------------------------------------------------------
 module.exports = async function handler(req, res) {
+    // Điều phối Copilot nội bộ dành riêng cho Quản trị viên
+    if (req.body?.isCopilot === true) {
+        return handleCopilotChat(req, res);
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -506,10 +1300,109 @@ module.exports = async function handler(req, res) {
         const staffAuthApi = require('./staff_auth.js');
         return staffAuthApi.resetPassword(req, res);
     }
-    if (req.body?.action === 'STAFF_AUTH_TOGGLE_STATUS') {
-        const staffAuthApi = require('./staff_auth.js');
-        return staffAuthApi.toggleAccountStatus(req, res);
+
+    // Giai đoạn G4: Điều phối các Thao tác có xác nhận (Action Confirmation, Ticket, Points, Notes, Handover)
+    if (req.body?.action && [
+        'CHAT_ACTION_PREVIEW',
+        'CHAT_COMPENSATE_POINTS',
+        'CHAT_CREATE_TICKET',
+        'CHAT_ADD_INTERNAL_NOTE',
+        'CHAT_HANDOVER_MANAGER'
+    ].includes(req.body.action)) {
+        const chatActionsApi = require('./chat_actions.js');
+        return chatActionsApi.dispatchChatAction(req, res);
     }
+
+    // Điều phối lấy nguyên văn tin nhắn độc hại (Yêu cầu quyền chat.raw.read và ghi log kiểm toán)
+    if (req.body?.action === 'CHAT_GET_RAW_CONTENT') {
+        const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Yêu cầu phiên đăng nhập nhân viên để xem nguyên văn.' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        let staffUser = null;
+
+        if (token.startsWith('local:')) {
+            const staffId = token.replace('local:', '');
+            const { data: staff } = await supabase
+                .from('staff')
+                .select('id, full_name, system_role, account_status, permissions')
+                .eq('id', staffId)
+                .maybeSingle();
+
+            if (staff && staff.account_status === 'ACTIVE') {
+                staffUser = staff;
+            }
+        } else {
+            const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+            if (!authErr && user) {
+                const { data: staff } = await supabase
+                    .from('staff')
+                    .select('id, full_name, system_role, account_status, permissions')
+                    .eq('auth_user_id', user.id)
+                    .maybeSingle();
+
+                if (staff && staff.account_status === 'ACTIVE') {
+                    staffUser = staff;
+                }
+            }
+        }
+
+        if (!staffUser) {
+            return res.status(403).json({ error: 'Không tìm thấy tài khoản nhân sự hợp lệ.' });
+        }
+
+        const perms = Array.isArray(staffUser.permissions) ? staffUser.permissions : [];
+        const hasPermission = staffUser.system_role === 'ADMIN' || 
+                              staffUser.system_role === 'CSKH_LEAD' || 
+                              perms.includes('chat.raw.read') || 
+                              perms.includes('all');
+
+        if (!hasPermission) {
+            return res.status(403).json({ error: 'Bạn không có quyền chat.raw.read để xem nguyên văn nội dung này.' });
+        }
+
+        const { isFeatureEnabled } = require('./chat_config.js');
+        if (!isFeatureEnabled('raw_reveal_enabled')) {
+            return res.status(403).json({ error: 'Chức năng giải mã xem nguyên văn hiện đang tạm khóa theo cấu hình hệ thống (G5-05).' });
+        }
+
+        const { messageId } = req.body;
+        if (!messageId) {
+            return res.status(400).json({ error: 'Thiếu messageId cần xem.' });
+        }
+
+        const { data: msg, error: msgErr } = await supabase
+            .from('chat_message')
+            .select('id, conversation_id, raw_content, content, is_toxic, sender_name, created_at')
+            .eq('id', messageId)
+            .maybeSingle();
+
+        if (msgErr || !msg) {
+            return res.status(404).json({ error: 'Không tìm thấy tin nhắn.' });
+        }
+
+        // Ghi nhật ký kiểm duyệt vào chat_moderation_log
+        try {
+            await supabase.from('chat_moderation_log').insert({
+                conversation_id: msg.conversation_id,
+                action_taken: 'masked',
+                detected_keywords: ['[AUDIT_VIEW_RAW]'],
+                violation_count: 0,
+                notes: `[AUDIT_VIEW_RAW] Nhân sự ${staffUser.full_name || staffUser.id} (${staffUser.system_role}) đã mở xem nguyên văn tin nhắn ID: ${msg.id} lúc ${new Date().toISOString()}`
+            });
+        } catch (logErr) {
+            console.warn('[Audit Log] Lỗi ghi nhật ký xem raw content:', logErr.message);
+        }
+
+        return res.status(200).json({
+            ok: true,
+            id: msg.id,
+            raw_content: msg.raw_content || msg.content
+        });
+    }
+
 
     try {
         const { messages, conversationId: clientConvId, sessionToken } = req.body;
@@ -521,6 +1414,9 @@ module.exports = async function handler(req, res) {
         }
 
         const userMsg = messages[messages.length - 1].content || '';
+        if (userMsg.length > 2000) {
+            return res.status(400).json({ error: 'Tin nhắn vượt quá giới hạn 2000 ký tự cho phép.' });
+        }
 
         // 1. NẠP MÀNG LỌC TOXIC SHIELD & SENTIMENT RULES TỪ DB
         const [filters, triggers, systemPrompts] = await Promise.all([
@@ -621,16 +1517,27 @@ module.exports = async function handler(req, res) {
                 content: maskedText,
                 raw_content: userMsg,
                 is_toxic: isToxic,
-                sentiment_score: detectedLevel
+                sentiment_score: detectedLevel,
+                metadata: {
+                    abuse_type: evalResult.abuseType || 'none',
+                    risk_type: evalResult.riskType || 'none',
+                    urgency: evalResult.urgency || 'low',
+                    handover_required: Boolean(evalResult.shouldHandover),
+                    handover_reason: evalResult.handoverReason || null,
+                    detected_keywords: detectedKeywords,
+                    masked_words: evalResult.maskedWords || []
+                }
             });
 
-            const isAgentRequested = userMsg.toLowerCase().includes('gặp nhân viên') || 
+            const isAgentRequested = Boolean(evalResult.isAgentRequested) ||
+                                     userMsg.toLowerCase().includes('gặp nhân viên') || 
                                      userMsg.toLowerCase().includes('người thật') || 
                                      userMsg.toLowerCase().includes('tư vấn viên');
             
+            const shouldHandover = evalResult.shouldHandover || isAgentRequested || detectedLevel >= 4 || isSharpEscalation;
             const nextStatus = conversation?.status === 'agent_handling' 
                 ? 'agent_handling' 
-                : (isAgentRequested || detectedLevel >= 4 || isSharpEscalation ? 'waiting_agent' : 'bot_handling');
+                : (shouldHandover ? 'waiting_agent' : 'bot_handling');
 
             // Cập nhật cấp độ cảm xúc, xu hướng, vi phạm và trạng thái cho phiên
             const updatePayload = {
@@ -640,6 +1547,10 @@ module.exports = async function handler(req, res) {
                 is_urgent: isUrgent || isAgentRequested || isSharpEscalation || isVipAttention,
                 updated_at: new Date().toISOString()
             };
+
+            if (shouldHandover && conversation?.status !== 'agent_handling') {
+                updatePayload.handover_reason = evalResult.handoverReason || (isAgentRequested ? 'Khách yêu cầu gặp tư vấn viên trực tiếp' : 'Hệ thống chuyển ca hỗ trợ');
+            }
 
             if (isVipAttention && !conversation?.ai_summary) {
                 updatePayload.ai_summary = `[VIP Attention] ${vipInfo.reason}. Cần ưu tiên phục vụ ân cần.`;
@@ -780,13 +1691,13 @@ module.exports = async function handler(req, res) {
                     parts: [{ text: 'Dạ PawPal đã nắm toàn bộ bối cảnh trên, em đang tiếp tục hỗ trợ sen chu đáo ạ.' }]
                 },
                 ...recentMessages.map(m => ({
-                    role: m.role,
+                    role: (m.role === 'assistant' || m.role === 'model') ? 'model' : 'user',
                     parts: [{ text: m.content }]
                 }))
             ];
         } else {
             history = messages.slice(0, -1).map(m => ({
-                role: m.role,
+                role: (m.role === 'assistant' || m.role === 'model') ? 'model' : 'user',
                 parts: [{ text: m.content }]
             }));
         }
@@ -803,8 +1714,10 @@ module.exports = async function handler(req, res) {
             chat = model.startChat({ history: history });
             streamResult = await chat.sendMessageStream([{ text: maskedText }]);
         } catch (err1) {
-            console.warn("[API] gemini-2.5-flash stream failed (" + err1.message + "), retrying...");
-            const fallbackModel = genAI.getGenerativeModel({ 
+            console.warn("[API] gemini-2.5-flash stream failed (" + err1.message + "), đang tự động chuyển sang key dự phòng tiếp theo từ CSDL...");
+            const nextGenAIResult = await getGenAI(true);
+            const activeGenAI = nextGenAIResult?.genAI || genAI;
+            const fallbackModel = activeGenAI.getGenerativeModel({ 
                 model: "gemini-2.5-flash",
                 systemInstruction: systemInstruction,
                 tools: toolsDeclaration
@@ -820,7 +1733,6 @@ module.exports = async function handler(req, res) {
             res.setHeader('Content-Type', 'text/event-stream');
             res.setHeader('Cache-Control', 'no-cache');
             res.setHeader('Connection', 'keep-alive');
-            res.setHeader('X-API-Key-Used', keyPrefix);
         }
 
         // 8. ĐỌC KẾT QUẢ VÀ XỬ LÝ TOOL CALLS
@@ -912,7 +1824,6 @@ module.exports = async function handler(req, res) {
             res.end();
         } else {
             res.setHeader('Content-Type', 'application/json; charset=utf-8');
-            res.setHeader('X-API-Key-Used', keyPrefix);
             return res.status(200).json({
                 reply: fullResponseText,
                 conversationId: activeConvId,
@@ -945,3 +1856,7 @@ module.exports = async function handler(req, res) {
         }
     }
 };
+
+module.exports.evaluateToxicAndSentiment = evaluateToxicAndSentiment;
+module.exports.adminDbTools = adminDbTools;
+

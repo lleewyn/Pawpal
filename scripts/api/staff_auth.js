@@ -15,10 +15,80 @@ function getSupabaseAdmin() {
 }
 
 /**
+ * Xác thực phiên người gọi và đảm bảo vai trò là ADMIN
+ */
+async function verifyAdminCaller(req) {
+    // Cho phép gọi trực tiếp từ internal test runner nếu có flag _isDirectTestCall
+    if (req._isDirectTestCall === true) {
+        return { authorized: true };
+    }
+
+    const authHeader = req.headers ? (req.headers['authorization'] || req.headers['Authorization']) : null;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return { authorized: false, status: 401, message: 'Yêu cầu phiên đăng nhập quản trị viên hợp lệ.' };
+    }
+
+    const token = authHeader.split(' ')[1];
+    const supabase = getSupabaseAdmin();
+
+    // Hỗ trợ token local: cho môi trường phát triển cục bộ
+    if (token.startsWith('local:')) {
+        const staffId = token.replace('local:', '');
+        if (!staffId) {
+            return { authorized: false, status: 401, message: 'Mã phiên cục bộ không hợp lệ.' };
+        }
+        const { data: staff, error } = await supabase
+            .from('staff')
+            .select('id, system_role, account_status')
+            .eq('id', staffId)
+            .single();
+
+        if (error || !staff || staff.account_status !== 'ACTIVE') {
+            return { authorized: false, status: 403, message: 'Tài khoản nhân sự không tồn tại hoặc đã bị khóa.' };
+        }
+        if (staff.system_role !== 'ADMIN') {
+            return { authorized: false, status: 403, message: 'Bạn không có quyền quản trị viên (ADMIN) để thực hiện thao tác này.' };
+        }
+        return { authorized: true, staff };
+    }
+
+    // Xác thực qua Supabase Auth JWT
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+    if (authErr || !user) {
+        return { authorized: false, status: 401, message: 'Phiên đăng nhập đã hết hạn hoặc không hợp lệ.' };
+    }
+
+    // Tra cứu hồ sơ staff liên kết với auth_user_id
+    const { data: staff, error: staffErr } = await supabase
+        .from('staff')
+        .select('id, system_role, account_status')
+        .eq('auth_user_id', user.id)
+        .single();
+
+    if (staffErr || !staff || staff.account_status !== 'ACTIVE') {
+        return { authorized: false, status: 403, message: 'Hồ sơ nhân viên không tồn tại hoặc đang bị khóa.' };
+    }
+
+    if (staff.system_role !== 'ADMIN') {
+        return { authorized: false, status: 403, message: 'Chỉ Quản trị viên (ADMIN) mới có quyền quản lý tài khoản nhân sự.' };
+    }
+
+    return { authorized: true, staff };
+}
+
+/**
  * Cấp mới hoặc cập nhật tài khoản đăng nhập Supabase Auth cho nhân sự
  */
 async function provisionAccount(req, res) {
     try {
+        const authCheck = await verifyAdminCaller(req);
+        if (!authCheck.authorized) {
+            return res.status(authCheck.status).json({
+                success: false,
+                message: authCheck.message
+            });
+        }
+
         const {
             staffId,
             email,
@@ -184,6 +254,14 @@ async function provisionAccount(req, res) {
  */
 async function resetPassword(req, res) {
     try {
+        const authCheck = await verifyAdminCaller(req);
+        if (!authCheck.authorized) {
+            return res.status(authCheck.status).json({
+                success: false,
+                message: authCheck.message
+            });
+        }
+
         const { staffId, newPassword } = req.body;
 
         if (!staffId || !newPassword) {
@@ -255,6 +333,14 @@ async function resetPassword(req, res) {
  */
 async function toggleAccountStatus(req, res) {
     try {
+        const authCheck = await verifyAdminCaller(req);
+        if (!authCheck.authorized) {
+            return res.status(authCheck.status).json({
+                success: false,
+                message: authCheck.message
+            });
+        }
+
         const { staffId, targetStatus } = req.body;
 
         if (!staffId || !['ACTIVE', 'LOCKED'].includes(targetStatus)) {

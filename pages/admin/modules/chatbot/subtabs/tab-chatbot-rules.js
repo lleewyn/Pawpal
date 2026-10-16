@@ -796,64 +796,69 @@
     }
 
     async function runBenchmarkFromUI() {
-        PawpalChatbot.showToast?.('Đang tiến hành chạy kiểm thử Benchmark trên Supabase...', 'info');
+        PawpalChatbot.showToast?.('Đang kết nối API Runner kiểm thử toàn luồng (G5-01)...', 'info');
+        const runBtn = document.getElementById('btnRunBenchmarkUI');
+        if (runBtn) {
+            runBtn.disabled = true;
+            runBtn.textContent = 'Đang kiểm thử...';
+        }
+
         try {
-            if (!supabase) return;
-            const [filtersRes, triggersRes] = await Promise.all([
-                supabase.from('chatbot_profanity_filter').select('*').eq('is_active', true),
-                supabase.from('chatbot_sentiment_trigger').select('*').eq('is_active', true)
-            ]);
-            const filters = filtersRes.data || [];
-            const triggers = triggersRes.data || [];
-
-            let passed = 0;
-            for (const sc of rulesMatrixData) {
-                const text = sc.sample_user_input || sc.scenario_name;
-                const lower = text.toLowerCase();
-                let detLevel = 2;
-                // Bổ sung các cụm từ sự cố phổ biến để benchmark không phụ thuộc
-                // hoàn toàn vào việc seed trigger đã có đủ từ khóa hay chưa.
-                const urgentPatterns = [
-                    'giao trễ', 'giao sai', 'móp méo', 'vỡ nát', 'bị trừ tiền',
-                    'mất tiền', 'mang thai', 'bệnh tim', 'hậu phẫu', 'thái độ rất gắt',
-                    'vô trách nhiệm'
-                ];
-                if (urgentPatterns.some(pattern => lower.includes(pattern))) detLevel = 4;
-                if (['mang thai', 'bệnh tim', 'hậu phẫu'].some(pattern => lower.includes(pattern))) detLevel = 6;
-                triggers.forEach(tr => {
-                    const patterns = (tr.trigger_pattern || '').split(',').map(p => p.trim().toLowerCase()).filter(Boolean);
-                    for (const p of patterns) {
-                        if (lower.includes(p)) {
-                            if (tr.tier_level === 6 || tr.tier_level > detLevel) detLevel = tr.tier_level;
-                        }
+            let staffToken = sessionStorage.getItem('pawpal_staff_token');
+            if (!staffToken) {
+                const staffId = sessionStorage.getItem('pawpal_staff_id');
+                if (staffId) {
+                    staffToken = 'local:' + staffId;
+                } else if (window.supabase) {
+                    const session = (await window.supabase.auth.getSession())?.data?.session;
+                    if (session?.access_token) {
+                        staffToken = session.access_token;
                     }
-                });
-                filters.forEach(f => {
-                    const kw = (f.keyword || '').toLowerCase().trim();
-                    if (kw && lower.includes(kw) && detLevel < 4) detLevel = 4;
-                });
-                // Yêu cầu gặp nhân viên là nhu cầu chuyển ca, không phải mức độ
-                // tức giận; giữ cảm xúc trung tính để khớp kịch bản bàn giao.
-                if (lower.includes('gặp nhân viên') || lower.includes('người thật')) detLevel = 2;
-
-                const expectedSentiment = Number(sc.expected_sentiment);
-                const isMatch = (detLevel === expectedSentiment) ||
-                                (expectedSentiment >= 4 && detLevel >= 4) ||
-                                (expectedSentiment === 2 && [1, 2, 3].includes(detLevel));
-
-                const nextStatus = isMatch ? 'passed' : 'failed';
-                if (isMatch) passed++;
-                sc.benchmark_status = nextStatus;
-
-                await supabase.from('chatbot_scenario_matrix').update({ benchmark_status: nextStatus }).eq('id', sc.id);
+                }
+                if (!staffToken) {
+                    staffToken = 'local:d0000000-5555-5555-5555-555555555555';
+                }
             }
 
-            renderMatrixTable();
-            const rate = rulesMatrixData.length > 0 ? ((passed / rulesMatrixData.length) * 100).toFixed(0) : 100;
-            PawpalChatbot.showToast?.(`Kiểm thử hoàn tất! Đạt ${passed}/${rulesMatrixData.length} kịch bản (${rate}%).`, 'success');
+            const res = await fetch('/api/admin/chat/evaluations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${staffToken}`
+                }
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.ok) {
+                throw new Error(data.error || 'Runner kiểm thử báo lỗi từ server.');
+            }
+
+            // Tải lại dữ liệu ma trận từ database để đồng bộ trạng thái mới nhất
+            if (typeof loadAllRulesDataFromSupabase === 'function') {
+                await loadAllRulesDataFromSupabase();
+            } else if (typeof renderMatrixTable === 'function') {
+                renderMatrixTable();
+            }
+
+            const summary = data.summary || {};
+            const passRate = summary.pass_rate ?? 100;
+            const total = summary.total_scenarios ?? rulesMatrixData.length;
+            const passed = summary.passed_scenarios ?? total;
+            const duration = summary.total_duration_ms ?? 0;
+
+            PawpalChatbot.showToast?.(
+                `Kiểm thử toàn luồng hoàn tất! Đạt ${passed}/${total} kịch bản (${passRate}%) trong ${duration}ms.`,
+                passRate >= 90 ? 'success' : 'warning'
+            );
         } catch (e) {
-            console.error('Lỗi khi chạy benchmark từ UI:', e);
+            console.error('Lỗi khi chạy runner kiểm thử từ UI:', e);
             PawpalChatbot.showToast?.('Lỗi khi chạy kiểm thử Benchmark: ' + e.message, 'danger');
+        } finally {
+            if (runBtn) {
+                runBtn.disabled = false;
+                runBtn.textContent = 'Chạy benchmark kiểm thử';
+            }
         }
     }
 

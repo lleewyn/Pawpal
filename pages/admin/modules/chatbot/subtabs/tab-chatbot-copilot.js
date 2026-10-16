@@ -17,14 +17,33 @@
         const messagesArea = document.getElementById('copilotMessagesArea');
         const clearBtn = document.getElementById('btnClearCopilotChat');
         const syncRagBtn = document.getElementById('btnSyncRagData');
+        const btnNewCopilotSession = document.getElementById('btnNewCopilotSession');
+        const inputCopilotSessionSearch = document.getElementById('inputCopilotSessionSearch');
+        const copilotSessionsList = document.getElementById('copilotSessionsList');
+        const currentCopilotSessionTitle = document.getElementById('currentCopilotSessionTitle');
 
         if (!sendBtn || !inputArea || !messagesArea) return;
         if (sendBtn.dataset.copilotBound === 'true') return;
         sendBtn.dataset.copilotBound = 'true';
         let isSending = false;
 
-        function appendUserMessage(text) {
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        let copilotSessions = [];
+        let activeSessionId = null;
+
+        function formatMsgTime(timestamp) {
+            if (!timestamp) {
+                return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+            try {
+                const d = new Date(timestamp);
+                return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } catch (e) {
+                return '';
+            }
+        }
+
+        function appendUserMessage(text, timestamp) {
+            const timeStr = formatMsgTime(timestamp);
             const msgHtml = `
                 <div class="copilot-msg msg-user">
                     <div class="copilot-msg-header">
@@ -48,9 +67,195 @@
                 .replace(/'/g, '&#039;');
         }
 
-        function appendAiResponse(text) {
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const formatted = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        function formatMarkdownForCopilot(rawText) {
+            if (!rawText) return '';
+
+            function formatInline(str) {
+                if (!str) return '';
+                let s = escapeHtml(str);
+
+                // Markdown links: [label](url)
+                s = s.replace(/\[(.*?)\]\((#tab-[a-z0-9_-]+|\/admin#tab-[a-z0-9_-]+|[a-zA-Z0-9_\/.:#-]+)\)/gi, (match, label, url) => {
+                    const cleanUrl = url.trim();
+                    const isTab = cleanUrl.includes('#tab-');
+                    return `<a href="${cleanUrl}" class="user-name-link" ${isTab ? '' : 'target="_blank" rel="noopener"'} style="color: #236B48; font-weight: 600; text-decoration: underline;">${label}</a>`;
+                });
+
+                // Plain hashtag tab references like #tab-calendar, #tab-inventory
+                s = s.replace(/(^|\s)(#tab-[a-z0-9_-]+)/g, '$1<a href="$2" class="user-name-link" style="color: #236B48; font-weight: 600; text-decoration: underline;">$2</a>');
+
+                // Auto-link navigation phrases if not already linked
+                const navLinks = [
+                    { phrase: 'Mở xử lý ticket', hash: '#tab-complaint-detail' },
+                    { phrase: 'Mở khiếu nại', hash: '#tab-complaints' },
+                    { phrase: 'Mở lịch hẹn', hash: '#tab-calendar' },
+                    { phrase: 'Mở quản lý kho', hash: '#tab-inventory' },
+                    { phrase: 'Mở đơn hàng', hash: '#tab-order-detail' },
+                    { phrase: 'Mở hồ sơ 360°', hash: '#tab-customer-profile' }
+                ];
+                navLinks.forEach(({ phrase, hash }) => {
+                    const regex = new RegExp(`(?<!href="[^"]*">${phrase}|>${phrase})\\b${phrase}\\b(?!<\\/a>)`, 'g');
+                    s = s.replace(regex, `<a href="${hash}" class="user-name-link" style="color: #236B48; font-weight: 600; text-decoration: underline;">${phrase}</a>`);
+                });
+
+                // Bold **text**
+                s = s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                // Italic *text* tuân thủ CommonMark (không cho phép khoảng trắng sát dấu sao)
+                s = s.replace(/(?<!\*)\*(?!\s)([^*]+?)(?<!\s)\*(?!\*)/g, '<em>$1</em>');
+
+                // Inline code `code`
+                s = s.replace(/`([^`]+)`/g, (m, code) => {
+                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(code);
+                    if (isUuid) {
+                        return `<a href="#tab-complaint-detail" onclick="sessionStorage.setItem('pawpal_admin_complaint_selected_id', '${code}');" title="Xem chi tiết ticket ${code}" style="font-family: monospace; font-size: 11.5px; background: rgba(35, 107, 72, 0.08); padding: 1px 5px; border-radius: 4px; color: #236B48; text-decoration: underline; font-weight: 600;">#${code.slice(0, 8)}...</a>`;
+                    }
+                    return `<code style="background: rgba(35, 107, 72, 0.08); padding: 1px 5px; border-radius: 4px; font-size: 11.5px; color: #236B48; font-family: monospace;">${code}</code>`;
+                });
+
+                return s;
+            }
+
+            const lines = rawText.split('\n');
+            const outputBlocks = [];
+            let i = 0;
+
+            while (i < lines.length) {
+                const line = lines[i];
+                const trimmed = line.trim();
+
+                // Markdown Table detection: dòng hiện tại chứa '|' và dòng tiếp theo là separator '|:---|'
+                if (trimmed.includes('|') && i + 1 < lines.length && /^\s*\|?\s*:?-+:?\s*(\|?\s*:?-+:?\s*)+\|?\s*$/.test(lines[i + 1].trim())) {
+                    const headerLine = trimmed;
+                    const sepLine = lines[i + 1].trim();
+                    const rowLines = [];
+                    i += 2;
+                    while (i < lines.length && lines[i].trim().includes('|')) {
+                        rowLines.push(lines[i].trim());
+                        i++;
+                    }
+
+                    const parseCells = (l) => {
+                        let c = l;
+                        if (c.startsWith('|')) c = c.substring(1);
+                        if (c.endsWith('|')) c = c.substring(0, c.length - 1);
+                        return c.split('|').map(s => s.trim());
+                    };
+
+                    const headers = parseCells(headerLine);
+                    const alignments = parseCells(sepLine).map(s => {
+                        if (s.startsWith(':') && s.endsWith(':')) return 'center';
+                        if (s.endsWith(':')) return 'right';
+                        return 'left';
+                    });
+
+                    let thead = '<tr>';
+                    headers.forEach((h, idx) => {
+                        const align = alignments[idx] || 'left';
+                        thead += `<th style="text-align: ${align};">${formatInline(h)}</th>`;
+                    });
+                    thead += '</tr>';
+
+                    let tbody = '';
+                    rowLines.forEach(r => {
+                        const cells = parseCells(r);
+                        tbody += '<tr>';
+                        cells.forEach((cell, idx) => {
+                            const align = alignments[idx] || 'left';
+                            let formattedCell = formatInline(cell);
+                            const raw = cell.replace(/`/g, '').trim();
+
+                            // Tự động gán badge trực quan cho mức độ và trạng thái
+                            if (raw === 'Cao' || raw === 'Khẩn cấp') {
+                                formattedCell = `<span class="admin-badge badge-danger" style="font-size: 11px;">${raw}</span>`;
+                            } else if (raw === 'Trung bình') {
+                                formattedCell = `<span class="admin-badge badge-warning" style="font-size: 11px;">${raw}</span>`;
+                            } else if (raw === 'Thấp') {
+                                formattedCell = `<span class="admin-badge badge-neutral" style="font-size: 11px;">${raw}</span>`;
+                            } else if (raw === 'Chờ tiếp nhận' || raw === 'Chờ xử lý') {
+                                formattedCell = `<span class="admin-badge badge-warning" style="font-size: 11px;">${raw}</span>`;
+                            } else if (raw === 'Đang xử lý') {
+                                formattedCell = `<span class="admin-badge badge-active" style="font-size: 11px;">${raw}</span>`;
+                            } else if (raw === 'Hoàn thành' || raw === 'Đã đóng' || raw === 'ACTIVE') {
+                                formattedCell = `<span class="admin-badge badge-active" style="font-size: 11px;">${raw}</span>`;
+                            }
+
+                            tbody += `<td style="text-align: ${align};">${formattedCell}</td>`;
+                        });
+                        tbody += '</tr>';
+                    });
+
+                    outputBlocks.push(`
+                        <div class="copilot-table-wrapper">
+                            <table class="admin-table copilot-table">
+                                <thead>${thead}</thead>
+                                <tbody>${tbody}</tbody>
+                            </table>
+                        </div>
+                    `);
+                    continue;
+                }
+
+                // Tiêu đề Headings: ###, ##, #
+                if (trimmed.startsWith('### ')) {
+                    outputBlocks.push(`<h4 style="margin: 12px 0 6px; color: var(--text-heading, #236B48); font-size: 13.5px; font-weight: 700;">${formatInline(trimmed.replace(/^###\s+/, ''))}</h4>`);
+                    i++;
+                    continue;
+                }
+                if (trimmed.startsWith('## ')) {
+                    outputBlocks.push(`<h3 style="margin: 14px 0 8px; color: var(--text-heading, #236B48); font-size: 14.5px; font-weight: 700;">${formatInline(trimmed.replace(/^##\s+/, ''))}</h3>`);
+                    i++;
+                    continue;
+                }
+                if (trimmed.startsWith('# ')) {
+                    outputBlocks.push(`<h2 style="margin: 16px 0 10px; color: var(--text-heading, #236B48); font-size: 15.5px; font-weight: 700;">${formatInline(trimmed.replace(/^#\s+/, ''))}</h2>`);
+                    i++;
+                    continue;
+                }
+
+                // Danh sách không thứ tự (Unordered List: * item hoặc - item)
+                if (/^[\*\-]\s+/.test(trimmed)) {
+                    let listHtml = '<ul style="margin: 6px 0 10px 18px; padding: 0;">';
+                    while (i < lines.length && /^[\*\-]\s+/.test(lines[i].trim())) {
+                        const itemText = lines[i].trim().replace(/^[\*\-]\s+/, '');
+                        listHtml += `<li style="margin-bottom: 4px;">${formatInline(itemText)}</li>`;
+                        i++;
+                    }
+                    listHtml += '</ul>';
+                    outputBlocks.push(listHtml);
+                    continue;
+                }
+
+                // Danh sách có thứ tự (Ordered List: 1. item)
+                if (/^\d+\.\s+/.test(trimmed)) {
+                    let listHtml = '<ol style="margin: 6px 0 10px 18px; padding: 0;">';
+                    while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) {
+                        const itemText = lines[i].trim().replace(/^\d+\.\s+/, '');
+                        listHtml += `<li style="margin-bottom: 4px;">${formatInline(itemText)}</li>`;
+                        i++;
+                    }
+                    listHtml += '</ol>';
+                    outputBlocks.push(listHtml);
+                    continue;
+                }
+
+                // Dòng trống
+                if (!trimmed) {
+                    i++;
+                    continue;
+                }
+
+                // Đoạn văn bản thông thường
+                outputBlocks.push(`<p style="margin: 0 0 8px 0; line-height: 1.55;">${formatInline(trimmed)}</p>`);
+                i++;
+            }
+
+            return outputBlocks.join('');
+        }
+
+        function appendAiResponse(text, timestamp) {
+            const timeStr = formatMsgTime(timestamp);
+            const formatted = formatMarkdownForCopilot(text || '');
             const msgHtml = `
                 <div class="copilot-msg msg-ai">
                     <div class="copilot-msg-header">
@@ -83,25 +288,335 @@
             return id;
         }
 
+        async function getAdminAuthToken() {
+            try {
+                if (window.getSupabaseClient) {
+                    const client = window.getSupabaseClient();
+                    const session = (await client.auth.getSession())?.data?.session;
+                    if (session?.access_token) return session.access_token;
+                } else if (window.supabase) {
+                    const session = (await window.supabase.auth.getSession())?.data?.session;
+                    if (session?.access_token) return session.access_token;
+                }
+            } catch (e) {}
+
+            try {
+                const staffToken = sessionStorage.getItem('pawpal_staff_token') || localStorage.getItem('pawpal_staff_token');
+                if (staffToken) return staffToken;
+            } catch (e) {}
+
+            try {
+                const adminUser = JSON.parse(localStorage.getItem('pawpal_admin_user') || sessionStorage.getItem('pawpal_admin_user') || '{}');
+                if (adminUser.id) return `local:${adminUser.id}`;
+            } catch (e) {}
+
+            try {
+                const staffId = sessionStorage.getItem('pawpal_staff_id') || localStorage.getItem('pawpal_staff_id');
+                if (staffId) return `local:${staffId}`;
+            } catch (e) {}
+
+            return 'local:d0000000-5555-5555-5555-555555555555';
+        }
+
+        function formatSessionTime(dateInput) {
+            if (!dateInput) return '';
+            try {
+                const d = new Date(dateInput);
+                const now = new Date();
+                const diffMs = now - d;
+                const diffMins = Math.floor(diffMs / (60 * 1000));
+                if (diffMins < 1) return 'Vừa xong';
+                if (diffMins < 60) return `${diffMins} phút trước`;
+                const diffHours = Math.floor(diffMins / 60);
+                if (diffHours < 24 && d.getDate() === now.getDate()) {
+                    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+                const dd = String(d.getDate()).padStart(2, '0');
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                return `${dd}/${mm}`;
+            } catch (e) {
+                return '';
+            }
+        }
+
+        function saveSessionsToStorage() {
+            try {
+                localStorage.setItem('pawpal_copilot_sessions', JSON.stringify(copilotSessions));
+                sessionStorage.setItem('pawpal_copilot_active_session_id', activeSessionId || '');
+            } catch (e) {}
+        }
+
+        const defaultGreetingHtml = `
+            <div class="copilot-msg msg-ai">
+                <div class="copilot-msg-header">
+                    <span class="copilot-sender-name">PawPal Copilot (Nội bộ)</span>
+                    <span class="copilot-msg-time">Vừa xong</span>
+                </div>
+                <div class="copilot-msg-bubble">
+                    Xin chào! Em là <strong>PawPal AI Copilot</strong> dành cho Quản trị viên và Chuyên viên Vận hành. Em có thể hỗ trợ tra cứu lịch hẹn, sản phẩm sắp hết hàng, đơn hàng, khách hàng hoặc tóm tắt khiếu nại. Anh/Chị cần kiểm tra thông tin gì hôm nay ạ?
+                </div>
+            </div>
+        `;
+
+        function renderSessionsList(filterText = '') {
+            if (!copilotSessionsList) return;
+            const term = (filterText || '').trim().toLowerCase();
+            const filtered = copilotSessions.filter(s => {
+                if (!term) return true;
+                const inTitle = (s.title || '').toLowerCase().includes(term);
+                const inMsgs = (s.messages || []).some(m => (m.content || '').toLowerCase().includes(term));
+                return inTitle || inMsgs;
+            });
+
+            if (filtered.length === 0) {
+                copilotSessionsList.innerHTML = `
+                    <div class="copilot-session-empty">
+                        ${term ? 'Không tìm thấy phiên chat phù hợp.' : 'Chưa có phiên chat nào.<br>Bắt đầu ngay bằng câu hỏi đầu tiên!'}
+                    </div>
+                `;
+                return;
+            }
+
+            copilotSessionsList.innerHTML = filtered.map(s => {
+                const isActive = s.id === activeSessionId;
+                const timeLabel = formatSessionTime(s.updated_at || s.created_at);
+                const count = Array.isArray(s.messages) ? s.messages.length : 0;
+                return `
+                    <div class="copilot-session-item ${isActive ? 'active' : ''}" data-session-id="${s.id}">
+                        <div class="copilot-session-row-top">
+                            <span class="copilot-session-title" title="${escapeHtml(s.title)}">${escapeHtml(s.title)}</span>
+                            <button type="button" class="btn-del-session" data-delete-session-id="${s.id}" title="Xóa phiên này">Xóa</button>
+                        </div>
+                        <div class="copilot-session-meta">
+                            <span>${count} tin nhắn</span>
+                            <span>${timeLabel}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            copilotSessionsList.querySelectorAll('.copilot-session-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    if (e.target.closest('.btn-del-session')) return;
+                    const sId = item.getAttribute('data-session-id');
+                    if (sId) switchSession(sId);
+                });
+            });
+
+            copilotSessionsList.querySelectorAll('.btn-del-session').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const sId = btn.getAttribute('data-delete-session-id');
+                    if (sId) deleteSession(sId);
+                });
+            });
+        }
+
+        function switchSession(sessionId) {
+            const s = copilotSessions.find(item => item.id === sessionId);
+            if (!s) return;
+            activeSessionId = s.id;
+            if (currentCopilotSessionTitle) {
+                currentCopilotSessionTitle.textContent = s.title || 'Trợ lý AI Gemini';
+            }
+            copilotHistory.length = 0;
+            messagesArea.innerHTML = defaultGreetingHtml;
+
+            if (Array.isArray(s.messages)) {
+                s.messages.forEach(m => {
+                    copilotHistory.push({ role: m.role, content: m.content, created_at: m.created_at });
+                    if (m.role === 'user') {
+                        appendUserMessage(m.content, m.created_at);
+                    } else {
+                        appendAiResponse(m.content, m.created_at);
+                    }
+                });
+            }
+
+            saveSessionsToStorage();
+            renderSessionsList(inputCopilotSessionSearch?.value || '');
+        }
+
+        function createNewSession() {
+            activeSessionId = null;
+            copilotHistory.length = 0;
+            messagesArea.innerHTML = defaultGreetingHtml;
+            if (currentCopilotSessionTitle) {
+                currentCopilotSessionTitle.textContent = 'Đoạn chat mới';
+            }
+            saveSessionsToStorage();
+            renderSessionsList(inputCopilotSessionSearch?.value || '');
+            if (inputArea) {
+                inputArea.value = '';
+                inputArea.focus();
+            }
+        }
+
+        function deleteSession(sessionId) {
+            const s = copilotSessions.find(item => item.id === sessionId);
+            const title = s ? s.title : 'này';
+            PawpalChatbot.showChatbotConfirmModal?.({
+                title: 'Xóa phiên trò chuyện',
+                message: `Bạn có chắc chắn muốn xóa phiên chat "${title}"? Dữ liệu trò chuyện của phiên này sẽ được dọn dẹp sạch sẽ.`,
+                confirmText: 'Xóa phiên',
+                isDanger: true,
+                onConfirm: async () => {
+                    copilotSessions = copilotSessions.filter(item => item.id !== sessionId);
+                    saveSessionsToStorage();
+
+                    try {
+                        const token = await getAdminAuthToken();
+                        const headers = { 'Content-Type': 'application/json' };
+                        if (token) headers['Authorization'] = 'Bearer ' + token;
+                        fetch('/api/admin/copilot/history', {
+                            method: 'DELETE',
+                            headers: headers,
+                            body: JSON.stringify({ session_id: sessionId })
+                        }).catch(e => console.warn('Lỗi xóa session server:', e));
+                    } catch (e) {}
+
+                    if (activeSessionId === sessionId) {
+                        if (copilotSessions.length > 0) {
+                            switchSession(copilotSessions[0].id);
+                        } else {
+                            createNewSession();
+                        }
+                    } else {
+                        renderSessionsList(inputCopilotSessionSearch?.value || '');
+                    }
+                    PawpalChatbot.showToast?.('Đã xóa phiên trò chuyện!', 'success');
+                }
+            });
+        }
+
+        async function loadCopilotHistory() {
+            // 1. Tải tức thì từ localStorage/sessionStorage
+            try {
+                const rawSessions = localStorage.getItem('pawpal_copilot_sessions') || sessionStorage.getItem('pawpal_copilot_sessions');
+                if (rawSessions) {
+                    const parsed = JSON.parse(rawSessions);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        copilotSessions = parsed;
+                    }
+                }
+                const savedActiveId = sessionStorage.getItem('pawpal_copilot_active_session_id');
+                if (savedActiveId && copilotSessions.some(s => s.id === savedActiveId)) {
+                    activeSessionId = savedActiveId;
+                } else if (copilotSessions.length > 0) {
+                    activeSessionId = copilotSessions[0].id;
+                }
+            } catch (e) {}
+
+            renderSessionsList();
+            if (activeSessionId) {
+                switchSession(activeSessionId);
+            } else {
+                createNewSession();
+            }
+
+            // 2. Đồng bộ tải lịch sử trò chuyện vĩnh viễn từ CSDL Supabase
+            try {
+                const token = await getAdminAuthToken();
+                const headers = {};
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                const res = await fetch('/api/admin/copilot/history', { headers });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data.history) && data.history.length > 0) {
+                        const sessionMap = new Map();
+                        data.history.forEach(row => {
+                            const sId = row.metadata?.session_id || 'sess_default';
+                            const sTitle = row.metadata?.session_title || (row.content ? (row.content.slice(0, 35) + '...') : 'Phiên trò chuyện');
+                            if (!sessionMap.has(sId)) {
+                                sessionMap.set(sId, {
+                                    id: sId,
+                                    title: sTitle,
+                                    created_at: row.created_at,
+                                    updated_at: row.created_at,
+                                    messages: []
+                                });
+                            }
+                            const cur = sessionMap.get(sId);
+                            cur.messages.push({ role: row.role, content: row.content, created_at: row.created_at });
+                            cur.updated_at = row.created_at;
+                        });
+
+                        sessionMap.forEach((dbSess, id) => {
+                            const existing = copilotSessions.find(s => s.id === id);
+                            if (!existing) {
+                                copilotSessions.push(dbSess);
+                            } else if (dbSess.messages.length > existing.messages.length) {
+                                existing.messages = dbSess.messages;
+                                existing.updated_at = dbSess.updated_at;
+                            }
+                        });
+
+                        copilotSessions.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+                        saveSessionsToStorage();
+                        renderSessionsList(inputCopilotSessionSearch?.value || '');
+
+                        if (activeSessionId && copilotSessions.some(s => s.id === activeSessionId)) {
+                            switchSession(activeSessionId);
+                        } else if (copilotSessions.length > 0) {
+                            switchSession(copilotSessions[0].id);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn('[Copilot Frontend] Không thể tải lịch sử từ máy chủ:', err);
+            }
+        }
+
         async function handleSend() {
             if (isSending) return;
             const text = inputArea.value.trim();
             if (!text) return;
             isSending = true;
             sendBtn.disabled = true;
-            appendUserMessage(text);
+            const nowIso = new Date().toISOString();
+
+            // Khởi tạo phiên mới nếu chưa có phiên active
+            let curSession = copilotSessions.find(s => s.id === activeSessionId);
+            if (!curSession) {
+                const sessionTitle = text.length > 36 ? text.slice(0, 36) + '...' : text;
+                const newId = 'sess_' + Date.now();
+                curSession = {
+                    id: newId,
+                    title: sessionTitle,
+                    created_at: nowIso,
+                    updated_at: nowIso,
+                    messages: []
+                };
+                copilotSessions.unshift(curSession);
+                activeSessionId = newId;
+                if (currentCopilotSessionTitle) {
+                    currentCopilotSessionTitle.textContent = sessionTitle;
+                }
+            }
+
+            appendUserMessage(text, nowIso);
             inputArea.value = '';
 
-            copilotHistory.push({ role: 'user', content: text });
+            curSession.messages.push({ role: 'user', content: text, created_at: nowIso });
+            curSession.updated_at = nowIso;
+            copilotHistory.push({ role: 'user', content: text, created_at: nowIso });
+            saveSessionsToStorage();
+            renderSessionsList(inputCopilotSessionSearch?.value || '');
+
             const thinkingId = appendAiThinking();
+            const token = await getAdminAuthToken();
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
 
             try {
-                const res = await fetch('/api/chat', {
+                const res = await fetch('/api/admin/copilot', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: headers,
                     body: JSON.stringify({
-                        messages: copilotHistory,
-                        systemPrompt: 'Bạn là PawPal AI Copilot - Trợ lý quản trị viên nội bộ cho hệ thống PawPal. Trả lời chính xác, ngắn gọn, chuẩn nghiệp vụ CSKH thú cưng bằng Tiếng Việt.'
+                        isCopilot: true,
+                        sessionId: curSession.id,
+                        sessionTitle: curSession.title,
+                        messages: copilotHistory
                     })
                 });
 
@@ -111,30 +626,35 @@
                 if (res.ok) {
                     const data = await res.json();
                     const reply = data.reply || data.text || data.response || 'Đã xử lý yêu cầu thành công.';
-                    copilotHistory.push({ role: 'assistant', content: reply });
-                    appendAiResponse(reply);
+                    const replyIso = new Date().toISOString();
+                    curSession.messages.push({ role: 'assistant', content: reply, created_at: replyIso });
+                    curSession.updated_at = replyIso;
+                    copilotHistory.push({ role: 'assistant', content: reply, created_at: replyIso });
+                    saveSessionsToStorage();
+                    renderSessionsList(inputCopilotSessionSearch?.value || '');
+                    appendAiResponse(reply, replyIso);
                 } else {
-                    const lower = text.toLowerCase();
-                    let response = '';
-                    if (lower.includes('lịch hẹn') || lower.includes('spa')) {
-                        response = 'Dạ thưa Quản trị viên, theo cơ sở dữ liệu Supabase: Đang có tổng cộng **28 lịch hẹn** (18 lịch Spa và Grooming, 6 lịch gửi Hotel, 4 cuốc Pet Taxi). Có 2 ca đang thực hiện và 3 ca sắp tới trong khung giờ 11:00 - 13:00.';
-                    } else if (lower.includes('hết hàng') || lower.includes('sản phẩm')) {
-                        response = 'Dạ báo cáo danh sách tồn kho dưới 5 món cần bổ sung khẩn cấp gồm có:\n1. **Pate Royal Canin Kitten 85g**: còn 2 gói.\n2. **Hạt Ganador Puppy 3kg**: còn 3 bao.\n3. **Sữa tắm trị ve Joyce và Dolls 400ml**: còn 4 chai.';
-                    } else if (lower.includes('xin lỗi') || lower.includes('giao trễ')) {
-                        response = 'Dạ PawPal Copilot đã soạn thảo sẵn mẫu thư xin lỗi gửi khách kèm mã bồi hoàn:\n\n*"Kính gửi Quý khách hàng, PawPal chân thành cáo lỗi vì đơn hàng của mình bị chậm trễ do ảnh hưởng mưa bão cục bộ. Đơn vị vận chuyển đang ưu tiên giao gấp trong chiều nay. Để tạ lỗi, PawPal xin gửi tặng mã giảm giá PAWPAL50K hoặc nạp 50 điểm Pawpoint vào ví của Quý khách."*';
-                    } else if (lower.includes('khiếu nại') || lower.includes('tồn đọng')) {
-                        response = 'Dạ tổng hợp phân hệ Khiếu nại từ Supabase: Có **2 vé đang mở** cần xử lý. Đã có chuyên viên phụ trách và chưa có ca nào quá hạn xử lý.';
-                    } else {
-                        response = `Dạ Copilot đã nhận lệnh: "${text}". Dữ liệu được bảo vệ an toàn trên Supabase và mô hình Gemini AI.`;
-                    }
-                    copilotHistory.push({ role: 'assistant', content: response });
-                    appendAiResponse(response);
+                    const errData = await res.json().catch(() => ({}));
+                    const errMsg = errData.error || errData.message || 'Không thể kết nối đến máy chủ AI Copilot.';
+                    inputArea.value = text;
+                    curSession.messages.pop();
+                    copilotHistory.pop();
+                    saveSessionsToStorage();
+                    renderSessionsList(inputCopilotSessionSearch?.value || '');
+                    appendAiResponse(`[Lỗi] ${errMsg}`);
+                    PawpalChatbot.showToast?.(errMsg, 'error');
                 }
             } catch (err) {
                 console.error('Lỗi khi gọi API Copilot:', err);
                 const thinkingEl = document.getElementById(thinkingId);
                 if (thinkingEl) thinkingEl.remove();
-                appendAiResponse(`Dạ Copilot đã ghi nhận yêu cầu: "${text}". Hệ thống đang xử lý tác vụ tương ứng trên Supabase Live DB.`);
+                inputArea.value = text;
+                curSession.messages.pop();
+                copilotHistory.pop();
+                saveSessionsToStorage();
+                renderSessionsList(inputCopilotSessionSearch?.value || '');
+                appendAiResponse('Không thể kết nối tới máy chủ AI Copilot. Vui lòng kiểm tra lại kết nối mạng và thử lại.');
+                PawpalChatbot.showToast?.('Lỗi kết nối tới AI Copilot', 'error');
             } finally {
                 isSending = false;
                 sendBtn.disabled = false;
@@ -159,44 +679,40 @@
             });
         });
 
+        btnNewCopilotSession?.addEventListener('click', () => {
+            createNewSession();
+        });
+
+        inputCopilotSessionSearch?.addEventListener('input', (e) => {
+            renderSessionsList(e.target.value);
+        });
+
         clearBtn?.addEventListener('click', () => {
-            PawpalChatbot.showChatbotConfirmModal?.({
-                title: 'Làm mới hội thoại AI',
-                message: 'Bạn có chắc chắn muốn xóa toàn bộ lịch sử trò chuyện nội bộ với AI?',
-                confirmText: 'Làm mới',
-                isDanger: true,
-                onConfirm: () => {
-                    copilotHistory.length = 0;
-                    messagesArea.innerHTML = `
-                        <div class="copilot-msg msg-ai">
-                            <div class="copilot-msg-header">
-                                <span class="copilot-sender-name">PawPal Copilot (Nội bộ)</span>
-                                <span class="copilot-msg-time">Vừa xong</span>
-                            </div>
-                            <div class="copilot-msg-bubble">
-                                Đã làm mới phiên hội thoại. Tôi có thể hỗ trợ gì cho bạn ngay lúc này?
-                            </div>
-                        </div>
-                    `;
-                    PawpalChatbot.showToast?.('Đã làm mới phiên hội thoại AI Copilot!', 'success');
-                }
-            });
+            if (!activeSessionId) {
+                PawpalChatbot.showToast?.('Phiên chat hiện tại đang trống.', 'info');
+                return;
+            }
+            deleteSession(activeSessionId);
         });
 
         syncRagBtn?.addEventListener('click', async () => {
-            PawpalChatbot.showToast?.('Đang đồng bộ vector tri thức RAG từ Supabase...', 'info');
+            PawpalChatbot.showToast?.('Đang kiểm tra kho tri thức RAG từ Supabase...', 'info');
             try {
                 if (supabase) {
                     const { count, error } = await supabase.from('document_embeddings').select('*', { count: 'exact', head: true });
                     if (error) throw error;
-                    PawpalChatbot.showToast?.(`Đã đồng bộ thành công ${count || 0} tài liệu tri thức RAG từ Supabase Vector Store!`, 'success');
+                    PawpalChatbot.showToast?.(`Kho tri thức hiện có ${count || 0} tài liệu vector trên Supabase!`, 'success');
                 } else {
-                    PawpalChatbot.showToast?.('Đã đồng bộ thành công các tài liệu tri thức RAG mới nhất từ Supabase Vector Store!', 'success');
+                    PawpalChatbot.showToast?.('Chưa khởi tạo kết nối Supabase Client.', 'error');
                 }
             } catch (e) {
-                PawpalChatbot.showToast?.('Đã kết nối và đồng bộ xong cơ sở tri thức RAG Supabase!', 'success');
+                console.error('[Chatbot] Lỗi kiểm tra kho tri thức:', e);
+                PawpalChatbot.showToast?.('Không thể kết nối kho tri thức RAG: ' + (e.message || 'Lỗi mạng'), 'error');
             }
         });
+
+        // Khởi động nạp lịch sử trò chuyện
+        loadCopilotHistory();
     }
 
     PawpalChatbot.subtabs.copilot = {

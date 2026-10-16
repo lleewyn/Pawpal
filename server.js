@@ -172,6 +172,100 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
+// Route chuyên biệt cho PawPal AI Copilot Quản trị viên (G3-01)
+app.post('/api/admin/copilot', async (req, res) => {
+    try {
+        req.body = req.body || {};
+        req.body.isCopilot = true;
+        delete require.cache[require.resolve('./scripts/api/chat.js')];
+        const handler = require('./scripts/api/chat.js');
+        await handler(req, res);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Lấy lịch sử trò chuyện Copilot của nhân sự
+app.get('/api/admin/copilot/history', async (req, res) => {
+    try {
+        req.body = req.body || {};
+        req.body.isCopilot = true;
+        req.body.action = 'GET_COPILOT_HISTORY';
+        delete require.cache[require.resolve('./scripts/api/chat.js')];
+        const handler = require('./scripts/api/chat.js');
+        await handler(req, res);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Xóa lịch sử trò chuyện Copilot của nhân sự
+app.delete('/api/admin/copilot/history', async (req, res) => {
+    try {
+        req.body = req.body || {};
+        req.body.isCopilot = true;
+        req.body.action = 'CLEAR_COPILOT_HISTORY';
+        delete require.cache[require.resolve('./scripts/api/chat.js')];
+        const handler = require('./scripts/api/chat.js');
+        await handler(req, res);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Route chuyên biệt cho Thao tác có xác nhận Chatbot Admin (G4)
+app.post('/api/admin/chat-actions', async (req, res) => {
+    try {
+        delete require.cache[require.resolve('./scripts/api/chat_actions.js')];
+        const chatActionsApi = require('./scripts/api/chat_actions.js');
+        await chatActionsApi.dispatchChatAction(req, res);
+    } catch (error) {
+        console.error('[Server] Chat Actions Route error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Route chuyên biệt cho Bộ Runner Đánh giá Kiểm thử Toàn luồng Chatbot (G5-01)
+app.post('/api/admin/chat/evaluations', async (req, res) => {
+    try {
+        delete require.cache[require.resolve('./scripts/api/chat_evaluations.js')];
+        const chatEvaluationsApi = require('./scripts/api/chat_evaluations.js');
+        await chatEvaluationsApi.runEvaluations(req, res);
+    } catch (error) {
+        console.error('[Server] Chat Evaluations Route error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Routes Cấu hình & Feature Toggles Chatbot (G5-05)
+app.get('/api/admin/chat/config', (req, res) => {
+    try {
+        delete require.cache[require.resolve('./scripts/api/chat_config.js')];
+        const { getChatConfig } = require('./scripts/api/chat_config.js');
+        res.status(200).json({ ok: true, config: getChatConfig() });
+    } catch (error) {
+        console.error('[Server] Chat Config GET error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.post('/api/admin/chat/config', async (req, res) => {
+    try {
+        delete require.cache[require.resolve('./scripts/api/chat_config.js')];
+        const { updateChatConfig } = require('./scripts/api/chat_config.js');
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) return res.status(401).json({ error: 'Yêu cầu phiên quản trị.' });
+        const updated = updateChatConfig(req.body);
+        res.status(200).json({ ok: true, config: updated });
+    } catch (error) {
+        console.error('[Server] Chat Config POST error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Route cho Cổng thanh toán VNPAY
 app.post('/api/vnpay/create-payment-url', async (req, res) => {
     try {

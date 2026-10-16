@@ -402,46 +402,9 @@
                         messages: mappedMsgs
                     };
                 });
-            } else if (profsRes.data && profsRes.data.length > 0) {
-                // Tạo phiên mẫu phong phú nếu chưa có lịch sử hội thoại trong CSDL
-                realConvList = profsRes.data.slice(0, 6).map((p, idx) => {
-                    const cId = p.customer_id || p.id;
-                    const points = pointsMap[cId] || (idx === 0 ? 1250 : 250);
-                    return {
-                        id: `conv-demo-${idx + 1}`,
-                        isRealDb: false,
-                        customerId: cId,
-                        customerName: p.full_name || `Khách hàng ${idx + 1}`,
-                        phone: '0901234567',
-                        tier: computeCustomerTier(points),
-                        pawpoints: points,
-                        unreadCount: idx === 0 ? 1 : 0,
-                        updatedAt: '10:45',
-                        sentimentLevel: idx === 0 ? 4 : 2,
-                        sentimentText: idx === 0 ? 'Mức độ 4: Tức giận cao độ' : 'Mức độ 2: Trung tính',
-                        sentimentTrend: idx === 0 ? 'escalating' : 'stable',
-                        isVipAttention: idx === 0,
-                        isHandover: idx === 1,
-                        isUrgent: idx === 0,
-                        waitingSeconds: idx === 0 ? 145 : 30,
-                        category: idx === 0 ? 'urgent' : (idx === 1 ? 'active' : 'all'),
-                        aiSummary: idx === 0 ? 'Khách phản ánh đơn hàng SP-2026-003 chậm trễ so với dự kiến giao.' : 'Tư vấn thông tin dịch vụ chăm sóc thú cưng.',
-                        internalNotes: '',
-                        recentOrder: (ordersMap[cId] || [])[0] ? { id: ordersMap[cId][0].order_code || ordersMap[cId][0].id, status: ordersMap[cId][0].order_status } : null,
-                        recentBooking: (apptsMap[cId] || [])[0] ? { id: apptsMap[cId][0].appointment_code || apptsMap[cId][0].id, status: apptsMap[cId][0].appointment_status } : null,
-                        openTickets: (ticketsMap[cId] || []).filter(t => t.status !== 'completed' && t.status !== 'resolved'),
-                        pets: petsMap[cId] || [{ name: 'Bé cưng', breed: 'Mèo', notes: 'Bình thường' }],
-                        smartResponses: [
-                            { tag: 'Đồng cảm và Xoa dịu', text: `Dạ PawPal thành thật xin lỗi sen và bé vì sự bất tiện này! Em xin phép ưu tiên xử lý ngay cho sen ạ.` },
-                            { tag: 'Tặng điểm tạ lỗi', text: `Dạ để tạ lỗi, PawPal xin gửi tặng 50 điểm Pawpoint vào ví tài khoản của sen để sử dụng cho lần mua sắm tiếp theo ạ.` },
-                            { tag: 'Hỗ trợ tức thì', text: `Dạ em đã chuyển thông tin đến bộ phận chuyên môn, chuyên viên sẽ gọi điện hỗ trợ trực tiếp cho sen trong 3 phút nữa ạ.` }
-                        ],
-                        messages: [
-                            { id: `msg-1`, sender: 'user', time: '10:40', text: 'Chào shop, mình muốn hỏi thông tin về dịch vụ spa cho bé.' },
-                            { id: `msg-2`, sender: 'bot', agentName: 'PawPal Bot', time: '10:41', text: 'Dạ PawPal xin chào sen! Shop có các gói spa tắm sấy, cắt tỉa và vệ sinh toàn diện cho bé ạ.' }
-                        ]
-                    };
-                });
+            } else {
+                // Không có hội thoại nào trong CSDL: giữ danh sách rỗng, không tạo conv-demo-* giả
+                realConvList = [];
             }
 
             PawpalChatbot.state.liveConversations = realConvList;
