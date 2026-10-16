@@ -15,7 +15,73 @@
         liveStaffList: [],
         liveCustomerDirectory: [],
         livePetDirectory: [],
-        selectedBookingId: sessionStorage.getItem('pawpal_admin_service_selected_id') || 'BKG-1001'
+        selectedBookingId: sessionStorage.getItem('pawpal_admin_service_selected_id') || null
+    };
+
+    function assertHandoverReady(booking) {
+        if(booking?.status!=='in_progress') throw new Error('Chỉ hoàn tất ca đang thực hiện.');
+        const intake=booking.intakeRecord;
+        if(!intake || !Number.isFinite(Date.parse(intake.recordedAt)) || !/^[0-9a-f-]{36}$/i.test(intake.staffId||'') || !(intake.actualWeight>0)) throw new Error('Ca chưa có biên bản tiếp nhận hợp lệ đã lưu.');
+    }
+    PawpalServices.assertHandoverReady=assertHandoverReady;
+    function recordPattern(kind) { return new RegExp('\\[Pawpal '+kind+' v1\\]\\n([\\s\\S]*?)\\n\\[\\/Pawpal '+kind+'\\]\\n?'); }
+    function readBookingRecord(note,kind) {
+        const match=String(note||'').match(recordPattern(kind));
+        if(!match) return null;
+        return Object.fromEntries(match[1].split('\n').filter(Boolean).map(line=>line.split('\t').map(decodeURIComponent)));
+    }
+    const recordSaves=new Set();
+    PawpalServices.saveBookingRecord=async function(booking,kind,record,payload) {
+        if(recordSaves.has(booking.dbId)) throw new Error('Đang lưu hồ sơ, vui lòng chờ.');
+        recordSaves.add(booking.dbId);
+        try {
+            if(!['intake','handover'].includes(kind)) throw new Error('Loại biên bản không hợp lệ.');
+            const block='[Pawpal '+kind+' v1]\n'+Object.entries(record).map(pair=>pair.map(value=>encodeURIComponent(String(value))).join('\t')).join('\n')+'\n[/Pawpal '+kind+']\n';
+            const note=block+String(booking.rawNote||'').replace(recordPattern(kind),'');
+            let query=window.getSupabaseClient().from('appointment').update({...payload,note}).eq('id',booking.dbId).eq('appointment_status',booking.rawStatus).eq('total_price',booking.total);
+            query=booking.rawNote==null ? query.is('note',null) : query.eq('note',booking.rawNote);
+            const {data,error}=await query.select('id,appointment_status,note,staff_id,payment_status,total_price').single();
+            if(error) throw error;
+            if(!data?.id || data.note!==note || data.appointment_status!==payload.appointment_status) throw new Error('Không xác minh được biên bản đã lưu.');
+            if(payload.staff_id && data.staff_id!==payload.staff_id) throw new Error('Không xác minh được nhân viên tiếp nhận.');
+            await PawpalServices.loadServicesData({force:true});
+            PawpalServices.subtabs.bookings?.renderBookingsTable();
+            PawpalServices.subtabs.bookings?.updateKPIs();
+            PawpalServices.subtabs.detail?.renderBookingDetail(booking.id);
+        } finally {recordSaves.delete(booking.dbId);}
+    };
+    const financePattern = /\[Pawpal charges v1\]\n([\s\S]*?)\n\[\/Pawpal charges\]\n?/;
+    function readCharges(note) {
+        const match = String(note || '').match(financePattern);
+        if (!match) return [];
+        return match[1].split('\n').filter(Boolean).map(line => {
+            const [id, kind, amount, name, reason, staff, serviceId] = line.split('\t').map(decodeURIComponent);
+            if (!['surcharge', 'service'].includes(kind) || !Number.isFinite(Number(amount)) || Number(amount) < 0) throw new Error('Chi tiết chi phí đã lưu không hợp lệ.');
+            return { id, kind, amount: Number(amount), name, reason, staff, serviceId };
+        });
+    }
+    PawpalServices.readCharges = readCharges;
+    const savingCharges = new Set();
+    PawpalServices.saveCharges = async function(booking, charges) {
+        if (savingCharges.has(booking.dbId)) throw new Error('Đang lưu chi phí, vui lòng chờ.');
+        savingCharges.add(booking.dbId);
+        try {
+            if (!['pending', 'confirmed', 'in_progress'].includes(booking.status) || booking.paymentStatus === 'Đã thanh toán') throw new Error('Ca đã kết thúc hoặc đã thanh toán, không thể đổi chi phí.');
+            if (charges.some(c => !Number.isSafeInteger(c.amount) || c.amount <= 0 || !c.name)) throw new Error('Số tiền phải là số nguyên dương.');
+            const db = window.getSupabaseClient();
+            const oldCharges = readCharges(booking.rawNote);
+            const total = Number(booking.total) - oldCharges.reduce((sum,c)=>sum+c.amount,0) + charges.reduce((sum,c)=>sum+c.amount,0);
+            const block = charges.length ? '[Pawpal charges v1]\n' + charges.map(c => [c.id,c.kind,c.amount,c.name,c.reason||'',c.staff||'',c.serviceId||''].map(value=>encodeURIComponent(String(value))).join('\t')).join('\n') + '\n[/Pawpal charges]\n' : '';
+            const note = block + String(booking.rawNote || '').replace(financePattern, '');
+            let query = db.from('appointment').update({ note: note || null, total_price: total }).eq('id',booking.dbId).eq('appointment_status',booking.rawStatus).eq('total_price',booking.total);
+            query = booking.rawNote == null ? query.is('note',null) : query.eq('note',booking.rawNote);
+            const { data,error } = await query.select('id,total_price,note').single();
+            if (error) throw error;
+            if (!data?.id || Number(data.total_price)!==total || (data.note||'')!==note) throw new Error('Không xác minh được chi phí đã lưu.');
+            await PawpalServices.loadServicesData({force:true});
+            PawpalServices.subtabs.bookings?.renderBookingsTable();
+            PawpalServices.subtabs.detail?.renderBookingDetail(booking.id);
+        } finally { savingCharges.delete(booking.dbId); }
     };
 
     // Helper: Chuyển chuỗi tiếng Việt không dấu
@@ -225,11 +291,13 @@
         try {
             PawpalServices.state.loadError = null;
             console.log('[PawpalServices] Đang nạp dữ liệu từ Supabase Live Database...');
-            const [appRes, svcRes, priceRes, revRes, careLogRes, staffRes, custRes, petRes] = await Promise.all([
+            const [appRes, svcRes, priceRes, revRes, careLogRes, staffRes, custRes, petRes, profileRes] = await Promise.all([
                 db.from('appointment')
                   .select(`
                       id, 
-                      appointment_code, 
+                      appointment_code,
+                      customer_id,
+                      pet_id,
                       appointment_date, 
                       appointment_time, 
                       appointment_status, 
@@ -277,7 +345,8 @@
                       customer_id,
                       customer:customer_id (id, phone_main, customer_profile (full_name))
                   `)
-                  .order('pet_name', { ascending: true })
+                  .order('pet_name', { ascending: true }),
+                db.from('customer_profile').select('customer_id, full_name')
             ]);
 
             for (const result of [appRes, svcRes, revRes]) { if (result.error) throw result.error; }
@@ -288,6 +357,13 @@
                 return profile?.full_name || '';
             };
             const customerLookup = new Map((custRes.data || []).map(customer => [customer.id, customer]));
+            // Profiles can remain readable when the account join is restricted by RLS.
+            // Match the appointment's customer ID directly; never infer a different owner.
+            for (const profile of profileRes.data || []) {
+                if (!profile.customer_id || !profile.full_name?.trim()) continue;
+                const customer = customerLookup.get(profile.customer_id) || { id: profile.customer_id };
+                customerLookup.set(profile.customer_id, { ...customer, customer_profile: profile });
+            }
 
             if (!appRes.error && Array.isArray(appRes.data)) {
                 PawpalServices.state.bookingsData = appRes.data.map((item, idx) => {
@@ -304,9 +380,9 @@
                     else if (s === 'COMPLETED') status = 'completed';
                     else if (s === 'CANCELLED') status = 'cancelled';
 
-                    const linkedCustomer = item.customer || item.pet_profile?.customer || customerLookup.get(item.customer_id) || customerLookup.get(item.pet_profile?.customer_id);
-                    const customerName = getCustomerProfileName(linkedCustomer) || 'Khách vãng lai';
-                    const phone = linkedCustomer?.phone_main || '—';
+                    const linkedCustomer = customerLookup.get(item.customer_id);
+                    const customerName = getCustomerProfileName(linkedCustomer) || getCustomerProfileName(item.customer) || 'Chưa cập nhật tên khách hàng';
+                    const phone = linkedCustomer?.phone_main || item.customer?.phone_main || '—';
                     const petName = item.pet_profile?.pet_name || 'Pet cưng';
                     const petBreed = item.pet_profile?.breed || 'Thú cưng';
                     const serviceName = item.service?.service_name || 'Dịch vụ Spa';
@@ -315,18 +391,42 @@
                     const petWeight = Number(item.pet_profile?.weight) > 0 ? `${item.pet_profile.weight} kg` : 'Chưa cập nhật';
                     const petAllergy = item.pet_profile?.allergy && !/^(không|none)$/i.test(item.pet_profile.allergy.trim()) ? item.pet_profile.allergy : (item.note && item.note.toLowerCase().includes('dị ứng') ? item.note : null);
 
-                    const relatedLogs = careLogs.filter(cl => cl.appointment_id === item.id);
+                    const taxiMatch = String(item.note || '').match(/\[Pawpal Taxi v1\]\nĐón: ([^\n]+)\nTrả: ([^\n]+)\nHình thức: ([^\n]+)\nCự ly: ([0-9.]+)\nBảng giá: ([^\n]+)\n\[\/Pawpal Taxi\]$/);
+                    const taxiInfo = cat === 'Taxi' && taxiMatch ? {
+                        pickupAddress: taxiMatch[1], dropoffAddress: taxiMatch[2],
+                        tripType: taxiMatch[3], distanceKm: Number(taxiMatch[4])
+                    } : {};
+                    const intake=readBookingRecord(item.note,'intake');
+                    const intakeRecord=intake ? {...intake,actualWeight:Number(intake.actualWeight),belongings:(intake.belongings||'').split(', ').filter(Boolean),proofPhotos:[]} : null;
+                    const charges = readCharges(item.note);
+                    const relatedLogs = careLogs.filter(cl => cl.appointment_id === item.id).map(log => {
+                        const author = String(log.description || '').match(/\n?Nhân viên: (.*) \(([0-9a-f-]{36})\)$/i);
+                        return { ...log,
+                            step_name: log.care_action?.action_name || 'Ghi nhận chăm sóc',
+                            ktv: author?.[1] || '',
+                            note: author ? String(log.description).slice(0,author.index).trim() : (log.description || ''),
+                            images: (log.care_log_media || []).map(media => media.media_url)
+                        };
+                    });
 
                     return {
                         id: item.appointment_code || 'BKG-' + (1000 + idx),
                         dbId: item.id,
-                        userId: item.customer?.id || 'USER-001',
+                        rawStatus: item.appointment_status,
+                        staffId: item.staff?.id || null,
+                        rawNote: item.note,
+                        petDbId: item.pet_id,
+                        serviceDbId: item.service?.id,
+                        serviceCategory: item.service?.service_category,
+                        userId: item.customer_id || null,
                         customerName,
                         phone,
+                        ...taxiInfo,
+                        customerNote: taxiMatch ? String(item.note || '').slice(0, taxiMatch.index).replace(financePattern, '').replace(recordPattern('intake'),'').replace(recordPattern('handover'),'').trim() : String(item.note || '').replace(financePattern, '').replace(recordPattern('intake'),'').replace(recordPattern('handover'),'').trim(),
                         petName,
                         petBreed,
                         petId: item.pet_profile?.pet_code || 'PET-001',
-                        petWeight,
+                        petWeight: intakeRecord ? `${intakeRecord.actualWeight} kg` : petWeight,
                         petAge: item.pet_profile?.date_of_birth ? (() => { const months = Math.floor((Date.now()-Date.parse(item.pet_profile.date_of_birth))/2629800000); return months >= 12 ? `${Math.floor(months/12)} tuổi` : months >= 0 ? `${months} tháng` : 'Chưa cập nhật'; })() : 'Chưa cập nhật',
                         petAlert: petAllergy,
                         category: cat,
@@ -336,7 +436,13 @@
                         date: item.appointment_date || '',
                         time: item.appointment_time ? item.appointment_time.substring(0, 5) : '',
                         staff,
-                        price: item.total_price || 0,
+                        intakeRecord,
+                        handoverRecord: readBookingRecord(item.note,'handover'),
+                        originalWeight: petWeight,
+                        charges,
+                        surcharges: charges.filter(c=>c.kind==='surcharge'),
+                        accompanyingServices: charges.filter(c=>c.kind==='service').map(c=>({...c,price:c.amount,note:c.reason})),
+                        price: Number(item.total_price || 0) - charges.reduce((sum,c)=>sum+c.amount,0),
                         total: item.total_price || 0,
                         paymentStatus: item.payment_status === 'PAID' ? 'Đã thanh toán' : 'Chưa thu',
                         status,
@@ -426,7 +532,10 @@
                 PawpalServices.state.liveStaffList = staffRes.data;
             }
             if (!custRes.error && Array.isArray(custRes.data)) {
-                PawpalServices.state.liveCustomerDirectory = custRes.data;
+                PawpalServices.state.liveCustomerDirectory = Array.from(customerLookup.values()).map(customer => ({
+                    ...customer,
+                    pet_profile: (petRes.data || []).filter(pet => pet.customer_id === customer.id)
+                }));
             }
             if (petRes && !petRes.error && Array.isArray(petRes.data)) {
                 PawpalServices.state.livePetDirectory = petRes.data;
@@ -501,7 +610,7 @@
         }
 
         if (subtabId === 'tab-service-detail') {
-            const bId = PawpalServices.state.selectedBookingId || 'BKG-1001';
+            const bId = PawpalServices.state.selectedBookingId || null;
             updateBreadcrumb(bId);
             if (PawpalServices.subtabs.detail?.renderBookingDetail) {
                 PawpalServices.subtabs.detail.renderBookingDetail(bId);
@@ -545,6 +654,16 @@
 
         // Tải dữ liệu ban đầu từ Supabase
         await loadServicesData();
+
+        if (sessionStorage.getItem('pawpal_admin_services_open_booking_modal') === 'true') {
+            const petCode = sessionStorage.getItem('pawpal_admin_selected_pet_code');
+            const pet = window.PawpalPets?.state?.petsData?.[petCode];
+            if (pet && PawpalServices.subtabs.bookings?.openForPet) {
+                switchSubtab('tab-service-bookings', false);
+                PawpalServices.subtabs.bookings.openForPet(pet);
+                sessionStorage.removeItem('pawpal_admin_services_open_booking_modal');
+            }
+        }
 
         // Khởi tạo các subtab con
         if (PawpalServices.subtabs.bookings?.renderBookingsTable) {

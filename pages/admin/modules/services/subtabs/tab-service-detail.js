@@ -3,6 +3,7 @@
     'use strict';
 
     const PawpalServices = window.PawpalServices = window.PawpalServices || {};
+    const escapeTripText = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     PawpalServices.subtabs = PawpalServices.subtabs || {};
 
     let currentEditingCarelogStepIdx = null;
@@ -18,8 +19,26 @@
 
     function renderBookingDetail(bookingId) {
         const bookingsData = PawpalServices.state?.bookingsData || [];
-        const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId) || bookingsData[0];
-        if (!booking) return;
+        const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
+        const section = document.getElementById('subtab-tab-service-detail');
+        const card = section?.querySelector('.service-detail-card');
+        const state = document.getElementById('serviceDetailState');
+        if (!booking) {
+            if (card) card.style.display = 'none';
+            if (state) {
+                state.style.display = 'block';
+                state.textContent = PawpalServices.state.loadError
+                    ? 'Không thể tải hồ sơ lịch hẹn. Vui lòng tải lại trang.'
+                    : !PawpalServices.state.isLoaded ? 'Đang tải hồ sơ lịch hẹn…'
+                    : !bookingId ? 'Chọn một lịch hẹn từ danh sách để xem hồ sơ.'
+                    : 'Không tìm thấy lịch hẹn đã chọn hoặc bạn chưa có quyền xem.';
+            }
+            PawpalServices.updateBreadcrumb?.(null);
+            return;
+        }
+        if (card) card.style.display = '';
+        if (state) state.style.display = 'none';
+        PawpalServices.updateBreadcrumb?.(booking.id);
 
         PawpalServices.state.selectedBookingId = booking.id;
         sessionStorage.setItem('pawpal_admin_service_selected_id', booking.id);
@@ -36,11 +55,19 @@
                 metaEl.textContent = `Lưu trú: ${booking.checkInDate || booking.date} ➔ ${booking.checkOutDate || 'Chưa cập nhật'} (${booking.nights || 'Chưa cập nhật'} đêm) | Phòng: ${booking.roomCode || 'Chưa cập nhật'} | Cơ sở: ${booking.branch || 'PawPal Quận 1'}`;
             } else if (booking.category === 'Taxi') {
                 const shortPickup = booking.pickupAddress ? (booking.pickupAddress.length > 22 ? booking.pickupAddress.substring(0, 22) + '...' : booking.pickupAddress) : 'Đón tận nơi';
-                metaEl.textContent = `Giờ đón: ${booking.time} - ${booking.date} | ${booking.tripType || '2 chiều'} | Lộ trình: ${shortPickup} ➔ Q.1 | Cơ sở: ${booking.branch || 'PawPal Quận 1'}`;
+                metaEl.textContent = `Giờ đón: ${booking.time} - ${booking.date} | ${booking.tripType || 'Chưa cập nhật'} | Lộ trình: ${shortPickup} ➔ ${booking.dropoffAddress || 'Chưa cập nhật'}`;
             } else {
                 metaEl.textContent = `Thời gian hẹn: ${booking.time} - ${booking.date} | Cơ sở: ${booking.branch || 'PawPal Quận 1'}`;
             }
         }
+
+        if (metaEl) {
+            const formatRecordedAt = value => new Intl.DateTimeFormat('vi-VN', {timeZone:'Asia/Bangkok',dateStyle:'short',timeStyle:'short'}).format(new Date(value));
+            if (booking.intakeRecord?.recordedAt) metaEl.textContent += ` | Tiếp nhận: ${formatRecordedAt(booking.intakeRecord.recordedAt)}`;
+            if (booking.handoverRecord?.recordedAt) metaEl.textContent += ` | Bàn giao: ${formatRecordedAt(booking.handoverRecord.recordedAt)}`;
+        }
+        const belongingsSummary = document.getElementById('detailBelongingsText');
+        if (belongingsSummary) belongingsSummary.textContent = booking.intakeRecord?.belongingsNote || booking.intakeRecord?.belongings?.join(', ') || 'Không có';
 
         // Cảnh báo an toàn Pet Alert
         const petAlertBanner = document.getElementById('detailPetAlertBanner');
@@ -89,9 +116,9 @@
 
             if (btnConfirm) {
                 btnConfirm.addEventListener('click', () => {
-                    const confirmAction = () => {
+                    const confirmAction = async () => {
                         if (PawpalServices.subtabs.bookings?.updateBookingStatus) {
-                            PawpalServices.subtabs.bookings.updateBookingStatus(booking.id, 'confirmed');
+                            await PawpalServices.subtabs.bookings.updateBookingStatus(booking.id, 'confirmed');
                         }
                         renderBookingDetail(booking.id);
                     };
@@ -99,7 +126,7 @@
                     if (typeof PawpalServices.showConfirmModal === 'function') {
                         PawpalServices.showConfirmModal({
                             title: 'Xác nhận lịch hẹn dịch vụ',
-                            message: `Bạn có chắc chắn muốn xác nhận tiếp nhận lịch hẹn ${booking.id} của bé ${booking.pet_name || 'cưng'} không?`,
+                            message: `Bạn có chắc chắn muốn xác nhận tiếp nhận lịch hẹn ${booking.id} của bé ${booking.petName || 'cưng'} không?`,
                             acceptText: 'Xác nhận lịch',
                             onAccept: confirmAction
                         });
@@ -139,9 +166,15 @@
             if (btnComplaint) {
                 btnComplaint.addEventListener('click', () => {
                     sessionStorage.setItem('pawpal_admin_complaint_from_booking', booking.id);
+                    sessionStorage.setItem('pawpal_admin_active_module', 'Khiếu nại');
+                    sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-services');
                     window.location.hash = '#tab-complaint-services';
-                    const complaintNav = document.querySelector('.admin-nav-item[data-module="Khiếu nại"]');
-                    if (complaintNav) complaintNav.click();
+                    const complaintBtn = Array.from(document.querySelectorAll('.sidebar-menu-btn')).find(b => b.getAttribute('data-title') === 'Khiếu nại');
+                    if (complaintBtn) {
+                        complaintBtn.click();
+                    } else if (window.PawpalAdmin?.loadModule) {
+                        window.PawpalAdmin.loadModule('Khiếu nại');
+                    }
                 });
             }
         }
@@ -149,6 +182,7 @@
         // Gắn nút đổi KTV cạnh dòng thông tin KTV
         const btnQuickChangeStaff = document.getElementById('btnDetailQuickChangeStaff');
         if (btnQuickChangeStaff) {
+            btnQuickChangeStaff.disabled = !['pending', 'confirmed', 'in_progress'].includes(booking.status);
             btnQuickChangeStaff.onclick = () => {
                 if (PawpalServices.subtabs.bookings?.openChangeStaffModal) {
                     PawpalServices.subtabs.bookings.openChangeStaffModal(booking.id);
@@ -203,22 +237,22 @@
                     </div>
                 `;
             } else if (booking.category === 'Taxi') {
-                const shortPickup = booking.pickupAddress || '45 Lê Duẩn, P. Bến Nghé, Quận 1';
-                const shortDropoff = booking.dropoffAddress || booking.branch || 'PawPal Chi nhánh Quận 1';
+                const shortPickup = booking.pickupAddress || 'Chưa cập nhật';
+                const shortDropoff = booking.dropoffAddress || 'Chưa cập nhật';
                 specialFieldsContainer.innerHTML = `
                     <div style="font-size: 13px; font-weight: 700; color: #236B48; margin-bottom: 8px;">Thông tin điều phối Pet Taxi đưa đón:</div>
                     <div class="info-grid-2col">
                         <div class="info-pair" style="grid-column: span 2;">
                             <span class="info-label">Lộ trình đưa đón:</span>
-                            <span class="info-value" style="font-weight: 600; color: #236B48;">${shortPickup} ➔ ${shortDropoff}</span>
+                            <span class="info-value" style="font-weight: 600; color: #236B48;">${escapeTripText(shortPickup)} ➔ ${escapeTripText(shortDropoff)}</span>
                         </div>
                         <div class="info-pair">
                             <span class="info-label">Hình thức chuyến:</span>
-                            <span class="info-value" style="font-weight: 600;">${booking.tripType || 'Đưa đón khứ hồi 2 chiều'}</span>
+                            <span class="info-value" style="font-weight: 600;">${escapeTripText(booking.tripType || 'Chưa cập nhật')}</span>
                         </div>
                         <div class="info-pair">
                             <span class="info-label">Cự ly ước tính:</span>
-                            <span class="info-value" style="font-weight: 600;">${booking.distanceKm || 4.2} km</span>
+                            <span class="info-value" style="font-weight: 600;">${booking.distanceKm ? `${booking.distanceKm} km` : 'Chưa cập nhật'}</span>
                         </div>
                     </div>
                 `;
@@ -317,7 +351,7 @@
             if (proofGrid) {
                 const photos = Array.isArray(intake.proofPhotos) && intake.proofPhotos.length > 0
                     ? intake.proofPhotos
-                    : ['https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=150&auto=format&fit=crop&q=80'];
+                    : [];
                 proofGrid.innerHTML = photos.map(url => `
                     <div class="intake-proof-item" style="display: inline-block; margin-right: 8px;">
                         <img src="${url}" alt="Ảnh đối chứng" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral); cursor: pointer;">
@@ -360,23 +394,20 @@
         renderDetailTimeline(booking);
 
         // Care-Log nhật ký từng bước dịch vụ
+        const logStaff = document.getElementById('newLogStepStaff');
+        if (logStaff) {
+            const selected = logStaff.value;
+            logStaff.replaceChildren(new Option('-- Chọn KTV thực hiện --',''), ...(PawpalServices.state.liveStaffList||[]).map(staff=>new Option(staff.full_name,staff.id)));
+            logStaff.value = selected;
+        }
+        const quickLog = document.getElementById('carelogQuickAddBox');
+        if (quickLog) quickLog.style.display = booking.status==='in_progress' ? '' : 'none';
         renderDetailCareLogs(booking);
     }
 
-    const ACCOMPANYING_SERVICE_PRESETS = [
-        { cat: 'spa', name: 'Tắm thuốc y tế trị ve rận nấm da', price: 80000 },
-        { cat: 'spa', name: 'Vệ sinh tai nấm và viêm chuyên sâu', price: 50000 },
-        { cat: 'spa', name: 'Cắt tỉa móng và mài mịn chống xước', price: 40000 },
-        { cat: 'spa', name: 'Nhuộm tai và đuôi thời trang organic', price: 150000 },
-        { cat: 'hotel', name: 'Khách sạn thú cưng: Thêm bữa ăn tươi dinh dưỡng', price: 35000 },
-        { cat: 'hotel', name: 'Khách sạn thú cưng: Dắt đi dạo công viên 30 phút', price: 50000 },
-        { cat: 'taxi', name: 'Pet Taxi: Xe đưa đón tận nơi 1 chiều về nhà', price: 70000 },
-        { cat: 'taxi', name: 'Pet Taxi: Xe đưa đón khứ hồi 2 chiều', price: 120000 }
-    ];
-
     function renderDetailFinancials(booking) {
         const formatCurrency = PawpalServices.formatCurrency || (num => `${num.toLocaleString('vi-VN')} đ`);
-        const basePrice = booking.price || booking.basePrice || 250000;
+        const basePrice = Number(booking.price ?? booking.basePrice ?? 0);
 
         // Dịch vụ đi cùng (Accompanying Services)
         const accompanyingList = booking.accompanyingServices || [];
@@ -386,8 +417,8 @@
             accompanyingListEl.innerHTML = accompanyingList.map((item, idx) => `
                 <div class="summary-row" style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 13px;">
                     <div>
-                        <span style="font-weight: 500; color: #236B48;">+ ${item.name}</span>
-                        ${item.staff ? `<span style="font-size: 11.5px; color: var(--text-muted); margin-left: 6px;">(KTV: ${item.staff})</span>` : ''}
+                        <span style="font-weight: 500; color: #236B48;">+ ${escapeTripText(item.name)}</span>
+                        ${item.staff ? `<span style="font-size: 11.5px; color: var(--text-muted); margin-left: 6px;">(KTV: ${escapeTripText(item.staff)})</span>` : ''}
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="font-weight: 600; color: var(--text-main);">${formatCurrency(item.price)}</span>
@@ -397,28 +428,24 @@
             `).join('');
 
             accompanyingListEl.querySelectorAll('.btn-del-accompanying').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const idx = parseInt(btn.getAttribute('data-idx'), 10);
-                    if (!isNaN(idx)) {
-                        accompanyingList.splice(idx, 1);
-                        booking.accompanyingServices = accompanyingList;
-                        renderDetailFinancials(booking);
-                        PawpalServices.showToast('Đã xóa dịch vụ đi cùng!');
-                    }
+                btn.addEventListener('click', async () => {
+                    btn.disabled = true;
+                    try { await PawpalServices.saveCharges(booking,(booking.charges||[]).filter(c=>c.id!==accompanyingList[Number(btn.dataset.idx)]?.id)); }
+                    catch(err) { PawpalServices.showToast('Không thể xóa dịch vụ: '+err.message,'danger'); btn.disabled=false; }
                 });
             });
         }
 
         // Phụ phí (Surcharges)
         const surcharges = booking.surcharges || [];
-        const surchargeTotal = surcharges.reduce((sum, s) => sum + (Number(s.amount) || 0), 0) + (booking.surchargePrice || 0);
+        const surchargeTotal = surcharges.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
         const surchargeListEl = document.getElementById('detailSurchargeBreakdownList');
         if (surchargeListEl) {
             surchargeListEl.innerHTML = surcharges.map((s, idx) => `
                 <div class="summary-row" style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 13px;">
                     <div>
-                        <span style="font-weight: 500; color: #D97706;">+ ${s.name}</span>
-                        ${s.reason ? `<div style="font-size: 11px; color: var(--text-muted);">${s.reason}</div>` : ''}
+                        <span style="font-weight: 500; color: #D97706;">+ ${escapeTripText(s.name)}</span>
+                        ${s.reason ? `<div style="font-size: 11px; color: var(--text-muted);">${escapeTripText(s.reason)}</div>` : ''}
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="font-weight: 600; color: var(--text-main);">${formatCurrency(s.amount)}</span>
@@ -428,19 +455,15 @@
             `).join('');
 
             surchargeListEl.querySelectorAll('.btn-del-surcharge-item').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const idx = parseInt(btn.getAttribute('data-idx'), 10);
-                    if (!isNaN(idx)) {
-                        surcharges.splice(idx, 1);
-                        booking.surcharges = surcharges;
-                        renderDetailFinancials(booking);
-                        PawpalServices.showToast('Đã xóa phụ phí!');
-                    }
+                btn.addEventListener('click', async () => {
+                    btn.disabled = true;
+                    try { await PawpalServices.saveCharges(booking,(booking.charges||[]).filter(c=>c.id!==surcharges[Number(btn.dataset.idx)]?.id)); }
+                    catch(err) { PawpalServices.showToast('Không thể xóa phụ phí: '+err.message,'danger'); btn.disabled=false; }
                 });
             });
         }
 
-        const voucherDiscount = booking.voucherDiscount || 0;
+        const voucherDiscount = 0;
         const total = basePrice + accompanyingTotal + surchargeTotal - voucherDiscount;
         booking.total = total;
 
@@ -487,7 +510,7 @@
 
     // Mở Modal 6B: Chỉnh sửa bước quy trình chăm sóc
     function openEditCarelogStepModal(stepIdx) {
-        const bookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || 'BKG-1001';
+        const bookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || null;
         const bookingsData = PawpalServices.state?.bookingsData || [];
         const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
         if (!booking) return;
@@ -506,7 +529,7 @@
         if (idxHidden) idxHidden.value = stepIdx;
 
         const titleInp = document.getElementById('editCarelogStepTitle');
-        if (titleInp) titleInp.value = step.description || step.step_name || '';
+        if (titleInp) titleInp.value = step.step_name || '';
 
         const staffSelect = document.getElementById('editCarelogStepStaff');
         if (staffSelect) {
@@ -524,14 +547,14 @@
 
         const timeInp = document.getElementById('editCarelogStepTime');
         if (timeInp) {
-            timeInp.value = step.recorded_at ? step.recorded_at.substring(11, 16) : (new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }));
+            timeInp.value = step.recorded_at ? new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'}).format(new Date(step.recorded_at)) : (new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }));
         }
 
         const descInp = document.getElementById('editCarelogStepDesc');
         if (descInp) descInp.value = step.note || '';
 
         const doneCheck = document.getElementById('editCarelogStepDone');
-        if (doneCheck) doneCheck.checked = Boolean(step.completed);
+        if (doneCheck) { doneCheck.checked = true; doneCheck.disabled = true; }
 
         editCarelogPhotosTemp = Array.isArray(step.images) ? [...step.images] : [];
         renderEditCarelogPhotosPreview();
@@ -575,19 +598,19 @@
             <div class="carelog-step-card" data-step-idx="${idx}" style="cursor: pointer; padding: 10px 12px; background: #fff; border: 1px solid var(--border-neutral); border-radius: var(--admin-radius); margin-bottom: 8px;">
                 <div class="carelog-step-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <div class="carelog-step-title" style="font-weight: 600; color: #236B48; font-size: 13px;">
-                        <span class="step-number">${idx + 1}.</span> ${log.description || log.step_name || 'Bước thực hiện'}
+                        <span class="step-number">${idx + 1}.</span> ${escapeTripText(log.step_name || log.description || 'Bước thực hiện')}
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span class="admin-badge ${log.completed ? 'badge-success' : 'badge-neutral'}">${log.completed ? 'Đã xong' : 'Đang làm'}</span>
+                        <span class="admin-badge ${log.completed ? 'badge-success' : 'badge-neutral'}">Đã ghi</span>
                         <span style="font-size: 11.5px; color: #236B48; font-weight: 500;">Sửa</span>
                     </div>
                 </div>
                 <div class="carelog-step-body" style="margin-top: 4px;">
                     <div class="carelog-meta-row" style="font-size: 11.5px; color: var(--text-muted); display: flex; gap: 12px;">
-                        <span>KTV: <strong>${log.ktv || booking.staff || 'Chưa phân công'}</strong></span>
-                        <span>Thời gian: ${log.recorded_at ? log.recorded_at.substring(11, 16) : '—'}</span>
+                        <span>KTV: <strong>${escapeTripText(log.ktv || 'Chưa cập nhật')}</strong></span>
+                        <span>Thời gian: ${log.recorded_at ? new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'}).format(new Date(log.recorded_at)) : '—'}</span>
                     </div>
-                    ${log.note ? `<div style="font-size: 12px; color: var(--text-main); margin-top: 4px;">${log.note}</div>` : ''}
+                    ${log.note ? `<div style="font-size: 12px; color: var(--text-main); margin-top: 4px;">${escapeTripText(log.note)}</div>` : ''}
                     ${(log.images && log.images.length > 0) ? `
                         <div class="carelog-step-images" style="display: flex; gap: 6px; margin-top: 6px;">
                             ${log.images.map(img => `
@@ -620,14 +643,49 @@
     }
 
     function initDetailSubtab() {
-        const initialBookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || 'BKG-1001';
+        document.getElementById('btnTriggerCarelogImageUpload')?.addEventListener('click', () => PawpalServices.showToast('Chưa cấu hình kho ảnh Supabase; chưa thể lưu ảnh nhật ký.','warning'));
+        const logButton = document.getElementById('btnSubmitCarelogStep');
+        if (logButton) logButton.addEventListener('click', async () => {
+            if (logButton.disabled) return;
+            const booking = (PawpalServices.state.bookingsData||[]).find(b=>b.id===PawpalServices.state.selectedBookingId);
+            const title = document.getElementById('newLogStepTitle').value.trim();
+            const note = document.getElementById('newLogStepNote').value.trim();
+            const staffId = document.getElementById('newLogStepStaff').value;
+            const staff = (PawpalServices.state.liveStaffList||[]).find(s=>s.id===staffId);
+            if (!title || !staff) { PawpalServices.showToast('Vui lòng nhập tên bước và chọn nhân viên thực hiện.','warning'); return; }
+            if (!booking || booking.status!=='in_progress') { PawpalServices.showToast('Chỉ ghi nhật ký khi ca đang thực hiện.','warning'); return; }
+            logButton.disabled=true;
+            try {
+                if (document.getElementById('carelogImageFileInput').files.length) throw new Error('Ảnh nhật ký chưa được tải lên máy chủ; vui lòng bỏ ảnh trước khi lưu.');
+                const db = window.getSupabaseClient();
+                const {data:actions,error:readError} = await db.from('care_action').select('*').eq('service_category',booking.serviceCategory).eq('action_name',title).eq('is_active',true);
+                if(readError) throw readError;
+                if(actions.length>1) throw new Error('Có nhiều mốc chăm sóc trùng tên, cần rà soát danh mục.');
+                let action = actions[0];
+                if(!action) {
+                    const {data,error} = await db.from('care_action').insert({action_name:title,service_category:booking.serviceCategory,display_order:0,estimated_duration:0,is_active:true}).select('id').single();
+                    if(error) throw error;
+                    action=data;
+                }
+                const {data,error} = await db.from('care_log').insert({appointment_id:booking.dbId,pet_id:booking.petDbId,care_action_id:action.id,description:[note,`Nhân viên: ${staff.full_name} (${staff.id})`].filter(Boolean).join('\n'),recorded_at:new Date().toISOString()}).select('id,appointment_id,pet_id').single();
+                if(error) throw error;
+                if(!data?.id || data.appointment_id!==booking.dbId || data.pet_id!==booking.petDbId) throw new Error('Không xác minh được nhật ký đã lưu.');
+                await PawpalServices.loadServicesData({force:true});
+                renderBookingDetail(booking.id);
+                document.getElementById('newLogStepTitle').value='';
+                document.getElementById('newLogStepNote').value='';
+                PawpalServices.showToast('Đã lưu nhật ký chăm sóc.');
+            } catch(err) { PawpalServices.showToast('Không thể ghi nhật ký: '+err.message,'danger'); }
+            finally { logButton.disabled=false; }
+        });
+        const initialBookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || null;
         renderBookingDetail(initialBookingId);
 
         // Nút mở Modal 5 (Thêm phụ phí)
         const btnAddSurcharge = document.getElementById('btnOpenAddSurchargeModal');
         if (btnAddSurcharge) {
             btnAddSurcharge.addEventListener('click', () => {
-                const bId = sessionStorage.getItem('pawpal_admin_service_selected_id') || 'BKG-1001';
+                const bId = sessionStorage.getItem('pawpal_admin_service_selected_id') || null;
                 if (PawpalServices.subtabs?.bookings?.openSurchargeModal) {
                     PawpalServices.subtabs.bookings.openSurchargeModal(bId);
                 } else {
@@ -642,7 +700,7 @@
         // ====================================================================
         const btnSubmitEditCarelog = document.getElementById('btnSubmitEditCarelogStep');
         if (btnSubmitEditCarelog) {
-            btnSubmitEditCarelog.addEventListener('click', () => {
+            btnSubmitEditCarelog.addEventListener('click', async () => {
                 const modal = document.getElementById('modalEditCarelogStep');
                 const stepIdx = parseInt(document.getElementById('editCarelogStepIndexHidden')?.value, 10);
                 const title = document.getElementById('editCarelogStepTitle')?.value.trim();
@@ -657,22 +715,41 @@
                     return;
                 }
 
-                const bookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || 'BKG-1001';
+                const bookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || null;
                 const bookingsData = PawpalServices.state?.bookingsData || [];
                 const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
                 if (booking && !isNaN(stepIdx)) {
                     const logs = booking.carelogs || booking.careLogs || [];
-                    if (logs[stepIdx]) {
-                        logs[stepIdx].description = title;
-                        logs[stepIdx].step_name = title;
-                        logs[stepIdx].ktv = staff || booking.staff;
-                        logs[stepIdx].recorded_at = `2026-10-12T${time || '10:00'}:00`;
-                        logs[stepIdx].note = desc;
-                        logs[stepIdx].completed = Boolean(done);
-                        logs[stepIdx].images = [...editCarelogPhotosTemp];
-                    }
-                    renderDetailCareLogs(booking);
-                    PawpalServices.showToast('Đã cập nhật bước quy trình chăm sóc thành công!');
+                    const step = logs[stepIdx];
+                    if (!step?.id || btnSubmitEditCarelog.disabled) return;
+                    btnSubmitEditCarelog.disabled = true;
+                    try {
+                        const db = window.getSupabaseClient();
+                        const performers = (PawpalServices.state.liveStaffList||[]).filter(s=>s.full_name===staff);
+                        if (performers.length!==1 || !time) throw new Error('Vui lòng chọn đúng một nhân viên và giờ ghi nhận.');
+                        if (editCarelogPhotosTemp.some(url=>url.startsWith('blob:'))) throw new Error('Chưa cấu hình kho ảnh; ảnh tạm chưa được lưu.');
+                        if (editCarelogPhotosTemp.length !== (step.images||[]).length) throw new Error('Thay đổi ảnh cần hoàn thiện kho ảnh trước.');
+                        const {data:actions,error:actionError}=await db.from('care_action').select('id').eq('service_category',booking.serviceCategory).eq('action_name',title).eq('is_active',true);
+                        if(actionError) throw actionError;
+                        if(actions.length>1) throw new Error('Mốc chăm sóc trùng tên, vui lòng rà soát danh mục.');
+                        let action=actions[0];
+                        if(!action) {
+                            const {data,error}=await db.from('care_action').insert({action_name:title,service_category:booking.serviceCategory,display_order:0,estimated_duration:0,is_active:true}).select('id').single();
+                            if(error) throw error;
+                            action=data;
+                        }
+                        const day = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(step.recorded_at));
+                        const recordedAt = new Date(`${day}T${time}:00+07:00`).toISOString();
+                        let query=db.from('care_log').update({care_action_id:action.id,description:[desc,`Nhân viên: ${staff} (${performers[0].id})`].filter(Boolean).join('\n'),recorded_at:recordedAt}).eq('id',step.id).eq('appointment_id',booking.dbId);
+                        if(step.updated_at) query=query.eq('updated_at',step.updated_at);
+                        const {data,error}=await query.select('id,care_action_id,recorded_at').single();
+                        if(error) throw error;
+                        if(!data?.id || data.care_action_id!==action.id || Date.parse(data.recorded_at)!==Date.parse(recordedAt)) throw new Error('Không xác minh được nhật ký đã cập nhật.');
+                        await PawpalServices.loadServicesData({force:true});
+                        renderBookingDetail(booking.id);
+                        PawpalServices.showToast('Đã lưu thay đổi nhật ký chăm sóc.');
+                    } catch(err) { PawpalServices.showToast('Không thể sửa nhật ký: '+err.message,'danger'); return; }
+                    finally { btnSubmitEditCarelog.disabled=false; }
                     if (modal) modal.classList.remove('active');
                 }
             });
@@ -681,17 +758,31 @@
         // Nút Xóa bước chăm sóc
         const btnDeleteCarelog = document.getElementById('btnDeleteCarelogStep');
         if (btnDeleteCarelog) {
-            btnDeleteCarelog.addEventListener('click', () => {
+            btnDeleteCarelog.addEventListener('click', async () => {
                 const modal = document.getElementById('modalEditCarelogStep');
                 const stepIdx = parseInt(document.getElementById('editCarelogStepIndexHidden')?.value, 10);
-                const bookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || 'BKG-1001';
+                const bookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || null;
                 const bookingsData = PawpalServices.state?.bookingsData || [];
                 const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
                 if (booking && !isNaN(stepIdx)) {
                     const logs = booking.carelogs || booking.careLogs || [];
-                    logs.splice(stepIdx, 1);
-                    renderDetailCareLogs(booking);
-                    PawpalServices.showToast('Đã xóa bước quy trình chăm sóc!');
+                    const step=logs[stepIdx];
+                    if(!step?.id || btnDeleteCarelog.disabled) return;
+                    if(!window.confirm('Xóa vĩnh viễn nhật ký này? Thao tác không thể hoàn tác.')) return;
+                    btnDeleteCarelog.disabled=true;
+                    try {
+                        const db=window.getSupabaseClient();
+                        if(step.care_log_media?.length) throw new Error('Nhật ký có media; cần xử lý media trước khi xóa.');
+                        let query=db.from('care_log').delete().eq('id',step.id).eq('appointment_id',booking.dbId);
+                        if(step.updated_at) query=query.eq('updated_at',step.updated_at);
+                        const {data,error}=await query.select('id').single();
+                        if(error) throw error;
+                        if(data?.id!==step.id) throw new Error('Không xác minh được nhật ký đã xóa.');
+                        await PawpalServices.loadServicesData({force:true});
+                        renderBookingDetail(booking.id);
+                        PawpalServices.showToast('Đã xóa nhật ký chăm sóc.');
+                    } catch(err) { PawpalServices.showToast('Không thể xóa nhật ký: '+err.message,'danger'); return; }
+                    finally { btnDeleteCarelog.disabled=false; }
                     if (modal) modal.classList.remove('active');
                 }
             });
@@ -701,7 +792,7 @@
         const btnAddPhoto = document.getElementById('btnEditCarelogAddPhoto');
         const photoFileInp = document.getElementById('editCarelogFileInput');
         if (btnAddPhoto && photoFileInp) {
-            btnAddPhoto.addEventListener('click', () => photoFileInp.click());
+            btnAddPhoto.addEventListener('click', () => PawpalServices.showToast('Chưa cấu hình kho ảnh Supabase; chưa thể lưu ảnh nhật ký.','warning'));
             photoFileInp.addEventListener('change', (e) => {
                 const files = Array.from(e.target.files || []);
                 files.forEach(file => {
@@ -727,13 +818,11 @@
         function updateAccompanyingServiceItems() {
             if (!accompanyingItemSelect) return;
             const cat = accompanyingCategorySelect ? accompanyingCategorySelect.value : 'ALL';
-            const filtered = cat === 'ALL' 
-                ? ACCOMPANYING_SERVICE_PRESETS 
-                : ACCOMPANYING_SERVICE_PRESETS.filter(item => item.cat === cat);
+            const filtered = (PawpalServices.state.servicesData || []).filter(item => item.status === 'Đang phục vụ' && (cat === 'ALL' || item.group === cat)).map(item=>({ name:item.name, price: '', id:item.dbId }));
 
             accompanyingItemSelect.innerHTML = '<option value="">-- Chọn gói dịch vụ đi cùng --</option>' + 
                 filtered.map(item => `
-                    <option value="${item.name}" data-price="${item.price}">${item.name} (${PawpalServices.formatCurrency(item.price)})</option>
+                    <option value="${escapeTripText(item.name)}" data-price="${item.price}">${escapeTripText(item.name)}</option>
                 `).join('');
 
             if (accompanyingPriceInput) accompanyingPriceInput.value = '';
@@ -766,14 +855,14 @@
             accompanyingItemSelect.addEventListener('change', () => {
                 const selectedOpt = accompanyingItemSelect.options[accompanyingItemSelect.selectedIndex];
                 const price = selectedOpt ? selectedOpt.getAttribute('data-price') : '';
-                if (accompanyingPriceInput && price) {
-                    accompanyingPriceInput.value = price;
+                if (accompanyingPriceInput) {
+                    accompanyingPriceInput.value = price || '';
                 }
             });
         }
 
         if (btnSubmitAccompanying) {
-            btnSubmitAccompanying.addEventListener('click', () => {
+            btnSubmitAccompanying.addEventListener('click', async () => {
                 const name = accompanyingItemSelect?.value;
                 const price = parseFloat(accompanyingPriceInput?.value || 0);
                 const staff = accompanyingStaffSelect?.value;
@@ -790,16 +879,19 @@
                     return;
                 }
 
-                const bookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || 'BKG-1001';
+                const bookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || null;
                 const bookingsData = PawpalServices.state?.bookingsData || [];
                 const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
                 if (booking) {
-                    booking.accompanyingServices = booking.accompanyingServices || [];
-                    booking.accompanyingServices.push({ name, price, staff, note });
-
-                    renderDetailFinancials(booking);
-                    const formatCur = PawpalServices.formatCurrency || (num => `${num.toLocaleString('vi-VN')} đ`);
-                    PawpalServices.showToast(`Đã thêm dịch vụ "${name}" (+${formatCur(price)}) vào ca!`);
+                    if (btnSubmitAccompanying.disabled) return;
+                    btnSubmitAccompanying.disabled = true;
+                    try {
+                        const services = (PawpalServices.state.servicesData||[]).filter(s=>s.name===name && s.status==='Đang phục vụ');
+                        if (services.length!==1) throw new Error('Vui lòng chọn đúng một dịch vụ đang phục vụ.');
+                        await PawpalServices.saveCharges(booking,[...(booking.charges||[]),{id:crypto.randomUUID(),kind:'service',name,amount:price,reason:note,staff,serviceId:services[0].dbId}]);
+                        PawpalServices.showToast('Đã lưu dịch vụ đi cùng.');
+                    } catch(err) { PawpalServices.showToast('Không thể lưu dịch vụ đi cùng: '+err.message,'danger'); return; }
+                    finally { btnSubmitAccompanying.disabled=false; }
 
                     if (modalAccompanying) modalAccompanying.classList.remove('active');
                 }
@@ -810,7 +902,7 @@
         const btnPrintIntakeStatic = document.getElementById('btnPrintIntakeWaiver');
         if (btnPrintIntakeStatic) {
             btnPrintIntakeStatic.addEventListener('click', () => {
-                const bId = sessionStorage.getItem('pawpal_admin_service_selected_id') || 'BKG-1001';
+                const bId = sessionStorage.getItem('pawpal_admin_service_selected_id') || null;
                 const bList = PawpalServices.state?.bookingsData || [];
                 const b = bList.find(item => item.id === bId || item.dbId === bId) || bList[0];
                 openIntakeWaiverModal(b);
@@ -821,7 +913,7 @@
         const btnNotifyPickupStatic = document.getElementById('btnNotifyCustomerPickup');
         if (btnNotifyPickupStatic) {
             btnNotifyPickupStatic.addEventListener('click', () => {
-                const bId = sessionStorage.getItem('pawpal_admin_service_selected_id') || 'BKG-1001';
+                const bId = sessionStorage.getItem('pawpal_admin_service_selected_id') || null;
                 const bList = PawpalServices.state?.bookingsData || [];
                 const b = bList.find(item => item.id === bId || item.dbId === bId) || bList[0];
                 openNotifyPickupModal(b);
@@ -831,7 +923,7 @@
 
     function openIntakeWaiverModal(booking) {
         if (!booking) {
-            const currentId = sessionStorage.getItem('pawpal_admin_service_selected_id') || 'BKG-1001';
+            const currentId = sessionStorage.getItem('pawpal_admin_service_selected_id') || null;
             const bookingsList = PawpalServices.state?.bookingsData || [];
             booking = bookingsList.find(b => b.id === currentId || b.dbId === currentId) || bookingsList[0];
         }
@@ -843,7 +935,7 @@
         const formatCurrency = PawpalServices.formatCurrency || (num => `${Number(num).toLocaleString('vi-VN')} đ`);
         const intake = booking.intakeRecord || {};
         const actualWeight = intake.actualWeight || parseFloat(booking.petWeight) || 4.2;
-        const basePrice = booking.price || booking.basePrice || 250000;
+        const basePrice = Number(booking.price ?? booking.basePrice ?? 0);
         const total = booking.total || basePrice;
 
         // Điền Header phiếu in
@@ -938,7 +1030,7 @@
 
     function openNotifyPickupModal(booking) {
         if (!booking) {
-            const currentId = sessionStorage.getItem('pawpal_admin_service_selected_id') || 'BKG-1001';
+            const currentId = sessionStorage.getItem('pawpal_admin_service_selected_id') || null;
             const bookingsList = PawpalServices.state?.bookingsData || [];
             booking = bookingsList.find(b => b.id === currentId || b.dbId === currentId) || bookingsList[0];
         }

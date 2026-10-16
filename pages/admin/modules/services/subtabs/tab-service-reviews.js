@@ -429,12 +429,23 @@
                 const review = reviewsData.find(r => r.id === rId);
 
                 const refCode = review?.bookingId || rId || 'đánh giá';
+                const bookingId = review?.bookingId || review?.id;
+                sessionStorage.setItem('pawpal_admin_complaint_from_booking', bookingId);
+                sessionStorage.setItem('pawpal_admin_active_module', 'Khiếu nại');
+                sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-services');
+                window.location.hash = '#tab-complaint-services';
+
                 if (PawpalServices.showToast) {
-                    PawpalServices.showToast(`Đã chuyển ${refCode} sang phân hệ giải quyết khiếu nại dịch vụ!`, 'success');
-                } else {
-                    alert(`Đã chuyển ${refCode} sang phân hệ giải quyết khiếu nại dịch vụ!`);
+                    PawpalServices.showToast(`Đang chuyển ${refCode} sang phân hệ giải quyết khiếu nại dịch vụ...`, 'info');
                 }
                 closeReplyReviewModal();
+
+                const complaintBtn = Array.from(document.querySelectorAll('.sidebar-menu-btn')).find(b => b.getAttribute('data-title') === 'Khiếu nại');
+                if (complaintBtn) {
+                    complaintBtn.click();
+                } else if (window.PawpalAdmin?.loadModule) {
+                    window.PawpalAdmin.loadModule('Khiếu nại');
+                }
             });
         }
 

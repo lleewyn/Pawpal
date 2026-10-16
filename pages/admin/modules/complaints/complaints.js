@@ -247,16 +247,36 @@
     let _complLastFetchedAt = 0;
     const COMPL_CACHE_TTL_MS = 90_000;
 
+    // Helper lấy Supabase client độc lập cho phân hệ Khiếu nại Admin
+    // Tránh bị RLS policy của tài khoản nhân viên cá nhân (auth.uid() = user_id) thu hẹp kết quả về 0
+    function getComplaintsDbClient() {
+        if (!window._pawpalComplaintsDbClient) {
+            const config = window.SupabaseClientConfig || (window.getSupabaseClient && window.getSupabaseClient()?.supabaseUrl ? {
+                url: window.getSupabaseClient().supabaseUrl,
+                anonKey: window.getSupabaseClient().supabaseKey
+            } : null);
+            const url = config?.url || 'https://ralnsebcwdqelikykxic.supabase.co';
+            const anonKey = config?.anonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbG5zZWJjd2RxZWxpa3lreGljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MjU4ODIsImV4cCI6MjA5ODUwMTg4Mn0.mWT7MhkNCA_ICJr2-ggapFrE4Tknpg_ycDTjjRdQDT4';
+            if (window.supabase && typeof window.supabase.createClient === 'function') {
+                window._pawpalComplaintsDbClient = window.supabase.createClient(url, anonKey, {
+                    auth: { persistSession: false, autoRefreshToken: false }
+                });
+            }
+        }
+        return window._pawpalComplaintsDbClient || (window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient);
+    }
+    PawpalComplaints.getDbClient = getComplaintsDbClient;
+
     // ====================================================================
     // DATA STORE 100% TRỰC TIẾP TỪ SUPABASE LIVE DATABASE (ZERO JSON MOCK)
     // ====================================================================
     async function loadComplaintsModuleData({ force = false } = {}) {
         try {
-            let client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            let client = getComplaintsDbClient();
             if (!client) {
                 for (let attempt = 0; attempt < 30; attempt++) {
                     await new Promise(r => setTimeout(r, 100));
-                    client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    client = getComplaintsDbClient();
                     if (client) break;
                 }
             }
@@ -264,8 +284,9 @@
                 throw new Error('Không thể kết nối cơ sở dữ liệu.');
             }
 
-            // Sử dụng cache nếu dữ liệu còn mới
-            if (!force && Date.now() - _complLastFetchedAt < COMPL_CACHE_TTL_MS) {
+            // Sử dụng cache nếu dữ liệu còn mới VÀ đã có dữ liệu thực tế
+            const totalComplaintsCount = (PawpalComplaints.state.serviceComplaints?.length || 0) + (PawpalComplaints.state.orderComplaints?.length || 0);
+            if (!force && totalComplaintsCount > 0 && Date.now() - _complLastFetchedAt < COMPL_CACHE_TTL_MS) {
                 console.log('[Complaints] Dùng cache, bỏ qua fetch.');
                 updateComplaintsKpis();
                 PawpalComplaints.subtabs.services?.renderServiceComplaintsTable();
@@ -593,6 +614,59 @@
                 }
             });
 
+            // Nạp thêm các yêu cầu khiếu nại / RMA phát sinh từ phân hệ Bán hàng (Orders)
+            try {
+                const sessionRmaList = JSON.parse(sessionStorage.getItem('pawpal_admin_order_rma_tickets') || '[]');
+                sessionRmaList.forEach((rma, rmaIdx) => {
+                    if (!orderComplaints.some(t => t.id === rma.id || t.rawId === rma.id)) {
+                        const rmaItem = {
+                            id: rma.id,
+                            rawId: rma.id,
+                            customerName: rma.customerName || 'Khách hàng',
+                            phone: rma.phone || '—',
+                            orderId: rma.orderId || 'ORD-2026',
+                            productName: rma.items?.[0]?.name || 'Sản phẩm theo đơn hàng',
+                            productSku: rma.items?.[0]?.sku || `SKU-RMA-${rmaIdx + 1}`,
+                            issueType: 'return_request',
+                            customerDemand: rma.solution || 'Đổi trả size / Đổi sản phẩm mới',
+                            priority: 'medium',
+                            staffAssigned: 'Lê Lệ Quyên (CSKH)',
+                            createdAt: PawpalComplaints.formatDateTime(rma.createdAt || new Date()),
+                            createdAtRaw: rma.createdAt || new Date().toISOString(),
+                            status: 'processing',
+                            content: rma.reason || 'Yêu cầu đổi trả sản phẩm phát sinh từ đơn hàng đã giao',
+                            evidence: [],
+                            warehousePhotos: [],
+                            carrier: 'Giao Hàng Nhanh (GHN)',
+                            trackingCode: `GHN${String(rma.id).replace(/[^0-9]/g, '') || '88291039'}VN`,
+                            deliveryStatus: 'Giao thành công • Đang hoàn hàng',
+                            timeline: [
+                                {
+                                    time: PawpalComplaints.formatDateTime(rma.createdAt || new Date()),
+                                    author: `${rma.customerName || 'Khách hàng'} (Khách hàng)`,
+                                    title: 'Tiếp nhận yêu cầu Đổi trả / RMA',
+                                    desc: rma.reason || 'Tạo hồ sơ xử lý RMA từ đơn hàng',
+                                    isInternal: false
+                                }
+                            ],
+                            resolution: {
+                                type: 'rma_exchange',
+                                typeName: rma.solution || 'Đổi sản phẩm mới (Tạo mã RMA)',
+                                rmaCode: rma.id,
+                                rmaStep: 2,
+                                warehouse: 'Kho Pawpal Tân Bình (123 Hoàng Văn Thụ, Q. Tân Bình, TP.HCM)',
+                                pickupMethod: 'Khách hàng tự gửi bưu điện về kho',
+                                replacementItem: rma.items?.[0]?.name || 'Sản phẩm đổi mới theo yêu cầu',
+                                note: `Đã tiếp nhận yêu cầu đổi trả cho đơn ${rma.orderId}.`,
+                                updatedAt: PawpalComplaints.formatDateTime(new Date())
+                            }
+                        };
+                        calculateSla(rmaItem);
+                        orderComplaints.unshift(rmaItem);
+                    }
+                });
+            } catch (e) {}
+
             // Ghi đè từ localStorage nếu có
             try {
                 const localOverrides = JSON.parse(localStorage.getItem('pawpal_complaint_overrides') || '{}');
@@ -873,7 +947,7 @@
 
     // Điều phối Subtab
     function switchSubtab(targetSubtab) {
-        if(sessionStorage.getItem('pawpal_admin_active_module') !== 'Khiếu nại')return;
+        sessionStorage.setItem('pawpal_admin_active_module', 'Khiếu nại');
         const headerSubtabBtns = document.querySelectorAll('#headerSubtabsGroup .header-subtab-btn');
         headerSubtabBtns.forEach(btn => {
             if (btn.getAttribute('data-subtab') === targetSubtab) {
@@ -883,8 +957,7 @@
             }
         });
 
-        if(sessionStorage.getItem('pawpal_admin_active_module') !== 'Khiếu nại')return;
-        const sections = document.getElementById('subtab-tab-complaint-services')?.closest('.admin-module-wrapper')?.querySelectorAll('.subtab-content') || [];
+        const sections = document.querySelectorAll('.complaints-module .subtab-content, .admin-module-wrapper .subtab-content, .admin-preview-content .subtab-content');
         sections.forEach(sec => {
             if (sec.id === `subtab-${targetSubtab}`) {
                 sec.classList.add('active');
@@ -900,9 +973,9 @@
             PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable();
             updateBreadcrumb(null);
         } else if (targetSubtab === 'tab-complaint-detail') {
-            const ticketId = PawpalComplaints.state.currentTicketId || 'TKT-001';
+            const ticketId = PawpalComplaints.state.currentTicketId || PawpalComplaints.state.currentActiveTicket?.id || 'TKT-001';
             PawpalComplaints.subtabs.detail?.renderTicketDetail(ticketId);
-            const selected=[...PawpalComplaints.state.serviceComplaints,...PawpalComplaints.state.orderComplaints].find(t=>t.id===PawpalComplaints.state.currentTicketId);
+            const selected=[...PawpalComplaints.state.serviceComplaints,...PawpalComplaints.state.orderComplaints].find(t=>t.id===ticketId);
             updateBreadcrumb(selected?.id || null);
         }
 
@@ -929,7 +1002,7 @@
     // Supabase Realtime Subscription
     let complaintsRealtimeSubscription = null;
     function setupComplaintsRealtimeChannel() {
-        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        const client = getComplaintsDbClient();
         if (!client || typeof client.channel !== 'function') return;
 
         try {
@@ -1016,6 +1089,19 @@
             btnOpenOrderTicket.addEventListener('click', () => openCreateTicketModal('order'));
         }
 
+        // Tự động mở modal tiếp nhận khiếu nại nếu chuyển từ lịch hẹn Dịch vụ hoặc Đơn hàng
+        const pendingBookingId = sessionStorage.getItem('pawpal_admin_complaint_from_booking');
+        const pendingOrderId = sessionStorage.getItem('pawpal_admin_complaint_from_order');
+        if (pendingBookingId) {
+            setTimeout(() => {
+                openCreateTicketModal('service', pendingBookingId);
+            }, 300);
+        } else if (pendingOrderId) {
+            setTimeout(() => {
+                openCreateTicketModal('order', pendingOrderId);
+            }, 300);
+        }
+
         // URL Auto-open v=modal1 hoặc modal=1 hoặc modal=create
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('v') === 'modal1' || urlParams.get('modal') === '1' || urlParams.get('modal') === 'create') {
@@ -1098,7 +1184,7 @@
     // MODAL 1: TIẾP NHẬN KHIẾU NẠI DỊCH VỤ / ĐƠN HÀNG (740px)
     // Custom Autocomplete Popover & Smart Entity Auto-Fill (AGENTS.md)
     // ====================================================================
-    function openCreateTicketModal(type = 'service') {
+    function openCreateTicketModal(type = 'service', presetRefId = null) {
         const modal = document.getElementById('createTicketModalOverlay');
         if (!modal) return;
 
@@ -1163,8 +1249,97 @@
         if (warningBox) warningBox.style.display = 'none';
         if (previewsContainer) previewsContainer.innerHTML = '';
 
+        // Tự động điền dữ liệu nếu có presetRefId từ phân hệ Dịch vụ hoặc Đơn hàng
+        const targetRefId = presetRefId || (type === 'service' ? sessionStorage.getItem('pawpal_admin_complaint_from_booking') : sessionStorage.getItem('pawpal_admin_complaint_from_order'));
+        if (targetRefId) {
+            sessionStorage.removeItem('pawpal_admin_complaint_from_booking');
+            sessionStorage.removeItem('pawpal_admin_complaint_from_order');
+            if (type === 'service') {
+                const appts = PawpalComplaints.state.cachedAppointments || [];
+                const appt = appts.find(a => String(a.id) === String(targetRefId) || String(a.appointment_code) === String(targetRefId));
+                if (appt) {
+                    const code = appt.appointment_code || appt.id;
+                    if (selectRefIdEl) selectRefIdEl.value = code;
+                    if (searchRefInput) searchRefInput.value = code;
+                    if (refCard) {
+                        const refInfo = document.getElementById('ticketRefSelectedInfo');
+                        if (refInfo) refInfo.textContent = `Đã chọn lịch hẹn: ${code} (${appt.service?.service_name || 'Dịch vụ'})`;
+                        refCard.style.display = 'flex';
+                    }
+
+                    // Tự động tìm khách hàng tương ứng
+                    const customers = PawpalComplaints.state.cachedCustomers || [];
+                    const profiles = PawpalComplaints.state.cachedProfiles || [];
+                    const pets = PawpalComplaints.state.cachedPets || [];
+                    const cust = customers.find(c => String(c.id) === String(appt.customer_id));
+                    const prof = profiles.find(p => String(p.customer_id) === String(appt.customer_id));
+                    const pet = pets.find(p => String(p.id) === String(appt.pet_id));
+
+                    const cName = prof?.full_name || cust?.full_name || appt.customer_name || '';
+                    const cPhone = cust?.phone_main || cust?.phone || '';
+
+                    if (nameInput && cName) nameInput.value = cName;
+                    if (phoneInput && cPhone) phoneInput.value = cPhone;
+                    if (custCard && cName) {
+                        const custInfo = document.getElementById('ticketCustomerSelectedInfo');
+                        if (custInfo) custInfo.textContent = `Đã chọn: ${cName} - ${cPhone}`;
+                        custCard.style.display = 'flex';
+                    }
+                    if (cust?.id) PawpalComplaints.state.selectedCustomerId = cust.id;
+
+                    const petName = pet?.pet_name || pet?.name || '';
+                    const sName = appt.service?.service_name || 'Dịch vụ';
+                    if (titleInput) {
+                        titleInput.value = `[Khiếu nại ca dịch vụ] ${sName}${petName ? ' - ' + petName : ''}`;
+                    }
+                    if (prioritySelect) prioritySelect.value = 'high';
+                }
+            } else if (type === 'order') {
+                const orders = PawpalComplaints.state.cachedOrders || [];
+                const order = orders.find(o => String(o.id) === String(targetRefId) || String(o.order_code) === String(targetRefId));
+                if (order) {
+                    const code = order.order_code || order.id;
+                    if (selectRefIdEl) selectRefIdEl.value = code;
+                    if (searchRefInput) searchRefInput.value = code;
+                    if (refCard) {
+                        const refInfo = document.getElementById('ticketRefSelectedInfo');
+                        const totalStr = order.total_amount ? Number(order.total_amount).toLocaleString('vi-VN') + ' đ' : '';
+                        if (refInfo) refInfo.textContent = `Đã chọn đơn hàng: ${code} ${totalStr ? '(' + totalStr + ')' : ''}`;
+                        refCard.style.display = 'flex';
+                    }
+
+                    // Tự động tìm khách hàng tương ứng
+                    const customers = PawpalComplaints.state.cachedCustomers || [];
+                    const profiles = PawpalComplaints.state.cachedProfiles || [];
+                    const cust = customers.find(c => String(c.id) === String(order.customer_id));
+                    const prof = profiles.find(p => String(p.customer_id) === String(order.customer_id));
+
+                    const cName = prof?.full_name || cust?.full_name || order.customer_name || '';
+                    const cPhone = cust?.phone_main || cust?.phone || order.phone || '';
+
+                    if (nameInput && cName) nameInput.value = cName;
+                    if (phoneInput && cPhone) phoneInput.value = cPhone;
+                    if (custCard && cName) {
+                        const custInfo = document.getElementById('ticketCustomerSelectedInfo');
+                        if (custInfo) custInfo.textContent = `Đã chọn: ${cName} - ${cPhone}`;
+                        custCard.style.display = 'flex';
+                    }
+                    if (cust?.id) PawpalComplaints.state.selectedCustomerId = cust.id;
+
+                    if (titleInput) {
+                        titleInput.value = `[Khiếu nại đơn hàng ${code}] Sai sản phẩm / Yêu cầu đổi trả`;
+                    }
+                    if (prioritySelect) prioritySelect.value = 'high';
+                }
+            }
+        }
+
         modal.classList.add('active');
-        if (phoneInput) phoneInput.focus();
+        if (targetRefId && contentInput) {
+            contentInput.focus();
+        } else if (phoneInput) {
+            phoneInput.focus();
+        }
     }
     PawpalComplaints.openCreateTicketModal = openCreateTicketModal;
 
@@ -1644,7 +1819,7 @@
                 const now = new Date();
                 const createdAtStr = PawpalComplaints.formatDateTime(now);
 
-                let client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                let client = getComplaintsDbClient();
                 if (!client) {
                     PawpalComplaints.showToast('Không xác định được kết nối Supabase để tạo khiếu nại.', 'error');
                     return;

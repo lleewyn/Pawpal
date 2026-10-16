@@ -275,6 +275,19 @@
                 staffObj.skillResult = resultVal;
                 staffObj.skillExam = resultVal === 'PASS' ? `Đạt (${scoreNum}đ)` : `Cần đào tạo (${scoreNum}đ)`;
                 staffObj.serviceLocked = resultVal !== 'PASS';
+
+                // Lưu trực tiếp điểm tay nghề vào Supabase
+                try {
+                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (client && staffObj.rawId) {
+                        client.from('staff').update({
+                            skill_score: scoreNum,
+                            service_locked: resultVal !== 'PASS'
+                        }).eq('id', staffObj.rawId).then(() => {});
+                    }
+                } catch (e) {
+                    console.error('[PawpalStaff] Lỗi lưu skill_score vào staff:', e);
+                }
             }
 
             // Thêm bản ghi đánh giá mới

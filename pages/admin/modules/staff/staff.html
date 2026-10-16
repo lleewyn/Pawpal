@@ -702,10 +702,10 @@
                         </div>
                     </div>
 
-                    <div class="detail-section-title" style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center;">
-                        <span>Tài khoản đăng nhập hệ thống</span>
-                        <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; cursor: pointer; text-transform: none; letter-spacing: normal;">
-                            <input type="checkbox" id="staffEnableAccountToggle" style="accent-color: var(--text-heading); cursor: pointer;">
+                    <div style="margin-top: 18px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div class="detail-section-title" style="margin-bottom: 0;">Tài khoản đăng nhập hệ thống</div>
+                        <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-heading); padding-bottom: 2px;">
+                            <input type="checkbox" id="staffEnableAccountToggle" style="accent-color: var(--text-heading); cursor: pointer; width: 16px; height: 16px;">
                             <span>Cấp tài khoản đăng nhập Pawpal-er</span>
                         </label>
                     </div>
@@ -913,7 +913,7 @@
 
     <!-- MODAL: TẠO ĐƠN XIN NGHỈ PHÉP VÀ ĐỀ XUẤT ĐỔI CA (PHASE 3) -->
     <div class="admin-modal-overlay" id="leaveSwapModalOverlay">
-        <div class="admin-modal-card" style="width: 600px; max-width: 94vw;">
+        <div class="admin-modal-card wide-modal">
             <form id="leaveSwapModalForm" novalidate onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
                 <div class="modal-header-clean">
                     <div class="modal-title-clean">Đơn xin nghỉ phép và đổi ca trực</div>
@@ -1135,7 +1135,7 @@
         <div class="admin-modal-card" style="width: 660px; max-width: 95vw;">
             <form id="incidentReportModalForm" novalidate onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
                 <div class="modal-header-clean">
-                    <div class="modal-title-clean">Ghi nhận sự cố ca trực và cập nhật tiến độ</div>
+            <div class="modal-title-clean">Ghi nhận sự cố ca trực</div>
                     <button type="button" class="modal-btn-close-text" id="btnCancelIncidentModal" data-close-modal="incidentReportModalOverlay">Đóng</button>
                 </div>
                 <div class="modal-body-clean">
@@ -1191,7 +1191,7 @@
                 </div>
                 <div class="modal-footer-clean" style="justify-content: space-between;">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissIncidentModal" data-close-modal="incidentReportModalOverlay">Hủy</button>
-                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveIncidentReport">Lưu biên bản và cập nhật tiến độ</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveIncidentReport">Lưu biên bản sự cố</button>
                 </div>
             </form>
         </div>
@@ -1199,12 +1199,12 @@
 
     <!-- DROPDOWN THAO TÁC 3 CHẤM (TEXT-ONLY) -->
     <div class="action-dropdown-menu" id="staffActionDropdown" style="display: none;">
-        <button type="button" class="action-menu-item" id="menuActionViewProfile">Xem hồ sơ</button>
-        <button type="button" class="action-menu-item" id="menuActionToggleLock">Khóa / Mở nhận việc</button>
-        <button type="button" class="action-menu-item" id="menuActionEditStaff">Chỉnh sửa hồ sơ</button>
-        <button type="button" class="action-menu-item" id="menuActionViewSchedule">Xem lịch làm việc</button>
-        <button type="button" class="action-menu-item" id="menuActionViewAssess">Xem lịch sử đánh giá</button>
-        <button type="button" class="action-menu-item danger-item" id="menuActionDeleteStaff">Xóa nhân viên</button>
+        <button type="button" class="action-menu-item dropdown-item" id="menuActionViewProfile" data-action="profile">Xem hồ sơ</button>
+        <button type="button" class="action-menu-item dropdown-item" id="menuActionToggleLock" data-action="lock">Khóa / Mở nhận việc</button>
+        <button type="button" class="action-menu-item dropdown-item" id="menuActionEditStaff" data-action="edit">Chỉnh sửa hồ sơ</button>
+        <button type="button" class="action-menu-item dropdown-item" id="menuActionViewSchedule" data-action="schedule">Xem lịch làm việc</button>
+        <button type="button" class="action-menu-item dropdown-item" id="menuActionViewAssess" data-action="assess">Xem lịch sử đánh giá</button>
+        <button type="button" class="action-menu-item danger-item dropdown-item" id="menuActionDeleteStaff" data-action="delete">Xóa nhân viên</button>
     </div>
 
     <!-- MODAL: XÁC NHẬN THAO TÁC NHÂN SỰ (CUSTOM CONFIRM DIALOG) -->

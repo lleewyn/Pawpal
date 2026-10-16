@@ -42,7 +42,13 @@ Với mỗi tab: kiểm tra tải dữ liệu/skeleton/trống/lỗi; bấm từ
 3. Hồ sơ khách không có SĐT ẩn Gọi điện, Zalo và Gửi lại SMS.
 4. “Khóa tài khoản” mở modal xác nhận, hỗ trợ Hủy và Escape. Sau khi người dùng xác nhận, hệ thống chỉ báo thành công nếu Supabase trả về đúng bản ghi đã cập nhật và dữ liệu tải mới khớp trạng thái.
 
-**Chưa kiểm thử:** lưu mới/sửa khách, điều chỉnh điểm và bước xác nhận khóa/mở khóa trên bản ghi QA riêng; tổ hợp lỗi Supabase; responsive; backdrop modal. Không tạo dữ liệu thử trong vòng này.
+**Đã kiểm thử bổ sung (15/10/2026):** mở biểu mẫu sửa hồ sơ và lưu tên khách hàng. Đã sửa hai lỗi: giá trị hiển thị `Chưa cập nhật` bị đưa vào ô email `type=email`, và thao tác sửa tên luôn xóa/ghi lại `customer_address` dù người dùng không sửa địa chỉ. Sau khi chuẩn hóa email rỗng và chỉ đồng bộ sổ địa chỉ khi thực sự thay đổi, modal đóng, toast thành công xuất hiện và dữ liệu được ghi vào Supabase. Lưu ý dữ liệu có mã khách trùng/ánh xạ hồ sơ không ổn định nên sau F5 giao diện có thể chọn sang hồ sơ khác; cần làm sạch mã quan hệ riêng.
+
+**Khóa/mở khóa (15/10/2026):** đã mở modal xác nhận và thực hiện khóa trên bản ghi thử. Sau tải lại, số tài khoản bị khóa vẫn là 0. Đã siết kiểm tra phản hồi `update(...).select()` để không báo thành công khi Supabase không trả về đúng bản ghi; hiện cần kiểm tra RLS hoặc enum `account_status` của bảng `customer`.
+
+**Nguyên nhân cần xử lý sau:** thao tác cập nhật tài khoản quản trị chưa được CSDL xác nhận, nhiều khả năng do policy RLS không nhận diện phiên admin qua `staff.auth_user_id` hoặc trạng thái `staff.account_status` chưa đúng. Khi đối chiếu thủ công cần dùng UUID thật; bảng `staff` hiện không có cột `email`, nên không được dùng truy vấn có `staff.email`. Cần đối chiếu `auth.users.id` với `staff.auth_user_id`, kiểm tra `staff.account_status = 'ACTIVE'`, policy `customer` cho lệnh `UPDATE`, và giá trị enum thực tế của `customer.account_status`. Không đánh dấu đạt cho đến khi khóa, tải lại, thấy `Bị khóa`, rồi mở khóa và tải lại thành `Đang hoạt động`.
+
+**Chưa kiểm thử:** lưu mới khách, điều chỉnh điểm và bước xác nhận khóa/mở khóa trên bản ghi QA riêng; tổ hợp lỗi Supabase; responsive; backdrop modal.
 
 ### Kiểm thử ghi dữ liệu bổ sung (14/10/2026)
 
@@ -294,3 +300,307 @@ Theo góp ý giao diện, cột `Loài và Giống` trong bảng danh sách hi�
 - Trạng thái hiện tại: Dashboard tải được dữ liệu thật (14 khiếu nại, 52 bé, 13 khách, 24 phiên chatbot). Kho đang hiển thị trạng thái trống vì truy vấn tồn kho chưa trả sản phẩm; cần rà soát schema quan hệ `inventory` nếu dữ liệu sản phẩm thực tế đang có.
 - Đối chiếu trực tiếp tab Sản phẩm cho thấy CSDL có 37 mặt hàng, 36 còn hàng, 1 sắp hết và 1 hết hàng. Vì vậy dòng “chưa có sản phẩm” trên Dashboard là lỗi đồng bộ truy vấn, không phải dữ liệu rỗng. Đã phát hiện truy vấn Dashboard đang yêu cầu cột `stock`/các cột inventory không dùng trong truy vấn chuẩn của tab Sản phẩm; đã thêm fallback truy vấn `product` và `inventory` riêng để tiếp tục xử lý.
 
+
+## Thú cưng — rà soát luồng ghi dữ liệu (15/10/2026)
+
+- Đã rà soát luồng hồ sơ, cân bé, ghi chú Groomer và các bảng liên quan. Truy vấn ghi hồ sơ thú cưng trước đây chỉ kiểm tra lỗi request, chưa xác minh số dòng cập nhật; ghi chú Groomer còn có thể báo thành công dù bản ghi bị từ chối.
+- Đã sửa: cập nhật hồ sơ, ghi chú Groomer và cân nặng đều dùng `select` để xác minh đúng một bản ghi trả về; luồng cân bắt buộc ghi thành công vào cả `pet_weight_history` và `pet_profile.weight`, không bỏ qua lỗi RLS/schema của lịch sử cân.
+- Sau khi tải phiên bản `20261015_r48`, cần thao tác một lần trên hồ sơ bé có chủ nuôi: nhập cân mới, lưu, tải lại và kiểm tra mốc mới trong bảng lịch sử cùng cân hiện tại. Nếu Supabase trả lỗi, giao diện phải hiện lỗi CSDL thay vì báo thành công.
+
+## Quy ước cập nhật tiến trình
+
+Sau mỗi lượt kiểm thử hoặc sửa lỗi, bắt buộc cập nhật ngay tài liệu này với: phạm vi và thao tác đã thực hiện, kết quả giao diện, kết quả ghi/đọc lại từ Supabase, lỗi còn lại và trạng thái Đạt/Chưa đạt. Không đánh dấu Đạt nếu chưa xác minh dữ liệu sau khi tải lại.
+
+## Thú cưng — lưu trữ và khôi phục hồ sơ (15/10/2026)
+
+- Rà soát thao tác Lưu trữ hồ sơ và Khôi phục hồ sơ trong menu `•••`.
+- Đã sửa để cả hai thao tác dùng `select` xác minh đúng một dòng và trạng thái `INACTIVE`/`ACTIVE` từ Supabase trước khi tải lại bảng và báo thành công. Lỗi RLS, thiếu ID hoặc cập nhật 0 dòng sẽ báo lỗi rõ ràng và không làm mới trạng thái giả.
+- Phiên bản module: `20261015_r49`. Đã kiểm tra cú pháp JavaScript.
+- Cần chạy lại trên một hồ sơ QA có thể khôi phục để xác nhận trực tiếp sau F5; chưa đánh dấu Đạt nếu chưa kiểm tra được bản ghi thật.
+
+## Thú cưng / Cân bé — kiểm thử trực tiếp và sửa (15/10/2026, r51)
+
+- Bản ghi thử: Bông kiểm thử skeleton, PET-009. Mở hồ sơ qua tên bé, mở Cân bé, nhập và bấm lưu thật.
+- Tái hiện: một lần lưu 4.6 kg tạo hai mốc lịch sử và hai toast; hồ sơ vẫn hiện 4.5 kg đến khi F5. Xác nhận sau F5 cả hai mốc 4.6 kg đã được ghi thật.
+- Nguyên nhân: tab danh sách và tab hồ sơ cùng gắn handler cho nút Lưu cân nặng; nạp lại sau lưu bị cache TTL chặn.
+- Đã sửa: chỉ dùng handler cân của hồ sơ, truyền đúng bé khi mở từ menu danh sách, chặn bấm khi request đang chạy, force tải dữ liệu sau ghi và cập nhật toàn bộ hồ sơ.
+- Kiểm thử lại: lưu 4.7 kg chỉ có một mốc; sau sửa cache lưu 4.8 kg cập nhật ngay cân trên header, thông tin thể trạng và lịch sử. F5 xác minh đúng một ô lịch sử 4.8 kg và cân hiện tại 4.8 kg. Đạt luồng cân từ hồ sơ.
+- Bằng chứng: artifacts/pet-weight-r51.png. Hai mốc 4.6 kg do lượt tái hiện vẫn được giữ để đối soát, chưa xóa dữ liệu.
+- Chưa kiểm thử lại trong lượt này: lưu trữ/khôi phục, chỉnh sửa hồ sơ, ghi chú, cân từ menu danh sách. Không suy rộng kết quả Đạt cho các thao tác này.
+
+## Thú cưng / Ghi chú và form sửa — kiểm thử trực tiếp (15/10/2026, r52)
+
+- PET-009: nhập ghi chú QA, bấm Lưu ghi chú, F5 xác nhận nội dung vẫn giữ. Thử lại với chuỗi QA lưu ghi chú r52 ngày 15/10/2026; xác minh cả thông tin thể trạng, form sửa nhận ngay nội dung mới, sau F5 textarea vẫn đúng. Đạt luồng ghi chú với bản ghi này.
+- Tái hiện và sửa: trước sửa form chỉnh hồ sơ dùng ghi chú cũ sau khi lưu Groomer; đã đồng bộ pet.notes và nội dung thể trạng sau lưu. Lỗi lưu ghi chú phải thoát và báo lỗi, không chạy tiếp toast thành công.
+- Tái hiện và sửa: hồ sơ chưa có ngày sinh nhưng mở form tự điền 2023-05-15. Đã bỏ ngày mặc định; mở lại form bản r52 xác minh giá trị ngày sinh trống.
+- Kiểm tra Lưu thay đổi khi chưa chọn chủ nuôi: bị chặn, hiện Bắt buộc chọn chủ nuôi trước khi lưu hồ sơ bé cưng. Nút Hủy đóng form được. Không tự gán chủ nuôi cho PET-009.
+- Chưa đánh dấu đạt toàn bộ sửa hồ sơ: chưa submit thành công form trên bé có quan hệ chủ nuôi rõ ràng trong lượt này. Chụp ảnh bằng chứng thất bại hai lần do công cụ capture; kết quả được xác minh bằng DOM sau F5.
+
+## Đính chính chủ nuôi thú cưng — đối chiếu Supabase thật (15/10/2026, r53)
+
+- Truy vấn chỉ đọc trực tiếp CSDL: 58 pet_profile, cả 58 có customer_id khớp customer.id, không có bé nào customer_id null. 39 bé khớp customer_profile.customer_id; 19 bé có tài khoản chủ nhưng chưa có hồ sơ tên tương ứng. PET-009 có cả tài khoản và hồ sơ chủ hợp lệ.
+- Đính chính các ghi nhận trước nói PET-009/Bo thiếu chủ: nhãn UI không chứng minh thiếu quan hệ; kết luận trước đó chưa đúng. Không sửa/gán lại customer_id.
+- Lỗi mapping: custMap chỉ tạo từ response customer; khi tài khoản bị giới hạn đọc nhưng customer_profile có tên, code loại mất hồ sơ đó và hiển thị Chưa cập nhật chủ nuôi.
+- Đã bổ sung mapping từ customer_profile theo customer_id chuẩn; nếu còn liên kết nhưng không tải được thông tin thì hiển thị Chưa tải được thông tin chủ nuôi, không ngụ ý không có chủ.
+- Test trực tiếp sau reload r53: LuLu hiện Lê Lệ Quyên QA; Miu Miu và PET-009 hiện Trần Thị Bích; Bar và High hiện Nguyễn Lê Thi. Danh sách đã hiển thị đúng tên từ quan hệ hiện có.
+- Còn cần xử lý riêng: quyền đọc customer cho phiên admin và 19 bé có tài khoản chủ nhưng thiếu customer_profile; không tự suy đoán tên hoặc đổi chủ.
+
+## Thú cưng — tiếp tục đối chiếu và thử sửa hồ sơ (15/10/2026)
+
+- Đối chiếu chỉ đọc: 19 bé chưa có hồ sơ tên thuộc 7 tài khoản customer, không có trường hợp customer_id nhầm sang customer_profile.id. Trong 7 tài khoản có 2 tài khoản tạm; 4 tài khoản có auth_user_id. Chưa suy diễn tên, chưa thay đổi quan hệ chủ.
+- Thử trực tiếp sửa PET-009 sau sửa mapping: form tự chọn đúng Trần Thị Bích; đổi màu lông thành Trắng QA 15/10, bấm Lưu thay đổi. Form đóng và thông tin cập nhật.
+- Sau F5 xác minh: màu lông Trắng QA 15/10, chủ nuôi Trần Thị Bích, ngày sinh Chưa cập nhật. Đạt cập nhật màu lông, giữ chủ nuôi và giữ ngày sinh null trên bản ghi này; không suy rộng sang toàn bộ trường hoặc luồng CRUD.
+- Còn lại: bổ sung/khôi phục tên của 7 tài khoản thiếu customer_profile dựa trên nguồn xác thực; quyền đọc tài khoản khách trong phiên admin vẫn cần giải quyết để lấy đầy đủ SĐT.
+
+## Thú cưng — lưu trữ/khôi phục thực tế và đối chiếu tên (15/10/2026, r54)
+
+- PET-009: thao tác Lưu trữ hồ sơ, xác nhận Lưu trữ; CSDL đã ghi nhưng bảng giữ trạng thái cũ đến F5. Tái hiện lỗi cache TTL chặn tải lại sau ghi.
+- Sửa hai callback lưu trữ/khôi phục dùng loadPetsModuleData({ force: true }); tăng phiên bản module r54. Kiểm tra cú pháp JavaScript đạt.
+- Kiểm thử lại trực tiếp cả hai chiều, đợi request hoàn tất: bảng chuyển Lưu trữ trước F5; F5 xác nhận vẫn Lưu trữ. Bấm Khôi phục hồ sơ, bảng chuyển Đang nuôi trước F5; F5 xác nhận vẫn Đang nuôi. Đạt luồng lưu trữ/khôi phục trên PET-009; bản ghi cuối đã trả về Đang nuôi.
+- Bằng chứng cuối: artifacts/pet-restore-r54.png. Chủ Trần Thị Bích, cân 4.8 kg và ghi chú QA vẫn giữ.
+- Đối chiếu thêm 7 tài khoản thiếu customer_profile: metadata đăng ký không có full_name/name; chỉ 2 tài khoản có tên người nhận trong địa chỉ. Tên người nhận không đủ chứng minh tên chủ nuôi nên chưa tự điền hoặc đổi quan hệ. Vấn đề tên thiếu và quyền đọc SĐT vẫn còn, chưa đánh dấu đã sửa hết.
+
+## Thú cưng — cân từ menu danh sách (15/10/2026, r54)
+
+- PET-009: mở menu ••• > Cân bé và thể trạng; modal nhận đúng tên và cân cũ 4.8 kg. Nhập 4.9 kg, chọn Cân định kỳ, bấm Lưu cân nặng một lần.
+- Request hoàn tất: modal đóng, bảng hiện 4.9 kg. Công cụ chờ lần đầu hết hạn trước khi request xong; không bấm lưu lại và không kết luận lỗi từ timeout của công cụ.
+- F5 xác minh bảng vẫn 4.9 kg; mở hồ sơ thấy cân hiện tại 4.9 kg và đúng một ô lịch sử 4.9 kg. Đạt ghi cân từ danh sách, không nhân đôi mốc trong lượt này.
+- Thử cân 0 kg: hiện Vui lòng nhập cân nặng lớn hơn 0 kg, modal giữ mở; Hủy đóng được, cân hiện tại giữ 4.9 kg. Chưa kiểm tra lại CSDL sau F5 riêng cho lượt nhập 0.
+- Bằng chứng: artifacts/pet-list-weigh-r54.png. Không sửa code trong lượt này. Chưa kết luận đạt toàn bộ thao tác Thú cưng.
+
+## Thú cưng — lỗi lưu và hiển thị dịch tễ (15/10/2026, r55)
+
+- Thử PET-009 chọn Xổ giun định kỳ và nhỏ gáy ve rận, nhập ghi chú QA, lưu thật. Tái hiện: UI gán tiêu đề Vắc-xin phòng dại, báo đủ điều kiện Hotel sai và bỏ ghi chú.
+- Nguyên nhân: loader dựng tiêu đề, nơi đối chiếu, chu kỳ Hằng năm tĩnh cho mọi vaccination_history; handler chỉ lưu loại/ngày, ghi đè lịch sử và bỏ trạng thái, ngày tái chủng, nguồn đối chiếu.
+- Sửa r55: đọc đúng nội dung cũ mà không gán nhãn dại; lưu đủ trường trong cột text vaccination_history hiện có, nối thêm lịch sử; xác minh select sau ghi, force refresh. Không tạo file JSON hoặc mock. Bỏ thông tin mặc định không có trong CSDL và escape nội dung khi render.
+- Sau reload r55, bản ghi xổ giun cũ hiển thị đúng loại, ngày 15/10/2026; không còn tự báo đủ điều kiện Hotel. Trường thiếu hiện Chưa cập nhật/Chưa xác nhận.
+- Đang kiểm thử lại lưu đủ nguồn QA r55, trạng thái Đã thực hiện và ngày tái chủng 2026-11-15; chưa đánh dấu Đạt khi chưa xác minh sau F5.
+- Kết quả lượt thử lại đã hoàn tất: modal đóng, hiển thị đúng Xổ giun, Đã thực hiện, ngày 15/10/2026, tái chủng 2026-11-15 và nguồn QA r55. F5 rồi mở tab dịch tễ: toàn bộ nội dung giữ nguyên; mốc cũ vẫn tồn tại, không bị ghi đè. Đạt lưu/đọc lại các trường đã thử trên PET-009. Bằng chứng artifacts/pet-vaccine-r55.png.
+- Giới hạn còn lại: chưa kiểm thử đồng thời hai phiên ghi lịch sử; chưa rà soát đầy đủ nghiệp vụ hạn hiệu lực và các điều kiện Hotel. Không kết luận đủ toàn bộ điều kiện nhận phòng chỉ từ lượt này.
+
+## Thú cưng — thao tác nhanh hồ sơ (16/10/2026, r56)
+
+- Kiểm thử PET-009: tab Nhật ký chăm sóc và Lịch sử dịch vụ chuyển được, hiển thị trạng thái trống trên hồ sơ này. Chưa coi là xác minh mọi bản ghi CSDL.
+- Tái hiện hai nút chết: Đặt lịch Spa hoặc Hotel và Đăng ảnh nhật ký bấm không có phản hồi. Source không có listener cho hai class tương ứng.
+- Đang sửa nút đặt lịch dùng luồng của menu danh sách. Phát hiện thêm sessionStorage mà menu danh sách truyền sang Dịch vụ chưa có nơi tiếp nhận, nên chỉ điều hướng mà không mở form/chọn bé.
+- Bổ sung nhận ngữ cảnh và điền qua hàm chọn khách/bé của form lịch hẹn; chưa đánh dấu Đạt trước khi thử lại UI.
+- Đăng ảnh nhật ký chưa có luồng tạo/upload tại phân hệ Thú cưng; còn lỗi, chưa sửa xong, chưa ghi dữ liệu từ nút này.
+- Kết quả r58: sau reload, bấm Đặt lịch Spa hoặc Hotel từ PET-009 tự mở form Thêm lịch hẹn, tự chọn đúng Trần Thị Bích và Bông kiểm thử skeleton/Poodle; cảnh báo nhận ghi chú của bé. Hủy đóng được và quay lại Thú cưng. Đạt điều hướng/mở form/chọn bé-chủ trong lượt này, chưa tạo lịch mới.
+- SĐT vẫn trống do nguồn khách không tải đủ SĐT (vấn đề đã ghi trước). Form còn hiện ngày 2026-10-15 trong khi ngày người dùng là 16/10; cần sửa ngày mặc định theo múi giờ/ngày hiện tại. Chưa đánh dấu đạt luồng tạo lịch và ghi CSDL.
+- Chụp bằng chứng form thất bại do công cụ capture; kết quả kiểm chứng bằng DOM. Nút Đăng ảnh nhật ký vẫn chưa có xử lý, cần tiếp tục triển khai/test, không coi hồ sơ thú cưng đã hoàn tất mọi thao tác.
+
+## Tiếp nối Thú cưng > Đặt lịch — ngày mặc định và phát hiện lưu giả (16/10/2026, r59)
+
+- Sửa ngày mặc định: mỗi lần mở form lấy ngày hiện tại theo Asia/Bangkok, không giữ ngày cũ/UTC. Sau reload thử trực tiếp Thêm lịch hẹn: hiện 2026-10-16. Đổi sang 2026-10-20 rồi Hủy và mở lại: trở về 2026-10-16. Đạt mở mới/reset ngày mặc định trong lượt này.
+- Bấm Lưu lịch hẹn khi form trống: hiện Vui lòng nhập tên khách hàng; form giữ mở. Hủy đóng được. Không tạo lịch trong lượt kiểm thử này.
+- Bằng chứng: artifacts/booking-date-r59.png.
+- LỖI CÒN MỞ, phát hiện qua source chưa thử ghi hợp lệ: handler tạo lịch gán ID giả CUST-NEW/PET-NEW, giá 250000 cố định vào state trước khi ghi; insert appointment không ghi customer_id/pet_id/service_id và không kiểm tra error trả về; vẫn có thể đóng form/toast thành công dù CSDL từ chối. Cần sửa handler theo quan hệ và giá thật, rồi thử ghi/F5. Chưa đánh dấu đạt tạo lịch.
+- SĐT thiếu và nút Đăng ảnh nhật ký ở hồ sơ Thú cưng vẫn chưa xử lý xong. Không suy rộng kiểm thử ngày thành đạt toàn bộ CRUD.
+
+## Lịch hẹn từ Thú cưng — sửa ghi dữ liệu thật (16/10/2026, r61)
+
+- Đã bỏ tạo dòng giả CUST-NEW/PET-NEW và giá 250000 cố định trước insert. Luồng Spa kiểm tra bé/chủ bằng UUID, đối chiếu pet_profile.customer_id, chọn dịch vụ thật và service_price_matrix theo cân/ngày; insert đầy đủ customer_id/pet_id/service_id/staff_id, kiểm tra error và bản ghi trả về rồi force tải lại.
+- Bấm Lưu khóa trong khi request chạy; lỗi giữ form mở. Tái hiện lỗi enum khi dùng giá trị trong CSDLdemo: cho_xac_nhan không được CSDL thật chấp nhận. Đã sửa PENDING/UNPAID theo code và phản hồi thực tế.
+- Đã thử ghi từ LuLu PET-1792044472428 / Lê Lệ Quyên QA, chọn Express Care – Vệ Sinh Nhanh, 17/10/2026 11:30, ghi chú QA r61. Modal đóng; bảng có lịch BKG-c8237798-4ead-4e89-8a5b-d6cafce481c8, LuLu 5 kg, dịch vụ 30 phút, 100000 đ, Chờ xác nhận. Giá lấy từ CSDL, không phải 250000 mặc định.
+- Còn mở: nhãn khách trên bảng vẫn Khách vãng lai do quyền đọc/mapping tên khách; insert đã xác minh customer_id đúng chủ, không được kết luận dữ liệu mất chủ từ nhãn này. SĐT chưa tải. Hotel/Taxi hiện báo rõ chưa hoàn thiện luồng phòng/chuyến và không lưu giả; chưa đạt CRUD hai nhóm này. Chưa kiểm thử trùng lịch và đồng thời.
+- Sau F5 đã xác minh lịch BKG-c8237798-4ead-4e89-8a5b-d6cafce481c8 vẫn xuất hiện đúng bé, dịch vụ, ngày giờ, giá 100000 đ và trạng thái chờ xác nhận. Đạt ghi/đọc lại lịch Spa trên bản ghi QA này. Bằng chứng artifacts/booking-save-r61.png. Giữ bản ghi QA để đối soát, chưa hủy.
+
+## Lịch hẹn — sửa hiển thị tên khách (16/10/2026, r62)
+
+- Nguyên nhân: truy vấn appointment thiếu customer_id thô; tên phụ thuộc customer join bị giới hạn quyền đọc nên bị thay nhãn Khách vãng lai dù lịch có chủ hợp lệ.
+- Sửa: lấy customer_id/pet_id, đọc customer_profile riêng và ghép chính xác bằng appointment.customer_id. Không suy chủ từ bé, không gán USER-001 giả, không gọi khách thiếu tên là khách vãng lai. Không thay đổi quan hệ hoặc dữ liệu lịch.
+- Kiểm thử trực tiếp sau reload: lịch BKG-c8237798-4ead-4e89-8a5b-d6cafce481c8 hiển thị Lê Lệ Quyên QA, LuLu 5 kg, Express Care, 17/10/2026 11:30, 100000 đ. Đạt sửa tên trên bản ghi QA đã ghi ở r61. node --check services.js đạt. Bằng chứng artifacts/booking-customer-r62.png.
+- Còn mở: SĐT vẫn — vì chưa đọc được số tài khoản; chưa sửa quyền RLS. Hotel/Taxi, kiểm tra trùng lịch và nút Đăng ảnh nhật ký vẫn chưa hoàn tất; không đánh dấu đạt toàn bộ CRUD.
+
+## Lịch hẹn — gợi ý khách và đổi nhóm dịch vụ (16/10/2026, r63)
+
+- Sửa danh sách chọn khách: dùng hồ sơ đã ghép bằng customer_id, ghép thú cưng từ pet_profile bằng đúng customer_id. Bỏ nhánh lấy khách từ lịch hẹn rồi tự điền SĐT 0901234567, giống Poodle và cân 4.5 không có nguồn dữ liệu.
+- Bỏ các mảng gói dịch vụ mẫu khi danh mục CSDL rỗng; chỉ gợi ý dịch vụ đang phục vụ. Không tìm thấy thì hiện trạng thái trống.
+- Test trực tiếp phát hiện đổi nhóm khi dropdown đang mở vẫn giữ gói Spa. Đã sửa cập nhật dropdown ngay khi đổi nhóm; reload rồi test lại Spa -> Hotel -> Taxi: Hotel có Phòng Standard/Deluxe/Luxury Suite, Taxi chỉ có Dịch Vụ Xe Đưa Đón Tận Nơi, không còn gói Spa trong danh sách Taxi.
+- Test tìm Lê Lệ Quyên QA: hiện 2 tài khoản trùng tên với danh sách bé khác nhau; chọn tài khoản có lala/LuLu, thẻ xác nhận và bé đầu tiên lala được điền. Tìm gói zzQA-khong-co-goi hiện Không tìm thấy gói dịch vụ phù hợp. Không tạo lịch mới trong lượt này; chưa đánh dấu đạt ghi Hotel/Taxi.
+- node --check services.js và tab-service-bookings.js đạt. Công cụ chụp ảnh lỗi Unable to capture screenshot hai lần nên lượt này chưa có ảnh bằng chứng; kết quả kiểm tra dùng DOM trực tiếp.
+- SĐT vẫn chưa tải: phone_main thuộc customer, policy customer_identity_boundary chỉ cho chủ tài khoản hoặc pawpal_is_staff(); cần xác minh liên kết Auth nhân viên/quyền đọc CSDL (vấn đề đã ghi trước), chưa sửa policy hay gán số từ người nhận. Giá hiển thị Hotel/Taxi và luồng ghi hai nhóm này chưa được xác minh đầy đủ.
+
+## Lịch hẹn — lưu Taxi một chiều thật (16/10/2026, r64)
+
+- Bổ sung luồng Taxi một chiều trong form Thêm lịch hẹn: xác minh UUID chủ/bé/dịch vụ, yêu cầu đủ địa chỉ đón/trả và cự ly dương, kiểm tra cân nặng thực. Đọc taxi_price_rule từ Supabase; chỉ dùng đúng một quy tắc còn hiệu lực theo cự ly/cân/ngày, giá bằng base_price + surcharge. Không có/nhập nhằng giá thì báo lỗi, không dùng công thức dự phòng.
+- Lưu lộ trình, hình thức, cự ly và ID quy tắc giá trong khối text có nhãn ở appointment.note hiện có, cùng ghi chú QA. Loader đọc lại khối này; bảng và hồ sơ hiển thị đúng dữ liệu. Không dùng file JSON hay thêm bảng không tồn tại. Chưa phải cơ chế giữ phòng Hotel.
+- Test thật: chọn Lê Lệ Quyên QA, LuLu 5 kg; Taxi một chiều đón đến quầy, ngày 18/10/2026 11:30, 4 km. Lưu khi chưa có địa chỉ bị chặn với thông báo yêu cầu địa chỉ đón/trả, form giữ mở.
+- Sau nhập Điểm đón QA r64 và Điểm trả QA r64, lưu thành công BKG-08e4e094-a5e6-48c9-b135-ffac698f70c8. F5: bảng giữ đúng khách/bé, hai điểm, 4 km, một chiều, 120000 đ, Chờ xác nhận. Mở hồ sơ giữ đúng lộ trình/hình thức/cự ly/giá.
+- Phát hiện thêm ghi chú đã lưu nhưng hồ sơ hiện Không có do loader thiếu customerNote. Đã nối lại; reload hồ sơ xác minh hiện QA r64 kiểm thử lưu Taxi 16/10/2026. Bỏ địa chỉ 45 Lê Duẩn, cự ly 4.2 km, khứ hồi và đích Q.1 mặc định sai ở hồ sơ Taxi; escape địa chỉ khi render HTML.
+- Bằng chứng artifacts/booking-taxi-r64.png. node --check cả ba file dịch vụ đạt; git diff --check đạt. Giữ lịch QA để đối soát, chưa xác nhận/thu tiền/điều phối.
+- Phạm vi đạt: tạo và đọc lại chuyến Taxi một chiều đã thử; chưa test hướng Chở về nhà, biên khoảng giá, đồng thời, trùng lịch hay sửa/hủy. Khứ hồi đang chặn rõ do thiếu quy tắc giờ về/giá khứ hồi; Hotel vẫn chặn vì chưa có cơ chế liên kết/giữ phòng được xác minh. SĐT và quyền đọc customer còn mở. Không kết luận hoàn tất toàn bộ CRUD dịch vụ.
+
+## Dịch vụ — xác nhận, điều phối và hủy thật (16/10/2026, r65)
+
+- Tái hiện: bấm xác nhận lịch Taxi, hồ sơ còn Chờ xác nhận vì render trước khi request kết thúc. Handler trạng thái và điều phối bỏ qua Supabase error, đổi state trước ghi nên có nguy cơ báo thành công giả.
+- Sửa chuyển trạng thái: kiểm tra kết nối/UUID/trạng thái gốc, chỉ cho chuyển theo trạng thái hiện tại, chống request lặp trong phiên; update có điều kiện trạng thái gốc, select xác minh id/status, force nạp và render hồ sơ sau await. Lỗi trả về thông báo và không đổi state giả.
+- Sửa hủy: đợi kết quả lưu rồi mới đóng modal/báo thành công; lưu lý do vào note, giữ nguyên khối lộ trình Taxi. Sửa điều phối: dùng đúng một staff UUID, xác minh id/staff_id sau update, so sánh nhân viên và trạng thái gốc, lưu lý do điều phối trong note, không tự sửa nhật ký cũ trên state. Chặn bàn giao toàn bộ các nhật ký đã ghi khi chưa có luồng lưu tương ứng. Bỏ KTV mặc định Ngọc Anh trong modal; vô hiệu nút Đổi KTV trên ca kết thúc.
+- Test chuyến QA BKG-08e4e094-a5e6-48c9-b135-ffac698f70c8: xác nhận đã tồn tại sau F5. Điều phối thử cho Trần Văn Nhân Viên, lý do QA r65 kiểm thử lưu điều phối; F5 bảng và hồ sơ giữ đúng nhân viên và Đã xác nhận. Đây là kiểm thử khả năng ghi staff_id, chưa xác minh tiêu chuẩn vai trò tài xế/lịch trực.
+- Hủy chuyến QA trên UI, lý do QA r65 kết thúc kiểm thử chuyến Taxi. F5: Đã hủy, lý do hủy và điều phối còn trong note; lộ trình/4 km/120000 đ giữ nguyên. Sau bản sửa mới nút Đổi KTV bị disabled trên lịch này, đã kiểm tra isEnabled=false. Không thu tiền hay tiếp nhận bé.
+- Test lại xác nhận bằng bản sửa mới trên lịch Spa QA BKG-c8237798-4ead-4e89-8a5b-d6cafce481c8: đợi Supabase hoàn tất, hồ sơ tự đổi Đã xác nhận; F5 bảng giữ Đã xác nhận/100000 đ/LuLu. Giữ lịch Spa ở Đã xác nhận để đối soát.
+- Bằng chứng artifacts/booking-status-r65.png. node --check ba file dịch vụ và git diff --check đạt.
+- Còn mở: khi F5 Hồ sơ, HTML mẫu BKG-1001/Miu Con có thể xuất hiện trong lúc dữ liệu thật đang tải (không phải bản ghi mới). Chưa sửa lượt này. Danh sách điều phối còn nhãn KTV Spa chung, chưa xác minh đúng vai trò tài xế, ca trực và xung đột lịch. Chưa thử lỗi RLS bằng phiên mất quyền, hai phiên ghi đồng thời, tiếp nhận/hoàn tất, thu tiền. Hotel/khứ hồi/SĐT vẫn mở. Lý do hủy và điều phối đang trình bày chung khu Ghi chú của khách; cần tách cách trình bày sau, dữ liệu đã lưu.
+
+## Dịch vụ — hồ sơ đúng ca khi tải lại (16/10/2026, r66)
+
+- Sửa lỗi F5 lộ HTML mẫu BKG-1001/Miu Con trong lúc chờ CSDL: nội dung hồ sơ ban đầu ẩn, trạng thái tải nằm ngoài thẻ hồ sơ. Khi có dữ liệu đúng ID mới hiện thẻ.
+- Bỏ fallback BKG-1001 và fallback bookingsData[0] trong render hồ sơ. Nếu không có lựa chọn/ID không tồn tại/không đọc được thì hiện trạng thái chọn lịch, không tìm thấy hoặc lỗi tải; không tự đổi sang ca khác. Breadcrumb chỉ hiện khi tìm thấy lịch thật.
+- Test trực tiếp F5 trên hồ sơ Taxi QA: DOM đầu chỉ có Đang tải hồ sơ lịch hẹn…, sau nạp có đúng BKG-08e4e094-a5e6-48c9-b135-ffac698f70c8 / Đã hủy. Chuyển bảng rồi mở Spa QA: code đúng BKG-c8237798-4ead-4e89-8a5b-d6cafce481c8. F5 lần nữa có trạng thái tải, chưa có dữ liệu mẫu.
+- Bằng chứng artifacts/service-detail-loading-r66.png. node --check services.js/tab-service-detail.js và git diff --check đạt. Không ghi thay đổi nghiệp vụ trong lượt này.
+- Chưa thao tác tạo tình huống ID bị xóa hoặc phiên mất quyền trên CSDL; nhánh lỗi/trống mới được rà code, chưa đánh dấu kiểm thử trực tiếp. Đây là trạng thái tải chữ, chưa phải skeleton bố cục hồ sơ. Hotel/khứ hồi/SĐT và các mục còn mở r65 vẫn chưa hoàn tất.
+
+## Lỗi để sửa sau và kiểm thử tiếp nhận (16/10/2026, r67)
+
+- Theo yêu cầu người dùng: ghi lại lỗi còn mở, tạm hoãn sửa. Các mục Hotel, Taxi khứ hồi, quyền đọc SĐT customer, vai trò/ca trực điều phối và bố cục skeleton hồ sơ tiếp tục giữ trạng thái CHƯA HOÀN TẤT, không kiểm thử lại các mục đã đạt chỉ để đổi nhãn.
+- Kiểm thử trực tiếp tiếp nhận lịch Spa QA BKG-c8237798-4ead-4e89-8a5b-d6cafce481c8: chọn Trần Văn Nhân Viên, cân 5.1 kg, tick Dây dắt, ghi QA r67 dây dắt kiểm thử tiếp nhận, bấm Xác nhận tiếp nhận và bắt đầu ca.
+- Tái hiện lỗi: ngay sau bấm có 5.1 kg/nhân viên/biên bản trong state; sau request tải lại thì lịch chuyển Đang thực hiện nhưng cân hiện 5 kg, nhân viên Chưa phân công, thông báo Ca dịch vụ chưa thực hiện tiếp nhận và kiểm tra an toàn tại quầy. Chưa đạt lưu biên bản.
+- Đối chiếu source: intakeRecord và booking.staff/petWeight chỉ gán vào state; không có insert/update lưu biên bản/cân tiếp nhận/staff_id/check_in_time. Chỉ updateBookingStatus ghi appointment_status. Force refresh bộc lộ dữ liệu chưa được lưu. Handler còn báo thành công trước await, fallback cân 4.2/Ngọc Anh, ảnh chỉ dùng blob URL. Đây là lỗi nghiệp vụ ghi dữ liệu, không phải dữ liệu bẩn.
+- Chưa sửa theo yêu cầu hoãn. Không thu tiền/hoàn tất ca. Lịch Spa QA hiện Đang thực hiện do kiểm thử; dữ liệu pet_profile.weight không bị đổi bởi thao tác này. Cần lưu biên bản và bắt đầu ca đồng nhất, kiểm tra required/cân dương/nhân viên thật, upload ảnh thật, xác minh sau reload trước báo thành công.
+- Sau F5 đã xác minh vẫn Đang thực hiện nhưng biên bản còn thông báo chưa tiếp nhận. Bằng chứng artifacts/intake-not-saved-r67.png. Lượt này chỉ kiểm thử và ghi process, không sửa code.
+
+## Dịch vụ — kiểm thử nhật ký, phụ phí và dịch vụ đi cùng (16/10/2026, r68)
+
+- Tiếp tục kiểm thử trên Spa QA BKG-c8237798-4ead-4e89-8a5b-d6cafce481c8, đang thực hiện. Theo yêu cầu đang hoãn sửa: chỉ kiểm thử và ghi lỗi, không đổi code.
+- Nhật ký: điền QA r68 kiểm thử ghi nhật ký và ghi chú rồi bấm Ghi nhật ký. Không có phản hồi/toast/bản ghi mới, form không reset; ô KTV chỉ có lựa chọn rỗng. Rà source không tìm thấy listener cho btnSubmitCarelogStep hoặc code nạp newLogStepStaff. Sau F5 nhật ký vẫn trống. CHƯA ĐẠT tạo nhật ký; chưa thể kiểm thử sửa/xóa trên ca QA này vì chưa tạo được bản ghi.
+- Phụ phí: thêm QA r68 phụ phí kiểm thử, 1000 đ, lý do QA r68 kiểm tra lưu dữ liệu, không thu tiền. UI báo thành công, có dòng 1000 đ nhưng tổng từ 100000 thành 102000 đ (sai cộng đôi). F5: dòng phụ phí biến mất, tổng trở về 100000 đ. Source chỉ push booking.surcharges và tăng booking.surchargePrice, không ghi CSDL; render lại cộng cả mảng và surchargePrice nên cộng đôi. CHƯA ĐẠT lưu phụ phí/tổng tiền. Bằng chứng artifacts/service-surcharge-r68-before.png.
+- Dịch vụ đi cùng: chọn Cắt tỉa móng và mài mịn chống xước 40000 đ, nhân viên Trần Văn Nhân Viên, ghi chú QA r68. Bấm Lưu dịch vụ đi cùng báo thành công, bảng kê có dòng và tổng 140000 đ. Gói trong dropdown lấy mảng tĩnh accompanyingServicesCatalog, handler chỉ ghi state. Bằng chứng trước F5 artifacts/service-addon-r68-before.png. Đang xác minh sau F5, chưa đánh dấu đạt ghi CSDL.
+- Không bấm thu tiền, không gửi tin khách, không thực hiện dịch vụ thực tế. Các thay đổi phụ phí/dịch vụ đi cùng chỉ nhằm kiểm thử lưu trên ca QA, không phải thu phí thật. Các lỗi r67 và mục Hotel/khứ hồi/SĐT vẫn hoãn sửa.
+- Xác minh F5 hoàn tất: dịch vụ đi cùng 40000 đ biến mất, tổng 140000 trở về 100000 đ; nhật ký vẫn trống. CHƯA ĐẠT lưu dịch vụ đi cùng. Bằng chứng artifacts/service-extras-r68-after.png. Đã ghi kết quả cuối, không còn ở trạng thái đang xác minh.
+
+## Dịch vụ — sửa lưu nhật ký và chi phí (16/10/2026, r69)
+
+- Sửa nút Ghi nhật ký: nạp nhân viên thật theo UUID, bắt buộc tên bước/nhân viên, chỉ ghi trên ca đang thực hiện; ghi care_log với appointment_id/pet_id/care_action_id, recorded_at thật, kiểm tra lỗi và select xác minh. Thiếu mốc thì tạo care_action thật. Nhân viên được ghi kèm description vì care_log thật không có staff_id; loader đọc lại, hiển thị tên nhân viên/ghi chú, giờ Asia/Bangkok và nhãn Đã ghi.
+- Test phát hiện CSDLdemo sai cấu trúc care_action: bảng thật KHÔNG có service_id, dùng service_category. Đã đọc cấu trúc bảng thật chỉ đọc và sửa theo nhóm dịch vụ. Lần thử đầu thất bại không tạo care_log; lần thử sau đã lưu QA r69 ghi nhật ký thật với ghi chú QA r69 kiểm tra lưu Supabase và F5.
+- Phụ phí/dịch vụ đi cùng: CSDL hiện chưa có bảng chi tiết phát sinh. Lưu các dòng có ID, loại, số tiền, tên, lý do, nhân viên, service UUID trong khối text có cấu trúc ở appointment.note; ghi note và total_price bằng cùng một update, điều kiện note/giá/trạng thái gốc chống ghi đè dữ liệu đã đổi. Không dùng file JSON/mock, không báo thành công nếu lỗi/0 dòng. Nạp lại từ CSDL sau ghi. Hạn chế: đây là chi tiết text của lịch hẹn, chưa thay thế bảng hạch toán riêng.
+- Bỏ cộng thêm surchargePrice lần thứ hai; giá gói được tách từ tổng đã lưu trừ đúng một lần các dòng phát sinh. Đổi nút Lưu phụ phí và ghi nhật ký thành Lưu phụ phí vì thao tác này không ghi care_log. Thêm lựa chọn mặc định Chưa có xác nhận của chủ nuôi để không tự khẳng định đã gửi Zalo/khách đồng ý. Bản ghi QA thử trước thay đổi mặc định có nguyên văn lựa chọn mặc định cũ; không có tin nhắn nào được gửi và không có khách thật xác nhận.
+- Bỏ danh mục dịch vụ đi cùng tĩnh; chọn từ service đang phục vụ. Giá đi cùng vẫn do quản trị nhập trên form, chưa tự định giá theo cân/Hotel/Taxi. Đổi dịch vụ sẽ xóa giá cũ. Hai nút xóa dòng chi phí đã chuyển sang ghi lại note/tổng bằng cùng cơ chế, chưa test xóa thật lượt này. Escape nội dung tài chính khi render.
+- Test trực tiếp lưu QA r69 phụ phí lưu thật 1000 đ: tổng 100000 -> 101000 đ, không còn 102000 đ. Thêm Cắt Móng & Vệ Sinh Tai từ CSDL, giá nhập kiểm thử 60000 đ, Trần Văn Nhân Viên, ghi chú QA: tổng 161000 đ. F5: cả dòng 1000, dòng 60000 và tổng 161000 vẫn còn; nhật ký QA/tên nhân viên/ghi chú vẫn còn, form nhật ký reset. Bằng chứng artifacts/service-saved-r69.png. Không thu tiền/hoàn tất/gửi thông báo khách.
+- Kiểm tra node --check ba file dịch vụ và git diff --check đạt. Phạm vi đạt: tạo/đọc lại nhật ký chữ, phụ phí và dịch vụ đi cùng đã thử. CHƯA đạt toàn bộ CRUD: sửa/xóa nhật ký cũ vẫn dùng state, ảnh chưa có luồng upload thật (lưu có file sẽ báo lỗi rõ), chưa test hai phiên cùng sửa, xóa chi phí, lỗi mất quyền hoặc giá từng loại dịch vụ. Biên bản tiếp nhận r67, Hotel/khứ hồi/SĐT còn mở; không đánh dấu đã sửa các mục này.
+
+## Nhật ký chăm sóc — sửa bản ghi thật (16/10/2026, r70)
+
+- Sửa handler Lưu thay đổi: ghi care_log thật theo id và appointment_id, kiểm tra updated_at gốc để tránh ghi đè bản ghi đã đổi; kiểm tra error/select xác minh rồi force refresh. Không tự sửa state/toast thành công trước CSDL. Khi đổi tên mốc, tìm hoặc tạo care_action cùng service_category, không đổi tên mốc dùng chung của ca khác.
+- Bỏ ngày cố định 2026-10-12: form đọc giờ Asia/Bangkok; cập nhật giữ đúng ngày cũ của recorded_at và giờ được chọn. Nạp đúng step_name/nhân viên/ghi chú đã lưu. care_log không có trạng thái hoàn thành bước riêng, đổi nhãn thành Đã ghi nhật ký, không giả lưu checkbox hoàn thành.
+- Test UI trên BKG-c8237798-4ead-4e89-8a5b-d6cafce481c8: đổi tên QA r69 ghi nhật ký thật thành QA r70 nhật ký đã chỉnh sửa; đổi nội dung QA r70 đã sửa nội dung, kiểm tra sau F5; giữ Trần Văn Nhân Viên/08:00. Lưu thành công, F5 vẫn đúng tên/nội dung/nhân viên/giờ. Bằng chứng artifacts/carelog-edit-r70.png. Đạt sửa/đọc lại bản ghi đã thử.
+- Handler Xóa bước này đã chuyển từ splice state sang DELETE care_log có id/appointment_id/updated_at và select xác minh; có xác nhận rõ xóa vĩnh viễn, chặn nhật ký có media. CHƯA TEST XÓA THẬT vì không có cơ chế khôi phục; không đánh dấu đã đạt Delete. Không xóa mốc care_action hoặc ảnh ngoài ý muốn.
+- Kiểm tra Supabase Storage chỉ đọc bằng listBuckets: kết quả [] (chưa có bucket). Ảnh chưa hoàn tất: chưa có bucket/private access policy/upload/media link để kiểm thử. Không tự mở bucket public hoặc quyền anon. Các nút thêm ảnh hiện báo rõ chưa cấu hình kho ảnh thay vì im lặng hoặc chấp nhận blob như ảnh đã lưu; thao tác sửa giữ nguyên ảnh có sẵn và chặn thay đổi ảnh chưa lưu. Handler báo lỗi ảnh mới chưa được test lại UI lượt này, chưa đánh dấu đạt upload.
+- node --check tab-service-detail.js và git diff --check đạt. Chưa sửa biên bản tiếp nhận/Hotel/khứ hồi/SĐT. Tổng ca QA vẫn 161000 đ, chưa thu tiền. Không coi kết quả sửa nhật ký là hoàn tất toàn bộ CRUD/ảnh.
+
+## Dịch vụ — nghiệm thu và hoàn tất ca QA (16/10/2026, r71)
+
+- Người dùng yêu cầu bỏ qua ảnh, tiếp tục các phần còn lại. Lượt này kiểm thử UI và đối chiếu CSDL, không sửa code hay cấu hình Storage.
+- Mở Hoàn thành dịch vụ trên Spa QA BKG-c8237798-4ead-4e89-8a5b-d6cafce481c8. Bỏ chọn Đã thu đủ tiền tại quầy để không ghi thanh toán giả. Không chọn voucher/đổi điểm, không thu tiền và không gửi tin khách.
+- Test validation: bỏ xác nhận chất lượng rồi bấm Xác nhận bàn giao: bị chặn với thông báo yêu cầu đạt tiêu chuẩn. Tick chất lượng, bỏ trả tư trang: bị chặn yêu cầu trao trả đủ tư trang. Hai điều kiện UI này đạt trên lượt thử.
+- Tick đủ hai điều kiện, giữ chưa thu tiền, bấm hoàn tất. Đối chiếu CSDL thật chỉ đọc: appointment_status=COMPLETED, payment_status=UNPAID, total_price=161000. Đạt chuyển trạng thái hoàn tất, giữ tổng tiền và chưa thanh toán trên ca QA này. Không chứng minh đạt thu ngân/voucher/đổi điểm.
+- Đối chiếu schema: appointment thật KHÔNG có check_in_time/check_out_time (query cột check_out_time báo không tồn tại; đã đọc tên cột thật). Không được dùng file demo để kết luận giờ bàn giao đã lưu. Handler hiện còn gửi update các cột sai status/total_amount và enum payment paid/pending, bỏ qua error; chỉ request updateBookingStatus riêng ghi được COMPLETED. Cần sửa tách hoàn tất/thu ngân, lưu biên bản bàn giao và kiểm tra lỗi toàn bộ request.
+- Lỗi mở: modal mặc định tick đạt chất lượng/trả tư trang/đã thu tiền; voucher và lựa chọn đổi điểm là danh sách tĩnh, tích điểm dự kiến +16 chưa có chứng cứ ghi transaction. Tiến độ báo 0/1 do care_log không có cờ completed dù nhật ký đã ghi; trước hoàn tất vẫn không có biên bản tiếp nhận hay staff_id mà cho hoàn tất. Chưa kiểm thử thu tiền, voucher hoặc trừ điểm thật; không đánh dấu đạt những mục này.
+- Ca Spa QA hiện đã Hoàn thành/Chưa thu/161000 đ. Các khoản QA và nhật ký giữ để đối soát. Các lỗi còn mở được giữ trong process; ảnh bỏ qua theo yêu cầu.
+- Sau F5 xác minh UI Hoàn thành, Chưa thu, tổng 161000 đ, phụ phí/dịch vụ đi cùng và nhật ký vẫn còn; bằng chứng artifacts/service-complete-r71.png. Ca vẫn hiển thị biên bản chưa tiếp nhận, xác nhận lỗi điều kiện nghiệp vụ chưa được chặn.
+
+## Dịch vụ — sửa tiếp nhận và bàn giao (16/10/2026, r72)
+
+- Lưu biên bản tiếp nhận vào khối text có cấu trúc ở appointment.note hiện có (cân tiếp nhận, UUID/tên nhân viên, checklist, tư trang, recordedAt/updatedAt). Cùng một UPDATE ghi note + staff_id + IN_PROGRESS; so sánh note/trạng thái/giá gốc, select xác minh trước báo thành công. Không giả định cột check_in_time/check_out_time có trong CSDL thật, không sửa pet_profile.weight ngoài ý muốn.
+- Loader đọc lại biên bản, cân tiếp nhận 5.1 kg tách với cân hồ sơ gốc 5 kg; hiển thị tư trang ở cả phần tóm tắt và biên bản, thời điểm tiếp nhận/bàn giao ở header theo Asia/Bangkok. Bỏ ảnh Unsplash mặc định khỏi biên bản không có ảnh.
+- Intake chặn cân <=0/thiếu hoặc trùng tên nhân viên/tình trạng bình thường và bất thường cùng tick. Phụ phí cân nặng chỉ kiểm tra khi vượt ngưỡng 0.5 kg; không tự cộng giá 50000 trong state. Khi cần phụ phí phải dùng luồng lưu phụ phí thật. Chặn chỉnh biên bản trên ca đã kết thúc.
+- Hoàn tất ca: assertHandoverReady kiểm tra đang thực hiện và biên bản tiếp nhận đã lưu có thời gian hợp lệ/UUID nhân viên/cân dương. Không cho đổi IN_PROGRESS/COMPLETED trực tiếp qua updateBookingStatus để bỏ qua biên bản. Lưu biên bản bàn giao (xác nhận chất lượng/trả tư trang, thời điểm thật, mốc tiếp nhận và tổng) cùng COMPLETED bằng một update, kiểm tra lỗi/select. Bỏ request sai cột status/total_amount và enum paid/pending, bỏ catch nuốt lỗi. Giữ nguyên payment_status và total_price.
+- Form bàn giao không tự tick nghiệm thu/tư trang; thanh toán chỉ hiển thị trạng thái từ CSDL, checkbox và phương thức bị khóa chỉnh sửa tại bước này. Bỏ voucher/điểm mẫu khỏi form, chưa tự tích điểm; chuyển xử lý các mục này sang thu ngân. Nút đổi thành Lưu biên bản bàn giao, không hứa xuất phiếu khi chưa in. Tiến độ hiển thị số nhật ký đã ghi thay vì cờ completed không tồn tại.
+- Tạo mới qua UI QA BKG-46e6e9c7-9896-4f15-956c-5eafe0a4c7f5, LuLu/Lê Lệ Quyên QA, Express Care, 19/10/2026 10:00, 100000 đ. Xác nhận lịch; test cân 0 bị chặn, cân 5.1 nhưng thiếu nhân viên bị chặn. Chọn Trần Văn Nhân Viên, Dây dắt, QA r72 dây dắt đã lưu cùng biên bản; lưu thành công. F5 giữ Đang thực hiện/5.1 kg/nhân viên/tư trang/checklist. Bằng chứng artifacts/intake-saved-r72.png.
+- Test bàn giao trên ca này: form ban đầu không tick nghiệm thu/đã thu tiền, tổng 100000 đ, tư trang đúng biên bản, không có nhật ký thì hiển thị Chưa có nhật ký chăm sóc. Tick đủ hai xác nhận, giữ chưa thanh toán, lưu thành công. Sau F5 Hoàn thành/Chưa thu/100000 đ, nguyên biên bản và tư trang, header có thời điểm tiếp nhận 08:17 và bàn giao 08:18 ngày 16/10/2026. Bằng chứng artifacts/handover-saved-r72.png.
+- Đối chiếu CSDL chỉ đọc đúng mã QA: COMPLETED, UNPAID, total_price=100000, có cả khối intake/handover, staff_id và tư trang đã lưu. Không thu tiền, không gửi thông báo, không tự cộng/trừ điểm. Giữ ca QA để đối soát.
+- Một phép thử chọn Đã thu đủ tiền rồi bấm lưu bị kiểm duyệt tự động từ chối vì nguy cơ ghi nhận thanh toán cho ca chưa thu. Không thực hiện/không thử vòng tránh. Tiếp tục bằng phương án bỏ chọn thu tiền; sau đó chuyển trạng thái thanh toán thành trường chỉ đọc trong bước bàn giao. Không đánh dấu đã kiểm thử thanh toán.
+- Kiểm tra tự động helper: chặn thiếu biên bản, sai trạng thái, cân 0; chấp nhận biên bản hợp lệ. Kiểm tra đọc biên bản text đúng cân/Unicode/loại bản ghi. node --check ba file dịch vụ và git diff --check đạt. Nhánh thiếu biên bản được kiểm tra helper, không thử hoàn tất một ca khách thật khác.
+- Giới hạn: kiểm tra chuyển trạng thái là phía giao diện, chưa thêm transaction/RPC kiểm soát quy tắc tại CSDL. Không kiểm thử hai phiên ghi đồng thời/mất quyền, biên bản có ảnh (bỏ qua theo yêu cầu), thu ngân/voucher/điểm thật, sửa biên bản đang thực hiện hoặc các mức phụ phí cân khác. Các ca legacy đã COMPLETED trước bản sửa không tự tạo biên bản ngược. Hotel/khứ hồi/SĐT vẫn mở.
+
+## Nhân sự / Lịch làm việc — sửa lưu phân ca (16/10/2026, r73)
+
+- Kiểm tra trang lịch trực người dùng đang mở. Tái hiện form tự chọn hai nhân viên đầu tiên dù bảng ngày/CSDL chưa có ca; handler Lưu phân ca chỉ ghi mockRoster theo cấu trúc sai (date -> shift -> ids), không ghi staff_schedule. Đã bỏ tự gán hai nhân viên; form đọc đúng roster date -> staffId -> shifts và tự reset lựa chọn theo ngày/ca.
+- Đọc metadata CSDL thật: staff_schedule có staff_id, work_date, shift, start_time, end_time, work_location, schedule_status; shift chỉ MORNING/AFTERNOON/EVENING, status SCHEDULED/WORKING/COMPLETED/OFF. File demo availability_status không khớp schema thật. Vô hiệu lựa chọn NIGHT; không báo lưu ca khuya giả.
+- Lưu thật: đọc lại lịch ngày, đối chiếu snapshot ca, kiểm tra UUID và 8 giờ/ngày; INSERT chọn mới hoặc UPDATE lịch OFF/SCHEDULED theo id, select xác minh rồi force tải lại. Bỏ phân công dùng OFF có thể tái kích hoạt, không DELETE. Không bỏ ca WORKING/COMPLETED. Loader bỏ OFF khỏi roster. Nếu request lỗi hoặc thay đổi một phần, tải lại lịch và báo lỗi thay vì đổi state giả. Chưa có RPC giao dịch nhiều nhân viên nên không đảm bảo toàn bộ nhóm được ghi nguyên tử.
+- Test UI trên Trần Văn Nhân Viên (UUID d0000000-5555-5555-5555-555555555555), ngày 20/10/2026: modal ngày mới không gán ai; chọn người dùng kiểm thử, lưu ca sáng 08:00–12:00. Bảng ngày 4.0h, F5 rồi chọn lại 20/10 vẫn giữ ca sáng. Thêm ca chiều 13:00–17:00 thành 8.0h. Không gửi thông báo và không đổi nhân viên khác.
+- Thử thêm ca tối khi đã đủ 8 giờ. Đối chiếu CSDL chỉ đọc sau lượt thử: chỉ có MORNING và AFTERNOON, đều SCHEDULED; không có EVENING. Toast lỗi đã hết trước lần đọc nên không lưu được ảnh toast; logic chặn 8h được rà code và kết quả không ghi ca thứ ba được xác minh.
+- Sửa bảng tuần: trước đó chỉ render tên + 7 ca trong khi header có Mã NV/Họ tên/7 ngày/Tổng giờ, gây lệch cột; ngày đầu lại là ngày đang chọn dù header ghi Thứ 2. Đã căn tuần bắt đầu thứ Hai, hiện ngày dưới nhãn, đủ 10 cột, nhãn ca tiếng Việt và tổng giờ. Bỏ suy ca từ staff.shift FULL_TIME khi chưa có staff_schedule.
+- Test F5 sau đủ hai ca: chọn 20/10, Theo tuần hiển thị EMP-001, Trần Văn Nhân Viên, thứ Hai trống/thứ Ba Sáng, Chiều/tổng 8.0h. Mở lại phân ca sáng có đúng nhân viên đã lưu. Option NIGHT isEnabled=false. Đổi ngày trong modal sang 21/10: danh sách đã phân trống, không kéo lựa chọn từ 20/10. Hủy đóng form, không ghi lịch ngày 21.
+- Bằng chứng artifacts/staff-schedule-r73.png. node --check staff.js/tab-staff-schedule.js và git diff --check đạt. Các thay đổi staff khác có sẵn trong workspace được giữ nguyên; lượt này chỉ thêm lọc OFF trong loader và sửa schedule subtab/cache version.
+- Phạm vi đạt: thêm/đọc lại hai ca và tuần/ngày trên dữ liệu đã thử. Chưa test Bỏ/OFF và tái kích hoạt, hai phiên đồng thời, lỗi quyền, lọc chức vụ, các lịch qua đêm. Hai ca QA sáng/chiều 20/10 được giữ để đối soát. Đơn nghỉ/đổi ca và báo cáo sự cố vẫn có handler chỉ đổi state/toast, chưa được sửa/test ghi thật lượt này. Không đánh dấu hoàn tất toàn bộ Nhân sự.
+
+## Nhân sự / Đơn nghỉ và đổi ca — chuẩn bị lưu thật (16/10/2026, r74, CHƯA KIỂM THỬ LIVE)
+
+- Tiếp tục mục còn mở r73. Đọc metadata Supabase thật: chỉ có staff và staff_schedule, chưa có bảng đơn nghỉ/đổi ca. Handler trước đó chỉ unshift state/đổi status tạm, duyệt ngay chỉnh sai cấu trúc roster, không ghi lịch thật.
+- Đã chuẩn bị scripts/database/20261016_staff_shift_requests.sql: bảng staff_shift_request có UUID người xin/người đổi/người thay, loại nghỉ, khoảng ngày/ca, lý do, người tạo, trạng thái và người duyệt. RLS chỉ authenticated là nhân viên ACTIVE được tạo đơn của mình; ADMIN ACTIVE được tạo thay/đọc/duyệt. Không mở anon. RPC duyệt/từ chối kiểm tra ADMIN từ auth.uid(), khóa đơn và cập nhật lịch/trạng thái đơn trong cùng giao dịch. Nghỉ đổi ca SCHEDULED sang OFF, có thể tạo ca cho người trực thay; swap đổi nhân viên hai ca SCHEDULED và kiểm tra trùng/8 giờ. Không duyệt ca đã bắt đầu/hoàn tất. Có unique index staff/date/shift để chống bản ghi trùng; nếu dữ liệu cũ trùng thì migration sẽ lỗi và rollback, không tự xóa dữ liệu.
+- Giao diện đã nối tạo đơn -> INSERT select xác minh, duyệt/từ chối -> RPC single, tải lại lịch và đơn từ CSDL. Bỏ báo thành công dựa vào state. Duyệt ngay nếu đã tạo đơn nhưng duyệt lỗi sẽ báo rõ đơn còn chờ duyệt, không nhận đã áp dụng lịch. Hiển thị lỗi tải đơn riêng, không giả thành danh sách trống. Thêm kiểm tra ngày/32 ngày tối đa, nhân viên đổi khác nhau, người thay khác người nghỉ, lý do và enum ca hỗ trợ. Escape text đơn khi render.
+- Chưa chạy SQL, chưa tạo/duyệt/từ chối đơn thật và chưa xác minh sau F5. Chưa compile SQL trên PostgreSQL. node --check staff.js/tab-staff-schedule.js và git diff --check đạt. Không được đánh dấu chức năng hoàn tất dựa trên syntax check.
+- Lượt reload staff-schedule để test bị kiểm duyệt tự động chặn: hệ thống duyệt báo chạm giới hạn sử dụng, không cấp quyền thao tác frame localhost:3000. Đây là lỗi hạn mức kiểm duyệt, không phải kết luận hành động không an toàn. Không thử đường vòng/trình duyệt khác hoặc gọi API để thay thế lượt test UI bị chặn. Người dùng sau đó yêu cầu tiếp tục; chỉ tiếp tục kiểm tra mã/process độc lập, chưa thử lại trình duyệt.
+- Bước cần thiết: người dùng chạy file SQL trong Supabase SQL Editor, sau đó kiểm tra tài khoản ADMIN ACTIVE có auth_user_id đúng; khi trình duyệt được cấp quyền lại, test tạo -> F5 -> từ chối và tạo -> duyệt -> F5 đối chiếu lịch, thay ca/trực thay và các điều kiện lỗi. Không yêu cầu tự điền UUID giả vào SQL. SQL tự dùng auth.uid() tại thời điểm ứng dụng gọi RPC.
+- Giới hạn còn lại: chưa có kiểm thử RPC/SQL; hai phiên phân ca trực tiếp có thể vẫn tranh chấp với duyệt (khóa duyệt chỉ tuần tự hóa các RPC duyệt). Cần thử cạnh tranh và cân nhắc chuyển cả phân ca sang RPC chung. Báo cáo sự cố vẫn chưa sửa. Các phần Khiếu nại đã kiểm thử trước đây không tự đánh dấu kiểm thử lại trong lượt này. Ảnh tiếp tục bỏ qua theo yêu cầu.
+
+## Nhân sự / Đơn nghỉ và đổi ca — kiểm tra trực tiếp giao diện (16/10/2026, r75)
+
+- Sau yêu cầu kiểm tra giao diện, công cụ trình duyệt đã hoạt động lại. Đã thao tác trên tab staff-schedule của người dùng, reload và mở khay đơn nghỉ/đổi ca.
+- Xác minh UI báo Chưa tải được đơn nghỉ/đổi ca. Cần chạy migration staff_shift_request và kiểm tra quyền nhân sự. Mở Tạo đơn mới: form có trường nhân viên, loại nghỉ, khoảng ngày, phạm vi ca, người thay, lý do.
+- Test validation: không nhập lý do bị chặn Vui lòng nhập lý do ít nhất 3 ký tự; ngày 20/10 -> 19/10 bị chặn khoảng ngày không hợp lệ; tab đổi ca với cùng người nguồn/đích bị chặn Hai nhân viên đổi ca phải khác nhau.
+- Test lưu hợp lệ trên UI: Trần Văn Nhân Viên, nghỉ ngày 20/10/2026, lý do QA r75 kiểm thử lưu đơn nghỉ, chưa duyệt. Supabase trả chính xác: Could not find the table 'public.staff_shift_request' in the schema cache. Đã bắt toast ngay trong lượt bấm và chụp artifacts/staff-request-ui-r75.png. Modal giữ mở, không toast thành công giả, chưa tạo đơn và không thay đổi lịch sáng/chiều QA trước đó.
+- Chưa chạy migration và chưa test duyệt/từ chối. Cần chạy scripts/database/20261016_staff_shift_requests.sql trong Supabase trước; chưa kết luận RLS đúng chỉ từ lỗi thiếu bảng.
+- Sửa thêm lỗi đọc sớm: khi mở khay trong lúc dữ liệu đang tải, trước đây hiện Không có đơn; đã đổi thành Đang tải đơn nghỉ và đổi ca… và cập nhật lại khay theo sự kiện staff-data-loaded. Test sau reload mở khay ngay: hiện đúng trạng thái tải. node --check schedule JS và git diff --check đạt.
+
+## Nhân sự / Form nghỉ và đổi ca — khoảng cách theo rule (16/10/2026, r76)
+
+- Người dùng chỉ ra các hàng form sát nhau. Nguyên nhân: .modal-body-clean có gap nhưng hai phần form con là block, các .form-row-2col liên tiếp không có khoảng cách dọc; JS chuyển phần active sang display:block nên chỉ thêm gap trên form cha không đủ.
+- Sửa CSS giới hạn trong #leaveSwapModalOverlay: margin-top 16px giữa các hàng của cả formSectionLeave/formSectionSwap, khoảng cách hai cột 16px, minmax(0,1fr)/min-width:0 tránh tràn cột. Giữ 6px giữa label và input, padding modal 26px 30px. Dùng wide-modal 740px/max95vw theo chuẩn form hai cột; màn <=600px chuyển một cột và footer được wrap. Bỏ border-bottom dài của nhóm tab, giữ gạch active ngay chữ.
+- Đo trực tiếp DOM sau reload: tab đổi ca ba khoảng dọc đều 16px (sai số số thực ~0.00003px); tab nghỉ phép [16,16,16]. Đã xem ảnh giao diện sau sửa và kiểm tra bố cục. git diff --check đạt. Không thay đổi hoặc ghi dữ liệu nghiệp vụ. Chưa chạy test responsive ở viewport di động, không đánh dấu đã kiểm thử mobile.
+- Bằng chứng artifacts/staff-form-spacing-r76.png. Lỗi thiếu bảng staff_shift_request/migration r74-r75 vẫn chưa giải quyết bởi việc chỉnh layout.
+
+## Đơn nghỉ/đổi ca sau khi chạy SQL — vướng phiên Auth (16/10/2026, r77)
+
+- Người dùng xác nhận đã chạy migration. Đã reload giao diện và thử lưu đơn nghỉ QA cho Trần Văn Nhân Viên, ngày 20/10/2026 ca sáng, lý do QA r77. Lỗi thiếu bảng đã được thay bằng permission denied for table staff_shift_request. Chưa có đơn nào được lưu/duyệt; lịch ca không đổi.
+- Đọc source xác thực: admin header dựa trên pawpal_admin_user, còn Supabase Auth dùng storageKey riêng pawpal_admin_supabase_auth. Có thông tin header không chứng minh có phiên Supabase hợp lệ. Không mở SELECT/INSERT cho anon để né lỗi quyền.
+- Bổ sung requireStaffAuth gọi auth.getUser trước INSERT hoặc RPC duyệt; phân biệt lỗi quyền với lỗi thiếu bảng ở khay đơn, không tiếp tục yêu cầu chạy SQL khi lỗi là permission denied.
+- Test lại UI: lưu đơn hợp lệ trả Không lưu được đơn. Phiên xác thực Supabase của quản trị chưa có hoặc đã hết hạn. Vui lòng đăng nhập lại tại /admin/login. Đã chụp artifacts/staff-request-auth-r77.png; ảnh lỗi quyền ban đầu artifacts/staff-request-r77.png. Xác nhận cần đăng nhập lại để có phiên Supabase thật trước khi kiểm thử lưu/duyệt/từ chối. Chưa yêu cầu người dùng cung cấp mật khẩu trong chat và chưa tự reset tài khoản/quyền.
+- node --check schedule JS và git diff --check đạt. Chưa kết luận RPC/SQL nghiệp vụ đạt vì chưa có phiên hợp lệ để thực hiện. Bước tiếp: người dùng đăng nhập lại tại /admin/login; tiếp tục test UI pending/F5/reject/approve và đối chiếu lịch, kiểm tra ADMIN ACTIVE/auth_user_id nếu đăng nhập thành công nhưng vẫn bị RLS chặn.
+
+## Nhân sự / Đơn nghỉ và đổi ca — kiểm thử live sau đăng nhập lại (16/10/2026, r78)
+
+- Người dùng báo đã đăng nhập lại và yêu cầu tiếp tục. Reload tab staff-schedule, kiểm thử bằng UI với phiên Supabase mới. Đã hết lỗi thiếu phiên/quyền r77 trên các thao tác đã thử; không mở quyền anon và không sửa Auth/RLS để né kiểm tra.
+- Tạo đơn nghỉ QA cho Trần Văn Nhân Viên, ngày 20/10/2026 ca sáng, lý do QA r78 kiểm thử từ chối đơn sau đăng nhập lại. Đơn PENDING xuất hiện, F5 vẫn còn. Bấm Từ chối: RPC trả REJECTED, UI giữ trạng thái Từ chối; lịch không bị thay đổi bởi nhánh này.
+- Tạo đơn thứ hai QA r78 kiểm thử duyệt nghỉ ca sáng đã phân. Bấm Duyệt đơn: thành APPROVED. F5 chọn 20/10: ca sáng không còn, chỉ còn ca chiều và tổng 4.0h. Ca sáng được chuyển OFF, không xóa dữ liệu phân ca.
+- Chuẩn bị ca đối ứng QA qua UI: Nguyễn Thị Chăm Sóc ca sáng 21/10/2026. Tạo SWAP từ Trần Văn Nhân Viên ca chiều 20/10 sang Nguyễn Thị Chăm Sóc ca sáng 21/10, lý do QA r78 kiểm thử đổi ca chiều 20 với ca sáng 21. Lưu PENDING rồi Duyệt đơn thành APPROVED. Kiểm tra bảng: Nguyễn Thị Chăm Sóc có ca chiều 20/10 (4h); Trần Văn Nhân Viên có ca sáng 21/10 (4h). Reload dữ liệu giữ kết quả. Không có ca thứ ba vượt 8h được tạo trong lượt này.
+- Đối chiếu CSDL chỉ đọc sau ba nhánh đầu: LEAVE REJECTED, LEAVE APPROVED, SWAP APPROVED đúng ngày 20/10 và target 21/10. Không dùng service role để tạo hoặc duyệt đơn; mọi ghi nghiệp vụ đi qua UI và RLS/RPC thật.
+- Test lỗi Duyệt ngay và áp dụng trên ca sáng 20/10 đã OFF: tạo đơn thứ tư QA r78 kiểm thử duyệt ca đã nghỉ phải thất bại; UI báo Đơn đã lưu chờ duyệt nhưng chưa áp dụng lịch. Không có ca đã phân phù hợp để nghỉ. F5: đơn còn PENDING, không báo đã duyệt và không chuyển lịch thêm. Lọc Chờ duyệt có đúng đơn QA này. Đã bấm Từ chối để đóng phép thử, UI trở thành REJECTED. Đây là nhánh lỗi trước khi ghi lịch; chưa test rollback khi lỗi xảy ra giữa nhiều thay đổi lịch.
+- Sửa lỗi hiển thị phát hiện khi test: đơn SWAP trước chỉ hiện ngày/ca nguồn và enum AFTERNOON. Nay hiện 20/10/2026 → 21/10/2026 (Ca chiều → Ca sáng), đầy đủ người đổi để duyệt đúng. Không thay raw shift của bản ghi. Sửa thêm nhánh tạo thành công nhưng duyệt ngay lỗi: tải lại đơn/lịch trước báo lỗi để số đếm không bị cũ; chưa lặp lại toàn bộ nhánh lỗi sau thay đổi nhỏ này, kiểm tra syntax đạt.
+- Kết quả cuối UI khay Tất cả: 4 đơn QA, 2 Đã duyệt (LEAVE/SWAP), 2 Từ chối. Bằng chứng artifacts/staff-requests-live-r78.png. Ca QA còn lại: ca sáng 20/10 của Trần Văn Nhân Viên OFF; Nguyễn Thị Chăm Sóc ca chiều 20/10; Trần Văn Nhân Viên ca sáng 21/10. Giữ để đối soát, không gửi thông báo cho nhân viên.
+- node --check staff.js/tab-staff-schedule.js và git diff --check đạt. Phạm vi đạt: tạo/đọc lại đơn sau F5, từ chối, duyệt nghỉ một ca, duyệt đổi hai ca khác ngày, lỗi ca nguồn không còn hoạt động. Chưa test nghỉ nhiều ngày/cả ngày, người trực thay, nhân viên thường tự gửi đơn, quyền không phải ADMIN, hai phiên tranh chấp, trùng ca/vượt 8h phát sinh trong RPC duyệt, Duyệt ngay thành công hoặc báo cáo sự cố. Không đánh dấu hoàn tất toàn bộ Nhân sự. Ảnh nghiệp vụ vẫn bỏ qua theo yêu cầu.
+
+## Nhân sự / Lịch làm việc — kiểm thử giao diện mở rộng (16/10/2026, r79)
+
+- Thao tác trực tiếp UI, ghi dữ liệu bằng form/RLS/RPC, không dùng service role. Lượt này kiểm thử, không sửa mã nghiệp vụ.
+- ĐẠT: Duyệt ngay thành công, nghỉ cả ngày có người trực thay. Đơn QA r79 nghỉ cả ngày và bàn giao người trực thay: EMP-001 ngày 21/10, người thay EMP-002. F5: người nghỉ 0h, người thay ca sáng 4h; đơn Đã duyệt.
+- ĐẠT: nghỉ nhiều ngày. Tạo ca sáng 22 và 23/10 cho EMP-001 bằng modal phân ca, duyệt ngay nghỉ 22–23/10. F5 từng ngày đều 0h, bảng tuần và khay đọc đúng hai ngày. Sau đó lịch 22 được tái kích hoạt để test lỗi khác.
+- ĐẠT validation: chặn khoảng ngày vượt 32 ngày; người trực thay trùng người nghỉ; NIGHT chưa hỗ trợ. Modal giữ mở và báo lỗi, không báo lưu thành công. Nút Hủy/Đóng form nghỉ và Escape form nghỉ/phân ca đóng được.
+- ĐẠT: bỏ ca bằng OFF và tái kích hoạt qua UI. Ngày 22 tái kích hoạt sáng EMP-001; tạo rồi bỏ sáng EMP-002 về 0h; phân chiều và tối EMP-002 lên 8h.
+- ĐẠT nhánh người thay trùng ca: tạo sáng 22/10 cho EMP-001/002, duyệt nghỉ người 1 và thay bằng người 2: RPC báo Người thay thế đã có bản ghi cùng ca, cần rà soát. F5 cả hai còn 4h, đơn PENDING; đã Từ chối. Thử lại khi ca sáng EMP-002 đã OFF vẫn bị cùng lỗi (RPC chặn cả bản ghi OFF), không dùng phép thử này để kết luận chặn 8h.
+- ĐẠT vượt 8h/rollback ngày mới 24/10: EMP-001 tối 4h, EMP-002 sáng+chiều 8h, chưa có bản ghi tối. Duyệt ngay đơn QA r79 RPC chặn nhận ca thứ ba vượt 8 giờ ngày 24: lỗi Thay đổi làm nhân viên vượt 8 giờ mỗi ngày. F5 người 1 vẫn tối 4h, người 2 vẫn sáng+chiều 8h, không có tối; đơn PENDING. Đã Từ chối. Kết quả xác minh rollback không mất ca nguồn/không tạo ca thứ ba. Bằng chứng artifacts/staff-rollback-r79.png.
+- ĐẠT: lọc khay Đã duyệt/Từ chối đúng trạng thái; Chờ duyệt 0 có empty state. Đơn duyệt không còn nút duyệt lại. Nhánh INSERT thành công/RPC lỗi tải lại đơn và số đếm đúng ở lượt r79.
+- LỖI UI: scheduleFilterShift MORNING/AFTERNOON không lọc bảng; scheduleFilterPosition Veterinarian vẫn hiện 9 nhân viên. Source chưa nối handler các bộ lọc vào render, không phải dữ liệu bẩn.
+- LỖI UI: <, > ở bảng tuần và Hôm nay không đổi ngày (giữ 23/10 trong phép thử). Source chưa có listener btnPrevDay/btnNextDay/btnToday. Ô ngày trực tiếp và Theo ngày/Theo tuần hoạt động.
+- LỖI UI: Báo cáo sự cố ca hiển thị lịch mẫu BK-8901/BK-8902/BK-8903 dù bàn thực tế trống. Nhập QA r79 kiểm tra lưu biên bản sự cố thiết bị, không thông báo khách rồi lưu: báo Đã lưu biên bản sự cố ca trực thành công. Đối chiếu handler chỉ showToast/đóng modal, không INSERT/UPDATE. Không có luồng đọc lại biên bản; không đánh dấu lưu CSDL đạt. Gia hạn/thông báo chưa chứng minh ghi/gửi thật; không gửi thông báo khách lượt này.
+- CẦN RÀ SOÁT: khay đơn nghỉ không hiện tên người thay đã chọn; chọn nhân viên vẫn native select, chưa đúng quy tắc autocomplete. Form nghỉ cho chọn NIGHT rồi mới chặn khi lưu, trong khi phân ca đã vô hiệu option này.
+- Cuối lượt: 9 đơn qua r78–r79, 4 APPROVED/5 REJECTED, không còn PENDING. EMP-002: chiều 20, sáng 21, chiều+tối 22, sáng+chiều 24. EMP-001: sáng 22, tối 24; các ca nghỉ cũ OFF. Ngày 23 không có ca. Giữ QA để đối soát, không xóa vĩnh viễn.
+- Chưa đánh dấu toàn bộ Nhân sự đạt: còn lỗi lọc/điều hướng/sự cố; chưa có phiên nhân viên thường để test tự tạo đơn và quyền không ADMIN; chưa thử cạnh tranh hai phiên ghi, ca WORKING/COMPLETED, responsive mobile. Không đổi quyền/reset mật khẩu/giả phiên để test. Ảnh nghiệp vụ bỏ qua theo yêu cầu. Chụp ảnh bảng tuần cuối lượt lỗi capture; dùng ảnh rollback đã lưu, không nhận có ảnh tuần.
+
+## Nhân sự / Lịch trực — sửa lỗi và test lại (16/10/2026, r80)
+
+- Sửa bộ lọc trong `tab-staff-schedule.js`: lọc chức vụ dùng `staff.role` đã chuẩn hóa; lọc ca dùng roster Supabase của ngày đang xem, và trong chế độ tuần tìm trong đúng bảy ngày. Không còn render đầy đủ danh sách khi bộ lọc đã chọn.
+- Test UI sau F5: chọn Bác sĩ thú y chỉ còn EMP-004 Phạm Thúy Vy; ngày 24/10 chọn Ca sáng và Ca chiều đều chỉ còn EMP-002, người có lịch thật. Các cột vẫn giữ nguyên để so sánh ca trong cùng ngày.
+- Sửa và test điều hướng: `<` ở ngày giảm 16/10 xuống 15/10; khi Theo tuần, `>` tăng một tuần từ 15/10 lên 22/10. Nút Hôm nay dùng Asia/Bangkok. Không thay đổi CSDL khi điều hướng.
+- Bỏ ba lịch giả BK-8901/BK-8902/BK-8903 khỏi báo cáo sự cố. Modal truy vấn `appointment` thật của đúng ngày đang xem với trạng thái CONFIRMED/CHECKED_IN/IN_PROGRESS, sau đó lấy tên pet/service thật. Khi không có ca, select bị khóa và ghi rõ Không có ca dịch vụ đang xử lý trong ngày.
+- Thay toast giả bằng INSERT `audit_log` thật: action OTHER, entity_name appointment_incident, staff_id, appointment_id, loại/mức độ/gia hạn/nội dung được lưu trong description có định dạng. Sau insert, handler yêu cầu bản ghi trả về có id/staff/entity đúng rồi mới đóng modal/báo thành công. Không tự sửa giờ hoặc trạng thái appointment vì schema không có trường thời gian hoàn tất riêng; giá trị gia hạn được ghi biên bản để điều phối.
+- Test UI không có ca thật ngày 24/10: select ca bị disabled, nhập QA r80 không có ca dịch vụ phải chặn lưu rồi bấm Lưu biên bản sự cố: báo Hãy chọn nhân sự và ca dịch vụ đang xử lý trước khi lưu biên bản, modal vẫn mở, không ghi audit. Đọc CSDL chỉ đọc cho 16–31/10: không có appointment CONFIRMED/CHECKED_IN/IN_PROGRESS, nên CHƯA thể test nhánh INSERT thành công mà không tạo một ca dịch vụ giả mới. Không dùng dữ liệu mẫu để nhận đạt.
+- Đổi copy modal thành Ghi nhận sự cố ca trực/Lưu biên bản sự cố để không hứa cập nhật tiến độ khi hiện tại chỉ có audit. `node --check` và `git diff --check` đạt.
+
+## Nhân sự / Báo cáo sự cố — kiểm thử ghi CSDL thành công (16/10/2026, r81)
+
+- Theo yêu cầu người dùng, tạo lịch hẹn QA bằng giao diện Dịch vụ: BKG-68b6ff1f-25f3-4af5-b12b-1c8f30f9b8d9, Lê Lệ Quyên QA, bé lala, Express Care – Vệ Sinh Nhanh, 17/10/2026 10:30, 100000 đ, chưa thu. Lượt tạo ngày 16/10 bị chặn đúng do thời gian hẹn phải ở tương lai; không tạo bản ghi ngày 16.
+- Tạo lần hai ngày 17/10 thành PENDING. Chọn `Xác nhận lịch hẹn` trong bảng: CSDL cập nhật CONFIRMED. Bảng chưa đổi nhãn ngay sau click ở lượt đầu nhưng sau F5 hiện Đã xác nhận; đây là lỗi làm mới tức thì cần tiếp tục rà soát, không phải lỗi ghi CSDL.
+- Vào Lịch trực ngày 17/10, form Báo cáo sự cố nạp đúng ca thật, không dữ liệu mẫu: `BKG-... · lala · Express Care – Vệ Sinh Nhanh · 10:30`.
+- Lưu qua UI biên bản QA r81 lưu biên bản sự cố thực tế, kiểm tra sau tải lại; loại SKIN_ISSUE, mức INTERNAL, gia hạn 15 phút. Toast chỉ báo thành công sau insert/select xác minh. Đối chiếu CSDL chỉ đọc: audit_log id `0c3cdf31-efee-49ff-bfb8-a8b0b4619df2`, action OTHER, entity_name appointment_incident, đúng staff_id, appointment_id, loại/mức/gia hạn/nội dung. Appointment vẫn CONFIRMED, UNPAID, 17/10 10:30; không tự đổi thanh toán/trạng thái ca.
+- F5 lại lịch trực ngày 17/10: ca QA vẫn xuất hiện trong form sự cố. F5 danh sách lịch hẹn: hiện Đã xác nhận và cảnh báo Chờ KTV (+15p). Đạt create appointment, confirm và ghi audit biên bản sự cố trên UI/CSDL. Giữ toàn bộ dữ liệu QA để đối soát, không xóa vĩnh viễn.

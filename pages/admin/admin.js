@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261015_r43';
+    const MODULE_SCRIPT_VERSION = '20261016_r82';
 
     function resolveModulePath(path) {
         if (!path) return path;
@@ -423,6 +423,9 @@ document.addEventListener('DOMContentLoaded', () => {
             html: 'modules/services/services.html',
             scripts: ['modules/services/services.js', 'modules/services/subtabs/tab-service-bookings.js', 'modules/services/subtabs/tab-service-detail.js', 'modules/services/subtabs/tab-service-catalog.js', 'modules/services/subtabs/tab-service-reviews.js'],
             postLoad: async () => {
+                if (sessionStorage.getItem('pawpal_admin_services_open_booking_modal') === 'true') {
+                    await window.PawpalServices?.init?.();
+                }
                 if (window.PawpalServices?.subtabs?.bookings?.renderBookingsTable) {
                     window.PawpalServices.subtabs.bookings.renderBookingsTable();
                     window.PawpalServices.subtabs.bookings.updateKPIs();
@@ -452,6 +455,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 window.PawpalComplaints?.subtabs?.services?.renderServiceComplaintsTable?.();
                 window.PawpalComplaints?.subtabs?.orders?.renderOrderComplaintsTable?.();
+                const selId = sessionStorage.getItem('pawpal_admin_complaint_selected_id');
+                if (selId) {
+                    window.PawpalComplaints?.subtabs?.detail?.renderTicketDetail?.(selId);
+                }
             }
         },
         'Chatbot':    {
@@ -1075,16 +1082,3 @@ document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
     }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-

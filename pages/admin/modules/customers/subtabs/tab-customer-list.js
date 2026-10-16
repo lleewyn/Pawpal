@@ -862,14 +862,19 @@
                             return;
                         }
                         try {
-                            const { error: lockErr } = await client
+                            const { data: lockRows, error: lockErr } = await client
                                 .from('customer')
                                 .update({ account_status: newStatus })
-                                .eq('id', custObj.dbId);
+                                .eq('id', custObj.dbId)
+                                .select('id, account_status');
 
                             if (lockErr) {
                                 if (lockErr) console.error('[Customers] Lỗi cập nhật trạng thái:', lockErr);
                                 PawpalCustomers.showToast('Không thể cập nhật trạng thái tài khoản trên cơ sở dữ liệu.', 'danger');
+                                return;
+                            }
+                            if (!lockRows || lockRows.length !== 1 || String(lockRows[0].account_status).toLowerCase() !== String(newStatus).toLowerCase()) {
+                                PawpalCustomers.showToast('Trạng thái không được CSDL xác nhận. Kiểm tra ID bản ghi hoặc chính sách RLS.', 'danger');
                                 return;
                             }
 

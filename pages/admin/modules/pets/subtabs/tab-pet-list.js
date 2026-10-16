@@ -460,6 +460,7 @@
                 }
             } else if (action === 'weigh') {
                 currentWeighingPetId = petId;
+                if (PawpalPets.subtabs.profile?.setWeighingPet) PawpalPets.subtabs.profile.setWeighingPet(petId);
                 const weighPetName = document.getElementById('weighPetName');
                 const weighOldWeight = document.getElementById('weighPetOldWeight');
                 const weighNewWeightInput = document.getElementById('weighPetNewWeight');
@@ -484,13 +485,16 @@
                     onConfirm: async () => {
                         try {
                             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                            if (client && pet.rawId) {
-                                await client.from('pet_profile').update({ status: 'INACTIVE' }).eq('id', pet.rawId);
-                            }
+                            if (!client || !pet.rawId) throw new Error('Thiếu kết nối hoặc mã hồ sơ thú cưng.');
+                            const { data: archivedRows, error: archiveError } = await client.from('pet_profile').update({ status: 'INACTIVE' }).eq('id', pet.rawId).select('id, status');
+                            if (archiveError) throw archiveError;
+                            if (!Array.isArray(archivedRows) || archivedRows.length !== 1 || archivedRows[0].status !== 'INACTIVE') throw new Error('Không xác minh được trạng thái lưu trữ trong CSDL.');
                         } catch (aErr) {
                             console.error('Supabase archive error:', aErr);
+                            PawpalPets.showToast('Không thể lưu trữ hồ sơ: ' + (aErr.message || 'Lỗi CSDL.'), 'danger');
+                            return;
                         }
-                        await PawpalPets.loadPetsModuleData();
+                        await PawpalPets.loadPetsModuleData({ force: true });
                         renderPetsTable();
                         updatePetKPIs();
                         PawpalPets.showToast(`Đã lưu trữ hồ sơ bé cưng ${pet.name}!`, 'success');
@@ -499,13 +503,16 @@
             } else if (action === 'restore') {
                 try {
                     const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                    if (client && pet.rawId) {
-                        await client.from('pet_profile').update({ status: 'ACTIVE' }).eq('id', pet.rawId);
-                    }
+                    if (!client || !pet.rawId) throw new Error('Thiếu kết nối hoặc mã hồ sơ thú cưng.');
+                    const { data: restoredRows, error: restoreError } = await client.from('pet_profile').update({ status: 'ACTIVE' }).eq('id', pet.rawId).select('id, status');
+                    if (restoreError) throw restoreError;
+                    if (!Array.isArray(restoredRows) || restoredRows.length !== 1 || restoredRows[0].status !== 'ACTIVE') throw new Error('Không xác minh được trạng thái khôi phục trong CSDL.');
                 } catch (rErr) {
                     console.error('Supabase restore error:', rErr);
+                    PawpalPets.showToast('Không thể khôi phục hồ sơ: ' + (rErr.message || 'Lỗi CSDL.'), 'danger');
+                    return;
                 }
-                await PawpalPets.loadPetsModuleData();
+                await PawpalPets.loadPetsModuleData({ force: true });
                 renderPetsTable();
                 updatePetKPIs();
                 PawpalPets.showToast(`Đã khôi phục hoạt động cho bé cưng ${pet.name}!`);
@@ -689,7 +696,7 @@
         setupCollarTagModal();
 
         // Setup Cân bé
-        setupWeighModal();
+        // Modal cân dùng chung bộ xử lý tại tab hồ sơ để mỗi lần bấm chỉ ghi một mốc.
 
         // Luôn render bảng thú cưng và cập nhật KPI ngay khi khởi tạo subtab
         renderPetsTable();
@@ -1394,6 +1401,7 @@
         renderPetsTable,
         updatePetKPIs,
         clearAllPetFilters,
+        handleCreateServiceForPet,
         openCollarTagPreview
     };
 

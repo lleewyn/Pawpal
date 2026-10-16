@@ -6,6 +6,7 @@
     PawpalCustomers.subtabs = PawpalCustomers.subtabs || {};
 
     let currentEditingAddresses = [];
+    let initialEditingAddressesSnapshot = '';
     let currentEditingPetCustId = null;
     let currentEditPetIndex = null;
 
@@ -502,7 +503,10 @@
                 ? 'Số điện thoại'
                 : 'Số điện thoại <span style="color: #DC2626;">*</span>';
         }
-        if (document.getElementById('editCustEmail')) document.getElementById('editCustEmail').value = data.email || '';
+        if (document.getElementById('editCustEmail')) {
+            const editableEmail = data.email && !/^(chưa cập nhật|chua cap nhat|null|undefined)$/i.test(String(data.email).trim()) ? data.email : '';
+            document.getElementById('editCustEmail').value = editableEmail;
+        }
         if (document.getElementById('editCustGender')) document.getElementById('editCustGender').value = data.gender || 'Nam';
         if (document.getElementById('editCustTier')) document.getElementById('editCustTier').value = data.tier || 'GOLD';
         
@@ -518,6 +522,7 @@
             { address: 'Tiếp nhận trực tiếp tại quầy Pawpal Center', isDefault: true }
         ];
         currentEditingAddresses = JSON.parse(JSON.stringify(existingAddresses));
+        initialEditingAddressesSnapshot = JSON.stringify(currentEditingAddresses);
         renderModalAddressList();
 
         modalEdit.style.display = 'flex';
@@ -608,7 +613,8 @@
                 const custId = document.getElementById('editCustId')?.value || 'CUST-001';
                 const newName = document.getElementById('editCustFullName')?.value || '';
                 const newPhone = document.getElementById('editCustPhone')?.value || '';
-                const newEmail = document.getElementById('editCustEmail')?.value || '';
+                const rawEmail = document.getElementById('editCustEmail')?.value || '';
+                const newEmail = /^(chưa cập nhật|chua cap nhat|null|undefined)$/i.test(rawEmail.trim()) ? '' : rawEmail.trim();
                 const newGender = document.getElementById('editCustGender')?.value || 'Nam';
                 const newTier = document.getElementById('editCustTier')?.value || 'GOLD';
                 const newDobRaw = document.getElementById('editCustDob')?.value || '';
@@ -622,6 +628,7 @@
                 if (!validAddresses.some(a => a.isDefault)) {
                     validAddresses[0].isDefault = true;
                 }
+                const addressesChanged = JSON.stringify(validAddresses) !== JSON.stringify(JSON.parse(initialEditingAddressesSnapshot || '[]').filter(a => a.address && a.address.trim() !== ''));
 
                 const custObj = PawpalCustomers.state.customerDatabase?.[custId];
                 const custDbId = custObj?.dbId;
@@ -640,10 +647,11 @@
 
                 try {
                     if (custDbId) {
-                        await client.from('customer').update({
+                        const { error: customerUpdateError } = await client.from('customer').update({
                             email: newEmail || null,
                             phone_main: newPhone || null
                         }).eq('id', custDbId);
+                        if (customerUpdateError) throw customerUpdateError;
 
                         const genderVal = (newGender === 'Nữ' || newGender === 'FEMALE') ? 'FEMALE' : ((newGender === 'Nam' || newGender === 'MALE') ? 'MALE' : 'OTHER');
                         const profilePayload = {
@@ -665,16 +673,20 @@
                             if (profileInsertError) throw profileInsertError;
                         }
 
-                        await client.from('customer_address').delete().eq('customer_id', custDbId);
-                        const addrInserts = validAddresses.map(a => ({
-                            customer_id: custDbId,
-                            receiver_name: newName,
-                            receiver_phone: newPhone,
-                            street_address: a.address,
-                            is_default: !!a.isDefault
-                        }));
-                        if (addrInserts.length > 0) {
-                            await client.from('customer_address').insert(addrInserts);
+                        if (addressesChanged) {
+                            const { error: addressDeleteError } = await client.from('customer_address').delete().eq('customer_id', custDbId);
+                            if (addressDeleteError) throw addressDeleteError;
+                            const addrInserts = validAddresses.map(a => ({
+                                customer_id: custDbId,
+                                receiver_name: newName,
+                                receiver_phone: newPhone,
+                                street_address: a.address,
+                                is_default: !!a.isDefault
+                            }));
+                            if (addrInserts.length > 0) {
+                                const { error: addressInsertError } = await client.from('customer_address').insert(addrInserts);
+                                if (addressInsertError) throw addressInsertError;
+                            }
                         }
                     }
 

@@ -257,6 +257,18 @@
                     email: customer.email || ''
                 }]));
 
+                // Hồ sơ chủ nuôi có thể đọc được dù bảng tài khoản bị giới hạn bởi RLS.
+                // Giữ khóa customer_id chuẩn, không bỏ mất tên chỉ vì thiếu hàng customer trong response.
+                (custProfRes.data || []).forEach(profile => {
+                    if (!profile.customer_id || custMap[profile.customer_id]) return;
+                    custMap[profile.customer_id] = {
+                        id: profile.customer_id,
+                        name: profile.full_name || 'Chưa cập nhật tên',
+                        phone: '',
+                        email: ''
+                    };
+                });
+
                 const petWeightHistoryMap = {};
                 if (Array.isArray(weightHistoryRes.data)) {
                     weightHistoryRes.data.forEach(record => {
@@ -344,7 +356,7 @@
                         const isArch = p.status === 'INACTIVE' || p.status === 'ARCHIVED';
                         
                         const ownerObj = custMap[p.customer_id] || {};
-                        const ownerName = ownerObj.name || 'Chưa cập nhật chủ nuôi';
+                        const ownerName = ownerObj.name || (p.customer_id ? 'Chưa tải được thông tin chủ nuôi' : 'Thiếu liên kết chủ nuôi');
                         const routine = p.routine || '';
                         const allergyText = allg ? `Dị ứng: ${allg}` : '';
                         const routineAlert = routine.trim() && routine.trim() !== 'Tiếp nhận mới tại quầy.'
@@ -361,15 +373,17 @@
                         const dobFormatted = p.date_of_birth ? formatDate(p.date_of_birth) : 'Chưa cập nhật';
                         const weightLogs = petWeightHistoryMap[p.id] || [];
 
-                        const vaccinesList = p.vaccination_history ? [
-                            {
-                                title: 'Vắc-xin phòng dại và bệnh truyền nhiễm định kỳ',
-                                status: p.vaccination_history && !p.vaccination_history.toLowerCase().includes('chưa') ? 'Đã tiêm đủ' : 'Chưa cập nhật',
-                                date: p.vaccination_history,
-                                nextDate: 'Hằng năm',
-                                place: 'Sổ tiêm đối chiếu tại quầy'
-                            }
-                        ] : [];
+                        const vaccinesList = (p.vaccination_history || '').split('\n\n').filter(Boolean).map(record => {
+                            const field = label => record.split('\n').find(line => line.startsWith(label + ': '))?.slice(label.length + 2) || '';
+                            const legacy = record.match(/^Đã tiêm (.+) \((\d{2}\/\d{2}\/\d{4})\)$/);
+                            return {
+                                title: field('Loại') || legacy?.[1] || record,
+                                status: field('Trạng thái') || 'Chưa xác nhận',
+                                date: field('Ngày ghi nhận') || legacy?.[2] || 'Chưa cập nhật',
+                                nextDate: field('Ngày tái chủng'),
+                                place: field('Nguồn đối chiếu') || 'Chưa cập nhật'
+                            };
+                        });
 
                         petsMap[code] = {
                             id: code,
@@ -395,7 +409,7 @@
                             custId: p.customer_id || '',
                             avatar: p.avatar_url || (spec === 'cat' ? '/assets/images/publics/catcute5.jpg' : '/assets/images/publics/dogcute3.jpg'),
                             status: statusStr,
-                            vaccinated: Boolean(p.vaccination_history && !p.vaccination_history.toLowerCase().includes('chưa')),
+                            vaccinated: vaccinesList.some(v => /dại|rabies/i.test(v.title) && ['Đã tiêm đủ', 'Đã thực hiện', 'Đạt chuẩn'].includes(v.status)),
                             isHotel: p.status === 'HOTEL',
                             isArchived: isArch,
                             weightHistory: weightLogs,

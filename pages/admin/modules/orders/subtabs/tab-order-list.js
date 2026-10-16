@@ -1700,10 +1700,18 @@
 
     window.PawpalOrdersModule.openComplaintModule = function(rmaId) {
         sessionStorage.setItem('pawpal_admin_active_module', 'Khiếu nại');
-        sessionStorage.setItem('pawpal_admin_complaint_subtab', 'tab-complaint-orders');
-        if (rmaId) sessionStorage.setItem('pawpal_admin_complaint_search', rmaId);
+        sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-orders');
+        window.location.hash = '#tab-complaint-orders';
+        if (rmaId) {
+            sessionStorage.setItem('pawpal_admin_complaint_selected_id', rmaId);
+            sessionStorage.setItem('pawpal_admin_complaint_search', rmaId);
+        }
         const compBtn = Array.from(document.querySelectorAll('.sidebar-menu-btn')).find(b => b.getAttribute('data-title') === 'Khiếu nại');
-        if (compBtn) compBtn.click();
+        if (compBtn) {
+            compBtn.click();
+        } else if (window.PawpalAdmin?.loadModule) {
+            window.PawpalAdmin.loadModule('Khiếu nại');
+        }
     };
 
     window.PawpalOrdersModule.closeModal = function(modalId) {

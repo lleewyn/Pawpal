@@ -52,7 +52,7 @@
         
         if (vaccineContainer) {
             const vList = pet.vaccines || [];
-            const hasRabies = vList.some(v => v.title.toLowerCase().includes('dại') || v.title.toLowerCase().includes('rabies'));
+            const hasRabies = vList.some(v => /dại|rabies/i.test(v.title) && ['Đã tiêm đủ', 'Đã thực hiện', 'Đạt chuẩn'].includes(v.status));
             const isHotelQualified = hasRabies && pet.status !== 'Lưu trữ';
 
             if (hotelBadge) {
@@ -72,11 +72,12 @@
             if (vList.length === 0) {
                 vaccineContainer.innerHTML = `
                     <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13.5px; grid-column: 1 / -1; line-height: 1.6;">
-                        Bé chưa có dữ liệu ghi nhận tiêm chủng. Bấm <strong>"+ Ghi nhận tiêm chủng hoặc xổ giun"</strong> ở trên để bổ sung hồ sơ dịch tễ.
+                        Bé chưa có dữ liệu ghi nhận tiêm chủng. Bấm <strong>"Ghi nhận tiêm chủng hoặc xổ giun"</strong> ở trên để bổ sung hồ sơ dịch tễ.
                     </div>
                 `;
             } else {
-                vaccineContainer.innerHTML = vList.map(v => `
+                const escapeText = value => String(value || '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+                vaccineContainer.innerHTML = vList.map(entry => Object.fromEntries(Object.entries(entry).map(([key, value]) => [key, escapeText(value)]))).map(v => `
                     <div class="vaccine-item-card is-qualified">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <strong style="color: var(--text-heading);">${v.title}</strong>
@@ -348,7 +349,7 @@
         if (document.getElementById('editPetBreed')) document.getElementById('editPetBreed').value = pet.breed || pet.speciesBreed || '';
         if (document.getElementById('editPetGender')) document.getElementById('editPetGender').value = pet.gender || 'Đực';
         if (document.getElementById('editPetWeight')) document.getElementById('editPetWeight').value = pet.weightNum || parseFloat(pet.weight) || 8.5;
-        if (document.getElementById('editPetDob')) document.getElementById('editPetDob').value = pet.dobRaw || '2023-05-15';
+        if (document.getElementById('editPetDob')) document.getElementById('editPetDob').value = pet.dobRaw || '';
         if (document.getElementById('editPetColor')) document.getElementById('editPetColor').value = pet.color || '';
         if (document.getElementById('editPetStatus')) document.getElementById('editPetStatus').value = pet.status || 'Đang nuôi';
         if (document.getElementById('editPetAlert')) document.getElementById('editPetAlert').value = pet.alert || '';
@@ -359,6 +360,14 @@
     }
 
     function initProfileTab() {
+        document.querySelector('.btn-quick-book-spa')?.addEventListener('click', () => {
+            const petId = sessionStorage.getItem('pawpal_admin_pet_id');
+            if (!PawpalPets.state.petsData?.[petId]) {
+                PawpalPets.showToast('Vui lòng chọn hồ sơ thú cưng trước khi đặt lịch.', 'warning');
+                return;
+            }
+            PawpalPets.subtabs.list?.handleCreateServiceForPet?.(petId);
+        });
         // Drawer Subtabs switching
         const drawerTabs = document.querySelectorAll('.drawer-tab-btn');
         drawerTabs.forEach(tab => {
@@ -380,12 +389,25 @@
                     try {
                         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                         if (client && pet.rawId) {
-                            await client.from('pet_profile').update({ routine: notesVal }).eq('id', pet.rawId);
+                            const { data: noteRows, error: noteError } = await client
+                                .from('pet_profile')
+                                .update({ routine: notesVal })
+                                .eq('id', pet.rawId)
+                                .select('id, routine');
+                            if (noteError) throw noteError;
+                            if (!Array.isArray(noteRows) || noteRows.length !== 1 || noteRows[0].routine !== notesVal) {
+                                throw new Error('Không xác minh được ghi chú đã lưu vào CSDL.');
+                            }
                         }
                     } catch (gErr) {
                         console.error('Supabase update groomer notes error:', gErr);
+                        PawpalPets.showToast('Không thể lưu ghi chú: ' + (gErr.message || 'Lỗi CSDL.'), 'danger');
+                        return;
                     }
                     pet.groomerNotes = notesVal;
+                    pet.notes = notesVal;
+                    const profileNotes = document.getElementById('profilePetNotes');
+                    if (profileNotes) profileNotes.textContent = notesVal;
                     PawpalPets.showToast(`Đã lưu ghi chú kỹ thuật Groomer cho bé ${pet.name}!`);
                 }
             });
@@ -479,6 +501,7 @@
             btnSubmitWeigh.addEventListener('click', async (event) => {
                 event.preventDefault();
                 event.stopPropagation();
+                if (btnSubmitWeigh.disabled) return;
                 const weightValue = weighNewWeightInput?.value.trim() || '';
                 const newKg = Number(weightValue);
                 const pet = PawpalPets.state.petsData?.[currentWeighingPetId];
@@ -489,6 +512,7 @@
                     return;
                 }
 
+                btnSubmitWeigh.disabled = true;
                 try {
                     const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                     if (!client || !pet.rawId) {
@@ -497,26 +521,31 @@
                     }
 
                     const measuredAt = new Date().toISOString();
-                    const { error: historyError } = await client.from('pet_weight_history').insert({
+                    const { data: historyRows, error: historyError } = await client.from('pet_weight_history').insert({
                         pet_id: pet.rawId,
                         weight: newKg,
                         measured_at: measuredAt,
                         recorded_by_name: window.currentUser?.full_name || window.currentUser?.name || 'Nhân viên PawPal'
-                    });
-                    // Một số môi trường chưa chạy migration hoặc chưa phân quyền RLS cho anon; vẫn cập nhật cân hiện tại.
-                    if (historyError && !/schema cache|relation .* does not exist|Could not find the table|permission denied/i.test(historyError.message || '')) {
-                        throw historyError;
+                    }).select('id, weight');
+                    if (historyError) throw historyError;
+                    if (!Array.isArray(historyRows) || historyRows.length !== 1 || Number(historyRows[0].weight) !== newKg) {
+                        throw new Error('Không xác minh được mốc cân nặng trong lịch sử.');
                     }
 
-                    const { error: wErr } = await client.from('pet_profile').update({ weight: newKg }).eq('id', pet.rawId);
+                    const { data: weightRows, error: wErr } = await client.from('pet_profile').update({ weight: newKg }).eq('id', pet.rawId).select('id, weight');
                     if (wErr) throw wErr;
+                    if (!Array.isArray(weightRows) || weightRows.length !== 1 || Number(weightRows[0].weight) !== newKg) {
+                        throw new Error('Không xác minh được cân nặng hiện tại của hồ sơ.');
+                    }
                 } catch (err) {
                     console.error('Weight update error:', err);
                     PawpalPets.showToast('Lỗi lưu cân nặng: ' + (err.message || 'Không thể ghi dữ liệu.'), 'danger');
                     return;
+                } finally {
+                    btnSubmitWeigh.disabled = false;
                 }
 
-                await PawpalPets.loadPetsModuleData();
+                await PawpalPets.loadPetsModuleData({ force: true });
                 if (PawpalPets.subtabs.list) {
                     PawpalPets.subtabs.list.renderPetsTable();
                     PawpalPets.subtabs.list.updatePetKPIs();
@@ -524,7 +553,8 @@
 
                 const updatedPet = PawpalPets.state.petsData?.[currentWeighingPetId];
                 if (updatedPet) {
-                    renderPetSubtabs(updatedPet);
+                    if (sessionStorage.getItem('pawpal_admin_pet_id') === currentWeighingPetId) openPetProfile(currentWeighingPetId, false);
+                    else renderPetSubtabs(updatedPet);
                 }
 
                 PawpalPets.showToast(`Đã lưu cân nặng mới (${newKg} kg) cho bé ${pet.name}!`);
@@ -597,10 +627,14 @@
                             updatePayload.customer_id = ownerCustId;
                         }
 
-                        const { error: updErr } = await client.from('pet_profile').update(updatePayload).eq('id', pet.rawId);
+                        const { data: updatedRows, error: updErr } = await client.from('pet_profile').update(updatePayload).eq('id', pet.rawId).select('id, pet_name, weight, customer_id');
                         if (updErr) {
                             console.error('Supabase update pet error:', updErr);
                             PawpalPets.showToast('Lỗi cập nhật CSDL: ' + updErr.message, 'danger');
+                            return;
+                        }
+                        if (!Array.isArray(updatedRows) || updatedRows.length !== 1 || updatedRows[0].pet_name !== name) {
+                            PawpalPets.showToast('Không xác minh được hồ sơ đã cập nhật trong CSDL.', 'danger');
                             return;
                         }
                     }
@@ -610,7 +644,7 @@
                     return;
                 }
 
-                await PawpalPets.loadPetsModuleData();
+                await PawpalPets.loadPetsModuleData({ force: true });
                 if (PawpalPets.subtabs.list) {
                     PawpalPets.subtabs.list.renderPetsTable();
                     PawpalPets.subtabs.list.updatePetKPIs();
@@ -779,21 +813,34 @@
                 }
                 const parts = rawDate.split('-');
                 const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                const nextDate = document.getElementById('newVaccineNextDate')?.value || '';
+                if (nextDate && nextDate <= rawDate) {
+                    PawpalPets.showToast('Ngày tái chủng phải sau ngày ghi nhận.', 'warning');
+                    return;
+                }
+                const cleanLine = value => String(value || '').replace(/[\r\n]+/g, ' ').trim();
+                const place = cleanLine(document.getElementById('newVaccinePlace')?.value);
+                const status = document.getElementById('newVaccineStatus')?.value || 'Chưa xác nhận';
 
                 try {
                     const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                     if (!client) throw new Error('Chưa kết nối được Supabase.');
-                    const { error: vErr } = await client.from('pet_profile').update({
-                        vaccination_history: `Đã tiêm ${title} (${formattedDate})`
-                    }).eq('id', pet.rawId);
+                    const { data: existing, error: readError } = await client.from('pet_profile').select('vaccination_history').eq('id', pet.rawId).single();
+                    if (readError) throw readError;
+                    const record = `Loại: ${cleanLine(title)}\nNgày ghi nhận: ${formattedDate}\nNgày tái chủng: ${nextDate}\nNguồn đối chiếu: ${place}\nTrạng thái: ${status}`;
+                    const history = [existing.vaccination_history, record].filter(Boolean).join('\n\n');
+                    const { data: saved, error: vErr } = await client.from('pet_profile').update({
+                        vaccination_history: history
+                    }).eq('id', pet.rawId).select('id, vaccination_history');
                     if (vErr) throw vErr;
+                    if (saved?.length !== 1 || saved[0].vaccination_history !== history) throw new Error('Không xác minh được dữ liệu dịch tễ đã lưu.');
                 } catch (vErr) {
                     console.error('Lỗi lưu lịch sử tiêm vào Supabase:', vErr);
                     PawpalPets.showToast('Không thể lưu xác nhận tiêm chủng: ' + (vErr.message || 'Lỗi CSDL.'), 'danger');
                     return;
                 }
 
-                await PawpalPets.loadPetsModuleData();
+                await PawpalPets.loadPetsModuleData({ force: true });
                 const updatedPet = PawpalPets.state.petsData?.[currentPetId];
                 if (updatedPet) renderPetSubtabs(updatedPet);
                 if (PawpalPets.subtabs.list) PawpalPets.subtabs.list.renderPetsTable();
@@ -809,6 +856,7 @@
         renderPetSubtabs,
         openPetProfile,
         openEditPetModal,
+        setWeighingPet: (petId) => { currentWeighingPetId = petId; },
         switchDrawerTab,
         updatePriceMatrix
     };

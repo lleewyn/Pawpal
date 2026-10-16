@@ -249,19 +249,51 @@
                         serviceLocked: Boolean(s.service_locked || s.serviceLocked),
                         note: s.specialization || '',
                         requested_count: 8,
-                        customer_reviews: []
+                        customer_reviews: [],
+                        authUserId: s.auth_user_id || null,
+                        accountStatus: s.account_status || 'INACTIVE',
+                        systemRole: s.system_role || 'STAFF',
+                        permissions: s.permissions || [],
+                        lastLoginAt: s.last_login_at || null
                     };
                 });
             }
 
-            PawpalStaff.state.mockAssessments = [];
+            PawpalStaff.state.mockAssessments = PawpalStaff.state.mockStaff
+                .filter(s => s.skillScore !== null && s.skillScore !== undefined)
+                .map((s, idx) => ({
+                    id: `ASM-00${idx + 1}`,
+                    date: '15/10/2026',
+                    staff_id: s.id,
+                    name: s.name,
+                    position: s.position,
+                    type: s.position.includes('Groom') ? 'Grooming' : (s.position.includes('Spa') ? 'Spa' : 'CSKH'),
+                    score: s.skillScore || 90,
+                    result: s.skillResult || 'PASS',
+                    evaluator: 'Lê Lệ Quyên',
+                    note: s.skillResult === 'PASS' ? 'Thao tác chuẩn xác theo quy chuẩn an toàn SOP' : 'Cần đào tạo lại kỹ thuật cắt tỉa chuyên sâu'
+                }));
             PawpalStaff.state.mockWorkstations = [];
-            PawpalStaff.state.mockLeaveSwapRequests = [];
+            const {data:requests,error:requestError}=await client.from('staff_shift_request').select('*').order('created_at',{ascending:false});
+            PawpalStaff.state.requestError=requestError?.message||null;
+            const requestStaff=id=>PawpalStaff.state.mockStaff.find(staff=>staff.rawId===id);
+            const requestShiftLabel={ALL:'Cả ngày',MORNING:'Ca sáng',AFTERNOON:'Ca chiều',EVENING:'Ca tối'};
+            PawpalStaff.state.mockLeaveSwapRequests=(requests||[]).map(row=>({
+                ...row,type:row.request_type,
+                staffName:requestStaff(row.staff_id)?.name||'Chưa tải được tên nhân viên',
+                swapWithName:requestStaff(row.target_staff_id)?.name||'',
+                date:row.request_type==='SWAP' ? PawpalStaff.formatDateVN(row.start_date)+' → '+PawpalStaff.formatDateVN(row.target_date)
+                    : row.start_date===row.end_date ? PawpalStaff.formatDateVN(row.start_date)
+                    : PawpalStaff.formatDateVN(row.start_date)+' – '+PawpalStaff.formatDateVN(row.end_date),
+                shiftLabel:row.request_type==='SWAP' ? (requestShiftLabel[row.shift]||row.shift)+' → '+(requestShiftLabel[row.target_shift]||row.target_shift)
+                    : (requestShiftLabel[row.shift]||row.shift)
+            }));
             const {data:schedules,error:scheduleError} = await client.from('staff_schedule').select('*');
             PawpalStaff.state.scheduleError = Boolean(scheduleError);
             PawpalStaff.state.schedules = schedules || [];
             PawpalStaff.state.mockRoster = {};
             (schedules || []).forEach(row => {
+                if(row.schedule_status==='OFF') return;
                 const date = String(row.schedule_date || row.work_date || row.date || row.start_time || '').slice(0,10);
                 const staff = PawpalStaff.state.mockStaff.find(staff => staff.rawId === row.staff_id);
                 const shift = row.shift || row.shift_type;

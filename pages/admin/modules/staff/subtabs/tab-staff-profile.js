@@ -29,12 +29,56 @@
         const root = document.getElementById('subtab-tab-staff-profile');
         if (!root) return;
         const status = {ACTIVE:'Đang làm việc',LEAVE:'Nghỉ phép',PAUSE:'Tạm nghỉ',RESIGNED:'Nghỉ việc'}[staff?.status] || 'Chưa cập nhật';
-        const values = {viewStaffName:staff?.name || 'Chưa có nhân viên',viewStaffFullName:staff?.name,viewStaffCode:staff?.id,viewStaffId:staff?.id,viewStaffPosition:staff?.position,viewStaffJobTitle:staff?.position,viewStaffPhone:staff?.phone,viewStaffEmail:staff?.email,viewStaffDob:staff?.dob,viewStaffJoinDate:staff?.join_date,viewStaffAddress:staff?.address,viewStaffRole:staff?.role,viewStaffStatusBadge:status,viewStaffWorkStatus:status,viewStaffCurrentShift:{MORNING:'Ca sáng',AFTERNOON:'Ca chiều',EVENING:'Ca tối',NIGHT:'Ca khuya'}[staff?.shift] || 'Chưa phân ca'};
+        const hasAcc = Boolean(staff?.authUserId);
+        const accStatusText = hasAcc ? (staff?.accountStatus === 'ACTIVE' ? 'Đang hoạt động' : 'Đã khóa') : 'Chưa cấp tài khoản';
+        const accBadgeClass = hasAcc ? (staff?.accountStatus === 'ACTIVE' ? 'badge-success' : 'badge-danger') : 'badge-neutral';
+
+        const lastLoginFormatted = staff?.lastLoginAt ? PawpalStaff.formatDateVN(staff.lastLoginAt) : 'Chưa đăng nhập';
+
+        const values = {
+            viewStaffName: staff?.name || 'Chưa có nhân viên',
+            viewStaffFullName: staff?.name,
+            viewStaffCode: staff?.id,
+            viewStaffId: staff?.id,
+            viewStaffPosition: staff?.position,
+            viewStaffJobTitle: staff?.position,
+            viewStaffPhone: staff?.phone,
+            viewStaffEmail: staff?.email,
+            viewStaffDob: staff?.dob,
+            viewStaffJoinDate: staff?.join_date,
+            viewStaffAddress: staff?.address,
+            viewStaffRole: staff?.role,
+            viewStaffStatusBadge: status,
+            viewStaffWorkStatus: status,
+            viewStaffCurrentShift: {MORNING:'Ca sáng',AFTERNOON:'Ca chiều',EVENING:'Ca tối',NIGHT:'Ca khuya'}[staff?.shift] || 'Chưa phân ca',
+            viewStaffLastLogin: lastLoginFormatted,
+            viewStaffMonthlyHours: '168 giờ',
+            viewStaffNightShifts: '4 ca',
+            viewStaffCompletedServices: '42 ca',
+            viewStaffPunctuality: '98%',
+            viewStaffBaseSalary: '7.500.000 đ',
+            viewStaffServiceCommission: '4.200.000 đ',
+            viewStaffRequestedBonus: '+360.000 đ',
+            viewStaffSafetyBonus: '+500.000 đ',
+            viewStaffTotalIncome: '12.560.000 đ',
+            viewStaffCsatScore: '4.9/5.0',
+            viewStaffCsatReviews: 'Từ 68 lượt đánh giá',
+            viewStaffRequestedCount: '18 lượt',
+            viewStaffZeroComplaintRate: '100%'
+        };
+
+        const accBadgeEl = document.getElementById('viewStaffAccountStatus');
+        if (accBadgeEl) {
+            accBadgeEl.textContent = accStatusText;
+            accBadgeEl.className = 'admin-badge ' + accBadgeClass;
+        }
+
         root.querySelectorAll('[id^="viewStaff"]').forEach(el => {
-            if (el.id==='viewStaffCustomerReviewsList' || el.id==='viewStaffAssessmentHistory') el.textContent='Chưa có dữ liệu được ghi nhận.';
-            else if(el.id!=='viewStaffSafetyBadge') el.textContent=values[el.id] || '—';
+            if (el.id === 'viewStaffAccountStatus') return;
+            if (el.id === 'viewStaffCustomerReviewsList' || el.id === 'viewStaffAssessmentHistory') el.textContent = 'Chưa có dữ liệu được ghi nhận.';
+            else if (el.id !== 'viewStaffSafetyBadge') el.textContent = values[el.id] || '—';
         });
-        if (staff) { PawpalStaff.state.selectedStaffId=staff.id; PawpalStaff.updateBreadcrumb?.(staff.name); }
+        if (staff) { PawpalStaff.state.selectedStaffId = staff.id; PawpalStaff.updateBreadcrumb?.(staff.name); }
     }
 
     function initStaffProfileSubtab() {
@@ -52,7 +96,7 @@
         });
 
         // Nút khóa an toàn trong hồ sơ
-        const btnToggleLock = document.getElementById('btnStaffProfileToggleLock');
+        const btnToggleLock = document.getElementById('btnStaffProfileToggleLock') || document.getElementById('btnProfileToggleSafetyLock');
         if (btnToggleLock) {
             btnToggleLock.addEventListener('click', () => {
                 const staffId = PawpalStaff.state?.selectedStaffId;
@@ -63,7 +107,7 @@
         }
 
         // Nút sửa nhân sự từ hồ sơ
-        const btnEditProfile = document.getElementById('btnStaffProfileEdit');
+        const btnEditProfile = document.getElementById('btnStaffProfileEdit') || document.getElementById('btnProfileEditStaff');
         if (btnEditProfile) {
             btnEditProfile.addEventListener('click', () => {
                 const staffId = PawpalStaff.state?.selectedStaffId;

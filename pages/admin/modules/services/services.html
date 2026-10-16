@@ -160,7 +160,8 @@
          SUB-TAB 2: HỒ SƠ LỊCH HẸN (CHI TIẾT CA DỊCH VỤ 360°)
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-service-detail">
-        <div class="admin-card service-detail-card">
+        <div id="serviceDetailState" class="admin-card" role="status" aria-live="polite" style="padding: 26px 30px;">Đang tải hồ sơ lịch hẹn…</div>
+        <div class="admin-card service-detail-card" style="display: none;">
             <!-- THANH TIÊU ĐỀ CHI TIẾT VÀ NÚT THAO TÁC 1-CHẠM -->
             <div class="service-detail-header-bar">
                 <div class="service-headline-group">
@@ -1068,6 +1069,7 @@
                     <div class="form-group-item">
                         <label class="form-label-clean">Hình thức xác nhận đồng thuận với chủ nuôi</label>
                         <select class="admin-select" id="surchargeConsentSelect">
+                            <option value="Chưa có xác nhận của chủ nuôi">Chưa có xác nhận của chủ nuôi</option>
                             <option value="Đã gửi ảnh và video qua Zalo cho khách, khách đã đồng ý">Đã gửi ảnh và video qua Zalo, khách đã đồng ý</option>
                             <option value="Đã gọi điện thoại trao đổi và khách xác nhận">Đã gọi điện thoại trao đổi và khách xác nhận</option>
                             <option value="Khách hàng yêu cầu trực tiếp tại quầy">Khách hàng yêu cầu trực tiếp tại quầy</option>
@@ -1093,7 +1095,7 @@
 
                 <div class="modal-footer-clean">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAddSurcharge" data-close-modal="modalAddSurcharge">Hủy</button>
-                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitAddSurcharge">Lưu phụ phí và ghi nhật ký</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitAddSurcharge">Lưu phụ phí</button>
                 </div>
             </form>
         </div>
@@ -1154,7 +1156,7 @@
                 <div class="form-group-item">
                     <label class="intake-check-item">
                         <input type="checkbox" id="editCarelogStepDone">
-                        <span>Đã hoàn thành bước kỹ thuật này</span>
+                        <span>Đã ghi nhật ký</span>
                     </label>
                 </div>
                 <div class="form-group-item">
@@ -1488,7 +1490,7 @@
                         <span id="completeStepsProgressText" style="font-size: 12.5px; font-weight: 600; color: #165335;">Đang kiểm tra...</span>
                     </div>
                     <label class="intake-check-item" style="margin-top: 4px;">
-                        <input type="checkbox" id="completeCheckQuality" checked required>
+                        <input type="checkbox" id="completeCheckQuality" required>
                         Xác nhận toàn bộ quy trình chăm sóc và vệ sinh đã đạt tiêu chuẩn spa
                     </label>
                 </div>
@@ -1500,7 +1502,7 @@
                         Không có đồ dùng gửi lại quầy
                     </div>
                     <label class="intake-check-item">
-                        <input type="checkbox" id="completeCheckBelongings" checked required>
+                        <input type="checkbox" id="completeCheckBelongings" required>
                         Đã đối chiếu và trao trả đầy đủ toàn bộ tư trang, phụ kiện cho chủ nuôi
                     </label>
                 </div>
@@ -1571,8 +1573,8 @@
                     <div class="form-group-item">
                         <label class="form-label-clean">Trạng thái thu ngân</label>
                         <label class="intake-check-item" style="height: 38px; display: flex; align-items: center;">
-                            <input type="checkbox" id="completeCheckPaid" checked>
-                            Đã thu đủ tiền tại quầy
+                            <input type="checkbox" id="completeCheckPaid">
+                            Đã thanh toán theo dữ liệu thu ngân
                         </label>
                     </div>
                 </div>
@@ -1591,7 +1593,7 @@
 
                 <div class="modal-footer-clean">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelCompleteBooking" data-close-modal="modalCompleteBooking">Hủy</button>
-                    <button type="button" class="admin-btn admin-btn-primary" id="completeModalSubmitBtn">Xác nhận bàn giao và xuất phiếu</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="completeModalSubmitBtn">Lưu biên bản bàn giao</button>
                 </div>
             </form>
         </div>

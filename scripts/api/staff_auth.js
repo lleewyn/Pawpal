@@ -129,6 +129,7 @@ async function provisionAccount(req, res) {
         const { error: updateStaffErr } = await supabase
             .from('staff')
             .update({
+                email: email,
                 auth_user_id: authUserId,
                 account_status: 'ACTIVE',
                 system_role: systemRole,
