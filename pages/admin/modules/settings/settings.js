@@ -24,7 +24,7 @@
         if (!d) return '—';
         const dateObj = new Date(d);
         if (isNaN(dateObj.getTime())) return String(d);
-        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+        return `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
     };
 
     const formatDate = window.formatDate || function(d) {
@@ -263,12 +263,24 @@
             const client = getSupabaseClient();
             if (!client) return;
 
-            await client.from('audit_log').insert([{
+            let staffId = null;
+            try {
+                const adminUser = JSON.parse(localStorage.getItem('pawpal_admin_user') || sessionStorage.getItem('pawpal_admin_user') || '{}');
+                if (adminUser?.id) staffId = adminUser.id;
+            } catch (e) {}
+
+            if (!staffId) {
+                staffId = 'd0000000-5555-5555-5555-555555555555';
+            }
+
+            const { error } = await client.from('audit_log').insert([{
+                staff_id: staffId,
                 action: action,
                 entity_name: entityName,
                 description: description,
                 created_at: new Date().toISOString()
             }]);
+            if (error) console.warn('[Settings] Không thể ghi audit_log:', error.message);
         } catch (e) {
             console.warn('[Settings] Không thể ghi audit_log:', e.message);
         }
@@ -335,7 +347,23 @@
         pawpointsPolicy: {
             pointValueVnd: 100,
             registerBonus: 50
-        }
+        },
+        websiteNotices: [
+            {
+                id: 'notice-topbar-01',
+                content: 'PawPal mở rộng khung giờ phục vụ Spa đến 21:00 các ngày cuối tuần!',
+                type: 'TOPBAR',
+                date: '15/10/2026',
+                isActive: true
+            },
+            {
+                id: 'notice-popup-01',
+                content: 'Ưu đãi tháng 10: Tặng ngay voucher 50.000đ cho khách hàng đặt lịch tiêm phòng đầu tiên!',
+                type: 'POPUP',
+                date: '10/10/2026',
+                isActive: false
+            }
+        ]
     };
 
     PawpalSettings.state = {
@@ -422,11 +450,11 @@
                 client.from('voucher').select('*').order('created_at', { ascending: false }),
                 client.from('blog_post').select('*').order('created_at', { ascending: false }),
                 client.from('notification').select('*').order('sent_at', { ascending: false }),
-                client.from('audit_log').select('*').order('created_at', { ascending: false }).limit(40),
+                client.from('audit_log').select('*, staff:staff_id(full_name)').order('created_at', { ascending: false }).limit(50),
                 client.from('pawpal_setting').select('*'),
                 client.from('service').select('id, service_code, service_name, estimated_duration').order('service_name'),
                 client.from('product').select('id, sku, product_name, sale_price').order('product_name').limit(50),
-                client.from('blog_category').select('id, category_name').order('category_name')
+                client.from('blog_category').select('id, category_name, description').order('display_order')
             ]);
 
             const error=[bannersError,vouchersError,blogsError,notifsError,auditsError,appSettingsError,servicesError,productsError,categoriesError].find(Boolean);
@@ -519,8 +547,10 @@
             });
 
             // 3. Map Blog / Articles
+            const ragSyncedIds = PawpalSettings.state?.systemConfig?.ragSyncedArticleIds || [];
             PawpalSettings.state.articlesList = blogs.map(a => {
-                const categoryName = (categoriesData || []).find(category=>category.id===a.category_id)?.category_name || 'Chưa phân loại';
+                const catObj = (categoriesData || []).find(category => category.id === a.category_id);
+                const categoryName = catObj?.description || catObj?.category_name || 'Chưa phân loại';
 
                 let status = 'published';
                 const sUpper = (a.status || '').toUpperCase();
@@ -529,39 +559,69 @@
 
                 const dateObj = a.updated_at ? new Date(a.updated_at) : (a.created_at ? new Date(a.created_at) : new Date());
                 const dateStr = formatDate(dateObj);
+                const isRag = ragSyncedIds.includes(a.id) || Boolean(a.rag_synced ?? a.ragSynced ?? false);
+                const defaultKeywords = ['Chăm sóc', 'Sức khỏe', 'Dinh dưỡng'];
 
                 return {
                     id: a.id,
                     title: a.title || 'Cẩm nang chăm sóc thú cưng',
                     author: 'Ban Biên Tập PawPal',
                     category: categoryName,
+                    categoryId: a.category_id,
                     views: a.view_count || 0,
                     status: status,
                     updatedAt: dateStr,
                     summary: a.summary || 'Hướng dẫn chăm sóc và dinh dưỡng an toàn cho thú cưng.',
-                    ragSynced: Boolean(a.rag_synced ?? a.ragSynced ?? false),
-                    ragKeywords: Array.isArray(a.rag_keywords) ? a.rag_keywords : [],
-                    ragSummary: a.rag_summary || (a.rag_synced ? (a.summary || a.title || '') : '')
+                    ragSynced: isRag,
+                    ragKeywords: (Array.isArray(a.rag_keywords) && a.rag_keywords.length) ? a.rag_keywords : defaultKeywords,
+                    ragSummary: a.rag_summary || a.summary || a.title || 'Bài viết cẩm nang cung cấp kiến thức nuôi dạy và chăm sóc Boss khoa học.'
                 };
             });
 
-            // 4. Map Notifications
-            PawpalSettings.state.notificationsList = notifs.map(n => ({
-                id: n.id,
-                content: n.content || n.title || 'Thông báo từ hệ thống PawPal',
-                type: (String(n.notification_type || n.type || '').toUpperCase() === 'POPUP' || n.type === 'popup') ? 'POPUP' : 'TOPBAR',
-                date: formatDate(n.sent_at || n.created_at || new Date()),
-                isActive: !n.is_read
-            }));
+            // 4. Map Notifications (Website Announcements từ system_config)
+            const websiteNotices = PawpalSettings.state?.systemConfig?.websiteNotices;
+            if (Array.isArray(websiteNotices) && websiteNotices.length > 0) {
+                PawpalSettings.state.notificationsList = websiteNotices;
+            } else if (notifs && notifs.length > 0) {
+                PawpalSettings.state.notificationsList = notifs.map(n => ({
+                    id: n.id,
+                    content: n.content || n.title || 'Thông báo từ hệ thống PawPal',
+                    type: (String(n.notification_type || n.type || '').toUpperCase() === 'POPUP' || n.type === 'popup') ? 'POPUP' : 'TOPBAR',
+                    date: formatDate(n.sent_at || n.created_at || new Date()),
+                    isActive: !n.is_read
+                }));
+            } else {
+                PawpalSettings.state.notificationsList = DEFAULT_SYSTEM_CONFIG.websiteNotices;
+            }
 
             // 5. Map Audit Logs
             if (audits.length > 0) {
+                const targetModMap = {
+                    product: 'Bán hàng',
+                    sales_order: 'Bán hàng',
+                    voucher: 'Khuyến mãi',
+                    banner: 'Banner',
+                    customer: 'Khách hàng',
+                    pet_profile: 'Thú cưng',
+                    service: 'Dịch vụ',
+                    appointment: 'Dịch vụ',
+                    appointment_incident: 'Dịch vụ',
+                    staff: 'Nhân sự',
+                    blog_post: 'Bài viết',
+                    pawpal_setting: 'Cấu hình',
+                    store_profile: 'Cấu hình',
+                    payment: 'Cấu hình',
+                    shipping: 'Cấu hình',
+                    booking_policy: 'Cấu hình'
+                };
                 PawpalSettings.state.auditLogsList = audits.map(l => {
                     const timeStr = formatDateTime(l.created_at);
+                    const actorName = l.staff?.full_name || 'Quản trị viên';
                     return {
+                        id: l.id,
                         time: timeStr,
-                        actor: 'Quản trị viên (Admin)',
-                        targetModules: ({product:'Bán hàng',sales_order:'Bán hàng',voucher:'Khuyến mãi',customer:'Khách hàng',pet_profile:'Thú cưng',service:'Dịch vụ',appointment:'Dịch vụ',staff:'Nhân sự',blog_post:'Bài viết',pawpal_setting:'Cấu hình'})[l.entity_name] || 'Hệ thống',
+                        actor: actorName,
+                        targetModules: targetModMap[l.entity_name] || 'Hệ thống',
                         actionText: l.description || l.action || 'Thao tác cấu hình hệ thống',
                         status: 'Đã đồng bộ SSOT'
                     };
@@ -694,19 +754,22 @@
     PawpalSettings.switchSubtab = switchSubtab;
 
     // Gắn sự kiện modal tác động đa phân hệ (Impact Confirmation Modal)
-    document.getElementById('btnConfirmAndSyncImpact')?.addEventListener('click', () => {
-        if (pendingImpactCallback) {
-            pendingImpactCallback();
-            pendingImpactCallback = null;
+    document.getElementById('btnConfirmAndSyncImpact')?.addEventListener('click', async () => {
+        const cb = pendingImpactCallback;
+        pendingImpactCallback = null;
+        closeModal('impactConfirmModalOverlay');
+        if (cb) {
+            try {
+                await cb();
+            } catch (err) {
+                console.error('[Settings] Lỗi khi thực thi tác vụ xác nhận tác động:', err);
+            }
         }
-        const modal = document.getElementById('impactConfirmModalOverlay');
-        if (modal) modal.style.display = 'none';
     });
 
     const closeImpactModalHandler = () => {
         pendingImpactCallback = null;
-        const modal = document.getElementById('impactConfirmModalOverlay');
-        if (modal) modal.style.display = 'none';
+        closeModal('impactConfirmModalOverlay');
     };
     document.getElementById('btnDismissImpactModal')?.addEventListener('click', closeImpactModalHandler);
     document.getElementById('btnCancelImpactModal')?.addEventListener('click', closeImpactModalHandler);

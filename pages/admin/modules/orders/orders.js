@@ -656,8 +656,8 @@
 
                         rmaMapByOrderId[r.sales_order_id] = {
                             id: r.id.slice(0, 12).toUpperCase(),
-                            solutionType: r.return_type === 'REFUND' ? 'refund' : 'exchange',
-                            solutionTypeName: r.return_type === 'REFUND' ? 'Hoàn tiền' : 'Đổi hàng mới',
+                            solutionType: (r.return_type === 'REFUND' || r.return_type === 'RETURN') ? 'refund' : 'exchange',
+                            solutionTypeName: (r.return_type === 'REFUND' || r.return_type === 'RETURN') ? 'Hoàn tiền' : 'Đổi hàng mới',
                             reason: r.reason,
                             reasonText: r.reason,
                             restockAction: 'restock',
@@ -720,6 +720,7 @@
                     }
 
                     const rawStatus = (o.order_status || 'PENDING').toLowerCase();
+                    const mappedStatus = (rawStatus === 'packing') ? 'confirmed' : rawStatus;
                     const rawPaymentStatus = (o.payment_status || 'UNPAID').toLowerCase();
                     let mappedPaymentStatus = rawPaymentStatus;
                     if (rawPaymentStatus === 'pending_refund') mappedPaymentStatus = 'refund_pending';
@@ -807,7 +808,7 @@
                         customerName: custName,
                         phone: phone,
                         address: formattedAddr,
-                        status: rawStatus,
+                        status: mappedStatus,
                         paymentStatus: mappedPaymentStatus,
                         paymentMethod: payMethod,
                         carrier: resolvedCarrier,

@@ -121,6 +121,41 @@
         }));
     }
 
+    async function mutateBanner(action, payload) {
+        const client = getSupabaseClient();
+        try {
+            if (client) {
+                if (action === 'insert') {
+                    const { data, error } = await client.from('banner').insert(payload).select('id');
+                    if (!error) return { data };
+                    console.warn('[Settings] Client Supabase insert banner failed, falling back to admin API:', error?.message);
+                } else if (action === 'update') {
+                    const { data, error } = await client.from('banner').update(payload.data).eq('id', payload.id).select('id');
+                    if (!error && data?.length) return { data };
+                    console.warn('[Settings] Client Supabase update banner failed, falling back to admin API:', error?.message);
+                } else if (action === 'delete') {
+                    const { data, error } = await client.from('banner').delete().eq('id', payload.id).select('id');
+                    if (!error && data?.length) return { data };
+                    console.warn('[Settings] Client Supabase delete banner failed, falling back to admin API:', error?.message);
+                }
+            }
+        } catch (clientErr) {
+            console.warn('[Settings] Client exception on banner mutation:', clientErr);
+        }
+
+        // Server API Fallback with Service Role Key
+        const res = await fetch('/api/admin/banners', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, payload })
+        });
+        const result = await res.json().catch(() => ({}));
+        if (!res.ok || !result.success) {
+            throw new Error(result.message || 'Không thể thao tác Banner trên hệ thống.');
+        }
+        return result;
+    }
+
     function renderBanners() {
         const container = document.getElementById('bannerCardsContainer');
         if (!container) return;
@@ -179,11 +214,7 @@
 
                 const newStatusStr = banner.status === 'active' ? 'tam_an' : 'dang_hien_thi';
                 try {
-                    const client = getSupabaseClient();
-                    if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
-                    const { data: updated, error } = await client.from('banner').update({ status: newStatusStr, updated_at: new Date().toISOString() }).eq('id', id).select('id');
-                    if (error) throw error;
-                    if (!updated || !updated.length) throw new Error('Không tìm thấy Banner để cập nhật.');
+                    await mutateBanner('update', { id, data: { status: newStatusStr, updated_at: new Date().toISOString() } });
                     await logSystemAudit('UPDATE', 'banner', `Đổi trạng thái banner "${banner.title}" thành ${newStatusStr}`);
                     await PawpalSettings.loadSettingsModuleData?.();
                     renderBanners();
@@ -191,7 +222,7 @@
                     showToast(`Banner "${banner.title}" hiện đã ${newStatusStr === 'dang_hien_thi' ? 'BẬT' : 'TẮT'}.`, 'info');
                 } catch (e) {
                     console.error('[Settings] Lỗi cập nhật banner:', e);
-                    showToast('Không thể cập nhật trạng thái Banner.', 'danger');
+                    showToast('Không thể cập nhật trạng thái Banner: ' + (e.message || ''), 'danger');
                 }
             });
         });
@@ -213,11 +244,7 @@
                 isDanger: true,
                 onConfirm: async () => {
                     try {
-                        const client = getSupabaseClient();
-                        if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
-                        const { data, error } = await client.from('banner').delete().eq('id', banner.id).select('id');
-                        if (error) throw error;
-                        if (!data?.length) throw new Error('Không tìm thấy Banner để xóa.');
+                        await mutateBanner('delete', { id: banner.id });
                         await logSystemAudit('DELETE', 'banner', `Xóa Banner: "${banner.title}"`);
                         await PawpalSettings.loadSettingsModuleData?.();
                         renderBanners();
@@ -251,11 +278,7 @@
                     return;
                 }
                 try {
-                    const client = getSupabaseClient();
-                    if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
-                    const { data: updated, error } = await client.from('banner').update({ end_date: newEndDate, status: 'dang_hien_thi', updated_at: new Date().toISOString() }).eq('id', id).select('id');
-                    if (error) throw error;
-                    if (!updated || !updated.length) throw new Error('Không tìm thấy Banner để gia hạn.');
+                    await mutateBanner('update', { id, data: { end_date: newEndDate, status: 'dang_hien_thi', updated_at: new Date().toISOString() } });
                     await logSystemAudit('UPDATE', 'banner', `Gia hạn banner "${banner.title}" đến ngày ${newEndDate}`);
                     await PawpalSettings.loadSettingsModuleData?.();
                     renderBanners();
@@ -263,7 +286,7 @@
                     showToast(`Đã gia hạn Banner "${banner.title}" thêm 30 ngày thành công! Hiệu lực mới đến ngày ${newEndDate}.`, 'success');
                 } catch (e) {
                     console.error('[Settings] Lỗi gia hạn banner:', e);
-                    showToast('Không thể gia hạn Banner.', 'danger');
+                    showToast('Không thể gia hạn Banner: ' + (e.message || ''), 'danger');
                 }
             });
         });
@@ -441,21 +464,41 @@
             container.appendChild(item);
         });
 
+        // Cập nhật thanh xem trước Top-bar trên Website
+        const topbarTextEl = document.getElementById('topbarLivePreviewText');
+        const topbarBadgeEl = document.querySelector('.topbar-preview-badge');
+        const activeTopbarNotice = notificationsList.find(n => n.type === 'TOPBAR' && n.isActive);
+        if (topbarTextEl) {
+            if (activeTopbarNotice) {
+                topbarTextEl.textContent = activeTopbarNotice.content;
+                if (topbarBadgeEl) {
+                    topbarBadgeEl.textContent = 'Đang chạy';
+                    topbarBadgeEl.style.backgroundColor = '#236B48';
+                }
+            } else {
+                topbarTextEl.textContent = 'Hiện chưa có thông báo Top-bar nào đang chạy trên website.';
+                if (topbarBadgeEl) {
+                    topbarBadgeEl.textContent = 'Đang tắt';
+                    topbarBadgeEl.style.backgroundColor = '#6B7280';
+                }
+            }
+        }
+
         // Bật/tắt thông báo
         container.querySelectorAll('.btn-toggle-notice').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const id = btn.getAttribute('data-id');
-                const notice = notificationsList.find(i => i.id === id);
+                const notice = notificationsList.find(i => String(i.id) === String(id));
                 if (!notice) return;
 
                 const newActive = !notice.isActive;
+                notice.isActive = newActive;
                 try {
-                    const client = getSupabaseClient();
-                    if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
-                    const { error } = await client.from('notification').update({ is_read: !newActive }).eq('id', id);
-                    if (error) throw error;
-                    await logSystemAudit('UPDATE', 'notification', `Đổi trạng thái thông báo ${id} thành ${newActive ? 'Bật' : 'Tắt'}`);
-                    await PawpalSettings.loadSettingsModuleData?.();
+                    if (PawpalSettings.state?.systemConfig) {
+                        PawpalSettings.state.systemConfig.websiteNotices = notificationsList;
+                        await PawpalSettings.persistSystemConfig?.(PawpalSettings.state.systemConfig);
+                    }
+                    await logSystemAudit('UPDATE', 'notification', `Đổi trạng thái thông báo "${notice.content.substring(0, 30)}..." thành ${newActive ? 'Bật' : 'Tắt'}`);
                     renderNotifications();
                     showToast(`Đã ${newActive ? 'BẬT' : 'TẮT'} thông báo website!`, 'info');
                 } catch (e) {
@@ -469,19 +512,21 @@
         container.querySelectorAll('.btn-delete-notice').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
+                const notice = notificationsList.find(i => String(i.id) === String(id));
                 PawpalSettings.showSettingsConfirmModal?.({
                     title: 'Xóa Thông báo Website',
-                    message: 'Bạn có chắc chắn muốn xóa thông báo này?',
+                    message: 'Bạn có chắc chắn muốn xóa thông báo này khỏi hệ thống?',
                     confirmText: 'Xóa',
                     isDanger: true,
                     onConfirm: async () => {
                         try {
-                            const client = getSupabaseClient();
-                            if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
-                            const { error } = await client.from('notification').delete().eq('id', id);
-                            if (error) throw error;
-                            await logSystemAudit('DELETE', 'notification', `Xóa thông báo website id: ${id}`);
-                            await PawpalSettings.loadSettingsModuleData?.();
+                            const updatedList = notificationsList.filter(i => String(i.id) !== String(id));
+                            PawpalSettings.state.notificationsList = updatedList;
+                            if (PawpalSettings.state?.systemConfig) {
+                                PawpalSettings.state.systemConfig.websiteNotices = updatedList;
+                                await PawpalSettings.persistSystemConfig?.(PawpalSettings.state.systemConfig);
+                            }
+                            await logSystemAudit('DELETE', 'notification', `Xóa thông báo website: "${(notice?.content || id).substring(0, 30)}..."`);
                             renderNotifications();
                             showToast('Đã xóa thông báo website thành công!', 'success');
                         } catch (e) {
@@ -709,7 +754,18 @@
         }
     }
 
+    let isInitialized = false;
+
     function initBannersSubtab() {
+        if (isInitialized) {
+            renderBanners();
+            renderVouchers();
+            renderNotifications();
+            renderZeroMissAlerts();
+            return;
+        }
+        isInitialized = true;
+
         // Chuyển Tab con trong Sub-tab 1
         document.querySelectorAll('.settings-subtabs-bar .settings-tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -767,19 +823,14 @@
             if (!isValidImageUrl) { showToast('URL ảnh Banner không hợp lệ. Hãy dùng đường dẫn bắt đầu bằng http://, https:// hoặc /.', 'warning'); return; }
             if (endDate < startDate) { showToast('Ngày kết thúc phải sau ngày bắt đầu.', 'warning'); return; }
             try {
-                const client = getSupabaseClient();
-                if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
                 const bannersList = PawpalSettings.state?.bannersList || [];
                 const payload = { title, image_url: imageUrl, link: url, button_text: cta, start_date: startDate, end_date: endDate, updated_at: new Date().toISOString() };
                 const wasEditing = Boolean(editingBannerId);
                 if (wasEditing) {
-                    const { data, error } = await client.from('banner').update(payload).eq('id', editingBannerId).select('id');
-                    if (error) throw error;
-                    if (!data?.length) throw new Error('Không tìm thấy Banner để cập nhật.');
+                    await mutateBanner('update', { id: editingBannerId, data: payload });
                     await logSystemAudit('UPDATE', 'banner', `Cập nhật Banner: "${title}"`);
                 } else {
-                    const { error } = await client.from('banner').insert([{ ...payload, display_order: bannersList.length + 1, status: 'dang_hien_thi' }]);
-                    if (error) throw error;
+                    await mutateBanner('insert', [{ ...payload, display_order: bannersList.length + 1, status: 'dang_hien_thi' }]);
                     await logSystemAudit('INSERT', 'banner', `Thêm Banner mới: "${title}"`);
                 }
                 PawpalSettings.closeModal?.('bannerModalOverlay');
@@ -874,7 +925,11 @@
                 }]);
                 if (error) throw error;
                 await logSystemAudit('INSERT', 'voucher', `Phát hành Voucher mới: ${code} (${name})`);
-                if (voucherModal) voucherModal.style.display = 'none';
+                PawpalSettings.closeModal?.('voucherModalOverlay');
+                ['inputVoucherCode', 'inputVoucherName', 'inputVoucherValue', 'inputVoucherMinOrder', 'inputVoucherStart', 'inputVoucherEnd'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
                 await PawpalSettings.loadSettingsModuleData?.();
                 renderVouchers();
                 renderZeroMissAlerts();
@@ -896,13 +951,13 @@
             const newLimit = voucher.limit + 50;
             try {
                 const client = getSupabaseClient();
-                if (client) {
-                    await client.from('voucher').update({
-                        max_usage: newLimit,
-                        is_active: true,
-                        updated_at: new Date().toISOString()
-                    }).eq('voucher_code', currentCode);
-                }
+                if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
+                const { error } = await client.from('voucher').update({
+                    max_usage: newLimit,
+                    is_active: true,
+                    updated_at: new Date().toISOString()
+                }).eq('voucher_code', currentCode);
+                if (error) throw error;
                 await logSystemAudit('UPDATE', 'voucher', `Gia hạn quota Voucher ${currentCode} thêm 50 lượt (Tổng: ${newLimit})`);
                 closeVoucherActionMenu();
                 await PawpalSettings.loadSettingsModuleData?.();
@@ -911,7 +966,7 @@
                 showToast(`Đã gia hạn thêm 50 lượt phát hành cho Voucher ${voucher.code} thành công! Hạn mức mới: ${voucher.used}/${newLimit} lượt.`, 'success');
             } catch (e) {
                 console.error('[Settings] Lỗi gia hạn quota voucher:', e);
-                showToast('Không thể gia hạn voucher.', 'danger');
+                showToast('Không thể gia hạn voucher: ' + (e.message || ''), 'danger');
             }
         });
 
@@ -925,12 +980,12 @@
             const newActive = voucher.status !== 'active';
             try {
                 const client = getSupabaseClient();
-                if (client) {
-                    await client.from('voucher').update({
-                        is_active: newActive,
-                        updated_at: new Date().toISOString()
-                    }).eq('voucher_code', currentCode);
-                }
+                if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
+                const { error } = await client.from('voucher').update({
+                    is_active: newActive,
+                    updated_at: new Date().toISOString()
+                }).eq('voucher_code', currentCode);
+                if (error) throw error;
                 await logSystemAudit('UPDATE', 'voucher', `Đổi trạng thái Voucher ${currentCode} thành ${newActive ? 'Hoạt động' : 'Tạm dừng'}`);
                 closeVoucherActionMenu();
                 await PawpalSettings.loadSettingsModuleData?.();
@@ -939,7 +994,7 @@
                 showToast(`Voucher ${voucher.code} hiện đã chuyển sang trạng thái: ${newActive ? 'Đang hoạt động' : 'Tạm dừng'}.`, 'info');
             } catch (e) {
                 console.error('[Settings] Lỗi bật/tắt voucher:', e);
-                showToast('Không thể cập nhật trạng thái voucher.', 'danger');
+                showToast('Không thể cập nhật trạng thái voucher: ' + (e.message || ''), 'danger');
             }
         });
 
@@ -954,9 +1009,9 @@
                 onConfirm: async () => {
                     try {
                         const client = getSupabaseClient();
-                        if (client) {
-                            await client.from('voucher').delete().eq('voucher_code', currentCode);
-                        }
+                        if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
+                        const { error } = await client.from('voucher').delete().eq('voucher_code', currentCode);
+                        if (error) throw error;
                         await logSystemAudit('DELETE', 'voucher', `Xóa Voucher ${currentCode}`);
                         closeVoucherActionMenu();
                         await PawpalSettings.loadSettingsModuleData?.();
@@ -1042,19 +1097,28 @@
             const nType = typeValue === 'popup' ? 'POPUP' : 'TOPBAR';
 
             try {
-                const client = getSupabaseClient();
-                if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
-                const { error } = await client.from('notification').insert([{
-                    title: content.substring(0, 60),
-                    content,
-                    notification_type: nType,
-                    is_read: statusValue !== 'active',
-                    sent_at: new Date().toISOString()
-                }]);
-                if (error) throw error;
+                const newNotice = {
+                    id: 'notice-' + Date.now(),
+                    content: content,
+                    type: nType,
+                    date: new Date().toLocaleDateString('vi-VN'),
+                    isActive: statusValue === 'active'
+                };
+
+                const currentList = Array.isArray(PawpalSettings.state?.notificationsList) ? PawpalSettings.state.notificationsList : [];
+                currentList.unshift(newNotice);
+                PawpalSettings.state.notificationsList = currentList;
+
+                if (PawpalSettings.state?.systemConfig) {
+                    PawpalSettings.state.systemConfig.websiteNotices = currentList;
+                    await PawpalSettings.persistSystemConfig?.(PawpalSettings.state.systemConfig);
+                }
+
                 await logSystemAudit('INSERT', 'notification', `Thêm thông báo ${typeValue === 'popup' ? 'Popup' : 'Top-bar'}: "${content.substring(0, 50)}..."`);
-                if (noticeModal) noticeModal.style.display = 'none';
-                await PawpalSettings.loadSettingsModuleData?.();
+                const contentInput = document.getElementById('inputNoticeContent');
+                if (contentInput) contentInput.value = '';
+
+                PawpalSettings.closeModal?.('notificationModalOverlay');
                 renderNotifications();
                 showToast('Đã lưu và đồng bộ thông báo mới sang Website!', 'success');
             } catch (e) {

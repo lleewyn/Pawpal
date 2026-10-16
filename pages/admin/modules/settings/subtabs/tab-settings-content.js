@@ -8,6 +8,7 @@
 
     let currentArticlePage = 1;
     const ARTICLE_PAGE_SIZE = 10;
+    let isContentInitialized = false;
 
     function getSupabaseClient() {
         return PawpalSettings.getSupabaseClient?.() || (window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient);
@@ -61,50 +62,51 @@
         PawpalSettings.state.currentActiveArticleId = null;
     }
 
-    function renderArticles() {
-        const tbody = document.getElementById('articlesTableBody');
-        if (!tbody) return;
-        if (PawpalSettings.state.loadError) {delete tbody.dataset.loadingSkeleton;tbody.innerHTML=`<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" style="padding:28px;text-align:center;">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;return;}
-        if (!PawpalSettings.state.isLoaded) return;
-        delete tbody.dataset.loadingSkeleton;
-
+    function getFilteredArticles() {
         const articlesList = PawpalSettings.state?.articlesList || [];
         const keyword = (document.getElementById('searchArticleInput')?.value || '').toLowerCase().trim();
         const catFilter = document.getElementById('filterArticleCategory')?.value || 'all';
         const statusFilter = document.getElementById('filterArticleStatus')?.value || 'all';
 
-        const filtered = articlesList.filter(a => {
+        return articlesList.filter(a => {
             if (catFilter !== 'all' && a.category !== catFilter) return false;
             if (statusFilter !== 'all' && a.status !== statusFilter) return false;
-            if (keyword) return a.title.toLowerCase().includes(keyword);
+            if (keyword && !a.title.toLowerCase().includes(keyword)) return false;
             return true;
         });
+    }
 
+    function renderArticles() {
+        const tbody = document.getElementById('articlesTableBody');
+        if (!tbody) return;
+        if (PawpalSettings.state.loadError) {
+            delete tbody.dataset.loadingSkeleton;
+            tbody.innerHTML = `<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" style="padding:28px;text-align:center;">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;
+            return;
+        }
+        if (!PawpalSettings.state.isLoaded) return;
+        delete tbody.dataset.loadingSkeleton;
+
+        const filtered = getFilteredArticles();
         const totalPages = Math.max(1, Math.ceil(filtered.length / ARTICLE_PAGE_SIZE));
-        currentArticlePage = Math.min(currentArticlePage, totalPages);
+        if (currentArticlePage > totalPages) currentArticlePage = totalPages;
+        if (currentArticlePage < 1) currentArticlePage = 1;
+
         const pageItems = filtered.slice((currentArticlePage - 1) * ARTICLE_PAGE_SIZE, currentArticlePage * ARTICLE_PAGE_SIZE);
         const pageBar = document.querySelector('#subtab-tab-content-management .admin-pagination-bar');
         if (pageBar) {
             pageBar.querySelector('.article-page-prev')?.classList.toggle('disabled', currentArticlePage === 1);
             pageBar.querySelector('.article-page-next')?.classList.toggle('disabled', currentArticlePage === totalPages);
             const nums = pageBar.querySelector('.article-page-numbers');
-            if (nums) nums.innerHTML = Array.from({ length: totalPages }, (_, i) => `<button type="button" class="pagination-btn ${i + 1 === currentArticlePage ? 'active' : ''}" data-article-page="${i + 1}">${i + 1}</button>`).join('');
-            nums?.querySelectorAll('[data-article-page]').forEach(btn => btn.addEventListener('click', () => {
-                currentArticlePage = Number(btn.dataset.articlePage);
-                renderArticles();
-            }));
-            pageBar.querySelector('.article-page-prev')?.addEventListener('click', () => {
-                if (currentArticlePage > 1) {
-                    currentArticlePage--;
-                    renderArticles();
-                }
-            });
-            pageBar.querySelector('.article-page-next')?.addEventListener('click', () => {
-                if (currentArticlePage < totalPages) {
-                    currentArticlePage++;
-                    renderArticles();
-                }
-            });
+            if (nums) {
+                nums.innerHTML = Array.from({ length: totalPages }, (_, i) => `<button type="button" class="pagination-btn ${i + 1 === currentArticlePage ? 'active' : ''}" data-article-page="${i + 1}">${i + 1}</button>`).join('');
+                nums.querySelectorAll('[data-article-page]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        currentArticlePage = Number(btn.dataset.articlePage);
+                        renderArticles();
+                    });
+                });
+            }
         }
 
         tbody.innerHTML = '';
@@ -130,7 +132,7 @@
                 <td><strong style="color: var(--text-main); font-size: 13.5px;">${a.title}</strong></td>
                 <td>${a.author}</td>
                 <td><span class="admin-badge badge-neutral">${a.category}</span></td>
-                <td>${a.views.toLocaleString('vi-VN')}</td>
+                <td>${(Number(a.views) || 0).toLocaleString('vi-VN')}</td>
                 <td>${ragBadge}</td>
                 <td>${statusBadge}</td>
                 <td>${a.updatedAt}</td>
@@ -153,7 +155,7 @@
         updateArticleKpis();
     }
 
-    // Nạp danh mục bài viết động từ CSDL Supabase (Chuẩn AGENTS.MD: Lọc sạch chuỗi rỗng/rác)
+    // Nạp danh mục bài viết động từ CSDL Supabase
     function populateBlogCategories() {
         const catFilterEl = document.getElementById('filterArticleCategory');
         const catInputEl = document.getElementById('inputArticleCategory');
@@ -161,24 +163,28 @@
         const dbCategories = PawpalSettings.state?.blogCategoriesList || [];
         const validCategories = [];
         dbCategories.forEach(c => {
-            const name = (c.category_name || '').trim();
+            const id = c.id;
+            const name = (c.description || c.category_name || '').trim();
             if (name && name !== 'Chưa rõ' && name !== 'unknown' && name !== 'null' && Number.isNaN(Number(name))) {
                 if (!validCategories.some(vc => vc.name.toLowerCase() === name.toLowerCase())) {
-                    validCategories.push({ id: c.id, name: name });
+                    validCategories.push({ id: id, name: name });
                 }
             }
         });
 
-        const defaultNames = ['Chó cưng', 'Mèo cưng', 'Dinh dưỡng', 'Grooming và Spa', 'Mẹo chăm sóc'];
         if (validCategories.length === 0) {
-            defaultNames.forEach(d => validCategories.push({ id: null, name: d }));
+            validCategories.push(
+                { id: 'f2e684f1-aba2-43b6-98af-dadac0c16ee3', name: 'Mẹo chăm sóc' },
+                { id: '3a715f52-a0b6-433a-88c1-0383b8e0486b', name: 'Tin tức' },
+                { id: '13820759-5b1e-4662-bc82-dabb8928ee41', name: 'Khuyến mãi' }
+            );
         }
 
         if (catFilterEl) {
             const currentVal = catFilterEl.value;
             catFilterEl.innerHTML = '<option value="all">Tất cả danh mục</option>' +
                 validCategories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-            if (currentVal && validCategories.some(c => c.name === currentVal)) {
+            if (currentVal && (currentVal === 'all' || validCategories.some(c => c.name === currentVal))) {
                 catFilterEl.value = currentVal;
             } else {
                 catFilterEl.value = 'all';
@@ -187,25 +193,65 @@
 
         if (catInputEl) {
             const currentVal = catInputEl.value;
-            catInputEl.innerHTML = validCategories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-            if (currentVal && validCategories.some(c => c.name === currentVal)) {
+            catInputEl.innerHTML = validCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            if (currentVal && validCategories.some(c => c.id === currentVal)) {
                 catInputEl.value = currentVal;
             }
         }
     }
 
     function initContentSubtab() {
+        if (isContentInitialized) {
+            populateBlogCategories();
+            renderArticles();
+            updateArticleKpis();
+            return;
+        }
+        isContentInitialized = true;
+
         // Lọc Bài viết
-        document.getElementById('searchArticleInput')?.addEventListener('input', renderArticles);
-        document.getElementById('filterArticleCategory')?.addEventListener('change', () => { currentArticlePage = 1; renderArticles(); });
-        document.getElementById('filterArticleStatus')?.addEventListener('change', () => { currentArticlePage = 1; renderArticles(); });
+        document.getElementById('searchArticleInput')?.addEventListener('input', () => {
+            currentArticlePage = 1;
+            renderArticles();
+        });
+        document.getElementById('filterArticleCategory')?.addEventListener('change', () => {
+            currentArticlePage = 1;
+            renderArticles();
+        });
+        document.getElementById('filterArticleStatus')?.addEventListener('change', () => {
+            currentArticlePage = 1;
+            renderArticles();
+        });
 
         // Nạp danh mục động
         populateBlogCategories();
 
+        // Điều khiển phân trang (gắn listener 1 lần)
+        const pageBar = document.querySelector('#subtab-tab-content-management .admin-pagination-bar');
+        pageBar?.querySelector('.article-page-prev')?.addEventListener('click', () => {
+            if (currentArticlePage > 1) {
+                currentArticlePage--;
+                renderArticles();
+            }
+        });
+        pageBar?.querySelector('.article-page-next')?.addEventListener('click', () => {
+            const filtered = getFilteredArticles();
+            const totalPages = Math.max(1, Math.ceil(filtered.length / ARTICLE_PAGE_SIZE));
+            if (currentArticlePage < totalPages) {
+                currentArticlePage++;
+                renderArticles();
+            }
+        });
+
         // Modal Tạo Bài Viết Mới
         document.getElementById('btnOpenCreateArticleModal')?.addEventListener('click', () => {
             populateBlogCategories();
+            const titleInput = document.getElementById('inputArticleTitle');
+            if (titleInput) titleInput.value = '';
+            const summaryInput = document.getElementById('inputArticleSummary');
+            if (summaryInput) summaryInput.value = '';
+            const contentInput = document.getElementById('inputArticleContent');
+            if (contentInput) contentInput.value = '';
             PawpalSettings.openModal?.('articleModalOverlay');
         });
         document.getElementById('btnCancelArticleModal')?.addEventListener('click', () => {
@@ -219,7 +265,7 @@
             const title = document.getElementById('inputArticleTitle')?.value.trim();
             const summary = document.getElementById('inputArticleSummary')?.value.trim() || '';
             const content = document.getElementById('inputArticleContent')?.value.trim() || '';
-            const category = document.getElementById('inputArticleCategory')?.value || 'Mẹo chăm sóc';
+            let categoryId = document.getElementById('inputArticleCategory')?.value || null;
             const status = document.getElementById('inputArticleStatus')?.value || 'published';
 
             const articleValidationErrors = [];
@@ -239,26 +285,61 @@
             try {
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Không kết nối được Supabase.');
-                let categoryId = null;
-                const { data: categoryRow } = await client.from('blog_category').select('id').eq('category_name', category).maybeSingle();
-                categoryId = categoryRow?.id || null;
-                const { error } = await client.from('blog_post').insert([{
+
+                // Xác thực author_id (BẮT BUỘC NOT NULL liên kết bảng staff)
+                let authorId = null;
+                try {
+                    const adminUser = JSON.parse(localStorage.getItem('pawpal_admin_user') || sessionStorage.getItem('pawpal_admin_user') || '{}');
+                    if (adminUser?.id) authorId = adminUser.id;
+                } catch (e) {}
+
+                if (!authorId) {
+                    const { data: anyStaff } = await client.from('staff').select('id').limit(1).maybeSingle();
+                    authorId = anyStaff?.id || 'd0000000-5555-5555-5555-555555555555';
+                }
+
+                // Xác thực category_id (UUID hợp lệ)
+                if (!categoryId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryId)) {
+                    const { data: firstCat } = await client.from('blog_category').select('id').limit(1).maybeSingle();
+                    categoryId = firstCat?.id || 'f2e684f1-aba2-43b6-98af-dadac0c16ee3';
+                }
+
+                let dbStatus = 'PUBLISHED';
+                if (status === 'draft') dbStatus = 'DRAFT';
+                else if (status === 'hidden') dbStatus = 'ARCHIVED';
+
+                const { data: insertedRows, error } = await client.from('blog_post').insert([{
                     title: title,
                     slug: slug,
                     summary: summary,
                     content: content || `<p>${summary}</p>`,
                     category_id: categoryId,
+                    author_id: authorId,
                     thumbnail_url: '/assets/images/publics/dogcute6.jpg',
-                    status: status.toUpperCase(),
+                    status: dbStatus,
                     view_count: 0,
                     publish_at: new Date().toISOString()
-                }]);
+                }]).select('id, title');
+
                 if (error) throw error;
+
+                // Tự động thêm bài viết mới vào danh sách RAG của Chatbot
+                const newId = insertedRows?.[0]?.id;
+                if (newId) {
+                    const sysConfig = PawpalSettings.state?.systemConfig || {};
+                    sysConfig.ragSyncedArticleIds = Array.isArray(sysConfig.ragSyncedArticleIds) ? sysConfig.ragSyncedArticleIds : [];
+                    if (!sysConfig.ragSyncedArticleIds.includes(newId)) {
+                        sysConfig.ragSyncedArticleIds.push(newId);
+                        PawpalSettings.persistSystemConfig?.(sysConfig);
+                    }
+                }
+
                 await logSystemAudit('INSERT', 'blog_post', `Tạo bài viết mới: "${title}"`);
                 PawpalSettings.closeModal?.('articleModalOverlay');
                 await PawpalSettings.loadSettingsModuleData?.();
+                populateBlogCategories();
                 renderArticles();
-                showToast('Đã lưu bài viết và đồng bộ dữ liệu sang tri thức RAG của Chatbot!', 'success');
+                showToast('Đã lưu bài viết và đồng bộ dữ liệu sang tri thức AI của Chatbot!', 'success');
             } catch (e) {
                 console.error('[Settings] Lỗi lưu bài viết:', e);
                 showToast('Lỗi khi lưu bài viết: ' + (e.message || ''), 'danger');
@@ -322,6 +403,12 @@
             const article = articlesList.find(a => a.id === currentId);
             if (article) {
                 article.ragSynced = true;
+                const sysConfig = PawpalSettings.state?.systemConfig || {};
+                sysConfig.ragSyncedArticleIds = Array.isArray(sysConfig.ragSyncedArticleIds) ? sysConfig.ragSyncedArticleIds : [];
+                if (!sysConfig.ragSyncedArticleIds.includes(currentId)) {
+                    sysConfig.ragSyncedArticleIds.push(currentId);
+                    PawpalSettings.persistSystemConfig?.(sysConfig);
+                }
                 renderArticles();
                 closeArticleActionMenu();
                 showToast(`Đã nạp thành công bài viết "${article.title}" vào cơ sở tri thức RAG của Chatbot PawPal!`, 'success');
@@ -335,6 +422,12 @@
             const article = articlesList.find(a => a.id === currentId);
             if (article) {
                 article.ragSynced = true;
+                const sysConfig = PawpalSettings.state?.systemConfig || {};
+                sysConfig.ragSyncedArticleIds = Array.isArray(sysConfig.ragSyncedArticleIds) ? sysConfig.ragSyncedArticleIds : [];
+                if (!sysConfig.ragSyncedArticleIds.includes(currentId)) {
+                    sysConfig.ragSyncedArticleIds.push(currentId);
+                    PawpalSettings.persistSystemConfig?.(sysConfig);
+                }
                 const statusEl = document.getElementById('ragArticleStatus');
                 if (statusEl) {
                     statusEl.className = 'admin-badge badge-active';
@@ -353,7 +446,7 @@
             const article = articlesList.find(a => a.id === currentId);
             if (!article) return;
 
-            const newStatus = article.status === 'published' ? 'HIDDEN' : 'PUBLISHED';
+            const newStatus = article.status === 'published' ? 'ARCHIVED' : 'PUBLISHED';
             try {
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Không kết nối được Supabase.');
@@ -367,6 +460,7 @@
                 await logSystemAudit('UPDATE', 'blog_post', `Chuyển trạng thái bài viết "${article.title}" thành ${newStatus}`);
                 closeArticleActionMenu();
                 await PawpalSettings.loadSettingsModuleData?.();
+                populateBlogCategories();
                 renderArticles();
                 showToast(`Bài viết "${article.title}" hiện đã chuyển sang trạng thái: ${newStatus === 'PUBLISHED' ? 'Công khai' : 'Tạm ẩn'}.`, 'info');
             } catch (e) {
@@ -391,12 +485,13 @@
                 onConfirm: async () => {
                     try {
                         const client = getSupabaseClient();
-                        if (client) {
-                            await client.from('blog_post').delete().eq('id', currentId);
-                        }
+                        if (!client) throw new Error('Không kết nối được Supabase.');
+                        const { error } = await client.from('blog_post').delete().eq('id', currentId);
+                        if (error) throw error;
                         await logSystemAudit('DELETE', 'blog_post', `Xóa bài viết "${title}"`);
                         closeArticleActionMenu();
                         await PawpalSettings.loadSettingsModuleData?.();
+                        populateBlogCategories();
                         renderArticles();
                         showToast(`Đã xóa thành công bài viết "${title}".`, 'success');
                     } catch (e) {

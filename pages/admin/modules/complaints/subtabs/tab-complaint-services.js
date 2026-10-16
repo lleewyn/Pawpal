@@ -288,7 +288,10 @@
         }
     }
 
+    let isServicesInitialized = false;
     function initServiceComplaintsSubtab() {
+        if (isServicesInitialized) return;
+        isServicesInitialized = true;
         const searchInput = document.getElementById('serviceSearchInput');
         if (searchInput) {
             searchInput.addEventListener('input', () => {

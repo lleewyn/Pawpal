@@ -858,7 +858,25 @@
         }
     }
 
+    let isLiveChatEventsInitialized = false;
+
     function initLiveChatSubtab() {
+        if (!isLiveChatEventsInitialized) {
+            setupLiveChatEventListeners();
+            isLiveChatEventsInitialized = true;
+        }
+
+        // Khởi chạy đồng hồ SLA ticker
+        startSlaTicker();
+        renderConversationsList();
+        renderCurrentChat();
+
+        if (!PawpalChatbot.state?.liveConversations || PawpalChatbot.state.liveConversations.length === 0) {
+            PawpalChatbot.loadChatbotDataFromSupabase?.();
+        }
+    }
+
+    function setupLiveChatEventListeners() {
         // Tab lọc
         document.querySelectorAll('.inbox-tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1691,15 +1709,6 @@
 
             PawpalChatbot.showToast?.('Đã hoàn tất ca chat và gửi biểu mẫu đánh giá CSAT cho khách hàng!', 'success');
         });
-
-        // Khởi chạy đồng hồ SLA ticker
-        startSlaTicker();
-        renderConversationsList();
-        renderCurrentChat();
-
-        if (!PawpalChatbot.state?.liveConversations || PawpalChatbot.state.liveConversations.length === 0) {
-            PawpalChatbot.loadChatbotDataFromSupabase?.();
-        }
     }
 
     PawpalChatbot.subtabs.live = {

@@ -627,7 +627,10 @@
         }
     }
 
+    let isDetailInitialized = false;
     function initComplaintDetailSubtab() {
+        if (isDetailInitialized) return;
+        isDetailInitialized = true;
         initResolveRmaProductAutocomplete();
 
         // Nút mở modal giải quyết khiếu nại

@@ -479,7 +479,10 @@
     }
 
     // Khởi tạo các sự kiện giao diện cho Subtab Products
+    let isProductsEventsInitialized = false;
     function initProductsEvents() {
+        if (isProductsEventsInitialized) return;
+        isProductsEventsInitialized = true;
         document.getElementById('formAddProduct')?.addEventListener('submit', (e) => e.preventDefault());
         document.getElementById('formGoodsReceipt')?.addEventListener('submit', (e) => e.preventDefault());
         document.getElementById('formStocktake')?.addEventListener('submit', (e) => e.preventDefault());

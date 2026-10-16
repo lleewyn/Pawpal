@@ -386,7 +386,9 @@ async function loadServices() {
 
         const { data: pricesData, error: pricesError } = await supabase
             .from('service_price_matrix')
-            .select('*');
+            .select('*')
+            .eq('status', 'ACTIVE')
+            .is('effective_to', null);
 
         if (pricesError) throw pricesError;
 

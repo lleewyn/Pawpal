@@ -569,33 +569,64 @@
         const servicesData = PawpalServices.state?.servicesData || [];
         const isEditing = Boolean(hiddenCode?.value);
 
-        if (isEditing) {
-            const idx = servicesData.findIndex(s => s.code === hiddenCode.value || s.id === hiddenCode.value);
-            if (idx !== -1) {
-                servicesData[idx] = { ...servicesData[idx], ...serviceObj };
-            } else {
-                servicesData.unshift(serviceObj);
-            }
-        } else {
-            servicesData.unshift(serviceObj);
-        }
-
-        // Cập nhật Supabase Live Database nếu có kết nối
+        // Ghi Supabase trước; không đổi state hoặc báo thành công khi CSDL lỗi.
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (db) {
-            try {
-                await db.from('service').upsert({
+        if (!db) {
+            PawpalServices.showToast?.('Không có kết nối CSDL để lưu dịch vụ.', 'danger');
+            return;
+        }
+        try {
+            const { data, error } = await db.from('service').upsert({
                     service_code: sCode,
                     service_name: sName,
-                    service_category: groupKey === 'hotel' ? 'PET_HOTEL' : (groupKey === 'taxi' ? 'PET_TAXI' : 'SPA_GROOMING'),
+                    // Giá trị phải khớp enum service_category_enum trên Supabase.
+                    service_category: groupKey === 'hotel' ? 'PET_HOTEL' : (groupKey === 'taxi' ? 'PET_TAXI' : 'GROOMING_SPA'),
                     estimated_duration: parseInt(sDuration, 10) || 60,
                     description: serviceObj.desc,
                     status: serviceObj.status === 'Đang phục vụ' ? 'ACTIVE' : 'INACTIVE',
                     checklist: serviceObj.steps
-                }, { onConflict: 'service_code' });
-            } catch (err) {
-                console.warn('[PawpalServices] Không thể lưu Supabase (offline fallback):', err);
+                }, { onConflict: 'service_code' }).select('id, service_code').single();
+            if (error) throw error;
+            if (!data?.id || data.service_code !== sCode) throw new Error('Không xác minh được dịch vụ đã lưu.');
+
+            // Ma trận giá là bảng quan hệ riêng, không nằm trong bảng service.
+            // Đóng hiệu lực mức giá cũ trước khi tạo bộ giá mới để vẫn giữ lịch sử.
+            const amount = (value) => Number(String(value || '').replace(/[^\d]/g, ''));
+            const priceRows = [
+                [0, 4.9, amount(pUnder5)],
+                [5, 10, amount(p5To10)],
+                [10, 20, amount(p10To20)],
+                // Schema dùng numeric giới hạn; 999.99 vẫn biểu diễn đúng khoảng trên 20 kg
+                // mà không làm tràn cột weight_to.
+                [20, 999.99, amount(pOver20)]
+            ].map(([weight_from, weight_to, unit_price]) => ({
+                service_id: data.id,
+                weight_from,
+                weight_to,
+                unit_price,
+                effective_from: new Date().toISOString(),
+                effective_to: null,
+                status: 'ACTIVE'
+            }));
+            if (priceRows.some(row => !Number.isSafeInteger(row.unit_price) || row.unit_price < 0)) {
+                throw new Error('Giá dịch vụ không hợp lệ.');
             }
+            const now = new Date().toISOString();
+            const { error: archivePriceError } = await db.from('service_price_matrix')
+                .update({ status: 'INACTIVE', effective_to: now })
+                .eq('service_id', data.id)
+                .eq('status', 'ACTIVE')
+                .is('effective_to', null);
+            if (archivePriceError) throw archivePriceError;
+            const { data: savedPrices, error: priceError } = await db.from('service_price_matrix')
+                .insert(priceRows)
+                .select('id, unit_price');
+            if (priceError) throw priceError;
+            if (savedPrices?.length !== priceRows.length) throw new Error('Không xác minh được ma trận giá đã lưu.');
+            await PawpalServices.loadServicesData({ force: true });
+        } catch (err) {
+            PawpalServices.showToast?.('Không thể lưu dịch vụ: ' + err.message, 'danger');
+            return;
         }
 
         // Đóng modal
@@ -650,6 +681,7 @@
         const btnSubmitService = document.getElementById('btnSubmitServiceForm');
         if (btnSubmitService) {
             btnSubmitService.addEventListener('click', handleSaveService);
+            btnSubmitService.dataset.catalogSaveBound = 'true';
         }
 
         // Chọn mẫu SOP có sẵn
@@ -696,6 +728,20 @@
         openCreateServiceModal,
         openSopDetailsModal
     };
+
+    // Nội dung subtab được admin render động. Bắt tại document (capture) để
+    // form được thay thế vẫn lưu đúng một lần và không bị listener cũ gọi lặp.
+    window.__pawpalCatalogSaveHandler = handleSaveService;
+    if (!window.__pawpalCatalogSaveCaptureBound) {
+        window.__pawpalCatalogSaveCaptureBound = true;
+        document.addEventListener('click', (event) => {
+            const button = event.target.closest?.('#btnSubmitServiceForm');
+            if (!button) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            window.__pawpalCatalogSaveHandler?.();
+        }, true);
+    }
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initCatalogSubtab);

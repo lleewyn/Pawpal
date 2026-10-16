@@ -230,7 +230,10 @@
         });
     }
 
+    let isOrdersInitialized = false;
     function initOrderComplaintsSubtab() {
+        if (isOrdersInitialized) return;
+        isOrdersInitialized = true;
         const searchInput = document.getElementById('orderSearchInput');
         if (searchInput) {
             searchInput.addEventListener('input', () => {

@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261016_r82';
+    const MODULE_SCRIPT_VERSION = '20261016_r95';
 
     function resolveModulePath(path) {
         if (!path) return path;
@@ -337,7 +337,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const missing = scriptPaths.filter(src => !_moduleScriptsLoaded.has(src));
         if (!missing.length) return;
 
-        await Promise.all(missing.map(src => new Promise((resolve) => {
+        // Các module dùng chung namespace nên phải nạp đúng thứ tự khai báo.
+        // Promise.all đã khiến các script động khởi tạo song song và có thể
+        // khiến cả phân hệ dừng tại skeleton sau một lần tải lại.
+        for (const src of missing) {
+            await new Promise((resolve) => {
             const script = document.createElement('script');
             script.className = 'dynamic-module-script';
             script.async = false; // Bắt buộc thực thi tuần tự theo đúng thứ tự khai báo trong mảng
@@ -352,7 +356,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 resolve();
             };
             document.body.appendChild(script);
-        })));
+            });
+        }
     }
 
     // Prefetch HTML + Script của một module vào cache trong nền (không render, không chạy init)

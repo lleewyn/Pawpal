@@ -242,7 +242,10 @@
     };
 
     // Khởi tạo các sự kiện giao diện cho Subtab Detail
+    let isDetailEventsInitialized = false;
     function initDetailEvents() {
+        if (isDetailEventsInitialized) return;
+        isDetailEventsInitialized = true;
         // Toggle hiển thị trường hoàn tiền trong modal RMA
         document.getElementById('formReturnRefund')?.addEventListener('submit', (e) => e.preventDefault());
         document.getElementById('rmaSolutionType')?.addEventListener('change', (e) => {
@@ -384,9 +387,9 @@
                             sales_order_id: dbOrderId,
                             customer_id: (order.userId && order.userId.length > 20) ? order.userId : null,
                             reason: reasonText,
-                            return_type: solType === 'refund' ? 'REFUND' : 'EXCHANGE',
+                            return_type: solType === 'refund' ? 'RETURN' : 'EXCHANGE',
                             description: internalNote || `Phiếu ${rmaCode}: ${solTypeName}`,
-                            request_status: 'RESOLVED'
+                            request_status: 'COMPLETED'
                         }).select().single();
 
                         if (rmaRow && rmaRow.id) {

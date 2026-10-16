@@ -277,6 +277,15 @@
     // Nạp dữ liệu 100% Supabase Live Database
     let _servicesLastFetchedAt = 0;
     const SERVICES_CACHE_TTL_MS = 90_000;
+    const SERVICES_QUERY_TIMEOUT_MS = 12_000;
+
+    function withServicesQueryTimeout(query) {
+        let timeoutId;
+        const timeout = new Promise((_, reject) => {
+            timeoutId = window.setTimeout(() => reject(new Error('Truy vấn dữ liệu dịch vụ quá thời gian chờ.')), SERVICES_QUERY_TIMEOUT_MS);
+        });
+        return Promise.race([query, timeout]).finally(() => window.clearTimeout(timeoutId));
+    }
 
     async function loadServicesData({ force = false } = {}) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -291,7 +300,10 @@
         try {
             PawpalServices.state.loadError = null;
             console.log('[PawpalServices] Đang nạp dữ liệu từ Supabase Live Database...');
-            const [appRes, svcRes, priceRes, revRes, careLogRes, staffRes, custRes, petRes, profileRes] = await Promise.all([
+            // Chỉ lấy các cột nhật ký cốt lõi khi dựng danh sách. Các join sâu
+            // care_action/care_log_media từng làm treo toàn bộ phân hệ, nhưng bỏ
+            // hẳn truy vấn sẽ khiến nhật ký vừa lưu không đọc lại ở hồ sơ ca.
+            const [appRes, svcRes, priceRes, revRes, staffRes, custRes, petRes, profileRes, careLogRes] = await Promise.all([
                 db.from('appointment')
                   .select(`
                       id, 
@@ -316,11 +328,9 @@
                 db.from('service_price_matrix')
                   .select('*'),
                 db.from('review')
-                  .select('id, rating, review_content, review_type, created_at, shop_reply, customer:customer_id(id, phone_main, customer_profile(full_name)), service:service_id(id, service_name)')
+                  .select('id, appointment_id, rating, review_content, review_type, created_at, shop_reply, customer:customer_id(id, phone_main, customer_profile(full_name)), service:service_id(id, service_name, service_category), appointment:appointment_id(appointment_code, staff:staff_id(full_name))')
                   .eq('review_type', 'SERVICE')
                   .order('created_at', { ascending: false }),
-                db.from('care_log')
-                  .select('*, care_action(*), care_log_media(*)'),
                 db.from('staff')
                   .select('id, full_name, role, specialization, phone_number')
                   .order('full_name', { ascending: true }),
@@ -346,8 +356,11 @@
                       customer:customer_id (id, phone_main, customer_profile (full_name))
                   `)
                   .order('pet_name', { ascending: true }),
-                db.from('customer_profile').select('customer_id, full_name')
-            ]);
+                db.from('customer_profile').select('customer_id, full_name'),
+                db.from('care_log')
+                  .select('id, appointment_id, pet_id, description, health_status, recorded_at, created_at')
+                  .order('recorded_at', { ascending: true })
+            ].map(withServicesQueryTimeout));
 
             for (const result of [appRes, svcRes, revRes]) { if (result.error) throw result.error; }
             const careLogs = (!careLogRes.error && careLogRes.data) ? careLogRes.data : [];
@@ -508,18 +521,21 @@
                 PawpalServices.state.reviewsData = revRes.data.map((r, i) => {
                     let cat = 'Spa';
                     const sName = r.service?.service_name || '';
-                    if (sName.includes('Hotel') || sName.includes('Phòng')) cat = 'Hotel';
-                    else if (sName.includes('Taxi') || sName.includes('Đón')) cat = 'Taxi';
+                    const serviceCategory = String(r.service?.service_category || '').toUpperCase();
+                    if (serviceCategory === 'PET_HOTEL' || sName.includes('Hotel') || sName.includes('Phòng')) cat = 'Hotel';
+                    else if (serviceCategory === 'PET_TAXI' || sName.includes('Taxi') || sName.includes('Đón')) cat = 'Taxi';
 
                     return {
-                        id: 'REV-' + (100 + i),
+                        // Dùng ID Supabase thật; không tạo mã REV giả theo thứ tự bảng.
+                        id: r.id,
+                        reviewCode: `ĐG-${String(r.id || '').slice(0, 8).toUpperCase()}`,
                         dbId: r.id,
-                        bookingId: '—',
+                        bookingId: r.appointment?.appointment_code || '—',
                         customerName: getCustomerProfileName(r.customer) || 'Khách hàng PawPal',
                         phone: r.customer?.phone_main || '—',
                         serviceName: sName || 'Dịch vụ Spa và Grooming',
                         category: cat,
-                        staff: 'Chưa có thông tin',
+                        staff: r.appointment?.staff?.full_name || 'Chưa có thông tin',
                         rating: r.rating || 5,
                         comment: r.review_content || '—',
                         status: r.shop_reply ? 'replied' : 'pending',

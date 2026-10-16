@@ -68,7 +68,7 @@
                     </div>
                     <div class="filter-row-bottom">
                         <div class="filter-dropdown-group">
-                            <label class="filter-label">Đối tượng:</label>
+                            <label class="filter-label">Đối tượng</label>
                             <select class="admin-select" id="filterVoucherTarget" style="width: 155px;">
                                 <option value="all">Tất cả đối tượng</option>
                                 <option value="Spa">Dịch vụ Spa</option>
@@ -79,7 +79,7 @@
                             </select>
                         </div>
                         <div class="filter-dropdown-group">
-                            <label class="filter-label">Trạng thái:</label>
+                            <label class="filter-label">Trạng thái</label>
                             <select class="admin-select" id="filterVoucherStatus" style="width: 175px;">
                                 <option value="all">Tất cả trạng thái</option>
                                 <option value="zero-miss">Cần xử lý gấp</option>
@@ -303,7 +303,7 @@
         <!-- DẢI ĐIỀU HÀNH KHÓA AN TOÀN VÀ TRẠNG THÁI SSOT -->
         <div class="admin-card" style="padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; background-color: var(--surface-white); border: 1px solid var(--border-neutral); border-radius: var(--admin-radius);">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 13.5px; font-weight: 700; color: var(--text-heading);">Cơ chế bảo vệ thông số lõi:</span>
+                <span style="font-size: 13.5px; font-weight: 700; color: var(--text-heading);">Cơ chế bảo vệ thông số lõi</span>
                 <span class="safe-mode-badge" id="safeModeBadge">Khóa an toàn: Đang bật</span>
                 <span style="font-size: 12.5px; color: var(--text-muted);">Mở khóa trước khi lưu thay đổi các chính sách vận hành</span>
             </div>
@@ -315,30 +315,30 @@
             <div class="admin-card system-module-card">
                 <div class="system-card-header">
                     <div>
-                        <div class="system-card-title">Thông tin Cửa hàng và Chi nhánh</div>
+                        <div class="system-card-title">Thông tin cửa hàng và chi nhánh</div>
                         <div class="system-card-desc">Tên thương hiệu, Hotline 24/7, Email CSKH, Địa chỉ và Mã số thuế VAT</div>
                     </div>
                     <span class="admin-badge badge-active" id="badgeStoreStatus">Trụ sở Q.3</span>
                 </div>
                 <div class="system-card-body">
                     <div class="info-pair">
-                        <span class="info-label">Tên thương hiệu:</span>
+                        <span class="info-label">Tên thương hiệu</span>
                         <span class="info-value" id="dispStoreBrand">PawPal Pet Center</span>
                     </div>
                     <div class="info-pair" style="margin-top: 6px;">
-                        <span class="info-label">Hotline tiếp nhận:</span>
+                        <span class="info-label">Hotline tiếp nhận</span>
                         <span class="info-value" id="dispStoreHotline" style="font-weight: 700; color: var(--text-heading);">1900 888 999</span>
                     </div>
                     <div class="info-pair" style="margin-top: 6px;">
-                        <span class="info-label">Email hỗ trợ:</span>
+                        <span class="info-label">Email hỗ trợ</span>
                         <span class="info-value" id="dispStoreEmail">cskh@pawpal.vn</span>
                     </div>
                     <div class="info-pair" style="margin-top: 6px;">
-                        <span class="info-label">Địa chỉ cơ sở:</span>
+                        <span class="info-label">Địa chỉ cơ sở</span>
                         <span class="info-value" id="dispStoreAddress">120 Nguyễn Thị Minh Khai, P.6, Q.3, TP.HCM</span>
                     </div>
                     <div class="info-pair" style="margin-top: 6px;">
-                        <span class="info-label">Mã số thuế (MST):</span>
+                        <span class="info-label">Mã số thuế VAT</span>
                         <span class="info-value" id="dispStoreTaxId">0316889988</span>
                     </div>
                 </div>
@@ -383,26 +383,26 @@
             <div class="admin-card system-module-card">
                 <div class="system-card-header">
                     <div>
-                        <div class="system-card-title">Đơn vị vận chuyển và Biểu phí</div>
+                        <div class="system-card-title">Đơn vị vận chuyển và biểu phí</div>
                         <div class="system-card-desc">Cấu hình mức Miễn phí ship, phí giao hàng nội/ngoại thành và API GHN/GHTK</div>
                     </div>
                     <span class="admin-badge badge-active" id="dispShippingPartnerBadge">GHN Express</span>
                 </div>
                 <div class="system-card-body">
                     <div class="info-pair">
-                        <span class="info-label">Miễn phí giao hàng:</span>
+                        <span class="info-label">Miễn phí giao hàng</span>
                         <span class="info-value" id="dispFreeShipThreshold" style="color: var(--text-heading); font-weight: 700;">Đơn từ 300,000 đ</span>
                     </div>
                     <div class="info-pair" style="margin-top: 6px;">
-                        <span class="info-label">Phí nội thành / Ngoại tỉnh:</span>
+                        <span class="info-label">Phí nội thành và ngoại tỉnh</span>
                         <span class="info-value" id="dispStandardShippingFees">25,000 đ / 35,000 đ</span>
                     </div>
                     <div class="info-pair" style="margin-top: 6px;">
-                        <span class="info-label">Giao hỏa tốc 2h:</span>
+                        <span class="info-label">Giao hỏa tốc 2 giờ</span>
                         <span class="info-value" id="dispExpressShippingFee">45,000 đ (Grab / Aha)</span>
                     </div>
                     <div class="info-pair" style="margin-top: 6px;">
-                        <span class="info-label">Đối tác API tích hợp:</span>
+                        <span class="info-label">Đối tác API tích hợp</span>
                         <span class="info-value" id="dispShippingApiStatus">GHN (Shop ID: PAWPAL_Q1)</span>
                     </div>
                 </div>
@@ -415,26 +415,26 @@
             <div class="admin-card system-module-card">
                 <div class="system-card-header">
                     <div>
-                        <div class="system-card-title">Chính sách Đặt lịch và Giờ mở cửa</div>
+                        <div class="system-card-title">Chính sách đặt lịch và giờ mở cửa</div>
                         <div class="system-card-desc">Quy tắc hủy lịch, giờ nhận/trả Pet Hotel, công suất ca và giờ hoạt động chi nhánh</div>
                     </div>
                     <span class="admin-badge badge-active">Áp dụng ngay</span>
                 </div>
                 <div class="system-card-body">
                     <div class="info-pair">
-                        <span class="info-label">Giờ phục vụ chi nhánh:</span>
+                        <span class="info-label">Giờ phục vụ chi nhánh</span>
                         <span class="info-value" id="dispOperatingHours">08:00 - 20:00 (T7/CN: 21:00)</span>
                     </div>
                     <div class="info-pair" style="margin-top: 6px;">
-                        <span class="info-label">Khung giờ Pet Hotel:</span>
+                        <span class="info-label">Khung giờ Pet Hotel</span>
                         <span class="info-value" id="dispHotelCheckInOut">Nhận sau 14:00 • Trả trước 12:00</span>
                     </div>
                     <div class="info-pair" style="margin-top: 6px;">
-                        <span class="info-label">Công suất tối đa / Ca:</span>
+                        <span class="info-label">Công suất tối đa mỗi ca</span>
                         <span class="info-value" id="dispSlotCapacity">Tối đa 4 bé / Khung giờ</span>
                     </div>
                     <div class="info-pair" style="margin-top: 6px;">
-                        <span class="info-label">Hủy miễn phí / Phí trễ:</span>
+                        <span class="info-label">Hủy miễn phí và phí trễ</span>
                         <span class="info-value" id="dispCancelPolicy">Trước 4 giờ • Phí trễ 50,000 đ</span>
                     </div>
                 </div>
@@ -511,14 +511,18 @@
                 </div>
                 <div class="filter-row-bottom">
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Phân hệ tác động:</label>
+                        <label class="filter-label">Phân hệ tác động</label>
                         <select class="admin-select" id="filterAuditTargetModule" style="width: 175px;">
                             <option value="all">Tất cả phân hệ</option>
+                            <option value="Cấu hình">Cấu hình</option>
                             <option value="Khách hàng">Khách hàng</option>
                             <option value="Dịch vụ">Dịch vụ</option>
                             <option value="Bán hàng">Bán hàng</option>
                             <option value="Nhân sự">Nhân sự</option>
-                            <option value="Cửa hàng">Cửa hàng</option>
+                            <option value="Khuyến mãi">Khuyến mãi</option>
+                            <option value="Bài viết">Bài viết</option>
+                            <option value="Banner">Banner</option>
+                            <option value="Thú cưng">Thú cưng</option>
                         </select>
                     </div>
                 </div>
@@ -1127,7 +1131,7 @@
     <div class="admin-modal-overlay" id="articleRagModalOverlay">
         <div class="admin-modal-card">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Tri thức AI Chatbot (RAG trích xuất)</div>
+                <div class="modal-title-clean">Tri thức AI trích xuất cho chatbot</div>
                 <button type="button" class="modal-btn-close-text" id="btnCancelRagModal" data-close-modal="articleRagModalOverlay">Đóng</button>
             </div>
             <div class="modal-body-clean">
@@ -1180,15 +1184,15 @@
     <!-- DROPDOWN TÁC VỤ 3 CHẤM DÀNH CHO VOUCHER (TEXT-ONLY, CHUẨN AGENTS.MD) -->
     <div class="action-dropdown-menu" id="voucherActionDropdown">
         <button type="button" class="action-menu-item text-success" id="btnActionExtendQuota">Gia hạn thêm 50 lượt</button>
-        <button type="button" class="action-menu-item" id="btnActionToggleStatus">Đổi trạng thái Bật/Tắt</button>
-        <button type="button" class="action-menu-item text-danger" id="btnActionDeleteVoucher">Xóa Voucher</button>
+        <button type="button" class="action-menu-item" id="btnActionToggleStatus">Đổi trạng thái bật hoặc tắt</button>
+        <button type="button" class="action-menu-item text-danger" id="btnActionDeleteVoucher">Xóa voucher</button>
     </div>
 
     <!-- DROPDOWN TÁC VỤ 3 CHẤM DÀNH CHO BÀI VIẾT (TEXT-ONLY, CHUẨN AGENTS.MD - GIAI ĐOẠN 3) -->
     <div class="action-dropdown-menu" id="articleActionDropdown">
-        <button type="button" class="action-menu-item text-success" id="btnActionViewRag">Xem tóm tắt AI (RAG)</button>
-        <button type="button" class="action-menu-item" id="btnActionSyncRag">Đồng bộ lại vào Chatbot</button>
-        <button type="button" class="action-menu-item" id="btnActionToggleArticleStatus">Đổi trạng thái Công khai / Tạm ẩn</button>
+        <button type="button" class="action-menu-item text-success" id="btnActionViewRag">Xem tóm tắt tri thức AI</button>
+        <button type="button" class="action-menu-item" id="btnActionSyncRag">Đồng bộ lại vào chatbot</button>
+        <button type="button" class="action-menu-item" id="btnActionToggleArticleStatus">Đổi trạng thái công khai hoặc tạm ẩn</button>
         <button type="button" class="action-menu-item text-danger" id="btnActionDeleteArticle">Xóa bài viết</button>
     </div>
 </div>

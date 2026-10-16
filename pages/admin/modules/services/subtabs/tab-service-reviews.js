@@ -68,8 +68,9 @@
                 const matchCust = toUnaccent(r.customerName || '').includes(termUnaccent) || (r.customerName || '').toLowerCase().includes(termRaw);
                 const matchComment = toUnaccent(r.comment || '').includes(termUnaccent);
                 const matchBooking = (r.bookingId || '').toLowerCase().includes(termRaw);
+                const matchReview = (r.reviewCode || r.id || '').toLowerCase().includes(termRaw);
                 const matchPhone = (r.phone || '').includes(termRaw);
-                if (!matchCust && !matchComment && !matchBooking && !matchPhone) return false;
+                if (!matchCust && !matchComment && !matchBooking && !matchReview && !matchPhone) return false;
             }
 
             if (reviewFilterStar !== 'ALL') {
@@ -151,8 +152,8 @@
             return `
                 <tr data-review-id="${r.id}">
                     <td style="${borderLeftStyle} font-weight: 600; color: var(--text-heading);">
-                        <div>${r.bookingId || r.id}</div>
-                        <div style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${r.id}</div>
+                        <div>${r.bookingId || '—'}</div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${r.reviewCode || r.id}</div>
                     </td>
                     <td>
                         <div style="font-weight: 600; color: var(--text-main);">${r.customerName}</div>
@@ -502,6 +503,29 @@
         const btnExport = document.getElementById('btnExportReviewReport');
         if (btnExport) {
             btnExport.addEventListener('click', () => {
+                const rows = PawpalServices.state?.reviewsData || [];
+                if (rows.length === 0) {
+                    PawpalServices.showToast?.('Không có đánh giá để xuất.', 'warning');
+                    return;
+                }
+                const csvCell = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+                const csv = [
+                    ['Mã lịch hẹn', 'Mã đánh giá', 'Khách hàng', 'Số điện thoại', 'Dịch vụ', 'Nhóm dịch vụ', 'Điểm sao', 'Nội dung đánh giá', 'Nhân viên phụ trách', 'Trạng thái phản hồi'],
+                    ...rows.map(r => [
+                        r.bookingId || '—', r.reviewCode || r.id, r.customerName, r.phone,
+                        r.serviceName, r.category === 'Hotel' ? 'Pet Hotel' : (r.category === 'Taxi' ? 'Pet Taxi' : 'Spa và Grooming'),
+                        r.rating, r.comment, r.staff || 'Chưa có thông tin', r.replyText || r.status === 'replied' ? 'Đã phản hồi' : 'Chưa phản hồi'
+                    ])
+                ].map(row => row.map(csvCell).join(',')).join('\r\n');
+                const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `bao-cao-danh-gia-${new Date().toISOString().slice(0, 10)}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
                 if (PawpalServices.showToast) {
                     PawpalServices.showToast('Đã trích xuất báo cáo đánh giá dịch vụ thành công!');
                 }

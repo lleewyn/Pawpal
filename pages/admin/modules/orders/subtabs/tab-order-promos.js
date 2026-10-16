@@ -106,7 +106,11 @@
     };
 
     // Khởi tạo các sự kiện giao diện cho Subtab Promos
+    let isPromosEventsInitialized = false;
     function initPromosEvents() {
+        if (isPromosEventsInitialized) return;
+        isPromosEventsInitialized = true;
+
         document.getElementById('formCreateVoucher')?.addEventListener('submit', (e) => e.preventDefault());
         document.getElementById('formVoucherAction')?.addEventListener('submit', (e) => e.preventDefault());
         document.getElementById('promoSearchInput')?.addEventListener('input', renderVouchersTable);

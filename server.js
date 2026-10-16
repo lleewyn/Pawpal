@@ -188,6 +188,10 @@ app.post('/api/admin/staff/provision-account', staffAuthApi.provisionAccount);
 app.post('/api/admin/staff/reset-password', staffAuthApi.resetPassword);
 app.post('/api/admin/staff/toggle-account-status', staffAuthApi.toggleAccountStatus);
 
+// Routes cho Phân hệ Quản trị Banners & Khuyến mãi
+const adminSettingsApi = require('./scripts/api/admin_settings.js');
+app.post('/api/admin/banners', adminSettingsApi.handleBannerAction);
+
 app.listen(port, () => {
     console.log(`===========================================`);
     console.log(`PawPal Local Server is running!`);

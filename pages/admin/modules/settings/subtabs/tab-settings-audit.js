@@ -7,12 +7,20 @@
 
     let auditPage = 1;
     const SETTINGS_PAGE_SIZE = 10;
+    let isAuditInitialized = false;
 
     function renderSettingsPager(containerId, page, totalPages, onChange) {
         const el = document.getElementById(containerId);
         if (!el) return;
-        if (totalPages < 1) { el.innerHTML = ''; return; }
-        el.innerHTML = `<button class="pagination-btn" ${page === 1 ? 'disabled' : ''} data-p="prev">&lt;</button>${Array.from({length: totalPages}, (_, i) => `<button class="pagination-btn ${i + 1 === page ? 'active' : ''}" data-p="${i + 1}">${i + 1}</button>`).join('')}<button class="pagination-btn" ${page === totalPages ? 'disabled' : ''} data-p="next">&gt;</button>`;
+        if (totalPages < 1) {
+            el.innerHTML = '';
+            return;
+        }
+        el.innerHTML = `
+            <button type="button" class="pagination-btn ${page === 1 ? 'disabled' : ''}" ${page === 1 ? 'disabled' : ''} data-p="prev" title="Trang trước">&lt;</button>
+            ${Array.from({ length: totalPages }, (_, i) => `<button type="button" class="pagination-btn ${i + 1 === page ? 'active' : ''}" data-p="${i + 1}">${i + 1}</button>`).join('')}
+            <button type="button" class="pagination-btn ${page === totalPages ? 'disabled' : ''}" ${page === totalPages ? 'disabled' : ''} data-p="next" title="Trang sau">&gt;</button>
+        `;
         el.querySelectorAll('[data-p]').forEach(btn => btn.addEventListener('click', () => {
             const p = btn.dataset.p;
             onChange(p === 'prev' ? page - 1 : p === 'next' ? page + 1 : Number(p));
@@ -22,7 +30,11 @@
     function renderAuditLogs() {
         const tbody = document.getElementById('auditLogTableBody');
         if (!tbody) return;
-        if (PawpalSettings.state.loadError) {delete tbody.dataset.loadingSkeleton;tbody.innerHTML=`<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" style="padding:28px;text-align:center;">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;return;}
+        if (PawpalSettings.state.loadError) {
+            delete tbody.dataset.loadingSkeleton;
+            tbody.innerHTML = `<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" style="padding:28px;text-align:center;">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;
+            return;
+        }
         if (!PawpalSettings.state.isLoaded) return;
         delete tbody.dataset.loadingSkeleton;
 
@@ -50,7 +62,7 @@
         const targetFilter = document.getElementById('filterAuditTargetModule')?.value || 'all';
 
         const filtered = auditLogsList.filter(log => {
-            if (targetFilter !== 'all' && !log.targetModules.includes(targetFilter)) return false;
+            if (targetFilter !== 'all' && log.targetModules !== targetFilter && !log.targetModules.includes(targetFilter)) return false;
             if (keyword) {
                 return (
                     log.actionText.toLowerCase().includes(keyword) ||
@@ -62,7 +74,9 @@
         });
 
         const totalPages = Math.max(1, Math.ceil(filtered.length / SETTINGS_PAGE_SIZE));
-        auditPage = Math.min(auditPage, totalPages);
+        if (auditPage > totalPages) auditPage = totalPages;
+        if (auditPage < 1) auditPage = 1;
+
         renderSettingsPager('auditPaginationControls', auditPage, totalPages, p => {
             auditPage = p;
             renderAuditLogs();
@@ -74,11 +88,20 @@
             return;
         }
 
-        filtered.slice((auditPage - 1) * SETTINGS_PAGE_SIZE, auditPage * SETTINGS_PAGE_SIZE).forEach(log => {
+        const pageItems = filtered.slice((auditPage - 1) * SETTINGS_PAGE_SIZE, auditPage * SETTINGS_PAGE_SIZE);
+        pageItems.forEach(log => {
+            const rawActor = log.actor || 'Quản trị viên';
+            const initials = rawActor.trim().charAt(0).toUpperCase() || 'Q';
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><span style="font-size: 12.5px; color: var(--text-muted);">${log.time}</span></td>
-                <td><strong>${log.actor}</strong></td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 26px; height: 26px; border-radius: 50%; background-color: #EEF5F1; color: #236B48; font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">${initials}</span>
+                        <strong style="color: var(--text-main); font-size: 13px;">${rawActor}</strong>
+                    </div>
+                </td>
                 <td><span class="admin-badge badge-neutral">${log.targetModules}</span></td>
                 <td><span style="color: var(--text-main); font-weight: 500;">${log.actionText}</span></td>
                 <td><span class="admin-badge badge-active">${log.status}</span></td>
@@ -88,11 +111,19 @@
     }
 
     function initAuditSubtab() {
+        if (isAuditInitialized) {
+            renderAuditLogs();
+            return;
+        }
+        isAuditInitialized = true;
+
         // Lọc và tìm kiếm trên Subtab 4: Nhật ký Cấu hình
         document.getElementById('searchAuditLogInput')?.addEventListener('input', () => {
+            auditPage = 1;
             renderAuditLogs();
         });
         document.getElementById('filterAuditTargetModule')?.addEventListener('change', () => {
+            auditPage = 1;
             renderAuditLogs();
         });
 

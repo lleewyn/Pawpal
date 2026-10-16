@@ -79,8 +79,9 @@
             info: '#20495E'
         };
 
-        const bg = bgColors[type] || bgColors.info;
-        const color = textColors[type] || textColors.info;
+        const normalizedType = type === 'error' ? 'danger' : type;
+        const bg = bgColors[normalizedType] || bgColors.info;
+        const color = textColors[normalizedType] || textColors.info;
 
         toast.style.cssText = `
             background: ${bg};

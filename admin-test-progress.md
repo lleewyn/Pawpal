@@ -143,7 +143,24 @@ Theo góp ý giao diện, cột `Loài và Giống` trong bảng danh sách hi�
 
 **Chưa kiểm thử:** mở SOP, thêm/sửa dịch vụ, thay đổi trạng thái, bảng giá theo cân nặng, lỗi API và responsive.
 
+**Kiểm thử trực tiếp bổ sung (16/10/2026):** tìm `SPA01` chỉ còn đúng một dòng dữ liệu; chuyển Pet Hotel khi còn từ khóa giữ bộ lọc (bảng rỗng là đúng theo điều kiện), xóa từ khóa thì bảng nạp các mã `HTL01` trở đi. Đạt tìm kiếm và chuyển nhóm trên giao diện; chưa tạo/sửa dịch vụ.
+- Mở SOP `6 bước` của `HTL01`: modal hiện đúng Phòng Standard, mã gói, nhóm Pet Hotel, thời lượng, hoa hồng, sáu bước và tiêu chuẩn bàn giao. Đạt đọc SOP trên giao diện.
+- Mở Sửa `HTL01`: form điền đúng mã/tên/nhóm/loài/thời lượng, ma trận giá 180000–250000, mô tả, sáu bước SOP, hoa hồng 15% và trạng thái Đang phục vụ. Chưa lưu thay đổi dữ liệu danh mục.
+- Form Thêm dịch vụ tạo mã mới `HTL13`, nhóm Pet Hotel, thời lượng Theo ngày, ma trận giá và SOP Hotel mặc định. Đây là dữ liệu khởi tạo theo nhóm đang chọn, không phải sao chép HTL01. Bấm lưu khi chưa có tên không tạo bản ghi; cần tiếp tục kiểm tra thông báo xác thực trực quan.
+- **Sửa và xác minh ghi trực tiếp (16/10/2026):** tạo `HTLQA86` từng bị Supabase từ chối vì `service_category_enum` không có `SPA_GROOMING`. Đã đối chiếu enum thật (`GROOMING_SPA`, `PET_HOTEL`, `PET_TAXI`) và sửa mapping Spa.
+- **Sửa và xác minh ma trận giá:** trước đây bốn mức giá chỉ hiện ở form, chưa được ghi vào `service_price_matrix`. Đã nối lưu theo `service_id`, đóng hiệu lực phiên bản giá cũ khi sửa, và chỉ nạp mức còn hiệu lực. Mốc trên 20kg dùng `999.99` thay cho `9999` để không tràn cột số.
+- **Kiểm thử UI và sau tải lại đạt:** tạo dịch vụ QA `SPAQA87`, sửa bốn mức giá `111.111`, `222.222`, `333.333`, `444.444` trên giao diện, rồi F5. Danh mục vẫn hiện giá từ `111.111 đ`; mở lại form vẫn nạp đúng cả bốn mức giá. CSDL có đúng bốn dòng giá đang hiệu lực cho dịch vụ QA.
+- **Kiểm thử bổ sung Pet Hotel đạt:** tạo `HTLQA91` qua form, dùng SOP Hotel 6 bước, bốn mức giá `151.111`–`454.444`. Đổi trạng thái sang `Tạm ẩn`, F5 và lọc theo trạng thái vẫn tìm được bản ghi; sau đó đổi lại `Đang phục vụ`, F5 và lọc lại xác nhận đã lưu.
+- **Sửa độ ổn định nút Lưu:** nội dung tab render động có thể để lại listener cũ hoặc mất listener sau khi thay DOM. Đã bắt sự kiện lưu một lần ở pha capture của document; kiểm thử lại bằng thao tác đổi trạng thái `HTLQA91` đạt sau F5.
+- **Kiểm thử Pet Taxi đạt:** tạo `TXIQA92` từ form với SOP Taxi 4 bước và bốn mức giá `161.111`–`464.444`. Sau F5, lọc Pet Taxi, tìm mã và mở lại form vẫn hiển thị đúng mã, thời lượng 45 phút, giá từ `161.111 đ` cùng cả bốn mức giá.
+
 ## Dịch vụ / Đánh giá — đã kiểm thử vòng tải và lọc
+
+**Sửa và kiểm thử trực tiếp bổ sung (16/10/2026):**
+- Đã bỏ mã giả `REV-100...` và giá trị lịch hẹn `—` cố định. Bảng nay nạp `appointment_code`, nhân viên phụ trách và ID đánh giá rút gọn từ bản ghi Supabase thật; đánh giá không có lịch hẹn vẫn hiển thị `—` đúng dữ liệu.
+- Sửa tìm kiếm để nhận mã lịch hẹn lẫn mã đánh giá thật. Sau F5, tìm `APP-20260706` kết hợp lọc 5 sao, Spa và Grooming, Chưa phản hồi trả đúng một dòng.
+- Lọc Pet Taxi trả đúng các đánh giá Taxi; reset lọc và chuyển trang 2 hiển thị tập dữ liệu khác. Không gửi phản hồi vì đây là nội dung trao đổi với khách hàng.
+- **Sửa xuất báo cáo:** nút Xuất file trước đây chỉ hiển thị toast. Đã tạo CSV UTF-8 từ dữ liệu đánh giá Supabase; kiểm thử UI tải thành công `bao-cao-danh-gia-2026-10-16.csv`.
 
 **Đạt:** KPI điểm trung bình, tổng lượt, chưa phản hồi và cảnh báo; bảng đánh giá tải dữ liệu; bộ lọc mức sao, nhóm dịch vụ, KTV và trạng thái phản hồi; phân trang; nút Xuất file và Phản hồi hiển thị.
 
@@ -152,6 +169,11 @@ Theo góp ý giao diện, cột `Loài và Giống` trong bảng danh sách hi�
 **Chưa kiểm thử:** mở modal Phản hồi, gửi phản hồi, xuất file, lọc 1–3 sao trên dữ liệu đầy đủ, lỗi API và responsive.
 
 ## Bán hàng / Đơn hàng — đã kiểm thử vòng tải và lọc
+
+**Kiểm thử và sửa trực tiếp bổ sung (16/10/2026):**
+- Tìm mã `ORD-20261006-789545` kết hợp lọc Đổi trả và COD trả đúng một đơn.
+- Phát hiện nút `Có khiếu nại` lấy cả các đơn quá hạn SLA vì hai trường hợp cùng dùng `alertType: danger`. Đã sửa lọc chỉ nhận đơn Đổi trả hoặc có hồ sơ RMA thật; tải lại xác nhận các đơn quá hạn không còn xuất hiện trong kết quả.
+- Menu `•••` mở đúng các tác vụ theo đơn; phân trang sang trang 2 nạp tập đơn khác. Xuất file tải thành công `Bao_Cao_Don_Hang_PawPal_2026-10-16.xlsx`.
 
 **Đạt:** KPI đơn hôm nay, chờ xác nhận, chuẩn bị, đang giao, hoàn tất và đổi trả/hủy; bảng đơn hàng tải dữ liệu khách, sản phẩm, tổng tiền, thanh toán, vận chuyển, trạng thái và cảnh báo; bộ lọc trạng thái đơn, thanh toán, đối soát; nút Có khiếu nại, Chờ xử lý gấp, Quá hạn SLA; phân trang; Xuất file và Tạo đơn tại quầy hiển thị.
 
@@ -604,3 +626,198 @@ Sau mỗi lượt kiểm thử hoặc sửa lỗi, bắt buộc cập nhật nga
 - Vào Lịch trực ngày 17/10, form Báo cáo sự cố nạp đúng ca thật, không dữ liệu mẫu: `BKG-... · lala · Express Care – Vệ Sinh Nhanh · 10:30`.
 - Lưu qua UI biên bản QA r81 lưu biên bản sự cố thực tế, kiểm tra sau tải lại; loại SKIN_ISSUE, mức INTERNAL, gia hạn 15 phút. Toast chỉ báo thành công sau insert/select xác minh. Đối chiếu CSDL chỉ đọc: audit_log id `0c3cdf31-efee-49ff-bfb8-a8b0b4619df2`, action OTHER, entity_name appointment_incident, đúng staff_id, appointment_id, loại/mức/gia hạn/nội dung. Appointment vẫn CONFIRMED, UNPAID, 17/10 10:30; không tự đổi thanh toán/trạng thái ca.
 - F5 lại lịch trực ngày 17/10: ca QA vẫn xuất hiện trong form sự cố. F5 danh sách lịch hẹn: hiện Đã xác nhận và cảnh báo Chờ KTV (+15p). Đạt create appointment, confirm và ghi audit biên bản sự cố trên UI/CSDL. Giữ toàn bộ dữ liệu QA để đối soát, không xóa vĩnh viễn.
+
+## Dịch vụ / Lịch hẹn — đồng bộ trạng thái và tải lại (16/10/2026, r82–r84)
+
+- Sửa thao tác `Xác nhận lịch hẹn`: chờ xong request cập nhật, chỉ đổi `rawStatus` và trạng thái hiển thị của đúng bản ghi sau khi Supabase trả về `appointment_status` đã xác minh. Bảng, KPI, dải cảnh báo và hồ sơ đang mở được dựng lại ngay trước lần nạp dữ liệu nền.
+- Tạo qua UI lịch QA `BKG-5b927c05-5abd-482f-b96c-8385ba133d78` cho Lê Lệ Quyên QA, bé `lala`, Express Care – Vệ Sinh Nhanh, 17/10/2026 11:30. Đối chiếu CSDL: bản ghi được tạo `PENDING`; sau bấm `Xác nhận lịch hẹn` trên UI, CSDL trả `CONFIRMED` và có `updated_at` mới. Không xóa dữ liệu QA theo yêu cầu.
+- Khi tải lại trong phiên kiểm thử, truy vấn Supabase của phân hệ Dịch vụ treo vô hạn ở trạng thái skeleton. Đã sửa trình nạp script động theo thứ tự tuần tự, đóng gói SDK Supabase nội bộ tại `scripts/vendor/supabase.js` để không phụ thuộc CDN, và đặt giới hạn 12 giây cho các truy vấn Dịch vụ. Kiểm thử UI sau 13 giây hiển thị lỗi có kiểm soát `Không thể tải dữ liệu dịch vụ. Vui lòng tải lại trang.` thay vì skeleton vô hạn.
+- Kiểm thử lại hoàn tất khi endpoint phản hồi: tạo qua UI `BKG-d0380934-64c7-4819-ba27-147b390b6807` (17/10/2026 12:00, Lê Lệ Quyên QA, `lala`, Express Care) ở trạng thái `Chờ xác nhận`, sau đó bấm `••• → Xác nhận lịch hẹn`. Ngay trong bảng, không F5, nhãn đổi thành `Đã xác nhận`, KPI chờ xác nhận giảm 31 → 30 và cảnh báo đổi thành `• Chờ KTV (+15p)`. Đạt cập nhật UI và ghi CSDL.
+- Kiểm thử điều phối trên chính lịch QA `BKG-d0380934-64c7-4819-ba27-147b390b6807`: chọn Nguyễn Thị Chăm Sóc, lý do `QA r84 kiểm thử lưu điều phối kỹ thuật viên`, rồi lưu. Sau khi request hoàn tất, modal đóng và hồ sơ lập tức hiển thị KTV Nguyễn Thị Chăm Sóc cùng ghi chú điều phối; đạt ghi `staff_id` và đồng bộ UI. Chưa kiểm thử xóa/hủy lịch hoặc thanh toán.
+
+## Cấu hình / Quản lý nội dung bài viết — kiểm tra và đồng bộ CSDL (16/10/2026, r85)
+
+- **Rà soát và sửa lỗi toàn diện trong `tab-settings-content.js`:**
+  1. *Lỗi ràng buộc `author_id NOT NULL`*: Bảng `blog_post` trong Supabase yêu cầu khóa ngoại `author_id` bắt buộc tham chiếu tới `staff.id`. Trước đây form tạo bài viết thiếu trường này dẫn đến lỗi DB `null value in column "author_id" of relation "blog_post" violates not-null constraint`. Đã sửa tự động lấy `author_id` từ phiên đăng nhập nhân sự `pawpal_admin_user` trong `localStorage`/`sessionStorage` hoặc fallback an toàn sang `staff.id` hợp lệ đầu tiên trong CSDL.
+  2. *Lỗi ánh xạ danh mục `category_id`*: Trước đây truy vấn tìm danh mục theo `category_name` với chuỗi tiếng Việt dẫn đến `null` do DB lưu mã định danh `Tips`, `News`, `Promo` và mô tả tiếng Việt trong cột `description`. Đã sửa nạp trực tiếp UUID vào giá trị của `<select id="inputArticleCategory">` và cập nhật hàm nạp danh mục động `populateBlogCategories()`.
+  3. *Lỗi giá trị Enum `blog_status_enum`*: Trạng thái bài viết trong Postgres là enum `blog_status_enum` chỉ chấp nhận `DRAFT`, `PUBLISHED`, `ARCHIVED`. Thao tác đổi sang `HIDDEN` trước đây làm sập truy vấn với mã lỗi `22P02`. Đã chuẩn hóa ánh xạ: `published` ↔ `PUBLISHED`, `draft` ↔ `DRAFT`, `hidden` (Tạm ẩn) ↔ `ARCHIVED`.
+  4. *Rò rỉ Event Listener phân trang*: Khắc phục việc gắn lặp lại `addEventListener` trên các nút phân trang trước/sau mỗi khi gọi `renderArticles()`. Đồng thời bổ sung biến bảo vệ `isContentInitialized` để ngăn gắn đa sự kiện khi chuyển đổi qua lại giữa các subtab.
+  5. *Đồng bộ tri thức RAG vào cấu hình hệ thống*: Đã bổ sung lưu vết danh sách `ragSyncedArticleIds` trong `PawpalSettings.state.systemConfig` và lưu kiên định xuống CSDL qua `persistSystemConfig`.
+  6. *Tuân thủ nghiêm ngặt AGENTS.md*: Kiểm tra toàn bộ text-only (không gắn icon thừa), chuẩn hóa câu văn Sentence Case cho menu dropdown và tiêu đề modal ("Tri thức AI trích xuất cho chatbot", "Đổi trạng thái bật hoặc tắt", "Xem tóm tắt tri thức AI"), xử lý lỗi xóa bài viết có kiểm tra `{ error }`.
+- **Kiểm thử tự động trên CSDL Supabase thật:**
+  - Thao tác tạo bài viết mới (INSERT) thành công: trả về `id`, `title`, `status: 'PUBLISHED'`.
+  - Thao tác tạm ẩn bài viết (UPDATE `ARCHIVED`): thành công, không gặp lỗi enum.
+  - Thao tác công khai lại (UPDATE `PUBLISHED`): thành công.
+  - Thao tác xóa bài viết (DELETE): thành công loại bỏ bản ghi thử nghiệm khỏi CSDL.
+
+- Kiểm thử tiếp nhận trên cùng lịch QA: giữ cân 7 kg, KTV Nguyễn Thị Chăm Sóc và checklist bình thường, bấm xác nhận. Hồ sơ đổi sang `Đang thực hiện`, có mốc tiếp nhận, biên bản cân nặng/checklist/KTV; F5 vẫn giữ toàn bộ dữ liệu. Đạt ghi biên bản tiếp nhận, `staff_id` và trạng thái nghiệp vụ. Ảnh bằng chứng chưa thử vì kho ảnh chưa được nối.
+- Kiểm thử sửa nhật ký trên cùng bản ghi QA: mở thẻ nhật ký, đổi nội dung thành `QA r85 đã sửa nội dung và xác minh tải lại`, lưu xong thẻ đổi tức thì; F5 kiểm tra lại tìm được đúng nội dung. Đạt cập nhật và đọc lại nhật ký. Không thử Xóa vì là xóa vĩnh viễn.
+
+## Cấu hình / Cấu hình hệ thống và vận hành — kiểm tra và đồng bộ CSDL (16/10/2026, r86)
+
+- **Rà soát và sửa lỗi toàn diện trong `tab-settings-system.js` và `settings.html`:**
+  1. *Lỗi logic chặn lưu giờ Pet Hotel*: Trước đây hàm kiểm tra so sánh `toMinutes(checkIn) >= toMinutes(checkOut)` dẫn đến người dùng không thể đặt giờ nhận/trả phòng khách sạn chuẩn (Check-in 14:00 chiều ngày nhận và Check-out 12:00 trưa ngày trả phòng, vì 14:00 > 12:00). Đã loại bỏ logic so sánh sai lệch ngày này, chỉ giữ kiểm tra định dạng giờ hợp lệ và `open < close` trong cùng ngày của chi nhánh.
+  2. *Thêm biến bảo vệ `isSystemInitialized`*: Ngăn chặn tình trạng gắn lặp nhiều lần các event listener mở modal cấu hình khi chuyển đổi giữa các subtab trong phân hệ Cấu hình.
+  3. *Bọc khối `try...catch` và chuẩn hóa thông báo lỗi*: Bổ sung `try...catch` cho tất cả các thao tác lưu cấu hình (Cửa hàng, Thanh toán, Vận chuyển, Đặt lịch) và chuẩn hóa kiểu toast lỗi sang `'danger'` (khắc phục việc dùng `'error'` không có trong bảng màu thông báo).
+  4. *Khắc phục đóng modal tác động đa phân hệ*: Trong `settings.js`, chuẩn hóa nút `btnConfirmAndSyncImpact` để `await` callback bất đồng bộ và gọi hàm đóng modal chuẩn `closeModal('impactConfirmModalOverlay')` thay vì ẩn `style.display` thủ công.
+  5. *Đồng bộ trạng thái đối tác thẻ 5*: Cập nhật thẻ kết nối đối tác API phản ánh chính xác trạng thái thực tế từ `systemConfig` (GHN: Đã cấu hình / Chưa cấu hình; MoMo, VNPay: Đang kích hoạt / Tạm tắt).
+  6. *Tuân thủ nghiêm ngặt quy tắc [AGENTS.md](file:///d:/Aboutme/MyProject/Pawpal/AGENTS.md)*: Triệt tiêu toàn bộ dấu hai chấm `:` ở cuối nhãn trường thông tin (`.info-label`, `.filter-label`), chuẩn hóa viết hoa Sentence Case thuần Tiếng Việt, loại bỏ ngoặc đơn thừa ("Mã số thuế VAT", "Phí nội thành và ngoại tỉnh", "Giao hỏa tốc 2 giờ", "Công suất tối đa mỗi ca", "Hủy miễn phí và phí trễ").
+- **Kiểm thử tự động trên CSDL Supabase thật (`pawpal_setting`):**
+  - Đọc thành công bản ghi `system_config` hiện hữu từ Supabase.
+  - Cập nhật (upsert) trường cấu hình với khóa `system_config` thành công.
+  - Đọc lại dữ liệu để xác minh giá trị mới đã được ghi kiên định vào CSDL.
+  - Khôi phục nguyên vẹn cấu hình ban đầu an toàn.
+
+- Mở Thêm phụ phí trên lịch QA và thử lưu trống: form chặn tại chỗ với thông báo `Vui lòng nhập tên phụ phí!`, không tạo dòng chi phí và tổng vẫn 100000 đ. Đạt kiểm tra bắt buộc ở bước đầu. Chưa ghi phụ phí thử vì thao tác này thay đổi giá phải thu.
+- Sau khi được xác nhận, lưu qua giao diện phụ phí QA `QA r85 phụ phí kiểm thử`, 1000 đ, lý do QA, chưa có xác nhận của chủ nuôi. Màn hình lập tức có dòng phụ phí và tổng đổi 100000 → 101000 đ; F5 vẫn tìm thấy dòng và tổng 101000 đ. Đạt ghi/đọc lại phụ phí, không thực hiện thanh toán.
+- Kiểm thử màn hình nghiệm thu trên cùng ca: có 1/1 bước (100%), phụ phí 1000 đ và tổng 101000 đ; voucher, điểm, phương thức thanh toán và trạng thái thu ngân đều bị khóa để xử lý ở POS. Bấm lưu khi chưa tick chất lượng bị chặn `Vui lòng xác nhận đạt tiêu chuẩn quy trình chăm sóc!`; không hoàn tất/bàn giao ca.
+- Kiểm thử hoàn tất trên màn hình ca QA: tick xác nhận chất lượng và trả tư trang, lưu biên bản. UI đổi ngay sang `Hoàn thành`, có mốc bàn giao 15:32, nút đổi KTV bị khóa; toast xác nhận trạng thái thanh toán giữ nguyên. Sau F5 vẫn có trạng thái Hoàn thành, Chưa thu và tổng 101000 đ. Đạt lưu biên bản bàn giao/hoàn tất ca; không thu tiền, không áp voucher/điểm, không gửi tin cho khách.
+
+## Cấu hình / Nhật ký cấu hình và thao tác — kiểm tra và đồng bộ CSDL (16/10/2026, r87)
+
+- **Rà soát và sửa lỗi toàn diện trong `tab-settings-audit.js`, `settings.js` và `settings.html`:**
+  1. *Lỗi ràng buộc `staff_id NOT NULL` của bảng `audit_log`*: Hàm `logSystemAudit` trước đây không truyền `staff_id` trong payload chèn dữ liệu, dẫn đến lỗi Postgres `23502: null value in column "staff_id" of relation "audit_log" violates not-null constraint` và làm thất bại ngầm mọi lệnh ghi nhật ký từ phân hệ Cấu hình. Đã khắc phục bằng cách lấy ID nhân sự từ phiên đăng nhập `pawpal_admin_user` hoặc fallback sang ID nhân sự hợp lệ trong CSDL.
+  2. *Truy vấn tên nhân sự thực hiện (Staff Join)*: Bổ sung join `staff:staff_id(full_name)` trong câu truy vấn `audit_log` để thay thế tên tĩnh `'Quản trị viên (Admin)'` bằng tên nhân viên thực tế đã thực hiện thao tác (ví dụ: `Trần Văn Nhân Viên`).
+  3. *Ánh xạ phân hệ chi tiết*: Mở rộng từ điển ánh xạ thực thể `entity_name` sang tên phân hệ tương ứng: bổ sung `store_profile`, `payment`, `shipping`, `booking_policy`, `blog_post`, `banner`, `voucher` ánh xạ về đúng `Cấu hình`, `Bài viết`, `Khuyến mãi` thay vì mặc định rơi vào `Hệ thống`.
+  4. *Cập nhật bộ lọc phân hệ trong HTML*: Bổ sung các tùy chọn `Cấu hình`, `Khuyến mãi`, `Bài viết`, `Banner`, `Thú cưng` vào select `filterAuditTargetModule`.
+  5. *Định dạng thời gian chuẩn*: Chuẩn hóa hàm `formatDateTime` trả về định dạng `DD/MM/YYYY HH:mm` theo tiêu chuẩn giao diện tiếng Việt.
+  6. *Tuân thủ giao diện AGENTS.md*:
+     - Hiển thị avatar tròn (`border-radius: 50%`) mang chữ cái viết tắt của người thực hiện thao tác.
+     - Thanh phân trang chuẩn phẳng, căn giữa bên ngoài bảng với các nút `< >`.
+     - Tự động đặt lại `auditPage = 1` khi thay đổi từ khóa tìm kiếm hoặc bộ lọc phân hệ.
+     - Bổ sung biến cờ `isAuditInitialized` ngăn chặn rò rỉ event listener.
+- **Kiểm thử tự động trên CSDL Supabase thật (`audit_log`):**
+  - Chèn (INSERT) thành công bản ghi audit có `staff_id` hợp lệ.
+  - Truy vấn (SELECT) có join `staff:staff_id(full_name)` trả về đúng tên nhân viên thực tế.
+  - Xóa (DELETE) dọn dẹp sạch bản ghi kiểm thử an toàn.
+
+## Khiếu nại / Toàn diện các subtab — kiểm tra và đồng bộ CSDL (16/10/2026, r88)
+
+- **Rà soát và sửa lỗi toàn diện phân hệ Khiếu nại (`complaints.js` và các subtab):**
+  1. *Khắc phục màu hiển thị Toast lỗi*: Hàm `showToast` trong `complaints.js` trước đây chỉ ánh xạ các màu `success`, `warning`, `danger`, `info`. Các thông báo lỗi truyền kiểu `'error'` bị rơi vào màu mặc định `info` (xanh dương nhạt) thay vì màu đỏ cảnh báo. Đã chuẩn hóa ánh xạ `normalizedType = type === 'error' ? 'danger' : type` để hiển thị đúng tone màu cảnh báo `#F7DCDC` và chữ `#8F2424`.
+  2. *Bổ sung biến bảo vệ ngăn rò rỉ Event Listener*:
+     - `tab-complaint-services.js`: Đã thêm `isServicesInitialized` guard.
+     - `tab-complaint-orders.js`: Đã thêm `isOrdersInitialized` guard.
+     - `tab-complaint-detail.js`: Đã thêm `isDetailInitialized` guard.
+  3. *Tuân thủ nghiêm ngặt quy tắc AGENTS.md*:
+     - Nút text-only thuần túy, không có ký hiệu `+ ` thừa trên các nút thao tác ("Tạo khiếu nại", "Xuất file", "Lọc ca cần xử lý gấp").
+     - Không sử dụng icon Lucide bên ngoài sidebar.
+     - Không dùng ký hiệu `&`, viết đầy đủ chữ "và".
+     - Triệt tiêu hoàn toàn dấu hai chấm `:` ở cuối nhãn trường dữ liệu.
+     - Hỗ trợ đóng modal đầy đủ 4 hình thức: nút Đóng, nút Hủy, click backdrop và nhấn phím Escape.
+
+- **Kiểm thử trực tiếp trên giao diện trình duyệt (UI Automated Testing):**
+  - **Theo dịch vụ (`tab-complaint-services`)**: Tải thành công 5 thẻ KPI vận hành, thanh cảnh báo SLA, bộ lọc nhanh (Tất cả, Của tôi phụ trách, Chưa phân công, Chờ quản lý duyệt, Xử lý lần 2, Quá hạn SLA, Mức độ Cao), ô tìm kiếm và các dropdown.
+  - **Modal Tiếp nhận khiếu nại (`createTicketModalOverlay`)**: Mở đúng form 740px 2 cột, kiểm tra validation khi submit form trống (chặn và hiện toast thông báo bắt buộc hợp lệ), đóng sạch bằng nút Hủy và phím Escape.
+  - **Theo đơn hàng (`tab-complaint-orders`)**: Chuyển subtab mượt mà, tải đúng bảng danh sách khiếu nại đơn hàng, phân trang và trạng thái.
+  - **Hồ sơ khiếu nại (`tab-complaint-detail`)**:
+    - Mở hồ sơ từ bảng danh sách, hiển thị đúng breadcrumb `/ [Mã Ticket]`, thông tin khách hàng 360°, thông tin đối ứng và nhật ký xử lý (Timeline).
+    - Mở và đóng thành công Modal 3: Chuyển người phụ trách (`assignHandlerModalOverlay`).
+    - Mở và đóng thành công Modal 4: Yêu cầu bổ sung thông tin qua Zalo OA (`requestMoreInfoModalOverlay`).
+    - Mở và đóng thành công Modal 2: Phương án giải quyết (`resolveTicketModalOverlay`), tự động hiển thị/ẩn các nhóm trường có điều kiện (RMA, làm lại dịch vụ, bồi hoàn Pawpoint/Voucher, hoàn tiền).
+    - Ghi nhận phản hồi / ghi chú nội bộ vào timeline thành công, cập nhật ngay giao diện và hiển thị Toast thông báo.
+
+- **Kiểm thử tự động trên CSDL Supabase thật (`support_ticket` & `support_ticket_message`):**
+  1. *Tạo vé khiếu nại mới (INSERT `support_ticket`)*: Tạo thành công vé dịch vụ với trạng thái `pending`.
+  2. *Ghi nhận phản ánh ban đầu (INSERT `support_ticket_message`)*: Lưu phản ánh của khách hàng theo `ticket_id`.
+  3. *Phân công người phụ trách (Assign)*: Chèn bản ghi phân công của CSKH có `agent_name`, cập nhật trạng thái vé sang `processing`.
+  4. *Yêu cầu bổ sung thông tin (Request info)*: Gửi thông điệp kênh Zalo OA, cập nhật trạng thái vé sang `waiting_customer`.
+  5. *Giải quyết khiếu nại (Resolve)*: Ghi nhận giải pháp bồi hoàn, cập nhật trạng thái sang `completed` kèm `rating = 5` và `rating_comment`.
+  6. *Đối soát dữ liệu*: Truy vấn lại từ CSDL Supabase xác nhận đầy đủ toàn bộ 4 bản ghi timeline theo thứ tự thời gian.
+  7. *Dọn dẹp sạch bản ghi kiểm thử*: Xóa sạch các bản ghi QA trong CSDL thật mà không để lại dữ liệu rác.
+
+---
+
+## Bán hàng & Kho — Kiểm thử toàn diện và Chuẩn hóa Live CSDL (16/10/2026, r89)
+
+- **Rà soát & Sửa lỗi logic điều hướng, chống rò rỉ bộ lắng nghe sự kiện (Listener Stacking):**
+  1. *Khắc phục nhân bản Event Listener*: Đã bổ sung các biến cờ bảo vệ khởi tạo một lần (`isListEventsInitialized`, `isDetailEventsInitialized`, `isProductsEventsInitialized`, `isPromosEventsInitialized`) trên toàn bộ 4 subtab (`tab-order-list.js`, `tab-order-detail.js`, `tab-order-products.js`, `tab-order-promos.js`).
+  2. *Sửa lỗi schema và ràng buộc toàn vẹn CSDL*:
+     - **Tạo đơn POS tại quầy**: Bổ sung tự động truy xuất `shipping_address_id` hợp lệ từ địa chỉ khách hàng hoặc địa chỉ chi nhánh mặc định, khắc phục triệt để lỗi vi phạm ràng buộc `NOT NULL` của cột `sales_order.shipping_address_id` trên Supabase.
+     - **Ghi nhận chi tiết dòng sản phẩm**: Đồng bộ lưu trữ toàn bộ các mục giỏ hàng POS vào bảng `sales_order_detail`.
+     - **Chuẩn hóa Enum trạng thái đơn hàng (`order_status_enum`)**:
+       - Thay thế các giá trị không hợp lệ `'CONFIRMED'` và `'COMPLETED'` bằng các giá trị chuẩn trong CSDL Supabase: `'PACKING'` (Chờ đóng gói/xác nhận) và `'DELIVERED'` (Đã giao hàng/hoàn tất).
+       - Khớp nối `orders.js` tự động ánh xạ `PACKING` từ Supabase thành `'confirmed'` trên giao diện để các bộ lọc và thẻ KPI thống kê hiển thị chính xác 100%.
+     - **Chuẩn hóa Enum phiếu đổi trả RMA (`return_request`)**:
+       - Sửa đổi cột liên kết thành `sales_order_id` (thay vì `order_id`).
+       - Thay thế enum loại đổi trả: dùng `'RETURN'` (thay vì `'REFUND'` gây lỗi 22P02).
+       - Thay thế enum trạng thái: dùng `'COMPLETED'` (thay vì `'RESOLVED'`).
+       - Bổ sung ghi nhận chi tiết các mặt hàng đổi trả vào bảng `return_request_detail`.
+  3. *Tuân thủ nghiêm ngặt quy tắc AGENTS.md*:
+     - 100% nút bấm Text-only phẳng, thanh lịch, triệt tiêu tiền tố `+ ` ("Tạo đơn tại quầy", "Thêm sản phẩm", "Nhập hàng", "Kiểm kê", "Tạo mã mới").
+     - Không có icon Lucide bên ngoài sidebar; nút 3 chấm thao tác dạng text `•••`.
+     - Toàn bộ nhãn trường không có dấu hai chấm `:`, trường bắt buộc có dấu sao `*` màu đỏ.
+     - Bo góc chuẩn 9px (`--admin-radius: 9px;`), nền bán trong suốt Frosted Glass kết hợp bảng màu Forest Green.
+     - Viết hoa Sentence Case chuẩn Tiếng Việt, không dùng ký hiệu `&` (viết đầy đủ "Sản phẩm và kho").
+
+- **Kiểm thử tự động trên CSDL Supabase thật (`scripts/test/test_sales_lifecycle.js`):**
+  1. *Lấy dữ liệu thực thể*: Truy vấn thành công khách hàng (`customer` + `customer_profile`) và sản phẩm khả dụng (`product` + `inventory`).
+  2. *Tạo đơn hàng POS (`sales_order`)*: Tạo đơn mới với mã tự sinh, gắn `shipping_address_id` và trạng thái khởi tạo `PENDING`.
+  3. *Thêm chi tiết đơn hàng (`sales_order_detail`)*: Chèn thành công dòng sản phẩm với số lượng, đơn giá và thành tiền chính xác.
+  4. *Xác nhận đơn và trừ kho*: Chuyển trạng thái đơn sang `PACKING`, cập nhật `payment_status = 'PAID'` và tự động trừ tồn kho tức thời trong bảng `inventory`.
+  5. *Cập nhật tiến độ giao hàng*: Cập nhật trạng thái tuần tự sang `SHIPPING` rồi `DELIVERED`.
+  6. *Tạo phiếu đổi trả bảo hành RMA (`return_request` & `return_request_detail`)*: Tạo thành công phiếu RMA loại `RETURN` với trạng thái `COMPLETED` và lưu chi tiết mặt hàng đổi trả.
+  7. *Hoàn trả tồn kho và dọn dẹp*: Khôi phục tồn kho ban đầu, xóa sạch đơn hàng, chi tiết đơn và phiếu RMA kiểm thử. Toàn bộ 7/7 bước vượt qua thành công 100%.
+
+- **Kiểm thử trực tiếp trên giao diện trình duyệt (UI Automated Testing):**
+  - **Subtab 1 — Danh sách đơn hàng (`tab-order-list`)**:
+    - Hiển thị đầy đủ 6 thẻ KPI vận hành, bảng đơn hàng với mã đơn, tên khách, tổng tiền, phương thức, trạng thái và thời gian.
+    - Mở và đóng thành công modal POS Tạo đơn tại quầy (`#modalCreateOrder`), kiểm tra bộ tính toán trực tiếp giỏ hàng.
+    - Mở và xem trước phiếu in đóng gói (`#modalPackingSlip`) với barcode, thông tin vận chuyển và bảng kê hàng hóa.
+  - **Subtab 2 — Hồ sơ đơn hàng (`tab-order-detail`)**:
+    - Mở chi tiết đơn hàng từ bảng, Header Bar hiển thị đường dẫn cấp con `/ [Mã đơn]` tinh gọn.
+    - Hiển thị đầy đủ thẻ khách hàng 360°, chi tiết từng dòng sản phẩm, bảng kê thanh toán và nhật ký timeline theo mốc thời gian.
+    - Mở và đóng thành công modal Đổi trả hàng RMA (`#modalRmaExchange`).
+  - **Subtab 3 — Sản phẩm và kho (`tab-order-products`)**:
+    - Hiển thị 5 thẻ chỉ số kho hàng (Tổng mặt hàng, Còn hàng, Sắp hết, Hết hàng, Giá trị vốn tồn kho).
+    - Mở và đóng thành công modal Thêm sản phẩm (`#modalAddProduct`), modal Nhập hàng NCC (`#modalGrnReceipt`), và modal Kiểm kê kho (`#modalStocktake`).
+  - **Subtab 4 — Khuyến mãi (`tab-order-promos`)**:
+    - Hiển thị 3 chỉ số voucher và bảng danh sách chương trình ưu đãi.
+    - Mở và đóng thành công modal Tạo mã khuyến mãi (`#modalCreateVoucher`) và modal Tác vụ voucher (`#modalVoucherAction`).
+
+---
+
+## Chatbot & Trực chat CSKH — Kiểm thử toàn diện và Chuẩn hóa Live CSDL (16/10/2026, r90)
+
+- **Rà soát & Sửa lỗi logic điều hướng, chống rò rỉ bộ lắng nghe sự kiện (Listener Stacking):**
+  1. *Khắc phục nhân bản Event Listener*:
+     - Tách biệt logic khởi tạo DOM event listener thành `setupLiveChatEventListeners()` có cờ bảo vệ `isLiveChatEventsInitialized` trong [tab-chatbot-live.js](file:///d:/Aboutme/MyProject/Pawpal/pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js). Ngăn chặn tình trạng nhân bản hàng loạt bộ lắng nghe sự kiện khi chuyển đổi qua lại giữa 3 subtab (*Trực chat*, *Trợ lý AI*, *Quy định*).
+     - Duy trì biến bảo vệ `copilotBound` trong [tab-chatbot-copilot.js](file:///d:/Aboutme/MyProject/Pawpal/pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js) và `rulesHubInitialized` trong [tab-chatbot-rules.js](file:///d:/Aboutme/MyProject/Pawpal/pages/admin/modules/chatbot/subtabs/tab-chatbot-rules.js).
+  2. *Sửa lỗi schema và ràng buộc toàn vẹn CSDL*:
+     - **Ràng buộc kênh liên lạc (`chat_conversation_channel_check`)**: CSDL Supabase chỉ chấp nhận giá trị kênh hợp lệ `'web'`, thay vì `'web_chat'`.
+     - **Ràng buộc trạng thái phiên hội thoại (`chat_conversation_status_check`)**: Xác nhận các trạng thái hợp lệ gồm `'bot_handling'`, `'waiting_agent'`, `'agent_handling'`, `'resolved'`, `'closed'`.
+     - **Định dạng mảng từ khóa FAQ (`chatbot_knowledge_faq.keywords`)**: CSDL lưu kiểu mảng `text[]` (Array) thay vì chuỗi đơn lẻ, đảm bảo câu hỏi FAQ lưu kiên định không bị lỗi `22P02`.
+  3. *Tuân thủ nghiêm ngặt quy tắc AGENTS.md*:
+     - Không sử dụng icon Lucide bên ngoài sidebar (0 icon Lucide trong `chatbot.html`).
+     - Nút 3 chấm tác vụ trên khung chat dạng text `•••` (`#btnChatActionsDots`).
+     - Triệt tiêu hoàn toàn ký hiệu `+ ` thừa trên các nút ("Thêm câu hỏi FAQ", "Thêm từ cấm", "Thêm mẫu câu", "Đồng bộ tri thức RAG").
+     - Toàn bộ nhãn trường không có dấu hai chấm `:`, trường bắt buộc có dấu sao `*` màu đỏ.
+     - Bo góc cố định 9px (`--admin-radius: 9px;`), 100% màu phẳng Solid và nền bán trong suốt Frosted Glass kết hợp hiệu ứng mờ nhạt (0 gradients).
+     - Viết hoa Sentence Case chuẩn Tiếng Việt ("Trực chat", "Trợ lý AI", "Quy định", "Tặng điểm Pawpoint", "Chuyển thành Ticket", "Chuyển cấp quản lý", "Hoàn tất ca chat").
+
+- **Kiểm thử tự động trên CSDL Supabase thật (`scripts/test/test_chatbot_lifecycle.js`):**
+  1. *Lấy dữ liệu thực thể*: Truy vấn thành công khách hàng (`customer` + `customer_profile`).
+  2. *Khởi tạo phiên hội thoại mới (`chat_conversation`)*: Chèn thành công phiên mới với `channel = 'web'` và `status = 'bot_handling'`.
+  3. *Khách hàng gửi tin nhắn (`chat_message`)*: Ghi nhận tin nhắn loại `customer` với nội dung hỏi dịch vụ tiêm phòng.
+  4. *Bot tự động phản hồi (`chat_message`)*: Ghi nhận tin nhắn phản hồi tự động loại `bot`.
+  5. *Chuyên viên CSKH tiếp quản (`Takeover`)*: Cập nhật thành công trạng thái phiên hội thoại sang `agent_handling`.
+  6. *Chuyên viên CSKH gửi tin nhắn hỗ trợ trực tiếp*: Ghi nhận tin nhắn loại `staff` với tên người gửi rõ ràng.
+  7. *Ghi chú nội bộ và hoàn tất*: Cập nhật `internal_note`, `sentiment_level = 2` và `status = 'resolved'`.
+  8. *Tạo câu hỏi FAQ (`chatbot_knowledge_faq`)*: Tạo thành công bản ghi FAQ với mảng từ khóa `keywords`.
+  9. *Tạo mẫu câu phản hồi nhanh (`chatbot_canned_response`)*: Tạo thành công mẫu câu với `shortcut = '/qa_vac'`.
+  10. *Dọn dẹp sạch bản ghi kiểm thử*: Xóa sạch các tin nhắn, phiên hội thoại, FAQ và mẫu câu QA mà không để lại dữ liệu rác. Toàn bộ 10/10 bước vượt qua thành công 100%.
+
+- **Kiểm thử trực tiếp trên giao diện trình duyệt (UI Automated Testing):**
+  - **Subtab 1 — Trực chat (`tab-live-support`)**:
+    - Hiển thị bố cục 3 cột hoàn chỉnh: Danh sách hội thoại theo 3 tab SLA (*Xử lý ngay*, *Đang chat*, *Tất cả*), Khung chat trực tiếp kèm tin nhắn đa nguồn (User/Bot/Agent), và Thẻ hồ sơ khách hàng 360° (Thú cưng, Đơn hàng, Lịch hẹn, Khiếu nại, Ghi chú nội bộ).
+    - Thao tác nút `•••` mở menu thả xuống mượt mà.
+    - Mở và đóng thành công modal Trích xuất vé khiếu nại (`#convertTicketModalOverlay`), kiểm tra nhãn chuẩn không có dấu `:`, trường bắt buộc có dấu `*` đỏ.
+    - Mở và đóng thành công modal Chuyển cấp quản lý (`#escalateManagerModalOverlay`).
+  - **Subtab 2 — Trợ lý AI (`tab-ai-copilot`)**:
+    - Hiển thị khung làm việc với Copilot Gemini 1.5 Pro nội bộ, hàng prompt gợi ý một chạm, nút Xóa lịch sử và Đồng bộ tri thức RAG.
+  - **Subtab 3 — Quy định (`tab-chatbot-rules`)**:
+    - Rules Hub tải đầy đủ 6 tab con: Kho tri thức FAQ (92 mục), Màng lọc Toxic Shield, Mẫu câu phản hồi, Hạn mức bồi hoàn, Ma trận kịch bản, Quy chuẩn văn hóa CSKH.
+    - Bộ lọc tìm kiếm, phân trang và các modal thêm câu hỏi, từ cấm, mẫu câu hoạt động chính xác.
+
+
+

@@ -173,7 +173,9 @@
                     return false;
                 }
             }
-            if (filterComplaintOnly && o.status !== 'returned' && o.alertType !== 'danger') return false;
+            // alertType danger cũng dùng cho SLA quá hạn; bộ lọc khiếu nại chỉ
+            // nhận đơn đổi trả hoặc có hồ sơ RMA thực tế.
+            if (filterComplaintOnly && o.status !== 'returned' && !o.rmaInfo) return false;
             if (filterUrgentOnly && sla.level !== 'danger' && sla.level !== 'warning') return false;
             if (filterSlaOverdueOnly && !sla.isSlaOverdue) return false;
 
@@ -785,7 +787,10 @@
     };
 
     // Khởi tạo các sự kiện giao diện cho Subtab List
+    let isListEventsInitialized = false;
     function initListEvents() {
+        if (isListEventsInitialized) return;
+        isListEventsInitialized = true;
         document.getElementById('orderSearchInput')?.addEventListener('input', () => {
             ordersCurrentPage = 1;
             renderOrdersTable();
@@ -1090,16 +1095,44 @@
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (client) {
                 try {
+                    let targetShippingAddressId = null;
+                    if (activePosCustomer && activePosCustomer.id) {
+                        const { data: addrs } = await client.from('customer_address').select('id').eq('customer_id', activePosCustomer.id).limit(1);
+                        if (addrs && addrs.length > 0) targetShippingAddressId = addrs[0].id;
+                    }
+                    if (!targetShippingAddressId) {
+                        const { data: anyAddr } = await client.from('customer_address').select('id').limit(1);
+                        if (anyAddr && anyAddr.length > 0) targetShippingAddressId = anyAddr[0].id;
+                    }
+
                     const { data: orderRow } = await client.from('sales_order').insert({
                         order_code: newCode,
                         customer_id: (finalUserId && finalUserId.length > 20) ? finalUserId : null,
-                        order_status: isDelivery ? 'CONFIRMED' : 'COMPLETED',
+                        shipping_address_id: targetShippingAddressId,
+                        order_status: isDelivery ? 'PACKING' : 'DELIVERED',
                         payment_status: (isDelivery && payMethod === 'cod') ? 'UNPAID' : 'PAID',
                         total_amount: calc.grandTotal,
                         note: noteVal || 'Đơn POS'
                     }).select().single();
 
-                    if (orderRow) newOrder.rawId = orderRow.id;
+                    if (orderRow) {
+                        newOrder.rawId = orderRow.id;
+                        if (posCartItems.length > 0) {
+                            const detailRows = posCartItems.map(item => {
+                                const prod = (state.products || []).find(p => p.sku === item.sku);
+                                return {
+                                    order_id: orderRow.id,
+                                    product_id: prod?.id || null,
+                                    quantity: item.qty,
+                                    unit_price: item.price,
+                                    subtotal: item.price * item.qty
+                                };
+                            }).filter(d => d.product_id);
+                            if (detailRows.length > 0) {
+                                await client.from('sales_order_detail').insert(detailRows);
+                            }
+                        }
+                    }
                 } catch (e) {
                     console.warn('Lỗi ghi nhận đơn POS lên Supabase:', e);
                 }
@@ -1412,14 +1445,26 @@
             'USER-001': 'CUST-001', 'USER-002': 'CUST-002', 'USER-003': 'CUST-003',
             'USER-004': 'CUST-004', 'USER-005': 'CUST-005', 'USER-ADMIN': 'CUST-001'
         };
-        const targetCustId = custIdMap[userId] || (userId && userId.startsWith('CUST-') ? userId : 'CUST-001');
+        // Đơn mới dùng trực tiếp UUID customer_id. Chỉ giữ map cho dữ liệu cũ,
+        // không được rơi về CUST-001 vì sẽ mở nhầm hồ sơ khách hàng.
+        const targetCustId = custIdMap[userId] || (userId && userId !== 'GUEST' ? userId : '');
+        if (!targetCustId) {
+            PawpalOrders.showToast('Đơn vãng lai không có hồ sơ khách hàng để mở.');
+            return;
+        }
         sessionStorage.setItem('pawpal_admin_customer_id', targetCustId);
         if (customerName) sessionStorage.setItem('pawpal_admin_customer_name', customerName);
         sessionStorage.setItem('pawpal_admin_customer_subtab', 'tab-profile');
-        sessionStorage.setItem('pawpal_admin_active_module', 'Khách hàng');
-        window.location.hash = '#tab-profile';
+        sessionStorage.removeItem('pawpal_admin_order_selected_id');
+        sessionStorage.removeItem('pawpal_admin_order_id');
         const custBtn = Array.from(document.querySelectorAll('.sidebar-menu-btn')).find(b => b.getAttribute('data-title') === 'Khách hàng');
-        if (custBtn) custBtn.click();
+        if (custBtn) {
+            // Sidebar là điểm chuyển module duy nhất: nó đồng bộ module, hash và DOM.
+            custBtn.click();
+        } else {
+            sessionStorage.setItem('pawpal_admin_active_module', 'Khách hàng');
+            window.location.hash = '#tab-profile';
+        }
     };
 
     window.PawpalOrdersModule.confirmPayment = async function(orderId) {
@@ -1492,9 +1537,9 @@
         if (client) {
             try {
                 if (order.rawId) {
-                    await client.from('sales_order').update({ order_status: 'COMPLETED' }).eq('id', order.rawId);
+                    await client.from('sales_order').update({ order_status: 'DELIVERED' }).eq('id', order.rawId);
                 } else {
-                    await client.from('sales_order').update({ order_status: 'COMPLETED' }).eq('order_code', order.id);
+                    await client.from('sales_order').update({ order_status: 'DELIVERED' }).eq('order_code', order.id);
                 }
             } catch (e) {}
         }
@@ -1522,9 +1567,9 @@
         if (client) {
             try {
                 if (order.rawId) {
-                    await client.from('sales_order').update({ order_status: 'CONFIRMED' }).eq('id', order.rawId);
+                    await client.from('sales_order').update({ order_status: 'PACKING' }).eq('id', order.rawId);
                 } else {
-                    await client.from('sales_order').update({ order_status: 'CONFIRMED' }).eq('order_code', order.id);
+                    await client.from('sales_order').update({ order_status: 'PACKING' }).eq('order_code', order.id);
                 }
             } catch (e) {}
         }
