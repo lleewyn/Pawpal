@@ -7,6 +7,14 @@
     margin: 0 auto;
 }
 
+/* Cột trong .row (display: flex) mặc định có min-width: auto, khiến nó từ chối co lại
+   theo đúng tỷ lệ Bootstrap (col-lg-7/col-lg-5) khi nội dung bên trong (lưới khung giờ,
+   lưới chuyên viên) cần nhiều chỗ hơn -> tràn đè sang cột bên cạnh. */
+.booking-form-col,
+.booking-summary-col {
+    min-width: 0;
+}
+
 .booking-stepper {
     display: flex;
     align-items: center;
@@ -469,7 +477,7 @@ html.booking-pre-step-4 #bookingStepper .step[data-step="4"] .step-circle {
 @media (min-width: 992px) {
     .spa-schedule {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         grid-template-areas:
             "date"
             "timeslot"
@@ -479,10 +487,10 @@ html.booking-pre-step-4 #bookingStepper .step[data-step="4"] .step-circle {
         align-items: start;
     }
 
-    .spa-schedule > .form-group { grid-area: date; }
-    .spa-schedule > .timeslot-section { grid-area: timeslot; }
-    .spa-schedule > .booking-hold-banner { grid-area: banner; }
-    .spa-schedule > .staff-selection { grid-area: staff; }
+    .spa-schedule > .form-group { grid-area: date; min-width: 0; }
+    .spa-schedule > .timeslot-section { grid-area: timeslot; min-width: 0; }
+    .spa-schedule > .booking-hold-banner { grid-area: banner; min-width: 0; }
+    .spa-schedule > .staff-selection { grid-area: staff; min-width: 0; }
 
     .spa-schedule .timeslot-section { max-height: 520px; overflow: auto; padding-right: 6px; }
     .spa-schedule .staff-selection { max-height: none; overflow: visible; }
@@ -1407,6 +1415,15 @@ html.booking-pre-step-4 #bookingStepper .step[data-step="4"] .step-circle {
     .booking-layout { grid-template-columns: 1fr; }
     .booking-summary-col { position: static; order: -1; }
     .summary-card { display: none; }
+}
+
+/* Chừa khoảng trống bên phải khối tóm tắt để tránh bị cụm nút nổi (Messenger/Zalo/Phone)
+   cố định ở góc dưới-phải đè lên nội dung. Áp dụng cho mọi độ rộng có hiển thị layout
+   2 cột (trên 1024px) để không phụ thuộc vào việc màn hình có đủ rộng để tự co giãn ra giữa hay không. */
+@media (min-width: 1025px) {
+    .booking-summary-col {
+        padding-right: 100px;
+    }
 }
 
 @media (max-width: 640px) {
