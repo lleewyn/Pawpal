@@ -89,11 +89,12 @@
             const apiStatusEl = document.getElementById('dispShippingApiStatus');
             const partnerBadge = document.getElementById('dispShippingPartnerBadge');
 
-            if (freeShipEl) freeShipEl.textContent = `Đơn từ ${(cfg.shippingPolicy.freeShippingThreshold || 300000).toLocaleString('vi-VN')} đ`;
-            if (stdFeesEl) stdFeesEl.textContent = `${(cfg.shippingPolicy.innerCityFee || 25000).toLocaleString('vi-VN')} đ / ${(cfg.shippingPolicy.outerCityFee || 35000).toLocaleString('vi-VN')} đ`;
-            if (expFeeEl) expFeeEl.textContent = `${(cfg.shippingPolicy.expressFee || 45000).toLocaleString('vi-VN')} đ (Grab / Aha)`;
-            if (apiStatusEl) apiStatusEl.textContent = `${(cfg.shippingPolicy.partnerName || 'GHN Express').split(' ')[0]} (Shop ID: ${cfg.shippingPolicy.shopId || 'PAWPAL_Q1'})`;
-            if (partnerBadge) partnerBadge.textContent = cfg.shippingPolicy.partnerName || 'GHN Express';
+            // CFG-29: Dùng ?? thay cho || để giữ đúng giá trị 0 hoặc false
+            if (freeShipEl) freeShipEl.textContent = `Đơn từ ${(cfg.shippingPolicy.freeShippingThreshold ?? 0).toLocaleString('vi-VN')} đ`;
+            if (stdFeesEl) stdFeesEl.textContent = `${(cfg.shippingPolicy.innerCityFee ?? 0).toLocaleString('vi-VN')} đ / ${(cfg.shippingPolicy.outerCityFee ?? 0).toLocaleString('vi-VN')} đ`;
+            if (expFeeEl) expFeeEl.textContent = `${(cfg.shippingPolicy.expressFee ?? 0).toLocaleString('vi-VN')} đ (Grab / Aha)`;
+            if (apiStatusEl) apiStatusEl.textContent = `${(cfg.shippingPolicy.partnerName || 'Chưa cấu hình').split(' ')[0]} (Shop ID: ${cfg.shippingPolicy.shopId || 'Trống'})`;
+            if (partnerBadge) partnerBadge.textContent = cfg.shippingPolicy.partnerName || 'Chưa cấu hình';
         }
 
         // Card 4: Booking Policy & Operating Hours
@@ -105,8 +106,8 @@
 
             if (opHoursEl) opHoursEl.textContent = `${cfg.operatingHours.weekday?.open || '08:00'} - ${cfg.operatingHours.weekday?.close || '20:00'} (T7/CN: ${cfg.operatingHours.weekend?.close || '21:00'})`;
             if (hotelEl) hotelEl.textContent = `Nhận sau ${cfg.hotelRules.checkInTime || '14:00'} • Trả trước ${cfg.hotelRules.checkOutTime || '12:00'}`;
-            if (capEl) capEl.textContent = `Tối đa ${cfg.bookingPolicy.slotCapacityMax || 4} bé / Khung giờ`;
-            if (cancelEl) cancelEl.textContent = `Trước ${cfg.bookingPolicy.freeCancelHours || 4} giờ • Phí trễ ${(cfg.bookingPolicy.lateCancelFee || 50000).toLocaleString('vi-VN')} đ`;
+            if (capEl) capEl.textContent = `Tối đa ${cfg.bookingPolicy.slotCapacityMax ?? 0} bé / Khung giờ`;
+            if (cancelEl) cancelEl.textContent = `Trước ${cfg.bookingPolicy.freeCancelHours ?? 0} giờ • Phí trễ ${(cfg.bookingPolicy.lateCancelFee ?? 0).toLocaleString('vi-VN')} đ`;
         }
 
         // Card 5: Partner Connection Badges
@@ -295,8 +296,9 @@
                     try {
                         const cfg = PawpalSettings.state?.systemConfig;
                         if (!cfg) throw new Error('Chưa khởi tạo cấu hình hệ thống.');
+                        // CFG-28: Bảo lưu cấu hình đối tác và các trường mở rộng hiện có, không hardcode override
                         cfg.paymentMethods = {
-                            cod: { enabled: codEn, name: 'Thanh toán khi nhận hàng (COD)', fee: 0 },
+                            cod: { enabled: codEn, name: 'Thanh toán khi nhận hàng (COD)', fee: cfg.paymentMethods?.cod?.fee ?? 0 },
                             bank: {
                                 enabled: bankEn,
                                 name: 'Chuyển khoản QR Banking',
@@ -305,8 +307,8 @@
                                 accountHolder: accHolder,
                                 syntax: syntax
                             },
-                            momo: { enabled: momoEn, name: 'Ví điện tử MoMo', merchantId: 'MOMO_PAWPAL_PROD' },
-                            vnpay: { enabled: vnpayEn, name: 'Cổng thanh toán VNPay', tmnCode: 'PAWPALVN' }
+                            momo: { enabled: momoEn, name: 'Ví điện tử MoMo', merchantId: cfg.paymentMethods?.momo?.merchantId ?? '' },
+                            vnpay: { enabled: vnpayEn, name: 'Cổng thanh toán VNPay', tmnCode: cfg.paymentMethods?.vnpay?.tmnCode ?? '' }
                         };
                         await PawpalSettings.persistSystemConfig?.(cfg);
                         PawpalSettings.closeModal?.('paymentConfigModalOverlay');
@@ -315,7 +317,8 @@
                         await PawpalSettings.loadSettingsModuleData?.();
                         renderSystemConfigCards();
                         PawpalSettings.subtabs.audit?.renderAuditLogs?.();
-                        showToast('Đã cập nhật cổng thanh toán và đồng bộ sang phân hệ Bán hàng và User Portal thành công!', 'success');
+                        // CFG-27: Thông báo lưu trung thực, không hứa hẹn đồng bộ ngoài thẩm quyền client
+                        showToast('Đã lưu cấu hình cổng thanh toán thành công!', 'success');
                     } catch (e) {
                         console.error('[Settings] Lưu cổng thanh toán thất bại:', e);
                         showToast(`Không thể lưu cấu hình cổng thanh toán: ${e?.message || 'Lỗi cơ sở dữ liệu'}`, 'danger');
@@ -397,7 +400,8 @@
                             primaryPartner: provider,
                             partnerName: partnerNameMap[provider] || 'GHN Express',
                             shopId: shopId,
-                            apiKey: apiKey
+                            isConfigured: Boolean(apiKey || shopId),
+                            apiKey: apiKey ? '••••••••' : ''
                         };
                         await PawpalSettings.persistSystemConfig?.(cfg);
                         PawpalSettings.closeModal?.('shippingConfigModalOverlay');
@@ -504,17 +508,18 @@
                     try {
                         const cfg = PawpalSettings.state?.systemConfig;
                         if (!cfg) throw new Error('Chưa khởi tạo cấu hình hệ thống.');
+                        // CFG-28: Bảo lưu holidayNotice và quy tắc hotel/booking hiện có, không ghi đè cứng
                         cfg.operatingHours = {
                             weekday: { open: wkOpen, close: wkClose },
                             weekend: { open: weOpen, close: weClose },
-                            holidayNotice: 'Mở cửa phục vụ xuyên suốt tất cả các ngày lễ và Tết Nguyên Đán.'
+                            holidayNotice: cfg.operatingHours?.holidayNotice ?? ''
                         };
                         cfg.hotelRules = {
                             checkInTime: checkIn,
                             checkOutTime: checkOut,
                             lateCheckOutFeePerHalfDay: hotelLateFee,
-                            includedMealsPerDay: 3,
-                            cameraAccessEnabled: true
+                            includedMealsPerDay: cfg.hotelRules?.includedMealsPerDay ?? 3,
+                            cameraAccessEnabled: cfg.hotelRules?.cameraAccessEnabled ?? true
                         };
                         cfg.bookingPolicy = {
                             freeCancelHours: freeHours,
@@ -530,7 +535,8 @@
                         await PawpalSettings.loadSettingsModuleData?.();
                         renderSystemConfigCards();
                         PawpalSettings.subtabs.audit?.renderAuditLogs?.();
-                        showToast('Đã áp dụng chính sách đặt lịch mới và đồng bộ sang phân hệ Dịch vụ và Nhân sự thành công!', 'success');
+                        // CFG-27: Thông báo lưu trung thực
+                        showToast('Đã áp dụng chính sách đặt lịch mới vào cấu hình hệ thống!', 'success');
                     } catch (e) {
                         console.error('[Settings] Lưu chính sách đặt lịch thất bại:', e);
                         showToast(`Không thể lưu chính sách đặt lịch: ${e?.message || 'Lỗi cơ sở dữ liệu'}`, 'danger');
@@ -539,10 +545,10 @@
             });
         });
 
-        // Live Healthcheck đối tác
+        // Live Healthcheck đối tác (CFG-26: Thông báo kiểm tra cấu hình đối tác trung thực)
         document.getElementById('btnConfigurePartners')?.addEventListener('click', () => {
             const cfg = PawpalSettings.state?.systemConfig || {};
-            const isGhnOk = Boolean(cfg.shippingPolicy?.shopId && cfg.shippingPolicy?.apiKey);
+            const isGhnOk = Boolean(cfg.shippingPolicy?.shopId && (cfg.shippingPolicy?.apiKey || cfg.shippingPolicy?.isConfigured));
             const isMomoOk = Boolean(cfg.paymentMethods?.momo?.enabled);
             const isVnpayOk = Boolean(cfg.paymentMethods?.vnpay?.enabled);
 
@@ -562,11 +568,16 @@
                 vnpayBadge.className = isVnpayOk ? 'admin-badge badge-active' : 'admin-badge badge-neutral';
                 vnpayBadge.textContent = isVnpayOk ? 'Đang kích hoạt' : 'Tạm tắt';
             }
-            showToast('Đã kiểm tra trạng thái cấu hình kết nối đối tác vận chuyển và thanh toán.', 'info');
+            showToast('Đã kiểm tra trạng thái cấu hình đối tác (kết nối trực tiếp cần backend integration API).', 'info');
         });
 
         // Safe mode UI & Toggle
         const handleSafeModeToggle = () => {
+            const currentRole = (sessionStorage.getItem('pawpal_admin_system_role') || '').toUpperCase();
+            if (PawpalSettings.state?.isSafeModeLocked && currentRole !== 'ADMIN' && currentRole !== 'MANAGER') {
+                showToast('Chỉ Quản trị viên (Admin/Manager) mới có quyền mở khóa an toàn hệ thống.', 'danger');
+                return;
+            }
             PawpalSettings.state.isSafeModeLocked = !PawpalSettings.state.isSafeModeLocked;
             PawpalSettings.updateSafeModeUI?.();
             if (PawpalSettings.state.isSafeModeLocked) {

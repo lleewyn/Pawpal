@@ -144,9 +144,24 @@
         }
 
         // Server API Fallback with Service Role Key
+        // CFG-12: Chặn leo thang đặc quyền - yêu cầu vai trò ADMIN hoặc MANAGER trước khi gọi fallback
+        const currentRole = (sessionStorage.getItem('pawpal_admin_system_role') || '').toUpperCase();
+        if (currentRole !== 'ADMIN' && currentRole !== 'MANAGER') {
+            throw new Error('Từ chối thao tác: Bạn không có quyền Quản trị viên để thay đổi Banner.');
+        }
+
+        const headers = { 'Content-Type': 'application/json' };
+        try {
+            const client = getSupabaseClient();
+            const session = (await client?.auth.getSession())?.data?.session;
+            if (session?.access_token) {
+                headers['Authorization'] = `Bearer ${session.access_token}`;
+            }
+        } catch (e) {}
+
         const res = await fetch('/api/admin/banners', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             body: JSON.stringify({ action, payload })
         });
         const result = await res.json().catch(() => ({}));
@@ -179,21 +194,27 @@
                 ? `<button type="button" class="banner-action-btn btn-extend-banner" data-id="${b.id}">Gia hạn 30 ngày</button>`
                 : '';
 
+            const esc = PawpalSettings.escapeHtml || (s => s);
+            const isImgUrl = b.image && /^(https?:\/\/|\/)[^\s]+$/i.test(b.image);
+            const previewHtml = isImgUrl
+                ? `<img src="${esc(b.image)}" alt="Banner" style="width:100%; height:100%; object-fit:cover; border-radius:6px;" onerror="this.onerror=null; this.parentElement.innerHTML='${esc(b.imageText)}';"/>`
+                : `${esc(b.imageText)}`;
+
             card.innerHTML = `
-                <div class="banner-preview-img">${b.imageText}</div>
+                <div class="banner-preview-img" style="overflow:hidden; display:flex; align-items:center; justify-content:center; background:#EDF4F0;">${previewHtml}</div>
                 <div class="banner-card-info">
-                    <span class="banner-card-title">${b.title}</span>
-                    <span class="banner-card-meta">CTA: <strong>${b.cta}</strong> | Link: ${b.url}</span>
-                    <span class="banner-card-meta">Hiệu lực: ${b.startDate} đến ${b.endDate}</span>
+                    <span class="banner-card-title">${esc(b.title)}</span>
+                    <span class="banner-card-meta">CTA: <strong>${esc(b.cta)}</strong> | Link: ${esc(b.url)}</span>
+                    <span class="banner-card-meta">Hiệu lực: ${esc(b.startDate)} đến ${esc(b.endDate)}</span>
                     ${alertTagHtml}
                 </div>
                 <div class="banner-card-actions">
                     <span class="admin-badge ${b.status === 'active' ? 'badge-active' : 'badge-neutral'}">${b.status === 'active' ? 'Đang bật' : 'Tạm tắt'}</span>
                     <div style="display: flex; gap: 6px;">
-                        <button type="button" class="banner-action-btn btn-edit-banner" data-id="${b.id}">Sửa</button>
-                        <button type="button" class="banner-action-btn btn-delete-banner" data-id="${b.id}">Xóa</button>
+                        <button type="button" class="banner-action-btn btn-edit-banner" data-id="${esc(b.id)}">Sửa</button>
+                        <button type="button" class="banner-action-btn btn-delete-banner" data-id="${esc(b.id)}">Xóa</button>
                         ${extendBtnHtml}
-                        <button type="button" class="banner-action-btn btn-toggle-banner ${b.status === 'active' ? 'is-pause' : 'is-enable'}" data-id="${b.id}">${b.status === 'active' ? 'Tắt' : 'Bật'}</button>
+                        <button type="button" class="banner-action-btn btn-toggle-banner ${b.status === 'active' ? 'is-pause' : 'is-enable'}" data-id="${esc(b.id)}">${b.status === 'active' ? 'Tắt' : 'Bật'}</button>
                     </div>
                 </div>
             `;
@@ -338,18 +359,22 @@
                 window._settingsVoucherPage = Number(btn.dataset.voucherPage);
                 renderVouchers();
             }));
-            prevBtn?.addEventListener('click', () => {
-                if (window._settingsVoucherPage > 1) {
-                    window._settingsVoucherPage -= 1;
-                    renderVouchers();
-                }
-            });
-            nextBtn?.addEventListener('click', () => {
-                if (window._settingsVoucherPage < totalVoucherPages) {
-                    window._settingsVoucherPage += 1;
-                    renderVouchers();
-                }
-            });
+            if (prevBtn) {
+                prevBtn.onclick = () => {
+                    if (window._settingsVoucherPage > 1) {
+                        window._settingsVoucherPage -= 1;
+                        renderVouchers();
+                    }
+                };
+            }
+            if (nextBtn) {
+                nextBtn.onclick = () => {
+                    if (window._settingsVoucherPage < totalVoucherPages) {
+                        window._settingsVoucherPage += 1;
+                        renderVouchers();
+                    }
+                };
+            }
         }
 
         tbody.innerHTML = '';
@@ -377,21 +402,22 @@
                 quotaDisplay = `<strong>${v.used}/${v.limit}</strong><span style="display:block; font-size:11.5px; color:#D97706; font-weight:600;">Còn ${v.limit - v.used} lượt</span>`;
             }
 
+            const esc = PawpalSettings.escapeHtml || (s => s);
             const tr = document.createElement('tr');
             if (rowAlertClass) tr.className = rowAlertClass;
 
             tr.innerHTML = `
-                <td><strong style="color: #236B48;">${v.code}</strong></td>
-                <td>${v.name}</td>
+                <td><strong style="color: #236B48;">${esc(v.code)}</strong></td>
+                <td>${esc(v.name)}</td>
                 <td>${v.type === 'percent' ? 'Giảm %' : 'Giảm tiền'}</td>
-                <td><span class="admin-badge badge-neutral">${v.target}</span></td>
+                <td><span class="admin-badge badge-neutral">${esc(v.target)}</span></td>
                 <td><strong>${discountDisp}</strong></td>
                 <td>${v.minOrder > 0 ? v.minOrder.toLocaleString('vi-VN') + ' đ' : 'Không'}</td>
                 <td>${quotaDisplay}</td>
-                <td>${v.validDate}</td>
+                <td>${esc(v.validDate)}</td>
                 <td>${statusBadge}</td>
                 <td style="text-align: center;">
-                    <button type="button" class="btn-dots-action btn-voucher-dots" data-code="${v.code}" title="Tác vụ">•••</button>
+                    <button type="button" class="btn-dots-action btn-voucher-dots" data-code="${esc(v.code)}" title="Tác vụ">•••</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -447,17 +473,18 @@
                 ? '<span class="admin-badge badge-active">Đang bật</span>'
                 : '<span class="admin-badge badge-neutral">Tạm tắt</span>';
 
+            const esc = PawpalSettings.escapeHtml || (s => s);
             item.innerHTML = `
                 <div class="notice-meta-line">
                     ${typeBadge}
-                    <span class="notice-date">${n.date}</span>
+                    <span class="notice-date">${esc(n.date)}</span>
                 </div>
-                <div class="notice-body-text">${n.content}</div>
+                <div class="notice-body-text">${esc(n.content)}</div>
                 <div class="notice-status-row">
                     ${statusBadge}
                     <div style="display: flex; gap: 8px;">
-                        <button type="button" class="btn-notice-action btn-toggle-notice" data-id="${n.id}">${n.isActive ? 'Tắt' : 'Bật'}</button>
-                        <button type="button" class="btn-notice-action btn-delete-notice" data-id="${n.id}">Xóa</button>
+                        <button type="button" class="btn-notice-action btn-toggle-notice" data-id="${esc(n.id)}">${n.isActive ? 'Tắt' : 'Bật'}</button>
+                        <button type="button" class="btn-notice-action btn-delete-notice" data-id="${esc(n.id)}">Xóa</button>
                     </div>
                 </div>
             `;
@@ -484,31 +511,35 @@
             }
         }
 
-        // Bật/tắt thông báo
+        // Bật/tắt thông báo (CFG-21: Rollback state khi lỗi)
         container.querySelectorAll('.btn-toggle-notice').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const id = btn.getAttribute('data-id');
                 const notice = notificationsList.find(i => String(i.id) === String(id));
                 if (!notice) return;
 
-                const newActive = !notice.isActive;
-                notice.isActive = newActive;
+                const oldActive = notice.isActive;
+                const newActive = !oldActive;
                 try {
+                    const updatedList = notificationsList.map(n => String(n.id) === String(id) ? { ...n, isActive: newActive } : n);
                     if (PawpalSettings.state?.systemConfig) {
-                        PawpalSettings.state.systemConfig.websiteNotices = notificationsList;
-                        await PawpalSettings.persistSystemConfig?.(PawpalSettings.state.systemConfig);
+                        const clonedCfg = JSON.parse(JSON.stringify(PawpalSettings.state.systemConfig));
+                        clonedCfg.websiteNotices = updatedList;
+                        await PawpalSettings.persistSystemConfig?.(clonedCfg);
                     }
+                    PawpalSettings.state.notificationsList = updatedList;
                     await logSystemAudit('UPDATE', 'notification', `Đổi trạng thái thông báo "${notice.content.substring(0, 30)}..." thành ${newActive ? 'Bật' : 'Tắt'}`);
                     renderNotifications();
                     showToast(`Đã ${newActive ? 'BẬT' : 'TẮT'} thông báo website!`, 'info');
                 } catch (e) {
                     console.error('[Settings] Lỗi cập nhật thông báo:', e);
+                    renderNotifications();
                     showToast('Không thể cập nhật thông báo: ' + (e.message || ''), 'danger');
                 }
             });
         });
 
-        // Xóa thông báo
+        // Xóa thông báo (CFG-21: Không mutate state trước khi DB commit thành công)
         container.querySelectorAll('.btn-delete-notice').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
@@ -521,16 +552,18 @@
                     onConfirm: async () => {
                         try {
                             const updatedList = notificationsList.filter(i => String(i.id) !== String(id));
-                            PawpalSettings.state.notificationsList = updatedList;
                             if (PawpalSettings.state?.systemConfig) {
-                                PawpalSettings.state.systemConfig.websiteNotices = updatedList;
-                                await PawpalSettings.persistSystemConfig?.(PawpalSettings.state.systemConfig);
+                                const clonedCfg = JSON.parse(JSON.stringify(PawpalSettings.state.systemConfig));
+                                clonedCfg.websiteNotices = updatedList;
+                                await PawpalSettings.persistSystemConfig?.(clonedCfg);
                             }
+                            PawpalSettings.state.notificationsList = updatedList;
                             await logSystemAudit('DELETE', 'notification', `Xóa thông báo website: "${(notice?.content || id).substring(0, 30)}..."`);
                             renderNotifications();
                             showToast('Đã xóa thông báo website thành công!', 'success');
                         } catch (e) {
                             console.error('[Settings] Lỗi xóa thông báo:', e);
+                            renderNotifications();
                             showToast('Không thể xóa thông báo: ' + (e.message || ''), 'danger');
                         }
                     }
@@ -821,6 +854,8 @@
             if (!title || !imageUrl || !startDate || !endDate) { showToast('Vui lòng nhập đủ tiêu đề, ảnh và thời gian Banner.', 'warning'); return; }
             const isValidImageUrl = /^(https?:\/\/|\/)[^\s]+$/i.test(imageUrl);
             if (!isValidImageUrl) { showToast('URL ảnh Banner không hợp lệ. Hãy dùng đường dẫn bắt đầu bằng http://, https:// hoặc /.', 'warning'); return; }
+            const isValidCtaUrl = /^(https?:\/\/|\/)[^\s]+$/i.test(url) && !/javascript:/i.test(url);
+            if (!isValidCtaUrl) { showToast('URL liên kết CTA không hợp lệ. Vui lòng nhập đường dẫn an toàn (bắt đầu bằng / hoặc https://).', 'warning'); return; }
             if (endDate < startDate) { showToast('Ngày kết thúc phải sau ngày bắt đầu.', 'warning'); return; }
             try {
                 const bannersList = PawpalSettings.state?.bannersList || [];
@@ -940,7 +975,7 @@
             }
         });
 
-        // Voucher Action Menu events
+        // Voucher Action Menu events (CFG-30: Verify rows affected qua .select('id'))
         document.getElementById('btnActionExtendQuota')?.addEventListener('click', async () => {
             const currentCode = PawpalSettings.state?.currentActiveVoucherCode;
             if (!currentCode) return;
@@ -948,16 +983,17 @@
             const voucher = vouchersList.find(v => v.code === currentCode);
             if (!voucher) return;
 
-            const newLimit = voucher.limit + 50;
+            const newLimit = (voucher.limit || 0) + 50;
             try {
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
-                const { error } = await client.from('voucher').update({
+                const { data, error } = await client.from('voucher').update({
                     max_usage: newLimit,
                     is_active: true,
                     updated_at: new Date().toISOString()
-                }).eq('voucher_code', currentCode);
+                }).eq('voucher_code', currentCode).select('id');
                 if (error) throw error;
+                if (!data || data.length === 0) throw new Error('Không tìm thấy voucher hoặc không có quyền thao tác.');
                 await logSystemAudit('UPDATE', 'voucher', `Gia hạn quota Voucher ${currentCode} thêm 50 lượt (Tổng: ${newLimit})`);
                 closeVoucherActionMenu();
                 await PawpalSettings.loadSettingsModuleData?.();
@@ -981,11 +1017,12 @@
             try {
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
-                const { error } = await client.from('voucher').update({
+                const { data, error } = await client.from('voucher').update({
                     is_active: newActive,
                     updated_at: new Date().toISOString()
-                }).eq('voucher_code', currentCode);
+                }).eq('voucher_code', currentCode).select('id');
                 if (error) throw error;
+                if (!data || data.length === 0) throw new Error('Không tìm thấy voucher hoặc không có quyền thao tác.');
                 await logSystemAudit('UPDATE', 'voucher', `Đổi trạng thái Voucher ${currentCode} thành ${newActive ? 'Hoạt động' : 'Tạm dừng'}`);
                 closeVoucherActionMenu();
                 await PawpalSettings.loadSettingsModuleData?.();
@@ -1010,8 +1047,9 @@
                     try {
                         const client = getSupabaseClient();
                         if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
-                        const { error } = await client.from('voucher').delete().eq('voucher_code', currentCode);
+                        const { data, error } = await client.from('voucher').delete().eq('voucher_code', currentCode).select('id');
                         if (error) throw error;
+                        if (!data || data.length === 0) throw new Error('Không tìm thấy voucher hoặc không có quyền thao tác.');
                         await logSystemAudit('DELETE', 'voucher', `Xóa Voucher ${currentCode}`);
                         closeVoucherActionMenu();
                         await PawpalSettings.loadSettingsModuleData?.();
@@ -1044,6 +1082,18 @@
             const pointVal = document.getElementById('inputCfgPointValue')?.value || '100';
             const regPts = document.getElementById('inputCfgRegisterPoints')?.value || '50';
 
+            // CFG-25: Kiểm tra số nguyên dương an toàn trước khi mở modal
+            const parsedVal = parseInt(pointVal, 10);
+            const parsedReg = parseInt(regPts, 10);
+            if (!Number.isSafeInteger(parsedVal) || parsedVal <= 0 || parsedVal > 1000000) {
+                showToast('Tỷ lệ quy đổi điểm phải là số nguyên dương hợp lệ (1 - 1.000.000 VNĐ).', 'warning');
+                return;
+            }
+            if (!Number.isSafeInteger(parsedReg) || parsedReg < 0 || parsedReg > 100000) {
+                showToast('Điểm thưởng đăng ký phải là số nguyên không âm (0 - 100.000 điểm).', 'warning');
+                return;
+            }
+
             PawpalSettings.openImpactConfirmationModal?.({
                 title: 'Chính sách Điểm thưởng PawPoints',
                 desc: 'Thay đổi tỷ lệ quy đổi điểm và điểm thưởng thành viên.',
@@ -1052,27 +1102,28 @@
                     { name: 'Phân hệ Bán hàng', note: 'Áp dụng tỷ lệ trừ tiền trực tiếp vào hóa đơn POS và Web Checkout' }
                 ],
                 onConfirm: async () => {
-                    const parsedVal = parseInt(pointVal, 10);
                     const dispPv = document.getElementById('dispPointValue');
                     if (dispPv) dispPv.textContent = `1 điểm = ${parsedVal.toLocaleString('vi-VN')} VNĐ`;
                     const kpiEl = document.getElementById('kpiPointRate');
                     if (kpiEl) kpiEl.textContent = `1đ = ${parsedVal.toLocaleString('vi-VN')}đ`;
                     const dispReg = document.getElementById('dispRegisterPoints');
-                    if (dispReg) dispReg.textContent = `+${regPts} điểm`;
+                    if (dispReg) dispReg.textContent = `+${parsedReg} điểm`;
                     PawpalSettings.closeModal?.('pawpointsModalOverlay');
 
                     if (PawpalSettings.state?.systemConfig) {
                         PawpalSettings.state.systemConfig.pawpointsPolicy = {
                             pointValueVnd: parsedVal,
-                            registerBonus: parseInt(regPts, 10)
+                            registerBonus: parsedReg
                         };
                         await PawpalSettings.persistSystemConfig?.(PawpalSettings.state.systemConfig);
+                        // CFG-24: Đánh dấu version chính sách để các phân hệ Bán hàng & Khách hàng làm mới cache
+                        localStorage.setItem('pawpal_pawpoints_policy_version', Date.now().toString());
                     }
 
-                    await logSystemAudit('UPDATE', 'pawpoints', `Cập nhật PawPoints: 1 điểm = ${parsedVal.toLocaleString('vi-VN')} VNĐ, Thưởng đăng ký +${regPts} điểm`);
+                    await logSystemAudit('UPDATE', 'pawpoints', `Cập nhật PawPoints: 1 điểm = ${parsedVal.toLocaleString('vi-VN')} VNĐ, Thưởng đăng ký +${parsedReg} điểm`);
                     await PawpalSettings.loadSettingsModuleData?.();
                     PawpalSettings.subtabs.audit?.renderAuditLogs?.();
-                    showToast('Đã lưu chính sách PawPoints và đồng bộ thành công sang phân hệ Khách hàng và Bán hàng!', 'success');
+                    showToast('Đã lưu chính sách PawPoints vào cấu hình hệ thống!', 'success');
                 }
             });
         });
@@ -1086,6 +1137,7 @@
         document.getElementById('btnCancelNoticeModal')?.addEventListener('click', () => PawpalSettings.closeModal?.('notificationModalOverlay'));
         document.getElementById('btnDismissNoticeModal')?.addEventListener('click', () => PawpalSettings.closeModal?.('notificationModalOverlay'));
 
+        // CFG-20: Lưu notice fail-closed và toast trung thực
         document.getElementById('btnSaveNotice')?.addEventListener('click', async () => {
             const content = document.getElementById('inputNoticeContent')?.value.trim();
             if (!content) {
@@ -1105,22 +1157,23 @@
                     isActive: statusValue === 'active'
                 };
 
-                const currentList = Array.isArray(PawpalSettings.state?.notificationsList) ? PawpalSettings.state.notificationsList : [];
+                const currentList = Array.isArray(PawpalSettings.state?.notificationsList) ? [...PawpalSettings.state.notificationsList] : [];
                 currentList.unshift(newNotice);
-                PawpalSettings.state.notificationsList = currentList;
 
                 if (PawpalSettings.state?.systemConfig) {
-                    PawpalSettings.state.systemConfig.websiteNotices = currentList;
-                    await PawpalSettings.persistSystemConfig?.(PawpalSettings.state.systemConfig);
+                    const clonedCfg = JSON.parse(JSON.stringify(PawpalSettings.state.systemConfig));
+                    clonedCfg.websiteNotices = currentList;
+                    await PawpalSettings.persistSystemConfig?.(clonedCfg);
                 }
 
+                PawpalSettings.state.notificationsList = currentList;
                 await logSystemAudit('INSERT', 'notification', `Thêm thông báo ${typeValue === 'popup' ? 'Popup' : 'Top-bar'}: "${content.substring(0, 50)}..."`);
                 const contentInput = document.getElementById('inputNoticeContent');
                 if (contentInput) contentInput.value = '';
 
                 PawpalSettings.closeModal?.('notificationModalOverlay');
                 renderNotifications();
-                showToast('Đã lưu và đồng bộ thông báo mới sang Website!', 'success');
+                showToast('Đã lưu cấu hình thông báo website thành công!', 'success');
             } catch (e) {
                 console.error('[Settings] Lỗi thêm thông báo:', e);
                 showToast('Lỗi khi thêm thông báo: ' + (e.message || ''), 'danger');

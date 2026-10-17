@@ -9,7 +9,7 @@
     }
 
     const { helpers, state } = PawpalOrders;
-    const { formatVND, showToast, matchSearch, addStockLog, persistProductsData, syncOrdersAndProductsFromSupabase } = helpers;
+    const { formatVND, formatDateTime, showToast, matchSearch, addStockLog, persistProductsData, syncOrdersAndProductsFromSupabase } = helpers;
 
     const PRODUCTS_PER_PAGE = 10;
     let productsCurrentPage = parseInt(sessionStorage.getItem('pawpal_admin_products_page') || '1', 10);
@@ -118,21 +118,22 @@
                 ? `<span class="alert-indicator text-${p.stock === 0 ? 'danger' : 'warning'}">• ${p.stock === 0 ? 'Hết hàng' : 'Cần nhập hàng'}</span>`
                 : '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>';
 
+            const esc = window.PawpalOrdersModule?.escapeHtml || (s => String(s || ''));
             const imgSrc = p.image || (Array.isArray(p.images) ? p.images[0] : (typeof p.images === 'string' ? p.images.split(',')[0].trim() : '/assets/images/shop/products/tp-hat-01.png'));
 
             return `
                 <tr class="${rowAlertClass}">
-                    <td style="font-family: monospace; font-weight: 600; color: #236B48;">${p.sku}</td>
+                    <td style="font-family: monospace; font-weight: 600; color: #236B48;">${esc(p.sku)}</td>
                     <td>
                         <div class="prod-item-row">
-                            <img src="${imgSrc}" alt="${p.name}" class="prod-thumb" onerror="this.src='/assets/images/shop/products/tp-hat-01.png'">
+                            <img src="${esc(imgSrc)}" alt="${esc(p.name)}" class="prod-thumb" onerror="this.src='/assets/images/shop/products/tp-hat-01.png'">
                             <div class="prod-info-cell">
-                                <a href="javascript:void(0)" class="prod-title" onclick="PawpalOrdersModule.openEditProductModal('${p.sku}')">${p.name}</a>
-                                <span class="prod-sku-tag">Quy cách: ${p.spec || 'Tiêu chuẩn'}</span>
+                                <a href="javascript:void(0)" class="prod-title btn-open-edit-prod" data-sku="${esc(p.sku)}">${esc(p.name)}</a>
+                                <span class="prod-sku-tag">Quy cách: ${esc(p.spec || 'Tiêu chuẩn')}</span>
                             </div>
                         </div>
                     </td>
-                    <td>${p.category}</td>
+                    <td>${esc(p.category)}</td>
                     <td>—</td>
                     <td>
                         <div style="font-weight: 600; color: var(--text-heading);">${formatVND(p.price)}</div>
@@ -140,18 +141,35 @@
                     </td>
                     <td>${Number(p.reviewCount)>0 ? Number(p.rating).toFixed(1) : "—"}</td>
                     <td>
-                        <div style="font-weight: 700; font-size: 13.5px;">${p.stock} <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">${p.unit || 'món'}</span></div>
+                        <div style="font-weight: 700; font-size: 13.5px;">${p.stock} <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">${esc(p.unit || 'món')}</span></div>
                         <div class="sub-meta-text">Ngưỡng: ${p.minStock}</div>
                     </td>
                     <td>—</td><td>—</td>
                     <td>${alertDot}</td>
                     <td>${stockBadge}</td>
                     <td style="text-align: center;">
-                        <button type="button" class="btn-action-trigger" onclick="PawpalOrdersModule.openStockActionMenu(event, '${p.sku}')">•••</button>
+                        <button type="button" class="btn-action-trigger btn-stock-action-trigger" data-sku="${esc(p.sku)}">•••</button>
                     </td>
                 </tr>
             `;
         }).join('');
+
+        tbody.querySelectorAll('.btn-open-edit-prod').forEach(el => {
+            el.addEventListener('click', () => {
+                const s = el.getAttribute('data-sku');
+                if (window.PawpalOrdersModule?.openEditProductModal) {
+                    window.PawpalOrdersModule.openEditProductModal(s);
+                }
+            });
+        });
+        tbody.querySelectorAll('.btn-stock-action-trigger').forEach(el => {
+            el.addEventListener('click', (e) => {
+                const s = el.getAttribute('data-sku');
+                if (window.PawpalOrdersModule?.openStockActionMenu) {
+                    window.PawpalOrdersModule.openStockActionMenu(e, s);
+                }
+            });
+        });
 
         renderProductsPagination(totalPages);
     }
@@ -658,7 +676,7 @@
                 const existingProd = productsList[prodIndex];
                 const oldStock = existingProd.stock || 0;
 
-                productsList[prodIndex] = {
+                const updatedProdObj = {
                     ...existingProd,
                     sku: sku,
                     name: name,
@@ -692,24 +710,9 @@
                     variants: isMultiple ? variants : []
                 };
 
-                if (stock !== oldStock) {
-                    const diff = stock - oldStock;
-                    addStockLog({
-                        sku: sku,
-                        name: name,
-                        type: diff > 0 ? 'IN' : 'OUT',
-                        typeLabel: diff > 0 ? 'Điều chỉnh tăng tồn kho trực tiếp' : 'Điều chỉnh giảm tồn kho trực tiếp',
-                        change: diff > 0 ? `+${diff}` : `${diff}`,
-                        beforeStock: oldStock,
-                        afterStock: stock,
-                        refCode: 'ADJ-' + sku,
-                        staff: 'Quản trị viên'
-                    });
-                }
-
                 if (client && existingProd.id) {
                     try {
-                        await client.from('product').update({
+                        const { error: pErr } = await client.from('product').update({
                             sku: sku,
                             product_name: name,
                             unit: unit,
@@ -724,16 +727,39 @@
                             specs: spec,
                             badge: badge || null
                         }).eq('id', existingProd.id);
+                        if (pErr) throw pErr;
 
                         if (stock !== oldStock) {
-                            await client.from('inventory').update({
+                            const { error: invErr } = await client.from('inventory').update({
                                 quantity_in_stock: stock,
-                                minimum_stock: minStock
+                                minimum_stock: minStock,
+                                last_updated_at: new Date().toISOString()
                             }).eq('product_id', existingProd.id);
+                            if (invErr) throw invErr;
                         }
                     } catch (errUpProd) {
-                        console.warn('Lỗi khi cập nhật sản phẩm lên Supabase:', errUpProd);
+                        console.error('Lỗi khi cập nhật sản phẩm lên Supabase:', errUpProd);
+                        showToast(`Không thể cập nhật sản phẩm: ${errUpProd?.message || 'Lỗi CSDL'}`, 'danger');
+                        return;
                     }
+                }
+
+                // CSDL cập nhật thành công mới cập nhật bộ nhớ cục bộ
+                productsList[prodIndex] = updatedProdObj;
+
+                if (stock !== oldStock) {
+                    const diff = stock - oldStock;
+                    addStockLog({
+                        sku: sku,
+                        name: name,
+                        type: diff > 0 ? 'IN' : 'OUT',
+                        typeLabel: diff > 0 ? 'Điều chỉnh tăng tồn kho trực tiếp' : 'Điều chỉnh giảm tồn kho trực tiếp',
+                        change: diff > 0 ? `+${diff}` : `${diff}`,
+                        beforeStock: oldStock,
+                        afterStock: stock,
+                        refCode: 'ADJ-' + sku,
+                        staff: 'Quản trị viên'
+                    });
                 }
 
                 persistProductsData();
@@ -774,11 +800,17 @@
                         if (pErr) throw pErr;
                         if (newP && newP.id) {
                             createdProdDbId = newP.id;
-                            await client.from('inventory').insert({
+                            const { error: invErr } = await client.from('inventory').insert({
                                 product_id: newP.id,
                                 quantity_in_stock: stock,
                                 minimum_stock: minStock
                             });
+                            if (invErr) {
+                                // Rollback: xóa product vừa tạo nếu insert inventory thất bại
+                                console.error('Lỗi khi khởi tạo inventory, đang rollback product:', invErr);
+                                await client.from('product').delete().eq('id', newP.id);
+                                throw invErr;
+                            }
                         }
                     } catch (errAddProdDb) {
                         console.error('Lỗi khi thêm sản phẩm mới vào Supabase:', errAddProdDb);
@@ -838,7 +870,7 @@
                     });
                 }
 
-                await syncOrdersAndProductsFromSupabase();
+                await syncOrdersAndProductsFromSupabase({ force: true });
                 document.getElementById('modalAddProduct')?.classList.remove('active');
                 renderProductsTable();
                 showToast(`Đã thêm thành công sản phẩm mới "${name}" (SKU: ${sku}) đầy đủ thông số!`, 'success');
@@ -866,50 +898,56 @@
             } else if (opType === 'SET') {
                 prod.stock = Math.max(0, qty);
             }
-            const afterStock = prod.stock;
-
-            if (newPrice && parseInt(newPrice, 10) > 0) {
-                prod.price = parseInt(newPrice, 10);
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                showToast('Chưa kết nối cơ sở dữ liệu Supabase!', 'danger');
+                return;
             }
 
-            prod.status = newStatus;
-            persistProductsData();
-
-            const changeStr = (opType === 'ADD' ? `+${qty}` : opType === 'SUB' ? `-${qty}` : `=${qty}`);
-            addStockLog({
-                sku: prod.sku,
-                name: prod.name,
-                type: 'ADJUST',
-                typeLabel: reason,
-                change: changeStr,
-                beforeStock: beforeStock,
-                afterStock: afterStock,
-                refCode: 'ADJ-' + Date.now().toString().slice(-4),
-                staff: 'Quản trị viên'
-            });
-
-            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (client && prod.id) {
-                try {
-                    await client.from('inventory').update({
+            try {
+                if (prod.id) {
+                    const { error: invErr } = await client.from('inventory').update({
                         quantity_in_stock: afterStock,
                         last_updated_at: new Date().toISOString()
                     }).eq('product_id', prod.id);
+                    if (invErr) throw invErr;
 
                     const updateProdPayload = {};
                     if (newPrice && parseInt(newPrice, 10) > 0) updateProdPayload.sale_price = parseInt(newPrice, 10);
                     if (newStatus) updateProdPayload.status = (newStatus === 'Còn hàng' || newStatus === 'Đang bán') ? 'ACTIVE' : 'INACTIVE';
                     if (Object.keys(updateProdPayload).length > 0) {
-                        await client.from('product').update(updateProdPayload).eq('id', prod.id);
+                        const { error: prodErr } = await client.from('product').update(updateProdPayload).eq('id', prod.id);
+                        if (prodErr) throw prodErr;
                     }
-                } catch (errAdjDb) {
-                    console.warn('Lỗi khi cập nhật điều chỉnh tồn kho lên Supabase:', errAdjDb);
                 }
-            }
 
-            document.getElementById('modalAdjustStock')?.classList.remove('active');
-            renderProductsTable();
-            showToast(`Đã cập nhật tồn kho cho sản phẩm ${sku}! Số lượng tồn mới: ${prod.stock} (Lý do: ${reason}).`, 'success');
+                prod.stock = afterStock;
+                if (newPrice && parseInt(newPrice, 10) > 0) {
+                    prod.price = parseInt(newPrice, 10);
+                }
+                prod.status = newStatus;
+                persistProductsData();
+
+                const changeStr = (opType === 'ADD' ? `+${qty}` : opType === 'SUB' ? `-${qty}` : `=${qty}`);
+                addStockLog({
+                    sku: prod.sku,
+                    name: prod.name,
+                    type: 'ADJUST',
+                    typeLabel: reason,
+                    change: changeStr,
+                    beforeStock: beforeStock,
+                    afterStock: afterStock,
+                    refCode: 'ADJ-' + Date.now().toString().slice(-4),
+                    staff: 'Quản trị viên'
+                });
+
+                document.getElementById('modalAdjustStock')?.classList.remove('active');
+                renderProductsTable();
+                showToast(`Đã cập nhật tồn kho cho sản phẩm ${sku}! Số lượng tồn mới: ${prod.stock} (Lý do: ${reason}).`, 'success');
+            } catch (errAdjDb) {
+                console.error('Lỗi khi cập nhật điều chỉnh tồn kho lên Supabase:', errAdjDb);
+                showToast(`Điều chỉnh tồn kho thất bại: ${errAdjDb?.message || 'Lỗi CSDL'}`, 'danger');
+            }
         });
 
         // Nút mở modal nhập hàng NCC
@@ -1019,6 +1057,20 @@
                 if (prod && prod.stock !== actualCount) {
                     const before = prod.stock;
                     const diff = actualCount - before;
+
+                    if (client && prod.id) {
+                        try {
+                            const { error: invErr } = await client.from('inventory').update({
+                                quantity_in_stock: actualCount,
+                                last_updated_at: new Date().toISOString()
+                            }).eq('product_id', prod.id);
+                            if (invErr) throw invErr;
+                        } catch (errStkDb) {
+                            console.error('[Stocktake] Lỗi khi cân đối kiểm kê sản phẩm ' + prod.sku + ':', errStkDb);
+                            continue;
+                        }
+                    }
+
                     prod.stock = actualCount;
                     updatedCount++;
 
@@ -1033,17 +1085,6 @@
                         refCode: auditCode,
                         staff: 'Quản trị viên'
                     });
-
-                    if (client && prod.id) {
-                        try {
-                            await client.from('inventory').update({
-                                quantity_in_stock: prod.stock,
-                                last_updated_at: new Date().toISOString()
-                            }).eq('product_id', prod.id);
-                        } catch (errStkDb) {
-                            console.warn('Lỗi khi cân đối kiểm kê lên Supabase:', errStkDb);
-                        }
-                    }
                 }
             }
 
@@ -1507,7 +1548,7 @@
     let activeReviewsSku = null;
     let activeReviewsFilter = 'ALL';
 
-    window.PawpalOrdersModule.openProductReviewsModal = function(sku) {
+    window.PawpalOrdersModule.openProductReviewsModal = async function(sku) {
         activeReviewsSku = sku;
         activeReviewsFilter = 'ALL';
         const prod = (state.products || []).find(p => p.sku === sku);
@@ -1520,21 +1561,25 @@
         const descEl = document.getElementById('prodReviewsScoreDesc');
         const totalCountEl = document.getElementById('prodReviewsCountTotal');
 
-        const score = prod.rating ? Number(prod.rating).toFixed(1) : '5.0';
         const count = prod.reviewCount || 0;
+        const score = (prod.rating && count > 0) ? Number(prod.rating).toFixed(1) : null;
 
-        if (bigScoreEl) bigScoreEl.textContent = `${score} ★`;
+        if (bigScoreEl) bigScoreEl.textContent = score ? `${score} ★` : '—';
         if (descEl) {
-            const numScore = parseFloat(score);
-            descEl.textContent = numScore >= 4.8 ? 'Cực kỳ hài lòng' : numScore >= 4.0 ? 'Rất hài lòng' : numScore >= 3.0 ? 'Hài lòng' : 'Cần cải thiện';
+            if (!score || count === 0) {
+                descEl.textContent = 'Chưa có đánh giá';
+            } else {
+                const numScore = parseFloat(score);
+                descEl.textContent = numScore >= 4.8 ? 'Cực kỳ hài lòng' : numScore >= 4.0 ? 'Rất hài lòng' : numScore >= 3.0 ? 'Hài lòng' : 'Cần cải thiện';
+            }
         }
-        if (totalCountEl) totalCountEl.textContent = `(${count > 0 ? count : 0} nhận xét)`;
+        if (totalCountEl) totalCountEl.textContent = `(${count} nhận xét)`;
 
-        PawpalOrdersModule.renderProductReviewsModalContent(sku);
+        await PawpalOrdersModule.renderProductReviewsModalContent(sku);
         document.getElementById('modalProductReviews')?.classList.add('active');
     };
 
-    window.PawpalOrdersModule.renderProductReviewsModalContent = function(sku) {
+    window.PawpalOrdersModule.renderProductReviewsModalContent = async function(sku) {
         const prod = (state.products || []).find(p => p.sku === sku);
         if (!prod) return;
 
@@ -1546,45 +1591,33 @@
             if (saved) reviews = JSON.parse(saved);
         } catch (e) {}
 
-        if (reviews.length === 0) {
-            reviews = [
-                {
-                    id: 'REV-01',
-                    customerName: 'Trần Thị Mai Phương',
-                    avatar: 'M',
-                    date: '24/06/2026',
-                    rating: 5,
-                    variant: prod.hasVariants && prod.variants && prod.variants.length > 0 ? prod.variants[0].name : 'Tiêu chuẩn',
-                    comment: `Sản phẩm ${prod.name} dùng cực kỳ ưng ý! Bé cún nhà mình ăn ngon miệng, tiêu hóa rất êm và không bị dị ứng. Đóng gói cẩn thận, giao nhanh chỉ 1 tiếng.`,
-                    images: [prodImgPath],
-                    reply: 'PawPal cảm ơn chị Mai Phương đã tin dùng sản phẩm! Chúc bé cưng luôn khỏe mạnh và mau lớn ạ.'
-                },
-                {
-                    id: 'REV-02',
-                    customerName: 'Nguyễn Hoàng Long',
-                    avatar: 'L',
-                    date: '20/06/2026',
-                    rating: 5,
-                    variant: prod.hasVariants && prod.variants && prod.variants.length > 1 ? prod.variants[1].name : 'Tiêu chuẩn',
-                    comment: 'Hàng chính hãng chuẩn xịn, hạn sử dụng còn rất xa. Shop tư vấn nhiệt tình, sẽ ủng hộ dài lâu.',
-                    images: [],
-                    reply: ''
-                },
-                {
-                    id: 'REV-03',
-                    customerName: 'Phạm Thu Thảo',
-                    avatar: 'T',
-                    date: '15/06/2026',
-                    rating: 4,
-                    variant: prod.hasVariants && prod.variants && prod.variants.length > 0 ? prod.variants[0].name : 'Tiêu chuẩn',
-                    comment: 'Chất lượng tốt, mùi thơm hấp dẫn. Chỉ tiếc là bên vận chuyển giao hơi trễ 1 chút so với hẹn, nhưng bù lại đóng gói bọc xốp kỹ càng.',
-                    images: [prodImgPath],
-                    reply: 'PawPal chân thành xin lỗi chị Thảo về trải nghiệm giao hàng. Shop đã làm việc lại với đơn vị vận chuyển để tối ưu tốc độ giao nhanh hơn ạ!'
-                }
-            ];
+        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (client && prod.id && (!reviews || reviews.length === 0)) {
             try {
-                sessionStorage.setItem(storageKey, JSON.stringify(reviews));
-            } catch (e) {}
+                const { data: dbReviews, error: revErr } = await client
+                    .from('review')
+                    .select('*, customer:customer_id(full_name, phone_number)')
+                    .eq('product_id', prod.id)
+                    .order('created_at', { ascending: false });
+                if (!revErr && Array.isArray(dbReviews) && dbReviews.length > 0) {
+                    reviews = dbReviews.map(r => ({
+                        id: r.id,
+                        customerName: r.customer?.full_name || 'Khách hàng',
+                        avatar: (r.customer?.full_name || 'K').charAt(0).toUpperCase(),
+                        date: r.created_at ? formatDateTime(new Date(r.created_at)).split(' ')[0] : '',
+                        rating: r.rating || 5,
+                        variant: r.variant_name || 'Tiêu chuẩn',
+                        comment: r.comment || r.content || '',
+                        images: r.images || [],
+                        reply: r.shop_reply || ''
+                    }));
+                    try {
+                        sessionStorage.setItem(storageKey, JSON.stringify(reviews));
+                    } catch (e) {}
+                }
+            } catch (errFetchRev) {
+                console.warn('Lỗi tải đánh giá từ Supabase:', errFetchRev);
+            }
         }
 
         const filterRow = document.getElementById('prodReviewsStarFilterRow');
@@ -1614,7 +1647,7 @@
         if (!container) return;
 
         if (displayReviews.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 13px;">Không có nhận xét nào phù hợp với bộ lọc đã chọn.</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 36px 20px; color: var(--text-muted); font-size: 13px;">Chưa có nhận xét hoặc đánh giá nào cho sản phẩm này.</div>';
             return;
         }
 
@@ -1683,9 +1716,15 @@
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (client && reviewId && reviewId.length > 20) {
             try {
-                await client.from('review').update({ shop_reply: replyText }).eq('id', reviewId);
+                const { error: revErr } = await client.from('review').update({ shop_reply: replyText }).eq('id', reviewId);
+                if (revErr) {
+                    showToast('Không thể lưu phản hồi: ' + (revErr.message || 'Lỗi CSDL'), 'danger');
+                    return;
+                }
             } catch (errRev) {
-                console.warn('Lỗi khi lưu phản hồi đánh giá lên Supabase:', errRev);
+                console.error('Lỗi khi lưu phản hồi đánh giá lên Supabase:', errRev);
+                showToast('Không thể kết nối CSDL để gửi phản hồi.', 'danger');
+                return;
             }
         }
 
@@ -1696,12 +1735,12 @@
             if (target) {
                 target.reply = replyText;
                 sessionStorage.setItem(storageKey, JSON.stringify(reviews));
-                showToast('Đã đăng phản hồi của cửa hàng thành công!', 'success');
-                PawpalOrdersModule.renderProductReviewsModalContent(sku);
             }
         } catch (e) {
             console.error(e);
         }
+        showToast('Đã đăng phản hồi của cửa hàng thành công!', 'success');
+        PawpalOrdersModule.renderProductReviewsModalContent(sku);
     };
 
     window.PawpalOrdersModule.viewProductOnStorefront = function() {

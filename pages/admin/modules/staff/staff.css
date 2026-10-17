@@ -6,13 +6,13 @@
     gap: 16px;
 }
 
-.subtab-content {
+.staff-module .subtab-content {
     display: none;
     flex-direction: column;
     gap: 16px;
 }
 
-.subtab-content.active {
+.staff-module .subtab-content.active {
     display: flex;
 }
 

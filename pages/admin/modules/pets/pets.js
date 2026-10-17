@@ -233,19 +233,26 @@
                     }
                 };
                 const loadWeightHistory = async () => {
-                    const request = client.from('pet_weight_history').select('id, pet_id, weight, measured_at, recorded_by_name, created_at');
-                    const timeout = new Promise(resolve => setTimeout(() => resolve({ data: [], error: { message: 'Lịch sử cân nặng chưa phản hồi kịp thời.' } }), 5000));
+                    const request = client.from('pet_weight_history').select('id, pet_id, weight, measured_at, recorded_by_name, created_at').order('measured_at', { ascending: false });
+                    const timeout = new Promise(resolve => setTimeout(() => resolve({ data: [], error: { message: 'Lịch sử cân nặng chưa phản hồi kịp thời do quá hạn 5s.' } }), 5000));
                     return Promise.race([request, timeout]);
                 };
-                // Tải song song 100% tất cả bảng dữ liệu (Triệt tiêu hoàn toàn Waterfall)
+                // [P-16] Tải song song dữ liệu và phân tách rõ lỗi timeout cân nặng
                 const [custAccRes, custProfRes, apptsRes, careLogsRes, petsRes, weightHistoryRes] = await Promise.all([
                     client.from('customer').select('id, email, phone_main, account_status'),
                     client.from('customer_profile').select('id, customer_id, full_name, gender'),
-                    client.from('appointment').select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_time, appointment_status, total_price, service:service_id(service_name), staff:staff_id(full_name)').limit(500),
+                    client.from('appointment').select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_time, appointment_status, total_price, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false }).limit(2000),
                     loadCareLogs(),
                     client.from('pet_profile').select('id, customer_id, pet_code, pet_name, avatar_url, species, breed, gender, date_of_birth, color, routine, weight, vaccination_history, allergy, status, created_at').order('created_at', { ascending: false }),
-                    loadWeightHistory().catch(() => ({ data: [] }))
+                    loadWeightHistory().catch((err) => ({ data: [], error: err }))
                 ]);
+
+                PawpalPets.state.weightTimeout = Boolean(weightHistoryRes.error);
+                PawpalPets.state.weightLoadError = weightHistoryRes.error ? weightHistoryRes.error.message : null;
+                if (weightHistoryRes.error) {
+                    console.warn('[PawpalPets] Lỗi tải cân nặng:', weightHistoryRes.error.message);
+                }
+
                 for (const result of [custAccRes, custProfRes, apptsRes, careLogsRes, petsRes]) {
                     if (result.error) throw result.error;
                 }
@@ -344,7 +351,7 @@
                     const speciesNameMap = { 'dog': 'Chó', 'cat': 'Mèo', 'rabbit': 'Thỏ', 'other': 'Khác' };
 
                     petsRes.data.forEach((p, idx) => {
-                        const code = p.pet_code || `PET-${String(idx + 1).padStart(3, '0')}`;
+                        const code = p.pet_code || (p.id ? `PET-${p.id.replace(/-/g, '').slice(0, 8).toUpperCase()}` : `PET-${String(idx + 1).padStart(3, '0')}`);
                         const spec = (p.species || 'dog').toLowerCase();
                         // Không đưa mã số/giá trị placeholder vào tên giống hiển thị.
                         const rawBreed = String(p.breed || '').trim();
@@ -393,13 +400,13 @@
                             species: spec,
                             speciesBreed: specBreed,
                             breed: br,
-                            gender: (p.gender === 'FEMALE' || p.gender === 'female' || p.gender === 'Cái') ? 'Cái' : 'Đực',
+                            gender: (p.gender === 'FEMALE' || p.gender === 'female' || p.gender === 'Cái') ? 'Cái' : ((p.gender === 'MALE' || p.gender === 'male' || p.gender === 'Đực') ? 'Đực' : 'Chưa rõ'),
                             weight: Number.isFinite(wNum) && wNum > 0 ? `${wNum} kg` : 'Chưa cập nhật',
                             weightNum: wNum,
                             dob: dobFormatted,
                             dobRaw: p.date_of_birth || '',
                             color: p.color || 'Chưa cập nhật',
-                            allergy: allg || 'Không',
+                            allergy: allg || 'Không ghi nhận',
                             allergies: allg,
                             notes: routine || '',
                             groomerNotes: routine || '',
@@ -438,6 +445,23 @@
     }
     PawpalPets.loadPetsModuleData = loadPetsModuleData;
 
+    PawpalPets.getPet = function(idOrCode) {
+        if (!idOrCode) return null;
+        const db = PawpalPets.state?.petsData || {};
+        if (db[idOrCode]) return db[idOrCode];
+        return Object.values(db).find(p => p.rawId === idOrCode || p.code === idOrCode || p.id === idOrCode) || null;
+    };
+
+    PawpalPets.escapeHtml = function(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
+
     // Quản lý Header Subtabs & Breadcrumb
     function updateBreadcrumb(petName) {
         if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Thú cưng') return;
@@ -447,7 +471,7 @@
         if (petName) {
             deepBreadcrumbEl.innerHTML = `
                 <span class="breadcrumb-separator">/</span>
-                <span class="breadcrumb-detail-name">${petName}</span>
+                <span class="breadcrumb-detail-name">${PawpalPets.escapeHtml(petName)}</span>
             `;
         } else {
             deepBreadcrumbEl.innerHTML = '';

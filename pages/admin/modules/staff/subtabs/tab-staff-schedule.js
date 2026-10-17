@@ -49,8 +49,13 @@
             const el=document.getElementById('quota'+label+'Count');if(el)el.textContent=`${count} nhân sự`;
             const badge=document.getElementById('quota'+label+'Badge');
             if(badge) {
-                badge.textContent = count >= 2 ? 'Đạt định biên' : (count > 0 ? 'Cần thêm 1 KTV' : 'Chưa phân ca');
-                badge.className = 'quota-status-pill ' + (count >= 2 ? 'pill-ok' : (count > 0 ? 'pill-warning' : 'pill-danger'));
+                if (PawpalStaff.state.scheduleError) {
+                    badge.textContent = 'Lỗi tải CSDL';
+                    badge.className = 'quota-status-pill pill-danger';
+                } else {
+                    badge.textContent = count >= 2 ? 'Đạt định biên' : (count > 0 ? 'Cần thêm 1 KTV' : 'Chưa phân ca');
+                    badge.className = 'quota-status-pill ' + (count >= 2 ? 'pill-ok' : (count > 0 ? 'pill-warning' : 'pill-danger'));
+                }
             }
         });
         const active=document.getElementById('liveWorkstationsActiveCount');if(active)active.textContent='Chưa có dữ liệu bàn dịch vụ';
@@ -110,12 +115,17 @@
                 return '<span style="color: #AEC8B9;">—</span>';
             };
 
+            const esc = (s) => PawpalStaff.escapeHtml ? PawpalStaff.escapeHtml(s) : String(s || '');
+            const safeId = esc(staff.id);
+            const safeName = esc(staff.name);
+            const safePosition = esc(staff.position);
+
             return `
                 <tr>
-                    <td style="font-weight: 600;">${staff.id}</td>
+                    <td style="font-weight: 600;">${safeId}</td>
                     <td>
-                        <div style="font-weight: 600; color: var(--text-heading); cursor: pointer;" class="btn-view-profile" data-id="${staff.id}">${staff.name}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted);">${staff.position}</div>
+                        <div style="font-weight: 600; color: var(--text-heading); cursor: pointer;" class="btn-view-profile" data-id="${safeId}">${safeName}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted);">${safePosition}</div>
                     </td>
                     <td style="text-align: center;">${renderShiftCell(isMorning, 'MORNING')}</td>
                     <td style="text-align: center;">${renderShiftCell(isAfternoon, 'AFTERNOON')}</td>
@@ -123,7 +133,7 @@
                     <td style="text-align: center;">${renderShiftCell(isNight, 'NIGHT')}</td>
                     <td style="text-align: center;">
                         <span style="font-weight: 600; color: ${totalHours > 8 ? '#DC2626' : 'var(--text-heading)'};">${totalHours.toFixed(1)}h</span>
-                        <button type="button" class="btn-edit-shift" data-staff-id="${staff.id}" style="margin-left: 6px; background: none; border: none; color: #236B48; text-decoration: underline; font-size: 11.5px; cursor: pointer;">Đổi</button>
+                        <button type="button" class="btn-edit-shift" data-staff-id="${safeId}" style="margin-left: 6px; background: none; border: none; color: #236B48; text-decoration: underline; font-size: 11.5px; cursor: pointer;">Đổi</button>
                     </td>
                 </tr>
             `;
@@ -161,7 +171,13 @@
         const shifts={MORNING:'Sáng',AFTERNOON:'Chiều',EVENING:'Tối',NIGHT:'Khuya'};
         tbody.innerHTML=staffList.map(staff=>{
             let hours=0;
-            const cells=dates.map(date=>{const list=PawpalStaff.state.mockRoster?.[date]?.[staff.id]||[];hours+=list.length*4;return `<td>${list.map(shift=>shifts[shift]||escape(shift)).join(', ')||'—'}</td>`;}).join('');
+            const cells=dates.map(date=>{
+                const list=PawpalStaff.state.mockRoster?.[date]?.[staff.id]||[];
+                list.forEach(shift => {
+                    hours += (shift === 'NIGHT' ? 8 : 4);
+                });
+                return `<td>${list.map(shift=>shifts[shift]||escape(shift)).join(', ')||'—'}</td>`;
+            }).join('');
             return `<tr><td>${escape(staff.id)}</td><td>${escape(staff.name)}</td>${cells}<td>${hours.toFixed(1)}h</td></tr>`;
         }).join('');
     }
@@ -431,6 +447,23 @@
             if (!data?.id || data.staff_id !== staffId || data.entity_name !== 'appointment_incident') {
                 throw new Error('Không xác minh được biên bản vừa ghi.');
             }
+
+            if (appointmentId && extendMinutes > 0) {
+                try {
+                    const { data: apt } = await client.from('appointment').select('notes, estimated_duration').eq('id', appointmentId).maybeSingle();
+                    if (apt) {
+                        const newNotes = (apt.notes ? apt.notes + ' | ' : '') + `[Sự cố ${type}: Gia hạn +${extendMinutes} phút]`;
+                        const newDuration = (Number(apt.estimated_duration) || 60) + extendMinutes;
+                        await client.from('appointment').update({
+                            notes: newNotes,
+                            estimated_duration: newDuration
+                        }).eq('id', appointmentId);
+                    }
+                } catch (aptErr) {
+                    console.warn('[Incident Report] Không thể gia hạn trực tiếp vào appointment:', aptErr);
+                }
+            }
+
             document.getElementById('incidentReportModalOverlay')?.classList.remove('active');
             PawpalStaff.showToast('Đã lưu biên bản sự cố vào CSDL. Thời gian gia hạn được ghi nhận để điều phối ca.', 'success');
         } catch (error) {

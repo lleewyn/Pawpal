@@ -6,19 +6,19 @@
     gap: 16px;
 }
 
-/* HIỂN THỊ NỘI DUNG TỪNG SUBTAB */
-.subtab-content {
+/* HIỂN THỊ NỘI DUNG TỪNG SUBTAB CHO MODULE DỊCH VỤ */
+.services-module .subtab-content {
     display: none;
     flex-direction: column;
     gap: 16px;
 }
 
-.subtab-content.active {
+.services-module .subtab-content.active {
     display: flex;
 }
 
-/* KHỐI THẺ CHÍNH */
-.admin-card {
+/* KHỐI THẺ CHÍNH DỊCH VỤ */
+.services-module .admin-card {
     background-color: var(--surface-white);
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius);

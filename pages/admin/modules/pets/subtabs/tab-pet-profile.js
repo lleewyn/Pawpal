@@ -26,6 +26,8 @@
         }
     }
 
+    const esc = (s) => (PawpalPets.escapeHtml ? PawpalPets.escapeHtml(s) : String(s || ''));
+
     function renderPetSubtabs(pet) {
         // Tab 1: Biến động cân nặng
         const weightTbody = document.getElementById('petWeightHistoryTbody');
@@ -36,10 +38,10 @@
             } else {
                 weightTbody.innerHTML = history.map(w => `
                     <tr>
-                        <td>${w.date}</td>
-                        <td><strong>${w.weight}</strong></td>
-                        <td>${w.tier}</td>
-                        <td>${w.by}</td>
+                        <td>${esc(w.date)}</td>
+                        <td><strong>${esc(w.weight)}</strong></td>
+                        <td>${esc(w.tier)}</td>
+                        <td>${esc(w.by)}</td>
                     </tr>
                 `).join('');
             }
@@ -58,10 +60,10 @@
             if (hotelBadge) {
                 if (isHotelQualified) {
                     hotelBadge.className = 'admin-badge badge-success';
-                    hotelBadge.textContent = 'Đủ điều kiện nhận phòng Hotel';
+                    hotelBadge.textContent = 'Đã có ghi nhận vaccine dại';
                 } else {
                     hotelBadge.className = 'admin-badge badge-warning';
-                    hotelBadge.textContent = 'Chưa đủ điều kiện nhận phòng Hotel';
+                    hotelBadge.textContent = 'Chưa ghi nhận vaccine dại';
                 }
             }
 
@@ -103,23 +105,23 @@
                 carelogTbody.innerHTML = cLogs.map(c => `
                     <tr>
                         <td>
-                            <strong>${c.time.split(' ')[0]}</strong>
-                            <div style="font-size: 12px; color: var(--text-muted);">${c.time.split(' ')[1] || ''}</div>
+                            <strong>${esc(String(c.time || '').split(' ')[0])}</strong>
+                            <div style="font-size: 12px; color: var(--text-muted);">${esc(String(c.time || '').split(' ')[1] || '')}</div>
                         </td>
                         <td>
-                            <strong style="color: var(--text-heading);">${c.service}</strong>
-                            <div style="font-size: 12px; color: var(--text-muted);">KTV: ${c.ktv}</div>
+                            <strong style="color: var(--text-heading);">${esc(c.service)}</strong>
+                            <div style="font-size: 12px; color: var(--text-muted);">KTV: ${esc(c.ktv)}</div>
                         </td>
                         <td style="text-align: center;">
                             <div style="display: inline-flex; gap: 4px;">
-                                <img src="${c.imgBefore}" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="Trước" title="Ảnh trước dịch vụ">
-                                <img src="${c.imgAfter}" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="Sau" title="Ảnh sau dịch vụ">
+                                <img src="${esc(c.imgBefore)}" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="Trước" title="Ảnh trước dịch vụ">
+                                <img src="${esc(c.imgAfter)}" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="Sau" title="Ảnh sau dịch vụ">
                             </div>
                         </td>
-                        <td><span class="admin-badge badge-success">${c.checkText}</span></td>
-                        <td><span class="admin-badge ${c.appStatus.includes('Đã gửi') ? 'badge-success' : 'badge-neutral'}">${c.appStatus}</span></td>
+                        <td><span class="admin-badge badge-success">${esc(c.checkText)}</span></td>
+                        <td><span class="admin-badge ${String(c.appStatus || '').includes('Đã gửi') ? 'badge-success' : 'badge-neutral'}">${esc(c.appStatus)}</span></td>
                         <td style="text-align: right;">
-                            <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-view-carelog-modal" data-care-id="${c.careId || 'CL-001'}">Xem chi tiết</button>
+                            <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-view-carelog-modal" data-care-id="${esc(c.careId || 'CL-001')}">Xem chi tiết</button>
                         </td>
                     </tr>
                 `).join('');
@@ -134,7 +136,7 @@
                 const rawBookings = sessionStorage.getItem('pawpal_admin_services_bookings');
                 if (rawBookings) {
                     const allBookings = JSON.parse(rawBookings);
-                    const petBookings = allBookings.filter(b => b.petId === pet.code || (b.petName && b.petName.toLowerCase() === pet.name.toLowerCase()));
+                    const petBookings = allBookings.filter(b => b.petId === pet.code || b.petId === pet.rawId || b.pet_id === pet.rawId);
                     petBookings.forEach(pb => {
                         if (!sHistory.some(h => h.id === pb.id)) {
                             sHistory.unshift({
@@ -142,7 +144,7 @@
                                 service: pb.serviceName,
                                 time: pb.date + ' ' + (pb.time || ''),
                                 weight: pb.petWeight || pet.weight,
-                                price: pb.total ? Number(pb.total).toLocaleString('vi-VN') + 'đ' : '250.000đ',
+                                price: pb.total ? Number(pb.total).toLocaleString('vi-VN') + ' đ' : 'Chưa xác nhận',
                                 status: pb.status === 'completed' ? 'Đã hoàn thành' : pb.status === 'confirmed' ? 'Đã xác nhận' : 'Chờ xác nhận'
                             });
                         }
@@ -156,13 +158,13 @@
                 historyTbody.innerHTML = sHistory.map(h => `
                     <tr>
                         <td>
-                            <a href="javascript:void(0)" class="user-name-link btn-jump-service-booking" data-booking-id="${h.id}" style="font-weight: 600; color: var(--text-heading); text-decoration: none;">${h.id}</a>
+                            <a href="javascript:void(0)" class="user-name-link btn-jump-service-booking" data-booking-id="${esc(h.id)}" style="font-weight: 600; color: var(--text-heading); text-decoration: none;">${esc(h.id)}</a>
                         </td>
-                        <td>${h.service}</td>
-                        <td>${h.time}</td>
-                        <td>${h.weight}</td>
-                        <td style="text-align: right;"><strong>${h.price}</strong></td>
-                        <td style="text-align: center;"><span class="admin-badge ${h.status === 'Đã hoàn thành' ? 'badge-success' : 'badge-warning'}">${h.status}</span></td>
+                        <td>${esc(h.service)}</td>
+                        <td>${esc(h.time)}</td>
+                        <td>${esc(h.weight)}</td>
+                        <td style="text-align: right;"><strong>${esc(h.price)}</strong></td>
+                        <td style="text-align: center;"><span class="admin-badge ${h.status === 'Đã hoàn thành' ? 'badge-success' : 'badge-warning'}">${esc(h.status)}</span></td>
                     </tr>
                 `).join('');
 
@@ -437,7 +439,7 @@
                 const weighOldWeight = document.getElementById('weighPetOldWeight');
                 if (weighPetName) weighPetName.value = pet.name;
                 if (weighOldWeight) weighOldWeight.value = pet.weight;
-                if (weighNewWeightInput) weighNewWeightInput.value = pet.weightNum || parseFloat(pet.weight) || 8.5;
+                if (weighNewWeightInput) weighNewWeightInput.value = pet.weightNum || parseFloat(pet.weight) || '';
 
                 if (modalWeighPet) {
                     modalWeighPet.classList.add('open');
@@ -465,17 +467,11 @@
                 const careId = btnViewCarelog.getAttribute('data-care-id') || 'CL-001';
                 const currentPetId = sessionStorage.getItem('pawpal_admin_pet_id');
                 const pet = PawpalPets.state?.petsData?.[currentPetId];
-                const careItem = pet?.carelogs?.find(c => c.careId === careId) || {
-                    careId,
-                    service: 'Tắm sấy dưỡng ẩm và Cắt mài móng',
-                    time: '25/09/2026 14:30',
-                    ktv: 'Hoàng Tuấn',
-                    imgBefore: '/assets/images/publics/dogcute3.jpg',
-                    imgAfter: '/assets/images/publics/dogcute1.jpg',
-                    checkText: '4/4 mục đạt chuẩn',
-                    appStatus: 'Đã gửi app cho chủ',
-                    message: 'Lông vùng tai bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.'
-                };
+                const careItem = pet?.carelogs?.find(c => c.careId === careId);
+                if (!careItem) {
+                    PawpalPets.showToast('Không tìm thấy nhật ký chăm sóc tương ứng.', 'warning');
+                    return;
+                }
 
                 const titleEl = document.getElementById('carelogModalTitle');
                 const timeEl = document.getElementById('carelogModalTime');
@@ -589,7 +585,8 @@
                 const species = document.getElementById('editPetSpecies')?.value || pet.species;
                 const breed = document.getElementById('editPetBreed')?.value || pet.breed;
                 const gender = document.getElementById('editPetGender')?.value || pet.gender;
-                const weight = parseFloat(document.getElementById('editPetWeight')?.value || '8.5');
+                const rawWeight = document.getElementById('editPetWeight')?.value;
+                const weight = rawWeight ? parseFloat(rawWeight) : (pet.weightNum || null);
                 const dob = document.getElementById('editPetDob')?.value || pet.dobRaw;
                 const color = document.getElementById('editPetColor')?.value || pet.color;
                 const status = document.getElementById('editPetStatus')?.value || pet.status;
@@ -618,7 +615,7 @@
                             date_of_birth: dob || null,
                             weight: weight,
                             color: color,
-                            routine: notes || (alertText ? `Lưu ý: ${alertText}` : 'Bé ngoan, hợp tác khi làm dịch vụ.'),
+                            routine: notes || (alertText ? `Lưu ý: ${alertText}` : (pet.routine || 'Chưa có ghi chú đặc biệt.')),
                             allergy: allergy,
                             status: dbStatus
                         };

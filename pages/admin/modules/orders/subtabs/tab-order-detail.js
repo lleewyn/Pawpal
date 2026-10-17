@@ -24,18 +24,18 @@
         if (content) content.style.display = '';
 
         const ordersList = state.orders || [];
-        const order = ordersList.find(o => o.id === orderId) || ordersList[0];
+        const order = orderId ? ordersList.find(o => o.id === orderId || o.rawId === orderId) : (state.selectedOrderId ? ordersList.find(o => o.id === state.selectedOrderId) : null);
 
         if (!order) {
             const codeEl = document.getElementById('detailOrderCode');
             const metaEl = document.getElementById('detailOrderMeta');
             const actionBtnsEl = document.getElementById('detailOrderActionButtons');
             const itemsTbody = document.getElementById('detailOrderItemsBody');
-            if (codeEl) codeEl.textContent = 'Chưa có đơn hàng';
-            if (metaEl) metaEl.textContent = 'Vui lòng chọn một đơn hàng từ danh sách để xem hồ sơ chi tiết.';
+            if (codeEl) codeEl.textContent = 'Không tìm thấy đơn hàng';
+            if (metaEl) metaEl.textContent = orderId ? `Đơn hàng "${orderId}" không tồn tại hoặc đã bị xóa.` : 'Vui lòng chọn một đơn hàng từ danh sách để xem hồ sơ chi tiết.';
             if (actionBtnsEl) actionBtnsEl.innerHTML = '';
             if (itemsTbody) {
-                itemsTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">Chưa có đơn hàng nào phát sinh trên hệ thống.</td></tr>';
+                itemsTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">Không có dữ liệu chi tiết cho đơn hàng này.</td></tr>';
             }
             const subtotalEl = document.getElementById('detailSummarySubtotal');
             if (subtotalEl) subtotalEl.textContent = '0 đ';
@@ -324,8 +324,19 @@
             const refundAmountVal = parseInt(document.getElementById('rmaRefundAmountInput')?.value || '0', 10);
             const internalNote = document.getElementById('rmaInternalNote')?.value.trim() || '';
 
-            const rmaCode = 'RMA-2026-' + (Math.floor(100 + Math.random() * 900));
+            // O-26: Kiểm tra quyền Quản trị / Quản lý trước khi tạo RMA và can thiệp tiền/kho
+            const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || '').toUpperCase();
+            if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
+                showToast('Chỉ Quản trị viên hoặc Quản lý chi nhánh mới có quyền lập phiếu RMA và xử lý hoàn tiền.', 'danger');
+                return;
+            }
+
+            const rmaCode = 'RMA-' + new Date().getFullYear() + '-' + (Math.floor(100 + Math.random() * 900));
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                showToast('Chưa kết nối cơ sở dữ liệu Supabase!', 'danger');
+                return;
+            }
 
             const returnedItems = [];
             for (const cb of checkedBoxes) {
@@ -342,86 +353,94 @@
                         quantity: qty,
                         price: prodInOrder.price
                     });
+                }
+            }
 
-                    // Nếu kiểm định đạt chuẩn -> Tự động nhập lại kho khả dụng
-                    if (restockVal === 'restock') {
-                        const stockItem = (state.products || []).find(p => p.sku === sku);
-                        if (stockItem) {
-                            stockItem.stock += qty;
-                            if (stockItem.stock > 0 && stockItem.status === 'Hết hàng') {
-                                stockItem.status = 'Còn hàng';
-                            }
+            // Ghi nhận RMA vào Supabase trước khi cập nhật kho hoặc đổi trạng thái hiển thị
+            try {
+                let dbOrderId = order.rawId;
+                if (!dbOrderId) {
+                    const { data: ordRow, error: findOrdErr } = await client.from('sales_order').select('id').eq('order_code', order.id).limit(1);
+                    if (findOrdErr) throw findOrdErr;
+                    if (ordRow && ordRow[0]) dbOrderId = ordRow[0].id;
+                }
 
-                            if (client && stockItem.id) {
-                                try {
-                                    const { data: invRow } = await client.from('inventory').select('id, quantity_in_stock').eq('product_id', stockItem.id).limit(1);
-                                    if (invRow && invRow[0]) {
-                                        await client.from('inventory').update({ quantity_in_stock: (invRow[0].quantity_in_stock || 0) + qty }).eq('id', invRow[0].id);
+                if (!dbOrderId) throw new Error('Không tìm thấy bản ghi đơn hàng tương ứng trên cơ sở dữ liệu.');
+
+                const updateOrderPayload = { order_status: 'RETURNED' };
+                if (solType === 'refund') {
+                    // O-12: Chờ đối soát hoàn tiền từ ngân hàng/cổng thanh toán, không giả lập đã hoàn tất tiền mặt
+                    updateOrderPayload.payment_status = 'PENDING_REFUND';
+                }
+                const { error: ordUpErr } = await client.from('sales_order').update(updateOrderPayload).eq('id', dbOrderId);
+                if (ordUpErr) throw ordUpErr;
+
+                const { data: rmaRow, error: rmaErr } = await client.from('return_request').insert({
+                    sales_order_id: dbOrderId,
+                    customer_id: (order.userId && order.userId.length > 20) ? order.userId : null,
+                    reason: reasonText,
+                    return_type: solType === 'refund' ? 'RETURN' : 'EXCHANGE',
+                    description: internalNote || `Phiếu ${rmaCode}: ${solTypeName}`,
+                    request_status: 'RECEIVED'
+                }).select().single();
+                if (rmaErr) throw rmaErr;
+
+                if (rmaRow && rmaRow.id) {
+                    const rmaDetails = [];
+                    for (const retItem of returnedItems) {
+                        const prodDb = (state.products || []).find(p => p.sku === retItem.sku);
+                        if (prodDb && prodDb.id) {
+                            rmaDetails.push({
+                                return_request_id: rmaRow.id,
+                                product_id: prodDb.id,
+                                quantity: retItem.quantity,
+                                unit_price: retItem.price
+                            });
+                        }
+                    }
+                    if (rmaDetails.length > 0) {
+                        const { error: detErr } = await client.from('return_request_detail').insert(rmaDetails);
+                        if (detErr) console.warn('[RMA] Lỗi lưu chi tiết phiếu trả:', detErr);
+                    }
+                }
+
+                // O-11: Chỉ sau khi tạo phiếu RMA thành công và kiểm định đạt chuẩn mới nhập lại kho khả dụng
+                if (restockVal === 'restock') {
+                    for (const retItem of returnedItems) {
+                        const stockItem = (state.products || []).find(p => p.sku === retItem.sku);
+                        if (stockItem && stockItem.id) {
+                            try {
+                                const { data: invRow } = await client.from('inventory').select('id, quantity_in_stock').eq('product_id', stockItem.id).limit(1);
+                                if (invRow && invRow[0]) {
+                                    const newQty = (invRow[0].quantity_in_stock || 0) + retItem.quantity;
+                                    await client.from('inventory').update({
+                                        quantity_in_stock: newQty,
+                                        last_updated_at: new Date().toISOString()
+                                    }).eq('id', invRow[0].id);
+                                    stockItem.stock = newQty;
+                                    if (stockItem.stock > 0 && stockItem.status === 'Hết hàng') {
+                                        stockItem.status = 'Còn hàng';
                                     }
-                                } catch (errRmaInv) {
-                                    console.warn('Lỗi nhập lại kho khi duyệt RMA:', errRmaInv);
                                 }
+                            } catch (errRmaInv) {
+                                console.warn('[RMA] Lỗi nhập lại kho khi duyệt RMA:', errRmaInv);
                             }
                         }
                     }
                 }
-            }
 
-            // Ghi nhận RMA vào Supabase
-            if (client) {
-                try {
-                    let dbOrderId = order.rawId;
-                    if (!dbOrderId) {
-                        const { data: ordRow } = await client.from('sales_order').select('id').eq('order_code', order.id).limit(1);
-                        if (ordRow && ordRow[0]) dbOrderId = ordRow[0].id;
-                    }
-
-                    if (dbOrderId) {
-                        const updateOrderPayload = { order_status: 'RETURNED' };
-                        if (solType === 'refund') {
-                            updateOrderPayload.payment_status = 'REFUNDED';
-                        }
-                        await client.from('sales_order').update(updateOrderPayload).eq('id', dbOrderId);
-
-                        const { data: rmaRow } = await client.from('return_request').insert({
-                            sales_order_id: dbOrderId,
-                            customer_id: (order.userId && order.userId.length > 20) ? order.userId : null,
-                            reason: reasonText,
-                            return_type: solType === 'refund' ? 'RETURN' : 'EXCHANGE',
-                            description: internalNote || `Phiếu ${rmaCode}: ${solTypeName}`,
-                            request_status: 'COMPLETED'
-                        }).select().single();
-
-                        if (rmaRow && rmaRow.id) {
-                            const rmaDetails = [];
-                            for (const retItem of returnedItems) {
-                                const prodDb = (state.products || []).find(p => p.sku === retItem.sku);
-                                if (prodDb && prodDb.id) {
-                                    rmaDetails.push({
-                                        return_request_id: rmaRow.id,
-                                        product_id: prodDb.id,
-                                        quantity: retItem.quantity,
-                                        unit_price: retItem.price
-                                    });
-                                }
-                            }
-                            if (rmaDetails.length > 0) {
-                                await client.from('return_request_detail').insert(rmaDetails);
-                            }
-                        }
-                    }
-                } catch (errRmaDb) {
-                    console.warn('Lỗi khi ghi phiếu RMA vào Supabase:', errRmaDb);
+                // Cập nhật trạng thái đơn hàng sau khi CSDL thành công
+                order.status = 'returned';
+                if (solType === 'refund') {
+                    order.paymentStatus = 'refund_pending';
                 }
+                order.alertType = 'danger';
+                order.alertMessage = `Phiếu RMA: ${rmaCode}`;
+            } catch (errRmaDb) {
+                console.error('[RMA] Lỗi khi xử lý phiếu RMA trên Supabase:', errRmaDb);
+                showToast(`Không thể tạo phiếu RMA: ${errRmaDb?.message || 'Lỗi CSDL'}`, 'danger');
+                return;
             }
-
-            // Cập nhật trạng thái đơn hàng sang Đổi trả
-            order.status = 'returned';
-            if (solType === 'refund') {
-                order.paymentStatus = 'refunded';
-            }
-            order.alertType = 'danger';
-            order.alertMessage = `Phiếu RMA: ${rmaCode}`;
             order.rmaInfo = {
                 id: rmaCode,
                 solutionType: solType,

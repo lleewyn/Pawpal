@@ -12,6 +12,7 @@
     let reviewFilterStatus = 'ALL';
     let reviewCurrentPage = 1;
     const REVIEWS_PAGE_SIZE = 10;
+    const esc = (s) => (PawpalServices.escapeHtml ? PawpalServices.escapeHtml(s) : String(s || ''));
 
     // Cập nhật 4 thẻ thống kê KPI Đánh giá dịch vụ
     function updateReviewKPIs() {
@@ -23,15 +24,15 @@
             return;
         }
 
-        const total = reviewsData.length;
-        let avgRating = '0.0 / 5.0';
-        if (total > 0) {
-            const sumStars = reviewsData.reduce((acc, r) => acc + (Number(r.rating) || 5), 0);
-            avgRating = (sumStars / total).toFixed(1) + ' / 5.0';
+        const ratedReviews = reviewsData.filter(r => Number.isFinite(Number(r.rating)) && Number(r.rating) >= 1 && Number(r.rating) <= 5);
+        let avgRating = '—';
+        if (ratedReviews.length > 0) {
+            const sumStars = ratedReviews.reduce((acc, r) => acc + Number(r.rating), 0);
+            avgRating = (sumStars / ratedReviews.length).toFixed(1) + ' / 5.0';
         }
 
         const pendingCount = reviewsData.filter(r => !r.replyText && r.status !== 'replied').length;
-        const lowStarCount = reviewsData.filter(r => (Number(r.rating) || 5) <= 3).length;
+        const lowStarCount = ratedReviews.filter(r => Number(r.rating) <= 3).length;
 
         const statAvg = document.getElementById('statAvgRating');
         const statTotal = document.getElementById('statTotalReviews');
@@ -74,10 +75,10 @@
             }
 
             if (reviewFilterStar !== 'ALL') {
-                const rStar = Number(r.rating) || 5;
+                const rStar = Number.isFinite(Number(r.rating)) && Number(r.rating) >= 1 && Number(r.rating) <= 5 ? Math.round(Number(r.rating)) : null;
                 if (reviewFilterStar === 'LOW') {
-                    if (rStar > 2) return false;
-                } else if (parseInt(reviewFilterStar, 10) !== rStar) {
+                    if (rStar === null || rStar > 2) return false;
+                } else if (rStar === null || parseInt(reviewFilterStar, 10) !== rStar) {
                     return false;
                 }
             }
@@ -144,44 +145,45 @@
 
         tbody.innerHTML = pageItems.map(r => {
             const isReplied = Boolean(r.replyText || r.status === 'replied');
-            const starNum = Number(r.rating) || 5;
-            const starsHtml = '★'.repeat(starNum) + '☆'.repeat(5 - starNum);
-            const isLowRating = starNum <= 3;
+            const hasValidRating = Number.isFinite(Number(r.rating)) && Number(r.rating) >= 1 && Number(r.rating) <= 5;
+            const starNum = hasValidRating ? Math.round(Number(r.rating)) : null;
+            const starsHtml = starNum !== null ? ('★'.repeat(starNum) + '☆'.repeat(5 - starNum)) : '<span style="color: var(--text-muted); font-size: 11px;">Chưa chấm</span>';
+            const isLowRating = starNum !== null && starNum <= 3;
             const borderLeftStyle = isLowRating ? 'border-left: 3px solid #D97706;' : 'border-left: 3px solid transparent;';
 
             return `
-                <tr data-review-id="${r.id}">
+                <tr data-review-id="${esc(r.id)}">
                     <td style="${borderLeftStyle} font-weight: 600; color: var(--text-heading);">
-                        <div>${r.bookingId || '—'}</div>
-                        <div style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${r.reviewCode || r.id}</div>
+                        <div>${esc(r.bookingId || '—')}</div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${esc(r.reviewCode || r.id)}</div>
                     </td>
                     <td>
-                        <div style="font-weight: 600; color: var(--text-main);">${r.customerName}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted);">${r.phone || '—'}</div>
+                        <div style="font-weight: 600; color: var(--text-main);">${esc(r.customerName)}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted);">${esc(r.phone || '—')}</div>
                     </td>
                     <td>
-                        <div style="font-weight: 500; color: var(--text-main);">${r.serviceName}</div>
+                        <div style="font-weight: 500; color: var(--text-main);">${esc(r.serviceName)}</div>
                         <div style="font-size: 11.5px; color: var(--text-muted);">${r.category === 'Hotel' ? 'Pet Hotel' : (r.category === 'Taxi' ? 'Pet Taxi' : 'Spa và Grooming')}</div>
                     </td>
                     <td style="color: #D97706; font-size: 13.5px; letter-spacing: 1px; white-space: nowrap;">
                         ${starsHtml} <span style="font-size: 12px; font-weight: 600; color: var(--text-main); margin-left: 2px;">${starNum}★</span>
                     </td>
                     <td class="service-review-content-cell" style="max-width: 260px; font-size: 12.5px; line-height: 1.45;">
-                        <div style="color: var(--text-main);">${r.comment || 'Khách không để lại nhận xét bằng lời.'}</div>
+                        <div style="color: var(--text-main);">${esc(r.comment || 'Khách không để lại nhận xét bằng lời.')}</div>
                         ${isReplied ? `
                             <div style="margin-top: 6px; padding: 4px 8px; background: #EEF5F1; border-radius: 6px; font-size: 11.5px; color: #236B48;">
-                                <span style="font-weight: 600;">Phản hồi:</span> ${r.replyText}
+                                <span style="font-weight: 600;">Phản hồi:</span> ${esc(r.replyText)}
                             </div>
                         ` : ''}
                     </td>
-                    <td>${r.staff || 'Chưa phân công'}</td>
+                    <td>${esc(r.staff || 'Chưa phân công')}</td>
                     <td>
                         <span class="admin-badge ${isReplied ? 'badge-success' : 'badge-warning'}">
                             ${isReplied ? 'Đã phản hồi' : 'Chờ phản hồi'}
                         </span>
                     </td>
                     <td style="text-align: center;">
-                        <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-reply-review" data-review-id="${r.id}" style="padding: 4px 10px; font-size: 12px;">
+                        <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-reply-review" data-review-id="${esc(r.id)}" style="padding: 4px 10px; font-size: 12px;">
                             ${isReplied ? 'Sửa' : 'Phản hồi'}
                         </button>
                     </td>
@@ -476,18 +478,21 @@
 
                 const reviewsData = PawpalServices.state?.reviewsData || [];
                 const review = reviewsData.find(r => r.id === rId);
-                if (review) {
+                if (!review) return;
+
+                btnSubmitReply.disabled = true;
+                btnSubmitReply.textContent = 'Đang lưu...';
+
+                try {
+                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (!client) throw new Error('Chưa kết nối được CSDL.');
+                    if (!review.dbId) throw new Error('Không tìm thấy định danh bản ghi đánh giá.');
+
+                    const { error } = await client.from('review').update({ shop_reply: text }).eq('id', review.dbId);
+                    if (error) throw error;
+
                     review.replyText = text;
                     review.status = 'replied';
-
-                    try {
-                        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                        if (client && review.dbId) {
-                            await client.from('review').update({ shop_reply: text }).eq('id', review.dbId);
-                        }
-                    } catch (e) {
-                        console.error('Error saving review reply:', e);
-                    }
 
                     renderReviewsTable();
                     updateReviewKPIs();
@@ -495,6 +500,12 @@
                         PawpalServices.showToast('Đã gửi phản hồi đánh giá thành công!');
                     }
                     closeReplyReviewModal();
+                } catch (e) {
+                    console.error('Error saving review reply:', e);
+                    PawpalServices.showToast?.('Không thể lưu phản hồi: ' + (e.message || 'Lỗi kết nối'), 'danger');
+                } finally {
+                    btnSubmitReply.disabled = false;
+                    btnSubmitReply.textContent = 'Gửi phản hồi';
                 }
             });
         }
@@ -508,15 +519,19 @@
                     PawpalServices.showToast?.('Không có đánh giá để xuất.', 'warning');
                     return;
                 }
-                const csvCell = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+                const sanitizeCsvCell = (val) => {
+                    let str = String(val ?? '');
+                    if (/^[=+\-@\t\r]/.test(str)) str = "'" + str;
+                    return `"${str.replace(/"/g, '""')}"`;
+                };
                 const csv = [
                     ['Mã lịch hẹn', 'Mã đánh giá', 'Khách hàng', 'Số điện thoại', 'Dịch vụ', 'Nhóm dịch vụ', 'Điểm sao', 'Nội dung đánh giá', 'Nhân viên phụ trách', 'Trạng thái phản hồi'],
                     ...rows.map(r => [
                         r.bookingId || '—', r.reviewCode || r.id, r.customerName, r.phone,
                         r.serviceName, r.category === 'Hotel' ? 'Pet Hotel' : (r.category === 'Taxi' ? 'Pet Taxi' : 'Spa và Grooming'),
-                        r.rating, r.comment, r.staff || 'Chưa có thông tin', r.replyText || r.status === 'replied' ? 'Đã phản hồi' : 'Chưa phản hồi'
+                        r.rating ?? '—', r.comment, r.staff || 'Chưa có thông tin', (r.replyText || r.status === 'replied') ? 'Đã phản hồi' : 'Chưa phản hồi'
                     ])
-                ].map(row => row.map(csvCell).join(',')).join('\r\n');
+                ].map(row => row.map(sanitizeCsvCell).join(',')).join('\r\n');
                 const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');

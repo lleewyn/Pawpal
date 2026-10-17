@@ -225,7 +225,10 @@
         currentConversation: null,
         currentFilterTab: sessionStorage.getItem('pawpal_admin_chatbot_filter_tab') || 'all',
         pendingAdminAttachment: null,
-        currentAdminRoomChannel: null
+        currentAdminRoomChannel: null,
+        isRealtimeHealthy: false,
+        liveLoaded: false,
+        liveLoadError: null
     };
 
     function computeCustomerTier(points) {
@@ -237,12 +240,23 @@
     PawpalChatbot.computeCustomerTier = computeCustomerTier;
 
     // -------------------------------------------------------------
-    // -------------------------------------------------------------
-    // NẠP DỮ LIỆU TỔNG HỢP TỪ SUPABASE LIVE DATABASE
+    // PR-02: KIẾN TRÚC 2-TIER NẠP INBOX VÀ CHI TIẾT THEO YÊU CẦU
     // -------------------------------------------------------------
     let chatbotRealtimeChannel = null;
+    let isInboxRefreshing = false;
+    let hasPendingRefresh = false;
+    let inboxDebounceTimer = null;
+    const customerContextCache = new Map();
 
-    async function loadChatbotDataFromSupabase() {
+    function invalidateCustomerCache(customerId) {
+        if (customerId) customerContextCache.delete(customerId);
+    }
+    PawpalChatbot.invalidateCustomerCache = invalidateCustomerCache;
+
+    // TIER 1: Tải tóm tắt danh sách hội thoại nhẹ (không join 8 bảng, không lấy raw_content)
+    async function loadInboxSummary(options = {}) {
+        const limit = options.limit || 50;
+
         if (!supabase) {
             PawpalChatbot.state.liveLoadError = 'Không thể kết nối dữ liệu hội thoại.';
             PawpalChatbot.subtabs.live?.renderConversationsList?.();
@@ -252,193 +266,348 @@
         }
 
         try {
-            // 1. Nạp đồng thời tất cả các bảng dữ liệu liên quan mà không bị chặn bởi RLS
-            const [
-                convsRes,
-                profsRes,
-                custRes,
-                petsRes,
-                ordersRes,
-                apptsRes,
-                ticketsRes,
-                pointsRes
-            ] = await Promise.all([
-                supabase.from('chat_conversation').select('*, chat_message(*)').order('updated_at', { ascending: false }).limit(50),
-                supabase.from('customer_profile').select('*'),
-                Promise.resolve(supabase.from('customer').select('*')).catch(() => ({ data: [] })),
-                supabase.from('pet_profile').select('*'),
-                supabase.from('sales_order').select('*').order('created_at', { ascending: false }),
-                supabase.from('appointment').select('*, service:service_id(service_name)').order('created_at', { ascending: false }),
-                supabase.from('support_ticket').select('*').order('created_at', { ascending: false }),
-                supabase.from('paw_point_transaction').select('*')
+            // 1. Chỉ lấy các cột cần thiết từ chat_conversation (không join chat_message(*) toàn bộ)
+            const { data: dbConvs, error: convErr } = await supabase
+                .from('chat_conversation')
+                .select('id, customer_id, status, is_urgent, sentiment_level, sentiment_trend, ai_summary, internal_note, created_at, updated_at')
+                .order('updated_at', { ascending: false })
+                .limit(limit);
+
+            if (convErr) throw convErr;
+            PawpalChatbot.state.liveLoadError = null;
+
+            if (!dbConvs || dbConvs.length === 0) {
+                PawpalChatbot.state.liveConversations = [];
+                PawpalChatbot.state.currentConversation = null;
+                updateFilterBadges();
+                PawpalChatbot.state.liveLoaded = true;
+                PawpalChatbot.subtabs.live?.renderConversationsList?.();
+                PawpalChatbot.subtabs.live?.renderCurrentChat?.();
+                updateDeepBreadcrumb();
+                return;
+            }
+
+            const convIds = dbConvs.map(c => c.id);
+            const customerIds = [...new Set(dbConvs.map(c => c.customer_id).filter(Boolean))];
+
+            // 2. Chỉ truy vấn thông tin khách hàng và tin nhắn gần nhất cho các hội thoại được trả về
+            const [profsRes, custsRes, recentMsgsRes] = await Promise.all([
+                customerIds.length > 0 
+                    ? supabase.from('customer_profile').select('customer_id, full_name').in('customer_id', customerIds)
+                    : Promise.resolve({ data: [] }),
+                customerIds.length > 0
+                    ? Promise.resolve(supabase.from('customer').select('id, email, phone_main').in('id', customerIds)).catch(() => ({ data: [] }))
+                    : Promise.resolve({ data: [] }),
+                // Tin nhắn tóm tắt cho preview: chỉ lấy các cột an toàn, TUYỆT ĐỐI KHÔNG lấy raw_content (CB-03, CB-10)
+                supabase.from('chat_message')
+                    .select('id, conversation_id, sender_type, sender_name, content, created_at, is_toxic')
+                    .in('conversation_id', convIds)
+                    .order('created_at', { ascending: false })
+                    .limit(limit * 2)
             ]);
 
-            if (convsRes.error) throw convsRes.error;
-            PawpalChatbot.state.liveLoadError = null;
-            // 2. Tạo bản đồ tra cứu (Lookup Maps) để nối dữ liệu quan hệ
+            if (profsRes.error) {
+                console.warn('[Inbox Tier-1] Cảnh báo truy vấn customer_profile:', profsRes.error.message);
+            }
+            if (custsRes.error) {
+                console.warn('[Inbox Tier-1] Cảnh báo truy vấn customer:', custsRes.error.message);
+            }
+
             const profMap = {};
             (profsRes.data || []).forEach(p => {
-                const cId = p.customer_id || p.id;
-                if (cId) profMap[cId] = p;
+                if (p.customer_id) profMap[p.customer_id] = p;
             });
 
             const custMap = {};
-            (custRes.data || []).forEach(c => {
+            (custsRes.data || []).forEach(c => {
                 if (c && c.id) custMap[c.id] = c;
             });
 
-            const petsMap = {};
-            (petsRes.data || []).forEach(p => {
-                if (!petsMap[p.customer_id]) petsMap[p.customer_id] = [];
-                petsMap[p.customer_id].push({
-                    id: p.id,
-                    name: p.pet_name || p.name || 'Bé cưng',
-                    breed: p.breed || p.species || 'Chưa rõ',
-                    notes: p.allergy || p.routine || 'Bình thường'
-                });
-            });
-
-            const ordersMap = {};
-            (ordersRes.data || []).forEach(o => {
-                if (!ordersMap[o.customer_id]) ordersMap[o.customer_id] = [];
-                ordersMap[o.customer_id].push(o);
-            });
-
-            const apptsMap = {};
-            (apptsRes.data || []).forEach(a => {
-                if (!apptsMap[a.customer_id]) apptsMap[a.customer_id] = [];
-                apptsMap[a.customer_id].push(a);
-            });
-
-            const ticketsMap = {};
-            (ticketsRes.data || []).forEach(t => {
-                const uId = t.user_id || t.customer_id;
-                if (uId) {
-                    if (!ticketsMap[uId]) ticketsMap[uId] = [];
-                    ticketsMap[uId].push(t);
+            const latestMsgMap = {};
+            (recentMsgsRes.data || []).forEach(m => {
+                if (!latestMsgMap[m.conversation_id]) {
+                    latestMsgMap[m.conversation_id] = m;
                 }
             });
 
-            const pointsMap = {};
-            (pointsRes.data || []).forEach(pt => {
-                if (pt.customer_id) {
-                    pointsMap[pt.customer_id] = (pointsMap[pt.customer_id] || 0) + (pt.points || 0);
-                }
-            });
+            // 3. Xây dựng danh sách hội thoại nhẹ Tier 1
+            const realConvList = dbConvs.map(rc => {
+                const prof = profMap[rc.customer_id] || {};
+                const cust = custMap[rc.customer_id] || {};
+                const latestMsg = latestMsgMap[rc.id];
 
-            // 3. Xử lý và nối dữ liệu cho từng phiên hội thoại thực tế
-            let realConvList = [];
-            const dbConvs = convsRes.data || [];
+                const custName = prof.full_name
+                    || (latestMsg?.sender_type === 'customer' && latestMsg.sender_name && latestMsg.sender_name !== 'Khách vãng lai' ? latestMsg.sender_name : null)
+                    || cust.email?.split('@')[0]
+                    || (rc.customer_id ? `Khách #${rc.customer_id.slice(0, 5)}` : `Khách #${rc.id.slice(0, 5)}`);
 
-            if (dbConvs.length > 0) {
-                realConvList = dbConvs.map(rc => {
-                    const prof = profMap[rc.customer_id] || {};
-                    const cust = custMap[rc.customer_id] || {};
-                    const dbMsgs = (rc.chat_message || []).sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
-                    const firstCustMsg = dbMsgs.find(m => m.sender_type === 'customer');
+                // CB-25: Không bịa số điện thoại giả, lấy chính xác phone_main từ bảng customer
+                const phone = cust.phone_main || (rc.customer_id ? '—' : 'Khách vãng lai');
+                const sLevel = rc.sentiment_level || 2;
+                const sText = sLevel === 6 ? 'Mức độ 6: Khẩn cấp y tế' : (sLevel === 5 ? 'Mức độ 5: Mất kiểm soát' : (sLevel === 4 ? 'Mức độ 4: Tức giận cao độ' : (sLevel === 3 ? 'Mức độ 3: Thất vọng' : 'Mức độ 2: Trung tính')));
 
-                    const custName = prof.full_name
-                        || (firstCustMsg?.sender_name && firstCustMsg.sender_name !== 'Khách vãng lai' ? firstCustMsg.sender_name : null)
-                        || cust.email?.split('@')[0]
-                        || (rc.customer_id ? `Khách #${rc.customer_id.slice(0, 5)}` : `Khách #${rc.id.slice(0, 5)}`);
+                const elapsedSec = Math.max(0, Math.floor((Date.now() - new Date(rc.updated_at || rc.created_at).getTime()) / 1000));
+                const isHandover = rc.status === 'agent_handling';
+                const isUrgent = Boolean(rc.is_urgent || sLevel >= 4);
 
-                    const phone = cust.phone_main || prof.phone || (rc.customer_id ? '0901234567' : 'Khách vãng lai');
-                    const points = pointsMap[rc.customer_id] || 0;
-                    const tier = rc.customer_id ? computeCustomerTier(points) : 'Vãng lai';
+                let cat = 'all';
+                if (isUrgent) cat = 'urgent';
+                else if (isHandover) cat = 'active';
 
-                    const mappedMsgs = dbMsgs.length > 0 ? dbMsgs.map(m => ({
-                        id: m.id,
-                        sender: m.sender_type === 'customer' ? 'user' : (m.sender_type === 'staff' ? 'agent' : 'bot'),
-                        agentName: m.sender_name || (m.sender_type === 'staff' ? 'Chuyên viên CSKH' : 'PawPal Bot'),
-                        time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        text: m.content || '',
-                        rawText: m.raw_content || m.content || '',
-                        isToxic: !!m.is_toxic,
-                        activeMaskLevel: m.is_toxic ? 'words' : 'raw'
-                    })) : [
+                // Nếu hội thoại đã có tin nhắn được nạp trước đó trong state, giữ lại để không bị chớp giật
+                const existingConv = (PawpalChatbot.state.liveConversations || []).find(c => c.id === rc.id);
+
+                const messages = existingConv && existingConv.messagesLoaded
+                    ? existingConv.messages
+                    : (latestMsg ? [{
+                        id: latestMsg.id,
+                        sender: latestMsg.sender_type === 'customer' ? 'user' : (latestMsg.sender_type === 'staff' ? 'agent' : 'bot'),
+                        agentName: latestMsg.sender_name || (latestMsg.sender_type === 'staff' ? 'Chuyên viên CSKH' : 'PawPal Bot'),
+                        time: new Date(latestMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        text: latestMsg.content || '',
+                        isToxic: !!latestMsg.is_toxic,
+                        activeMaskLevel: latestMsg.is_toxic ? 'words' : 'raw'
+                    }] : [
                         { id: `init-${rc.id}`, sender: 'bot', agentName: 'PawPal Bot', time: new Date(rc.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: 'Dạ PawPal xin chào sen! Em có thể hỗ trợ gì cho sen hôm nay ạ?' }
-                    ];
+                    ]);
 
-                    const sLevel = rc.sentiment_level || 2;
-                    const sText = sLevel === 6 ? 'Mức độ 6: Khẩn cấp y tế' : (sLevel === 5 ? 'Mức độ 5: Mất kiểm soát' : (sLevel === 4 ? 'Mức độ 4: Tức giận cao độ' : (sLevel === 3 ? 'Mức độ 3: Thất vọng' : 'Mức độ 2: Trung tính')));
-
-                    const elapsedSec = Math.max(0, Math.floor((Date.now() - new Date(rc.updated_at || rc.created_at).getTime()) / 1000));
-                    const isHandover = rc.status === 'agent_handling';
-                    const isUrgent = Boolean(rc.is_urgent || sLevel >= 4);
-
-                    let cat = 'all';
-                    if (isUrgent) cat = 'urgent';
-                    else if (isHandover) cat = 'active';
-
-                    return {
-                        id: rc.id,
-                        isRealDb: true,
-                        customerId: rc.customer_id,
-                        customerName: custName,
-                        phone: phone,
-                        tier: tier,
-                        pawpoints: points,
-                        unreadCount: isUrgent ? 1 : 0,
-                        updatedAt: new Date(rc.updated_at || rc.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        sentimentLevel: sLevel,
-                        sentimentText: sText,
-                        sentimentTrend: rc.sentiment_trend || 'stable',
-                        isVipAttention: ((ticketsMap[rc.customer_id] || []).length >= 2) || (points >= 500) || Boolean(rc.ai_summary && rc.ai_summary.includes('VIP')),
-                        isHandover: isHandover,
-                        isUrgent: isUrgent,
-                        waitingSeconds: isHandover ? 0 : Math.min(elapsedSec, 999),
-                        category: cat,
-                        aiSummary: rc.ai_summary || (sLevel >= 4 ? 'Khách hàng có phản ánh cần ưu tiên xử lý.' : 'Hội thoại chăm sóc khách hàng tự động.'),
-                        internalNotes: rc.internal_note || cust.note || '',
-                        recentOrder: (ordersMap[rc.customer_id] || [])[0] ? { id: ordersMap[rc.customer_id][0].order_code || ordersMap[rc.customer_id][0].id, status: ordersMap[rc.customer_id][0].order_status } : null,
-                        recentBooking: (apptsMap[rc.customer_id] || [])[0] ? { id: apptsMap[rc.customer_id][0].appointment_code || apptsMap[rc.customer_id][0].id, status: apptsMap[rc.customer_id][0].appointment_status } : null,
-                        openTickets: (ticketsMap[rc.customer_id] || []).filter(t => t.status !== 'completed' && t.status !== 'resolved'),
-                        pets: petsMap[rc.customer_id] || [{ name: 'Bé cưng', breed: 'Thú cưng', notes: 'Bình thường' }],
-                        smartResponses: [
-                            { tag: 'Đồng cảm và Xoa dịu', text: `Dạ PawPal thành thật xin lỗi sen và bé vì sự bất tiện này! Em xin phép ưu tiên xử lý ngay cho sen ạ.` },
-                            { tag: 'Tặng điểm tạ lỗi', text: `Dạ để tạ lỗi, PawPal xin gửi tặng 50 điểm Pawpoint vào ví tài khoản của sen để sử dụng cho lần mua sắm tiếp theo ạ.` },
-                            { tag: 'Hỗ trợ tức thì', text: `Dạ em đã chuyển thông tin đến bộ phận chuyên môn, chuyên viên sẽ gọi điện hỗ trợ trực tiếp cho sen trong 3 phút nữa ạ.` }
-                        ],
-                        messages: mappedMsgs
-                    };
-                });
-            } else {
-                // Không có hội thoại nào trong CSDL: giữ danh sách rỗng, không tạo conv-demo-* giả
-                realConvList = [];
-            }
+                return {
+                    id: rc.id,
+                    isRealDb: true,
+                    customerId: rc.customer_id,
+                    customerName: custName,
+                    phone: phone,
+                    tier: existingConv?.tier || (rc.customer_id ? 'Thành viên' : 'Vãng lai'),
+                    pawpoints: existingConv?.pawpoints || 0,
+                    unreadCount: isUrgent ? 1 : 0,
+                    updatedAt: new Date(rc.updated_at || rc.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    sentimentLevel: sLevel,
+                    sentimentText: sText,
+                    sentimentTrend: rc.sentiment_trend || 'stable',
+                    isVipAttention: Boolean(rc.ai_summary && rc.ai_summary.includes('VIP')) || (sLevel >= 4),
+                    isHandover: isHandover,
+                    isUrgent: isUrgent,
+                    waitingSeconds: isHandover ? 0 : Math.min(elapsedSec, 999),
+                    category: cat,
+                    aiSummary: rc.ai_summary || (sLevel >= 4 ? 'Khách hàng có phản ánh cần ưu tiên xử lý.' : 'Hội thoại chăm sóc khách hàng tự động.'),
+                    internalNotes: rc.internal_note || '',
+                    recentOrder: existingConv?.recentOrder || null,
+                    recentBooking: existingConv?.recentBooking || null,
+                    openTickets: existingConv?.openTickets || [],
+                    pets: existingConv?.pets || [],
+                    smartResponses: [
+                        { tag: 'Đồng cảm và Xoa dịu', text: 'Dạ PawPal thành thật xin lỗi sen và bé vì sự bất tiện này! Em xin phép ưu tiên xử lý ngay cho sen ạ.' },
+                        { tag: 'Kiểm tra thông tin', text: 'Dạ sen cho em xin thêm thông tin chi tiết hoặc hình ảnh tình trạng của bé để em hỗ trợ kịp thời nhé ạ.' },
+                        { tag: 'Chuyển chuyên viên', text: 'Dạ em đã ghi nhận thông tin và đang kết nối chuyên viên phụ trách để giải quyết trường hợp của sen ngay ạ.' }
+                    ],
+                    messages: messages,
+                    messagesLoaded: Boolean(existingConv?.messagesLoaded),
+                    contextLoaded: Boolean(existingConv?.contextLoaded)
+                };
+            });
 
             PawpalChatbot.state.liveConversations = realConvList;
 
             // Đồng bộ conversation đang chọn
             const savedConvId = sessionStorage.getItem('pawpal_admin_chatbot_conv_id');
-            PawpalChatbot.state.currentConversation = (savedConvId && PawpalChatbot.state.liveConversations.find(c => c.id === savedConvId))
-                || (savedConvId && PawpalChatbot.state.liveConversations.find(c => c.customerId === savedConvId))
-                || PawpalChatbot.state.liveConversations[0]
+            const targetConv = (savedConvId && realConvList.find(c => c.id === savedConvId))
+                || (savedConvId && realConvList.find(c => c.customerId === savedConvId))
+                || realConvList[0]
                 || null;
 
-            if (PawpalChatbot.state.currentConversation) {
-                sessionStorage.setItem('pawpal_admin_chatbot_conv_id', PawpalChatbot.state.currentConversation.id);
+            PawpalChatbot.state.currentConversation = targetConv;
+            if (targetConv) {
+                sessionStorage.setItem('pawpal_admin_chatbot_conv_id', targetConv.id);
+                // Kích hoạt nạp chi tiết Tier 2 theo yêu cầu
+                loadConversationDetails(targetConv);
             }
 
-            // Cập nhật số đếm trên các tab bộ lọc
             updateFilterBadges();
-
-            // Cập nhật subtab Trực chat
             PawpalChatbot.state.liveLoaded = true;
             PawpalChatbot.subtabs.live?.renderConversationsList?.();
             PawpalChatbot.subtabs.live?.renderCurrentChat?.();
-
-            // Cập nhật deep breadcrumb nếu đang ở Trực chat
             updateDeepBreadcrumb();
 
         } catch (err) {
             PawpalChatbot.state.liveLoadError = 'Không thể tải hội thoại. Vui lòng tải lại trang.';
             PawpalChatbot.subtabs.live?.renderConversationsList?.();
             PawpalChatbot.subtabs.live?.renderCurrentChat?.();
-            console.error('[Chatbot] Lỗi nạp dữ liệu từ Supabase:', err);
+            console.error('[Chatbot] Lỗi nạp dữ liệu Inbox tóm tắt:', err);
         }
     }
-    PawpalChatbot.loadChatbotDataFromSupabase = loadChatbotDataFromSupabase;
+
+    // TIER 2: Nạp tin nhắn đầy đủ (30 tin gần nhất) theo phiên hội thoại
+    async function loadConversationMessages(convId, options = {}) {
+        if (!supabase || !convId) return [];
+        const limit = options.limit || 30;
+        try {
+            let q = supabase
+                .from('chat_message')
+                .select('id, conversation_id, sender_type, sender_name, content, created_at, is_toxic')
+                .eq('conversation_id', convId)
+                .order('created_at', { ascending: false })
+                .limit(limit);
+
+            if (options.beforeCreatedAt) {
+                q = q.lt('created_at', options.beforeCreatedAt);
+            }
+
+            const { data: msgs, error } = await q;
+            if (error) throw error;
+
+            const sorted = (msgs || []).slice().reverse();
+            return sorted.map(m => ({
+                id: m.id,
+                sender: m.sender_type === 'customer' ? 'user' : (m.sender_type === 'staff' ? 'agent' : 'bot'),
+                agentName: m.sender_name || (m.sender_type === 'staff' ? 'Chuyên viên CSKH' : 'PawPal Bot'),
+                time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                text: m.content || '',
+                isToxic: !!m.is_toxic,
+                activeMaskLevel: m.is_toxic ? 'words' : 'raw'
+            }));
+        } catch (err) {
+            console.error('[Chatbot] Lỗi nạp tin nhắn phiên:', err);
+            return [];
+        }
+    }
+
+    // TIER 2: Nạp ngữ cảnh hồ sơ khách hàng (đơn hàng, lịch hẹn, ticket, thú cưng, điểm thưởng)
+    async function loadCustomerContext(customerId) {
+        if (!supabase || !customerId || customerId === 'guest') {
+            return {
+                pets: [],
+                recentOrder: null,
+                recentBooking: null,
+                openTickets: [],
+                pawpoints: 0,
+                tier: 'Vãng lai'
+            };
+        }
+
+        if (customerContextCache.has(customerId)) {
+            return customerContextCache.get(customerId);
+        }
+
+        try {
+            const [petsRes, ordersRes, apptsRes, ticketsRes, pointsRes] = await Promise.all([
+                supabase.from('pet_profile').select('id, pet_name, breed, species, allergy, routine').eq('customer_id', customerId),
+                supabase.from('sales_order').select('id, order_code, order_status, created_at').eq('customer_id', customerId).order('created_at', { ascending: false }).limit(1),
+                supabase.from('appointment').select('id, appointment_code, appointment_status, created_at, service:service_id(service_name)').eq('customer_id', customerId).order('created_at', { ascending: false }).limit(1),
+                supabase.from('support_ticket').select('id, title, status, category, created_at').or(`user_id.eq.${customerId},customer_id.eq.${customerId}`).neq('status', 'completed').neq('status', 'resolved').limit(5),
+                supabase.from('customer_membership').select('total_paw_points').eq('customer_id', customerId).maybeSingle()
+            ]);
+
+            const pets = (petsRes.data || []).map(p => ({
+                id: p.id,
+                name: p.pet_name || 'Thú cưng',
+                breed: p.breed || p.species || 'Chưa rõ',
+                notes: p.allergy || p.routine || 'Bình thường'
+            }));
+
+            const recentOrder = (ordersRes.data || [])[0] ? {
+                id: ordersRes.data[0].order_code || ordersRes.data[0].id,
+                status: ordersRes.data[0].order_status || 'Đang xử lý'
+            } : null;
+
+            const recentBooking = (apptsRes.data || [])[0] ? {
+                id: apptsRes.data[0].appointment_code || apptsRes.data[0].id,
+                status: apptsRes.data[0].appointment_status || 'Đã xếp lịch'
+            } : null;
+
+            const openTickets = ticketsRes.data || [];
+
+            // CB-17: Lấy số dư authoritative từ customer_membership
+            const totalPoints = pointsRes.data?.total_paw_points ?? 0;
+
+            const ctx = {
+                pets,
+                recentOrder,
+                recentBooking,
+                openTickets,
+                pawpoints: totalPoints,
+                tier: computeCustomerTier(totalPoints)
+            };
+
+            customerContextCache.set(customerId, ctx);
+            return ctx;
+        } catch (err) {
+            console.error('[Chatbot] Lỗi nạp ngữ cảnh khách hàng:', err);
+            return {
+                pets: [],
+                recentOrder: null,
+                recentBooking: null,
+                openTickets: [],
+                pawpoints: 0,
+                tier: 'Thành viên'
+            };
+        }
+    }
+
+    // Nạp đầy đủ thông tin chi tiết phiên được chọn (Tier 2 on-demand)
+    async function loadConversationDetails(conv) {
+        if (!conv) return;
+
+        const tasks = [];
+        if (!conv.messagesLoaded) {
+            tasks.push(loadConversationMessages(conv.id, { limit: 30 }).then(msgs => {
+                if (msgs.length > 0) {
+                    conv.messages = msgs;
+                }
+                conv.messagesLoaded = true;
+            }));
+        }
+
+        if (!conv.contextLoaded && conv.customerId) {
+            tasks.push(loadCustomerContext(conv.customerId).then(ctx => {
+                conv.pets = ctx.pets;
+                conv.recentOrder = ctx.recentOrder;
+                conv.recentBooking = ctx.recentBooking;
+                conv.openTickets = ctx.openTickets;
+                conv.pawpoints = ctx.pawpoints;
+                conv.tier = ctx.tier;
+                conv.contextLoaded = true;
+            }));
+        }
+
+        if (tasks.length > 0) {
+            await Promise.all(tasks);
+            if (PawpalChatbot.state.currentConversation && PawpalChatbot.state.currentConversation.id === conv.id) {
+                PawpalChatbot.subtabs.live?.renderCurrentChat?.();
+                PawpalChatbot.subtabs.live?.renderCustomerInfoPanel?.();
+            }
+        }
+    }
+
+    // Debounce và In-flight Coalescing cho làm mới Inbox
+    function refreshInboxDebounced(delay = 350) {
+        if (inboxDebounceTimer) clearTimeout(inboxDebounceTimer);
+        inboxDebounceTimer = setTimeout(async () => {
+            if (isInboxRefreshing) {
+                hasPendingRefresh = true;
+                return;
+            }
+            isInboxRefreshing = true;
+            try {
+                await loadInboxSummary();
+            } catch (err) {
+                console.error('[Chatbot] Lỗi refreshInboxDebounced:', err);
+            } finally {
+                isInboxRefreshing = false;
+                if (hasPendingRefresh) {
+                    hasPendingRefresh = false;
+                    refreshInboxDebounced(100);
+                }
+            }
+        }, delay);
+    }
+
+    // Phơi bày ra namespace toàn cục
+    PawpalChatbot.loadInboxSummary = loadInboxSummary;
+    PawpalChatbot.loadChatbotDataFromSupabase = loadInboxSummary; // Tương thích ngược
+    PawpalChatbot.loadConversationMessages = loadConversationMessages;
+    PawpalChatbot.loadCustomerContext = loadCustomerContext;
+    PawpalChatbot.loadConversationDetails = loadConversationDetails;
+    PawpalChatbot.refreshInboxDebounced = refreshInboxDebounced;
 
     function updateFilterBadges() {
         const convs = PawpalChatbot.state.liveConversations || [];
@@ -470,7 +639,7 @@
     }
 
     // -------------------------------------------------------------
-    // SUPABASE REALTIME CHANNEL SYNC
+    // SUPABASE REALTIME CHANNEL SYNC (PR-02: THÔNG MINH, KHÔNG THRASHING)
     // -------------------------------------------------------------
     function setupChatbotRealtimeSync() {
         if (!supabase || typeof supabase.channel !== 'function') return;
@@ -487,15 +656,22 @@
 
             chatbotRealtimeChannel = supabase.channel('admin-chatbot-global-sync')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_conversation' }, () => {
-                    loadChatbotDataFromSupabase();
+                    refreshInboxDebounced(350);
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_message' }, () => {
-                    loadChatbotDataFromSupabase();
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_message' }, (payload) => {
+                    const newMsg = payload && payload.new;
+                    if (newMsg && PawpalChatbot.state.currentConversation && newMsg.conversation_id === PawpalChatbot.state.currentConversation.id) {
+                        PawpalChatbot.subtabs.live?.handleIncomingMessage?.(newMsg);
+                    }
+                    refreshInboxDebounced(350);
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, () => {
-                    loadChatbotDataFromSupabase();
-                })
-                .subscribe();
+                .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        PawpalChatbot.state.isRealtimeHealthy = true;
+                    } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                        PawpalChatbot.state.isRealtimeHealthy = false;
+                    }
+                });
 
             window.addEventListener('beforeunload', () => {
                 if (chatbotRealtimeChannel) supabase.removeChannel(chatbotRealtimeChannel);
@@ -630,20 +806,22 @@
 
 
     // -------------------------------------------------------------
-    // KHỞI ĐỘNG MODULE
+    // KHỞI ĐỘNG MODULE (PR-02: TIẾT KIỆM TẢI, TẮT POLLING KHI REALTIME KHỎE)
     // -------------------------------------------------------------
     setupChatbotRealtimeSync();
-    loadChatbotDataFromSupabase();
+    loadInboxSummary();
 
     window.addEventListener('focus', () => {
-        loadChatbotDataFromSupabase();
+        refreshInboxDebounced(150);
     });
 
+    // PR-02: Fallback polling 45s chỉ chạy khi Realtime mất kết nối và tab đang hiển thị
     setInterval(() => {
-        if (sessionStorage.getItem('pawpal_admin_active_module') === 'Chatbot') {
-            loadChatbotDataFromSupabase();
-        }
-    }, 10000);
+        if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Chatbot') return;
+        if (document.hidden) return;
+        if (PawpalChatbot.state.isRealtimeHealthy) return;
+        refreshInboxDebounced(0);
+    }, 45000);
 
     const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
     const savedTab = sessionStorage.getItem('pawpal_admin_chatbot_subtab');

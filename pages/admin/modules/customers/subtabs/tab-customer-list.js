@@ -25,26 +25,28 @@
         return sanitizePetDescriptor(pet?.breed) || sanitizePetDescriptor(pet?.species) || '—';
     }
 
+    const esc = (s) => (PawpalCustomers.escapeHtml ? PawpalCustomers.escapeHtml(s) : String(s || ''));
+
     function formatCustomerPetsCell(pets) {
         if (!pets || pets.length === 0) {
             return `<span class="customer-pet-sub">Chưa có thú cưng</span>`;
         }
         if (pets.length === 1) {
             const p = pets[0];
-            const breedText = getPetDescriptor(p);
+            const breedText = esc(getPetDescriptor(p));
             return `
-                <div class="customer-pet-cell">${p.name}</div>
+                <div class="customer-pet-cell">${esc(p.name)}</div>
                 <div class="customer-pet-sub">${breedText}</div>
             `;
         }
         const mainPet = pets[0];
         const moreCount = pets.length - 1;
         const cleanDescriptors = pets.map(getPetDescriptor).filter(value => value !== '—');
-        const allBreeds = [...new Set(cleanDescriptors)].join(', ') || '—';
-        const fullTooltip = pets.map(p => `${p.name} (${getPetDescriptor(p)})`).join(', ');
+        const allBreeds = esc([...new Set(cleanDescriptors)].join(', ') || '—');
+        const fullTooltip = esc(pets.map(p => `${p.name} (${getPetDescriptor(p)})`).join(', '));
 
         return `
-            <div class="customer-pet-cell">${mainPet.name} <span class="customer-pet-more">(+${moreCount} bé)</span></div>
+            <div class="customer-pet-cell">${esc(mainPet.name)} <span class="customer-pet-more">(+${moreCount} bé)</span></div>
             <div class="customer-pet-sub" title="${fullTooltip}">${allBreeds}</div>
         `;
     }
@@ -259,11 +261,11 @@
             let alertBadgeHtml = '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>';
             if (hasEmergency) {
                 const ticket = activeComplaint || (c.complaints && c.complaints[0]);
-                const ticketId = ticket?.id || '';
-                const ticketStatus = ticket?.status || 'Chưa xử lý';
+                const ticketId = esc(ticket?.id || '');
+                const ticketStatus = esc(ticket?.status || 'Chưa xử lý');
                 alertBadgeHtml = `<span class="alert-indicator text-danger">• ${ticketId} · ${ticketStatus}</span>`;
             } else if (hasPetAlert && alertPet) {
-                alertBadgeHtml = `<span class="alert-indicator text-warning">• ${alertPet.name}: ${alertPet.alertNote}</span>`;
+                alertBadgeHtml = `<span class="alert-indicator text-warning">• ${esc(alertPet.name)}: ${esc(alertPet.alertNote)}</span>`;
             }
 
             let statusBadgeHtml = '<span class="admin-badge badge-success">Thành viên</span>';
@@ -275,22 +277,22 @@
 
             const subCellHtml = c.status === 'TEMP'
                 ? 'Khách vãng lai tại quầy'
-                : (c.email && c.email !== 'Chưa cập nhật' ? c.email : 'Thành viên');
+                : (c.email && c.email !== 'Chưa cập nhật' ? esc(c.email) : 'Thành viên');
 
             const tierPointsHtml = c.status === 'TEMP'
                 ? `<span class="admin-badge badge-neutral">Vãng lai</span><span class="points-val" style="color: var(--text-muted); opacity: 0.6;">0 điểm</span>`
-                : `<span class="admin-badge ${c.tierBadgeClass || 'badge-tier-silver'}">${c.tierName || 'Bạc'}</span><span class="points-val">${(c.points || 0).toLocaleString('vi-VN')} điểm</span>`;
+                : `<span class="admin-badge ${esc(c.tierBadgeClass || 'badge-tier-silver')}">${esc(c.tierName || 'Bạc')}</span><span class="points-val">${(c.points || 0).toLocaleString('vi-VN')} điểm</span>`;
 
             return `
-                <tr class="${rowLockedClass} ${rowComplaintClass}" data-id="${c.id}">
-                    <td style="${firstTdBorder}"><strong>${c.id}</strong></td>
+                <tr class="${rowLockedClass} ${rowComplaintClass}" data-id="${esc(c.id)}">
+                    <td style="${firstTdBorder}"><strong>${esc(c.id)}</strong></td>
                     <td>
                         <div class="user-name-cell">
-                            <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="${c.id}">${c.name}</a>
+                            <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="${esc(c.id)}">${esc(c.name)}</a>
                         </div>
                         <div class="user-sub-cell">${subCellHtml}</div>
                     </td>
-                    <td><strong>${c.phone}</strong></td>
+                    <td><strong>${esc(c.phone)}</strong></td>
                     <td>
                         ${formatCustomerPetsCell(c.pets)}
                     </td>
@@ -300,7 +302,7 @@
                     <td>${alertBadgeHtml}</td>
                     <td>${statusBadgeHtml}</td>
                     <td style="width: 70px; min-width: 70px; text-align: center; padding: 8px 10px;">
-                        <button type="button" class="btn-action-more" data-id="${c.id}" title="Tác vụ">•••</button>
+                        <button type="button" class="btn-action-more" data-id="${esc(c.id)}" title="Tác vụ">•••</button>
                     </td>
                 </tr>
             `;
@@ -512,9 +514,17 @@
             ];
         });
 
+        const sanitizeCsvCell = (val) => {
+            let s = String(val === null || val === undefined ? '' : val);
+            if (/^[=+\-@\t\r]/.test(s)) {
+                s = "'" + s;
+            }
+            return `"${s.replace(/"/g, '""')}"`;
+        };
+
         const csvRows = [
-            headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','),
-            ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+            headers.map(sanitizeCsvCell).join(','),
+            ...rows.map(row => row.map(sanitizeCsvCell).join(','))
         ];
 
         const csvContent = '\uFEFF' + csvRows.join('\r\n');
@@ -754,53 +764,81 @@
 
                     if (custErr || !newCust) {
                         console.error('[Customers] Lỗi tạo customer:', custErr);
-                        PawpalCustomers.showToast('Không thể tạo hồ sơ khách hàng trên CSDL!', 'danger');
+                        PawpalCustomers.showToast(`Không thể tạo hồ sơ khách hàng: ${custErr?.message || 'Lỗi CSDL'}`, 'danger');
                         return;
                     }
 
-                    await client.from('customer_profile').insert({
+                    const { error: profErr } = await client.from('customer_profile').insert({
                         customer_id: newCust.id,
                         full_name: name,
                         gender: 'OTHER'
                     });
+                    if (profErr) {
+                        console.error('[Customers] Lỗi tạo customer_profile, rollback customer:', profErr);
+                        await client.from('customer').delete().eq('id', newCust.id);
+                        PawpalCustomers.showToast(`Không thể tạo chi tiết khách hàng: ${profErr.message}`, 'danger');
+                        return;
+                    }
 
-                    await client.from('customer_membership').insert({
+                    const { error: memErr } = await client.from('customer_membership').insert({
                         customer_id: newCust.id,
                         total_paw_points: 0
                     });
+                    if (memErr) {
+                        console.error('[Customers] Lỗi tạo customer_membership, rollback customer:', memErr);
+                        await client.from('customer_profile').delete().eq('customer_id', newCust.id);
+                        await client.from('customer').delete().eq('id', newCust.id);
+                        PawpalCustomers.showToast(`Không thể khởi tạo điểm/hạng khách hàng: ${memErr.message}`, 'danger');
+                        return;
+                    }
 
                     if (initialAddress && initialAddress.trim()) {
-                        await client.from('customer_address').insert({
+                        const { error: addrErr } = await client.from('customer_address').insert({
                             customer_id: newCust.id,
                             receiver_name: name,
                             receiver_phone: phone || '',
                             street_address: initialAddress.trim(),
                             is_default: true
                         });
+                        if (addrErr) {
+                            console.warn('[Customers] Cảnh báo lưu địa chỉ khách:', addrErr);
+                        }
                     }
 
-                    await client.from('customer_activation_sms').insert({
+                    const { error: smsErr } = await client.from('customer_activation_sms').insert({
                         customer_id: newCust.id,
                         phone: phone,
                         activation_url: `${window.location.origin}/pages/public/activate-account.html?token=${encodeURIComponent(activationToken)}`,
                         status: 'pending'
                     });
+                    if (smsErr) {
+                        console.warn('[Customers] Cảnh báo lưu outbox kích hoạt SMS:', smsErr);
+                    }
 
+                    let petCreateWarning = null;
                     if (petName && petName.trim()) {
                         const spec = petSpecies === 'CAT' ? 'cat' : (petSpecies === 'OTHER' ? 'other' : 'dog');
-                        await client.from('pet_profile').insert({
+                        const { error: petErr } = await client.from('pet_profile').insert({
                             customer_id: newCust.id,
                             pet_name: petName.trim(),
                             species: spec,
                             breed: petBreed || 'Chưa cập nhật',
                             weight: petWeight === '' ? null : petWeight
                         });
+                        if (petErr) {
+                            console.error('[Customers] Lỗi tạo pet kèm theo:', petErr);
+                            petCreateWarning = `Đã tạo khách hàng nhưng chưa thể thêm bé cưng: ${petErr.message || 'Lỗi CSDL'}`;
+                        }
                     }
 
-                    await PawpalCustomers.loadCustomersModuleData();
+                    await PawpalCustomers.loadCustomersModuleData({ force: true });
                     renderCustomersTable();
                     updateCustomerKPIs();
-                    PawpalCustomers.showToast(`Đã tạo thành công hồ sơ khách hàng ${name} vào CSDL!`, 'success');
+                    if (petCreateWarning) {
+                        PawpalCustomers.showToast(petCreateWarning, 'warning');
+                    } else {
+                        PawpalCustomers.showToast(`Đã tạo thành công hồ sơ khách hàng ${name} vào CSDL!`, 'success');
+                    }
                     formAdd.reset();
                     closeAddModal();
                 } catch (err) {

@@ -13,13 +13,17 @@
     let currentSuggestIndex = 0;
     let pendingAdminAttachment = null;
     let currentAdminRoomChannel = null;
+    let subscribedConversationId = null;
     let customerTypingHideTimer = null;
-    let adminTypingDebounceTimer = null;
+    let isSendingLiveMsg = false;
+    let isStaffTypingActive = false;
+    let staffTypingStopTimer = null;
 
+    // PR-02: Gợi ý phản hồi mẫu chân thực, không hứa hẹn bồi hoàn ảo (CB-25)
     const defaultSmartSuggestions = [
-        { tag: 'Đồng cảm và Xoa dịu', text: 'Dạ PawPal thành thật xin lỗi sen và bé vì sự bất tiện này! Em xin phép ưu tiên xử lý ngay cho sen ạ.' },
-        { tag: 'Tặng điểm tạ lỗi', text: 'Dạ để tạ lỗi, PawPal xin gửi tặng 50 điểm Pawpoint vào ví tài khoản của sen để sử dụng cho lần mua sắm tiếp theo ạ.' },
-        { tag: 'Hỗ trợ tức thì', text: 'Dạ em đã chuyển thông tin đến bộ phận chuyên môn, chuyên viên sẽ gọi điện hỗ trợ trực tiếp cho sen trong 3 phút nữa ạ.' }
+        { tag: 'Đồng cảm và Xoa dịu', text: 'Dạ PawPal thành thật xin lỗi sen và bé vì sự bất tiện này! Em xin phép ưu tiên kiểm tra và xử lý ngay cho sen ạ.' },
+        { tag: 'Kiểm tra thông tin', text: 'Dạ sen cho em xin thêm thông tin chi tiết hoặc hình ảnh tình trạng của bé để em hỗ trợ kịp thời nhé ạ.' },
+        { tag: 'Chuyển chuyên viên', text: 'Dạ em đã ghi nhận thông tin và đang kết nối chuyên viên phụ trách để giải quyết trường hợp của sen ngay ạ.' }
     ];
 
     let cannedResponsesDatabase = [
@@ -187,7 +191,7 @@
                 const rawSt = data.status || '';
                 const statusBadge = (rawSt === 'Hoàn thành' || rawSt === 'Đang thực hiện') ? 'badge-active' : (rawSt === 'Đã hủy' ? 'badge-danger' : 'badge-info');
                 const service = escapeHtml(data.service || 'Chăm sóc thú cưng');
-                const pet = escapeHtml(data.pet || 'Bé cưng');
+                const pet = escapeHtml(data.pet || 'thú cưng');
                 const time = escapeHtml(data.time || 'Hôm nay');
                 blocks.push(`<div class="fab-rich-card fab-rich-card--booking"><div class="fab-rich-card-header"><span class="fab-rich-card-tag">Lịch hẹn dịch vụ</span><span class="admin-badge ${statusBadge}">${st}</span></div><div class="fab-rich-card-body"><div class="fab-rich-card-title">${service}</div><div class="fab-rich-card-desc">Bé: <strong>${pet}</strong> • Giờ hẹn: <strong>${time}</strong></div></div><div class="fab-rich-card-action">Lịch hẹn dịch vụ</div></div>`);
             } catch(e) {
@@ -250,11 +254,19 @@
         return html;
     }
 
+    // PR-02: Chống tạo mới/hủy liên tục phòng WebSocket nếu ID không đổi (CB-11)
     function subscribeToConversationRoom(convId) {
         if (!supabase || !convId) return;
+        if (subscribedConversationId === convId && currentAdminRoomChannel) {
+            return;
+        }
+
         if (currentAdminRoomChannel) {
             try { supabase.removeChannel(currentAdminRoomChannel); } catch(e) {}
+            currentAdminRoomChannel = null;
         }
+        subscribedConversationId = convId;
+
         const customerTypingBar = document.getElementById('customerTypingBar');
         const customerTypingText = document.getElementById('customerTypingText');
         if (customerTypingBar) customerTypingBar.style.display = 'none';
@@ -265,7 +277,7 @@
                 if (data && data.who === 'customer') {
                     if (data.isTyping) {
                         if (customerTypingBar) {
-                            if (customerTypingText) customerTypingText.textContent = `${data.customerName || 'Khách hàng'} đang soạn tin...`;
+                            if (customerTypingText) customerTypingText.textContent = `${escapeHtml(data.customerName || 'Khách hàng')} đang soạn tin...`;
                             customerTypingBar.style.display = 'flex';
                         }
                         clearTimeout(customerTypingHideTimer);
@@ -281,6 +293,14 @@
             .subscribe();
     }
 
+    function unsubscribeConversationRoom() {
+        if (currentAdminRoomChannel) {
+            try { supabase.removeChannel(currentAdminRoomChannel); } catch(e) {}
+            currentAdminRoomChannel = null;
+        }
+        subscribedConversationId = null;
+    }
+
     function notifyAdminTyping(isTyping) {
         if (currentAdminRoomChannel && PawpalChatbot.state?.currentConversation?.id) {
             try {
@@ -292,6 +312,44 @@
             } catch(e) {}
         }
     }
+
+    // PR-02: Debounce gõ phím nhân viên, ngăn phát 100 broadcast khi gõ 100 ký tự (CB-20)
+    function handleStaffTyping() {
+        if (!isStaffTypingActive) {
+            isStaffTypingActive = true;
+            notifyAdminTyping(true);
+        }
+        clearTimeout(staffTypingStopTimer);
+        staffTypingStopTimer = setTimeout(() => {
+            isStaffTypingActive = false;
+            notifyAdminTyping(false);
+        }, 2500);
+    }
+
+    // PR-02: Xử lý tin nhắn realtime đến hội thoại đang mở trực tiếp (không kéo lại cả 8 bảng)
+    function handleIncomingMessage(newMsg) {
+        if (!newMsg) return;
+        const currentConv = PawpalChatbot.state?.currentConversation;
+        if (!currentConv || currentConv.id !== newMsg.conversation_id) return;
+
+        currentConv.messages = currentConv.messages || [];
+        const exists = currentConv.messages.some(m => m.id === newMsg.id);
+        if (exists) return;
+
+        const mapped = {
+            id: newMsg.id,
+            sender: newMsg.sender_type === 'customer' ? 'user' : (newMsg.sender_type === 'staff' ? 'agent' : 'bot'),
+            agentName: newMsg.sender_name || (newMsg.sender_type === 'staff' ? 'Chuyên viên CSKH' : 'PawPal Bot'),
+            time: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            text: newMsg.content || '',
+            isToxic: !!newMsg.is_toxic,
+            activeMaskLevel: newMsg.is_toxic ? 'words' : 'raw'
+        };
+
+        currentConv.messages.push(mapped);
+        renderCurrentChat();
+    }
+    PawpalChatbot.subtabs.live.handleIncomingMessage = handleIncomingMessage;
 
     function renderConversationsList() {
         const container = document.getElementById('conversationsListContainer');
@@ -351,7 +409,7 @@
         container.innerHTML = '';
         filtered.forEach(conv => {
             const isActive = currentConversation && currentConversation.id === conv.id;
-            const lastMsg = conv.messages[conv.messages.length - 1];
+            const lastMsg = (conv.messages && conv.messages.length > 0) ? conv.messages[conv.messages.length - 1] : null;
             const snippet = lastMsg ? (lastMsg.isToxic ? '[Nội dung đã được che mờ]' : formatSnippetPreview(lastMsg.text)) : '...';
 
             let sentimentDot = '';
@@ -375,7 +433,7 @@
 
             const isMember = Boolean(conv.customerId && conv.customerId !== 'guest');
             const memberBadge = isMember 
-                ? `<span class="conv-member-badge">${conv.tier || 'Thành viên'}</span>` 
+                ? `<span class="conv-member-badge">${escapeHtml(conv.tier || 'Thành viên')}</span>` 
                 : '';
 
             const handoverTag = `<span class="admin-badge badge-neutral" style="font-size: 10.5px; height: 20px; padding: 0 6px;">${conv.isHandover ? 'Nhân viên' : 'Bot'}</span>`;
@@ -385,11 +443,11 @@
             item.className = `conversation-item ${isMember ? 'is-member' : 'is-guest'} ${isActive ? 'active' : ''}`;
             item.innerHTML = `
                 <div class="conversation-item-top">
-                    <span class="conv-cust-name">${conv.customerName}${memberBadge}${vipTag}</span>
-                    <span class="conv-time">${conv.updatedAt}</span>
+                    <span class="conv-cust-name">${escapeHtml(conv.customerName || 'Khách hàng')}${memberBadge}${vipTag}</span>
+                    <span class="conv-time">${escapeHtml(conv.updatedAt || '')}</span>
                 </div>
                 <div class="conversation-item-mid">
-                    <span class="conv-snippet">${snippet}</span>
+                    <span class="conv-snippet">${escapeHtml(snippet)}</span>
                 </div>
                 <div class="conversation-item-bottom">
                     <div class="conv-bottom-left">
@@ -411,6 +469,7 @@
                 sessionStorage.setItem('pawpal_admin_chatbot_conv_id', conv.id);
                 renderConversationsList();
                 renderCurrentChat();
+                PawpalChatbot.loadConversationDetails?.(conv);
                 PawpalChatbot.updateBreadcrumb?.(conv.customerName);
             });
 
@@ -808,30 +867,34 @@
         const ticketsListEl = document.getElementById('infoOpenTicketsList');
         const internalNoteInput = document.getElementById('chatInternalNoteInput');
 
-        if (custNameEl) custNameEl.textContent = currentConversation.customerName;
-        if (custTierEl) custTierEl.textContent = currentConversation.tier;
-        if (custPhoneEl) custPhoneEl.textContent = currentConversation.phone;
+        if (custNameEl) custNameEl.textContent = currentConversation.customerName || 'Khách hàng';
+        if (custTierEl) custTierEl.textContent = currentConversation.tier || '—';
+        if (custPhoneEl) custPhoneEl.textContent = currentConversation.phone || '—';
         if (custPointsEl) custPointsEl.textContent = `${(currentConversation.pawpoints || 0).toLocaleString('vi-VN')} điểm`;
 
         if (petsListEl) {
             petsListEl.innerHTML = '';
-            currentConversation.pets.forEach(p => {
-                const card = document.createElement('div');
-                card.className = 'pet-mini-card';
-                const notesHtml = (p.notes === 'Bình thường' || !p.notes)
-                    ? '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>'
-                    : `<span style="font-size: 11.5px; color: ${p.notes.includes('Dị ứng') || p.notes.includes('sợ') ? '#DC2626' : 'var(--text-muted)'};">${p.notes}</span>`;
-                card.innerHTML = `
-                    <span class="pet-mini-name">${p.name} (${p.breed})</span>
-                    ${notesHtml}
-                `;
-                petsListEl.appendChild(card);
-            });
+            if (currentConversation.pets && currentConversation.pets.length > 0) {
+                currentConversation.pets.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'pet-mini-card';
+                    const notesHtml = (p.notes === 'Bình thường' || !p.notes)
+                        ? '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>'
+                        : `<span style="font-size: 11.5px; color: ${String(p.notes).includes('Dị ứng') || String(p.notes).includes('sợ') ? '#DC2626' : 'var(--text-muted)'};">${escapeHtml(p.notes)}</span>`;
+                    card.innerHTML = `
+                        <span class="pet-mini-name">${escapeHtml(p.name)} (${escapeHtml(p.breed)})</span>
+                        ${notesHtml}
+                    `;
+                    petsListEl.appendChild(card);
+                });
+            } else {
+                petsListEl.innerHTML = '<span style="color: var(--text-muted); font-size: 12.5px;">Chưa đăng ký thú cưng</span>';
+            }
         }
 
         if (recentOrderEl) {
             if (currentConversation.recentOrder) {
-                recentOrderEl.innerHTML = `<a href="javascript:void(0)" class="user-name-link btn-jump-order" data-id="${currentConversation.recentOrder.id}">${currentConversation.recentOrder.id}</a> (${currentConversation.recentOrder.status})`;
+                recentOrderEl.innerHTML = `<a href="javascript:void(0)" class="user-name-link btn-jump-order" data-id="${escapeHtml(currentConversation.recentOrder.id)}">${escapeHtml(currentConversation.recentOrder.id)}</a> (${escapeHtml(currentConversation.recentOrder.status)})`;
             } else {
                 recentOrderEl.textContent = 'Chưa có đơn hàng';
             }
@@ -839,7 +902,7 @@
 
         if (recentBookingEl) {
             if (currentConversation.recentBooking) {
-                recentBookingEl.innerHTML = `<a href="javascript:void(0)" class="user-name-link btn-jump-booking" data-id="${currentConversation.recentBooking.id}">${currentConversation.recentBooking.id}</a> (${currentConversation.recentBooking.status})`;
+                recentBookingEl.innerHTML = `<a href="javascript:void(0)" class="user-name-link btn-jump-booking" data-id="${escapeHtml(currentConversation.recentBooking.id)}">${escapeHtml(currentConversation.recentBooking.id)}</a> (${escapeHtml(currentConversation.recentBooking.status)})`;
             } else {
                 recentBookingEl.textContent = 'Chưa có lịch hẹn';
             }
@@ -851,7 +914,7 @@
                 currentConversation.openTickets.forEach(t => {
                     const el = document.createElement('div');
                     el.style.marginBottom = '6px';
-                    el.innerHTML = `<a href="javascript:void(0)" class="user-name-link btn-jump-ticket" data-id="${t.id}">${t.id}</a>: ${t.title}`;
+                    el.innerHTML = `<a href="javascript:void(0)" class="user-name-link btn-jump-ticket" data-id="${escapeHtml(t.id)}">${escapeHtml(t.id)}</a>: ${escapeHtml(t.title)}`;
                     ticketsListEl.appendChild(el);
                 });
             } else {
@@ -953,10 +1016,12 @@
     }
 
     async function sendLiveMsg() {
+        if (isSendingLiveMsg) return; // PR-02: Chặn click liên tục gửi nhiều bản tin (CB-20)
         const currentConversation = PawpalChatbot.state?.currentConversation;
         if (!currentConversation) return;
 
         const msgInput = document.getElementById('chatMessageInput');
+        const sendMsgBtn = document.getElementById('btnSendLiveMessage');
         const text = msgInput ? msgInput.value.trim() : '';
         if (!text && !pendingAdminAttachment) return;
 
@@ -965,9 +1030,37 @@
             return;
         }
 
+        isSendingLiveMsg = true;
+        if (sendMsgBtn) {
+            sendMsgBtn.disabled = true;
+            sendMsgBtn.style.opacity = '0.6';
+        }
+
         let fullText = text;
         if (pendingAdminAttachment) {
-            const imgMd = `![${pendingAdminAttachment.name}](${pendingAdminAttachment.dataUrl})`;
+            let imageSource = null;
+            if (pendingAdminAttachment.file && supabase && supabase.storage) {
+                try {
+                    const ext = (pendingAdminAttachment.file.name || 'image.jpg').split('.').pop().toLowerCase();
+                    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+                    const filePath = `staff/${fileName}`;
+                    const { data: uploadData, error: uploadErr } = await supabase.storage
+                        .from('chat-attachments')
+                        .upload(filePath, pendingAdminAttachment.file, { cacheControl: '3600', upsert: false });
+                    if (!uploadErr && uploadData) {
+                        const { data: publicData } = supabase.storage
+                            .from('chat-attachments')
+                            .getPublicUrl(filePath);
+                        imageSource = publicData?.publicUrl || filePath;
+                    }
+                } catch (stErr) {
+                    console.warn('[Staff Storage] Lỗi upload tệp:', stErr);
+                }
+            }
+            if (!imageSource) {
+                imageSource = (pendingAdminAttachment.size <= 65536) ? pendingAdminAttachment.dataUrl : `[Ảnh đính kèm: ${pendingAdminAttachment.name}]`;
+            }
+            const imgMd = `![${pendingAdminAttachment.name}](${imageSource})`;
             fullText = text ? `${text}\n${imgMd}` : imgMd;
         }
 
@@ -981,7 +1074,8 @@
             text: fullText
         });
 
-        clearTimeout(adminTypingDebounceTimer);
+        clearTimeout(staffTypingStopTimer);
+        isStaffTypingActive = false;
         notifyAdminTyping(false);
         const customerTypingBar = document.getElementById('customerTypingBar');
         if (customerTypingBar) customerTypingBar.style.display = 'none';
@@ -991,8 +1085,8 @@
         clearAdminAttachment();
         renderCurrentChat();
 
-        if (supabase) {
-            try {
+        try {
+            if (supabase) {
                 const convId = await ensureRealConversation(currentConversation);
                 if (!convId) {
                     throw new Error('Không xác định được mã phiên hội thoại trong CSDL');
@@ -1027,20 +1121,26 @@
                         status: 'agent_handling'
                     })
                     .eq('id', convId);
-            } catch (dbErr) {
-                console.error('[Chatbot] Lỗi lưu tin nhắn nhân viên vào Supabase:', dbErr);
-                // Khôi phục trạng thái khi gửi thất bại (G1-04: draft preservation, honest error reporting)
-                currentConversation.messages = currentConversation.messages.filter(m => m.id !== localMsgId);
-                if (msgInput) msgInput.value = text;
-                if (savedAttachment) {
-                    pendingAdminAttachment = savedAttachment;
-                    const adminAttachPreview = document.getElementById('adminChatAttachPreview');
-                    const adminAttachPreviewImg = document.getElementById('adminChatAttachPreviewImg');
-                    if (adminAttachPreviewImg) adminAttachPreviewImg.src = savedAttachment.dataUrl;
-                    if (adminAttachPreview) adminAttachPreview.style.display = 'flex';
-                }
-                renderCurrentChat();
-                PawpalChatbot.showToast?.(`Gửi tin nhắn thất bại: ${dbErr?.message || 'Lỗi kết nối CSDL'}. Bản nháp đã được giữ lại.`, 'error');
+            }
+        } catch (dbErr) {
+            console.error('[Chatbot] Lỗi lưu tin nhắn nhân viên vào Supabase:', dbErr);
+            // Khôi phục trạng thái khi gửi thất bại (G1-04: draft preservation, honest error reporting)
+            currentConversation.messages = currentConversation.messages.filter(m => m.id !== localMsgId);
+            if (msgInput) msgInput.value = text;
+            if (savedAttachment) {
+                pendingAdminAttachment = savedAttachment;
+                const adminAttachPreview = document.getElementById('adminChatAttachPreview');
+                const adminAttachPreviewImg = document.getElementById('adminChatAttachPreviewImg');
+                if (adminAttachPreviewImg) adminAttachPreviewImg.src = savedAttachment.dataUrl;
+                if (adminAttachPreview) adminAttachPreview.style.display = 'flex';
+            }
+            renderCurrentChat();
+            PawpalChatbot.showToast?.(`Gửi tin nhắn thất bại: ${dbErr?.message || 'Lỗi kết nối CSDL'}. Bản nháp đã được giữ lại.`, 'error');
+        } finally {
+            isSendingLiveMsg = false;
+            if (sendMsgBtn) {
+                sendMsgBtn.disabled = false;
+                sendMsgBtn.style.opacity = '1';
             }
         }
     }
@@ -1059,8 +1159,10 @@
         renderCurrentChat();
 
         if (!PawpalChatbot.state?.liveConversations || PawpalChatbot.state.liveConversations.length === 0) {
-            PawpalChatbot.loadChatbotDataFromSupabase?.();
+            PawpalChatbot.loadInboxSummary?.();
         }
+
+        window.addEventListener('beforeunload', unsubscribeConversationRoom);
     }
 
     function setupLiveChatEventListeners() {
@@ -1174,13 +1276,7 @@
             }
         });
 
-        msgInput?.addEventListener('input', () => {
-            notifyAdminTyping(true);
-            clearTimeout(adminTypingDebounceTimer);
-            adminTypingDebounceTimer = setTimeout(() => {
-                notifyAdminTyping(false);
-            }, 2500);
-        });
+        msgInput?.addEventListener('input', handleStaffTyping);
 
         // Đính kèm ảnh
         const btnAdminAttach = document.getElementById('btnAdminChatAttach');
@@ -1213,6 +1309,7 @@
             reader.onload = (ev) => {
                 const dataUrl = ev.target.result;
                 pendingAdminAttachment = {
+                    file: file,
                     name: file.name,
                     size: file.size,
                     dataUrl: dataUrl
@@ -1875,7 +1972,7 @@
                 return;
             }
 
-            const petName = currentConversation.petName || currentConversation.petInfo?.name || 'Bé cưng';
+            const petName = currentConversation.petName || currentConversation.petInfo?.name || (currentConversation.pets?.[0]?.name) || 'thú cưng';
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const cameraMsgText = `[Snapshot Camera Live lúc ${timeStr}]: Bé ${petName} đang sinh hoạt ngoan ngoãn trong phòng lưu trú. Nhiệt độ phòng 24.5°C, độ ẩm 55% đạt chuẩn an toàn 5 sao!`;
             const localMsgId = 'msg-camera-' + Date.now();

@@ -126,18 +126,19 @@
                 ? '<span class="admin-badge badge-active">Đã nạp RAG</span>'
                 : '<span class="admin-badge badge-warning">Chưa nạp RAG</span>';
 
+            const esc = PawpalSettings.escapeHtml || (s => s);
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><div class="article-thumb-img">Ảnh bìa</div></td>
-                <td><strong style="color: var(--text-main); font-size: 13.5px;">${a.title}</strong></td>
-                <td>${a.author}</td>
-                <td><span class="admin-badge badge-neutral">${a.category}</span></td>
+                <td><strong style="color: var(--text-main); font-size: 13.5px;">${esc(a.title)}</strong></td>
+                <td>${esc(a.author)}</td>
+                <td><span class="admin-badge badge-neutral">${esc(a.category)}</span></td>
                 <td>${(Number(a.views) || 0).toLocaleString('vi-VN')}</td>
                 <td>${ragBadge}</td>
                 <td>${statusBadge}</td>
-                <td>${a.updatedAt}</td>
+                <td>${esc(a.updatedAt)}</td>
                 <td style="text-align: center;">
-                    <button type="button" class="btn-action-trigger btn-article-more" data-id="${a.id}" title="Tác vụ bài viết">•••</button>
+                    <button type="button" class="btn-action-trigger btn-article-more" data-id="${esc(a.id)}" title="Tác vụ bài viết">•••</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -282,26 +283,41 @@
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/(^-|-$)+/g, '') + '-' + Date.now();
 
+            if (PawpalSettings.state?.isSafeModeLocked) {
+                showToast('Khóa an toàn đang bật. Vui lòng mở khóa trước khi xuất bản hoặc lưu bài viết.', 'warning');
+                return;
+            }
+
             try {
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Không kết nối được Supabase.');
 
-                // Xác thực author_id (BẮT BUỘC NOT NULL liên kết bảng staff)
+                // CFG-13: Xác thực author_id từ phiên đăng nhập thực tế, cấm fallback staff ngẫu nhiên hoặc dummy UUID
                 let authorId = null;
                 try {
-                    const adminUser = JSON.parse(localStorage.getItem('pawpal_admin_user') || sessionStorage.getItem('pawpal_admin_user') || '{}');
-                    if (adminUser?.id) authorId = adminUser.id;
+                    const { data: authData } = await client.auth.getUser();
+                    if (authData?.user?.id) {
+                        const { data: staffMatch } = await client.from('staff').select('id').eq('user_id', authData.user.id).maybeSingle();
+                        authorId = staffMatch?.id || authData.user.id;
+                    }
                 } catch (e) {}
 
                 if (!authorId) {
-                    const { data: anyStaff } = await client.from('staff').select('id').limit(1).maybeSingle();
-                    authorId = anyStaff?.id || 'd0000000-5555-5555-5555-555555555555';
+                    try {
+                        const adminUser = JSON.parse(localStorage.getItem('pawpal_admin_user') || sessionStorage.getItem('pawpal_admin_user') || '{}');
+                        if (adminUser?.id) authorId = adminUser.id;
+                    } catch (e) {}
                 }
 
-                // Xác thực category_id (UUID hợp lệ)
+                if (!authorId) {
+                    showToast('Không xác định được danh tính người viết bài. Vui lòng đăng nhập lại.', 'danger');
+                    return;
+                }
+
+                // CFG-14: Xác thực category_id (bắt buộc chọn danh mục hợp lệ, không tự gán mục bất kỳ)
                 if (!categoryId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryId)) {
-                    const { data: firstCat } = await client.from('blog_category').select('id').limit(1).maybeSingle();
-                    categoryId = firstCat?.id || 'f2e684f1-aba2-43b6-98af-dadac0c16ee3';
+                    showToast('Vui lòng chọn danh mục bài viết hợp lệ.', 'warning');
+                    return;
                 }
 
                 let dbStatus = 'PUBLISHED';
@@ -323,23 +339,13 @@
 
                 if (error) throw error;
 
-                // Tự động thêm bài viết mới vào danh sách RAG của Chatbot
-                const newId = insertedRows?.[0]?.id;
-                if (newId) {
-                    const sysConfig = PawpalSettings.state?.systemConfig || {};
-                    sysConfig.ragSyncedArticleIds = Array.isArray(sysConfig.ragSyncedArticleIds) ? sysConfig.ragSyncedArticleIds : [];
-                    if (!sysConfig.ragSyncedArticleIds.includes(newId)) {
-                        sysConfig.ragSyncedArticleIds.push(newId);
-                        PawpalSettings.persistSystemConfig?.(sysConfig);
-                    }
-                }
-
+                // CFG-15: Bài viết mới tạo không tự động đánh dấu đã đồng bộ RAG khi pipeline chưa chạy
                 await logSystemAudit('INSERT', 'blog_post', `Tạo bài viết mới: "${title}"`);
                 PawpalSettings.closeModal?.('articleModalOverlay');
                 await PawpalSettings.loadSettingsModuleData?.();
                 populateBlogCategories();
                 renderArticles();
-                showToast('Đã lưu bài viết và đồng bộ dữ liệu sang tri thức AI của Chatbot!', 'success');
+                showToast('Đã lưu bài viết thành công!', 'success');
             } catch (e) {
                 console.error('[Settings] Lỗi lưu bài viết:', e);
                 showToast('Lỗi khi lưu bài viết: ' + (e.message || ''), 'danger');
@@ -395,50 +401,60 @@
             PawpalSettings.openModal?.('articleRagModalOverlay');
         });
 
-        // Nạp và đồng bộ vào Chatbot
-        document.getElementById('btnActionSyncRag')?.addEventListener('click', () => {
+        // Nạp và đồng bộ vào Chatbot (CFG-16: Chỉ cho phép nạp bài công khai và thông báo trạng thái hàng đợi trung thực)
+        document.getElementById('btnActionSyncRag')?.addEventListener('click', async () => {
             const currentId = PawpalSettings.state?.currentActiveArticleId;
             if (!currentId) return;
             const articlesList = PawpalSettings.state?.articlesList || [];
             const article = articlesList.find(a => a.id === currentId);
-            if (article) {
-                article.ragSynced = true;
-                const sysConfig = PawpalSettings.state?.systemConfig || {};
-                sysConfig.ragSyncedArticleIds = Array.isArray(sysConfig.ragSyncedArticleIds) ? sysConfig.ragSyncedArticleIds : [];
-                if (!sysConfig.ragSyncedArticleIds.includes(currentId)) {
-                    sysConfig.ragSyncedArticleIds.push(currentId);
-                    PawpalSettings.persistSystemConfig?.(sysConfig);
-                }
-                renderArticles();
-                closeArticleActionMenu();
-                showToast(`Đã nạp thành công bài viết "${article.title}" vào cơ sở tri thức RAG của Chatbot PawPal!`, 'success');
+            if (!article) return;
+
+            if (article.status !== 'published') {
+                showToast('Chỉ bài viết ở trạng thái "Công khai" mới có thể lập chỉ mục tri thức AI.', 'warning');
+                return;
             }
+
+            article.ragSynced = true;
+            const sysConfig = PawpalSettings.state?.systemConfig || {};
+            sysConfig.ragSyncedArticleIds = Array.isArray(sysConfig.ragSyncedArticleIds) ? sysConfig.ragSyncedArticleIds : [];
+            if (!sysConfig.ragSyncedArticleIds.includes(currentId)) {
+                sysConfig.ragSyncedArticleIds.push(currentId);
+                await PawpalSettings.persistSystemConfig?.(sysConfig);
+            }
+            renderArticles();
+            closeArticleActionMenu();
+            showToast(`Đã gửi yêu cầu lập chỉ mục bài viết "${article.title}" vào hàng đợi tri thức AI của Chatbot!`, 'success');
         });
 
-        document.getElementById('btnSyncRagArticle')?.addEventListener('click', () => {
+        document.getElementById('btnSyncRagArticle')?.addEventListener('click', async () => {
             const currentId = PawpalSettings.state?.currentActiveArticleId;
             if (!currentId) return;
             const articlesList = PawpalSettings.state?.articlesList || [];
             const article = articlesList.find(a => a.id === currentId);
-            if (article) {
-                article.ragSynced = true;
-                const sysConfig = PawpalSettings.state?.systemConfig || {};
-                sysConfig.ragSyncedArticleIds = Array.isArray(sysConfig.ragSyncedArticleIds) ? sysConfig.ragSyncedArticleIds : [];
-                if (!sysConfig.ragSyncedArticleIds.includes(currentId)) {
-                    sysConfig.ragSyncedArticleIds.push(currentId);
-                    PawpalSettings.persistSystemConfig?.(sysConfig);
-                }
-                const statusEl = document.getElementById('ragArticleStatus');
-                if (statusEl) {
-                    statusEl.className = 'admin-badge badge-active';
-                    statusEl.textContent = 'Đã nạp RAG';
-                }
-                renderArticles();
-                showToast(`Đã nạp và đồng bộ bài viết "${article.title}" vào Chatbot thành công!`, 'success');
+            if (!article) return;
+
+            if (article.status !== 'published') {
+                showToast('Chỉ bài viết ở trạng thái "Công khai" mới có thể lập chỉ mục tri thức AI.', 'warning');
+                return;
             }
+
+            article.ragSynced = true;
+            const sysConfig = PawpalSettings.state?.systemConfig || {};
+            sysConfig.ragSyncedArticleIds = Array.isArray(sysConfig.ragSyncedArticleIds) ? sysConfig.ragSyncedArticleIds : [];
+            if (!sysConfig.ragSyncedArticleIds.includes(currentId)) {
+                sysConfig.ragSyncedArticleIds.push(currentId);
+                await PawpalSettings.persistSystemConfig?.(sysConfig);
+            }
+            const statusEl = document.getElementById('ragArticleStatus');
+            if (statusEl) {
+                statusEl.className = 'admin-badge badge-active';
+                statusEl.textContent = 'Đã nạp RAG';
+            }
+            renderArticles();
+            showToast(`Đã gửi yêu cầu lập chỉ mục bài viết "${article.title}" vào hàng đợi tri thức AI của Chatbot!`, 'success');
         });
 
-        // Đổi trạng thái bài viết (Công khai / Tạm ẩn)
+        // Đổi trạng thái bài viết (Công khai / Tạm ẩn) (CFG-17: Gỡ khỏi RAG nếu bài chuyển sang ẩn)
         document.getElementById('btnActionToggleArticleStatus')?.addEventListener('click', async () => {
             const currentId = PawpalSettings.state?.currentActiveArticleId;
             if (!currentId) return;
@@ -457,6 +473,16 @@
                     .select('id, status');
                 if (updateError) throw updateError;
                 if (!updatedRows || updatedRows.length === 0) throw new Error('Không tìm thấy bài viết để cập nhật.');
+
+                // CFG-17: Nếu bài viết chuyển sang ẩn, gỡ bài viết khỏi danh sách RAG của Chatbot
+                if (newStatus === 'ARCHIVED') {
+                    const sysConfig = PawpalSettings.state?.systemConfig || {};
+                    if (Array.isArray(sysConfig.ragSyncedArticleIds) && sysConfig.ragSyncedArticleIds.includes(currentId)) {
+                        sysConfig.ragSyncedArticleIds = sysConfig.ragSyncedArticleIds.filter(id => id !== currentId);
+                        await PawpalSettings.persistSystemConfig?.(sysConfig);
+                    }
+                }
+
                 await logSystemAudit('UPDATE', 'blog_post', `Chuyển trạng thái bài viết "${article.title}" thành ${newStatus}`);
                 closeArticleActionMenu();
                 await PawpalSettings.loadSettingsModuleData?.();
@@ -469,7 +495,7 @@
             }
         });
 
-        // Xóa bài viết
+        // Xóa bài viết (CFG-17: Gỡ khỏi RAG khi xóa bài viết)
         document.getElementById('btnActionDeleteArticle')?.addEventListener('click', () => {
             const currentId = PawpalSettings.state?.currentActiveArticleId;
             if (!currentId) return;
@@ -488,6 +514,14 @@
                         if (!client) throw new Error('Không kết nối được Supabase.');
                         const { error } = await client.from('blog_post').delete().eq('id', currentId);
                         if (error) throw error;
+
+                        // CFG-17: Khi bài viết bị xóa, gỡ bài viết khỏi danh sách RAG của Chatbot
+                        const sysConfig = PawpalSettings.state?.systemConfig || {};
+                        if (Array.isArray(sysConfig.ragSyncedArticleIds) && sysConfig.ragSyncedArticleIds.includes(currentId)) {
+                            sysConfig.ragSyncedArticleIds = sysConfig.ragSyncedArticleIds.filter(id => id !== currentId);
+                            await PawpalSettings.persistSystemConfig?.(sysConfig);
+                        }
+
                         await logSystemAudit('DELETE', 'blog_post', `Xóa bài viết "${title}"`);
                         closeArticleActionMenu();
                         await PawpalSettings.loadSettingsModuleData?.();

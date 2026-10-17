@@ -8,6 +8,16 @@
     let orderCurrentPage = 1;
     let currentOrderQuickFilter = 'ALL';
     const ITEMS_PER_PAGE = 10;
+    let lastFilteredOrders = [];
+
+    function sanitizeCsvCell(val) {
+        if (val === null || val === undefined) return '""';
+        let str = String(val);
+        if (/^[=+\-@]/.test(str)) {
+            str = "'" + str;
+        }
+        return `"${str.replace(/"/g, '""')}"`;
+    }
 
     function escapeHtml(str) {
         if (!str) return '';
@@ -110,10 +120,17 @@
             if (currentOrderQuickFilter === 'REPROCESSING' && item.status !== 'reprocessing') return false;
             if (currentOrderQuickFilter === 'OVERDUE' && item.slaStatus !== 'OVERDUE') return false;
             if (currentOrderQuickFilter === 'HIGH' && item.priority !== 'high') return false;
-            if (currentOrderQuickFilter === 'MY' && item.staffAssigned !== 'Trần Văn Nhân Viên') return false;
+            if (currentOrderQuickFilter === 'MY') {
+                const myStaff = (typeof PawpalComplaints !== 'undefined' && PawpalComplaints.getCurrentStaffName) ? PawpalComplaints.getCurrentStaffName() : 'Quản trị viên';
+                const assigned = (item.staffAssigned || '').toLowerCase();
+                const myLower = myStaff.toLowerCase();
+                if (!assigned.includes(myLower) && assigned !== myLower) return false;
+            }
 
             return true;
         });
+
+        lastFilteredOrders = filtered;
 
         const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
         if (orderCurrentPage > totalPages) orderCurrentPage = totalPages || 1;
@@ -270,18 +287,18 @@
         const btnExport = document.getElementById('btnExportOrderComplaints');
         if (btnExport) {
             btnExport.addEventListener('click', () => {
-                const orderComplaints = PawpalComplaints.state?.orderComplaints || [];
+                const exportList = lastFilteredOrders.length > 0 ? lastFilteredOrders : (PawpalComplaints.state?.orderComplaints || []);
                 const headers = ['Mã ticket', 'Thời gian', 'Khách hàng', 'Số điện thoại', 'Mã đơn hàng', 'Nội dung', 'Mức độ', 'Trạng thái', 'Người phụ trách'];
-                const rows = orderComplaints.map(t => [
-                    `"${t.id || ''}"`,
-                    `"${t.createdAt || ''}"`,
-                    `"${t.customerName || ''}"`,
-                    `"${t.phone || ''}"`,
-                    `"${t.orderId || ''}"`,
-                    `"${(t.title || '').replace(/"/g, '""')}"`,
-                    `"${t.priority || ''}"`,
-                    `"${t.status || ''}"`,
-                    `"${t.staffAssigned || ''}"`
+                const rows = exportList.map(t => [
+                    sanitizeCsvCell(t.id),
+                    sanitizeCsvCell(t.createdAt),
+                    sanitizeCsvCell(t.customerName),
+                    sanitizeCsvCell(t.phone),
+                    sanitizeCsvCell(t.orderId),
+                    sanitizeCsvCell(t.title),
+                    sanitizeCsvCell(t.priority),
+                    sanitizeCsvCell(t.status),
+                    sanitizeCsvCell(t.staffAssigned)
                 ]);
 
                 const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -296,7 +313,7 @@
                 link.click();
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
-                PawpalComplaints.showToast('Đã xuất thành công dữ liệu khiếu nại đơn hàng sang file CSV!');
+                PawpalComplaints.showToast(`Đã xuất thành công ${exportList.length} khiếu nại đơn hàng sang file CSV!`);
             });
         }
 

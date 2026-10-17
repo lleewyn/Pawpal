@@ -89,22 +89,30 @@
         }
 
         const pageItems = filtered.slice((auditPage - 1) * SETTINGS_PAGE_SIZE, auditPage * SETTINGS_PAGE_SIZE);
+        const esc = PawpalSettings.escapeHtml || (s => s);
         pageItems.forEach(log => {
             const rawActor = log.actor || 'Quản trị viên';
             const initials = rawActor.trim().charAt(0).toUpperCase() || 'Q';
+            const statusStr = log.status || 'Đã ghi nhận';
+            let badgeClass = 'badge-active';
+            if (statusStr.includes('Thất bại') || statusStr.includes('Lỗi')) {
+                badgeClass = 'badge-danger';
+            } else if (statusStr.includes('Chờ') || statusStr.includes('Chưa')) {
+                badgeClass = 'badge-warning';
+            }
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><span style="font-size: 12.5px; color: var(--text-muted);">${log.time}</span></td>
+                <td><span style="font-size: 12.5px; color: var(--text-muted);">${esc(log.time)}</span></td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="width: 26px; height: 26px; border-radius: 50%; background-color: #EEF5F1; color: #236B48; font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">${initials}</span>
-                        <strong style="color: var(--text-main); font-size: 13px;">${rawActor}</strong>
+                        <span style="width: 26px; height: 26px; border-radius: 50%; background-color: #EEF5F1; color: #236B48; font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">${esc(initials)}</span>
+                        <strong style="color: var(--text-main); font-size: 13px;">${esc(rawActor)}</strong>
                     </div>
                 </td>
-                <td><span class="admin-badge badge-neutral">${log.targetModules}</span></td>
-                <td><span style="color: var(--text-main); font-weight: 500;">${log.actionText}</span></td>
-                <td><span class="admin-badge badge-active">${log.status}</span></td>
+                <td><span class="admin-badge badge-neutral">${esc(log.targetModules)}</span></td>
+                <td><span style="color: var(--text-main); font-weight: 500;">${esc(log.actionText)}</span></td>
+                <td><span class="admin-badge ${badgeClass}">${esc(statusStr)}</span></td>
             `;
             tbody.appendChild(tr);
         });

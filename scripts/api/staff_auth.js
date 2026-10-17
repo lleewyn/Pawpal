@@ -14,66 +14,135 @@ function getSupabaseAdmin() {
     });
 }
 
+const jwt = require('jsonwebtoken');
+
+function getJwtSigningSecret() {
+    return process.env.JWT_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'pawpal_internal_signing_secret_do_not_use_in_prod';
+}
+
 /**
- * Xác thực phiên người gọi và đảm bảo vai trò là ADMIN
+ * Ký token JWT xác thực danh tính nhân sự
  */
-async function verifyAdminCaller(req) {
-    // Cho phép gọi trực tiếp từ internal test runner nếu có flag _isDirectTestCall
+function signStaffToken(staff, expiresIn = '8h') {
+    if (!staff || !staff.id) {
+        throw new Error('Cần thông tin staff hợp lệ để ký token JWT.');
+    }
+    const payload = {
+        sub: staff.id,
+        staff_id: staff.id,
+        auth_user_id: staff.auth_user_id || null,
+        system_role: staff.system_role || 'STAFF',
+        permissions: Array.isArray(staff.permissions) ? staff.permissions : [],
+        full_name: staff.full_name || staff.name || 'Nhân sự PawPal'
+    };
+    return jwt.sign(payload, getJwtSigningSecret(), { expiresIn, algorithm: 'HS256' });
+}
+
+/**
+ * Xác thực phiên người gọi và kiểm tra quyền hạn nhân sự (CB-01, CB-05)
+ */
+async function verifyStaffCaller(req, requiredRoleOrPermission = null) {
     if (req._isDirectTestCall === true) {
-        return { authorized: true };
+        return { 
+            authorized: true, 
+            staff: { id: 'test-direct-staff', system_role: 'ADMIN', account_status: 'ACTIVE', permissions: ['all'] } 
+        };
     }
 
     const authHeader = req.headers ? (req.headers['authorization'] || req.headers['Authorization']) : null;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return { authorized: false, status: 401, message: 'Yêu cầu phiên đăng nhập quản trị viên hợp lệ.' };
+        return { authorized: false, status: 401, message: 'Yêu cầu phiên đăng nhập nhân sự hợp lệ (Bearer token).' };
     }
 
     const token = authHeader.split(' ')[1];
-    const supabase = getSupabaseAdmin();
+    if (!token) {
+        return { authorized: false, status: 401, message: 'Token xác thực trống.' };
+    }
 
-    // Hỗ trợ token local: cho môi trường phát triển cục bộ
+    // CB-01 / QA-01: Chặn đứng mọi token giả lập local:
     if (token.startsWith('local:')) {
-        const staffId = token.replace('local:', '');
-        if (!staffId) {
-            return { authorized: false, status: 401, message: 'Mã phiên cục bộ không hợp lệ.' };
-        }
-        const { data: staff, error } = await supabase
-            .from('staff')
-            .select('id, system_role, account_status')
-            .eq('id', staffId)
-            .single();
-
-        if (error || !staff || staff.account_status !== 'ACTIVE') {
-            return { authorized: false, status: 403, message: 'Tài khoản nhân sự không tồn tại hoặc đã bị khóa.' };
-        }
-        if (staff.system_role !== 'ADMIN') {
-            return { authorized: false, status: 403, message: 'Bạn không có quyền quản trị viên (ADMIN) để thực hiện thao tác này.' };
-        }
-        return { authorized: true, staff };
+        return { 
+            authorized: false, 
+            status: 401, 
+            message: 'Mã phiên cục bộ local: không được chấp nhận. Yêu cầu JWT có chữ ký hợp lệ.' 
+        };
     }
 
-    // Xác thực qua Supabase Auth JWT
-    const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
-    if (authErr || !user) {
-        return { authorized: false, status: 401, message: 'Phiên đăng nhập đã hết hạn hoặc không hợp lệ.' };
+    const supabase = getSupabaseAdmin();
+    let staff = null;
+
+    // 1. Thử xác thực qua Supabase Auth JWT (phiên đăng nhập trình duyệt)
+    try {
+        const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+        if (!authErr && user && user.id) {
+            const { data: dbStaff } = await supabase
+                .from('staff')
+                .select('id, auth_user_id, full_name, system_role, account_status, permissions')
+                .eq('auth_user_id', user.id)
+                .maybeSingle();
+
+            if (dbStaff) {
+                staff = dbStaff;
+            }
+        }
+    } catch (e) {}
+
+    // 2. Thử giải mã qua Signed JWT (HS256)
+    if (!staff) {
+        try {
+            const decoded = jwt.verify(token, getJwtSigningSecret(), { algorithms: ['HS256'] });
+            const staffId = decoded.sub || decoded.staff_id;
+            if (staffId) {
+                const { data: dbStaff } = await supabase
+                    .from('staff')
+                    .select('id, auth_user_id, full_name, system_role, account_status, permissions')
+                    .eq('id', staffId)
+                    .maybeSingle();
+                if (dbStaff) {
+                    staff = dbStaff;
+                }
+            }
+        } catch (jwtErr) {}
     }
 
-    // Tra cứu hồ sơ staff liên kết với auth_user_id
-    const { data: staff, error: staffErr } = await supabase
-        .from('staff')
-        .select('id, system_role, account_status')
-        .eq('auth_user_id', user.id)
-        .single();
-
-    if (staffErr || !staff || staff.account_status !== 'ACTIVE') {
-        return { authorized: false, status: 403, message: 'Hồ sơ nhân viên không tồn tại hoặc đang bị khóa.' };
+    if (!staff) {
+        return { authorized: false, status: 401, message: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn.' };
     }
 
-    if (staff.system_role !== 'ADMIN') {
-        return { authorized: false, status: 403, message: 'Chỉ Quản trị viên (ADMIN) mới có quyền quản lý tài khoản nhân sự.' };
+    // CB-01 / QA-02: Kiểm tra trạng thái tài khoản
+    if (staff.account_status !== 'ACTIVE') {
+        return { 
+            authorized: false, 
+            status: 403, 
+            message: 'Tài khoản nhân sự đã bị khóa hoặc tạm ngưng hoạt động.' 
+        };
+    }
+
+    // CB-05: Kiểm tra quyền / vai trò yêu cầu
+    if (requiredRoleOrPermission) {
+        const perms = Array.isArray(staff.permissions) ? staff.permissions : [];
+        const isPermitted = staff.system_role === 'ADMIN' || 
+                            perms.includes('all') ||
+                            (typeof requiredRoleOrPermission === 'string' && (staff.system_role === requiredRoleOrPermission || perms.includes(requiredRoleOrPermission))) ||
+                            (Array.isArray(requiredRoleOrPermission) && (requiredRoleOrPermission.includes(staff.system_role) || requiredRoleOrPermission.some(p => perms.includes(p))));
+
+        if (!isPermitted) {
+            return {
+                authorized: false,
+                status: 403,
+                message: 'Bạn không có quyền thực hiện thao tác này.'
+            };
+        }
     }
 
     return { authorized: true, staff };
+}
+
+/**
+ * Xác thực phiên người gọi và đảm bảo vai trò là ADMIN
+ */
+async function verifyAdminCaller(req) {
+    return verifyStaffCaller(req, 'ADMIN');
 }
 
 /**
@@ -416,5 +485,9 @@ async function toggleAccountStatus(req, res) {
 module.exports = {
     provisionAccount,
     resetPassword,
-    toggleAccountStatus
+    toggleAccountStatus,
+    verifyAdminCaller,
+    verifyStaffCaller,
+    signStaffToken,
+    getJwtSigningSecret
 };

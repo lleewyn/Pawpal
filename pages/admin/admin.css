@@ -612,6 +612,10 @@ body.admin-body {
     overscroll-behavior-y: contain;
 }
 
+.admin-preview-content:has(.chatbot-module-wrapper) {
+    overflow-y: hidden !important;
+}
+
 /* ==========================================================================
    HỆ THỐNG COMPONENT CHUNG TOÀN HỆ THỐNG ADMIN (COMMON COMPONENTS)
    Tuân thủ: Bo góc 9px, màu phẳng không gradient, không hover, icon nét mảnh

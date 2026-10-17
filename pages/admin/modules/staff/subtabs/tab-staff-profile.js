@@ -25,9 +25,21 @@
 
     function renderStaffProfile(staffId) {
         if (!PawpalStaff.state.isLoaded) return;
-        const staff = (PawpalStaff.state.mockStaff || []).find(s=>s.id===staffId || s.rawId===staffId) || PawpalStaff.state.mockStaff[0];
+        const staffList = PawpalStaff.state.mockStaff || [];
+        const staff = staffId ? staffList.find(s => s.id === staffId || s.rawId === staffId) : null;
         const root = document.getElementById('subtab-tab-staff-profile');
         if (!root) return;
+
+        if (!staff) {
+            root.querySelectorAll('[id^="viewStaff"]').forEach(el => {
+                if (el.id === 'viewStaffName' || el.id === 'viewStaffFullName') {
+                    el.textContent = staffId ? 'Không tìm thấy hồ sơ nhân sự' : 'Chưa chọn nhân sự';
+                } else el.textContent = '—';
+            });
+            PawpalStaff.updateBreadcrumb?.(staffId ? 'Không tìm thấy' : 'Chi tiết');
+            return;
+        }
+
         const status = {ACTIVE:'Đang làm việc',LEAVE:'Nghỉ phép',PAUSE:'Tạm nghỉ',RESIGNED:'Nghỉ việc'}[staff?.status] || 'Chưa cập nhật';
         const hasAcc = Boolean(staff?.authUserId);
         const accStatusText = hasAcc ? (staff?.accountStatus === 'ACTIVE' ? 'Đang hoạt động' : 'Đã khóa') : 'Chưa cấp tài khoản';
@@ -52,19 +64,19 @@
             viewStaffWorkStatus: status,
             viewStaffCurrentShift: {MORNING:'Ca sáng',AFTERNOON:'Ca chiều',EVENING:'Ca tối',NIGHT:'Ca khuya'}[staff?.shift] || 'Chưa phân ca',
             viewStaffLastLogin: lastLoginFormatted,
-            viewStaffMonthlyHours: '168 giờ',
-            viewStaffNightShifts: '4 ca',
-            viewStaffCompletedServices: '42 ca',
-            viewStaffPunctuality: '98%',
-            viewStaffBaseSalary: '7.500.000 đ',
-            viewStaffServiceCommission: '4.200.000 đ',
-            viewStaffRequestedBonus: '+360.000 đ',
-            viewStaffSafetyBonus: '+500.000 đ',
-            viewStaffTotalIncome: '12.560.000 đ',
-            viewStaffCsatScore: '4.9/5.0',
-            viewStaffCsatReviews: 'Từ 68 lượt đánh giá',
-            viewStaffRequestedCount: '18 lượt',
-            viewStaffZeroComplaintRate: '100%'
+            viewStaffMonthlyHours: staff?.monthlyHours ? `${staff.monthlyHours} giờ` : 'Chưa có dữ liệu',
+            viewStaffNightShifts: staff?.nightShifts ? `${staff.nightShifts} ca` : '0 ca',
+            viewStaffCompletedServices: staff?.completedServices ? `${staff.completedServices} ca` : 'Chưa có ca',
+            viewStaffPunctuality: staff?.punctuality ? `${staff.punctuality}%` : 'Chưa có dữ liệu',
+            viewStaffBaseSalary: staff?.base_salary ? `${Number(staff.base_salary).toLocaleString('vi-VN')} đ` : 'Chưa cấu hình',
+            viewStaffServiceCommission: staff?.commission ? `${Number(staff.commission).toLocaleString('vi-VN')} đ` : 'Chưa có dữ liệu',
+            viewStaffRequestedBonus: staff?.requestedBonus ? `+${Number(staff.requestedBonus).toLocaleString('vi-VN')} đ` : '0 đ',
+            viewStaffSafetyBonus: staff?.safetyBonus ? `+${Number(staff.safetyBonus).toLocaleString('vi-VN')} đ` : '0 đ',
+            viewStaffTotalIncome: staff?.totalIncome ? `${Number(staff.totalIncome).toLocaleString('vi-VN')} đ` : 'Chưa tổng hợp',
+            viewStaffCsatScore: staff?.rating ? `${staff.rating}/5.0` : 'Chưa có đánh giá',
+            viewStaffCsatReviews: staff?.reviewCount ? `Từ ${staff.reviewCount} lượt đánh giá` : 'Chưa có đánh giá',
+            viewStaffRequestedCount: staff?.requestedCount ? `${staff.requestedCount} lượt` : '0 lượt',
+            viewStaffZeroComplaintRate: staff?.zeroComplaintRate || '100%'
         };
 
         const accBadgeEl = document.getElementById('viewStaffAccountStatus');

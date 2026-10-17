@@ -134,12 +134,13 @@
 
         if (!PawpalServices.state.isLoaded) return;
         const today = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-        const total = bookingsData.filter(booking => booking.date?.slice(0,10) === today).length;
-        const pending = bookingsData.filter(b => b.status === 'pending').length;
+        const todayBookings = bookingsData.filter(booking => booking.date?.slice(0,10) === today);
+        const total = todayBookings.length;
+        const pending = todayBookings.filter(b => b.status === 'pending').length;
         const upcoming = bookingsData.filter(isBookingUpcoming).length;
-        const inProgress = bookingsData.filter(b => b.status === 'in_progress').length;
-        const completed = bookingsData.filter(b => b.status === 'completed').length;
-        const cancelled = bookingsData.filter(b => b.status === 'cancelled').length;
+        const inProgress = todayBookings.filter(b => b.status === 'in_progress').length;
+        const completed = todayBookings.filter(b => b.status === 'completed').length;
+        const cancelled = todayBookings.filter(b => b.status === 'cancelled').length;
 
         const statTotal = document.getElementById('statTotalBookings');
         const statPending = document.getElementById('statPendingBookings');
@@ -316,59 +317,59 @@
 
             if (item.category === 'Hotel') {
                 serviceCellHtml = `
-                    <div style="font-weight: 500; color: var(--text-main);">${item.serviceName}</div>
+                    <div style="font-weight: 500; color: var(--text-main);">${escapeBookingText(item.serviceName)}</div>
                     <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
-                        ${[item.roomCode, item.nights ? `${item.nights} đêm` : '', item.dietPlan].filter(Boolean).join(' • ')}
+                        ${[escapeBookingText(item.roomCode), item.nights ? `${escapeBookingText(item.nights)} đêm` : '', escapeBookingText(item.dietPlan)].filter(Boolean).join(' • ')}
                     </div>
                 `;
                 datetimeCellHtml = `
-                    <div style="font-weight: 600; color: var(--text-main);">${item.checkInDate ? `${item.checkInDate} ➔ ${item.checkOutDate}` : item.date}</div>
-                    <div style="font-size: 11.5px; color: var(--text-muted);">${item.nights ? `${item.nights} đêm (${item.checkInTime || '08:00'} check-in)` : item.time}</div>
+                    <div style="font-weight: 600; color: var(--text-main);">${item.checkInDate ? `${escapeBookingText(item.checkInDate)} ➔ ${escapeBookingText(item.checkOutDate)}` : escapeBookingText(item.date)}</div>
+                    <div style="font-size: 11.5px; color: var(--text-muted);">${item.nights ? `${escapeBookingText(item.nights)} đêm (${escapeBookingText(item.checkInTime || '08:00')} check-in)` : escapeBookingText(item.time)}</div>
                 `;
             } else if (item.category === 'Taxi') {
                 const shortPickup = item.pickupAddress ? (item.pickupAddress.length > 22 ? item.pickupAddress.substring(0, 22) + '...' : item.pickupAddress) : 'Đón tận nơi';
                 serviceCellHtml = `
-                    <div style="font-weight: 500; color: var(--text-main);">${item.serviceName}</div>
+                    <div style="font-weight: 500; color: var(--text-main);">${escapeBookingText(item.serviceName)}</div>
                     <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
-                        ${escapeBookingText(shortPickup)}${item.dropoffAddress ? ` ➔ ${escapeBookingText(item.dropoffAddress)}` : ''}${item.distanceKm ? ` (${item.distanceKm} km)` : ''}
+                        ${escapeBookingText(shortPickup)}${item.dropoffAddress ? ` ➔ ${escapeBookingText(item.dropoffAddress)}` : ''}${item.distanceKm ? ` (${escapeBookingText(item.distanceKm)} km)` : ''}
                     </div>
                 `;
                 datetimeCellHtml = `
-                    <div style="font-weight: 600; color: var(--text-main);">${item.time}</div>
-                    <div style="font-size: 11.5px; color: var(--text-muted);">${item.date} • ${item.tripType || 'Chưa cập nhật'}</div>
+                    <div style="font-weight: 600; color: var(--text-main);">${escapeBookingText(item.time)}</div>
+                    <div style="font-size: 11.5px; color: var(--text-muted);">${escapeBookingText(item.date)} • ${escapeBookingText(item.tripType || 'Chưa cập nhật')}</div>
                 `;
             } else {
                 serviceCellHtml = `
-                    <div style="font-weight: 500; color: var(--text-main);">${item.serviceName}</div>
-                    ${item.styleType ? `<div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">${item.styleType}</div>` : `<div style="font-size: 12px; color: var(--text-muted);">${item.duration}</div>`}
+                    <div style="font-weight: 500; color: var(--text-main);">${escapeBookingText(item.serviceName)}</div>
+                    ${item.styleType ? `<div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">${escapeBookingText(item.styleType)}</div>` : `<div style="font-size: 12px; color: var(--text-muted);">${escapeBookingText(item.duration)}</div>`}
                 `;
                 datetimeCellHtml = `
-                    <div style="font-weight: 600; color: var(--text-main);">${item.time}</div>
-                    <div style="font-size: 11.5px; color: var(--text-muted);">${item.date}</div>
+                    <div style="font-weight: 600; color: var(--text-main);">${escapeBookingText(item.time)}</div>
+                    <div style="font-size: 11.5px; color: var(--text-muted);">${escapeBookingText(item.date)}</div>
                 `;
             }
 
             const staffDisplay = item.staff
-                ? `<span style="font-weight: 500; color: var(--text-main);">${item.staff}</span>`
-                : `<button type="button" class="btn-table-action-inline btn-assign-staff-inline" data-booking-id="${item.id}" style="color: #B45309; background: none; border: none; font-weight: 600; cursor: pointer; text-decoration: underline; font-size: 12px; padding: 0;">Điều phối</button>`;
+                ? `<span style="font-weight: 500; color: var(--text-main);">${escapeBookingText(item.staff)}</span>`
+                : `<button type="button" class="btn-table-action-inline btn-assign-staff-inline" data-booking-id="${escapeBookingText(item.id)}" style="color: #B45309; background: none; border: none; font-weight: 600; cursor: pointer; text-decoration: underline; font-size: 12px; padding: 0;">Điều phối</button>`;
 
             const alertBadgeHtml = getAlertBadge(item);
 
             return `
-                <tr class="service-table-row ${alertClass} ${isLocked}" data-booking-id="${item.id}">
+                <tr class="service-table-row ${alertClass} ${isLocked}" data-booking-id="${escapeBookingText(item.id)}">
                     <td class="alert-border-cell" style="width: 100px; min-width: 100px; font-weight: 600;">
-                        <a href="javascript:void(0)" class="user-name-link btn-view-booking-detail" data-booking-id="${item.id}">${item.id}</a>
+                        <a href="javascript:void(0)" class="user-name-link btn-view-booking-detail" data-booking-id="${escapeBookingText(item.id)}">${escapeBookingText(item.id)}</a>
                     </td>
                     <td style="min-width: 130px;">
                         ${datetimeCellHtml}
                     </td>
                     <td style="min-width: 140px;">
-                        <div style="font-weight: 600; color: var(--text-main);">${item.customerName}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted);">${item.phone}</div>
+                        <div style="font-weight: 600; color: var(--text-main);">${escapeBookingText(item.customerName)}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted);">${escapeBookingText(item.phone)}</div>
                     </td>
                     <td style="min-width: 140px;">
-                        <div style="font-weight: 600; color: var(--text-heading);">${item.petName}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted);">${item.petBreed || 'Chó'} • ${item.petWeight}</div>
+                        <div style="font-weight: 600; color: var(--text-heading);">${escapeBookingText(item.petName)}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted);">${escapeBookingText(item.petBreed || 'Chó')} • ${escapeBookingText(item.petWeight)}</div>
                     </td>
                     <td style="min-width: 180px;">
                         ${serviceCellHtml}
@@ -380,7 +381,7 @@
                         ${formatCurrency(item.total || item.price || 0)}
                     </td>
                     <td style="min-width: 110px; text-align: center;">
-                        <span class="admin-badge ${item.paymentStatus === 'Đã thanh toán' ? 'badge-success' : 'badge-neutral'}">${item.paymentStatus || 'Chưa thu'}</span>
+                        <span class="admin-badge ${item.paymentStatus === 'Đã thanh toán' ? 'badge-success' : 'badge-neutral'}">${escapeBookingText(item.paymentStatus || 'Chưa thu')}</span>
                     </td>
                     <td style="min-width: 110px; text-align: center;">
                         ${getStatusBadge(item.status)}
@@ -389,7 +390,7 @@
                         ${alertBadgeHtml}
                     </td>
                     <td style="width: 70px; min-width: 70px; text-align: center; padding: 8px 10px;">
-                        <button type="button" class="btn-booking-action-more" data-booking-id="${item.id}" title="Tác vụ">•••</button>
+                        <button type="button" class="btn-booking-action-more" data-booking-id="${escapeBookingText(item.id)}" title="Tác vụ">•••</button>
                     </td>
                 </tr>
             `;
@@ -658,6 +659,22 @@
             });
         });
 
+        // Nút lọc nhanh lịch sắp tới 60 phút trên strip banner
+        const btnFilterUpcomingQuick = document.getElementById('btnFilterUpcomingQuick');
+        if (btnFilterUpcomingQuick) {
+            btnFilterUpcomingQuick.addEventListener('click', () => {
+                currentFilterStatus = 'ALL';
+                isUpcomingFilterActive = true;
+                if (selectStatus) selectStatus.value = 'ALL';
+                if (btnUpcoming) btnUpcoming.classList.add('active');
+                document.querySelectorAll('.kpi-card-clickable').forEach(c => {
+                    c.classList.toggle('active', c.getAttribute('data-kpi-filter') === 'upcoming');
+                });
+                currentBookingPage = 1;
+                renderBookingsTable();
+            });
+        }
+
         // Bắt sự kiện xem chi tiết lịch hẹn từ bảng
         document.addEventListener('click', (e) => {
             const btnDetail = e.target.closest('.btn-view-booking-detail');
@@ -757,6 +774,10 @@
         const alertBox = document.getElementById('intakeWeightAlertBox');
         const alertText = document.getElementById('intakeWeightAlertText');
         if (!weightInput || !alertBox || !alertText) return;
+        if (origWeight == null || !Number.isFinite(origWeight)) {
+            alertBox.style.display = 'none';
+            return;
+        }
 
         const currentWeight = parseFloat(weightInput.value) || origWeight;
         const diff = Math.round((currentWeight - origWeight) * 10) / 10;
@@ -835,36 +856,40 @@
         }
 
         // Cân nặng ban đầu & Cân nặng thực tế
-        const origWeightVal = booking ? (parseFloat(booking.originalWeight) || parseFloat(booking.petWeight) || 4.2) : 4.2;
+        const rawOrigWeight = booking ? (parseFloat(booking.originalWeight) || parseFloat(booking.petWeight) || null) : null;
+        const origWeightVal = Number.isFinite(rawOrigWeight) && rawOrigWeight > 0 ? rawOrigWeight : null;
         const origWeightLabel = document.getElementById('intakeOriginalWeightLabel');
         if (origWeightLabel) {
-            origWeightLabel.textContent = `(Đăng ký: ${origWeightVal} kg)`;
+            origWeightLabel.textContent = origWeightVal !== null ? `(Đăng ký: ${origWeightVal} kg)` : '(Đăng ký: Chưa ghi nhận)';
         }
 
         const weightInput = document.getElementById('intakePetWeightInput');
         if (weightInput) {
-            weightInput.value = booking?.intakeRecord?.actualWeight || origWeightVal;
+            weightInput.value = booking?.intakeRecord?.actualWeight || origWeightVal || '';
             weightInput.oninput = () => checkIntakeWeightDiscrepancy(origWeightVal);
         }
 
-        checkIntakeWeightDiscrepancy(origWeightVal);
+        if (origWeightVal !== null) {
+            checkIntakeWeightDiscrepancy(origWeightVal);
+        }
 
         // Nạp dữ liệu checklist ngoại quan
         const intake = booking?.intakeRecord || {};
+        const hasIntakeRecord = Boolean(booking?.intakeRecord && (intake.skinCoat || intake.eyesEars || intake.wounds || intake.temperament));
         const setCheck = (id, val) => { const el = document.getElementById(id); if (el) el.checked = Boolean(val); };
 
-        setCheck('checkSkinNormal', intake.skinCoat ? intake.skinCoat.includes('Sạch sẽ') || intake.skinCoat.includes('sạch sẽ') : true);
+        setCheck('checkSkinNormal', intake.skinCoat ? (intake.skinCoat.includes('Sạch sẽ') || intake.skinCoat.includes('sạch sẽ')) : false);
         setCheck('checkSkinFleas', intake.skinCoat ? intake.skinCoat.includes('ve rận') : false);
         setCheck('checkSkinFungus', intake.skinCoat ? intake.skinCoat.includes('nấm') : false);
         setCheck('checkSkinMatted', intake.skinCoat ? intake.skinCoat.includes('rối') : false);
 
-        setCheck('checkEyesEarsNormal', intake.eyesEars ? intake.eyesEars.includes('bình thường') || intake.eyesEars.includes('Bình thường') : true);
-        setCheck('checkEyesDischarge', intake.eyesEars ? intake.eyesEars.includes('ghèn') || intake.eyesEars.includes('Đỏ mắt') : false);
-        setCheck('checkEarsInfection', intake.eyesEars ? intake.eyesEars.includes('viêm tai') || intake.eyesEars.includes('Sáp tai') : false);
+        setCheck('checkEyesEarsNormal', intake.eyesEars ? (intake.eyesEars.includes('bình thường') || intake.eyesEars.includes('Bình thường')) : false);
+        setCheck('checkEyesDischarge', intake.eyesEars ? (intake.eyesEars.includes('ghèn') || intake.eyesEars.includes('Đỏ mắt')) : false);
+        setCheck('checkEarsInfection', intake.eyesEars ? (intake.eyesEars.includes('viêm tai') || intake.eyesEars.includes('Sáp tai')) : false);
         setCheck('checkNoseRunny', intake.eyesEars ? intake.eyesEars.includes('mũi') : false);
 
         const hasWounds = intake.wounds && !intake.wounds.includes('Không có');
-        setCheck('checkWoundNone', !hasWounds);
+        setCheck('checkWoundNone', hasIntakeRecord && !hasWounds);
         setCheck('checkWoundExisting', hasWounds);
 
         const woundNote = document.getElementById('intakeExistingWoundNote');
@@ -872,7 +897,7 @@
 
         const tempRadios = document.querySelectorAll('input[name="intakeTemperamentRadio"]');
         tempRadios.forEach(r => {
-            r.checked = (r.value === (intake.temperament || 'Ngoan hiền'));
+            r.checked = Boolean(intake.temperament && r.value === intake.temperament);
         });
 
         const belongingsInput = document.getElementById('intakeBelongingsInput');
@@ -1034,13 +1059,16 @@
         const progressEl = document.getElementById('completeStepsProgressText');
         if (progressEl) {
             const logs = booking?.carelogs || booking?.careLogs || [];
-            if (logs.length > 0) {
-                const doneCount = logs.length;
-                progressEl.textContent = `${doneCount}/${logs.length} bước đã thực hiện (${Math.round((doneCount / logs.length) * 100)}%)`;
-                progressEl.style.color = doneCount === logs.length ? '#16A34A' : '#D97706';
+            const serviceObj = (PawpalServices.state?.servicesData || []).find(s => s.id === booking?.serviceId || s.name === booking?.serviceName);
+            const totalSopSteps = Array.isArray(serviceObj?.steps) && serviceObj.steps.length > 0 ? serviceObj.steps.length : (Array.isArray(booking?.sopSteps) && booking.sopSteps.length > 0 ? booking.sopSteps.length : 6);
+            const doneCount = logs.length;
+            if (doneCount > 0) {
+                const pct = Math.min(100, Math.round((doneCount / totalSopSteps) * 100));
+                progressEl.textContent = `${doneCount}/${totalSopSteps} bước đã thực hiện (${pct}%)`;
+                progressEl.style.color = doneCount >= totalSopSteps ? '#16A34A' : '#D97706';
             } else {
-                progressEl.textContent = 'Chưa có nhật ký chăm sóc';
-                progressEl.style.color = '#16A34A';
+                progressEl.textContent = `0/${totalSopSteps} bước đã thực hiện (0%)`;
+                progressEl.style.color = '#DC2626';
             }
         }
 
@@ -1119,15 +1147,34 @@
     }
 
     function escalateBookingToComplaint(bookingId) {
-        sessionStorage.setItem('pawpal_admin_complaint_from_booking', bookingId);
+        if (!bookingId) {
+            PawpalServices.showToast('Không tìm thấy mã ca dịch vụ để tạo khiếu nại.', 'warning');
+            return;
+        }
+        const booking = (PawpalServices.state?.bookingsData || []).find(b => b.id === bookingId || b.dbId === bookingId);
+        const resolvedId = booking?.dbId || bookingId;
+        const displayCode = booking?.id || bookingId;
+
+        sessionStorage.setItem('pawpal_admin_complaint_from_booking', resolvedId);
+        sessionStorage.setItem('pawpal_admin_complaint_from_booking_code', displayCode);
         sessionStorage.setItem('pawpal_admin_active_module', 'Khiếu nại');
         sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-services');
-        window.location.hash = '#tab-complaint-services';
-        const complaintBtn = Array.from(document.querySelectorAll('.sidebar-menu-btn')).find(b => b.getAttribute('data-title') === 'Khiếu nại');
-        if (complaintBtn) {
+
+        PawpalServices.showToast(`Đang chuyển sang phân hệ Khiếu nại để lập hồ sơ cho ca ${displayCode}...`, 'info');
+
+        const complaintBtn = Array.from(document.querySelectorAll('.sidebar-menu-btn, .admin-nav-item')).find(b => {
+            const title = b.getAttribute('data-title') || b.getAttribute('data-module');
+            return title === 'Khiếu nại';
+        });
+
+        if (window.PawpalRouter?.navigateToModule) {
+            window.PawpalRouter.navigateToModule('Khiếu nại', 'tab-complaint-services');
+        } else if (complaintBtn) {
             complaintBtn.click();
         } else if (window.PawpalAdmin?.loadModule) {
             window.PawpalAdmin.loadModule('Khiếu nại');
+        } else {
+            window.location.hash = '#tab-complaint-services';
         }
     }
 

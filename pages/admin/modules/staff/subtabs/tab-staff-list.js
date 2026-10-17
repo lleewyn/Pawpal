@@ -339,16 +339,18 @@
                             onConfirm: async () => {
                                 try {
                                     const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                                    if (client && staff?.rawId) {
-                                        await client.from('staff').delete().eq('id', staff.rawId);
-                                    }
+                                    if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu Supabase.');
+                                    if (!staff?.rawId) throw new Error('Không tìm thấy ID nhân viên hợp lệ.');
+                                    const { error: delErr } = await client.from('staff').delete().eq('id', staff.rawId);
+                                    if (delErr) throw delErr;
+
                                     PawpalStaff.state.mockStaff = (PawpalStaff.state?.mockStaff || []).filter(s => s.id !== staffId && s.rawId !== staffId);
                                     renderStaffList();
                                     renderStaffAlertBar();
-                                    PawpalStaff.showToast('Đã xóa nhân viên thành công!', 'success');
+                                    PawpalStaff.showToast('Đã xóa nhân viên khỏi hệ thống thành công.', 'success');
                                 } catch (delErr) {
                                     console.error('Lỗi xóa nhân viên:', delErr);
-                                    PawpalStaff.showToast('Không thể xóa nhân viên do có dữ liệu liên kết!', 'danger');
+                                    PawpalStaff.showToast(`Không thể xóa nhân viên: ${delErr?.message || 'Có dữ liệu ràng buộc hoặc lỗi quyền truy cập'}`, 'danger');
                                 }
                             }
                         });
@@ -507,55 +509,103 @@
         modal.classList.add('active');
     }
 
-    function openReassignModal(staffId) {
+    async function openReassignModal(staffId) {
         const modal = document.getElementById('reassignModalOverlay');
         if (!modal) return;
 
         const staffList = PawpalStaff.state?.mockStaff || [];
-        const currentStaff = staffList.find(s => s.id === staffId) || staffList[0] || { id: 'EMP-001', name: 'Nhân viên', position: 'Kỹ thuật viên' };
+        const currentStaff = staffList.find(s => s.id === staffId || s.rawId === staffId) || staffList[0];
+        if (!currentStaff) return;
         
         modal.setAttribute('data-target-staff-id', currentStaff.id);
+        modal.setAttribute('data-target-staff-raw-id', currentStaff.rawId || '');
 
         const warningText = document.getElementById('reassignModalWarningText');
         if (warningText) {
-            warningText.innerHTML = `Nhân viên <strong>${currentStaff.name} (${currentStaff.id})</strong> đang có các ca hẹn dịch vụ trong ngày. Vui lòng phân công lại nhân sự để tránh gián đoạn dịch vụ.`;
+            warningText.innerHTML = `Nhân viên <strong>${escapeHtml(currentStaff.name)} (${escapeHtml(currentStaff.id)})</strong> đang có các ca hẹn dịch vụ trong ngày. Vui lòng phân công lại nhân sự để tránh gián đoạn dịch vụ.`;
         }
 
-        // Danh sách KTV khả dụng khác để thay thế
-        const availableReplacements = staffList.filter(s => s.id !== currentStaff.id && s.status !== 'PAUSE' && !s.serviceLocked);
+        // N-14: Danh sách KTV khả dụng khác để thay thế:
+        // Phải là nhân sự ACTIVE, không nghỉ phép (LEAVE), không bị khóa dịch vụ (serviceLocked) và có chuyên môn phù hợp
+        const availableReplacements = staffList.filter(s => 
+            (s.id !== currentStaff.id && s.rawId !== currentStaff.rawId) &&
+            s.status === 'ACTIVE' && 
+            !s.serviceLocked &&
+            (s.role === 'Grooming' || s.role === 'Bác sĩ thú y' || s.role === 'Kỹ thuật viên' || (s.position && s.position.includes('Kỹ thuật viên')))
+        );
 
         // Nạp options vào dropdown chuyển nhanh tất cả
         const selectAllStaff = document.getElementById('reassignSelectAllStaff');
         if (selectAllStaff) {
             selectAllStaff.innerHTML = '<option value="">-- Chọn nhân sự thay thế cho tất cả ca --</option>' + 
-                availableReplacements.map(s => `<option value="${s.id}">${s.name} (${s.position})</option>`).join('');
+                availableReplacements.map(s => `<option value="${escapeHtml(s.rawId || s.id)}">${escapeHtml(s.name)} (${escapeHtml(s.position)})</option>`).join('');
         }
-
-        // Mock danh sách ca hẹn cần điều phối
-        const mockBookings = [
-            { id: 'BK-8902', customerName: 'Trần Minh Anh', petName: 'Bơ (Poodle)', service: 'Grooming cắt tỉa tạo kiểu', time: '09:00 - 10:30' },
-            { id: 'BK-8905', customerName: 'Lê Hoàng Nam', petName: 'Miu (Mèo Anh lông ngắn)', service: 'Tắm spa khử mùi và sấy', time: '14:00 - 15:00' }
-        ];
 
         const tbody = document.getElementById('reassignBookingsTableBody');
         if (tbody) {
-            tbody.innerHTML = mockBookings.map(b => `
-                <tr>
-                    <td style="font-weight: 600; color: var(--text-heading);">${b.id}</td>
-                    <td>
-                        <div style="font-weight: 600; color: var(--text-main);">${b.petName}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted);">${b.customerName}</div>
-                    </td>
-                    <td><span class="admin-badge badge-primary">${b.service}</span></td>
-                    <td style="font-weight: 500;">${b.time}</td>
-                    <td>
-                        <select class="admin-select reassign-select-row" data-booking-id="${b.id}" style="height: 32px; padding: 2px 8px; font-size: 12px;">
-                            <option value="">-- Chọn KTV --</option>
-                            ${availableReplacements.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
-                        </select>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:18px;color:var(--text-muted);">Đang tải danh sách ca hẹn thực tế từ CSDL...</td></tr>';
+        }
+
+        modal.classList.add('active');
+
+        // N-12: Query danh sách ca hẹn thật từ CSDL Supabase theo staff_id
+        const client = PawpalStaff.getSupabaseClient ? PawpalStaff.getSupabaseClient() : window.SupabaseClient;
+        let realBookings = [];
+        if (client && currentStaff.rawId) {
+            try {
+                const todayStr = new Date().toISOString().slice(0, 10);
+                const { data: appts, error: apptErr } = await client
+                    .from('appointment')
+                    .select('id, appointment_code, appointment_date, start_time, end_time, appointment_status, service:service_id(service_name), customer:customer_id(full_name), pet:pet_id(name)')
+                    .eq('staff_id', currentStaff.rawId)
+                    .gte('appointment_date', todayStr)
+                    .in('appointment_status', ['CONFIRMED', 'PENDING', 'IN_PROGRESS', 'CHO_XAC_NHAN', 'DA_XAC_NHAN'])
+                    .order('appointment_date', { ascending: true })
+                    .limit(20);
+
+                if (!apptErr && Array.isArray(appts)) {
+                    realBookings = appts.map(a => ({
+                        id: a.appointment_code || a.id,
+                        rawId: a.id,
+                        customerName: a.customer?.full_name || 'Khách hàng',
+                        petName: a.pet?.name || 'Bé cưng',
+                        service: a.service?.service_name || 'Dịch vụ chăm sóc',
+                        time: `${a.appointment_date} ${a.start_time || ''}`
+                    }));
+                }
+            } catch (e) {
+                console.error('Lỗi khi tải lịch hẹn của KTV cần khóa:', e);
+            }
+        }
+
+        if (tbody) {
+            if (realBookings.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                            Nhân viên hiện không có ca hẹn dịch vụ nào cần điều phối lại trong CSDL.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                tbody.innerHTML = realBookings.map(b => `
+                    <tr>
+                        <td style="font-weight: 600; color: var(--text-heading);">${escapeHtml(b.id)}</td>
+                        <td>
+                            <div style="font-weight: 600; color: var(--text-main);">${escapeHtml(b.petName)}</div>
+                            <div style="font-size: 11.5px; color: var(--text-muted);">${escapeHtml(b.customerName)}</div>
+                        </td>
+                        <td><span class="admin-badge badge-primary">${escapeHtml(b.service)}</span></td>
+                        <td style="font-weight: 500;">${escapeHtml(b.time)}</td>
+                        <td>
+                            <select class="admin-select reassign-select-row" data-booking-raw-id="${escapeHtml(b.rawId)}" style="height: 32px; padding: 2px 8px; font-size: 12px;">
+                                <option value="">-- Chọn KTV --</option>
+                                ${availableReplacements.map(s => `<option value="${escapeHtml(s.rawId || s.id)}">${escapeHtml(s.name)}</option>`).join('')}
+                            </select>
+                        </td>
+                    </tr>
+                `).join('');
+            }
         }
 
         // Khi thay đổi dropdown chuyển nhanh tất cả -> áp dụng cho tất cả hàng
@@ -569,8 +619,6 @@
                 }
             };
         }
-
-        modal.classList.add('active');
     }
 
     function initStaffListSubtab() {
@@ -757,9 +805,13 @@
         const staffPassInput = document.getElementById('staffAccountPassword');
         if (btnGenPass && staffPassInput) {
             btnGenPass.addEventListener('click', () => {
-                const chars = 'abcdefghijkmnpqrstuvwxyz23456789!@#$%';
+                const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*';
+                const array = new Uint8Array(12);
+                window.crypto.getRandomValues(array);
                 let pass = '';
-                for (let i = 0; i < 8; i++) pass += chars[Math.floor(Math.random() * chars.length)];
+                for (let i = 0; i < array.length; i++) {
+                    pass += chars[array[i] % chars.length];
+                }
                 staffPassInput.value = pass;
             });
         }
@@ -803,25 +855,18 @@
 
                     let targetStaffId = null;
 
-                    if (client) {
-                        if (editingId) {
-                            const staffList = PawpalStaff.state?.mockStaff || [];
-                            const staff = staffList.find(s => s.id === editingId);
-                            if (staff && staff.rawId) {
-                                targetStaffId = staff.rawId;
-                                await client.from('staff').update({
-                                    full_name: name,
-                                    phone_number: phone,
-                                    email: email,
-                                    address: address,
-                                    dob: dob || null,
-                                    hire_date: joinDate || null,
-                                    shift: shift,
-                                    specialization: specialization
-                                }).eq('id', staff.rawId);
-                            }
-                        } else {
-                            const { data: newStaffData, error: insertErr } = await client.from('staff').insert({
+                    if (!client) {
+                        throw new Error('Chưa kết nối được cơ sở dữ liệu Supabase. Vui lòng kiểm tra lại phiên làm việc.');
+                    }
+
+                    const dbRole = PawpalStaff.mapPositionToDbRole ? PawpalStaff.mapPositionToDbRole(position) : 'STAFF';
+
+                    if (editingId) {
+                        const staffList = PawpalStaff.state?.mockStaff || [];
+                        const staff = staffList.find(s => s.id === editingId);
+                        if (staff && staff.rawId) {
+                            targetStaffId = staff.rawId;
+                            const { error: updateErr } = await client.from('staff').update({
                                 full_name: name,
                                 phone_number: phone,
                                 email: email,
@@ -829,13 +874,29 @@
                                 dob: dob || null,
                                 hire_date: joinDate || null,
                                 shift: shift,
-                                status: 'ACTIVE',
-                                specialization: specialization
-                            }).select('id').single();
-
-                            if (insertErr) throw insertErr;
-                            if (newStaffData) targetStaffId = newStaffData.id;
+                                role: dbRole,
+                                specialization: specialization || position
+                            }).eq('id', staff.rawId);
+                            if (updateErr) throw updateErr;
+                        } else {
+                            throw new Error('Không tìm thấy mã định danh hồ sơ nhân sự cần cập nhật.');
                         }
+                    } else {
+                        const { data: newStaffData, error: insertErr } = await client.from('staff').insert({
+                            full_name: name,
+                            phone_number: phone,
+                            email: email,
+                            address: address,
+                            dob: dob || null,
+                            hire_date: joinDate || null,
+                            shift: shift,
+                            status: 'ACTIVE',
+                            role: dbRole,
+                            specialization: specialization || position
+                        }).select('id').single();
+
+                        if (insertErr) throw insertErr;
+                        if (newStaffData) targetStaffId = newStaffData.id;
                     }
 
                     // Nếu có bật tùy chọn cấp tài khoản đăng nhập
@@ -844,28 +905,54 @@
                             PawpalStaff.showToast('Vui lòng nhập Email công vụ để cấp tài khoản!', 'warning');
                         } else if (!editingId && (!accountPassword || accountPassword.length < 6)) {
                             PawpalStaff.showToast('Mật khẩu khởi tạo phải có ít nhất 6 ký tự!', 'warning');
-                        } else if (accountPassword) {
-                            const resp = await fetch('/api/admin/staff/provision-account', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    staffId: targetStaffId,
-                                    email: accountEmail,
-                                    password: accountPassword,
-                                    systemRole: systemRole,
-                                    permissions: permissions,
-                                    mustChangePassword: mustChangePass
-                                })
-                            });
-                            const result = await resp.json();
-                            if (!result.success) {
-                                console.warn('[PawpalStaff] Lỗi cấp tài khoản Auth:', result.message);
-                                PawpalStaff.showToast('Lưu nhân viên thành công nhưng cấp tài khoản thất bại: ' + result.message, 'warning');
+                        } else {
+                            // Lấy token Bearer từ phiên đăng nhập Supabase của Admin
+                            let adminBearerToken = null;
+                            try {
+                                if (client && client.auth) {
+                                    const sess = await client.auth.getSession();
+                                    adminBearerToken = sess?.data?.session?.access_token;
+                                }
+                            } catch (tokErr) {
+                                console.warn('[PawpalStaff] Lấy admin token thất bại:', tokErr);
+                            }
+
+                            const reqHeaders = { 'Content-Type': 'application/json' };
+                            if (adminBearerToken) {
+                                reqHeaders['Authorization'] = `Bearer ${adminBearerToken}`;
+                            }
+
+                            const payload = {
+                                staffId: targetStaffId,
+                                email: accountEmail,
+                                systemRole: systemRole,
+                                permissions: permissions,
+                                mustChangePassword: mustChangePass
+                            };
+                            if (accountPassword) {
+                                payload.password = accountPassword;
+                            }
+
+                            try {
+                                const resp = await fetch('/api/admin/staff/provision-account', {
+                                    method: 'POST',
+                                    headers: reqHeaders,
+                                    body: JSON.stringify(payload)
+                                });
+                                const result = await resp.json().catch(() => ({}));
+                                if (!resp.ok || !result.success) {
+                                    console.warn('[PawpalStaff] Lỗi đồng bộ tài khoản Auth:', result.message);
+                                    PawpalStaff.showToast('Lưu thông tin nhân viên thành công nhưng đồng bộ tài khoản Auth thất bại: ' + (result.message || 'Lỗi phân quyền'), 'warning');
+                                }
+                            } catch (fetchErr) {
+                                console.warn('[PawpalStaff] Không thể kết nối endpoint provision-account:', fetchErr);
                             }
                         }
                     }
                 } catch (e) {
-                    console.error('Error saving staff:', e);
+                    console.error('[PawpalStaff] Error saving staff:', e);
+                    PawpalStaff.showToast('Không thể lưu hồ sơ nhân sự: ' + (e.message || 'Lỗi cơ sở dữ liệu'), 'error');
+                    return; // Chặn đứng, không đóng modal và không tạo trạng thái thành công ảo
                 }
 
                 // Cập nhật mock state đồng bộ
@@ -918,11 +1005,52 @@
         // Xử lý xác nhận điều phối lại ca hẹn (Modal 6)
         const btnConfirmReassign = document.getElementById('btnConfirmReassign');
         if (btnConfirmReassign) {
-            btnConfirmReassign.addEventListener('click', () => {
+            btnConfirmReassign.addEventListener('click', async () => {
                 const modal = document.getElementById('reassignModalOverlay');
                 const staffId = modal?.getAttribute('data-target-staff-id');
+                const staffRawId = modal?.getAttribute('data-target-staff-raw-id');
                 const staffList = PawpalStaff.state?.mockStaff || [];
-                const staff = staffList.find(s => s.id === staffId);
+                const staff = staffList.find(s => s.id === staffId || s.rawId === staffRawId);
+                
+                const client = PawpalStaff.getSupabaseClient ? PawpalStaff.getSupabaseClient() : window.SupabaseClient;
+                if (client && staffRawId) {
+                    btnConfirmReassign.disabled = true;
+                    btnConfirmReassign.textContent = 'Đang xử lý...';
+                    try {
+                        // 1. Tạm khóa nhận dịch vụ cho nhân viên trong CSDL
+                        const { error: lockErr } = await client
+                            .from('staff')
+                            .update({ service_locked: true, status: 'pause' })
+                            .eq('id', staffRawId);
+                        if (lockErr) throw lockErr;
+
+                        // 2. Chuyển giao các ca hẹn đã chọn sang KTV mới
+                        const reassignRows = modal.querySelectorAll('.reassign-select-row');
+                        for (const row of reassignRows) {
+                            const bookingRawId = row.getAttribute('data-booking-raw-id');
+                            const newStaffRawId = row.value;
+                            if (bookingRawId && newStaffRawId) {
+                                const { error: reassignErr } = await client
+                                    .from('appointment')
+                                    .update({ staff_id: newStaffRawId })
+                                    .eq('id', bookingRawId);
+                                if (reassignErr) {
+                                    console.error('Lỗi khi điều phối ca hẹn:', bookingRawId, reassignErr);
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Lỗi khi khóa KTV và điều phối ca hẹn:', err);
+                        PawpalStaff.showToast(`Lỗi CSDL khi điều phối: ${err.message || 'Không thể cập nhật'}`, 'danger');
+                        btnConfirmReassign.disabled = false;
+                        btnConfirmReassign.textContent = 'Xác nhận và Chuyển ca';
+                        return;
+                    } finally {
+                        btnConfirmReassign.disabled = false;
+                        btnConfirmReassign.textContent = 'Xác nhận và Chuyển ca';
+                    }
+                }
+
                 if (staff) {
                     staff.serviceLocked = true;
                     staff.status = 'PAUSE';
@@ -936,11 +1064,28 @@
 
         const btnDismissReassign = document.getElementById('btnDismissReassignModal');
         if (btnDismissReassign) {
-            btnDismissReassign.addEventListener('click', () => {
+            btnDismissReassign.addEventListener('click', async () => {
                 const modal = document.getElementById('reassignModalOverlay');
                 const staffId = modal?.getAttribute('data-target-staff-id');
+                const staffRawId = modal?.getAttribute('data-target-staff-raw-id');
                 const staffList = PawpalStaff.state?.mockStaff || [];
-                const staff = staffList.find(s => s.id === staffId);
+                const staff = staffList.find(s => s.id === staffId || s.rawId === staffRawId);
+
+                const client = PawpalStaff.getSupabaseClient ? PawpalStaff.getSupabaseClient() : window.SupabaseClient;
+                if (client && staffRawId) {
+                    try {
+                        const { error: lockErr } = await client
+                            .from('staff')
+                            .update({ service_locked: true, status: 'pause' })
+                            .eq('id', staffRawId);
+                        if (lockErr) throw lockErr;
+                    } catch (err) {
+                        console.error('Lỗi khi tạm khóa KTV:', err);
+                        PawpalStaff.showToast(`Lỗi CSDL khi khóa KTV: ${err.message || 'Không thể cập nhật'}`, 'danger');
+                        return;
+                    }
+                }
+
                 if (staff) {
                     staff.serviceLocked = true;
                     staff.status = 'PAUSE';

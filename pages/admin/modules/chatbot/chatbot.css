@@ -6,20 +6,39 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    max-height: 100%;
     width: 100%;
+    min-height: 0;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 .chatbot-module-wrapper .subtab-content {
     display: none;
     height: 100%;
+    max-height: 100%;
     width: 100%;
+    min-height: 0;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 .chatbot-module-wrapper .subtab-content.active {
     display: flex;
     flex-direction: column;
     height: 100%;
+    max-height: 100%;
     width: 100%;
+    min-height: 0;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* Khóa cuộn ngoài shell admin khi đang xem chatbot module để triệt tiêu thanh cuộn trang */
+.admin-preview-content:has(.chatbot-module-wrapper),
+.admin-preview-content:has(#subtab-tab-ai-copilot.active),
+.admin-preview-content:has(#subtab-tab-live-support.active) {
+    overflow-y: hidden !important;
 }
 
 .chatbot-rules-container {
@@ -112,8 +131,13 @@
     display: grid;
     grid-template-columns: 280px 1fr;
     gap: 16px;
-    height: calc(100vh - 120px);
+    height: 100%;
+    max-height: 100%;
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 @media (max-width: 1200px) {
@@ -133,6 +157,9 @@
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius);
     height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    min-width: 0;
     box-sizing: border-box;
     overflow: hidden;
 }
@@ -260,6 +287,9 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    min-width: 0;
     padding: 24px;
     gap: 16px;
     background-color: var(--surface-white);
@@ -268,6 +298,7 @@
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius);
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 .copilot-header {
@@ -275,6 +306,7 @@
     justify-content: space-between;
     align-items: center;
     padding-bottom: 14px;
+    flex-shrink: 0;
 }
 
 .copilot-title-group {
@@ -289,9 +321,12 @@
 }
 
 .copilot-messages-scroll {
-    flex: 1;
+    flex: 1 1 0;
+    min-height: 0;
+    min-width: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -415,6 +450,7 @@
     gap: 8px;
     flex-wrap: wrap;
     padding-top: 8px;
+    flex-shrink: 0;
 }
 
 .prompt-pill-label {
@@ -445,6 +481,7 @@
     display: flex;
     gap: 12px;
     align-items: flex-end;
+    flex-shrink: 0;
 }
 
 .copilot-textarea {

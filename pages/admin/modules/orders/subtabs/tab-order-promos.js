@@ -61,9 +61,9 @@
                 statusBadge = '<span class="admin-badge badge-cancelled">Hết hạn</span>';
             }
 
-            const limitVal = v.limit || 100;
+            const limitVal = v.limit ? v.limit : '∞';
             const usedVal = v.used || 0;
-            const pct = Math.min(100, Math.round((usedVal / limitVal) * 100));
+            const pct = (typeof v.limit === 'number' && v.limit > 0) ? Math.min(100, Math.round((usedVal / v.limit) * 100)) : 0;
 
             return `
                 <tr>
@@ -80,7 +80,7 @@
                     </td>
                     <td>${formatVND(Number(v.minOrder)||0)}</td>
                     <td>${Number(v.points)||0}</td>
-                    <td>${v.validDate || v.expiry || "—"}</td>
+                    <td>${v.validDate || v.expiry || "Không giới hạn"}</td>
                     <td>
                         <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
                             <span>${usedVal} / ${limitVal}</span>
@@ -162,8 +162,8 @@
                 showToast('Mức giảm giá không hợp lệ.', 'warning');
                 return;
             }
-            if (!Number.isFinite(numMinOrder) || numMinOrder <= 0) {
-                showToast('Đơn hàng tối thiểu phải lớn hơn 0.', 'warning');
+            if (!Number.isFinite(numMinOrder) || numMinOrder < 0) {
+                showToast('Đơn hàng tối thiểu không hợp lệ.', 'warning');
                 return;
             }
             if (!Number.isFinite(pointsNum) || pointsNum < 0 || !Number.isFinite(maxUsesNum) || maxUsesNum <= 0) {
@@ -222,7 +222,7 @@
                 value: numVal,
                 discount: discount,
                 minOrder: numMinOrder,
-                points: points,
+                points: pointsNum,
                 validDate: expiry,
                 expiry: expiry,
                 limit: maxUsesNum,

@@ -22,40 +22,16 @@ function cleanExpiredIdempotency() {
 }
 setInterval(cleanExpiredIdempotency, 60 * 60 * 1000).unref();
 
+const { verifyStaffCaller } = require('./staff_auth.js');
+
 /**
- * Xác thực danh tính nhân sự từ Authorization header
+ * Xác thực danh tính nhân sự từ Authorization header (CB-01 / PR-01)
  */
 async function getStaffUser(authHeader) {
-    if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
-    const token = authHeader.split(' ')[1];
-
-    if (token.startsWith('local:')) {
-        const staffId = token.replace('local:', '');
-        if (!staffId) return null;
-        const { data: staff, error } = await supabase
-            .from('staff')
-            .select('id, full_name, system_role, account_status, permissions')
-            .eq('id', staffId)
-            .maybeSingle();
-
-        if (error || !staff || staff.account_status !== 'ACTIVE') return null;
-        return staff;
-    }
-
-    try {
-        const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
-        if (authErr || !user) return null;
-        const { data: staff, error } = await supabase
-            .from('staff')
-            .select('id, full_name, system_role, account_status, permissions')
-            .eq('auth_user_id', user.id)
-            .maybeSingle();
-
-        if (error || !staff || staff.account_status !== 'ACTIVE') return null;
-        return staff;
-    } catch (e) {
-        return null;
-    }
+    if (!authHeader) return null;
+    const req = { headers: { authorization: authHeader } };
+    const authResult = await verifyStaffCaller(req);
+    return authResult.authorized ? authResult.staff : null;
 }
 
 function buildSafeKeywordRegex(keyword) {

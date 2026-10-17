@@ -8,21 +8,117 @@
     let remCurrentPage = 1;
     const REMINDERS_PER_PAGE = 10;
     let currentSendingReminderId = 'REM-001';
+    const esc = (s) => (PawpalPets.escapeHtml ? PawpalPets.escapeHtml(s) : String(s || ''));
+
+    function getSentReminders() {
+        try {
+            return JSON.parse(localStorage.getItem('pawpal_admin_pet_reminders_sent') || '{}');
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function markReminderSent(remId, channel = 'ZALO') {
+        const sentMap = getSentReminders();
+        sentMap[remId] = {
+            sentAt: new Date().toISOString(),
+            channel
+        };
+        try {
+            localStorage.setItem('pawpal_admin_pet_reminders_sent', JSON.stringify(sentMap));
+        } catch (e) {}
+    }
 
     function getRemindersData() {
         const reminders = [];
         const today = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
         const todayTime = Date.parse(today + 'T00:00:00+07:00');
         const completed = (PawpalPets.state.appointments || []).filter(a => a.appointment_status === 'COMPLETED');
+        const sentMap = getSentReminders();
+
         for (const pet of Object.values(PawpalPets.state.petsData || {})) {
             if (pet.isArchived) continue;
             const history = completed.filter(a => a.pet_id === pet.rawId);
+
+            // Nhắc Spa & Grooming
             for (const rule of [{type:'BATH',days:14,pattern:/tắm|bath/i,label:'chưa tắm sấy'}, {type:'GROOM',days:30,pattern:/cắt tỉa|groom|tạo kiểu|style/i,label:'chưa cắt tỉa'}]) {
                 const last = history.filter(a => rule.pattern.test(a.service?.service_name || '')).sort((a,b) => String(b.appointment_date).localeCompare(String(a.appointment_date)))[0];
                 if (!last?.appointment_date) continue;
                 const days = Math.floor((todayTime - Date.parse(last.appointment_date.slice(0,10)+'T00:00:00+07:00'))/86400000);
                 if (!Number.isFinite(days) || days <= rule.days) continue;
-                reminders.push({id:`${pet.rawId}:${rule.type}`,petId:pet.code,petName:pet.name,speciesBreed:pet.speciesBreed,ownerName:pet.ownerName,ownerPhone:pet.ownerPhone,custId:pet.custId,type:rule.type,typeText:`Quá ${days} ngày ${rule.label}`,typeBadgeClass:'badge-warning',typeBadgeStyle:'',lastDateText:PawpalPets.formatDate(last.appointment_date),status:'UNSENT',statusText:'Chưa ghi nhận gửi tin',statusBadgeClass:'badge-neutral'});
+                const remId = `${pet.rawId}:${rule.type}`;
+                const isSent = Boolean(sentMap[remId]);
+                reminders.push({
+                    id: remId,
+                    rawId: pet.rawId,
+                    petId: pet.code,
+                    petName: pet.name,
+                    speciesBreed: pet.speciesBreed,
+                    ownerName: pet.ownerName,
+                    ownerPhone: pet.ownerPhone,
+                    custId: pet.custId,
+                    type: rule.type,
+                    typeText: `Quá ${days} ngày ${rule.label}`,
+                    typeBadgeClass: 'badge-warning',
+                    typeBadgeStyle: '',
+                    lastDateText: PawpalPets.formatDate(last.appointment_date),
+                    status: isSent ? 'SENT' : 'UNSENT',
+                    statusText: isSent ? 'Đã liên hệ' : 'Chưa ghi nhận gửi tin',
+                    statusBadgeClass: isSent ? 'badge-success' : 'badge-neutral'
+                });
+            }
+
+            // Nhắc Pet Hotel: Lưu trú trên 45 ngày trước
+            const lastHotel = history.filter(a => /hotel|lưu trú|khách sạn/i.test(a.service?.service_name || '')).sort((a,b) => String(b.appointment_date).localeCompare(String(a.appointment_date)))[0];
+            if (lastHotel?.appointment_date) {
+                const daysHotel = Math.floor((todayTime - Date.parse(lastHotel.appointment_date.slice(0,10)+'T00:00:00+07:00'))/86400000);
+                if (daysHotel > 45) {
+                    const remId = `${pet.rawId}:HOTEL`;
+                    const isSent = Boolean(sentMap[remId]);
+                    reminders.push({
+                        id: remId,
+                        rawId: pet.rawId,
+                        petId: pet.code,
+                        petName: pet.name,
+                        speciesBreed: pet.speciesBreed,
+                        ownerName: pet.ownerName,
+                        ownerPhone: pet.ownerPhone,
+                        custId: pet.custId,
+                        type: 'HOTEL',
+                        typeText: `Quá ${daysHotel} ngày chưa lưu trú`,
+                        typeBadgeClass: 'badge-info',
+                        typeBadgeStyle: 'background-color: #E0F2FE; color: #0369A1;',
+                        lastDateText: PawpalPets.formatDate(lastHotel.appointment_date),
+                        status: isSent ? 'SENT' : 'UNSENT',
+                        statusText: isSent ? 'Đã liên hệ' : 'Chưa ghi nhận gửi tin',
+                        statusBadgeClass: isSent ? 'badge-success' : 'badge-neutral'
+                    });
+                }
+            }
+
+            // Cảnh báo tiêm chủng dại (chưa có ghi nhận vaccine dại)
+            const hasRabies = /dại|rabies/i.test(pet.vaccinationHistory || pet.vaccine || '');
+            if (!hasRabies) {
+                const remId = `${pet.rawId}:HOTEL_VACCINE`;
+                const isSent = Boolean(sentMap[remId]);
+                reminders.push({
+                    id: remId,
+                    rawId: pet.rawId,
+                    petId: pet.code,
+                    petName: pet.name,
+                    speciesBreed: pet.speciesBreed,
+                    ownerName: pet.ownerName,
+                    ownerPhone: pet.ownerPhone,
+                    custId: pet.custId,
+                    type: 'HOTEL_VACCINE',
+                    typeText: 'Chưa có xác nhận vaccine dại',
+                    typeBadgeClass: 'badge-warning',
+                    typeBadgeStyle: 'background-color: #FEF3C7; color: #92400E;',
+                    lastDateText: 'Chưa xác nhận',
+                    status: isSent ? 'SENT' : 'UNSENT',
+                    statusText: isSent ? 'Đã liên hệ' : 'Chưa ghi nhận gửi tin',
+                    statusBadgeClass: isSent ? 'badge-success' : 'badge-neutral'
+                });
             }
         }
         return reminders;
@@ -51,15 +147,15 @@
     function buildReminderText(templateKey, petName, ownerName) {
         switch(templateKey) {
             case 'SPA_BATH':
-                return `PawPal mến chào Sen ${ownerName}! Bé ${petName} đã hơn 2 tuần chưa ghé spa làm đẹp rồi đó ạ. PawPal gửi tặng bé voucher ưu đãi 10% dịch vụ Spa trong tuần này. Sen đặt lịch ngay cho bé nhé!`;
+                return `PawPal mến chào Sen ${ownerName}! Bé ${petName} đã đến kỳ tắm sấy và chăm sóc vệ sinh định kỳ tại PawPal Pet Center. Sen liên hệ với tiệm để được tư vấn và xếp lịch hẹn chu đáo nhất cho bé nhé!`;
             case 'GROOM':
-                return `PawPal thân gửi Sen ${ownerName}! Bộ lông của bé ${petName} đã đến kỳ cắt tỉa tạo kiểu và gỡ rối định kỳ để bé luôn gọn gàng, thoáng mát. Tiệm đang có sẵn khung giờ đẹp hôm nay và ngày mai, Sen đặt lịch tạo kiểu cho bé nhé!`;
+                return `PawPal thân gửi Sen ${ownerName}! Bộ lông của bé ${petName} đã đến kỳ cắt tỉa tạo kiểu và gỡ rối định kỳ để bé luôn gọn gàng, thoáng mát. Sen đặt lịch làm đẹp cho bé tại PawPal nhé!`;
             case 'HOTEL':
-                return `PawPal mến chào Sen ${ownerName}! Cuối tuần này Sen có kế hoạch du lịch hoặc về quê không ạ? Phòng Pet Hotel chuẩn 5 sao tại PawPal đã sẵn sàng phục vụ bé ${petName} với camera xem trực tiếp 24/7 và chế độ chăm sóc tận tình. Sen liên hệ đặt phòng sớm nhé!`;
+                return `PawPal mến chào Sen ${ownerName}! Quý khách có kế hoạch đi xa hoặc công tác sắp tới? Phòng lưu trú Pet Hotel tại PawPal sẵn sàng đón tiếp bé ${petName} với camera 24/7 và chế độ chăm sóc tận tình. Sen liên hệ đặt phòng sớm nhé!`;
             case 'HOTEL_VACCINE':
-                return `PawPal thông báo đến Sen ${ownerName}: Sổ tiêm phòng dại định kỳ của bé ${petName} sắp đến hạn tái chủng tại phòng khám thú y. Để đảm bảo điều kiện an toàn dịch tễ khi bé lưu trú tại Pet Hotel dịp tới, Sen nhớ đưa bé đi tiêm phòng ở cơ sở thú y gần nhất nhé!`;
+                return `PawPal thông báo đến Sen ${ownerName}: Bé ${petName} cần được kiểm tra và cập nhật sổ tiêm chủng định kỳ tại cơ sở thú y. Để đảm bảo điều kiện an toàn dịch tễ khi lưu trú Pet Hotel, Sen nhớ kiểm tra lại lịch tiêm của bé nhé!`;
             case 'SHOP':
-                return `PawPal nhắc nhỏ Sen ${ownerName}: Khẩu phần thức ăn hạt và cát vệ sinh của bé ${petName} dự kiến sắp hết. PawPal đang có ưu đãi freeship và quà tặng hấp dẫn cho đơn hàng phụ kiện hoặc thức ăn cho bé hôm nay ạ!`;
+                return `PawPal nhắc nhỏ Sen ${ownerName}: Khẩu phần dinh dưỡng và đồ dùng chăm sóc của bé ${petName} dự kiến sắp cần bổ sung. Tiệm luôn sẵn sàng các sản phẩm chất lượng để phục vụ bé ạ!`;
             default:
                 return `PawPal mến chào Sen ${ownerName}! Bé ${petName} đã đến kỳ chăm sóc định kỳ tại PawPal. Sen liên hệ với tiệm để được tư vấn và xếp lịch thuận tiện nhất nhé!`;
         }
@@ -163,41 +259,42 @@
             const borderStyle = isAlertRow ? 'border-left: 3px solid #D97706;' : 'border-left: 3px solid transparent;';
 
             return `
-            <tr data-rem-id="${item.id}">
+            <tr data-rem-id="${esc(item.id)}">
                 <td style="${borderStyle}">
-                    <strong style="color: var(--text-heading);">${item.petName}</strong>
-                    <div style="font-size: 12px; color: var(--text-muted);">${item.speciesBreed} • Mã: ${item.petId}</div>
+                    <strong style="color: var(--text-heading);">${esc(item.petName)}</strong>
+                    <div style="font-size: 12px; color: var(--text-muted);">${esc(item.speciesBreed)} • Mã: ${esc(item.petId)}</div>
                 </td>
                 <td>
-                    <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="${item.custId}">${item.ownerName}</a>
-                    <div style="font-size: 12px; color: var(--text-muted);">${item.ownerPhone}</div>
+                    <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="${esc(item.custId)}">${esc(item.ownerName)}</a>
+                    <div style="font-size: 12px; color: var(--text-muted);">${esc(item.ownerPhone)}</div>
                 </td>
                 <td>
-                    <span class="admin-badge ${item.typeBadgeClass}" ${item.typeBadgeStyle ? `style="${item.typeBadgeStyle}"` : ''}>
-                        ${item.typeText}
+                    <span class="admin-badge ${esc(item.typeBadgeClass)}" ${item.typeBadgeStyle ? `style="${item.typeBadgeStyle}"` : ''}>
+                        ${esc(item.typeText)}
                     </span>
                 </td>
-                <td>${item.lastDateText}</td>
+                <td>${esc(item.lastDateText)}</td>
                 <td>
-                    <span class="admin-badge ${item.statusBadgeClass}">
-                        ${item.statusText}
+                    <span class="admin-badge ${esc(item.statusBadgeClass)}">
+                        ${esc(item.statusText)}
                     </span>
                 </td>
                 <td style="text-align: right;">
                     <div style="display: inline-flex; gap: 6px;">
                         <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-reminder-modal"
-                            data-rem-id="${item.id}"
-                            data-pet="${item.petName}"
-                            data-owner="${item.ownerName}"
-                            data-phone="${item.ownerPhone}"
+                            data-rem-id="${esc(item.id)}"
+                            data-pet="${esc(item.petName)}"
+                            data-owner="${esc(item.ownerName)}"
+                            data-phone="${esc(item.ownerPhone)}"
                             ${canContact ? '' : 'disabled title="Chưa có chủ nuôi hoặc số điện thoại hợp lệ"'}>
                             ${canContact ? (item.status === 'SENT' ? 'Gửi lại' : 'Gửi tin') : 'Thiếu liên hệ'}
                         </button>
                         <button type="button" class="admin-btn admin-btn-primary btn-sm btn-quick-book-spa" 
-                            data-id="${item.petId}" 
-                            data-pet="${item.petName}"
-                            data-owner="${item.ownerName}"
-                            data-phone="${item.ownerPhone}">
+                            data-id="${esc(item.petId)}" 
+                            data-raw-id="${esc(item.rawId)}"
+                            data-pet="${esc(item.petName)}"
+                            data-owner="${esc(item.ownerName)}"
+                            data-phone="${esc(item.ownerPhone)}">
                             Đặt lịch
                         </button>
                     </div>
@@ -247,6 +344,31 @@
         updateReminderKPIs();
 
         document.addEventListener('click', (e) => {
+            // P-07: Xử lý nút Đặt lịch trực tiếp theo đúng pet của dòng được bấm
+            const btnQuickBook = e.target.closest('.btn-quick-book-spa');
+            if (btnQuickBook) {
+                const rawId = btnQuickBook.getAttribute('data-raw-id');
+                const petId = btnQuickBook.getAttribute('data-id');
+                const targetId = rawId || petId;
+                if (!targetId) {
+                    PawpalPets.showToast('Không xác định được thú cưng để đặt lịch.', 'warning');
+                    return;
+                }
+                PawpalPets.subtabs.list?.handleCreateServiceForPet?.(targetId);
+                return;
+            }
+
+            // Chuyển sang tab hồ sơ khách hàng tương ứng
+            const btnJumpCust = e.target.closest('.btn-jump-customer');
+            if (btnJumpCust) {
+                const custId = btnJumpCust.getAttribute('data-cust-id');
+                if (custId && window.PawpalAdmin?.navigateToModule) {
+                    sessionStorage.setItem('pawpal_admin_customer_id', custId);
+                    window.PawpalAdmin.navigateToModule('customers', 'profile');
+                }
+                return;
+            }
+
             const btnReminder = e.target.closest('.btn-open-reminder-modal');
             if (btnReminder && modalSendReminder) {
                 currentSendingReminderId = btnReminder.getAttribute('data-rem-id') || 'REM-001';
@@ -313,8 +435,22 @@
             });
         }
 
+        // P-06: Ghi nhận trạng thái đã gửi/liên hệ
         btnSubmitSendReminder?.addEventListener('click', () => {
-            PawpalPets.showToast('Mở Zalo và gửi nội dung đã sao chép cho chủ nuôi.', 'info');
+            if (currentSendingReminderId) {
+                markReminderSent(currentSendingReminderId, 'ZALO');
+                PawpalPets.showToast('Đã ghi nhận liên hệ nhắc lịch qua Zalo cho chủ nuôi!', 'success');
+                modalSendReminder?.classList.remove('open');
+                renderRemindersTable();
+            } else {
+                PawpalPets.showToast('Mở Zalo và gửi nội dung đã sao chép cho chủ nuôi.', 'info');
+            }
+        });
+        btnOpenZaloChat?.addEventListener('click', () => {
+            if (currentSendingReminderId) {
+                markReminderSent(currentSendingReminderId, 'ZALO');
+                renderRemindersTable();
+            }
         });
         btnBatchSend?.addEventListener('click', () => {
             PawpalPets.showToast('Chưa kết nối dịch vụ gửi tin đồng loạt. Vui lòng mở Zalo của từng chủ nuôi.', 'info');

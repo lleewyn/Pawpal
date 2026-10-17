@@ -91,12 +91,15 @@
         const msgEl = document.getElementById('custConfirmMessage');
         const acceptBtn = document.getElementById('btnAcceptCustConfirm');
         if (!modal) {
-            if (onAccept) onAccept();
+            console.error('[Customers] Thiếu phần tử modal xác nhận (#modalConfirmCustomerAction). Thao tác đã bị hủy để đảm bảo an toàn.');
+            if (typeof PawpalCustomers.showToast === 'function') {
+                PawpalCustomers.showToast('Không thể hiển thị hộp thoại xác nhận. Thao tác đã bị hủy để đảm bảo an toàn.', 'danger');
+            }
             return;
         }
 
         if (titleEl && title) titleEl.textContent = title;
-        if (msgEl && message) msgEl.innerHTML = message;
+        if (msgEl && message) msgEl.textContent = message;
         if (acceptBtn) acceptBtn.textContent = acceptText;
 
         activeCustConfirmCallback = onAccept;
@@ -124,6 +127,16 @@
         activeCustConfirmCallback = null;
     });
 
+    PawpalCustomers.escapeHtml = function(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
+
     // 3. HEADER BREADCRUMB & SUBTAB NAVIGATION
     const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
     const headerSubtabBtns = document.querySelectorAll('.header-subtab-btn');
@@ -136,7 +149,7 @@
         if (custName) {
             deepBreadcrumbEl.innerHTML = `
                 <span class="breadcrumb-separator">/</span>
-                <span class="breadcrumb-detail-name">${custName}</span>
+                <span class="breadcrumb-detail-name">${PawpalCustomers.escapeHtml(custName)}</span>
             `;
         } else {
             deepBreadcrumbEl.innerHTML = '';
@@ -195,7 +208,8 @@
     let customerLoadPromise = null;
     PawpalCustomers.loadCustomersModuleData = function(options = {}) {
         if (customerLoadPromise) return customerLoadPromise;
-        customerLoadPromise = loadCustomersModuleData(options).finally(() => {
+        const normalizedOptions = typeof options === 'boolean' ? { force: options } : (options || {});
+        customerLoadPromise = loadCustomersModuleData(normalizedOptions).finally(() => {
             customerLoadPromise = null;
         });
         return customerLoadPromise;
@@ -274,14 +288,15 @@
                 petsRes.data.forEach((p, idx) => {
                     if (!petsMap[p.customer_id]) petsMap[p.customer_id] = [];
                     const specName = p.species === 'cat' ? 'Mèo' : (p.species === 'dog' ? 'Chó' : (p.species === 'rabbit' ? 'Thỏ' : 'Thú cưng'));
+                    const petCode = p.pet_code || (p.id ? `PET-${p.id.replace(/-/g, '').slice(0, 8).toUpperCase()}` : `PET-${String(idx + 1).padStart(3, '0')}`);
                     petsMap[p.customer_id].push({
-                        id: p.pet_code || `PET-${String(idx + 1).padStart(3, '0')}`,
+                        id: petCode,
                         dbId: p.id,
                         name: p.pet_name || 'Bé cưng',
                         species: specName,
                         breed: p.breed || 'Chưa cập nhật',
-                        weight: p.weight ? String(p.weight) : '4.0',
-                        vaccine: p.vaccination_history || 'Đầy đủ sổ tiêm',
+                        weight: (p.weight !== null && p.weight !== undefined && p.weight !== '') ? String(p.weight) : 'Chưa ghi nhận',
+                        vaccine: (p.vaccination_history && p.vaccination_history.trim()) ? p.vaccination_history : 'Chưa xác minh sổ tiêm',
                         alertNote: p.allergy && p.allergy !== 'Không' ? `Cảnh báo dị ứng: ${p.allergy}` : (p.routine || 'Bình thường')
                     });
                 });
@@ -325,16 +340,25 @@
             if (Array.isArray(apptsRes.data)) {
                 apptsRes.data.forEach(a => {
                     if (!apptsMap[a.customer_id]) apptsMap[a.customer_id] = [];
-                    const aDate = a.appointment_date ? (PawpalCustomers.formatDate(a.appointment_date) + (a.start_time ? ` ${PawpalCustomers.formatTime(a.start_time)}` : '')) : '2026-09-25 09:00';
-                    let st = 'Hoàn thành';
-                    let stClass = 'badge-success';
-                    if (a.status === 'PENDING') {
+                    // C-02: Đọc đúng trường appointment_time và appointment_status
+                    const aTime = a.appointment_time ? ` ${a.appointment_time.slice(0, 5)}` : '';
+                    const aDate = a.appointment_date ? (PawpalCustomers.formatDate(a.appointment_date) + aTime) : '—';
+                    const apptStatus = (a.appointment_status || '').toUpperCase();
+                    let st = 'Chưa rõ';
+                    let stClass = 'badge-neutral';
+                    if (apptStatus === 'COMPLETED' || apptStatus === 'DA_HOAN_THANH') {
+                        st = 'Hoàn thành';
+                        stClass = 'badge-success';
+                    } else if (apptStatus === 'PENDING' || apptStatus === 'CHO_XAC_NHAN') {
                         st = 'Chờ xác nhận';
                         stClass = 'badge-warning';
-                    } else if (a.status === 'IN_PROGRESS' || a.status === 'CONFIRMED') {
+                    } else if (apptStatus === 'CONFIRMED' || apptStatus === 'DA_XAC_NHAN') {
+                        st = 'Đã xác nhận';
+                        stClass = 'badge-info';
+                    } else if (apptStatus === 'IN_PROGRESS' || apptStatus === 'DANG_THUC_HIEN') {
                         st = 'Đang thực hiện';
                         stClass = 'badge-info';
-                    } else if (a.status === 'CANCELLED') {
+                    } else if (apptStatus === 'CANCELLED' || apptStatus === 'DA_HUY') {
                         st = 'Đã hủy';
                         stClass = 'badge-danger';
                     }
@@ -408,7 +432,17 @@
 
             if (unifiedCustomers.length > 0) {
                 unifiedCustomers.forEach((c, idx) => {
-                    const custKey = `CUST-${String(idx + 1).padStart(3, '0')}`;
+                    const rawClean = (c.id || '').replace(/-/g, '').toUpperCase();
+                    const shortCode = rawClean.length >= 12 
+                        ? ((rawClean.startsWith('D0000000') || rawClean.startsWith('F0000000')) ? rawClean.slice(-8) : rawClean.slice(0, 8))
+                        : rawClean;
+                    let custKey = c.customer_code || (shortCode ? `CUST-${shortCode}` : `CUST-${String(idx + 1).padStart(3, '0')}`);
+                    if (freshDb[custKey]) {
+                        custKey = `CUST-${rawClean.slice(-8)}`;
+                    }
+                    if (freshDb[custKey]) {
+                        custKey = `${custKey}-${idx + 1}`;
+                    }
                     const prof = profMap[c.id] || {};
                     const mem = memMap[c.id] || {};
                     const points = mem.total_paw_points || 0;
@@ -446,8 +480,9 @@
                     }
 
                     const rawAccountStatus = String(c.account_status || '').toLowerCase();
-                    // CSDL demo dùng enum tiếng Việt; vẫn hỗ trợ các bản ghi cũ dùng mã tiếng Anh.
-                    let isLocked = c.account_status === 'LOCKED' || rawAccountStatus === 'da_khoa';
+                    // C-13: Nhận diện đầy đủ các trạng thái tài khoản: đã khóa, tạm khóa (tam_khoa/suspended/temp) và hoạt động
+                    const isSuspended = rawAccountStatus === 'tam_khoa' || rawAccountStatus === 'suspended' || rawAccountStatus === 'temp';
+                    const isLocked = c.account_status === 'LOCKED' || rawAccountStatus === 'da_khoa' || isSuspended;
 
                     // Xác định số điện thoại ưu tiên: c.phone_main -> số người nhận trong sổ địa chỉ -> '—'
                     const phoneVal = c.phone_main || addrs.find(a => a.receiverPhone)?.receiverPhone || '—';
@@ -535,6 +570,13 @@
         }
     }
 
+    PawpalCustomers.getCustomer = function(idOrKey) {
+        if (!idOrKey) return null;
+        const db = PawpalCustomers.state.customerDatabase || {};
+        if (db[idOrKey]) return db[idOrKey];
+        return Object.values(db).find(c => c.dbId === idOrKey || c.id === idOrKey) || null;
+    };
+
     PawpalCustomers.populateCustomerDatalists = function() {
         const searchDatalist = document.getElementById('customerSearchDatalist');
         const adjustDatalist = document.getElementById('adjustCustomerDatalist');
@@ -577,32 +619,32 @@
 
             window._custRealtimeChannel = client.channel('admin_customers_realtime')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'customer' }, async () => {
-                    await PawpalCustomers.loadCustomersModuleData();
+                    await PawpalCustomers.loadCustomersModuleData({ force: true });
                     if (PawpalCustomers.subtabs.list) {
                         PawpalCustomers.subtabs.list.renderCustomersTable();
                         PawpalCustomers.subtabs.list.updateCustomerKPIs();
                     }
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_profile' }, async () => {
-                    await PawpalCustomers.loadCustomersModuleData();
+                    await PawpalCustomers.loadCustomersModuleData({ force: true });
                     if (PawpalCustomers.subtabs.list) PawpalCustomers.subtabs.list.renderCustomersTable();
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_membership' }, async () => {
-                    await PawpalCustomers.loadCustomersModuleData();
+                    await PawpalCustomers.loadCustomersModuleData({ force: true });
                     if (PawpalCustomers.subtabs.list) {
                         PawpalCustomers.subtabs.list.renderCustomersTable();
                         PawpalCustomers.subtabs.list.updateCustomerKPIs();
                     }
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_address' }, async () => {
-                    await PawpalCustomers.loadCustomersModuleData();
+                    await PawpalCustomers.loadCustomersModuleData({ force: true });
                     const currentOpenId = sessionStorage.getItem('pawpal_admin_customer_id');
                     if (currentOpenId && PawpalCustomers.subtabs.profile) {
                         PawpalCustomers.subtabs.profile.renderDrawerAddresses(currentOpenId);
                     }
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_profile' }, async () => {
-                    await PawpalCustomers.loadCustomersModuleData();
+                    await PawpalCustomers.loadCustomersModuleData({ force: true });
                     if (PawpalCustomers.subtabs.list) PawpalCustomers.subtabs.list.renderCustomersTable();
                     const currentOpenId = sessionStorage.getItem('pawpal_admin_customer_id');
                     if (currentOpenId && PawpalCustomers.subtabs.profile) {
@@ -610,7 +652,7 @@
                     }
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, async () => {
-                    await PawpalCustomers.loadCustomersModuleData();
+                    await PawpalCustomers.loadCustomersModuleData({ force: true });
                     if (PawpalCustomers.subtabs.list) {
                         PawpalCustomers.subtabs.list.renderComplaintBar();
                         PawpalCustomers.subtabs.list.renderCustomersTable();
@@ -618,7 +660,7 @@
                     }
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'paw_point_transaction' }, async () => {
-                    await PawpalCustomers.loadCustomersModuleData();
+                    await PawpalCustomers.loadCustomersModuleData({ force: true });
                     if (PawpalCustomers.subtabs.pawpoint) {
                         PawpalCustomers.subtabs.pawpoint.renderPawpointHistory();
                     }

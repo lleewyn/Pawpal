@@ -387,6 +387,38 @@
             };
         }
 
+        const btnSettleToPos = document.getElementById('btnSettleToPos');
+        if (btnSettleToPos) {
+            btnSettleToPos.onclick = () => {
+                sessionStorage.setItem('pawpal_admin_pos_booking_id', booking.id);
+                sessionStorage.setItem('pawpal_admin_pos_customer_id', booking.customerId || '');
+                sessionStorage.setItem('pawpal_admin_pos_booking_amount', booking.totalPrice || booking.price || 0);
+                PawpalServices.showToast?.('Đang chuyển thông tin ca sang quầy thu ngân POS...', 'info');
+                const posBtn = Array.from(document.querySelectorAll('.sidebar-menu-btn')).find(b => b.getAttribute('data-title') === 'Bán hàng');
+                if (posBtn) {
+                    posBtn.click();
+                } else if (window.PawpalAdmin?.loadModule) {
+                    window.PawpalAdmin.loadModule('Bán hàng');
+                }
+            };
+        }
+
+        const btnShareCarelog = document.getElementById('btnShareCarelogLink');
+        if (btnShareCarelog) {
+            btnShareCarelog.onclick = () => {
+                const shareUrl = `${window.location.origin}/pages/portal/carelog.html?id=${encodeURIComponent(booking.id)}`;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        PawpalServices.showToast?.('Đã sao chép liên kết nhật ký chăm sóc vào bộ nhớ tạm!');
+                    }).catch(() => {
+                        prompt('Sao chép liên kết nhật ký chăm sóc:', shareUrl);
+                    });
+                } else {
+                    prompt('Sao chép liên kết nhật ký chăm sóc:', shareUrl);
+                }
+            };
+        }
+
         // Cập nhật Khối tài chính và Bảng kê chi phí
         renderDetailFinancials(booking);
 
@@ -954,12 +986,16 @@
         const petWeightEl = document.getElementById('waiverPetWeight');
         const petAgeEl = document.getElementById('waiverPetAge');
 
-        if (custNameEl) custNameEl.textContent = booking.customer || 'Lê Lệ Quyên';
-        if (custPhoneEl) custPhoneEl.textContent = booking.phone || '0901234567';
-        if (petNameEl) petNameEl.textContent = booking.petName || 'Miu Con';
-        if (petBreedEl) petBreedEl.textContent = booking.petBreed || 'Mèo Anh Lông Ngắn';
-        if (petWeightEl) petWeightEl.textContent = `${booking.petWeight || booking.originalWeight || '4.2'} kg`;
-        if (petAgeEl) petAgeEl.textContent = booking.petAge || '2 tuổi';
+        const customerDisplayName = booking.customerName || booking.customer || 'Chủ nuôi';
+        const serviceDisplayName = booking.serviceName || booking.service || 'Dịch vụ chăm sóc';
+        const staffDisplayName = booking.staff || 'Chưa phân công';
+
+        if (custNameEl) custNameEl.textContent = customerDisplayName;
+        if (custPhoneEl) custPhoneEl.textContent = booking.phone || '—';
+        if (petNameEl) petNameEl.textContent = booking.petName || 'Bé cưng';
+        if (petBreedEl) petBreedEl.textContent = booking.petBreed || 'Thú cưng';
+        if (petWeightEl) petWeightEl.textContent = booking.petWeight || booking.originalWeight || 'Chưa cập nhật';
+        if (petAgeEl) petAgeEl.textContent = booking.petAge || 'Chưa cập nhật';
 
         // Phần 2: Ngoại quan tiếp nhận (Zero-Claim)
         const actualWeightEl = document.getElementById('waiverActualWeight');
@@ -970,16 +1006,16 @@
         const temperamentEl = document.getElementById('waiverTemperament');
         const belongingsEl = document.getElementById('waiverBelongings');
 
-        if (actualWeightEl) actualWeightEl.textContent = `${actualWeight} kg`;
+        if (actualWeightEl) actualWeightEl.textContent = actualWeight ? `${actualWeight} kg` : 'Chưa cân';
         if (weightEvalEl) weightEvalEl.textContent = intake.weightEvaluation || 'Đúng khung giá chuẩn';
-        if (skinCoatEl) skinCoatEl.textContent = intake.skinCoat || 'Sạch sẽ, không ve rận';
+        if (skinCoatEl) skinCoatEl.textContent = intake.skinCoat || 'Chưa ghi nhận bất thường';
         if (eyesEarsEl) eyesEarsEl.textContent = intake.eyesEars || 'Bình thường';
         if (woundsEl) woundsEl.textContent = intake.wounds || 'Không có vết thương cũ';
         if (temperamentEl) temperamentEl.textContent = intake.temperament || 'Ngoan hiền';
         
         const bNote = intake.belongingsNote || '';
         const bItems = Array.isArray(intake.belongings) && intake.belongings.length > 0 ? intake.belongings.join(', ') : '';
-        if (belongingsEl) belongingsEl.textContent = bNote || bItems || '01 Dây dắt đỏ';
+        if (belongingsEl) belongingsEl.textContent = bNote || bItems || 'Không có tư trang gửi lại';
 
         // Phần 3: Gói dịch vụ & Chi phí
         const svcNameEl = document.getElementById('waiverServiceName');
@@ -990,9 +1026,9 @@
         const extraItemsBlock = document.getElementById('waiverExtraItemsBlock');
         const extraItemsText = document.getElementById('waiverExtraItemsText');
 
-        if (svcNameEl) svcNameEl.textContent = booking.service || 'Gói Tắm Vệ Sinh Cơ Bản';
+        if (svcNameEl) svcNameEl.textContent = serviceDisplayName;
         if (priceBaseEl) priceBaseEl.textContent = formatCurrency(basePrice);
-        if (staffNameEl) staffNameEl.textContent = booking.staff || 'Ngọc Anh';
+        if (staffNameEl) staffNameEl.textContent = staffDisplayName;
         if (durationEl) durationEl.textContent = booking.duration || '60 phút';
         if (priceTotalEl) priceTotalEl.textContent = formatCurrency(total);
 
@@ -1011,8 +1047,8 @@
         // Chữ ký
         const staffSignEl = document.getElementById('waiverStaffSignName');
         const custSignEl = document.getElementById('waiverCustSignName');
-        if (staffSignEl) staffSignEl.textContent = `KTV. ${booking.staff || 'Nguyễn Ngọc Anh'}`;
-        if (custSignEl) custSignEl.textContent = booking.customer || 'Lê Lệ Quyên';
+        if (staffSignEl) staffSignEl.textContent = staffDisplayName !== 'Chưa phân công' ? `KTV. ${staffDisplayName}` : 'KTV tiếp nhận';
+        if (custSignEl) custSignEl.textContent = customerDisplayName;
 
         // Nút in phiếu
         const btnPrintAction = document.getElementById('btnPrintIntakeWaiverAction');
@@ -1047,14 +1083,14 @@
         const belongingsEl = document.getElementById('notifyPickupBelongings');
         const textareaEl = document.getElementById('notifyPickupMessageText');
 
-        const custName = booking.customer || 'Quý khách';
+        const custName = booking.customerName || booking.customer || 'Quý khách';
         const custPhone = booking.phone || '';
         const petName = booking.petName || 'Bé cưng';
-        const svcName = booking.service || 'Dịch vụ chăm sóc';
-        const totalCost = formatCurrency(booking.total || booking.price || 250000);
+        const svcName = booking.serviceName || booking.service || 'Dịch vụ chăm sóc';
+        const totalCost = formatCurrency(booking.total || booking.price || 0);
         const staffName = booking.staff || 'KTV PawPal';
         const intake = booking.intakeRecord || {};
-        const belongingsNote = intake.belongingsNote || (Array.isArray(intake.belongings) && intake.belongings.length > 0 ? intake.belongings.join(', ') : '01 Dây dắt đỏ');
+        const belongingsNote = intake.belongingsNote || (Array.isArray(intake.belongings) && intake.belongings.length > 0 ? intake.belongings.join(', ') : 'Không có tư trang gửi lại');
 
         if (metaEl) {
             metaEl.textContent = `Mã ca ${booking.id || 'BKG-1001'} • Bé ${petName} • Chủ nuôi ${custName} ${custPhone ? `(${custPhone})` : ''}`;
@@ -1089,10 +1125,35 @@ PawPal kính mời Anh/Chị ghé tiệm để đón bé về sum vầy cùng gi
 
         const btnSend = document.getElementById('btnSendNotifyPickup');
         if (btnSend) {
-            btnSend.onclick = () => {
-                const channel = document.querySelector('input[name="pickupChannel"]:checked')?.value || 'Zalo ZNS';
-                PawpalServices.showToast(`Đã gửi thông báo đón bé ${petName} qua ${channel} thành công!`);
-                modal.classList.remove('active');
+            btnSend.onclick = async () => {
+                btnSend.disabled = true;
+                const channel = document.querySelector('input[name="pickupChannel"]:checked')?.value || 'Zalo';
+                const messageText = textareaEl?.value || '';
+
+                try {
+                    const client = PawpalServices.getSupabaseClient ? PawpalServices.getSupabaseClient() : window.SupabaseClient;
+                    if (client) {
+                        const { error: notifErr } = await client.from('notification').insert({
+                            user_id: booking.userId || null,
+                            type: 'SERVICE_PICKUP',
+                            title: `Mời đón bé ${petName} tại Pawpal`,
+                            content: messageText,
+                            status: 'QUEUED',
+                            channel: channel.includes('Zalo') ? 'ZALO' : (channel.includes('SMS') ? 'SMS' : 'APP'),
+                            phone: custPhone ? custPhone.replace(/\D/g, '') : null
+                        });
+                        if (notifErr) {
+                            console.warn('Lỗi ghi hàng đợi thông báo đón bé:', notifErr);
+                        }
+                    }
+                    PawpalServices.showToast(`Đã xếp hàng gửi thông báo đón bé ${petName} qua ${channel}!`, 'success');
+                    modal.classList.remove('active');
+                } catch (e) {
+                    console.error('Lỗi gửi thông báo đón bé:', e);
+                    PawpalServices.showToast('Không thể gửi thông báo lúc này. Vui lòng liên hệ trực tiếp chủ nuôi.', 'danger');
+                } finally {
+                    btnSend.disabled = false;
+                }
             };
         }
 

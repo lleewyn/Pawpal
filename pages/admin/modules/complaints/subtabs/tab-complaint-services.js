@@ -9,6 +9,16 @@
     const ITEMS_PER_PAGE = 10;
     let currentServiceQuickFilter = 'ALL';
     let currentServiceKpiFilter = 'ALL';
+    let lastFilteredServices = [];
+
+    function sanitizeCsvCell(val) {
+        if (val === null || val === undefined) return '""';
+        let str = String(val);
+        if (/^[=+\-@]/.test(str)) {
+            str = "'" + str;
+        }
+        return `"${str.replace(/"/g, '""')}"`;
+    }
 
     function escapeHtml(str) {
         if (!str) return '';
@@ -129,7 +139,12 @@
                 } else if (item.staffAssigned !== selectedStaff) return false;
             }
 
-            if (currentServiceQuickFilter === 'MY' && item.staffAssigned !== 'Lê Lệ Quyên') return false;
+            if (currentServiceQuickFilter === 'MY') {
+                const myStaff = (typeof PawpalComplaints !== 'undefined' && PawpalComplaints.getCurrentStaffName) ? PawpalComplaints.getCurrentStaffName() : 'Quản trị viên';
+                const assigned = (item.staffAssigned || '').toLowerCase();
+                const myLower = myStaff.toLowerCase();
+                if (!assigned.includes(myLower) && assigned !== myLower) return false;
+            }
             if (currentServiceQuickFilter === 'UNASSIGNED' && item.staffAssigned !== 'Chưa phân công') return false;
             if (currentServiceQuickFilter === 'WAITING_MANAGER' && item.status !== 'waiting_manager_approval') return false;
             if (currentServiceQuickFilter === 'REPROCESSING' && item.status !== 'reprocessing') return false;
@@ -148,6 +163,7 @@
         });
 
         filtered.sort(sortComplaintsByUrgencyAndSla);
+        lastFilteredServices = filtered;
 
         const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
         if (serviceCurrentPage > totalPages) serviceCurrentPage = totalPages || 1;
@@ -316,18 +332,18 @@
         const btnExport = document.getElementById('btnExportServiceComplaints');
         if (btnExport) {
             btnExport.addEventListener('click', () => {
-                const serviceComplaints = PawpalComplaints.state?.serviceComplaints || [];
+                const exportList = lastFilteredServices.length > 0 ? lastFilteredServices : (PawpalComplaints.state?.serviceComplaints || []);
                 const headers = ['Mã ticket', 'Thời gian', 'Khách hàng', 'Số điện thoại', 'Dịch vụ', 'Nội dung', 'Mức độ', 'Trạng thái', 'Người phụ trách'];
-                const rows = serviceComplaints.map(t => [
-                    `"${t.id || ''}"`,
-                    `"${t.createdAt || ''}"`,
-                    `"${t.customerName || ''}"`,
-                    `"${t.phone || ''}"`,
-                    `"${t.serviceName || ''}"`,
-                    `"${(t.title || '').replace(/"/g, '""')}"`,
-                    `"${t.priority || ''}"`,
-                    `"${t.status || ''}"`,
-                    `"${t.staffAssigned || ''}"`
+                const rows = exportList.map(t => [
+                    sanitizeCsvCell(t.id),
+                    sanitizeCsvCell(t.createdAt),
+                    sanitizeCsvCell(t.customerName),
+                    sanitizeCsvCell(t.phone),
+                    sanitizeCsvCell(t.serviceName),
+                    sanitizeCsvCell(t.title),
+                    sanitizeCsvCell(t.priority),
+                    sanitizeCsvCell(t.status),
+                    sanitizeCsvCell(t.staffAssigned)
                 ]);
 
                 const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -342,7 +358,7 @@
                 link.click();
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
-                PawpalComplaints.showToast('Đã xuất thành công dữ liệu khiếu nại dịch vụ sang file CSV!');
+                PawpalComplaints.showToast(`Đã xuất thành công ${exportList.length} khiếu nại dịch vụ sang file CSV!`);
             });
         }
 

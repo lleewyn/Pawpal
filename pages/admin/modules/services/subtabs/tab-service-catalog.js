@@ -12,6 +12,7 @@
     let selectedPetTypes = ['Chó', 'Mèo'];
     const DEFAULT_PET_SPECIES = ['Chó', 'Mèo', 'Thỏ', 'Hamster', 'Bọ ú', 'Chim cảnh', 'Thú nhỏ'];
     let availablePetSpecies = [...DEFAULT_PET_SPECIES];
+    const esc = (s) => (PawpalServices.escapeHtml ? PawpalServices.escapeHtml(s) : String(s || ''));
 
     function parsePetTypes(str) {
         if (!str) return ['Chó', 'Mèo'];
@@ -307,32 +308,32 @@
             const stepCount = (svc.steps && svc.steps.length) || (svc.group === 'taxi' ? 4 : (svc.group === 'hotel' ? 6 : 7));
 
             return `
-                <tr class="${isHidden ? 'row-locked' : ''}" data-service-code="${svc.code || svc.id}">
+                <tr class="${isHidden ? 'row-locked' : ''}" data-service-code="${esc(svc.code || svc.id)}">
                     <td style="text-align: center;">
-                        <img src="${svc.image || '/assets/images/services/spa/process/spa01.webp'}" class="service-thumb-cell" alt="${svc.name}" style="width: 38px; height: 38px; border-radius: 9px; object-fit: cover;">
+                        <img src="${esc(svc.image || '/assets/images/services/spa/process/spa01.webp')}" class="service-thumb-cell" alt="${esc(svc.name)}" style="width: 38px; height: 38px; border-radius: 9px; object-fit: cover;">
                     </td>
                     <td>
-                        <span style="font-weight: 600; color: #203A2C; font-size: 13px;">${svc.code || svc.id}</span>
+                        <span style="font-weight: 600; color: #203A2C; font-size: 13px;">${esc(svc.code || svc.id)}</span>
                     </td>
                     <td>
-                        <div style="font-weight: 600; color: var(--text-heading);">${svc.name}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${svc.desc || 'Chăm sóc toàn diện'}</div>
+                        <div style="font-weight: 600; color: var(--text-heading);">${esc(svc.name)}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${esc(svc.desc || 'Chăm sóc toàn diện')}</div>
                     </td>
-                    <td>${groupName}</td>
-                    <td>${svc.petType || 'Chó và Mèo'}</td>
-                    <td>${svc.duration || '60 phút'}</td>
-                    <td style="font-weight: 600; color: #236B48;">${minPrice} đ</td>
+                    <td>${esc(groupName)}</td>
+                    <td>${esc(svc.petType || 'Chó và Mèo')}</td>
+                    <td>${esc(svc.duration || '60 phút')}</td>
+                    <td style="font-weight: 600; color: #236B48;">${esc(minPrice)} đ</td>
                     <td>
-                        <button type="button" class="btn-view-sop-pill btn-view-service-sop" data-service-code="${svc.code || svc.id}" title="Xem quy trình chuẩn SOP">${stepCount} bước</button>
+                        <button type="button" class="btn-view-sop-pill btn-view-service-sop" data-service-code="${esc(svc.code || svc.id)}" title="Xem quy trình chuẩn SOP">${stepCount} bước</button>
                     </td>
                     <td>
                         <span style="font-size: 12.5px; font-weight: 600; color: #D97706;">${svc.averageRating != null ? svc.averageRating.toFixed(1) + ' ★' : '—'}</span>
                     </td>
                     <td style="text-align: center;">
-                        <span class="admin-badge ${isHidden ? 'badge-neutral' : 'badge-success'}">${svc.status || 'Đang phục vụ'}</span>
+                        <span class="admin-badge ${isHidden ? 'badge-neutral' : 'badge-success'}">${esc(svc.status || 'Đang phục vụ')}</span>
                     </td>
                     <td style="text-align: center;">
-                        <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-edit-catalog-service" data-service-code="${svc.code || svc.id}">Sửa</button>
+                        <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-edit-catalog-service" data-service-code="${esc(svc.code || svc.id)}">Sửa</button>
                     </td>
                 </tr>
             `;
@@ -593,7 +594,7 @@
             // Đóng hiệu lực mức giá cũ trước khi tạo bộ giá mới để vẫn giữ lịch sử.
             const amount = (value) => Number(String(value || '').replace(/[^\d]/g, ''));
             const priceRows = [
-                [0, 4.9, amount(pUnder5)],
+                [0, 5, amount(pUnder5)],
                 [5, 10, amount(p5To10)],
                 [10, 20, amount(p10To20)],
                 // Schema dùng numeric giới hạn; 999.99 vẫn biểu diễn đúng khoảng trên 20 kg
@@ -621,7 +622,14 @@
             const { data: savedPrices, error: priceError } = await db.from('service_price_matrix')
                 .insert(priceRows)
                 .select('id, unit_price');
-            if (priceError) throw priceError;
+            if (priceError) {
+                // Rollback: khôi phục trạng thái ACTIVE cho bộ giá vừa bị lưu trữ
+                await db.from('service_price_matrix')
+                    .update({ status: 'ACTIVE', effective_to: null })
+                    .eq('service_id', data.id)
+                    .eq('effective_to', now);
+                throw priceError;
+            }
             if (savedPrices?.length !== priceRows.length) throw new Error('Không xác minh được ma trận giá đã lưu.');
             await PawpalServices.loadServicesData({ force: true });
         } catch (err) {

@@ -94,6 +94,7 @@ function initFab() {
             reader.onload = (ev) => {
                 const dataUrl = ev.target.result;
                 pendingAttachedImage = {
+                    file: file,
                     name: file.name,
                     size: file.size,
                     dataUrl: dataUrl
@@ -1032,35 +1033,81 @@ function initFab() {
     }
 
     // -------------------------------------------------------------
+    // CB-13: Tải tệp đính kèm lên Supabase Storage bucket 'chat-attachments'
+    async function uploadAttachmentToStorage(dbClient, fileObj, folder = 'user') {
+        if (!dbClient || !dbClient.storage || !fileObj) return null;
+        try {
+            const ext = (fileObj.name || 'image.jpg').split('.').pop().toLowerCase();
+            const fileName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+            const filePath = `${folder}/${fileName}`;
+            const { data, error } = await dbClient.storage
+                .from('chat-attachments')
+                .upload(filePath, fileObj, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
+            if (error) {
+                console.warn('[Storage] Lỗi tải ảnh đính kèm:', error.message);
+                return null;
+            }
+            const { data: publicData } = dbClient.storage
+                .from('chat-attachments')
+                .getPublicUrl(filePath);
+            return publicData?.publicUrl || filePath;
+        } catch(e) {
+            console.warn('[Storage] Exception upload ảnh:', e);
+            return null;
+        }
+    }
+
+    // -------------------------------------------------------------
     // GỬI TIN NHẮN (ĐIỀU PHỐI: TRỰC TIẾP NHÂN VIÊN HOẶC QUA AI COPILOT)
     // -------------------------------------------------------------
+    let isSendingCustomerMsg = false;
     async function sendMessage() {
+        if (isSendingCustomerMsg) return;
+
         clearTimeout(customerTypingDebounceTimer);
         notifyCustomerTyping(false);
 
         const rawText = input ? input.value.trim() : '';
         if (!rawText && !pendingAttachedImage) return;
 
+        isSendingCustomerMsg = true;
+        if (sendBtn) {
+            sendBtn.disabled = true;
+            sendBtn.classList.add('is-loading');
+        }
+
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+
         let textToSend = rawText;
         if (pendingAttachedImage) {
-            const imgMd = `![${pendingAttachedImage.name}](${pendingAttachedImage.dataUrl})`;
+            let imageSource = null;
+            if (pendingAttachedImage.file && db && db.storage) {
+                imageSource = await uploadAttachmentToStorage(db, pendingAttachedImage.file, 'user');
+            }
+            if (!imageSource) {
+                // Chỉ dùng dataUrl nếu ảnh rất nhỏ (<= 64KB), còn lại dùng placeholder metadata để tránh phình DB
+                imageSource = (pendingAttachedImage.size <= 65536) ? pendingAttachedImage.dataUrl : `[Ảnh đính kèm: ${pendingAttachedImage.name}]`;
+            }
+            const imgMd = `![${pendingAttachedImage.name}](${imageSource})`;
             textToSend = rawText ? `${rawText}\n${imgMd}` : imgMd;
         }
 
+        const savedDraft = rawText;
         if (input) input.value = '';
         clearPendingAttachment();
         appendMessage(textToSend, 'user');
 
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-
         // Trường hợp 1: Đang có chuyên viên tiếp quản hoặc đang đợi chuyên viên
         if (currentConversationStatus === 'agent_handling' || currentConversationStatus === 'waiting_agent') {
-            const convId = await ensureConversationExists();
-            conversationHistory.push({ role: 'user', content: textToSend });
-            saveChatHistory();
+            try {
+                const convId = await ensureConversationExists();
+                conversationHistory.push({ role: 'user', content: textToSend });
+                saveChatHistory();
 
-            if (db && convId) {
-                try {
+                if (db && convId) {
                     await db.from('chat_message').insert([{
                         conversation_id: convId,
                         sender_type: 'customer',
@@ -1073,8 +1120,15 @@ function initFab() {
                     await db.from('chat_conversation').update({
                         updated_at: new Date().toISOString()
                     }).eq('id', convId);
-                } catch(e) {
-                    console.error('[FAB] Lỗi gửi tin nhắn trực tiếp tới chuyên viên:', e);
+                }
+            } catch(e) {
+                console.error('[FAB] Lỗi gửi tin nhắn trực tiếp tới chuyên viên:', e);
+                if (input && !input.value) input.value = savedDraft;
+            } finally {
+                isSendingCustomerMsg = false;
+                if (sendBtn) {
+                    sendBtn.disabled = false;
+                    sendBtn.classList.remove('is-loading');
                 }
             }
             return;
@@ -1099,14 +1153,6 @@ function initFab() {
                     token = data.session.access_token;
                 }
             }
-            if (!token) {
-                try {
-                    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-                    if (currentUser && (currentUser.id || currentUser._supabaseId)) {
-                        token = 'local:' + (currentUser._supabaseId || currentUser.id);
-                    }
-                } catch(e) {}
-            }
             
             conversationHistory.push({
                 "role": "user",
@@ -1114,10 +1160,12 @@ function initFab() {
             });
             saveChatHistory();
 
+            const clientMessageId = 'clmsg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             const bodyPayload = {
                 messages: conversationHistory,
                 conversationId: activeConversationId || undefined,
                 sessionToken: currentSessionToken,
+                client_message_id: clientMessageId,
                 stream: true
             };
 
@@ -1133,19 +1181,42 @@ function initFab() {
 
             removeTyping();
 
+            if (!response.ok) {
+                let errJson = null;
+                try {
+                    errJson = await response.json();
+                } catch(e) {}
+                const errorMsg = errJson?.reply || (response.status === 429 
+                    ? 'PawPal AI đang bận xử lý nhiều yêu cầu cùng lúc. Bạn vui lòng thử lại sau vài giây nhé! 🐾' 
+                    : 'Xin lỗi, không thể kết nối tới PawPal AI lúc này.');
+                appendMessage(errorMsg, 'bot');
+                if (input && !input.value) input.value = savedDraft;
+                conversationHistory.pop();
+                saveChatHistory();
+                return;
+            }
+
             let botBubble = null;
             let fullReply = '';
             const contentType = response.headers.get('content-type') || '';
 
             if (contentType.includes('application/json')) {
                 const data = await response.json();
+                if (data.ok === false) {
+                    appendMessage(data.reply || 'Xin lỗi, PawPal AI đang gặp sự cố. Bạn thử lại sau nhé!', 'bot');
+                    if (input && !input.value) input.value = savedDraft;
+                    conversationHistory.pop();
+                    saveChatHistory();
+                    return;
+                }
+
                 if (data.conversationId && data.conversationId !== activeConversationId) {
                     activeConversationId = data.conversationId;
                     localStorage.setItem('pawpal_fab_conv_id', activeConversationId);
-                    registerConversationSession(activeConversationId, text, 'bot_handling');
+                    registerConversationSession(activeConversationId, textToSend, 'bot_handling');
                     subscribeToStaffRealtime(activeConversationId);
                 } else if (activeConversationId) {
-                    registerConversationSession(activeConversationId, text, 'bot_handling');
+                    registerConversationSession(activeConversationId, textToSend, 'bot_handling');
                 }
 
                 fullReply = data.reply || data.text || '';
@@ -1161,6 +1232,7 @@ function initFab() {
             } else {
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
+                let currentEvent = 'message';
                 
                 while (true) {
                     const { value, done } = await reader.read();
@@ -1170,17 +1242,35 @@ function initFab() {
                     const lines = streamChunk.split('\n');
                     
                     for (const line of lines) {
+                        if (line.startsWith('event: ')) {
+                            currentEvent = line.slice(7).trim();
+                            continue;
+                        }
                         if (!line.startsWith('data: ')) continue;
                         try {
                             const parsed = JSON.parse(line.slice(6));
+
+                            if (currentEvent === 'error' || parsed.ok === false) {
+                                console.error("[PawPal AI SSE Error]", parsed);
+                                const errReply = parsed.reply || 'Xin lỗi, PawPal AI đang gặp sự cố kết nối.';
+                                if (!botBubble) {
+                                    botBubble = document.createElement('div');
+                                    botBubble.className = 'fab-chat-bubble fab-chat-bubble--bot';
+                                    messages.appendChild(botBubble);
+                                }
+                                botBubble.innerHTML = formatChatContent(errReply);
+                                scrollToBottom();
+                                if (input && !input.value) input.value = savedDraft;
+                                break;
+                            }
                             
                             if (parsed.conversationId && parsed.conversationId !== activeConversationId) {
                                 activeConversationId = parsed.conversationId;
                                 localStorage.setItem('pawpal_fab_conv_id', activeConversationId);
-                                registerConversationSession(activeConversationId, text, 'bot_handling');
+                                registerConversationSession(activeConversationId, textToSend, 'bot_handling');
                                 subscribeToStaffRealtime(activeConversationId);
                             } else if (activeConversationId) {
-                                registerConversationSession(activeConversationId, text, 'bot_handling');
+                                registerConversationSession(activeConversationId, textToSend, 'bot_handling');
                             }
 
                             if (parsed.done) {
@@ -1221,14 +1311,23 @@ function initFab() {
             
             if (!fullReply && !botBubble) {
                 appendMessage('Xin lỗi, hệ thống PawPal AI đang gặp sự cố kết nối. Quý khách vui lòng thử lại sau.', 'bot');
+                if (input && !input.value) input.value = savedDraft;
             }
             finalReplyForConsole = fullReply;
         } catch (error) {
             console.error("Chatbot request failed", error);
             removeTyping();
             appendMessage("Xin lỗi, không thể kết nối tới PawPal AI lúc này.", 'bot');
+            if (input && !input.value) input.value = savedDraft;
+            conversationHistory.pop();
+            saveChatHistory();
         } finally {
             if (aiTimerInterval) clearInterval(aiTimerInterval);
+            isSendingCustomerMsg = false;
+            if (sendBtn) {
+                sendBtn.disabled = false;
+                sendBtn.classList.remove('is-loading');
+            }
         }
     }
 

@@ -21,7 +21,9 @@ async function runG3TestSuite() {
     }
     const testStaff = staffList[0];
     console.log(`   -> Nhân sự: ${testStaff.full_name} (${testStaff.system_role}, ID: ${testStaff.id})`);
-    const validAuthHeader = `Bearer local:${testStaff.id}`;
+    const { signStaffToken } = require('../api/staff_auth.js');
+    const validToken = signStaffToken(testStaff);
+    const validAuthHeader = `Bearer ${validToken}`;
 
     // Helper giả lập request Express
     function mockReqRes(body, headers = {}) {

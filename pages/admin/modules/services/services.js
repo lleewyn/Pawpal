@@ -18,6 +18,16 @@
         selectedBookingId: sessionStorage.getItem('pawpal_admin_service_selected_id') || null
     };
 
+    PawpalServices.escapeHtml = function(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
+
     function assertHandoverReady(booking) {
         if(booking?.status!=='in_progress') throw new Error('Chỉ hoàn tất ca đang thực hiện.');
         const intake=booking.intakeRecord;
@@ -211,27 +221,42 @@
         if (booking.status === 'completed') {
             return { level: 'ok', label: 'Hoàn thành', minutesLate: 0 };
         }
+
+        const now = Date.now();
+        const createdAt = booking.created_at ? Date.parse(booking.created_at) : null;
+        const waitingMinutes = createdAt ? Math.max(0, Math.floor((now - createdAt) / 60000)) : 0;
+
         if (booking.status === 'pending') {
-            if (booking.alertType === 'urgent' || booking.id === 'BKG-1006') {
-                return { level: 'danger', label: 'Quá hạn duyệt (>30p)', minutesLate: 35 };
+            if (waitingMinutes > 30) {
+                return { level: 'danger', label: `Quá hạn duyệt (${waitingMinutes}p)`, minutesLate: waitingMinutes };
             }
-            return { level: 'warning', label: 'Chờ duyệt (>15p)', minutesLate: 15 };
+            if (waitingMinutes > 15) {
+                return { level: 'warning', label: `Chờ duyệt (${waitingMinutes}p)`, minutesLate: waitingMinutes };
+            }
+            return { level: 'info', label: 'Mới tiếp nhận', minutesLate: 0 };
         }
+
         if (booking.status === 'confirmed') {
-            if (booking.alertType === 'urgent' || (!booking.staff)) {
-                return { level: 'warning', label: 'Chờ KTV (+15p)', minutesLate: 15 };
+            if (!booking.staff) {
+                return { level: 'warning', label: 'Chờ KTV tiếp nhận', minutesLate: 0 };
             }
-            if (isBookingUpcoming(booking) || booking.id === 'BKG-1008') {
+            if (isBookingUpcoming(booking)) {
                 return { level: 'info', label: 'Sắp tới giờ', minutesLate: 0 };
             }
             return { level: 'ok', label: 'Chờ đón bé', minutesLate: 0 };
         }
+
         if (booking.status === 'in_progress') {
-            if (booking.id === 'BKG-1009') {
-                return { level: 'danger', label: 'Quá hạn SLA (>30p)', minutesLate: 35 };
-            }
-            if (booking.alertType === 'urgent') {
-                return { level: 'warning', label: 'Trễ ca (+15p)', minutesLate: 18 };
+            const date = booking.date || booking.appointment_date;
+            const time = booking.time || booking.appointment_time;
+            if (date && time) {
+                const scheduledStart = Date.parse(`${String(date).slice(0, 10)}T${String(time).slice(0, 5)}:00+07:00`);
+                const durationMinutes = Number(booking.duration) || 60;
+                const expectedEnd = scheduledStart + (durationMinutes * 60000);
+                if (Number.isFinite(expectedEnd) && now > expectedEnd) {
+                    const lateMin = Math.floor((now - expectedEnd) / 60000);
+                    return { level: 'danger', label: `Quá hạn SLA (${lateMin}p)`, minutesLate: lateMin };
+                }
             }
             return { level: 'ok', label: 'Đúng tiến độ', minutesLate: 0 };
         }
@@ -358,11 +383,22 @@
                   .order('pet_name', { ascending: true }),
                 db.from('customer_profile').select('customer_id, full_name'),
                 db.from('care_log')
-                  .select('id, appointment_id, pet_id, description, health_status, recorded_at, created_at')
+                  .select('id, appointment_id, pet_id, care_action_id, description, health_status, recorded_at, created_at, care_action:care_action_id(id, action_name)')
                   .order('recorded_at', { ascending: true })
             ].map(withServicesQueryTimeout));
 
             for (const result of [appRes, svcRes, revRes]) { if (result.error) throw result.error; }
+            PawpalServices.state.auxiliaryErrors = {
+                price: priceRes.error ? priceRes.error.message : null,
+                staff: staffRes.error ? staffRes.error.message : null,
+                careLog: careLogRes.error ? careLogRes.error.message : null
+            };
+            if (priceRes.error) {
+                console.warn('[PawpalServices] Lỗi nạp service_price_matrix:', priceRes.error);
+            }
+            if (staffRes.error) {
+                console.warn('[PawpalServices] Lỗi nạp staff:', staffRes.error);
+            }
             const careLogs = (!careLogRes.error && careLogRes.data) ? careLogRes.data : [];
             const getCustomerProfileName = (customer) => {
                 const profile = customer?.customer_profile;
@@ -423,7 +459,7 @@
                     });
 
                     return {
-                        id: item.appointment_code || 'BKG-' + (1000 + idx),
+                        id: item.appointment_code || (item.id ? `BKG-${item.id.replace(/-/g, '').slice(0, 8).toUpperCase()}` : `BKG-${1000 + idx}`),
                         dbId: item.id,
                         rawStatus: item.appointment_status,
                         staffId: item.staff?.id || null,
@@ -481,12 +517,13 @@
                     }
 
                     const svcPrices = priceMatrix.filter(p => p.service_id === svc.id);
-                    let minPriceVal = 120000;
+                    const hasPriceError = Boolean(priceRes.error);
+                    const defaultPriceLabel = hasPriceError ? 'Lỗi tải giá' : 'Chưa có giá';
                     const pricesObj = {
-                        under5: '120.000',
-                        to10: '150.000',
-                        to20: '200.000',
-                        over20: '250.000'
+                        under5: defaultPriceLabel,
+                        to10: defaultPriceLabel,
+                        to20: defaultPriceLabel,
+                        over20: defaultPriceLabel
                     };
 
                     if (svcPrices.length > 0) {
@@ -494,7 +531,7 @@
                         if (validPrices.length > 0) minPriceVal = Math.min(...validPrices);
                         svcPrices.forEach(p => {
                             const formatted = (Number(p.unit_price) || 0).toLocaleString('vi-VN');
-                            if (p.weight_to < 5) pricesObj.under5 = formatted;
+                            if (p.weight_to <= 5) pricesObj.under5 = formatted;
                             else if (p.weight_from >= 5 && p.weight_to <= 10) pricesObj.to10 = formatted;
                             else if (p.weight_from >= 10 && p.weight_to <= 20) pricesObj.to20 = formatted;
                             else if (p.weight_from >= 20) pricesObj.over20 = formatted;
@@ -536,7 +573,7 @@
                         serviceName: sName || 'Dịch vụ Spa và Grooming',
                         category: cat,
                         staff: r.appointment?.staff?.full_name || 'Chưa có thông tin',
-                        rating: r.rating || 5,
+                        rating: Number.isFinite(Number(r.rating)) && Number(r.rating) >= 1 && Number(r.rating) <= 5 ? Number(r.rating) : 0,
                         comment: r.review_content || '—',
                         status: r.shop_reply ? 'replied' : 'pending',
                         replyText: r.shop_reply || ''
@@ -584,7 +621,7 @@
         if (bookingCode) {
             deepBreadcrumbEl.innerHTML = `
                 <span class="breadcrumb-separator">/</span>
-                <span class="breadcrumb-detail-name">${bookingCode}</span>
+                <span class="breadcrumb-detail-name">${PawpalServices.escapeHtml(bookingCode)}</span>
             `;
         } else {
             deepBreadcrumbEl.innerHTML = '';

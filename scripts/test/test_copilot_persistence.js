@@ -4,14 +4,20 @@
  * và API GET / DELETE /api/admin/copilot/history
  */
 
+require('dotenv').config();
 const http = require('http');
+const { createClient } = require('@supabase/supabase-js');
+const { signStaffToken } = require('../api/staff_auth.js');
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY);
+let validStaffToken = '';
 
 function makeRequest(method, path, body = null, headers = {}) {
     return new Promise((resolve, reject) => {
         const payload = body ? JSON.stringify(body) : null;
         const reqHeaders = {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer local:f12d8dcc-aceb-4c80-adb4-c14e1d9afc30', // Staff Lê Hoàng Tiến
+            'Authorization': 'Bearer ' + validStaffToken,
             ...headers
         };
         if (payload) {
@@ -45,8 +51,22 @@ function makeRequest(method, path, body = null, headers = {}) {
 async function runTest() {
     console.log('=== BẮT ĐẦU KIỂM THỬ LƯU TRỮ LỊCH SỬ CHAT COPILOT ===\n');
 
+    // 0. Lấy nhân sự thật từ CSDL
+    const { data: staffList, error: stErr } = await supabase
+        .from('staff')
+        .select('id, full_name, system_role, account_status')
+        .eq('account_status', 'ACTIVE')
+        .limit(1);
+
+    if (stErr || !staffList || staffList.length === 0) {
+        throw new Error('Không tìm thấy nhân sự ACTIVE trong CSDL.');
+    }
+    const testStaff = staffList[0];
+    validStaffToken = signStaffToken(testStaff);
+    console.log(`0. Nhân sự kiểm thử: ${testStaff.full_name} (${testStaff.system_role}, ID: ${testStaff.id})`);
+
     // 1. Kiểm tra GET /api/admin/copilot/history
-    console.log('1. Kiểm tra API GET /api/admin/copilot/history...');
+    console.log('\n1. Kiểm tra API GET /api/admin/copilot/history...');
     const getRes = await makeRequest('GET', '/api/admin/copilot/history');
     console.log('   Status:', getRes.status);
     console.log('   Body:', getRes.body);

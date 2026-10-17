@@ -4,12 +4,18 @@
  */
 
 const DEFAULT_CONFIG = {
-    // 1. Feature flags theo master plan G5-05
+    // 1. Feature flags theo master plan G5-05 & PR-06
     copilot_read_enabled: process.env.COPILOT_READ_ENABLED !== 'false',
     copilot_draft_enabled: process.env.COPILOT_DRAFT_ENABLED !== 'false',
     ticket_action_enabled: process.env.TICKET_ACTION_ENABLED !== 'false',
     points_action_enabled: process.env.POINTS_ACTION_ENABLED !== 'false',
     raw_reveal_enabled: process.env.RAW_REVEAL_ENABLED !== 'false',
+
+    // PR-06: Công tắc tính năng & Triển khai có kiểm soát (Kill Switches)
+    ai_bot_reply_enabled: process.env.ENABLE_AI_BOT_REPLY !== 'false',
+    copilot_ai_enabled: process.env.ENABLE_COPILOT_AI !== 'false',
+    fast_path_enabled: process.env.FAST_PATH_ENABLED !== 'false',
+    rollout_stage: process.env.CHATBOT_ROLLOUT_STAGE || 'all', // 'internal' | 'pilot' | 'all'
 
     // 2. Chế độ kiểm duyệt (auto | manual_review) - tuyệt đối không có chế độ tắt bảo vệ
     moderation_mode: process.env.MODERATION_MODE || 'auto',
@@ -21,7 +27,7 @@ const DEFAULT_CONFIG = {
     action_preview_ttl_ms: 10 * 60 * 1000, // 10 phút
 
     // 4. Phiên bản hệ thống
-    version: '1.5.0-G5-PROD',
+    version: '1.6.0-PR06-PROD',
     last_updated: new Date().toISOString()
 };
 

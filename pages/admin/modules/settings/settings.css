@@ -147,20 +147,20 @@
 /* ==========================================================================
    BẢNG DỮ LIỆU CHUẨN AGENTS.MD
    ========================================================================== */
-.admin-table th:first-child {
+.settings-module-wrapper .admin-table th:first-child {
     border-left: 3px solid var(--table-header-bg);
 }
 
-.admin-table td:first-child {
+.settings-module-wrapper .admin-table td:first-child {
     border-left: 3px solid transparent;
 }
 
 /* VẠCH CẢNH BÁO MẸP TRÁI DUY NHẤT VÀ ĐỘC QUYỀN TRÊN DÒNG BẢNG (TUÂN THỦ 100% AGENTS.MD) */
-.admin-table tr.row-alert-danger td:first-child {
+.settings-module-wrapper .admin-table tr.row-alert-danger td:first-child {
     border-left: 3px solid #DC2626 !important;
 }
 
-.admin-table tr.row-alert-warning td:first-child {
+.settings-module-wrapper .admin-table tr.row-alert-warning td:first-child {
     border-left: 3px solid #D97706 !important;
 }
 

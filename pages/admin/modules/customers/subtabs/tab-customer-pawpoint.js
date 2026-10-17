@@ -113,9 +113,17 @@
             item.reason || ''
         ]);
 
+        const sanitizeCsvCell = (val) => {
+            let s = String(val === null || val === undefined ? '' : val);
+            if (/^[=+\-@\t\r]/.test(s)) {
+                s = "'" + s;
+            }
+            return `"${s.replace(/"/g, '""')}"`;
+        };
+
         const csvRows = [
-            headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','),
-            ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+            headers.map(sanitizeCsvCell).join(','),
+            ...rows.map(row => row.map(sanitizeCsvCell).join(','))
         ];
 
         const csvContent = '\uFEFF' + csvRows.join('\r\n');
@@ -321,38 +329,58 @@
 
         try {
             const custDbId = matchedCust.dbId;
-            const currentBalance = Number(matchedCust.points) || 0;
-            if (type === 'SUB' && pts > currentBalance) {
-                PawpalCustomers.showToast('Số điểm trừ không được vượt quá số dư hiện tại.', 'warning');
+            if (!custDbId) {
+                PawpalCustomers.showToast('Không tìm thấy mã CSDL của khách hàng để điều chỉnh điểm.', 'danger');
                 return;
             }
-            const newBalance = type === 'ADD' ? (currentBalance + pts) : (currentBalance - pts);
+
+            // C-04: Tra cứu số dư mới nhất trực tiếp từ CSDL để triệt tiêu race condition
+            let liveBalance = Number(matchedCust.points) || 0;
+            const { data: latestMem, error: fetchMemErr } = await client
+                .from('customer_membership')
+                .select('total_paw_points')
+                .eq('customer_id', custDbId)
+                .maybeSingle();
+            if (!fetchMemErr && latestMem && latestMem.total_paw_points !== null && latestMem.total_paw_points !== undefined) {
+                liveBalance = Number(latestMem.total_paw_points) || 0;
+            }
+
+            if (type === 'SUB' && pts > liveBalance) {
+                PawpalCustomers.showToast(`Số điểm trừ (${pts}) vượt quá số dư thực tế hiện tại (${liveBalance} điểm).`, 'warning');
+                return;
+            }
+
+            const newBalance = type === 'ADD' ? (liveBalance + pts) : (liveBalance - pts);
             const ptsSigned = type === 'ADD' ? pts : -pts;
 
-            if (custDbId) {
-                const { data: updatedMembership, error: memErr } = await client
+            const { data: updatedMembership, error: memErr } = await client
+                .from('customer_membership')
+                .update({ total_paw_points: newBalance })
+                .eq('customer_id', custDbId)
+                .select('customer_id, total_paw_points')
+                .maybeSingle();
+
+            if (memErr || !updatedMembership || Number(updatedMembership.total_paw_points) !== newBalance) {
+                console.warn('[Customers] Lỗi cập nhật customer_membership, thử upsert:', memErr);
+                const { error: upsertErr } = await client
                     .from('customer_membership')
-                    .update({ total_paw_points: newBalance })
-                    .eq('customer_id', custDbId)
-                    .select('customer_id, total_paw_points')
-                    .maybeSingle();
+                    .upsert({ customer_id: custDbId, total_paw_points: newBalance });
+                if (upsertErr) throw upsertErr;
+            }
 
-                if (memErr || !updatedMembership || Number(updatedMembership.total_paw_points) !== newBalance) {
-                    console.warn('[Customers] Lỗi cập nhật customer_membership, thử upsert:', memErr);
-                    const { error: upsertErr } = await client
-                        .from('customer_membership')
-                        .upsert({ customer_id: custDbId, total_paw_points: newBalance });
-                    if (upsertErr) throw upsertErr;
-                }
+            const { error: transactionError } = await client.from('paw_point_transaction').insert({
+                customer_id: custDbId,
+                reward_rule_id: null,
+                points: ptsSigned,
+                balance_after: newBalance,
+                description: reason
+            });
 
-                const { error: transactionError } = await client.from('paw_point_transaction').insert({
-                    customer_id: custDbId,
-                    reward_rule_id: '92222222-2222-2222-2222-222222222222',
-                    points: ptsSigned,
-                    balance_after: newBalance,
-                    description: reason
-                });
-                if (transactionError) throw transactionError;
+            if (transactionError) {
+                // C-04: Compensation Rollback - hoàn trả số dư ban đầu nếu ghi nhật ký giao dịch thất bại
+                console.error('[Pawpoint] Lỗi ghi transaction, rollback số dư về:', liveBalance, transactionError);
+                await client.from('customer_membership').update({ total_paw_points: liveBalance }).eq('customer_id', custDbId);
+                throw transactionError;
             }
 
             await PawpalCustomers.loadCustomersModuleData({ force: true });

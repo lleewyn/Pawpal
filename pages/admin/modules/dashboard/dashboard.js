@@ -18,6 +18,17 @@
         return Number(value || 0).toLocaleString('vi-VN');
     }
 
+    function escapeHtml(str) {
+        if (str == null) return '';
+        return String(str).replace(/[&<>"']/g, m => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        })[m]);
+    }
+
     function getTodayDateString() {
         const now = new Date();
         const year = now.getFullYear();
@@ -100,10 +111,10 @@
                     servicesRes,
                     chatsRes
                 ] = await Promise.all([
-                    // Chỉ SELECT cột cần thiết — đúng theo schema Supabase
-                    client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(500),
-                    client.from('appointment').select('id, appointment_code, customer_id, staff_id, service_id, appointment_date, appointment_time, appointment_status, total_price').order('appointment_date', { ascending: false }).limit(500),
-                    client.from('support_ticket').select('id, user_id, title, status, priority, created_at').order('created_at', { ascending: false }).limit(200),
+                    // [D-07] Tối ưu hóa truy vấn Dashboard theo mốc thời gian, loại bỏ giới hạn làm thiếu dữ liệu KPI
+                    client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(2000),
+                    client.from('appointment').select('id, appointment_code, customer_id, pet_id, staff_id, service_id, appointment_date, appointment_time, appointment_status, total_price, notes').order('appointment_date', { ascending: false }).limit(2000),
+                    client.from('support_ticket').select('id, user_id, title, status, priority, created_at').order('created_at', { ascending: false }).limit(1000),
                     // Giống schema đang dùng ở tab Sản phẩm: chỉ lấy các cột tồn tại trong inventory.
                     client.from('product').select('id, product_name, sku, status, stock, inventory(quantity_in_stock, minimum_stock)'),
                     client.from('customer').select('id', { count: 'exact', head: true }),
@@ -115,7 +126,14 @@
                     client.from('chat_conversation').select('id, status, created_at').limit(200)
                 ]);
 
-                _dashLastFetchedAt = Date.now();
+                // D-02: Kiểm tra lỗi truy vấn, không cache kết quả lỗi thành số 0
+                const queryErrors = [ordersRes.error, apptsRes.error, ticketsRes.error].filter(Boolean);
+                if (queryErrors.length > 0) {
+                    console.warn('[Dashboard] Một số truy vấn Supabase gặp lỗi:', queryErrors.map(e => e.message));
+                    _dashLastFetchedAt = 0;
+                } else {
+                    _dashLastFetchedAt = Date.now();
+                }
 
                 liveSalesOrders = ordersRes.data || [];
                 liveAppointments = apptsRes.data || [];
@@ -128,7 +146,7 @@
                         client.from('product').select('id, product_name, sku, status'),
                         client.from('inventory').select('product_id, quantity_in_stock, minimum_stock')
                     ]);
-                    if (!productFallback.error) {
+                    if (!productFallback.error && !inventoryFallback.error) {
                         const inventoryByProduct = new Map((inventoryFallback.data || []).map(inv => [inv.product_id, inv]));
                         liveProducts = (productFallback.data || []).map(product => ({
                             ...product,
@@ -182,7 +200,7 @@
     function renderDashboardKPIs() {
         const todayStr = getTodayDateString();
 
-        // 1. Doanh thu hôm nay (gồm đơn bán hàng hoàn thành/đã giao/đã thanh toán + ca dịch vụ hoàn thành)
+        // 1. Doanh thu hôm nay (chỉ tính đơn bán hàng và ca dịch vụ đã thanh toán thành công, loại trừ đơn hủy/hoàn tiền)
         const todayOrders = liveSalesOrders.filter(o => {
             const dateStr = o.created_at ? o.created_at.substring(0, 10) : '';
             return dateStr === todayStr;
@@ -192,7 +210,8 @@
             .filter(o => {
                 const s = (o.order_status || '').toUpperCase();
                 const p = (o.payment_status || '').toUpperCase();
-                return s === 'COMPLETED' || s === 'DELIVERED' || s === 'DA_GIAO' || s === 'PAID' || p === 'PAID';
+                if (s === 'CANCELLED' || s === 'DA_HUY' || s === 'REFUNDED' || s === 'DA_HOAN_TIEN' || p === 'REFUNDED') return false;
+                return p === 'PAID' || p === 'DA_THANH_TOAN' || ((s === 'COMPLETED' || s === 'DELIVERED' || s === 'DA_GIAO') && p !== 'UNPAID' && p !== 'CHUA_THANH_TOAN' && p !== 'COD_PENDING');
             })
             .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
 
@@ -200,7 +219,10 @@
             .filter(a => {
                 const isToday = toDateKey(a.appointment_date) === todayStr;
                 const s = (a.appointment_status || '').toUpperCase();
-                return isToday && (s === 'COMPLETED' || s === 'DA_HOAN_THANH');
+                const p = (a.payment_status || '').toUpperCase();
+                const isCompleted = s === 'COMPLETED' || s === 'DA_HOAN_THANH';
+                const isPaid = p === 'PAID' || p === 'DA_THANH_TOAN';
+                return isToday && isCompleted && isPaid;
             })
             .reduce((sum, a) => sum + (parseFloat(a.total_price || a.price || 0) || 0), 0);
 
@@ -316,6 +338,12 @@
             })
             .map(prod => {
                 const inv = Array.isArray(prod.inventory) ? prod.inventory[0] : prod.inventory;
+                // D-10: Phân biệt rõ sản phẩm chưa có dữ liệu cấu hình kho vs sản phẩm thực sự hết hàng
+                const hasInventoryData = (inv !== null && inv !== undefined) || (prod.stock !== undefined && prod.stock !== null);
+                if (!hasInventoryData) {
+                    return null;
+                }
+
                 const rawStock = inv?.quantity_in_stock !== undefined 
                     ? inv.quantity_in_stock 
                     : (inv?.quantity_on_hand !== undefined 
@@ -337,7 +365,8 @@
                     isEmpty: stock === 0,
                     isLow: stock > 0 && stock <= minStock
                 };
-            });
+            })
+            .filter(Boolean);
 
         // Lọc các sản phẩm hết hàng hoặc sắp hết hàng theo Quy tắc thiết kế (Design & Business Rule)
         // 1. Cấp bách nhất: Hết hàng (stock = 0) luôn luôn xếp đầu tiên (vị trí 1)
@@ -375,10 +404,12 @@
         container.innerHTML = lowStockItems.slice(0, 4).map(prod => {
             const badgeClass = prod.isEmpty ? 'is-empty' : 'is-low';
             const badgeText = prod.isEmpty ? 'Hết hàng' : `Còn ${prod.stock}`;
+            const safeSku = escapeHtml(prod.sku);
+            const safeName = escapeHtml(prod.name);
 
             return `
-                <button type="button" class="dashboard-stock-row" data-sku="${prod.sku}" data-dashboard-module="Bán hàng">
-                    <span><strong>${prod.name}</strong><small>SKU: ${prod.sku}</small></span>
+                <button type="button" class="dashboard-stock-row" data-sku="${safeSku}" data-dashboard-module="Bán hàng">
+                    <span><strong>${safeName}</strong><small>SKU: ${safeSku}</small></span>
                     <span class="dashboard-stock-count ${badgeClass}">${badgeText}</span>
                 </button>
             `;
@@ -423,16 +454,18 @@
             return formatISODate(d);
         });
 
-        // Tính doanh thu theo ngày từ các đơn hàng hoàn tất/đã giao + lịch dịch vụ hoàn tất
+        // Tính doanh thu theo ngày từ các đơn hàng đã thanh toán và lịch dịch vụ hoàn tất đã thanh toán
         const completedOrders = liveSalesOrders.filter(o => {
             const s = (o.order_status || '').toUpperCase();
             const p = (o.payment_status || '').toUpperCase();
-            return s === 'COMPLETED' || s === 'DELIVERED' || s === 'DA_GIAO' || s === 'PAID' || p === 'PAID';
+            if (s === 'CANCELLED' || s === 'DA_HUY' || s === 'REFUNDED' || s === 'DA_HOAN_TIEN' || p === 'REFUNDED') return false;
+            return p === 'PAID' || p === 'DA_THANH_TOAN' || ((s === 'COMPLETED' || s === 'DELIVERED' || s === 'DA_GIAO') && p !== 'UNPAID' && p !== 'CHUA_THANH_TOAN' && p !== 'COD_PENDING');
         });
 
         const completedAppts = liveAppointments.filter(a => {
             const s = (a.appointment_status || '').toUpperCase();
-            return s === 'COMPLETED' || s === 'DA_HOAN_THANH';
+            const p = (a.payment_status || '').toUpperCase();
+            return (s === 'COMPLETED' || s === 'DA_HOAN_THANH') && (p === 'PAID' || p === 'DA_THANH_TOAN');
         });
 
         const currentWeek = currentWeekDays.map(dateStr => {
@@ -571,7 +604,7 @@
                     status: statusText,
                     badge: badgeClass,
                     statusCode: statusCode,
-                    notes: a.note || 'Chăm sóc dịu nhẹ, đúng quy trình an toàn.'
+                    notes: a.notes || a.note || ''
                 };
             });
         }
@@ -600,12 +633,21 @@
                 return;
             }
 
-            bookingList.innerHTML = dayBookings.map((booking, idx) => `
+            bookingList.innerHTML = dayBookings.map((booking, idx) => {
+                const safeTime = escapeHtml(booking.time);
+                const safePet = escapeHtml(booking.pet);
+                const safeCustomer = escapeHtml(booking.customer);
+                const safeService = escapeHtml(booking.service);
+                const safeStatus = escapeHtml(booking.status);
+                const safeBadge = escapeHtml(booking.badge || 'badge-neutral');
+
+                return `
                 <button type="button" class="dashboard-booking-row" data-booking-idx="${idx}">
-                    <time>${booking.time}</time>
-                    <span class="dashboard-booking-detail"><strong>${booking.pet} · ${booking.customer}</strong><small>${booking.service}</small></span>
-                    <span class="admin-badge ${booking.badge}">${booking.status}</span>
-                </button>`).join('');
+                    <time>${safeTime}</time>
+                    <span class="dashboard-booking-detail"><strong>${safePet} · ${safeCustomer}</strong><small>${safeService}</small></span>
+                    <span class="admin-badge ${safeBadge}">${safeStatus}</span>
+                </button>`;
+            }).join('');
 
             bookingList.querySelectorAll('.dashboard-booking-row').forEach((btn) => {
                 btn.addEventListener('click', (e) => {
@@ -890,20 +932,23 @@
         const totalSessions = liveChatConversations.length;
         const handoverSessions = liveChatConversations.filter(c => {
             const s = (c.status || '').toUpperCase();
-            return s === 'ESCALATED' || s === 'HANDOVER' || s === 'AGENT_HANDOVER';
+            return s === 'ESCALATED' || s === 'HANDOVER' || s === 'AGENT_HANDOVER' || s === 'AGENT_HANDLING' || s === 'HUMAN_AGENT';
         }).length;
         const aiSessions = Math.max(0, totalSessions - handoverSessions);
-        const aiPercent = totalSessions > 0 ? Math.round((aiSessions / totalSessions) * 100) : 100;
+        // D-05: 0 phiên hiển thị '—' thay vì 100%
+        const aiPercent = totalSessions > 0 ? Math.round((aiSessions / totalSessions) * 100) : 0;
 
         const elDonutCircle = document.getElementById('dashboardDonutCircle');
         if (elDonutCircle) {
-            const strokeDash = (aiPercent / 100) * 301.59;
+            const strokeDash = totalSessions > 0 ? (aiPercent / 100) * 301.59 : 0;
             elDonutCircle.setAttribute('stroke-dasharray', `${strokeDash.toFixed(2)} 301.59`);
         }
 
         const elPercentWrap = document.getElementById('dashboardChatbotPercentWrap');
         if (elPercentWrap) {
-            elPercentWrap.innerHTML = `<strong>${aiPercent}%</strong><small>AI tự xử lý</small>`;
+            elPercentWrap.innerHTML = totalSessions > 0 
+                ? `<strong>${aiPercent}%</strong><small>AI tự xử lý</small>`
+                : `<strong>—</strong><small>Chưa có phiên</small>`;
         }
 
         const elAiSessions = document.getElementById('dashboardAiSessionsCount');
@@ -916,9 +961,10 @@
         if (elTotalChat) elTotalChat.textContent = `${totalSessions} phiên trò chuyện`;
 
         // 2. Chỉ số Lấp đầy nhân sự (Tỷ lệ nhân viên đang có ca phụ trách hôm nay)
+        // D-06: Sử dụng đúng trường account_status hoặc status để lọc nhân sự hoạt động
         const activeStaffList = liveStaffList.filter(s => {
-            const st = (s.status || '').toUpperCase();
-            return st !== 'INACTIVE' && st !== 'RESIGNED' && st !== 'NGHI_VIEC';
+            const st = (s.account_status || s.status || '').toUpperCase();
+            return st === 'ACTIVE' || st === 'HOAT_DONG' || (st !== 'INACTIVE' && st !== 'RESIGNED' && st !== 'NGHI_VIEC' && st !== 'LOCKED');
         });
         const totalActiveStaff = activeStaffList.length || liveStaffList.length;
 
@@ -1011,10 +1057,7 @@
         if (btnPet) {
             btnPet.addEventListener('click', () => {
                 sessionStorage.setItem('pawpal_admin_pet_subtab', 'tab-pet-list');
-                sessionStorage.setItem('pawpal_admin_pet_open_add_modal', 'true');
-                const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
-                    .find(b => b.getAttribute('data-title') === 'Thú cưng');
-                if (target) target.click();
+                openCreateFormAfterNavigation('Thú cưng', 'btnOpenAddPetModal');
             });
         }
 
@@ -1072,7 +1115,13 @@
         if (elSvc) elSvc.textContent = booking.service || 'Chăm sóc thú cưng';
         if (elTime) elTime.textContent = `${booking.time || '09:30'} · ${dateDisplay}`;
         if (elStaff) elStaff.textContent = booking.staff || 'Kỹ thuật viên';
-        if (elStatus) elStatus.innerHTML = `<span class="admin-badge ${booking.badge || 'badge-neutral'}">${booking.status || 'Đã xác nhận'}</span>`;
+        if (elStatus) {
+            elStatus.textContent = '';
+            const badgeSpan = document.createElement('span');
+            badgeSpan.className = `admin-badge ${booking.badge || 'badge-neutral'}`;
+            badgeSpan.textContent = booking.status || 'Đã xác nhận';
+            elStatus.appendChild(badgeSpan);
+        }
         if (elNotes) elNotes.textContent = booking.notes || 'Chăm sóc dịu nhẹ, đúng quy trình an toàn.';
 
         modal.style.display = 'flex';
@@ -1146,38 +1195,38 @@
 
             dashboardRealtimeSub = client.channel('admin-dashboard-live-sync')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_order' }, async () => {
-                    await loadDashboardData();
+                    await loadDashboardData({ force: true });
                     renderDashboardKPIs();
                     renderRevenueChart();
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment' }, async () => {
-                    await loadDashboardData();
+                    await loadDashboardData({ force: true });
                     renderDashboardKPIs();
                     setupDashboardCalendar();
                     renderChatbotAndStaffMetrics();
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, async () => {
-                    await loadDashboardData();
+                    await loadDashboardData({ force: true });
                     renderDashboardKPIs();
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'customer' }, async () => {
-                    await loadDashboardData();
+                    await loadDashboardData({ force: true });
                     renderDashboardKPIs();
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_profile' }, async () => {
-                    await loadDashboardData();
+                    await loadDashboardData({ force: true });
                     renderDashboardKPIs();
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'product' }, async () => {
-                    await loadDashboardData();
+                    await loadDashboardData({ force: true });
                     renderDashboardStockList();
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, async () => {
-                    await loadDashboardData();
+                    await loadDashboardData({ force: true });
                     renderDashboardStockList();
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_conversation' }, async () => {
-                    await loadDashboardData();
+                    await loadDashboardData({ force: true });
                     renderChatbotAndStaffMetrics();
                 })
                 .subscribe();
@@ -1233,11 +1282,35 @@
             renderRevenueChart();
             renderChatbotAndStaffMetrics();
         });
+
+        // [D-11] Lắng nghe sự kiện biến động dữ liệu từ phân hệ khác để tự động xóa cache Dashboard
+        window.addEventListener('pawpal:invalidate-dashboard-cache', async () => {
+            _dashLastFetchedAt = 0;
+            const dashEl = document.querySelector('.dashboard-module') || document.getElementById('moduleDashboard');
+            if (dashEl && dashEl.style.display !== 'none') {
+                await loadDashboardData({ force: true });
+                renderDashboardKPIs();
+                renderDashboardStockList();
+                renderRevenueChart();
+                renderChatbotAndStaffMetrics();
+            }
+        });
     }
 
     window.PawpalDashboard = {
         init: startDashboard,
         loadDashboardData,
+        refresh: async function() {
+            _dashLastFetchedAt = 0;
+            await loadDashboardData({ force: true });
+            renderDashboardKPIs();
+            renderDashboardStockList();
+            renderRevenueChart();
+            renderChatbotAndStaffMetrics();
+        },
+        getLastUpdatedTime: function() {
+            return _dashLastFetchedAt ? new Date(_dashLastFetchedAt).toLocaleTimeString('vi-VN') : 'Chưa cập nhật';
+        },
         renderDashboardKPIs,
         renderDashboardStockList,
         renderRevenueChart,

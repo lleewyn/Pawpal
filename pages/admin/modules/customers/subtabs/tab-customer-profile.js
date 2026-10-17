@@ -10,6 +10,10 @@
     let currentEditingPetCustId = null;
     let currentEditPetIndex = null;
 
+    function getCust(id) {
+        return (PawpalCustomers.getCustomer && PawpalCustomers.getCustomer(id)) || PawpalCustomers.state?.customerDatabase?.[id];
+    }
+
     // Chuyển đổi giữa 5 tabs con trong Drawer Hồ sơ
     function switchDrawerTab(targetPanelId) {
         const drawerTabs = document.querySelectorAll('.drawer-tab-btn');
@@ -27,11 +31,13 @@
         if (window.lucide) lucide.createIcons();
     }
 
+    const esc = (s) => (PawpalCustomers.escapeHtml ? PawpalCustomers.escapeHtml(s) : String(s || ''));
+
     // Render Sổ địa chỉ trong Drawer
     function renderDrawerAddresses(custId) {
         const container = document.getElementById('profileValAddressContainer');
         if (!container) return;
-        const cust = PawpalCustomers.state.customerDatabase?.[custId];
+        const cust = getCust(custId);
         const list = cust?.addresses || [
             { address: 'Tiếp nhận trực tiếp tại quầy Pawpal Pet Center', isDefault: true }
         ];
@@ -41,7 +47,7 @@
                 <span class="admin-badge ${item.isDefault ? 'badge-success' : 'badge-neutral'}" style="font-size: 11px; padding: 2px 7px;">
                     ${item.isDefault ? 'Mặc định' : 'Phụ'}
                 </span>
-                <span>${item.address}</span>
+                <span>${esc(item.address)}</span>
             </div>
         `).join('');
     }
@@ -50,7 +56,7 @@
     function renderDrawerPets(custId) {
         const container = document.getElementById('petCardsListContainer');
         if (!container) return;
-        const cust = PawpalCustomers.state.customerDatabase?.[custId];
+        const cust = getCust(custId);
         const pets = cust?.pets || [];
 
         if (pets.length === 0) {
@@ -63,25 +69,25 @@
         }
 
         container.innerHTML = pets.map((pet, idx) => `
-            <div class="pet-detail-card" data-pet-id="${pet.id || ('PET-' + idx)}">
+            <div class="pet-detail-card" data-pet-id="${esc(pet.id || ('PET-' + idx))}">
                 <div class="pet-card-head">
                     <div class="pet-card-head-left">
-                        <span class="pet-card-name">${pet.name} (Mã: ${pet.id || ('PET-' + (idx+1))})</span>
+                        <span class="pet-card-name">${esc(pet.name)} (Mã: ${esc(pet.id || ('PET-' + (idx+1)))})</span>
                         <span class="admin-badge ${pet.alertNote && pet.alertNote !== 'Bình thường' ? 'badge-warning' : 'badge-neutral'}">
-                            ${pet.alertNote || 'Bình thường'}
+                            ${esc(pet.alertNote || 'Bình thường')}
                         </span>
                     </div>
                     <div class="pet-card-actions">
-                        <button type="button" class="btn-pet-action btn-pet-view-profile admin-badge badge-neutral" data-pet-id="${pet.id || ('PET-' + (idx+1))}" data-pet-name="${pet.name}">Xem hồ sơ bé</button>
-                        <button type="button" class="btn-pet-action btn-pet-edit" data-cust-id="${custId}" data-pet-index="${idx}">Sửa</button>
-                        <button type="button" class="btn-pet-action btn-pet-delete" data-cust-id="${custId}" data-pet-index="${idx}">Xóa</button>
+                        <button type="button" class="btn-pet-action btn-pet-view-profile admin-badge badge-neutral" data-pet-id="${esc(pet.id || ('PET-' + (idx+1)))}" data-pet-name="${esc(pet.name)}">Xem hồ sơ bé</button>
+                        <button type="button" class="btn-pet-action btn-pet-edit" data-cust-id="${esc(custId)}" data-pet-index="${idx}">Sửa</button>
+                        <button type="button" class="btn-pet-action btn-pet-delete" data-cust-id="${esc(custId)}" data-pet-index="${idx}">Xóa</button>
                     </div>
                 </div>
                 <div class="pet-card-body">
-                    <div><strong>Loài:</strong> ${pet.species} ${pet.breed ? '(' + pet.breed + ')' : ''}</div>
-                    <div><strong>Cân nặng:</strong> ${pet.weight ? pet.weight + ' kg' : 'Chưa cân'}</div>
-                    <div><strong>Tiền sử tiêm chủng:</strong> ${pet.vaccine || 'Chưa cập nhật'}</div>
-                    <div><strong>Tính cách / Lưu ý:</strong> ${pet.alertNote || 'Bình thường'}</div>
+                    <div><strong>Loài:</strong> ${esc(pet.species)} ${pet.breed ? '(' + esc(pet.breed) + ')' : ''}</div>
+                    <div><strong>Cân nặng:</strong> ${pet.weight ? esc(pet.weight) + ' kg' : 'Chưa cân'}</div>
+                    <div><strong>Tiền sử tiêm chủng:</strong> ${esc(pet.vaccine || 'Chưa cập nhật')}</div>
+                    <div><strong>Tính cách / Lưu ý:</strong> ${esc(pet.alertNote || 'Bình thường')}</div>
                 </div>
             </div>
         `).join('');
@@ -117,7 +123,7 @@
                 e.stopPropagation();
                 const cId = btn.getAttribute('data-cust-id');
                 const pIdx = parseInt(btn.getAttribute('data-pet-index'), 10);
-                const pet = PawpalCustomers.state.customerDatabase?.[cId]?.pets[pIdx];
+                const pet = getCust(cId)?.pets[pIdx];
                 PawpalCustomers.showCustomerConfirmModal({
                     title: 'Xác nhận xóa thú cưng',
                     message: `Bạn có chắc chắn muốn xóa bé cưng <strong>${pet?.name || ''}</strong> khỏi hồ sơ của khách hàng này trên CSDL?`,
@@ -137,7 +143,7 @@
                                     return;
                                 }
                             }
-                            await PawpalCustomers.loadCustomersModuleData();
+                            await PawpalCustomers.loadCustomersModuleData({ force: true });
                             renderDrawerPets(cId);
                             if (PawpalCustomers.subtabs.list) {
                                 PawpalCustomers.subtabs.list.renderCustomersTable();
@@ -158,7 +164,7 @@
     function renderDrawerOrders(custId) {
         const tbody = document.getElementById('drawerOrdersTbody');
         if (!tbody) return;
-        const cust = PawpalCustomers.state.customerDatabase?.[custId];
+        const cust = getCust(custId);
         let orders = [...(cust?.orders || [])];
 
         try {
@@ -167,14 +173,11 @@
                 const allOrders = JSON.parse(rawOrders);
                 const custName = cust?.name?.toLowerCase();
                 const custPhone = cust?.phone;
-                const custIdMap = { 'CUST-001': 'USER-001', 'CUST-002': 'USER-002', 'CUST-003': 'USER-003', 'CUST-004': 'USER-004', 'CUST-005': 'USER-005' };
-                const mappedUserId = custIdMap[custId];
+                const mappedUserId = cust?.dbId || custId;
 
                 const matchedOrders = allOrders.filter(o =>
-                    o.userId === custId ||
-                    o.userId === mappedUserId ||
-                    (custPhone && o.phone && o.phone.replace(/[^0-9]/g, '') === custPhone.replace(/[^0-9]/g, '')) ||
-                    (custName && o.customerName && o.customerName.toLowerCase() === custName)
+                    (custId && (o.userId === custId || o.customerId === custId)) ||
+                    (mappedUserId && (o.userId === mappedUserId || o.customerId === mappedUserId))
                 );
 
                 matchedOrders.forEach(mo => {
@@ -238,7 +241,7 @@
     function renderDrawerBookings(custId) {
         const tbody = document.getElementById('drawerBookingsTbody');
         if (!tbody) return;
-        const bookings = PawpalCustomers.state.customerDatabase?.[custId]?.bookings || [];
+        const bookings = getCust(custId)?.bookings || [];
 
         if (bookings.length === 0) {
             tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Khách hàng chưa có lịch hẹn dịch vụ nào.</td></tr>`;
@@ -271,7 +274,7 @@
     function renderDrawerComplaints(custId) {
         const tbody = document.getElementById('drawerComplaintsTbody');
         if (!tbody) return;
-        const complaints = PawpalCustomers.state.customerDatabase?.[custId]?.complaints || [];
+        const complaints = getCust(custId)?.complaints || [];
 
         if (complaints.length === 0) {
             tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Khách hàng không có phản ánh hay khiếu nại nào.</td></tr>`;
@@ -306,7 +309,7 @@
         const content = document.getElementById('customerProfileData');
         const placeholder = document.getElementById('customerProfilePlaceholder');
         const state = PawpalCustomers.state;
-        const data = state.customerDatabase?.[custId];
+        const data = getCust(custId);
         if (!state.hasLoadedCustomers || !data) {
             if (content) content.hidden = true;
             if (placeholder) {
@@ -377,8 +380,32 @@
         if (authStatusEl) {
             const authBadgeClass = data.status === 'LOCKED' ? 'badge-danger' : (data.status === 'TEMP' ? 'badge-warning' : 'badge-success');
             authStatusEl.innerHTML = `<span class="admin-badge ${authBadgeClass}">${data.status === 'LOCKED' ? 'Tài khoản bị khóa' : (data.status === 'TEMP' ? 'Tài khoản tạm' : 'Đang hoạt động')}</span>${hasValidPhone ? '<button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnResendSmsToken" style="font-size: 11.5px; padding: 3px 8px;">Gửi lại SMS</button>' : ''}`;
-            authStatusEl.querySelector('#btnResendSmsToken')?.addEventListener('click', () => {
-                PawpalCustomers.showToast(`Đã gửi lại tin nhắn SMS chứa liên kết tạo mật khẩu đến số ${phoneDigits}.`);
+            authStatusEl.querySelector('#btnResendSmsToken')?.addEventListener('click', async () => {
+                const btn = authStatusEl.querySelector('#btnResendSmsToken');
+                if (btn) btn.disabled = true;
+                try {
+                    const client = PawpalCustomers.getSupabaseClient();
+                    if (client) {
+                        const { error: notifErr } = await client.from('notification').insert({
+                            user_id: data.dbId || null,
+                            type: 'SMS_OTP',
+                            title: 'Liên kết tạo mật khẩu Pawpal',
+                            content: `Mã xác thực kích hoạt tài khoản Pawpal của bạn đã được gửi đến số ${phoneDigits}.`,
+                            status: 'QUEUED',
+                            channel: 'SMS',
+                            phone: phoneDigits
+                        });
+                        if (notifErr) {
+                            console.warn('[Customers] Ghi thông báo SMS outbox lỗi:', notifErr);
+                        }
+                    }
+                    PawpalCustomers.showToast(`Đã xếp hàng tin nhắn SMS kích hoạt đến số ${phoneDigits}.`);
+                } catch (err) {
+                    console.error('[Customers] Lỗi gửi lại SMS:', err);
+                    PawpalCustomers.showToast('Không thể gửi SMS lúc này. Vui lòng thử lại sau.', 'danger');
+                } finally {
+                    if (btn) btn.disabled = false;
+                }
             });
         }
 
@@ -484,7 +511,7 @@
     function openEditCustomerModal(custId) {
         if (!modalEdit) return;
         const currentId = custId || document.getElementById('profileValCustId')?.textContent || 'CUST-001';
-        const data = PawpalCustomers.state.customerDatabase?.[currentId] || {};
+        const data = getCust(currentId) || {};
 
         if (document.getElementById('editCustId')) document.getElementById('editCustId').value = currentId;
         if (document.getElementById('editCustFullName')) document.getElementById('editCustFullName').value = data.name || '';
@@ -510,11 +537,19 @@
         if (document.getElementById('editCustGender')) document.getElementById('editCustGender').value = data.gender || 'Nam';
         if (document.getElementById('editCustTier')) document.getElementById('editCustTier').value = data.tier || 'GOLD';
         
-        const dob = data.dob || '';
-        if (dob && dob.includes('/')) {
-            const parts = dob.split('/');
-            if (parts.length === 3 && document.getElementById('editCustDob')) {
-                document.getElementById('editCustDob').value = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        const editDobInput = document.getElementById('editCustDob');
+        if (editDobInput) {
+            editDobInput.value = '';
+            const dob = data.dob || data.dobRaw || '';
+            if (dob) {
+                if (dob.includes('/')) {
+                    const parts = dob.split('/');
+                    if (parts.length === 3) {
+                        editDobInput.value = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                    }
+                } else if (/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
+                    editDobInput.value = dob;
+                }
             }
         }
 
@@ -688,9 +723,20 @@
                                 if (addressInsertError) throw addressInsertError;
                             }
                         }
+
+                        // C-08: Lưu hạng thành viên vào customer_membership và đảm bảo điểm sàn của hạng
+                        const tierFloors = { 'DIAMOND': 3000, 'GOLD': 1000, 'SILVER': 300, 'MEMBER': 0 };
+                        const minFloor = tierFloors[newTier] !== undefined ? tierFloors[newTier] : 0;
+                        const currentPts = Number(custObj?.membership?.points || custObj?.points || 0);
+                        const finalPts = Math.max(currentPts, minFloor);
+                        const { error: memTierError } = await client.from('customer_membership')
+                            .upsert({ customer_id: custDbId, total_paw_points: finalPts });
+                        if (memTierError) {
+                            console.warn('[Customers] Lỗi cập nhật hạng customer_membership:', memTierError);
+                        }
                     }
 
-                    await PawpalCustomers.loadCustomersModuleData();
+                    await PawpalCustomers.loadCustomersModuleData({ force: true });
                     renderDrawerCustomerProfile(custId);
                     if (PawpalCustomers.subtabs.list) {
                         PawpalCustomers.subtabs.list.renderCustomersTable();
@@ -769,7 +815,7 @@
                         if (petErr) throw petErr;
                     }
 
-                    await PawpalCustomers.loadCustomersModuleData();
+                    await PawpalCustomers.loadCustomersModuleData({ force: true });
                     renderDrawerPets(currentCustId);
                     if (PawpalCustomers.subtabs.list) {
                         PawpalCustomers.subtabs.list.renderCustomersTable();
@@ -836,7 +882,7 @@
                         if (petErr) throw petErr;
                     }
 
-                    await PawpalCustomers.loadCustomersModuleData();
+                    await PawpalCustomers.loadCustomersModuleData({ force: true });
                     renderDrawerPets(currentEditingPetCustId);
                     if (PawpalCustomers.subtabs.list) {
                         PawpalCustomers.subtabs.list.renderCustomersTable();
@@ -871,7 +917,7 @@
                         const { error: noteErr } = await client.from('customer').update({ note: noteVal }).eq('id', custDbId);
                         if (noteErr) throw noteErr;
                     }
-                    await PawpalCustomers.loadCustomersModuleData();
+                    await PawpalCustomers.loadCustomersModuleData({ force: true });
                     PawpalCustomers.showToast('Đã lưu thành công ghi chú khách hàng vào CSDL!', 'success');
                 } catch (err) {
                     console.error('[Customers] Lỗi lưu ghi chú:', err);

@@ -42,6 +42,15 @@
             }
         }
 
+        function smartScrollToBottom(container, force = false) {
+            if (!container) return;
+            const threshold = 140; // px từ mép đáy
+            const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight <= threshold;
+            if (force || isNearBottom) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
         function appendUserMessage(text, timestamp) {
             const timeStr = formatMsgTime(timestamp);
             const msgHtml = `
@@ -54,7 +63,7 @@
                 </div>
             `;
             messagesArea.insertAdjacentHTML('beforeend', msgHtml);
-            messagesArea.scrollTop = messagesArea.scrollHeight;
+            smartScrollToBottom(messagesArea, true);
         }
 
         function escapeHtml(str) {
@@ -266,7 +275,7 @@
                 </div>
             `;
             messagesArea.insertAdjacentHTML('beforeend', msgHtml);
-            messagesArea.scrollTop = messagesArea.scrollHeight;
+            smartScrollToBottom(messagesArea, false);
         }
 
         function appendAiThinking() {
@@ -284,7 +293,7 @@
                 </div>
             `;
             messagesArea.insertAdjacentHTML('beforeend', msgHtml);
-            messagesArea.scrollTop = messagesArea.scrollHeight;
+            smartScrollToBottom(messagesArea, false);
             return id;
         }
 
@@ -301,21 +310,16 @@
             } catch (e) {}
 
             try {
+                const storedAuth = JSON.parse(localStorage.getItem('pawpal_admin_supabase_auth') || '{}');
+                if (storedAuth?.access_token) return storedAuth.access_token;
+            } catch (e) {}
+
+            try {
                 const staffToken = sessionStorage.getItem('pawpal_staff_token') || localStorage.getItem('pawpal_staff_token');
-                if (staffToken) return staffToken;
+                if (staffToken && !staffToken.startsWith('local:')) return staffToken;
             } catch (e) {}
 
-            try {
-                const adminUser = JSON.parse(localStorage.getItem('pawpal_admin_user') || sessionStorage.getItem('pawpal_admin_user') || '{}');
-                if (adminUser.id) return `local:${adminUser.id}`;
-            } catch (e) {}
-
-            try {
-                const staffId = sessionStorage.getItem('pawpal_staff_id') || localStorage.getItem('pawpal_staff_id');
-                if (staffId) return `local:${staffId}`;
-            } catch (e) {}
-
-            return 'local:d0000000-5555-5555-5555-555555555555';
+            return null;
         }
 
         function formatSessionTime(dateInput) {
@@ -433,6 +437,7 @@
                 });
             }
 
+            smartScrollToBottom(messagesArea, true);
             saveSessionsToStorage();
             renderSessionsList(inputCopilotSessionSearch?.value || '');
         }

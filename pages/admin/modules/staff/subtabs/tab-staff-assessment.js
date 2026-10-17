@@ -116,21 +116,30 @@
                 resultBadge = '<span class="admin-badge badge-danger">Chưa đạt</span>';
             }
 
+            const esc = (s) => PawpalStaff.escapeHtml ? PawpalStaff.escapeHtml(s) : String(s || '');
+            const safeDate = esc(item.date);
+            const safeStaffId = esc(item.staff_id || item.id);
+            const safeName = esc(item.name);
+            const safePosition = esc(item.position);
+            const safeType = esc(item.type);
+            const safeEvaluator = esc(item.evaluator || 'Hội đồng chuyên môn');
+            const safeNote = esc(item.note || '—');
+
             return `
                 <tr>
-                    <td style="font-weight: 600;">${item.date}</td>
-                    <td style="font-weight: 600;">${item.staff_id || item.id}</td>
+                    <td style="font-weight: 600;">${safeDate}</td>
+                    <td style="font-weight: 600;">${safeStaffId}</td>
                     <td>
-                        <div style="font-weight: 600; color: var(--text-heading);">${item.name}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted);">${item.position}</div>
+                        <div style="font-weight: 600; color: var(--text-heading);">${safeName}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted);">${safePosition}</div>
                     </td>
-                    <td>${item.type}</td>
+                    <td>${safeType}</td>
                     <td style="font-weight: 600; text-align: center;">${item.score}/100</td>
                     <td style="text-align: center;">${resultBadge}</td>
-                    <td>${item.evaluator || 'Hội đồng chuyên môn'}</td>
-                    <td style="max-width: 200px; font-size: 12px; color: var(--text-muted);">${item.note || '—'}</td>
+                    <td>${safeEvaluator}</td>
+                    <td style="max-width: 200px; font-size: 12px; color: var(--text-muted);">${safeNote}</td>
                     <td style="text-align: center;">
-                        <button type="button" class="btn-action-trigger btn-reassess-trigger" data-staff-id="${item.staff_id || ''}" style="border: none; background: none; color: #236B48; cursor: pointer; font-size: 12.5px; font-weight: 600;">Đánh giá</button>
+                        <button type="button" class="btn-action-trigger btn-reassess-trigger" data-staff-id="${safeStaffId}" style="border: none; background: none; color: #236B48; cursor: pointer; font-size: 12.5px; font-weight: 600;">Đánh giá</button>
                     </td>
                 </tr>
             `;
@@ -192,10 +201,11 @@
         }
 
         if (scoreInput) {
-            scoreInput.value = 85;
+            scoreInput.value = '';
+            scoreInput.placeholder = '0 - 100';
             scoreInput.oninput = () => {
                 const val = Number(scoreInput.value);
-                if (resultSelect) {
+                if (resultSelect && !isNaN(val) && scoreInput.value !== '') {
                     if (val >= 80) resultSelect.value = 'PASS';
                     else if (val >= 60) resultSelect.value = 'RETRAIN';
                     else resultSelect.value = 'FAIL';
@@ -251,7 +261,7 @@
             btnOpenAdd.addEventListener('click', () => openAssessmentModal());
         }
 
-        function handleSaveAssessment(isNotify = false) {
+        async function handleSaveAssessment(isNotify = false) {
             const modal = document.getElementById('assessmentModalOverlay');
             const staffId = document.getElementById('assessInputStaff')?.value;
             const dateVal = document.getElementById('assessInputDate')?.value;
@@ -265,30 +275,76 @@
                 return;
             }
 
-            const staffList = PawpalStaff.state?.mockStaff || [];
-            const staffObj = staffList.find(s => s.id === staffId);
             const scoreNum = Number(scoreVal);
+            if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > 100) {
+                PawpalStaff.showToast('Điểm đánh giá phải là số từ 0 đến 100!', 'warning');
+                return;
+            }
 
-            // Cập nhật điểm tay nghề nhân sự
-            if (staffObj) {
-                staffObj.skillScore = scoreNum;
-                staffObj.skillResult = resultVal;
-                staffObj.skillExam = resultVal === 'PASS' ? `Đạt (${scoreNum}đ)` : `Cần đào tạo (${scoreNum}đ)`;
-                staffObj.serviceLocked = resultVal !== 'PASS';
+            // Đồng bộ kết quả đánh giá theo chính sách điểm chuẩn
+            let finalResult = resultVal;
+            if (scoreNum >= 80) finalResult = 'PASS';
+            else if (scoreNum >= 60) finalResult = 'RETRAIN';
+            else finalResult = 'FAIL';
 
-                // Lưu trực tiếp điểm tay nghề vào Supabase
+            const staffList = PawpalStaff.state?.mockStaff || [];
+            const staffObj = staffList.find(s => s.id === staffId || s.rawId === staffId);
+            if (!staffObj) {
+                PawpalStaff.showToast('Không tìm thấy nhân sự được chọn!', 'danger');
+                return;
+            }
+
+            // Lưu trực tiếp điểm tay nghề vào Supabase và kiểm tra lỗi fail-closed
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (client && staffObj.rawId) {
                 try {
-                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                    if (client && staffObj.rawId) {
-                        client.from('staff').update({
-                            skill_score: scoreNum,
-                            service_locked: resultVal !== 'PASS'
-                        }).eq('id', staffObj.rawId).then(() => {});
+                    const { error: upErr } = await client.from('staff').update({
+                        skill_score: scoreNum,
+                        service_locked: finalResult !== 'PASS'
+                    }).eq('id', staffObj.rawId);
+
+                    if (upErr) throw upErr;
+
+                    try {
+                        await client.from('staff_assessment').insert({
+                            staff_id: staffObj.rawId,
+                            assessment_type: typeVal,
+                            score: scoreNum,
+                            result: finalResult,
+                            notes: noteVal,
+                            assessment_date: dateVal
+                        });
+                    } catch (_ignoreInsert) {
+                        // Bảng assessment riêng có thể chưa cấu hình
+                    }
+
+                    // Gửi thông báo thực tế vào hàng đợi thông báo nếu người dùng chọn Lưu và gửi
+                    if (isNotify) {
+                        try {
+                            await client.from('notification').insert({
+                                recipient_id: staffObj.rawId,
+                                recipient_type: 'staff',
+                                title: 'Thông báo kết quả sát hạch tay nghề',
+                                content: `Kết quả đánh giá chuyên môn định kỳ: Điểm ${scoreNum}/100 - Xếp loại: ${finalResult === 'PASS' ? 'Đạt' : (finalResult === 'RETRAIN' ? 'Cần đào tạo lại' : 'Không đạt')}. ${noteVal ? 'Ghi chú: ' + noteVal : ''}`,
+                                status: 'UNREAD',
+                                created_at: new Date().toISOString()
+                            });
+                        } catch (notifErr) {
+                            console.warn('[PawpalStaff] Lỗi ghi thông báo vào outbox:', notifErr);
+                        }
                     }
                 } catch (e) {
                     console.error('[PawpalStaff] Lỗi lưu skill_score vào staff:', e);
+                    PawpalStaff.showToast(`Không thể lưu kết quả đánh giá: ${e.message || 'Lỗi CSDL'}`, 'danger');
+                    return;
                 }
             }
+
+            // CSDL cập nhật thành công mới thay đổi state
+            staffObj.skillScore = scoreNum;
+            staffObj.skillResult = finalResult;
+            staffObj.skillExam = finalResult === 'PASS' ? `Đạt (${scoreNum}đ)` : `Cần đào tạo (${scoreNum}đ)`;
+            staffObj.serviceLocked = finalResult !== 'PASS';
 
             // Thêm bản ghi đánh giá mới
             PawpalStaff.state.mockAssessments = PawpalStaff.state.mockAssessments || [];
@@ -301,9 +357,9 @@
                 position: staffObj ? staffObj.position : 'Kỹ thuật viên',
                 type: typeVal === 'Grooming' ? 'Grooming' : (typeVal === 'Spa' ? 'Spa' : 'Chăm sóc'),
                 score: scoreNum,
-                result: resultVal,
-                evaluator: 'Lê Lệ Quyên',
-                note: noteVal || (resultVal === 'PASS' ? 'Thao tác chuẩn xác' : 'Cần đào tạo lại chuyên sâu')
+                result: finalResult,
+                evaluator: 'Quản trị viên',
+                note: noteVal || (finalResult === 'PASS' ? 'Thao tác chuẩn xác' : 'Cần đào tạo lại chuyên sâu')
             });
 
             currentAssessmentPage = 1;

@@ -30,6 +30,16 @@
         return (amount || 0).toLocaleString('vi-VN') + ' đ';
     }
 
+    function escapeHtml(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function toUnaccent(str) {
         if (!str) return '';
         return String(str)
@@ -102,6 +112,24 @@
         };
         currentStockLogsList.unshift(newLog);
         persistStockLogsData();
+
+        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (client && entry.sku) {
+            try {
+                client.from('inventory_log').insert({
+                    sku: entry.sku,
+                    change_type: entry.type || 'ADJUST',
+                    quantity_changed: parseInt(entry.change) || 0,
+                    before_stock: entry.beforeStock,
+                    after_stock: entry.afterStock,
+                    reference_code: entry.refCode || ('ADJ-' + entry.sku),
+                    reason: entry.typeLabel || entry.reason || 'Điều chỉnh tồn kho',
+                    created_at: new Date().toISOString()
+                }).then(({ error }) => {
+                    if (error) console.warn('[Inventory Log] Chưa thể ghi vào inventory_log Supabase:', error.message);
+                });
+            } catch (errLog) {}
+        }
     }
 
     let currentOrdersList = [];
@@ -435,7 +463,7 @@
             orders: currentOrdersList,
             products: currentProductsList,
             stockLogs: currentStockLogsList,
-            selectedOrderId: sessionStorage.getItem('pawpal_admin_order_selected_id') || sessionStorage.getItem('pawpal_admin_order_id') || 'ORD-2026-001',
+            selectedOrderId: sessionStorage.getItem('pawpal_admin_order_selected_id') || sessionStorage.getItem('pawpal_admin_order_id') || null,
             selectedBatchOrderIds: [],
             activeActionOrderId: null,
             activeAdjustProductSku: null,
@@ -546,33 +574,32 @@
                     const catObj = p.product_category || {};
                     const invObj = Array.isArray(p.inventory) ? p.inventory[0] : (p.inventory || {});
                     const imgs = Array.isArray(p.image_urls) ? p.image_urls : (typeof p.image_urls === 'string' && p.image_urls ? p.image_urls.split(',').map(s => s.trim()) : []);
-                    const stockVal = invObj ? (invObj.quantity_in_stock !== undefined ? invObj.quantity_in_stock : 10) : 10;
-                    const minStockVal = invObj ? (invObj.minimum_stock !== undefined ? invObj.minimum_stock : 5) : 5;
+                    const hasInv = invObj && invObj.quantity_in_stock !== undefined && invObj.quantity_in_stock !== null;
+                    const stockVal = hasInv ? Number(invObj.quantity_in_stock) : null;
+                    const minStockVal = invObj && invObj.minimum_stock !== undefined && invObj.minimum_stock !== null ? Number(invObj.minimum_stock) : null;
 
                     return {
                         id: p.id,
                         sku: p.sku || 'SKU-000',
                         name: p.product_name || 'Sản phẩm PawPal',
-                        category: catObj.category_name || 'Thức ăn khô',
+                        category: catObj.category_name || 'Chưa phân loại',
                         brand: 'PawPal',
                         petType: 'Chó và Mèo',
                         origin: p.origin || 'Việt Nam',
                         unit: p.unit || 'Túi',
                         spec: p.specs || 'Tiêu chuẩn',
-                        badge: p.badge || (stockVal === 0 ? 'Hết hàng' : 'Bán chạy'),
+                        badge: p.badge || (stockVal === 0 ? 'Hết hàng' : (p.status === 'INACTIVE' ? 'Tạm ngưng' : '')),
                         costPrice: p.cost_price || 0,
                         rating: p.rating,
-                        reviewCount: p.review_count,
+                        reviewCount: p.review_count || 0,
                         price: p.sale_price || 0,
-                        originalPrice: Math.round((p.sale_price || 0) * 1.15),
-                        memberPrice: Math.round((p.sale_price || 0) * 0.925),
+                        originalPrice: p.sale_price || p.cost_price || 0,
+                        memberPrice: p.sale_price || 0,
                         stock: stockVal,
                         minStock: minStockVal,
                         images: imgs.length > 0 ? imgs.join(', ') : '/assets/images/shop/products/tp-hat-01.png',
                         image: imgs[0] || '/assets/images/shop/products/tp-hat-01.png',
-                        status: stockVal === 0 ? 'Hết hàng' : (stockVal <= minStockVal ? 'Sắp hết' : (p.status === 'INACTIVE' ? 'Tạm ngưng' : 'Còn hàng')),
-                        rating: p.rating,
-                        reviewCount: p.review_count || 0,
+                        status: p.status === 'INACTIVE' ? 'Tạm ngưng' : (stockVal === 0 ? 'Hết hàng' : (stockVal !== null && minStockVal !== null && stockVal <= minStockVal ? 'Sắp hết' : 'Còn hàng')),
                         hasVariants: false,
                         variants: []
                     };
@@ -599,7 +626,7 @@
                         const rawDiscount = Number(v.discount_value) || 0;
                         const safeDiscount = isPct ? Math.min(100, Math.max(0, rawDiscount)) : Math.max(0, rawDiscount);
                         const discountVal = isPct ? `${safeDiscount}%` : formatVND(safeDiscount);
-                        let expFormatted = '31/12/2026';
+                        let expFormatted = 'Không giới hạn';
                         if (v.end_date) {
                             const expD = new Date(v.end_date);
                             if (!isNaN(expD.getTime())) {
@@ -621,7 +648,7 @@
                             endsAt: v.end_date,
                             validDate: expFormatted,
                             expiry: expFormatted,
-                            limit: v.max_usage || 100,
+                            limit: (v.max_usage !== null && v.max_usage !== undefined) ? Number(v.max_usage) : null,
                             used: v.usage_count || 0,
                             status: v.end_date && Date.parse(v.end_date) < Date.now() ? 'expired' : (v.is_active ? 'active' : 'paused')
                         };
@@ -713,7 +740,7 @@
                     const custProfile = Array.isArray(cust.customer_profile) ? cust.customer_profile[0] : (cust.customer_profile || {});
                     const shipAddr = o.shipping_address || {};
                     const custName = custProfile.full_name || shipAddr.receiver_name || 'Khách hàng PawPal';
-                    const phone = cust.phone_main || shipAddr.receiver_phone || '0900000000';
+                    const phone = cust.phone_main || shipAddr.receiver_phone || '';
                     let formattedAddr = 'Tại cửa hàng PawPal';
                     if (shipAddr.street_address || shipAddr.province) {
                         formattedAddr = [shipAddr.street_address, shipAddr.province].filter(Boolean).join(', ');
@@ -729,10 +756,15 @@
                     const payObj = Array.isArray(o.payment) ? o.payment[0] : (o.payment || {});
                     if (payObj && payObj.payment_method_id) {
                         const pmId = String(payObj.payment_method_id).toLowerCase();
-                        if (pmId.includes('bank')) payMethod = 'bank_transfer';
+                        if (pmId.includes('bank') || pmId.includes('transfer')) payMethod = 'bank_transfer';
                         else if (pmId.includes('momo')) payMethod = 'momo';
                         else if (pmId.includes('vnpay')) payMethod = 'vnpay';
-                        else if (pmId.includes('cash')) payMethod = 'cash';
+                        else if (pmId.includes('card')) payMethod = 'pos_card';
+                        else if (pmId.includes('cash') || pmId.includes('tien_mat')) payMethod = 'cash';
+                    } else if (o.note && (o.note.includes('Tiền mặt') || o.note.toLowerCase().includes('cash'))) {
+                        payMethod = 'cash';
+                    } else if (o.note && (o.note.includes('Chuyển khoản') || o.note.toLowerCase().includes('transfer') || o.note.toLowerCase().includes('bank'))) {
+                        payMethod = 'bank_transfer';
                     }
 
                     let calculatedDiscount = 0;
@@ -774,8 +806,10 @@
                         alertMessage = 'Chờ đối soát COD';
                     }
 
-                    const resolvedCarrier = (rawStatus === 'shipping' || rawStatus === 'delivered' ? 'J&T Express' : 'Chưa phân công');
-                    const resolvedTracking = (rawStatus === 'shipping' || rawStatus === 'delivered' ? `JT${o.id.slice(0, 8).toUpperCase()}` : '--');
+                    const carrierMatch = o.note ? o.note.match(/Hãng:\s*([^\n;]+)/i)?.[1] : null;
+                    const trackingMatch = o.note ? o.note.match(/Vận đơn:\s*([^\n;]+)/i)?.[1] : null;
+                    const resolvedCarrier = o.carrier || carrierMatch || (rawStatus === 'shipping' || rawStatus === 'delivered' ? 'Bưu cục đối tác' : 'Chưa phân công');
+                    const resolvedTracking = o.tracking_number || trackingMatch || '--';
 
                     const timeline = [
                         { title: 'Tạo đơn hàng thành công', time: formatTime(o.created_at) + ' - ' + formatDate(o.created_at), desc: 'Đơn hàng được ghi nhận vào hệ thống PawPal', done: true }
@@ -834,8 +868,14 @@
                 persistOrdersData();
 
                 window.PawpalOrders.state.ordersLoaded = true;
+                window.PawpalOrders.state.ordersError = false;
+                window.PawpalOrders.state.productsError = false;
+                window.PawpalOrders.state.vouchersError = false;
+
                 window.PawpalOrders.renderOrdersTable();
-                window.PawpalOrders.renderOrderDetail(window.PawpalOrders.state.selectedOrderId || currentOrdersList[0]?.id);
+                if (window.PawpalOrders.state.selectedOrderId) {
+                    window.PawpalOrders.renderOrderDetail(window.PawpalOrders.state.selectedOrderId);
+                }
             }
 
             if (window.PawpalOrders.controllers.list?.loadPosCustomerDirectory) {
@@ -861,7 +901,7 @@
         if (orderId) {
             deepBreadcrumbEl.innerHTML = `
                 <span class="breadcrumb-separator">/</span>
-                <span class="breadcrumb-detail-name">${orderId}</span>
+                <span class="breadcrumb-detail-name">${escapeHtml(orderId)}</span>
             `;
         } else {
             deepBreadcrumbEl.innerHTML = '';
@@ -896,10 +936,10 @@
         }
 
         if (targetSubtab === 'tab-order-detail') {
-            const targetId = window.PawpalOrders.state.selectedOrderId || sessionStorage.getItem('pawpal_admin_order_selected_id') || currentOrdersList[0]?.id;
+            const targetId = window.PawpalOrders.state.selectedOrderId || sessionStorage.getItem('pawpal_admin_order_selected_id') || null;
             window.PawpalOrders.state.selectedOrderId = targetId;
             window.PawpalOrders.renderOrderDetail(targetId);
-            updateBreadcrumb(targetId);
+            updateBreadcrumb(targetId || '');
         } else {
             updateBreadcrumb('');
             if (targetSubtab === 'tab-order-list') {
@@ -974,6 +1014,7 @@
     window.PawpalOrdersModule.syncOrdersAndProductsFromSupabase = syncOrdersAndProductsFromSupabase;
     window.PawpalOrdersModule.loadOrdersData = syncOrdersAndProductsFromSupabase;
     window.PawpalOrdersModule.showOrderConfirmModal = showOrderConfirmModal;
+    window.PawpalOrdersModule.escapeHtml = escapeHtml;
 
     // Tự động khởi tạo sau khi tất cả script subtab nạp xong
     setTimeout(() => {

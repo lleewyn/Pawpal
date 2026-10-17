@@ -17,6 +17,18 @@
         selectedStaffId: sessionStorage.getItem('pawpal_admin_staff_selected_id') || 'EMP-001'
     };
 
+    function escapeHtml(str) {
+        if (str == null) return '';
+        return String(str).replace(/[&<>"']/g, m => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        })[m]);
+    }
+    PawpalStaff.escapeHtml = escapeHtml;
+
     // Helper định dạng ngày giờ chuẩn Việt Nam
     function formatDateVN(dateInput) {
         if (!dateInput) return '—';
@@ -185,9 +197,24 @@
         if (r === 'DRIVER' || s.includes('tài xế') || s.includes('taxi')) return 'Driver';
         if (r === 'RECEPTIONIST' || s.includes('lễ tân')) return 'Receptionist';
         if (r === 'CSKH' || s.includes('cskh') || s.includes('chăm sóc khách')) return 'CSKH';
-        if (s.includes('bảo mẫu') || s.includes('hotel') || s.includes('lưu trú')) return 'Caregiver';
-        return 'Groomer';
+        if (r === 'CAREGIVER' || s.includes('bảo mẫu') || s.includes('hotel') || s.includes('lưu trú')) return 'Caregiver';
+        if (r === 'GROOMER' || s.includes('groom') || s.includes('cắt tỉa') || s.includes('spa')) return 'Groomer';
+        if (!r && !s) return 'Chưa phân loại';
+        return r || 'Chưa phân loại';
     }
+
+    function mapPositionToDbRole(pos) {
+        const p = (pos || '').toLowerCase();
+        if (p.includes('quản trị') || p.includes('admin')) return 'ADMIN';
+        if (p.includes('lễ tân') || p.includes('receptionist')) return 'RECEPTIONIST';
+        if (p.includes('bảo mẫu') || p.includes('hotel') || p.includes('lưu trú') || p.includes('caregiver')) return 'CAREGIVER';
+        if (p.includes('chăm sóc khách') || p.includes('cskh')) return 'CSKH';
+        if (p.includes('tài xế') || p.includes('taxi') || p.includes('driver')) return 'DRIVER';
+        if (p.includes('bác sĩ') || p.includes('thú y') || p.includes('vet')) return 'VET';
+        if (p.includes('groom') || p.includes('cắt tỉa') || p.includes('spa')) return 'GROOMER';
+        return 'STAFF';
+    }
+    PawpalStaff.mapPositionToDbRole = mapPositionToDbRole;
 
     function mapDbRoleToPosition(dbRole, specialization) {
         if (specialization) return specialization;
@@ -199,7 +226,8 @@
         if (role === 'Caregiver') return 'Bảo mẫu Pet Hotel';
         if (role === 'Receptionist') return 'Lễ tân tiếp đón';
         if (role === 'CSKH') return 'Chuyên viên CSKH';
-        return 'Kỹ thuật viên Grooming';
+        if (role === 'Chưa phân loại') return 'Chưa phân loại';
+        return role;
     }
 
     let _staffLastFetchedAt = 0;
@@ -226,7 +254,16 @@
                     const formattedRole = mapDbRoleToStaffRole(s.role, s.specialization);
                     const formattedPosition = mapDbRoleToPosition(s.role, s.specialization);
                     const joinDateFormatted = s.hire_date ? formatDateVN(s.hire_date) : 'Chưa cập nhật';
-                    const code = `EMP-${String(idx + 1).padStart(3, '0')}`;
+                    const code = s.staff_code || s.employee_code || (s.id ? `EMP-${s.id.replace(/-/g, '').slice(0, 8).toUpperCase()}` : `EMP-${String(idx + 1).padStart(3, '0')}`);
+
+                    const rawStatus = (s.status || s.employment_status || '').toUpperCase();
+                    let mappedStatus = 'ACTIVE';
+                    if (rawStatus === 'RESIGNED' || rawStatus === 'TERMINATED') mappedStatus = 'RESIGNED';
+                    else if (rawStatus === 'LOCKED' || s.account_status === 'locked' || s.account_status === 'LOCKED') mappedStatus = 'LOCKED';
+                    else if (rawStatus === 'LEAVE') mappedStatus = 'LEAVE';
+                    else if (rawStatus === 'PAUSE') mappedStatus = 'PAUSE';
+                    else if (rawStatus === 'ACTIVE' || !rawStatus) mappedStatus = 'ACTIVE';
+                    else mappedStatus = rawStatus;
 
                     return {
                         id: code,
@@ -237,7 +274,8 @@
                         phone: s.phone_number || s.phone || '—',
                         email: s.email || 'Chưa cập nhật',
                         shift: s.shift || '',
-                        status: s.status === 'locked' ? 'RESIGNED' : (s.status === 'leave' ? 'LEAVE' : (s.status === 'pause' ? 'PAUSE' : 'ACTIVE')),
+                        status: mappedStatus,
+                        accountStatus: s.account_status || (mappedStatus === 'LOCKED' ? 'LOCKED' : 'ACTIVE'),
                         join_date: joinDateFormatted,
                         dob: s.dob ? formatDateVN(s.dob) : 'Chưa cập nhật',
                         address: s.address || 'Chưa cập nhật',
@@ -324,6 +362,9 @@
         }
     }
     PawpalStaff.loadStaffModuleData = loadStaffModuleData;
+    PawpalStaff.invalidateCache = function() {
+        _staffLastFetchedAt = 0;
+    };
 
     function updateBreadcrumb(staffName) {
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
@@ -331,7 +372,7 @@
         if (staffName) {
             deepBreadcrumbEl.innerHTML = `
                 <span class="breadcrumb-separator">/</span>
-                <span class="breadcrumb-detail-name">${staffName}</span>
+                <span class="breadcrumb-detail-name">${escapeHtml(staffName)}</span>
             `;
         } else {
             deepBreadcrumbEl.innerHTML = '';
@@ -399,6 +440,7 @@
         switchSubtab('tab-staff-profile');
     }
     PawpalStaff.openStaffProfile = openStaffProfile;
+    let _isStaffListenersInitialized = false;
 
     async function initStaffModule() {
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
@@ -434,37 +476,41 @@
             switchSubtab('tab-staff-list', false);
         }
 
-        window.addEventListener('admin:subtab-change', (e) => {
-            if (e.detail?.module === 'Nhân sự' && validTabs.includes(e.detail.tabId)) {
-                switchSubtab(e.detail.tabId, false);
-            }
-        });
+        if (!_isStaffListenersInitialized) {
+            _isStaffListenersInitialized = true;
 
-        // Đóng modalConfirmStaffAction qua data-close-modal, backdrop click, Escape key
-        document.querySelectorAll('[data-close-modal="modalConfirmStaffAction"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const modal = document.getElementById('modalConfirmStaffAction');
-                if (modal) modal.classList.remove('active');
+            window.addEventListener('admin:subtab-change', (e) => {
+                if (e.detail?.module === 'Nhân sự' && validTabs.includes(e.detail.tabId)) {
+                    switchSubtab(e.detail.tabId, false);
+                }
             });
-        });
 
-        const modalConfirmStaff = document.getElementById('modalConfirmStaffAction');
-        if (modalConfirmStaff) {
-            modalConfirmStaff.addEventListener('click', (e) => {
-                if (e.target === modalConfirmStaff) {
-                    modalConfirmStaff.classList.remove('active');
+            // Đóng modalConfirmStaffAction qua data-close-modal, backdrop click, Escape key
+            document.querySelectorAll('[data-close-modal="modalConfirmStaffAction"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const modal = document.getElementById('modalConfirmStaffAction');
+                    if (modal) modal.classList.remove('active');
+                });
+            });
+
+            const modalConfirmStaff = document.getElementById('modalConfirmStaffAction');
+            if (modalConfirmStaff) {
+                modalConfirmStaff.addEventListener('click', (e) => {
+                    if (e.target === modalConfirmStaff) {
+                        modalConfirmStaff.classList.remove('active');
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('modalConfirmStaffAction');
+                    if (modal && modal.classList.contains('active')) {
+                        modal.classList.remove('active');
+                    }
                 }
             });
         }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                const modal = document.getElementById('modalConfirmStaffAction');
-                if (modal && modal.classList.contains('active')) {
-                    modal.classList.remove('active');
-                }
-            }
-        });
 
         // URL Auto-open v=modal8 hoặc modal=8 hoặc modal=confirm
         const urlParams = new URLSearchParams(window.location.search);

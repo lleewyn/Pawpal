@@ -297,45 +297,79 @@
             else if (o.paymentMethod === 'momo') payMethodLabel = 'MoMo';
             else if (o.paymentMethod === 'bank_transfer') payMethodLabel = 'Chuyển khoản';
 
+            const esc = (text) => window.PawpalOrdersModule?.escapeHtml ? window.PawpalOrdersModule.escapeHtml(text) : String(text || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
             const isChecked = selectedBatchOrderIds.includes(o.id);
+            const safeId = esc(o.id);
+            const safeName = esc(o.customerName);
+            const safePhone = esc(o.phone);
+            const safeUserId = esc(o.userId);
+            const safeProdSummary = esc(prodSummary);
+            const safeCarrier = esc(o.carrier || '--');
+            const safeTracking = esc(o.trackingNumber || '--');
 
             return `
                 <tr class="${rowAlertClass}">
                     <td style="text-align: center; width: 42px;">
-                        <input type="checkbox" class="admin-checkbox order-row-checkbox" data-id="${o.id}" ${isChecked ? 'checked' : ''} onclick="PawpalOrdersModule.toggleSelectOrder(event, '${o.id}')">
+                        <input type="checkbox" class="admin-checkbox order-row-checkbox" data-id="${safeId}" ${isChecked ? 'checked' : ''}>
                     </td>
                     <td>
-                        <a href="javascript:void(0)" class="order-code-link" onclick="PawpalOrdersModule.openOrderDetail('${o.id}')">${o.id}</a>
+                        <a href="javascript:void(0)" class="order-code-link btn-open-order-detail" data-id="${safeId}">${safeId}</a>
                     </td>
                     <td>
                         <div>
-                            <span class="user-name-link" onclick="PawpalOrdersModule.openCustomerProfile('${o.userId}', '${o.customerName}')">${o.customerName}</span>
-                            <div class="sub-meta-text">${o.phone}</div>
+                            <span class="user-name-link btn-open-customer-profile" data-user-id="${safeUserId}" data-user-name="${safeName}">${safeName}</span>
+                            <div class="sub-meta-text">${safePhone}</div>
                         </div>
                     </td>
                     <td style="max-width: 240px;">
-                        <div style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${prodSummary}">${prodSummary}</div>
+                        <div style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${safeProdSummary}">${safeProdSummary}</div>
                         <div class="sub-meta-text">Tổng: ${(o.products || []).reduce((acc, p) => acc + (p.quantity || 1), 0)} sản phẩm</div>
                     </td>
                     <td>
                         <div class="price-text-main">${formatVND(o.total)}</div>
                     </td>
                     <td>
-                        <div>${payMethodLabel}</div>
+                        <div>${esc(payMethodLabel)}</div>
                         <div style="margin-top: 2px;">${payBadge}</div>
                     </td>
                     <td>
-                        <div>${o.carrier || '--'}</div>
-                        <div class="sub-meta-text" style="font-family: monospace;">${o.trackingNumber || '--'}</div>
+                        <div>${safeCarrier}</div>
+                        <div class="sub-meta-text" style="font-family: monospace;">${safeTracking}</div>
                     </td>
                     <td>${statusBadge}</td>
                     <td>${alertLabel}</td>
                     <td style="text-align: center;">
-                        <button type="button" class="btn-action-trigger" onclick="PawpalOrdersModule.openActionDropdown(event, '${o.id}')">•••</button>
+                        <button type="button" class="btn-action-trigger btn-order-action-trigger" data-id="${safeId}">•••</button>
                     </td>
                 </tr>
             `;
         }).join('');
+
+        tbody.querySelectorAll('.order-row-checkbox').forEach(cb => {
+            cb.addEventListener('change', (e) => {
+                const id = cb.getAttribute('data-id');
+                PawpalOrdersModule.toggleSelectOrder?.(e, id);
+            });
+        });
+        tbody.querySelectorAll('.btn-open-order-detail').forEach(el => {
+            el.addEventListener('click', () => {
+                const id = el.getAttribute('data-id');
+                PawpalOrdersModule.openOrderDetail?.(id);
+            });
+        });
+        tbody.querySelectorAll('.btn-open-customer-profile').forEach(el => {
+            el.addEventListener('click', () => {
+                const uid = el.getAttribute('data-user-id');
+                const uname = el.getAttribute('data-user-name');
+                PawpalOrdersModule.openCustomerProfile?.(uid, uname);
+            });
+        });
+        tbody.querySelectorAll('.btn-order-action-trigger').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = btn.getAttribute('data-id');
+                PawpalOrdersModule.openActionDropdown?.(e, id);
+            });
+        });
 
         renderOrdersPagination(totalOrdersPages);
     }
@@ -383,7 +417,7 @@
                         pet_profile (id, pet_name, breed, species)
                     `)
                     .order('created_at', { ascending: false })
-                    .limit(50);
+                    .limit(500);
 
                 if (!error && Array.isArray(data) && data.length > 0) {
                     posCustomerDirectory = data.map(item => {
@@ -412,12 +446,8 @@
             console.warn('Lỗi tải danh bạ khách hàng cho POS:', err);
         }
 
-        if (!posCustomerDirectory || posCustomerDirectory.length === 0) {
-            posCustomerDirectory = [
-                { id: 'CUST-001', name: 'Nguyễn Văn An', phone: '0901234567', rank: 'Thành viên Vàng', points: 420, address: '123 Nguyễn Thị Minh Khai, Q.1, TP.HCM', pets: [{ pet_name: 'Milo', breed: 'Poodle' }] },
-                { id: 'CUST-002', name: 'Trần Thị Mai', phone: '0912345678', rank: 'Thành viên Bạc', points: 150, address: '45 Lê Duẩn, Q.1, TP.HCM', pets: [{ pet_name: 'Bông', breed: 'Mèo Anh Lông Ngắn' }] },
-                { id: 'CUST-003', name: 'Lê Hoàng Nam', phone: '0987654321', rank: 'Thành viên Kim Cương', points: 1250, address: '88 Nam Kỳ Khởi Nghĩa, Q.3, TP.HCM', pets: [{ pet_name: 'Lu', breed: 'Golden Retriever' }] }
-            ];
+        if (!Array.isArray(posCustomerDirectory)) {
+            posCustomerDirectory = [];
         }
     }
 
@@ -553,18 +583,47 @@
 
     function addToPosCart(sku, qty = 1) {
         const prod = getAvailableProducts().find(p => p.sku === sku);
-        if (!prod) return;
+        if (!prod) {
+            showToast('Sản phẩm không tồn tại', 'warning');
+            return;
+        }
+        if (prod.stock != null && prod.stock <= 0) {
+            showToast(`Sản phẩm "${prod.name}" hiện đã hết hàng trong kho!`, 'warning');
+            return;
+        }
 
         const existing = posCartItems.find(i => i.sku === sku);
+        const currentQty = existing ? existing.qty : 0;
+        const targetQty = currentQty + qty;
+
+        if (prod.stock != null && targetQty > prod.stock) {
+            showToast(`Kho chỉ còn ${prod.stock} sản phẩm. Đã điều chỉnh về số lượng tối đa khả dụng!`, 'warning');
+            if (existing) {
+                existing.qty = prod.stock;
+            } else {
+                posCartItems.push({
+                    sku: prod.sku,
+                    name: prod.name,
+                    price: prod.price,
+                    qty: prod.stock,
+                    image: prod.image,
+                    maxStock: prod.stock
+                });
+            }
+            renderPosCartTable();
+            return;
+        }
+
         if (existing) {
-            existing.qty += qty;
+            existing.qty = targetQty;
         } else {
             posCartItems.push({
                 sku: prod.sku,
                 name: prod.name,
                 price: prod.price,
                 qty: qty,
-                image: prod.image
+                image: prod.image,
+                maxStock: prod.stock
             });
         }
         renderPosCartTable();
@@ -574,7 +633,14 @@
         if (newQty <= 0) {
             posCartItems.splice(index, 1);
         } else if (posCartItems[index]) {
-            posCartItems[index].qty = newQty;
+            const item = posCartItems[index];
+            const prod = getAvailableProducts().find(p => p.sku === item.sku);
+            if (prod && prod.stock != null && newQty > prod.stock) {
+                showToast(`Số lượng vượt quá tồn kho khả dụng (${prod.stock})`, 'warning');
+                item.qty = prod.stock;
+            } else {
+                item.qty = newQty;
+            }
         }
         renderPosCartTable();
     }
@@ -638,17 +704,35 @@
         let voucherDiscount = 0;
         if (voucherInput) {
             const vList = helpers.getSharedVouchersList();
-            const foundVoucher = vList.find(v => v.code === voucherInput && (v.status === 'active' || v.status === 'Đang chạy'));
+            const now = new Date();
+            const foundVoucher = vList.find(v => {
+                if (v.code !== voucherInput) return false;
+                if (v.status !== 'active' && v.status !== 'Đang chạy') return false;
+                if (v.startDate && new Date(v.startDate) > now) return false;
+                if (v.endDate && new Date(v.endDate) < now) return false;
+                if (v.usageLimit && v.usedCount != null && v.usedCount >= v.usageLimit) return false;
+                if (v.minOrder && subtotal < v.minOrder) return false;
+                return true;
+            });
             if (foundVoucher) {
                 if (foundVoucher.type === 'percent') {
                     voucherDiscount = Math.round(subtotal * (foundVoucher.value / 100));
+                    if (foundVoucher.maxDiscount && voucherDiscount > foundVoucher.maxDiscount) {
+                        voucherDiscount = foundVoucher.maxDiscount;
+                    }
                 } else {
-                    voucherDiscount = foundVoucher.value;
+                    voucherDiscount = Number(foundVoucher.value) || 0;
                 }
             }
         }
 
-        const pointsInput = Math.max(0, parseInt(document.getElementById('createOrderPointsInput')?.value || '0', 10) || 0);
+        let pointsInput = Math.max(0, parseInt(document.getElementById('createOrderPointsInput')?.value || '0', 10) || 0);
+        const maxCustPoints = activePosCustomer?.points || 0;
+        if (pointsInput > maxCustPoints) {
+            pointsInput = maxCustPoints;
+            const ptInputEl = document.getElementById('createOrderPointsInput');
+            if (ptInputEl) ptInputEl.value = pointsInput;
+        }
         const pointsDiscount = Math.max(0, pointsInput * 100);
 
         const isDelivery = document.getElementById('radioAddrDelivery')?.checked === true;
@@ -761,10 +845,12 @@
         else if (order.paymentMethod === 'cod') payLabel = 'Thanh toán COD';
         setTxt('recPayMethod', payLabel);
 
-        setTxt('recCashTendered', formatVND(order.total || 0));
-        setTxt('recCashChange', '0 đ');
+        const cashTenderedVal = order.cashTendered != null ? Number(order.cashTendered) : (order.total || 0);
+        const cashChangeVal = order.cashChange != null ? Number(order.cashChange) : Math.max(0, cashTenderedVal - (order.total || 0));
+        setTxt('recCashTendered', formatVND(cashTenderedVal));
+        setTxt('recCashChange', formatVND(cashChangeVal));
 
-        const earnedPoints = Math.max(1, Math.floor((order.total || 0) / 100000));
+        const earnedPoints = Math.max(0, Math.floor((order.total || 0) / 100000));
         setTxt('recPointsEarned', `+${earnedPoints} điểm Pawpoint`);
         setTxt('recCustRank', (activePosCustomer && activePosCustomer.rank) ? activePosCustomer.rank : 'Thành viên Bạc');
 
@@ -772,7 +858,7 @@
     }
 
     function printReceiptDirectly() {
-        showToast('Đang gửi lệnh in hóa đơn tới máy in POS K80...', 'info');
+        showToast('Đang mở hộp thoại in của trình duyệt...', 'info');
         setTimeout(() => {
             window.print();
         }, 300);
@@ -908,28 +994,57 @@
                 message: `Bạn có chắc chắn muốn xác nhận đối soát toàn bộ ${codPending.length} đơn hàng với tổng số tiền ${formatVND(totalAmount)}?`,
                 acceptText: 'Xác nhận đối soát',
                 onAccept: async () => {
+                    const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || '').toUpperCase();
+                    if (userRole !== 'ADMIN' && userRole !== 'MANAGER' && userRole !== 'ACCOUNTANT') {
+                        showToast('Chỉ Kế toán, Quản lý hoặc Quản trị viên mới có quyền đối soát thu tiền COD.', 'danger');
+                        return;
+                    }
+
                     const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (!client) {
+                        showToast('Chưa kết nối cơ sở dữ liệu Supabase!', 'danger');
+                        return;
+                    }
+
+                    let successCount = 0;
+                    let successAmount = 0;
+                    let failedCount = 0;
+
                     for (const o of codPending) {
-                        o.paymentStatus = 'paid';
-                        o.timeline.push({
-                            title: 'Đã đối soát tiền COD (Hàng loạt)',
-                            time: formatTime(new Date()) + ' - Hôm nay',
-                            desc: 'Kế toán xác nhận bưu cục đã chuyển khoản tiền COD về tài khoản PawPal',
-                            done: true
-                        });
-                        if (client) {
-                            try {
-                                if (o.rawId) {
-                                    await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', o.rawId);
-                                } else {
-                                    await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', o.id);
-                                }
-                            } catch (e) {}
+                        try {
+                            let updateRes;
+                            if (o.rawId) {
+                                updateRes = await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', o.rawId);
+                            } else {
+                                updateRes = await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', o.id);
+                            }
+                            if (updateRes?.error) throw updateRes.error;
+
+                            o.paymentStatus = 'paid';
+                            o.timeline.push({
+                                title: 'Đã đối soát tiền COD (Hàng loạt)',
+                                time: formatTime(new Date()) + ' - Hôm nay',
+                                desc: 'Kế toán xác nhận bưu cục đã chuyển khoản tiền COD về tài khoản PawPal',
+                                done: true
+                            });
+                            successCount++;
+                            successAmount += (o.total || 0);
+                        } catch (errOne) {
+                            console.error(`[COD] Lỗi đối soát đơn ${o.id}:`, errOne);
+                            failedCount++;
                         }
                     }
+
                     persistOrdersData();
                     renderOrdersTable();
-                    showToast(`Đã đối soát thành công toàn bộ ${codPending.length} đơn hàng COD (${formatVND(totalAmount)})!`, 'success');
+
+                    if (failedCount === 0) {
+                        showToast(`Đã đối soát thành công toàn bộ ${successCount} đơn hàng COD (${formatVND(successAmount)})!`, 'success');
+                    } else if (successCount > 0) {
+                        showToast(`Đã đối soát thành công ${successCount}/${codPending.length} đơn (${formatVND(successAmount)}). Có ${failedCount} đơn cập nhật thất bại.`, 'warning');
+                    } else {
+                        showToast('Đối soát toàn bộ đơn COD thất bại trên cơ sở dữ liệu!', 'danger');
+                    }
                 }
             });
         });
@@ -963,16 +1078,23 @@
             let sku = document.getElementById('createOrderSelectedProductSku')?.value;
             if (!sku) {
                 const searchVal = (document.getElementById('createOrderProductSearchInput')?.value || '').trim().toLowerCase();
+                if (!searchVal) {
+                    showToast('Vui lòng chọn sản phẩm muốn thêm vào giỏ', 'warning');
+                    return;
+                }
                 const matched = prodList.find(p => (p.name || '').toLowerCase().includes(searchVal) || (p.sku || '').toLowerCase() === searchVal);
                 if (matched) sku = matched.sku;
-                else if (prodList.length > 0) sku = prodList[0].sku;
             }
             if (!sku) {
-                showToast('Vui lòng chọn sản phẩm muốn thêm vào giỏ', 'warning');
+                showToast('Không tìm thấy sản phẩm phù hợp', 'warning');
                 return;
             }
             const qtyInput = document.getElementById('createOrderQty');
             const qty = parseInt(qtyInput?.value || '1', 10);
+            if (!Number.isFinite(qty) || qty <= 0) {
+                showToast('Số lượng sản phẩm phải là số nguyên dương lớn hơn 0', 'warning');
+                return;
+            }
             addToPosCart(sku, qty);
 
             const searchInput = document.getElementById('createOrderProductSearchInput');
@@ -1041,16 +1163,17 @@
             }
 
             const name = document.getElementById('createOrderName')?.value.trim() || 'Khách vãng lai';
-            const phone = document.getElementById('createOrderPhone')?.value.trim() || '0900000000';
+            const phone = document.getElementById('createOrderPhone')?.value.trim() || '';
             const payMethod = document.getElementById('createOrderPaymentMethod')?.value || 'cash';
             const voucherInput = document.getElementById('createOrderVoucherCode')?.value.trim();
             const isDelivery = document.getElementById('radioAddrDelivery')?.checked === true;
             const noteVal = document.getElementById('createOrderNote')?.value.trim();
             const calc = updatePosLiveCalculation();
 
-            const newCode = 'ORD-2026-00' + ((state.orders || []).length + 1);
+            const randSuffix = Math.floor(1000 + Math.random() * 9000);
+            const newCode = 'ORD-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-4) + '-' + randSuffix;
             const finalAddr = isDelivery ? 'Giao tận nơi theo yêu cầu' : 'Tại cửa hàng PawPal - Khách nhận trực tiếp (Chi nhánh Quận 1, TP. HCM)';
-            const finalUserId = (activePosCustomer && activePosCustomer.id) || 'USER-001';
+            const finalUserId = (activePosCustomer && activePosCustomer.id) || null;
 
             const newOrder = {
                 id: newCode,
@@ -1093,59 +1216,122 @@
             };
 
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (client) {
-                try {
-                    let targetShippingAddressId = null;
-                    if (activePosCustomer && activePosCustomer.id) {
-                        const { data: addrs } = await client.from('customer_address').select('id').eq('customer_id', activePosCustomer.id).limit(1);
-                        if (addrs && addrs.length > 0) targetShippingAddressId = addrs[0].id;
-                    }
-                    if (!targetShippingAddressId) {
-                        const { data: anyAddr } = await client.from('customer_address').select('id').limit(1);
-                        if (anyAddr && anyAddr.length > 0) targetShippingAddressId = anyAddr[0].id;
+            if (!client) {
+                showToast('Chưa kết nối được cơ sở dữ liệu Supabase. Vui lòng kiểm tra lại.', 'danger');
+                return;
+            }
+
+            try {
+                let targetShippingAddressId = null;
+                if (isDelivery && activePosCustomer && activePosCustomer.id) {
+                    const { data: addrs } = await client.from('customer_address').select('id').eq('customer_id', activePosCustomer.id).limit(1);
+                    if (addrs && addrs.length > 0) targetShippingAddressId = addrs[0].id;
+                }
+                // O-02: Tuyệt đối không lấy địa chỉ của khách hàng khác trong toàn hệ thống gán vào đơn này
+
+                const { data: orderRow, error: orderErr } = await client.from('sales_order').insert({
+                    order_code: newCode,
+                    customer_id: (finalUserId && finalUserId.length > 20) ? finalUserId : null,
+                    shipping_address_id: targetShippingAddressId,
+                    order_status: isDelivery ? 'PACKING' : 'DELIVERED',
+                    payment_status: (isDelivery && payMethod === 'cod') ? 'UNPAID' : 'PAID',
+                    total_amount: calc.grandTotal,
+                    note: noteVal || 'Đơn POS'
+                }).select().single();
+
+                if (orderErr || !orderRow) {
+                    throw (orderErr || new Error('Không thể tạo bản ghi đơn hàng trên cơ sở dữ liệu.'));
+                }
+
+                newOrder.rawId = orderRow.id;
+                if (orderRow.order_code) {
+                    newOrder.id = orderRow.order_code;
+                }
+
+                if (posCartItems.length > 0) {
+                    const detailRows = posCartItems.map(item => {
+                        const prod = (state.products || []).find(p => p.sku === item.sku);
+                        return {
+                            order_id: orderRow.id,
+                            product_id: prod?.id || null,
+                            quantity: item.qty,
+                            unit_price: item.price,
+                            subtotal: item.price * item.qty
+                        };
+                    }).filter(d => d.product_id);
+                    if (detailRows.length > 0) {
+                        const { error: detailErr } = await client.from('sales_order_detail').insert(detailRows);
+                        if (detailErr) {
+                            console.error('[POS] Lỗi lưu chi tiết đơn hàng:', detailErr);
+                        }
                     }
 
-                    const { data: orderRow } = await client.from('sales_order').insert({
-                        order_code: newCode,
-                        customer_id: (finalUserId && finalUserId.length > 20) ? finalUserId : null,
-                        shipping_address_id: targetShippingAddressId,
-                        order_status: isDelivery ? 'PACKING' : 'DELIVERED',
-                        payment_status: (isDelivery && payMethod === 'cod') ? 'UNPAID' : 'PAID',
-                        total_amount: calc.grandTotal,
-                        note: noteVal || 'Đơn POS'
-                    }).select().single();
-
-                    if (orderRow) {
-                        newOrder.rawId = orderRow.id;
-                        if (posCartItems.length > 0) {
-                            const detailRows = posCartItems.map(item => {
-                                const prod = (state.products || []).find(p => p.sku === item.sku);
-                                return {
-                                    order_id: orderRow.id,
-                                    product_id: prod?.id || null,
-                                    quantity: item.qty,
-                                    unit_price: item.price,
-                                    subtotal: item.price * item.qty
-                                };
-                            }).filter(d => d.product_id);
-                            if (detailRows.length > 0) {
-                                await client.from('sales_order_detail').insert(detailRows);
+                    // O-04: Trừ tồn kho trong bảng inventory cho các mặt hàng đã bán tại POS
+                    for (const item of posCartItems) {
+                        const prod = (state.products || []).find(p => p.sku === item.sku);
+                        if (prod?.id) {
+                            try {
+                                const { data: invRow } = await client.from('inventory')
+                                    .select('id, quantity_in_stock')
+                                    .eq('product_id', prod.id)
+                                    .limit(1);
+                                if (invRow && invRow[0]) {
+                                    const currentStock = Number(invRow[0].quantity_in_stock) || 0;
+                                    const newStock = Math.max(0, currentStock - item.qty);
+                                    await client.from('inventory')
+                                        .update({ quantity_in_stock: newStock, last_updated_at: new Date().toISOString() })
+                                        .eq('id', invRow[0].id);
+                                    prod.stock = newStock;
+                                }
+                            } catch (invErr) {
+                                console.error('[POS] Lỗi trừ tồn kho cho sản phẩm ' + item.sku + ':', invErr);
                             }
                         }
                     }
-                } catch (e) {
-                    console.warn('Lỗi ghi nhận đơn POS lên Supabase:', e);
                 }
+
+                // O-04: Xử lý trừ điểm Pawpoint thật trên membership và ghi ledger nếu khách dùng điểm
+                if (calc.pointsUsed > 0 && finalUserId) {
+                    try {
+                        const { data: memData } = await client.from('customer_membership')
+                            .select('id, total_paw_points')
+                            .eq('customer_id', finalUserId)
+                            .maybeSingle();
+                        if (memData) {
+                            const curPts = Number(memData.total_paw_points) || 0;
+                            const newBalance = Math.max(0, curPts - calc.pointsUsed);
+                            await client.from('customer_membership')
+                                .update({ total_paw_points: newBalance })
+                                .eq('id', memData.id);
+                            await client.from('paw_point_transaction').insert({
+                                customer_id: finalUserId,
+                                point_amount: -calc.pointsUsed,
+                                points: -calc.pointsUsed,
+                                balance_after: newBalance,
+                                direction: 'SUB',
+                                transaction_type: 'REDEEM',
+                                reason: `Trừ ${calc.pointsUsed} điểm thanh toán đơn hàng POS ${newOrder.id}`,
+                                description: `Trừ điểm đơn hàng POS ${newOrder.id}`
+                            });
+                        }
+                    } catch (ptErr) {
+                        console.error('[POS] Lỗi cập nhật trừ điểm Pawpoint:', ptErr);
+                    }
+                }
+
+                state.orders = state.orders || [];
+                state.orders.unshift(newOrder);
+                persistOrdersData();
+
+                document.getElementById('modalCreateOrder')?.classList.remove('active');
+                renderOrdersTable();
+                showToast(`Đã tạo thành công đơn hàng POS ${newOrder.id}!`, 'success');
+                openPosReceipt(newOrder);
+            } catch (e) {
+                console.error('[POS] Lỗi ghi nhận đơn POS lên Supabase:', e);
+                showToast(`Tạo đơn hàng POS thất bại: ${e?.message || 'Lỗi cơ sở dữ liệu'}`, 'danger');
+                // O-03: Chặn đứng, không tạo đơn hàng ma trên màn hình khi CSDL gặp lỗi!
             }
-
-            state.orders = state.orders || [];
-            state.orders.unshift(newOrder);
-            persistOrdersData();
-
-            document.getElementById('modalCreateOrder')?.classList.remove('active');
-            renderOrdersTable();
-            showToast(`Đã tạo thành công đơn hàng POS ${newCode}!`, 'success');
-            openPosReceipt(newOrder);
         };
 
         document.getElementById('btnSubmitCreateOrder')?.addEventListener('click', handleFinalizePosOrder);
@@ -1470,149 +1656,206 @@
     window.PawpalOrdersModule.confirmPayment = async function(orderId) {
         const order = (state.orders || []).find(o => o.id === orderId);
         if (!order) return;
-        order.paymentStatus = 'paid';
-        order.timeline.push({
-            title: 'Đã xác nhận thu tiền',
-            time: formatTime(new Date()) + ' - Hôm nay',
-            desc: 'Nhân viên xác nhận đã thu đủ số tiền cho đơn hàng',
-            done: true
-        });
 
-        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (client) {
-            try {
-                if (order.rawId) {
-                    await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', order.rawId);
-                } else {
-                    await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', order.id);
-                }
-            } catch (e) {}
+        const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || '').toUpperCase();
+        if (userRole !== 'ADMIN' && userRole !== 'MANAGER' && userRole !== 'CASHIER' && userRole !== 'ACCOUNTANT') {
+            showToast('Chỉ Thu ngân, Kế toán hoặc Quản trị viên mới có quyền xác nhận thu tiền.', 'danger');
+            return;
         }
 
-        persistOrdersData();
-        renderOrdersTable();
-        showToast(`Đã xác nhận thu tiền cho đơn hàng ${orderId}!`, 'success');
+        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!client) {
+            showToast('Chưa kết nối cơ sở dữ liệu Supabase!', 'danger');
+            return;
+        }
+
+        try {
+            let res;
+            if (order.rawId) {
+                res = await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', order.rawId);
+            } else {
+                res = await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', order.id);
+            }
+            if (res?.error) throw res.error;
+
+            order.paymentStatus = 'paid';
+            order.timeline.push({
+                title: 'Đã xác nhận thu tiền',
+                time: formatTime(new Date()) + ' - Hôm nay',
+                desc: 'Nhân viên xác nhận đã thu đủ số tiền cho đơn hàng',
+                done: true
+            });
+
+            persistOrdersData();
+            renderOrdersTable();
+            showToast(`Đã xác nhận thu tiền cho đơn hàng ${orderId}!`, 'success');
+        } catch (err) {
+            console.error('[Orders] Lỗi xác nhận thu tiền:', err);
+            showToast(`Xác nhận thu tiền thất bại: ${err?.message || 'Lỗi CSDL'}`, 'danger');
+        }
     };
 
     window.PawpalOrdersModule.reconcileCod = async function(orderId) {
         const order = (state.orders || []).find(o => o.id === orderId);
         if (!order) return;
-        order.paymentStatus = 'paid';
-        order.timeline.push({
-            title: 'Đã đối soát tiền COD',
-            time: formatTime(new Date()) + ' - Hôm nay',
-            desc: 'Kế toán xác nhận bưu cục đã chuyển khoản tiền COD về tài khoản PawPal',
-            done: true
-        });
 
-        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (client) {
-            try {
-                if (order.rawId) {
-                    await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', order.rawId);
-                } else {
-                    await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', order.id);
-                }
-            } catch (e) {}
+        const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || '').toUpperCase();
+        if (userRole !== 'ADMIN' && userRole !== 'MANAGER' && userRole !== 'ACCOUNTANT') {
+            showToast('Chỉ Kế toán, Quản lý hoặc Quản trị viên mới có quyền đối soát thu tiền COD.', 'danger');
+            return;
         }
 
-        persistOrdersData();
-        renderOrdersTable();
-        showToast(`Đã đối soát tiền COD cho đơn hàng ${orderId}!`, 'success');
+        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!client) {
+            showToast('Chưa kết nối cơ sở dữ liệu Supabase!', 'danger');
+            return;
+        }
+
+        try {
+            let res;
+            if (order.rawId) {
+                res = await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', order.rawId);
+            } else {
+                res = await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', order.id);
+            }
+            if (res?.error) throw res.error;
+
+            order.paymentStatus = 'paid';
+            order.timeline.push({
+                title: 'Đã đối soát tiền COD',
+                time: formatTime(new Date()) + ' - Hôm nay',
+                desc: 'Kế toán xác nhận bưu cục đã chuyển khoản tiền COD về tài khoản PawPal',
+                done: true
+            });
+
+            persistOrdersData();
+            renderOrdersTable();
+            showToast(`Đã đối soát tiền COD cho đơn hàng ${orderId}!`, 'success');
+        } catch (err) {
+            console.error('[Orders] Lỗi đối soát COD:', err);
+            showToast(`Đối soát COD thất bại: ${err?.message || 'Lỗi CSDL'}`, 'danger');
+        }
     };
 
     window.PawpalOrdersModule.completeOrder = async function(orderId) {
         const order = (state.orders || []).find(o => o.id === orderId);
         if (!order) return;
-        order.status = 'completed';
-        const pointsEarned = Math.floor(order.total / 10000);
-        order.timeline.push({
-            title: 'Hoàn tất đơn hàng',
-            time: formatTime(new Date()) + ' - Hôm nay',
-            desc: `Đơn hàng đã hoàn thành và tích lũy +${pointsEarned} điểm Pawpoint`,
-            done: true
-        });
 
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (client) {
-            try {
-                if (order.rawId) {
-                    await client.from('sales_order').update({ order_status: 'DELIVERED' }).eq('id', order.rawId);
-                } else {
-                    await client.from('sales_order').update({ order_status: 'DELIVERED' }).eq('order_code', order.id);
-                }
-            } catch (e) {}
+        if (!client) {
+            showToast('Chưa kết nối cơ sở dữ liệu Supabase!', 'danger');
+            return;
         }
 
-        persistOrdersData();
-        renderOrdersTable();
-        if (typeof PawpalOrders.renderOrderDetail === 'function') {
-            PawpalOrders.renderOrderDetail(orderId);
+        try {
+            let res;
+            if (order.rawId) {
+                res = await client.from('sales_order').update({ order_status: 'COMPLETED' }).eq('id', order.rawId);
+            } else {
+                res = await client.from('sales_order').update({ order_status: 'COMPLETED' }).eq('order_code', order.id);
+            }
+            if (res?.error) throw res.error;
+
+            order.status = 'completed';
+            const pointsEarned = Math.floor(order.total / 10000);
+            order.timeline.push({
+                title: 'Hoàn tất đơn hàng',
+                time: formatTime(new Date()) + ' - Hôm nay',
+                desc: `Đơn hàng đã hoàn thành và tích lũy +${pointsEarned} điểm Pawpoint`,
+                done: true
+            });
+
+            persistOrdersData();
+            renderOrdersTable();
+            if (typeof PawpalOrders.renderOrderDetail === 'function') {
+                PawpalOrders.renderOrderDetail(orderId);
+            }
+            showToast(`Đơn hàng ${orderId} đã hoàn tất! +${pointsEarned} điểm Pawpoint.`, 'success');
+        } catch (err) {
+            console.error('[Orders] Lỗi hoàn tất đơn hàng:', err);
+            showToast(`Hoàn tất đơn hàng thất bại: ${err?.message || 'Lỗi CSDL'}`, 'danger');
         }
-        showToast(`Đơn hàng ${orderId} đã hoàn tất! +${pointsEarned} điểm Pawpoint.`, 'success');
     };
 
     window.PawpalOrdersModule.confirmOrder = async function(orderId) {
         const order = (state.orders || []).find(o => o.id === orderId);
         if (!order) return;
-        order.status = 'confirmed';
-        order.timeline.push({
-            title: 'Đã xác nhận đơn hàng',
-            time: formatTime(new Date()) + ' - Hôm nay',
-            desc: 'Nhân viên đã duyệt đơn và xuất kho đóng gói',
-            done: true
-        });
 
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (client) {
-            try {
-                if (order.rawId) {
-                    await client.from('sales_order').update({ order_status: 'PACKING' }).eq('id', order.rawId);
-                } else {
-                    await client.from('sales_order').update({ order_status: 'PACKING' }).eq('order_code', order.id);
-                }
-            } catch (e) {}
+        if (!client) {
+            showToast('Chưa kết nối cơ sở dữ liệu Supabase!', 'danger');
+            return;
         }
 
-        persistOrdersData();
-        renderOrdersTable();
-        if (typeof PawpalOrders.renderOrderDetail === 'function') {
-            PawpalOrders.renderOrderDetail(orderId);
+        try {
+            let res;
+            if (order.rawId) {
+                res = await client.from('sales_order').update({ order_status: 'PACKING' }).eq('id', order.rawId);
+            } else {
+                res = await client.from('sales_order').update({ order_status: 'PACKING' }).eq('order_code', order.id);
+            }
+            if (res?.error) throw res.error;
+
+            order.status = 'confirmed';
+            order.timeline.push({
+                title: 'Đã xác nhận đơn hàng',
+                time: formatTime(new Date()) + ' - Hôm nay',
+                desc: 'Nhân viên đã duyệt đơn và xuất kho đóng gói',
+                done: true
+            });
+
+            persistOrdersData();
+            renderOrdersTable();
+            if (typeof PawpalOrders.renderOrderDetail === 'function') {
+                PawpalOrders.renderOrderDetail(orderId);
+            }
+            showToast(`Đã xác nhận đơn hàng ${orderId}!`, 'success');
+        } catch (err) {
+            console.error('[Orders] Lỗi xác nhận đơn hàng:', err);
+            showToast(`Xác nhận đơn hàng thất bại: ${err?.message || 'Lỗi CSDL'}`, 'danger');
         }
-        showToast(`Đã xác nhận đơn hàng ${orderId}!`, 'success');
     };
 
     window.PawpalOrdersModule.completeDelivery = async function(orderId) {
         const order = (state.orders || []).find(o => o.id === orderId);
         if (!order) return;
-        order.status = 'delivered';
-        if (order.paymentMethod === 'cod' && order.paymentStatus === 'unpaid') {
-            order.paymentStatus = 'cod_pending';
-        }
-        order.timeline.push({
-            title: 'Đã giao hàng thành công',
-            time: formatTime(new Date()) + ' - Hôm nay',
-            desc: 'Khách hàng đã nhận hàng thành công',
-            done: true
-        });
 
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (client) {
-            try {
-                if (order.rawId) {
-                    await client.from('sales_order').update({ order_status: 'DELIVERED' }).eq('id', order.rawId);
-                } else {
-                    await client.from('sales_order').update({ order_status: 'DELIVERED' }).eq('order_code', order.id);
-                }
-            } catch (e) {}
+        if (!client) {
+            showToast('Chưa kết nối cơ sở dữ liệu Supabase!', 'danger');
+            return;
         }
 
-        persistOrdersData();
-        renderOrdersTable();
-        if (typeof PawpalOrders.renderOrderDetail === 'function') {
-            PawpalOrders.renderOrderDetail(orderId);
+        try {
+            let res;
+            if (order.rawId) {
+                res = await client.from('sales_order').update({ order_status: 'DELIVERED' }).eq('id', order.rawId);
+            } else {
+                res = await client.from('sales_order').update({ order_status: 'DELIVERED' }).eq('order_code', order.id);
+            }
+            if (res?.error) throw res.error;
+
+            order.status = 'delivered';
+            if (order.paymentMethod === 'cod' && order.paymentStatus === 'unpaid') {
+                order.paymentStatus = 'cod_pending';
+            }
+            order.timeline.push({
+                title: 'Đã giao hàng thành công',
+                time: formatTime(new Date()) + ' - Hôm nay',
+                desc: 'Khách hàng đã nhận hàng thành công',
+                done: true
+            });
+
+            persistOrdersData();
+            renderOrdersTable();
+            if (typeof PawpalOrders.renderOrderDetail === 'function') {
+                PawpalOrders.renderOrderDetail(orderId);
+            }
+            showToast(`Đã cập nhật Đã giao hàng cho đơn ${orderId}!`, 'success');
+        } catch (err) {
+            console.error('[Orders] Lỗi cập nhật giao hàng:', err);
+            showToast(`Cập nhật giao hàng thất bại: ${err?.message || 'Lỗi CSDL'}`, 'danger');
         }
-        showToast(`Đã cập nhật Đã giao hàng cho đơn ${orderId}!`, 'success');
     };
 
     window.PawpalOrdersModule.openShipModal = function(orderId) {
@@ -1701,11 +1944,11 @@
     };
 
     window.PawpalOrdersModule.openReturnRefundModal = function(orderId) {
-        let order = (state.orders || []).find(o => o.id === orderId);
+        const order = (state.orders || []).find(o => o.id === orderId || o.rawId === orderId);
         if (!order) {
-            order = (state.orders || []).find(o => o.status === 'delivered' || o.status === 'completed') || (state.orders || [])[0];
+            showToast('Không tìm thấy đơn hàng cần tạo đổi trả (RMA)!', 'warning');
+            return;
         }
-        if (!order) return;
 
         state.selectedOrderId = order.id;
         const codeEl = document.getElementById('rmaOrderTargetCode');
