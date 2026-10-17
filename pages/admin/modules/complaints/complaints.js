@@ -681,6 +681,7 @@
             PawpalComplaints.state.loadError = 'Không thể tải khiếu nại. Vui lòng tải lại trang.';
             console.error('[Complaints] Lỗi nạp dữ liệu từ Supabase:', err.message || String(err), err.code || '');
         }
+    }
     PawpalComplaints.loadComplaintsModuleData = loadComplaintsModuleData;
 
     // Helper lazy-fetch tin nhắn khi mở 1 ticket cụ thể (PERF-03.K02)

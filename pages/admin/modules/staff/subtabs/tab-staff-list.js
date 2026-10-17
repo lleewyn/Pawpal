@@ -556,7 +556,7 @@
                 const todayStr = new Date().toISOString().slice(0, 10);
                 const { data: appts, error: apptErr } = await client
                     .from('appointment')
-                    .select('id, appointment_code, appointment_date, start_time, end_time, appointment_status, service:service_id(service_name), customer:customer_id(full_name), pet:pet_id(name)')
+                    .select('id, appointment_code, appointment_date, appointment_time, appointment_status, service:service_id(service_name), pet:pet_id(pet_name)')
                     .eq('staff_id', currentStaff.rawId)
                     .gte('appointment_date', todayStr)
                     .in('appointment_status', ['CONFIRMED', 'PENDING', 'IN_PROGRESS', 'CHO_XAC_NHAN', 'DA_XAC_NHAN'])
@@ -567,10 +567,10 @@
                     realBookings = appts.map(a => ({
                         id: a.appointment_code || a.id,
                         rawId: a.id,
-                        customerName: a.customer?.full_name || 'Khách hàng',
-                        petName: a.pet?.name || 'Bé cưng',
+                        customerName: 'Khách hàng',
+                        petName: a.pet?.pet_name || 'Bé cưng',
                         service: a.service?.service_name || 'Dịch vụ chăm sóc',
-                        time: `${a.appointment_date} ${a.start_time || ''}`
+                        time: `${a.appointment_date} ${a.appointment_time || ''}`
                     }));
                 }
             } catch (e) {

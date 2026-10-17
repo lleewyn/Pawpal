@@ -466,8 +466,8 @@
                         .order('appointment_date', { ascending: false })
                         .limit(20),
                     client.from('support_ticket')
-                        .select('id, customer_id, user_id, title, status, priority, created_at')
-                        .or(`customer_id.eq.${cust.dbId},user_id.eq.${cust.dbId}`)
+                        .select('id, user_id, title, type, status, priority, created_at')
+                        .eq('user_id', cust.dbId)
                         .order('created_at', { ascending: false })
                         .limit(20)
                 ]);
