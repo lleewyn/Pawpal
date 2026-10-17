@@ -396,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261017_r08';
+    const MODULE_SCRIPT_VERSION = '20261017_r09';
 
     function resolveModulePath(path) {
         if (!path) return path;

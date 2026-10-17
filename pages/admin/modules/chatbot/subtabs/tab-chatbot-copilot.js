@@ -4,6 +4,7 @@
 
     const PawpalChatbot = window.PawpalChatbot = window.PawpalChatbot || {};
     PawpalChatbot.subtabs = PawpalChatbot.subtabs || {};
+    PawpalChatbot.subtabs.copilot = PawpalChatbot.subtabs.copilot || {};
 
     const supabase = (typeof window.getSupabaseClient === 'function') 
         ? window.getSupabaseClient() 

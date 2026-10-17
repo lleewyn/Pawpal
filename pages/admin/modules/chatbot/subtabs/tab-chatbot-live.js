@@ -4,6 +4,7 @@
 
     const PawpalChatbot = window.PawpalChatbot = window.PawpalChatbot || {};
     PawpalChatbot.subtabs = PawpalChatbot.subtabs || {};
+    PawpalChatbot.subtabs.live = PawpalChatbot.subtabs.live || {};
 
     const supabase = (typeof window.getSupabaseClient === 'function') 
         ? window.getSupabaseClient() 
@@ -2114,12 +2115,13 @@
         });
     }
 
-    PawpalChatbot.subtabs.live = {
+    Object.assign(PawpalChatbot.subtabs.live, {
         init: initLiveChatSubtab,
         renderConversationsList,
         renderCurrentChat,
-        renderCustomerInfoPanel
-    };
+        renderCustomerInfoPanel,
+        handleIncomingMessage
+    });
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initLiveChatSubtab);
