@@ -771,7 +771,7 @@ const adminDbTools = {
                     status: a.appointment_status,
                     payment: a.payment_status,
                     price: a.total_price,
-                    open_url: `#tab-calendar`
+                    open_url: `#tab-service-detail?id=${a.id}&code=${encodeURIComponent(a.appointment_code || '')}`
                 };
             });
 
@@ -851,7 +851,7 @@ const adminDbTools = {
                     unit_price: it.unit_price,
                     subtotal: it.subtotal
                 })),
-                open_url: `#tab-order-detail`
+                open_url: `#tab-order-detail?id=${o.id}&code=${encodeURIComponent(o.order_code || '')}`
             }));
 
             return { count: orders.length, orders };
@@ -912,7 +912,7 @@ const adminDbTools = {
                 min_stock: item.minimum_stock,
                 price: item.product?.sale_price || 0,
                 status: item.product?.status || 'ACTIVE',
-                open_url: '#tab-inventory'
+                open_url: '#tab-order-products'
             }));
 
             // Nếu không truyền threshold, lọc theo ngưỡng tối thiểu của từng mặt hàng
@@ -967,7 +967,7 @@ const adminDbTools = {
                 status: t.status,
                 priority: t.priority,
                 created_at: t.created_at,
-                open_url: '#tab-complaint-detail'
+                open_url: `#tab-complaint-detail?id=${t.id}`
             }));
 
             return {
@@ -1045,7 +1045,7 @@ const adminDbTools = {
                         service: a.service?.service_name,
                         status: a.appointment_status
                     })),
-                    open_url: '#tab-customer-profile'
+                    open_url: `#tab-profile?id=${c.id}&name=${encodeURIComponent(c.customer_profile?.full_name || '')}&phone=${encodeURIComponent(c.phone_main || '')}`
                 };
             }));
 
@@ -1446,12 +1446,12 @@ Quy tắc trả lời:
    - Thông tin khách hàng, thú cưng, hạng điểm -> BẮT BUỘC GỌI CÔNG CỤ get_customer_context.
    - Chính sách đổi trả, bảng giá, quy định -> BẮT BUỘC GỌI CÔNG CỤ search_knowledge.
    TUYỆT ĐỐI KHÔNG từ chối hoặc trả lời hệ thống không hỗ trợ khi các công cụ trên đã sẵn sàng trong hệ thống.
-3. Khi trình bày dữ liệu dạng bảng/danh sách: nêu rõ tổng số, ngày giờ truy vấn, các cột chính và đính kèm đường dẫn điều hướng nhanh trong hệ thống:
-   - Lịch hẹn: [Mở lịch hẹn](#tab-calendar)
-   - Đơn hàng: [Mở đơn hàng](#tab-order-detail)
-   - Tồn kho: [Mở quản lý kho](#tab-inventory)
-   - Khiếu nại/Ticket: [Mở xử lý ticket](#tab-complaint-detail)
-   - Hồ sơ khách hàng: [Mở hồ sơ 360°](#tab-customer-profile)
+3. Khi trình bày dữ liệu dạng bảng/danh sách: nêu rõ tổng số, ngày giờ truy vấn, các cột chính và đính kèm đường dẫn điều hướng nhanh trong hệ thống (luôn kèm tham số ID hoặc Tên thực thể nếu có để hệ thống mở trực tiếp hồ sơ chi tiết):
+   - Lịch hẹn: [Mở lịch hẹn](#tab-service-detail?id=MãHẹn) hoặc [Mở lịch hẹn](#tab-service-bookings)
+   - Đơn hàng: [Mở đơn hàng](#tab-order-detail?id=MãĐơn)
+   - Tồn kho: [Mở quản lý kho](#tab-order-products)
+   - Khiếu nại/Ticket: [Mở xử lý ticket](#tab-complaint-detail?id=MãTicket)
+   - Hồ sơ khách hàng: [Mở hồ sơ 360°](#tab-profile?name=TênKhách&id=MãKhách) hoặc [Mở hồ sơ 360°](#tab-profile)
 4. Tuân thủ Sentence Case (chỉ viết hoa chữ cái đầu), không dùng ký hiệu '+' trước nút bấm, không dùng từ tiếng Anh dịch kèm trong ngoặc đơn.
 5. Khi trình bày dữ liệu so sánh, danh sách nhiều thuộc tính (khiếu nại, đơn hàng, ca hẹn, tồn kho), BẮT BUỘC dùng bảng Markdown chuẩn: \| Cột 1 \| Cột 2 \| Cột 3 \| kèm dòng phân cách \|:---\|:---\|:---\|.`;
 

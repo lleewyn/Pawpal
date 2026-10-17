@@ -84,27 +84,27 @@
                 let s = escapeHtml(str);
 
                 // Markdown links: [label](url)
-                s = s.replace(/\[(.*?)\]\((#tab-[a-z0-9_-]+|\/admin#tab-[a-z0-9_-]+|[a-zA-Z0-9_\/.:#-]+)\)/gi, (match, label, url) => {
+                s = s.replace(/\[(.*?)\]\((#tab-[a-z0-9_?&=%-]+|\/admin#tab-[a-z0-9_?&=%-]+|[a-zA-Z0-9_\/.:#?&=%-]+)\)/gi, (match, label, url) => {
                     const cleanUrl = url.trim();
                     const isTab = cleanUrl.includes('#tab-');
-                    return `<a href="${cleanUrl}" class="user-name-link" ${isTab ? '' : 'target="_blank" rel="noopener"'} style="color: #236B48; font-weight: 600; text-decoration: underline;">${label}</a>`;
+                    return `<a href="${cleanUrl}" class="user-name-link copilot-deep-link" ${isTab ? '' : 'target="_blank" rel="noopener"'} style="color: #236B48; font-weight: 600; text-decoration: underline;">${label}</a>`;
                 });
 
                 // Plain hashtag tab references like #tab-calendar, #tab-inventory
-                s = s.replace(/(^|\s)(#tab-[a-z0-9_-]+)/g, '$1<a href="$2" class="user-name-link" style="color: #236B48; font-weight: 600; text-decoration: underline;">$2</a>');
+                s = s.replace(/(^|\s)(#tab-[a-z0-9_?&=%-]+)/g, '$1<a href="$2" class="user-name-link copilot-deep-link" style="color: #236B48; font-weight: 600; text-decoration: underline;">$2</a>');
 
                 // Auto-link navigation phrases if not already linked
                 const navLinks = [
                     { phrase: 'Mở xử lý ticket', hash: '#tab-complaint-detail' },
-                    { phrase: 'Mở khiếu nại', hash: '#tab-complaints' },
-                    { phrase: 'Mở lịch hẹn', hash: '#tab-calendar' },
-                    { phrase: 'Mở quản lý kho', hash: '#tab-inventory' },
+                    { phrase: 'Mở khiếu nại', hash: '#tab-complaint-services' },
+                    { phrase: 'Mở lịch hẹn', hash: '#tab-service-bookings' },
+                    { phrase: 'Mở quản lý kho', hash: '#tab-order-products' },
                     { phrase: 'Mở đơn hàng', hash: '#tab-order-detail' },
-                    { phrase: 'Mở hồ sơ 360°', hash: '#tab-customer-profile' }
+                    { phrase: 'Mở hồ sơ 360°', hash: '#tab-profile' }
                 ];
                 navLinks.forEach(({ phrase, hash }) => {
                     const regex = new RegExp(`(?<!href="[^"]*">${phrase}|>${phrase})\\b${phrase}\\b(?!<\\/a>)`, 'g');
-                    s = s.replace(regex, `<a href="${hash}" class="user-name-link" style="color: #236B48; font-weight: 600; text-decoration: underline;">${phrase}</a>`);
+                    s = s.replace(regex, `<a href="${hash}" class="user-name-link copilot-deep-link" style="color: #236B48; font-weight: 600; text-decoration: underline;">${phrase}</a>`);
                 });
 
                 // Bold **text**
@@ -713,6 +713,258 @@
             } catch (e) {
                 console.error('[Chatbot] Lỗi kiểm tra kho tri thức:', e);
                 PawpalChatbot.showToast?.('Không thể kết nối kho tri thức RAG: ' + (e.message || 'Lỗi mạng'), 'error');
+            }
+        });
+
+        // Bộ trích xuất ngữ cảnh thực thể và điều hướng chi tiết 360°
+        function extractEntityContextFromMessage(msgElement, extraText = '') {
+            const fullText = ((msgElement ? (msgElement.innerText || msgElement.textContent) : '') + ' ' + extraText).trim();
+            const res = {};
+            if (!fullText) return res;
+
+            // 1. Tên khách hàng:
+            const custMatch = fullText.match(/(?:khách hàng|chủ nuôi|hồ sơ của|thông tin của|cho khách)\s+([A-ZÀ-Ỹ][a-zà-ỹA-ZÀ-Ỹ0-9\s]+?)(?:\s+(?:như|có|với|đã|số|sđt|tại|mã|\(|\.|\,|\:|\n|$))/i);
+            if (custMatch && custMatch[1]) {
+                res.customerName = custMatch[1].trim();
+            }
+
+            // SĐT khách hàng
+            const phoneMatch = fullText.match(/\b(0\d{9}|\+84\d{9})\b/);
+            if (phoneMatch) res.customerPhone = phoneMatch[1];
+
+            // Mã khách hàng: CUST-xxx
+            const custCodeMatch = fullText.match(/\b(CUST-[A-Z0-9-]+)\b/i);
+            if (custCodeMatch) res.customerId = custCodeMatch[1];
+
+            // 2. Ticket khiếu nại: UUID, #f1a50343, hoặc TKT-xxx
+            const uuidMatch = fullText.match(/\b([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b/i);
+            const ticketShortMatch = fullText.match(/#([0-9a-f]{8})\b/i);
+            const ticketCodeMatch = fullText.match(/\b(TKT-[A-Z0-9-]+)\b/i);
+            if (uuidMatch) res.ticketId = uuidMatch[1];
+            else if (ticketCodeMatch) res.ticketId = ticketCodeMatch[1];
+            else if (ticketShortMatch) res.ticketId = ticketShortMatch[1];
+
+            // 3. Đơn hàng: ORD-xxx
+            const orderMatch = fullText.match(/\b(ORD-[A-Z0-9-]+)\b/i);
+            if (orderMatch) res.orderId = orderMatch[1];
+
+            // 4. Thú cưng: PET-xxx
+            const petMatch = fullText.match(/\b(PET-[A-Z0-9-]+)\b/i);
+            if (petMatch) res.petId = petMatch[1];
+
+            // 5. Lịch hẹn: APT-xxx
+            const aptMatch = fullText.match(/\b(APT-[A-Z0-9-]+)\b/i);
+            if (aptMatch) res.bookingId = aptMatch[1];
+
+            return res;
+        }
+
+        async function jumpToCustomerProfile({ id, name, phone } = {}) {
+            if (window.PawpalCustomers?.loadCustomersModuleData && !window.PawpalCustomers.state?.hasLoadedCustomers) {
+                try { await window.PawpalCustomers.loadCustomersModuleData(); } catch (e) {}
+            }
+
+            let resolvedCust = null;
+            if (window.PawpalCustomers?.getCustomer) {
+                if (id) resolvedCust = window.PawpalCustomers.getCustomer(id);
+                if (!resolvedCust && name) resolvedCust = window.PawpalCustomers.getCustomer(name);
+                if (!resolvedCust && phone) resolvedCust = window.PawpalCustomers.getCustomer(phone);
+            }
+
+            const targetId = resolvedCust ? resolvedCust.id : (id || name || null);
+            const targetName = resolvedCust ? resolvedCust.name : (name || id || 'Khách hàng');
+
+            if (targetId) sessionStorage.setItem('pawpal_admin_customer_id', targetId);
+            if (targetName) sessionStorage.setItem('pawpal_admin_customer_name', targetName);
+            sessionStorage.setItem('pawpal_admin_customer_subtab', 'tab-profile');
+            sessionStorage.setItem('pawpal_admin_active_module', 'Khách hàng');
+
+            if (window.PawpalChatbot?.showToast) {
+                window.PawpalChatbot.showToast(`Đang mở hồ sơ 360° của ${targetName}...`, 'info');
+            }
+
+            const sidebarBtn = document.querySelector('.sidebar-menu-btn[data-title="Khách hàng"]');
+            if (sidebarBtn) {
+                sidebarBtn.click();
+            } else {
+                window.location.hash = '#tab-profile';
+            }
+
+            setTimeout(() => {
+                if (window.PawpalCustomers?.subtabs?.profile?.renderDrawerCustomerProfile) {
+                    const finalId = sessionStorage.getItem('pawpal_admin_customer_id') || targetId;
+                    if (finalId) window.PawpalCustomers.subtabs.profile.renderDrawerCustomerProfile(finalId);
+                }
+                if (window.PawpalCustomers?.switchSubtab) {
+                    window.PawpalCustomers.switchSubtab('tab-profile');
+                }
+            }, 200);
+        }
+
+        function jumpToTicketDetail(ticketId) {
+            if (ticketId) {
+                const cleanId = String(ticketId).replace(/^#/, '').trim();
+                sessionStorage.setItem('pawpal_admin_complaint_selected_id', cleanId);
+            }
+            sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-detail');
+            sessionStorage.setItem('pawpal_admin_active_module', 'Khiếu nại');
+
+            if (window.PawpalChatbot?.showToast) {
+                window.PawpalChatbot.showToast(`Đang mở chi tiết Ticket khiếu nại ${ticketId || ''}...`, 'info');
+            }
+
+            const sidebarBtn = document.querySelector('.sidebar-menu-btn[data-title="Khiếu nại"]');
+            if (sidebarBtn) {
+                sidebarBtn.click();
+            } else {
+                window.location.hash = '#tab-complaint-detail';
+            }
+
+            setTimeout(() => {
+                if (ticketId && window.PawpalComplaints?.openTicketDetail) {
+                    window.PawpalComplaints.openTicketDetail(ticketId);
+                }
+                if (window.PawpalComplaints?.switchSubtab) {
+                    window.PawpalComplaints.switchSubtab('tab-complaint-detail');
+                }
+            }, 200);
+        }
+
+        function jumpToOrderDetail(orderId) {
+            if (orderId) {
+                const cleanId = String(orderId).replace(/^#/, '').trim();
+                sessionStorage.setItem('pawpal_admin_order_selected_id', cleanId);
+                sessionStorage.setItem('pawpal_admin_order_id', cleanId);
+            }
+            sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-detail');
+            sessionStorage.setItem('pawpal_admin_active_module', 'Bán hàng');
+
+            if (window.PawpalChatbot?.showToast) {
+                window.PawpalChatbot.showToast(`Đang mở chi tiết đơn hàng ${orderId || ''}...`, 'info');
+            }
+
+            const sidebarBtn = document.querySelector('.sidebar-menu-btn[data-title="Bán hàng"]');
+            if (sidebarBtn) {
+                sidebarBtn.click();
+            } else {
+                window.location.hash = '#tab-order-detail';
+            }
+
+            setTimeout(() => {
+                if (window.PawpalOrders?.switchSubtab) {
+                    window.PawpalOrders.switchSubtab('tab-order-detail');
+                }
+            }, 200);
+        }
+
+        function jumpToPetProfile(petId) {
+            if (petId) {
+                const cleanId = String(petId).replace(/^#/, '').trim();
+                sessionStorage.setItem('pawpal_admin_pet_id', cleanId);
+            }
+            sessionStorage.setItem('pawpal_admin_pet_subtab', 'tab-pet-profile');
+            sessionStorage.setItem('pawpal_admin_active_module', 'Thú cưng');
+
+            if (window.PawpalChatbot?.showToast) {
+                window.PawpalChatbot.showToast(`Đang mở hồ sơ thú cưng ${petId || ''}...`, 'info');
+            }
+
+            const sidebarBtn = document.querySelector('.sidebar-menu-btn[data-title="Thú cưng"]');
+            if (sidebarBtn) {
+                sidebarBtn.click();
+            } else {
+                window.location.hash = '#tab-pet-profile';
+            }
+
+            setTimeout(() => {
+                if (petId && window.openPetProfile) {
+                    window.openPetProfile(petId);
+                }
+                if (window.PawpalPets?.switchSubtab) {
+                    window.PawpalPets.switchSubtab('tab-pet-profile');
+                }
+            }, 200);
+        }
+
+        function jumpToBookingDetail(bookingId, targetSubtab = 'tab-service-detail') {
+            if (bookingId) {
+                const cleanId = String(bookingId).replace(/^#/, '').trim();
+                sessionStorage.setItem('pawpal_admin_service_selected_id', cleanId);
+            }
+            sessionStorage.setItem('pawpal_admin_services_active_subtab', targetSubtab);
+            sessionStorage.setItem('pawpal_admin_active_module', 'Dịch vụ');
+
+            if (window.PawpalChatbot?.showToast) {
+                window.PawpalChatbot.showToast(`Đang mở thông tin ca dịch vụ / lịch hẹn...`, 'info');
+            }
+
+            const sidebarBtn = document.querySelector('.sidebar-menu-btn[data-title="Dịch vụ"]');
+            if (sidebarBtn) {
+                sidebarBtn.click();
+            } else {
+                window.location.hash = '#' + targetSubtab;
+            }
+
+            setTimeout(() => {
+                if (window.PawpalServices?.switchSubtab) {
+                    window.PawpalServices.switchSubtab(targetSubtab);
+                }
+            }, 200);
+        }
+
+        // Ủy quyền sự kiện click trên khung tin nhắn Copilot để điều hướng sâu vào đúng hồ sơ chi tiết
+        messagesArea.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (!link) return;
+            const href = link.getAttribute('href');
+            if (!href || (!href.startsWith('#tab-') && !href.includes('#tab-'))) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const [hashBase, queryString] = href.split('?');
+            const rawCleanHash = (hashBase || '').replace(/^.*#/, '');
+            const aliases = {
+                'tab-customer-profile': 'tab-profile',
+                'tab-customer': 'tab-list',
+                'tab-customers': 'tab-list',
+                'tab-complaints': 'tab-complaint-services',
+                'tab-calendar': 'tab-service-bookings',
+                'tab-inventory': 'tab-order-products',
+                'tab-orders': 'tab-order-list',
+                'tab-pets': 'tab-pet-list',
+                'tab-services': 'tab-service-bookings'
+            };
+            const cleanHash = aliases[rawCleanHash] || rawCleanHash;
+            const params = new URLSearchParams(queryString || '');
+
+            const msgEl = link.closest('.copilot-message') || link.closest('.copilot-bubble-ai') || link.parentElement;
+            let prevUserText = '';
+            if (msgEl) {
+                const prevMsg = msgEl.previousElementSibling;
+                if (prevMsg) prevUserText = prevMsg.innerText || '';
+            }
+            const context = extractEntityContextFromMessage(msgEl, prevUserText);
+
+            if (cleanHash === 'tab-profile') {
+                const custId = params.get('id') || params.get('customerId') || link.getAttribute('data-customer-id') || context.customerId;
+                const custName = params.get('name') || params.get('customerName') || link.getAttribute('data-customer-name') || context.customerName;
+                const custPhone = params.get('phone') || link.getAttribute('data-customer-phone') || context.customerPhone;
+                jumpToCustomerProfile({ id: custId, name: custName, phone: custPhone });
+            } else if (cleanHash === 'tab-complaint-detail') {
+                const ticketId = params.get('id') || params.get('ticketId') || link.getAttribute('data-ticket-id') || context.ticketId;
+                jumpToTicketDetail(ticketId);
+            } else if (cleanHash === 'tab-order-detail') {
+                const orderId = params.get('id') || params.get('orderId') || link.getAttribute('data-order-id') || context.orderId;
+                jumpToOrderDetail(orderId);
+            } else if (cleanHash === 'tab-pet-profile') {
+                const petId = params.get('id') || params.get('petId') || link.getAttribute('data-pet-id') || context.petId;
+                jumpToPetProfile(petId);
+            } else if (cleanHash === 'tab-service-detail' || cleanHash === 'tab-service-bookings') {
+                const bookingId = params.get('id') || params.get('bookingId') || link.getAttribute('data-booking-id') || context.bookingId;
+                jumpToBookingDetail(bookingId, cleanHash);
+            } else {
+                window.location.hash = '#' + cleanHash;
             }
         });
 

@@ -655,18 +655,101 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.lucide) lucide.createIcons();
     }
 
+    function normalizeSubtabId(rawTabId) {
+        if (!rawTabId) return rawTabId;
+        const clean = String(rawTabId).split('?')[0].replace('#', '');
+        const aliases = {
+            'tab-customer-profile': 'tab-profile',
+            'tab-customer': 'tab-list',
+            'tab-customers': 'tab-list',
+            'tab-complaints': 'tab-complaint-services',
+            'tab-calendar': 'tab-service-bookings',
+            'tab-inventory': 'tab-order-products',
+            'tab-orders': 'tab-order-list',
+            'tab-pets': 'tab-pet-list',
+            'tab-services': 'tab-service-bookings'
+        };
+        return aliases[clean] || clean;
+    }
+
     function resolveModuleFromHash(hash) {
         if (!hash) return null;
-        if (hash.startsWith('#tab-service') || hash.startsWith('#tab-booking') || hash === '#services') return 'Dịch vụ';
-        if (hash.startsWith('#tab-order')) return 'Bán hàng';
-        if (hash.startsWith('#tab-staff')) return 'Nhân sự';
-        if (hash.startsWith('#tab-complaint')) return 'Khiếu nại';
-        if (hash.startsWith('#tab-chatbot') || hash.startsWith('#tab-ai-') || hash.startsWith('#tab-live-support')) return 'Chatbot';
-        if (hash.startsWith('#tab-setting') || hash.startsWith('#tab-banner') || hash.startsWith('#tab-blog') || hash.startsWith('#tab-system') || hash.startsWith('#tab-content') || hash.startsWith('#tab-audit') || hash === '#settings') return 'Cấu hình';
-        if (hash.startsWith('#tab-pet')) return 'Thú cưng';
-        if (hash.startsWith('#tab-list') || hash.startsWith('#tab-profile') || hash.startsWith('#tab-pawpoint') || hash.startsWith('#tab-customer')) return 'Khách hàng';
-        if (hash.startsWith('#tab-dashboard')) return 'Dashboard';
+        const base = String(hash).split('?')[0];
+        if (base.startsWith('#tab-service') || base.startsWith('#tab-booking') || base.startsWith('#tab-calendar') || base === '#services') return 'Dịch vụ';
+        if (base.startsWith('#tab-order') || base.startsWith('#tab-inventory')) return 'Bán hàng';
+        if (base.startsWith('#tab-staff')) return 'Nhân sự';
+        if (base.startsWith('#tab-complaint')) return 'Khiếu nại';
+        if (base.startsWith('#tab-chatbot') || base.startsWith('#tab-ai-') || base.startsWith('#tab-live-support')) return 'Chatbot';
+        if (base.startsWith('#tab-setting') || base.startsWith('#tab-banner') || base.startsWith('#tab-blog') || base.startsWith('#tab-system') || base.startsWith('#tab-content') || base.startsWith('#tab-audit') || base === '#settings') return 'Cấu hình';
+        if (base.startsWith('#tab-pet')) return 'Thú cưng';
+        if (base.startsWith('#tab-list') || base.startsWith('#tab-profile') || base.startsWith('#tab-pawpoint') || base.startsWith('#tab-customer')) return 'Khách hàng';
+        if (base.startsWith('#tab-dashboard')) return 'Dashboard';
         return null;
+    }
+
+    function handleEntityDeepLink(targetMod, cleanHash, params) {
+        if (!targetMod || !params) return;
+        try {
+            if (targetMod === 'Khách hàng' && cleanHash === 'tab-profile') {
+                const custId = params.get('id') || params.get('customerId') || params.get('customer_id');
+                const custName = params.get('name') || params.get('customerName') || params.get('customer_name');
+                if (custId) sessionStorage.setItem('pawpal_admin_customer_id', custId);
+                if (custName) sessionStorage.setItem('pawpal_admin_customer_name', custName);
+                if (window.PawpalCustomers) {
+                    const resolvedCust = (custId || custName) && window.PawpalCustomers.getCustomer 
+                        ? window.PawpalCustomers.getCustomer(custId || custName) 
+                        : null;
+                    const finalId = resolvedCust ? resolvedCust.id : (custId || custName);
+                    if (finalId && window.PawpalCustomers.subtabs?.profile?.renderDrawerCustomerProfile) {
+                        window.PawpalCustomers.subtabs.profile.renderDrawerCustomerProfile(finalId);
+                    }
+                    if (window.PawpalCustomers.switchSubtab) {
+                        window.PawpalCustomers.switchSubtab('tab-profile');
+                    }
+                }
+            } else if (targetMod === 'Khiếu nại' && cleanHash === 'tab-complaint-detail') {
+                const ticketId = params.get('id') || params.get('ticketId') || params.get('ticket_id');
+                if (ticketId) {
+                    sessionStorage.setItem('pawpal_admin_complaint_selected_id', ticketId);
+                    if (window.PawpalComplaints?.openTicketDetail) {
+                        window.PawpalComplaints.openTicketDetail(ticketId);
+                    }
+                    if (window.PawpalComplaints?.switchSubtab) {
+                        window.PawpalComplaints.switchSubtab('tab-complaint-detail');
+                    }
+                }
+            } else if (targetMod === 'Bán hàng' && cleanHash === 'tab-order-detail') {
+                const orderId = params.get('id') || params.get('orderId') || params.get('order_id') || params.get('code');
+                if (orderId) {
+                    sessionStorage.setItem('pawpal_admin_order_selected_id', orderId);
+                    sessionStorage.setItem('pawpal_admin_order_id', orderId);
+                    if (window.PawpalOrders?.switchSubtab) {
+                        window.PawpalOrders.switchSubtab('tab-order-detail');
+                    }
+                }
+            } else if (targetMod === 'Thú cưng' && cleanHash === 'tab-pet-profile') {
+                const petId = params.get('id') || params.get('petId') || params.get('pet_id');
+                if (petId) {
+                    sessionStorage.setItem('pawpal_admin_pet_id', petId);
+                    if (window.openPetProfile) {
+                        window.openPetProfile(petId);
+                    }
+                    if (window.PawpalPets?.switchSubtab) {
+                        window.PawpalPets.switchSubtab('tab-pet-profile');
+                    }
+                }
+            } else if (targetMod === 'Dịch vụ' && cleanHash === 'tab-service-detail') {
+                const bookingId = params.get('id') || params.get('bookingId') || params.get('booking_id');
+                if (bookingId) {
+                    sessionStorage.setItem('pawpal_admin_service_selected_id', bookingId);
+                    if (window.PawpalServices?.switchSubtab) {
+                        window.PawpalServices.switchSubtab('tab-service-detail');
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('[Admin DeepLink] Lỗi xử lý tham số điều hướng:', e);
+        }
     }
 
     function getTargetHashForModule(moduleName) {
@@ -765,8 +848,9 @@ document.addEventListener('DOMContentLoaded', () => {
     sessionStorage.setItem('pawpal_admin_active_module', initialModule);
 
     // Nếu URL có hash hợp lệ cho initialModule, lưu ngay vào storage của module đó
+    const [initialHashBase, initialQueryString] = currentHash.split('?');
     const initialConfig = MODULE_SUBTABS_MAP[initialModule];
-    const cleanInitialHash = currentHash.replace('#', '');
+    const cleanInitialHash = normalizeSubtabId(initialHashBase.replace('#', ''));
     if (initialConfig && initialConfig.subtabs.some(s => s.id === cleanInitialHash)) {
         if (initialConfig.storageKey) sessionStorage.setItem(initialConfig.storageKey, cleanInitialHash);
     } else if (!window.location.hash) {
@@ -778,7 +862,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    loadModule(initialModule);
+    if (initialQueryString) {
+        handleEntityDeepLink(initialModule, cleanInitialHash, new URLSearchParams(initialQueryString));
+    }
+
+    loadModule(initialModule).then(() => {
+        if (initialQueryString) {
+            setTimeout(() => handleEntityDeepLink(initialModule, cleanInitialHash, new URLSearchParams(initialQueryString)), 200);
+        }
+    });
     
     // Tải trước toàn bộ 9 template HTML và scripts của các phân hệ quan trọng trong nền
     // Giúp khi bấm sang phân hệ mới, HTML & scripts đã có sẵn trong memory/disk cache (0ms network)
@@ -795,10 +887,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Lắng nghe thay đổi URL Hash liên phân hệ để chuyển module mượt mà
     window.addEventListener('hashchange', () => {
-        const hash = window.location.hash || '';
-        const targetMod = resolveModuleFromHash(hash);
+        const fullHash = window.location.hash || '';
+        const [hashBase, queryString] = fullHash.split('?');
+        const targetMod = resolveModuleFromHash(hashBase);
         const currentMod = sessionStorage.getItem('pawpal_admin_active_module');
-        const cleanHash = hash.replace('#', '');
+        const rawCleanHash = (hashBase || '').replace('#', '');
+        const cleanHash = normalizeSubtabId(rawCleanHash);
+        const searchParams = new URLSearchParams(queryString || '');
+
+        if (queryString) {
+            handleEntityDeepLink(targetMod, cleanHash, searchParams);
+        }
 
         if (targetMod && targetMod !== currentMod) {
             sidebarBtns.forEach(b => {
@@ -809,7 +908,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (cfg && cfg.subtabs.some(s => s.id === cleanHash)) {
                 if (cfg.storageKey) sessionStorage.setItem(cfg.storageKey, cleanHash);
             }
-            loadModule(targetMod);
+            loadModule(targetMod).then(() => {
+                if (queryString) {
+                    setTimeout(() => handleEntityDeepLink(targetMod, cleanHash, searchParams), 150);
+                }
+            });
         } else if (targetMod) {
             const cfg = MODULE_SUBTABS_MAP[targetMod];
             if (cfg && cfg.subtabs.some(s => s.id === cleanHash)) {
@@ -822,6 +925,9 @@ document.addEventListener('DOMContentLoaded', () => {
             window.dispatchEvent(new CustomEvent('admin:subtab-change', {
                 detail: { module: targetMod, tabId: cleanHash }
             }));
+            if (queryString) {
+                setTimeout(() => handleEntityDeepLink(targetMod, cleanHash, searchParams), 50);
+            }
         }
     });
 

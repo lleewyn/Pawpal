@@ -574,7 +574,16 @@
         if (!idOrKey) return null;
         const db = PawpalCustomers.state.customerDatabase || {};
         if (db[idOrKey]) return db[idOrKey];
-        return Object.values(db).find(c => c.dbId === idOrKey || c.id === idOrKey) || null;
+        const raw = String(idOrKey).trim();
+        const lower = raw.toLowerCase();
+        const digits = raw.replace(/\D/g, '');
+        return Object.values(db).find(c => {
+            if (c.dbId === idOrKey || c.id === idOrKey) return true;
+            if (digits.length >= 9 && c.phone && c.phone.replace(/\D/g, '') === digits) return true;
+            if (c.name && c.name.toLowerCase() === lower) return true;
+            if (c.name && lower.length >= 3 && (c.name.toLowerCase().includes(lower) || lower.includes(c.name.toLowerCase()))) return true;
+            return false;
+        }) || null;
     };
 
     PawpalCustomers.populateCustomerDatalists = function() {
@@ -717,9 +726,11 @@
         }
 
         const firstCustId = Object.keys(PawpalCustomers.state.customerDatabase)[0] || 'CUST-001';
-        const savedCustId = sessionStorage.getItem('pawpal_admin_customer_id') || firstCustId;
+        const savedCustId = sessionStorage.getItem('pawpal_admin_customer_id');
+        const resolvedCust = savedCustId ? PawpalCustomers.getCustomer(savedCustId) : null;
+        const activeCustId = resolvedCust ? resolvedCust.id : (savedCustId || firstCustId);
         if (PawpalCustomers.subtabs.profile) {
-            PawpalCustomers.subtabs.profile.renderDrawerCustomerProfile(savedCustId);
+            PawpalCustomers.subtabs.profile.renderDrawerCustomerProfile(activeCustId);
         }
 
         PawpalCustomers.switchSubtab(initialSubtab, false);
