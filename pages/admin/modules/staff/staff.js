@@ -237,7 +237,7 @@
             if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
             const { data, error } = await client
                 .from('staff')
-                .select('id, staff_code, full_name, role, specialization, phone_number, email, shift, status, employment_status, account_status, hire_date, dob, address, skill_score, service_locked, system_role, permissions, last_login_at')
+                .select('id, full_name, role, specialization, phone_number, email, shift, status, account_status, hire_date, dob, address, skill_score, service_locked, system_role, permissions, last_login_at')
                 .order('created_at', { ascending: true });
             if (error) throw error;
             return data || [];
@@ -263,9 +263,9 @@
             try {
                 const { data, error } = await client
                     .from('staff_schedule')
-                    .select('id, staff_id, schedule_date, work_date, date, start_time, shift, shift_type, schedule_status')
-                    .gte('schedule_date', fromDate)
-                    .lte('schedule_date', toDate);
+                    .select('id, staff_id, work_date, shift, start_time, end_time, work_location, schedule_status')
+                    .gte('work_date', fromDate)
+                    .lte('work_date', toDate);
                 if (error) throw error;
                 return data || [];
             } catch (err) {

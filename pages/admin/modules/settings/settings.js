@@ -601,7 +601,7 @@
             const client = getSupabaseClient();
             if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
             const [blogsRes, categoriesRes] = await Promise.all([
-                client.from('blog_post').select('id, title, category_id, view_count, status, updated_at, created_at, summary, rag_synced, rag_keywords, rag_summary').order('created_at', { ascending: false }),
+                client.from('blog_post').select('id, title, category_id, view_count, status, updated_at, created_at, summary').order('created_at', { ascending: false }),
                 client.from('blog_category').select('id, category_name, description').order('display_order')
             ]);
             if (blogsRes.error) throw blogsRes.error;
@@ -738,7 +738,7 @@
             if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
             const { data, error } = await client
                 .from('audit_log')
-                .select('id, staff_id, action, entity_name, description, status, error, sync_status, created_at, staff:staff_id(full_name)')
+                .select('id, staff_id, action, entity_name, description, created_at, staff:staff_id(full_name)')
                 .order('created_at', { ascending: false })
                 .limit(50);
             if (error) throw error;
