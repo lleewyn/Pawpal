@@ -4,6 +4,11 @@
 
     const PawpalComplaints = window.PawpalComplaints = window.PawpalComplaints || {};
     PawpalComplaints.subtabs = PawpalComplaints.subtabs || {};
+    PawpalComplaints.state = PawpalComplaints.state || {
+        serviceComplaints: [],
+        orderComplaints: [],
+        isLoaded: false
+    };
 
     function escapeHtml(str) {
         if (!str) return '';
@@ -20,6 +25,7 @@
     }
 
     function openTicketDetail(ticketId) {
+        if (!PawpalComplaints.state) PawpalComplaints.state = {};
         PawpalComplaints.state.currentTicketId = ticketId;
         sessionStorage.setItem('pawpal_admin_complaint_selected_id', ticketId);
         if (PawpalComplaints.switchSubtab) {
@@ -36,11 +42,11 @@
         const ticket = targetId ? allTickets.find(t => t.id === targetId || t.rawId === targetId) : null;
         const content = document.getElementById('complaintDetailData');
         const placeholder = document.getElementById('complaintDetailPlaceholder');
-        if (!PawpalComplaints.state.isLoaded || PawpalComplaints.state.loadError || !ticket) {
+        if (!PawpalComplaints.state?.isLoaded || PawpalComplaints.state?.loadError || !ticket) {
             if (content) content.style.display = 'none';
             if (placeholder) {
                 placeholder.style.display = '';
-                placeholder.textContent = PawpalComplaints.state.loadError || (!ticket && targetId ? `Không tìm thấy hồ sơ khiếu nại mã ${targetId}.` : 'Chưa có hồ sơ khiếu nại để hiển thị.');
+                placeholder.textContent = PawpalComplaints.state?.loadError || (!ticket && targetId ? `Không tìm thấy hồ sơ khiếu nại mã ${targetId}.` : 'Chưa có hồ sơ khiếu nại để hiển thị.');
             }
             PawpalComplaints.updateBreadcrumb?.(null);
             return;

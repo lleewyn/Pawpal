@@ -396,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261017_r11';
+    const MODULE_SCRIPT_VERSION = '20261017_r12';
 
     function resolveModulePath(path) {
         if (!path) return path;
@@ -526,10 +526,14 @@ document.addEventListener('DOMContentLoaded', () => {
             html: 'modules/complaints/complaints.html',
             scripts: ['modules/complaints/complaints.js', 'modules/complaints/subtabs/tab-complaint-services.js', 'modules/complaints/subtabs/tab-complaint-orders.js', 'modules/complaints/subtabs/tab-complaint-detail.js'],
             postLoad: async () => {
+                const getCount = () => ((window.PawpalComplaints?.state?.serviceComplaints?.length || 0) + (window.PawpalComplaints?.state?.orderComplaints?.length || 0));
                 if (window.PawpalComplaints?.init) {
                     await window.PawpalComplaints.init();
                 } else if (window.PawpalComplaints?.loadComplaintsModuleData) {
-                    await window.PawpalComplaints.loadComplaintsModuleData();
+                    await window.PawpalComplaints.loadComplaintsModuleData({ force: getCount() === 0 });
+                }
+                if (getCount() === 0 && window.PawpalComplaints?.loadComplaintsModuleData) {
+                    await window.PawpalComplaints.loadComplaintsModuleData({ force: true });
                 }
                 window.PawpalComplaints?.subtabs?.services?.renderServiceComplaintsTable?.();
                 window.PawpalComplaints?.subtabs?.orders?.renderOrderComplaintsTable?.();

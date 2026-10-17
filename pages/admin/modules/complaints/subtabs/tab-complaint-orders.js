@@ -4,6 +4,11 @@
 
     const PawpalComplaints = window.PawpalComplaints = window.PawpalComplaints || {};
     PawpalComplaints.subtabs = PawpalComplaints.subtabs || {};
+    PawpalComplaints.state = PawpalComplaints.state || {
+        serviceComplaints: [],
+        orderComplaints: [],
+        isLoaded: false
+    };
 
     let orderCurrentPage = 1;
     let currentOrderQuickFilter = 'ALL';
@@ -81,8 +86,8 @@
     function renderOrderComplaintsTable() {
         const tbody = document.getElementById('orderComplaintsTableBody');
         if (!tbody) return;
-        if (PawpalComplaints.state.loadError) { delete tbody.dataset.loadingSkeleton; tbody.innerHTML='<tr><td colspan="12" style="padding:28px;text-align:center;">Không thể tải khiếu nại. Vui lòng tải lại trang.</td></tr>';return; }
-        if (!PawpalComplaints.state.isLoaded) return;
+        if (PawpalComplaints.state?.loadError) { delete tbody.dataset.loadingSkeleton; tbody.innerHTML='<tr><td colspan="12" style="padding:28px;text-align:center;">Không thể tải khiếu nại. Vui lòng tải lại trang.</td></tr>';return; }
+        if (!PawpalComplaints.state?.isLoaded) return;
         delete tbody.dataset.loadingSkeleton;
 
         tbody.innerHTML = '';

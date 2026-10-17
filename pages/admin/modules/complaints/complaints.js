@@ -8,7 +8,7 @@
     PawpalComplaints.subtabs = PawpalComplaints.subtabs || {};
 
     // State dùng chung cho toàn bộ phân hệ Khiếu nại
-    PawpalComplaints.state = {
+    PawpalComplaints.state = Object.assign({
         serviceComplaints: [],
         orderComplaints: [],
         cachedAppointments: [],
@@ -19,8 +19,9 @@
         cachedStaff: [],
         currentActiveTicket: null,
         currentTicketType: 'service', // 'service' hoặc 'order'
-        currentTicketId: sessionStorage.getItem('pawpal_admin_complaint_selected_id') || 'TKT-001'
-    };
+        currentTicketId: sessionStorage.getItem('pawpal_admin_complaint_selected_id') || 'TKT-001',
+        isLoaded: false
+    }, PawpalComplaints.state || {});
 
     // Helper định dạng ngày giờ chuẩn hóa toàn hệ thống (YYYY-MM-DD HH:mm, YYYY-MM-DD, HH:mm)
     const formatDateTime = PawpalComplaints.formatDateTime = window.formatDateTime || function(d) {
@@ -251,6 +252,28 @@
     }
     PawpalComplaints.getDbClient = getComplaintsDbClient;
 
+    // Supabase client dùng anon role không mang session nhân sự để đọc support_ticket
+    // (Bảo đảm không bị chặn bởi RLS user_id = auth.uid() của bảng support_ticket trên CSDL)
+    function getComplaintsAnonClient() {
+        if (!window._pawpalComplaintsAnonClient) {
+            const config = window.SupabaseClientConfig || (window.getSupabaseClient && window.getSupabaseClient()?.supabaseUrl ? {
+                url: window.getSupabaseClient().supabaseUrl,
+                anonKey: window.getSupabaseClient().supabaseKey
+            } : (window.SupabaseClient ? {
+                url: window.SupabaseClient.supabaseUrl,
+                anonKey: window.SupabaseClient.supabaseKey
+            } : null));
+
+            if (config?.url && config?.anonKey && window.supabase && typeof window.supabase.createClient === 'function') {
+                window._pawpalComplaintsAnonClient = window.supabase.createClient(config.url, config.anonKey, {
+                    auth: { persistSession: false, autoRefreshToken: false }
+                });
+            }
+        }
+        return window._pawpalComplaintsAnonClient || getComplaintsDbClient();
+    }
+    PawpalComplaints.getAnonDbClient = getComplaintsAnonClient;
+
     // ====================================================================
     // DATA STORE 100% TRỰC TIẾP TỪ SUPABASE LIVE DATABASE (ZERO JSON MOCK)
     // ====================================================================
@@ -279,6 +302,7 @@
             }
 
             const fetchComplaintsData = async () => {
+                const ticketClient = getComplaintsAnonClient() || client;
                 const [
                     ticketsRes,
                     customersRes,
@@ -289,7 +313,7 @@
                     staffRes,
                     productsRes
                 ] = await Promise.all([
-                    Promise.resolve(client.from('support_ticket').select('*').order('priority', { ascending: true }).order('created_at', { ascending: false })).catch(err => ({ data: [], error: err })),
+                    Promise.resolve(ticketClient.from('support_ticket').select('*').order('priority', { ascending: true }).order('created_at', { ascending: false })).catch(err => ({ data: [], error: err })),
                     Promise.resolve(client.from('customer').select('id, email, phone_main, account_status')).catch(err => ({ data: [], error: err })),
                     Promise.resolve(client.from('customer_profile').select('customer_id, full_name, gender')).catch(err => ({ data: [], error: err })),
                     Promise.resolve(client.from('pet_profile').select('id, customer_id, pet_code, pet_name, species, breed, avatar_url')).catch(err => ({ data: [], error: err })),
@@ -687,7 +711,7 @@
     // Helper lazy-fetch tin nhắn khi mở 1 ticket cụ thể (PERF-03.K02)
     PawpalComplaints.fetchTicketMessages = async function(ticketId, { force = false } = {}) {
         if (!ticketId) return [];
-        const client = getComplaintsDbClient();
+        const client = getComplaintsAnonClient() || getComplaintsDbClient();
         if (!client) return [];
 
         const fetchMessages = async () => {
@@ -985,7 +1009,7 @@
     // Supabase Realtime Subscription
     let complaintsRealtimeSubscription = null;
     function setupComplaintsRealtimeChannel() {
-        const client = getComplaintsDbClient();
+        const client = getComplaintsAnonClient() || getComplaintsDbClient();
         if (!client || typeof client.channel !== 'function') return;
 
         try {
@@ -1065,7 +1089,8 @@
     let _isComplaintsInit = false;
     // Khởi tạo phân hệ
     async function initComplaintsModule() {
-        if (_isComplaintsInit) {
+        const hasData = ((PawpalComplaints.state?.serviceComplaints?.length || 0) + (PawpalComplaints.state?.orderComplaints?.length || 0)) > 0;
+        if (_isComplaintsInit && hasData) {
             updateComplaintsKpis();
             renderComplaintsAlertBar();
             PawpalComplaints.subtabs.services?.renderServiceComplaintsTable?.();
@@ -1082,7 +1107,7 @@
             moduleTitleEl.style.display = 'none';
         }
 
-        await loadComplaintsModuleData();
+        await loadComplaintsModuleData({ force: !hasData });
         setupComplaintsRealtimeChannel();
         updateComplaintsKpis();
         renderComplaintsAlertBar();
