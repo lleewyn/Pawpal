@@ -168,8 +168,11 @@ export async function initPetDiary() {
         window.addEventListener('hashchange', async () => {
             if (window.location.hash.includes('diary')) {
                 const targetPetId = getRouteParam('id') || getRouteParam('pet') || getRouteParam('petId');
-                if (targetPetId && targetPetId !== currentPetId) {
-                    await selectAndLoadPet(targetPetId);
+                const targetSessionId = getRouteParam('sessionId') || getRouteParam('session');
+                const petChanged = targetPetId && String(targetPetId) !== String(currentPetId);
+                const sessionChanged = targetSessionId && String(targetSessionId) !== String(currentSessionId);
+                if (targetPetId && (petChanged || sessionChanged)) {
+                    await selectAndLoadPet(targetPetId, targetSessionId, { allowDefaultFallback: false });
                 } else if (!targetPetId) {
                     const defaultId = await getDefaultPetIdToLoad();
                     if (defaultId && defaultId !== currentPetId) {
@@ -189,10 +192,7 @@ export async function initPetDiary() {
     }
 
         if (targetPetId) {
-            await selectAndLoadPet(targetPetId);
-            if (sessionIdFromUrl) {
-                await openSessionFromUrlOrFallback(sessionIdFromUrl);
-            }
+            await selectAndLoadPet(targetPetId, sessionIdFromUrl, { allowDefaultFallback: !petIdFromUrl });
         } else {
             showEmptyPetState();
         }
@@ -325,13 +325,47 @@ function showEmptyPetState() {
     const emptyState = document.getElementById('emptyState');
     const petSelector = document.getElementById('petSelector');
     const skeletonEl = document.getElementById('diaryLoadingSkeleton');
+    const titleEl = emptyState?.querySelector('.empty-title');
+    const descEl = emptyState?.querySelector('.empty-desc');
+    const actionEl = emptyState?.querySelector('.btn-add-pet-cta');
 
     if (skeletonEl) skeletonEl.classList.add('d-none');
     if (dashboardState) dashboardState.classList.remove('d-none');
     if (diaryContent) diaryContent.classList.add('d-none');
     if (emptyState) emptyState.classList.remove('d-none');
     if (petSelector) petSelector.value = '';
+    if (titleEl) titleEl.textContent = 'Chưa có hồ sơ bé cưng';
+    if (descEl) descEl.textContent = 'Bạn chưa đăng ký bé cưng nào trong hệ thống. Hãy thêm bé cưng để theo dõi nhật ký chăm sóc thời gian thực!';
+    if (actionEl) {
+        actionEl.href = '#pets';
+        actionEl.textContent = 'Thêm bé cưng ngay';
+    }
 
+    updateDiaryBreadcrumb('');
+}
+
+function showPetNotFoundState(petId) {
+    const dashboardState = document.getElementById('dashboardState');
+    const diaryContent = document.getElementById('diaryContent');
+    const emptyState = document.getElementById('emptyState');
+    const skeletonEl = document.getElementById('diaryLoadingSkeleton');
+    const titleEl = emptyState?.querySelector('.empty-title');
+    const descEl = emptyState?.querySelector('.empty-desc');
+    const actionEl = emptyState?.querySelector('.btn-add-pet-cta');
+
+    currentPetId = null;
+    currentPetObject = null;
+
+    if (skeletonEl) skeletonEl.classList.add('d-none');
+    if (diaryContent) diaryContent.classList.add('d-none');
+    if (dashboardState) dashboardState.classList.remove('d-none');
+    if (emptyState) emptyState.classList.remove('d-none');
+    if (titleEl) titleEl.textContent = 'Không tìm thấy nhật ký bé cưng';
+    if (descEl) descEl.textContent = `Mã ${petId} không tồn tại hoặc không thuộc tài khoản đang đăng nhập.`;
+    if (actionEl) {
+        actionEl.href = '#diary';
+        actionEl.textContent = 'Xem nhật ký của các bé';
+    }
     updateDiaryBreadcrumb('');
 }
 
@@ -346,7 +380,7 @@ async function showDashboardState() {
 
 window.pawpalShowDiaryDashboard = showDashboardState;
 
-async function selectAndLoadPet(petId, targetSessionId = null) {
+async function selectAndLoadPet(petId, targetSessionId = null, { allowDefaultFallback = true } = {}) {
     const emptyState = document.getElementById('emptyState');
     const diaryContent = document.getElementById('diaryContent');
     const dashboardState = document.getElementById('dashboardState');
@@ -357,19 +391,23 @@ async function selectAndLoadPet(petId, targetSessionId = null) {
         return;
     }
 
+    const requestedPetId = String(petId).trim();
     const pets = await getPets();
     const pet = pets.find(p => 
-        String(p.id).toLowerCase() === String(petId).toLowerCase() ||
-        String(p.name).toLowerCase() === String(petId).toLowerCase()
+        String(p.id).toLowerCase() === requestedPetId.toLowerCase() ||
+        String(p.code || '').toLowerCase() === requestedPetId.toLowerCase() ||
+        String(p.name).toLowerCase() === requestedPetId.toLowerCase()
     );
 
     if (!pet) {
-        const fallbackId = await getDefaultPetIdToLoad();
-        if (fallbackId && String(fallbackId) !== String(petId)) {
-            await selectAndLoadPet(fallbackId, targetSessionId);
-            return;
+        if (allowDefaultFallback) {
+            const fallbackId = await getDefaultPetIdToLoad();
+            if (fallbackId && String(fallbackId) !== requestedPetId) {
+                await selectAndLoadPet(fallbackId, targetSessionId);
+                return;
+            }
         }
-        showEmptyPetState();
+        showPetNotFoundState(requestedPetId);
         return;
     }
 
@@ -405,7 +443,8 @@ async function selectAndLoadPet(petId, targetSessionId = null) {
     // Cập nhật Breadcrumb: Trang chủ / Nhật ký chăm sóc / [Tên bé]
     updateDiaryBreadcrumb(currentPetObject.name);
 
-    const targetHash = `#diary?id=${currentPetId}`;
+    const sessionQuery = targetSessionId ? `&sessionId=${encodeURIComponent(targetSessionId)}` : '';
+    const targetHash = `#diary?id=${encodeURIComponent(currentPetId)}${sessionQuery}`;
     if (window.location.hash !== targetHash) {
         history.replaceState(null, '', targetHash);
     }
@@ -462,7 +501,7 @@ async function loadPetDiary(petId, targetSessionId = null) {
     // Chọn phiên dịch vụ kích hoạt
     let activeSession = null;
     if (targetSessionId) {
-        activeSession = allSessions.find(s => String(s.id) === String(targetSessionId));
+        activeSession = allSessions.find(s => String(s.id).toLowerCase() === String(targetSessionId).toLowerCase());
     }
     if (!activeSession) {
         activeSession = currentSession || (allSessions.length > 0 ? allSessions[0] : null);
@@ -1235,7 +1274,7 @@ function getStageMetadata(status, desc) {
     }
     if (text.includes('cắt') || text.includes('tỉa') || text.includes('chải') || text.includes('tạo kiểu')) {
         return {
-            badgeText: 'Cắt tỉa và Tạo phom',
+            badgeText: 'Cắt tỉa và Tạo form',
             badgeBg: '#FCE7F3',
             badgeColor: '#BE185D',
             mood: 'Tạo kiểu xinh xắn, ngoan ngoãn đứng cho chuyên viên cắt tỉa',
@@ -1673,22 +1712,10 @@ function switchSession(sessionId) {
     currentSessionId = session.id;
     renderServiceStepper(session, currentPetObject);
     renderTimeline(session.timeline, session);
-}
 
-async function openSessionFromUrlOrFallback(sessionId) {
-    const historyItems = document.querySelectorAll('.history-item');
-    const target = sessionId
-        ? Array.from(historyItems).find((item) => item.dataset.sessionId === sessionId)
-        : null;
-
-    if (target) {
-        target.click();
-        return;
-    }
-
-    const firstHistory = historyItems[0];
-    if (firstHistory) {
-        firstHistory.click();
+    const targetHash = `#diary?id=${encodeURIComponent(currentPetId)}&sessionId=${encodeURIComponent(session.id)}`;
+    if (window.location.hash !== targetHash) {
+        history.replaceState(null, '', targetHash);
     }
 }
 
