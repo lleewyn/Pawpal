@@ -511,6 +511,7 @@
                             PawpalPets.showToast('Không thể lưu trữ hồ sơ: ' + (aErr.message || 'Lỗi CSDL.'), 'danger');
                             return;
                         }
+                        window.PawpalDataStore?.emitMutation?.('pet_profile', 'UPDATE', { id: pet.rawId });
                         await PawpalPets.loadPetsModuleData({ force: true });
                         renderPetsTable();
                         updatePetKPIs();
@@ -529,6 +530,7 @@
                     PawpalPets.showToast('Không thể khôi phục hồ sơ: ' + (rErr.message || 'Lỗi CSDL.'), 'danger');
                     return;
                 }
+                window.PawpalDataStore?.emitMutation?.('pet_profile', 'UPDATE', { id: pet.rawId });
                 await PawpalPets.loadPetsModuleData({ force: true });
                 renderPetsTable();
                 updatePetKPIs();
@@ -567,11 +569,15 @@
         const btnClearPetSearch = document.getElementById('btnClearPetSearch');
         const btnPetClearFilters = document.getElementById('btnPetClearFilters');
 
+        let petSearchTimer = null;
         if (petSearchInput) {
             petSearchInput.addEventListener('input', () => {
                 if (btnClearPetSearch) btnClearPetSearch.style.display = petSearchInput.value ? 'block' : 'none';
-                petCurrentPage = 1;
-                renderPetsTable();
+                clearTimeout(petSearchTimer);
+                petSearchTimer = setTimeout(() => {
+                    petCurrentPage = 1;
+                    renderPetsTable();
+                }, 300);
             });
         }
 
@@ -1279,6 +1285,7 @@
                             PawpalPets.showToast('Đã tạo hồ sơ nhưng chưa ghi được lịch sử cân nặng: ' + initialWeightError.message, 'danger');
                         }
 
+                        window.PawpalDataStore?.emitMutation?.('pet_profile', 'INSERT', createdPet);
                         await PawpalPets.loadPetsModuleData({ force: true });
                         renderPetsTable();
                         updatePetKPIs();
@@ -1408,6 +1415,8 @@
                     return;
                 }
 
+                window.PawpalDataStore?.emitMutation?.('pet_profile', 'UPDATE', { id: pet.rawId });
+                window.PawpalDataStore?.emitMutation?.('pet_weight_history', 'INSERT', { pet_id: pet.rawId });
                 await PawpalPets.loadPetsModuleData({ force: true });
                 renderPetsTable();
                 updatePetKPIs();

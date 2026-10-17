@@ -21,7 +21,23 @@
             }
             return;
         }
+
         delete tbody.dataset.loadingSkeleton;
+
+        // Lazy fetch lịch sử Pawpoint nếu chưa nạp (PERF-03.C04)
+        if ((!PawpalCustomers.state.pawpointHistory || PawpalCustomers.state.pawpointHistory.length === 0) && typeof PawpalCustomers.fetchPawpointLedger === 'function' && !PawpalCustomers.state._pawpointsFetching) {
+            PawpalCustomers.state._pawpointsFetching = true;
+            if (!tbody.querySelector('.skeleton-row')) {
+                window.PawpalAdmin?.renderTableSkeleton?.(tbody, { columns: 5 });
+            }
+            PawpalCustomers.fetchPawpointLedger().then(() => {
+                PawpalCustomers.state._pawpointsFetching = false;
+                renderPawpointHistory();
+            }).catch(() => {
+                PawpalCustomers.state._pawpointsFetching = false;
+            });
+            return;
+        }
 
         const query = (document.getElementById('pawpointSearchInput')?.value || '').trim();
         const filterType = document.getElementById('pawpointFilterType')?.value || 'ALL';
@@ -382,6 +398,11 @@
                 await client.from('customer_membership').update({ total_paw_points: liveBalance }).eq('customer_id', custDbId);
                 throw transactionError;
             }
+
+            window.PawpalDataStore?.emitMutation?.('paw_point_transaction', 'INSERT', { customer_id: custDbId });
+            window.PawpalDataStore?.emitMutation?.('customer_membership', 'UPDATE', { customer_id: custDbId });
+            window.PawpalDataStore?.invalidate?.('customers:pawpoints*');
+            window.PawpalDataStore?.invalidate?.('customers:list');
 
             await PawpalCustomers.loadCustomersModuleData({ force: true });
             if (PawpalCustomers.subtabs.list) {

@@ -979,9 +979,13 @@
         const searchInput = document.getElementById('custSearchInput');
 
         if (searchInput) {
+            let searchDebounceTimer = null;
             searchInput.addEventListener('input', () => {
-                currentCustomerPage = 1;
-                renderCustomersTable();
+                if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(() => {
+                    currentCustomerPage = 1;
+                    renderCustomersTable();
+                }, 300);
             });
 
             searchInput.addEventListener('change', () => {

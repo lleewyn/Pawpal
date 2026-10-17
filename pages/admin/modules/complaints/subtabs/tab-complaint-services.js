@@ -309,10 +309,14 @@
         if (isServicesInitialized) return;
         isServicesInitialized = true;
         const searchInput = document.getElementById('serviceSearchInput');
+        let serviceSearchTimer = null;
         if (searchInput) {
             searchInput.addEventListener('input', () => {
-                serviceCurrentPage = 1;
-                renderServiceComplaintsTable();
+                clearTimeout(serviceSearchTimer);
+                serviceSearchTimer = setTimeout(() => {
+                    serviceCurrentPage = 1;
+                    renderServiceComplaintsTable();
+                }, 300);
             });
         }
 

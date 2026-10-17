@@ -664,10 +664,14 @@
 
         // Tìm kiếm và lọc trạng thái
         const searchInput = document.getElementById('catalogSearchInput');
+        let catalogSearchTimer = null;
         if (searchInput) {
             searchInput.addEventListener('input', () => {
-                catalogSearchTerm = searchInput.value.trim();
-                renderCatalogTable();
+                clearTimeout(catalogSearchTimer);
+                catalogSearchTimer = setTimeout(() => {
+                    catalogSearchTerm = searchInput.value.trim();
+                    renderCatalogTable();
+                }, 300);
             });
         }
 

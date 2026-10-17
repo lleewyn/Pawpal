@@ -105,6 +105,21 @@
         if (contentEl) contentEl.textContent = ticket.content || 'Không có mô tả chi tiết.';
         if (timeEl) timeEl.textContent = ticket.createdAt || '—';
 
+        // Lazy fetch tin nhắn chi tiết của ticket nếu chưa nạp (PERF-03.K02)
+        if (typeof PawpalComplaints.fetchTicketMessages === 'function' && !ticket._messagesLoaded) {
+            PawpalComplaints.fetchTicketMessages(ticket.rawId || ticket.id).then(msgs => {
+                ticket._messagesLoaded = true;
+                ticket.messages = msgs;
+                if (msgs.length > 0) {
+                    const userMsg = msgs.find(m => ['user','khach_hang'].includes(m.sender_type)) || msgs[0];
+                    if (userMsg?.content && contentEl) {
+                        ticket.content = userMsg.content;
+                        contentEl.textContent = userMsg.content;
+                    }
+                }
+            });
+        }
+
         const isService = (ticket.type === 'service' || !ticket.orderId);
 
         // Hiển thị thông tin đối tượng liên quan (Pet hoặc Sản phẩm)
@@ -921,6 +936,10 @@
                     PawpalComplaints.showToast(`Không thể gửi phản hồi: ${sendError.message || 'Lỗi CSDL'}`, 'error');
                     return;
                 }
+
+                window.PawpalDataStore?.emitMutation?.('support_ticket_message', 'INSERT', { ticket_id: targetDbId });
+                window.PawpalDataStore?.invalidate?.(`complaints:messages:${targetDbId}`);
+                if (currentTicket) currentTicket._messagesLoaded = false;
 
                 messageInput.value = '';
                 PawpalComplaints.showToast('Đã gửi phản hồi tới khách hàng!');

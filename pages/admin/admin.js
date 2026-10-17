@@ -114,6 +114,78 @@ document.addEventListener('DOMContentLoaded', () => {
     const subtabsContainer = document.getElementById('headerSubtabsGroup');
     const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
     const contentArea = document.querySelector('.admin-preview-content');
+    const headerSyncStatusEl = document.getElementById('headerSyncStatus');
+    const btnHeaderRefreshEl = document.getElementById('btnHeaderRefresh');
+
+    function updateHeaderSync(state = 'idle', customText = null) {
+        if (!headerSyncStatusEl) return;
+        headerSyncStatusEl.classList.remove('is-syncing', 'is-error');
+        if (state === 'syncing') {
+            headerSyncStatusEl.classList.add('is-syncing');
+            headerSyncStatusEl.textContent = customText || 'Đang đồng bộ...';
+        } else if (state === 'error') {
+            headerSyncStatusEl.classList.add('is-error');
+            headerSyncStatusEl.textContent = customText || 'Không thể đồng bộ';
+        } else {
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            headerSyncStatusEl.textContent = customText || `Đã đồng bộ lúc ${hh}:${mm}`;
+        }
+    }
+
+    window.addEventListener('pawpal:data-refreshed', () => {
+        updateHeaderSync('idle');
+    });
+
+    btnHeaderRefreshEl?.addEventListener('click', async () => {
+        const activeMod = sessionStorage.getItem('pawpal_admin_active_module') || 'Dashboard';
+        updateHeaderSync('syncing', 'Đang làm mới...');
+        btnHeaderRefreshEl.disabled = true;
+        btnHeaderRefreshEl.style.opacity = '0.6';
+
+        try {
+            if (activeMod === 'Dashboard' && window.PawpalDashboard?.loadDashboardData) {
+                window.PawpalDataStore?.invalidate('dashboard:*');
+                await window.PawpalDashboard.loadDashboardData({ force: true });
+                window.PawpalDashboard.init?.();
+            } else if (activeMod === 'Khách hàng' && window.PawpalCustomers?.loadCustomersModuleData) {
+                window.PawpalDataStore?.invalidate('customers:*');
+                await window.PawpalCustomers.loadCustomersModuleData({ force: true });
+                window.PawpalCustomers.subtabs?.list?.renderCustomersTable?.();
+            } else if (activeMod === 'Thú cưng' && window.PawpalPets?.loadPetsModuleData) {
+                window.PawpalDataStore?.invalidate('pets:*');
+                await window.PawpalPets.loadPetsModuleData({ force: true });
+                window.PawpalPets.subtabs?.list?.renderPetsTable?.();
+            } else if (activeMod === 'Dịch vụ' && window.PawpalServices?.loadServicesData) {
+                window.PawpalDataStore?.invalidate('services:*');
+                await window.PawpalServices.loadServicesData({ force: true });
+                window.PawpalServices.subtabs?.bookings?.renderBookingsTable?.();
+            } else if (activeMod === 'Bán hàng' && window.PawpalOrdersModule?.syncOrdersAndProductsFromSupabase) {
+                window.PawpalDataStore?.invalidate('orders:*');
+                await window.PawpalOrdersModule.syncOrdersAndProductsFromSupabase({ force: true });
+            } else if (activeMod === 'Nhân sự' && window.PawpalStaff?.loadStaffModuleData) {
+                window.PawpalDataStore?.invalidate('staff:*');
+                await window.PawpalStaff.loadStaffModuleData({ force: true });
+                window.PawpalStaff.subtabs?.list?.renderStaffTable?.();
+            } else if (activeMod === 'Khiếu nại' && window.PawpalComplaints?.loadComplaintsModuleData) {
+                window.PawpalDataStore?.invalidate('complaints:*');
+                await window.PawpalComplaints.loadComplaintsModuleData({ force: true });
+            } else if (activeMod === 'Cấu hình' && window.PawpalSettings?.loadSettingsModuleData) {
+                window.PawpalDataStore?.invalidate('settings:*');
+                await window.PawpalSettings.loadSettingsModuleData({ force: true });
+            } else if (activeMod === 'Chatbot' && window.PawpalChatbot?.loadInboxSummary) {
+                await window.PawpalChatbot.loadInboxSummary();
+            }
+            updateHeaderSync('idle');
+        } catch (err) {
+            console.warn('[Admin] Lỗi làm mới dữ liệu phân hệ:', err);
+            updateHeaderSync('error', 'Lỗi làm mới');
+        } finally {
+            btnHeaderRefreshEl.disabled = false;
+            btnHeaderRefreshEl.style.opacity = '1';
+        }
+    });
 
     // ====================================================================
     // MODULE HTML CACHE — Lưu HTML đã tải để không fetch lại khi quay về
@@ -324,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261017_r05';
+    const MODULE_SCRIPT_VERSION = '20261017_r08';
 
     function resolveModulePath(path) {
         if (!path) return path;
@@ -398,7 +470,8 @@ document.addEventListener('DOMContentLoaded', () => {
             scripts: ['modules/customers/customers.js', 'modules/customers/subtabs/tab-customer-list.js', 'modules/customers/subtabs/tab-customer-profile.js', 'modules/customers/subtabs/tab-customer-pawpoint.js'],
             postLoad: async () => {
                 if (window.PawpalCustomers?.loadCustomersModuleData) {
-                    await window.PawpalCustomers.loadCustomersModuleData();
+                    const hasData = Object.keys(window.PawpalCustomers.state?.customerDatabase || {}).length > 0;
+                    await window.PawpalCustomers.loadCustomersModuleData({ force: !hasData });
                 }
                 const customers = window.PawpalCustomers;
                 customers?.subtabs?.pawpoint?.renderPawpointHistory?.();
@@ -534,25 +607,37 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             _currentModule = moduleName;
             
-            // Đồng bộ subtab active theo hash
+            // Đồng bộ subtab active theo hash ngay lập tức
             if (moduleName !== 'Dashboard') syncActiveSubtabPane(cachedEl, moduleName);
             if (window.lucide) lucide.createIcons();
             
-            // Chạy postLoad để dữ liệu hiển thị đúng nhất
-            const modCfg = MODULE_CONFIG[moduleName];
-            if (modCfg && modCfg.postLoad) {
-                try { await modCfg.postLoad(); } catch (e) { console.warn(`[Admin] postLoad ${moduleName}:`, e); }
-            }
             if (moduleName === 'Cấu hình' && !window.PawpalSettings) {
-                const articleBody = activeEl.querySelector('#articlesTableBody');
+                const articleBody = cachedEl.querySelector('#articlesTableBody');
                 if (articleBody && articleBody.querySelector('.skeleton-text')) {
                     articleBody.removeAttribute('data-loading-skeleton');
                     articleBody.innerHTML = '<tr><td colspan="8" style="padding:28px;text-align:center;color:var(--text-muted);">Không thể khởi tạo cấu hình. Vui lòng tải lại trang.</td></tr>';
                 }
             }
 
-            // Dispatch event để module JS biết tab đã active trở lại
+            // Dispatch event để module JS biết tab đã active trở lại ngay lập tức
             window.dispatchEvent(new CustomEvent('admin:module-show', { detail: { module: moduleName } }));
+
+            // Tối ưu Giai đoạn 1 (PERF-01): Chạy postLoad trong nền (non-blocking) - KHÔNG AWAIT để chuyển tab tức thì 0ms!
+            const modCfg = MODULE_CONFIG[moduleName];
+            if (modCfg && modCfg.postLoad) {
+                Promise.resolve().then(async () => {
+                    if (thisLoadId !== _activeModuleLoadId) return;
+                    try {
+                        await modCfg.postLoad();
+                        if (thisLoadId === _activeModuleLoadId && moduleName !== 'Dashboard') {
+                            syncActiveSubtabPane(cachedEl, moduleName);
+                        }
+                    } catch (e) {
+                        console.warn(`[Admin] postLoad nền ${moduleName}:`, e);
+                    }
+                });
+            }
+
             return;
         }
 

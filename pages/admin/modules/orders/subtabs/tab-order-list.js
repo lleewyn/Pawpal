@@ -877,9 +877,13 @@
     function initListEvents() {
         if (isListEventsInitialized) return;
         isListEventsInitialized = true;
+        let orderSearchTimer = null;
         document.getElementById('orderSearchInput')?.addEventListener('input', () => {
-            ordersCurrentPage = 1;
-            renderOrdersTable();
+            clearTimeout(orderSearchTimer);
+            orderSearchTimer = setTimeout(() => {
+                ordersCurrentPage = 1;
+                renderOrdersTable();
+            }, 300);
         });
         document.getElementById('orderFilterStatus')?.addEventListener('change', (e) => {
             currentFilterStatus = e.target.value;

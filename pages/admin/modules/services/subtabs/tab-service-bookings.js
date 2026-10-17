@@ -552,13 +552,16 @@
         const scrollBox = document.querySelector('.table-responsive-wrapper');
         if (scrollBox) scrollBox.addEventListener('scroll', closeBookingGlobalDropdown);
 
-        // Bắt sự kiện Toolbar lọc
         const searchInput = document.getElementById('serviceSearchInput');
+        let serviceSearchTimer = null;
         if (searchInput) {
             searchInput.addEventListener('input', () => {
-                currentSearchTerm = searchInput.value.trim();
-                currentBookingPage = 1;
-                renderBookingsTable();
+                clearTimeout(serviceSearchTimer);
+                serviceSearchTimer = setTimeout(() => {
+                    currentSearchTerm = searchInput.value.trim();
+                    currentBookingPage = 1;
+                    renderBookingsTable();
+                }, 300);
             });
         }
 

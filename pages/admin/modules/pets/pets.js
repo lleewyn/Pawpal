@@ -223,41 +223,38 @@
                 const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                 if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
 
-                const loadCareLogs = async () => {
-                    const logs = [];
-                    for (let offset = 0; ; offset += 1000) {
-                        const result = await client.from('care_log').select('id, appointment_id, pet_id, description, health_status, recorded_at, created_at').order('id').range(offset, offset + 999);
-                        if (result.error) return result;
-                        logs.push(...(result.data || []));
-                        if ((result.data || []).length < 1000) return { data: logs, error: null };
+                const fetchPetsList = async () => {
+                    const [custAccRes, custProfRes, petsRes] = await Promise.all([
+                        client.from('customer').select('id, email, phone_main, account_status'),
+                        client.from('customer_profile').select('id, customer_id, full_name, gender'),
+                        client.from('pet_profile').select('id, customer_id, pet_code, pet_name, avatar_url, species, breed, gender, date_of_birth, color, routine, weight, vaccination_history, allergy, status, created_at').order('created_at', { ascending: false })
+                    ]);
+                    for (const res of [custAccRes, custProfRes, petsRes]) {
+                        if (res.error) throw res.error;
                     }
+                    return {
+                        custAcc: custAccRes.data || [],
+                        custProf: custProfRes.data || [],
+                        pets: petsRes.data || []
+                    };
                 };
-                const loadWeightHistory = async () => {
-                    const request = client.from('pet_weight_history').select('id, pet_id, weight, measured_at, recorded_by_name, created_at').order('measured_at', { ascending: false });
-                    const timeout = new Promise(resolve => setTimeout(() => resolve({ data: [], error: { message: 'Lịch sử cân nặng chưa phản hồi kịp thời do quá hạn 5s.' } }), 5000));
-                    return Promise.race([request, timeout]);
-                };
-                // [P-16] Tải song song dữ liệu và phân tách rõ lỗi timeout cân nặng
-                const [custAccRes, custProfRes, apptsRes, careLogsRes, petsRes, weightHistoryRes] = await Promise.all([
-                    client.from('customer').select('id, email, phone_main, account_status'),
-                    client.from('customer_profile').select('id, customer_id, full_name, gender'),
-                    client.from('appointment').select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_time, appointment_status, total_price, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false }).limit(2000),
-                    loadCareLogs(),
-                    client.from('pet_profile').select('id, customer_id, pet_code, pet_name, avatar_url, species, breed, gender, date_of_birth, color, routine, weight, vaccination_history, allergy, status, created_at').order('created_at', { ascending: false }),
-                    loadWeightHistory().catch((err) => ({ data: [], error: err }))
-                ]);
 
-                PawpalPets.state.weightTimeout = Boolean(weightHistoryRes.error);
-                PawpalPets.state.weightLoadError = weightHistoryRes.error ? weightHistoryRes.error.message : null;
-                if (weightHistoryRes.error) {
-                    console.warn('[PawpalPets] Lỗi tải cân nặng:', weightHistoryRes.error.message);
-                }
+                const data = window.PawpalDataStore?.fetch
+                    ? await window.PawpalDataStore.fetch('pets:list', fetchPetsList, {
+                        ttlMs: window.PawpalDataStore.TTL.LIST,
+                        force
+                    })
+                    : await fetchPetsList();
 
-                for (const result of [custAccRes, custProfRes, apptsRes, careLogsRes, petsRes]) {
-                    if (result.error) throw result.error;
-                }
-                const profiles = new Map((custProfRes.data || []).map(profile => [profile.customer_id, profile]));
-                const custMap = Object.fromEntries((custAccRes.data || []).map(customer => [customer.id, {
+                const custAccData = data.custAcc || [];
+                const custProfData = data.custProf || [];
+                const petsDataList = data.pets || [];
+
+                PawpalPets.state.weightTimeout = false;
+                PawpalPets.state.weightLoadError = null;
+
+                const profiles = new Map(custProfData.map(profile => [profile.customer_id, profile]));
+                const custMap = Object.fromEntries(custAccData.map(customer => [customer.id, {
                     id: customer.id,
                     name: profiles.get(customer.id)?.full_name || 'Chưa cập nhật tên',
                     phone: customer.phone_main || '',
@@ -266,7 +263,7 @@
 
                 // Hồ sơ chủ nuôi có thể đọc được dù bảng tài khoản bị giới hạn bởi RLS.
                 // Giữ khóa customer_id chuẩn, không bỏ mất tên chỉ vì thiếu hàng customer trong response.
-                (custProfRes.data || []).forEach(profile => {
+                custProfData.forEach(profile => {
                     if (!profile.customer_id || custMap[profile.customer_id]) return;
                     custMap[profile.customer_id] = {
                         id: profile.customer_id,
@@ -276,81 +273,12 @@
                     };
                 });
 
-                const petWeightHistoryMap = {};
-                if (Array.isArray(weightHistoryRes.data)) {
-                    weightHistoryRes.data.forEach(record => {
-                        const petId = record.pet_id;
-                        const measuredAt = record.measured_at || record.created_at;
-                        const measuredWeight = Number(record.weight);
-                        if (!petId || !measuredAt || !Number.isFinite(measuredWeight) || measuredWeight <= 0) return;
-                        if (!petWeightHistoryMap[petId]) petWeightHistoryMap[petId] = [];
-                        petWeightHistoryMap[petId].push({
-                            date: formatDate(measuredAt),
-                            weight: `${measuredWeight} kg`,
-                            tier: measuredWeight < 5 ? 'Dưới 5 kg' : (measuredWeight <= 10 ? 'Từ 5 đến 10 kg' : 'Trên 10 kg'),
-                            by: record.recorded_by_name || 'Nhân viên PawPal',
-                            measuredAt: new Date(measuredAt).getTime()
-                        });
-                    });
-                }
-
-                const petApptsMap = {};
-                if (Array.isArray(apptsRes.data)) {
-                    apptsRes.data.forEach(app => {
-                        const pId = app.pet_id;
-                        if (!pId) return;
-                        if (!petApptsMap[pId]) petApptsMap[pId] = [];
-                        
-                        const sName = app.service?.service_name || 'Dịch vụ Spa và Grooming';
-                        const appDate = app.appointment_date ? formatDate(app.appointment_date) : '';
-                        const appTime = app.appointment_time ? app.appointment_time.slice(0, 5) : '';
-                        const priceStr = app.total_price != null ? Number(app.total_price).toLocaleString('vi-VN') + 'đ' : 'Chưa cập nhật';
-                        
-                        let stText = 'Chờ xác nhận';
-                        if (app.appointment_status === 'COMPLETED') stText = 'Đã hoàn thành';
-                        else if (app.appointment_status === 'CONFIRMED') stText = 'Đã xác nhận';
-                        else if (app.appointment_status === 'IN_PROGRESS') stText = 'Đang thực hiện';
-                        else if (app.appointment_status === 'CANCELLED') stText = 'Đã hủy';
-
-                        petApptsMap[pId].push({
-                            id: app.appointment_code || `BK-${app.id.slice(0, 4)}`,
-                            rawId: app.id,
-                            service: sName,
-                            time: `${appDate} ${appTime}`,
-                            weight: 'Chưa ghi nhận',
-                            price: priceStr,
-                            status: stText
-                        });
-                    });
-                }
-
-                const petCareLogsMap = {};
-                if (Array.isArray(careLogsRes.data)) {
-                    careLogsRes.data.forEach(cl => {
-                        const pId = cl.pet_id;
-                        if (!pId) return;
-                        if (!petCareLogsMap[pId]) petCareLogsMap[pId] = [];
-                        
-                        const logTime = cl.recorded_at ? formatDateTime(cl.recorded_at) : '';
-                        petCareLogsMap[pId].push({
-                            time: logTime,
-                            service: cl.description || 'Chưa có ghi chú',
-                            ktv: 'Kỹ thuật viên PawPal',
-                            imgBefore: '',
-                            imgAfter: '',
-                            checkText: cl.health_status ? `Tình trạng: ${cl.health_status}` : 'Chưa ghi nhận',
-                            appStatus: 'Đã ghi nhận',
-                            careId: cl.id
-                        });
-                    });
-                }
-
-                // 3. Map hồ sơ pet_profile
+                // 3. Map hồ sơ pet_profile (chi tiết cân nặng, lịch hẹn, care logs sẽ tải on-demand)
                 const petsMap = {};
-                if (Array.isArray(petsRes.data) && petsRes.data.length > 0) {
+                if (Array.isArray(petsDataList) && petsDataList.length > 0) {
                     const speciesNameMap = { 'dog': 'Chó', 'cat': 'Mèo', 'rabbit': 'Thỏ', 'other': 'Khác' };
 
-                    petsRes.data.forEach((p, idx) => {
+                    petsDataList.forEach((p, idx) => {
                         const code = p.pet_code || (p.id ? `PET-${p.id.replace(/-/g, '').slice(0, 8).toUpperCase()}` : `PET-${String(idx + 1).padStart(3, '0')}`);
                         const spec = (p.species || 'dog').toLowerCase();
                         // Không đưa mã số/giá trị placeholder vào tên giống hiển thị.
@@ -378,7 +306,6 @@
                         else if (isArch) statusStr = 'Lưu trữ';
 
                         const dobFormatted = p.date_of_birth ? formatDate(p.date_of_birth) : 'Chưa cập nhật';
-                        const weightLogs = petWeightHistoryMap[p.id] || [];
 
                         const vaccinesList = (p.vaccination_history || '').split('\n\n').filter(Boolean).map(record => {
                             const field = label => record.split('\n').find(line => line.startsWith(label + ': '))?.slice(label.length + 2) || '';
@@ -419,17 +346,18 @@
                             vaccinated: vaccinesList.some(v => /dại|rabies/i.test(v.title) && ['Đã tiêm đủ', 'Đã thực hiện', 'Đạt chuẩn'].includes(v.status)),
                             isHotel: p.status === 'HOTEL',
                             isArchived: isArch,
-                            weightHistory: weightLogs,
+                            weightHistory: [],
                             vaccines: vaccinesList,
-                            carelogs: petCareLogsMap[p.id] || [],
-                            history: petApptsMap[p.id] || []
+                            carelogs: [],
+                            history: [],
+                            _detailsLoaded: false
                         };
                     });
                 }
                 PawpalPets.state.petsData = petsMap;
                 PawpalPets.state.customersData = custMap;
-                PawpalPets.state.appointments = apptsRes.data || [];
-                PawpalPets.state.careLogs = careLogsRes.data || [];
+                PawpalPets.state.appointments = [];
+                PawpalPets.state.careLogs = [];
                 PawpalPets.state.isLoaded = true;
                 _petsLastFetchedAt = Date.now();
             } catch (err) {
@@ -444,6 +372,162 @@
         return _petsFetchPromise;
     }
     PawpalPets.loadPetsModuleData = loadPetsModuleData;
+
+    // Helper lazy-fetch chi tiết hồ sơ 1 thú cưng (Cân nặng, Care log, Lịch hẹn)
+    PawpalPets.fetchPetProfileDetails = async function(pet, { force = false } = {}) {
+        if (!pet || !pet.rawId) return pet;
+        if (!force && pet._detailsLoaded) return pet;
+
+        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!client) return pet;
+
+        try {
+            const fetchDetails = async () => {
+                const [wRes, cRes, aRes] = await Promise.all([
+                    client.from('pet_weight_history')
+                        .select('id, pet_id, weight, measured_at, recorded_by_name, created_at')
+                        .eq('pet_id', pet.rawId)
+                        .order('measured_at', { ascending: false })
+                        .limit(30),
+                    client.from('care_log')
+                        .select('id, appointment_id, pet_id, description, health_status, recorded_at, created_at')
+                        .eq('pet_id', pet.rawId)
+                        .order('recorded_at', { ascending: false })
+                        .limit(30),
+                    client.from('appointment')
+                        .select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_time, appointment_status, total_price, service:service_id(service_name), staff:staff_id(full_name)')
+                        .eq('pet_id', pet.rawId)
+                        .order('appointment_date', { ascending: false })
+                        .limit(30)
+                ]);
+                return {
+                    weight: wRes.data || [],
+                    careLogs: cRes.data || [],
+                    appts: aRes.data || []
+                };
+            };
+
+            const details = window.PawpalDataStore?.fetch
+                ? await window.PawpalDataStore.fetch(`pets:details:${pet.rawId}`, fetchDetails, {
+                    ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
+                    force
+                })
+                : await fetchDetails();
+
+            // Map weight history
+            pet.weightHistory = (details.weight || []).map(record => {
+                const measuredAt = record.measured_at || record.created_at;
+                const measuredWeight = Number(record.weight);
+                return {
+                    date: formatDate(measuredAt),
+                    weight: `${measuredWeight} kg`,
+                    tier: measuredWeight < 5 ? 'Dưới 5 kg' : (measuredWeight <= 10 ? 'Từ 5 đến 10 kg' : 'Trên 10 kg'),
+                    by: record.recorded_by_name || 'Nhân viên PawPal',
+                    measuredAt: new Date(measuredAt).getTime()
+                };
+            });
+
+            // Map care logs
+            pet.carelogs = (details.careLogs || []).map(cl => ({
+                time: cl.recorded_at ? formatDateTime(cl.recorded_at) : '',
+                service: cl.description || 'Chưa có ghi chú',
+                ktv: 'Kỹ thuật viên PawPal',
+                imgBefore: '',
+                imgAfter: '',
+                checkText: cl.health_status ? `Tình trạng: ${cl.health_status}` : 'Chưa ghi nhận',
+                appStatus: 'Đã ghi nhận',
+                careId: cl.id
+            }));
+
+            // Map history appointments
+            pet.history = (details.appts || []).map(app => {
+                const sName = app.service?.service_name || 'Dịch vụ Spa và Grooming';
+                const appDate = app.appointment_date ? formatDate(app.appointment_date) : '';
+                const appTime = app.appointment_time ? app.appointment_time.slice(0, 5) : '';
+                const priceStr = app.total_price != null ? Number(app.total_price).toLocaleString('vi-VN') + 'đ' : 'Chưa cập nhật';
+                let stText = 'Chờ xác nhận';
+                if (app.appointment_status === 'COMPLETED') stText = 'Đã hoàn thành';
+                else if (app.appointment_status === 'CONFIRMED') stText = 'Đã xác nhận';
+                else if (app.appointment_status === 'IN_PROGRESS') stText = 'Đang thực hiện';
+                else if (app.appointment_status === 'CANCELLED') stText = 'Đã hủy';
+
+                return {
+                    id: app.appointment_code || `BK-${app.id.slice(0, 4)}`,
+                    rawId: app.id,
+                    service: sName,
+                    time: `${appDate} ${appTime}`,
+                    weight: 'Chưa ghi nhận',
+                    price: priceStr,
+                    status: stText
+                };
+            });
+
+            pet._detailsLoaded = true;
+        } catch (e) {
+            console.warn('[PawpalPets] Lỗi tải chi tiết bé cưng:', e);
+        }
+        return pet;
+    };
+
+    // Helper lazy-fetch care logs cho subtab Care Log
+    PawpalPets.fetchCareLogsTab = async function({ force = false, limit = 100 } = {}) {
+        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!client) return [];
+
+        const fetchLogs = async () => {
+            const [logsRes, apptsRes] = await Promise.all([
+                client.from('care_log')
+                    .select('id, appointment_id, pet_id, description, health_status, recorded_at, created_at')
+                    .order('recorded_at', { ascending: false })
+                    .limit(limit),
+                client.from('appointment')
+                    .select('id, customer_id, pet_id')
+                    .limit(500)
+            ]);
+            return {
+                logs: logsRes.data || [],
+                appts: apptsRes.data || []
+            };
+        };
+
+        const res = window.PawpalDataStore?.fetch
+            ? await window.PawpalDataStore.fetch(`pets:carelogs:recent:${limit}`, fetchLogs, {
+                ttlMs: window.PawpalDataStore.TTL.LIST,
+                force
+            })
+            : await fetchLogs();
+
+        PawpalPets.state.careLogs = res.logs || [];
+        if (res.appts?.length > 0) {
+            PawpalPets.state.appointments = res.appts;
+        }
+        return PawpalPets.state.careLogs;
+    };
+
+    // Helper lazy-fetch appointments cho subtab Nhắc lịch (Reminders)
+    PawpalPets.fetchRemindersAppointments = async function({ force = false } = {}) {
+        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!client) return [];
+
+        const fetchAppts = async () => {
+            const { data } = await client.from('appointment')
+                .select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_status, service:service_id(service_name)')
+                .eq('appointment_status', 'COMPLETED')
+                .order('appointment_date', { ascending: false })
+                .limit(500);
+            return data || [];
+        };
+
+        const appts = window.PawpalDataStore?.fetch
+            ? await window.PawpalDataStore.fetch('pets:appointments:completed', fetchAppts, {
+                ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
+                force
+            })
+            : await fetchAppts();
+
+        PawpalPets.state.appointments = appts;
+        return appts;
+    };
 
     PawpalPets.getPet = function(idOrCode) {
         if (!idOrCode) return null;
@@ -571,17 +655,32 @@
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (client?.channel) {
             const channel = client.channel('admin-pets-live');
-            const refresh = async () => {
-                await loadPetsModuleData({ force: true });
-                PawpalPets.subtabs.list?.renderPetsTable?.();
-                PawpalPets.subtabs.list?.updatePetKPIs?.();
-                const selected = sessionStorage.getItem('pawpal_admin_pet_id');
-                PawpalPets.subtabs.profile?.openPetProfile?.(PawpalPets.state.petsData[selected] ? selected : Object.keys(PawpalPets.state.petsData)[0], false);
+            const refresh = () => {
+                if (window.PawpalDataStore?.handleRealtimeChange) {
+                    window.PawpalDataStore.handleRealtimeChange({
+                        moduleName: 'Thú cưng',
+                        invalidatePattern: 'pets:*',
+                        onActiveRefresh: async () => {
+                            await loadPetsModuleData({ force: true });
+                            PawpalPets.subtabs.list?.renderPetsTable?.();
+                            PawpalPets.subtabs.list?.updatePetKPIs?.();
+                            const selected = sessionStorage.getItem('pawpal_admin_pet_id');
+                            PawpalPets.subtabs.profile?.openPetProfile?.(PawpalPets.state.petsData[selected] ? selected : Object.keys(PawpalPets.state.petsData)[0], false);
+                        },
+                        debounceMs: 300
+                    });
+                } else if (sessionStorage.getItem('pawpal_admin_active_module') === 'Thú cưng') {
+                    loadPetsModuleData({ force: true }).then(() => {
+                        PawpalPets.subtabs.list?.renderPetsTable?.();
+                        PawpalPets.subtabs.list?.updatePetKPIs?.();
+                    });
+                }
             };
             ['pet_profile', 'customer', 'customer_profile', 'appointment', 'care_log', 'pet_weight_history'].forEach(table => {
                 channel.on('postgres_changes', { event: '*', schema: 'public', table }, refresh);
             });
             channel.subscribe();
+            window.PawpalDataStore?.recordMetric?.('channel-add', 'admin-pets-live');
         }
 
         // Khôi phục subtab active từ URL hash hoặc sessionStorage

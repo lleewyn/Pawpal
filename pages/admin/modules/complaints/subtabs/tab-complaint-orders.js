@@ -252,10 +252,14 @@
         if (isOrdersInitialized) return;
         isOrdersInitialized = true;
         const searchInput = document.getElementById('orderSearchInput');
+        let orderSearchTimer = null;
         if (searchInput) {
             searchInput.addEventListener('input', () => {
-                orderCurrentPage = 1;
-                renderOrderComplaintsTable();
+                clearTimeout(orderSearchTimer);
+                orderSearchTimer = setTimeout(() => {
+                    orderCurrentPage = 1;
+                    renderOrderComplaintsTable();
+                }, 300);
             });
         }
 

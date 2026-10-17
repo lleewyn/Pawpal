@@ -1179,8 +1179,12 @@
         });
 
         // Tìm kiếm
+        let inboxSearchTimer = null;
         document.getElementById('inboxSearchInput')?.addEventListener('input', () => {
-            renderConversationsList();
+            clearTimeout(inboxSearchTimer);
+            inboxSearchTimer = setTimeout(() => {
+                renderConversationsList();
+            }, 300);
         });
 
         // NÚT 3 CHẤM

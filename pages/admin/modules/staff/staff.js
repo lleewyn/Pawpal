@@ -230,25 +230,93 @@
         return role;
     }
 
-    let _staffLastFetchedAt = 0;
-    const STAFF_CACHE_TTL_MS = 90_000;
-
-    async function loadStaffModuleData({ force = false } = {}) {
-        if (!force && Date.now() - _staffLastFetchedAt < STAFF_CACHE_TTL_MS && PawpalStaff.state.mockStaff.length > 0) {
-            console.log('[PawpalStaff] Dùng cache in-memory, bỏ qua fetch.');
-            return;
-        }
-
-        try {
+    // Đồng bộ Supabase Live Database qua PawpalDataStore
+    async function fetchStaffRaw({ force = false } = {}) {
+        const fetcher = async () => {
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
-
-            const { data: staffData, error: staffErr } = await client
+            const { data, error } = await client
                 .from('staff')
-                .select('*')
+                .select('id, staff_code, full_name, role, specialization, phone_number, email, shift, status, employment_status, account_status, hire_date, dob, address, skill_score, service_locked, system_role, permissions, last_login_at')
                 .order('created_at', { ascending: true });
+            if (error) throw error;
+            return data || [];
+        };
 
-            if (staffErr) throw staffErr;
+        if (window.PawpalDataStore) {
+            return window.PawpalDataStore.fetch('staff:list', fetcher, {
+                ttlMs: window.PawpalDataStore.TTL_TIERS.CATALOG,
+                force
+            });
+        }
+        return fetcher();
+    }
+
+    async function fetchSchedulesRaw({ force = false } = {}) {
+        const fetcher = async () => {
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) return [];
+            // Giới hạn phạm vi ngày: +/- 30 ngày quanh hiện tại để tránh full-table scan lịch cũ nhiều năm
+            const now = new Date();
+            const fromDate = new Date(now.getTime() - 30 * 86400000).toISOString().slice(0, 10);
+            const toDate = new Date(now.getTime() + 45 * 86400000).toISOString().slice(0, 10);
+            try {
+                const { data, error } = await client
+                    .from('staff_schedule')
+                    .select('id, staff_id, schedule_date, work_date, date, start_time, shift, shift_type, schedule_status')
+                    .gte('schedule_date', fromDate)
+                    .lte('schedule_date', toDate);
+                if (error) throw error;
+                return data || [];
+            } catch (err) {
+                console.warn('[PawpalStaff] Lỗi nạp staff_schedule có bộ lọc ngày, thử fallback:', err);
+                const fallback = await client.from('staff_schedule').select('*').limit(300);
+                return fallback.data || [];
+            }
+        };
+
+        if (window.PawpalDataStore) {
+            return window.PawpalDataStore.fetch('staff:schedules', fetcher, {
+                ttlMs: window.PawpalDataStore.TTL_TIERS.OPERATIONAL,
+                force
+            });
+        }
+        return fetcher();
+    }
+
+    async function fetchShiftRequestsRaw({ force = false } = {}) {
+        const fetcher = async () => {
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) return [];
+            const { data, error } = await client
+                .from('staff_shift_request')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(100);
+            if (error) {
+                console.warn('[PawpalStaff] Lỗi nạp staff_shift_request:', error);
+                return [];
+            }
+            return data || [];
+        };
+
+        if (window.PawpalDataStore) {
+            return window.PawpalDataStore.fetch('staff:shift_requests', fetcher, {
+                ttlMs: window.PawpalDataStore.TTL_TIERS.LIST,
+                force
+            });
+        }
+        return fetcher();
+    }
+
+    async function loadStaffModuleData({ force = false } = {}) {
+        try {
+            const [staffData, schedules, requests] = await Promise.all([
+                fetchStaffRaw({ force }),
+                fetchSchedulesRaw({ force }),
+                fetchShiftRequestsRaw({ force })
+            ]);
+
             if (Array.isArray(staffData)) {
                 PawpalStaff.state.mockStaff = staffData.map((s, idx) => {
                     const formattedRole = mapDbRoleToStaffRole(s.role, s.specialization);
@@ -289,7 +357,6 @@
                         requested_count: 8,
                         customer_reviews: [],
                         authUserId: s.auth_user_id || null,
-                        accountStatus: s.account_status || 'INACTIVE',
                         systemRole: s.system_role || 'STAFF',
                         permissions: s.permissions || [],
                         lastLoginAt: s.last_login_at || null
@@ -312,27 +379,27 @@
                     note: s.skillResult === 'PASS' ? 'Thao tác chuẩn xác theo quy chuẩn an toàn SOP' : 'Cần đào tạo lại kỹ thuật cắt tỉa chuyên sâu'
                 }));
             PawpalStaff.state.mockWorkstations = [];
-            const {data:requests,error:requestError}=await client.from('staff_shift_request').select('*').order('created_at',{ascending:false});
-            PawpalStaff.state.requestError=requestError?.message||null;
-            const requestStaff=id=>PawpalStaff.state.mockStaff.find(staff=>staff.rawId===id);
-            const requestShiftLabel={ALL:'Cả ngày',MORNING:'Ca sáng',AFTERNOON:'Ca chiều',EVENING:'Ca tối'};
-            PawpalStaff.state.mockLeaveSwapRequests=(requests||[]).map(row=>({
-                ...row,type:row.request_type,
-                staffName:requestStaff(row.staff_id)?.name||'Chưa tải được tên nhân viên',
-                swapWithName:requestStaff(row.target_staff_id)?.name||'',
-                date:row.request_type==='SWAP' ? PawpalStaff.formatDateVN(row.start_date)+' → '+PawpalStaff.formatDateVN(row.target_date)
-                    : row.start_date===row.end_date ? PawpalStaff.formatDateVN(row.start_date)
-                    : PawpalStaff.formatDateVN(row.start_date)+' – '+PawpalStaff.formatDateVN(row.end_date),
-                shiftLabel:row.request_type==='SWAP' ? (requestShiftLabel[row.shift]||row.shift)+' → '+(requestShiftLabel[row.target_shift]||row.target_shift)
-                    : (requestShiftLabel[row.shift]||row.shift)
+
+            const requestStaff = id => PawpalStaff.state.mockStaff.find(staff => staff.rawId === id);
+            const requestShiftLabel = { ALL: 'Cả ngày', MORNING: 'Ca sáng', AFTERNOON: 'Ca chiều', EVENING: 'Ca tối' };
+            PawpalStaff.state.mockLeaveSwapRequests = (requests || []).map(row => ({
+                ...row,
+                type: row.request_type,
+                staffName: requestStaff(row.staff_id)?.name || 'Chưa tải được tên nhân viên',
+                swapWithName: requestStaff(row.target_staff_id)?.name || '',
+                date: row.request_type === 'SWAP' ? PawpalStaff.formatDateVN(row.start_date) + ' → ' + PawpalStaff.formatDateVN(row.target_date)
+                    : row.start_date === row.end_date ? PawpalStaff.formatDateVN(row.start_date)
+                    : PawpalStaff.formatDateVN(row.start_date) + ' – ' + PawpalStaff.formatDateVN(row.end_date),
+                shiftLabel: row.request_type === 'SWAP' ? (requestShiftLabel[row.shift] || row.shift) + ' → ' + (requestShiftLabel[row.target_shift] || row.target_shift)
+                    : (requestShiftLabel[row.shift] || row.shift)
             }));
-            const {data:schedules,error:scheduleError} = await client.from('staff_schedule').select('*');
-            PawpalStaff.state.scheduleError = Boolean(scheduleError);
+
+            PawpalStaff.state.scheduleError = false;
             PawpalStaff.state.schedules = schedules || [];
             PawpalStaff.state.mockRoster = {};
             (schedules || []).forEach(row => {
-                if(row.schedule_status==='OFF') return;
-                const date = String(row.schedule_date || row.work_date || row.date || row.start_time || '').slice(0,10);
+                if (row.schedule_status === 'OFF') return;
+                const date = String(row.schedule_date || row.work_date || row.date || row.start_time || '').slice(0, 10);
                 const staff = PawpalStaff.state.mockStaff.find(staff => staff.rawId === row.staff_id);
                 const shift = row.shift || row.shift_type;
                 if (!staff || !date || !shift) return;
@@ -353,7 +420,6 @@
                 PawpalStaff.subtabs.assessment.updateAssessmentKPIs();
             }
 
-            _staffLastFetchedAt = Date.now();
             window.dispatchEvent(new CustomEvent('pawpal:staff-data-loaded', { detail: { count: PawpalStaff.state.mockStaff.length } }));
         } catch (err) {
             PawpalStaff.state.loadError = 'Không thể tải dữ liệu nhân sự.';
@@ -362,8 +428,26 @@
         }
     }
     PawpalStaff.loadStaffModuleData = loadStaffModuleData;
+
+    // Lắng nghe mutation liên phân hệ
+    if (window.PawpalDataStore) {
+        window.PawpalDataStore.subscribeMutations((mutation) => {
+            if (mutation.entity === 'staff') {
+                window.PawpalDataStore.invalidate('staff:list*');
+                window.PawpalDataStore.invalidate('services:staff*');
+            } else if (mutation.entity === 'staff_schedule') {
+                window.PawpalDataStore.invalidate('staff:schedules*');
+                window.PawpalDataStore.invalidate('dashboard:*');
+            } else if (mutation.entity === 'staff_shift_request') {
+                window.PawpalDataStore.invalidate('staff:shift_requests*');
+            }
+        });
+    }
+
     PawpalStaff.invalidateCache = function() {
-        _staffLastFetchedAt = 0;
+        if (window.PawpalDataStore) {
+            window.PawpalDataStore.invalidate('staff:*');
+        }
     };
 
     function updateBreadcrumb(staffName) {
@@ -479,6 +563,8 @@
         if (!_isStaffListenersInitialized) {
             _isStaffListenersInitialized = true;
 
+            setupStaffRealtimeSync();
+
             window.addEventListener('admin:subtab-change', (e) => {
                 if (e.detail?.module === 'Nhân sự' && validTabs.includes(e.detail.tabId)) {
                     switchSubtab(e.detail.tabId, false);
@@ -523,6 +609,52 @@
                     isDanger: true
                 });
             }, 300);
+        }
+    }
+
+    let _staffRealtimeChannel = null;
+    function setupStaffRealtimeSync() {
+        if (_staffRealtimeChannel) return;
+        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!client || typeof client.channel !== 'function') return;
+
+        try {
+            const triggerStaffSync = (pattern) => {
+                if (window.PawpalDataStore?.handleRealtimeChange) {
+                    window.PawpalDataStore.handleRealtimeChange({
+                        moduleName: 'Nhân sự',
+                        invalidatePattern: pattern || 'staff:*',
+                        onActiveRefresh: async () => {
+                            await loadStaffModuleData({ force: true });
+                            PawpalStaff.subtabs?.list?.renderStaffTable?.();
+                            PawpalStaff.subtabs?.list?.updateStaffKPIs?.();
+                        },
+                        debounceMs: 300
+                    });
+                } else if (sessionStorage.getItem('pawpal_admin_active_module') === 'Nhân sự') {
+                    loadStaffModuleData({ force: true }).then(() => {
+                        PawpalStaff.subtabs?.list?.renderStaffTable?.();
+                        PawpalStaff.subtabs?.list?.updateStaffKPIs?.();
+                    });
+                }
+            };
+
+            _staffRealtimeChannel = client.channel('admin-staff-live-sync')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'staff' }, () => triggerStaffSync('staff:list*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_schedule' }, () => triggerStaffSync('staff:schedules*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_shift_request' }, () => triggerStaffSync('staff:shifts*'))
+                .subscribe();
+
+            window.PawpalDataStore?.recordMetric?.('channel-add', 'admin-staff-live-sync');
+
+            window.addEventListener('beforeunload', () => {
+                if (_staffRealtimeChannel) {
+                    client.removeChannel(_staffRealtimeChannel);
+                    window.PawpalDataStore?.recordMetric?.('channel-remove', 'admin-staff-live-sync');
+                }
+            });
+        } catch (e) {
+            console.warn('[Staff] Lỗi mở kênh realtime:', e);
         }
     }
 

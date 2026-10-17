@@ -260,6 +260,17 @@
             carelogCount.style.display = pet.carelogs?.length ? '' : 'none';
         }
 
+        if (typeof PawpalPets.fetchPetProfileDetails === 'function' && !pet._detailsLoaded) {
+            PawpalPets.fetchPetProfileDetails(pet).then(() => {
+                renderPetSubtabs(pet);
+                const clc = document.querySelector('[data-drawertab="ptab-carelog"] .tab-badge-count');
+                if (clc) {
+                    clc.textContent = (pet.carelogs || []).length;
+                    clc.style.display = pet.carelogs?.length ? '' : 'none';
+                }
+            });
+        }
+
         sessionStorage.setItem('pawpal_admin_pet_id', pet.code);
         sessionStorage.setItem('pawpal_admin_pet_name', pet.name);
 
@@ -540,6 +551,11 @@
                 } finally {
                     btnSubmitWeigh.disabled = false;
                 }
+
+                window.PawpalDataStore?.emitMutation?.('pet_profile', 'UPDATE', { id: pet.rawId });
+                window.PawpalDataStore?.emitMutation?.('pet_weight_history', 'INSERT', { pet_id: pet.rawId });
+                window.PawpalDataStore?.invalidate?.(`pets:details:${pet.rawId}`);
+                pet._detailsLoaded = false;
 
                 await PawpalPets.loadPetsModuleData({ force: true });
                 if (PawpalPets.subtabs.list) {

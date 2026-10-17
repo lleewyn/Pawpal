@@ -18,6 +18,19 @@
             } else if (!tbody.querySelector('.skeleton-row')) window.PawpalAdmin?.renderTableSkeleton?.(tbody, {columns:5});
             return;
         }
+
+        // Lazy fetch care logs nếu chưa có
+        if ((!PawpalPets.state.careLogs || PawpalPets.state.careLogs.length === 0) && typeof PawpalPets.fetchCareLogsTab === 'function' && !PawpalPets.state._careLogsFetching) {
+            PawpalPets.state._careLogsFetching = true;
+            if (!tbody.querySelector('.skeleton-row')) window.PawpalAdmin?.renderTableSkeleton?.(tbody, {columns:5});
+            PawpalPets.fetchCareLogsTab().then(() => {
+                PawpalPets.state._careLogsFetching = false;
+                renderCarelogsTable();
+            }).catch(() => {
+                PawpalPets.state._careLogsFetching = false;
+            });
+            return;
+        }
         delete tbody.dataset.loadingSkeleton;
         // Nhật ký cũ có thể tham chiếu pet_code (PET-001), còn dữ liệu mới dùng
         // UUID rawId; lập chỉ mục cả hai để luôn nối được bé và chủ nuôi.

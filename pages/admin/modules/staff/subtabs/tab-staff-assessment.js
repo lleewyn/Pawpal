@@ -222,11 +222,15 @@
     function initAssessmentSubtab() {
         const searchInput = document.getElementById('assessmentSearchInput');
         const clearBtn = document.getElementById('btnClearAssessmentSearch');
+        let assessSearchTimer = null;
         if (searchInput) {
             searchInput.addEventListener('input', () => {
                 if (clearBtn) clearBtn.style.display = searchInput.value ? 'inline-flex' : 'none';
-                currentAssessmentPage = 1;
-                renderAssessmentList();
+                clearTimeout(assessSearchTimer);
+                assessSearchTimer = setTimeout(() => {
+                    currentAssessmentPage = 1;
+                    renderAssessmentList();
+                }, 300);
             });
         }
         if (clearBtn) {

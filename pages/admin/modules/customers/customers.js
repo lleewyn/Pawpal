@@ -230,177 +230,79 @@
                 return;
             }
 
-            const [
-                custRes,
-                profRes,
-                memRes,
-                addrRes,
-                petsRes,
-                ordersRes,
-                apptsRes,
-                ticketsRes,
-                pointsTxRes
-            ] = await Promise.all([
-                // Chỉ SELECT cột cần thiết — đúng theo schema Supabase
-                client.from('customer').select('id, email, phone_main, account_status, is_temporary, created_at').order('created_at', { ascending: false }),
-                client.from('customer_profile').select('id, customer_id, full_name, gender, date_of_birth'),
-                client.from('customer_membership').select('customer_id, total_paw_points'),
-                client.from('customer_address').select('id, customer_id, receiver_name, receiver_phone, street_address, province, is_default'),
-                client.from('pet_profile').select('id, customer_id, pet_code, pet_name, species, breed, weight, vaccination_history, allergy, routine, date_of_birth, avatar_url'),
-                client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(600),
-                client.from('appointment').select('id, appointment_code, customer_id, appointment_date, appointment_time, appointment_status, total_price, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false }).limit(600),
-                client.from('support_ticket').select('id, user_id, title, status, priority, created_at').order('created_at', { ascending: false }).limit(300),
-                client.from('paw_point_transaction').select('id, customer_id, points, balance_after, description, created_at').order('created_at', { ascending: false }).limit(500)
-            ]);
+            const fetchCustomersBase = async () => {
+                const [
+                    custRes,
+                    profRes,
+                    memRes,
+                    addrRes,
+                    petsRes
+                ] = await Promise.all([
+                    client.from('customer').select('id, email, phone_main, account_status, is_temporary, created_at').order('created_at', { ascending: false }),
+                    client.from('customer_profile').select('id, customer_id, full_name, gender, date_of_birth'),
+                    client.from('customer_membership').select('customer_id, total_paw_points'),
+                    client.from('customer_address').select('id, customer_id, receiver_name, receiver_phone, street_address, province, is_default'),
+                    client.from('pet_profile').select('id, customer_id, pet_code, pet_name, species, breed, weight, vaccination_history, allergy, routine, date_of_birth, avatar_url')
+                ]);
+                if (custRes.error) throw custRes.error;
+                return {
+                    custData: custRes.data || [],
+                    profData: profRes.data || [],
+                    memData: memRes.data || [],
+                    addrData: addrRes.data || [],
+                    petsData: petsRes.data || []
+                };
+            };
 
-            if (custRes.error) throw custRes.error;
-
+            const data = window.PawpalDataStore?.fetch
+                ? await window.PawpalDataStore.fetch('customers:list', fetchCustomersBase, {
+                    ttlMs: window.PawpalDataStore.TTL.LIST,
+                    force
+                })
+                : await fetchCustomersBase();
 
             const profMap = {};
-            if (Array.isArray(profRes.data)) {
-                profRes.data.forEach(p => { profMap[p.customer_id] = p; });
-            }
+            (data.profData || []).forEach(p => { profMap[p.customer_id] = p; });
 
             const memMap = {};
-            if (Array.isArray(memRes.data)) {
-                memRes.data.forEach(m => { memMap[m.customer_id] = m; });
-            }
+            (data.memData || []).forEach(m => { memMap[m.customer_id] = m; });
 
             const addrMap = {};
-            if (Array.isArray(addrRes.data)) {
-                addrRes.data.forEach(a => {
-                    if (!addrMap[a.customer_id]) addrMap[a.customer_id] = [];
-                    const street = a.street_address || '';
-                    const prov = a.province || '';
-                    const fullAddr = [street, prov].filter(Boolean).join(', ') || 'Chưa cập nhật địa chỉ';
-                    addrMap[a.customer_id].push({
-                        rawId: a.id,
-                        address: fullAddr,
-                        receiverName: a.receiver_name || '',
-                        receiverPhone: a.receiver_phone || '',
-                        isDefault: !!a.is_default
-                    });
+            (data.addrData || []).forEach(a => {
+                if (!addrMap[a.customer_id]) addrMap[a.customer_id] = [];
+                const street = a.street_address || '';
+                const prov = a.province || '';
+                const fullAddr = [street, prov].filter(Boolean).join(', ') || 'Chưa cập nhật địa chỉ';
+                addrMap[a.customer_id].push({
+                    rawId: a.id,
+                    address: fullAddr,
+                    receiverName: a.receiver_name || '',
+                    receiverPhone: a.receiver_phone || '',
+                    isDefault: !!a.is_default
                 });
-            }
+            });
 
             const petsMap = {};
-            if (Array.isArray(petsRes.data)) {
-                petsRes.data.forEach((p, idx) => {
-                    if (!petsMap[p.customer_id]) petsMap[p.customer_id] = [];
-                    const specName = p.species === 'cat' ? 'Mèo' : (p.species === 'dog' ? 'Chó' : (p.species === 'rabbit' ? 'Thỏ' : 'Thú cưng'));
-                    const petCode = p.pet_code || (p.id ? `PET-${p.id.replace(/-/g, '').slice(0, 8).toUpperCase()}` : `PET-${String(idx + 1).padStart(3, '0')}`);
-                    petsMap[p.customer_id].push({
-                        id: petCode,
-                        dbId: p.id,
-                        name: p.pet_name || 'Bé cưng',
-                        species: specName,
-                        breed: p.breed || 'Chưa cập nhật',
-                        weight: (p.weight !== null && p.weight !== undefined && p.weight !== '') ? String(p.weight) : 'Chưa ghi nhận',
-                        vaccine: (p.vaccination_history && p.vaccination_history.trim()) ? p.vaccination_history : 'Chưa xác minh sổ tiêm',
-                        alertNote: p.allergy && p.allergy !== 'Không' ? `Cảnh báo dị ứng: ${p.allergy}` : (p.routine || 'Bình thường')
-                    });
+            (data.petsData || []).forEach((p, idx) => {
+                if (!petsMap[p.customer_id]) petsMap[p.customer_id] = [];
+                const specName = p.species === 'cat' ? 'Mèo' : (p.species === 'dog' ? 'Chó' : (p.species === 'rabbit' ? 'Thỏ' : 'Thú cưng'));
+                const petCode = p.pet_code || (p.id ? `PET-${p.id.replace(/-/g, '').slice(0, 8).toUpperCase()}` : `PET-${String(idx + 1).padStart(3, '0')}`);
+                petsMap[p.customer_id].push({
+                    id: petCode,
+                    dbId: p.id,
+                    name: p.pet_name || 'Bé cưng',
+                    species: specName,
+                    breed: p.breed || 'Chưa cập nhật',
+                    weight: (p.weight !== null && p.weight !== undefined && p.weight !== '') ? String(p.weight) : 'Chưa ghi nhận',
+                    vaccine: (p.vaccination_history && p.vaccination_history.trim()) ? p.vaccination_history : 'Chưa xác minh sổ tiêm',
+                    alertNote: p.allergy && p.allergy !== 'Không' ? `Cảnh báo dị ứng: ${p.allergy}` : (p.routine || 'Bình thường')
                 });
-            }
+            });
 
+            // PERF-03.C02: Khởi tạo rỗng, các đơn/lịch/ticket tải on-demand theo từng customer_id khi mở hồ sơ 360°
             const ordersMap = {};
-            if (Array.isArray(ordersRes.data)) {
-                ordersRes.data.forEach(o => {
-                    if (!ordersMap[o.customer_id]) ordersMap[o.customer_id] = [];
-                    const dateStr = o.created_at ? PawpalCustomers.formatDateTime(o.created_at) : '2026-09-25 14:30';
-                    const totalStr = o.total_amount ? Number(o.total_amount).toLocaleString('vi-VN') + ' đ' : '0 đ';
-                    let st = 'Hoàn thành';
-                    let stClass = 'badge-success';
-                    if (o.order_status === 'PENDING') {
-                        st = 'Chờ xác nhận';
-                        stClass = 'badge-warning';
-                    } else if (o.order_status === 'PROCESSING' || o.order_status === 'CONFIRMED') {
-                        st = 'Đang chuẩn bị';
-                        stClass = 'badge-info';
-                    } else if (o.order_status === 'SHIPPING' || o.order_status === 'DELIVERING') {
-                        st = 'Đang giao';
-                        stClass = 'badge-info';
-                    } else if (o.order_status === 'CANCELLED') {
-                        st = 'Đã hủy';
-                        stClass = 'badge-danger';
-                    }
-                    ordersMap[o.customer_id].push({
-                        id: o.order_code || `ORD-${o.id.slice(0, 4)}`,
-                        rawId: o.id,
-                        date: dateStr,
-                        total: totalStr,
-                        payment: o.payment_status === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán',
-                        paymentClass: o.payment_status === 'PAID' ? 'badge-success' : 'badge-warning',
-                        status: st,
-                        statusClass: stClass
-                    });
-                });
-            }
-
             const apptsMap = {};
-            if (Array.isArray(apptsRes.data)) {
-                apptsRes.data.forEach(a => {
-                    if (!apptsMap[a.customer_id]) apptsMap[a.customer_id] = [];
-                    // C-02: Đọc đúng trường appointment_time và appointment_status
-                    const aTime = a.appointment_time ? ` ${a.appointment_time.slice(0, 5)}` : '';
-                    const aDate = a.appointment_date ? (PawpalCustomers.formatDate(a.appointment_date) + aTime) : '—';
-                    const apptStatus = (a.appointment_status || '').toUpperCase();
-                    let st = 'Chưa rõ';
-                    let stClass = 'badge-neutral';
-                    if (apptStatus === 'COMPLETED' || apptStatus === 'DA_HOAN_THANH') {
-                        st = 'Hoàn thành';
-                        stClass = 'badge-success';
-                    } else if (apptStatus === 'PENDING' || apptStatus === 'CHO_XAC_NHAN') {
-                        st = 'Chờ xác nhận';
-                        stClass = 'badge-warning';
-                    } else if (apptStatus === 'CONFIRMED' || apptStatus === 'DA_XAC_NHAN') {
-                        st = 'Đã xác nhận';
-                        stClass = 'badge-info';
-                    } else if (apptStatus === 'IN_PROGRESS' || apptStatus === 'DANG_THUC_HIEN') {
-                        st = 'Đang thực hiện';
-                        stClass = 'badge-info';
-                    } else if (apptStatus === 'CANCELLED' || apptStatus === 'DA_HUY') {
-                        st = 'Đã hủy';
-                        stClass = 'badge-danger';
-                    }
-                    apptsMap[a.customer_id].push({
-                        id: a.appointment_code || `APT-${a.id.slice(0, 4)}`,
-                        rawId: a.id,
-                        date: aDate,
-                        service: a.service?.service_name || 'Dịch vụ Spa & Grooming',
-                        staff: a.staff?.full_name || 'KTV Pawpal',
-                        status: st,
-                        statusClass: stClass
-                    });
-                });
-            }
-
             const complaintsMap = {};
-            if (Array.isArray(ticketsRes.data)) {
-                ticketsRes.data.forEach(t => {
-                    const uId = t.customer_id || t.user_id;
-                    if (!uId) return;
-                    if (!complaintsMap[uId]) complaintsMap[uId] = [];
-                    const tDate = t.created_at ? PawpalCustomers.formatDateTime(t.created_at) : '2026-09-25 10:00';
-                    let st = 'Đang xử lý';
-                    let stClass = 'badge-warning';
-                    if (t.status === 'RESOLVED' || t.status === 'CLOSED') {
-                        st = 'Đã giải quyết';
-                        stClass = 'badge-success';
-                    } else if (t.status === 'OPEN' || t.status === 'NEW') {
-                        st = 'Chưa xử lý';
-                        stClass = 'badge-danger';
-                    }
-                    complaintsMap[uId].push({
-                        id: `TK-${t.id.slice(0, 4)}`,
-                        rawId: t.id,
-                        date: tDate,
-                        issue: t.title || 'Phản ánh chất lượng dịch vụ',
-                        level: t.priority === 'HIGH' ? 'Cao' : (t.priority === 'URGENT' ? 'Khẩn cấp' : 'Trung bình'),
-                        status: st,
-                        statusClass: stClass
-                    });
-                });
-            }
 
             const freshDb = {};
 
@@ -408,8 +310,8 @@
             const customerIdSet = new Set();
             const unifiedCustomers = [];
 
-            if (Array.isArray(custRes.data)) {
-                custRes.data.forEach(c => {
+            if (Array.isArray(data.custData)) {
+                data.custData.forEach(c => {
                     if (c && c.id) {
                         customerIdSet.add(c.id);
                         unifiedCustomers.push(c);
@@ -417,8 +319,8 @@
                 });
             }
 
-            if (Array.isArray(profRes.data)) {
-                profRes.data.forEach(p => {
+            if (Array.isArray(data.profData)) {
+                data.profData.forEach(p => {
                     if (p && p.customer_id && !customerIdSet.has(p.customer_id)) {
                         customerIdSet.add(p.customer_id);
                         unifiedCustomers.push({
@@ -517,36 +419,8 @@
 
             PawpalCustomers.state.customerDatabase = freshDb;
 
-            // Nạp lịch sử giao dịch điểm Pawpoint từ Supabase
-            if (Array.isArray(pointsTxRes.data) && pointsTxRes.data.length > 0) {
-                PawpalCustomers.state.pawpointHistory = pointsTxRes.data.map(pt => {
-                    const cObj = Object.values(freshDb).find(c => c.dbId === pt.customer_id) || {};
-                    const tTime = pt.created_at ? PawpalCustomers.formatDateTime(pt.created_at) : '2026-09-25 14:30';
-                    const rawPoints = Number(pt.points ?? pt.point_amount ?? pt.amount ?? 0) || 0;
-                    const transactionType = String(pt.transaction_type || pt.type || pt.direction || '').toUpperCase();
-                    const descriptionText = String(pt.description || pt.reason || '').toLowerCase();
-                    const isSubtraction = rawPoints < 0 || ['SUB', 'DEBIT', 'DEDUCT', 'REDEEM', 'TRỪ'].includes(transactionType) || /trừ|đổi quà|sử dụng điểm|khấu trừ/.test(descriptionText);
-                    const ptsNum = Math.abs(rawPoints);
-                    return {
-                        id: `PWH-${pt.id.slice(0, 4)}`,
-                        rawId: pt.id,
-                        time: tTime,
-                        custId: cObj.id || 'CUST-001',
-                        custName: cObj.name || 'Khách hàng',
-                        phone: cObj.phone || '—',
-                        type: isSubtraction ? 'SUB' : 'ADD',
-                        points: ptsNum,
-                        balance: pt.balance_after ?? cObj.points ?? 0,
-                        reason: pt.description || 'Giao dịch điểm Pawpoint'
-                    };
-                }).sort((a, b) => {
-                    const timeA = Date.parse(a.time) || 0;
-                    const timeB = Date.parse(b.time) || 0;
-                    return timeB - timeA;
-                });
-            } else {
-                PawpalCustomers.state.pawpointHistory = [];
-            }
+            // PERF-03.C04: Lịch sử điểm Pawpoint nạp on-demand khi mở subtab Pawpoints
+            PawpalCustomers.state.pawpointHistory = [];
 
             PawpalCustomers.populateCustomerDatalists();
             _custLastFetchedAt = Date.now();
@@ -569,6 +443,169 @@
             PawpalCustomers.subtabs.profile?.renderDrawerCustomerProfile?.(sessionStorage.getItem('pawpal_admin_customer_id'));
         }
     }
+
+    // Helper lazy-fetch hồ sơ 360° (Đơn hàng, Lịch hẹn, Khiếu nại) cho 1 khách hàng cụ thể (PERF-03.C03)
+    PawpalCustomers.fetchCustomerProfile360 = async function(cust, { force = false } = {}) {
+        if (!cust || !cust.dbId) return cust;
+        if (!force && cust._detailsLoaded) return cust;
+
+        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!client) return cust;
+
+        try {
+            const fetchCust360 = async () => {
+                const [ordersRes, apptsRes, ticketsRes] = await Promise.all([
+                    client.from('sales_order')
+                        .select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at')
+                        .eq('customer_id', cust.dbId)
+                        .order('created_at', { ascending: false })
+                        .limit(20),
+                    client.from('appointment')
+                        .select('id, appointment_code, customer_id, appointment_date, appointment_time, appointment_status, total_price, service:service_id(service_name), staff:staff_id(full_name)')
+                        .eq('customer_id', cust.dbId)
+                        .order('appointment_date', { ascending: false })
+                        .limit(20),
+                    client.from('support_ticket')
+                        .select('id, customer_id, user_id, title, status, priority, created_at')
+                        .or(`customer_id.eq.${cust.dbId},user_id.eq.${cust.dbId}`)
+                        .order('created_at', { ascending: false })
+                        .limit(20)
+                ]);
+                return {
+                    orders: ordersRes.data || [],
+                    appts: apptsRes.data || [],
+                    tickets: ticketsRes.data || []
+                };
+            };
+
+            const payload = window.PawpalDataStore?.fetch
+                ? await window.PawpalDataStore.fetch(`customers:360:${cust.dbId}`, fetchCust360, {
+                    ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
+                    force
+                })
+                : await fetchCust360();
+
+            // Map orders
+            cust.orders = (payload.orders || []).map(o => {
+                const dateStr = o.created_at ? PawpalCustomers.formatDateTime(o.created_at) : '—';
+                const totalStr = o.total_amount ? Number(o.total_amount).toLocaleString('vi-VN') + ' đ' : '0 đ';
+                let st = 'Hoàn thành';
+                let stClass = 'badge-success';
+                if (o.order_status === 'PENDING') { st = 'Chờ xác nhận'; stClass = 'badge-warning'; }
+                else if (o.order_status === 'PROCESSING' || o.order_status === 'CONFIRMED') { st = 'Đang chuẩn bị'; stClass = 'badge-info'; }
+                else if (o.order_status === 'SHIPPING' || o.order_status === 'DELIVERING') { st = 'Đang giao'; stClass = 'badge-info'; }
+                else if (o.order_status === 'CANCELLED') { st = 'Đã hủy'; stClass = 'badge-danger'; }
+                return {
+                    id: o.order_code || `ORD-${o.id.slice(0, 4)}`,
+                    rawId: o.id,
+                    date: dateStr,
+                    total: totalStr,
+                    payment: o.payment_status === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán',
+                    paymentClass: o.payment_status === 'PAID' ? 'badge-success' : 'badge-warning',
+                    status: st,
+                    statusClass: stClass
+                };
+            });
+
+            // Map appts
+            cust.bookings = (payload.appts || []).map(a => {
+                const aTime = a.appointment_time ? ` ${a.appointment_time.slice(0, 5)}` : '';
+                const aDate = a.appointment_date ? (PawpalCustomers.formatDate(a.appointment_date) + aTime) : '—';
+                const apptStatus = (a.appointment_status || '').toUpperCase();
+                let st = 'Chưa rõ';
+                let stClass = 'badge-neutral';
+                if (apptStatus === 'COMPLETED' || apptStatus === 'DA_HOAN_THANH') { st = 'Hoàn thành'; stClass = 'badge-success'; }
+                else if (apptStatus === 'PENDING' || apptStatus === 'CHO_XAC_NHAN') { st = 'Chờ xác nhận'; stClass = 'badge-warning'; }
+                else if (apptStatus === 'CONFIRMED' || apptStatus === 'DA_XAC_NHAN') { st = 'Đã xác nhận'; stClass = 'badge-info'; }
+                else if (apptStatus === 'IN_PROGRESS' || apptStatus === 'DANG_THUC_HIEN') { st = 'Đang thực hiện'; stClass = 'badge-info'; }
+                else if (apptStatus === 'CANCELLED' || apptStatus === 'DA_HUY') { st = 'Đã hủy'; stClass = 'badge-danger'; }
+                return {
+                    id: a.appointment_code || `APT-${a.id.slice(0, 4)}`,
+                    rawId: a.id,
+                    date: aDate,
+                    service: a.service?.service_name || 'Dịch vụ Spa & Grooming',
+                    staff: a.staff?.full_name || 'KTV Pawpal',
+                    status: st,
+                    statusClass: stClass
+                };
+            });
+
+            // Map complaints
+            cust.complaints = (payload.tickets || []).map(t => {
+                const tDate = t.created_at ? PawpalCustomers.formatDateTime(t.created_at) : '—';
+                let st = 'Đang xử lý';
+                let stClass = 'badge-warning';
+                if (t.status === 'RESOLVED' || t.status === 'CLOSED') { st = 'Đã giải quyết'; stClass = 'badge-success'; }
+                else if (t.status === 'OPEN' || t.status === 'NEW') { st = 'Chưa xử lý'; stClass = 'badge-danger'; }
+                return {
+                    id: `TK-${t.id.slice(0, 4)}`,
+                    rawId: t.id,
+                    date: tDate,
+                    issue: t.title || 'Phản ánh chất lượng dịch vụ',
+                    level: t.priority === 'HIGH' ? 'Cao' : (t.priority === 'URGENT' ? 'Khẩn cấp' : 'Trung bình'),
+                    status: st,
+                    statusClass: stClass
+                };
+            });
+
+            cust._detailsLoaded = true;
+        } catch (e) {
+            console.warn('[PawpalCustomers] Lỗi nạp 360:', e);
+        }
+        return cust;
+    };
+
+    // Helper lazy-fetch lịch sử điểm Pawpoint khi vào tab Pawpoints (PERF-03.C04)
+    PawpalCustomers.fetchPawpointLedger = async function({ force = false, limit = 100 } = {}) {
+        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!client) return [];
+
+        const fetchLedger = async () => {
+            const { data, error } = await client
+                .from('paw_point_transaction')
+                .select('id, customer_id, points, balance_after, description, created_at')
+                .order('created_at', { ascending: false })
+                .limit(limit);
+            if (error) throw error;
+            return data || [];
+        };
+
+        try {
+            const rows = window.PawpalDataStore?.fetch
+                ? await window.PawpalDataStore.fetch(`customers:pawpoints:${limit}`, fetchLedger, {
+                    ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
+                    force
+                })
+                : await fetchLedger();
+
+            const freshDb = PawpalCustomers.state.customerDatabase || {};
+            PawpalCustomers.state.pawpointHistory = rows.map(pt => {
+                const cObj = Object.values(freshDb).find(c => c.dbId === pt.customer_id) || {};
+                const tTime = pt.created_at ? PawpalCustomers.formatDateTime(pt.created_at) : '—';
+                const rawPoints = Number(pt.points ?? pt.point_amount ?? pt.amount ?? 0) || 0;
+                const transactionType = String(pt.transaction_type || pt.type || pt.direction || '').toUpperCase();
+                const descriptionText = String(pt.description || pt.reason || '').toLowerCase();
+                const isSubtraction = rawPoints < 0 || ['SUB', 'DEBIT', 'DEDUCT', 'REDEEM', 'TRỪ'].includes(transactionType) || /trừ|đổi quà|sử dụng điểm|khấu trừ/.test(descriptionText);
+                const ptsNum = Math.abs(rawPoints);
+                return {
+                    id: `PWH-${pt.id.slice(0, 4)}`,
+                    rawId: pt.id,
+                    time: tTime,
+                    custId: cObj.id || 'CUST-001',
+                    custName: cObj.name || 'Khách hàng',
+                    phone: cObj.phone || '—',
+                    type: isSubtraction ? 'SUB' : 'ADD',
+                    points: ptsNum,
+                    balance: pt.balance_after ?? cObj.points ?? 0,
+                    reason: pt.description || 'Giao dịch điểm Pawpoint'
+                };
+            });
+            return PawpalCustomers.state.pawpointHistory;
+        } catch (err) {
+            console.warn('[PawpalCustomers] Lỗi nạp lịch sử điểm Pawpoint:', err);
+            return [];
+        }
+    };
 
     PawpalCustomers.getCustomer = function(idOrKey) {
         if (!idOrKey) return null;
@@ -624,57 +661,90 @@
 
             if (window._custRealtimeChannel) {
                 client.removeChannel(window._custRealtimeChannel);
+                window.PawpalDataStore?.recordMetric?.('channel-remove', 'admin_customers_realtime');
             }
 
+            const triggerCustSync = (invalidatePattern, refreshCallback) => {
+                if (window.PawpalDataStore?.handleRealtimeChange) {
+                    window.PawpalDataStore.handleRealtimeChange({
+                        moduleName: 'Khách hàng',
+                        invalidatePattern: invalidatePattern || 'customers:*',
+                        onActiveRefresh: async () => {
+                            await PawpalCustomers.loadCustomersModuleData({ force: true });
+                            if (typeof refreshCallback === 'function') {
+                                refreshCallback();
+                            } else if (PawpalCustomers.subtabs.list) {
+                                PawpalCustomers.subtabs.list.renderCustomersTable();
+                                PawpalCustomers.subtabs.list.updateCustomerKPIs();
+                            }
+                        },
+                        debounceMs: 300
+                    });
+                } else if (sessionStorage.getItem('pawpal_admin_active_module') === 'Khách hàng') {
+                    PawpalCustomers.loadCustomersModuleData({ force: true }).then(() => {
+                        if (refreshCallback) refreshCallback();
+                    });
+                }
+            };
+
             window._custRealtimeChannel = client.channel('admin_customers_realtime')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer' }, async () => {
-                    await PawpalCustomers.loadCustomersModuleData({ force: true });
-                    if (PawpalCustomers.subtabs.list) {
-                        PawpalCustomers.subtabs.list.renderCustomersTable();
-                        PawpalCustomers.subtabs.list.updateCustomerKPIs();
-                    }
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer' }, () => {
+                    triggerCustSync('customers:*', () => {
+                        if (PawpalCustomers.subtabs.list) {
+                            PawpalCustomers.subtabs.list.renderCustomersTable();
+                            PawpalCustomers.subtabs.list.updateCustomerKPIs();
+                        }
+                    });
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_profile' }, async () => {
-                    await PawpalCustomers.loadCustomersModuleData({ force: true });
-                    if (PawpalCustomers.subtabs.list) PawpalCustomers.subtabs.list.renderCustomersTable();
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_profile' }, () => {
+                    triggerCustSync('customers:*', () => {
+                        if (PawpalCustomers.subtabs.list) PawpalCustomers.subtabs.list.renderCustomersTable();
+                    });
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_membership' }, async () => {
-                    await PawpalCustomers.loadCustomersModuleData({ force: true });
-                    if (PawpalCustomers.subtabs.list) {
-                        PawpalCustomers.subtabs.list.renderCustomersTable();
-                        PawpalCustomers.subtabs.list.updateCustomerKPIs();
-                    }
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_membership' }, () => {
+                    triggerCustSync('customers:*', () => {
+                        if (PawpalCustomers.subtabs.list) {
+                            PawpalCustomers.subtabs.list.renderCustomersTable();
+                            PawpalCustomers.subtabs.list.updateCustomerKPIs();
+                        }
+                    });
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_address' }, async () => {
-                    await PawpalCustomers.loadCustomersModuleData({ force: true });
-                    const currentOpenId = sessionStorage.getItem('pawpal_admin_customer_id');
-                    if (currentOpenId && PawpalCustomers.subtabs.profile) {
-                        PawpalCustomers.subtabs.profile.renderDrawerAddresses(currentOpenId);
-                    }
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_address' }, () => {
+                    triggerCustSync('customers:*', () => {
+                        const currentOpenId = sessionStorage.getItem('pawpal_admin_customer_id');
+                        if (currentOpenId && PawpalCustomers.subtabs.profile) {
+                            PawpalCustomers.subtabs.profile.renderDrawerAddresses(currentOpenId);
+                        }
+                    });
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_profile' }, async () => {
-                    await PawpalCustomers.loadCustomersModuleData({ force: true });
-                    if (PawpalCustomers.subtabs.list) PawpalCustomers.subtabs.list.renderCustomersTable();
-                    const currentOpenId = sessionStorage.getItem('pawpal_admin_customer_id');
-                    if (currentOpenId && PawpalCustomers.subtabs.profile) {
-                        PawpalCustomers.subtabs.profile.renderDrawerPets(currentOpenId);
-                    }
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_profile' }, () => {
+                    triggerCustSync('customers:*', () => {
+                        if (PawpalCustomers.subtabs.list) PawpalCustomers.subtabs.list.renderCustomersTable();
+                        const currentOpenId = sessionStorage.getItem('pawpal_admin_customer_id');
+                        if (currentOpenId && PawpalCustomers.subtabs.profile) {
+                            PawpalCustomers.subtabs.profile.renderDrawerPets(currentOpenId);
+                        }
+                    });
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, async () => {
-                    await PawpalCustomers.loadCustomersModuleData({ force: true });
-                    if (PawpalCustomers.subtabs.list) {
-                        PawpalCustomers.subtabs.list.renderComplaintBar();
-                        PawpalCustomers.subtabs.list.renderCustomersTable();
-                        PawpalCustomers.subtabs.list.updateCustomerKPIs();
-                    }
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, () => {
+                    triggerCustSync('customers:*', () => {
+                        if (PawpalCustomers.subtabs.list) {
+                            PawpalCustomers.subtabs.list.renderComplaintBar();
+                            PawpalCustomers.subtabs.list.renderCustomersTable();
+                            PawpalCustomers.subtabs.list.updateCustomerKPIs();
+                        }
+                    });
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'paw_point_transaction' }, async () => {
-                    await PawpalCustomers.loadCustomersModuleData({ force: true });
-                    if (PawpalCustomers.subtabs.pawpoint) {
-                        PawpalCustomers.subtabs.pawpoint.renderPawpointHistory();
-                    }
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'paw_point_transaction' }, () => {
+                    triggerCustSync('customers:*', () => {
+                        if (PawpalCustomers.subtabs.pawpoint) {
+                            PawpalCustomers.subtabs.pawpoint.renderPawpointHistory();
+                        }
+                    });
                 })
                 .subscribe();
+
+            window.PawpalDataStore?.recordMetric?.('channel-add', 'admin_customers_realtime');
         } catch (err) {
             console.warn('[Customers] Không thể thiết lập Supabase Realtime:', err);
         }

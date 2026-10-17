@@ -620,6 +620,23 @@
         const carelogsContainer = document.getElementById('detailCarelogList') || document.getElementById('detailCareLogsContainer');
         if (!carelogsContainer) return;
 
+        if (!booking._careLogsLoaded && PawpalServices.fetchBookingCareLogs && booking.dbId) {
+            carelogsContainer.innerHTML = '<div style="color:var(--text-muted);padding:12px 0;">Đang nạp nhật ký chăm sóc…</div>';
+            PawpalServices.fetchBookingCareLogs(booking.dbId).then(logs => {
+                booking.careLogs = logs;
+                booking.carelogs = logs;
+                booking._careLogsLoaded = true;
+                if (PawpalServices.state?.selectedBookingId === booking.id) {
+                    renderDetailCareLogs(booking);
+                }
+            }).catch(err => {
+                console.warn('[PawpalServices] Lỗi nạp nhật ký ca:', err);
+                booking._careLogsLoaded = true;
+                renderDetailCareLogs(booking);
+            });
+            return;
+        }
+
         let logs = booking.carelogs || booking.careLogs || [];
         if (!logs.length) {
             carelogsContainer.innerHTML = '<div style="color:var(--text-muted);padding:12px 0;">Chưa có nhật ký chăm sóc cho ca dịch vụ này.</div>';

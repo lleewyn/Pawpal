@@ -278,43 +278,58 @@
                 return;
             }
 
-            const [
-                ticketsRes,
-                messagesRes,
-                customersRes,
-                profilesRes,
-                petsRes,
-                apptsRes,
-                ordersRes,
-                staffRes,
-                productsRes
-            ] = await Promise.all([
-                Promise.resolve(client.from('support_ticket').select('*').order('priority', { ascending: true }).order('created_at', { ascending: false })).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('support_ticket_message').select('*').order('created_at', { ascending: true })).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('customer').select('id, email, phone_main, account_status')).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('customer_profile').select('customer_id, full_name, gender')).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('pet_profile').select('id, customer_id, pet_code, pet_name, species, breed, avatar_url')).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('appointment').select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_status, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false }).limit(400)).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(400)).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('staff').select('id, full_name, role, account_status')).catch(err => ({ data: [], error: err })),
-                Promise.resolve(client.from('product').select('id, product_name, sku, sale_price, status')).catch(err => ({ data: [], error: err }))
-            ]);
+            const fetchComplaintsData = async () => {
+                const [
+                    ticketsRes,
+                    customersRes,
+                    profilesRes,
+                    petsRes,
+                    apptsRes,
+                    ordersRes,
+                    staffRes,
+                    productsRes
+                ] = await Promise.all([
+                    Promise.resolve(client.from('support_ticket').select('*').order('priority', { ascending: true }).order('created_at', { ascending: false })).catch(err => ({ data: [], error: err })),
+                    Promise.resolve(client.from('customer').select('id, email, phone_main, account_status')).catch(err => ({ data: [], error: err })),
+                    Promise.resolve(client.from('customer_profile').select('customer_id, full_name, gender')).catch(err => ({ data: [], error: err })),
+                    Promise.resolve(client.from('pet_profile').select('id, customer_id, pet_code, pet_name, species, breed, avatar_url')).catch(err => ({ data: [], error: err })),
+                    Promise.resolve(client.from('appointment').select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_status, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false }).limit(400)).catch(err => ({ data: [], error: err })),
+                    Promise.resolve(client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(400)).catch(err => ({ data: [], error: err })),
+                    Promise.resolve(client.from('staff').select('id, full_name, role, account_status')).catch(err => ({ data: [], error: err })),
+                    Promise.resolve(client.from('product').select('id, product_name, sku, sale_price, status')).catch(err => ({ data: [], error: err }))
+                ]);
+                for (const result of [ticketsRes, staffRes]) { if (result.error) throw result.error; }
+                return {
+                    tickets: ticketsRes.data || [],
+                    customers: customersRes.data || [],
+                    profiles: profilesRes.data || [],
+                    pets: petsRes.data || [],
+                    appointments: apptsRes.data || [],
+                    orders: ordersRes.data || [],
+                    staffList: staffRes.data || [],
+                    products: productsRes.data || []
+                };
+            };
+
+            const cachedPayload = window.PawpalDataStore?.fetch
+                ? await window.PawpalDataStore.fetch('complaints:data', fetchComplaintsData, {
+                    ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
+                    force
+                })
+                : await fetchComplaintsData();
 
             PawpalComplaints.state.loadError = null;
-            for (const result of [ticketsRes,messagesRes,staffRes]) { if (result.error) throw result.error; }
             PawpalComplaints.state.unclassifiedTickets = [];
 
-
-            const tickets = (ticketsRes && ticketsRes.data) || [];
-
-            const messages = (messagesRes && messagesRes.data) || [];
-            const customers = (customersRes && customersRes.data) || [];
-            const profiles = (profilesRes && profilesRes.data) || [];
-            const pets = (petsRes && petsRes.data) || [];
-            const appointments = (apptsRes && apptsRes.data) || [];
-            const orders = (ordersRes && ordersRes.data) || [];
-            const staffList = (staffRes && staffRes.data) || [];
-            const products = (productsRes && productsRes.data) || [];
+            const tickets = cachedPayload.tickets || [];
+            const messages = []; // Tải on-demand theo ticket_id khi mở chi tiết khiếu nại (PERF-03.K02)
+            const customers = cachedPayload.customers || [];
+            const profiles = cachedPayload.profiles || [];
+            const pets = cachedPayload.pets || [];
+            const appointments = cachedPayload.appointments || [];
+            const orders = cachedPayload.orders || [];
+            const staffList = cachedPayload.staffList || [];
+            const products = cachedPayload.products || [];
 
             PawpalComplaints.state.cachedAppointments = appointments;
             PawpalComplaints.state.cachedOrders = orders;
@@ -666,8 +681,37 @@
             PawpalComplaints.state.loadError = 'Không thể tải khiếu nại. Vui lòng tải lại trang.';
             console.error('[Complaints] Lỗi nạp dữ liệu từ Supabase:', err.message || String(err), err.code || '');
         }
-    }
     PawpalComplaints.loadComplaintsModuleData = loadComplaintsModuleData;
+
+    // Helper lazy-fetch tin nhắn khi mở 1 ticket cụ thể (PERF-03.K02)
+    PawpalComplaints.fetchTicketMessages = async function(ticketId, { force = false } = {}) {
+        if (!ticketId) return [];
+        const client = getComplaintsDbClient();
+        if (!client) return [];
+
+        const fetchMessages = async () => {
+            const { data, error } = await client
+                .from('support_ticket_message')
+                .select('*')
+                .eq('ticket_id', ticketId)
+                .order('created_at', { ascending: true });
+            if (error) throw error;
+            return data || [];
+        };
+
+        try {
+            const msgs = window.PawpalDataStore?.fetch
+                ? await window.PawpalDataStore.fetch(`complaints:messages:${ticketId}`, fetchMessages, {
+                    ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
+                    force
+                })
+                : await fetchMessages();
+            return msgs;
+        } catch (err) {
+            console.warn(`[Complaints] Lỗi nạp tin nhắn cho ticket ${ticketId}:`, err);
+            return [];
+        }
+    };
 
     // Cập nhật KPIs & Badge
     function updateComplaintsKpis() {
@@ -947,26 +991,62 @@
             if (complaintsRealtimeSubscription) {
                 client.removeChannel(complaintsRealtimeSubscription);
                 complaintsRealtimeSubscription = null;
+                window.PawpalDataStore?.recordMetric?.('channel-remove', 'admin_complaints_live_sync');
             }
 
+            const triggerComplaintsSync = (invalidatePattern, refreshFn) => {
+                if (window.PawpalDataStore?.handleRealtimeChange) {
+                    window.PawpalDataStore.handleRealtimeChange({
+                        moduleName: 'Khiếu nại',
+                        invalidatePattern: invalidatePattern || 'complaints:*',
+                        onActiveRefresh: async () => {
+                            await loadComplaintsModuleData({ force: true });
+                            if (typeof refreshFn === 'function') {
+                                refreshFn();
+                            } else {
+                                updateComplaintsKpis();
+                                renderComplaintsAlertBar();
+                                PawpalComplaints.subtabs.services?.renderServiceComplaintsTable();
+                                PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable();
+                                if (PawpalComplaints.state.currentTicketId) {
+                                    PawpalComplaints.subtabs.detail?.renderTicketDetail(PawpalComplaints.state.currentTicketId);
+                                }
+                            }
+                        },
+                        debounceMs: 300
+                    });
+                } else if (sessionStorage.getItem('pawpal_admin_active_module') === 'Khiếu nại') {
+                    loadComplaintsModuleData({ force: true }).then(() => {
+                        if (refreshFn) refreshFn();
+                    });
+                }
+            };
+
             const channel = client.channel('admin_complaints_live_sync')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, async (payload) => {
-                    console.log('[Complaints Realtime] support_ticket thay đổi:', payload.eventType);
-                    await loadComplaintsModuleData({ force: true });
-                    updateComplaintsKpis();
-                    renderComplaintsAlertBar();
-                    PawpalComplaints.subtabs.services?.renderServiceComplaintsTable();
-                    PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable();
-                    if (PawpalComplaints.state.currentTicketId) {
-                        PawpalComplaints.subtabs.detail?.renderTicketDetail(PawpalComplaints.state.currentTicketId);
-                    }
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, (payload) => {
+                    triggerComplaintsSync('complaints:*', () => {
+                        updateComplaintsKpis();
+                        renderComplaintsAlertBar();
+                        PawpalComplaints.subtabs.services?.renderServiceComplaintsTable();
+                        PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable();
+                        if (PawpalComplaints.state.currentTicketId) {
+                            PawpalComplaints.subtabs.detail?.renderTicketDetail(PawpalComplaints.state.currentTicketId);
+                        }
+                    });
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket_message' }, async (payload) => {
-                    console.log('[Complaints Realtime] support_ticket_message thay đổi:', payload.eventType);
-                    await loadComplaintsModuleData({ force: true });
-                    if (PawpalComplaints.state.currentTicketId) {
-                        PawpalComplaints.subtabs.detail?.renderTicketDetail(PawpalComplaints.state.currentTicketId);
-                    }
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket_message' }, (payload) => {
+                    // PERF-04.09: Bảo vệ thứ tự sự kiện - tin nhắn của ticket khác không làm nhảy UI ticket đang mở
+                    const msgTicketId = payload.new?.ticket_id || payload.old?.ticket_id;
+                    const isTargetingOpenTicket = msgTicketId && (PawpalComplaints.state.currentTicketId === msgTicketId);
+
+                    triggerComplaintsSync(msgTicketId ? `complaints:messages:${msgTicketId}` : 'complaints:*', () => {
+                        updateComplaintsKpis();
+                        PawpalComplaints.subtabs.services?.renderServiceComplaintsTable();
+                        PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable();
+                        if (isTargetingOpenTicket && PawpalComplaints.state.currentTicketId) {
+                            PawpalComplaints.subtabs.detail?.renderTicketDetail(PawpalComplaints.state.currentTicketId);
+                        }
+                    });
                 })
                 .subscribe((status) => {
                     if (status === 'SUBSCRIBED') {
@@ -975,13 +1055,24 @@
                 });
 
             complaintsRealtimeSubscription = channel;
+            window.PawpalDataStore?.recordMetric?.('channel-add', 'admin_complaints_live_sync');
         } catch (err) {
             console.warn('[Complaints Realtime] Lỗi thiết lập Realtime Channel:', err);
         }
     }
 
+    let _isComplaintsInit = false;
     // Khởi tạo phân hệ
     async function initComplaintsModule() {
+        if (_isComplaintsInit) {
+            updateComplaintsKpis();
+            renderComplaintsAlertBar();
+            PawpalComplaints.subtabs.services?.renderServiceComplaintsTable?.();
+            PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable?.();
+            return;
+        }
+        _isComplaintsInit = true;
+
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const moduleTitleEl = document.getElementById('headerModuleTitle');
 

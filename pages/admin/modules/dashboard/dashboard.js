@@ -98,50 +98,63 @@
                     return;
                 }
 
-                const [
-                    ordersRes,
-                    apptsRes,
-                    ticketsRes,
-                    productsRes,
-                    custCountRes,
-                    petCountRes,
-                    profilesRes,
-                    petsRes,
-                    staffRes,
-                    servicesRes,
-                    chatsRes
-                ] = await Promise.all([
-                    // [D-07] Tối ưu hóa truy vấn Dashboard theo mốc thời gian, loại bỏ giới hạn làm thiếu dữ liệu KPI
-                    client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(2000),
-                    client.from('appointment').select('id, appointment_code, customer_id, pet_id, staff_id, service_id, appointment_date, appointment_time, appointment_status, total_price, notes').order('appointment_date', { ascending: false }).limit(2000),
-                    client.from('support_ticket').select('id, user_id, title, status, priority, created_at').order('created_at', { ascending: false }).limit(1000),
-                    // Giống schema đang dùng ở tab Sản phẩm: chỉ lấy các cột tồn tại trong inventory.
-                    client.from('product').select('id, product_name, sku, status, stock, inventory(quantity_in_stock, minimum_stock)'),
-                    client.from('customer').select('id', { count: 'exact', head: true }),
-                    client.from('pet_profile').select('id', { count: 'exact', head: true }),
-                    client.from('customer_profile').select('customer_id, full_name'),
-                    client.from('pet_profile').select('id, pet_name, customer_id, species, breed'),
-                    client.from('staff').select('id, full_name, role, account_status'),
-                    client.from('service').select('id, service_name'),
-                    client.from('chat_conversation').select('id, status, created_at').limit(200)
-                ]);
+                const fetchDashboardPayload = async () => {
+                    const [
+                        ordersRes,
+                        apptsRes,
+                        ticketsRes,
+                        productsRes,
+                        custCountRes,
+                        petCountRes,
+                        profilesRes,
+                        petsRes,
+                        staffRes,
+                        servicesRes,
+                        chatsRes
+                    ] = await Promise.all([
+                        client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(2000),
+                        client.from('appointment').select('id, appointment_code, customer_id, pet_id, staff_id, service_id, appointment_date, appointment_time, appointment_status, total_price, note').order('appointment_date', { ascending: false }).limit(2000),
+                        client.from('support_ticket').select('id, user_id, title, status, priority, created_at').order('created_at', { ascending: false }).limit(1000),
+                        client.from('product').select('id, product_name, sku, status, inventory(quantity_in_stock, minimum_stock)'),
+                        client.from('customer').select('id', { count: 'exact', head: true }),
+                        client.from('pet_profile').select('id', { count: 'exact', head: true }),
+                        client.from('customer_profile').select('customer_id, full_name'),
+                        client.from('pet_profile').select('id, pet_name, customer_id, species, breed'),
+                        client.from('staff').select('id, full_name, role, account_status'),
+                        client.from('service').select('id, service_name'),
+                        client.from('chat_conversation').select('id, status, created_at').limit(200)
+                    ]);
 
-                // D-02: Kiểm tra lỗi truy vấn, không cache kết quả lỗi thành số 0
-                const queryErrors = [ordersRes.error, apptsRes.error, ticketsRes.error].filter(Boolean);
-                if (queryErrors.length > 0) {
-                    console.warn('[Dashboard] Một số truy vấn Supabase gặp lỗi:', queryErrors.map(e => e.message));
-                    _dashLastFetchedAt = 0;
-                } else {
-                    _dashLastFetchedAt = Date.now();
-                }
+                    return {
+                        orders: ordersRes.data || [],
+                        appts: apptsRes.data || [],
+                        tickets: ticketsRes.data || [],
+                        products: productsRes.data || [],
+                        custCount: custCountRes.count,
+                        petCount: petCountRes.count,
+                        profiles: profilesRes.data || [],
+                        pets: petsRes.data || [],
+                        staff: staffRes.data || [],
+                        services: servicesRes.data || [],
+                        chats: chatsRes.data || []
+                    };
+                };
 
-                liveSalesOrders = ordersRes.data || [];
-                liveAppointments = apptsRes.data || [];
-                liveTickets = ticketsRes.data || [];
-                liveProducts = productsRes.data || [];
-                // Nếu quan hệ lồng inventory không được expose ở môi trường hiện tại,
-                // tải hai bảng riêng để Dashboard vẫn phản ánh đúng tồn kho thật.
-                if (productsRes.error || liveProducts.length === 0) {
+                const data = window.PawpalDataStore?.fetch
+                    ? await window.PawpalDataStore.fetch('dashboard:summary', fetchDashboardPayload, {
+                        ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
+                        force
+                    })
+                    : await fetchDashboardPayload();
+
+                _dashLastFetchedAt = Date.now();
+                liveSalesOrders = data.orders || [];
+                liveAppointments = data.appts || [];
+                liveTickets = data.tickets || [];
+                liveProducts = data.products || [];
+
+                // Fallback nếu relation inventory không liên kết trực tiếp
+                if (liveProducts.length === 0) {
                     const [productFallback, inventoryFallback] = await Promise.all([
                         client.from('product').select('id, product_name, sku, status'),
                         client.from('inventory').select('product_id, quantity_in_stock, minimum_stock')
@@ -154,13 +167,14 @@
                         }));
                     }
                 }
-                liveStaffList = staffRes.data || [];
-                liveChatConversations = chatsRes.data || [];
-                const profiles = profilesRes.data || [];
-                liveCustomersCount = custCountRes.count !== null && custCountRes.count !== undefined && custCountRes.count > 0
-                    ? custCountRes.count
+
+                liveStaffList = data.staff || [];
+                liveChatConversations = data.chats || [];
+                const profiles = data.profiles || [];
+                liveCustomersCount = data.custCount !== null && data.custCount !== undefined && data.custCount > 0
+                    ? data.custCount
                     : profiles.length;
-                livePetsCount = petCountRes.count !== null && petCountRes.count !== undefined ? petCountRes.count : 0;
+                livePetsCount = data.petCount !== null && data.petCount !== undefined ? data.petCount : 0;
 
                 // Maps tra cứu nhanh
                 liveProfilesMap.clear();
@@ -168,7 +182,7 @@
                     if (p.customer_id) liveProfilesMap.set(p.customer_id, p);
                 });
 
-                const pets = petsRes.data || [];
+                const pets = data.pets || [];
                 livePetsMap.clear();
                 pets.forEach(pet => {
                     livePetsMap.set(pet.id, pet);
@@ -179,7 +193,7 @@
                     liveStaffMap.set(s.id, s.full_name);
                 });
 
-                const services = servicesRes.data || [];
+                const services = data.services || [];
                 liveServicesMap.clear();
                 services.forEach(srv => {
                     liveServicesMap.set(srv.id, srv.service_name);
@@ -1191,45 +1205,81 @@
         try {
             if (dashboardRealtimeSub) {
                 client.removeChannel(dashboardRealtimeSub);
+                window.PawpalDataStore?.recordMetric?.('channel-remove', 'admin-dashboard-live-sync');
             }
 
+            const triggerSync = (invalidatePattern, refreshFn) => {
+                if (window.PawpalDataStore?.handleRealtimeChange) {
+                    window.PawpalDataStore.handleRealtimeChange({
+                        moduleName: 'Dashboard',
+                        invalidatePattern: invalidatePattern || 'dashboard:*',
+                        onActiveRefresh: async () => {
+                            await loadDashboardData({ force: true });
+                            if (typeof refreshFn === 'function') {
+                                refreshFn();
+                            } else {
+                                renderDashboardKPIs();
+                                renderDashboardStockList();
+                                renderRevenueChart();
+                                renderChatbotAndStaffMetrics();
+                            }
+                        },
+                        debounceMs: 300
+                    });
+                } else if (sessionStorage.getItem('pawpal_admin_active_module') === 'Dashboard') {
+                    loadDashboardData({ force: true }).then(() => {
+                        if (refreshFn) refreshFn();
+                    });
+                }
+            };
+
             dashboardRealtimeSub = client.channel('admin-dashboard-live-sync')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_order' }, async () => {
-                    await loadDashboardData({ force: true });
-                    renderDashboardKPIs();
-                    renderRevenueChart();
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_order' }, () => {
+                    triggerSync('dashboard:*', () => {
+                        renderDashboardKPIs();
+                        renderRevenueChart();
+                    });
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment' }, async () => {
-                    await loadDashboardData({ force: true });
-                    renderDashboardKPIs();
-                    setupDashboardCalendar();
-                    renderChatbotAndStaffMetrics();
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment' }, () => {
+                    triggerSync('dashboard:*', () => {
+                        renderDashboardKPIs();
+                        setupDashboardCalendar();
+                        renderChatbotAndStaffMetrics();
+                    });
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, async () => {
-                    await loadDashboardData({ force: true });
-                    renderDashboardKPIs();
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, () => {
+                    triggerSync('dashboard:*', () => {
+                        renderDashboardKPIs();
+                    });
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer' }, async () => {
-                    await loadDashboardData({ force: true });
-                    renderDashboardKPIs();
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer' }, () => {
+                    triggerSync('dashboard:*', () => {
+                        renderDashboardKPIs();
+                    });
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_profile' }, async () => {
-                    await loadDashboardData({ force: true });
-                    renderDashboardKPIs();
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_profile' }, () => {
+                    triggerSync('dashboard:*', () => {
+                        renderDashboardKPIs();
+                    });
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'product' }, async () => {
-                    await loadDashboardData({ force: true });
-                    renderDashboardStockList();
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'product' }, () => {
+                    triggerSync('dashboard:*', () => {
+                        renderDashboardStockList();
+                    });
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, async () => {
-                    await loadDashboardData({ force: true });
-                    renderDashboardStockList();
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => {
+                    triggerSync('dashboard:*', () => {
+                        renderDashboardStockList();
+                    });
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_conversation' }, async () => {
-                    await loadDashboardData({ force: true });
-                    renderChatbotAndStaffMetrics();
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_conversation' }, () => {
+                    triggerSync('dashboard:*', () => {
+                        renderChatbotAndStaffMetrics();
+                    });
                 })
                 .subscribe();
+
+            window.PawpalDataStore?.recordMetric?.('channel-add', 'admin-dashboard-live-sync');
         } catch (e) {
             console.warn('[Dashboard] Lỗi khởi tạo Realtime Channel:', e);
         }
@@ -1255,11 +1305,11 @@
 
         _isDashboardInit = true;
         await loadDashboardData();
-        renderDashboardKPIs();
-        renderDashboardStockList();
-        renderRevenueChart();
-        setupDashboardCalendar();
-        renderChatbotAndStaffMetrics();
+        try { renderDashboardKPIs(); } catch (e) { console.warn('[Dashboard] renderDashboardKPIs error:', e); }
+        try { renderDashboardStockList(); } catch (e) { console.warn('[Dashboard] renderDashboardStockList error:', e); }
+        try { renderRevenueChart(); } catch (e) { console.warn('[Dashboard] renderRevenueChart error:', e); }
+        try { setupDashboardCalendar(); } catch (e) { console.warn('[Dashboard] setupDashboardCalendar error:', e); }
+        try { renderChatbotAndStaffMetrics(); } catch (e) { console.warn('[Dashboard] renderChatbotAndStaffMetrics error:', e); }
         setupQuickReceptionActions();
         setupBookingQuickModalEvents();
         bindModuleNavigation();
@@ -1277,22 +1327,31 @@
             if (_dashHiddenAt === 0 || hiddenDuration < DASH_FOCUS_RELOAD_AFTER_MS) return;
             _dashHiddenAt = 0;
             await loadDashboardData({ force: true });
-            renderDashboardKPIs();
-            renderDashboardStockList();
-            renderRevenueChart();
-            renderChatbotAndStaffMetrics();
+            try { renderDashboardKPIs(); } catch (e) {}
+            try { renderDashboardStockList(); } catch (e) {}
+            try { renderRevenueChart(); } catch (e) {}
+            try { renderChatbotAndStaffMetrics(); } catch (e) {}
+        });
+
+        // Lắng nghe sự kiện biến động dữ liệu từ DataStore (PERF-03.D05)
+        window.addEventListener('pawpal:mutation', (e) => {
+            const table = e.detail?.table;
+            if (['sales_order', 'appointment', 'support_ticket', 'product', 'inventory', 'customer', 'pet_profile'].includes(table)) {
+                window.PawpalDataStore?.invalidate?.('dashboard:*');
+            }
         });
 
         // [D-11] Lắng nghe sự kiện biến động dữ liệu từ phân hệ khác để tự động xóa cache Dashboard
         window.addEventListener('pawpal:invalidate-dashboard-cache', async () => {
             _dashLastFetchedAt = 0;
+            window.PawpalDataStore?.invalidate?.('dashboard:*');
             const dashEl = document.querySelector('.dashboard-module') || document.getElementById('moduleDashboard');
             if (dashEl && dashEl.style.display !== 'none') {
                 await loadDashboardData({ force: true });
-                renderDashboardKPIs();
-                renderDashboardStockList();
-                renderRevenueChart();
-                renderChatbotAndStaffMetrics();
+                try { renderDashboardKPIs(); } catch (e) {}
+                try { renderDashboardStockList(); } catch (e) {}
+                try { renderRevenueChart(); } catch (e) {}
+                try { renderChatbotAndStaffMetrics(); } catch (e) {}
             }
         });
     }

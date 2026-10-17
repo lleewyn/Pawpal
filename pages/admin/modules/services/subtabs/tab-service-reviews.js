@@ -39,6 +39,7 @@
         const statPending = document.getElementById('statPendingReviews');
         const statLow = document.getElementById('statLowRatingReviews');
 
+        const total = reviewsData.length;
         if (statAvg) statAvg.textContent = avgRating;
         if (statTotal) statTotal.textContent = total;
         if (statPending) statPending.textContent = pendingCount;
@@ -318,11 +319,15 @@
     // Khởi tạo các sự kiện lọc, tìm kiếm và nút thao tác
     function initReviewsSubtab() {
         const searchInput = document.getElementById('reviewSearchInput');
+        let reviewSearchTimer = null;
         if (searchInput) {
             searchInput.addEventListener('input', () => {
-                reviewSearchTerm = searchInput.value.trim();
-                reviewCurrentPage = 1;
-                renderReviewsTable();
+                clearTimeout(reviewSearchTimer);
+                reviewSearchTimer = setTimeout(() => {
+                    reviewSearchTerm = searchInput.value.trim();
+                    reviewCurrentPage = 1;
+                    renderReviewsTable();
+                }, 300);
             });
         }
 

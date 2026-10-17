@@ -424,21 +424,45 @@
         // Tab 5: Khiếu nại
         renderDrawerComplaints(custId);
 
+        // Lazy fetch hồ sơ 360° nếu chưa tải (PERF-03.C03)
+        if (typeof PawpalCustomers.fetchCustomerProfile360 === 'function' && !data._detailsLoaded) {
+            PawpalCustomers.fetchCustomerProfile360(data).then(() => {
+                renderDrawerOrders(custId);
+                renderDrawerBookings(custId);
+                renderDrawerComplaints(custId);
+                const bOrd = document.getElementById('badgeCountOrders');
+                const bApp = document.getElementById('badgeCountBookings');
+                const bCmp = document.getElementById('badgeCountComplaints');
+                if (bOrd) {
+                    bOrd.textContent = (data.orders || []).length;
+                    bOrd.style.display = data.orders?.length > 0 ? 'inline-flex' : 'none';
+                }
+                if (bApp) {
+                    bApp.textContent = (data.bookings || []).length;
+                    bApp.style.display = data.bookings?.length > 0 ? 'inline-flex' : 'none';
+                }
+                if (bCmp) {
+                    bCmp.textContent = (data.complaints || []).length;
+                    bCmp.style.display = data.complaints?.length > 0 ? 'inline-flex' : 'none';
+                }
+            });
+        }
+
         // Cập nhật số đếm badge trên các tabs con
         const badgeOrders = document.getElementById('badgeCountOrders');
         const badgeBookings = document.getElementById('badgeCountBookings');
         const badgeComplaints = document.getElementById('badgeCountComplaints');
         if (badgeOrders) {
-            badgeOrders.textContent = data.orders.length;
-            badgeOrders.style.display = data.orders.length > 0 ? 'inline-flex' : 'none';
+            badgeOrders.textContent = (data.orders || []).length;
+            badgeOrders.style.display = data.orders?.length > 0 ? 'inline-flex' : 'none';
         }
         if (badgeBookings) {
-            badgeBookings.textContent = data.bookings.length;
-            badgeBookings.style.display = data.bookings.length > 0 ? 'inline-flex' : 'none';
+            badgeBookings.textContent = (data.bookings || []).length;
+            badgeBookings.style.display = data.bookings?.length > 0 ? 'inline-flex' : 'none';
         }
         if (badgeComplaints) {
-            badgeComplaints.textContent = data.complaints.length;
-            badgeComplaints.style.display = data.complaints.length > 0 ? 'inline-flex' : 'none';
+            badgeComplaints.textContent = (data.complaints || []).length;
+            badgeComplaints.style.display = data.complaints?.length > 0 ? 'inline-flex' : 'none';
         }
 
         PawpalCustomers.updateBreadcrumb(data.name);

@@ -582,6 +582,9 @@
     function refreshInboxDebounced(delay = 350) {
         if (inboxDebounceTimer) clearTimeout(inboxDebounceTimer);
         inboxDebounceTimer = setTimeout(async () => {
+            if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Chatbot') {
+                return;
+            }
             if (isInboxRefreshing) {
                 hasPendingRefresh = true;
                 return;

@@ -33,6 +33,18 @@
         const reminders = [];
         const today = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
         const todayTime = Date.parse(today + 'T00:00:00+07:00');
+
+        if ((!PawpalPets.state.appointments || PawpalPets.state.appointments.length === 0) && typeof PawpalPets.fetchRemindersAppointments === 'function' && !PawpalPets.state._remindersFetching) {
+            PawpalPets.state._remindersFetching = true;
+            PawpalPets.fetchRemindersAppointments().then(() => {
+                PawpalPets.state._remindersFetching = false;
+                renderRemindersTable();
+                updateRemindersKPIs();
+            }).catch(() => {
+                PawpalPets.state._remindersFetching = false;
+            });
+        }
+
         const completed = (PawpalPets.state.appointments || []).filter(a => a.appointment_status === 'COMPLETED');
         const sentMap = getSentReminders();
 
@@ -336,7 +348,16 @@
             });
         }
 
-        if (reminderSearchInput) reminderSearchInput.addEventListener('input', () => { remCurrentPage = 1; renderRemindersTable(); });
+        let remSearchTimer = null;
+        if (reminderSearchInput) {
+            reminderSearchInput.addEventListener('input', () => {
+                clearTimeout(remSearchTimer);
+                remSearchTimer = setTimeout(() => {
+                    remCurrentPage = 1;
+                    renderRemindersTable();
+                }, 300);
+            });
+        }
         if (reminderFilterType) reminderFilterType.addEventListener('change', () => { remCurrentPage = 1; renderRemindersTable(); });
         if (reminderFilterStatus) reminderFilterStatus.addEventListener('change', () => { remCurrentPage = 1; renderRemindersTable(); });
 

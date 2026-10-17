@@ -624,13 +624,17 @@
     function initStaffListSubtab() {
         const searchInput = document.getElementById('staffSearchInput');
         const clearSearchBtn = document.getElementById('btnClearStaffSearch');
+        let staffSearchTimer = null;
         if (searchInput) {
             searchInput.addEventListener('input', () => {
                 if (clearSearchBtn) {
                     clearSearchBtn.style.display = searchInput.value ? 'inline-flex' : 'none';
                 }
-                currentStaffPage = 1;
-                renderStaffList();
+                clearTimeout(staffSearchTimer);
+                staffSearchTimer = setTimeout(() => {
+                    currentStaffPage = 1;
+                    renderStaffList();
+                }, 300);
             });
         }
         if (clearSearchBtn) {
