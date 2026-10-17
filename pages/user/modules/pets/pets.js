@@ -99,11 +99,43 @@ function getDefaultPetAvatar(species) {
 let isInitRunning = false;
 let editingPetId = null;
 
+function getPetRouteParams() {
+    const hashQuery = window.location.hash.includes('?')
+        ? window.location.hash.slice(window.location.hash.indexOf('?') + 1)
+        : '';
+    const params = new URLSearchParams(hashQuery || window.location.search);
+    if (!params.has('id')) {
+        const pathPetId = window.location.hash
+            .replace(/^#\/?pets\/?/i, '')
+            .split('?')[0];
+        if (pathPetId) params.set('id', decodeURIComponent(pathPetId));
+    }
+    return params;
+}
+
+function syncPetRoute(params = '') {
+    const targetHash = `#pets${params ? `?${params}` : ''}`;
+    if (window.location.hash !== targetHash) {
+        window.history.replaceState(null, '', targetHash);
+    }
+}
+
 export async function initPetProfilePage() {
     if (isInitRunning) return;
     isInitRunning = true;
     
     try {
+        // Đọc deep link trước mọi truy vấn dữ liệu để không hiển thị nháy màn hình danh sách pet.
+        const urlParams = getPetRouteParams();
+        const actionParam = urlParams.get('action');
+        const editId = urlParams.get('id') || urlParams.get('edit');
+        const shouldOpenForm = actionParam === 'create' || Boolean(editId);
+
+        if (shouldOpenForm) {
+            document.getElementById('petListView')?.classList.add('d-none');
+            document.getElementById('petDetailView')?.classList.remove('d-none');
+        }
+
         if (typeof window.setUserSubBreadcrumb === 'function') {
             window.setUserSubBreadcrumb('', 'pets');
         }
@@ -120,14 +152,11 @@ export async function initPetProfilePage() {
         setupDeleteModal();
         loadPetBottomInsights();
 
-        // Kiểm tra deep link tham số URL ví dụ ?action=create hoặc ?id=PET-xxx hoặc ?edit=PET-xxx
-        const urlParams = new URLSearchParams(window.location.search);
-        const actionParam = urlParams.get('action');
-        const editId = urlParams.get('id') || urlParams.get('edit');
+        // Điền form sau khi dữ liệu thật từ Supabase đã tải xong.
         if (actionParam === 'create') {
-            switchToPetFormScreen();
+            await switchToPetFormScreen();
         } else if (editId) {
-            switchToPetFormScreen(editId);
+            await switchToPetFormScreen(editId);
         }
     } catch (e) {
         console.error('Error during initPetProfilePage:', e);
@@ -140,7 +169,6 @@ export async function switchToPetFormScreen(petId = null) {
     const listView = document.getElementById('petListView');
     const detailView = document.getElementById('petDetailView');
     const titleEl = document.getElementById('petFormScreenTitle');
-    const subtitleEl = document.getElementById('petFormScreenSubtitle');
     const quickBox = document.getElementById('petQuickLinksBox');
     const diaryLink = document.getElementById('linkPetDiaryQuick');
     const petIdInput = document.getElementById('petId');
@@ -154,8 +182,7 @@ export async function switchToPetFormScreen(petId = null) {
         const pet = pets.find(p => String(p.id) === String(petId));
         if (pet) {
             if (petIdInput) petIdInput.value = pet.id;
-            if (titleEl) titleEl.textContent = `Hồ sơ bé cưng: ${pet.name}`;
-            if (subtitleEl) subtitleEl.textContent = `Mã bé: #${pet.id} • Cập nhật cân nặng, ngày sinh và đặc điểm chăm sóc của bé`;
+            if (titleEl) titleEl.textContent = pet.name;
             if (quickBox) quickBox.classList.remove('d-none');
             if (diaryLink) diaryLink.href = `#diary?id=${encodeURIComponent(pet.id)}`;
             populatePetForm(pet);
@@ -163,17 +190,20 @@ export async function switchToPetFormScreen(petId = null) {
             if (typeof window.setUserSubBreadcrumb === 'function') {
                 window.setUserSubBreadcrumb(pet.name, 'pets');
             }
+
+            syncPetRoute(`id=${encodeURIComponent(pet.id)}`);
         }
     } else {
         if (petIdInput) petIdInput.value = '';
-        if (titleEl) titleEl.textContent = 'Thêm bé cưng mới';
-        if (subtitleEl) subtitleEl.textContent = 'Đăng ký thông tin để PawPal chăm sóc bé chu đáo và chuẩn xác nhất';
+        if (titleEl) titleEl.textContent = 'Thêm bé cưng';
         if (quickBox) quickBox.classList.add('d-none');
         resetPetForm();
 
         if (typeof window.setUserSubBreadcrumb === 'function') {
             window.setUserSubBreadcrumb('Thêm bé mới', 'pets');
         }
+
+        syncPetRoute('action=create');
     }
 
     listView.classList.add('d-none');
@@ -193,6 +223,8 @@ export function switchToPetListScreen() {
     if (typeof window.setUserSubBreadcrumb === 'function') {
         window.setUserSubBreadcrumb('', 'pets');
     }
+
+    syncPetRoute();
 
     renderPetGrids();
     loadPetBottomInsights();
@@ -702,8 +734,15 @@ function setupTabs() {
             
             const activeTab = document.getElementById('activeTab');
             const archiveTab = document.getElementById('archiveTab');
-            if (activeTab) activeTab.style.display = btn.dataset.tab === 'active' ? 'block' : 'none';
-            if (archiveTab) archiveTab.style.display = btn.dataset.tab === 'archive' ? 'block' : 'none';
+            const showArchive = btn.dataset.tab === 'archive';
+            if (activeTab) {
+                activeTab.style.removeProperty('display');
+                activeTab.classList.toggle('d-none', showArchive);
+            }
+            if (archiveTab) {
+                archiveTab.style.removeProperty('display');
+                archiveTab.classList.toggle('d-none', !showArchive);
+            }
         });
     });
 }

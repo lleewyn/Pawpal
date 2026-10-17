@@ -373,12 +373,6 @@
     margin: 0;
 }
 
-.pet-screen-subtitle {
-    font-size: 13px;
-    color: #4F7A65;
-    margin: 0;
-}
-
 .pet-detail-card-container {
     background: #ffffff;
     border: 1px solid #ECF2EE;
@@ -553,11 +547,17 @@
 .chip-item {
     display: inline-flex;
     align-items: center;
+    position: relative;
     cursor: pointer;
 }
 
 .chip-item input[type="radio"] {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .chip-item span {
@@ -580,6 +580,11 @@
     border-color: #236B48;
     color: #ffffff;
     font-weight: 600;
+}
+
+.chip-item input[type="radio"]:focus-visible + span {
+    outline: 2px solid #236B48;
+    outline-offset: 2px;
 }
 
 .checkbox-label-custom {
