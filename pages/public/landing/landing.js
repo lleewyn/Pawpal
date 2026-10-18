@@ -176,24 +176,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const cartPage = '/pages/shop/cart/cart.html';
     const checkoutPage = '/pages/shop/checkout/checkout.html?buynow=true';
     const getCart = () => JSON.parse(localStorage.getItem(cartKey) || '[]');
-    const saveCart = (cart) => {
-        localStorage.setItem(cartKey, JSON.stringify(cart));
+    const saveCart = async (cart) => {
         const currentUser = getCurrentWishlistUser();
         if (window.API && typeof window.API.saveUserCart === 'function') {
-            window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
+            const result = await window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
+            if (!result?.success) throw new Error('Không thể lưu giỏ hàng');
+        } else {
+            throw new Error('Không thể kết nối giỏ hàng');
         }
     };
     const getQty = (item) => {
         const qty = Number(item?.quantity ?? item?.qty ?? 1);
         return Number.isFinite(qty) && qty > 0 ? qty : 1;
     };
-    const showCartToast = (message) => {
+    const showCartToast = (message, type = 'success') => {
         if (typeof window.showGlobalToast === 'function') {
-            window.showGlobalToast('success', message);
+            window.showGlobalToast(type, message);
             return;
         }
         if (typeof window.showToast === 'function') {
-            window.showToast(message, 'success');
+            window.showToast(message, type);
             return;
         }
         const toast = document.createElement('div');
@@ -347,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     renderProducts(featured);
 
-    grid.addEventListener('click', (event) => {
+    grid.addEventListener('click', async (event) => {
         const wishlistBtn = event.target.closest('.product-wishlist-btn');
         const addBtn = event.target.closest('.add-to-cart-btn');
         const buyBtn = event.target.closest('.buy-now-btn');
@@ -381,9 +383,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const cart = getCart();
         upsertCartItem(cart, id, product, 1);
-        saveCart(cart);
-        showCartToast(`Đã thêm ${product.name} vào giỏ hàng`);
-        if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
+        try {
+            const user = getCurrentWishlistUser();
+            if (user?.id && !user.is_temporary) {
+                const result = await window.API.addToCart(user.id, id, 1, product);
+                if (!result?.success) throw new Error('Không thể thêm sản phẩm vào giỏ hàng');
+            } else {
+                await saveCart(cart);
+            }
+            showCartToast(`Đã thêm ${product.name} vào giỏ hàng`);
+            if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
+        } catch (error) {
+            showCartToast(error.message || 'Không thể thêm sản phẩm vào giỏ hàng', 'warning');
+        }
     });
 
     document.querySelectorAll('.shop-tab-btn').forEach(btn => {

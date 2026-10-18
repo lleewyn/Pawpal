@@ -1,4 +1,19 @@
 import { resolveAuthenticatedCustomerId } from '/scripts/shared/customer-identity.mjs';
+import { normalizeCartItems, publishCart } from '/scripts/shared/cart-state.mjs';
+
+let cartWriteQueue = Promise.resolve();
+function queueCartWrite(task) {
+    const result = cartWriteQueue.then(() => typeof navigator !== 'undefined' && navigator.locks
+        ? navigator.locks.request('pawpal-cart-write', task)
+        : task());
+    cartWriteQueue = result.catch(() => {});
+    return result;
+}
+
+function assertCartOwner(userId) {
+    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    if (!userId || user?.id !== userId) throw new Error('Tài khoản đã thay đổi. Vui lòng tải lại giỏ hàng.');
+}
 
 const resolveCustomerId = resolveAuthenticatedCustomerId;
 
@@ -347,100 +362,196 @@ export const API = {
         return safeReadObject('pawpal_pet_tracker_logs') || {};
     },
 
-    async getUserCart(userId) {
+    async getUserCart(userId, { waitForWrites = true } = {}) {
         if (!userId) return [];
+        assertCartOwner(userId);
+        if (waitForWrites) await cartWriteQueue;
+        assertCartOwner(userId);
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) return [];
+        if (!db) throw new Error('Chưa kết nối được giỏ hàng.');
 
         try {
             const { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', userId).maybeSingle();
-            if (cartError || !cartData) return [];
+            if (cartError) throw cartError;
+            if (!cartData) return publishCart([], userId);
 
-            const { data: items, error: itemsError } = await db.from('cart_item').select('product_id, quantity').eq('cart_id', cartData.id);
-            if (!itemsError && items) {
-                return items.map(item => ({ id: item.product_id, qty: item.quantity }));
-            }
+            const { data: items, error: itemsError } = await db.from('cart_item').select('product_id, quantity, unit_price').eq('cart_id', cartData.id);
+            if (itemsError) throw itemsError;
+            let cached = [];
+            try { if (localStorage.getItem('pawpal_cart_owner') === String(userId)) cached = JSON.parse(localStorage.getItem('pawpal_cart') || '[]'); } catch {}
+            return publishCart((items || []).map(item => ({
+                ...(Array.isArray(cached) ? cached.find(c => String(c.id) === String(item.product_id)) : null),
+                id: item.product_id, quantity: Number(item.quantity), qty: Number(item.quantity), price: Number(item.unit_price),
+            })), userId);
         } catch (err) {
-            console.error('Error getUserCart:', err);
+            throw err;
         }
-        return [];
     },
 
     async getOrCreateCart(userId) {
         if (!userId) return null;
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) return null;
+        if (!db) throw new Error('Chưa kết nối được giỏ hàng.');
 
-        let { data: cartData } = await db.from('cart').select('id').eq('customer_id', userId).maybeSingle();
+        let { data: cartData, error: readError } = await db.from('cart').select('id').eq('customer_id', userId).maybeSingle();
+        if (readError) throw readError;
         if (!cartData) {
             const { data: newCart, error } = await db.from('cart').insert({ customer_id: userId, cart_status: 'ACTIVE' }).select('id').single();
-            if (error) return null;
+            if (error) throw error;
             cartData = newCart;
         }
         return cartData;
     },
 
     async saveUserCart(userId, cartItems) {
-        try {
-            localStorage.setItem('pawpal_cart', JSON.stringify(cartItems || []));
-            document.dispatchEvent(new CustomEvent('cart_updated'));
-            if (typeof window.updateCartBadge === 'function') {
-                window.updateCartBadge();
-            }
-        } catch(e) {}
-
-        if (!userId) return { success: true };
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) return { success: true };
-
-        try {
-            const cart = await this.getOrCreateCart(userId);
-            if (!cart) return { success: false };
-
-            // First delete existing items
-            await db.from('cart_item').delete().eq('cart_id', cart.id);
-
-            // Then insert new items
-            if (cartItems && cartItems.length > 0) {
-                const itemsToInsert = cartItems.map(item => ({
-                    cart_id: cart.id,
-                    product_id: item.id,
-                    quantity: item.qty || item.quantity || 1,
-                    unit_price: item.price || 0,
-                    subtotal: (item.price || 0) * (item.qty || item.quantity || 1)
-                }));
-                const { error } = await db.from('cart_item').insert(itemsToInsert);
-                if (error) console.error('Error inserting cart items:', error);
-                return { success: !error };
-            }
-            return { success: true };
-        } catch (err) {
-            console.error('Error saveUserCart:', err);
-            return { success: false };
-        }
+        const snapshot = normalizeCartItems(cartItems);
+        return queueCartWrite(() => this.persistUserCart(userId, snapshot));
     },
 
-    async addToCart(userId, productId, quantity = 1) {
-        if (!userId) return { success: false, error: 'User not logged in' };
+    async validateCartStock(cartItems) {
+        const items = normalizeCartItems(cartItems);
+        if (!items.length) return { valid: true };
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) return { success: false, error: 'No DB' };
-
-        const cart = await this.getOrCreateCart(userId);
-        if (!cart) return { success: false, error: 'Cannot create cart' };
-
-        const { data: existingItem } = await db.from('cart_item')
-            .select('id, quantity').eq('cart_id', cart.id).eq('product_id', productId).maybeSingle();
-
-        if (existingItem) {
-            const { error } = await db.from('cart_item')
-                .update({ quantity: existingItem.quantity + quantity })
-                .eq('id', existingItem.id);
-            return { success: !error, error };
-        } else {
-            const { error } = await db.from('cart_item')
-                .insert({ cart_id: cart.id, product_id: productId, quantity, unit_price: 0, subtotal: 0 });
-            return { success: !error, error };
+        if (!db) throw new Error('Không thể kiểm tra tồn kho. Vui lòng thử lại.');
+        const { data, error } = await db.from('inventory').select('product_id, quantity_in_stock').in('product_id', items.map(item => item.id));
+        if (error) throw new Error('Không thể kiểm tra tồn kho. Vui lòng thử lại.');
+        const stockByProduct = new Map();
+        for (const row of data || []) {
+            const count = Number(row.quantity_in_stock);
+            if (!Number.isSafeInteger(count) || count < 0) throw new Error('Không thể kiểm tra tồn kho. Vui lòng thử lại.');
+            stockByProduct.set(String(row.product_id), (stockByProduct.get(String(row.product_id)) || 0) + count);
         }
+        for (const item of items) {
+            const remaining = stockByProduct.get(item.id) || 0;
+            if (item.quantity > remaining) throw new Error(`Chỉ còn ${remaining} sản phẩm trong kho`);
+        }
+        return { valid: true };
+    },
+
+    async prepareCartCheckout(userId, selectedItems) {
+        const requested = normalizeCartItems(selectedItems);
+        return queueCartWrite(async () => {
+            const current = await this.getUserCart(userId, { waitForWrites: false });
+            const selected = current.filter(item => requested.some(entry => entry.id === String(item.id)));
+            if (!selected.length || selected.length !== requested.length) throw new Error('Giỏ hàng đã thay đổi. Vui lòng chọn lại sản phẩm.');
+            await this.validateCartStock(selected);
+            return selected;
+        });
+    },
+
+    async restoreCartBackup(userId, backupItems, { mode = 'add', token = JSON.stringify(backupItems) } = {}) {
+        const backup = normalizeCartItems(backupItems);
+        return queueCartWrite(async () => {
+            const current = await this.getUserCart(userId, { waitForWrites: false });
+            const key = `pawpal_cart_restore_${userId}`;
+            const payload = JSON.stringify(backup);
+            const previous = JSON.parse(localStorage.getItem(key) || 'null');
+            if (previous?.token === token && previous.payload === payload && previous.status === 'applied') return current;
+            let merged;
+            if (previous?.token === token && previous.payload === payload && previous.status === 'prepared') {
+                // A prior request may have committed before its response was lost.
+                merged = normalizeCartItems([...current]);
+                for (const target of previous.target) {
+                    const item = merged.find(entry => entry.id === target.id);
+                    if (item) { item.quantity = Math.max(item.quantity, target.quantity); item.qty = item.quantity; }
+                    else merged.push(target);
+                }
+            } else {
+                const additions = mode === 'included'
+                    ? backup.filter(item => !current.some(entry => String(entry.id) === item.id))
+                    : backup;
+                merged = normalizeCartItems([...current, ...additions]);
+            }
+            const journal = { token, payload, target: merged, status: 'prepared' };
+            localStorage.setItem(key, JSON.stringify(journal));
+            // Restoring a saved cart does not purchase items or reserve stock.
+            if (JSON.stringify(merged) !== JSON.stringify(current)) await this.persistUserCart(userId, merged, { checkStock: false });
+            journal.status = 'applied';
+            localStorage.setItem(key, JSON.stringify(journal));
+            return merged;
+        });
+    },
+
+    async removePurchasedCartItems(userId, purchasedItems) {
+        const purchased = normalizeCartItems(purchasedItems);
+        return queueCartWrite(async () => {
+            const current = await this.getUserCart(userId, { waitForWrites: false });
+            const remaining = current.map(item => {
+                const quantity = item.quantity - (purchased.find(entry => entry.id === String(item.id))?.quantity || 0);
+                return { ...item, quantity, qty: quantity };
+            }).filter(item => item.quantity > 0);
+            await this.persistUserCart(userId, remaining, { checkStock: false });
+            return { success: true };
+        });
+    },
+
+    async persistUserCart(userId, items, { checkStock = true } = {}) {
+        if (!userId) { publishCart(items); return { success: true }; }
+        assertCartOwner(userId);
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) throw new Error('Cart database unavailable');
+        if (checkStock) await this.validateCartStock(items);
+        const cart = await this.getOrCreateCart(userId);
+        if (!cart) throw new Error('Cart unavailable');
+        const { data: existing, error: readError } = await db.from('cart_item')
+            .select('id, product_id, quantity').eq('cart_id', cart.id);
+        if (readError) throw readError;
+        const keep = new Set();
+        for (const item of items) {
+            const price = Number(item.price) || 0;
+            const values = { quantity: item.quantity, unit_price: price, subtotal: price * item.quantity };
+            const current = (existing || []).find(row => String(row.product_id) === item.id);
+            const query = current
+                ? db.from('cart_item').update(values).eq('cart_id', cart.id).eq('id', current.id)
+                : db.from('cart_item').insert({ ...values, cart_id: cart.id, product_id: item.id });
+            const { data, error } = await query.select('id');
+            if (error) throw error;
+            if (!data?.length) throw new Error('Cart write was not applied');
+            keep.add(data[0].id);
+        }
+        const removals = (existing || []).filter(row => !keep.has(row.id)).map(row => row.id);
+        if (removals.length) {
+            const { data, error } = await db.from('cart_item').delete()
+                .eq('cart_id', cart.id).in('id', removals).select('id');
+            if (error) throw error;
+            if (data?.length !== removals.length) throw new Error('Cart deletion was not applied');
+        }
+        publishCart(items, userId);
+        return { success: true };
+    },
+
+    async addToCart(userId, productId, quantity = 1, details = {}) {
+        if (!userId) return { success: false, error: 'User not logged in' };
+        if (!Number.isSafeInteger(Number(quantity)) || Number(quantity) < 1) throw new Error('Invalid quantity');
+        return queueCartWrite(async () => {
+            const items = await this.getUserCart(userId, { waitForWrites: false });
+            const existing = items.find(item => String(item.id) === String(productId));
+            if (existing) {
+                const nextQuantity = existing.quantity + Number(quantity);
+                Object.assign(existing, details, { id: String(productId), quantity: nextQuantity, qty: nextQuantity });
+            }
+            else items.push({ ...details, id: String(productId), quantity: Number(quantity), qty: Number(quantity) });
+            return this.persistUserCart(userId, normalizeCartItems(items));
+        });
+    },
+
+    async adjustCartQuantity(userId, productId, delta) {
+        if (!Number.isSafeInteger(delta) || !delta) throw new Error('Số lượng không hợp lệ.');
+        return queueCartWrite(async () => {
+            const items = await this.getUserCart(userId, { waitForWrites: false });
+            const item = items.find(entry => String(entry.id) === String(productId));
+            if (!item) throw new Error('Sản phẩm đã được xóa khỏi giỏ hàng.');
+            item.quantity += delta;
+            item.qty = item.quantity;
+            return this.persistUserCart(userId, normalizeCartItems(items));
+        });
+    },
+
+    async removeCartProduct(userId, productId) {
+        return queueCartWrite(async () => {
+            const items = await this.getUserCart(userId, { waitForWrites: false });
+            return this.persistUserCart(userId, items.filter(item => String(item.id) !== String(productId)), { checkStock: false });
+        });
     },
 
     async updateCartItemQuantity(userId, productId, quantity) {

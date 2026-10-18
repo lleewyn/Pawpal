@@ -561,9 +561,13 @@ async function handleAddToCart() {
         selectedVariant: selectedVariantState.name || 'Tiêu chuẩn'
     };
     
-    await addProductToCart(itemToAdd, quantity);
-    showToast('Đã thêm sản phẩm vào giỏ hàng', 'success');
-    await updateCartBadge();
+    try {
+        await addProductToCart(itemToAdd, quantity);
+        showToast('Đã thêm sản phẩm vào giỏ hàng', 'success');
+        await updateCartBadge();
+    } catch (error) {
+        showToast(error.message || 'Không thể thêm sản phẩm vào giỏ hàng', 'warning');
+    }
 }
 
 function handleBuyNow() {
@@ -811,41 +815,8 @@ async function bindRelatedProductCards() {
 
 async function addProductToCart(product, quantity) {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    let cart = [];
-    if (window.API && typeof window.API.getUserCart === 'function') {
-        cart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
-    }
-    
-    const targetVariant = product.selectedVariant || null;
-    const existingIndex = cart.findIndex(item => {
-        const isSameId = String(item.id) === String(product.id);
-        if (!targetVariant) return isSameId;
-        return isSameId && (item.selectedVariant === targetVariant);
-    });
-    
-    if (existingIndex >= 0) {
-        cart[existingIndex].quantity += quantity;
-        
-        if (cart[existingIndex].quantity > product.stock) {
-            cart[existingIndex].quantity = product.stock;
-            showToast(`Đã cập nhật số lượng tối đa: ${product.stock}`, 'warning');
-        }
-    } else {
-        cart.push({
-            id: product.id,
-            name: product.name,
-            brand: product.brand,
-            price: product.price,
-            selectedVariant: targetVariant,
-            quantity: quantity,
-            image: product.image,
-            stock: product.stock
-        });
-    }
-    
-    if (window.API && typeof window.API.saveUserCart === 'function') {
-        await window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
-    }
+    const result = await window.API.addToCart(currentUser?.id, product.id, quantity, product);
+    if (!result?.success) throw new Error(result?.error || 'Cannot update cart');
 }
 
 async function updateCartBadge() {

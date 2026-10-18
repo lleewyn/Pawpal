@@ -1,7 +1,16 @@
+import { ensureCartAccess, showCartNotice } from '/scripts/shared/cart-access.mjs';
+import { voucherBelongsToUser } from '/scripts/shared/cart-state.mjs';
 
 async function initCartPage() {
+    if (!ensureCartAccess()) return;
+    const cartRoot = document.getElementById('cart-items-list');
+    if (!cartRoot || cartRoot.dataset.cartLoading === 'true' || cartRoot.dataset.cartReady === 'true') return;
+    cartRoot.dataset.cartLoading = 'true';
+    const cartOwner = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id;
+    cartRoot.dataset.cartOwner = cartOwner;
     if (!window.DataLoader) {
         console.error(' DataLoader không tìm thấy');
+        delete cartRoot.dataset.cartLoading;
         return;
     }
 
@@ -50,6 +59,10 @@ async function initCartPage() {
             return null;
         }
     }
+    const stillOwnsCart = () => getCurrentUser()?.id === cartOwner && cartRoot.isConnected;
+    let saveRevision = 0;
+    let savingCount = 0;
+    const mayUseVoucher = voucher => !voucher.ownerPhone || voucherBelongsToUser(voucher, getCurrentUser());
 
     function normalizeId(value) {
         return value == null ? '' : String(value);
@@ -325,17 +338,10 @@ async function initCartPage() {
     async function initCart() {
         try {
             const currentUser = getCurrentUser();
-            if (!currentUser || !currentUser.id) {
-                if (typeof window.showGlobalToast === 'function') {
-                    window.showGlobalToast('warning', 'Vui lòng đăng nhập để xem giỏ hàng');
-                }
-                setTimeout(() => {
-                    window.location.href = '/pages/public/login/login.html';
-                }, 1500);
-                return;
-            }
+            if (!ensureCartAccess()) return;
 
             products = await window.DataLoader.loadProducts();
+            if (!stillOwnsCart()) return;
             
             let fetchedCart = [];
             if (window.API && typeof window.API.getUserCart === 'function') {
@@ -343,8 +349,11 @@ async function initCartPage() {
             } else {
                 fetchedCart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
             }
-            const localCart = restoreCartFromBackup(fetchedCart || []);
-            cart = localCart.map(normalizeCartItem);
+            const localCart = await restoreCartFromBackup(fetchedCart || []);
+            if (!stillOwnsCart()) return;
+            cart = localCart.map(item => normalizeCartItem({
+                ...products.find(product => isSameCartItemId(product.id, item.id)), ...item,
+            }));
             
             cart.forEach(item => {
                 selectedIds.add(normalizeId(item.id));
@@ -362,7 +371,9 @@ async function initCartPage() {
             }
 
             myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]')
-                .filter(v => currentUser && v.ownerPhone === currentUser.phone);
+                .filter(v => voucherBelongsToUser(v, getCurrentUser()));
+            vouchers = vouchers.filter(mayUseVoucher);
+            if (!stillOwnsCart()) return;
             
             setupVoucherEvents();
             setupSelectAllEvent();
@@ -371,18 +382,28 @@ async function initCartPage() {
             renderAvailableVouchers();
             renderMyVouchers();
             renderCart();
-            await saveCart();
             if (typeof window.updateCartBadge === 'function') {
                 window.updateCartBadge();
             }
         } catch (error) {
-            console.error(' Lỗi khởi tạo giỏ hàng:', error);
+            if (!stillOwnsCart()) return;
+            const skeleton = document.getElementById('cart-loading-skeleton');
+            if (skeleton) skeleton.classList.add('d-none');
+            cartEmptyState.classList.add('d-none');
+            cartContentRow.classList.remove('d-none');
+            cartItemsList.innerHTML = '<p role="alert">Không thể tải giỏ hàng. Dữ liệu đã lưu được giữ nguyên. Vui lòng thử lại.</p>';
+            const retry = document.createElement('button');
+            retry.type = 'button';
+            retry.className = 'btn-cta';
+            retry.textContent = 'Thử lại';
+            retry.addEventListener('click', () => window.location.reload());
+            cartItemsList.appendChild(retry);
         }
     }
 
     function setupSelectAllEvent() {
         if (selectAllItems) {
-            selectAllItems.addEventListener('change', (e) => {
+            selectAllItems.onchange = (e) => {
                 const isChecked = e.target.checked;
                 if (isChecked) {
                     cart.forEach(item => selectedIds.add(normalizeId(item.id)));
@@ -395,28 +416,31 @@ async function initCartPage() {
                 });
                 
                 calculateTotals();
-            });
+            };
         }
     }
 
     function setupVoucherEvents() {
         if (btnApplyVoucher) {
-            btnApplyVoucher.addEventListener('click', applyVoucherCode);
+            btnApplyVoucher.onclick = () => applyVoucherCode();
         }
         if (voucherInput) {
-            voucherInput.addEventListener('keypress', (e) => {
+            voucherInput.onkeypress = (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     applyVoucherCode();
                 }
-            });
+            };
         }
     }
 
     function setupCheckoutEvent() {
         const btnProceed = document.getElementById('btn-proceed-checkout');
         if (btnProceed) {
-            btnProceed.addEventListener('click', async (e) => {
+            btnProceed.onclick = async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (btnProceed.dataset.submitting === 'true') return;
                 const selectedItems = cart.filter(item => selectedIds.has(normalizeId(item.id)));
                 
                 if (selectedItems.length === 0) {
@@ -426,11 +450,15 @@ async function initCartPage() {
                 }
 
                 const unselectedItems = cart.filter(item => !selectedIds.has(normalizeId(item.id)));
-                localStorage.setItem('pawpal_cart_unselected_backup', JSON.stringify(unselectedItems));
-                
-                if (window.saveCart) window.saveCart(selectedItems);
+                btnProceed.dataset.submitting = 'true';
+                try {
                 const currentUser = getCurrentUser();
-                await window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, selectedItems);
+                const checkoutItems = await window.API.prepareCartCheckout(currentUser.id, selectedItems);
+                localStorage.setItem('pawpal_cart_unselected_backup', JSON.stringify(unselectedItems));
+                localStorage.setItem('pawpal_cart_backup_context', JSON.stringify({
+                    ownerId: currentUser.id, raw: JSON.stringify(unselectedItems), mode: 'included', token: crypto.randomUUID(),
+                }));
+                sessionStorage.setItem('pawpal_checkout_selection', JSON.stringify({ customerId: currentUser.id, productIds: checkoutItems.map(item => String(item.id)) }));
                 
                 sessionStorage.removeItem('pawpal_is_buynow');
                 sessionStorage.removeItem('pawpal_buynow_cart');
@@ -440,7 +468,13 @@ async function initCartPage() {
                 } else {
                     localStorage.removeItem('pawpal_applied_voucher_code');
                 }
-            });
+                window.location.assign('/checkout');
+                } catch (error) {
+                    showCartNotice(error.message || 'Không thể lưu giỏ hàng. Vui lòng thử lại.');
+                } finally {
+                    delete btnProceed.dataset.submitting;
+                }
+            };
         }
     }
 
@@ -451,9 +485,9 @@ async function initCartPage() {
             return;
         }
 
-        let voucher = vouchers.find(v => v.code === code && v.active);
+        let voucher = vouchers.find(v => v.code === code && v.active && mayUseVoucher(v));
         if (!voucher) {
-            voucher = myVouchers.find(v => v.code === code);
+            voucher = myVouchers.find(v => v.code === code && voucherBelongsToUser(v, getCurrentUser()));
         }
         if (!voucher) {
             alert('Mã giảm giá không tồn tại hoặc đã hết hạn.');
@@ -807,7 +841,7 @@ async function initCartPage() {
         });
 
         if (cartCountHeader) {
-            cartCountHeader.textContent = cart.length;
+            cartCountHeader.textContent = cart.reduce((total, item) => total + getItemQuantity(item), 0);
         }
 
         const cartSelectCount = document.getElementById('cart-select-count');
@@ -859,20 +893,26 @@ async function initCartPage() {
     }
 
     function updateQuantity(productId, newQty) {
-        if (newQty < 1) return;
+        if (!stillOwnsCart()) return;
+        if (!Number.isSafeInteger(newQty) || newQty < 1) return;
 
         const item = cart.find(i => isSameCartItemId(i.id, productId));
         if (item) {
-            const maxQty = (item.stock != null && item.stock > 0) ? item.stock : newQty;
+            const product = products.find(p => isSameCartItemId(p.id, productId));
+            const maxQty = Number(product?.stock);
+            if (!Number.isSafeInteger(maxQty) || maxQty < 0) {
+                showCartNotice('Không thể kiểm tra tồn kho. Vui lòng tải lại trang.');
+                return;
+            }
             if (newQty > maxQty) {
-                if (typeof window.showGlobalToast === 'function') {
-                    window.showGlobalToast('warning', `Chỉ còn ${maxQty} sản phẩm trong kho`);
-                }
+                showCartNotice(`Chỉ còn ${maxQty} sản phẩm trong kho`);
+                if (newQty >= getItemQuantity(item) || maxQty < 1) return;
                 newQty = maxQty;
             }
+            const delta = newQty - getItemQuantity(item);
             item.quantity = newQty;
             item.qty = newQty;
-            saveCart();
+            if (delta) saveCart({ productId, delta });
             renderCart();
         }
     }
@@ -916,25 +956,43 @@ async function initCartPage() {
         setTimeout(() => {
             cart = cart.filter(i => !isSameCartItemId(i.id, productId));
             selectedIds.delete(normalizeId(productId));
-            saveCart();
+            saveCart({ removeId: productId });
             renderCart();
         }, 300);
     }
 
-    async function saveCart() {
-        localStorage.setItem('pawpal_cart', JSON.stringify(cart));
-        const currentUser = getCurrentUser();
-        if (currentUser && currentUser.id && window.API && typeof window.API.saveUserCart === 'function') {
-            await window.API.saveUserCart(currentUser.id, cart);
-        }
-        document.dispatchEvent(new CustomEvent('cart_updated'));
-        if (typeof window.updateCartBadge === 'function') {
-            window.updateCartBadge();
+    async function saveCart(mutation = null) {
+        if (!stillOwnsCart()) return false;
+        const revision = ++saveRevision;
+        savingCount++;
+        const snapshot = cart.map(item => ({ ...item }));
+        try {
+            const currentUser = getCurrentUser();
+            if (!currentUser?.id || !window.API?.saveUserCart) throw new Error('Cart unavailable');
+            const result = mutation?.delta
+                ? await window.API.adjustCartQuantity(cartOwner, mutation.productId, mutation.delta)
+                : mutation?.removeId
+                    ? await window.API.removeCartProduct(cartOwner, mutation.removeId)
+                    : await window.API.saveUserCart(cartOwner, snapshot);
+            if (!result?.success) throw new Error('Cart save failed');
+            if (stillOwnsCart() && revision === saveRevision) {
+                cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]').map(item => normalizeCartItem({ ...products.find(product => isSameCartItemId(product.id, item.id)), ...item }));
+                renderCart();
+            }
+            return true;
+        } catch (error) {
+            if (!stillOwnsCart() || revision !== saveRevision) return false;
+            try { cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]').map(normalizeCartItem); } catch {}
+            renderCart();
+            showCartNotice(error.message || 'Không thể lưu giỏ hàng. Vui lòng thử lại.');
+            return false;
+        } finally {
+            savingCount--;
         }
     }
 
         if (btnClearCart) {
-            btnClearCart.addEventListener('click', () => {
+            btnClearCart.onclick = () => {
                 if (confirm('Bạn có chắc chắn muốn xóa toàn bộ sản phẩm trong giỏ hàng?')) {
                     cart = [];
                     selectedIds.clear();
@@ -942,7 +1000,7 @@ async function initCartPage() {
                     saveCart();
                     renderCart();
                 }
-            });
+            };
         }
 
     function loadPersistedVoucher() {
@@ -963,6 +1021,7 @@ async function initCartPage() {
             return;
         }
 
+        myVouchers = myVouchers.filter(v => voucherBelongsToUser(v, getCurrentUser()));
         if (!myVouchers.length) {
             myVouchersList.innerHTML = '<div class="text-muted">Bạn chưa có voucher đổi điểm nào.</div>';
             return;
@@ -1036,9 +1095,9 @@ async function initCartPage() {
     }
 
     function validateVoucherCode(code, subtotal) {
-        let voucher = vouchers.find(v => v.code === code && v.active);
+        let voucher = vouchers.find(v => v.code === code && v.active && mayUseVoucher(v));
         if (!voucher) {
-            voucher = myVouchers.find(v => v.code === code);
+            voucher = myVouchers.find(v => v.code === code && voucherBelongsToUser(v, getCurrentUser()));
         }
 
         if (!voucher) {
@@ -1098,44 +1157,39 @@ async function initCartPage() {
         return { valid: true, discount, voucher };
     }
 
-    function restoreCartFromBackup(currentCart) {
+    async function restoreCartFromBackup(currentCart) {
         const backupJson = localStorage.getItem('pawpal_cart_unselected_backup');
         if (!backupJson) {
             return currentCart;
         }
 
-        let backupItems = [];
+        let backupItems;
         try {
             backupItems = JSON.parse(backupJson);
         } catch (err) {
-            console.error(' Lỗi đọc backup giỏ hàng:', err);
-            localStorage.removeItem('pawpal_cart_unselected_backup');
-            return currentCart;
+            throw new Error('Không thể đọc bản lưu giỏ hàng. Dữ liệu được giữ nguyên để kiểm tra lại.');
         }
-
-        const mergedCart = [...currentCart];
-        backupItems.forEach(backupItem => {
-            const existing = mergedCart.find(item => isSameCartItemId(item.id, backupItem.id));
-            if (existing) {
-                const backupQty = getItemQuantity(backupItem);
-                existing.quantity = getItemQuantity(existing) + backupQty;
-                existing.qty = existing.quantity;
-            } else {
-                mergedCart.push(normalizeCartItem(backupItem));
-            }
-        });
-
+        if (!Array.isArray(backupItems)) throw new Error('Bản lưu giỏ hàng không hợp lệ.');
         const currentUser = getCurrentUser();
-        if (window.API && typeof window.API.saveUserCart === 'function') {
-            window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, mergedCart);
+        let context = JSON.parse(localStorage.getItem('pawpal_cart_backup_context') || 'null');
+        if (context?.raw === backupJson && context.ownerId !== currentUser.id) return currentCart;
+        if (!context || context.raw !== backupJson) {
+            context = { ownerId: currentUser.id, raw: backupJson, mode: 'add', token: crypto.randomUUID() };
+            localStorage.setItem('pawpal_cart_backup_context', JSON.stringify(context));
         }
-        localStorage.removeItem('pawpal_cart_unselected_backup');
+        if (!window.API?.restoreCartBackup) throw new Error('Không thể khôi phục giỏ hàng. Vui lòng thử lại.');
+        const mergedCart = await window.API.restoreCartBackup(currentUser.id, backupItems, context);
+        if (!stillOwnsCart()) return currentCart;
+        if (localStorage.getItem('pawpal_cart_unselected_backup') === backupJson) {
+            localStorage.removeItem('pawpal_cart_unselected_backup');
+            localStorage.removeItem('pawpal_cart_backup_context');
+        }
         return mergedCart;
     }
 
     function getItemQuantity(item) {
         const qty = Number(item?.quantity ?? item?.qty ?? 1);
-        return Number.isFinite(qty) && qty > 0 ? qty : 1;
+        return Number.isSafeInteger(qty) && qty > 0 ? qty : 1;
     }
 
     function normalizeCartItem(item) {
@@ -1147,10 +1201,45 @@ async function initCartPage() {
         };
     }
 
-        await initCart();
+        try {
+            await initCart();
+            if (stillOwnsCart()) {
+                cartRoot.dataset.cartReady = 'true';
+                sessionStorage.removeItem('pawpal_checkout_selection');
+                if (cartRoot.cartUpdatedHandler) document.removeEventListener('cart_updated', cartRoot.cartUpdatedHandler);
+                cartRoot.cartUpdatedHandler = event => {
+                    if (!stillOwnsCart() || savingCount || event.detail?.ownerId !== cartOwner || !Array.isArray(event.detail.items)) return;
+                    const previousIds = new Set(cart.map(item => normalizeId(item.id)));
+                    cart = event.detail.items.map(item => normalizeCartItem({ ...products.find(product => isSameCartItemId(product.id, item.id)), ...item }));
+                    const currentIds = new Set(cart.map(item => normalizeId(item.id)));
+                    selectedIds = new Set([...selectedIds].filter(id => currentIds.has(id)));
+                    cart.forEach(item => { if (!previousIds.has(normalizeId(item.id))) selectedIds.add(normalizeId(item.id)); });
+                    renderCart();
+                };
+                document.addEventListener('cart_updated', cartRoot.cartUpdatedHandler);
+            }
+        } finally {
+            delete cartRoot.dataset.cartLoading;
+        }
     }
 
     window.initCart = initCartPage;
+    if (!window.pawpalCartAccountListeners) {
+        window.pawpalCartAccountListeners = true;
+        const refreshAccount = () => {
+            const root = document.getElementById('cart-items-list');
+            const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            if (root?.dataset.cartOwner && root.dataset.cartOwner !== user?.id) window.location.reload();
+        };
+        document.addEventListener('auth_state_changed', refreshAccount);
+        window.addEventListener('storage', event => { if (event.key === 'pawpal_current_user' || event.key === null) refreshAccount(); });
+    }
+    window.addEventListener('pageshow', event => {
+        if (!event.persisted || !/^\/cart\/?$/.test(window.location.pathname)) return;
+        const root = document.getElementById('cart-items-list');
+        if (root) delete root.dataset.cartReady;
+        window.initCart();
+    });
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initCartPage);

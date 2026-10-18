@@ -1,4 +1,6 @@
 
+import { voucherBelongsToUser } from '/scripts/shared/cart-state.mjs';
+
 const checkoutState = {
     cart: [],
     products: [],
@@ -145,6 +147,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             if (window.API && typeof window.API.getUserCart === 'function') {
                 checkoutState.cart = await window.API.getUserCart(checkoutState.user?.id || checkoutState.user?.phone || null);
+                const selection = JSON.parse(sessionStorage.getItem('pawpal_checkout_selection') || 'null');
+                if (selection && selection.customerId === checkoutState.user?.id && Array.isArray(selection.productIds)) {
+                    checkoutState.cart = checkoutState.cart.filter(item => selection.productIds.includes(String(item.id)));
+                }
             } else {
                 checkoutState.cart = [];
             }
@@ -161,7 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         checkoutState.user = checkoutState.user || currentUser;
         checkoutState.myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]')
-            .filter(v => currentUser && v.ownerPhone === currentUser.phone);
+            .filter(v => voucherBelongsToUser(v, currentUser));
         
         initializeShippingForm();
         renderDeliveryOptions();
@@ -235,11 +241,11 @@ async function loadProducts() {
                         ...product, 
                         ...item, 
                         price: Number(item.price) || Number(product.price) || 0,
-                        quantity: item.qty || item.quantity || 1, 
-                        qty: item.qty || item.quantity || 1 
+                        quantity: Number(item.quantity ?? item.qty ?? 1),
+                        qty: Number(item.quantity ?? item.qty ?? 1)
                     };
                 }
-                return { ...item, quantity: item.qty || item.quantity || 1, qty: item.qty || item.quantity || 1 };
+                return { ...item, quantity: Number(item.quantity ?? item.qty ?? 1), qty: Number(item.quantity ?? item.qty ?? 1) };
             });
         } else {
             console.warn('DataLoader không có sẵn, không thể tải sản phẩm');
@@ -291,9 +297,10 @@ function validateCheckoutCart() {
 }
 
 function validateVoucher(code, showMessage = true) {
-    let voucher = checkoutState.vouchers.find(v => v.code === code && v.active);
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    let voucher = checkoutState.vouchers.find(v => v.code === code && v.active && (!v.ownerPhone || voucherBelongsToUser(v, currentUser)));
     if (!voucher) {
-        voucher = checkoutState.myVouchers.find(v => v.code === code);
+        voucher = checkoutState.myVouchers.find(v => v.code === code && voucherBelongsToUser(v, currentUser));
     }
 
     if (!voucher) {
@@ -1339,6 +1346,25 @@ function validateCheckoutForm() {
 // ============================================================================
 // Checkout
 // ============================================================================
+async function finalizeCheckoutCart() {
+    if (sessionStorage.getItem('pawpal_is_buynow') === 'true') {
+        sessionStorage.removeItem('pawpal_buynow_cart');
+        sessionStorage.removeItem('pawpal_is_buynow');
+        return;
+    }
+    const customerId = checkoutState.user?.id;
+    const backupJson = localStorage.getItem('pawpal_cart_unselected_backup');
+    const context = JSON.parse(localStorage.getItem('pawpal_cart_backup_context') || 'null');
+    const ownBackup = !context || context.ownerId === customerId;
+    if (backupJson && ownBackup) await window.API.restoreCartBackup(customerId, JSON.parse(backupJson), context?.raw === backupJson ? context : {});
+    await window.API.removePurchasedCartItems(customerId, checkoutState.cart);
+    if (ownBackup && localStorage.getItem('pawpal_cart_unselected_backup') === backupJson) {
+        localStorage.removeItem('pawpal_cart_unselected_backup');
+        localStorage.removeItem('pawpal_cart_backup_context');
+    }
+    sessionStorage.removeItem('pawpal_checkout_selection');
+}
+
 async function handleCheckout() {
     const btnCheckout = document.getElementById('btn-checkout');
     if (btnCheckout) {
@@ -1484,33 +1510,11 @@ async function handleCheckout() {
     }
     
     if (checkoutState.selectedPayment === 'cod') {
-        localStorage.removeItem('pawpal_cart_unselected_backup');
+        await finalizeCheckoutCart();
         localStorage.removeItem('pawpal_applied_voucher_code');
         localStorage.removeItem(PENDING_POINTS_KEY);
-        const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
-        if (isBuyNow) {
-            sessionStorage.removeItem('pawpal_buynow_cart');
-            sessionStorage.removeItem('pawpal_is_buynow');
-        } else {
-            if (window.API && typeof window.API.saveUserCart === 'function') {
-                await window.API.saveUserCart(checkoutState.user?.id || checkoutState.user?.phone || null, []);
-            }
-        }
         window.location.href = `/payment-success?orderId=${orderData.orderId}`;
     } else if (checkoutState.selectedPayment === 'vnpay') {
-        localStorage.removeItem('pawpal_cart_unselected_backup');
-        localStorage.removeItem('pawpal_applied_voucher_code');
-        localStorage.removeItem(PENDING_POINTS_KEY);
-        const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
-        if (isBuyNow) {
-            sessionStorage.removeItem('pawpal_buynow_cart');
-            sessionStorage.removeItem('pawpal_is_buynow');
-        } else {
-            if (window.API && typeof window.API.saveUserCart === 'function') {
-                await window.API.saveUserCart(checkoutState.user?.id || checkoutState.user?.phone || null, []);
-            }
-        }
-
         // Ưu tiên gọi Backend để lấy URL Cổng VNPAY Sandbox thật
         try {
             const vnpRes = await fetch('/api/vnpay/create-payment-url', {
@@ -1535,18 +1539,9 @@ async function handleCheckout() {
     } else if (['momo', 'zalopay', 'vietqr'].includes(checkoutState.selectedPayment)) {
         showQRPaymentModal(orderData);
     } else {
-        localStorage.removeItem('pawpal_cart_unselected_backup');
+        await finalizeCheckoutCart();
         localStorage.removeItem('pawpal_applied_voucher_code');
         localStorage.removeItem(PENDING_POINTS_KEY);
-        const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
-        if (isBuyNow) {
-            sessionStorage.removeItem('pawpal_buynow_cart');
-            sessionStorage.removeItem('pawpal_is_buynow');
-        } else {
-            if (window.API && typeof window.API.saveUserCart === 'function') {
-                await window.API.saveUserCart(checkoutState.user?.id || checkoutState.user?.phone || null, []);
-            }
-        }
         window.location.href = `/payment-success?orderId=${orderData.orderId}`;
     }
 }
@@ -1741,19 +1736,6 @@ function hideQRPaymentModal() {
 
     // Nếu người dùng đóng modal khi chưa hoàn tất thanh toán
     if (!qrPaymentState.paymentVerified && qrPaymentState.orderData) {
-        localStorage.removeItem('pawpal_cart_unselected_backup');
-        localStorage.removeItem('pawpal_applied_voucher_code');
-        localStorage.removeItem(PENDING_POINTS_KEY);
-        const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
-        if (isBuyNow) {
-            sessionStorage.removeItem('pawpal_buynow_cart');
-            sessionStorage.removeItem('pawpal_is_buynow');
-        } else {
-            if (window.API && typeof window.API.saveUserCart === 'function') {
-                window.API.saveUserCart(checkoutState.user?.id || checkoutState.user?.phone || null, []);
-            }
-        }
-
         showToast(`Đơn hàng #${qrPaymentState.orderData.orderId} đang ở trạng thái "Chờ thanh toán" (thời hạn 15 phút). Bạn có thể tiếp tục thanh toán trong mục Đơn hàng của tôi.`, 'info');
         setTimeout(() => {
             window.location.href = `/pages/user/#orders?status=pending_payment`;
@@ -1821,17 +1803,8 @@ function verifyPaymentSimulation() {
                 statusMsg.className = 'payment-status-message show success';
                 statusMsg.innerHTML = 'Thanh toán thành công!';
                 
-                localStorage.removeItem('pawpal_cart_unselected_backup');
-                const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
-                if (isBuyNow) {
-                    sessionStorage.removeItem('pawpal_buynow_cart');
-                    sessionStorage.removeItem('pawpal_is_buynow');
-                } else {
-                    if (window.API && typeof window.API.saveUserCart === 'function') {
-                        await window.API.saveUserCart(checkoutState.user?.id || checkoutState.user?.phone || null, []);
-                    }
-                }
-                
+                await finalizeCheckoutCart();
+
                 setTimeout(() => {
                     window.location.href = `/payment-success?orderId=${qrPaymentState.orderData.orderId}`;
                 }, 1500);
