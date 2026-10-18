@@ -2,6 +2,8 @@
  * modules/wishlist/wishlist.js - Module logic độc lập cho Sản phẩm & Dịch vụ yêu thích PawPal
  */
 
+import { API } from '/scripts/api/api.js';
+
 let currentFilter = 'all';
 let wishlistRenderVersion = 0;
 export function dispose() { ++wishlistRenderVersion; }
@@ -106,9 +108,9 @@ async function getWishlistItems() {
     let finalProductIds = [];
     let finalServiceIds = [];
 
-    if (currentUser && currentUser.id && window.API && typeof window.API.getUserWishlist === 'function') {
+    if (currentUser && currentUser.id) {
         try {
-            const serverWishlist = await window.API.getUserWishlist(currentUser.id);
+            const serverWishlist = await API.getUserWishlist(currentUser.id);
             finalProductIds = serverWishlist.productIds || [];
             finalServiceIds = serverWishlist.serviceIds || [];
         } catch (e) {
@@ -185,13 +187,11 @@ async function removeFromWishlist(type, id) {
     const currentUser = getCurrentUser();
     if (!currentUser || !currentUser.id) return;
 
-    if (window.API && typeof window.API.toggleWishlist === 'function') {
-        const isService = type === 'service';
-        const res = await window.API.toggleWishlist(currentUser.id, id, isService);
-        if (res && res.success) {
-            renderWishlist();
-            showNotification('Đã xóa khỏi danh sách yêu thích');
-        }
+    const isService = type === 'service';
+    const res = await API.toggleWishlist(currentUser.id, id, isService);
+    if (res && res.success) {
+        renderWishlist();
+        showNotification('Đã xóa khỏi danh sách yêu thích');
     }
 }
 
@@ -202,14 +202,27 @@ async function addProductToCart(product) {
         return;
     }
 
-    if (window.API && typeof window.API.addToCart === 'function') {
-        const raw = product.rawProduct || product;
-        const res = await window.API.addToCart(user.id, raw, 1);
-        if (res && res.success) {
-            showNotification('Đã thêm vào giỏ hàng');
-        } else {
+    const productId = product.id || product.rawProduct?.id;
+    if (!productId) {
+        showNotification('Có lỗi xảy ra, vui lòng thử lại');
+        return;
+    }
+
+    try {
+        const res = await API.addToCart(user.id, productId, 1);
+        if (!res?.success) {
             showNotification('Có lỗi xảy ra, vui lòng thử lại');
+            return;
         }
+
+        showNotification('Đã thêm vào giỏ hàng');
+        document.dispatchEvent(new CustomEvent('cart_updated'));
+        if (typeof window.updateCartBadge === 'function') {
+            await window.updateCartBadge();
+        }
+    } catch (error) {
+        console.error('[wishlist] Failed to add product to cart:', error);
+        showNotification('Có lỗi xảy ra, vui lòng thử lại');
     }
 }
 
