@@ -362,6 +362,14 @@
     color: #7F1D1D !important;
 }
 
+/* Nút đã quá thời gian tự thao tác (< 2 tiếng): vẫn bấm được để hiện hướng dẫn Hotline */
+.btn-booking-action.disabled,
+.btn-booking-action.disabled:hover {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #ffffff;
+}
+
 /* Đã đánh giá badge */
 .badge-reviewed-9px {
     height: 28px;

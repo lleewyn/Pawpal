@@ -82,12 +82,15 @@
     color: #4F7A65;
     font-weight: 500;
     min-width: 130px;
+    flex-shrink: 0;
 }
 
 .spec-value {
     color: #203A2C;
     font-weight: 500;
     text-align: right;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .price-highlight {

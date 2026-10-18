@@ -78,16 +78,10 @@ function getBookingPetAvatar(petObj, booking) {
     return DEFAULT_PET_AVATARS.cat;
 }
 
-function getServiceReviewKey(booking) {
-    return `pawpal_service_review_${booking.id || booking.code || ''}`;
-}
+let reviewedAppointmentIds = new Set();
 
 function hasServiceReview(booking) {
-    try {
-        return Boolean(localStorage.getItem(getServiceReviewKey(booking)));
-    } catch {
-        return false;
-    }
+    return reviewedAppointmentIds.has(String(booking._supabaseId || booking.id || ''));
 }
 
 function escapeHtml(text) {
@@ -162,6 +156,21 @@ async function loadBookings(status) {
             if (pet.name) currentPetMap.set(String(pet.name).trim().toLowerCase(), pet);
             if (pet.pet_name) currentPetMap.set(String(pet.pet_name).trim().toLowerCase(), pet);
         });
+
+        reviewedAppointmentIds = new Set();
+        try {
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (db && currentUser?.id) {
+                const { data: reviews, error: reviewErr } = await db.from('review')
+                    .select('appointment_id')
+                    .eq('customer_id', currentUser.id)
+                    .eq('review_type', 'SERVICE');
+                if (reviewErr) throw reviewErr;
+                reviewedAppointmentIds = new Set((reviews || []).map((r) => String(r.appointment_id)).filter(Boolean));
+            }
+        } catch (reviewErr) {
+            console.warn('[Bookings] Could not load service review status from Supabase:', reviewErr.message);
+        }
 
         renderBookings(status);
     } catch (error) {
@@ -351,7 +360,9 @@ function createBookingCard(booking) {
     card.className = `booking-card pawpal-smooth-entrance status-${normalizedStatus}`;
     card.tabIndex = 0;
     card.setAttribute('role', 'link');
+    // Trang SPA giữ nguyên vị trí cuộn khi đổi route: cuộn về đầu để trang mới không mở ở vùng footer
     card.onclick = () => {
+        window.scrollTo(0, 0);
         window.location.hash = `#booking-detail?id=${encodeURIComponent(bookingId)}`;
     };
     card.setAttribute('aria-label', `Xem chi tiết lịch hẹn ${petName}`);
@@ -359,6 +370,7 @@ function createBookingCard(booking) {
     card.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
+            window.scrollTo(0, 0);
             window.location.hash = `#booking-detail?id=${encodeURIComponent(bookingId)}`;
         }
     });
@@ -394,6 +406,10 @@ function createBookingCard(booking) {
             </div>
         ` : ''}
     `;
+
+    card.querySelectorAll('a.btn-booking-action').forEach((link) => {
+        link.addEventListener('click', () => window.scrollTo(0, 0));
+    });
 
     const changeBtn = card.querySelector('.btn-change-schedule');
     if (changeBtn) {
@@ -522,7 +538,8 @@ window.BookingsData = {
 
 function showToast(message, type = 'info') {
     if (typeof window.showToast === 'function') {
-        window.showToast(message, type);
+        // window.showToast (scripts/shared/auth.js) nhận (type, message) và không có kiểu 'danger'
+        window.showToast(type === 'danger' ? 'error' : type, message);
         return;
     }
     let container = document.getElementById('toastContainer');
@@ -644,7 +661,8 @@ function openQuickRescheduleModal(booking) {
     modalEl.id = 'quickRescheduleBookingModal';
     modalEl.className = 'modal fade';
     modalEl.tabIndex = -1;
-    const isHotelBooking = false;
+    const isHotelBooking = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase() === 'hotel'
+        || String(booking?.service || booking?.serviceName || '').toLowerCase().includes('hotel');
     modalEl.innerHTML = `
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
