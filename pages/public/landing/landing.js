@@ -172,9 +172,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const grid = document.getElementById('productGrid');
     if (!grid) return;
 
+    grid.dataset.landingProductsOwner = 'true';
+
     const cartKey = 'pawpal_cart';
     const cartPage = '/pages/shop/cart/cart.html';
-    const checkoutPage = '/pages/shop/checkout/checkout.html?buynow=true';
     const getCart = () => JSON.parse(localStorage.getItem(cartKey) || '[]');
     const saveCart = (cart) => {
         localStorage.setItem(cartKey, JSON.stringify(cart));
@@ -232,44 +233,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return null;
         }
     };
-    const getWishlistKey = () => {
-        const user = getCurrentWishlistUser();
-        return user && user.phone ? `pawpal_wishlist_${user.phone}` : 'pawpal_wishlist_guest';
-    };
-    const getWishlist = () => {
-        try {
-            return JSON.parse(localStorage.getItem(getWishlistKey()) || '[]');
-        } catch (error) {
-            return [];
-        }
-    };
-    const saveWishlist = (wishlist) => {
-        const list = wishlist.map(String);
-        localStorage.setItem(getWishlistKey(), JSON.stringify(list));
-        const currentUser = getCurrentWishlistUser();
-        if (window.API && typeof window.API.saveUserWishlist === 'function') {
-            window.API.saveUserWishlist(currentUser?.id || currentUser?.phone || null, { productIds: list, serviceIds: [] });
-        }
-    };
-    const toggleWishlist = (productId) => {
-        const wishlist = getWishlist();
-        const id = String(productId);
-        const index = wishlist.indexOf(id);
-        if (index >= 0) {
-            wishlist.splice(index, 1);
-        } else {
-            wishlist.push(id);
-        }
-        saveWishlist(wishlist);
-        return wishlist.includes(id);
-    };
-    const syncWishlistButtons = () => {
-        const wishlist = getWishlist();
-        grid.querySelectorAll('.product-wishlist-btn').forEach(btn => {
-            btn.classList.toggle('active', wishlist.includes(String(btn.dataset.productId)));
-        });
-    };
-
     let attempts = 0;
     while (!window.DataLoader && attempts < 20) {
         await new Promise(r => setTimeout(r, 100));
@@ -342,25 +305,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>`;
         }).join('');
-        syncWishlistButtons();
+        window.setupLandingProductWishlist?.(grid);
     };
 
     renderProducts(featured);
 
     grid.addEventListener('click', (event) => {
-        const wishlistBtn = event.target.closest('.product-wishlist-btn');
         const addBtn = event.target.closest('.add-to-cart-btn');
         const buyBtn = event.target.closest('.buy-now-btn');
-        if (!wishlistBtn && !addBtn && !buyBtn) return;
+        if (!addBtn && !buyBtn) return;
 
         event.preventDefault();
         event.stopPropagation();
-
-        if (wishlistBtn) {
-            const active = toggleWishlist(wishlistBtn.dataset.productId);
-            wishlistBtn.classList.toggle('active', active);
-            return;
-        }
 
         const btn = addBtn || buyBtn;
         const id = btn.dataset.productId;
@@ -368,14 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!product) return;
 
         if (buyBtn) {
-            const buyNowCart = [{
-                ...product,
-                quantity: 1,
-                qty: 1
-            }];
-            sessionStorage.setItem('pawpal_buynow_cart', JSON.stringify(buyNowCart));
-            sessionStorage.setItem('pawpal_is_buynow', 'true');
-            window.location.href = checkoutPage;
+            window.openLandingBuyNowModal(product, buyBtn);
             return;
         }
 

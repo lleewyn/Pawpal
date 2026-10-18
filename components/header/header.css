@@ -176,7 +176,20 @@
 }
 
 /* Menu vuốt trên Mobile */
+.mobile-nav-close { display: none; }
 @media (max-width: 1249.98px) {
+    .mobile-nav-close {
+        display: block;
+        position: absolute;
+        top: 20px;
+        right: 28px;
+        border: none;
+        background: transparent;
+        color: var(--color-bg-white, #fff);
+        font: inherit;
+        cursor: pointer;
+        padding: 8px;
+    }
     .main-header {
         padding-top: 0;
         z-index: 1100;

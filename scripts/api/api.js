@@ -477,15 +477,20 @@ export const API = {
         return { success: !error, error };
     },
 
-    async getUserWishlist(userId) {
+    async getUserWishlist(userId, { strict = false } = {}) {
         if (!userId) return { productIds: [], serviceIds: [] };
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) return { productIds: [], serviceIds: [] };
+        if (!db) {
+            if (strict) throw new Error('Chưa kết nối được dữ liệu yêu thích.');
+            return { productIds: [], serviceIds: [] };
+        }
 
         try {
-            const { data: wl } = await db.from('wishlist').select('id').eq('customer_id', userId).maybeSingle();
+            const { data: wl, error: readError } = await db.from('wishlist').select('id').eq('customer_id', userId).maybeSingle();
+            if (readError) throw readError;
             if (wl && wl.id) {
                 const { data: items, error: itError } = await db.from('wishlist_item').select('product_id, service_id').eq('wishlist_id', wl.id);
+                if (itError) throw itError;
                 if (!itError && items) {
                     return {
                         productIds: items.map(i => i.product_id).filter(Boolean),
@@ -494,6 +499,7 @@ export const API = {
                 }
             }
         } catch (err) {
+            if (strict) throw err;
             console.warn('[API] getUserWishlist Supabase error:', err);
         }
         return { productIds: [], serviceIds: [] };
@@ -512,6 +518,32 @@ export const API = {
             wl = newWl;
         }
         return wl;
+    },
+
+    async saveUserWishlist(userId, { productIds } = {}) {
+        if (!Array.isArray(productIds)) throw new Error('Danh sách yêu thích không hợp lệ.');
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        const customerId = await resolveCustomerId(db, userId);
+        const wishlist = await this.getOrCreateWishlist(customerId);
+        if (!wishlist) throw new Error('Không thể tải danh sách yêu thích.');
+        const { data: existing, error: readError } = await db.from('wishlist_item')
+            .select('id, product_id, service_id').eq('wishlist_id', wishlist.id);
+        if (readError) throw readError;
+        const desired = new Set(productIds.map(String));
+        const current = new Set((existing || []).filter(item => item.product_id).map(item => String(item.product_id)));
+        const additions = [...desired].filter(id => !current.has(id))
+            .map(product_id => ({ wishlist_id: wishlist.id, product_id }));
+        if (additions.length) {
+            const { error } = await db.from('wishlist_item').insert(additions);
+            if (error) throw error;
+        }
+        // This operation saves products only; service wishlist entries remain intact.
+        const removals = (existing || []).filter(item => item.product_id && !desired.has(String(item.product_id))).map(item => item.id);
+        if (removals.length) {
+            const { error } = await db.from('wishlist_item').delete().eq('wishlist_id', wishlist.id).in('id', removals);
+            if (error) throw error;
+        }
+        return { success: true, productIds: [...desired] };
     },
 
     async toggleWishlist(userId, itemId, isService = false) {
