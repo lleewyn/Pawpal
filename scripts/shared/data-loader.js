@@ -157,7 +157,7 @@ async function loadProducts() {
         }
 
         console.log('Loading products from Supabase...');
-        const { data: rawProducts, error } = await db.from('product').select('*, product_category!inner(category_name), inventory(quantity_in_stock)');
+        const { data: rawProducts, error } = await db.from('product').select('*, product_category!inner(category_name), inventory(quantity_in_stock), product_variant(sku_variant, sale_price, compare_at_price, status)');
         
         if (error) {
             throw error;
@@ -169,7 +169,16 @@ async function loadProducts() {
         const knownBrands = ['Royal Canin', 'Pedigree', 'Me-O', 'Whiskas', "Hill's", 'Purina', 'Kong', 'Taste of the Wild', 'Frontline', 'Furminator', 'Nylabone', 'Hartz', "King's Pet", 'Inaba', 'Nutrience', 'Zenith', 'Orijen', 'Acana', 'GimCat', 'Gimborn', 'TropiClean', 'Bio-Pharmachemie'];
 
         const products = rawProducts.map(item => {
-            const sale = Number(item.sale_price) < Number(item.cost_price);
+            // Prices belong to variants; use the lowest available active variant price.
+            const pricedVariants = (item.product_variant || [])
+                .filter(variant => variant.status === 'dang_ban' && variant.sale_price != null
+                    && Number.isFinite(Number(variant.sale_price)) && Number(variant.sale_price) >= 0)
+                .sort((a, b) => Number(a.sale_price) - Number(b.sale_price));
+            const baseVariant = pricedVariants[0];
+            const price = baseVariant ? Number(baseVariant.sale_price) : null;
+            const compareAtPrice = baseVariant?.compare_at_price != null
+                ? Number(baseVariant.compare_at_price) : null;
+            const sale = price !== null && Number.isFinite(compareAtPrice) && compareAtPrice > price;
             let images = [];
             if (Array.isArray(item.image_urls)) {
                 images = item.image_urls.map(url => rootPath + url);
@@ -201,14 +210,14 @@ async function loadProducts() {
 
             return {
                 id: item.id,
-                sku: item.sku,
+                sku: baseVariant?.sku_variant || '',
                 name: item.product_name,
                 brand: detectedBrand,
                 category: item.category_id,
                 categoryName: item.product_category?.category_name || 'Khác',
-                price: Number(item.sale_price),
-                originalPrice: sale ? Number(item.cost_price) : null,
-                oldPrice: sale ? Number(item.cost_price) : null,
+                price,
+                originalPrice: sale ? compareAtPrice : null,
+                oldPrice: sale ? compareAtPrice : null,
                 image: images[0],
                 images: images,
                 inStock: item.status === 'ACTIVE' && stockCount > 0,
