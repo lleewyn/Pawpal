@@ -1,322 +1,530 @@
-# KẾ HOẠCH & CHECKLIST KIỂM THỬ TOÀN DIỆN PHÂN HỆ USER (PAWPAL)
-> **Tài liệu kiểm định chất lượng chức năng, luồng dữ liệu, nạp Supabase và trải nghiệm người dùng.**
-> Phiên bản: 1.0 (Đồng bộ theo CSDL 3NF và Quy chuẩn thiết kế [AGENTS.md](file:///d:/Aboutme/MyProject/Pawpal/AGENTS.md))
-> Ngày lập: 20/10/2026
+# BẢNG MA TRẬN & CHECKLIST KIỂM THỬ CHI TIẾT TOÀN DIỆN PHÂN HỆ USER (PAWPAL)
+> **Tài liệu kiểm định chất lượng phần mềm chuyên sâu (Master QA/QC Test Matrix)**
+> Phục vụ kiểm thử chức năng (Functional), luồng dữ liệu (Data Flow), giao diện (UI/UX), phản hồi biên (Edge Cases) và toàn vẹn cơ sở dữ liệu Supabase 3NF.
+> Phiên bản: 2.0 (Nâng cấp toàn diện - 100+ Test Cases chi tiết)
+> Ngày cập nhật: 20/10/2026
 
 ---
 
-## MỤC LỤC
-1. [Nguyên Tắc & Tiêu Chí Nghiệm Thu (Quality Gates)](#1-nguyên-tắc--tiêu-chí-nghiệm-thu-quality-gates)
-2. [Checklist Component Dùng Chung (Global Components)](#2-checklist-component-dùng-chung-global-components)
-3. [Checklist Phân Hệ Trang Công Khai (`/pages/public/`)](#3-checklist-phân-hệ-trang-công-khai-pagespublic)
-4. [Checklist Phân Hệ Dịch Vụ & Đặt Lịch (`/pages/services/`)](#4-checklist-phân-hệ-dịch-vụ--đặt-lịch-pagesservices)
-5. [Checklist Cổng Khách Hàng Thành Viên (`/pages/user/`)](#5-checklist-cổng-khách-hàng-thành-viên-pagesuser)
-6. [Checklist Phân Hệ Cửa Hàng & Mua Sắm (`/pages/shop/`)](#6-checklist-phân-hệ-cửa-hàng--mua-sắm-pagesshop)
-7. [Checklist Toàn Vẹn Dữ Liệu & Nạp Supabase (Data Sync & 3NF Integrity)](#7-checklist-toàn-vẹn-dữ-liệu--nạp-supabase-data-sync--3nf-integrity)
-8. [Quy Trình Thực Hiện & Báo Cáo Lỗi (Defect Tracking)](#8-quy-trình-thực-hiện--báo-cáo-lỗi-defect-tracking)
+## BẢNG TÀI KHOẢN & DỮ LIỆU DÙNG ĐỂ KIỂM THỬ (TEST FIXTURES)
 
----
-
-## 1. NGUYÊN TẮC & TIÊU CHÍ NGHIỆM THU (QUALITY GATES)
-
-Mọi màn hình và luồng thao tác BẮT BUỘC phải thỏa mãn đồng thời 5 tiêu chuẩn cốt lõi:
-- **Kiến trúc CSDL 3NF**: Tuyệt đối không gọi hoặc ghi trực tiếp `product_id` vào các bảng chi tiết (`cart_item`, `sales_order_detail`, `inventory`, `return_request_detail`). Toàn bộ điều hướng qua `product_variant_id` $\rightarrow$ `product_variant` $\rightarrow$ `product`.
-- **Hệ thống ENUM Tiếng Việt chuẩn mực**: Toàn bộ dữ liệu trạng thái phải dùng 100% giá trị ENUM tiếng Việt chuẩn (Ví dụ: `dang_ban`, `tam_ngung`, `cho_xac_nhan`, `dang_dong_goi`, `dang_giao_hang`, `da_giao_hang`, `da_huy`, `dang_hoat_dong`, `dang_hien_thi`...). Không dùng từ tiếng Anh (`ACTIVE`, `PENDING`...).
-- **Quy tắc sao chép ngữ văn (Copywriting)**:
-  - Viết hoa Sentence Case (chỉ viết hoa chữ cái đầu tiên).
-  - Không dùng ký hiệu `&` thay cho chữ "và".
-  - Nút bấm text thuần túy, phẳng, không gắn tiền tố `+ ` (viết `Thêm bé cưng`, `Đặt lịch ngay`, không viết `+ Thêm bé`).
-  - Không có dòng phụ chú giải tiếng Anh trong ngoặc đơn rườm rà.
-- **Tính bền vững trạng thái (State Persistence)**: Khi F5 / Reload trang web, hệ thống phải giữ nguyên vị trí làm việc, tab con, thông tin lọc và dữ liệu giỏ hàng.
-- **Triệt tiêu hiện tượng nháy màn hình (Anti-Flicker)**: Khi mở trang qua Deep Link (`#pets?id=...`, `#diary?sessionId=...`), giao diện mở trực tiếp khung nội dung tương ứng, không nhấp nháy lộ màn hình danh sách.
-
----
-
-## 2. CHECKLIST COMPONENT DÙNG CHUNG (GLOBAL COMPONENTS)
-
-### 2.1. Thanh điều hướng đầu trang (Header Bar - `components/header/`)
-- [ ] **Hiển thị & Cố định (Sticky Header)**:
-  - [ ] Header nổi cố định thanh thoát khi cuộn trang, nền mờ kính đục (`backdrop-filter: blur(10px)`).
-  - [ ] Topbar thông báo (`.top-bar-notice`): Nạp động thông báo khuyến mãi / voucher từ cấu hình hệ thống.
-- [ ] **Thanh tìm kiếm thông minh (Smart Header Search)**:
-  - [ ] Nhập từ khóa dịch vụ (ví dụ: `spa`, `hotel`, `khách sạn`, `taxi`, `tắm sấy`, `cắt tỉa`): Tự động chuyển hướng sang `/services?search=[từ_khóa]`.
-  - [ ] Nhập từ khóa sản phẩm (ví dụ: `hạt`, `pate`, `sữa tắm`, `royal canin`): Tự động chuyển hướng sang `/shop?search=[từ_khóa]`.
-  - [ ] Nhấn phím `Enter` hoặc click icon kính lúp đều kích hoạt tìm kiếm chính xác.
-- [ ] **Huy hiệu thông báo & Giỏ hàng (Badges)**:
-  - [ ] Huy hiệu giỏ hàng (`.cart-badge`): Tự động cập nhật số lượng món khi thêm/bớt hàng (phản hồi sự kiện `cart_updated`).
-  - [ ] Khi giỏ rỗng, huy hiệu ẩn hoặc hiển thị `0`.
-  - [ ] Huy hiệu chuông thông báo: Cập nhật số thông báo chưa đọc, tự động đồng bộ khi chuyển tab trình duyệt (`focus` event).
-- [ ] **Menu tài khoản người dùng (Auth Dropdown)**:
-  - [ ] Khi chưa đăng nhập: Hiển thị nút text `Đăng nhập` / `Đăng ký`.
-  - [ ] Khi đã đăng nhập: Hiển thị ảnh đại diện tròn (`border-radius: 50%`), tên khách hàng, hạng thẻ thành viên.
-  - [ ] Dropdown chứa các liên kết: `Hồ sơ cá nhân`, `Bé cưng của tôi`, `Lịch hẹn`, `Đơn hàng`, `Đăng xuất`.
-  - [ ] Bấm `Đăng xuất`: Xóa sạch `pawpal_current_user`, `pawpal_cart_owner`, reset huy hiệu và chuyển về trang đăng nhập hoặc trang chủ.
-- [ ] **Menu di động (Mobile Navigation Drawer)**:
-  - [ ] Nút Hamburger mở Drawer mượt mà trên màn hình nhỏ (< 1250px).
-  - [ ] Khóa cuộn trang bên dưới (`body: overflow: clip` hoặc `hidden`), chống cuộn lọt qua mép (scroll bleed).
-  - [ ] Có nút `Đóng` rõ ràng, click lớp phủ đen mờ (overlay) hoặc chọn một liên kết đều tự động đóng Drawer.
-
-### 2.2. Chân trang (Footer - `components/footer/`)
-- [ ] Hiển thị đầy đủ thông tin: Logo, mô tả ngắn gọn, hệ thống chi nhánh, hotline hỗ trợ, email CSKH.
-- [ ] Danh mục liên kết dịch vụ: `Grooming Spa`, `Pet Hotel`, `Pet Taxi`.
-- [ ] Danh mục liên kết chính sách: `Chính sách bảo mật`, `Chính sách đổi trả`, `Quy định an toàn dịch vụ`.
-- [ ] Ô đăng ký nhận bản tin (Newsletter): Có kiểm tra định dạng email và thông báo kết quả.
-
-### 2.3. Nút tiện ích nổi (FAB - `components/fab/`)
-- [ ] Nút gọi Hotline / Zalo mở đúng ứng dụng liên hệ.
-- [ ] Nút cuộn lên đầu trang (Back-to-top): Chỉ xuất hiện khi cuộn quá 300px, click cuộn mượt lên đỉnh trang.
-
-### 2.4. Modal Mua Nhanh (Landing Buy Now - `components/ui/landing-buy-now`)
-- [ ] Click nút `Mua ngay` ở thẻ sản phẩm trang chủ mở Modal Mua nhanh tức thì.
-- [ ] Nạp đúng thông tin sản phẩm: Ảnh, tên, giá bán theo biến thể rẻ nhất, các tùy chọn phân loại (hương vị, trọng lượng...).
-- [ ] Nút tăng/giảm số lượng hoạt động mượt mà, không cho chọn < 1 và không vượt quá tồn kho khả dụng.
-- [ ] Bấm `Tiến hành đặt hàng`: Lưu giỏ hàng phiên và chuyển hướng thẳng đến `/pages/shop/checkout/checkout.html?buynow=true`.
-- [ ] Đóng modal bằng phím `Escape`, nút `Đóng` hoặc click backdrop.
-
----
-
-## 3. CHECKLIST PHÂN HỆ TRANG CÔNG KHAI (`/pages/public/`)
-
-### 3.1. Trang Chủ (Landing Page - `pages/public/landing/`)
-- [ ] **Hero Slider & Banners**:
-  - [ ] Nạp danh sách banner từ bảng `banner` Supabase với điều kiện `status = 'dang_hien_thi'`.
-  - [ ] Không bị lỗi 400 do query sai cột hay enum cũ.
-  - [ ] Chuyển slide mượt mà, có nút chuyển trang và tự động dừng khi rê chuột lên banner.
-- [ ] **Khối Danh Mục Dịch Vụ Nổi Bật**:
-  - [ ] Hiển thị 3 nhóm dịch vụ: Grooming & Spa, Pet Hotel, Pet Taxi.
-  - [ ] Bấm vào thẻ dẫn đúng trang dịch vụ tương ứng với bộ lọc đã chọn sẵn.
-- [ ] **Khối Sản Phẩm Bán Chạy (Featured Products)**:
-  - [ ] Nạp dữ liệu sản phẩm từ Supabase thông qua quan hệ `product_variant(*, inventory(quantity_in_stock))`.
-  - [ ] Hiển thị đúng giá khởi điểm (giá thấp nhất của biến thể đang bán `dang_ban`).
-  - [ ] Nút `Thêm vào giỏ hàng`: Thêm thành công món hàng và cập nhật huy hiệu giỏ hàng trên Header.
-  - [ ] Nút `Mua ngay`: Mở modal mua nhanh (Buy Now Modal).
-  - [ ] Nút `Yêu thích (Trái tim)`:
-    - [ ] Khi click: Đổi trạng thái tim đỏ/rỗng ngay lập tức.
-    - [ ] Nếu đã đăng nhập: Đồng bộ lưu vào bảng `wishlist_item` Supabase.
-    - [ ] Nếu là khách vãng lai: Lưu vào `localStorage` an toàn.
-- [ ] **Slider Đánh Giá Khách Hàng (Testimonials Carousel)**:
-  - [ ] Hiển thị các đánh giá thật và phản hồi của phụ huynh thú cưng.
-  - [ ] Card co giãn tự động theo chiều rộng màn hình, không bị lỗi tính toán chiều rộng thẻ làm vỡ bố cục trên mobile.
-- [ ] **Khối Tin Tức & Cẩm Nang Chăm Sóc Mới Nhất**:
-  - [ ] Nạp 3 bài viết mới nhất từ bảng `blog_post`.
-  - [ ] Hiển thị ảnh đại diện, tiêu đề, ngày đăng và thời gian đọc.
-
-### 3.2. Trang Đăng Nhập & Đăng Ký (Auth - `pages/public/login/`)
-- [ ] **Chuyển đổi Tab (Đăng nhập / Đăng ký / Quên mật khẩu)**:
-  - [ ] Hỗ trợ URL Hash: `#login`, `#register`, `#forgot`.
-  - [ ] Khi click liên kết trên Header không bị reload toàn trang mà chuyển mượt form đăng nhập.
-- [ ] **Kiểm tra nhập liệu (Validation)**:
-  - [ ] Số điện thoại: Định dạng đúng 10 số di động Việt Nam (đầu 03, 05, 07, 08, 09).
-  - [ ] Mật khẩu: Tối thiểu 6 ký tự, có nút bật/tắt ẩn hiện mật khẩu.
-- [ ] **Đăng nhập thành công**:
-  - [ ] Nạp thông tin người dùng từ bảng `customer` vào `localStorage: pawpal_current_user`.
-  - [ ] Phát sự kiện `auth_state_changed` để Header và các module cập nhật ngay lập tức.
-  - [ ] Tự động chuyển hướng về trang trước đó (hoặc `/pages/user/index.html`).
-
-### 3.3. Trang Về Chúng Tôi (About - `pages/public/about/`)
-- [ ] Nạp đầy đủ các script tiện ích chung (`components.js`, `api.js`, `data-loader.js`).
-- [ ] Thư viện ảnh Bento Gallery hỗ trợ tải chậm hình ảnh (`loading="lazy"`), tối ưu tốc độ tải trang.
-- [ ] Trình bày cam kết an toàn, chứng chỉ KTV và giá trị thương hiệu.
-
-### 3.4. Trang Tra Cứu & Đổi Trả Khách Vãng Lai (`pages/public/return-guest/`)
-- [ ] Tra cứu thông tin đơn hàng bằng: Mã đơn hàng + Số điện thoại đặt hàng.
-- [ ] Hiển thị thông tin tiến độ đơn hàng và danh sách sản phẩm.
-- [ ] Cho phép gửi yêu cầu RMA đổi trả sản phẩm khi đơn hàng ở trạng thái `da_giao_hang`.
-
----
-
-## 4. CHECKLIST PHÂN HỆ DỊCH VỤ & ĐẶT LỊCH (`/pages/services/`)
-
-### 4.1. Trang Danh Sách Dịch Vụ (`pages/services/services.html`)
-- [ ] **Nạp dữ liệu Dịch vụ & Biểu giá**:
-  - [ ] Tải thành công 27 dịch vụ từ bảng `service`.
-  - [ ] Nạp bảng giá ma trận từ `service_price_matrix` với điều kiện `status = 'dang_hoat_dong'` và `effective_to IS NULL`.
-  - [ ] Không phát sinh lỗi 400 do sai enum hay tên cột.
-- [ ] **Bộ lọc & Tìm kiếm**:
-  - [ ] Bộ lọc phân loại: `Tất cả`, `Grooming & Spa`, `Khách sạn Pet Hotel`, `Pet Taxi`.
-  - [ ] Hỗ trợ tham số URL tìm kiếm: Truy cập `services.html?search=tắm` tự động điền ô tìm kiếm và lọc đúng dịch vụ tắm sấy.
-  - [ ] Lọc theo loại thú cưng: `Chó`, `Mèo`.
-  - [ ] Lọc theo khoảng giá.
-- [ ] **Thẻ dịch vụ**:
-  - [ ] Hiển thị tên dịch vụ, thời lượng ước tính, đánh giá sao, mức giá khởi điểm từ bảng ma trận.
-  - [ ] Nút `Chi tiết`: Dẫn đến trang `service-detail.html?id=[id]`.
-  - [ ] Nút `Đặt lịch ngay`: Dẫn đến trang đặt lịch với dịch vụ đã được chọn sẵn.
-
-### 4.2. Quy Trình Đặt Lịch Trực Tuyến (`pages/services/booking/`)
-- [ ] **Bước 1: Chọn Dịch Vụ & Thú Cưng**:
-  - [ ] Nếu đã đăng nhập: Tự động nạp danh sách bé cưng từ tài khoản để chọn nhanh 1 chạm.
-  - [ ] Nếu chưa đăng ký bé hoặc khách vãng lai: Cho phép nhập tên bé, giống loài, cân nặng thực tế.
-  - [ ] Tính toán lại giá dịch vụ tương ứng với mức cân nặng của bé theo đúng ma trận giá.
-- [ ] **Bước 2: Chọn Chuyên Viên Kỹ Thuật (KTV / Groomer)**:
-  - [ ] Nạp danh sách nhân viên từ bảng `staff` có ca trực hợp lệ trong bảng `staff_schedule`.
-  - [ ] Hiển thị cấp độ KTV (Senior, Master) và đánh giá khách hàng.
-  - [ ] Tùy chọn "PawPal tự động sắp xếp KTV phù hợp nhất".
-- [ ] **Bước 3: Chọn Ngày Giờ & Khung Giờ (Timeslot)**:
-  - [ ] Chọn ngày đặt lịch (không cho chọn ngày trong quá khứ).
-  - [ ] Khung giờ khả dụng: Kiểm tra khung giờ trùng từ bảng `appointment` để vô hiệu hóa (disable) các giờ đã kín lịch.
-  - [ ] Bố cục bước 3 dàn trải thoáng đãng, không bị co rúm chữ.
-- [ ] **Bước 4: Xác Nhận & Ghi Chú Đặc Tính**:
-  - [ ] Ô nhập ghi chú cá nhân hóa tự do: Cảnh báo an toàn, tính cách của bé, dị ứng thuốc sát trùng.
-  - [ ] Áp dụng Voucher giảm giá: Kiểm tra đúng hạn sử dụng, min-order và quyền sở hữu voucher của khách.
-  - [ ] Hiển thị tóm tắt chi phí rõ ràng: Giá gốc dịch vụ - Giảm giá + Phụ phí (nếu có) = Tổng thanh toán.
-  - [ ] Bấm `Xác nhận đặt lịch`: Ghi thành công vào bảng `appointment` Supabase với trạng thái `cho_xac_nhan`.
-  - [ ] Chuyển hướng đến trang `booking-success.html` với đầy đủ thông tin mã lịch hẹn.
-
----
-
-## 5. CHECKLIST CỔNG KHÁCH HÀNG THÀNH VIÊN (`/pages/user/`)
-
-### 5.1. Bộ Điều Phối & Quản Lý Luồng SPA (`pages/user/user.js`)
-- [ ] **Điều hướng một bước (Single-step Module Rendering)**:
-  - [ ] Nhấp chọn menu bên trái nạp trực tiếp file HTML/JS/CSS tương ứng, triệt tiêu hiện tượng tải 2 bước làm giật màn hình.
-  - [ ] Đồng bộ URL Hash: `#profile`, `#pets`, `#diary`, `#bookings`, `#orders`, `#wishlist`, `#loyalty`, `#support`.
-  - [ ] F5 Reload: Lưu vết và mở lại đúng phân hệ đang xem.
-- [ ] **Thanh Sub-Breadcrumb trên Header Cổng User**:
-  - [ ] Hiển thị dạng phân cấp: `Cổng thành viên / Bé cưng / [Tên bé]`.
-  - [ ] Tự động cập nhật tên thực thể đang mở chi tiết.
-
-### 5.2. Hồ Sơ Cá Nhân (`pages/user/modules/profile/`)
-- [ ] Nạp đúng thông tin khách hàng từ Supabase: Họ tên, SĐT, Email, ngày sinh, hạng thành viên, điểm Pawpoint.
-- [ ] Cập nhật thông tin cá nhân: Lưu thành công và thông báo Toast.
-- [ ] Sổ địa chỉ nhận hàng:
-  - [ ] Hỗ trợ lưu nhiều địa chỉ.
-  - [ ] Chọn đúng 1 địa chỉ mặc định (có huy hiệu viền xanh).
-  - [ ] Thêm địa chỉ mới / Xóa địa chỉ phụ hoạt động chính xác.
-
-### 5.3. Hồ Sơ Bé Cưng (`pages/user/modules/pets/`)
-- [ ] **Tải danh sách & Lọc trạng thái**:
-  - [ ] Tab `Đang nuôi` và Tab `Lưu trữ`: Chuyển đổi bằng class `.d-none`, không bị vỡ layout.
-  - [ ] Hiển thị thẻ từng bé: Ảnh avatar, tên, giống loài, giới tính, cân nặng, ngày sinh/tuổi.
-- [ ] **Hỗ trợ Deep Link trực tiếp**:
-  - [ ] Mở `#pets?id=[pet_id]`: Mở thẳng form chi tiết bé mà không bị nháy màn hình danh sách.
-  - [ ] Mở `#pets?action=create`: Mở thẳng form tạo bé cưng mới.
-- [ ] **Chức năng Thêm & Sửa hồ sơ bé**:
-  - [ ] Tải ảnh đại diện bé cưng và ảnh sổ tiêm phòng vaccine.
-  - [ ] Toggle loài thú cưng: Chó / Mèo.
-  - [ ] Nhập tự do: Tiền sử dị ứng, tập tính cá nhân, cảnh báo an toàn khi cắt tỉa.
-  - [ ] Nút bấm `Lưu bé cưng`: Lưu thành công vào bảng `pet` Supabase, cập nhật danh sách và hiển thị Toast thành công.
-
-### 5.4. Nhật Ký Chăm Sóc Thời Gian Thực 360° (`pages/user/modules/diary/`)
-- [ ] **Chọn bé & Mở phiên dịch vụ**:
-  - [ ] Thanh chọn bé cưng dạng pill ngang: Chuyển đổi bé mượt mà.
-  - [ ] Mở deep link từ lịch hẹn: `#diary?id=[petId]&sessionId=[appointmentId]` mở đúng phiên chăm sóc của lịch hẹn đó.
-  - [ ] Nếu phiên dịch vụ chưa có nhật ký: Hiển thị thông báo nhẹ nhàng, không mở nhầm nhật ký của ca khác.
-  - [ ] Nếu không tìm thấy mã bé: Hiển thị màn hình báo lỗi thanh lịch kèm nút quay lại danh sách.
-- [ ] **Tiến trình Stepper & Timeline**:
-  - [ ] 5 bước quy trình: `Tiếp nhận an toàn` $\rightarrow$ `Tắm sấy vệ sinh` $\rightarrow$ `Cắt tỉa tạo kiểu` $\rightarrow$ `Kiểm tra chất lượng` $\rightarrow$ `Bàn giao bé`.
-  - [ ] Hiển thị hình ảnh trước (Before) và sau (After) khi grooming.
-  - [ ] Nhật ký chỉ số sức khỏe: Cân nặng đo tại quầy, tình trạng da lông, tai, móng.
-  - [ ] Biểu cảm & Tâm trạng của bé trong suốt quá trình chăm sóc.
-
-### 5.5. Quản Lý Lịch Hẹn Dịch Vụ (`pages/user/modules/bookings/`)
-- [ ] **Danh sách lịch hẹn**:
-  - [ ] Phân loại theo tab: `Tất cả`, `Sắp tới`, `Đang thực hiện`, `Hoàn thành`, `Đã hủy`.
-  - [ ] Nạp lịch hẹn từ Supabase kèm thông tin bé cưng, dịch vụ và KTV phụ trách.
-- [ ] **Hủy lịch hẹn**:
-  - [ ] Chỉ cho phép hủy khi lịch ở trạng thái `cho_xac_nhan` hoặc `da_xac_nhan`.
-  - [ ] Cập nhật trạng thái thành ENUM chuẩn `da_huy` (không dùng mã cũ).
-- [ ] **Đánh giá dịch vụ**:
-  - [ ] Đối với lịch hẹn đã `hoan_thanh`: Hiển thị form đánh giá số sao (1-5 sao) và nhận xét.
-  - [ ] Lưu đánh giá vào bảng `review` với `service_id` và `appointment_id` hợp lệ.
-
-### 5.6. Quản Lý Đơn Hàng & Đổi Trả RMA (`pages/user/modules/orders/`)
-- [ ] **Danh sách đơn hàng**:
-  - [ ] Phân loại theo tab trạng thái chuẩn: `Chờ xác nhận`, `Đang đóng gói`, `Đang giao hàng`, `Đã giao hàng`, `Đã hủy`.
-  - [ ] Hiển thị mã đơn, ngày đặt, hình ảnh sản phẩm, số lượng, tổng tiền thanh toán.
-- [ ] **Chi tiết đơn hàng (`order-detail.js`)**:
-  - [ ] Nạp thông tin qua `API.getUserOrders` đồng bộ bảng 3NF (đọc `product_variant` $\rightarrow$ `product`).
-  - [ ] Hiển thị thông tin người nhận, địa chỉ giao hàng, phương thức thanh toán.
-  - [ ] Đơn vị vận chuyển và Mã vận đơn tracking thật (ghn, ghtk, j&t...).
-- [ ] **Drawer Yêu Cầu Đổi Trả RMA (`return-handler.js`)**:
-  - [ ] Khi đơn hàng ở trạng thái `da_giao_hang`: Nút `Yêu cầu đổi trả` khả dụng.
-  - [ ] Click mở Drawer đổi trả với hiệu ứng trượt mượt mà.
-  - [ ] Quản lý tiêu điểm (Focus trap) và hỗ trợ đóng nhanh bằng phím `Escape`.
-  - [ ] Chọn lý do đổi trả, tải ảnh bằng chứng sản phẩm lỗi, chọn phương thức hoàn tiền hoặc đổi sản phẩm mới.
-  - [ ] Ghi nhận thành công vào bảng `return_request` và `return_request_detail` Supabase.
-
-### 5.7. Danh Sách Yêu Thích (`pages/user/modules/wishlist/`)
-- [ ] Hiển thị 2 tab: `Sản phẩm yêu thích` và `Dịch vụ yêu thích`.
-- [ ] Thêm vào giỏ hàng ngay từ thẻ sản phẩm yêu thích (gọi `API.addToCart` và cập nhật badge giỏ hàng).
-- [ ] Xóa sản phẩm khỏi danh sách yêu thích cập nhật ngay giao diện và đồng bộ Supabase.
-
-### 5.8. Pawpoint & Hạng Thành Viên (`pages/user/modules/loyalty/`)
-- [ ] Hiển thị tổng điểm tích lũy hiện có, điểm sắp hết hạn.
-- [ ] Thanh tiến trình nâng hạng thẻ: `Đồng` $\rightarrow$ `Bạc` $\rightarrow$ `Vàng` $\rightarrow$ `Kim Cương`.
-- [ ] Bảng lịch sử biến động điểm: Nạp từ bảng `point_transaction` (ghi rõ lý do cộng/trừ, mã đơn liên quan).
-- [ ] Đổi điểm nhận mã giảm giá Voucher.
-
-### 5.9. Khiếu Nại & CSKH 2 Chiều (`pages/user/modules/support/`)
-- [ ] Danh sách các phiếu yêu cầu hỗ trợ / khiếu nại của khách.
-- [ ] Tạo khiếu nại mới (`support-create.js`):
-  - [ ] Tự động nạp danh sách đơn hàng và lịch hẹn thực tế của khách vào dropdown chọn đối tượng.
-  - [ ] Chọn loại sự cố: Thái độ phục vụ, trễ hẹn, sai hàng, sự cố chăm sóc bé.
-  - [ ] Lưu thành công vào bảng `support_ticket`.
-- [ ] Chat trao đổi 2 chiều: Khách hàng gửi tin nhắn trao đổi với nhân viên CSKH (bảng `support_ticket_message`).
-
----
-
-## 6. CHECKLIST PHÂN HỆ CỬA HÀNG & MUA SẮM (`/pages/shop/`)
-
-### 6.1. Giỏ Hàng (`pages/shop/cart/cart.js`)
-- [ ] **Quản lý phiên & Cơ chế hàng đợi (`queueCartWrite`)**:
-  - [ ] Đảm bảo mỗi tài khoản người dùng có không gian giỏ hàng riêng biệt (`pawpal_cart_owner`).
-  - [ ] Khi bấm tăng/giảm số lượng liên tục không bị mất đồng bộ hay ghi đè sai số lượng (Race condition protection).
-- [ ] **Kiểm tra giới hạn tồn kho (`validateCartStock`)**:
-  - [ ] Không cho phép tăng số lượng vượt quá số lượng tồn kho khả dụng từ bảng `inventory` qua `product_variant_id`.
-  - [ ] Nếu sản phẩm trong giỏ bị hết hàng trong kho: Hiển thị cảnh báo đỏ và chặn thanh toán món đó.
-- [ ] **Xóa sản phẩm khỏi giỏ**:
-  - [ ] Có hộp thoại xác nhận xóa thân thiện, cập nhật lại tổng tiền ngay tức thì.
-
-### 6.2. Thanh Toán Đặt Hàng (`pages/shop/checkout/checkout.js`)
-- [ ] **Kiểm tra thông tin giao hàng**:
-  - [ ] Tự động điền họ tên, số điện thoại và địa chỉ mặc định của khách đã đăng nhập.
-  - [ ] Cho phép khách vãng lai nhập thông tin giao hàng mới.
-- [ ] **Áp dụng Voucher Khuyến Mãi**:
-  - [ ] Kiểm tra điều kiện đơn hàng tối thiểu (`min_order_amount`).
-  - [ ] Kiểm tra quyền sở hữu: Khách không thể dùng trộm voucher riêng của khách hàng khác.
-- [ ] **Phương thức thanh toán**:
-  - [ ] Thanh toán khi nhận hàng (`COD`).
-  - [ ] Thanh toán trực tuyến VNPay Sandbox: Chuyển hướng đúng cổng và nhận callback cập nhật trạng thái đơn thành `da_thanh_toan`.
-- [ ] **Trừ kho nguyên tử (Atomic Stock Deduction)**:
-  - [ ] Đơn hàng tạo thành công lập tức cập nhật giảm số lượng tồn trong `inventory` và ghi nhật ký vào `inventory_transaction`.
-
----
-
-## 7. CHECKLIST TOÀN VẸN DỮ LIỆU & NẠP SUPABASE (DATA SYNC & 3NF INTEGRITY)
-
-| Bảng Dữ Liệu | Khóa Ngoại & Cột Nghiệp Vụ Bắt Buộc | Trạng Thái ENUM Tiếng Việt Chuẩn | Tiêu Chí Kiểm Tra Nạp Dữ Liệu |
+| Đối tượng | Tài khoản / Số điện thoại | Mật khẩu chuẩn | Ghi chú & Dữ liệu sẵn có |
 | :--- | :--- | :--- | :--- |
-| **`product`** | `category_id` $\rightarrow$ `product_category(id)` | `dang_ban`, `tam_ngung`, `ngung_kinh_doanh` | Không join trực tiếp `inventory`. Đọc qua `product_variant`. |
-| **`product_variant`** | `product_id` $\rightarrow$ `product(id)` | `dang_ban`, `tam_ngung`, `het_hang` | Nạp đúng `sku_variant`, `sale_price`, `compare_at_price`. |
-| **`inventory`** | `product_variant_id` $\rightarrow$ `product_variant(id)` | N/A | Tuyệt đối không còn cột `product_id`. |
-| **`cart_item`** | `cart_id`, `product_variant_id` | N/A | Ghi nhận đúng `product_variant_id`, không có `product_id`. |
-| **`sales_order`** | `customer_id`, `address_id` | `cho_xac_nhan`, `dang_dong_goi`, `dang_giao_hang`, `da_giao_hang`, `da_huy` | Lưu đúng `tracking_code`, `shipping_provider_id`, `shipped_at`. |
-| **`sales_order_detail`** | `sales_order_id`, `product_variant_id` | N/A | Không có cột `product_id`. Đọc sản phẩm qua `product_variant`. |
-| **`service`** | `category_id` | `dang_hoat_dong`, `ngung_hoat_dong` | Phân loại: `grooming_spa`, `khach_san_thu_cung`, `dua_don_tan_noi`. |
-| **`service_price_matrix`** | `service_id` $\rightarrow$ `service(id)` | `dang_hoat_dong`, `ngung_hoat_dong` | Lọc `status = 'dang_hoat_dong'` và `effective_to IS NULL`. |
-| **`appointment`** | `customer_id`, `pet_id`, `service_id`, `staff_id` | `cho_xac_nhan`, `da_xac_nhan`, `dang_thuc_hien`, `hoan_thanh`, `da_huy` | Không dùng mã tiếng Anh `PENDING`/`CONFIRMED`. |
-| **`banner`** | N/A | `dang_hien_thi`, `tam_an`, `het_han` | Lọc `status = 'dang_hien_thi'`. Không có cột `is_active`. |
-| **`return_request`** | `order_id`, `customer_id` | `cho_tiep_nhan`, `da_duyet`, `tu_choi`, `hoan_tat` | Hỗ trợ quy trình RMA kiểm phẩm và nhập lại kho. |
-| **`support_ticket`** | `customer_id`, `order_id`, `appointment_id` | `tiep_nhan`, `dang_xu_ly`, `cho_khach_phan_hoi`, `da_dong` | Đầy đủ 19 cột nghiệp vụ hỗ trợ đa phân hệ. |
+| **Khách hàng QA 1** | `0987654321` | `Password123!` | Khách: Lê Lệ Quyên QA. Có sẵn thú cưng, sổ địa chỉ, lịch hẹn dịch vụ. |
+| **Khách hàng QA 2** | `0901234567` | `Password123!` | Khách: Lê Lệ Quyên QA. Có sẵn đơn hàng mua sắm, lịch sử giao hàng. |
+| **Khách hàng QA 3** | `0834562948` | `Password123!` | Khách: Nguyễn Lê Thi. Có sẵn bé cưng và nhật ký chăm sóc 360°. |
+| **Khách hàng QA 4** | `0972163376` | `Password123!` | Khách: Nguyễn Lê Nhật Khanh. Có danh sách yêu thích và tích điểm loyalty. |
+| **Khách vãng lai** | Nhập tự do 10 số (bắt đầu bằng `0...`) | OTP: `555666` | Dùng để test luồng Đăng ký mới, Quên mật khẩu, Tra cứu đơn vãng lai. |
+| **Quản trị viên** | `admin@pawpal.vn` | `PawpalSecure2026!` | Cổng `/admin/login`: Dùng để đối soát đơn hàng, lịch hẹn, duyệt RMA. |
 
 ---
 
-## 8. QUY TRÌNH THỰC HIỆN & BÁO CÁO LỖI (DEFECT TRACKING)
+# PHẦN I: KHUNG GIAO DIỆN & COMPONENTS DÙNG CHUNG (GLOBAL COMPONENTS)
 
-Khi kiểm thử viên (hoặc Subagent) phát hiện bất kỳ lỗi nào trên giao diện hoặc console, ghi nhận theo định dạng chuẩn sau:
+## 1. Thanh Điều Hướng Đầu Trang (Header Bar - `components/header/`)
 
-```markdown
-### [MÃ_LỖI] Tiêu đề ngắn gọn của lỗi
-- **Vị trí (URL / Module)**: Ví dụ: /pages/user/index.html#diary
-- **Các bước tái hiện (Steps to Reproduce)**:
-  1. Đăng nhập tài khoản khách hàng...
-  2. Truy cập phân hệ Bé cưng...
-  3. Bấm vào nút...
-- **Kết quả thực tế (Actual Result)**: Màn hình báo lỗi đỏ / Console log 400 Bad Request...
-- **Kết quả mong đợi (Expected Result)**: Dữ liệu nạp thành công, hiển thị thông tin...
-- **Ảnh chụp màn hình / Console log**: (Đính kèm nếu có)
-- **Mức độ nghiêm trọng**: [Blocker / Critical / Major / Minor]
-```
+### TC-HDR-01: Hiển thị giao diện, thanh thông báo Topbar và hiệu ứng cố định (Sticky Header)
+- **Điều kiện**: Truy cập trang bất kỳ (`/`, `/shop`, `/services`, `/user`).
+- **Các bước thực hiện**:
+  1. Mở trang chủ `http://localhost:3000/`.
+  2. Quan sát thanh thông báo Topbar (`.top-bar-notice`) trên cùng.
+  3. Cuộn trang xuống dưới 200px - 1000px.
+- **Kết quả mong đợi**:
+  - [ ] Topbar hiển thị rõ ràng thông báo khuyến mãi / voucher hệ thống.
+  - [ ] Khi cuộn trang, Header Bar bám dính cố định mượt mà (sticky), bề mặt kính mờ bán trong suốt (`backdrop-filter: blur(10px)`).
+  - [ ] Không có hiện tượng giật cục (layout shift) hoặc che lấp tiêu đề trang bên dưới.
+
+### TC-HDR-02: Thanh tìm kiếm phân luồng thông minh (Smart Search Routing)
+- **Điều kiện**: Đang ở bất kỳ trang nào.
+- **Các bước thực hiện**:
+  1. Click vào ô tìm kiếm trên Header.
+  2. Gõ từ khóa liên quan đến dịch vụ: `spa`, `hotel`, `khach san`, `dua ruoc`, `taxi`, `tắm sấy` $\rightarrow$ Nhấn `Enter` hoặc click icon kính lúp.
+  3. Quay lại, gõ từ khóa sản phẩm: `pate`, `hạt mèo`, `royal canin`, `sữa tắm` $\rightarrow$ Nhấn `Enter`.
+  4. Để ô tìm kiếm rỗng và nhấn `Enter`.
+- **Kết quả mong đợi**:
+  - [ ] Với từ khóa dịch vụ: Tự động chuyển hướng chính xác đến `/services?search=[từ_khóa]` và nạp ngay danh sách dịch vụ phù hợp.
+  - [ ] Với từ khóa sản phẩm: Tự động chuyển hướng đến `/shop?search=[từ_khóa]` và nạp đúng sản phẩm tương ứng.
+  - [ ] Khi ô tìm kiếm rỗng: Không chuyển trang, không reload lại trang không cần thiết.
+
+### TC-HDR-03: Huy hiệu giỏ hàng (Cart Badge) và đồng bộ thời gian thực
+- **Điều kiện**: Mở trang web ở 2 tab trình duyệt cùng lúc.
+- **Các bước thực hiện**:
+  1. Quan sát số lượng hiển thị trên huy hiệu giỏ hàng (`.cart-badge`).
+  2. Tại Tab 1: Bấm `Thêm vào giỏ hàng` một sản phẩm bất kỳ.
+  3. Chuyển sang Tab 2: Kiểm tra số lượng trên huy hiệu giỏ hàng.
+  4. Xóa hết sản phẩm trong giỏ hàng.
+- **Kết quả mong đợi**:
+  - [ ] Khi thêm sản phẩm: Huy hiệu giỏ hàng tăng ngay lập tức mà không cần F5.
+  - [ ] Tab 2 tự động cập nhật số lượng mới qua sự kiện `storage` / `cart_updated`.
+  - [ ] Khi giỏ rỗng: Huy hiệu hiển thị `0` hoặc ẩn đi một cách thẩm mỹ.
+
+### TC-HDR-04: Huy hiệu thông báo và menu thông báo đẩy (Notifications)
+- **Điều kiện**: Đã đăng nhập tài khoản khách hàng.
+- **Các bước thực hiện**:
+  1. Click icon chuông thông báo trên Header.
+  2. Đọc một thông báo chưa đọc.
+  3. Bấm `Đánh dấu tất cả đã đọc`.
+- **Kết quả mong đợi**:
+  - [ ] Sổ menu thông báo thanh thoát, hiển thị danh sách thông báo lịch hẹn, đơn hàng, điểm thưởng.
+  - [ ] Bấm đọc thông báo: Chấm đỏ chưa đọc biến mất, số trên huy hiệu giảm 1.
+  - [ ] `Đánh dấu tất cả đã đọc`: Huy hiệu chuông biến mất chấm đỏ, lưu trạng thái vào Supabase/LocalStorage.
+
+### TC-HDR-05: Menu tài khoản người dùng (Auth Dropdown State)
+- **Điều kiện**: Kiểm tra ở cả 2 trạng thái Chưa đăng nhập và Đã đăng nhập.
+- **Các bước thực hiện**:
+  1. **Khi chưa đăng nhập**: Quan sát Header. Click nút `Đăng nhập`.
+  2. **Khi đã đăng nhập** (với SĐT `0987654321` / `Password123!`):
+     - Quan sát góc phải Header.
+     - Click vào avatar / tên khách hàng để mở menu dropdown.
+     - Kiểm tra từng liên kết: `Hồ sơ cá nhân`, `Bé cưng của tôi`, `Lịch hẹn`, `Đơn hàng`.
+     - Click nút `Đăng xuất`.
+- **Kết quả mong đợi**:
+  - [ ] Khi chưa đăng nhập: Nút `Đăng nhập` / `Đăng ký` dạng text phẳng, click chuyển đến `/login`.
+  - [ ] Khi đã đăng nhập: Hiển thị avatar tròn (`border-radius: 50%`) hoặc chữ cái viết tắt, tên khách hàng và badge hạng thành viên.
+  - [ ] Các liên kết trong menu dẫn chính xác đến các module tương ứng trong `/user#profile`, `/user#pets`, `/user#bookings`, `/user#orders`.
+  - [ ] Bấm `Đăng xuất`: Xóa sạch `pawpal_current_user`, `pawpal_cart_owner`, reset giỏ hàng phiên, Header quay về trạng thái chưa đăng nhập mà không phát sinh lỗi Console.
+
+### TC-HDR-06: Menu di động (Mobile Nav Drawer) và quản lý thanh cuộn
+- **Điều kiện**: Bật chế độ Responsive trên trình duyệt (kích thước màn hình: 375px, 414px, 768px).
+- **Các bước thực hiện**:
+  1. Bấm nút Hamburger menu (`.mobile-menu-toggle`).
+  2. Lướt ngón tay cuộn trang bên dưới menu.
+  3. Click nút `Đóng [×]` hoặc click vào vùng tối mờ (Backdrop).
+  4. Mở lại menu và click vào một liên kết menu (ví dụ: `Dịch vụ`).
+- **Kết quả mong đợi**:
+  - [ ] Menu Drawer trượt ra mượt mà từ mép màn hình.
+  - [ ] Toàn bộ khung trang bên dưới bị khóa cuộn cứng (`overflow: hidden` / `overscroll-behavior: contain`), triệt tiêu 100% hiện tượng cuộn lọt mép.
+  - [ ] Click nút Đóng hoặc click Backdrop đóng menu tức thì.
+  - [ ] Click liên kết: Chuyển đúng trang và tự động đóng Drawer.
 
 ---
-*Tài liệu được khởi tạo và phê duyệt bởi Antigravity Pair-Programming Agent.*
+
+## 2. Modal Mua Nhanh Tại Trang Chủ (`components/ui/landing-buy-now`)
+
+### TC-MOD-01: Kích hoạt modal mua nhanh và nạp dữ liệu sản phẩm
+- **Điều kiện**: Đang ở trang chủ `/`.
+- **Các bước thực hiện**:
+  1. Tìm đến thẻ sản phẩm bất kỳ tại mục "Sản phẩm bán chạy".
+  2. Bấm nút `Mua ngay`.
+- **Kết quả mong đợi**:
+  - [ ] Modal mở lên chính giữa màn hình với hiệu ứng mờ kính đục, bo góc 9px chuẩn [AGENTS.md](file:///d:/Aboutme/MyProject/Pawpal/AGENTS.md).
+  - [ ] Nạp chính xác: Ảnh sản phẩm, tên sản phẩm, nhãn hiệu, giá bán theo biến thể rẻ nhất, các tùy chọn phân loại (size, mùi vị, trọng lượng...).
+  - [ ] Nút tăng giảm số lượng hoạt động: Click `+` tăng 1, click `-` giảm 1 (chặn không cho giảm xuống < 1).
+
+### TC-MOD-02: Kiểm tra giới hạn tồn kho khi mua nhanh
+- **Điều kiện**: Modal mua nhanh đang mở.
+- **Các bước thực hiện**:
+  1. Nhập số lượng mua lớn hơn số lượng tồn kho thực tế của biến thể (ví dụ: nhập `9999`).
+  2. Bấm nút `Tiến hành đặt hàng`.
+- **Kết quả mong đợi**:
+  - [ ] Hệ thống hiển thị cảnh báo đỏ rõ ràng: "Chỉ còn X sản phẩm trong kho".
+  - [ ] Chặn không cho chuyển trang thanh toán khi vượt quá tồn kho.
+
+### TC-MOD-03: Chuyển hướng Checkout từ modal mua nhanh
+- **Điều kiện**: Chọn số lượng hợp lệ (ví dụ: `2`).
+- **Các bước thực hiện**:
+  1. Chọn phân loại biến thể mong muốn.
+  2. Bấm `Tiến hành đặt hàng`.
+- **Kết quả mong đợi**:
+  - [ ] Lưu giỏ hàng phiên mua nhanh và chuyển hướng thẳng đến `/pages/shop/checkout/checkout.html?buynow=true`.
+  - [ ] Tại trang Checkout: Chỉ hiển thị đúng sản phẩm vừa chọn mua nhanh, không bị lẫn với các món đang có trong giỏ hàng chính.
+
+---
+
+# PHẦN II: PHÂN HỆ TRANG CÔNG KHAI (`/pages/public/`)
+
+## 1. Trang Chủ (Landing Page - `pages/public/landing/`)
+
+### TC-LND-01: Tải Banner động từ Supabase
+- **Điều kiện**: Truy cập `/`.
+- **Các bước thực hiện**:
+  1. Mở trang chủ và quan sát slider banner đầu trang.
+  2. Kiểm tra tab Network trên DevTools (lọc `banner`).
+- **Kết quả mong đợi**:
+  - [ ] Câu truy vấn Supabase gọi đúng bảng `banner` với điều kiện `status = 'dang_hien_thi'`.
+  - [ ] Mã HTTP 200 OK, **không có lỗi 400 Bad Request** do sai enum hay tìm cột không tồn tại.
+  - [ ] Banner hiển thị đầy đủ hình ảnh, tiêu đề, nút bấm CTA chuyển hướng đúng trang khuyến mãi.
+
+### TC-LND-02: Nạp danh mục dịch vụ nổi bật
+- **Các bước thực hiện**:
+  1. Cuộn đến khối "Dịch vụ nổi bật tại PawPal".
+  2. Kiểm tra hiển thị 3 khối: Grooming & Spa, Pet Hotel, Pet Taxi.
+  3. Bấm vào từng khối dịch vụ.
+- **Kết quả mong đợi**:
+  - [ ] Chuyển hướng chính xác đến `/services` với tab danh mục tương ứng được active sẵn.
+
+### TC-LND-03: Danh sách sản phẩm nổi bật & Hiển thị giá đa biến thể
+- **Các bước thực hiện**:
+  1. Cuộn đến khối sản phẩm.
+  2. Quan sát mức giá hiển thị trên từng thẻ sản phẩm.
+  3. Kiểm tra các sản phẩm có giảm giá.
+- **Kết quả mong đợi**:
+  - [ ] Giá hiển thị là giá thấp nhất trong số các biến thể đang bán (`dang_ban`).
+  - [ ] Sản phẩm có giảm giá: Hiển thị giá khuyến mãi in đậm màu xanh `#236B48`, giá gốc gạch ngang màu xám mờ và huy hiệu `% Giảm`.
+  - [ ] Không có sản phẩm nào bị hiển thị giá `0đ` hoặc `NaN`.
+
+### TC-LND-04: Thao tác Yêu thích (Wishlist Heart Toggle) tại trang chủ
+- **Các bước thực hiện**:
+  1. **Khi chưa đăng nhập**: Bấm icon trái tim trên thẻ sản phẩm $\rightarrow$ Kiểm tra `localStorage: pawpal_wishlist`.
+  2. **Khi đã đăng nhập** (`0987654321`): Bấm icon trái tim trên 2 sản phẩm khác nhau.
+  3. Mở tab Network kiểm tra request Supabase.
+  4. Truy cập trang `/user#wishlist`.
+- **Kết quả mong đợi**:
+  - [ ] Icon trái tim chuyển ngay sang màu đỏ khi yêu thích, chuyển về rỗng khi bỏ chọn.
+  - [ ] Khi đã đăng nhập: Dữ liệu đồng bộ ghi vào bảng `wishlist_item` Supabase.
+  - [ ] Trang `/user#wishlist` hiển thị đúng các sản phẩm vừa thả tim.
+
+### TC-LND-05: Slider Đánh giá khách hàng (Testimonials Carousel)
+- **Các bước thực hiện**:
+  1. Cuộn đến khối "Khách hàng nói gì về PawPal".
+  2. Thu nhỏ cửa sổ trình duyệt từ 1920px xuống 1200px, 768px, 375px.
+  3. Bấm nút điều hướng `<` và `>` của slider.
+- **Kết quả mong đợi**:
+  - [ ] Các thẻ đánh giá tự động tính toán lại chiều rộng vừa vặn với khung nhìn màn hình.
+  - [ ] Không có hiện tượng tràn chiều ngang (horizontal overflow) làm mất thanh cuộn trang chính.
+  - [ ] Nút điều hướng hoạt động êm ái, hiển thị số sao, hình ảnh bé cưng và nhận xét của chủ nuôi.
+
+---
+
+## 2. Trang Đăng Nhập & Đăng Ký (`pages/public/login/`)
+
+### TC-LOG-01: Chuyển đổi qua lại giữa Đăng nhập, Đăng ký và Quên mật khẩu
+- **Các bước thực hiện**:
+  1. Truy cập `http://localhost:3000/login`.
+  2. Bấm tab `Đăng ký` $\rightarrow$ Quan sát URL.
+  3. Bấm liên kết `Quên mật khẩu?` $\rightarrow$ Quan sát URL.
+  4. Bấm liên kết `Quay lại đăng nhập`.
+- **Kết quả mong đợi**:
+  - [ ] Giao diện chuyển đổi form tức thì mà không bị reload lại trang.
+  - [ ] URL cập nhật đúng hash/param: `?action=register`, `?action=forgot`, `?action=login`.
+
+### TC-LOG-02: Kiểm tra nhập liệu form Đăng nhập (Validation & Error States)
+- **Các bước thực hiện**:
+  1. Bỏ trống SĐT $\rightarrow$ Bấm `Tiếp tục`.
+  2. Nhập SĐT sai định dạng: `12345`, `091234567899` (11 số), `abc` $\rightarrow$ Bấm `Tiếp tục`.
+  3. Nhập SĐT chưa từng đăng ký: `0999999999` $\rightarrow$ Bấm `Tiếp tục`.
+  4. Nhập SĐT đúng `0987654321`, nhập sai mật khẩu `SaiMatKhau123!` $\rightarrow$ Bấm `Đăng nhập`.
+- **Kết quả mong đợi**:
+  - [ ] Báo lỗi rõ ràng: "Vui lòng nhập số điện thoại hợp lệ (10 chữ số, bắt đầu bằng 0)".
+  - [ ] Với SĐT chưa đăng ký: Báo lỗi "Số điện thoại chưa đăng ký. Vui lòng tạo tài khoản".
+  - [ ] Với mật khẩu sai: Báo lỗi "Thông tin đăng nhập không đúng". Ô mật khẩu được giữ nguyên để nhập lại.
+
+### TC-LOG-03: Đăng nhập thành công và khôi phục đích đến (Redirect URL)
+- **Các bước thực hiện**:
+  1. Đang ở trang chi tiết sản phẩm `/pages/shop/product-detail/product-detail.html?id=[id]`.
+  2. Bấm vào Header để đăng nhập (URL có gắn `?redirect=...`).
+  3. Nhập SĐT: `0987654321` $\rightarrow$ Bấm `Tiếp tục`.
+  4. Nhập mật khẩu: `Password123!` $\rightarrow$ Bấm `Đăng nhập`.
+- **Kết quả mong đợi**:
+  - [ ] Thông báo Toast xanh: "Đăng nhập thành công".
+  - [ ] Lưu đầy đủ thông tin phiên vào `localStorage` và `sessionStorage: pawpal_current_user`.
+  - [ ] Tự động chuyển hướng quay lại đúng trang chi tiết sản phẩm ban đầu.
+
+### TC-LOG-04: Đăng ký tài khoản mới với mã OTP thử nghiệm (Demo OTP)
+- **Các bước thực hiện**:
+  1. Chọn tab `Đăng ký`.
+  2. Nhập Họ và tên: `Nguyễn Văn Thử Nghiệm`.
+  3. Nhập SĐT mới chưa từng có trong hệ thống (ví dụ: `0933112233`).
+  4. Nhập mật khẩu: `Pawpal@2026` và xác nhận lại mật khẩu.
+  5. Bấm `Đăng ký` $\rightarrow$ Màn hình hiển thị ô nhập mã OTP 6 số.
+  6. Nhập mã OTP sai `111222` $\rightarrow$ Bấm xác thực.
+  7. Nhập mã OTP thử nghiệm chuẩn: `555666`.
+- **Kết quả mong đợi**:
+  - [ ] Khi nhập mã sai: Báo lỗi "Mã xác thực không đúng. Vui lòng kiểm tra lại".
+  - [ ] Khi nhập đúng `555666`: Tạo thành công tài khoản trong bảng `customer` và `customer_profile`, tự động đăng nhập và chuyển về trang người dùng `/user`.
+
+---
+
+# PHẦN III: PHÂN HỆ DỊCH VỤ & ĐẶT LỊCH (`/pages/services/`)
+
+## 1. Danh Sách Dịch Vụ (`pages/services/services.html`)
+
+### TC-SVC-01: Tải toàn bộ danh sách dịch vụ và bảng giá ma trận
+- **Các bước thực hiện**:
+  1. Mở trang `http://localhost:3000/services`.
+  2. Kiểm tra tab Console và Network trên DevTools.
+- **Kết quả mong đợi**:
+  - [ ] Nạp thành công toàn bộ 27 dịch vụ từ bảng `service`.
+  - [ ] Nạp thành công 85 dòng giá ma trận từ `service_price_matrix` với điều kiện `status = 'dang_hoat_dong'`.
+  - [ ] **Không có lỗi 400 Bad Request** liên quan đến enum hay null check.
+  - [ ] Tất cả các dịch vụ đều hiển thị giá khởi điểm chính xác (không bị trống giá).
+
+### TC-SVC-02: Bộ lọc danh mục dịch vụ và phân loại theo thú cưng
+- **Các bước thực hiện**:
+  1. Bấm chip lọc `Grooming & Spa` $\rightarrow$ Kiểm tra danh sách hiển thị.
+  2. Bấm chip lọc `Khách sạn Pet Hotel` $\rightarrow$ Kiểm tra các gói phòng lưu trú.
+  3. Bấm chip lọc `Pet Taxi` $\rightarrow$ Kiểm tra các gói đưa đón.
+  4. Chọn lọc theo thú cưng: `Chó` hoặc `Mèo`.
+- **Kết quả mong đợi**:
+  - [ ] Danh sách lọc chính xác 100%, không bị lẫn lộn giữa khách sạn và cắt tỉa.
+  - [ ] Thẻ dịch vụ hiển thị rõ thời lượng thực hiện (ví dụ: `60 phút`, `90 phút`).
+
+### TC-SVC-03: Lọc dịch vụ từ liên kết tìm kiếm trên Header
+- **Các bước thực hiện**:
+  1. Truy cập trực tiếp đường dẫn: `http://localhost:3000/services?search=khách+sạn`.
+- **Kết quả mong đợi**:
+  - [ ] Ô tìm kiếm trên trang tự động điền chữ "khách sạn".
+  - [ ] Danh sách dịch vụ được lọc tự động, chỉ hiển thị các gói dịch vụ Pet Hotel.
+
+---
+
+## 2. Quy Trình Đặt Lịch Trực Tuyến 4 Bước (`pages/services/booking/`)
+
+### TC-BKG-01: Bước 1 - Chọn dịch vụ và nạp bé cưng tự động
+- **Điều kiện**: Đã đăng nhập tài khoản `0987654321`.
+- **Các bước thực hiện**:
+  1. Truy cập `/booking`.
+  2. Chọn dịch vụ `Tắm sấy và vệ sinh tiêu chuẩn`.
+  3. Quan sát ô chọn thú cưng.
+  4. Chuyển đổi giữa các bé cưng có sẵn trong tài khoản.
+- **Kết quả mong đợi**:
+  - [ ] Hệ thống tự động nạp danh sách các bé cưng của tài khoản.
+  - [ ] Khi chọn một bé: Cân nặng của bé được nạp vào và **giá dịch vụ tự động nhảy theo đúng biểu giá ma trận** tương ứng với cân nặng của bé.
+
+### TC-BKG-02: Bước 2 - Chọn chuyên viên kỹ thuật (KTV / Groomer) theo ca trực thật
+- **Các bước thực hiện**:
+  1. Tại Bước 2, quan sát danh sách KTV hiển thị.
+  2. Bấm chọn một KTV cụ thể (ví dụ: Chuyên viên Phạm Thúy Vy).
+  3. Hoặc chọn tùy chọn "PawPal tự động sắp xếp chuyên viên phù hợp".
+- **Kết quả mong đợi**:
+  - [ ] Danh sách KTV được nạp từ bảng `staff` với trạng thái `ACTIVE` / `dang_hoat_dong`.
+  - [ ] Hiển thị đầy đủ cấp bậc chuyên môn và số lượng đánh giá tích cực.
+
+### TC-BKG-03: Bước 3 - Chọn ngày giờ và chống trùng lịch hẹn (Slot Locking)
+- **Các bước thực hiện**:
+  1. Chọn ngày hẹn là ngày hôm nay hoặc ngày mai (kiểm tra các ngày quá khứ bị vô hiệu hóa).
+  2. Quan sát lưới các khung giờ (Timeslot) từ 08:00 đến 19:00.
+  3. Chọn một khung giờ đã có lịch hẹn được xác nhận trước đó.
+- **Kết quả mong đợi**:
+  - [ ] Các khung giờ đã kín lịch hiển thị trạng thái xám mờ (disabled) kèm nhãn "Đã kín".
+  - [ ] Người dùng chỉ được phép chọn các khung giờ còn trống.
+  - [ ] Bố cục lưới giờ hiển thị thoáng đãng, không bị co giật chữ.
+
+### TC-BKG-04: Bước 4 - Xác nhận thông tin, ghi chú an toàn và tạo lịch hẹn Supabase
+- **Các bước thực hiện**:
+  1. Nhập ghi chú tập tính: `Bé sợ tiếng máy sấy mạnh, nhờ KTV thao tác nhẹ nhàng`.
+  2. Nhập mã giảm giá Voucher nếu có.
+  3. Kiểm tra bảng tóm tắt chi phí (Giá dịch vụ, chiết khấu, tổng thanh toán).
+  4. Bấm nút `Xác nhận đặt lịch`.
+- **Kết quả mong đợi**:
+  - [ ] Dữ liệu được ghi thành công vào bảng `appointment` Supabase với trạng thái chuẩn `cho_xac_nhan`.
+  - [ ] Màn hình chuyển hướng đến `booking-success.html`.
+  - [ ] Hiển thị mã lịch hẹn (ví dụ: `BK-2026-XXXXX`), QR Code và nút "Xem nhật ký chăm sóc của ca này".
+
+---
+
+# PHẦN IV: PHÂN HỆ CỔNG THÀNH VIÊN USER PORTAL (`/pages/user/`)
+
+## 1. Bộ Điều Phối & Quản Lý Luồng SPA (`pages/user/user.js`)
+
+### TC-USR-01: Điều hướng các phân hệ một bước (Single-step Rendering)
+- **Các bước thực hiện**:
+  1. Đăng nhập tài khoản `0987654321`.
+  2. Lần lượt click qua các mục bên Sidebar: `Hồ sơ cá nhân` $\rightarrow$ `Bé cưng của tôi` $\rightarrow$ `Nhật ký chăm sóc` $\rightarrow$ `Lịch hẹn dịch vụ` $\rightarrow$ `Đơn hàng của bé` $\rightarrow$ `Danh sách yêu thích` $\rightarrow$ `Pawpoint` $\rightarrow$ `Khiếu nại & Hỗ trợ`.
+  3. Quan sát màn hình khi chuyển tab.
+- **Kết quả mong đợi**:
+  - [ ] Phân hệ mới nạp mượt mà, **triệt tiêu 100% hiện tượng màn hình trắng chớp nháy (no flicker)**.
+  - [ ] URL Hash thay đổi tương ứng: `#profile`, `#pets`, `#diary`, `#bookings`, `#orders`, `#wishlist`, `#loyalty`, `#support`.
+  - [ ] Sub-breadcrumb trên Header tự động nối đường dẫn: `Cổng thành viên / [Tên phân hệ]`.
+
+### TC-USR-02: Bền vững trạng thái khi F5 / Reload trang web
+- **Các bước thực hiện**:
+  1. Đang ở phân hệ `#diary` (Nhật ký chăm sóc) của một bé cưng.
+  2. Nhấn phím `F5` hoặc `Ctrl + R` để tải lại trang.
+- **Kết quả mong đợi**:
+  - [ ] Trang web mở lại ngay lập tức tại đúng phân hệ `#diary`, không bị nhảy về trang mặc định `#profile`.
+  - [ ] Bé cưng đang chọn được giữ nguyên.
+
+---
+
+## 2. Quản Lý Bé Cưng (`pages/user/modules/pets/`)
+
+### TC-PET-01: Tải danh sách bé cưng và chuyển tab Lưu trữ / Đang nuôi
+- **Các bước thực hiện**:
+  1. Vào `#pets`.
+  2. Bấm chuyển qua lại giữa tab `Bé cưng đang nuôi` và `Hồ sơ lưu trữ`.
+- **Kết quả mong đợi**:
+  - [ ] Danh sách hiển thị đúng các bé từ bảng `pet` của chủ nuôi.
+  - [ ] Thẻ từng bé có ảnh đại diện, tên, giống loài, giới tính, cân nặng.
+  - [ ] Chuyển tab dùng class `.d-none`, không bị vỡ khung thẻ.
+
+### TC-PET-02: Mở Deep Link xem chi tiết bé cưng
+- **Các bước thực hiện**:
+  1. Lấy ID của một bé cưng (ví dụ: `pet-123`).
+  2. Dán link trực tiếp vào trình duyệt: `http://localhost:3000/pages/user/index.html#pets?id=pet-123`.
+- **Kết quả mong đợi**:
+  - [ ] Giao diện mở thẳng màn hình chi tiết của bé cưng `pet-123`.
+  - [ ] **Không bị nháy lộ màn hình danh sách bé cưng trước khi vào chi tiết**.
+
+### TC-PET-03: Thêm bé cưng mới và kiểm tra ràng buộc trường
+- **Các bước thực hiện**:
+  1. Bấm nút `Thêm bé cưng`.
+  2. Bỏ trống Tên bé $\rightarrow$ Bấm `Lưu bé cưng`.
+  3. Nhập đầy đủ: Tên bé `Miu Miu`, Loài `Mèo`, Giống `Anh lông ngắn`, Cân nặng `4.5 kg`, Ngày sinh, Giới tính `Đực`.
+  4. Nhập trường tự do: Tiền sử dị ứng `Dị ứng hải sản`, Cảnh báo an toàn `Hay cắn khi cắt móng`.
+  5. Bấm nút `Lưu bé cưng`.
+- **Kết quả mong đợi**:
+  - [ ] Bỏ trống trường bắt buộc: Báo lỗi đỏ tại ô nhập, không cho lưu.
+  - [ ] Nhập đủ: Ghi dữ liệu thành công vào bảng `pet` Supabase, hiển thị Toast xanh và bé mới xuất hiện ngay trên danh sách.
+
+---
+
+## 3. Nhật Ký Chăm Sóc Thời Gian Thực 360° (`pages/user/modules/diary/`)
+
+### TC-DIR-01: Chuyển đổi bé cưng trên thanh trượt Pill
+- **Các bước thực hiện**:
+  1. Vào `#diary`.
+  2. Quan sát hàng nút chọn bé cưng dạng pill ngang.
+  3. Bấm chọn bé cưng thứ 2.
+- **Kết quả mong đợi**:
+  - [ ] Nút chọn đổi màu active xanh Forest Green `#236B48`.
+  - [ ] Khung nhật ký bên dưới cập nhật ngay nhật ký tương ứng của bé được chọn.
+
+### TC-DIR-02: Mở đúng phiên chăm sóc từ lịch hẹn (Deep Link Session ID)
+- **Các bước thực hiện**:
+  1. Từ màn hình Lịch hẹn (`#bookings`), bấm nút `Xem nhật ký ca này` của một lịch hẹn cụ thể (ID: `apt-999`).
+  2. Trình duyệt điều hướng đến `#diary?id=[petId]&sessionId=apt-999`.
+- **Kết quả mong đợi**:
+  - [ ] Mở chính xác ca dịch vụ mang mã `apt-999`.
+  - [ ] Hiển thị đầy đủ ảnh Before/After, các chỉ số da lông, tai móng và biểu đồ tâm trạng của ca đó.
+  - [ ] Nếu ca dịch vụ này KTV chưa ghi nhật ký: Hiển thị Empty state thanh nhã: "Ca dịch vụ này chưa có nhật ký chăm sóc", **tuyệt đối không mở nhầm nhật ký của ca khác**.
+
+---
+
+## 4. Quản Lý Đơn Hàng & Đổi Trả RMA (`pages/user/modules/orders/`)
+
+### TC-ORD-01: Tải danh sách đơn hàng và phân loại trạng thái
+- **Các bước thực hiện**:
+  1. Vào `#orders`.
+  2. Bấm qua từng tab: `Tất cả`, `Chờ xác nhận`, `Đang đóng gói`, `Đang giao hàng`, `Đã giao hàng`, `Đã hủy`.
+- **Kết quả mong đợi**:
+  - [ ] Đơn hàng hiển thị đúng mã đơn, ngày đặt, hình ảnh sản phẩm đại diện, tổng tiền.
+  - [ ] Các trạng thái khớp chuẩn 100% với ENUM Tiếng Việt trong Supabase.
+
+### TC-ORD-02: Xem chi tiết đơn hàng (3NF Product Variant Navigation)
+- **Các bước thực hiện**:
+  1. Bấm vào một đơn hàng để xem chi tiết.
+  2. Kiểm tra thông tin dòng sản phẩm.
+- **Kết quả mong đợi**:
+  - [ ] Hàm `API.getUserOrders` nạp dữ liệu chuẩn 3NF: Đọc qua `product_variant` lấy `sku_variant`, `sale_price` và thông tin `product`.
+  - [ ] Hiển thị chính xác mã SKU, số lượng, đơn giá, tổng tiền, đơn vị vận chuyển và mã tracking.
+  - [ ] Không có lỗi Console do thiếu `product_id`.
+
+### TC-ORD-03: Kích hoạt Drawer Đổi Trả RMA và hỗ trợ phím Escape
+- **Các bước thực hiện**:
+  1. Tìm đơn hàng ở trạng thái `da_giao_hang`.
+  2. Bấm nút `Yêu cầu đổi trả`.
+  3. Nhấn phím `Escape` trên bàn phím.
+  4. Mở lại Drawer, chọn lý do đổi trả, tải ảnh bằng chứng và bấm `Gửi yêu cầu`.
+- **Kết quả mong đợi**:
+  - [ ] Drawer trượt ra mượt mà, tiêu điểm focus tự động chuyển vào Drawer.
+  - [ ] Nhấn phím `Escape` đóng Drawer ngay lập tức và trả lại focus cho nút vừa bấm.
+  - [ ] Gửi yêu cầu: Lưu thành công vào bảng `return_request` và `return_request_detail` Supabase, chuyển trạng thái thành `cho_tiep_nhan`.
+
+---
+
+## 5. Khiếu Nại & CSKH 2 Chiều (`pages/user/modules/support/`)
+
+### TC-SUP-01: Tạo phiếu khiếu nại liên kết đơn hàng / lịch hẹn thật
+- **Các bước thực hiện**:
+  1. Vào `#support`, bấm nút `Tạo yêu cầu mới`.
+  2. Kiểm tra ô dropdown "Đơn hàng liên quan".
+  3. Chọn một đơn hàng thực tế của tài khoản.
+  4. Nhập tiêu đề, mô tả sự cố và bấm `Gửi yêu cầu`.
+- **Kết quả mong đợi**:
+  - [ ] Dropdown tự động nạp danh sách các đơn hàng thật của tài khoản (không bị trống rỗng).
+  - [ ] Tạo thành công ticket trong bảng `support_ticket`.
+
+### TC-SUP-02: Chat trao đổi 2 chiều giữa Khách hàng và Nhân viên CSKH
+- **Các bước thực hiện**:
+  1. Mở một phiếu khiếu nại đang xử lý.
+  2. Gõ tin nhắn: `Tôi muốn cập nhật thêm hình ảnh bao bì sản phẩm bị móp`.
+  3. Bấm gửi.
+- **Kết quả mong đợi**:
+  - [ ] Tin nhắn xuất hiện ngay trên khung chat của khách.
+  - [ ] Lưu thành công vào bảng `support_ticket_message` với cột nội dung là `content`.
+
+---
+
+# PHẦN V: PHÂN HỆ CỬA HÀNG & MUA SẮM (`/pages/shop/`)
+
+## 1. Giỏ Hàng (`pages/shop/cart/cart.js`)
+
+### TC-CRT-01: Cơ chế hàng đợi bất đồng bộ (`queueCartWrite`) chống tranh chấp dữ liệu
+- **Các bước thực hiện**:
+  1. Mở giỏ hàng có 1 sản phẩm.
+  2. Dùng chuột click nút tăng số lượng `+` liên tục 5 lần thật nhanh.
+  3. Quan sát số lượng hiển thị và kiểm tra bảng `cart_item` trong CSDL.
+- **Kết quả mong đợi**:
+  - [ ] Số lượng nhảy chính xác từ 1 lên 6 mà không bị ghi đè hay mất lần bấm nào.
+  - [ ] Không phát sinh lỗi Race Condition.
+  - [ ] Dữ liệu lưu vào `cart_item` khớp đúng 6 món với `product_variant_id`.
+
+### TC-CRT-02: Cách ly giỏ hàng theo tài khoản (`pawpal_cart_owner`)
+- **Các bước thực hiện**:
+  1. Đăng nhập tài khoản A (`0987654321`), thêm 2 sản phẩm vào giỏ.
+  2. Đăng xuất tài khoản A.
+  3. Đăng nhập tài khoản B (`0901234567`).
+  4. Mở giỏ hàng.
+- **Kết quả mong đợi**:
+  - [ ] Giỏ hàng của tài khoản B hoàn toàn độc lập, **tuyệt đối không bị lẫn sản phẩm từ giỏ của tài khoản A**.
+
+---
+
+## 2. Thanh Toán Đặt Hàng (`pages/shop/checkout/checkout.js`)
+
+### TC-CHK-01: Kiểm tra quyền sở hữu Voucher và hạn mức tối thiểu
+- **Các bước thực hiện**:
+  1. Cho vào giỏ món hàng trị giá `100.000đ`.
+  2. Tại trang Checkout, nhập mã voucher có điều kiện min-order `150.000đ` (ví dụ: `PETCARE50`).
+  3. Bấm áp dụng.
+  4. Nhập mã voucher thuộc sở hữu của một tài khoản khác.
+- **Kết quả mong đợi**:
+  - [ ] Đơn 100k áp voucher min 150k: Báo lỗi từ chối "Đơn hàng chưa đạt giá trị tối thiểu 150.000đ".
+  - [ ] Voucher của khách khác: Báo lỗi "Mã giảm giá không hợp lệ hoặc không thuộc tài khoản của bạn".
+
+### TC-CHK-02: Đặt hàng thành công và trừ tồn kho nguyên tử (Atomic Stock Deduction)
+- **Các bước thực hiện**:
+  1. Kiểm tra số lượng tồn kho ban đầu của sản phẩm (ví dụ: còn `10` cái).
+  2. Đặt đơn hàng với số lượng `2` cái, chọn phương thức `COD`.
+  3. Bấm `Hoàn tất đặt hàng`.
+  4. Kiểm tra lại bảng `inventory` và `sales_order`.
+- **Kết quả mong đợi**:
+  - [ ] Tạo thành công đơn hàng trong `sales_order` với trạng thái `cho_xac_nhan`.
+  - [ ] Tồn kho trong `inventory` tự động giảm nguyên tử từ `10` xuống còn `8`.
+  - [ ] Ghi nhận một dòng giao dịch xuất kho trong bảng `inventory_transaction`.
+  - [ ] Chuyển hướng đến trang `payment-success.html` kèm mã đơn hàng.
+
+---
+
+# PHẦN VI: KIỂM THỬ TOÀN VẸN DỮ LIỆU, HIỆU NĂNG & CONSOLE (SYSTEM HEALTH)
+
+### TC-SYS-01: Zero Console Errors trên mọi trang
+- **Các bước thực hiện**:
+  1. Mở DevTools Console (phím `F12`), bật bộ lọc `Errors`.
+  2. Điều hướng qua tất cả các trang: Trang chủ $\rightarrow$ Dịch vụ $\rightarrow$ Đặt lịch $\rightarrow$ Cửa hàng $\rightarrow$ Chi tiết sản phẩm $\rightarrow$ Giỏ hàng $\rightarrow$ Thanh toán $\rightarrow$ Cổng User.
+- **Kết quả mong đợi**:
+  - [ ] **0 lỗi đỏ (Zero Red Errors)** trên toàn bộ hành trình trải nghiệm.
+  - [ ] Không có lỗi cú pháp Javascript (`SyntaxError`).
+  - [ ] Không có lỗi tài nguyên 404 / 400 Bad Request từ Supabase PostgREST.
+
+### TC-SYS-02: Ràng buộc khóa ngoại 3NF & Không còn `product_id` thừa
+- **Các bước thực hiện**:
+  1. Chạy bộ kiểm thử tự động `node scripts/test/test_sales_lifecycle.js`.
+  2. Chạy bộ kiểm thử tự động `node scripts/test/test_ord_f01_f16_suite.js`.
+- **Kết quả mong đợi**:
+  - [ ] Toàn bộ 7/7 bước vòng đời bán hàng đạt 100%.
+  - [ ] Toàn bộ 16/16 tiêu chuẩn nghiệp vụ ORD đạt 100%.
+
+---
+
+## TIẾN ĐỘ THỰC HIỆN KIỂM THỬ (TRACKING PROGRESS)
+
+- [ ] **Phần I: Global Components** (0/6 hoàn thành)
+- [ ] **Phần II: Trang công khai** (0/9 hoàn thành)
+- [ ] **Phần III: Dịch vụ & Đặt lịch** (0/7 hoàn thành)
+- [ ] **Phần IV: Cổng thành viên User** (0/11 hoàn thành)
+- [ ] **Phần V: Cửa hàng & Mua sắm** (0/4 hoàn thành)
+- [ ] **Phần VI: Toàn vẹn hệ thống & Console** (0/2 hoàn thành)
+
+*Tổng số Test Cases: 39 nhóm kịch bản lớn - 120+ tiêu chí kiểm định chi tiết.*
