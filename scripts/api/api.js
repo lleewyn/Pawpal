@@ -1,5 +1,20 @@
 import { normalizeOrderStatus } from '/scripts/shared/order-status.mjs';
 import { resolveAuthenticatedCustomerId } from '/scripts/shared/customer-identity.mjs';
+import { normalizeCartItems, publishCart } from '/scripts/shared/cart-state.mjs';
+
+let cartWriteQueue = Promise.resolve();
+function queueCartWrite(task) {
+    const result = cartWriteQueue.then(() => typeof navigator !== 'undefined' && navigator.locks
+        ? navigator.locks.request('pawpal-cart-write', task)
+        : task());
+    cartWriteQueue = result.catch(() => {});
+    return result;
+}
+
+function assertCartOwner(userId) {
+    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    if (!userId || user?.id !== userId) throw new Error('Tài khoản đã thay đổi. Vui lòng tải lại giỏ hàng.');
+}
 
 const resolveCustomerId = resolveAuthenticatedCustomerId;
 
@@ -327,128 +342,237 @@ export const API = {
         return safeReadObject('pawpal_pet_tracker_logs') || {};
     },
 
-    async getUserCart(userId) {
+    async getUserCart(userId, { waitForWrites = true } = {}) {
         if (!userId) return [];
+        assertCartOwner(userId);
+        if (waitForWrites) await cartWriteQueue;
+        assertCartOwner(userId);
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) return [];
+        if (!db) throw new Error('Chưa kết nối được giỏ hàng.');
 
         try {
             const { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', userId).maybeSingle();
-            if (cartError || !cartData) return [];
+            if (cartError) throw cartError;
+            if (!cartData) return publishCart([], userId);
 
             const { data: items, error: itemsError } = await db.from('cart_item')
-                .select('product_variant_id, quantity, unit_price, subtotal, product_variant(id, product_id, sku_variant, sale_price, product(id, product_name, brand_name, image_urls))')
+                .select('id, product_variant_id, quantity, unit_price, subtotal, product_variant(id, product_id, sku_variant, sale_price, product(id, product_name, brand_name, image_urls))')
                 .eq('cart_id', cartData.id);
-            if (!itemsError && items) {
-                return items.map(item => ({
-                    id: item.product_variant?.product?.id || item.product_variant_id,
+            if (itemsError) throw itemsError;
+            let cached = [];
+            try { if (localStorage.getItem('pawpal_cart_owner') === String(userId)) cached = JSON.parse(localStorage.getItem('pawpal_cart') || '[]'); } catch {}
+            return publishCart((items || []).map(item => {
+                const prod = item.product_variant?.product || {};
+                const prodId = prod.id || item.product_variant_id;
+                const cachedItem = Array.isArray(cached) ? cached.find(c => String(c.id) === String(prodId) || String(c.id) === String(item.product_variant_id) || String(c.variantId) === String(item.product_variant_id)) : null;
+                return {
+                    ...(cachedItem || {}),
+                    id: prodId,
                     variantId: item.product_variant_id,
-                    qty: item.quantity,
-                    price: item.unit_price,
-                    name: item.product_variant?.product?.product_name || 'Sản phẩm',
-                    sku: item.product_variant?.sku_variant || ''
-                }));
-            }
+                    product_variant_id: item.product_variant_id,
+                    name: prod.product_name || cachedItem?.name || 'Sản phẩm',
+                    sku: item.product_variant?.sku_variant || cachedItem?.sku || '',
+                    quantity: Number(item.quantity),
+                    qty: Number(item.quantity),
+                    price: Number(item.unit_price) || Number(item.product_variant?.sale_price) || 0,
+                    subtotal: Number(item.subtotal) || ((Number(item.unit_price) || 0) * Number(item.quantity))
+                };
+            }), userId);
         } catch (err) {
-            console.error('Error getUserCart:', err);
+            throw err;
         }
-        return [];
     },
 
     async getOrCreateCart(userId) {
         if (!userId) return null;
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) return null;
+        if (!db) throw new Error('Chưa kết nối được giỏ hàng.');
 
-        let { data: cartData } = await db.from('cart').select('id').eq('customer_id', userId).maybeSingle();
+        let { data: cartData, error: readError } = await db.from('cart').select('id').eq('customer_id', userId).maybeSingle();
+        if (readError) throw readError;
         if (!cartData) {
             const { data: newCart, error } = await db.from('cart').insert({ customer_id: userId, cart_status: 'ACTIVE' }).select('id').single();
-            if (error) return null;
+            if (error) throw error;
             cartData = newCart;
         }
         return cartData;
     },
 
     async saveUserCart(userId, cartItems) {
-        try {
-            localStorage.setItem('pawpal_cart', JSON.stringify(cartItems || []));
-            document.dispatchEvent(new CustomEvent('cart_updated'));
-            if (typeof window.updateCartBadge === 'function') {
-                window.updateCartBadge();
-            }
-        } catch(e) {}
-
-        if (!userId) return { success: true };
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) return { success: true };
-
-        try {
-            const cart = await this.getOrCreateCart(userId);
-            if (!cart) return { success: false };
-
-            // First delete existing items
-            await db.from('cart_item').delete().eq('cart_id', cart.id);
-
-            // Then insert new items
-            if (cartItems && cartItems.length > 0) {
-                const itemsToInsert = [];
-                for (const item of cartItems) {
-                    let vId = item.variantId || item.product_variant_id;
-                    if (!vId && item.id) {
-                        const { data: vData } = await db.from('product_variant').select('id').eq('product_id', item.id).limit(1);
-                        vId = vData?.[0]?.id || item.id;
-                    }
-                    if (vId) {
-                        itemsToInsert.push({
-                            cart_id: cart.id,
-                            product_variant_id: vId,
-                            quantity: item.qty || item.quantity || 1,
-                            unit_price: item.price || 0,
-                            subtotal: (item.price || 0) * (item.qty || item.quantity || 1)
-                        });
-                    }
-                }
-                if (itemsToInsert.length > 0) {
-                    const { error } = await db.from('cart_item').insert(itemsToInsert);
-                    if (error) console.error('Error inserting cart items:', error);
-                    return { success: !error };
-                }
-            }
-            return { success: true };
-        } catch (err) {
-            console.error('Error saveUserCart:', err);
-            return { success: false };
-        }
+        const snapshot = normalizeCartItems(cartItems);
+        return queueCartWrite(() => this.persistUserCart(userId, snapshot));
     },
 
-    async addToCart(userId, variantOrProductId, quantity = 1) {
-        if (!userId) return { success: false, error: 'User not logged in' };
+    async validateCartStock(cartItems) {
+        const items = normalizeCartItems(cartItems);
+        if (!items.length) return { valid: true };
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) return { success: false, error: 'No DB' };
+        if (!db) throw new Error('Không thể kiểm tra tồn kho. Vui lòng thử lại.');
+        const rawIds = items.map(item => item.variantId || item.product_variant_id || item.id).filter(Boolean);
+        if (!rawIds.length) return { valid: true };
+        const { data: variants } = await db.from('product_variant').select('id, product_id').or(id.in.(),product_id.in.());
+        const variantIdMap = new Map();
+        for (const v of variants || []) {
+            variantIdMap.set(String(v.id), v.id);
+            variantIdMap.set(String(v.product_id), v.id);
+        }
+        const vIds = [...new Set(items.map(i => variantIdMap.get(String(i.variantId || i.product_variant_id || i.id))).filter(Boolean))];
+        if (vIds.length) {
+            const { data: invData, error } = await db.from('inventory').select('product_variant_id, quantity_in_stock').in('product_variant_id', vIds);
+            if (error) throw new Error('Không thể kiểm tra tồn kho. Vui lòng thử lại.');
+            const stockByVariant = new Map();
+            for (const row of invData || []) {
+                const count = Number(row.quantity_in_stock);
+                if (Number.isSafeInteger(count) && count >= 0) {
+                    stockByVariant.set(String(row.product_variant_id), (stockByVariant.get(String(row.product_variant_id)) || 0) + count);
+                }
+            }
+            for (const item of items) {
+                const resolvedVId = variantIdMap.get(String(item.variantId || item.product_variant_id || item.id));
+                const remaining = resolvedVId ? (stockByVariant.get(String(resolvedVId)) ?? 999) : 999;
+                if (item.quantity > remaining) throw new Error(Chỉ còn  sản phẩm trong kho);
+            }
+        }
+        return { valid: true };
+    },
 
+    async prepareCartCheckout(userId, selectedItems) {
+        const requested = normalizeCartItems(selectedItems);
+        return queueCartWrite(async () => {
+            const current = await this.getUserCart(userId, { waitForWrites: false });
+            const selected = current.filter(item => requested.some(entry => entry.id === String(item.id)));
+            if (!selected.length || selected.length !== requested.length) throw new Error('Giỏ hàng đã thay đổi. Vui lòng chọn lại sản phẩm.');
+            await this.validateCartStock(selected);
+            return selected;
+        });
+    },
+
+    async restoreCartBackup(userId, backupItems, { mode = 'add', token = JSON.stringify(backupItems) } = {}) {
+        const backup = normalizeCartItems(backupItems);
+        return queueCartWrite(async () => {
+            const current = await this.getUserCart(userId, { waitForWrites: false });
+            const key = `pawpal_cart_restore_${userId}`;
+            const payload = JSON.stringify(backup);
+            const previous = JSON.parse(localStorage.getItem(key) || 'null');
+            if (previous?.token === token && previous.payload === payload && previous.status === 'applied') return current;
+            let merged;
+            if (previous?.token === token && previous.payload === payload && previous.status === 'prepared') {
+                // A prior request may have committed before its response was lost.
+                merged = normalizeCartItems([...current]);
+                for (const target of previous.target) {
+                    const item = merged.find(entry => entry.id === target.id);
+                    if (item) { item.quantity = Math.max(item.quantity, target.quantity); item.qty = item.quantity; }
+                    else merged.push(target);
+                }
+            } else {
+                const additions = mode === 'included'
+                    ? backup.filter(item => !current.some(entry => String(entry.id) === item.id))
+                    : backup;
+                merged = normalizeCartItems([...current, ...additions]);
+            }
+            const journal = { token, payload, target: merged, status: 'prepared' };
+            localStorage.setItem(key, JSON.stringify(journal));
+            // Restoring a saved cart does not purchase items or reserve stock.
+            if (JSON.stringify(merged) !== JSON.stringify(current)) await this.persistUserCart(userId, merged, { checkStock: false });
+            journal.status = 'applied';
+            localStorage.setItem(key, JSON.stringify(journal));
+            return merged;
+        });
+    },
+
+    async removePurchasedCartItems(userId, purchasedItems) {
+        const purchased = normalizeCartItems(purchasedItems);
+        return queueCartWrite(async () => {
+            const current = await this.getUserCart(userId, { waitForWrites: false });
+            const remaining = current.map(item => {
+                const quantity = item.quantity - (purchased.find(entry => entry.id === String(item.id))?.quantity || 0);
+                return { ...item, quantity, qty: quantity };
+            }).filter(item => item.quantity > 0);
+            await this.persistUserCart(userId, remaining, { checkStock: false });
+            return { success: true };
+        });
+    },
+
+    async persistUserCart(userId, items, { checkStock = true } = {}) {
+        if (!userId) { publishCart(items); return { success: true }; }
+        assertCartOwner(userId);
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) throw new Error('Cart database unavailable');
+        if (checkStock) await this.validateCartStock(items);
         const cart = await this.getOrCreateCart(userId);
-        if (!cart) return { success: false, error: 'Cannot create cart' };
+        if (!cart) throw new Error('Cart unavailable');
+        const { data: existing, error: readError } = await db.from('cart_item')
+            .select('id, product_variant_id, quantity').eq('cart_id', cart.id);
+        if (readError) throw readError;
 
-        let targetVariantId = variantOrProductId;
-        const { data: checkVariant } = await db.from('product_variant').select('id').eq('id', variantOrProductId).maybeSingle();
-        if (!checkVariant) {
-            const { data: foundVars } = await db.from('product_variant').select('id').eq('product_id', variantOrProductId).limit(1);
-            if (foundVars && foundVars.length > 0) targetVariantId = foundVars[0].id;
+        const rawIds = items.map(item => item.variantId || item.product_variant_id || item.id).filter(Boolean);
+        let variantMap = new Map();
+        if (rawIds.length) {
+            const { data: vRows } = await db.from('product_variant').select('id, product_id').or(id.in.(),product_id.in.());
+            for (const v of vRows || []) {
+                variantMap.set(String(v.id), v.id);
+                variantMap.set(String(v.product_id), v.id);
+            }
         }
 
-        const { data: existingItem } = await db.from('cart_item')
-            .select('id, quantity').eq('cart_id', cart.id).eq('product_variant_id', targetVariantId).maybeSingle();
-
-        if (existingItem) {
-            const { error } = await db.from('cart_item')
-                .update({ quantity: existingItem.quantity + quantity })
-                .eq('id', existingItem.id);
-            return { success: !error, error };
-        } else {
-            const { error } = await db.from('cart_item')
-                .insert({ cart_id: cart.id, product_variant_id: targetVariantId, quantity, unit_price: 0, subtotal: 0 });
-            return { success: !error, error };
+        const keep = new Set();
+        for (const item of items) {
+            const resolvedVId = variantMap.get(String(item.variantId || item.product_variant_id || item.id)) || item.variantId || item.product_variant_id || item.id;
+            const price = Number(item.price) || 0;
+            const values = { quantity: item.quantity, unit_price: price, subtotal: price * item.quantity, product_variant_id: resolvedVId };
+            const current = (existing || []).find(row => String(row.product_variant_id) === String(resolvedVId));
+            const query = current
+                ? db.from('cart_item').update({ quantity: values.quantity, unit_price: values.unit_price, subtotal: values.subtotal }).eq('cart_id', cart.id).eq('id', current.id)
+                : db.from('cart_item').insert({ ...values, cart_id: cart.id });
+            const { data, error } = await query.select('id');
+            if (error) throw error;
+            if (!data?.length) throw new Error('Cart write was not applied');
+            keep.add(data[0].id);
         }
+        }
+        const removals = (existing || []).filter(row => !keep.has(row.id)).map(row => row.id);
+        if (removals.length) {
+            const { data, error } = await db.from('cart_item').delete()
+                .eq('cart_id', cart.id).in('id', removals).select('id');
+            if (error) throw error;
+            if (data?.length !== removals.length) throw new Error('Cart deletion was not applied');
+        }
+        publishCart(items, userId);
+        return { success: true };
+    },
+
+    async addToCart(userId, productId, quantity = 1, details = {}) {
+        if (!userId) return { success: false, error: 'User not logged in' };
+        if (!Number.isSafeInteger(Number(quantity)) || Number(quantity) < 1) throw new Error('Invalid quantity');
+        return queueCartWrite(async () => {
+            const items = await this.getUserCart(userId, { waitForWrites: false });
+            const existing = items.find(item => String(item.id) === String(productId));
+            if (existing) {
+                const nextQuantity = existing.quantity + Number(quantity);
+                Object.assign(existing, details, { id: String(productId), quantity: nextQuantity, qty: nextQuantity });
+            }
+            else items.push({ ...details, id: String(productId), quantity: Number(quantity), qty: Number(quantity) });
+            return this.persistUserCart(userId, normalizeCartItems(items));
+        });
+    },
+
+    async adjustCartQuantity(userId, productId, delta) {
+        if (!Number.isSafeInteger(delta) || !delta) throw new Error('Số lượng không hợp lệ.');
+        return queueCartWrite(async () => {
+            const items = await this.getUserCart(userId, { waitForWrites: false });
+            const item = items.find(entry => String(entry.id) === String(productId));
+            if (!item) throw new Error('Sản phẩm đã được xóa khỏi giỏ hàng.');
+            item.quantity += delta;
+            item.qty = item.quantity;
+            return this.persistUserCart(userId, normalizeCartItems(items));
+        });
+    },
+
+    async removeCartProduct(userId, productId) {
+        return queueCartWrite(async () => {
+            const items = await this.getUserCart(userId, { waitForWrites: false });
+            return this.persistUserCart(userId, items.filter(item => String(item.id) !== String(productId)), { checkStock: false });
+        });
     },
 
     async updateCartItemQuantity(userId, variantOrProductId, quantity) {

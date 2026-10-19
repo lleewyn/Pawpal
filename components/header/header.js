@@ -117,7 +117,9 @@
         }
     });
 
+    let cartBadgeRevision = 0;
     window.updateCartBadge = async function() {
+        const revision = ++cartBadgeRevision;
         const currentUser = (typeof window.getCurrentUser === 'function')
             ? window.getCurrentUser()
             : (function() { try { return JSON.parse(localStorage.getItem('pawpal_current_user')) || null; } catch { return null; }})();
@@ -142,7 +144,7 @@
         let hasLocalCart = false;
         try {
             const rawCart = localStorage.getItem('pawpal_cart');
-            if (rawCart !== null) {
+            if (rawCart !== null && localStorage.getItem('pawpal_cart_owner') === String(currentUser.id)) {
                 hasLocalCart = true;
                 const cartList = JSON.parse(rawCart);
                 if (Array.isArray(cartList)) {
@@ -162,6 +164,7 @@
             }
         }
         
+        if (revision !== cartBadgeRevision || getCurrentUser()?.id !== currentUser.id) return;
         // Badge trên desktop header
         const cartBadges = document.querySelectorAll('.cart-badge');
         cartBadges.forEach(badge => {

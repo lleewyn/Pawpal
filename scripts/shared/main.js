@@ -441,10 +441,14 @@ function setupShopLandingActions(grid) {
             }
             const id = btn.dataset.productId;
             if (window.API && window.API.addToCart) {
+                try {
                 const res = await window.API.addToCart(u.id, id, 1);
                 if (res && res.success) {
                     miniToast('Đã thêm vào giỏ hàng 🛒');
                     if (window.updateCartBadge) window.updateCartBadge();
+                }
+                } catch (error) {
+                    miniToast(error.message || 'Không thể thêm sản phẩm vào giỏ hàng', 'warning');
                 }
             }
         });
