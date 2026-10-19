@@ -11,7 +11,13 @@ let petSeedCache = null;
 let currentPetId = null;
 let currentPetObject = null;
 let currentSessionId = null;
-let isHashListenerAttached = false;
+let diaryHashHandler = null;
+
+// user.js nạp lại module mỗi lần vào trang; gỡ listener cũ để không vẽ đè nhật ký của lần trước
+export function dispose() {
+    if (diaryHashHandler) window.removeEventListener('hashchange', diaryHashHandler);
+    diaryHashHandler = null;
+}
 
 const DEMO_STAFF_PRIMARY = 'Nguyễn Thị Mai';
 const DEMO_STAFF_RECEPTION = 'Trần Văn Nam';
@@ -163,22 +169,22 @@ export async function initPetDiary() {
             petSelector.addEventListener('change', handlePetChange);
         }
 
-    if (!isHashListenerAttached) {
-        isHashListenerAttached = true;
-        window.addEventListener('hashchange', async () => {
-            if (window.location.hash.includes('diary')) {
-                const targetPetId = getRouteParam('id') || getRouteParam('pet') || getRouteParam('petId');
-                if (targetPetId && targetPetId !== currentPetId) {
-                    await selectAndLoadPet(targetPetId);
-                } else if (!targetPetId) {
-                    const defaultId = await getDefaultPetIdToLoad();
-                    if (defaultId && defaultId !== currentPetId) {
-                        await selectAndLoadPet(defaultId);
-                    }
+    dispose();
+    diaryHashHandler = async () => {
+        if (window.location.hash.includes('diary')) {
+            const targetPetId = getRouteParam('id') || getRouteParam('pet') || getRouteParam('petId');
+            const targetSessionId = getRouteParam('sessionId') || getRouteParam('session');
+            if (targetPetId && targetPetId !== currentPetId) {
+                await selectAndLoadPet(targetPetId, targetSessionId);
+            } else if (!targetPetId) {
+                const defaultId = await getDefaultPetIdToLoad();
+                if (defaultId && defaultId !== currentPetId) {
+                    await selectAndLoadPet(defaultId);
                 }
             }
-        });
-    }
+        }
+    };
+    window.addEventListener('hashchange', diaryHashHandler);
 
     const petIdFromUrl = getRouteParam('id') || getRouteParam('pet') || getRouteParam('petId');
     const sessionIdFromUrl = getRouteParam('sessionId') || getRouteParam('session');
@@ -189,10 +195,7 @@ export async function initPetDiary() {
     }
 
         if (targetPetId) {
-            await selectAndLoadPet(targetPetId);
-            if (sessionIdFromUrl) {
-                await openSessionFromUrlOrFallback(sessionIdFromUrl);
-            }
+            await selectAndLoadPet(targetPetId, sessionIdFromUrl);
         } else {
             showEmptyPetState();
         }
@@ -405,7 +408,9 @@ async function selectAndLoadPet(petId, targetSessionId = null) {
     // Cập nhật Breadcrumb: Trang chủ / Nhật ký chăm sóc / [Tên bé]
     updateDiaryBreadcrumb(currentPetObject.name);
 
-    const targetHash = `#diary?id=${currentPetId}`;
+    const targetHash = targetSessionId
+        ? `#diary?id=${currentPetId}&sessionId=${encodeURIComponent(targetSessionId)}`
+        : `#diary?id=${currentPetId}`;
     if (window.location.hash !== targetHash) {
         history.replaceState(null, '', targetHash);
     }
@@ -459,12 +464,13 @@ async function loadPetDiary(petId, targetSessionId = null) {
     if (currentSession) allSessions.push({ ...currentSession, isCurrent: true });
     [...history].reverse().forEach(s => allSessions.push({ ...s, isCurrent: false }));
 
-    // Chọn phiên dịch vụ kích hoạt
+    // Chọn phiên dịch vụ kích hoạt. Khi mở từ một lịch hẹn cụ thể (targetSessionId) mà ca đó
+    // chưa có nhật ký thì hiển thị trạng thái trống, không mở nhầm nhật ký của ca khác.
     let activeSession = null;
     if (targetSessionId) {
-        activeSession = allSessions.find(s => String(s.id) === String(targetSessionId));
-    }
-    if (!activeSession) {
+        activeSession = allSessions.find(s => String(s.id) === String(targetSessionId)) || null;
+        if (!activeSession) showToast('Ca dịch vụ này chưa có nhật ký chăm sóc.', 'info');
+    } else {
         activeSession = currentSession || (allSessions.length > 0 ? allSessions[0] : null);
     }
 
@@ -473,7 +479,7 @@ async function loadPetDiary(petId, targetSessionId = null) {
 
     renderHistorySidebar(allSessions.map(s => ({
         ...s,
-        isCurrent: activeSession ? (String(s.id) === String(activeSession.id)) : s.isCurrent
+        isCurrent: activeSession ? (String(s.id) === String(activeSession.id)) : (targetSessionId ? false : s.isCurrent)
     })));
 
     if (activeSession) {
@@ -529,7 +535,7 @@ async function syncPetDiaryFromSupabase(pet) {
             }
 
             const mediaUrl = log.care_log_media?.[0]?.media_url || null;
-            const staffName = log.care_log_media?.[0]?.Staff?.full_name || 'Nhân viên PawPal';
+            const staffName = log.care_log_media?.[0]?.staff?.full_name || 'Nhân viên PawPal';
 
             sessionsMap[aptId].timeline.push({
                 id: log.id,
@@ -1673,23 +1679,6 @@ function switchSession(sessionId) {
     currentSessionId = session.id;
     renderServiceStepper(session, currentPetObject);
     renderTimeline(session.timeline, session);
-}
-
-async function openSessionFromUrlOrFallback(sessionId) {
-    const historyItems = document.querySelectorAll('.history-item');
-    const target = sessionId
-        ? Array.from(historyItems).find((item) => item.dataset.sessionId === sessionId)
-        : null;
-
-    if (target) {
-        target.click();
-        return;
-    }
-
-    const firstHistory = historyItems[0];
-    if (firstHistory) {
-        firstHistory.click();
-    }
 }
 
 /* ==========================================================================

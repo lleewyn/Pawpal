@@ -33,34 +33,28 @@ function getBookingPrice(priceMatrix, petSpecies) {
 
 async function cancelBookingOnSupabase(booking) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db || !booking?._supabaseId) return;
-    try {
-        await db.from('appointment')
-            .update({ appointment_status: 'CANCELLED' })
-            .eq('id', booking._supabaseId);
-        console.log('[BookingDetail] Cancel synced to Supabase');
-    } catch (err) {
-        console.warn('[BookingDetail] cancelBookingOnSupabase error:', err.message);
-    }
+    if (!db || !booking?._supabaseId) throw new Error('Không xác định được lịch hẹn để hủy.');
+    const { error } = await db.from('appointment')
+        .update({ appointment_status: 'CANCELLED' })
+        .eq('id', booking._supabaseId);
+    if (error) throw error;
+    console.log('[BookingDetail] Cancel synced to Supabase');
 }
 
 async function rescheduleBookingOnSupabase(booking) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db || !booking?._supabaseId) return;
-    try {
-        const serviceCategory = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase();
-        await db.from('appointment')
-            .update({
-                appointment_date:   booking.date,
-                appointment_time:   serviceCategory === 'hotel' ? null : (booking.timeStart || booking.time) + ':00',
-                appointment_status: 'cho_xac_nhan',
-                change_count:       booking.changeCount || 0,
-            })
-            .eq('id', booking._supabaseId);
-        console.log('[BookingDetail] Reschedule synced to Supabase');
-    } catch (err) {
-        console.warn('[BookingDetail] rescheduleBookingOnSupabase error:', err.message);
-    }
+    if (!db || !booking?._supabaseId) throw new Error('Không xác định được lịch hẹn để đổi lịch.');
+    const serviceCategory = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase();
+    const { error } = await db.from('appointment')
+        .update({
+            appointment_date:   booking.date,
+            appointment_time:   serviceCategory === 'hotel' ? null : (booking.timeStart || booking.time) + ':00',
+            appointment_status: 'cho_xac_nhan',
+            change_count:       booking.changeCount || 0,
+        })
+        .eq('id', booking._supabaseId);
+    if (error) throw error;
+    console.log('[BookingDetail] Reschedule synced to Supabase');
 }
 
 let currentBooking = null;
@@ -129,10 +123,8 @@ async function loadBookingDetail(bookingId) {
     const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
 
     const remoteBookings = currentUser ? await API.getUserBookings(currentUser) : [];
-    const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-    const allList = [...(remoteBookings || []), ...localBookings];
 
-    currentBooking = allList.find((b) => String(b.id || b._id || b._supabaseId) === String(bookingId) || b.code === bookingId || b.appointment_code === bookingId);
+    currentBooking = (remoteBookings || []).find((b) => String(b.id || b._id || b._supabaseId) === String(bookingId) || b.code === bookingId || b.appointment_code === bookingId);
 
     if (!currentBooking) {
         showBookingLoadError('Không tìm thấy lịch hẹn này.');
@@ -158,12 +150,13 @@ async function loadBookingDetail(bookingId) {
             }
             const sessionId = currentBooking.id || '';
             const query = `id=${encodeURIComponent(petId)}${sessionId ? `&sessionId=${encodeURIComponent(sessionId)}` : ''}`;
+            window.scrollTo(0, 0);
             window.location.hash = `#diary?${query}`;
         };
     }
 
     renderBookingDetail(currentBooking);
-    renderServiceReviewSection(currentBooking);
+    await renderServiceReviewSection(currentBooking);
     checkBookingModifiability(currentBooking);
 
     if (window.setUserSubBreadcrumb && currentBooking) {
@@ -259,18 +252,20 @@ function renderBookingDetail(booking) {
         complaintSection.classList.toggle('d-none', !isCompleted);
         if (isCompleted) {
             complaintLink.href = `#support-create?type=service&bookingId=${encodeURIComponent(booking.id)}`;
+            complaintLink.onclick = () => window.scrollTo(0, 0);
         }
     }
 }
 
-async function fetchRemoteServiceReview(appointmentId) {
+async function loadServiceReviewFromSupabase(booking) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db || !appointmentId) return null;
+    const apptId = booking?._supabaseId || booking?.id;
+    if (!db || !apptId) return null;
     try {
         const { data, error } = await db
             .from('review')
             .select('id, rating, review_content, created_at, shop_reply')
-            .eq('appointment_id', appointmentId)
+            .eq('appointment_id', apptId)
             .eq('review_type', 'SERVICE')
             .maybeSingle();
         if (error) {
@@ -290,21 +285,21 @@ async function fetchRemoteServiceReview(appointmentId) {
     }
 }
 
-function renderServiceReviewSection(booking) {
+async function renderServiceReviewSection(booking) {
     const section = document.getElementById('serviceReviewSection');
     if (!section) return;
 
     const normalizedStatus = resolveBookingStatus(booking);
-    const reviewKey = getServiceReviewKey(booking);
-    const localReview = loadServiceReview(reviewKey);
+    section.classList.toggle('d-none', normalizedStatus !== 'completed');
+    if (normalizedStatus !== 'completed') return;
+
     const statusEl = document.getElementById('serviceReviewStatus');
     const hintEl = document.getElementById('serviceReviewHint');
     const textarea = document.getElementById('serviceReviewComment');
     const submitBtn = document.getElementById('btnSubmitServiceReview');
 
-    section.classList.toggle('d-none', normalizedStatus !== 'completed');
-
-    if (normalizedStatus !== 'completed') return;
+    const reviewKey = getServiceReviewKey(booking);
+    const localReview = loadServiceReview(reviewKey);
 
     function applyReviewToUI(rev) {
         if (!rev) return;
@@ -312,7 +307,7 @@ function renderServiceReviewSection(booking) {
         if (statusEl) statusEl.textContent = 'Đã đánh giá';
         if (hintEl) hintEl.textContent = `Bạn đã đánh giá ${rev.rating}/5 sao.`;
         if (textarea) {
-            textarea.value = rev.comment || '';
+            textarea.value = rev.comment || rev.review_content || '';
             textarea.disabled = true;
         }
         syncServiceStarUI(currentServiceReviewRating);
@@ -341,20 +336,16 @@ function renderServiceReviewSection(booking) {
     }
 
     // Kiểm tra đồng bộ từ Supabase
-    const apptId = booking._supabaseId || booking.id;
-    if (apptId) {
-        fetchRemoteServiceReview(apptId).then(remoteRev => {
-            if (remoteRev) {
-                localStorage.setItem(reviewKey, JSON.stringify({
-                    bookingId: booking.id,
-                    service: booking.service || booking.serviceName || 'Dịch vụ PawPal',
-                    rating: remoteRev.rating,
-                    comment: remoteRev.comment,
-                    createdAt: remoteRev.createdAt
-                }));
-                applyReviewToUI(remoteRev);
-            }
-        });
+    const remoteRev = await loadServiceReviewFromSupabase(booking);
+    if (remoteRev) {
+        localStorage.setItem(reviewKey, JSON.stringify({
+            bookingId: booking.id,
+            service: booking.service || booking.serviceName || 'Dịch vụ PawPal',
+            rating: remoteRev.rating,
+            comment: remoteRev.comment,
+            createdAt: remoteRev.createdAt
+        }));
+        applyReviewToUI(remoteRev);
     }
 
     const starButtons = document.querySelectorAll('#serviceStarRow .service-star-btn');
@@ -372,18 +363,6 @@ function syncServiceStarUI(rating) {
         const value = Number(btn.dataset.rating || 0);
         btn.classList.toggle('active', value <= rating && rating > 0);
     });
-}
-
-function getServiceReviewKey(booking) {
-    return `pawpal_service_review_${booking.id || booking.code || ''}`;
-}
-
-function loadServiceReview(key) {
-    try {
-        return JSON.parse(localStorage.getItem(key) || 'null');
-    } catch (_) {
-        return null;
-    }
 }
 
 async function handleSubmitServiceReview() {
@@ -408,7 +387,6 @@ async function handleSubmitServiceReview() {
     try {
         let savedDbReview = null;
         if (db && apptId) {
-            // Lấy thông tin appointment chính xác từ DB để đảm bảo đúng customer_id và service_id
             const { data: appt, error: apptErr } = await db
                 .from('appointment')
                 .select('id, customer_id, service_id, appointment_status')
@@ -430,7 +408,8 @@ async function handleSubmitServiceReview() {
                         service_id: serviceId,
                         review_type: 'SERVICE',
                         rating: currentServiceReviewRating,
-                        review_content: commentText
+                        review_content: commentText,
+                        review_status: 'APPROVED'
                     }])
                     .select()
                     .single();
@@ -573,21 +552,46 @@ function handleChangeSchedule() {
     showChangeScheduleModal(null);
 }
 
-function showChangeScheduleModal(user = null) {
+async function loadRealScheduleOptions() {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    const defaultSlots = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+    const randomOption = { id: 'random', name: 'Phân bổ ngẫu nhiên', desc: 'PawPal tự động chọn nhân viên trống lịch' };
+    if (!db) return { slots: defaultSlots, staffs: [randomOption] };
+
+    try {
+        const [{ data: staffData, error: staffErr }, { data: scheduleData, error: scheduleErr }] = await Promise.all([
+            db.from('staff').select('id, full_name, specialization, status, service_locked').order('full_name', { ascending: true }),
+            db.from('staff_schedule').select('start_time, end_time')
+        ]);
+        if (staffErr) throw staffErr;
+        if (scheduleErr) throw scheduleErr;
+
+        const activeStaff = (staffData || [])
+            .filter((s) => s.status === 'ACTIVE' && !s.service_locked)
+            .map((s) => ({ id: s.id, name: s.full_name, desc: s.specialization || 'Chuyên viên PawPal' }));
+
+        const generatedSlots = new Set(defaultSlots);
+        (scheduleData || []).forEach((row) => {
+            if (!row.start_time || !row.end_time) return;
+            const startHour = parseInt(row.start_time.split(':')[0], 10);
+            const endHour = parseInt(row.end_time.split(':')[0], 10);
+            for (let i = startHour; i <= endHour; i++) generatedSlots.add(`${String(i).padStart(2, '0')}:00`);
+        });
+
+        return { slots: Array.from(generatedSlots).sort(), staffs: [randomOption, ...activeStaff] };
+    } catch (err) {
+        console.warn('[BookingDetail] Could not load schedule options from Supabase:', err.message);
+        return { slots: defaultSlots, staffs: [randomOption] };
+    }
+}
+
+async function showChangeScheduleModal(user = null) {
     const modalId = 'changeScheduleModal';
     const existing = document.getElementById(modalId);
     if (existing) existing.remove();
 
-    const isHotelBooking = String(currentBookingState?.serviceCategory || currentBookingState?.category || currentBookingState?.service_type || '').toLowerCase() === 'hotel';
-    const slots = (window.PawPalBookingConfig?.slots) || [
-        '08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'
-    ];
-    const staffs = (window.PawPalBookingConfig?.staffs) || [
-        { name: 'Phân bổ ngẫu nhiên', desc: 'PawPal tự động chọn nhân viên trống lịch', id: 'random' },
-        { name: 'Nguyễn Minh An',     desc: 'Chuyên viên Spa • 3 năm kinh nghiệm',      id: 'staff1' },
-        { name: 'Trần An Nhiên',      desc: 'Bảo mẫu Hotel • Cực kỳ nhẹ nhàng',         id: 'staff2' },
-        { name: 'Lê Hoàng Tiến',     desc: 'Chuyên viên cắt tỉa Grooming',              id: 'staff3' }
-    ];
+    const isHotelBooking = String(currentBooking?.serviceCategory || currentBooking?.category || currentBooking?.service_type || '').toLowerCase() === 'hotel';
+    const { slots, staffs } = await loadRealScheduleOptions();
 
     const slotsHtml = slots.map(s =>
         `<button class="slot-time-btn" data-time="${s}" disabled style="opacity:0.4;cursor:not-allowed;">${s}</button>`
@@ -770,34 +774,44 @@ function showChangeScheduleModal(user = null) {
         });
     }
 
-    document.getElementById('confirmChangeBtn').addEventListener('click', () => {
+    document.getElementById('confirmChangeBtn').addEventListener('click', async (event) => {
         if (!selectedDate || (!isHotelBooking && (!selectedTime || !selectedStaff))) return;
+        const confirmBtn = event.currentTarget;
+        if (confirmBtn.disabled) return;
         clearHoldTimer();
+        confirmBtn.disabled = true;
 
         const notes = document.getElementById('changeNotes').value.trim();
-        currentBooking.date = selectedDate;
+        const updatedBooking = { ...currentBooking, date: selectedDate };
         if (isHotelBooking) {
-            currentBooking.time = '';
-            currentBooking.timeStart = '';
-            currentBooking.timeEnd = '';
-            currentBooking.staff = 'Bảo mẫu khách sạn';
+            updatedBooking.time = '';
+            updatedBooking.timeStart = '';
+            updatedBooking.timeEnd = '';
+            updatedBooking.staff = 'Bảo mẫu khách sạn';
         } else {
-            currentBooking.time = selectedTime;
-            currentBooking.timeStart = selectedTime;
-            currentBooking.timeEnd = '';
-            currentBooking.staff = selectedStaff;
+            updatedBooking.time = selectedTime;
+            updatedBooking.timeStart = selectedTime;
+            updatedBooking.timeEnd = '';
+            updatedBooking.staff = selectedStaff;
         }
-        currentBooking.changeCount = (currentBooking.changeCount || 0) + 1;
-        if (notes) currentBooking.note = `Yêu cầu đổi lịch: ${notes}`;
+        updatedBooking.changeCount = (currentBooking.changeCount || 0) + 1;
+        if (notes) updatedBooking.note = `Yêu cầu đổi lịch: ${notes}`;
 
-        rescheduleBookingOnSupabase(currentBooking); // sync Supabase
-        showToast('Đã thay đổi lịch hẹn thành công!', 'success');
-        renderBookingDetail(currentBooking);
-        checkBookingModifiability(currentBooking);
-        bootstrap.Modal.getInstance(modalEl)?.hide();
+        try {
+            await rescheduleBookingOnSupabase(updatedBooking);
+            currentBooking = updatedBooking;
+            showToast('Đã thay đổi lịch hẹn thành công!', 'success');
+            renderBookingDetail(currentBooking);
+            checkBookingModifiability(currentBooking);
+            bootstrap.Modal.getInstance(modalEl)?.hide();
 
-        if (user) {
-            setTimeout(() => showUpsellPasswordModal(user), 800);
+            if (user) {
+                setTimeout(() => showUpsellPasswordModal(user), 800);
+            }
+        } catch (err) {
+            console.error('[BookingDetail] Đổi lịch thất bại:', err);
+            showToast('Không thể đổi lịch hẹn lúc này. Vui lòng thử lại.', 'error');
+            confirmBtn.disabled = false;
         }
     });
 }
@@ -890,8 +904,17 @@ function showGuestOTPModal(user, onSuccess) {
     });
 }
 
-function confirmCancelBooking(onDone) {
+async function confirmCancelBooking(onDone) {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+
+    try {
+        await cancelBookingOnSupabase(currentBooking);
+    } catch (err) {
+        console.error('[BookingDetail] Hủy lịch thất bại:', err);
+        showToast('Không thể hủy lịch hẹn lúc này. Vui lòng thử lại.', 'error');
+        return;
+    }
+
     if (currentUser) {
         currentUser.cancelCount = (Number(currentUser.cancelCount) || 0) + 1;
         if (currentUser.cancelCount > 3) {
@@ -921,22 +944,23 @@ function confirmCancelBooking(onDone) {
     } catch (_) {}
 
     currentBooking.status = 'cancelled';
-    cancelBookingOnSupabase(currentBooking); // sync Supabase (không await để không block UI)
 
-    // Tạo thông báo xác nhận hủy lịch cho Khách hàng
+    // Ghi thông báo xác nhận hủy lịch thật vào bảng notification cho khách hàng
     try {
-        const userNotifs = JSON.parse(localStorage.getItem('pawpal_notifications') || '[]');
-        userNotifs.unshift({
-            id: `notif-${Date.now()}`,
-            userId: currentUser?.id,
-            title: 'Xác nhận hủy lịch hẹn',
-            message: `Lịch hẹn #${currentBooking.id || currentBooking.code} của bé ${currentBooking.petName || 'cưng'} đã được hủy thành công.`,
-            createdAt: new Date().toISOString(),
-            type: 'booking_cancelled',
-            read: false
-        });
-        localStorage.setItem('pawpal_notifications', JSON.stringify(userNotifs));
-    } catch (_) {}
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (db && currentUser?.id) {
+            await db.from('notification').insert({
+                customer_id: currentUser.id,
+                notification_type: 'BOOKING',
+                title: 'Xác nhận hủy lịch hẹn',
+                content: `Lịch hẹn #${currentBooking.id || currentBooking.code} của bé ${currentBooking.petName || 'cưng'} đã được hủy thành công.`,
+                is_read: false,
+                sent_at: new Date().toISOString()
+            });
+        }
+    } catch (notifErr) {
+        console.warn('[BookingDetail] Không thể ghi thông báo hủy lịch vào Supabase:', notifErr.message);
+    }
 
     // Gửi thông báo đến Admin
     try {
