@@ -6,111 +6,10 @@ let currentOrder = null;
 let isGuest = false; // Giả định: false = Member, true = Guest
 
 async function syncSingleOrderFromSupabase(orderId, currentUser) {
-    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db || !currentUser) return null;
-    try {
-        let customerId = currentUser.id;
-        if (currentUser._source !== 'supabase') {
-            const { data: found } = await db.from('customer').select('id').eq('phone_main', currentUser.phone).limit(1);
-            if (!found?.length) return null;
-            customerId = found[0].id;
-        }
-
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
-        let query = db
-            .from('sales_order')
-            .select(`
-                id, order_code, order_status, payment_status,
-                total_amount,
-                created_at, updated_at, note,
-                sales_order_detail (
-                    id, quantity, unit_price, discount_amount, subtotal,
-                    product ( id, product_name, image_urls, sku )
-                ),
-                customer_address ( receiver_name, receiver_phone, province, street_address ),
-                payment ( payment_method_id, transaction_status )
-            `)
-            .eq('customer_id', customerId)
-            .limit(1);
-
-        query = isUUID ? query.eq('id', orderId) : query.eq('order_code', orderId);
-        const { data, error } = await query;
-
-        if (error || !data?.length) return null;
-        const o = data[0];
-
-        const details = o.sales_order_detail || [];
-        const products = details.map(d => ({
-            id:       d.product?.id || '',
-            name:     d.product?.product_name || 'Sản phẩm',
-            sku:      d.product?.sku || '',
-            image:    normalizeImageUrl(d.product?.image_urls?.[0]),
-            quantity: d.quantity,
-            price:    d.unit_price,
-            total:    d.subtotal,
-        }));
-        const addr = o.customer_address;
-
-        const local = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-        const existing = local.find(l => String(l.id) === String(o.order_code || o.id) || String(l._supabaseId) === String(o.id));
-        const localPaymentStatus = String(existing?.paymentStatus || existing?.payment?.status || '').toLowerCase();
-        const remotePaymentStatus = String(o.payment_status || '').toLowerCase();
-        const paymentStatus = localPaymentStatus === 'paid' ? 'paid' : remotePaymentStatus;
-        
-        const dbPayment = o.payment && o.payment.length > 0 ? o.payment[0] : null;
-        const dbPaymentMethod = dbPayment?.payment_method_id?.toLowerCase() || 'cod';
-        const paymentMethod = existing?.paymentMethod || dbPaymentMethod;
-
-        const dbStatus = mapOrderStatus(o.order_status);
-        const isLocalTerminal = existing && (existing.status === 'completed' || existing.status === 'cancelled');
-        const finalStatus = isLocalTerminal ? existing.status : dbStatus;
-        const finalOrderStatus = isLocalTerminal ? (existing.orderStatus || existing.order_status) : o.order_status;
-
-        const calculatedSubtotal = products.reduce((sum, p) => sum + (p.total || (p.price * p.quantity)), 0);
-        const subtotal = existing?.pricing?.subtotal || calculatedSubtotal;
-        const discount = existing?.pricing?.discount || 0;
-        const shippingFee = existing?.pricing?.shippingFee !== undefined 
-            ? existing.pricing.shippingFee 
-            : Math.max(0, (o.total_amount || 0) - subtotal + discount);
-
-        const order = {
-            id:          o.order_code || o.id,
-            _supabaseId: o.id,
-            userId:      currentUser.id,
-            userPhone:   currentUser.phone,
-            status:      finalStatus,
-            orderStatus: finalOrderStatus,
-            paymentStatus,
-            paymentMethod: paymentMethod,
-            products,
-            pricing: {
-                subtotal:    subtotal,
-                shippingFee: shippingFee,
-                discount:    discount,
-                total:       o.total_amount,
-            },
-            shipping: addr ? {
-                name:    addr.receiver_name  || '',
-                phone:   addr.receiver_phone || '',
-                address: [addr.street_address, addr.province].filter(Boolean).join(', '),
-            } : {},
-            note:          o.note || '',
-            createdAt:     o.created_at,
-            updatedAt:     o.updated_at,
-            pointsAwarded: existing?.pointsAwarded || false,
-            pointsEarned:  existing?.pointsEarned  || 0,
-            timeline:      existing?.timeline || buildTimelineFromStatus(o.order_status, o.created_at, o.updated_at),
-            _source:       'supabase',
-        };
-
-        const others = local.filter(l => String(l.id) !== String(order.id) && String(l._supabaseId) !== String(o.id));
-        localStorage.setItem('pawpal_orders', JSON.stringify([order, ...others]));
-        console.log('[OrderDetail] ✅ Synced từ Supabase:', order.id);
-        return order;
-    } catch (err) {
-        console.warn('[OrderDetail] Supabase sync error:', err.message);
-        return null;
-    }
+    if (!currentUser) throw new Error('Vui lòng đăng nhập để xem đơn hàng.');
+    const orders = await API.getUserOrders(currentUser);
+    return orders.find(order => [order.id, order._supabaseId]
+        .some(id => id != null && String(id) === String(orderId))) || null;
 }
 
 function mapOrderStatus(status) {
@@ -205,15 +104,10 @@ async function loadOrderDetail() {
     
     try {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-        if (window.SupabaseClient && currentUser) {
-            await syncSingleOrderFromSupabase(orderId, currentUser);
-            if (!window.pawpalReviews) {
-                window.pawpalReviews = await API.getUserReviews(currentUser.id);
-            }
+        currentOrder = await syncSingleOrderFromSupabase(orderId, currentUser);
+        if (currentUser && !window.pawpalReviews) {
+            window.pawpalReviews = await API.getUserReviews(currentUser.id);
         }
-
-        const localOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-        currentOrder = Array.isArray(localOrders) ? localOrders.find(o => String(o.id) === String(orderId)) : null;
 
         if (!currentOrder) {
             showError('Không tìm thấy đơn hàng #' + orderId);
@@ -248,7 +142,7 @@ async function loadOrderDetail() {
             }, 350);
         }
         
-        if ((currentOrder.status === 'completed') && typeof ReviewHandler !== 'undefined') {
+        if (['delivered', 'completed'].includes(currentOrder.status) && typeof ReviewHandler !== 'undefined') {
             const orderTimeline = Array.isArray(currentOrder.timeline) ? currentOrder.timeline : [];
             const deliveredEntry = orderTimeline.find(t => t.status === 'delivered' || t.status === 'completed');
             const deliveredDate  = deliveredEntry

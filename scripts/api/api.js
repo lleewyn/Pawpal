@@ -176,7 +176,8 @@ export const API = {
                     created_at, updated_at, note,
                     sales_order_detail (
                         id, quantity, unit_price, discount_amount, subtotal,
-                        product ( id, product_name, image_urls, sku )
+                        product ( id, product_name, image_urls ),
+                        product_variant ( sku_variant )
                     ),
                     customer_address ( receiver_name, receiver_phone, province, street_address )
                 `)
@@ -227,7 +228,7 @@ export const API = {
                 const products = details.map(d => ({
                     id:       d.product?.id || '',
                     name:     d.product?.product_name || 'Sản phẩm',
-                    sku:      d.product?.sku || '',
+                    sku:      d.product_variant?.sku_variant || '',
                     image:    normalizeImageUrl(d.product?.image_urls?.[0]),
                     quantity: d.quantity,
                     price:    d.unit_price,

@@ -1,3 +1,4 @@
+import { API } from '/scripts/api/api.js';
 
 let currentRmaOrder = null;
 
@@ -25,35 +26,25 @@ async function openRMADrawer(orderId) {
         console.error('[ReturnHandler] Không thể tải giao diện:', error);
         return;
     }
-    currentRmaOrder = window.pawpalCurrentOrderForReturn?.id === orderId ? window.pawpalCurrentOrderForReturn : null;
-    if (typeof ordersState !== 'undefined' && ordersState.allOrders) {
-        currentRmaOrder = ordersState.allOrders.find(o => o.id === orderId);
-    }
-
-    if (!currentRmaOrder && window.SupabaseClient) {
-    }
-    
-    if (!currentRmaOrder) {
-        currentRmaOrder = {
-            id: orderId,
-            products: [{
-                id: 'PROD-UNKNOWN',
-                name: 'Sản phẩm không có dữ liệu',
-                image: '/assets/images/shop/products/placeholder.webp',
-                quantity: 1,
-                price: 0,
-                total: 0
-            }]
-        };
+    try {
+        const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        const orders = await API.getUserOrders(user);
+        currentRmaOrder = orders.find(order => [order.id, order._supabaseId]
+            .some(id => id != null && String(id) === String(orderId)));
+        if (!currentRmaOrder) throw new Error('Không tìm thấy đơn hàng để đổi trả.');
+    } catch (error) {
+        console.error('[ReturnHandler] Unable to load order:', error);
+        alert(error.message || 'Không thể tải đơn hàng. Vui lòng thử lại.');
+        return;
     }
 
     const container = document.getElementById('rma-drawer-container') || createRmaDrawerContainer();
 
     container.innerHTML = `
         <div class="rma-drawer-overlay" id="rma-overlay"></div>
-        <div class="rma-drawer" id="rma-drawer">
+        <div class="rma-drawer" id="rma-drawer" role="dialog" aria-modal="true" aria-labelledby="rma-drawer-title" tabindex="-1">
             <div class="rma-drawer-header">
-                <h3>Yêu cầu Đổi trả</h3>
+                <h3 id="rma-drawer-title">Yêu cầu Đổi trả</h3>
                 <button class="rma-drawer-close" id="rma-close-btn">Đóng [×]</button>
             </div>
             <div class="rma-drawer-body">
@@ -141,7 +132,10 @@ async function openRMADrawer(orderId) {
 
     setTimeout(() => {
         document.getElementById('rma-overlay').classList.add('is-open');
-        document.getElementById('rma-drawer').classList.add('is-open');
+        const drawer = document.getElementById('rma-drawer');
+        drawer.classList.add('is-open');
+        drawer.querySelector('.rma-drawer-body').scrollTop = 0;
+        drawer.focus({ preventScroll: true });
     }, 50);
 
     setupDrawerListeners();
@@ -150,6 +144,7 @@ async function openRMADrawer(orderId) {
 window.openRMADrawer = openRMADrawer;
 
 function setupDrawerListeners() {
+    const previousFocus = document.activeElement;
     const overlay = document.getElementById('rma-overlay');
     const drawer = document.getElementById('rma-drawer');
     const closeBtn = document.getElementById('rma-close-btn');
@@ -158,12 +153,19 @@ function setupDrawerListeners() {
     const submitBtn = document.getElementById('rma-submit-btn');
 
     const closeDrawer = () => {
+        document.removeEventListener('keydown', handleEscape);
         overlay.classList.remove('is-open');
         drawer.classList.remove('is-open');
+        if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
         setTimeout(() => {
             document.getElementById('rma-drawer-container').innerHTML = '';
         }, 400); // khớp transition CSS
     };
+
+    const handleEscape = event => {
+        if (event.key === 'Escape') closeDrawer();
+    };
+    document.addEventListener('keydown', handleEscape);
 
     overlay.addEventListener('click', closeDrawer);
     closeBtn.addEventListener('click', closeDrawer);

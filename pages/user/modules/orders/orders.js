@@ -227,7 +227,10 @@ function filterByStatus(status) {
 }
 
 function searchOrders(query) {
-    ordersState.searchQuery = query.toLowerCase();
+    const normalizedQuery = String(query ?? '').trim();
+    ordersState.searchQuery = normalizedQuery.toLowerCase();
+    const searchInput = document.getElementById('order-search');
+    if (searchInput) searchInput.value = normalizedQuery;
     ordersState.currentPage = 1;
     applyFilters();
 }
@@ -463,7 +466,7 @@ function showEmptyState(message) {
         <div class="empty-state">
             <h4 class="empty-title">Chưa có đơn hàng nào</h4>
             <p class="empty-desc">${escapeHtml(message || 'Các đơn mua sắm vật phẩm và phụ kiện cho bé cưng sẽ hiển thị tại đây')}</p>
-            <a href="/shop" class="btn-order-primary-cta">+ Mua sắm cho bé ngay</a>
+            <a href="/pages/shop/index.html" class="btn-order-primary-cta">+ Mua sắm cho bé ngay</a>
         </div>
     `;
     const pagination = document.getElementById('pagination');

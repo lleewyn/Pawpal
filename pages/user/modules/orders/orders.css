@@ -647,6 +647,12 @@
         flex-direction: column;
     }
 
+    .orders-search .search-input {
+        flex: none;
+        width: 100%;
+        min-width: 0;
+    }
+
     .search-btn {
         width: 100%;
     }
