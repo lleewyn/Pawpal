@@ -218,7 +218,7 @@
     // Tìm route chuẩn từ hash hoặc alias
     function resolveRoute(hashStr) {
         if (!hashStr) return 'profile';
-        const clean = hashStr.replace(/^#\/?/, '').split('?')[0].toLowerCase();
+        const clean = hashStr.replace(/^#\/?/, '').split('?')[0].split('/')[0].toLowerCase();
         if (ROUTE_CONFIG[clean]) return clean;
 
         for (const [key, conf] of Object.entries(ROUTE_CONFIG)) {
@@ -424,6 +424,15 @@
                     if (!moduleRenderer.isCurrent(ticket)) return;
                     await moduleRenderer.commit(ticket, async () => {
                         contentContainer.innerHTML = `<div class="user-module-view">${html}</div>`;
+                        if (routeKey === 'pets') {
+                            const petParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
+                            const hasPetDeepLink = petParams.get('action') === 'create'
+                                || Boolean(petParams.get('id') || petParams.get('edit'));
+                            if (hasPetDeepLink) {
+                                contentContainer.querySelector('#petListView')?.classList.add('d-none');
+                                contentContainer.querySelector('#petDetailView')?.classList.remove('d-none');
+                            }
+                        }
                         if (config.moduleScript) await loadModuleScript(config.moduleScript, true);
                         if (moduleRenderer.isCurrent(ticket)) {
                             contentContainer.setAttribute('aria-busy', 'false');
@@ -664,7 +673,11 @@
 
         // Khởi động trực tiếp phân hệ mục tiêu ngay lập tức
         const targetRoute = resolveRoute(window.location.hash || sessionStorage.getItem('pawpal_user_active_tab') || 'profile');
-        const routeQuery = window.location.hash.includes('?') ? window.location.hash.slice(window.location.hash.indexOf('?')) : '';
+        let routeQuery = window.location.hash.includes('?') ? window.location.hash.slice(window.location.hash.indexOf('?')) : '';
+        if (!routeQuery && targetRoute === 'pets') {
+            const pathPetId = window.location.hash.replace(/^#\/?pets\/?/i, '').split('?')[0];
+            if (pathPetId) routeQuery = `?id=${encodeURIComponent(decodeURIComponent(pathPetId))}`;
+        }
         if (window.location.hash !== `#${targetRoute}${routeQuery}`) {
             window.history.replaceState(null, '', `#${targetRoute}${routeQuery}`);
         }
