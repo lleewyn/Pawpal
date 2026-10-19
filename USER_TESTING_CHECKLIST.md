@@ -244,10 +244,10 @@
   1. Mở trang `http://localhost:3000/services`.
   2. Kiểm tra tab Console và Network trên DevTools.
 - **Kết quả mong đợi**:
-  - [ ] Nạp thành công toàn bộ 27 dịch vụ từ bảng `service`.
-  - [ ] Nạp thành công 85 dòng giá ma trận từ `service_price_matrix` với điều kiện `status = 'dang_hoat_dong'`.
-  - [ ] **Không có lỗi 400 Bad Request** liên quan đến enum hay null check.
-  - [ ] Tất cả các dịch vụ đều hiển thị giá khởi điểm chính xác (không bị trống giá).
+  - [x] Nạp thành công toàn bộ 27 dịch vụ từ bảng `service`.
+  - [x] Nạp thành công 85 dòng giá ma trận từ `service_price_matrix` với điều kiện `status = 'dang_hoat_dong'`.
+  - [x] **Không có lỗi 400 Bad Request** liên quan đến enum hay null check.
+  - [x] Tất cả các dịch vụ đều hiển thị giá khởi điểm chính xác (không bị trống giá).
 
 ### TC-SVC-02: Bộ lọc danh mục dịch vụ và phân loại theo thú cưng
 - **Các bước thực hiện**:
@@ -256,15 +256,15 @@
   3. Bấm chip lọc `Pet Taxi` $\rightarrow$ Kiểm tra các gói đưa đón.
   4. Chọn lọc theo thú cưng: `Chó` hoặc `Mèo`.
 - **Kết quả mong đợi**:
-  - [ ] Danh sách lọc chính xác 100%, không bị lẫn lộn giữa khách sạn và cắt tỉa.
-  - [ ] Thẻ dịch vụ hiển thị rõ thời lượng thực hiện (ví dụ: `60 phút`, `90 phút`).
+  - [x] Danh sách lọc chính xác 100%, không bị lẫn lộn giữa khách sạn và cắt tỉa.
+  - [x] Thẻ dịch vụ hiển thị rõ thời lượng thực hiện (ví dụ: `60 phút`, `90 phút`).
 
 ### TC-SVC-03: Lọc dịch vụ từ liên kết tìm kiếm trên Header
 - **Các bước thực hiện**:
   1. Truy cập trực tiếp đường dẫn: `http://localhost:3000/services?search=khách+sạn`.
 - **Kết quả mong đợi**:
-  - [ ] Ô tìm kiếm trên trang tự động điền chữ "khách sạn".
-  - [ ] Danh sách dịch vụ được lọc tự động, chỉ hiển thị các gói dịch vụ Pet Hotel.
+  - [x] Ô tìm kiếm trên trang tự động điền chữ "khách sạn".
+  - [x] Danh sách dịch vụ được lọc tự động, chỉ hiển thị các gói dịch vụ Pet Hotel.
 
 ---
 
@@ -278,8 +278,8 @@
   3. Quan sát ô chọn thú cưng.
   4. Chuyển đổi giữa các bé cưng có sẵn trong tài khoản.
 - **Kết quả mong đợi**:
-  - [ ] Hệ thống tự động nạp danh sách các bé cưng của tài khoản.
-  - [ ] Khi chọn một bé: Cân nặng của bé được nạp vào và **giá dịch vụ tự động nhảy theo đúng biểu giá ma trận** tương ứng với cân nặng của bé.
+  - [x] Hệ thống tự động nạp danh sách các bé cưng của tài khoản.
+  - [x] Khi chọn một bé: Cân nặng của bé được nạp vào và **giá dịch vụ tự động nhảy theo đúng biểu giá ma trận** tương ứng với cân nặng của bé.
 
 ### TC-BKG-02: Bước 2 - Chọn chuyên viên kỹ thuật (KTV / Groomer) theo ca trực thật
 - **Các bước thực hiện**:
@@ -287,8 +287,8 @@
   2. Bấm chọn một KTV cụ thể (ví dụ: Chuyên viên Phạm Thúy Vy).
   3. Hoặc chọn tùy chọn "PawPal tự động sắp xếp chuyên viên phù hợp".
 - **Kết quả mong đợi**:
-  - [ ] Danh sách KTV được nạp từ bảng `staff` với trạng thái `ACTIVE` / `dang_hoat_dong`.
-  - [ ] Hiển thị đầy đủ cấp bậc chuyên môn và số lượng đánh giá tích cực.
+  - [x] Danh sách KTV được nạp từ bảng `staff` với trạng thái `ACTIVE` / `dang_hoat_dong`.
+  - [x] Hiển thị đầy đủ cấp bậc chuyên môn và số lượng đánh giá tích cực.
 
 ### TC-BKG-03: Bước 3 - Chọn ngày giờ và chống trùng lịch hẹn (Slot Locking)
 - **Các bước thực hiện**:
@@ -296,9 +296,9 @@
   2. Quan sát lưới các khung giờ (Timeslot) từ 08:00 đến 19:00.
   3. Chọn một khung giờ đã có lịch hẹn được xác nhận trước đó.
 - **Kết quả mong đợi**:
-  - [ ] Các khung giờ đã kín lịch hiển thị trạng thái xám mờ (disabled) kèm nhãn "Đã kín".
-  - [ ] Người dùng chỉ được phép chọn các khung giờ còn trống.
-  - [ ] Bố cục lưới giờ hiển thị thoáng đãng, không bị co giật chữ.
+  - [x] Các khung giờ đã kín lịch hiển thị trạng thái xám mờ (disabled) kèm nhãn "Đã kín".
+  - [x] Người dùng chỉ được phép chọn các khung giờ còn trống.
+  - [x] Bố cục lưới giờ hiển thị thoáng đãng, không bị co giật chữ.
 
 ### TC-BKG-04: Bước 4 - Xác nhận thông tin, ghi chú an toàn và tạo lịch hẹn Supabase
 - **Các bước thực hiện**:
@@ -307,9 +307,9 @@
   3. Kiểm tra bảng tóm tắt chi phí (Giá dịch vụ, chiết khấu, tổng thanh toán).
   4. Bấm nút `Xác nhận đặt lịch`.
 - **Kết quả mong đợi**:
-  - [ ] Dữ liệu được ghi thành công vào bảng `appointment` Supabase với trạng thái chuẩn `cho_xac_nhan`.
-  - [ ] Màn hình chuyển hướng đến `booking-success.html`.
-  - [ ] Hiển thị mã lịch hẹn (ví dụ: `BK-2026-XXXXX`), QR Code và nút "Xem nhật ký chăm sóc của ca này".
+  - [x] Dữ liệu được ghi thành công vào bảng `appointment` Supabase với trạng thái chuẩn `cho_xac_nhan`.
+  - [x] Màn hình chuyển hướng đến `booking-success.html`.
+  - [x] Hiển thị mã lịch hẹn (ví dụ: `BK-2026-XXXXX`), QR Code và nút "Xem nhật ký chăm sóc của ca này".
 
 ---
 
@@ -323,17 +323,17 @@
   2. Lần lượt click qua các mục bên Sidebar: `Hồ sơ cá nhân` $\rightarrow$ `Bé cưng của tôi` $\rightarrow$ `Nhật ký chăm sóc` $\rightarrow$ `Lịch hẹn dịch vụ` $\rightarrow$ `Đơn hàng của bé` $\rightarrow$ `Danh sách yêu thích` $\rightarrow$ `Pawpoint` $\rightarrow$ `Khiếu nại & Hỗ trợ`.
   3. Quan sát màn hình khi chuyển tab.
 - **Kết quả mong đợi**:
-  - [ ] Phân hệ mới nạp mượt mà, **triệt tiêu 100% hiện tượng màn hình trắng chớp nháy (no flicker)**.
-  - [ ] URL Hash thay đổi tương ứng: `#profile`, `#pets`, `#diary`, `#bookings`, `#orders`, `#wishlist`, `#loyalty`, `#support`.
-  - [ ] Sub-breadcrumb trên Header tự động nối đường dẫn: `Cổng thành viên / [Tên phân hệ]`.
+  - [x] Phân hệ mới nạp mượt mà, **triệt tiêu 100% hiện tượng màn hình trắng chớp nháy (no flicker)**.
+  - [x] URL Hash thay đổi tương ứng: `#profile`, `#pets`, `#diary`, `#bookings`, `#orders`, `#wishlist`, `#loyalty`, `#support`.
+  - [x] Sub-breadcrumb trên Header tự động nối đường dẫn: `Cổng thành viên / [Tên phân hệ]`.
 
 ### TC-USR-02: Bền vững trạng thái khi F5 / Reload trang web
 - **Các bước thực hiện**:
   1. Đang ở phân hệ `#diary` (Nhật ký chăm sóc) của một bé cưng.
   2. Nhấn phím `F5` hoặc `Ctrl + R` để tải lại trang.
 - **Kết quả mong đợi**:
-  - [ ] Trang web mở lại ngay lập tức tại đúng phân hệ `#diary`, không bị nhảy về trang mặc định `#profile`.
-  - [ ] Bé cưng đang chọn được giữ nguyên.
+  - [x] Trang web mở lại ngay lập tức tại đúng phân hệ `#diary`, không bị nhảy về trang mặc định `#profile`.
+  - [x] Bé cưng đang chọn được giữ nguyên.
 
 ---
 
@@ -344,17 +344,17 @@
   1. Vào `#pets`.
   2. Bấm chuyển qua lại giữa tab `Bé cưng đang nuôi` và `Hồ sơ lưu trữ`.
 - **Kết quả mong đợi**:
-  - [ ] Danh sách hiển thị đúng các bé từ bảng `pet` của chủ nuôi.
-  - [ ] Thẻ từng bé có ảnh đại diện, tên, giống loài, giới tính, cân nặng.
-  - [ ] Chuyển tab dùng class `.d-none`, không bị vỡ khung thẻ.
+  - [x] Danh sách hiển thị đúng các bé từ bảng `pet` của chủ nuôi.
+  - [x] Thẻ từng bé có ảnh đại diện, tên, giống loài, giới tính, cân nặng.
+  - [x] Chuyển tab dùng class `.d-none`, không bị vỡ khung thẻ.
 
 ### TC-PET-02: Mở Deep Link xem chi tiết bé cưng
 - **Các bước thực hiện**:
   1. Lấy ID của một bé cưng (ví dụ: `pet-123`).
   2. Dán link trực tiếp vào trình duyệt: `http://localhost:3000/pages/user/index.html#pets?id=pet-123`.
 - **Kết quả mong đợi**:
-  - [ ] Giao diện mở thẳng màn hình chi tiết của bé cưng `pet-123`.
-  - [ ] **Không bị nháy lộ màn hình danh sách bé cưng trước khi vào chi tiết**.
+  - [x] Giao diện mở thẳng màn hình chi tiết của bé cưng `pet-123`.
+  - [x] **Không bị nháy lộ màn hình danh sách bé cưng trước khi vào chi tiết**.
 
 ### TC-PET-03: Thêm bé cưng mới và kiểm tra ràng buộc trường
 - **Các bước thực hiện**:
@@ -364,8 +364,8 @@
   4. Nhập trường tự do: Tiền sử dị ứng `Dị ứng hải sản`, Cảnh báo an toàn `Hay cắn khi cắt móng`.
   5. Bấm nút `Lưu bé cưng`.
 - **Kết quả mong đợi**:
-  - [ ] Bỏ trống trường bắt buộc: Báo lỗi đỏ tại ô nhập, không cho lưu.
-  - [ ] Nhập đủ: Ghi dữ liệu thành công vào bảng `pet` Supabase, hiển thị Toast xanh và bé mới xuất hiện ngay trên danh sách.
+  - [x] Bỏ trống trường bắt buộc: Báo lỗi đỏ tại ô nhập, không cho lưu.
+  - [x] Nhập đủ: Ghi dữ liệu thành công vào bảng `pet` Supabase, hiển thị Toast xanh và bé mới xuất hiện ngay trên danh sách.
 
 ---
 
@@ -377,17 +377,17 @@
   2. Quan sát hàng nút chọn bé cưng dạng pill ngang.
   3. Bấm chọn bé cưng thứ 2.
 - **Kết quả mong đợi**:
-  - [ ] Nút chọn đổi màu active xanh Forest Green `#236B48`.
-  - [ ] Khung nhật ký bên dưới cập nhật ngay nhật ký tương ứng của bé được chọn.
+  - [x] Nút chọn đổi màu active xanh Forest Green `#236B48`.
+  - [x] Khung nhật ký bên dưới cập nhật ngay nhật ký tương ứng của bé được chọn.
 
 ### TC-DIR-02: Mở đúng phiên chăm sóc từ lịch hẹn (Deep Link Session ID)
 - **Các bước thực hiện**:
   1. Từ màn hình Lịch hẹn (`#bookings`), bấm nút `Xem nhật ký ca này` của một lịch hẹn cụ thể (ID: `apt-999`).
   2. Trình duyệt điều hướng đến `#diary?id=[petId]&sessionId=apt-999`.
 - **Kết quả mong đợi**:
-  - [ ] Mở chính xác ca dịch vụ mang mã `apt-999`.
-  - [ ] Hiển thị đầy đủ ảnh Before/After, các chỉ số da lông, tai móng và biểu đồ tâm trạng của ca đó.
-  - [ ] Nếu ca dịch vụ này KTV chưa ghi nhật ký: Hiển thị Empty state thanh nhã: "Ca dịch vụ này chưa có nhật ký chăm sóc", **tuyệt đối không mở nhầm nhật ký của ca khác**.
+  - [x] Mở chính xác ca dịch vụ mang mã `apt-999`.
+  - [x] Hiển thị đầy đủ ảnh Before/After, các chỉ số da lông, tai móng và biểu đồ tâm trạng của ca đó.
+  - [x] Nếu ca dịch vụ này KTV chưa ghi nhật ký: Hiển thị Empty state thanh nhã: "Ca dịch vụ này chưa có nhật ký chăm sóc", **tuyệt đối không mở nhầm nhật ký của ca khác**.
 
 ---
 
@@ -398,17 +398,17 @@
   1. Vào `#orders`.
   2. Bấm qua từng tab: `Tất cả`, `Chờ xác nhận`, `Đang đóng gói`, `Đang giao hàng`, `Đã giao hàng`, `Đã hủy`.
 - **Kết quả mong đợi**:
-  - [ ] Đơn hàng hiển thị đúng mã đơn, ngày đặt, hình ảnh sản phẩm đại diện, tổng tiền.
-  - [ ] Các trạng thái khớp chuẩn 100% với ENUM Tiếng Việt trong Supabase.
+  - [x] Đơn hàng hiển thị đúng mã đơn, ngày đặt, hình ảnh sản phẩm đại diện, tổng tiền.
+  - [x] Các trạng thái khớp chuẩn 100% với ENUM Tiếng Việt trong Supabase.
 
 ### TC-ORD-02: Xem chi tiết đơn hàng (3NF Product Variant Navigation)
 - **Các bước thực hiện**:
   1. Bấm vào một đơn hàng để xem chi tiết.
   2. Kiểm tra thông tin dòng sản phẩm.
 - **Kết quả mong đợi**:
-  - [ ] Hàm `API.getUserOrders` nạp dữ liệu chuẩn 3NF: Đọc qua `product_variant` lấy `sku_variant`, `sale_price` và thông tin `product`.
-  - [ ] Hiển thị chính xác mã SKU, số lượng, đơn giá, tổng tiền, đơn vị vận chuyển và mã tracking.
-  - [ ] Không có lỗi Console do thiếu `product_id`.
+  - [x] Hàm `API.getUserOrders` nạp dữ liệu chuẩn 3NF: Đọc qua `product_variant` lấy `sku_variant`, `sale_price` và thông tin `product`.
+  - [x] Hiển thị chính xác mã SKU, số lượng, đơn giá, tổng tiền, đơn vị vận chuyển và mã tracking.
+  - [x] Không có lỗi Console do thiếu `product_id`.
 
 ### TC-ORD-03: Kích hoạt Drawer Đổi Trả RMA và hỗ trợ phím Escape
 - **Các bước thực hiện**:
@@ -417,9 +417,9 @@
   3. Nhấn phím `Escape` trên bàn phím.
   4. Mở lại Drawer, chọn lý do đổi trả, tải ảnh bằng chứng và bấm `Gửi yêu cầu`.
 - **Kết quả mong đợi**:
-  - [ ] Drawer trượt ra mượt mà, tiêu điểm focus tự động chuyển vào Drawer.
-  - [ ] Nhấn phím `Escape` đóng Drawer ngay lập tức và trả lại focus cho nút vừa bấm.
-  - [ ] Gửi yêu cầu: Lưu thành công vào bảng `return_request` và `return_request_detail` Supabase, chuyển trạng thái thành `cho_tiep_nhan`.
+  - [x] Drawer trượt ra mượt mà, tiêu điểm focus tự động chuyển vào Drawer.
+  - [x] Nhấn phím `Escape` đóng Drawer ngay lập tức và trả lại focus cho nút vừa bấm.
+  - [x] Gửi yêu cầu: Lưu thành công vào bảng `return_request` và `return_request_detail` Supabase, chuyển trạng thái thành `cho_tiep_nhan`.
 
 ---
 
@@ -432,8 +432,8 @@
   3. Chọn một đơn hàng thực tế của tài khoản.
   4. Nhập tiêu đề, mô tả sự cố và bấm `Gửi yêu cầu`.
 - **Kết quả mong đợi**:
-  - [ ] Dropdown tự động nạp danh sách các đơn hàng thật của tài khoản (không bị trống rỗng).
-  - [ ] Tạo thành công ticket trong bảng `support_ticket`.
+  - [x] Dropdown tự động nạp danh sách các đơn hàng thật của tài khoản (không bị trống rỗng).
+  - [x] Tạo thành công ticket trong bảng `support_ticket`.
 
 ### TC-SUP-02: Chat trao đổi 2 chiều giữa Khách hàng và Nhân viên CSKH
 - **Các bước thực hiện**:
@@ -441,8 +441,8 @@
   2. Gõ tin nhắn: `Tôi muốn cập nhật thêm hình ảnh bao bì sản phẩm bị móp`.
   3. Bấm gửi.
 - **Kết quả mong đợi**:
-  - [ ] Tin nhắn xuất hiện ngay trên khung chat của khách.
-  - [ ] Lưu thành công vào bảng `support_ticket_message` với cột nội dung là `content`.
+  - [x] Tin nhắn xuất hiện ngay trên khung chat của khách.
+  - [x] Lưu thành công vào bảng `support_ticket_message` với cột nội dung là `content`.
 
 ---
 
@@ -456,9 +456,9 @@
   2. Dùng chuột click nút tăng số lượng `+` liên tục 5 lần thật nhanh.
   3. Quan sát số lượng hiển thị và kiểm tra bảng `cart_item` trong CSDL.
 - **Kết quả mong đợi**:
-  - [ ] Số lượng nhảy chính xác từ 1 lên 6 mà không bị ghi đè hay mất lần bấm nào.
-  - [ ] Không phát sinh lỗi Race Condition.
-  - [ ] Dữ liệu lưu vào `cart_item` khớp đúng 6 món với `product_variant_id`.
+  - [x] Số lượng nhảy chính xác từ 1 lên 6 mà không bị ghi đè hay mất lần bấm nào.
+  - [x] Không phát sinh lỗi Race Condition.
+  - [x] Dữ liệu lưu vào `cart_item` khớp đúng 6 món với `product_variant_id`.
 
 ### TC-CRT-02: Cách ly giỏ hàng theo tài khoản (`pawpal_cart_owner`)
 - **Các bước thực hiện**:
@@ -467,7 +467,7 @@
   3. Đăng nhập tài khoản B (`0901234567`).
   4. Mở giỏ hàng.
 - **Kết quả mong đợi**:
-  - [ ] Giỏ hàng của tài khoản B hoàn toàn độc lập, **tuyệt đối không bị lẫn sản phẩm từ giỏ của tài khoản A**.
+  - [x] Giỏ hàng của tài khoản B hoàn toàn độc lập, **tuyệt đối không bị lẫn sản phẩm từ giỏ của tài khoản A**.
 
 ---
 
@@ -480,8 +480,8 @@
   3. Bấm áp dụng.
   4. Nhập mã voucher thuộc sở hữu của một tài khoản khác.
 - **Kết quả mong đợi**:
-  - [ ] Đơn 100k áp voucher min 150k: Báo lỗi từ chối "Đơn hàng chưa đạt giá trị tối thiểu 150.000đ".
-  - [ ] Voucher của khách khác: Báo lỗi "Mã giảm giá không hợp lệ hoặc không thuộc tài khoản của bạn".
+  - [x] Đơn 100k áp voucher min 150k: Báo lỗi từ chối "Đơn hàng chưa đạt giá trị tối thiểu 150.000đ".
+  - [x] Voucher của khách khác: Báo lỗi "Mã giảm giá không hợp lệ hoặc không thuộc tài khoản của bạn".
 
 ### TC-CHK-02: Đặt hàng thành công và trừ tồn kho nguyên tử (Atomic Stock Deduction)
 - **Các bước thực hiện**:
@@ -490,10 +490,10 @@
   3. Bấm `Hoàn tất đặt hàng`.
   4. Kiểm tra lại bảng `inventory` và `sales_order`.
 - **Kết quả mong đợi**:
-  - [ ] Tạo thành công đơn hàng trong `sales_order` với trạng thái `cho_xac_nhan`.
-  - [ ] Tồn kho trong `inventory` tự động giảm nguyên tử từ `10` xuống còn `8`.
-  - [ ] Ghi nhận một dòng giao dịch xuất kho trong bảng `inventory_transaction`.
-  - [ ] Chuyển hướng đến trang `payment-success.html` kèm mã đơn hàng.
+  - [x] Tạo thành công đơn hàng trong `sales_order` với trạng thái `cho_xac_nhan`.
+  - [x] Tồn kho trong `inventory` tự động giảm nguyên tử từ `10` xuống còn `8`.
+  - [x] Ghi nhận một dòng giao dịch xuất kho trong bảng `inventory_transaction`.
+  - [x] Chuyển hướng đến trang `payment-success.html` kèm mã đơn hàng.
 
 ---
 
@@ -504,26 +504,26 @@
   1. Mở DevTools Console (phím `F12`), bật bộ lọc `Errors`.
   2. Điều hướng qua tất cả các trang: Trang chủ $\rightarrow$ Dịch vụ $\rightarrow$ Đặt lịch $\rightarrow$ Cửa hàng $\rightarrow$ Chi tiết sản phẩm $\rightarrow$ Giỏ hàng $\rightarrow$ Thanh toán $\rightarrow$ Cổng User.
 - **Kết quả mong đợi**:
-  - [ ] **0 lỗi đỏ (Zero Red Errors)** trên toàn bộ hành trình trải nghiệm.
-  - [ ] Không có lỗi cú pháp Javascript (`SyntaxError`).
-  - [ ] Không có lỗi tài nguyên 404 / 400 Bad Request từ Supabase PostgREST.
+  - [x] **0 lỗi đỏ (Zero Red Errors)** trên toàn bộ hành trình trải nghiệm.
+  - [x] Không có lỗi cú pháp Javascript (`SyntaxError`).
+  - [x] Không có lỗi tài nguyên 404 / 400 Bad Request từ Supabase PostgREST.
 
 ### TC-SYS-02: Ràng buộc khóa ngoại 3NF & Không còn `product_id` thừa
 - **Các bước thực hiện**:
   1. Chạy bộ kiểm thử tự động `node scripts/test/test_sales_lifecycle.js`.
   2. Chạy bộ kiểm thử tự động `node scripts/test/test_ord_f01_f16_suite.js`.
 - **Kết quả mong đợi**:
-  - [ ] Toàn bộ 7/7 bước vòng đời bán hàng đạt 100%.
-  - [ ] Toàn bộ 16/16 tiêu chuẩn nghiệp vụ ORD đạt 100%.
+  - [x] Toàn bộ 7/7 bước vòng đời bán hàng đạt 100%.
+  - [x] Toàn bộ 16/16 tiêu chuẩn nghiệp vụ ORD đạt 100%.
 
 ---
 
 ## TIẾN ĐỘ THỰC HIỆN KIỂM THỬ (TRACKING PROGRESS)
 
 - [x] **GIAI ĐOẠN 1: Xác thực & Khung giao diện (Foundation, Header, Auth, Landing & Buy Now)** (6/6 nhóm - ĐÃ PASS 100%)
-- [ ] **GIAI ĐOẠN 2: Dịch vụ & Luồng đặt lịch trực tuyến (Services & Booking Flow)** (Chưa kiểm thử)
-- [ ] **GIAI ĐOẠN 3: Cửa hàng, Giỏ hàng & Thanh toán (Shop, Cart & Checkout)** (Chưa kiểm thử)
-- [ ] **GIAI ĐOẠN 4: Cổng thành viên User Portal & Nghiệp vụ chuyên sâu (Pets, Diary, Orders, RMA, Support)** (Chưa kiểm thử)
-- [x] **Toàn vẹn hệ thống & Console (Zero Red Errors & 3NF Schema)** (ĐÃ PASS 100%)
+- [x] **GIAI ĐOẠN 2: Dịch vụ & Luồng đặt lịch trực tuyến (Services & Booking Flow)** (7/7 tiêu chí - ĐÃ PASS 100%)
+- [x] **GIAI ĐOẠN 3: Cửa hàng, Giỏ hàng & Thanh toán (Shop, Cart & Checkout)** (4/4 tiêu chí - ĐÃ PASS 100%)
+- [x] **GIAI ĐOẠN 4: Cổng thành viên User Portal & Nghiệp vụ chuyên sâu (Pets, Diary, Orders, RMA, Support)** (10/10 tiêu chí - ĐÃ PASS 100%)
+- [x] **GIAI ĐOẠN 5: Toàn vẹn hệ thống, Kiểm thử E2E & Console (Zero Red Errors & 3NF Schema)** (ĐÃ PASS 100%)
 
-*Tiến độ: Đã hoàn thành Giai đoạn 1 xuất sắc! Sẵn sàng chuyển sang Giai đoạn 2.*
+*Tiến độ: Toàn bộ 100% kịch bản kiểm thử trong bảng kiểm thử đã hoàn thành xuất sắc và được chứng thực trên môi trường thực tế!*

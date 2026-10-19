@@ -431,7 +431,7 @@ export const API = {
             for (const item of items) {
                 const resolvedVId = variantIdMap.get(String(item.variantId || item.product_variant_id || item.id));
                 const remaining = resolvedVId ? (stockByVariant.get(String(resolvedVId)) ?? 999) : 999;
-                if (item.quantity > remaining) throw new Error(Chỉ còn  sản phẩm trong kho);
+                if (item.quantity > remaining) throw new Error(`Chỉ còn ${remaining} sản phẩm trong kho`);
             }
         }
         return { valid: true };
@@ -530,7 +530,6 @@ export const API = {
             if (error) throw error;
             if (!data?.length) throw new Error('Cart write was not applied');
             keep.add(data[0].id);
-        }
         }
         const removals = (existing || []).filter(row => !keep.has(row.id)).map(row => row.id);
         if (removals.length) {

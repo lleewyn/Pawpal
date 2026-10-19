@@ -569,7 +569,7 @@ function finishBookingLoading() {
     }));
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initBookingModule() {
     try {
     console.log('=== BOOKING MODULE INITIALIZING ===');
 
@@ -731,7 +731,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     } finally {
         finishBookingLoading();
     }
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBookingModule);
+} else {
+    initBookingModule();
+}
 
 function resolveCurrentUserName(user) {
     if (!user) return '';
@@ -2737,7 +2743,7 @@ async function loadServicesDirectly() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initAddonQtyControls() {
     document.querySelectorAll('.addon-qty-control button').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
@@ -2748,4 +2754,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-});
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAddonQtyControls);
+} else {
+    initAddonQtyControls();
+}
