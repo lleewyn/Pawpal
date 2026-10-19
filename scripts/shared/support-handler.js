@@ -129,6 +129,24 @@
         localStorage.setItem(LOCAL_TICKETS_KEY, JSON.stringify(tickets));
     }
 
+    async function authenticatedCustomerRequest(body) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db?.auth?.getSession) throw new Error('Không tìm thấy phiên đăng nhập.');
+        const { data, error } = await db.auth.getSession();
+        if (error || !data?.session?.access_token) throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        const response = await fetch('/api/customer/auth/me', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${data.session.access_token}`
+            },
+            body: JSON.stringify(body)
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.success) throw new Error(result.message || 'Không thể gửi phản hồi. Vui lòng thử lại.');
+        return result;
+    }
+
     async function loadTickets() {
         let localList = getLocalTickets();
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -310,6 +328,12 @@
         const ticket = localList.find(t => t.id === ticketId || t.rawId === ticketId);
         const targetDbId = ticket?.rawId || ticketId;
 
+        const result = await authenticatedCustomerRequest({
+            action: 'support-reply',
+            ticketId: targetDbId,
+            content: text
+        });
+
         if (ticket) {
             if (!ticket.messages) ticket.messages = [];
             ticket.messages.push({
@@ -352,25 +376,9 @@
             }
         }
 
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (db) {
-            try {
-                const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetDbId);
-                if (isUuid) {
-                    await db.from('support_ticket_message').insert([{
-                        ticket_id: targetDbId,
-                        sender_type: 'user',
-                        content: text
-                    }]);
-                    await db.from('support_ticket').update({ status: 'processing', updated_at: now.toISOString() }).eq('id', targetDbId);
-                }
-            } catch (e) {
-                console.warn('[Support] Gửi phản hồi Supabase lỗi:', e);
-            }
-        }
-
         await loadTickets();
         document.dispatchEvent(new CustomEvent('tickets_updated'));
+        return result.message;
     }
 
     async function sbCloseAndRateTicket(ticketId, rating, comment = '') {

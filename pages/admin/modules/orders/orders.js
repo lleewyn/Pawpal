@@ -547,6 +547,7 @@
                 client.from('product_category').select('id, category_name, description').order('category_name'),
                 client.from('product').select(`
                     id, product_name, unit,
+                    brand_name, target_pet, description, min_price, slug,
                     status, specs, badge, origin, ingredients, benefits, usage_instructions,
                     rating, review_count, image_urls,
                     category_id,
@@ -679,8 +680,9 @@
                     sku: effectiveSku,
                     name: p.product_name || 'Sản phẩm PawPal',
                     category: catObj.category_name || 'Chưa phân loại',
-                    brand: detectedBrand,
-                    petType: 'Chó và Mèo',
+                    brand: p.brand_name || detectedBrand,
+                    petType: p.target_pet || 'Chó và Mèo',
+                    description: p.description || p.specs || '',
                     origin: p.origin || 'Việt Nam',
                     unit: p.unit || 'Túi',
                     spec: p.specs || 'Tiêu chuẩn',
@@ -791,7 +793,7 @@
 
             const [orderRes, rmaRes] = await Promise.all([
                 client.from('sales_order').select(`
-                    id, order_code, order_status, payment_status, total_amount, note, created_at,
+                    id, order_code, order_status, payment_status, total_amount, note, created_at, tracking_code, shipping_provider_id, shipped_at,
                     customer (
                         id, phone_main,
                         customer_profile (full_name)
@@ -803,7 +805,7 @@
                         id, quantity, unit_price, discount_amount, subtotal,
                         product (id, product_name, image_urls, specs, product_variant (sku_variant, sale_price))
                     ),
-                    payment (payment_method_id, amount, transaction_status)
+                    payment (payment_method_id, payment_method_config_id, amount, transaction_status)
                 `).order('created_at', { ascending: false }),
                 client.from('return_request').select('id, sales_order_id, reason, return_type, description, request_status, created_at, return_request_detail (*, product (id, product_name, product_variant (sku_variant, sale_price)))').order('created_at', { ascending: false })
             ]);
@@ -927,8 +929,8 @@
 
                 const carrierMatch = o.note ? o.note.match(/Hãng:\s*([^\n;]+)/i)?.[1] : null;
                 const trackingMatch = o.note ? o.note.match(/Vận đơn:\s*([^\n;]+)/i)?.[1] : null;
-                const resolvedCarrier = o.carrier || carrierMatch || (rawStatus === 'shipping' || rawStatus === 'delivered' ? 'Bưu cục đối tác' : 'Chưa phân công');
-                const resolvedTracking = o.tracking_number || trackingMatch || '--';
+                const resolvedCarrier = o.shipping_provider_id || o.carrier || carrierMatch || (rawStatus === 'shipping' || rawStatus === 'delivered' ? 'Bưu cục đối tác' : 'Chưa phân công');
+                const resolvedTracking = o.tracking_code || o.tracking_number || trackingMatch || '--';
 
                 const timeline = [
                     { title: 'Tạo đơn hàng thành công', time: formatTime(o.created_at) + ' - ' + formatDate(o.created_at), desc: 'Đơn hàng được ghi nhận vào hệ thống PawPal', done: true }

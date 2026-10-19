@@ -263,6 +263,19 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
                     ? await service.save(user.id, req.body.profile || {}) : await service.snapshot(user.id);
                 return res.json({ success: true, profile });
             }
+            if (['loyalty-wallet', 'loyalty-redeem'].includes(req.body?.action)) {
+                const service = require('./customer_loyalty').createCustomerLoyaltyService(admin);
+                if (req.body.action === 'loyalty-wallet') {
+                    return res.json({ success: true, vouchers: await service.wallet(user.id) });
+                }
+                await limit(`redeem:${user.id}`, 10, 60000);
+                return res.json({ success: true, redemption: await service.redeem(user.id, req.body) });
+            }
+            if (req.body?.action === 'support-reply') {
+                await limit(`support-reply:${user.id}`, 30, 60000);
+                const service = require('./customer_support').createCustomerSupportService(admin);
+                return res.json({ success: true, message: await service.reply(user.id, req.body) });
+            }
             res.json({ success: true, user });
         }),
         changePassword: wrap(async (req, res) => {

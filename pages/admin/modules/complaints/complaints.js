@@ -1872,11 +1872,18 @@
                 }
                 try {
                     const titleWithRef = refId ? `${title} [${refId}]` : title;
+                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                    const validCustId = targetCustomerId && isUuid.test(targetCustomerId) ? targetCustomerId : null;
+                    const generatedTicketCode = `TKT-${String(Math.floor(100000 + Math.random() * 900000))}`;
                     const insertPayload = {
                         title: titleWithRef,
                         type: type === 'order' ? 'order' : 'service',
                         priority: priority === 'high' ? 'Cao' : (priority === 'low' ? 'Thấp' : 'Trung bình'),
                         status: 'pending',
+                        ticket_code: generatedTicketCode,
+                        customer_id: validCustId,
+                        order_id: (type === 'order' && refId && isUuid.test(refId)) ? refId : null,
+                        appointment_id: (type !== 'order' && refId && isUuid.test(refId)) ? refId : null,
                         user_id: targetCustomerId
                     };
                     const { data: insertedTickets, error: insertErr } = await client.from('support_ticket').insert([insertPayload]).select();

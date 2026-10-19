@@ -11,6 +11,17 @@ function ensureSupportReady(callback) {
     document.addEventListener('support_ready', callback, { once: true });
 }
 
+export async function copyVoucherWithFeedback(button, code, resetDelay = 2000) {
+    if (!button || !code || !navigator.clipboard?.writeText) {
+        throw new Error('Trình duyệt không hỗ trợ sao chép mã.');
+    }
+    await navigator.clipboard.writeText(code);
+    button.textContent = 'Đã chép mã!';
+    window.setTimeout(() => {
+        button.textContent = 'Sao chép mã';
+    }, resetDelay);
+}
+
 export function initSupportTickets() {
     ensureSupportReady(async () => {
         let activeTicketId = null;
@@ -19,6 +30,7 @@ export function initSupportTickets() {
         let currentFilter = 'all';
 
         const ticketsTableBody = document.getElementById('ticketsListTableBody');
+        const ticketsTableArea = document.getElementById('ticketsTableArea');
         const detailModalOverlay = document.getElementById('ticketDetailModalOverlay');
         const detailTicketTitle = document.getElementById('detailTicketTitle');
         const detailTicketIdPill = document.getElementById('detailTicketIdPill');
@@ -45,6 +57,11 @@ export function initSupportTickets() {
 
         function renderSkeletonRows() {
             if (!ticketsTableBody) return;
+            if (ticketsTableArea) {
+                ticketsTableArea.setAttribute('aria-busy', 'true');
+                ticketsTableArea.classList.add('support-table-loading');
+                ticketsTableArea.classList.remove('support-table-ready');
+            }
             ticketsTableBody.innerHTML = `
                 <tr>
                     <td><span class="pawpal-skeleton" style="width: 85px; height: 22px;"></span></td>
@@ -66,6 +83,13 @@ export function initSupportTickets() {
                             <span class="pawpal-skeleton" style="width: 140px; height: 12px;"></span>
                         </div>
                     </td>
+                    <td class="text-center"><span class="pawpal-skeleton" style="width: 80px; height: 22px;"></span></td>
+                    <td class="text-center"><span class="pawpal-skeleton" style="width: 60px; height: 22px;"></span></td>
+                    <td class="text-center"><span class="pawpal-skeleton" style="width: 55px; height: 26px;"></span></td>
+                </tr>
+                <tr>
+                    <td><span class="pawpal-skeleton" style="width: 85px; height: 22px;"></span></td>
+                    <td><div class="d-flex flex-column gap-1"><span class="pawpal-skeleton" style="width: 190px; height: 14px;"></span><span class="pawpal-skeleton" style="width: 110px; height: 12px;"></span></div></td>
                     <td class="text-center"><span class="pawpal-skeleton" style="width: 80px; height: 22px;"></span></td>
                     <td class="text-center"><span class="pawpal-skeleton" style="width: 60px; height: 22px;"></span></td>
                     <td class="text-center"><span class="pawpal-skeleton" style="width: 55px; height: 26px;"></span></td>
@@ -204,6 +228,11 @@ export function initSupportTickets() {
                     <tr><td colspan="5" class="tickets-empty-cell">
                         <p class="mb-0 text-muted">${emptyMsg}</p>
                     </td></tr>`;
+                if (ticketsTableArea) {
+                    ticketsTableArea.setAttribute('aria-busy', 'false');
+                    ticketsTableArea.classList.remove('support-table-loading');
+                    ticketsTableArea.classList.add('support-table-ready');
+                }
                 return;
             }
 
@@ -258,6 +287,13 @@ export function initSupportTickets() {
                 });
                 ticketsTableBody.appendChild(row);
             });
+            if (ticketsTableArea) {
+                ticketsTableArea.setAttribute('aria-busy', 'false');
+                ticketsTableArea.classList.remove('support-table-loading');
+                ticketsTableArea.classList.remove('support-table-ready');
+                void ticketsTableArea.offsetWidth;
+                ticketsTableArea.classList.add('support-table-ready');
+            }
         }
 
         function renderTimelineMessages(ticket) {
@@ -527,15 +563,12 @@ export function initSupportTickets() {
 
                     const btnCopy = detailTicketResolutionCard.querySelector('.btn-copy-voucher');
                     if (btnCopy) {
-                        btnCopy.addEventListener('click', (e) => {
+                        btnCopy.addEventListener('click', async (e) => {
                             const code = e.currentTarget.getAttribute('data-code');
-                            if (code && navigator.clipboard) {
-                                navigator.clipboard.writeText(code).then(() => {
-                                    btnCopy.textContent = 'Đã chép mã!';
-                                    setTimeout(() => {
-                                        btnCopy.textContent = 'Sao chép mã';
-                                    }, 2000);
-                                });
+                            try {
+                                await copyVoucherWithFeedback(btnCopy, code);
+                            } catch (error) {
+                                console.error('[Support] Không thể sao chép mã bồi hoàn:', error);
                             }
                         });
                     }
@@ -701,15 +734,20 @@ export function initSupportTickets() {
                     finalContent += ` [Khách đã đính kèm ${attachedReplyPhotos.length} ảnh bằng chứng xác minh]`;
                 }
 
-                await window.PawPalSupport.sendTicketReply(activeTicketId, finalContent);
-                textarea.value = '';
-                attachedReplyPhotos = [];
-                renderReplyPreviews();
-                btnSendReply.disabled = false;
-                btnSendReply.textContent = 'Gửi phản hồi';
-
-                showTicketDetail(activeTicketId);
-                renderTable();
+                try {
+                    await window.PawPalSupport.sendTicketReply(activeTicketId, finalContent);
+                    textarea.value = '';
+                    attachedReplyPhotos = [];
+                    renderReplyPreviews();
+                    showTicketDetail(activeTicketId);
+                    renderTable();
+                } catch (error) {
+                    console.error('[Support] Không thể gửi phản hồi:', error);
+                    window.alert(error.message || 'Không thể gửi phản hồi. Vui lòng thử lại.');
+                } finally {
+                    btnSendReply.disabled = false;
+                    btnSendReply.textContent = 'Gửi phản hồi';
+                }
             });
         }
 
@@ -842,6 +880,7 @@ export function initSupportTickets() {
             });
         }
 
+        renderSkeletonRows();
         await window.PawPalSupport.loadTickets();
         renderTable();
 

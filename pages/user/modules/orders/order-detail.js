@@ -23,12 +23,13 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
                 id, order_code, order_status, payment_status,
                 total_amount,
                 created_at, updated_at, note,
+                tracking_code, shipping_provider_id, shipped_at,
                 sales_order_detail (
                     id, quantity, unit_price, discount_amount, subtotal,
                     product ( id, product_name, image_urls, sku )
                 ),
                 customer_address ( receiver_name, receiver_phone, province, street_address ),
-                payment ( payment_method_id, transaction_status )
+                payment ( payment_method_id, payment_method_config_id, transaction_status )
             `)
             .eq('customer_id', customerId)
             .limit(1);
@@ -58,7 +59,7 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
         const paymentStatus = localPaymentStatus === 'paid' ? 'paid' : remotePaymentStatus;
         
         const dbPayment = o.payment && o.payment.length > 0 ? o.payment[0] : null;
-        const dbPaymentMethod = dbPayment?.payment_method_id?.toLowerCase() || 'cod';
+        const dbPaymentMethod = (dbPayment?.payment_method_config_id || dbPayment?.payment_method_id || '').toLowerCase() || 'cod';
         const paymentMethod = existing?.paymentMethod || dbPaymentMethod;
 
         const dbStatus = mapOrderStatus(o.order_status);
@@ -82,6 +83,9 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
             orderStatus: finalOrderStatus,
             paymentStatus,
             paymentMethod: paymentMethod,
+            carrier:     o.shipping_provider_id || existing?.carrier || '',
+            trackingCode: o.tracking_code || existing?.trackingCode || '',
+            shippedAt:   o.shipped_at || existing?.shippedAt || null,
             products,
             pricing: {
                 subtotal:    subtotal,

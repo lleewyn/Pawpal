@@ -400,6 +400,35 @@
     overflow: hidden;
 }
 
+.tickets-table-wrapper.support-table-loading .pawpal-skeleton {
+    display: inline-block;
+    max-width: 100%;
+    border-radius: 9px;
+    background: #E5E7EB !important;
+    animation: supportSkeletonPulse 1.4s ease-in-out infinite !important;
+}
+
+.tickets-table-wrapper.support-table-ready tbody {
+    animation: supportTableReveal 180ms ease-out both;
+}
+
+@keyframes supportSkeletonPulse {
+    0%, 100% { opacity: 0.52; }
+    50% { opacity: 1; }
+}
+
+@keyframes supportTableReveal {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tickets-table-wrapper.support-table-loading .pawpal-skeleton,
+    .tickets-table-wrapper.support-table-ready tbody {
+        animation: none !important;
+    }
+}
+
 .tickets-table {
     width: 100%;
     border-collapse: collapse;

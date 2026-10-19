@@ -232,15 +232,28 @@
     // 3. Trình nạp CSS động
     function loadModuleCss(cssHref) {
         const existingLink = document.getElementById('dynamic-user-module-css');
-        if (existingLink) existingLink.remove();
-
-        if (!cssHref) return;
+        document.getElementById('dynamic-user-module-css-pending')?.remove();
+        if (!cssHref) {
+            if (existingLink) existingLink.remove();
+            return Promise.resolve();
+        }
         const fullHref = (cssHref.startsWith('/') ? cssHref : `/pages/user/${cssHref}`) + '?v=' + Date.now();
         const link = document.createElement('link');
-        link.id = 'dynamic-user-module-css';
+        link.id = 'dynamic-user-module-css-pending';
         link.rel = 'stylesheet';
         link.href = fullHref;
-        document.head.appendChild(link);
+        return new Promise((resolve, reject) => {
+            link.addEventListener('load', () => {
+                if (existingLink) existingLink.remove();
+                link.id = 'dynamic-user-module-css';
+                resolve();
+            }, { once: true });
+            link.addEventListener('error', () => {
+                link.remove();
+                reject(new Error(`Không thể tải giao diện module: ${cssHref}`));
+            }, { once: true });
+            document.head.appendChild(link);
+        });
     }
 
     // 4. Trình nạp Script động
@@ -407,9 +420,10 @@
                 const res = await fetch(fullModuleUrl);
                 if (res.ok) {
                     const html = await res.text();
+                    if (config.moduleCss) await loadModuleCss(config.moduleCss);
+                    if (!moduleRenderer.isCurrent(ticket)) return;
                     await moduleRenderer.commit(ticket, async () => {
                         contentContainer.innerHTML = `<div class="user-module-view">${html}</div>`;
-                        if (config.moduleCss) loadModuleCss(config.moduleCss);
                         if (config.moduleScript) await loadModuleScript(config.moduleScript, true);
                         if (moduleRenderer.isCurrent(ticket)) {
                             contentContainer.setAttribute('aria-busy', 'false');

@@ -861,6 +861,9 @@
                     try {
                         const { error: pErr } = await client.from('product').update({
                             product_name: name,
+                            brand_name: brand,
+                            target_pet: petType,
+                            description: description || spec,
                             unit: unit,
                             image_urls: images.split(',').map(s => s.trim()).filter(Boolean),
                             status: status === 'Còn hàng' || status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
@@ -962,6 +965,9 @@
 
                         const { data: newP, error: pErr } = await client.from('product').insert({
                             product_name: name,
+                            brand_name: brand,
+                            target_pet: petType,
+                            description: description || spec,
                             category_id: categoryId,
                             unit: unit,
                             image_urls: images.split(',').map(s => s.trim()).filter(Boolean),

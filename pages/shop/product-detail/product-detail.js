@@ -1028,8 +1028,8 @@ function renderProductDetails(product) {
             'dog': 'Chó',
             'cat': 'Mèo'
         };
-        const raw = (product.petType || product.pet_type || '').toLowerCase();
-        productPetType.textContent = petTypeMap[raw] || 'Chó / Mèo';
+        const raw = (product.target_pet || product.targetPet || product.petType || product.pet_type || '').toLowerCase();
+        productPetType.textContent = product.target_pet || product.targetPet || petTypeMap[raw] || 'Chó và Mèo';
     }
 
     const productDescShort = document.getElementById('productDescShort');
@@ -1045,7 +1045,7 @@ function renderProductDetails(product) {
     if (productCategoryMeta) productCategoryMeta.textContent = product.categoryName || 'Sản phẩm';
 
     const productBrandMeta = document.getElementById('productBrandMeta');
-    if (productBrandMeta) productBrandMeta.textContent = product.brand;
+    if (productBrandMeta) productBrandMeta.textContent = product.brand_name || product.brand || 'Pawpal';
     
     const dynamicDetailsContainer = document.getElementById('dynamicProductDetails');
     if (dynamicDetailsContainer) {

@@ -1412,9 +1412,26 @@
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (client) {
                 try {
+                    const providerMap = {
+                        'j và t express': 'cfd67b15-d045-42f6-b2b5-b182addb9eac',
+                        'j&t express': 'cfd67b15-d045-42f6-b2b5-b182addb9eac',
+                        'jnt': 'cfd67b15-d045-42f6-b2b5-b182addb9eac',
+                        'giao hàng tiết kiệm ghtk': '59849fde-3105-4751-b1ae-e1d617068c79',
+                        'giao hàng tiết kiệm': '59849fde-3105-4751-b1ae-e1d617068c79',
+                        'ghtk': '59849fde-3105-4751-b1ae-e1d617068c79',
+                        'viettel post': 'a5a7d7b8-9d07-4f05-849f-592604a9a12c',
+                        'vtp': 'a5a7d7b8-9d07-4f05-849f-592604a9a12c',
+                        'giao hàng nhanh': 'd6818d11-232a-4f72-b11b-3d5728ac3b2d',
+                        'ghn': 'd6818d11-232a-4f72-b11b-3d5728ac3b2d',
+                        'ninja van': '09e5fe86-59dd-426c-9321-0a0b7e5af5e9'
+                    };
+                    const resolvedProviderUuid = providerMap[String(carrier || '').toLowerCase().trim()] || null;
                     const shipNote = `Hãng: ${carrier}; Vận đơn: ${tracking}`;
                     const payload = {
                         order_status: 'SHIPPING',
+                        tracking_code: tracking,
+                        shipping_provider_id: resolvedProviderUuid,
+                        shipped_at: new Date().toISOString(),
                         note: order.note ? `${order.note} | ${shipNote}` : shipNote
                     };
                     if (order.rawId) {
@@ -1574,9 +1591,26 @@
 
                 if (client) {
                     try {
+                        const providerMap = {
+                            'j và t express': 'cfd67b15-d045-42f6-b2b5-b182addb9eac',
+                            'j&t express': 'cfd67b15-d045-42f6-b2b5-b182addb9eac',
+                            'jnt': 'cfd67b15-d045-42f6-b2b5-b182addb9eac',
+                            'giao hàng tiết kiệm ghtk': '59849fde-3105-4751-b1ae-e1d617068c79',
+                            'giao hàng tiết kiệm': '59849fde-3105-4751-b1ae-e1d617068c79',
+                            'ghtk': '59849fde-3105-4751-b1ae-e1d617068c79',
+                            'viettel post': 'a5a7d7b8-9d07-4f05-849f-592604a9a12c',
+                            'vtp': 'a5a7d7b8-9d07-4f05-849f-592604a9a12c',
+                            'giao hàng nhanh': 'd6818d11-232a-4f72-b11b-3d5728ac3b2d',
+                            'ghn': 'd6818d11-232a-4f72-b11b-3d5728ac3b2d',
+                            'ninja van': '09e5fe86-59dd-426c-9321-0a0b7e5af5e9'
+                        };
+                        const resolvedProviderUuid = providerMap[String(carrier || '').toLowerCase().trim()] || null;
                         const shipNote = `Hãng: ${carrier}; Vận đơn: ${tracking}`;
                         const payload = {
                             order_status: 'SHIPPING',
+                            tracking_code: tracking,
+                            shipping_provider_id: resolvedProviderUuid,
+                            shipped_at: new Date().toISOString(),
                             note: order.note ? `${order.note} | ${shipNote}` : shipNote
                         };
                         if (order.rawId) {

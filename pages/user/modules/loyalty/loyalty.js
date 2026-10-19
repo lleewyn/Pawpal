@@ -129,6 +129,22 @@ async function copyVoucherCode(code) {
     }
 }
 
+async function loyaltyApi(action, payload = {}) {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db?.auth?.getSession) return null;
+    const { data } = await db.auth.getSession();
+    const token = data?.session?.access_token;
+    if (!token) return null;
+    const response = await fetch('/api/customer/auth/me', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action, ...payload })
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.success) throw new Error(result.message || 'Không thể xử lý Paw Points.');
+    return result;
+}
+
 function escapeHtml(text) {
     if (text === null || text === undefined) return '';
     const cleaned = String(text).replace(/\s*&\s*/g, ' và ');
@@ -570,7 +586,8 @@ export async function renderMyVouchers(user) {
     const countLabel = document.getElementById('myVouchersCountLabel');
     if (!container) return;
 
-    let myVouchers = getStoredMyVouchers();
+    const walletResult = await loyaltyApi('loyalty-wallet');
+    const myVouchers = walletResult ? (walletResult.vouchers || []) : getStoredMyVouchers();
 
     if (countLabel) {
         countLabel.textContent = `${myVouchers.length} voucher khả dụng`;
@@ -978,101 +995,38 @@ function triggerRedeem(voucherInfo, user) {
 }
 
 async function doRedeem(voucherInfo, user) {
-    if (user.points >= voucherInfo.pointsCost) {
-        user.points -= voucherInfo.pointsCost;
+    if (user.points < voucherInfo.pointsCost) {
+        showToast('error', `Số điểm hiện tại chưa đủ để đổi ưu đãi này.`);
+        return;
+    }
+
+    const confirmButton = document.getElementById('btnConfirmRedeemAction');
+    if (confirmButton) {
+        confirmButton.disabled = true;
+        confirmButton.textContent = 'Đang đổi...';
+    }
+    try {
+        const result = await loyaltyApi('loyalty-redeem', {
+            voucherId: voucherInfo._raw?.id || voucherInfo.id,
+            voucherCode: voucherInfo.code
+        });
+        if (!result?.redemption) throw new Error('Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
+        user.points = Number(result.redemption.points);
         setCurrentUser(user);
 
-        const newVoucherCode = voucherInfo.code || ('PAW-' + Math.random().toString(36).substring(2, 8).toUpperCase());
-        const myVouchers = getStoredMyVouchers();
-        const newVoucherItem = {
-            id: 'MY-VOUCHER-' + Date.now(),
-            code: newVoucherCode,
-            name: voucherInfo.name,
-            discountDisplay: voucherInfo.discountDisplay,
-            pointsCost: voucherInfo.pointsCost,
-            createdAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            status: 'AVAILABLE'
-        };
-        myVouchers.unshift(newVoucherItem);
-        saveStoredMyVouchers(myVouchers);
-
-        // 1. Cập nhật trực tiếp lên Supabase Live DB (customer_membership & paw_point_transaction)
-        try {
-            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (db && user.id) {
-                // Cập nhật điểm trong customer_membership
-                await db.from('customer_membership')
-                    .update({ 
-                        total_paw_points: user.points,
-                        current_points: user.points,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('customer_id', user.id);
-
-                // Ghi lịch sử giao dịch điểm paw_point_transaction
-                await db.from('paw_point_transaction').insert({
-                    customer_id: user.id,
-                    points: -voucherInfo.pointsCost,
-                    transaction_type: 'REDEEM',
-                    description: `Đổi ưu đãi: ${voucherInfo.name}`,
-                    created_at: new Date().toISOString()
-                });
-            }
-        } catch (dbErr) {
-            console.warn('[Loyalty] Lỗi cập nhật điểm lên Supabase:', dbErr);
-        }
-
-        // 2. Đồng bộ trừ điểm sang pawpal_admin_customers_data và ghi lịch sử Pawpoint session
-        try {
-            const cleanPhone = (user.phone || '').replace(/[^0-9]/g, '');
-            const syncAdminData = (storage) => {
-                const raw = storage.getItem('pawpal_admin_customers_data');
-                if (raw) {
-                    const data = JSON.parse(raw);
-                    const matched = Object.values(data).find(c => c.phone && c.phone.replace(/[^0-9]/g, '') === cleanPhone);
-                    if (matched) {
-                        matched.points = user.points;
-                        storage.setItem('pawpal_admin_customers_data', JSON.stringify(data));
-                    }
-                }
-            };
-            syncAdminData(sessionStorage);
-            syncAdminData(localStorage);
-
-            const rawHist = localStorage.getItem('pawpal_admin_pawpoint_history') || sessionStorage.getItem('pawpal_admin_pawpoint_history');
-            let hist = rawHist ? JSON.parse(rawHist) : [];
-            const now = new Date();
-            const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-            hist.unshift({
-                id: 'PWH-' + String(hist.length + 1).padStart(3, '0'),
-                time: timeStr,
-                custId: user.id || 'CUST-001',
-                custName: user.name || 'Khách hàng',
-                phone: user.phone || '',
-                type: 'SUB',
-                points: voucherInfo.pointsCost,
-                balance: user.points,
-                reason: `Đổi ưu đãi: ${voucherInfo.name}`
-            });
-            localStorage.setItem('pawpal_admin_pawpoint_history', JSON.stringify(hist));
-            sessionStorage.setItem('pawpal_admin_pawpoint_history', JSON.stringify(hist));
-        } catch (e) {
-            console.warn('Lỗi đồng bộ điểm voucher sang admin:', e);
-        }
-
-        // Update real-time UI
         const pointsDisplay = document.getElementById('current-points-display');
-        if (pointsDisplay) {
-            pointsDisplay.innerHTML = `${user.points} <span class="points-unit">Paw Points</span>`;
-        }
+        if (pointsDisplay) pointsDisplay.innerHTML = `${user.points} <span class="points-unit">Paw Points</span>`;
 
-        renderMyVouchers(user);
+        await renderMyVouchers(user);
         renderLoyaltyPage(user, window.PawPalVoucherRedeemList || []);
-
-        showToast('success', `Đổi điểm thành công! Mã ưu đãi của bạn: ${newVoucherCode}`);
-    } else {
-        showToast('error', `Số điểm hiện tại chưa đủ để đổi ưu đãi này.`);
+        showToast('success', `Đổi điểm thành công! Mã ưu đãi của bạn: ${result.redemption.voucher.code}`);
+    } catch (error) {
+        showToast('error', error.message || 'Không thể đổi ưu đãi. Vui lòng thử lại.');
+    } finally {
+        if (confirmButton) {
+            confirmButton.disabled = false;
+            confirmButton.textContent = 'Xác nhận đổi';
+        }
     }
 }
 

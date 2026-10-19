@@ -1,0 +1,18 @@
+{
+  "tablesInMdCount": 81,
+  "tablesInSbCount": 81,
+  "missingTablesInSb": [],
+  "extraTablesInSb": [],
+  "tableDifferences": [
+    {
+      "stt": "12",
+      "table": "service",
+      "missingInSb": [],
+      "extraInSb": [
+        "pet_types"
+      ],
+      "mdColsCount": 20,
+      "sbColsCount": 21
+    }
+  ]
+}

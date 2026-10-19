@@ -48,7 +48,7 @@ async function testFullSalesLifecycle() {
 
         const { data: products, error: pErr } = await adminDb
             .from('product')
-            .select('id, product_name, sku, sale_price, inventory(id, quantity_in_stock)')
+            .select('id, product_name, min_price, product_variant(id, sku_variant, sale_price), inventory(id, quantity_in_stock)')
             .limit(1);
         if (pErr) throw pErr;
         if (!products || products.length === 0) {
@@ -56,6 +56,7 @@ async function testFullSalesLifecycle() {
         }
         const sampleProduct = products[0];
         testProductId = sampleProduct.id;
+        const sampleVariant = Array.isArray(sampleProduct.product_variant) ? sampleProduct.product_variant[0] : null;
         const invRow = Array.isArray(sampleProduct.inventory) ? sampleProduct.inventory[0] : sampleProduct.inventory;
         
         // QA-P0-01: Không dùng `|| 50` làm sai lệch tồn kho thật
@@ -69,7 +70,9 @@ async function testFullSalesLifecycle() {
         if (initialStock < 2) {
             throw new Error(`Tồn kho sản phẩm không đủ để bán thử nghiệm (cần tối thiểu 2, hiện có ${initialStock})`);
         }
-        console.log('   -> Sản phẩm:', sampleProduct.product_name, '| SKU:', sampleProduct.sku, '| Giá:', sampleProduct.sale_price, '| Tồn kho ban đầu:', initialStock);
+        const effectiveSku = sampleVariant?.sku_variant || 'SKU-TEST';
+        const effectivePrice = sampleVariant?.sale_price || sampleProduct.sale_price || 100000;
+        console.log('   -> Sản phẩm:', sampleProduct.product_name, '| SKU:', effectiveSku, '| Giá:', effectivePrice, '| Tồn kho ban đầu:', initialStock);
 
         // Bước 2: Tạo đơn hàng mới (sales_order)
         console.log('\n2. Tạo đơn hàng mới tại quầy (sales_order)...');
@@ -80,7 +83,7 @@ async function testFullSalesLifecycle() {
             shipping_address_id: shippingAddressId || null,
             order_status: 'PENDING',
             payment_status: 'UNPAID',
-            total_amount: (sampleProduct.sale_price || 100000) * 2,
+            total_amount: effectivePrice * 2,
             note: '[QA Test Script] Đơn kiểm thử tự động vòng đời bán hàng'
         };
 
@@ -98,9 +101,10 @@ async function testFullSalesLifecycle() {
         const detailPayload = {
             order_id: createdOrderId,
             product_id: testProductId,
+            product_variant_id: sampleVariant?.id || null,
             quantity: 2,
-            unit_price: sampleProduct.sale_price || 100000,
-            subtotal: (sampleProduct.sale_price || 100000) * 2
+            unit_price: effectivePrice,
+            subtotal: effectivePrice * 2
         };
         const { data: newDetail, error: detErr } = await adminDb
             .from('sales_order_detail')
@@ -132,12 +136,18 @@ async function testFullSalesLifecycle() {
 
         // Bước 5: Chuyển sang SHIPPING rồi DELIVERED
         console.log('\n5. Cập nhật tiến độ giao hàng: SHIPPING -> DELIVERED...');
+        const testTracking = 'TEST-GHN-' + Math.floor(100000 + Math.random() * 900000);
         const { error: shipErr } = await adminDb
             .from('sales_order')
-            .update({ order_status: 'SHIPPING' })
+            .update({
+                order_status: 'SHIPPING',
+                tracking_code: testTracking,
+                shipping_provider_id: 'd6818d11-232a-4f72-b11b-3d5728ac3b2d', // Giao Hàng Nhanh
+                shipped_at: new Date().toISOString()
+            })
             .eq('id', createdOrderId);
         if (shipErr) throw shipErr;
-        console.log('   -> Trạng thái đơn: SHIPPING');
+        console.log('   -> Trạng thái đơn: SHIPPING | Vận đơn:', testTracking);
 
         const { error: delivErr } = await adminDb
             .from('sales_order')
