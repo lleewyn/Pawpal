@@ -103,14 +103,48 @@ Quá trình đối soát tự động giữa tài liệu thiết kế gốc [`CD
 ---
 
 ### 3.2. Nguyên tắc "Lưu Kép & Tương Thích Ngược" (Dual-Field Strategy)
-Để đảm bảo **không bao giờ gãy code cũ**:
-1. **Tuyệt đối KHÔNG xóa cột VÀNG (`product_id`, `payment_method_id`):** 
-   - Giữ nguyên cột vàng ở vị trí Foreign Key thứ hai.
+Để đảm bảo **không bao giờ gãy code cũ trong quá trình chuyển tiếp**:
+1. **Chưa xóa cột VÀNG (`product_id`, `payment_method_id`) ngay từ đầu:** 
+   - Giữ nguyên cột vàng ở vị trí Foreign Key thứ hai trong giai đoạn đầu.
    - Code cũ chưa kịp sửa vẫn chạy tốt với cột vàng.
 2. **Ghi dữ liệu mới (Write Path):** Code mới luôn ghi **CẢ HAI** (Vàng + Đỏ).
 3. **Đọc dữ liệu (Read Path):** 
    - `const variant = row.product_variant || fallbackParentProduct(row.product_id);`
    - Ưu tiên hiển thị theo biến thể con (Đỏ), nếu trống thì fallback về thông tin sản phẩm cha (Vàng).
+
+---
+
+### 3.3. Quy trình chuyển đổi 3 bước chuẩn kỹ thuật để xóa bỏ cột VÀNG (Chuẩn hóa 3NF tuyệt đối)
+
+Để giải quyết triệt để sự trùng lặp dữ liệu trên ERD (loại bỏ hoàn toàn phụ thuộc bắc cầu), quy trình chuyển đổi được tiến hành theo 3 bước chuẩn kỹ thuật phần mềm:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│ BƯỚC 1: CSDL (Migration & Backfill - Thực hiện ngay bây giờ)           │
+│ 1. Thêm cột ĐỎ (product_variant_id, payment_method_config_id).         │
+│ 2. Tự động copy/map toàn bộ dữ liệu từ Vàng sang Đỏ (Backfill).        │
+│ 3. Vẫn giữ cột Vàng để code cũ không bị gãy (Zero Breaking Changes).  │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ BƯỚC 2: CODEBASE (Refactoring & Verification - Trợ lý thực hiện)      │
+│ 1. Sửa toàn bộ code JS ở Admin và Website để gọi trực tiếp cột ĐỎ.     │
+│ 2. Kiểm thử E2E đảm bảo 100% chức năng chạy mượt mà theo cột ĐỎ.       │
+│ 3. Xác nhận không còn bất kỳ dòng code nào phụ thuộc vào cột Vàng.     │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ BƯỚC 3: CSDL (Dọn dẹp triệt để - Chuẩn hóa 3NF không trùng lặp)        │
+│ Chạy script SQL DROP COLUMN để xóa dứt điểm các cột Vàng:             │
+│   • ALTER TABLE sales_order_detail DROP COLUMN product_id;             │
+│   • ALTER TABLE cart_item DROP COLUMN product_id;                      │
+│   • ALTER TABLE purchase_order_detail DROP COLUMN product_id;          │
+│   • ALTER TABLE payment DROP COLUMN payment_method_id;                 │
+│ Kết quả: CSDL sạch 100%, ERD chuẩn 3NF, không mất 1 byte dữ liệu!      │
+└────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -237,6 +271,10 @@ graph TD
   - Chạy `node scripts/test/test_sales_lifecycle.js` $\rightarrow$ Kết quả: PASS.
   - Chạy `node scripts/test/test_complaints_lifecycle.js` $\rightarrow$ Kết quả: PASS.
   - Chạy `node scripts/test/compare_schema_cdsl.js` $\rightarrow$ Kết quả: 0 bảng thiếu, 0 cột lệch.
+- [ ] **6.5. Dọn dẹp triệt để (Xóa bỏ cột VÀNG - Chuẩn hóa 3NF hoàn hảo):**
+  - Sau khi kiểm thử xác nhận 100% code đã gọi ổn định theo `product_variant_id` và `payment_method_config_id`.
+  - Thực thi lệnh SQL DROP COLUMN để xóa các cột Vàng trong bảng con (`sales_order_detail.product_id`, `cart_item.product_id`, `purchase_order_detail.product_id`, `payment.payment_method_id`).
+  - CSDL và ERD chính thức đạt chuẩn 3NF thuần khiết, triệt tiêu 100% sự trùng lặp dữ liệu!
 
 ---
 
