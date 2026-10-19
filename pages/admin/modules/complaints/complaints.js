@@ -320,9 +320,14 @@
                     Promise.resolve(client.from('appointment').select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_status, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false }).limit(400)).catch(err => ({ data: [], error: err })),
                     Promise.resolve(client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(400)).catch(err => ({ data: [], error: err })),
                     Promise.resolve(client.from('staff').select('id, full_name, role, account_status')).catch(err => ({ data: [], error: err })),
-                    Promise.resolve(client.from('product').select('id, product_name, sku, sale_price, status')).catch(err => ({ data: [], error: err }))
+                    Promise.resolve(client.from('product').select('id, product_name, status, product_variant(sku_variant, sale_price)')).catch(err => ({ data: [], error: err }))
                 ]);
                 for (const result of [ticketsRes, staffRes]) { if (result.error) throw result.error; }
+                const mappedProducts = (productsRes.data || []).map(p => ({
+                    ...p,
+                    sku: p.product_variant?.[0]?.sku_variant || 'SKU-000',
+                    sale_price: p.product_variant?.[0]?.sale_price || 0
+                }));
                 return {
                     tickets: ticketsRes.data || [],
                     customers: customersRes.data || [],
@@ -331,7 +336,7 @@
                     appointments: apptsRes.data || [],
                     orders: ordersRes.data || [],
                     staffList: staffRes.data || [],
-                    products: productsRes.data || []
+                    products: mappedProducts
                 };
             };
 

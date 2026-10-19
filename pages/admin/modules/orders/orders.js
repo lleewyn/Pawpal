@@ -546,7 +546,7 @@
             const [catRes, prodRes] = await Promise.all([
                 client.from('product_category').select('id, category_name, description').order('category_name'),
                 client.from('product').select(`
-                    id, sku, product_name, unit, cost_price, sale_price,
+                    id, product_name, unit,
                     status, specs, badge, origin, ingredients, benefits, usage_instructions,
                     rating, review_count, image_urls,
                     category_id,
@@ -591,9 +591,9 @@
                 const variants = Array.isArray(p.product_variant) ? p.product_variant : [];
                 const primaryVar = variants.length > 0 ? variants[0] : null;
 
-                const effectiveSku = (primaryVar && primaryVar.sku_variant) ? primaryVar.sku_variant : (p.sku || 'SKU-000');
-                const effectiveCostPrice = (primaryVar && primaryVar.cost_price !== undefined) ? Number(primaryVar.cost_price) : (Number(p.cost_price) || 0);
-                const effectiveSalePrice = (primaryVar && primaryVar.sale_price !== undefined) ? Number(primaryVar.sale_price) : (Number(p.sale_price) || 0);
+                const effectiveSku = (primaryVar && primaryVar.sku_variant) ? primaryVar.sku_variant : 'SKU-000';
+                const effectiveCostPrice = (primaryVar && primaryVar.cost_price !== undefined) ? Number(primaryVar.cost_price) : 0;
+                const effectiveSalePrice = (primaryVar && primaryVar.sale_price !== undefined) ? Number(primaryVar.sale_price) : 0;
 
                 // Xác định tên thuộc tính 1 và thuộc tính 2 cho sản phẩm nếu có nhiều biến thể
                 const hasFlavor = variants.some(v => v.variant_flavor?.flavor_name);
@@ -770,11 +770,11 @@
                     ),
                     sales_order_detail (
                         id, quantity, unit_price, discount_amount, subtotal,
-                        product (id, sku, product_name, image_urls, specs)
+                        product (id, product_name, image_urls, specs, product_variant (sku_variant, sale_price))
                     ),
                     payment (payment_method_id, amount, transaction_status)
                 `).order('created_at', { ascending: false }),
-                client.from('return_request').select('id, sales_order_id, reason, return_type, description, request_status, created_at, return_request_detail (*, product (sku, product_name, sale_price))').order('created_at', { ascending: false })
+                client.from('return_request').select('id, sales_order_id, reason, return_type, description, request_status, created_at, return_request_detail (*, product (id, product_name, product_variant (sku_variant, sale_price)))').order('created_at', { ascending: false })
             ]);
 
             if (orderRes.error) throw orderRes.error;
@@ -799,7 +799,7 @@
             (res.rma || []).forEach(r => {
                 const isResolved = r.request_status === 'COMPLETED' || r.request_status === 'RESOLVED';
                 const items = (r.return_request_detail || []).map(d => ({
-                    sku: d.product?.sku || 'SKU',
+                    sku: d.product?.product_variant?.[0]?.sku_variant || 'SKU',
                     name: d.product?.product_name || 'Sản phẩm',
                     quantity: d.quantity || 1,
                     price: d.unit_price || 0
@@ -868,7 +868,7 @@
                     calculatedSubtotal += sub;
 
                     return {
-                        sku: pr.sku || 'SKU-000',
+                        sku: pr.product_variant?.[0]?.sku_variant || 'SKU-000',
                         name: pr.product_name || 'Sản phẩm PawPal',
                         spec: pr.specs || 'Tiêu chuẩn',
                         price: uPrice,

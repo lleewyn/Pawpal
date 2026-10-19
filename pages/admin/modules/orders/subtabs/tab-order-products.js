@@ -798,11 +798,8 @@
                 if (client && existingProd.id) {
                     try {
                         const { error: pErr } = await client.from('product').update({
-                            sku: sku,
                             product_name: name,
                             unit: unit,
-                            cost_price: costPrice,
-                            sale_price: price,
                             image_urls: images.split(',').map(s => s.trim()).filter(Boolean),
                             status: status === 'Còn hàng' || status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
                             origin: origin,
@@ -887,12 +884,9 @@
                         const categoryId = cats && cats[0] ? cats[0].id : null;
 
                         const { data: newP, error: pErr } = await client.from('product').insert({
-                            sku: sku,
                             product_name: name,
                             category_id: categoryId,
                             unit: unit,
-                            cost_price: costPrice,
-                            sale_price: price,
                             image_urls: images.split(',').map(s => s.trim()).filter(Boolean),
                             status: status === 'Còn hàng' || status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
                             origin: origin,
@@ -1034,11 +1028,13 @@
                     }).eq('product_id', prod.id);
                     if (invErr) throw invErr;
 
-                    const updateProdPayload = {};
-                    if (newPrice && parseInt(newPrice, 10) > 0) updateProdPayload.sale_price = parseInt(newPrice, 10);
-                    if (newStatus) updateProdPayload.status = (newStatus === 'Còn hàng' || newStatus === 'Đang bán') ? 'ACTIVE' : 'INACTIVE';
-                    if (Object.keys(updateProdPayload).length > 0) {
-                        const { error: prodErr } = await client.from('product').update(updateProdPayload).eq('id', prod.id);
+                    if (newPrice && parseInt(newPrice, 10) > 0) {
+                        await client.from('product_variant').update({ sale_price: parseInt(newPrice, 10) }).eq('product_id', prod.id);
+                    }
+                    if (newStatus) {
+                        const { error: prodErr } = await client.from('product').update({
+                            status: (newStatus === 'Còn hàng' || newStatus === 'Đang bán') ? 'ACTIVE' : 'INACTIVE'
+                        }).eq('id', prod.id);
                         if (prodErr) throw prodErr;
                     }
                 }

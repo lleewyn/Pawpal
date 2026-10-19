@@ -116,7 +116,7 @@
                         client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(2000),
                         client.from('appointment').select('id, appointment_code, customer_id, pet_id, staff_id, service_id, appointment_date, appointment_time, appointment_status, payment_status, total_price, note').order('appointment_date', { ascending: false }).limit(2000),
                         client.from('support_ticket').select('id, user_id, title, status, priority, created_at').order('created_at', { ascending: false }).limit(1000),
-                        client.from('product').select('id, product_name, sku, status, inventory(quantity_in_stock, minimum_stock)'),
+                        client.from('product').select('id, product_name, status, inventory(quantity_in_stock, minimum_stock), product_variant(sku_variant)'),
                         client.from('customer').select('id', { count: 'exact', head: true }),
                         client.from('pet_profile').select('id', { count: 'exact', head: true }),
                         client.from('customer_profile').select('customer_id, full_name'),
@@ -157,16 +157,22 @@
                 // Fallback nếu relation inventory không liên kết trực tiếp
                 if (liveProducts.length === 0) {
                     const [productFallback, inventoryFallback] = await Promise.all([
-                        client.from('product').select('id, product_name, sku, status'),
+                        client.from('product').select('id, product_name, status, product_variant(sku_variant)'),
                         client.from('inventory').select('product_id, quantity_in_stock, minimum_stock')
                     ]);
                     if (!productFallback.error && !inventoryFallback.error) {
                         const inventoryByProduct = new Map((inventoryFallback.data || []).map(inv => [inv.product_id, inv]));
                         liveProducts = (productFallback.data || []).map(product => ({
                             ...product,
+                            sku: product.product_variant?.[0]?.sku_variant || 'SKU-000',
                             inventory: inventoryByProduct.get(product.id) || null
                         }));
                     }
+                } else {
+                    liveProducts = liveProducts.map(p => ({
+                        ...p,
+                        sku: p.sku || p.product_variant?.[0]?.sku_variant || 'SKU-000'
+                    }));
                 }
 
                 liveStaffList = data.staff || [];

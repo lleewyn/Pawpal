@@ -687,12 +687,16 @@
             const [appSettingsRes, servicesRes, productsRes] = await Promise.all([
                 client.from('pawpal_setting').select('*'),
                 client.from('service').select('id, service_code, service_name, estimated_duration').order('service_name'),
-                client.from('product').select('id, sku, product_name, sale_price').order('product_name').limit(50)
+                client.from('product').select('id, product_name, product_variant(sku_variant, sale_price)').order('product_name').limit(50)
             ]);
             return {
                 appSettings: appSettingsRes.data || [],
                 services: servicesRes.data || [],
-                products: productsRes.data || []
+                products: (productsRes.data || []).map(p => ({
+                    ...p,
+                    sku: p.product_variant?.[0]?.sku_variant || 'SKU-000',
+                    sale_price: p.product_variant?.[0]?.sale_price || 0
+                }))
             };
         };
 
