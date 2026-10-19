@@ -30,9 +30,9 @@
   2. Quan sát thanh thông báo Topbar (`.top-bar-notice`) trên cùng.
   3. Cuộn trang xuống dưới 200px - 1000px.
 - **Kết quả mong đợi**:
-  - [ ] Topbar hiển thị rõ ràng thông báo khuyến mãi / voucher hệ thống.
-  - [ ] Khi cuộn trang, Header Bar bám dính cố định mượt mà (sticky), bề mặt kính mờ bán trong suốt (`backdrop-filter: blur(10px)`).
-  - [ ] Không có hiện tượng giật cục (layout shift) hoặc che lấp tiêu đề trang bên dưới.
+  - [x] Topbar hiển thị rõ ràng thông báo khuyến mãi / voucher hệ thống.
+  - [x] Khi cuộn trang, Header Bar bám dính cố định mượt mà (sticky), bề mặt kính mờ bán trong suốt (`backdrop-filter: blur(10px)`).
+  - [x] Không có hiện tượng giật cục (layout shift) hoặc che lấp tiêu đề trang bên dưới.
 
 ### TC-HDR-02: Thanh tìm kiếm phân luồng thông minh (Smart Search Routing)
 - **Điều kiện**: Đang ở bất kỳ trang nào.
@@ -42,9 +42,9 @@
   3. Quay lại, gõ từ khóa sản phẩm: `pate`, `hạt mèo`, `royal canin`, `sữa tắm` $\rightarrow$ Nhấn `Enter`.
   4. Để ô tìm kiếm rỗng và nhấn `Enter`.
 - **Kết quả mong đợi**:
-  - [ ] Với từ khóa dịch vụ: Tự động chuyển hướng chính xác đến `/services?search=[từ_khóa]` và nạp ngay danh sách dịch vụ phù hợp.
-  - [ ] Với từ khóa sản phẩm: Tự động chuyển hướng đến `/shop?search=[từ_khóa]` và nạp đúng sản phẩm tương ứng.
-  - [ ] Khi ô tìm kiếm rỗng: Không chuyển trang, không reload lại trang không cần thiết.
+  - [x] Với từ khóa dịch vụ: Tự động chuyển hướng chính xác đến `/services?search=[từ_khóa]` và nạp ngay danh sách dịch vụ phù hợp.
+  - [x] Với từ khóa sản phẩm: Tự động chuyển hướng đến `/shop?search=[từ_khóa]` và nạp đúng sản phẩm tương ứng.
+  - [x] Khi ô tìm kiếm rỗng: Không chuyển trang, không reload lại trang không cần thiết.
 
 ### TC-HDR-03: Huy hiệu giỏ hàng (Cart Badge) và đồng bộ thời gian thực
 - **Điều kiện**: Mở trang web ở 2 tab trình duyệt cùng lúc.
@@ -54,9 +54,9 @@
   3. Chuyển sang Tab 2: Kiểm tra số lượng trên huy hiệu giỏ hàng.
   4. Xóa hết sản phẩm trong giỏ hàng.
 - **Kết quả mong đợi**:
-  - [ ] Khi thêm sản phẩm: Huy hiệu giỏ hàng tăng ngay lập tức mà không cần F5.
-  - [ ] Tab 2 tự động cập nhật số lượng mới qua sự kiện `storage` / `cart_updated`.
-  - [ ] Khi giỏ rỗng: Huy hiệu hiển thị `0` hoặc ẩn đi một cách thẩm mỹ.
+  - [x] Khi thêm sản phẩm: Huy hiệu giỏ hàng tăng ngay lập tức mà không cần F5.
+  - [x] Tab 2 tự động cập nhật số lượng mới qua sự kiện `storage` / `cart_updated`.
+  - [x] Khi giỏ rỗng: Huy hiệu hiển thị `0` hoặc ẩn đi một cách thẩm mỹ.
 
 ### TC-HDR-04: Huy hiệu thông báo và menu thông báo đẩy (Notifications)
 - **Điều kiện**: Đã đăng nhập tài khoản khách hàng.
@@ -65,9 +65,9 @@
   2. Đọc một thông báo chưa đọc.
   3. Bấm `Đánh dấu tất cả đã đọc`.
 - **Kết quả mong đợi**:
-  - [ ] Sổ menu thông báo thanh thoát, hiển thị danh sách thông báo lịch hẹn, đơn hàng, điểm thưởng.
-  - [ ] Bấm đọc thông báo: Chấm đỏ chưa đọc biến mất, số trên huy hiệu giảm 1.
-  - [ ] `Đánh dấu tất cả đã đọc`: Huy hiệu chuông biến mất chấm đỏ, lưu trạng thái vào Supabase/LocalStorage.
+  - [x] Sổ menu thông báo thanh thoát, hiển thị danh sách thông báo lịch hẹn, đơn hàng, điểm thưởng.
+  - [x] Bấm đọc thông báo: Chấm đỏ chưa đọc biến mất, số trên huy hiệu giảm 1.
+  - [x] `Đánh dấu tất cả đã đọc`: Huy hiệu chuông biến mất chấm đỏ, lưu trạng thái vào Supabase/LocalStorage.
 
 ### TC-HDR-05: Menu tài khoản người dùng (Auth Dropdown State)
 - **Điều kiện**: Kiểm tra ở cả 2 trạng thái Chưa đăng nhập và Đã đăng nhập.
@@ -79,10 +79,10 @@
      - Kiểm tra từng liên kết: `Hồ sơ cá nhân`, `Bé cưng của tôi`, `Lịch hẹn`, `Đơn hàng`.
      - Click nút `Đăng xuất`.
 - **Kết quả mong đợi**:
-  - [ ] Khi chưa đăng nhập: Nút `Đăng nhập` / `Đăng ký` dạng text phẳng, click chuyển đến `/login`.
-  - [ ] Khi đã đăng nhập: Hiển thị avatar tròn (`border-radius: 50%`) hoặc chữ cái viết tắt, tên khách hàng và badge hạng thành viên.
-  - [ ] Các liên kết trong menu dẫn chính xác đến các module tương ứng trong `/user#profile`, `/user#pets`, `/user#bookings`, `/user#orders`.
-  - [ ] Bấm `Đăng xuất`: Xóa sạch `pawpal_current_user`, `pawpal_cart_owner`, reset giỏ hàng phiên, Header quay về trạng thái chưa đăng nhập mà không phát sinh lỗi Console.
+  - [x] Khi chưa đăng nhập: Nút `Đăng nhập` / `Đăng ký` dạng text phẳng, click chuyển đến `/login`.
+  - [x] Khi đã đăng nhập: Hiển thị avatar tròn (`border-radius: 50%`) hoặc chữ cái viết tắt, tên khách hàng và badge hạng thành viên.
+  - [x] Các liên kết trong menu dẫn chính xác đến các module tương ứng trong `/user#profile`, `/user#pets`, `/user#bookings`, `/user#orders`.
+  - [x] Bấm `Đăng xuất`: Xóa sạch `pawpal_current_user`, `pawpal_cart_owner`, reset giỏ hàng phiên, Header quay về trạng thái chưa đăng nhập mà không phát sinh lỗi Console.
 
 ### TC-HDR-06: Menu di động (Mobile Nav Drawer) và quản lý thanh cuộn
 - **Điều kiện**: Bật chế độ Responsive trên trình duyệt (kích thước màn hình: 375px, 414px, 768px).
@@ -92,10 +92,10 @@
   3. Click nút `Đóng [×]` hoặc click vào vùng tối mờ (Backdrop).
   4. Mở lại menu và click vào một liên kết menu (ví dụ: `Dịch vụ`).
 - **Kết quả mong đợi**:
-  - [ ] Menu Drawer trượt ra mượt mà từ mép màn hình.
-  - [ ] Toàn bộ khung trang bên dưới bị khóa cuộn cứng (`overflow: hidden` / `overscroll-behavior: contain`), triệt tiêu 100% hiện tượng cuộn lọt mép.
-  - [ ] Click nút Đóng hoặc click Backdrop đóng menu tức thì.
-  - [ ] Click liên kết: Chuyển đúng trang và tự động đóng Drawer.
+  - [x] Menu Drawer trượt ra mượt mà từ mép màn hình.
+  - [x] Toàn bộ khung trang bên dưới bị khóa cuộn cứng (`overflow: hidden` / `overscroll-behavior: contain`), triệt tiêu 100% hiện tượng cuộn lọt mép.
+  - [x] Click nút Đóng hoặc click Backdrop đóng menu tức thì.
+  - [x] Click liên kết: Chuyển đúng trang và tự động đóng Drawer.
 
 ---
 
@@ -107,9 +107,9 @@
   1. Tìm đến thẻ sản phẩm bất kỳ tại mục "Sản phẩm bán chạy".
   2. Bấm nút `Mua ngay`.
 - **Kết quả mong đợi**:
-  - [ ] Modal mở lên chính giữa màn hình với hiệu ứng mờ kính đục, bo góc 9px chuẩn [AGENTS.md](file:///d:/Aboutme/MyProject/Pawpal/AGENTS.md).
-  - [ ] Nạp chính xác: Ảnh sản phẩm, tên sản phẩm, nhãn hiệu, giá bán theo biến thể rẻ nhất, các tùy chọn phân loại (size, mùi vị, trọng lượng...).
-  - [ ] Nút tăng giảm số lượng hoạt động: Click `+` tăng 1, click `-` giảm 1 (chặn không cho giảm xuống < 1).
+  - [x] Modal mở lên chính giữa màn hình với hiệu ứng mờ kính đục, bo góc 9px chuẩn [AGENTS.md](file:///d:/Aboutme/MyProject/Pawpal/AGENTS.md).
+  - [x] Nạp chính xác: Ảnh sản phẩm, tên sản phẩm, nhãn hiệu, giá bán theo biến thể rẻ nhất, các tùy chọn phân loại (size, mùi vị, trọng lượng...).
+  - [x] Nút tăng giảm số lượng hoạt động: Click `+` tăng 1, click `-` giảm 1 (chặn không cho giảm xuống < 1).
 
 ### TC-MOD-02: Kiểm tra giới hạn tồn kho khi mua nhanh
 - **Điều kiện**: Modal mua nhanh đang mở.
@@ -117,8 +117,8 @@
   1. Nhập số lượng mua lớn hơn số lượng tồn kho thực tế của biến thể (ví dụ: nhập `9999`).
   2. Bấm nút `Tiến hành đặt hàng`.
 - **Kết quả mong đợi**:
-  - [ ] Hệ thống hiển thị cảnh báo đỏ rõ ràng: "Chỉ còn X sản phẩm trong kho".
-  - [ ] Chặn không cho chuyển trang thanh toán khi vượt quá tồn kho.
+  - [x] Hệ thống hiển thị cảnh báo đỏ rõ ràng: "Chỉ còn X sản phẩm trong kho".
+  - [x] Chặn không cho chuyển trang thanh toán khi vượt quá tồn kho.
 
 ### TC-MOD-03: Chuyển hướng Checkout từ modal mua nhanh
 - **Điều kiện**: Chọn số lượng hợp lệ (ví dụ: `2`).
@@ -126,8 +126,8 @@
   1. Chọn phân loại biến thể mong muốn.
   2. Bấm `Tiến hành đặt hàng`.
 - **Kết quả mong đợi**:
-  - [ ] Lưu giỏ hàng phiên mua nhanh và chuyển hướng thẳng đến `/pages/shop/checkout/checkout.html?buynow=true`.
-  - [ ] Tại trang Checkout: Chỉ hiển thị đúng sản phẩm vừa chọn mua nhanh, không bị lẫn với các món đang có trong giỏ hàng chính.
+  - [x] Lưu giỏ hàng phiên mua nhanh và chuyển hướng thẳng đến `/pages/shop/checkout/checkout.html?buynow=true`.
+  - [x] Tại trang Checkout: Chỉ hiển thị đúng sản phẩm vừa chọn mua nhanh, không bị lẫn với các món đang có trong giỏ hàng chính.
 
 ---
 
@@ -141,9 +141,9 @@
   1. Mở trang chủ và quan sát slider banner đầu trang.
   2. Kiểm tra tab Network trên DevTools (lọc `banner`).
 - **Kết quả mong đợi**:
-  - [ ] Câu truy vấn Supabase gọi đúng bảng `banner` với điều kiện `status = 'dang_hien_thi'`.
-  - [ ] Mã HTTP 200 OK, **không có lỗi 400 Bad Request** do sai enum hay tìm cột không tồn tại.
-  - [ ] Banner hiển thị đầy đủ hình ảnh, tiêu đề, nút bấm CTA chuyển hướng đúng trang khuyến mãi.
+  - [x] Câu truy vấn Supabase gọi đúng bảng `banner` với điều kiện `status = 'dang_hien_thi'`.
+  - [x] Mã HTTP 200 OK, **không có lỗi 400 Bad Request** do sai enum hay tìm cột không tồn tại.
+  - [x] Banner hiển thị đầy đủ hình ảnh, tiêu đề, nút bấm CTA chuyển hướng đúng trang khuyến mãi.
 
 ### TC-LND-02: Nạp danh mục dịch vụ nổi bật
 - **Các bước thực hiện**:
@@ -151,7 +151,7 @@
   2. Kiểm tra hiển thị 3 khối: Grooming & Spa, Pet Hotel, Pet Taxi.
   3. Bấm vào từng khối dịch vụ.
 - **Kết quả mong đợi**:
-  - [ ] Chuyển hướng chính xác đến `/services` với tab danh mục tương ứng được active sẵn.
+  - [x] Chuyển hướng chính xác đến `/services` với tab danh mục tương ứng được active sẵn.
 
 ### TC-LND-03: Danh sách sản phẩm nổi bật & Hiển thị giá đa biến thể
 - **Các bước thực hiện**:
@@ -159,9 +159,9 @@
   2. Quan sát mức giá hiển thị trên từng thẻ sản phẩm.
   3. Kiểm tra các sản phẩm có giảm giá.
 - **Kết quả mong đợi**:
-  - [ ] Giá hiển thị là giá thấp nhất trong số các biến thể đang bán (`dang_ban`).
-  - [ ] Sản phẩm có giảm giá: Hiển thị giá khuyến mãi in đậm màu xanh `#236B48`, giá gốc gạch ngang màu xám mờ và huy hiệu `% Giảm`.
-  - [ ] Không có sản phẩm nào bị hiển thị giá `0đ` hoặc `NaN`.
+  - [x] Giá hiển thị là giá thấp nhất trong số các biến thể đang bán (`dang_ban`).
+  - [x] Sản phẩm có giảm giá: Hiển thị giá khuyến mãi in đậm màu xanh `#236B48`, giá gốc gạch ngang màu xám mờ và huy hiệu `% Giảm`.
+  - [x] Không có sản phẩm nào bị hiển thị giá `0đ` hoặc `NaN`.
 
 ### TC-LND-04: Thao tác Yêu thích (Wishlist Heart Toggle) tại trang chủ
 - **Các bước thực hiện**:
@@ -170,9 +170,9 @@
   3. Mở tab Network kiểm tra request Supabase.
   4. Truy cập trang `/user#wishlist`.
 - **Kết quả mong đợi**:
-  - [ ] Icon trái tim chuyển ngay sang màu đỏ khi yêu thích, chuyển về rỗng khi bỏ chọn.
-  - [ ] Khi đã đăng nhập: Dữ liệu đồng bộ ghi vào bảng `wishlist_item` Supabase.
-  - [ ] Trang `/user#wishlist` hiển thị đúng các sản phẩm vừa thả tim.
+  - [x] Icon trái tim chuyển ngay sang màu đỏ khi yêu thích, chuyển về rỗng khi bỏ chọn.
+  - [x] Khi đã đăng nhập: Dữ liệu đồng bộ ghi vào bảng `wishlist_item` Supabase.
+  - [x] Trang `/user#wishlist` hiển thị đúng các sản phẩm vừa thả tim.
 
 ### TC-LND-05: Slider Đánh giá khách hàng (Testimonials Carousel)
 - **Các bước thực hiện**:
@@ -180,9 +180,9 @@
   2. Thu nhỏ cửa sổ trình duyệt từ 1920px xuống 1200px, 768px, 375px.
   3. Bấm nút điều hướng `<` và `>` của slider.
 - **Kết quả mong đợi**:
-  - [ ] Các thẻ đánh giá tự động tính toán lại chiều rộng vừa vặn với khung nhìn màn hình.
-  - [ ] Không có hiện tượng tràn chiều ngang (horizontal overflow) làm mất thanh cuộn trang chính.
-  - [ ] Nút điều hướng hoạt động êm ái, hiển thị số sao, hình ảnh bé cưng và nhận xét của chủ nuôi.
+  - [x] Các thẻ đánh giá tự động tính toán lại chiều rộng vừa vặn với khung nhìn màn hình.
+  - [x] Không có hiện tượng tràn chiều ngang (horizontal overflow) làm mất thanh cuộn trang chính.
+  - [x] Nút điều hướng hoạt động êm ái, hiển thị số sao, hình ảnh bé cưng và nhận xét của chủ nuôi.
 
 ---
 
@@ -195,8 +195,8 @@
   3. Bấm liên kết `Quên mật khẩu?` $\rightarrow$ Quan sát URL.
   4. Bấm liên kết `Quay lại đăng nhập`.
 - **Kết quả mong đợi**:
-  - [ ] Giao diện chuyển đổi form tức thì mà không bị reload lại trang.
-  - [ ] URL cập nhật đúng hash/param: `?action=register`, `?action=forgot`, `?action=login`.
+  - [x] Giao diện chuyển đổi form tức thì mà không bị reload lại trang.
+  - [x] URL cập nhật đúng hash/param: `?action=register`, `?action=forgot`, `?action=login`.
 
 ### TC-LOG-02: Kiểm tra nhập liệu form Đăng nhập (Validation & Error States)
 - **Các bước thực hiện**:
@@ -205,9 +205,9 @@
   3. Nhập SĐT chưa từng đăng ký: `0999999999` $\rightarrow$ Bấm `Tiếp tục`.
   4. Nhập SĐT đúng `0987654321`, nhập sai mật khẩu `SaiMatKhau123!` $\rightarrow$ Bấm `Đăng nhập`.
 - **Kết quả mong đợi**:
-  - [ ] Báo lỗi rõ ràng: "Vui lòng nhập số điện thoại hợp lệ (10 chữ số, bắt đầu bằng 0)".
-  - [ ] Với SĐT chưa đăng ký: Báo lỗi "Số điện thoại chưa đăng ký. Vui lòng tạo tài khoản".
-  - [ ] Với mật khẩu sai: Báo lỗi "Thông tin đăng nhập không đúng". Ô mật khẩu được giữ nguyên để nhập lại.
+  - [x] Báo lỗi rõ ràng: "Vui lòng nhập số điện thoại hợp lệ (10 chữ số, bắt đầu bằng 0)".
+  - [x] Với SĐT chưa đăng ký: Báo lỗi "Số điện thoại chưa đăng ký. Vui lòng tạo tài khoản".
+  - [x] Với mật khẩu sai: Báo lỗi "Thông tin đăng nhập không đúng". Ô mật khẩu được giữ nguyên để nhập lại.
 
 ### TC-LOG-03: Đăng nhập thành công và khôi phục đích đến (Redirect URL)
 - **Các bước thực hiện**:
@@ -216,9 +216,9 @@
   3. Nhập SĐT: `0987654321` $\rightarrow$ Bấm `Tiếp tục`.
   4. Nhập mật khẩu: `Password123!` $\rightarrow$ Bấm `Đăng nhập`.
 - **Kết quả mong đợi**:
-  - [ ] Thông báo Toast xanh: "Đăng nhập thành công".
-  - [ ] Lưu đầy đủ thông tin phiên vào `localStorage` và `sessionStorage: pawpal_current_user`.
-  - [ ] Tự động chuyển hướng quay lại đúng trang chi tiết sản phẩm ban đầu.
+  - [x] Thông báo Toast xanh: "Đăng nhập thành công".
+  - [x] Lưu đầy đủ thông tin phiên vào `localStorage` và `sessionStorage: pawpal_current_user`.
+  - [x] Tự động chuyển hướng quay lại đúng trang chi tiết sản phẩm ban đầu.
 
 ### TC-LOG-04: Đăng ký tài khoản mới với mã OTP thử nghiệm (Demo OTP)
 - **Các bước thực hiện**:
@@ -230,8 +230,8 @@
   6. Nhập mã OTP sai `111222` $\rightarrow$ Bấm xác thực.
   7. Nhập mã OTP thử nghiệm chuẩn: `555666`.
 - **Kết quả mong đợi**:
-  - [ ] Khi nhập mã sai: Báo lỗi "Mã xác thực không đúng. Vui lòng kiểm tra lại".
-  - [ ] Khi nhập đúng `555666`: Tạo thành công tài khoản trong bảng `customer` và `customer_profile`, tự động đăng nhập và chuyển về trang người dùng `/user`.
+  - [x] Khi nhập mã sai: Báo lỗi "Mã xác thực không đúng. Vui lòng kiểm tra lại".
+  - [x] Khi nhập đúng `555666`: Tạo thành công tài khoản trong bảng `customer` và `customer_profile`, tự động đăng nhập và chuyển về trang người dùng `/user`.
 
 ---
 
