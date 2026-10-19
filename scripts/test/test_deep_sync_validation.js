@@ -39,8 +39,8 @@ async function runDeepSyncTest() {
             customer_id: sampleCustId,
             shipping_address_id: sampleAddrId,
             total_amount: 500000,
-            order_status: 'SHIPPING',
-            payment_status: 'PAID',
+            order_status: 'dang_giao_hang',
+            payment_status: 'da_thanh_toan',
             tracking_code: 'TEST-TRACK-999',
             shipped_at: now,
             delivered_at: now
@@ -68,7 +68,7 @@ async function runDeepSyncTest() {
         const { data: cart } = await sb.from('cart').select('id').eq('customer_id', sampleCustId).maybeSingle();
         let testCartId = cart?.id;
         if (!testCartId) {
-            const { data: createdCart } = await sb.from('cart').insert({ customer_id: sampleCustId, cart_status: 'ACTIVE' }).select('id').single();
+            const { data: createdCart } = await sb.from('cart').insert({ customer_id: sampleCustId, cart_status: 'dang_hoat_dong' }).select('id').single();
             testCartId = createdCart.id;
         }
         const { data: newCartItem, error: cartItemErr } = await sb.from('cart_item').insert({
@@ -92,7 +92,7 @@ async function runDeepSyncTest() {
 
         const { data: newTx, error: txErr } = await sb.from('inventory_transaction').insert({
             product_variant_id: sampleVar.id,
-            transaction_type: 'ADJUSTMENT',
+            transaction_type: 'dieu_chinh_tang',
             quantity: 1,
             stock_before: 10,
             stock_after: 11,
@@ -137,7 +137,7 @@ async function runDeepSyncTest() {
         console.log('\n7. [support_ticket_message] Ghi tin nhắn trao đổi có sender_id & is_internal...');
         const { data: newMsg, error: msgErr } = await sb.from('support_ticket_message').insert({
             ticket_id: newTicket.id,
-            sender_type: 'STAFF',
+            sender_type: 'nhan_vien',
             sender_id: sampleStaffId,
             content: 'Nội bộ: Cần thúc giục bưu tá phát hỏa tốc',
             is_internal: true
@@ -152,9 +152,9 @@ async function runDeepSyncTest() {
             sales_order_id: newOrder.id,
             customer_id: sampleCustId,
             reason: 'wrong_item',
-            return_type: 'RETURN',
-            request_status: 'PENDING',
-            resolution_type: 'REFUND',
+            return_type: 'tra_san_pham',
+            request_status: 'cho_xu_ly',
+            resolution_type: 'hoan_tien',
             refund_amount: 200000,
             resolved_by: sampleStaffId
         }).select().single();
@@ -175,12 +175,12 @@ async function runDeepSyncTest() {
         console.log('\n9. [payment] Ghi nhận giao dịch với customer_id & payment_method_config_id...');
         const { data: newPay, error: payErr } = await sb.from('payment').insert({
             payment_code: 'PAY-SYNC-' + Date.now().toString().slice(-6),
-            payment_type: 'PRODUCT',
+            payment_type: 'mua_hang',
             order_id: newOrder.id,
             customer_id: sampleCustId,
             payment_method_config_id: sampleMethodConfigId || 'vnpay',
             amount: 500000,
-            transaction_status: 'SUCCESS'
+            transaction_status: 'thanh_cong'
         }).select().single();
         if (payErr) throw payErr;
         cleanups.push({ table: 'payment', id: newPay.id });
@@ -203,7 +203,7 @@ async function runDeepSyncTest() {
         console.log('\n11. [notification] Tạo thông báo liên kết đa phân hệ...');
         const { data: newNoti, error: notiErr } = await sb.from('notification').insert({
             customer_id: sampleCustId,
-            notification_type: 'ORDER',
+            notification_type: 'don_hang_moi',
             title: 'Cập nhật đơn hàng',
             content: 'Đơn hàng của bạn đang được giao.',
             sales_order_id: newOrder.id,

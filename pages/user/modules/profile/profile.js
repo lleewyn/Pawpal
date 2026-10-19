@@ -318,7 +318,7 @@ async function loadUpcomingBooking(user) {
             const { data, error } = await client.from('appointment')
                 .select('id, appointment_code, appointment_date, appointment_time, appointment_status, service:service_id(service_name), pet_profile:pet_id(pet_name)')
                 .eq('customer_id', user.id)
-                .in('appointment_status', ['PENDING', 'CONFIRMED', 'IN_PROGRESS'])
+                .in('appointment_status', ['cho_xac_nhan', 'da_xac_nhan', 'dang_thuc_hien', 'PENDING', 'CONFIRMED', 'IN_PROGRESS'])
                 .gte('appointment_date', new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()))
                 .order('appointment_date', { ascending: true })
                 .order('appointment_time', { ascending: true })
@@ -414,7 +414,7 @@ async function loadRecentOrders(user) {
                 orders = data.map(o => ({
                     code: o.order_code || o.id,
                     total: Number(o.total_amount || 0),
-                    status: (o.order_status || 'PENDING').toLowerCase(),
+                    status: (o.order_status || 'cho_xac_nhan').toLowerCase(),
                     createdAt: o.created_at
                 }));
             }

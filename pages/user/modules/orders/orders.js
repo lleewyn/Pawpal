@@ -617,8 +617,8 @@ function cancelOrder(orderId) {
         if (db) {
             try {
                 const { error: cancelErr } = await db.from('sales_order').update({
-                    order_status: 'CANCELLED',
-                    payment_status: isPaid ? 'PENDING_REFUND' : 'CANCELLED',
+                    order_status: 'da_huy',
+                    payment_status: isPaid ? 'da_hoan_tien' : 'chua_thanh_toan',
                     updated_at: new Date().toISOString()
                 }).eq('id', order.id);
                 if (cancelErr) console.warn('[Orders] Supabase cancel error:', cancelErr);
@@ -1142,7 +1142,7 @@ function openChangePaymentMethodModal(orderId) {
         if (db) {
             try {
                 await db.from('sales_order').update({
-                    order_status: newMethod === 'cod' ? 'PENDING' : 'PENDING_PAYMENT',
+                    order_status: 'cho_xac_nhan',
                     updated_at: new Date().toISOString()
                 }).eq('id', order.id);
             } catch (err) {

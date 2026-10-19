@@ -491,17 +491,21 @@
                 const totalStr = o.total_amount ? Number(o.total_amount).toLocaleString('vi-VN') + ' đ' : '0 đ';
                 let st = 'Hoàn thành';
                 let stClass = 'badge-success';
-                if (o.order_status === 'PENDING') { st = 'Chờ xác nhận'; stClass = 'badge-warning'; }
-                else if (o.order_status === 'PROCESSING' || o.order_status === 'CONFIRMED') { st = 'Đang chuẩn bị'; stClass = 'badge-info'; }
-                else if (o.order_status === 'SHIPPING' || o.order_status === 'DELIVERING') { st = 'Đang giao'; stClass = 'badge-info'; }
-                else if (o.order_status === 'CANCELLED') { st = 'Đã hủy'; stClass = 'badge-danger'; }
+                const ordStatus = (o.order_status || '').toUpperCase();
+                const payStatus = (o.payment_status || '').toLowerCase();
+                const isPaid = payStatus === 'paid' || payStatus === 'da_thanh_toan';
+                if (ordStatus === 'PENDING' || ordStatus === 'CHO_XAC_NHAN') { st = 'Chờ xác nhận'; stClass = 'badge-warning'; }
+                else if (ordStatus === 'PROCESSING' || ordStatus === 'CONFIRMED' || ordStatus === 'DA_XAC_NHAN' || ordStatus === 'DANG_DONG_GOI' || ordStatus === 'PACKING') { st = 'Đang chuẩn bị'; stClass = 'badge-info'; }
+                else if (ordStatus === 'SHIPPING' || ordStatus === 'DELIVERING' || ordStatus === 'DANG_GIAO_HANG') { st = 'Đang giao'; stClass = 'badge-info'; }
+                else if (ordStatus === 'CANCELLED' || ordStatus === 'DA_HUY') { st = 'Đã hủy'; stClass = 'badge-danger'; }
+                else if (ordStatus === 'DELIVERED' || ordStatus === 'DA_GIAO_HANG' || ordStatus === 'COMPLETED' || ordStatus === 'DA_HOAN_TAT') { st = 'Hoàn thành'; stClass = 'badge-success'; }
                 return {
                     id: o.order_code || `ORD-${o.id.slice(0, 4)}`,
                     rawId: o.id,
                     date: dateStr,
                     total: totalStr,
-                    payment: o.payment_status === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán',
-                    paymentClass: o.payment_status === 'PAID' ? 'badge-success' : 'badge-warning',
+                    payment: isPaid ? 'Đã thanh toán' : 'Chưa thanh toán',
+                    paymentClass: isPaid ? 'badge-success' : 'badge-warning',
                     status: st,
                     statusClass: stClass
                 };

@@ -1028,9 +1028,9 @@
                         try {
                             let updateRes;
                             if (o.rawId) {
-                                updateRes = await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', o.rawId);
+                                updateRes = await client.from('sales_order').update({ payment_status: 'da_thanh_toan' }).eq('id', o.rawId);
                             } else {
-                                updateRes = await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', o.id);
+                                updateRes = await client.from('sales_order').update({ payment_status: 'da_thanh_toan' }).eq('order_code', o.id);
                             }
                             if (updateRes?.error) throw updateRes.error;
 
@@ -1430,7 +1430,7 @@
                     const resolvedProviderUuid = providerMap[String(carrier || '').toLowerCase().trim()] || null;
                     const shipNote = `Hãng: ${carrier}; Vận đơn: ${tracking}`;
                     const payload = {
-                        order_status: 'SHIPPING',
+                        order_status: 'dang_giao_hang',
                         tracking_code: tracking,
                         shipping_provider_id: resolvedProviderUuid,
                         shipped_at: new Date().toISOString(),
@@ -1475,8 +1475,8 @@
             if (client) {
                 try {
                     const payload = {
-                        order_status: 'CANCELLED',
-                        payment_status: (order.paymentStatus === 'refund_pending') ? 'PENDING' : 'CANCELLED'
+                        order_status: 'da_huy',
+                        payment_status: (order.paymentStatus === 'refund_pending') ? 'da_hoan_tien' : 'chua_thanh_toan'
                     };
                     if (order.rawId) {
                         await client.from('sales_order').update(payload).eq('id', order.rawId);
@@ -1609,7 +1609,7 @@
                         const resolvedProviderUuid = providerMap[String(carrier || '').toLowerCase().trim()] || null;
                         const shipNote = `Hãng: ${carrier}; Vận đơn: ${tracking}`;
                         const payload = {
-                            order_status: 'SHIPPING',
+                            order_status: 'dang_giao_hang',
                             tracking_code: tracking,
                             shipping_provider_id: resolvedProviderUuid,
                             shipped_at: new Date().toISOString(),
@@ -1760,9 +1760,9 @@
         try {
             let res;
             if (order.rawId) {
-                res = await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', order.rawId);
+                res = await client.from('sales_order').update({ payment_status: 'da_thanh_toan' }).eq('id', order.rawId);
             } else {
-                res = await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', order.id);
+                res = await client.from('sales_order').update({ payment_status: 'da_thanh_toan' }).eq('order_code', order.id);
             }
             if (res?.error) throw res.error;
 
@@ -1802,9 +1802,9 @@
         try {
             let res;
             if (order.rawId) {
-                res = await client.from('sales_order').update({ payment_status: 'PAID' }).eq('id', order.rawId);
+                res = await client.from('sales_order').update({ payment_status: 'da_thanh_toan' }).eq('id', order.rawId);
             } else {
-                res = await client.from('sales_order').update({ payment_status: 'PAID' }).eq('order_code', order.id);
+                res = await client.from('sales_order').update({ payment_status: 'da_thanh_toan' }).eq('order_code', order.id);
             }
             if (res?.error) throw res.error;
 
@@ -1838,9 +1838,9 @@
         try {
             let res;
             if (order.rawId) {
-                res = await client.from('sales_order').update({ order_status: 'COMPLETED' }).eq('id', order.rawId);
+                res = await client.from('sales_order').update({ order_status: 'da_giao_hang' }).eq('id', order.rawId);
             } else {
-                res = await client.from('sales_order').update({ order_status: 'COMPLETED' }).eq('order_code', order.id);
+                res = await client.from('sales_order').update({ order_status: 'da_giao_hang' }).eq('order_code', order.id);
             }
             if (res?.error) throw res.error;
 
@@ -1878,9 +1878,9 @@
         try {
             let res;
             if (order.rawId) {
-                res = await client.from('sales_order').update({ order_status: 'PACKING' }).eq('id', order.rawId);
+                res = await client.from('sales_order').update({ order_status: 'dang_dong_goi' }).eq('id', order.rawId);
             } else {
-                res = await client.from('sales_order').update({ order_status: 'PACKING' }).eq('order_code', order.id);
+                res = await client.from('sales_order').update({ order_status: 'dang_dong_goi' }).eq('order_code', order.id);
             }
             if (res?.error) throw res.error;
 
@@ -1917,9 +1917,9 @@
         try {
             let res;
             if (order.rawId) {
-                res = await client.from('sales_order').update({ order_status: 'DELIVERED' }).eq('id', order.rawId);
+                res = await client.from('sales_order').update({ order_status: 'da_giao_hang' }).eq('id', order.rawId);
             } else {
-                res = await client.from('sales_order').update({ order_status: 'DELIVERED' }).eq('order_code', order.id);
+                res = await client.from('sales_order').update({ order_status: 'da_giao_hang' }).eq('order_code', order.id);
             }
             if (res?.error) throw res.error;
 

@@ -559,7 +559,7 @@
                     .select('id, appointment_code, appointment_date, appointment_time, appointment_status, service:service_id(service_name), pet:pet_id(pet_name)')
                     .eq('staff_id', currentStaff.rawId)
                     .gte('appointment_date', todayStr)
-                    .in('appointment_status', ['CONFIRMED', 'PENDING', 'IN_PROGRESS', 'CHO_XAC_NHAN', 'DA_XAC_NHAN'])
+                    .in('appointment_status', ['da_xac_nhan', 'cho_xac_nhan', 'dang_thuc_hien', 'CONFIRMED', 'PENDING', 'IN_PROGRESS'])
                     .order('appointment_date', { ascending: true })
                     .limit(20);
 

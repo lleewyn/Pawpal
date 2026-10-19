@@ -377,10 +377,10 @@
 
                 if (!dbOrderId) throw new Error('Không tìm thấy bản ghi đơn hàng tương ứng trên cơ sở dữ liệu.');
 
-                const updateOrderPayload = { order_status: 'RETURNED' };
+                const updateOrderPayload = { order_status: 'da_tra_hang' };
                 if (solType === 'refund') {
-                    // O-12: Chờ đối soát hoàn tiền từ ngân hàng/cổng thanh toán (PENDING trong enum CSDL)
-                    updateOrderPayload.payment_status = 'PENDING';
+                    // O-12: Chờ đối soát hoàn tiền từ ngân hàng/cổng thanh toán (da_hoan_tien trong enum CSDL)
+                    updateOrderPayload.payment_status = 'da_hoan_tien';
                 }
                 const { error: ordUpErr } = await client.from('sales_order').update(updateOrderPayload).eq('id', dbOrderId);
                 if (ordUpErr) throw ordUpErr;
@@ -389,9 +389,9 @@
                     sales_order_id: dbOrderId,
                     customer_id: (order.userId && order.userId.length > 20) ? order.userId : null,
                     reason: reasonText,
-                    return_type: solType === 'refund' ? 'RETURN' : 'EXCHANGE',
+                    return_type: solType === 'refund' ? 'tra_san_pham' : 'doi_san_pham',
                     description: internalNote || `Phiếu ${rmaCode}: ${solTypeName}`,
-                    request_status: 'APPROVED'
+                    request_status: 'da_duyet'
                 }).select().single();
                 if (rmaErr) throw rmaErr;
 

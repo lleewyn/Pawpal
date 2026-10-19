@@ -849,7 +849,7 @@ window.handleGuestConfirmOrder = async function(orderId) {
                 const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                 if (db) {
                     const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
-                    let query = db.from('sales_order').update({ order_status: 'DELIVERED', payment_status: 'PAID', updated_at: new Date().toISOString() });
+                    let query = db.from('sales_order').update({ order_status: 'da_giao_hang', payment_status: 'da_thanh_toan', updated_at: new Date().toISOString() });
                     query = isUUID ? query.eq('id', orderId) : query.eq('order_code', orderId);
                     query.then(({error}) => {
                         if (error) console.warn('[ReturnGuest] Sync error:', error);
@@ -1202,7 +1202,7 @@ function confirmCancelBooking(bookingId) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (db) {
         const isUUID = typeof bookingId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingId);
-        let query = db.from('appointment').update({ appointment_status: 'CANCELLED', updated_at: new Date().toISOString() });
+        let query = db.from('appointment').update({ appointment_status: 'da_huy', updated_at: new Date().toISOString() });
         query = isUUID ? query.eq('id', bookingId) : query.eq('appointment_code', bookingId);
         query.then(({error}) => { if (error) console.warn('[ReturnGuest] Cancel booking sync error:', error); });
     }
@@ -1231,7 +1231,7 @@ function confirmCancelOrder(orderId) {
         const db = window.SupabaseClient;
         if (db) {
             const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
-            let query = db.from('sales_order').update({ order_status: 'CANCELLED', updated_at: new Date().toISOString() });
+            let query = db.from('sales_order').update({ order_status: 'da_huy', updated_at: new Date().toISOString() });
             query = isUUID ? query.eq('id', orderId) : query.eq('order_code', orderId);
             query.then(({error}) => { if (error) console.warn('[ReturnGuest] Cancel order sync error:', error); });
         }

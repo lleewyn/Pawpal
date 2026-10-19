@@ -628,8 +628,8 @@ export const API = {
             const paymentMethodStr = String(orderData.payment?.method || 'cod').toLowerCase();
             const isPaid = orderData.payment?.status === 'paid' || orderData.payment?.status === 'PAID';
             
-            const initialOrderStatus = isPaid ? 'CONFIRMED' : 'PENDING';
-            const initialPaymentStatus = isPaid ? 'PAID' : (paymentMethodStr === 'cod' ? 'UNPAID' : 'PENDING');
+            const initialOrderStatus = isPaid ? 'da_xac_nhan' : 'cho_xac_nhan';
+            const initialPaymentStatus = isPaid ? 'da_thanh_toan' : 'chua_thanh_toan';
 
             const totalOrderAmount = Number(orderData.pricing?.grandTotal ?? orderData.pricing?.total ?? 0);
             const salesOrder = {
@@ -648,10 +648,10 @@ export const API = {
             const paymentInsert = {
                 payment_code: paymentCode,
                 order_id: newOrder.id,
-                payment_type: 'PRODUCT',
+                payment_type: 'mua_hang',
                 payment_method_config_id: paymentMethodStr,
                 amount: isNaN(totalOrderAmount) ? 0 : totalOrderAmount,
-                transaction_status: isPaid ? 'SUCCESS' : 'PENDING'
+                transaction_status: isPaid ? 'thanh_cong' : 'cho_xu_ly'
             };
             const { error: payError } = await db.from('payment').insert(paymentInsert);
             if (payError) console.error('[API] Failed to insert payment:', payError);
@@ -705,18 +705,18 @@ export const API = {
         }
 
         try {
-            const rawStatus = String(paymentStatus || '').toUpperCase().trim();
+            const rawStatus = String(paymentStatus || '').toLowerCase().trim();
             const normalizedStatus = {
-                'PAID': 'PAID',
-                'DA_THANH_TOAN': 'PAID',
-                'FAILED': 'UNPAID',
-                'THANH_TOAN_THAT_BAI': 'UNPAID',
-                'PENDING': 'PENDING',
-                'CHUA_THANH_TOAN': 'UNPAID',
-                'UNPAID': 'UNPAID',
-                'REFUNDED': 'REFUNDED',
-                'DA_HOAN_TIEN': 'REFUNDED'
-            }[rawStatus] || 'PENDING';
+                'paid': 'da_thanh_toan',
+                'da_thanh_toan': 'da_thanh_toan',
+                'failed': 'thanh_toan_that_bai',
+                'thanh_toan_that_bai': 'thanh_toan_that_bai',
+                'pending': 'chua_thanh_toan',
+                'chua_thanh_toan': 'chua_thanh_toan',
+                'unpaid': 'chua_thanh_toan',
+                'refunded': 'da_hoan_tien',
+                'da_hoan_tien': 'da_hoan_tien'
+            }[rawStatus] || 'chua_thanh_toan';
 
             const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
 
@@ -733,7 +733,7 @@ export const API = {
             if (error) throw error;
 
             if (data && data.id) {
-                const transStatus = normalizedStatus === 'PAID' ? 'SUCCESS' : (normalizedStatus === 'UNPAID' ? 'FAILED' : 'PENDING');
+                const transStatus = normalizedStatus === 'da_thanh_toan' ? 'thanh_cong' : (normalizedStatus === 'thanh_toan_that_bai' ? 'that_bai' : (normalizedStatus === 'da_hoan_tien' ? 'da_hoan_tien' : 'cho_xu_ly'));
                 await db.from('payment').update({
                     transaction_status: transStatus,
                     updated_at: new Date().toISOString()
@@ -754,26 +754,31 @@ export const API = {
         }
 
         try {
-            const rawStatus = String(orderStatus || '').toUpperCase().trim();
+            const rawStatus = String(orderStatus || '').toLowerCase().trim();
             const normalizedStatus = {
-                'PLACED': 'PENDING',
-                'CHO_XAC_NHAN': 'PENDING',
-                'PENDING': 'PENDING',
-                'CONFIRMED': 'CONFIRMED',
-                'DA_XAC_NHAN': 'CONFIRMED',
-                'PREPARING': 'PACKING',
-                'PACKING': 'PACKING',
-                'DANG_CHUAN_BI': 'PACKING',
-                'SHIPPING': 'SHIPPING',
-                'DANG_GIAO': 'SHIPPING',
-                'DELIVERED': 'DELIVERED',
-                'DA_GIAO': 'DELIVERED',
-                'COMPLETED': 'COMPLETED',
-                'DA_HOAN_TAT': 'COMPLETED',
-                'CANCELLED': 'CANCELLED',
-                'DA_HUY': 'CANCELLED',
-                'RETURNED': 'RETURNED'
-            }[rawStatus] || rawStatus;
+                'placed': 'cho_xac_nhan',
+                'cho_xac_nhan': 'cho_xac_nhan',
+                'pending': 'cho_xac_nhan',
+                'confirmed': 'da_xac_nhan',
+                'da_xac_nhan': 'da_xac_nhan',
+                'preparing': 'dang_dong_goi',
+                'packing': 'dang_dong_goi',
+                'dang_dong_goi': 'dang_dong_goi',
+                'dang_chuan_bi': 'dang_dong_goi',
+                'shipping': 'dang_giao_hang',
+                'dang_giao': 'dang_giao_hang',
+                'dang_giao_hang': 'dang_giao_hang',
+                'delivered': 'da_giao_hang',
+                'da_giao': 'da_giao_hang',
+                'da_giao_hang': 'da_giao_hang',
+                'completed': 'da_giao_hang',
+                'da_hoan_tat': 'da_giao_hang',
+                'cancelled': 'da_huy',
+                'canceled': 'da_huy',
+                'da_huy': 'da_huy',
+                'returned': 'da_tra_hang',
+                'da_tra_hang': 'da_tra_hang'
+            }[rawStatus] || 'cho_xac_nhan';
 
             const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
 

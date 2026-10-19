@@ -285,8 +285,8 @@ function setupDrawerListeners() {
             });
             const { data: request, error } = await db.from('return_request').insert({
                 sales_order_id: orderUuid, customer_id: customerId, reason,
-                return_type: returnType.toUpperCase(),
-                request_status: 'PENDING', description: returnData.description
+                return_type: returnType.toLowerCase() === 'exchange' ? 'doi_san_pham' : 'tra_san_pham',
+                request_status: 'cho_xu_ly', description: returnData.description
             }).select('id').single();
             if (error) throw error;
             const detailResult = await db.from('return_request_detail').insert(details.map(detail => ({ ...detail, return_request_id: request.id })));

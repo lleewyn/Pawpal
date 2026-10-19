@@ -35,7 +35,7 @@ async function cancelBookingOnSupabase(booking) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db || !booking?._supabaseId) throw new Error('Không xác định được lịch hẹn để hủy.');
     const { error } = await db.from('appointment')
-        .update({ appointment_status: 'CANCELLED' })
+        .update({ appointment_status: 'da_huy' })
         .eq('id', booking._supabaseId);
     if (error) throw error;
     console.log('[BookingDetail] Cancel synced to Supabase');
@@ -266,7 +266,7 @@ async function loadServiceReviewFromSupabase(booking) {
             .from('review')
             .select('id, rating, review_content, created_at, shop_reply')
             .eq('appointment_id', apptId)
-            .eq('review_type', 'SERVICE')
+            .in('review_type', ['dich_vu', 'SERVICE'])
             .maybeSingle();
         if (error) {
             console.warn('[BookingDetail] Lỗi kiểm tra đánh giá từ Supabase:', error);
@@ -406,10 +406,10 @@ async function handleSubmitServiceReview() {
                         appointment_id: appt.id,
                         customer_id: customerId,
                         service_id: serviceId,
-                        review_type: 'SERVICE',
+                        review_type: 'dich_vu',
                         rating: currentServiceReviewRating,
                         review_content: commentText,
-                        review_status: 'APPROVED'
+                        review_status: 'da_duyet'
                     }])
                     .select()
                     .single();

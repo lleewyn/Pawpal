@@ -618,7 +618,7 @@ function openQuickCancelModal(booking) {
         if (button.disabled) return;
         button.disabled = true;
         try {
-            await changeOnSupabase(bookingId, { appointment_status: 'CANCELLED' });
+            await changeOnSupabase(bookingId, { appointment_status: 'da_huy' });
             modal.hide();
             showToast('Đã hủy lịch hẹn thành công', 'success');
             await loadBookings(document.querySelector('.filter-tab.active')?.dataset.status || 'all');
@@ -718,7 +718,7 @@ function openQuickRescheduleModal(booking) {
         button.disabled = true;
         try {
             await changeOnSupabase(bookingId, { appointment_date: selectedDate,
-                ...(selectedSlot ? { appointment_time: selectedSlot + ':00' } : {}), appointment_status: 'PENDING' });
+                ...(selectedSlot ? { appointment_time: selectedSlot + ':00' } : {}), appointment_status: 'cho_xac_nhan' });
             modal.hide();
             showToast('Đã đổi lịch hẹn thành công', 'success');
             await loadBookings(document.querySelector('.filter-tab.active')?.dataset.status || 'all');

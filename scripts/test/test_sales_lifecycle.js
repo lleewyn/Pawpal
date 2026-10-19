@@ -81,8 +81,8 @@ async function testFullSalesLifecycle() {
             order_code: testOrderCode,
             customer_id: customer?.id || null,
             shipping_address_id: shippingAddressId || null,
-            order_status: 'PENDING',
-            payment_status: 'UNPAID',
+            order_status: 'cho_xac_nhan',
+            payment_status: 'chua_thanh_toan',
             total_amount: effectivePrice * 2,
             note: '[QA Test Script] Đơn kiểm thử tự động vòng đời bán hàng'
         };
@@ -128,10 +128,10 @@ async function testFullSalesLifecycle() {
 
         const { error: confErr } = await adminDb
             .from('sales_order')
-            .update({ order_status: 'PACKING', payment_status: 'PAID' })
+            .update({ order_status: 'dang_dong_goi', payment_status: 'da_thanh_toan' })
             .eq('id', createdOrderId);
         if (confErr) throw confErr;
-        console.log('   -> Trạng thái đơn: PACKING | Thanh toán: PAID');
+        console.log('   -> Trạng thái đơn: dang_dong_goi | Thanh toán: da_thanh_toan');
 
         // Bước 5: Chuyển sang SHIPPING rồi DELIVERED
         console.log('\n5. Cập nhật tiến độ giao hàng: SHIPPING -> DELIVERED...');
@@ -139,21 +139,21 @@ async function testFullSalesLifecycle() {
         const { error: shipErr } = await adminDb
             .from('sales_order')
             .update({
-                order_status: 'SHIPPING',
+                order_status: 'dang_giao_hang',
                 tracking_code: testTracking,
                 shipping_provider_id: 'd6818d11-232a-4f72-b11b-3d5728ac3b2d', // Giao Hàng Nhanh
                 shipped_at: new Date().toISOString()
             })
             .eq('id', createdOrderId);
         if (shipErr) throw shipErr;
-        console.log('   -> Trạng thái đơn: SHIPPING | Vận đơn:', testTracking);
+        console.log('   -> Trạng thái đơn: dang_giao_hang | Vận đơn:', testTracking);
 
         const { error: delivErr } = await adminDb
             .from('sales_order')
-            .update({ order_status: 'DELIVERED' })
+            .update({ order_status: 'da_giao_hang' })
             .eq('id', createdOrderId);
         if (delivErr) throw delivErr;
-        console.log('   -> Trạng thái đơn: DELIVERED');
+        console.log('   -> Trạng thái đơn: da_giao_hang');
 
         // Bước 6: Kiểm tra tạo yêu cầu đổi trả (return_request & return_request_detail)
         console.log('\n6. Tạo yêu cầu đổi trả bảo hành (RMA return_request)...');
@@ -161,9 +161,9 @@ async function testFullSalesLifecycle() {
             sales_order_id: createdOrderId,
             customer_id: customer?.id || null,
             reason: '[QA Test] Bao bì bị móp rách trong quá trình vận chuyển',
-            return_type: 'RETURN',
+            return_type: 'tra_san_pham',
             description: '[QA Test] Phiếu hoàn tiền do vận chuyển móp hộp',
-            request_status: 'COMPLETED'
+            request_status: 'da_hoan_tat'
         };
         const { data: newRma, error: rmaErr } = await adminDb
             .from('return_request')

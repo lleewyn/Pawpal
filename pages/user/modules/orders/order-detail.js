@@ -1204,8 +1204,8 @@ function cancelOrder() {
         if (db) {
             try {
                 const { error: cancelErr } = await db.from('sales_order').update({
-                    order_status: 'CANCELLED',
-                    payment_status: isPaidOnline ? 'PENDING_REFUND' : 'CANCELLED',
+                    order_status: 'da_huy',
+                    payment_status: isPaidOnline ? 'da_hoan_tien' : 'chua_thanh_toan',
                     note: cancelReason ? `[Lý do hủy: ${cancelReason}]` : null,
                     updated_at: new Date().toISOString()
                 }).eq('id', currentOrder.id);
@@ -1407,7 +1407,7 @@ function openChangePaymentMethodModal() {
         if (db) {
             try {
                 await db.from('sales_order').update({
-                    order_status: newMethod === 'cod' ? 'PENDING' : 'PENDING_PAYMENT',
+                    order_status: 'cho_xac_nhan',
                     updated_at: new Date().toISOString()
                 }).eq('id', currentOrder.id);
             } catch (err) {

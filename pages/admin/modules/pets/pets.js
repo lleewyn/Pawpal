@@ -445,11 +445,12 @@
                 const appDate = app.appointment_date ? formatDate(app.appointment_date) : '';
                 const appTime = app.appointment_time ? app.appointment_time.slice(0, 5) : '';
                 const priceStr = app.total_price != null ? Number(app.total_price).toLocaleString('vi-VN') + 'đ' : 'Chưa cập nhật';
+                const stRaw = (app.appointment_status || '').toUpperCase();
                 let stText = 'Chờ xác nhận';
-                if (app.appointment_status === 'COMPLETED') stText = 'Đã hoàn thành';
-                else if (app.appointment_status === 'CONFIRMED') stText = 'Đã xác nhận';
-                else if (app.appointment_status === 'IN_PROGRESS') stText = 'Đang thực hiện';
-                else if (app.appointment_status === 'CANCELLED') stText = 'Đã hủy';
+                if (stRaw === 'COMPLETED' || stRaw === 'DA_HOAN_TAT' || stRaw === 'DA_HOAN_THANH') stText = 'Đã hoàn thành';
+                else if (stRaw === 'CONFIRMED' || stRaw === 'DA_XAC_NHAN') stText = 'Đã xác nhận';
+                else if (stRaw === 'IN_PROGRESS' || stRaw === 'DANG_THUC_HIEN') stText = 'Đang thực hiện';
+                else if (stRaw === 'CANCELLED' || stRaw === 'DA_HUY') stText = 'Đã hủy';
 
                 return {
                     id: app.appointment_code || `BK-${app.id.slice(0, 4)}`,

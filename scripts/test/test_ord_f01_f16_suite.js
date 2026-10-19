@@ -76,8 +76,8 @@ async function runOrdF01ToF16TestSuite() {
             order_code: orderCode1,
             customer_id: testCustId,
             shipping_address_id: addr.id,
-            order_status: 'PENDING',
-            payment_status: 'UNPAID',
+            order_status: 'cho_xac_nhan',
+            payment_status: 'chua_thanh_toan',
             total_amount: testProduct.sale_price * 2,
             note: 'Đơn kiểm thử ORD-F01'
         }).select().single();
@@ -162,10 +162,10 @@ async function runOrdF01ToF16TestSuite() {
         const { data: payRow, error: payErr } = await adminClient.from('payment').insert({
             order_id: order1.id,
             payment_code: payCode,
-            payment_type: 'PRODUCT',
+            payment_type: 'mua_hang',
             payment_method_config_id: 'vnpay',
             amount: 380000,
-            transaction_status: 'SUCCESS'
+            transaction_status: 'thanh_cong'
         }).select().single();
         if (payErr) throw payErr;
         testEntities.paymentIds.push(payRow.id);
@@ -192,8 +192,8 @@ async function runOrdF01ToF16TestSuite() {
         // -------------------------------------------------------------
         // ORD-F06 [P1]: Đơn đi qua trạng thái PENDING → PACKING → SHIPPING → DELIVERED đúng enum
         // -------------------------------------------------------------
-        console.log('6. [ORD-F06] Kiểm tra vòng đời trạng thái: PENDING -> PACKING -> SHIPPING -> DELIVERED...');
-        const stages = ['PACKING', 'SHIPPING', 'DELIVERED'];
+        console.log('6. [ORD-F06] Kiểm tra vòng đời trạng thái: cho_xac_nhan -> dang_dong_goi -> dang_giao_hang -> da_giao_hang...');
+        const stages = ['dang_dong_goi', 'dang_giao_hang', 'da_giao_hang'];
         for (const stage of stages) {
             const { error: stageErr } = await adminClient.from('sales_order').update({ order_status: stage }).eq('id', order1.id);
             if (stageErr) throw new Error(`Lỗi cập nhật sang trạng thái ${stage}: ${stageErr.message}`);
@@ -212,7 +212,7 @@ async function runOrdF01ToF16TestSuite() {
         const shipNote = `Hãng: ${testCarrier}; Vận đơn: ${testTracking}`;
 
         const { error: shipUpErr } = await adminClient.from('sales_order').update({
-            order_status: 'SHIPPING',
+            order_status: 'dang_giao_hang',
             note: shipNote
         }).eq('id', order1.id);
         if (shipUpErr) throw shipUpErr;
@@ -238,8 +238,8 @@ async function runOrdF01ToF16TestSuite() {
             order_code: 'ORD-CANCEL-' + Date.now().toString().slice(-6),
             customer_id: testCustId,
             shipping_address_id: addr.id,
-            order_status: 'PACKING',
-            payment_status: 'PAID',
+            order_status: 'dang_dong_goi',
+            payment_status: 'da_thanh_toan',
             total_amount: testProduct.sale_price,
             note: 'Đơn test hủy hoàn tồn'
         }).select().single();
@@ -248,10 +248,10 @@ async function runOrdF01ToF16TestSuite() {
         // Giả lập đã trừ 1 trong kho
         await adminClient.from('inventory').update({ quantity_in_stock: originalStock - 1 }).eq('id', testInv.id);
 
-        // Hủy đơn: hoàn lại tồn kho & cập nhật trạng thái CANCELLED, payment_status PENDING (chờ đối soát hoàn tiền)
+        // Hủy đơn: hoàn lại tồn kho & cập nhật trạng thái da_huy, payment_status chua_thanh_toan
         await adminClient.from('sales_order').update({
-            order_status: 'CANCELLED',
-            payment_status: 'PENDING'
+            order_status: 'da_huy',
+            payment_status: 'chua_thanh_toan'
         }).eq('id', cancelOrder.id);
 
         await adminClient.from('inventory').update({ quantity_in_stock: originalStock }).eq('id', testInv.id);
@@ -260,7 +260,7 @@ async function runOrdF01ToF16TestSuite() {
         const { data: verifyInv } = await adminClient.from('inventory').select('quantity_in_stock').eq('id', testInv.id).single();
 
         console.log(`   -> Trạng thái sau hủy: Đơn: ${verifyCancel.order_status}, Thanh toán: ${verifyCancel.payment_status}, Tồn kho: ${verifyInv.quantity_in_stock}`);
-        if (verifyCancel.order_status !== 'CANCELLED' || verifyCancel.payment_status !== 'PENDING' || verifyInv.quantity_in_stock !== originalStock) {
+        if (verifyCancel.order_status !== 'da_huy' || verifyCancel.payment_status !== 'chua_thanh_toan' || verifyInv.quantity_in_stock !== originalStock) {
             throw new Error('Hủy đơn không giải phóng tồn kho hoặc trạng thái hoàn tiền!');
         }
         passedTests++;
@@ -274,9 +274,9 @@ async function runOrdF01ToF16TestSuite() {
             sales_order_id: order1.id,
             customer_id: testCustId,
             reason: 'Khách đổi ý nhưng hàng nguyên seal',
-            return_type: 'RETURN',
+            return_type: 'tra_san_pham',
             description: '[Kiểm định đạt chuẩn] Nhập lại kho khả dụng',
-            request_status: 'APPROVED'
+            request_status: 'da_duyet'
         }).select().single();
         if (rmaPassErr) throw rmaPassErr;
         testEntities.rmaIds.push(rmaPass.id);
@@ -315,7 +315,7 @@ async function runOrdF01ToF16TestSuite() {
         if (audRefErr) throw audRefErr;
         testEntities.auditLogIds.push(auditRefund.id);
 
-        await adminClient.from('sales_order').update({ payment_status: 'REFUNDED' }).eq('id', order1.id);
+        await adminClient.from('sales_order').update({ payment_status: 'da_hoan_tien' }).eq('id', order1.id);
         console.log(`   -> Biên bản hoàn tiền lưu thành công trong audit_log ID: ${auditRefund.id}`);
         passedTests++;
         console.log('   => PASS ORD-F10\n');
@@ -325,7 +325,7 @@ async function runOrdF01ToF16TestSuite() {
         // -------------------------------------------------------------
         console.log('11. [ORD-F11] Kiểm tra điều chỉnh tồn kho ghi nhận ledger vào inventory_transaction & audit_log...');
         const { data: invTrans, error: transErr } = await adminClient.from('inventory_transaction').insert({
-            transaction_type: 'ADJUSTMENT',
+            transaction_type: 'dieu_chinh_tang',
             quantity: 5,
             stock_before: originalStock,
             stock_after: originalStock + 5,
@@ -374,16 +374,16 @@ async function runOrdF01ToF16TestSuite() {
             product_id: testProduct.id,
             service_id: null,
             appointment_id: null,
-            review_type: 'PRODUCT',
+            review_type: 'san_pham',
             rating: 5,
             review_content: 'Hạt Royal Canin chính hãng, mèo con ăn rất thích!',
-            review_status: 'APPROVED'
+            review_status: 'da_duyet'
         }).select().single();
         if (revErr) throw revErr;
         testEntities.reviewIds.push(prodReview.id);
 
         console.log(`   -> Đã tạo review sản phẩm ID: ${prodReview.id}, Loại: ${prodReview.review_type}, Product ID: ${prodReview.product_id}, Service ID: ${prodReview.service_id || 'NULL'}`);
-        if (prodReview.review_type !== 'PRODUCT' || prodReview.service_id !== null) {
+        if (prodReview.review_type !== 'san_pham' || prodReview.service_id !== null) {
             throw new Error('Đánh giá sản phẩm bị lẫn với đánh giá dịch vụ!');
         }
         passedTests++;

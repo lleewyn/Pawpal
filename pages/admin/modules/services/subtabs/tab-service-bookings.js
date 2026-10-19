@@ -743,7 +743,7 @@
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             const booking = (PawpalServices.state?.bookingsData || []).find(b => b.id === bookingId || b.dbId === bookingId);
             if (!client || !booking?.dbId || !booking.rawStatus) throw new Error('Thiếu dữ liệu lịch hẹn; vui lòng tải lại trang.');
-            const statuses = { confirmed: 'CONFIRMED', in_progress: 'IN_PROGRESS', completed: 'COMPLETED', cancelled: 'CANCELLED' };
+            const statuses = { confirmed: 'da_xac_nhan', in_progress: 'dang_thuc_hien', completed: 'da_hoan_tat', cancelled: 'da_huy', pending: 'cho_xac_nhan' };
             const transitions = { pending: ['confirmed', 'cancelled'], confirmed: ['in_progress', 'cancelled'], in_progress: ['completed'] };
             if (!statuses[newStatus] || !transitions[booking.status]?.includes(newStatus)) throw new Error('Trạng thái hiện tại không cho phép thao tác này.');
             if (newStatus==='in_progress' || newStatus==='completed') throw new Error('Vui lòng dùng biên bản tiếp nhận hoặc bàn giao để chuyển trạng thái.');
@@ -1522,7 +1522,7 @@
                         appointment_code: newId, customer_id: ownerId, pet_id: petRow.id,
                         service_id: service.dbId, staff_id: staffMatches[0]?.id || null,
                         appointment_date: date, appointment_time: time + ':00',
-                        appointment_status: 'PENDING', payment_status: 'UNPAID',
+                        appointment_status: 'cho_xac_nhan', payment_status: 'chua_thanh_toan',
                         total_price: totalPrice, change_count: 0,
                         note: [note, petAlert, tripNote].filter(Boolean).join('\n') || null
                     }).select('id, customer_id, pet_id, service_id').single();

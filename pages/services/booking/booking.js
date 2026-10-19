@@ -1477,7 +1477,7 @@ async function refreshBusySlotsForDate(date) {
         const { data, error } = await db.from('appointment')
             .select('appointment_time')
             .eq('appointment_date', date)
-            .in('appointment_status', ['PENDING', 'CONFIRMED', 'CHECKED_IN', 'IN_PROGRESS']);
+            .in('appointment_status', ['cho_xac_nhan', 'da_xac_nhan', 'da_check_in', 'dang_thuc_hien', 'PENDING', 'CONFIRMED']);
         if (error) throw error;
         bookedSlotsCache[date] = new Set((data || [])
             .map(r => (r.appointment_time || '').slice(0, 5))
@@ -2613,8 +2613,8 @@ async function insertBookingToSupabase(bookingRecord, currentUser) {
         staff_id: staffId,
         appointment_date: bookingRecord.date,
         appointment_time: appointmentTime,
-        appointment_status: 'PENDING',
-        payment_status: 'PENDING',
+        appointment_status: 'cho_xac_nhan',
+        payment_status: 'chua_thanh_toan',
         note: bookingRecord.note || null,
         total_price: bookingRecord.price,
         created_at: new Date().toISOString(),

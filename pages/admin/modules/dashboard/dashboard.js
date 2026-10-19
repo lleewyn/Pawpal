@@ -242,7 +242,7 @@
                 const s = (o.order_status || '').toUpperCase();
                 const p = (o.payment_status || '').toUpperCase();
                 if (s === 'CANCELLED' || s === 'DA_HUY' || s === 'REFUNDED' || s === 'DA_HOAN_TIEN' || p === 'REFUNDED') return false;
-                return p === 'PAID' || p === 'DA_THANH_TOAN' || ((s === 'COMPLETED' || s === 'DELIVERED' || s === 'DA_GIAO') && p !== 'UNPAID' && p !== 'CHUA_THANH_TOAN' && p !== 'COD_PENDING');
+                return p === 'PAID' || p === 'DA_THANH_TOAN' || ((s === 'COMPLETED' || s === 'DELIVERED' || s === 'DA_GIAO' || s === 'DA_GIAO_HANG') && p !== 'UNPAID' && p !== 'CHUA_THANH_TOAN' && p !== 'COD_PENDING');
             })
             .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
 
@@ -251,7 +251,7 @@
                 const isToday = toDateKey(a.appointment_date) === todayStr;
                 const s = (a.appointment_status || a.status || '').toUpperCase();
                 const p = (a.payment_status || '').toUpperCase();
-                const isCompleted = s === 'COMPLETED' || s === 'DA_HOAN_THANH';
+                const isCompleted = s === 'COMPLETED' || s === 'DA_HOAN_THANH' || s === 'DA_HOAN_TAT';
                 const isPaid = p === 'PAID' || p === 'DA_THANH_TOAN';
                 return isToday && isCompleted && isPaid;
             })
