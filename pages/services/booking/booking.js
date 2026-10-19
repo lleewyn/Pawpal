@@ -9,6 +9,21 @@ let selectedService = null;
 let bookingVouchers = null;
 let appliedBookingVoucher = null;
 
+async function ensureBookingVouchersLoaded() {
+    if (bookingVouchers) return bookingVouchers;
+    try {
+        if (window.API && typeof window.API.getVouchers === 'function') {
+            bookingVouchers = await window.API.getVouchers();
+        } else {
+            bookingVouchers = [];
+        }
+    } catch (e) {
+        console.warn('[booking] Could not load vouchers from Supabase:', e);
+        bookingVouchers = [];
+    }
+    return bookingVouchers;
+}
+
 function renderVoucherDropdown() {
     const dropdown = document.getElementById('bookingVoucherDropdown');
     const input = document.getElementById('bookingVoucherInput');
@@ -82,15 +97,7 @@ async function handleApplyBookingVoucher() {
         return;
     }
 
-    if (!bookingVouchers) {
-        try {
-            const res = await fetch('/data/vouchers.json');
-            if (res.ok) bookingVouchers = await res.json();
-            else bookingVouchers = [];
-        } catch (e) {
-            bookingVouchers = [];
-        }
-    }
+    await ensureBookingVouchersLoaded();
 
     const voucher = bookingVouchers.find(v => v.code === code && v.active);
     if (!voucher) {
@@ -396,15 +403,7 @@ async function restoreBookingSession() {
     }
 
     if (saved.appliedVoucherCode) {
-        if (!bookingVouchers) {
-            try {
-                const res = await fetch('/data/vouchers.json');
-                if (res.ok) bookingVouchers = await res.json();
-                else bookingVouchers = [];
-            } catch (e) {
-                bookingVouchers = [];
-            }
-        }
+        await ensureBookingVouchersLoaded();
         const voucher = bookingVouchers ? bookingVouchers.find(v => v.code === saved.appliedVoucherCode && v.active) : null;
         if (voucher) {
             appliedBookingVoucher = voucher;
@@ -442,6 +441,24 @@ let holdTimerInterval = null;
 let holdExpirationTime = null;
 let heldSlot = '';
 
+function mapStaffDbRole(dbRole, specialization = '') {
+    const r = (dbRole || '').toUpperCase();
+    const s = (specialization || '').toLowerCase();
+    if (r === 'ADMIN') return 'Admin';
+    if (r === 'VET' || s.includes('bác sĩ') || s.includes('thú y')) return 'Veterinarian';
+    if (r === 'DRIVER' || s.includes('tài xế') || s.includes('taxi')) return 'Driver';
+    if (r === 'RECEPTIONIST' || s.includes('lễ tân')) return 'Receptionist';
+    if (s.includes('bảo mẫu') || s.includes('hotel') || s.includes('lưu trú')) return 'Caregiver';
+    return 'Groomer';
+}
+
+function mapStaffDbStatus(dbStatus) {
+    if (dbStatus === 'locked') return 'RESIGNED';
+    if (dbStatus === 'leave') return 'LEAVE';
+    if (dbStatus === 'pause') return 'PAUSE';
+    return 'ACTIVE';
+}
+
 async function loadBookingConfig() {
     try {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -449,6 +466,8 @@ async function loadBookingConfig() {
             console.warn('[booking] Supabase Client not initialized, falling back to mock booking config');
             const res = await fetch('/data/booking-config.json');
             const config = await res.json();
+            config.rawStaffList = [];
+            config.roster = {};
             window.PawPalBookingConfig = config;
             return config;
         }
@@ -458,7 +477,7 @@ async function loadBookingConfig() {
             .order('id', { ascending: true });
 
         const { data: scheduleData, error: scheduleErr } = await db.from('staff_schedule')
-            .select('start_time, end_time');
+            .select('staff_id, work_date, shift, schedule_status, start_time, end_time');
 
         if (staffsErr) {
             throw new Error(staffsErr.message);
@@ -497,9 +516,33 @@ async function loadBookingConfig() {
             desc: 'PawPal tự động chọn chuyên viên trống lịch'
         });
 
+        const rawStaffList = (staffsData || []).map(s => ({
+            id: s.id,
+            name: s.full_name || 'Nhân viên PawPal',
+            role: mapStaffDbRole(s.role, s.specialization),
+            position: s.specialization || '',
+            status: mapStaffDbStatus(s.status),
+            shift: s.shift || 'MORNING',
+            skillExam: s.skill_score == null ? '' : `${s.skill_score}/100`,
+            serviceLocked: Boolean(s.service_locked)
+        }));
+
+        const roster = {};
+        (scheduleData || []).forEach(row => {
+            if (row.schedule_status === 'OFF') return;
+            const date = String(row.work_date || '').slice(0, 10);
+            const staffId = row.staff_id;
+            const shift = row.shift;
+            if (!date || !staffId || !shift) return;
+            (roster[date] ||= {});
+            (roster[date][staffId] ||= []).push(shift);
+        });
+
         const config = {
             slots: finalSlots,
-            staffs: staffsArray
+            staffs: staffsArray,
+            rawStaffList,
+            roster
         };
         window.PawPalBookingConfig = config;
         return config;
@@ -507,6 +550,10 @@ async function loadBookingConfig() {
         console.warn('[booking] Cannot load booking-config from Supabase, falling back to JSON:', error);
         const res = await fetch('/data/booking-config.json');
         const config = await res.json().catch(() => null);
+        if (config) {
+            config.rawStaffList = [];
+            config.roster = {};
+        }
         window.PawPalBookingConfig = config;
         return config;
     }
@@ -559,15 +606,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         voucherInput.addEventListener('focus', async () => {
-            if (!bookingVouchers) {
-                try {
-                    const res = await fetch('/data/vouchers.json');
-                    if (res.ok) bookingVouchers = await res.json();
-                    else bookingVouchers = [];
-                } catch (e) {
-                    bookingVouchers = [];
-                }
-            }
+            await ensureBookingVouchersLoaded();
             renderVoucherDropdown();
             voucherDropdown.style.display = 'block';
         });
@@ -1423,6 +1462,35 @@ window.updateAddonQty = function (id, delta) {
     saveBookingSession();
 };
 
+let bookedSlotsCache = {};
+let bookedSlotsLoadingDate = null;
+
+async function refreshBusySlotsForDate(date) {
+    if (!date || bookedSlotsCache[date] || bookedSlotsLoadingDate === date) return;
+    bookedSlotsLoadingDate = date;
+    try {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) {
+            bookedSlotsCache[date] = new Set();
+            return;
+        }
+        const { data, error } = await db.from('appointment')
+            .select('appointment_time')
+            .eq('appointment_date', date)
+            .in('appointment_status', ['PENDING', 'CONFIRMED', 'CHECKED_IN', 'IN_PROGRESS']);
+        if (error) throw error;
+        bookedSlotsCache[date] = new Set((data || [])
+            .map(r => (r.appointment_time || '').slice(0, 5))
+            .filter(Boolean));
+    } catch (e) {
+        console.warn('[booking] Could not load busy slots from Supabase:', e);
+        bookedSlotsCache[date] = new Set();
+    } finally {
+        if (bookedSlotsLoadingDate === date) bookedSlotsLoadingDate = null;
+        if (bookingState.date === date) renderTimeslots();
+    }
+}
+
 function renderTimeslots() {
     const grid = document.getElementById('timeslotGrid');
     if (!grid) return;
@@ -1434,7 +1502,8 @@ function renderTimeslots() {
     const now = new Date();
     const isToday = bookingState.date === now.toISOString().split('T')[0];
 
-    const existingBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+    const busySlotsForDate = bookedSlotsCache[bookingState.date];
+    if (!busySlotsForDate) refreshBusySlotsForDate(bookingState.date);
 
     grid.innerHTML = slots.map(slot => {
         let isTooSoon = false;
@@ -1450,7 +1519,7 @@ function renderTimeslots() {
             }
         }
 
-        const isBusy = existingBookings.some(b => b.date === bookingState.date && b.timeStart === slot);
+        const isBusy = busySlotsForDate ? busySlotsForDate.has(slot) : false;
 
         let statusClass = 'open';
         if (isTooSoon) statusClass = 'soon';
@@ -1547,35 +1616,12 @@ function renderStaff() {
     const listContainer = document.getElementById('staffList');
     if (!listContainer) return;
 
-    // Lấy danh sách nhân viên từ Staff Module hoặc LocalStorage hoặc Fallback
-    let rawStaffList = [];
-    if (window.PawpalStaffManager && typeof window.PawpalStaffManager.getAllStaff === 'function') {
-        rawStaffList = window.PawpalStaffManager.getAllStaff();
-    } else {
-        try {
-            const saved = localStorage.getItem('pawpal_staff_data');
-            if (saved) rawStaffList = JSON.parse(saved);
-        } catch(e) {}
-    }
+    // Lấy danh sách nhân viên và lịch phân ca thật từ Supabase (đã nạp sẵn trong loadBookingConfig)
+    const rawStaffList = (window.PawPalBookingConfig && Array.isArray(window.PawPalBookingConfig.rawStaffList))
+        ? window.PawPalBookingConfig.rawStaffList
+        : [];
 
-    if (!rawStaffList || rawStaffList.length === 0) {
-        rawStaffList = [
-            { id: 'EMP-001', name: 'Lê Lệ Quyên', role: 'Admin', position: 'Quản trị viên', status: 'ACTIVE', shift: 'MORNING', skillExam: 'Đạt (95đ)', serviceLocked: false },
-            { id: 'EMP-002', name: 'Nguyễn Văn A', role: 'Groomer', position: 'Groomer', status: 'ACTIVE', shift: 'AFTERNOON', skillExam: 'Đạt (85đ)', serviceLocked: false },
-            { id: 'EMP-004', name: 'Lê Văn C', role: 'Veterinarian', position: 'Bác sĩ/Bảo mẫu', status: 'ACTIVE', shift: 'NIGHT', skillExam: 'Đạt (90đ)', serviceLocked: false },
-            { id: 'EMP-008', name: 'Nguyễn Thị Thảo', role: 'Groomer', position: 'Groomer', status: 'ACTIVE', shift: 'MORNING', skillExam: 'Đạt (92đ)', serviceLocked: false },
-            { id: 'EMP-009', name: 'Vũ Đình Trọng', role: 'Veterinarian', position: 'Bác sĩ/Bảo mẫu', status: 'ACTIVE', shift: 'MORNING', skillExam: 'Đạt (88đ)', serviceLocked: false },
-            { id: 'EMP-010', name: 'Đỗ Bảo Ngọc', role: 'Receptionist', position: 'Lễ tân & Chăm sóc', status: 'ACTIVE', shift: 'EVENING', skillExam: 'Đạt (82đ)', serviceLocked: false },
-            { id: 'EMP-011', name: 'Nguyễn Quốc Bảo', role: 'Driver', position: 'Tài xế Taxi Pet', status: 'ACTIVE', shift: 'ALL', skillExam: 'Đạt (90đ)', serviceLocked: false }
-        ];
-    }
-
-    // Lấy Roster từ LocalStorage
-    let roster = {};
-    try {
-        const savedRos = localStorage.getItem('pawpal_staff_roster');
-        if (savedRos) roster = JSON.parse(savedRos);
-    } catch(e) {}
+    const roster = (window.PawPalBookingConfig && window.PawPalBookingConfig.roster) || {};
 
     // Thông tin dịch vụ hiện tại
     const serviceCategory = (selectedService?.category || '').toLowerCase();
@@ -1631,7 +1677,7 @@ function renderStaff() {
         if (serviceCategory === 'spa' || serviceName.includes('tắm') || serviceName.includes('cắt tỉa') || serviceName.includes('grooming') || serviceName.includes('nhuộm')) {
             if (staff.role === 'Groomer' || staff.role === 'Admin') matchRole = true;
         } else if (serviceCategory === 'hotel' || serviceName.includes('khách sạn') || serviceName.includes('lưu trú')) {
-            if (staff.role === 'Veterinarian' || staff.role === 'Receptionist') matchRole = true;
+            if (staff.role === 'Veterinarian' || staff.role === 'Receptionist' || staff.role === 'Caregiver') matchRole = true;
         } else if (serviceCategory === 'taxi' || serviceName.includes('taxi') || serviceName.includes('đưa đón')) {
             if (staff.role === 'Driver') matchRole = true;
         } else if (serviceCategory === 'vet' || serviceName.includes('khám') || serviceName.includes('thú y') || serviceName.includes('tiêm')) {
@@ -2388,6 +2434,7 @@ async function persistBookingSubmit() {
     if (holdTimerInterval) {
         clearInterval(holdTimerInterval);
     }
+    delete bookedSlotsCache[bookingRecord.date];
     sessionStorage.setItem('last_booking_id', finalBookingId);
     clearBookingSession();
 
