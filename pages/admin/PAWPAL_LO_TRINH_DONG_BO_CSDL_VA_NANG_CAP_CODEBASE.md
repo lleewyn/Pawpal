@@ -136,13 +136,20 @@ Quá trình đối soát tự động giữa tài liệu thiết kế gốc [`CD
                                     │
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│ BƯỚC 3: CSDL (Dọn dẹp triệt để - Chuẩn hóa 3NF không trùng lặp)        │
-│ Chạy script SQL DROP COLUMN để xóa dứt điểm các cột Vàng:             │
-│   • ALTER TABLE sales_order_detail DROP COLUMN product_id;             │
-│   • ALTER TABLE cart_item DROP COLUMN product_id;                      │
-│   • ALTER TABLE purchase_order_detail DROP COLUMN product_id;          │
-│   • ALTER TABLE payment DROP COLUMN payment_method_id;                 │
-│ Kết quả: CSDL sạch 100%, ERD chuẩn 3NF, không mất 1 byte dữ liệu!      │
+│ BƯỚC 3: KẾT LUẬN KIẾN TRÚC & ĐỐI SOÁT VỚI CDSLfinal.md                │
+│ • Đối soát với tài liệu gốc CDSLfinal.md (Bảng 37, 24, 42):            │
+│   Tài liệu thiết kế CHÍNH THỨC quy định lưu song song cả 2 cột:         │
+│   - sales_order_detail: có cả product_id VÀ product_variant_id         │
+│   - purchase_order_detail: có cả product_id VÀ product_variant_id      │
+│   - payment: có cả payment_method_id VÀ payment_method_config_id       │
+│ • Quyết định: GIỮ NGUYÊN CẢ HAI CỘT (Không chạy lệnh DROP COLUMN).     │
+│ • Lợi ích:                                                             │
+│   1. Tối ưu hiệu năng truy vấn báo cáo (Read Optimization).            │
+│   2. Gom nhóm sản phẩm cha SPU tức thì mà không cần JOIN trung gian.   │
+│   3. Tương thích 100% với luồng POS Admin và Web Checkout.             │
+│   4. Khớp 100% với tài liệu thiết kế nghiệp vụ CDSLfinal.md.           │
+│ • Các cột thừa thật sự (sku, cost_price, sale_price trên bảng product) │
+│   đã được dọn dẹp và xóa dứt điểm thành công 100%.                     │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
