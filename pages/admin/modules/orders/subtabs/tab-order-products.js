@@ -380,10 +380,8 @@
     }
 
     function toggleVariantMode(isMultiple) {
-        const radioSingle = document.querySelector('input[name="prodVariantType"][value="single"]');
-        const radioMulti = document.querySelector('input[name="prodVariantType"][value="multiple"]');
-        if (isMultiple && radioMulti) radioMulti.checked = true;
-        if (!isMultiple && radioSingle) radioSingle.checked = true;
+        const chk = document.getElementById('chkEnableVariants');
+        if (chk) chk.checked = !!isMultiple;
 
         const singleBox = document.getElementById('singleProductPriceBox');
         const multiBox = document.getElementById('multipleProductVariantsBox');
@@ -394,6 +392,11 @@
             renderAttributeTags(1);
             renderAttributeTags(2);
             generateVariantMatrix();
+        } else {
+            attr1TagValues = [];
+            attr2TagValues = [];
+            renderAttributeTags(1);
+            renderAttributeTags(2);
         }
     }
 
@@ -627,7 +630,7 @@
                 return;
             }
 
-            const isMultiple = document.querySelector('input[name="prodVariantType"]:checked')?.value === 'multiple';
+            const isMultiple = document.getElementById('chkEnableVariants')?.checked || false;
             let unit = 'Túi';
             let spec = '';
             let costPrice = 0;
@@ -813,22 +816,37 @@
 
                         // Đồng bộ biến thể trong bảng product_variant
                         try {
-                            const { data: existingVars } = await client.from('product_variant').select('id').eq('product_id', existingProd.id).limit(1);
-                            if (existingVars && existingVars.length > 0) {
-                                await client.from('product_variant').update({
-                                    sku_variant: sku,
-                                    cost_price: costPrice,
-                                    sale_price: price,
-                                    status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
-                                }).eq('id', existingVars[0].id);
-                            } else {
-                                await client.from('product_variant').insert({
+                            if (isMultiple && variants.length > 0) {
+                                await client.from('product_variant').delete().eq('product_id', existingProd.id);
+                                const varInserts = variants.map(v => ({
                                     product_id: existingProd.id,
-                                    sku_variant: sku,
-                                    cost_price: costPrice,
-                                    sale_price: price,
+                                    sku_variant: v.sku,
+                                    cost_price: v.costPrice,
+                                    sale_price: v.price,
+                                    compare_at_price: v.originalPrice || null,
                                     status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
-                                });
+                                }));
+                                await client.from('product_variant').insert(varInserts);
+                            } else {
+                                const { data: existingVars } = await client.from('product_variant').select('id').eq('product_id', existingProd.id).limit(1);
+                                if (existingVars && existingVars.length > 0) {
+                                    await client.from('product_variant').update({
+                                        sku_variant: sku,
+                                        cost_price: costPrice,
+                                        sale_price: price,
+                                        compare_at_price: originalPrice || null,
+                                        status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
+                                    }).eq('id', existingVars[0].id);
+                                } else {
+                                    await client.from('product_variant').insert({
+                                        product_id: existingProd.id,
+                                        sku_variant: sku,
+                                        cost_price: costPrice,
+                                        sale_price: price,
+                                        compare_at_price: originalPrice || null,
+                                        status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
+                                    });
+                                }
                             }
                         } catch (varSyncErr) {
                             console.warn('Lỗi đồng bộ product_variant:', varSyncErr);
@@ -903,17 +921,30 @@
                         if (newP && newP.id) {
                             createdProdDbId = newP.id;
 
-                            // Tự động tạo biến thể mặc định trong product_variant
+                            // Đồng bộ biến thể trong bảng product_variant
                             try {
-                                await client.from('product_variant').insert({
-                                    product_id: newP.id,
-                                    sku_variant: sku,
-                                    cost_price: costPrice,
-                                    sale_price: price,
-                                    status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
-                                });
+                                if (isMultiple && variants.length > 0) {
+                                    const varInserts = variants.map(v => ({
+                                        product_id: newP.id,
+                                        sku_variant: v.sku,
+                                        cost_price: v.costPrice,
+                                        sale_price: v.price,
+                                        compare_at_price: v.originalPrice || null,
+                                        status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
+                                    }));
+                                    await client.from('product_variant').insert(varInserts);
+                                } else {
+                                    await client.from('product_variant').insert({
+                                        product_id: newP.id,
+                                        sku_variant: sku,
+                                        cost_price: costPrice,
+                                        sale_price: price,
+                                        compare_at_price: originalPrice || null,
+                                        status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
+                                    });
+                                }
                             } catch (varInsErr) {
-                                console.warn('Lỗi tạo product_variant mặc định:', varInsErr);
+                                console.warn('Lỗi tạo product_variant:', varInsErr);
                             }
 
                             const { error: invErr } = await client.from('inventory').insert({

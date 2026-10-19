@@ -1291,50 +1291,54 @@
                                 </select>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- KHỐI 2: GIÁ BÁN VÀ PHÂN LOẠI -->
-                    <div class="product-form-section">
-                        <div class="section-header-inline">
-                            <div class="product-section-heading" style="margin-bottom: 0;">2. Giá bán và phân loại</div>
-                            <div class="variant-toggle-group">
-                                <label class="radio-label-clean">
-                                    <input type="radio" name="prodVariantType" value="single" checked onchange="PawpalOrdersModule.toggleVariantMode(false)">
-                                    <span>Sản phẩm đơn</span>
-                                </label>
-                                <label class="radio-label-clean">
-                                    <input type="radio" name="prodVariantType" value="multiple" onchange="PawpalOrdersModule.toggleVariantMode(true)">
-                                    <span>Nhiều phân loại</span>
-                                </label>
+                        <div class="form-row-2col" style="margin-top: 14px;">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Đơn vị tính</label>
+                                <select class="admin-select" id="newProdUnit">
+                                    <option value="Túi">Túi</option>
+                                    <option value="Lon">Lon</option>
+                                    <option value="Hộp">Hộp</option>
+                                    <option value="Gói">Gói</option>
+                                    <option value="Chai">Chai</option>
+                                    <option value="Tuýp">Tuýp</option>
+                                    <option value="Cái">Cái</option>
+                                    <option value="Chiếc">Chiếc</option>
+                                    <option value="Bộ">Bộ</option>
+                                    <option value="Khay">Khay</option>
+                                </select>
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Quy cách đóng gói</label>
+                                <input type="text" class="admin-input" id="newProdSpec" placeholder="Ví dụ: Lon 180g, Túi 2kg...">
                             </div>
                         </div>
 
-                        <!-- 2A. GIAO DIỆN SẢN PHẨM ĐƠN -->
-                        <div id="singleProductPriceBox">
-                            <div class="form-row-2col">
-                                <div class="form-group-item">
-                                    <label class="form-label-clean">Đơn vị tính</label>
-                                    <select class="admin-select" id="newProdUnit">
-                                        <option value="Túi">Túi</option>
-                                        <option value="Lon">Lon</option>
-                                        <option value="Hộp">Hộp</option>
-                                        <option value="Gói">Gói</option>
-                                        <option value="Chai">Chai</option>
-                                        <option value="Tuýp">Tuýp</option>
-                                        <option value="Cái">Cái</option>
-                                        <option value="Chiếc">Chiếc</option>
-                                        <option value="Bộ">Bộ</option>
-                                        <option value="Khay">Khay</option>
-                                    </select>
-                                </div>
-                                <div class="form-group-item">
-                                    <label class="form-label-clean">Quy cách đóng gói</label>
-                                    <input type="text" class="admin-input" id="newProdSpec" placeholder="Ví dụ: Lon 180g, Túi 2kg...">
+                        <div class="form-group-item" style="margin-top: 14px;">
+                            <label class="form-label-clean">Hình ảnh sản phẩm</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="text" class="admin-input" id="newProdImages" placeholder="Nhập đường dẫn URL ảnh, phân cách bằng dấu phẩy..." style="flex: 1;" oninput="PawpalOrdersModule.updateProductImagePreview()">
+                                <div class="product-thumb-preview-box" id="productThumbPreviewBox" title="Xem trước ảnh chính">
+                                    <img id="productThumbPreviewImg" src="/assets/images/shop/products/TP-PATE-02.png" alt="Xem trước" onerror="this.src='/assets/images/shop/products/tp-hat-01.png';">
                                 </div>
                             </div>
+                            <div id="productGalleryThumbnailsRow" style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;"></div>
+                        </div>
+                    </div>
 
+                    <!-- KHỐI 2: GIÁ BÁN VÀ KHO HÀNG -->
+                    <div class="product-form-section">
+                        <div class="section-header-inline" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                            <div class="product-section-heading" style="margin-bottom: 0;">2. Giá bán và kho hàng</div>
+                            <label class="form-check-label" style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #236B48; cursor: pointer; user-select: none;">
+                                <input type="checkbox" id="chkEnableVariants" onchange="PawpalOrdersModule.toggleVariantMode(this.checked)" style="accent-color: #236B48; width: 16px; height: 16px; cursor: pointer;">
+                                <span>Sản phẩm có nhiều phân loại</span>
+                            </label>
+                        </div>
+
+                        <!-- 2A. GIAO DIỆN SẢN PHẨM ĐƠN (MẶC ĐỊNH) -->
+                        <div id="singleProductPriceBox">
                             <!-- 3 CỘT GIÁ CHUẨN ERP -->
-                            <div class="form-row-3col" style="margin-top: 14px;">
+                            <div class="form-row-3col">
                                 <div class="form-group-item">
                                     <label class="form-label-clean">Giá vốn nhập kho</label>
                                     <input type="number" class="admin-input" id="newProdCostPrice" placeholder="Ví dụ: 95000" min="0">
@@ -1351,24 +1355,13 @@
 
                             <div class="form-row-2col" style="margin-top: 14px;">
                                 <div class="form-group-item">
-                                    <label class="form-label-clean">Tồn kho ban đầu</label>
+                                    <label class="form-label-clean">Tồn kho ban đầu <span style="color: #DC2626;">*</span></label>
                                     <input type="number" class="admin-input" id="newProdInitialStock" value="20" min="0">
                                 </div>
                                 <div class="form-group-item">
                                     <label class="form-label-clean">Ngưỡng cảnh báo tồn thấp</label>
                                     <input type="number" class="admin-input" id="newProdMinStock" value="5" min="1">
                                 </div>
-                            </div>
-
-                            <div class="form-group-item" style="margin-top: 14px;">
-                                <label class="form-label-clean">Hình ảnh sản phẩm</label>
-                                <div style="display: flex; gap: 10px; align-items: center;">
-                                    <input type="text" class="admin-input" id="newProdImages" placeholder="Nhập đường dẫn URL ảnh, phân cách bằng dấu phẩy..." style="flex: 1;" oninput="PawpalOrdersModule.updateProductImagePreview()">
-                                    <div class="product-thumb-preview-box" id="productThumbPreviewBox" title="Xem trước ảnh chính">
-                                        <img id="productThumbPreviewImg" src="/assets/images/shop/products/TP-PATE-02.png" alt="Xem trước" onerror="this.src='/assets/images/shop/products/tp-hat-01.png';">
-                                    </div>
-                                </div>
-                                <div id="productGalleryThumbnailsRow" style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;"></div>
                             </div>
                         </div>
 
