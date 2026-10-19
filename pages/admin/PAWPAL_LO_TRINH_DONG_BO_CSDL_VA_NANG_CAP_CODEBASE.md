@@ -164,17 +164,11 @@ graph TD
 ### GIAI ĐOẠN 1: MIGRATION CSDL TRÊN SUPABASE (DBA / ADMIN)
 > **Mục tiêu:** Bổ sung toàn bộ các cột mới và backfill dữ liệu cũ mà không làm gián đoạn hệ thống.
 
-- [ ] **1.1. Chạy file SQL:** Mở Supabase SQL Editor $\rightarrow$ Chạy file [`scripts/database/20261019_sync_schema_with_cdsl.sql`](file:///d:/Aboutme/MyProject/Pawpal/scripts/database/20261019_sync_schema_with_cdsl.sql).
-- [ ] **1.2. Xác nhận cột bảng `product`:** Kiểm tra các cột `brand_name`, `target_pet`, `min_price`, `description`, `slug` đã xuất hiện trong bảng `product`.
-- [ ] **1.3. Xác nhận Backfill dữ liệu `product`:** Chạy query kiểm tra xem các sản phẩm như Royal Canin, Petkit, King's Pet đã được tự động điền `brand_name` hay chưa:
-  ```sql
-  SELECT id, product_name, brand_name, target_pet, description FROM product LIMIT 10;
-  ```
-- [ ] **1.4. Xác nhận cột bảng `sales_order` & Backfill vận đơn:** Kiểm tra xem `tracking_code` đã được trích xuất từ chuỗi `note` hay chưa:
-  ```sql
-  SELECT id, order_code, tracking_code, note FROM sales_order WHERE tracking_code IS NOT NULL LIMIT 5;
-  ```
-- [ ] **1.5. Chạy lại script đối soát:** Chạy lệnh `node scripts/test/compare_schema_cdsl.js` để xác nhận số lượng cột thiếu về **0**.
+- [x] **1.1. Chạy file SQL:** Mở Supabase SQL Editor $\rightarrow$ Chạy file [`scripts/database/20261019_sync_schema_with_cdsl.sql`](file:///d:/Aboutme/MyProject/Pawpal/scripts/database/20261019_sync_schema_with_cdsl.sql).
+- [x] **1.2. Xác nhận cột bảng `product`:** Kiểm tra các cột `brand_name`, `target_pet`, `min_price`, `description`, `slug` đã xuất hiện trong bảng `product`.
+- [x] **1.3. Xác nhận Backfill dữ liệu `product`:** Chạy query kiểm tra xem các sản phẩm như Royal Canin, Petkit, King's Pet đã được tự động điền `brand_name`.
+- [x] **1.4. Xác nhận cột bảng `sales_order` & Backfill vận đơn:** Kiểm tra cột `tracking_code`, `shipping_provider_id`, `shipped_at`.
+- [x] **1.5. Chạy lại script đối soát:** Chạy lệnh `node scripts/test/compare_schema_cdsl.js` để xác nhận số lượng cột thiếu về **0**.
 
 ---
 
