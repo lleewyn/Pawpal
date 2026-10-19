@@ -282,31 +282,37 @@
     let attr2TagValues = [];
 
     function renderAttributeTags(group) {
-        const container = document.getElementById(group === 1 ? 'attr1TagsContainer' : 'attr2TagsContainer');
-        const input = document.getElementById(group === 1 ? 'attr1NewTagInput' : 'attr2NewTagInput');
-        const hiddenInput = document.getElementById(group === 1 ? 'attr1Values' : 'attr2Values');
-        if (!container || !input) return;
+        const listContainer = document.getElementById(group === 1 ? 'attr1TagsList' : 'attr2TagsList');
+        const input = document.getElementById(group === 1 ? 'attr1TagInput' : 'attr2TagInput');
+        if (!listContainer) return;
 
         const tags = group === 1 ? attr1TagValues : attr2TagValues;
-        if (hiddenInput) hiddenInput.value = tags.join(', ');
+        listContainer.innerHTML = '';
 
-        const existingTags = container.querySelectorAll('.variant-tag-chip');
-        existingTags.forEach(el => el.remove());
+        if (input) {
+            input.placeholder = tags.length > 0 ? 'Thêm giá trị...' : 'Nhập giá trị rồi nhấn Enter hoặc phẩy (,)...';
+        }
 
         tags.forEach((tag, idx) => {
             const chip = document.createElement('span');
-            chip.className = 'variant-tag-chip';
-            chip.innerHTML = `${tag} <button type="button" class="btn-remove-tag" onclick="PawpalOrdersModule.removeTagValue(${group}, ${idx})">&times;</button>`;
-            container.insertBefore(chip, input);
+            chip.className = 'tag-item-chip';
+            chip.innerHTML = `${tag} <span class="tag-item-remove" title="Xóa" onclick="event.stopPropagation(); PawpalOrdersModule.removeTagValue(${group}, ${idx})">&times;</span>`;
+            listContainer.appendChild(chip);
         });
     }
 
     function addTagValue(group, val) {
-        if (!val || !val.trim()) return;
-        const clean = val.trim();
+        if (!val) return;
+        const parts = String(val).split(',').map(s => s.trim()).filter(Boolean);
         const arr = group === 1 ? attr1TagValues : attr2TagValues;
-        if (!arr.includes(clean)) {
-            arr.push(clean);
+        let changed = false;
+        parts.forEach(p => {
+            if (!arr.includes(p)) {
+                arr.push(p);
+                changed = true;
+            }
+        });
+        if (changed) {
             renderAttributeTags(group);
             generateVariantMatrix();
         }
@@ -325,7 +331,7 @@
         if (e.key === 'Enter' || e.key === ',') {
             e.preventDefault();
             const input = e.target;
-            const val = input.value.replace(',', '').trim();
+            const val = input.value.trim();
             if (val) {
                 addTagValue(group, val);
                 input.value = '';
@@ -336,6 +342,41 @@
                 removeTagValue(group, arr.length - 1);
             }
         }
+    }
+
+    function applyBulkVariantValues() {
+        const cost = document.getElementById('bulkCostPrice')?.value;
+        const price = document.getElementById('bulkPrice')?.value;
+        const orig = document.getElementById('bulkOriginalPrice')?.value;
+        const stock = document.getElementById('bulkStock')?.value;
+        const img = document.getElementById('bulkImage')?.value?.trim();
+
+        const rows = document.querySelectorAll('#productVariantsTableBody tr.variant-row-item');
+        if (rows.length === 0) return;
+
+        rows.forEach(r => {
+            if (cost !== '' && cost !== undefined) {
+                const el = r.querySelector('.variant-cost-input');
+                if (el) el.value = cost;
+            }
+            if (price !== '' && price !== undefined) {
+                const el = r.querySelector('.variant-price-input');
+                if (el) el.value = price;
+            }
+            if (orig !== '' && orig !== undefined) {
+                const el = r.querySelector('.variant-orig-input');
+                if (el) el.value = orig;
+            }
+            if (stock !== '' && stock !== undefined) {
+                const el = r.querySelector('.variant-stock-input');
+                if (el) el.value = stock;
+            }
+            if (img) {
+                const el = r.querySelector('.variant-img-input');
+                if (el) el.value = img;
+            }
+        });
+        showToast('Đã áp dụng thông số hàng loạt cho tất cả biến thể!', 'success');
     }
 
     function toggleVariantMode(isMultiple) {
@@ -464,6 +505,9 @@
                     </td>
                     <td>
                         <input type="text" class="admin-input variant-img-input" value="${autoImg}" placeholder="Đường dẫn ảnh" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
+                    </td>
+                    <td style="text-align: center;">
+                        <button type="button" class="tag-item-remove" style="color: #DC2626; cursor: pointer; font-size: 14px; background: none; border: none;" title="Xóa dòng" onclick="this.closest('tr').remove()">&times;</button>
                     </td>
                 </tr>
             `;
@@ -1803,6 +1847,10 @@
     window.PawpalOrdersModule.addTagValue = addTagValue;
     window.PawpalOrdersModule.removeTagValue = removeTagValue;
     window.PawpalOrdersModule.handleTagInputKey = handleTagInputKey;
+    window.PawpalOrdersModule.handleTagInputKeyDown = handleTagInputKey;
+    window.PawpalOrdersModule.renderAttributeTags = renderAttributeTags;
+    window.PawpalOrdersModule.generateVariantMatrix = generateVariantMatrix;
+    window.PawpalOrdersModule.applyBulkVariantValues = applyBulkVariantValues;
     window.PawpalOrdersModule.toggleVariantMode = toggleVariantMode;
     window.PawpalOrdersModule.removeProductImageAtIndex = function(idx) {
         const input = document.getElementById('newProdImages');
