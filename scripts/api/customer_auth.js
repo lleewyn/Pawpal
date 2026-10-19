@@ -46,14 +46,15 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
         const staff = await admin.from('staff').select('id').eq('phone_number', phone).limit(1);
         if (staff.error) throw staff.error;
         if (staff.data?.length) throw new Error('Tài khoản nhân sự phải đăng nhập tại cổng quản trị.');
-        if (data?.account_status === 'LOCKED') throw new Error('Tài khoản đã bị khóa. Vui lòng liên hệ hỗ trợ.');
+        if (data?.account_status === 'LOCKED' || data?.account_status === 'da_khoa') throw new Error('Tài khoản đã bị khóa. Vui lòng liên hệ hỗ trợ.');
         return data;
     }
     async function identity(authId) {
         const staff = await admin.from('staff').select('id').eq('auth_user_id', authId).limit(1);
         if (staff.error || staff.data?.length) throw new Error('Phiên đăng nhập không thuộc tài khoản khách hàng.');
         const result = await admin.from('customer').select('id, phone_main, email, account_status, is_temporary, customer_profile(full_name, gender, date_of_birth), customer_membership(total_paw_points, membership_tier(tier_name))').eq('auth_user_id', authId).maybeSingle();
-        if (result.error || !result.data || result.data.account_status !== 'ACTIVE' || result.data.is_temporary) throw new Error('Tài khoản chưa hoạt động hoặc đã bị khóa.');
+        const isActive = result.data?.account_status === 'ACTIVE' || result.data?.account_status === 'dang_hoat_dong';
+        if (result.error || !result.data || !isActive || result.data.is_temporary) throw new Error('Tài khoản chưa hoạt động hoặc đã bị khóa.');
         const c = result.data;
         const profile = Array.isArray(c.customer_profile) ? c.customer_profile[0] : c.customer_profile;
         const member = Array.isArray(c.customer_membership) ? c.customer_membership[0] : c.customer_membership;
