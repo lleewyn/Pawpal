@@ -1313,15 +1313,27 @@
 
         const hasVariants = !!(prod.hasVariants && Array.isArray(prod.variants) && prod.variants.length > 0);
         if (hasVariants) {
+            // Đảm bảo từng biến thể luôn có thuộc tính phân loại
+            prod.variants.forEach((v, idx) => {
+                if (!v.attr1) {
+                    v.attr1 = v.variant_flavor?.flavor_name || (v.name ? v.name.split('-')[0].trim() : `Phân loại ${idx + 1}`);
+                }
+                if (!v.attr2 && v.variant_size?.size_name) {
+                    v.attr2 = v.variant_size.size_name;
+                }
+            });
+
             attr1TagValues = [...new Set(prod.variants.map(v => v.attr1 || v.name).filter(Boolean))];
             attr2TagValues = [...new Set(prod.variants.map(v => v.attr2).filter(Boolean))];
 
             const attr1N = document.getElementById('attr1Name');
             const attr2N = document.getElementById('attr2Name');
             if (attr1N) attr1N.value = prod.attr1Name || 'Hương vị';
-            if (attr2N) attr2N.value = prod.attr2Name || 'Quy cách';
+            if (attr2N) attr2N.value = prod.attr2Name || (attr2TagValues.length > 0 ? 'Kích thước' : 'Quy cách');
 
             toggleVariantMode(true);
+            renderAttributeTags(1);
+            renderAttributeTags(2);
             generateVariantMatrix(prod.variants);
         } else {
             toggleVariantMode(false);

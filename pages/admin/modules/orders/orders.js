@@ -552,7 +552,12 @@
                     category_id,
                     product_category (id, category_name),
                     inventory (quantity_in_stock, minimum_stock),
-                    product_variant (id, sku_variant, cost_price, sale_price, status)
+                    product_variant (
+                        id, sku_variant, cost_price, sale_price, compare_at_price, status,
+                        variant_size (id, size_name),
+                        variant_color (id, color_name),
+                        variant_flavor (id, flavor_name)
+                    )
                 `)
             ]);
 
@@ -590,6 +595,54 @@
                 const effectiveCostPrice = (primaryVar && primaryVar.cost_price !== undefined) ? Number(primaryVar.cost_price) : (Number(p.cost_price) || 0);
                 const effectiveSalePrice = (primaryVar && primaryVar.sale_price !== undefined) ? Number(primaryVar.sale_price) : (Number(p.sale_price) || 0);
 
+                // Xác định tên thuộc tính 1 và thuộc tính 2 cho sản phẩm nếu có nhiều biến thể
+                const hasFlavor = variants.some(v => v.variant_flavor?.flavor_name);
+                const hasSize = variants.some(v => v.variant_size?.size_name);
+                const hasColor = variants.some(v => v.variant_color?.color_name);
+
+                let detectedAttr1Name = 'Hương vị';
+                let detectedAttr2Name = 'Quy cách';
+
+                if (hasFlavor) {
+                    detectedAttr1Name = 'Hương vị';
+                    if (hasSize) detectedAttr2Name = 'Kích thước';
+                    else if (hasColor) detectedAttr2Name = 'Màu sắc';
+                } else if (hasSize) {
+                    detectedAttr1Name = 'Kích thước';
+                    if (hasColor) detectedAttr2Name = 'Màu sắc';
+                } else if (hasColor) {
+                    detectedAttr1Name = 'Màu sắc';
+                }
+
+                const mappedVariants = variants.map(v => {
+                    let a1 = '';
+                    let a2 = '';
+                    if (hasFlavor) {
+                        a1 = v.variant_flavor?.flavor_name || '';
+                        a2 = v.variant_size?.size_name || v.variant_color?.color_name || '';
+                    } else if (hasSize) {
+                        a1 = v.variant_size?.size_name || '';
+                        a2 = v.variant_color?.color_name || '';
+                    } else if (hasColor) {
+                        a1 = v.variant_color?.color_name || '';
+                    } else {
+                        a1 = v.sku_variant || '';
+                    }
+
+                    return {
+                        id: v.id,
+                        sku: v.sku_variant,
+                        attr1: a1,
+                        attr2: a2,
+                        name: a2 ? `${a1} - ${a2}` : a1,
+                        costPrice: Number(v.cost_price) || 0,
+                        price: Number(v.sale_price) || 0,
+                        originalPrice: v.compare_at_price ? Number(v.compare_at_price) : (Number(v.sale_price) || 0),
+                        stock: stockVal !== null ? Math.round(stockVal / (variants.length || 1)) : 20,
+                        status: v.status
+                    };
+                });
+
                 return {
                     id: p.id,
                     sku: effectiveSku,
@@ -613,13 +666,9 @@
                     image: imgs[0] || '/assets/images/shop/products/tp-hat-01.png',
                     status: p.status === 'INACTIVE' ? 'Tạm ngưng' : (stockVal === 0 ? 'Hết hàng' : (stockVal !== null && minStockVal !== null && stockVal <= minStockVal ? 'Sắp hết' : 'Còn hàng')),
                     hasVariants: variants.length > 1,
-                    variants: variants.map(v => ({
-                        id: v.id,
-                        sku: v.sku_variant,
-                        costPrice: Number(v.cost_price) || 0,
-                        price: Number(v.sale_price) || 0,
-                        status: v.status
-                    }))
+                    attr1Name: detectedAttr1Name,
+                    attr2Name: detectedAttr2Name,
+                    variants: mappedVariants
                 };
             });
 
@@ -1011,8 +1060,9 @@
                     window.PawpalOrders.renderOrdersTable();
                 }
             } else if (targetSubtab === 'tab-order-products') {
-                if (!window.PawpalOrders.state.productsLoaded) {
-                    fetchProductsData().then(() => window.PawpalOrders.renderProductsTable());
+                const needsFresh = !window.PawpalOrders.state.productsLoaded || state.products.some(p => p.hasVariants && !p.variants[0]?.attr1);
+                if (needsFresh) {
+                    fetchProductsData({ force: true }).then(() => window.PawpalOrders.renderProductsTable());
                 } else {
                     window.PawpalOrders.renderProductsTable();
                 }
