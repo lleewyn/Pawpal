@@ -805,7 +805,7 @@
                         id, quantity, unit_price, discount_amount, subtotal,
                         product (id, product_name, image_urls, specs, product_variant (sku_variant, sale_price))
                     ),
-                    payment (payment_method_id, payment_method_config_id, amount, transaction_status)
+                    payment (payment_method_config_id, amount, transaction_status)
                 `).order('created_at', { ascending: false }),
                 client.from('return_request').select('id, sales_order_id, reason, return_type, description, request_status, created_at, return_request_detail (*, product (id, product_name, product_variant (sku_variant, sale_price)))').order('created_at', { ascending: false })
             ]);
@@ -875,8 +875,8 @@
 
                 let payMethod = 'cod';
                 const payObj = Array.isArray(o.payment) ? o.payment[0] : (o.payment || {});
-                if (payObj && payObj.payment_method_id) {
-                    const pmId = String(payObj.payment_method_id).toLowerCase();
+                const pmId = String(payObj?.payment_method_config_id || payObj?.payment_method_id || '').toLowerCase();
+                if (pmId) {
                     if (pmId.includes('bank') || pmId.includes('transfer')) payMethod = 'bank_transfer';
                     else if (pmId.includes('momo')) payMethod = 'momo';
                     else if (pmId.includes('vnpay')) payMethod = 'vnpay';

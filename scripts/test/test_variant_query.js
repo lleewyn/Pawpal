@@ -36,7 +36,7 @@ async function testAll() {
         id, quantity, unit_price, discount_amount, subtotal,
         product (id, product_name, image_urls, specs, product_variant (sku_variant, sale_price))
     ),
-    payment (payment_method_id, amount, transaction_status)
+    payment (payment_method_config_id, amount, transaction_status)
   `).order('created_at', { ascending: false }).limit(5);
   console.log('2. Orders - fetchOrdersData:', qOrd.error ? qOrd.error.message : `OK (${qOrd.data.length} orders)`);
 

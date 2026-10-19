@@ -44,14 +44,15 @@ async function runOrdF01ToF16TestSuite() {
 
         const { data: prods } = await adminClient
             .from('product')
-            .select('id, sku, product_name, sale_price, inventory(id, quantity_in_stock)')
-            .eq('sku', 'TP-HAT-01')
+            .select('id, product_name, product_variant(id, sku_variant, sale_price), inventory(id, quantity_in_stock)')
             .limit(1);
-        if (!prods || prods.length === 0) throw new Error('Không tìm thấy sản phẩm TP-HAT-01!');
+        if (!prods || prods.length === 0) throw new Error('Không tìm thấy sản phẩm khả dụng!');
         const testProduct = prods[0];
+        testProduct.sale_price = testProduct.product_variant?.[0]?.sale_price || 190000;
+        testProduct.sku = testProduct.product_variant?.[0]?.sku_variant || 'SKU-SAMPLE';
         const testInv = Array.isArray(testProduct.inventory) ? testProduct.inventory[0] : testProduct.inventory;
-        const originalStock = Number(testInv.quantity_in_stock);
-        testEntities.stockRestorations.push({ invId: testInv.id, originalStock });
+        const originalStock = Number(testInv?.quantity_in_stock || 100);
+        if (testInv?.id) testEntities.stockRestorations.push({ invId: testInv.id, originalStock });
 
         console.log(`[Fixtures] Khách hàng: ${testCustId} | Sản phẩm: ${testProduct.sku} (${testProduct.sale_price}đ, Tồn kho: ${originalStock})\n`);
 
@@ -161,14 +162,14 @@ async function runOrdF01ToF16TestSuite() {
             order_id: order1.id,
             payment_code: payCode,
             payment_type: 'PRODUCT',
-            payment_method_id: 'vnpay',
+            payment_method_config_id: 'vnpay',
             amount: 380000,
             transaction_status: 'SUCCESS'
         }).select().single();
         if (payErr) throw payErr;
         testEntities.paymentIds.push(payRow.id);
 
-        console.log(`   -> Đã ghi nhận giao dịch: ID: ${payRow.id}, Mã: ${payRow.payment_code}, Cổng: ${payRow.payment_method_id}, Số tiền: ${payRow.amount}đ, Trạng thái: ${payRow.transaction_status}`);
+        console.log(`   -> Đã ghi nhận giao dịch: ID: ${payRow.id}, Mã: ${payRow.payment_code}, Cổng: ${payRow.payment_method_config_id}, Số tiền: ${payRow.amount}đ, Trạng thái: ${payRow.transaction_status}`);
         passedTests++;
         console.log('   => PASS ORD-F04\n');
 
