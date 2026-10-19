@@ -128,6 +128,23 @@
     }
     PawpalComplaints.getCurrentStaffName = getCurrentStaffName;
 
+    function getCurrentStaffId() {
+        try {
+            const sessionStr = sessionStorage.getItem('pawpal_admin_session') || localStorage.getItem('pawpal_admin_session');
+            if (sessionStr) {
+                const sess = JSON.parse(sessionStr);
+                if (sess.staff_id || sess.id) return sess.staff_id || sess.id;
+            }
+            const staffList = PawpalComplaints.state?.cachedStaff || [];
+            const staffName = getCurrentStaffName();
+            const matched = staffList.find(s => s.full_name?.toLowerCase() === staffName?.toLowerCase() || s.id === staffName);
+            if (matched?.id) return matched.id;
+            if (staffList.length > 0) return staffList[0].id;
+        } catch (_) {}
+        return null;
+    }
+    PawpalComplaints.getCurrentStaffId = getCurrentStaffId;
+
     // SLA Calculation
     function calculateSla(item) {
         if (!item) return;
@@ -535,6 +552,43 @@
                     const petDisplayBreed = pet ? `${pet.breed || pet.species || 'Thú cưng'} • ${pet.weight ? pet.weight + ' kg' : 'Chưa ghi nhận cân nặng'}` : (isContactOrOther ? 'Chưa xác định' : 'Chưa có thông tin');
                     const petDisplayNotes = pet ? (pet.allergy && pet.allergy !== 'Không' ? `Dị ứng: ${pet.allergy}. ${pet.routine || ''}` : (pet.routine || 'Không có tiền sử dị ứng.')) : (isContactOrOther ? 'Chưa có thông tin bé cưng' : 'Chưa ghi nhận tiền sử dị ứng.');
 
+                    const demandLabels = {
+                        'hoan_tien': 'Hoàn tiền cho khách',
+                        'hoan_tien_mot_phan': 'Hoàn tiền một phần',
+                        'doi_san_pham': 'Đổi sản phẩm mới',
+                        'thuc_hien_lai_dich_vu': 'Làm lại dịch vụ',
+                        'boi_thuong': 'Bồi thường sự cố',
+                        'tu_choi': 'Từ chối giải quyết',
+                        'khac': 'Giải pháp khác'
+                    };
+
+                    const optNames = {
+                        'redo_service': 'Làm lại dịch vụ miễn phí',
+                        'change_staff': 'Đổi kỹ thuật viên chăm sóc',
+                        'reward_voucher': 'Tặng Voucher và Pawpoint bồi hoàn',
+                        'refund': 'Hoàn tiền dịch vụ',
+                        'rma_replace': 'Đổi sản phẩm mới (Tạo mã RMA)',
+                        'rma_exchange': 'Đổi sản phẩm mới (Tạo mã RMA)',
+                        'rma_refund': 'Thu hồi và hoàn tiền',
+                        'explain': 'Giải thích quy trình và chăm sóc khách hàng',
+                        'hoan_tien': 'Hoàn tiền cho khách',
+                        'boi_thuong': 'Bồi thường sự cố'
+                    };
+
+                    let dbResolution = null;
+                    if (t.resolution_type || t.resolution_note || (t.approved_amount && Number(t.approved_amount) > 0)) {
+                        dbResolution = {
+                            option: t.resolution_type,
+                            type: t.resolution_type,
+                            typeName: optNames[t.resolution_type] || t.resolution_type || 'Đã giải quyết',
+                            note: t.resolution_note || t.investigation_note || '',
+                            approvedAmount: Number(t.approved_amount) || 0,
+                            resolvedBy: t.resolved_by,
+                            resolvedAt: t.resolved_at,
+                            closedAt: t.closed_at
+                        };
+                    }
+
                     const serviceItem = {
                         id: t.ticket_code || t.id,
                         rawId: t.id,
@@ -548,9 +602,22 @@
                         serviceName: appt && appt.service ? appt.service.service_name : (isContactOrOther ? 'Hỗ trợ và phản ánh chung' : (t.title || 'Dịch vụ chăm sóc thú cưng')),
                         staffExecuted: appt && appt.staff ? `${appt.staff.full_name}` : (isContactOrOther ? 'Bộ phận CSKH' : 'Chưa phân công'),
                         title: t.title || 'Khiếu nại ca dịch vụ',
-                        content: userMsg ? userMsg.content : (t.title || 'Khách phản ánh về dịch vụ'),
+                        content: userMsg ? userMsg.content : (t.description || t.title || 'Khách phản ánh về dịch vụ'),
                         priority: normPriority,
                         staffAssigned: staffAssigned,
+                        assigned_staff_id: t.assigned_staff_id,
+                        requested_resolution: t.requested_resolution,
+                        requested_amount: Number(t.requested_amount) || 0,
+                        customerDemand: demandLabels[t.requested_resolution] || t.requested_resolution || 'Làm lại dịch vụ hoặc bồi hoàn',
+                        first_response_at: t.first_response_at,
+                        investigation_note: t.investigation_note,
+                        resolution_type: t.resolution_type,
+                        resolution_note: t.resolution_note,
+                        approved_amount: Number(t.approved_amount) || 0,
+                        resolved_by: t.resolved_by,
+                        resolved_at: t.resolved_at,
+                        closed_at: t.closed_at,
+                        resolution: dbResolution || ov?.resolution || null,
                         createdAt: createdAtStr,
                         createdAtRaw: t.created_at,
                         status: normStatus,
@@ -580,6 +647,43 @@
                         issueType = 'quality';
                     }
 
+                    const demandLabels = {
+                        'hoan_tien': 'Hoàn tiền cho khách',
+                        'hoan_tien_mot_phan': 'Hoàn tiền một phần',
+                        'doi_san_pham': 'Đổi sản phẩm mới',
+                        'thuc_hien_lai_dich_vu': 'Làm lại dịch vụ',
+                        'boi_thuong': 'Bồi thường sự cố',
+                        'tu_choi': 'Từ chối giải quyết',
+                        'khac': 'Giải pháp khác'
+                    };
+
+                    const optNames = {
+                        'redo_service': 'Làm lại dịch vụ miễn phí',
+                        'change_staff': 'Đổi kỹ thuật viên chăm sóc',
+                        'reward_voucher': 'Tặng Voucher và Pawpoint bồi hoàn',
+                        'refund': 'Hoàn tiền dịch vụ',
+                        'rma_replace': 'Đổi sản phẩm mới (Tạo mã RMA)',
+                        'rma_exchange': 'Đổi sản phẩm mới (Tạo mã RMA)',
+                        'rma_refund': 'Thu hồi và hoàn tiền',
+                        'explain': 'Giải thích quy trình và chăm sóc khách hàng',
+                        'hoan_tien': 'Hoàn tiền cho khách',
+                        'boi_thuong': 'Bồi thường sự cố'
+                    };
+
+                    let dbResolution = null;
+                    if (t.resolution_type || t.resolution_note || (t.approved_amount && Number(t.approved_amount) > 0)) {
+                        dbResolution = {
+                            option: t.resolution_type,
+                            type: t.resolution_type,
+                            typeName: optNames[t.resolution_type] || t.resolution_type || 'Đã giải quyết',
+                            note: t.resolution_note || t.investigation_note || '',
+                            approvedAmount: Number(t.approved_amount) || 0,
+                            resolvedBy: t.resolved_by,
+                            resolvedAt: t.resolved_at,
+                            closedAt: t.closed_at
+                        };
+                    }
+
                     const orderItem = {
                         id: t.ticket_code || t.id,
                         rawId: t.id,
@@ -589,13 +693,25 @@
                         productName: (order && order.productName) || t.title || 'Chưa liên kết sản phẩm',
                         productSku: (order && order.productSku) || '—',
                         issueType: issueType,
-                        customerDemand: issueType === 'return_request' ? 'Đổi trả size sản phẩm' : (issueType === 'damaged' ? 'Gửi bù hàng hỏng' : 'Đổi sản phẩm mới'),
+                        customerDemand: demandLabels[t.requested_resolution] || t.requested_resolution || (issueType === 'return_request' ? 'Đổi trả size sản phẩm' : (issueType === 'damaged' ? 'Gửi bù hàng hỏng' : 'Đổi sản phẩm mới')),
                         priority: normPriority,
                         staffAssigned: staffAssigned,
+                        assigned_staff_id: t.assigned_staff_id,
+                        requested_resolution: t.requested_resolution,
+                        requested_amount: Number(t.requested_amount) || 0,
+                        first_response_at: t.first_response_at,
+                        investigation_note: t.investigation_note,
+                        resolution_type: t.resolution_type,
+                        resolution_note: t.resolution_note,
+                        approved_amount: Number(t.approved_amount) || 0,
+                        resolved_by: t.resolved_by,
+                        resolved_at: t.resolved_at,
+                        closed_at: t.closed_at,
+                        resolution: dbResolution || ov?.resolution || null,
                         createdAt: createdAtStr,
                         createdAtRaw: t.created_at,
                         status: normStatus,
-                        content: userMsg ? userMsg.content : (t.title || 'Khách phản ánh về đơn hàng'),
+                        content: userMsg ? userMsg.content : (t.description || t.title || 'Khách phản ánh về đơn hàng'),
                         evidence: [],
                         warehousePhotos: [],
                         carrier: order && order.carrier ? order.carrier : 'Chưa bàn giao đơn vị vận chuyển',

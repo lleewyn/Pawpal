@@ -18,11 +18,13 @@ async function testFullComplaintsLifecycle() {
             title: '[QA Test Fixture] Bé bị trầy xước tai sau ca Spa',
             type: 'service',
             priority: 'Cao',
-            status: 'pending'
+            status: 'pending',
+            requested_resolution: 'thuc_hien_lai_dich_vu',
+            requested_amount: 50000
         }]).select().single();
         if (tErr) throw tErr;
         createdTicketId = ticket.id;
-        console.log('   -> Đã tạo ticket:', ticket.id, '| Trạng thái:', ticket.status);
+        console.log('   -> Đã tạo ticket:', ticket.id, '| Trạng thái:', ticket.status, '| Đề nghị khách:', ticket.requested_resolution);
 
         // Bước 2: Khách hàng gửi phản ánh ban đầu (Initial message)
         console.log('2. Lưu tin nhắn phản ánh ban đầu của khách hàng...');
@@ -47,10 +49,11 @@ async function testFullComplaintsLifecycle() {
 
         const { error: sUpdateErr } = await adminDb.from('support_ticket').update({
             status: 'processing',
+            assigned_staff_id: assignedStaff?.id || null,
             updated_at: new Date().toISOString()
         }).eq('id', createdTicketId);
         if (sUpdateErr) throw sUpdateErr;
-        console.log('   -> Đã cập nhật trạng thái sang processing, Phụ trách:', agentName);
+        console.log('   -> Đã cập nhật trạng thái sang processing, Phụ trách (assigned_staff_id):', assignedStaff?.id);
 
         // Bước 4: Yêu cầu bổ sung thông tin (Request more info)
         console.log('4. Gửi yêu cầu bổ sung thông tin phản ánh...');
@@ -62,12 +65,14 @@ async function testFullComplaintsLifecycle() {
         }]).select().single();
         if (m3Err) throw m3Err;
 
+        const nowFirstResp = new Date().toISOString();
         const { error: sWaitErr } = await adminDb.from('support_ticket').update({
             status: 'waiting_customer',
-            updated_at: new Date().toISOString()
+            first_response_at: nowFirstResp,
+            updated_at: nowFirstResp
         }).eq('id', createdTicketId);
         if (sWaitErr) throw sWaitErr;
-        console.log('   -> Đã cập nhật trạng thái sang waiting_customer');
+        console.log('   -> Đã cập nhật trạng thái sang waiting_customer, Phản hồi đầu (first_response_at):', nowFirstResp);
 
         // Bước 5: Giải quyết khiếu nại (Resolve ticket)
         console.log('5. Chọn phương án giải quyết và hoàn tất khiếu nại...');
@@ -79,14 +84,22 @@ async function testFullComplaintsLifecycle() {
         }]).select().single();
         if (m4Err) throw m4Err;
 
+        const nowResolve = new Date().toISOString();
         const { data: resolvedTicket, error: sResErr } = await adminDb.from('support_ticket').update({
             status: 'completed',
             rating: 5,
             rating_comment: 'Rất hài lòng với sự tận tâm xử lý của PawPal',
-            updated_at: new Date().toISOString()
+            investigation_note: 'Bác sĩ kiểm tra vết thương nhẹ, đã xử lý sát trùng',
+            resolution_type: 'boi_thuong',
+            resolution_note: 'Tặng voucher 50k và bồi thường 100% chi phí',
+            approved_amount: 50000,
+            resolved_by: assignedStaff?.id || null,
+            resolved_at: nowResolve,
+            closed_at: nowResolve,
+            updated_at: nowResolve
         }).eq('id', createdTicketId).select().single();
         if (sResErr) throw sResErr;
-        console.log('   -> Đã hoàn tất ticket. Status:', resolvedTicket.status, '| Rating:', resolvedTicket.rating);
+        console.log('   -> Đã hoàn tất ticket. Status:', resolvedTicket.status, '| Resolution:', resolvedTicket.resolution_type);
 
         // Bước 6: Truy vấn đối soát dữ liệu (Verification)
         console.log('6. Truy vấn đối chiếu toàn bộ dữ liệu ticket và timeline...');
@@ -97,12 +110,31 @@ async function testFullComplaintsLifecycle() {
 
         console.log('   -> Tiêu đề:', verifiedTicket.title);
         console.log('   -> Trạng thái cuối:', verifiedTicket.status);
+        console.log('   -> requested_resolution:', verifiedTicket.requested_resolution);
+        console.log('   -> requested_amount:', verifiedTicket.requested_amount);
+        console.log('   -> assigned_staff_id:', verifiedTicket.assigned_staff_id);
+        console.log('   -> first_response_at:', verifiedTicket.first_response_at);
+        console.log('   -> investigation_note:', verifiedTicket.investigation_note);
+        console.log('   -> resolution_type:', verifiedTicket.resolution_type);
+        console.log('   -> resolution_note:', verifiedTicket.resolution_note);
+        console.log('   -> approved_amount:', verifiedTicket.approved_amount);
+        console.log('   -> resolved_by:', verifiedTicket.resolved_by);
+        console.log('   -> resolved_at:', verifiedTicket.resolved_at);
+        console.log('   -> closed_at:', verifiedTicket.closed_at);
+
+        if (!verifiedTicket.assigned_staff_id && assignedStaff?.id) throw new Error('assigned_staff_id không được cập nhật');
+        if (!verifiedTicket.first_response_at) throw new Error('first_response_at không được cập nhật');
+        if (!verifiedTicket.resolution_type) throw new Error('resolution_type không được cập nhật');
+        if (!verifiedTicket.resolution_note) throw new Error('resolution_note không được cập nhật');
+        if (!verifiedTicket.resolved_at) throw new Error('resolved_at không được cập nhật');
+        if (!verifiedTicket.closed_at) throw new Error('closed_at không được cập nhật');
+
         console.log('   -> Tổng số bản ghi timeline:', verifiedMsgs.length);
         verifiedMsgs.forEach((m, idx) => {
             console.log('      [' + (idx + 1) + '] (' + m.sender_type + (m.agent_name ? ' - ' + m.agent_name : '') + '): ' + m.content.substring(0, 70));
         });
 
-        console.log('\n=== KẾT QUẢ KIỂM THỬ: TẤT CẢ 6 BƯỚC ĐẠT THÀNH CÔNG 100% ===');
+        console.log('\n=== KẾT QUẢ KIỂM THỬ: TẤT CẢ 6 BƯỚC ĐẠT THÀNH CÔNG 100% (11 CỘT ĐỒNG BỘ CHUẨN) ===');
 
     } catch (err) {
         console.error('LỖI TRONG QUÁ TRÌNH KIỂM THỬ KHIẾU NẠI:', err);

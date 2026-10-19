@@ -229,14 +229,32 @@
         const userId = currentUser ? currentUser.id : null;
         const now = new Date();
 
+        const isUuid = (val) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+        const ticketCode = 'TK-' + Date.now().toString(36).toUpperCase().slice(-6);
+
         // Thử tạo trước trên Supabase để lấy UUID chuẩn
         let createdId = null;
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (db) {
             try {
-                const { data: tData, error: tErr } = await db.from('support_ticket').insert([{
-                    title, type, priority, status: 'pending', user_id: userId
-                }]).select();
+                const insertPayload = {
+                    title,
+                    type,
+                    priority,
+                    status: 'pending',
+                    user_id: userId,
+                    ticket_code: ticketCode,
+                    customer_id: isUuid(userId) ? userId : null,
+                    order_id: isUuid(context.orderId) ? context.orderId : null,
+                    appointment_id: isUuid(context.bookingId) ? context.bookingId : null,
+                    channel: 'web',
+                    category: type,
+                    subject: title,
+                    description: content,
+                    requested_resolution: context.customerDemand || null,
+                    requested_amount: parseFloat(context.requestedAmount) || 0
+                };
+                const { data: tData, error: tErr } = await db.from('support_ticket').insert([insertPayload]).select();
                 if (!tErr && tData && tData.length > 0) {
                     createdId = tData[0].id;
                     await db.from('support_ticket_message').insert([{
@@ -250,7 +268,7 @@
             }
         }
 
-        const finalTicketId = createdId || ('TK-2026-' + Math.floor(100 + Math.random() * 900));
+        const finalTicketId = createdId || ticketCode || ('TK-2026-' + Math.floor(100 + Math.random() * 900));
 
         const localTicket = {
             id: finalTicketId,

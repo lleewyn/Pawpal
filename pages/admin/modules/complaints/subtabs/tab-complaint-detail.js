@@ -767,14 +767,33 @@
                     PawpalComplaints.showToast('Không xác định được kết nối hoặc mã khiếu nại để lưu trạng thái.', 'error');
                     return;
                 }
-                const { error: resolveError } = await clientResolve.from('support_ticket').update({
+                const nowIso = new Date().toISOString();
+                const currentStaffId = (typeof PawpalComplaints !== 'undefined' && PawpalComplaints.getCurrentStaffId) ? PawpalComplaints.getCurrentStaffId() : null;
+                const updatePayload = {
                     status: needsManager ? 'processing' : 'completed',
-                    updated_at: new Date().toISOString()
-                }).eq('id', ticket.rawId);
+                    investigation_note: note,
+                    resolution_type: optVal,
+                    resolution_note: note,
+                    updated_at: nowIso
+                };
+                if (!needsManager) {
+                    updatePayload.resolved_by = currentStaffId;
+                    updatePayload.resolved_at = nowIso;
+                    updatePayload.closed_at = nowIso;
+                }
+                const { error: resolveError } = await clientResolve.from('support_ticket').update(updatePayload).eq('id', ticket.rawId);
                 if (resolveError) {
                     console.error('[Complaints] Update resolve status error:', resolveError);
                     PawpalComplaints.showToast(`Không thể cập nhật trạng thái: ${resolveError.message || 'Lỗi CSDL'}`, 'error');
                     return;
+                }
+                ticket.investigation_note = note;
+                ticket.resolution_type = optVal;
+                ticket.resolution_note = note;
+                if (!needsManager) {
+                    ticket.resolved_by = currentStaffId;
+                    ticket.resolved_at = nowIso;
+                    ticket.closed_at = nowIso;
                 }
 
                 // Lưu vết đề xuất vào nhật ký xử lý support_ticket_message
@@ -876,6 +895,7 @@
                             assigned_staff_id: matchedStaff.id,
                             updated_at: new Date().toISOString()
                         }).eq('id', ticket.rawId);
+                        ticket.assigned_staff_id = matchedStaff.id;
                     } catch (_) {}
                 }
 
@@ -960,6 +980,18 @@
                     return;
                 }
 
+                // Ghi nhận mốc phản hồi đầu tiên first_response_at nếu chưa có
+                if (currentTicket && !currentTicket.first_response_at) {
+                    try {
+                        const nowFirstResp = new Date().toISOString();
+                        await client.from('support_ticket').update({
+                            first_response_at: nowFirstResp,
+                            updated_at: nowFirstResp
+                        }).eq('id', targetDbId).is('first_response_at', null);
+                        currentTicket.first_response_at = nowFirstResp;
+                    } catch (_) {}
+                }
+
                 window.PawpalDataStore?.emitMutation?.('support_ticket_message', 'INSERT', { ticket_id: targetDbId });
                 if (currentTicket) currentTicket._messagesLoaded = false;
                 renderTicketDetail(targetDbId);
@@ -1017,6 +1049,18 @@
                     console.error('[Complaints] Lưu yêu cầu bổ sung lỗi:', requestMessageError);
                     PawpalComplaints.showToast(`Không thể lưu yêu cầu: ${requestMessageError.message || 'Lỗi CSDL'}`, 'error');
                     return;
+                }
+
+                // Ghi nhận mốc phản hồi đầu tiên first_response_at nếu chưa có
+                if (ticket && !ticket.first_response_at) {
+                    try {
+                        const nowFirstResp = new Date().toISOString();
+                        await clientRequest.from('support_ticket').update({
+                            first_response_at: nowFirstResp,
+                            updated_at: nowFirstResp
+                        }).eq('id', ticket.rawId).is('first_response_at', null);
+                        ticket.first_response_at = nowFirstResp;
+                    } catch (_) {}
                 }
                 const { error: requestStatusError } = await clientRequest.from('support_ticket').update({
                     status: 'waiting_customer',
@@ -1228,11 +1272,31 @@
                     }
 
                     if (client && ticket.rawId) {
+                        const nowIso = new Date().toISOString();
+                        const approverStaffId = (typeof PawpalComplaints !== 'undefined' && PawpalComplaints.getCurrentStaffId) ? PawpalComplaints.getCurrentStaffId() : null;
+                        const approvedAmount = pointsGranted > 0 ? (pointsGranted * 1000) : (ticket.requested_amount || ticket.approved_amount || 0);
+                        const approvalNote = pointsGranted > 0 
+                            ? `Quản lý ${approverName} đã duyệt bồi hoàn +${pointsGranted} điểm Pawpoint cho khách hàng.`
+                            : `Quản lý ${approverName} đã phê duyệt phương án: ${ticket.resolution?.typeName || ticket.resolution?.option || 'Bồi hoàn'}.`;
+
                         const { error: ticketUpErr } = await client.from('support_ticket').update({
                             status: 'completed',
-                            updated_at: new Date().toISOString()
+                            resolution_type: ticket.resolution?.option || ticket.resolution_type || 'boi_thuong',
+                            resolution_note: approvalNote,
+                            approved_amount: approvedAmount,
+                            resolved_by: approverStaffId,
+                            resolved_at: nowIso,
+                            closed_at: nowIso,
+                            updated_at: nowIso
                         }).eq('id', ticket.rawId);
                         if (ticketUpErr) throw ticketUpErr;
+
+                        ticket.resolution_type = ticket.resolution?.option || ticket.resolution_type || 'boi_thuong';
+                        ticket.resolution_note = approvalNote;
+                        ticket.approved_amount = approvedAmount;
+                        ticket.resolved_by = approverStaffId;
+                        ticket.resolved_at = nowIso;
+                        ticket.closed_at = nowIso;
 
                         const approvalMsg = pointsGranted > 0 
                             ? `[PHÊ DUYỆT BỒI HOÀN] Quản lý ${approverName} đã duyệt bồi hoàn +${pointsGranted} điểm Pawpoint cho khách hàng. Số dư mới: ${newPointsBalance} điểm.`
@@ -1298,14 +1362,18 @@
                 const client = getDbClient();
                 const approverName = sessionStorage.getItem('pawpal_admin_user_name') || 'Quản lý';
                 if (client && ticket.rawId) {
+                    const nowIso = new Date().toISOString();
+                    const rejectNote = '[TỪ CHỐI] Quản lý đã từ chối phương án đề xuất. Yêu cầu CSKH rà soát và đề xuất lại.';
                     const { error } = await client.from('support_ticket').update({
                         status: 'processing',
-                        updated_at: new Date().toISOString()
+                        investigation_note: rejectNote,
+                        updated_at: nowIso
                     }).eq('id', ticket.rawId);
                     if (error) {
                         PawpalComplaints.showToast('Không thể cập nhật từ chối: ' + error.message, 'danger');
                         return;
                     }
+                    ticket.investigation_note = rejectNote;
 
                     // K-06: Ghi nhận vết từ chối vào support_ticket_message
                     try {

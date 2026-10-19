@@ -1664,12 +1664,62 @@ export const API = {
 
             if (error) throw error;
 
-            // Cập nhật updated_at cho ticket
-            await db.from('support_ticket').update({ updated_at: now }).eq('id', ticketId);
+            // Cập nhật updated_at cho ticket và ghi nhận first_response_at nếu nhân viên phản hồi lần đầu
+            const isStaffReply = ['cskh', 'nhan_vien', 'admin', 'staff'].includes(senderType) && !isInternal;
+            if (isStaffReply) {
+                await db.from('support_ticket').update({
+                    updated_at: now,
+                    first_response_at: now
+                }).eq('id', ticketId).is('first_response_at', null);
+            } else {
+                await db.from('support_ticket').update({ updated_at: now }).eq('id', ticketId);
+            }
 
             return { success: true, data };
         } catch (e) {
             console.error('[API] addTicketMessage error:', e);
+            return { success: false, error: e.message };
+        }
+    },
+
+    async resolveSupportTicket(ticketId, {
+        status = 'completed',
+        resolutionType = null,
+        resolutionNote = null,
+        investigationNote = null,
+        approvedAmount = 0,
+        resolvedBy = null,
+        closedAt = null
+    } = {}) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !ticketId) return { success: false };
+
+        try {
+            const now = new Date().toISOString();
+            const payload = {
+                status,
+                updated_at: now
+            };
+            if (resolutionType) payload.resolution_type = resolutionType;
+            if (resolutionNote) payload.resolution_note = resolutionNote;
+            if (investigationNote) payload.investigation_note = investigationNote;
+            if (approvedAmount > 0) payload.approved_amount = approvedAmount;
+            if (resolvedBy) payload.resolved_by = resolvedBy;
+            if (status === 'completed' || status === 'resolved') {
+                payload.resolved_at = now;
+                payload.closed_at = closedAt || now;
+            }
+
+            const { data, error } = await db.from('support_ticket')
+                .update(payload)
+                .eq('id', ticketId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (e) {
+            console.error('[API] resolveSupportTicket error:', e);
             return { success: false, error: e.message };
         }
     },
