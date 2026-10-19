@@ -399,7 +399,6 @@ STT	THỰC THỂ	MÔ TẢ	THUỘC TÍNH	Ý NGHĨA THUỘC TÍNH
 			appointment_id	Lịch hẹn được thanh toán nếu payment_type là dat_lich.
 			order_id	Đơn hàng được thanh toán nếu payment_type là mua_hang.
 			voucher_id	Voucher được áp dụng cho giao dịch nếu có.
-			payment_method_id	
 			payment_method_config_id	Phương thức thanh toán được sử dụng.
 			payment_type	Loại giao dịch thanh toán.
 			amount	Số tiền thực tế của giao dịch thanh toán.
