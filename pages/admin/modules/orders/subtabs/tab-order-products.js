@@ -17,6 +17,38 @@
 
     let globalDbCategories = [];
 
+    // Nhận diện thương hiệu từ tên sản phẩm hoặc thông tin cấu hình
+    function extractBrandFromName(name) {
+        if (!name) return 'PawPal';
+        const lower = name.toLowerCase();
+        const brandMap = [
+            { key: 'royal canin', brand: 'Royal Canin' },
+            { key: 'petkit', brand: 'Petkit' },
+            { key: "king's pet", brand: "King's Pet" },
+            { key: 'kings pet', brand: "King's Pet" },
+            { key: 'ciao churu', brand: 'Ciao Churu' },
+            { key: 'churu', brand: 'Ciao Churu' },
+            { key: 'ciao', brand: 'Ciao Churu' },
+            { key: 'whiskas', brand: 'Whiskas' },
+            { key: 'orijen', brand: 'Orijen' },
+            { key: 'pidan', brand: 'Pidan' },
+            { key: 'me-o', brand: 'Me-O' },
+            { key: "cat's best", brand: "Cat's Best" },
+            { key: 'kit cat', brand: 'Kit Cat' },
+            { key: 'furrytail', brand: 'Furrytail' },
+            { key: 'gimcat', brand: 'GimCat' },
+            { key: 'purina', brand: 'Purina' },
+            { key: 'pro plan', brand: 'Pro Plan' },
+            { key: 'nutrience', brand: 'Nutrience' },
+            { key: 'taste of the wild', brand: 'Taste of the Wild' },
+            { key: 'monge', brand: 'Monge' }
+        ];
+        for (const item of brandMap) {
+            if (lower.includes(item.key)) return item.brand;
+        }
+        return 'PawPal';
+    }
+
     // Cập nhật bộ lọc danh mục sản phẩm từ CSDL Supabase
     function updateCategoryFilterDropdown(dbCategories = []) {
         if (Array.isArray(dbCategories) && dbCategories.length > 0) {
@@ -72,7 +104,8 @@
             if (searchVal) {
                 const matchSku = matchSearch(p.sku, searchVal);
                 const matchName = matchSearch(p.name, searchVal);
-                if (!matchSku && !matchName) return false;
+                const matchBrand = matchSearch(p.brand || extractBrandFromName(p.name), searchVal);
+                if (!matchSku && !matchName && !matchBrand) return false;
             }
             return true;
         });
@@ -98,6 +131,26 @@
             return;
         }
 
+        // Bảng tra cứu số lượng tạm giữ theo SKU và theo Tên từ các đơn hàng đang xử lý
+        const reservedMap = {};
+        const reservedByName = {};
+        (state.orders || []).forEach(order => {
+            const st = (order.status || '').toLowerCase();
+            // Đơn đang ở trạng thái chờ duyệt, đã xác nhận, đang đóng gói, đang xử lý -> Tạm giữ trong kho
+            if (['pending', 'confirmed', 'packing', 'processing'].includes(st)) {
+                (order.products || []).forEach(item => {
+                    const qty = Number(item.quantity) || 1;
+                    if (item.sku && item.sku !== 'SKU-000') {
+                        reservedMap[item.sku] = (reservedMap[item.sku] || 0) + qty;
+                    }
+                    if (item.name) {
+                        const nameKey = item.name.toLowerCase().trim();
+                        reservedByName[nameKey] = (reservedByName[nameKey] || 0) + qty;
+                    }
+                });
+            }
+        });
+
         tbody.innerHTML = pagedProducts.map(p => {
             let stockBadge = '';
             let rowAlertClass = '';
@@ -121,6 +174,11 @@
             const esc = window.PawpalOrdersModule?.escapeHtml || (s => String(s || ''));
             const imgSrc = p.image || (Array.isArray(p.images) ? p.images[0] : (typeof p.images === 'string' ? p.images.split(',')[0].trim() : '/assets/images/shop/products/tp-hat-01.png'));
 
+            const itemBrand = (p.brand && p.brand !== 'Chưa rõ' && p.brand !== '—') ? p.brand : extractBrandFromName(p.name);
+            const totalStock = Number(p.stock) || 0;
+            const reserved = reservedMap[p.sku] || reservedByName[(p.name || '').toLowerCase().trim()] || 0;
+            const available = Math.max(0, totalStock - reserved);
+
             return `
                 <tr class="${rowAlertClass}">
                     <td style="font-family: monospace; font-weight: 600; color: #236B48;">${esc(p.sku)}</td>
@@ -134,17 +192,18 @@
                         </div>
                     </td>
                     <td>${esc(p.category)}</td>
-                    <td>—</td>
+                    <td><span style="font-weight: 500; color: #203A2C;">${esc(itemBrand)}</span></td>
                     <td>
                         <div style="font-weight: 600; color: var(--text-heading);">${formatVND(p.price)}</div>
                         <div class="sub-meta-text">Vốn: ${formatVND(p.costPrice || 0)}</div>
                     </td>
-                    <td>${Number(p.reviewCount)>0 ? Number(p.rating).toFixed(1) : "—"}</td>
-                    <td>
+                    <td style="text-align: center;">${Number(p.reviewCount)>0 ? Number(p.rating).toFixed(1) : "—"}</td>
+                    <td style="text-align: center;">
                         <div style="font-weight: 700; font-size: 13.5px;">${p.stock} <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">${esc(p.unit || 'món')}</span></div>
                         <div class="sub-meta-text">Ngưỡng: ${p.minStock}</div>
                     </td>
-                    <td>—</td><td>—</td>
+                    <td style="text-align: center;"><span style="font-weight: 600; color: ${reserved > 0 ? '#C05621' : 'var(--text-muted)'};">${reserved}</span></td>
+                    <td style="text-align: center;"><span style="font-weight: 700; color: ${available > 0 ? '#236B48' : '#8F2424'};">${available}</span></td>
                     <td>${alertDot}</td>
                     <td>${stockBadge}</td>
                     <td style="text-align: center;">

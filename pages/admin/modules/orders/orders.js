@@ -643,12 +643,43 @@
                     };
                 });
 
+                const detectedBrand = (function(name) {
+                    if (!name) return 'PawPal';
+                    const lower = name.toLowerCase();
+                    const brandMap = [
+                        { key: 'royal canin', brand: 'Royal Canin' },
+                        { key: 'petkit', brand: 'Petkit' },
+                        { key: "king's pet", brand: "King's Pet" },
+                        { key: 'kings pet', brand: "King's Pet" },
+                        { key: 'ciao churu', brand: 'Ciao Churu' },
+                        { key: 'churu', brand: 'Ciao Churu' },
+                        { key: 'ciao', brand: 'Ciao Churu' },
+                        { key: 'whiskas', brand: 'Whiskas' },
+                        { key: 'orijen', brand: 'Orijen' },
+                        { key: 'pidan', brand: 'Pidan' },
+                        { key: 'me-o', brand: 'Me-O' },
+                        { key: "cat's best", brand: "Cat's Best" },
+                        { key: 'kit cat', brand: 'Kit Cat' },
+                        { key: 'furrytail', brand: 'Furrytail' },
+                        { key: 'gimcat', brand: 'GimCat' },
+                        { key: 'purina', brand: 'Purina' },
+                        { key: 'pro plan', brand: 'Pro Plan' },
+                        { key: 'nutrience', brand: 'Nutrience' },
+                        { key: 'taste of the wild', brand: 'Taste of the Wild' },
+                        { key: 'monge', brand: 'Monge' }
+                    ];
+                    for (const item of brandMap) {
+                        if (lower.includes(item.key)) return item.brand;
+                    }
+                    return 'PawPal';
+                })(p.product_name);
+
                 return {
                     id: p.id,
                     sku: effectiveSku,
                     name: p.product_name || 'Sản phẩm PawPal',
                     category: catObj.category_name || 'Chưa phân loại',
-                    brand: 'PawPal',
+                    brand: detectedBrand,
                     petType: 'Chó và Mèo',
                     origin: p.origin || 'Việt Nam',
                     unit: p.unit || 'Túi',
