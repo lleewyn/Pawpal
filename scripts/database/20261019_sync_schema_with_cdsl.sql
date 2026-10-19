@@ -58,7 +58,7 @@ ALTER TABLE sales_order ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ;
 
 -- Backfill tracking_code nếu trước đây bị nhồi vào chuỗi note: "Vận đơn: XYZ"
 UPDATE sales_order
-SET tracking_code = (REGEXP_MATCHES(note, 'Vận đơn:\s*([^\n;]+)', 'i'))[1]
+SET tracking_code = SUBSTRING(note FROM '(?i)Vận đơn:\s*([^\n;]+)')
 WHERE tracking_code IS NULL AND note ~* 'Vận đơn:';
 
 -- ----------------------------------------------------------------------------
