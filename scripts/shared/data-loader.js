@@ -157,7 +157,7 @@ async function loadProducts() {
         }
 
         console.log('Loading products from Supabase...');
-        const { data: rawProducts, error } = await db.from('product').select('*, product_category!inner(category_name), inventory(quantity_in_stock)');
+        const { data: rawProducts, error } = await db.from('product').select('*, product_category!inner(category_name), inventory(quantity_in_stock), product_variant(*)');
         
         if (error) {
             throw error;
@@ -169,7 +169,14 @@ async function loadProducts() {
         const knownBrands = ['Royal Canin', 'Pedigree', 'Me-O', 'Whiskas', "Hill's", 'Purina', 'Kong', 'Taste of the Wild', 'Frontline', 'Furminator', 'Nylabone', 'Hartz', "King's Pet", 'Inaba', 'Nutrience', 'Zenith', 'Orijen', 'Acana', 'GimCat', 'Gimborn', 'TropiClean', 'Bio-Pharmachemie'];
 
         const products = rawProducts.map(item => {
-            const sale = Number(item.sale_price) < Number(item.cost_price);
+            const variants = Array.isArray(item.product_variant) ? item.product_variant : [];
+            const primaryVar = variants.length > 0 ? variants[0] : null;
+
+            const effectiveSku = (primaryVar && primaryVar.sku_variant) ? primaryVar.sku_variant : (item.sku || '');
+            const effectiveCostPrice = (primaryVar && primaryVar.cost_price !== undefined) ? Number(primaryVar.cost_price) : (Number(item.cost_price) || 0);
+            const effectiveSalePrice = (primaryVar && primaryVar.sale_price !== undefined) ? Number(primaryVar.sale_price) : (Number(item.sale_price) || 0);
+
+            const sale = effectiveSalePrice < effectiveCostPrice;
             let images = [];
             if (Array.isArray(item.image_urls)) {
                 images = item.image_urls.map(url => rootPath + url);
@@ -201,14 +208,14 @@ async function loadProducts() {
 
             return {
                 id: item.id,
-                sku: item.sku,
+                sku: effectiveSku,
                 name: item.product_name,
                 brand: detectedBrand,
                 category: item.category_id,
                 categoryName: item.product_category?.category_name || 'Khác',
-                price: Number(item.sale_price),
-                originalPrice: sale ? Number(item.cost_price) : null,
-                oldPrice: sale ? Number(item.cost_price) : null,
+                price: effectiveSalePrice,
+                originalPrice: sale ? effectiveCostPrice : null,
+                oldPrice: sale ? effectiveCostPrice : null,
                 image: images[0],
                 images: images,
                 inStock: item.status === 'ACTIVE' && stockCount > 0,
@@ -223,7 +230,14 @@ async function loadProducts() {
                 benefits: item.benefits || item.description || '',
                 usage: item.usage_instructions || '',
                 specs: item.specs || '',
-                description: item.description || ''
+                description: item.description || '',
+                variants: variants.map(v => ({
+                    id: v.id,
+                    sku: v.sku_variant,
+                    price: Number(v.sale_price) || 0,
+                    costPrice: Number(v.cost_price) || 0,
+                    comparePrice: v.compare_at_price ? Number(v.compare_at_price) : null
+                }))
             };
         });
         

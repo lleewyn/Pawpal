@@ -729,6 +729,29 @@
                         }).eq('id', existingProd.id);
                         if (pErr) throw pErr;
 
+                        // Đồng bộ biến thể trong bảng product_variant
+                        try {
+                            const { data: existingVars } = await client.from('product_variant').select('id').eq('product_id', existingProd.id).limit(1);
+                            if (existingVars && existingVars.length > 0) {
+                                await client.from('product_variant').update({
+                                    sku_variant: sku,
+                                    cost_price: costPrice,
+                                    sale_price: price,
+                                    status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
+                                }).eq('id', existingVars[0].id);
+                            } else {
+                                await client.from('product_variant').insert({
+                                    product_id: existingProd.id,
+                                    sku_variant: sku,
+                                    cost_price: costPrice,
+                                    sale_price: price,
+                                    status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
+                                });
+                            }
+                        } catch (varSyncErr) {
+                            console.warn('Lỗi đồng bộ product_variant:', varSyncErr);
+                        }
+
                         if (stock !== oldStock) {
                             const { error: invErr } = await client.from('inventory').update({
                                 quantity_in_stock: stock,
@@ -800,6 +823,20 @@
                         if (pErr) throw pErr;
                         if (newP && newP.id) {
                             createdProdDbId = newP.id;
+
+                            // Tự động tạo biến thể mặc định trong product_variant
+                            try {
+                                await client.from('product_variant').insert({
+                                    product_id: newP.id,
+                                    sku_variant: sku,
+                                    cost_price: costPrice,
+                                    sale_price: price,
+                                    status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
+                                });
+                            } catch (varInsErr) {
+                                console.warn('Lỗi tạo product_variant mặc định:', varInsErr);
+                            }
+
                             const { error: invErr } = await client.from('inventory').insert({
                                 product_id: newP.id,
                                 quantity_in_stock: stock,

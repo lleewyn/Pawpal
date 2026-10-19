@@ -551,8 +551,9 @@
                     rating, review_count, image_urls,
                     category_id,
                     product_category (id, category_name),
-                    inventory (quantity_in_stock, minimum_stock)
-                `).order('sku')
+                    inventory (quantity_in_stock, minimum_stock),
+                    product_variant (id, sku_variant, cost_price, sale_price, status)
+                `)
             ]);
 
             if (prodRes.error) throw prodRes.error;
@@ -582,9 +583,16 @@
                 const stockVal = hasInv ? Number(invObj.quantity_in_stock) : null;
                 const minStockVal = invObj && invObj.minimum_stock !== undefined && invObj.minimum_stock !== null ? Number(invObj.minimum_stock) : null;
 
+                const variants = Array.isArray(p.product_variant) ? p.product_variant : [];
+                const primaryVar = variants.length > 0 ? variants[0] : null;
+
+                const effectiveSku = (primaryVar && primaryVar.sku_variant) ? primaryVar.sku_variant : (p.sku || 'SKU-000');
+                const effectiveCostPrice = (primaryVar && primaryVar.cost_price !== undefined) ? Number(primaryVar.cost_price) : (Number(p.cost_price) || 0);
+                const effectiveSalePrice = (primaryVar && primaryVar.sale_price !== undefined) ? Number(primaryVar.sale_price) : (Number(p.sale_price) || 0);
+
                 return {
                     id: p.id,
-                    sku: p.sku || 'SKU-000',
+                    sku: effectiveSku,
                     name: p.product_name || 'Sản phẩm PawPal',
                     category: catObj.category_name || 'Chưa phân loại',
                     brand: 'PawPal',
@@ -593,19 +601,25 @@
                     unit: p.unit || 'Túi',
                     spec: p.specs || 'Tiêu chuẩn',
                     badge: p.badge || (stockVal === 0 ? 'Hết hàng' : (p.status === 'INACTIVE' ? 'Tạm ngưng' : '')),
-                    costPrice: p.cost_price || 0,
+                    costPrice: effectiveCostPrice,
                     rating: p.rating,
                     reviewCount: p.review_count || 0,
-                    price: p.sale_price || 0,
-                    originalPrice: p.sale_price || p.cost_price || 0,
-                    memberPrice: p.sale_price || 0,
+                    price: effectiveSalePrice,
+                    originalPrice: effectiveSalePrice || effectiveCostPrice || 0,
+                    memberPrice: effectiveSalePrice,
                     stock: stockVal,
                     minStock: minStockVal,
                     images: imgs.length > 0 ? imgs.join(', ') : '/assets/images/shop/products/tp-hat-01.png',
                     image: imgs[0] || '/assets/images/shop/products/tp-hat-01.png',
                     status: p.status === 'INACTIVE' ? 'Tạm ngưng' : (stockVal === 0 ? 'Hết hàng' : (stockVal !== null && minStockVal !== null && stockVal <= minStockVal ? 'Sắp hết' : 'Còn hàng')),
-                    hasVariants: false,
-                    variants: []
+                    hasVariants: variants.length > 1,
+                    variants: variants.map(v => ({
+                        id: v.id,
+                        sku: v.sku_variant,
+                        costPrice: Number(v.cost_price) || 0,
+                        price: Number(v.sale_price) || 0,
+                        status: v.status
+                    }))
                 };
             });
 
