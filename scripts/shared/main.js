@@ -145,155 +145,10 @@ function initActiveNav() {
 window.initActiveNav = initActiveNav;
 
 function initMobileNavigation() {
-    const toggleBtn = document.getElementById('mobileNavToggle');
-    const nav = document.getElementById('primaryNavigation');
-    if (!toggleBtn || !nav) return;
-
-    if (toggleBtn.dataset.mobileNavReady === 'true' && nav.dataset.mobileNavReady === 'true') {
-        return;
+    // Header owns drawer state, event handlers and scroll locking.
+    if (typeof window.initHeaderMobileNavigation === 'function') {
+        window.initHeaderMobileNavigation();
     }
-
-    let mobileOverlay = null;
-    let scrollLockY = 0;
-    function createOverlay() {
-        if (mobileOverlay) return;
-        mobileOverlay = document.createElement('div');
-        mobileOverlay.className = 'mobile-nav-overlay';
-        mobileOverlay.style.position = 'fixed';
-        mobileOverlay.style.inset = '0';
-        mobileOverlay.style.background = 'rgba(0,0,0,0.45)';
-        mobileOverlay.style.zIndex = '9995';
-        mobileOverlay.style.opacity = '0';
-        mobileOverlay.style.transition = 'opacity 220ms ease';
-        document.body.appendChild(mobileOverlay);
-        mobileOverlay.addEventListener('click', closeDrawer);
-        requestAnimationFrame(() => {
-            if (mobileOverlay) mobileOverlay.style.opacity = '1';
-        });
-    }
-
-    function removeOverlay() {
-        if (!mobileOverlay) return;
-        mobileOverlay.style.opacity = '0';
-        setTimeout(() => {
-            if (mobileOverlay && mobileOverlay.parentNode) mobileOverlay.parentNode.removeChild(mobileOverlay);
-            mobileOverlay = null;
-        }, 240);
-    }
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeDrawer();
-    });
-
-    // Đóng drawer khi click ra ngoài
-    document.addEventListener('click', (e) => {
-        if (!nav.classList.contains('show')) return;
-        if (nav.contains(e.target) || toggleBtn.contains(e.target)) return;
-        closeDrawer();
-    });
-
-    let wasMobile = window.innerWidth < 1250;
-    window.addEventListener('resize', () => {
-        const isMobile = window.innerWidth < 1250;
-        if (isMobile !== wasMobile) {
-            closeDrawer();
-        }
-        wasMobile = isMobile;
-    });
-
-    nav.classList.remove('show');
-    toggleBtn.setAttribute('aria-expanded', 'false');
-    document.body.style.overflow = '';
-    nav.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show'));
-    nav.querySelectorAll('.dropdown-toggle').forEach(dt => {
-        dt.setAttribute('aria-expanded', 'false');
-        const svg = dt.querySelector('svg');
-        if (svg) svg.style.transform = 'rotate(0deg)';
-    });
-
-    function openDrawer() {
-        scrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
-        nav.classList.add('show');
-        const header = document.querySelector('.main-header');
-        if (header) header.classList.add('nav-open');
-        toggleBtn.setAttribute('aria-expanded', 'true');
-        document.body.style.overflow = 'hidden';
-        createOverlay();
-    }
-
-    function closeDrawer() {
-        nav.classList.remove('show');
-        const header = document.querySelector('.main-header');
-        if (header) header.classList.remove('nav-open');
-        toggleBtn.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-        removeOverlay();
-        nav.querySelectorAll('.dropdown-toggle svg').forEach(svg => svg.style.transform = 'rotate(0deg)');
-        nav.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show'));
-        nav.querySelectorAll('.dropdown-toggle').forEach(dt => {
-            dt.classList.remove('show');
-            dt.setAttribute('aria-expanded', 'false');
-        });
-    }
-
-    toggleBtn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const isOpen = nav.classList.contains('show');
-        if (isOpen) {
-            closeDrawer();
-        } else {
-            openDrawer();
-        }
-    };
-
-    nav.querySelectorAll('a').forEach(link => {
-        if (!link.classList.contains('dropdown-toggle') && link.dataset.mobileNavCloseBound !== 'true') {
-            link.addEventListener('click', (e) => {
-                closeDrawer();
-            });
-            link.dataset.mobileNavCloseBound = 'true';
-        }
-    });
-
-    const dropdownToggles = nav.querySelectorAll('.dropdown-toggle');
-    dropdownToggles.forEach(dt => {
-        if (dt.dataset.mobileDropdownBound === 'true') return;
-        
-        dt.addEventListener('click', (e) => {
-            if (window.innerWidth < 1250) {
-                e.preventDefault();
-                e.stopPropagation();
-                const parentItem = dt.closest('.nav-item.dropdown') || dt.parentElement;
-                const menu = parentItem ? parentItem.querySelector('.dropdown-menu') : dt.nextElementSibling;
-                if (menu) {
-                    const isCurrentlyOpen = menu.classList.contains('show');
-                    nav.querySelectorAll('.dropdown-menu.show').forEach(m => {
-                        if (m !== menu) m.classList.remove('show');
-                    });
-                    nav.querySelectorAll('.dropdown-toggle').forEach(t => {
-                        if (t !== dt) {
-                            t.classList.remove('show');
-                            t.setAttribute('aria-expanded', 'false');
-                            const s = t.querySelector('svg');
-                            if (s) s.style.transform = 'rotate(0deg)';
-                        }
-                    });
-
-                    menu.classList.toggle('show', !isCurrentlyOpen);
-                    dt.classList.toggle('show', !isCurrentlyOpen);
-                    dt.setAttribute('aria-expanded', String(!isCurrentlyOpen));
-                    const svg = dt.querySelector('svg');
-                    if (svg) svg.style.transform = !isCurrentlyOpen ? 'rotate(180deg)' : 'rotate(0deg)';
-                }
-            }
-        });
-        
-        dt.dataset.mobileDropdownBound = 'true';
-    });
-
-    toggleBtn.dataset.mobileNavReady = 'true';
-    nav.dataset.mobileNavReady = 'true';
 }
 
 function initTimelineTracker() {
@@ -486,10 +341,11 @@ function initFaqAccordion() {
 
 function initShopFilter() {
     const grid = document.getElementById('productGrid');
-    if (!grid) return;
+    if (!grid || grid.dataset.landingProductsOwner === 'true') return;
 
     if (window.DataLoader && typeof window.DataLoader.loadProducts === 'function') {
         window.DataLoader.loadProducts().then(allProducts => {
+            if (grid.dataset.landingProductsOwner === 'true') return;
             grid.innerHTML = allProducts.map(product => {
                 let mappedCategory = '';
                 if (['food-dry', 'food-wet', 'bones'].includes(product.category)) mappedCategory = 'thucan';
@@ -572,42 +428,7 @@ function setupShopLandingActions(grid) {
         setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 2000);
     }
 
-    const user = getCurrentUser();
-
-    if (user && user.id && window.API && window.API.getUserWishlist) {
-        window.API.getUserWishlist(user.id).then(wl => {
-            const productIds = wl.productIds || [];
-            grid.querySelectorAll('.product-wishlist-btn').forEach(btn => {
-                const id = btn.dataset.productId;
-                if (productIds.includes(id)) btn.classList.add('active');
-            });
-        });
-    }
-
-    grid.querySelectorAll('.product-wishlist-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const u = getCurrentUser();
-            if (!u || !u.id) {
-                miniToast('Vui lòng đăng nhập để thêm vào danh sách yêu thích', 'warning');
-                return;
-            }
-            const id = btn.dataset.productId;
-            if (window.API && window.API.toggleWishlist) {
-                const res = await window.API.toggleWishlist(u.id, id);
-                if (res && res.success) {
-                    if (res.action === 'added') {
-                        btn.classList.add('active');
-                        miniToast('Đã thêm vào yêu thích ❤️');
-                    } else {
-                        btn.classList.remove('active');
-                        miniToast('Đã bỏ khỏi yêu thích');
-                    }
-                }
-            }
-        });
-    });
+    setupLandingProductWishlist(grid);
 
     grid.querySelectorAll('.product-quick-add').forEach(btn => {
         btn.addEventListener('click', async (e) => {
@@ -633,19 +454,120 @@ function setupShopLandingActions(grid) {
         btn.addEventListener('click', async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            const u = getCurrentUser();
-            if (!u || !u.id) {
-                miniToast('Vui lòng đăng nhập để sử dụng giỏ hàng', 'warning');
-                return;
-            }
             const id = btn.dataset.productId;
-            if (window.API && window.API.addToCart) {
-                await window.API.addToCart(u.id, id, 1);
-                window.location.href = rootPath + 'pages/shop/cart/cart.html';
+            try {
+                const products = await window.DataLoader.loadProducts();
+                const product = products.find(item => String(item.id) === String(id));
+                if (product && window.openLandingBuyNowModal) window.openLandingBuyNowModal(product, btn);
+            } catch {
+                miniToast('Không thể tải sản phẩm. Vui lòng thử lại.', 'warning');
             }
         });
     });
 }
+function setupLandingProductWishlist(grid) {
+    if (grid.dataset.wishlistBound === 'true') {
+        grid.syncLandingWishlist?.();
+        return;
+    }
+    grid.dataset.wishlistBound = 'true';
+    const selectedIds = new Set();
+    let saving = false;
+    let version = 0;
+    let currentContext = '';
+    let ready;
+    const getUser = () => {
+        try { return JSON.parse(localStorage.getItem('pawpal_current_user') || 'null'); }
+        catch { return null; }
+    };
+    const notify = (message, type = 'success') => {
+        if (typeof window.showGlobalToast === 'function') window.showGlobalToast(type, message);
+        else window.alert(message);
+    };
+    const contextFor = () => {
+        const user = getUser();
+        const member = Boolean(user?.id && !user.is_temporary);
+        const key = member ? `pawpal_wishlist_${user.phone || ''}` : 'pawpal_wishlist_guest';
+        return { user, member, key, identity: `${key}:${member ? user.id : 'guest'}` };
+    };
+    const setState = (id, active) => {
+        if (active) selectedIds.add(String(id));
+        else selectedIds.delete(String(id));
+        grid.querySelectorAll('.product-wishlist-btn').forEach(button => {
+            if (String(button.dataset.productId) !== String(id)) return;
+            button.classList.toggle('active', active);
+            button.setAttribute('aria-pressed', String(active));
+            button.setAttribute('aria-label', active ? 'Bỏ khỏi yêu thích' : 'Thêm vào yêu thích');
+        });
+    };
+    grid.syncLandingWishlist = () => {
+        grid.querySelectorAll('.product-wishlist-btn').forEach(button => {
+            setState(button.dataset.productId, selectedIds.has(String(button.dataset.productId)));
+        });
+    };
+    const refresh = async () => {
+        const context = contextFor();
+        const requestVersion = ++version;
+        currentContext = context.identity;
+        let cached = [];
+        try { cached = JSON.parse(localStorage.getItem(context.key) || '[]'); } catch {}
+        selectedIds.clear();
+        if (Array.isArray(cached)) cached.forEach(id => selectedIds.add(String(id)));
+        grid.syncLandingWishlist();
+        if (!context.member) return;
+        if (!context.user.phone || !window.API?.getUserWishlist) throw new Error('Wishlist unavailable');
+        const wishlist = await window.API.getUserWishlist(context.user.id, { strict: true });
+        if (requestVersion !== version || contextFor().identity !== context.identity) return;
+        const ids = (wishlist.productIds || []).map(String);
+        localStorage.setItem(context.key, JSON.stringify(ids));
+        selectedIds.clear();
+        ids.forEach(id => selectedIds.add(id));
+        grid.syncLandingWishlist();
+    };
+    const startRefresh = () => {
+        ready = refresh();
+        ready.catch(() => notify('Không thể tải danh sách yêu thích. Vui lòng thử lại.', 'error'));
+    };
+    startRefresh();
+    document.addEventListener('auth_state_changed', startRefresh);
+    grid.addEventListener('click', async event => {
+        const button = event.target.closest('.product-wishlist-btn');
+        if (!button || !grid.contains(button)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const context = contextFor();
+        if (context.identity !== currentContext) startRefresh();
+        const id = String(button.dataset.productId);
+        if (saving) return;
+        saving = true;
+        button.disabled = true;
+        try {
+            await ready;
+            if (contextFor().identity !== context.identity) return;
+            const nextIds = new Set(selectedIds);
+            const active = !nextIds.has(id);
+            if (active) nextIds.add(id);
+            else nextIds.delete(id);
+            if (context.member) {
+                if (!window.API?.saveUserWishlist) throw new Error('Wishlist unavailable');
+                const result = await window.API.saveUserWishlist(context.user.id, { productIds: [...nextIds] });
+                if (!result?.success) throw new Error('Wishlist save failed');
+            }
+            if (contextFor().identity !== context.identity) return;
+            localStorage.setItem(context.key, JSON.stringify([...nextIds]));
+            setState(id, active);
+            notify(active ? 'Đã thêm vào yêu thích' : 'Đã bỏ khỏi yêu thích');
+            document.dispatchEvent(new CustomEvent('wishlist_updated'));
+        } catch {
+            notify('Không thể cập nhật yêu thích. Vui lòng thử lại.', 'error');
+        } finally {
+            saving = false;
+            button.disabled = false;
+        }
+    });
+}
+window.setupLandingProductWishlist = setupLandingProductWishlist;
+
 function setupLandingServiceWishlist(grid) {
     function getCurrentUser() {
         try { return JSON.parse(localStorage.getItem('pawpal_current_user')) || null; } catch { return null; }
@@ -922,10 +844,8 @@ function initTestimonialsCarousel() {
     if (track.dataset.carouselReady === 'true') return;
     track.dataset.carouselReady = 'true';
 
-    const cardWidth = 320;
-    const gap = 30;
-    const step = cardWidth + gap;
     const wrapper = document.querySelector('.testimonials-carousel-wrapper');
+    if (!wrapper) return;
     
     const totalCards = cards.length;
 
@@ -946,6 +866,14 @@ function initTestimonialsCarousel() {
         track.style.transition = instant ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
         
         const wrapperWidth = wrapper.offsetWidth;
+        // Leave room for the active card's existing 1.05 scale on narrow screens.
+        const cardWidth = Math.min(320, Math.max(1, (wrapperWidth - 4) / 1.05));
+        const gap = parseFloat(getComputedStyle(track).columnGap) || 30;
+        const step = cardWidth + gap;
+        allCards.forEach(card => {
+            card.style.width = `${cardWidth}px`;
+            card.style.flexBasis = `${cardWidth}px`;
+        });
         const offset = - (positionIndex * step) + (wrapperWidth / 2) - (cardWidth / 2);
         
         track.style.transform = `translateX(${offset}px)`;

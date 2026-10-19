@@ -96,7 +96,7 @@
     function getNotifications() {
         try {
             const stored = JSON.parse(localStorage.getItem(NOTI_KEY));
-            if (Array.isArray(stored) && stored.length > 0) {
+            if (Array.isArray(stored)) {
                 return stored;
             }
 
@@ -145,7 +145,7 @@
 
     function updateHeaderDropdown() {
         const notis = getNotifications();
-        const unreadCount = notis.filter(n => !n.read).length;
+        const unreadCount = notis.filter(n => !n.read && !n.isRead).length;
 
         const badge = document.getElementById('notificationBadge');
         if (badge) {
@@ -154,6 +154,7 @@
                 badge.style.display = 'flex';
             } else {
                 badge.style.display = 'none';
+                badge.textContent = '0';
             }
         }
 

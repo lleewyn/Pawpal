@@ -970,33 +970,32 @@
     function setupHeaderSearch() {
         document.querySelectorAll('.search-bar').forEach(bar => {
             if (bar.dataset.searchBound === 'true') return;
-            bar.dataset.searchBound = 'true';
 
             const input = bar.querySelector('input');
             const icon = bar.querySelector('.search-icon');
             if (!input) return;
+            bar.dataset.searchBound = 'true';
 
-            const executeSearch = () => {
+            const executeSearch = (event) => {
+                event.preventDefault();
+                event.stopPropagation();
                 const query = input.value.trim();
-                if (query) {
-                    window.location.href = `/shop?search=${encodeURIComponent(query)}`;
-                }
+                if (!query) return;
+                window.location.href = `/shop?search=${encodeURIComponent(query)}`;
             };
 
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
-                    e.preventDefault();
-                    executeSearch();
+                    executeSearch(e);
                 }
             });
+            const form = input.closest('form');
+            if (form) form.addEventListener('submit', executeSearch);
 
             if (icon) {
                 icon.style.cursor = 'pointer';
                 icon.style.pointerEvents = 'auto';
-                icon.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    executeSearch();
-                });
+                icon.addEventListener('click', executeSearch);
             }
         });
     }
@@ -1014,6 +1013,15 @@
         }
 
         let mobileOverlay = null;
+        let previousOverflow = null;
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'mobile-nav-close';
+        closeBtn.setAttribute('aria-label', 'Đóng menu');
+        closeBtn.textContent = 'Đóng';
+        closeBtn.addEventListener('click', closeDrawer);
+        nav.prepend(closeBtn);
+        nav.setAttribute('data-lenis-prevent', '');
         function createOverlay() {
             if (mobileOverlay) return;
             mobileOverlay = document.createElement('div');
@@ -1033,10 +1041,12 @@
 
         function removeOverlay() {
             if (!mobileOverlay) return;
-            mobileOverlay.style.opacity = '0';
+            const closingOverlay = mobileOverlay;
+            mobileOverlay = null;
+            closingOverlay.style.opacity = '0';
+            closingOverlay.style.pointerEvents = 'none';
             setTimeout(() => {
-                if (mobileOverlay && mobileOverlay.parentNode) mobileOverlay.parentNode.removeChild(mobileOverlay);
-                mobileOverlay = null;
+                closingOverlay.remove();
             }, 240);
         }
 
@@ -1071,6 +1081,8 @@
         });
 
         function openDrawer() {
+            if (nav.classList.contains('show')) return;
+            previousOverflow = document.body.style.overflow;
             nav.classList.add('show');
             const header = document.querySelector('.main-header');
             if (header) header.classList.add('nav-open');
@@ -1082,11 +1094,13 @@
         }
 
         function closeDrawer() {
+            if (!nav.classList.contains('show')) return;
             nav.classList.remove('show');
             const header = document.querySelector('.main-header');
             if (header) header.classList.remove('nav-open');
             toggleBtn.setAttribute('aria-expanded', 'false');
-            document.body.style.overflow = '';
+            document.body.style.overflow = previousOverflow ?? '';
+            previousOverflow = null;
             removeOverlay();
             nav.querySelectorAll('.dropdown-toggle svg').forEach(svg => svg.style.transform = 'rotate(0deg)');
             nav.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show'));
@@ -1107,13 +1121,10 @@
             }
         };
 
-        nav.querySelectorAll('a').forEach(link => {
-            if (!link.classList.contains('dropdown-toggle') && link.dataset.mobileNavCloseBound !== 'true') {
-                link.addEventListener('click', (e) => {
-                    // Nếu là link chuyển hash hoặc url thì đóng drawer
-                    closeDrawer();
-                });
-                link.dataset.mobileNavCloseBound = 'true';
+        nav.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (window.innerWidth < 1250 && link && nav.contains(link) && !link.classList.contains('dropdown-toggle')) {
+                closeDrawer();
             }
         });
 
@@ -1162,6 +1173,7 @@
     }
 
     window.initMobileNavigation = initMobileNavigation;
+    window.initHeaderMobileNavigation = initMobileNavigation;
 
     // Chạy khi header được chèn vào HTML
     document.addEventListener('headerInjected', () => {
@@ -1193,6 +1205,9 @@
     });
     window.addEventListener('pawpal_settings_updated', renderDynamicTopBarNotice);
     window.addEventListener('storage', (e) => {
+        if (e.key === 'pawpal_notifications' || e.key === null) {
+            window.updateNotificationBadge();
+        }
         if (e.key === 'pawpal_settings_notices') {
             renderDynamicTopBarNotice();
         }
@@ -1201,6 +1216,7 @@
         }
     });
     window.addEventListener('focus', () => {
+        window.updateNotificationBadge();
         if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
     });
 })();
