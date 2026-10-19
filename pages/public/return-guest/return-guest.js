@@ -58,8 +58,22 @@ function initReturnGuestPage() {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         try {
-            const phone = phoneInput ? phoneInput.value.trim() : '';
-            if (!phone) return;
+            const rawPhone = phoneInput ? phoneInput.value : '';
+            const phone = rawPhone.trim();
+
+            // Chặn SĐT sai định dạng ngay tại form, không gửi request tra cứu
+            const phoneError = validateLookupPhone(phone);
+            if (phoneError) {
+                if (memberCard) memberCard.classList.add('d-none');
+                if (resultsEl) resultsEl.classList.add('d-none');
+                if (errorBox) {
+                    errorBox.textContent = phoneError;
+                    errorBox.classList.remove('d-none');
+                }
+                phoneInput.focus();
+                return;
+            }
+            if (phone !== rawPhone) phoneInput.value = phone;
 
             const normPhone = normalizePhone(phone);
 
@@ -203,6 +217,12 @@ function resolveAppUrl(path) {
 
 function normalizePhone(p) {
     return String(p || '').replace(/\D/g, '').replace(/^84/, '0');
+}
+
+function validateLookupPhone(phone) {
+    if (!phone) return 'Vui lòng nhập số điện thoại.';
+    if (!/^0\d{9}$/.test(phone)) return 'Số điện thoại không hợp lệ. Vui lòng nhập đúng 10 chữ số, bắt đầu bằng 0 (ví dụ: 0901234567).';
+    return '';
 }
 
 async function loadSupabaseGuestResults(phone) {
@@ -820,7 +840,7 @@ window.handleGuestCancelOrder = function(orderId) {
     showActionConfirm(
         'Hủy đơn hàng',
         `Bạn có chắc chắn muốn hủy đơn hàng <strong>${esc(orderId)}</strong>? Đơn hàng sau khi hủy sẽ không thể khôi phục.${refundNote}`,
-        () => confirmCancelOrder(orderId)
+        () => confirmCancelOrder(orderId, isPaidOnline)
     );
 };
 
@@ -831,31 +851,26 @@ window.handleGuestConfirmOrder = async function(orderId) {
     showActionConfirm(
         'Xác nhận đơn hàng',
         `Bạn xác nhận đã nhận hàng thành công cho đơn hàng <strong>${esc(orderId)}</strong>?`,
-        () => {
+        async () => {
             const order = rgLastSearchState.orders.find(o => o.id === orderId);
-            if (order) {
-                order.status = 'completed';
-                order.updatedAt = new Date().toISOString();
+            if (!order) {
+                showToast('Không tìm thấy đơn hàng trong kết quả tra cứu.', 'error');
+                return;
             }
-            
+
+            // Lưu CSDL trước, chỉ báo thành công khi cập nhật được (COMPLETED giống trang Đơn hàng của bé)
+            const saved = await updateGuestOrderStatus(order, { order_status: 'COMPLETED', payment_status: 'PAID' });
+            if (!saved) {
+                showToast('Chưa xác nhận được đơn hàng. Vui lòng thử lại sau.', 'error');
+                return;
+            }
+
+            order.status = 'completed';
+            order.paymentStatus = 'paid';
+            order.updatedAt = new Date().toISOString();
             renderResults(rgLastSearchState.bookings, rgLastSearchState.orders);
             showToast('Đã xác nhận nhận hàng!', 'success');
 
-            if (window.API && typeof window.API.updateOrderStatus === 'function') {
-                window.API.updateOrderStatus(orderId, 'COMPLETED').catch(err => {
-                    console.warn('[ReturnGuest] Failed to sync completed status:', err);
-                });
-            } else {
-                const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                if (db) {
-                    const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
-                    let query = db.from('sales_order').update({ order_status: 'da_giao_hang', payment_status: 'da_thanh_toan', updated_at: new Date().toISOString() });
-                    query = isUUID ? query.eq('id', orderId) : query.eq('order_code', orderId);
-                    query.then(({error}) => {
-                        if (error) console.warn('[ReturnGuest] Sync error:', error);
-                    });
-                }
-            }
         }
     );
 };
@@ -1214,10 +1229,35 @@ function confirmCancelBooking(bookingId) {
     if (phone) setTimeout(() => showUpsellModal(phone), 250);
 }
 
-function confirmCancelOrder(orderId) {
+// Cập nhật trạng thái đơn trên Supabase; trả về true khi thực sự có dòng được cập nhật
+async function updateGuestOrderStatus(order, fields) {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db || !order) return false;
+    try {
+        let query = db.from('sales_order').update({ ...fields, updated_at: new Date().toISOString() });
+        query = order._supabaseId ? query.eq('id', order._supabaseId) : query.eq('order_code', order.id);
+        const { data, error } = await query.select('id');
+        if (error || !Array.isArray(data) || data.length === 0) {
+            console.warn('[ReturnGuest] Order status sync failed:', error || 'no row updated');
+            return false;
+        }
+        return true;
+    } catch (err) {
+        console.warn('[ReturnGuest] Order status sync exception:', err);
+        return false;
+    }
+}
+
+async function confirmCancelOrder(orderId, isPaidOnline = false) {
     const order = rgLastSearchState.orders.find(o => o.id === orderId);
     if (!order) {
         showToast('Không tìm thấy đơn hàng trong kết quả tra cứu.', 'error');
+        return;
+    }
+
+    const saved = await updateGuestOrderStatus(order, { order_status: 'CANCELLED' });
+    if (!saved) {
+        showToast('Chưa hủy được đơn hàng. Vui lòng thử lại sau.', 'error');
         return;
     }
 
@@ -1225,17 +1265,6 @@ function confirmCancelOrder(orderId) {
     order.orderStatus = 'CANCELLED';
     order.updatedAt = new Date().toISOString();
 
-    if (window.API && typeof window.API.updateOrderStatus === 'function') {
-        window.API.updateOrderStatus(orderId, 'CANCELLED').catch(e => console.warn(e));
-    } else {
-        const db = window.SupabaseClient;
-        if (db) {
-            const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
-            let query = db.from('sales_order').update({ order_status: 'da_huy', updated_at: new Date().toISOString() });
-            query = isUUID ? query.eq('id', orderId) : query.eq('order_code', orderId);
-            query.then(({error}) => { if (error) console.warn('[ReturnGuest] Cancel order sync error:', error); });
-        }
-    }
 
     const toastMsg = isPaidOnline
         ? 'Đã hủy đơn hàng. Yêu cầu hoàn tiền đã được ghi nhận!'

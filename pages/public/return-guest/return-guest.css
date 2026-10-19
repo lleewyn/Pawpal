@@ -39,6 +39,7 @@
 .rg-input-wrapper {
     position: relative;
     flex: 1;
+    min-width: 0;
 }
 
 .rg-input-icon {
@@ -81,6 +82,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+
+/* landing.css (nạp chung qua spa-router) ép .btn-cta rộng 100% ở ≤768px, làm ô nhập SĐT bị bóp lại */
+.rg-form-row .rg-search-btn {
+    width: auto;
 }
 
 .rg-error {
@@ -399,11 +405,25 @@
         padding: 24px 16px 32px;
     }
 
-    .rg-form-row {
-        flex-direction: column;
+    .rg-search-hub {
+        padding: 24px 16px;
     }
 
-    .rg-search-btn {
+    .rg-title {
+        font-size: 1.5rem;
+    }
+
+    .rg-form-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .rg-input-wrapper {
+        flex: none;
+        width: 100%;
+    }
+
+    .rg-form-row .rg-search-btn {
         width: 100%;
     }
 
@@ -504,6 +524,29 @@
 }
 
 .otp-input.otp-error { border-color: var(--color-danger); }
+
+/* return-guest.css được spa-router nạp sẵn ở mọi trang → chỉ áp cho popup của trang Tra cứu (id bắt đầu bằng rg-) */
+.modal[id^="rg-"] .otp-input {
+    flex: 0 1 44px;
+    min-width: 0;
+}
+
+/* Giữ 2 nút ở chân popup cân đối, không để .btn-cta 100% của landing.css đẩy xuống dòng */
+.modal[id^="rg-"] .modal-footer .btn-cta {
+    width: auto;
+}
+
+@media (max-width: 576px) {
+    .modal[id^="rg-"] .modal-footer {
+        flex-wrap: nowrap;
+    }
+
+    .modal[id^="rg-"] .modal-footer > button {
+        flex: 1 1 0;
+        min-width: 0;
+        justify-content: center;
+    }
+}
 
 
 .rg-actions-flex {
