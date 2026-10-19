@@ -961,8 +961,8 @@
                 }
 
                 window.PawpalDataStore?.emitMutation?.('support_ticket_message', 'INSERT', { ticket_id: targetDbId });
-                window.PawpalDataStore?.invalidate?.(`complaints:messages:${targetDbId}`);
                 if (currentTicket) currentTicket._messagesLoaded = false;
+                renderTicketDetail(targetDbId);
 
                 messageInput.value = '';
                 PawpalComplaints.showToast('Đã gửi phản hồi tới khách hàng!');

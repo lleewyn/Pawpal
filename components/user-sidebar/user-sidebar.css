@@ -168,3 +168,26 @@ body.user-sidebar-open .dashboard-sidebar-backdrop {
         font-size: var(--fs-small);
     }
 }
+
+.support-unread-badge {
+    width: 8px;
+    height: 8px;
+    background-color: #DC2626;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.support-unread-badge.has-count {
+    width: auto;
+    height: auto;
+    min-width: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 16px;
+}
+

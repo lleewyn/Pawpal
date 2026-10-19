@@ -14,6 +14,7 @@ function ensureSupportReady(callback) {
 export function initSupportTickets() {
     ensureSupportReady(async () => {
         let activeTicketId = null;
+        let activeRealtimeChannel = null;
         let currentSelectedRating = 5;
         let currentFilter = 'all';
 
@@ -165,6 +166,13 @@ export function initSupportTickets() {
         }
 
         function closeTicketModal() {
+            if (activeRealtimeChannel) {
+                try {
+                    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (db) db.removeChannel(activeRealtimeChannel);
+                } catch (e) {}
+                activeRealtimeChannel = null;
+            }
             if (detailModalOverlay) {
                 detailModalOverlay.classList.add('d-none');
             }
@@ -250,6 +258,101 @@ export function initSupportTickets() {
                 });
                 ticketsTableBody.appendChild(row);
             });
+        }
+
+        function renderTimelineMessages(ticket) {
+            if (!ticketTimelineMessages) return;
+            ticketTimelineMessages.innerHTML = '';
+
+            const messages = ticket?.messages || [];
+            if (messages.length === 0) {
+                ticketTimelineMessages.innerHTML = `
+                    <div class="text-center text-muted small py-3">Chưa có tin nhắn trao đổi nào.</div>
+                `;
+            } else {
+                messages.forEach(msg => {
+                    const item = document.createElement('div');
+                    const isCskh = msg.sender === 'cskh';
+                    item.className = `thread-message ${isCskh ? 'message-cskh' : 'message-user'}`;
+
+                    let senderLabel = 'Bạn (Khách hàng)';
+                    if (isCskh) {
+                        senderLabel = msg.agent ? `Tư vấn viên ${msg.agent}` : 'CSKH PawPal';
+                    }
+
+                    const timeStr = formatDisplayTime(msg.time);
+
+                    item.innerHTML = `
+                        <div class="thread-message-meta">
+                            <span class="sender-tag ${isCskh ? 'sender-cskh' : 'sender-user'}">${escapeHtml(senderLabel)}</span>
+                            <span class="thread-time">${escapeHtml(timeStr)}</span>
+                        </div>
+                        <div class="thread-bubble ${isCskh ? 'bubble-cskh' : 'bubble-user'}">
+                            ${escapeHtml(msg.text)}
+                        </div>
+                    `;
+                    ticketTimelineMessages.appendChild(item);
+                });
+            }
+            ticketTimelineMessages.scrollTop = ticketTimelineMessages.scrollHeight;
+        }
+
+        function subscribeTicketRealtime(ticketId) {
+            if (activeRealtimeChannel) {
+                try {
+                    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                    if (db) db.removeChannel(activeRealtimeChannel);
+                } catch (e) {}
+                activeRealtimeChannel = null;
+            }
+
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!db || !ticketId) return;
+
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ticketId);
+            if (!isUuid) return;
+
+            try {
+                activeRealtimeChannel = db
+                    .channel(`user_ticket_${ticketId}`)
+                    .on('postgres_changes', {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'support_ticket_message',
+                        filter: `ticket_id=eq.${ticketId}`
+                    }, async (payload) => {
+                        const newMsg = payload.new;
+                        if (!newMsg) return;
+                        if (newMsg.sender_type === 'system' || newMsg.sender_type === 'internal_note') return;
+
+                        await window.PawPalSupport.loadTickets();
+                        const updatedTickets = window.PawPalSupport.getTickets();
+                        const current = updatedTickets.find(t => t.id === ticketId || t.rawId === ticketId);
+                        if (current && activeTicketId === ticketId) {
+                            renderTimelineMessages(current);
+                        }
+                        renderTable();
+                    })
+                    .on('postgres_changes', {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'support_ticket',
+                        filter: `id=eq.${ticketId}`
+                    }, async () => {
+                        await window.PawPalSupport.loadTickets();
+                        if (activeTicketId === ticketId) {
+                            showTicketDetail(ticketId);
+                        }
+                        renderTable();
+                    })
+                    .subscribe((status) => {
+                        if (status === 'SUBSCRIBED') {
+                            console.log(`[Support Realtime] Kết nối kênh Realtime vé #${ticketId} thành công ✓`);
+                        }
+                    });
+            } catch (err) {
+                console.warn('[Support Realtime] Lỗi đăng ký kênh:', err);
+            }
         }
 
         function showTicketDetail(ticketId) {
@@ -443,38 +546,7 @@ export function initSupportTickets() {
             }
 
             // 4. Render Luồng hội thoại trao đổi (Conversational Thread)
-            ticketTimelineMessages.innerHTML = '';
-
-            const messages = ticket.messages || [];
-            if (messages.length === 0) {
-                ticketTimelineMessages.innerHTML = `
-                    <div class="text-center text-muted small py-3">Chưa có tin nhắn trao đổi nào.</div>
-                `;
-            } else {
-                messages.forEach(msg => {
-                    const item = document.createElement('div');
-                    const isCskh = msg.sender === 'cskh';
-                    item.className = `thread-message ${isCskh ? 'message-cskh' : 'message-user'}`;
-
-                    let senderLabel = 'Bạn (Khách hàng)';
-                    if (isCskh) {
-                        senderLabel = msg.agent ? `Tư vấn viên ${msg.agent}` : 'CSKH PawPal';
-                    }
-
-                    const timeStr = formatDisplayTime(msg.time);
-
-                    item.innerHTML = `
-                        <div class="thread-message-meta">
-                            <span class="sender-tag ${isCskh ? 'sender-cskh' : 'sender-user'}">${escapeHtml(senderLabel)}</span>
-                            <span class="thread-time">${escapeHtml(timeStr)}</span>
-                        </div>
-                        <div class="thread-bubble ${isCskh ? 'bubble-cskh' : 'bubble-user'}">
-                            ${escapeHtml(msg.text)}
-                        </div>
-                    `;
-                    ticketTimelineMessages.appendChild(item);
-                });
-            }
+            renderTimelineMessages(ticket);
 
             // 5. Quản lý trạng thái Reply và Đánh giá CSKH
             const isCompleted = ticket.status === 'completed' || ticket.status === 'resolved' || ticket.status === 'closed';
@@ -551,6 +623,9 @@ export function initSupportTickets() {
             detailModalOverlay.classList.remove('d-none');
             document.body.classList.add('ticket-modal-open');
             ticketTimelineMessages.scrollTop = ticketTimelineMessages.scrollHeight;
+
+            // Đăng ký Supabase Realtime 2 chiều cho hội thoại vé này
+            subscribeTicketRealtime(ticket.rawId || ticket.id);
         }
 
         // Lắng nghe sự kiện đóng Popup Modal

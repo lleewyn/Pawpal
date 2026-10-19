@@ -154,12 +154,15 @@
                         if (msgsData) {
                             msgsData.forEach(m => {
                                 if (!msgsByTicket[m.ticket_id]) msgsByTicket[m.ticket_id] = [];
-                                msgsByTicket[m.ticket_id].push({
-                                    sender: m.sender_type,
-                                    agent: m.agent_name,
-                                    text: m.content,
-                                    time: m.created_at
-                                });
+                                // SUP-F03: Chỉ hiển thị tin nhắn trao đổi khách - CSKH, bảo mật các ghi chú điều tra nội bộ
+                                if (m.sender_type !== 'system' && m.sender_type !== 'internal_note') {
+                                    msgsByTicket[m.ticket_id].push({
+                                        sender: m.sender_type,
+                                        agent: m.agent_name,
+                                        text: m.content,
+                                        time: m.created_at
+                                    });
+                                }
                             });
                         }
                     }
@@ -208,8 +211,32 @@
         const userId = currentUser ? currentUser.id : null;
         const now = new Date();
 
+        // Thử tạo trước trên Supabase để lấy UUID chuẩn
+        let createdId = null;
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (db) {
+            try {
+                const { data: tData, error: tErr } = await db.from('support_ticket').insert([{
+                    title, type, priority, status: 'pending', user_id: userId
+                }]).select();
+                if (!tErr && tData && tData.length > 0) {
+                    createdId = tData[0].id;
+                    await db.from('support_ticket_message').insert([{
+                        ticket_id: createdId,
+                        sender_type: 'user',
+                        content: content
+                    }]);
+                }
+            } catch (e) {
+                console.warn('[Support] Lưu Supabase không thành công, dùng fallback local:', e);
+            }
+        }
+
+        const finalTicketId = createdId || ('TK-2026-' + Math.floor(100 + Math.random() * 900));
+
         const localTicket = {
-            id: 'TK-2026-' + Math.floor(100 + Math.random() * 900),
+            id: finalTicketId,
+            rawId: createdId || finalTicketId,
             title: title,
             type: type,
             priority: priority,
@@ -273,26 +300,6 @@
             console.warn('[Support] Sync ticket to customer DB error:', err);
         }
 
-        // Thử đồng bộ lên Supabase nếu có
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (db) {
-            try {
-                const { data: tData } = await db.from('support_ticket').insert([{
-                    title, type, priority, status: 'pending', user_id: userId
-                }]).select();
-                if (tData && tData.length > 0) {
-                    const newId = tData[0].id;
-                    await db.from('support_ticket_message').insert([{
-                        ticket_id: newId,
-                        sender_type: 'user',
-                        content: content
-                    }]);
-                }
-            } catch (e) {
-                console.warn('[Support] Lưu Supabase không thành công, đã lưu LocalStorage an toàn:', e);
-            }
-        }
-
         await loadTickets();
         return localTicket;
     }
@@ -300,7 +307,9 @@
     async function sbSendTicketReply(ticketId, text) {
         const now = new Date();
         const localList = getLocalTickets();
-        const ticket = localList.find(t => t.id === ticketId);
+        const ticket = localList.find(t => t.id === ticketId || t.rawId === ticketId);
+        const targetDbId = ticket?.rawId || ticketId;
+
         if (ticket) {
             if (!ticket.messages) ticket.messages = [];
             ticket.messages.push({
@@ -319,7 +328,7 @@
 
                 const syncToAdminCollection = (storageKey) => {
                     const arr = JSON.parse(localStorage.getItem(storageKey)) || [];
-                    const idx = arr.findIndex(item => item.id === ticketId || (ticket?.context?.bookingId && item.bookingId === ticket.context.bookingId) || (ticket?.context?.orderId && item.orderId === ticket.context.orderId));
+                    const idx = arr.findIndex(item => item.id === targetDbId || item.id === ticketId || (ticket?.context?.bookingId && item.bookingId === ticket.context.bookingId) || (ticket?.context?.orderId && item.orderId === ticket.context.orderId));
                     if (idx >= 0) {
                         if (!arr[idx].timeline) arr[idx].timeline = [];
                         arr[idx].timeline.unshift({
@@ -346,32 +355,22 @@
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (db) {
             try {
-                await db.from('support_ticket_message').insert([{
-                    ticket_id: ticketId,
-                    sender_type: 'user',
-                    content: text
-                }]);
-                await db.from('support_ticket').update({ status: 'processing', updated_at: now.toISOString() }).eq('id', ticketId);
-            } catch (e) {}
+                const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetDbId);
+                if (isUuid) {
+                    await db.from('support_ticket_message').insert([{
+                        ticket_id: targetDbId,
+                        sender_type: 'user',
+                        content: text
+                    }]);
+                    await db.from('support_ticket').update({ status: 'processing', updated_at: now.toISOString() }).eq('id', targetDbId);
+                }
+            } catch (e) {
+                console.warn('[Support] Gửi phản hồi Supabase lỗi:', e);
+            }
         }
 
         await loadTickets();
-
-        // Tự động mô phỏng CSKH phản hồi tiếp nhận sau 2s
-        setTimeout(async () => {
-            const list = getLocalTickets();
-            const t = list.find(item => item.id === ticketId);
-            if (t) {
-                t.messages.push({
-                    sender: 'cskh',
-                    agent: 'Nguyễn Văn B (CSKH)',
-                    text: 'PawPal đã nhận được phản hồi bổ sung từ bạn rồi ạ. Chúng tôi đang kiểm tra gấp và sẽ cập nhật phương án giải quyết sớm nhất nhé!',
-                    time: new Date().toISOString()
-                });
-                saveLocalTickets(list);
-                await loadTickets();
-            }
-        }, 2000);
+        document.dispatchEvent(new CustomEvent('tickets_updated'));
     }
 
     async function sbCloseAndRateTicket(ticketId, rating, comment = '') {

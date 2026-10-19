@@ -47,6 +47,31 @@
         });
     }
 
+    function updateSupportUnreadBadge() {
+        const badge = document.getElementById('supportUnreadBadge');
+        if (!badge) return;
+        if (!window.PawPalSupport || !window.PawPalSupport.getTickets) return;
+        const tickets = window.PawPalSupport.getTickets() || [];
+        const waitingCount = tickets.filter(t => t.status === 'waiting_customer').length;
+        if (waitingCount > 0) {
+            badge.classList.remove('d-none');
+            badge.classList.add('has-count');
+            badge.textContent = waitingCount;
+            badge.title = `Có ${waitingCount} phản hồi từ CSKH cần bạn xem`;
+        } else {
+            badge.classList.add('d-none');
+            badge.classList.remove('has-count');
+            badge.textContent = '';
+        }
+    }
+
     updateActiveState();
-    window.addEventListener('hashchange', updateActiveState);
+    updateSupportUnreadBadge();
+    window.addEventListener('hashchange', () => {
+        updateActiveState();
+        updateSupportUnreadBadge();
+    });
+    document.addEventListener('tickets_updated', updateSupportUnreadBadge);
+    document.addEventListener('support_ready', updateSupportUnreadBadge);
 })();
+
