@@ -410,7 +410,8 @@ export const API = {
         if (!db) throw new Error('Không thể kiểm tra tồn kho. Vui lòng thử lại.');
         const rawIds = items.map(item => item.variantId || item.product_variant_id || item.id).filter(Boolean);
         if (!rawIds.length) return { valid: true };
-        const { data: variants } = await db.from('product_variant').select('id, product_id').or(id.in.(),product_id.in.());
+        const idList = rawIds.map(id => `"${id}"`).join(',');
+        const { data: variants } = await db.from('product_variant').select('id, product_id').or(`id.in.(${idList}),product_id.in.(${idList})`);
         const variantIdMap = new Map();
         for (const v of variants || []) {
             variantIdMap.set(String(v.id), v.id);
@@ -508,7 +509,8 @@ export const API = {
         const rawIds = items.map(item => item.variantId || item.product_variant_id || item.id).filter(Boolean);
         let variantMap = new Map();
         if (rawIds.length) {
-            const { data: vRows } = await db.from('product_variant').select('id, product_id').or(id.in.(),product_id.in.());
+            const idList = rawIds.map(id => `"${id}"`).join(',');
+            const { data: vRows } = await db.from('product_variant').select('id, product_id').or(`id.in.(${idList}),product_id.in.(${idList})`);
             for (const v of vRows || []) {
                 variantMap.set(String(v.id), v.id);
                 variantMap.set(String(v.product_id), v.id);

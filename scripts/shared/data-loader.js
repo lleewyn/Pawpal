@@ -157,7 +157,7 @@ async function loadProducts() {
         }
 
         console.log('Loading products from Supabase...');
-        const { data: rawProducts, error } = await db.from('product').select('*, product_category!inner(category_name), inventory(quantity_in_stock), product_variant(*)');
+        const { data: rawProducts, error } = await db.from('product').select('*, product_category!inner(category_name), product_variant(*, inventory(quantity_in_stock))');
         
         if (error) {
             throw error;
@@ -191,11 +191,13 @@ async function loadProducts() {
             let badgeStr = item.badge ? String(item.badge).toLowerCase() : null;
             
             let stockCount = 0;
-            if (item.inventory) {
-                if (Array.isArray(item.inventory) && item.inventory.length > 0) {
-                    stockCount = Number(item.inventory[0].quantity_in_stock);
-                } else if (!Array.isArray(item.inventory)) {
-                    stockCount = Number(item.inventory.quantity_in_stock);
+            for (const v of variants) {
+                if (v.inventory) {
+                    if (Array.isArray(v.inventory)) {
+                        stockCount += v.inventory.reduce((sum, inv) => sum + Number(inv.quantity_in_stock || 0), 0);
+                    } else {
+                        stockCount += Number(v.inventory.quantity_in_stock || 0);
+                    }
                 }
             }
 
@@ -226,7 +228,7 @@ async function loadProducts() {
                 oldPrice: sale ? compareAtPrice : null,
                 image: images[0],
                 images: images,
-                inStock: item.status === 'ACTIVE' && stockCount > 0,
+                inStock: (item.status === 'ACTIVE' || item.status === 'dang_ban') && stockCount > 0,
                 stock: stockCount,
                 sale: sale,
                 badge: badgeStr,
@@ -409,7 +411,7 @@ async function loadServices() {
         const { data: pricesData, error: pricesError } = await supabase
             .from('service_price_matrix')
             .select('*')
-            .eq('status', 'ACTIVE')
+            .eq('status', 'dang_hoat_dong')
             .is('effective_to', null);
 
         if (pricesError) throw pricesError;
@@ -423,8 +425,8 @@ async function loadServices() {
 
         const services = servicesData.map((svc, index) => {
             let category = 'spa';
-            if (svc.service_category === 'PET_HOTEL') category = 'hotel';
-            else if (svc.service_category === 'PET_TAXI') category = 'taxi';
+            if (svc.service_category === 'PET_HOTEL' || svc.service_category === 'khach_san_thu_cung') category = 'hotel';
+            else if (svc.service_category === 'PET_TAXI' || svc.service_category === 'dua_don_tan_noi') category = 'taxi';
 
             const name = String(svc.service_name || '').toLowerCase();
             const code = String(svc.service_code || '').toUpperCase();
@@ -480,7 +482,7 @@ async function loadServices() {
                 groomerLevel: svc.groomer_level || '',
                 image: imageList[0],
                 images: imageList,
-                status: svc.status === 'ACTIVE' ? 'Đang phục vụ' : 'Ngưng phục vụ'
+                status: (svc.status === 'dang_hoat_dong' || svc.status === 'ACTIVE') ? 'Đang phục vụ' : 'Ngưng phục vụ'
             };
         });
 
@@ -729,7 +731,7 @@ async function loadBanners() {
 
         const { data, error } = await db.from('banner')
             .select('*')
-            .or('status.eq.dang_hien_thi,status.eq.ACTIVE,is_active.eq.true')
+            .or('status.eq.dang_hien_thi,status.eq.ACTIVE')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
