@@ -454,8 +454,8 @@
         if (attr1Vals.length === 0 && attr2Vals.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">
-                        Vui lòng thêm ít nhất một giá trị cho thuộc tính 1 ở trên để tạo bảng biến thể.
+                    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                        Vui lòng thêm ít nhất một giá trị cho nhóm phân loại 1 ở trên để tạo bảng biến thể.
                     </td>
                 </tr>
             `;
@@ -474,34 +474,40 @@
             });
         }
 
+        const fallbackCost = document.getElementById('newProdCostPrice')?.value || '';
+        const fallbackPrice = document.getElementById('newProdPrice')?.value || '';
+        const fallbackOrig = document.getElementById('newProdOriginalPrice')?.value || '';
+        const fallbackStock = document.getElementById('newProdInitialStock')?.value || 10;
+        const fallbackImg = document.getElementById('newProdImages')?.value?.split(',')[0]?.trim() || 'assets/images/shop/products/tp-hat-01.png';
+
         tbody.innerHTML = combinations.map((c, idx) => {
             const key = c.v2 ? `${c.v1}|${c.v2}` : c.v1;
             const saved = existingDataMap[key] || {};
             const autoSku = saved.sku || `${baseSku}-${String(idx + 1).padStart(2, '0')}`;
-            const autoCost = saved.costPrice !== undefined ? saved.costPrice : '';
-            const autoPrice = saved.price !== undefined ? saved.price : '';
-            const autoOrig = saved.originalPrice !== undefined ? saved.originalPrice : '';
-            const autoStock = saved.stock !== undefined ? saved.stock : 10;
-            const autoImg = saved.image || 'assets/images/shop/products/tp-hat-01.png';
+            const autoCost = saved.costPrice !== undefined ? saved.costPrice : fallbackCost;
+            const autoPrice = saved.price !== undefined ? saved.price : fallbackPrice;
+            const autoOrig = saved.originalPrice !== undefined ? saved.originalPrice : fallbackOrig;
+            const autoStock = saved.stock !== undefined ? saved.stock : fallbackStock;
+            const autoImg = saved.image || fallbackImg;
 
             return `
                 <tr class="variant-row-item" data-attr-1="${c.v1}" data-attr-2="${c.v2}">
                     <td style="font-weight: 600; color: #236B48;">${c.v1 || '--'}</td>
                     ${attr2Vals.length > 0 ? `<td style="font-weight: 500;">${c.v2}</td>` : ''}
                     <td>
-                        <input type="text" class="admin-input variant-sku-input" value="${autoSku}" placeholder="SKU biến thể" style="height: 28px; font-size: 11.5px; padding: 0 6px; font-family: monospace;">
+                        <input type="text" class="admin-input variant-sku-input" value="${autoSku}" placeholder="Mã SKU *" style="height: 28px; font-size: 11.5px; padding: 0 6px; font-family: monospace;">
                     </td>
                     <td>
-                        <input type="number" class="admin-input variant-cost-input" value="${autoCost}" placeholder="Vốn (đ)" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
+                        <input type="number" class="admin-input variant-cost-input" value="${autoCost}" placeholder="Vốn (đ) *" min="0" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
                     </td>
                     <td>
-                        <input type="number" class="admin-input variant-price-input" value="${autoPrice}" placeholder="Bán (đ)" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
+                        <input type="number" class="admin-input variant-price-input" value="${autoPrice}" placeholder="Bán (đ) *" min="1" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
                     </td>
                     <td>
-                        <input type="number" class="admin-input variant-orig-input" value="${autoOrig}" placeholder="Gốc (đ)" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
+                        <input type="number" class="admin-input variant-orig-input" value="${autoOrig}" placeholder="Gốc (đ)" min="0" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
                     </td>
                     <td>
-                        <input type="number" class="admin-input variant-stock-input" value="${autoStock}" placeholder="Tồn" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
+                        <input type="number" class="admin-input variant-stock-input" value="${autoStock}" placeholder="Tồn *" min="0" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
                     </td>
                     <td>
                         <input type="text" class="admin-input variant-img-input" value="${autoImg}" placeholder="Đường dẫn ảnh" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
@@ -640,20 +646,60 @@
                     return;
                 }
 
-                let hasInvalidVariant = false;
-                variantRows.forEach((row, idx) => {
+                const skuSet = new Set();
+                for (let idx = 0; idx < variantRows.length; idx++) {
+                    const row = variantRows[idx];
                     const v1 = row.getAttribute('data-attr-1') || '';
                     const v2 = row.getAttribute('data-attr-2') || '';
                     const vName = v2 ? `${v1} - ${v2}` : (v1 || `Phân loại ${idx + 1}`);
-                    const vSku = row.querySelector('.variant-sku-input')?.value.trim() || `${sku}-${String(idx + 1).padStart(2, '0')}`;
-                    const vCost = parseInt(row.querySelector('.variant-cost-input')?.value || '0', 10);
-                    const vPrice = parseInt(row.querySelector('.variant-price-input')?.value || '0', 10);
-                    const vOrig = parseInt(row.querySelector('.variant-orig-input')?.value || '0', 10);
-                    const vMemberPrice = Math.round(vPrice * 0.925 / 1000) * 1000;
-                    const vStock = parseInt(row.querySelector('.variant-stock-input')?.value || '0', 10);
-                    const vImg = row.querySelector('.variant-img-input')?.value.trim() || 'assets/images/shop/products/tp-hat-01.png';
 
-                    if (vPrice <= 0) hasInvalidVariant = true;
+                    const skuInput = row.querySelector('.variant-sku-input');
+                    const costInput = row.querySelector('.variant-cost-input');
+                    const priceInput = row.querySelector('.variant-price-input');
+                    const origInput = row.querySelector('.variant-orig-input');
+                    const stockInput = row.querySelector('.variant-stock-input');
+                    const imgInput = row.querySelector('.variant-img-input');
+
+                    const vSku = skuInput?.value.trim();
+                    const rawCost = costInput?.value.trim();
+                    const rawPrice = priceInput?.value.trim();
+                    const rawOrig = origInput?.value.trim();
+                    const rawStock = stockInput?.value.trim();
+
+                    if (!vSku) {
+                        skuInput?.focus();
+                        showToast(`Vui lòng nhập Mã SKU bắt buộc cho phân loại "${vName}".`, 'warning');
+                        return;
+                    }
+                    if (skuSet.has(vSku.toLowerCase())) {
+                        skuInput?.focus();
+                        showToast(`Mã SKU "${vSku}" ở phân loại "${vName}" bị trùng lặp. Vui lòng đặt mã SKU riêng biệt.`, 'warning');
+                        return;
+                    }
+                    skuSet.add(vSku.toLowerCase());
+
+                    if (rawCost === '' || isNaN(Number(rawCost)) || Number(rawCost) < 0) {
+                        costInput?.focus();
+                        showToast(`Vui lòng nhập Giá vốn bắt buộc (>= 0) cho phân loại "${vName}".`, 'warning');
+                        return;
+                    }
+                    if (rawPrice === '' || isNaN(Number(rawPrice)) || Number(rawPrice) <= 0) {
+                        priceInput?.focus();
+                        showToast(`Vui lòng nhập Giá bán bắt buộc (> 0) cho phân loại "${vName}".`, 'warning');
+                        return;
+                    }
+                    if (rawStock === '' || isNaN(Number(rawStock)) || Number(rawStock) < 0) {
+                        stockInput?.focus();
+                        showToast(`Vui lòng nhập Số lượng tồn kho bắt buộc (>= 0) cho phân loại "${vName}".`, 'warning');
+                        return;
+                    }
+
+                    const vCost = parseInt(rawCost, 10);
+                    const vPrice = parseInt(rawPrice, 10);
+                    const vOrig = rawOrig !== '' ? parseInt(rawOrig, 10) : 0;
+                    const vStock = parseInt(rawStock, 10);
+                    const vMemberPrice = Math.round(vPrice * 0.925 / 1000) * 1000;
+                    const vImg = imgInput?.value.trim() || 'assets/images/shop/products/tp-hat-01.png';
 
                     variants.push({
                         attr1: v1,
@@ -667,11 +713,6 @@
                         stock: vStock,
                         image: vImg
                     });
-                });
-
-                if (hasInvalidVariant) {
-                    showToast('Vui lòng điền giá bán hợp lệ (> 0) cho tất cả các biến thể trong bảng.', 'warning');
-                    return;
                 }
 
                 unit = document.getElementById('newProdUnit')?.value || 'Món';
@@ -1308,6 +1349,22 @@
 
         attr1TagValues = [];
         attr2TagValues = [];
+        const attr1N = document.getElementById('attr1Name');
+        const attr2N = document.getElementById('attr2Name');
+        if (attr1N) attr1N.value = 'Phân loại';
+        if (attr2N) attr2N.value = 'Quy cách';
+        renderAttributeTags(1);
+        renderAttributeTags(2);
+        const tbody = document.getElementById('productVariantsTableBody');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                        Vui lòng thêm ít nhất một giá trị cho nhóm phân loại 1 ở trên để tạo bảng biến thể.
+                    </td>
+                </tr>
+            `;
+        }
         toggleVariantMode(false);
         updateProductImagePreview();
 
@@ -1380,6 +1437,26 @@
             renderAttributeTags(2);
             generateVariantMatrix(prod.variants);
         } else {
+            attr1TagValues = [];
+            attr2TagValues = [];
+            const cat = prod.category || '';
+            const isFood = cat.toLowerCase().includes('thức ăn') || cat.toLowerCase().includes('pate') || cat.toLowerCase().includes('bánh') || cat.toLowerCase().includes('hạt');
+            const attr1N = document.getElementById('attr1Name');
+            const attr2N = document.getElementById('attr2Name');
+            if (attr1N) attr1N.value = isFood ? 'Hương vị' : 'Màu sắc';
+            if (attr2N) attr2N.value = 'Kích thước';
+            renderAttributeTags(1);
+            renderAttributeTags(2);
+            const tbody = document.getElementById('productVariantsTableBody');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                            Vui lòng thêm ít nhất một giá trị cho nhóm phân loại 1 ở trên để tạo bảng biến thể.
+                        </td>
+                    </tr>
+                `;
+            }
             toggleVariantMode(false);
         }
 
