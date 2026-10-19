@@ -446,3 +446,33 @@
 /* Keep the return form above the shared fixed header and floating controls. */
 .rma-drawer-overlay { z-index: 20000; }
 .rma-drawer { z-index: 20001; overscroll-behavior: contain; }
+
+#rma-drawer-container {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    pointer-events: none;
+}
+
+#rma-drawer-container .rma-drawer,
+#rma-drawer-container .rma-drawer-overlay {
+    pointer-events: auto;
+}
+
+.rma-drawer-body {
+    min-height: 0;
+    overscroll-behavior: contain;
+}
+
+.rma-drawer .rma-product-thumb {
+    flex: 0 0 60px;
+    width: 60px;
+    height: 60px;
+    max-width: 60px;
+    object-fit: contain;
+}
+
+.rma-drawer .rma-product-info {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}

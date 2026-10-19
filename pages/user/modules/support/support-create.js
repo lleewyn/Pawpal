@@ -1,5 +1,6 @@
 // support-create.js - Xử lý tạo Khiếu nại và Yêu cầu Hỗ trợ phía User (Chuẩn SPA & AGENTS.md)
 import '/scripts/shared/support-handler.js';
+import { API } from '/scripts/api/api.js';
 
 let userBookings = [];
 let userOrders = [];
@@ -123,7 +124,9 @@ export async function initSupportCreate() {
     }
 
     if (queryOrderId && orderSelect) {
-        orderSelect.value = queryOrderId;
+        const selectedOrder = userOrders.find(order => [order.id, order._supabaseId]
+            .some(id => id != null && String(id) === queryOrderId));
+        orderSelect.value = selectedOrder ? selectedOrder.id : '';
         autoGenerateTitle();
     }
 
@@ -363,59 +366,13 @@ async function loadUserEntities() {
         }
     }
 
-    // 2. Tải Orders từ Supabase
-    try {
-        if (db && currentUser.id) {
-            const { data, error } = await db
-                .from('sales_order')
-                .select(`
-                    id,
-                    order_code,
-                    created_at,
-                    order_status,
-                    sales_order_detail (
-                        quantity,
-                        unit_price,
-                        product_variant:product_variant_id ( id, sku_variant, product:product_id ( id, product_name ) )
-                    )
-                `)
-                .eq('customer_id', currentUser.id)
-                .order('created_at', { ascending: false });
-
-            if (!error && data && data.length > 0) {
-                userOrders = data.map(o => ({
-                    id: o.order_code || o.id,
-                    createdAt: o.created_at ? o.created_at.substring(0, 10) : '',
-                    status: o.order_status,
-                    products: (o.sales_order_detail || []).map(d => ({
-                        id: d.product_variant?.product?.id || d.product?.id || d.product_variant?.sku_variant || 'P-01',
-                        name: d.product_variant?.product?.product_name || d.product?.product_name || 'Sản phẩm PawPal',
-                        sku: d.product_variant?.sku_variant || 'SKU',
-                        quantity: d.quantity || 1,
-                        price: d.unit_price || 0
-                    }))
-                }));
-            }
-        }
-    } catch (e) {
-        console.warn('[SupportCreate] Lỗi tải đơn hàng từ Supabase:', e);
+    // Load the same authenticated live order data as the orders list.
+    userOrders = [];
+        if (currentUser.id) userOrders = await API.getUserOrders(currentUser);
+    } catch (error) {
+        console.warn('[SupportCreate] Không thể tải danh sách đơn hàng:', error);
     }
 
-    if (!userOrders || userOrders.length === 0) {
-        try {
-            if (window.API && window.API.getUserOrders) {
-                userOrders = await window.API.getUserOrders(currentUser.id);
-            }
-        } catch (e) {}
-    }
-
-    if (!userOrders || userOrders.length === 0) {
-        try {
-            userOrders = JSON.parse(localStorage.getItem('pawpal_orders')) || [];
-        } catch (e) {}
-    }
-
-    // Đổ dữ liệu vào select Đơn hàng
     const orderSelect = document.getElementById('orderSelect');
     if (orderSelect) {
         if (userOrders.length === 0) {

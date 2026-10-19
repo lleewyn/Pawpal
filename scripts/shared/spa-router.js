@@ -342,7 +342,7 @@
             matched = nav.querySelector('a.nav-link[href="/"]') || nav.querySelector('a.nav-link[href*="landing"]');
         } else if (path.startsWith('/services') || path.startsWith('/pages/services/') || path.includes('service-detail') || path.startsWith('/booking')) {
             matched = nav.querySelector('a.nav-link[href="/services"]') || nav.querySelector('a.nav-link[href*="services"]');
-        } else if (path.startsWith('/shop') || path.includes('product-detail') || path.startsWith('/cart') || path.startsWith('/checkout')) {
+        } else if (path.startsWith('/shop') || path.startsWith('/pages/shop/') || path.includes('product-detail') || path.startsWith('/cart') || path.startsWith('/checkout')) {
             matched = nav.querySelector('a.nav-link[href="/shop"]') || nav.querySelector('a.nav-link[href*="shop"]');
         } else if (path.startsWith('/blog') || path.startsWith('/pages/public/blog') || path.includes('cam-nang')) {
             matched = nav.querySelector('a.nav-link[href="/blog"]') || nav.querySelector('a.nav-link[href*="blog"]');
