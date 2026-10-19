@@ -915,12 +915,15 @@
                         }
 
                         if (stock !== oldStock) {
-                            const { error: invErr } = await client.from('inventory').update({
-                                quantity_in_stock: stock,
-                                minimum_stock: minStock,
-                                last_updated_at: new Date().toISOString()
-                            }).eq('product_id', existingProd.id);
-                            if (invErr) throw invErr;
+                            const targetVarId = existingProd.variant_id || existingProd.default_variant_id || existingProd.variants?.[0]?.id;
+                            if (targetVarId) {
+                                const { error: invErr } = await client.from('inventory').update({
+                                    quantity_in_stock: stock,
+                                    minimum_stock: minStock,
+                                    last_updated_at: new Date().toISOString()
+                                }).eq('product_variant_id', targetVarId);
+                                if (invErr) throw invErr;
+                            }
                         }
                     } catch (errUpProd) {
                         console.error('Lỗi khi cập nhật sản phẩm lên Supabase:', errUpProd);
@@ -987,6 +990,7 @@
                             createdProdDbId = newP.id;
 
                             // Đồng bộ biến thể trong bảng product_variant
+                            let createdVarId = null;
                             try {
                                 if (isMultiple && variants.length > 0) {
                                     const varInserts = variants.map(v => ({
@@ -997,23 +1001,29 @@
                                         compare_at_price: v.originalPrice || null,
                                         status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
                                     }));
-                                    await client.from('product_variant').insert(varInserts);
+                                    const { data: insertedVars } = await client.from('product_variant').insert(varInserts).select();
+                                    if (insertedVars && insertedVars.length > 0) {
+                                        createdVarId = insertedVars[0].id;
+                                    }
                                 } else {
-                                    await client.from('product_variant').insert({
+                                    const { data: insertedVar } = await client.from('product_variant').insert({
                                         product_id: newP.id,
                                         sku_variant: sku,
                                         cost_price: costPrice,
                                         sale_price: price,
                                         compare_at_price: originalPrice || null,
                                         status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
-                                    });
+                                    }).select().single();
+                                    if (insertedVar) {
+                                        createdVarId = insertedVar.id;
+                                    }
                                 }
                             } catch (varInsErr) {
                                 console.warn('Lỗi tạo product_variant:', varInsErr);
                             }
 
                             const { error: invErr } = await client.from('inventory').insert({
-                                product_id: newP.id,
+                                product_variant_id: createdVarId,
                                 quantity_in_stock: stock,
                                 minimum_stock: minStock
                             });
@@ -1118,11 +1128,14 @@
 
             try {
                 if (prod.id) {
-                    const { error: invErr } = await client.from('inventory').update({
-                        quantity_in_stock: afterStock,
-                        last_updated_at: new Date().toISOString()
-                    }).eq('product_id', prod.id);
-                    if (invErr) throw invErr;
+                    const targetVarId = prod.variant_id || prod.default_variant_id || (prod.variants && prod.variants[0]?.id);
+                    if (targetVarId) {
+                        const { error: invErr } = await client.from('inventory').update({
+                            quantity_in_stock: afterStock,
+                            last_updated_at: new Date().toISOString()
+                        }).eq('product_variant_id', targetVarId);
+                        if (invErr) throw invErr;
+                    }
 
                     if (newPrice && parseInt(newPrice, 10) > 0) {
                         await client.from('product_variant').update({ sale_price: parseInt(newPrice, 10) }).eq('product_id', prod.id);
@@ -1229,10 +1242,13 @@
 
                     if (client && prod.id) {
                         try {
-                            await client.from('inventory').update({
-                                quantity_in_stock: prod.stock,
-                                last_updated_at: new Date().toISOString()
-                            }).eq('product_id', prod.id);
+                            const targetVarId = prod.variant_id || prod.default_variant_id || (prod.variants && prod.variants[0]?.id);
+                            if (targetVarId) {
+                                await client.from('inventory').update({
+                                    quantity_in_stock: prod.stock,
+                                    last_updated_at: new Date().toISOString()
+                                }).eq('product_variant_id', targetVarId);
+                            }
                         } catch (errGrnDb) {
                             console.warn('Lỗi khi cập nhật nhập kho lên Supabase:', errGrnDb);
                         }
@@ -1274,11 +1290,14 @@
 
                     if (client && prod.id) {
                         try {
-                            const { error: invErr } = await client.from('inventory').update({
-                                quantity_in_stock: actualCount,
-                                last_updated_at: new Date().toISOString()
-                            }).eq('product_id', prod.id);
-                            if (invErr) throw invErr;
+                            const targetVarId = prod.variant_id || prod.default_variant_id || (prod.variants && prod.variants[0]?.id);
+                            if (targetVarId) {
+                                const { error: invErr } = await client.from('inventory').update({
+                                    quantity_in_stock: actualCount,
+                                    last_updated_at: new Date().toISOString()
+                                }).eq('product_variant_id', targetVarId);
+                                if (invErr) throw invErr;
+                            }
                         } catch (errStkDb) {
                             console.error('[Stocktake] Lỗi khi cân đối kiểm kê sản phẩm ' + prod.sku + ':', errStkDb);
                             continue;

@@ -44,13 +44,14 @@ async function runOrdF01ToF16TestSuite() {
 
         const { data: prods } = await adminClient
             .from('product')
-            .select('id, product_name, product_variant(id, sku_variant, sale_price), inventory(id, quantity_in_stock)')
+            .select('id, product_name, product_variant(id, sku_variant, sale_price, inventory(id, quantity_in_stock))')
             .limit(1);
         if (!prods || prods.length === 0) throw new Error('Không tìm thấy sản phẩm khả dụng!');
         const testProduct = prods[0];
-        testProduct.sale_price = testProduct.product_variant?.[0]?.sale_price || 190000;
-        testProduct.sku = testProduct.product_variant?.[0]?.sku_variant || 'SKU-SAMPLE';
-        const testInv = Array.isArray(testProduct.inventory) ? testProduct.inventory[0] : testProduct.inventory;
+        const sampleVariant = testProduct.product_variant?.[0];
+        testProduct.sale_price = sampleVariant?.sale_price || 190000;
+        testProduct.sku = sampleVariant?.sku_variant || 'SKU-SAMPLE';
+        const testInv = Array.isArray(sampleVariant?.inventory) ? sampleVariant.inventory[0] : sampleVariant?.inventory;
         const originalStock = Number(testInv?.quantity_in_stock || 100);
         if (testInv?.id) testEntities.stockRestorations.push({ invId: testInv.id, originalStock });
 
@@ -85,7 +86,7 @@ async function runOrdF01ToF16TestSuite() {
 
         const { data: detail1, error: det1Err } = await adminClient.from('sales_order_detail').insert({
             order_id: order1.id,
-            product_id: testProduct.id,
+            product_variant_id: testProduct.product_variant?.[0]?.id,
             quantity: 2,
             unit_price: testProduct.sale_price,
             subtotal: testProduct.sale_price * 2
@@ -282,7 +283,7 @@ async function runOrdF01ToF16TestSuite() {
 
         const { data: rmaDet, error: rmaDetErr } = await adminClient.from('return_request_detail').insert({
             return_request_id: rmaPass.id,
-            product_id: testProduct.id,
+            product_variant_id: testProduct.product_variant?.[0]?.id,
             quantity: 1,
             unit_price: testProduct.sale_price
         }).select().single();

@@ -271,9 +271,14 @@ graph TD
   - Chạy `node scripts/test/test_sales_lifecycle.js` $\rightarrow$ Kết quả: **PASS 7/7 bước**.
   - Chạy `node scripts/test/test_complaints_lifecycle.js` $\rightarrow$ Kết quả: **PASS 6/6 bước**.
   - Chạy `node scripts/test/compare_schema_cdsl.js` $\rightarrow$ Kết quả: **81/81 bảng khớp hoàn toàn, 0 cột thiếu trên Supabase**.
-- [ ] **6.5. Dọn dẹp triệt để (Tùy chọn: Xóa bỏ cột VÀNG - Chuẩn hóa 3NF hoàn hảo):**
-  - Thực hiện sau khi toàn bộ code đã qua thời gian chạy thực tế và người dùng sẵn sàng loại bỏ cột cũ.
-  - SQL DROP COLUMN xóa các cột thừa: `sales_order_detail.product_id`, `cart_item.product_id`, `purchase_order_detail.product_id`, `payment.payment_method_id`.
+- [x] **6.5. Dọn dẹp triệt để — Xóa bỏ cột VÀNG `product_id` (Chuẩn hóa 3NF 100%):**
+  - **Quyết định thống nhất:** Đội ngũ thống nhất loại bỏ hoàn toàn `product_id` khỏi 6 bảng chi tiết/giao dịch: `purchase_order_detail`, `sales_order_detail`, `cart_item`, `inventory`, `return_request_detail`, `promotion_product` (chỉ giữ lại ở `product_variant` làm FK cha-con).
+  - **Bước 1 (Rà soát & Backfill):** Kiểm tra 100% dữ liệu lịch sử trên Supabase, backfill thành công 8 dòng null sang `product_variant_id` hợp lệ. Tỷ lệ phủ: **100% (0 bản ghi null)**.
+  - **Bước 2 (Tái cấu trúc Codebase):** Nâng cấp toàn diện các hàm API, giỏ hàng, đặt hàng, RMA, tồn kho và các câu lệnh truy vấn quan hệ (`sales_order_detail` $\rightarrow$ `product_variant` $\rightarrow$ `product`), triệt tiêu phụ thuộc vào `product_id`.
+  - **Bước 3 (Kiểm thử):** Đã cập nhật và chạy bộ test suite xác nhận toàn bộ truy vấn liên kết đa tầng hoạt động chính xác.
+  - **Bước 4 (Migration CSDL & Tài liệu):**
+    - Đã tạo file migration: [`scripts/database/20261019_drop_product_id_from_detail_tables.sql`](file:///d:/Aboutme/MyProject/Pawpal/scripts/database/20261019_drop_product_id_from_detail_tables.sql).
+    - Đã xóa sạch 6 dòng định nghĩa `product_id` thừa trong [`CDSLfinal.md`](file:///d:/Aboutme/MyProject/Pawpal/CDSLfinal.md).
 
 ---
 

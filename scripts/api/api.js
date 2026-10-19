@@ -177,8 +177,7 @@ export const API = {
                     created_at, updated_at, note,
                     sales_order_detail (
                         id, quantity, unit_price, discount_amount, subtotal, product_variant_id,
-                        product ( id, product_name, image_urls ),
-                        product_variant ( id, sku_variant, sale_price )
+                        product_variant ( id, sku_variant, sale_price, product ( id, product_name, image_urls ) )
                     ),
                     customer_address ( receiver_name, receiver_phone, province, street_address )
                 `)
@@ -200,15 +199,20 @@ export const API = {
 
             const orders = (data || []).map(o => {
                 const details = o.sales_order_detail || [];
-                const products = details.map(d => ({
-                    id:       d.product?.id || '',
-                    name:     d.product?.product_name || 'Sản phẩm',
-                    sku:      d.product_variant?.sku_variant || d.product?.sku || '',
-                    image:    normalizeImageUrl(d.product?.image_urls?.[0]),
-                    quantity: d.quantity,
-                    price:    d.unit_price,
-                    total:    d.subtotal,
-                }));
+                const products = details.map(d => {
+                    const pv = d.product_variant || {};
+                    const pr = pv.product || d.product || {};
+                    return {
+                        id:       pr.id || '',
+                        variant_id: d.product_variant_id || pv.id,
+                        name:     pr.product_name || 'Sản phẩm',
+                        sku:      pv.sku_variant || pr.sku || '',
+                        image:    normalizeImageUrl(pr.image_urls?.[0]),
+                        quantity: d.quantity,
+                        price:    d.unit_price,
+                        total:    d.subtotal,
+                    };
+                });
                 const addr = o.customer_address;
                 const calculatedSubtotal = products.reduce((sum, p) => sum + (p.total || (p.price * p.quantity)), 0);
                 const discount = 0;
@@ -332,9 +336,18 @@ export const API = {
             const { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', userId).maybeSingle();
             if (cartError || !cartData) return [];
 
-            const { data: items, error: itemsError } = await db.from('cart_item').select('product_id, quantity').eq('cart_id', cartData.id);
+            const { data: items, error: itemsError } = await db.from('cart_item')
+                .select('product_variant_id, quantity, unit_price, subtotal, product_variant(id, product_id, sku_variant, sale_price, product(id, product_name, brand_name, image_urls))')
+                .eq('cart_id', cartData.id);
             if (!itemsError && items) {
-                return items.map(item => ({ id: item.product_id, qty: item.quantity }));
+                return items.map(item => ({
+                    id: item.product_variant?.product?.id || item.product_variant_id,
+                    variantId: item.product_variant_id,
+                    qty: item.quantity,
+                    price: item.unit_price,
+                    name: item.product_variant?.product?.product_name || 'Sản phẩm',
+                    sku: item.product_variant?.sku_variant || ''
+                }));
             }
         } catch (err) {
             console.error('Error getUserCart:', err);
@@ -378,16 +391,28 @@ export const API = {
 
             // Then insert new items
             if (cartItems && cartItems.length > 0) {
-                const itemsToInsert = cartItems.map(item => ({
-                    cart_id: cart.id,
-                    product_id: item.id,
-                    quantity: item.qty || item.quantity || 1,
-                    unit_price: item.price || 0,
-                    subtotal: (item.price || 0) * (item.qty || item.quantity || 1)
-                }));
-                const { error } = await db.from('cart_item').insert(itemsToInsert);
-                if (error) console.error('Error inserting cart items:', error);
-                return { success: !error };
+                const itemsToInsert = [];
+                for (const item of cartItems) {
+                    let vId = item.variantId || item.product_variant_id;
+                    if (!vId && item.id) {
+                        const { data: vData } = await db.from('product_variant').select('id').eq('product_id', item.id).limit(1);
+                        vId = vData?.[0]?.id || item.id;
+                    }
+                    if (vId) {
+                        itemsToInsert.push({
+                            cart_id: cart.id,
+                            product_variant_id: vId,
+                            quantity: item.qty || item.quantity || 1,
+                            unit_price: item.price || 0,
+                            subtotal: (item.price || 0) * (item.qty || item.quantity || 1)
+                        });
+                    }
+                }
+                if (itemsToInsert.length > 0) {
+                    const { error } = await db.from('cart_item').insert(itemsToInsert);
+                    if (error) console.error('Error inserting cart items:', error);
+                    return { success: !error };
+                }
             }
             return { success: true };
         } catch (err) {
@@ -396,7 +421,7 @@ export const API = {
         }
     },
 
-    async addToCart(userId, productId, quantity = 1) {
+    async addToCart(userId, variantOrProductId, quantity = 1) {
         if (!userId) return { success: false, error: 'User not logged in' };
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db) return { success: false, error: 'No DB' };
@@ -404,8 +429,15 @@ export const API = {
         const cart = await this.getOrCreateCart(userId);
         if (!cart) return { success: false, error: 'Cannot create cart' };
 
+        let targetVariantId = variantOrProductId;
+        const { data: checkVariant } = await db.from('product_variant').select('id').eq('id', variantOrProductId).maybeSingle();
+        if (!checkVariant) {
+            const { data: foundVars } = await db.from('product_variant').select('id').eq('product_id', variantOrProductId).limit(1);
+            if (foundVars && foundVars.length > 0) targetVariantId = foundVars[0].id;
+        }
+
         const { data: existingItem } = await db.from('cart_item')
-            .select('id, quantity').eq('cart_id', cart.id).eq('product_id', productId).maybeSingle();
+            .select('id, quantity').eq('cart_id', cart.id).eq('product_variant_id', targetVariantId).maybeSingle();
 
         if (existingItem) {
             const { error } = await db.from('cart_item')
@@ -414,32 +446,32 @@ export const API = {
             return { success: !error, error };
         } else {
             const { error } = await db.from('cart_item')
-                .insert({ cart_id: cart.id, product_id: productId, quantity, unit_price: 0, subtotal: 0 });
+                .insert({ cart_id: cart.id, product_variant_id: targetVariantId, quantity, unit_price: 0, subtotal: 0 });
             return { success: !error, error };
         }
     },
 
-    async updateCartItemQuantity(userId, productId, quantity) {
+    async updateCartItemQuantity(userId, variantOrProductId, quantity) {
         if (!userId) return { success: false, error: 'User not logged in' };
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         const cart = await this.getOrCreateCart(userId);
         if (!cart) return { success: false };
 
-        if (quantity <= 0) return this.removeFromCart(userId, productId);
+        if (quantity <= 0) return this.removeFromCart(userId, variantOrProductId);
 
         const { error } = await db.from('cart_item')
             .update({ quantity })
-            .eq('cart_id', cart.id).eq('product_id', productId);
+            .eq('cart_id', cart.id).or(`product_variant_id.eq.${variantOrProductId},id.eq.${variantOrProductId}`);
         return { success: !error, error };
     },
 
-    async removeFromCart(userId, productId) {
+    async removeFromCart(userId, variantOrProductId) {
         if (!userId) return { success: false, error: 'User not logged in' };
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         const cart = await this.getOrCreateCart(userId);
         if (!cart) return { success: false };
 
-        const { error } = await db.from('cart_item').delete().eq('cart_id', cart.id).eq('product_id', productId);
+        const { error } = await db.from('cart_item').delete().eq('cart_id', cart.id).or(`product_variant_id.eq.${variantOrProductId},id.eq.${variantOrProductId}`);
         return { success: !error, error };
     },
 
@@ -625,18 +657,24 @@ export const API = {
             if (payError) console.error('[API] Failed to insert payment:', payError);
 
             if (orderData.items && orderData.items.length > 0) {
-                const orderDetails = orderData.items.map(item => {
+                const orderDetails = [];
+                for (const item of orderData.items) {
                     const uPrice = Number(item.price || 0);
                     const qty = Number(item.qty || item.quantity || 1);
-                    return {
+                    let vId = item.variantId || item.product_variant_id;
+                    if (!vId && item.id) {
+                        const { data: vData } = await db.from('product_variant').select('id').eq('product_id', item.id).limit(1);
+                        vId = vData?.[0]?.id || item.id;
+                    }
+                    orderDetails.push({
                         order_id: newOrder.id,
-                        product_id: item.id,
+                        product_variant_id: vId,
                         quantity: isNaN(qty) ? 1 : qty,
                         unit_price: isNaN(uPrice) ? 0 : uPrice,
                         discount_amount: 0,
                         subtotal: (isNaN(uPrice) ? 0 : uPrice) * (isNaN(qty) ? 1 : qty)
-                    };
-                });
+                    });
+                }
                 const { error: itemsError } = await db.from('sales_order_detail').insert(orderDetails);
                 if (itemsError) throw itemsError;
             }

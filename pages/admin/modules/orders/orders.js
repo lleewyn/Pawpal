@@ -677,6 +677,8 @@
 
                 return {
                     id: p.id,
+                    variant_id: variants[0]?.id || null,
+                    default_variant_id: variants[0]?.id || null,
                     sku: effectiveSku,
                     name: p.product_name || 'Sản phẩm PawPal',
                     category: catObj.category_name || 'Chưa phân loại',
@@ -802,12 +804,12 @@
                         receiver_name, receiver_phone, province, street_address
                     ),
                     sales_order_detail (
-                        id, quantity, unit_price, discount_amount, subtotal,
-                        product (id, product_name, image_urls, specs, product_variant (sku_variant, sale_price))
+                        id, quantity, unit_price, discount_amount, subtotal, product_variant_id,
+                        product_variant (id, sku_variant, sale_price, product (id, product_name, image_urls, specs))
                     ),
                     payment (payment_method_config_id, amount, transaction_status)
                 `).order('created_at', { ascending: false }),
-                client.from('return_request').select('id, sales_order_id, reason, return_type, description, request_status, created_at, return_request_detail (*, product (id, product_name, product_variant (sku_variant, sale_price)))').order('created_at', { ascending: false })
+                client.from('return_request').select('id, sales_order_id, reason, return_type, description, request_status, created_at, return_request_detail (*, product_variant (id, sku_variant, sale_price, product (id, product_name)))').order('created_at', { ascending: false })
             ]);
 
             if (orderRes.error) throw orderRes.error;
@@ -832,8 +834,8 @@
             (res.rma || []).forEach(r => {
                 const isResolved = r.request_status === 'COMPLETED' || r.request_status === 'RESOLVED';
                 const items = (r.return_request_detail || []).map(d => ({
-                    sku: d.product?.product_variant?.[0]?.sku_variant || 'SKU',
-                    name: d.product?.product_name || 'Sản phẩm',
+                    sku: d.product_variant?.sku_variant || d.product?.product_variant?.[0]?.sku_variant || 'SKU',
+                    name: d.product_variant?.product?.product_name || d.product?.product_name || 'Sản phẩm',
                     quantity: d.quantity || 1,
                     price: d.unit_price || 0
                 }));
@@ -891,7 +893,8 @@
                 let calculatedDiscount = 0;
                 let calculatedSubtotal = 0;
                 const prods = (o.sales_order_detail || []).map(d => {
-                    const pr = d.product || {};
+                    const pv = d.product_variant || {};
+                    const pr = pv.product || d.product || {};
                     const pImgs = Array.isArray(pr.image_urls) ? pr.image_urls : (typeof pr.image_urls === 'string' && pr.image_urls ? pr.image_urls.split(',').map(s => s.trim()) : []);
                     const qty = Number(d.quantity) || 1;
                     const uPrice = Number(d.unit_price) || 0;
@@ -901,7 +904,8 @@
                     calculatedSubtotal += sub;
 
                     return {
-                        sku: pr.product_variant?.[0]?.sku_variant || 'SKU-000',
+                        variant_id: d.product_variant_id || pv.id,
+                        sku: pv.sku_variant || pr.product_variant?.[0]?.sku_variant || 'SKU-000',
                         name: pr.product_name || 'Sản phẩm PawPal',
                         spec: pr.specs || 'Tiêu chuẩn',
                         price: uPrice,

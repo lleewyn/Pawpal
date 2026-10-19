@@ -245,7 +245,7 @@ async function loadSupabaseGuestResults(phone) {
                 note,
                 customer!inner ( phone_main ),
                 customer_address ( receiver_name, receiver_phone, street_address, province ),
-                sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product ( id, product_name, image_urls ), product_variant ( id, sku_variant ) )
+                sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product_variant ( id, sku_variant, product ( id, product_name, image_urls ) ) )
             `)
             .eq('customer.phone_main', normPhone)
             .order('created_at', { ascending: false });
@@ -265,7 +265,7 @@ async function loadSupabaseGuestResults(phone) {
                     updated_at,
                     note,
                     customer_address!inner ( receiver_name, receiver_phone, street_address, province ),
-                    sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product ( id, product_name, image_urls ), product_variant ( id, sku_variant ) )
+                    sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product_variant ( id, sku_variant, product ( id, product_name, image_urls ) ) )
                 `)
                 .eq('customer_address.receiver_phone', normPhone)
                 .order('created_at', { ascending: false });
@@ -316,15 +316,20 @@ function mapSupabaseOrderRow(row) {
     };
     const addr = row.customer_address || {};
     const products = Array.isArray(row.sales_order_detail)
-        ? row.sales_order_detail.map((detail) => ({
-            id: detail.product?.id || '',
-            name: detail.product?.product_name || 'Sản phẩm',
-            sku: detail.product_variant?.sku_variant || detail.product?.sku || '',
-            image: normalizeImageUrl(detail.product?.image_urls?.[0]),
-            quantity: detail.quantity,
-            price: detail.unit_price,
-            total: detail.subtotal,
-        }))
+        ? row.sales_order_detail.map((detail) => {
+            const pv = detail.product_variant || {};
+            const pr = pv.product || detail.product || {};
+            return {
+                id: pr.id || '',
+                variant_id: detail.product_variant_id || pv.id,
+                name: pr.product_name || 'Sản phẩm',
+                sku: pv.sku_variant || pr.sku || '',
+                image: normalizeImageUrl(pr.image_urls?.[0]),
+                quantity: detail.quantity,
+                price: detail.unit_price,
+                total: detail.subtotal,
+            };
+        })
         : [];
 
     return {

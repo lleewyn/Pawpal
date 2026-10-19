@@ -399,10 +399,11 @@
                     const rmaDetails = [];
                     for (const retItem of returnedItems) {
                         const prodDb = (state.products || []).find(p => p.sku === retItem.sku);
-                        if (prodDb && prodDb.id) {
+                        const variantId = prodDb?.variant_id || prodDb?.default_variant_id || (prodDb?.variants && prodDb.variants[0]?.id) || null;
+                        if (variantId) {
                             rmaDetails.push({
                                 return_request_id: rmaRow.id,
-                                product_id: prodDb.id,
+                                product_variant_id: variantId,
                                 quantity: retItem.quantity,
                                 unit_price: retItem.price
                             });
@@ -418,18 +419,21 @@
                 if (restockVal === 'restock') {
                     for (const retItem of returnedItems) {
                         const stockItem = (state.products || []).find(p => p.sku === retItem.sku);
-                        if (stockItem && stockItem.id) {
+                        const variantId = stockItem?.variant_id || stockItem?.default_variant_id || (stockItem?.variants && stockItem.variants[0]?.id) || null;
+                        if (variantId) {
                             try {
-                                const { data: invRow } = await client.from('inventory').select('id, quantity_in_stock').eq('product_id', stockItem.id).limit(1);
+                                const { data: invRow } = await client.from('inventory').select('id, quantity_in_stock').eq('product_variant_id', variantId).limit(1);
                                 if (invRow && invRow[0]) {
                                     const newQty = (invRow[0].quantity_in_stock || 0) + retItem.quantity;
                                     await client.from('inventory').update({
                                         quantity_in_stock: newQty,
                                         last_updated_at: new Date().toISOString()
                                     }).eq('id', invRow[0].id);
-                                    stockItem.stock = newQty;
-                                    if (stockItem.stock > 0 && stockItem.status === 'Hết hàng') {
-                                        stockItem.status = 'Còn hàng';
+                                    if (stockItem) {
+                                        stockItem.stock = newQty;
+                                        if (stockItem.stock > 0 && stockItem.status === 'Hết hàng') {
+                                            stockItem.status = 'Còn hàng';
+                                        }
                                     }
                                 }
                             } catch (errRmaInv) {

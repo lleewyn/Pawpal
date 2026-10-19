@@ -244,7 +244,6 @@ STT	THỰC THỂ	MÔ TẢ	THUỘC TÍNH	Ý NGHĨA THUỘC TÍNH
 			created_at	Thời điểm tạo phiếu nhập.
 			updated_at	Thời điểm cập nhật phiếu nhập gần nhất.
 24	purchase_order_detail	Lưu chi tiết từng sản phẩm trong phiếu nhập hàng	id	Mã định danh dòng chi tiết phiếu nhập.
-			product_id	
 			purchase_order_id	Phiếu nhập chứa sản phẩm này.
 			product_variant_id	Biến thể sản phẩm thực tế được nhập vào kho.
 			quantity	Số lượng sản phẩm được đặt nhập theo phiếu.
@@ -327,7 +326,6 @@ STT	THỰC THỂ	MÔ TẢ	THUỘC TÍNH	Ý NGHĨA THUỘC TÍNH
 			updated_at	Thời điểm cập nhật giỏ hàng gần nhất.
 33	cart_item	Lưu danh sách sản phẩm được thêm vào giỏ hàng	id	Mã định danh dòng sản phẩm trong giỏ.
 			cart_id	Giỏ hàng chứa sản phẩm này.
-			product_id	
 			product_variant_id	Biến thể sản phẩm khách đang mua.
 			quantity	Số lượng biến thể được chọn trong giỏ.
 			unit_price	Giá bán của biến thể tại thời điểm được thêm/cập nhật vào giỏ.
@@ -359,7 +357,6 @@ STT	THỰC THỂ	MÔ TẢ	THUỘC TÍNH	Ý NGHĨA THUỘC TÍNH
 			created_at	Thời điểm tạo đơn hàng.
 			updated_at	Thời điểm cập nhật đơn hàng gần nhất.
 37	sales_order_detail	Lưu chi tiết sản phẩm, số lượng và đơn giá trong từng đơn hàng	id	Mã định danh dòng chi tiết đơn hàng.
-			product_id	
 			order_id	Đơn hàng chứa dòng sản phẩm này.
 			product_variant_id	Biến thể SKU thực tế khách mua.
 			quantity	Số lượng SKU được mua trong dòng đơn.
@@ -377,7 +374,6 @@ STT	THỰC THỂ	MÔ TẢ	THUỘC TÍNH	Ý NGHĨA THUỘC TÍNH
 			created_at	Thời điểm tạo reservation.
 			updated_at	Thời điểm cập nhật reservation gần nhất.
 39	inventory	Lưu số lượng tồn kho hiện tại của từng sản phẩm	id	Mã định danh bản ghi tồn kho.
-			product_id	
 			product_variant_id	Biến thể SKU được quản lý tồn kho.
 			quantity_in_stock	Số lượng thực tế đang có trong kho.
 			minimum_stock	Mức tồn kho tối thiểu để phát cảnh báo sắp hết hàng.
@@ -508,7 +504,6 @@ STT	THỰC THỂ	MÔ TẢ	THUỘC TÍNH	Ý NGHĨA THUỘC TÍNH
 			created_at	Thời điểm tạo yêu cầu đổi trả.
 			updated_at	Thời điểm cập nhật yêu cầu gần nhất.
 50	return_request_detail	Lưu chi tiết sản phẩm được đổi trả	id	Mã định danh dòng chi tiết đổi trả.
-			product_id	
 			return_request_id	Yêu cầu đổi trả chứa sản phẩm này.
 			product_variant_id	Biến thể SKU được đổi/trả.
 			quantity	Số lượng SKU được yêu cầu đổi/trả.
@@ -576,7 +571,6 @@ STT	THỰC THỂ	MÔ TẢ	THUỘC TÍNH	Ý NGHĨA THUỘC TÍNH
 			created_at	Thời điểm tạo chương trình.
 			updated_at	Thời điểm cập nhật chương trình gần nhất.
 55	promotion_product	Lưu danh sách sản phẩm được áp dụng trong chương trình khuyến mãi	id	Mã định danh bản ghi áp dụng khuyến mãi cho sản phẩm.
-			product_id	
 			promotion_id	Chương trình khuyến mãi được áp dụng.
 			product_variant_id	Biến thể sản phẩm cụ thể được hưởng khuyến mãi.
 56	promotion_service	Lưu danh sách dịch vụ được áp dụng trong chương trình khuyến mãi	id	Mã định danh bản ghi áp dụng khuyến mãi cho dịch vụ.

@@ -58,7 +58,7 @@ async function resolveOrderData(orderId, fallbackOrder) {
                 total_amount, created_at,
                 sales_order_detail (
                     id, quantity, unit_price, subtotal,
-                    product ( id, product_name, image_urls )
+                    product_variant ( id, sku_variant, product ( id, product_name, image_urls ) )
                 ),
                 customer_address ( receiver_name, receiver_phone, province, street_address )
             `)
@@ -87,13 +87,17 @@ async function resolveOrderData(orderId, fallbackOrder) {
                         : (row.payment_status || localOrder?.payment?.status || 'PENDING')
                 ).toLowerCase(),
             },
-            items: (row.sales_order_detail || []).map((item) => ({
-                id: item.product?.id || '',
-                name: item.product?.product_name || 'Sản phẩm',
-                image: item.product?.image_urls?.[0] || '',
-                quantity: item.quantity || 1,
-                price: item.unit_price || 0,
-            })),
+            items: (row.sales_order_detail || []).map((item) => {
+                const pv = item.product_variant || {};
+                const pr = pv.product || item.product || {};
+                return {
+                    id: pr.id || '',
+                    name: pr.product_name || 'Sản phẩm',
+                    image: pr.image_urls?.[0] || '',
+                    quantity: item.quantity || 1,
+                    price: item.unit_price || 0,
+                };
+            }),
             pricing: {
                 subtotal: localOrder?.pricing?.subtotal || 
                           (row.sales_order_detail || []).reduce((acc, item) => acc + ((item.unit_price || 0) * (item.quantity || 1)), 0) || 

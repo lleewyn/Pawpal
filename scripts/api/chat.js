@@ -817,8 +817,10 @@ const adminDbTools = {
                         quantity,
                         unit_price,
                         subtotal,
-                        product:product_id (product_name),
-                        product_variant:product_variant_id (sku_variant)
+                        product_variant:product_variant_id (
+                            sku_variant,
+                            product:product_id (product_name)
+                        )
                     )
                 `);
 
@@ -846,7 +848,7 @@ const adminDbTools = {
                 recipient: `${o.shipping_address?.receiver_name || ''} - ${o.shipping_address?.receiver_phone || ''}`,
                 address: `${o.shipping_address?.street_address || ''}, ${o.shipping_address?.province || ''}`,
                 items: (o.sales_order_detail || []).map(it => ({
-                    product: it.product?.product_name || 'Sản phẩm',
+                    product: it.product_variant?.product?.product_name || it.product?.product_name || 'Sản phẩm',
                     sku: it.product_variant?.sku_variant || it.product?.sku || '',
                     quantity: it.quantity,
                     unit_price: it.unit_price,
@@ -880,12 +882,15 @@ const adminDbTools = {
                     quantity_in_stock,
                     minimum_stock,
                     last_updated_at,
-                    product:product_id (
+                    product_variant:product_variant_id (
                         id,
-                        product_name,
-                        sku,
+                        sku_variant,
                         sale_price,
-                        status
+                        status,
+                        product:product_id (
+                            id,
+                            product_name
+                        )
                     )
                 `)
                 .order('quantity_in_stock', { ascending: true });
@@ -907,12 +912,12 @@ const adminDbTools = {
 
             let lowStockItems = (data || []).map(item => ({
                 id: item.id,
-                product_name: item.product?.product_name || 'Sản phẩm',
-                sku: item.product?.sku || '',
+                product_name: item.product_variant?.product?.product_name || item.product?.product_name || 'Sản phẩm',
+                sku: item.product_variant?.sku_variant || item.product?.sku || '',
                 stock: item.quantity_in_stock,
                 min_stock: item.minimum_stock,
-                price: item.product?.sale_price || 0,
-                status: item.product?.status || 'ACTIVE',
+                price: item.product_variant?.sale_price || item.product?.sale_price || 0,
+                status: item.product_variant?.status || item.product?.status || 'ACTIVE',
                 open_url: '#tab-order-products'
             }));
 

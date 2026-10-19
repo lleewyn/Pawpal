@@ -279,9 +279,9 @@ function setupDrawerListeners() {
             const lineResult = await db.from('sales_order_detail').select('*').eq('order_id', orderUuid);
             if (lineResult.error) throw lineResult.error;
             const details = returnData.products.map(product => {
-                const line = lineResult.data.find(item => item.product_id === product.id || item.product_variant?.product_id === product.id || (product.variantId && item.product_variant_id === product.variantId));
+                const line = lineResult.data.find(item => item.product_variant_id === product.variantId || item.product_variant_id === product.id || item.product_id === product.id);
                 if (!line) throw new Error('Không tìm thấy sản phẩm trong đơn hàng.');
-                return { ...(line.product_variant_id ? {product_variant_id:line.product_variant_id} : {product_id:line.product_id}), quantity: product.quantity, unit_price: product.price };
+                return { product_variant_id: line.product_variant_id, quantity: product.quantity, unit_price: product.price };
             });
             const { data: request, error } = await db.from('return_request').insert({
                 sales_order_id: orderUuid, customer_id: customerId, reason,

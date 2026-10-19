@@ -48,7 +48,7 @@ async function testFullSalesLifecycle() {
 
         const { data: products, error: pErr } = await adminDb
             .from('product')
-            .select('id, product_name, min_price, product_variant(id, sku_variant, sale_price), inventory(id, quantity_in_stock)')
+            .select('id, product_name, min_price, product_variant(id, sku_variant, sale_price, inventory(id, quantity_in_stock))')
             .limit(1);
         if (pErr) throw pErr;
         if (!products || products.length === 0) {
@@ -57,7 +57,7 @@ async function testFullSalesLifecycle() {
         const sampleProduct = products[0];
         testProductId = sampleProduct.id;
         const sampleVariant = Array.isArray(sampleProduct.product_variant) ? sampleProduct.product_variant[0] : null;
-        const invRow = Array.isArray(sampleProduct.inventory) ? sampleProduct.inventory[0] : sampleProduct.inventory;
+        const invRow = Array.isArray(sampleVariant?.inventory) ? sampleVariant.inventory[0] : sampleVariant?.inventory;
         
         // QA-P0-01: Không dùng `|| 50` làm sai lệch tồn kho thật
         if (invRow && invRow.quantity_in_stock !== null && invRow.quantity_in_stock !== undefined) {
@@ -100,7 +100,6 @@ async function testFullSalesLifecycle() {
         console.log('\n3. Thêm chi tiết dòng sản phẩm (sales_order_detail)...');
         const detailPayload = {
             order_id: createdOrderId,
-            product_id: testProductId,
             product_variant_id: sampleVariant?.id || null,
             quantity: 2,
             unit_price: effectivePrice,
@@ -181,7 +180,7 @@ async function testFullSalesLifecycle() {
                 .from('return_request_detail')
                 .insert([{
                     return_request_id: createdRmaId,
-                    product_id: testProductId,
+                    product_variant_id: sampleVariant?.id || null,
                     quantity: 2,
                     unit_price: sampleProduct.sale_price || 100000
                 }])

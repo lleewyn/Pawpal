@@ -33,19 +33,19 @@ async function testAll() {
         receiver_name, receiver_phone, province, street_address
     ),
     sales_order_detail (
-        id, quantity, unit_price, discount_amount, subtotal,
-        product (id, product_name, image_urls, specs, product_variant (sku_variant, sale_price))
+        id, quantity, unit_price, discount_amount, subtotal, product_variant_id,
+        product_variant (id, sku_variant, sale_price, product (id, product_name, image_urls, specs))
     ),
     payment (payment_method_config_id, amount, transaction_status)
   `).order('created_at', { ascending: false }).limit(5);
   console.log('2. Orders - fetchOrdersData:', qOrd.error ? qOrd.error.message : `OK (${qOrd.data.length} orders)`);
 
   // 3. Orders: return_request query
-  const qRma = await sb.from('return_request').select('id, sales_order_id, reason, return_type, description, request_status, created_at, return_request_detail (*, product (id, product_name, product_variant (sku_variant, sale_price)))').order('created_at', { ascending: false }).limit(5);
+  const qRma = await sb.from('return_request').select('id, sales_order_id, reason, return_type, description, request_status, created_at, return_request_detail (*, product_variant (id, sku_variant, sale_price, product (id, product_name)))').order('created_at', { ascending: false }).limit(5);
   console.log('3. Orders - rma query:', qRma.error ? qRma.error.message : `OK (${qRma.data.length} rma)`);
 
   // 4. Dashboard product query
-  const qDash = await sb.from('product').select('id, product_name, status, inventory(quantity_in_stock, minimum_stock), product_variant(sku_variant)').limit(5);
+  const qDash = await sb.from('product').select('id, product_name, status, product_variant(id, sku_variant, inventory(quantity_in_stock, minimum_stock))').limit(5);
   console.log('4. Dashboard - product query:', qDash.error ? qDash.error.message : `OK (${qDash.data.length} prods)`);
 
   // 5. Complaints product query

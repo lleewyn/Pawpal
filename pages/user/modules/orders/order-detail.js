@@ -26,8 +26,7 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
                 tracking_code, shipping_provider_id, shipped_at,
                 sales_order_detail (
                     id, quantity, unit_price, discount_amount, subtotal, product_variant_id,
-                    product ( id, product_name, image_urls ),
-                    product_variant ( id, sku_variant, sale_price )
+                    product_variant ( id, sku_variant, sale_price, product ( id, product_name, image_urls ) )
                 ),
                 customer_address ( receiver_name, receiver_phone, province, street_address ),
                 payment ( payment_method_config_id, transaction_status )
@@ -42,15 +41,20 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
         const o = data[0];
 
         const details = o.sales_order_detail || [];
-        const products = details.map(d => ({
-            id:       d.product?.id || '',
-            name:     d.product?.product_name || 'Sản phẩm',
-            sku:      d.product_variant?.sku_variant || d.product?.sku || '',
-            image:    normalizeImageUrl(d.product?.image_urls?.[0]),
-            quantity: d.quantity,
-            price:    d.unit_price,
-            total:    d.subtotal,
-        }));
+        const products = details.map(d => {
+            const pv = d.product_variant || {};
+            const pr = pv.product || d.product || {};
+            return {
+                id:       pr.id || '',
+                variant_id: d.product_variant_id || pv.id,
+                name:     pr.product_name || 'Sản phẩm',
+                sku:      pv.sku_variant || pr.sku || '',
+                image:    normalizeImageUrl(pr.image_urls?.[0]),
+                quantity: d.quantity,
+                price:    d.unit_price,
+                total:    d.subtotal,
+            };
+        });
         const addr = o.customer_address;
 
         const local = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');

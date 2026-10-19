@@ -1300,14 +1300,15 @@
                 if (posCartItems.length > 0) {
                     const detailRows = posCartItems.map(item => {
                         const prod = (state.products || []).find(p => p.sku === item.sku);
+                        const variantId = item.variantId || prod?.variant_id || prod?.default_variant_id || (prod?.variants && prod.variants[0]?.id) || null;
                         return {
                             order_id: orderRow.id,
-                            product_id: prod?.id || null,
+                            product_variant_id: variantId,
                             quantity: item.qty,
                             unit_price: item.price,
                             subtotal: item.price * item.qty
                         };
-                    }).filter(d => d.product_id);
+                    }).filter(d => d.product_variant_id);
                     if (detailRows.length > 0) {
                         const { error: detailErr } = await client.from('sales_order_detail').insert(detailRows);
                         if (detailErr) {
@@ -1318,11 +1319,12 @@
                     // O-04: Trừ tồn kho trong bảng inventory cho các mặt hàng đã bán tại POS
                     for (const item of posCartItems) {
                         const prod = (state.products || []).find(p => p.sku === item.sku);
-                        if (prod?.id) {
+                        const variantId = item.variantId || prod?.variant_id || prod?.default_variant_id || (prod?.variants && prod.variants[0]?.id) || null;
+                        if (variantId) {
                             try {
                                 const { data: invRow } = await client.from('inventory')
                                     .select('id, quantity_in_stock')
-                                    .eq('product_id', prod.id)
+                                    .eq('product_variant_id', variantId)
                                     .limit(1);
                                 if (invRow && invRow[0]) {
                                     const currentStock = Number(invRow[0].quantity_in_stock) || 0;
@@ -1330,7 +1332,7 @@
                                     await client.from('inventory')
                                         .update({ quantity_in_stock: newStock, last_updated_at: new Date().toISOString() })
                                         .eq('id', invRow[0].id);
-                                    prod.stock = newStock;
+                                    if (prod) prod.stock = newStock;
                                 }
                             } catch (invErr) {
                                 console.error('[POS] Lỗi trừ tồn kho cho sản phẩm ' + item.sku + ':', invErr);
