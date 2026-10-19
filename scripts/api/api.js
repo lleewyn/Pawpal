@@ -618,6 +618,7 @@ export const API = {
                 order_id: newOrder.id,
                 payment_type: 'PRODUCT',
                 payment_method_id: paymentMethodStr,
+                payment_method_config_id: paymentMethodStr,
                 amount: isNaN(totalOrderAmount) ? 0 : totalOrderAmount,
                 transaction_status: isPaid ? 'SUCCESS' : 'PENDING'
             };
