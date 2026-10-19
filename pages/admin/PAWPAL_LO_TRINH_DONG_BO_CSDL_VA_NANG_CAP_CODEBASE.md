@@ -40,7 +40,81 @@ Quá trình đối soát tự động giữa tài liệu thiết kế gốc [`CD
 
 ---
 
-## 3. CHECKLIST LỘ TRÌNH TRIỂN KHAI CHI TIẾT (6 GIAI ĐOẠN)
+## 3. CHUYÊN ĐỀ ĐẶC BIỆT: KẾ HOẠCH XỬ LÝ CHUYỂN ĐỔI TỪ CỘT MÀU VÀNG SANG CỘT MÀU ĐỎ
+
+> **Bối cảnh thực tế từ tài liệu thiết kế:**
+> * **Cột MÀU VÀNG (`product_id`, `payment_method_id`):** Là cột tạm thời được sử dụng trong giai đoạn đầu khi các cột màu đỏ chưa được tạo trên Supabase.
+> * **Cột MÀU ĐỎ (`product_variant_id`, `quantity_reserved`, `payment_method_config_id`):** Là cột chuẩn kiến trúc ERP đa biến thể (SPU / SKU) để xác định chính xác phiên bản sản phẩm (kích cỡ, hương vị, màu sắc) và cổng thanh toán chuẩn.
+
+```
+       [MÔ HÌNH CŨ: CHỈ DÙNG CỘT VÀNG]                 [MÔ HÌNH MỚI: CHUẨN HÓA CỘT ĐỎ]
+Đơn hàng / Giỏ hàng ---> product_id (SP Cha)    Đơn hàng / Giỏ hàng ---> product_variant_id (SKU Con)
+(Không biết bán size nào, vị nào)                                    + product_id (SP Cha - Giữ tương thích)
+```
+
+### 3.1. Phân tích 5 bảng trọng yếu cần chuyển đổi
+
+#### ① Bảng `sales_order_detail` (Chi tiết Đơn hàng)
+* **Trước đây (Vàng):** Chỉ lưu `product_id`. Khi khách mua thức ăn mèo, đơn hàng chỉ ghi nhận ID của gói thức ăn nói chung; không biết là gói 400g hay gói 2kg. SKU hiển thị bị gán cứng hoặc lấy tạm SKU đầu tiên.
+* **Xử lý chuyển đổi sang Đỏ:**
+  1. *Dữ liệu lịch sử:* SQL Migration tự động map `product_variant_id` của biến thể mặc định tương ứng với `product_id` cũ.
+  2. *Code tạo đơn POS & Đơn Online:* Khi khách chọn phân loại (ví dụ: *Túi 2kg*), payload gửi lên Supabase sẽ bao gồm:
+     ```javascript
+     {
+         order_id: orderId,
+         product_id: selectedVariant.product_id, // Giữ cột VÀNG (SP cha)
+         product_variant_id: selectedVariant.id, // Điền cột ĐỎ (SKU con chính xác)
+         quantity: qty,
+         unit_price: selectedVariant.price,
+         subtotal: selectedVariant.price * qty
+     }
+     ```
+  3. *Hiển thị đơn hàng:* JOIN qua `product_variant` để hiển thị đúng tên quy cách con: *"Thức ăn Royal Canin - Vị Cá hồi - 2kg"*.
+
+#### ② Bảng `cart_item` (Giỏ hàng Khách hàng)
+* **Trước đây (Vàng):** Khách bấm "Thêm vào giỏ" chỉ lưu `product_id`. Nếu sản phẩm có 3 hương vị, giỏ hàng không nhớ được khách chọn vị nào.
+* **Xử lý chuyển đổi sang Đỏ:**
+  1. *Website Shop (`product-detail.js`):* Khi khách bấm chọn Chip phân loại (ví dụ: Vị Bò, Size M), lấy `variantId` của phân loại đó.
+  2. *Ghi vào DB:* `cart_item.insert({ cart_id, product_id, product_variant_id: variantId, quantity })`.
+  3. *Hiển thị giỏ hàng:* Hiển thị hình ảnh, giá và quy cách chính xác của biến thể khách đã chọn.
+
+#### ③ Bảng `purchase_order_detail` (Phiếu nhập hàng Nhà cung cấp)
+* **Trước đây (Vàng):** Nhập hàng theo `product_id`. Khi nhập 100 lon pate, kho không phân loại được nhập bao nhiêu lon vị gà, bao nhiêu lon vị cá hồi.
+* **Xử lý chuyển đổi sang Đỏ:**
+  1. Dòng nhập kho lưu chính xác `product_variant_id`.
+  2. Khi thủ kho duyệt phiếu nhập, hệ thống cộng tồn kho `inventory` vào đúng SKU biến thể đó.
+
+#### ④ Bảng `inventory` (Quản lý Tồn kho & Tạm giữ)
+* **Trước đây (Vàng):** Tồn kho chỉ ghi nhận 1 dòng duy nhất cho `product_id`. Cột `quantity_reserved` (Tạm giữ) chưa có, phải tính tạm ở RAM bằng cách duyệt qua danh sách đơn hàng.
+* **Xử lý chuyển đổi sang Đỏ:**
+  1. Thêm `product_variant_id` và `quantity_reserved` vào bảng `inventory`.
+  2. *Cơ chế vận hành Tạm giữ (Reserved Stock) chuẩn ERP:*
+     - Khi đơn hàng tạo mới (`pending`, `confirmed`): Tăng `quantity_reserved` tương ứng số lượng đặt.
+     - Khi đơn hàng xuất kho đi giao (`shipping`, `completed`): Giảm `quantity_reserved` và trừ `quantity_in_stock`.
+     - Khi đơn bị hủy (`cancelled`): Giảm `quantity_reserved` (trả lại khả dụng cho khách khác mua).
+     - Khả dụng thực tế: `available = quantity_in_stock - quantity_reserved`.
+
+#### ⑤ Bảng `payment` (Phương thức thanh toán)
+* **Trước đây (Vàng):** Dùng chuỗi tự do `payment_method_id` (như `'cod'`, `'bank_transfer'`, `'momo'`).
+* **Xử lý chuyển đổi sang Đỏ:**
+  1. Thêm `payment_method_config_id` trỏ thẳng tới bảng cấu hình `payment_method_config(id)`.
+  2. Giúp quản lý chặt chẽ thông tin tài khoản ngân hàng, phí thanh toán, cấu hình cổng VNPAY/MoMo và trạng thái bật/tắt cổng mà không hardcode chuỗi chữ.
+
+---
+
+### 3.2. Nguyên tắc "Lưu Kép & Tương Thích Ngược" (Dual-Field Strategy)
+Để đảm bảo **không bao giờ gãy code cũ**:
+1. **Tuyệt đối KHÔNG xóa cột VÀNG (`product_id`, `payment_method_id`):** 
+   - Giữ nguyên cột vàng ở vị trí Foreign Key thứ hai.
+   - Code cũ chưa kịp sửa vẫn chạy tốt với cột vàng.
+2. **Ghi dữ liệu mới (Write Path):** Code mới luôn ghi **CẢ HAI** (Vàng + Đỏ).
+3. **Đọc dữ liệu (Read Path):** 
+   - `const variant = row.product_variant || fallbackParentProduct(row.product_id);`
+   - Ưu tiên hiển thị theo biến thể con (Đỏ), nếu trống thì fallback về thông tin sản phẩm cha (Vàng).
+
+---
+
+## 4. CHECKLIST LỘ TRÌNH TRIỂN KHAI CHI TIẾT (6 GIAI ĐOẠN)
 
 ```mermaid
 graph TD
@@ -166,7 +240,7 @@ graph TD
 
 ---
 
-## 4. MA TRẬN RỦI RO VÀ PHƯƠNG ÁN DỰ PHÒNG (ROLLBACK PLAN)
+## 5. MA TRẬN RỦI RO VÀ PHƯƠNG ÁN DỰ PHÒNG (ROLLBACK PLAN)
 
 | Rủi ro tiềm ẩn | Mức độ | Nguyên nhân | Biện pháp phòng ngừa & Xử lý |
 | :--- | :---: | :--- | :--- |
@@ -177,7 +251,7 @@ graph TD
 
 ---
 
-## 5. KẾT LUẬN & HÀNH ĐỘNG TIẾP THEO
+## 6. KẾT LUẬN & HÀNH ĐỘNG TIẾP THEO
 
 File lộ trình này đã vạch ra toàn bộ các bước chuyển đổi từ một hệ thống có những đoạn xử lý chắp vá sang một hệ thống chuẩn hóa CSDL theo mô hình doanh nghiệp chuẩn mực.
 

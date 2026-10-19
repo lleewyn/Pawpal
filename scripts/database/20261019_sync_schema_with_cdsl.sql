@@ -97,6 +97,26 @@ FROM (
 ) pv
 WHERE sod.product_id = pv.product_id AND sod.product_variant_id IS NULL;
 
+-- Backfill liên kết biến thể cho giỏ hàng cart_item
+UPDATE cart_item ci
+SET product_variant_id = pv.id
+FROM (
+    SELECT DISTINCT ON (product_id) id, product_id 
+    FROM product_variant 
+    ORDER BY product_id, created_at ASC
+) pv
+WHERE ci.product_id = pv.product_id AND ci.product_variant_id IS NULL;
+
+-- Backfill liên kết biến thể cho chi tiết nhập kho purchase_order_detail
+UPDATE purchase_order_detail pod
+SET product_variant_id = pv.id
+FROM (
+    SELECT DISTINCT ON (product_id) id, product_id 
+    FROM product_variant 
+    ORDER BY product_id, created_at ASC
+) pv
+WHERE pod.product_id = pv.product_id AND pod.product_variant_id IS NULL;
+
 -- Backfill liên kết biến thể cho inventory nếu có
 UPDATE inventory inv
 SET product_variant_id = pv.id
@@ -175,6 +195,17 @@ UPDATE payment p
 SET customer_id = a.customer_id
 FROM appointment a
 WHERE p.appointment_id = a.id AND p.customer_id IS NULL;
+
+-- Tự động điền payment_method_config_id trong payment từ payment_method_id nếu có
+UPDATE payment p
+SET payment_method_config_id = pmc.id
+FROM payment_method_config pmc
+WHERE p.payment_method_config_id IS NULL
+  AND p.payment_method_id IS NOT NULL
+  AND (
+      LOWER(pmc.short_name) = LOWER(p.payment_method_id)
+      OR LOWER(pmc.name) LIKE '%' || LOWER(p.payment_method_id) || '%'
+  );
 
 -- ----------------------------------------------------------------------------
 -- 8. BẢNG staff_schedule (Lịch làm việc nhân sự)
