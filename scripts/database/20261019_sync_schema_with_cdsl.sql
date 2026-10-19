@@ -151,10 +151,14 @@ ALTER TABLE support_ticket ADD COLUMN IF NOT EXISTS resolved_by UUID REFERENCES 
 ALTER TABLE support_ticket ADD COLUMN IF NOT EXISTS resolved_at TIMESTAMPTZ;
 ALTER TABLE support_ticket ADD COLUMN IF NOT EXISTS closed_at TIMESTAMPTZ;
 
--- Đồng bộ user_id sang customer_id nếu customer_id đang null
-UPDATE support_ticket
-SET customer_id = user_id
-WHERE customer_id IS NULL AND user_id IS NOT NULL;
+-- Đồng bộ user_id sang customer_id nếu user_id có định dạng UUID hợp lệ và tồn tại trong bảng customer
+UPDATE support_ticket st
+SET customer_id = st.user_id::uuid
+FROM customer c
+WHERE st.customer_id IS NULL
+  AND st.user_id IS NOT NULL
+  AND st.user_id ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+  AND st.user_id::uuid = c.id;
 
 -- Bổ sung trường cho support_ticket_message
 ALTER TABLE support_ticket_message ADD COLUMN IF NOT EXISTS sender_id UUID;
@@ -183,7 +187,7 @@ ALTER TABLE care_action ADD COLUMN IF NOT EXISTS service_id UUID REFERENCES serv
 -- 7. BẢNG payment (Thanh toán)
 -- ----------------------------------------------------------------------------
 ALTER TABLE payment ADD COLUMN IF NOT EXISTS customer_id UUID REFERENCES customer(id) ON DELETE SET NULL;
-ALTER TABLE payment ADD COLUMN IF NOT EXISTS payment_method_config_id UUID REFERENCES payment_method_config(id) ON DELETE SET NULL;
+ALTER TABLE payment ADD COLUMN IF NOT EXISTS payment_method_config_id VARCHAR(50) REFERENCES payment_method_config(id) ON DELETE SET NULL;
 
 -- Tự động điền customer_id trong payment từ đơn hàng hoặc lịch hẹn
 UPDATE payment p
@@ -203,7 +207,8 @@ FROM payment_method_config pmc
 WHERE p.payment_method_config_id IS NULL
   AND p.payment_method_id IS NOT NULL
   AND (
-      LOWER(pmc.short_name) = LOWER(p.payment_method_id)
+      p.payment_method_id = pmc.id
+      OR LOWER(p.payment_method_id) = LOWER(pmc.short_name)
       OR LOWER(pmc.name) LIKE '%' || LOWER(p.payment_method_id) || '%'
   );
 
