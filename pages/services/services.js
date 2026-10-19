@@ -271,7 +271,22 @@ async function initServicesPage() {
                 if (catRadio) catRadio.checked = true;
             }
 
-            servicesFilterState(true);
+            const searchParam = urlParams.get('search') ?? urlParams.get('q');
+            if (searchParam !== null) {
+                // A new header search takes precedence over previously saved filters.
+                document.querySelectorAll('input[name="sortFilter"], input[name="categoryFilter"], input[name="petFilter"], input[name="priceBucketFilter"], #ratingAll, .rating-star-check').forEach(control => {
+                    control.checked = control.defaultChecked;
+                });
+                if (categoryParam) {
+                    const categoryRadio = [...document.querySelectorAll('input[name="categoryFilter"]')]
+                        .find(control => control.value === categoryParam);
+                    if (categoryRadio) categoryRadio.checked = true;
+                }
+                const searchInput = document.getElementById('searchServiceInput');
+                if (searchInput) searchInput.value = searchParam.trim();
+            } else {
+                servicesFilterState(true);
+            }
             applyFilters();
             updateServicesFilterCount();
         } else {

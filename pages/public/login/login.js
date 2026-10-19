@@ -284,6 +284,19 @@
             input.type = input.type === 'password' ? 'text' : 'password';
             button.setAttribute('aria-label', input.type === 'password' ? 'Hiện mật khẩu' : 'Ẩn mật khẩu');
         }));
+        // Header links may change only the hash on this shared auth page.
+        document.addEventListener('click', event => {
+            if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+            const link = event.target.closest?.('.main-header a[href]');
+            if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+            const target = new URL(link.href, window.location.href);
+            if (target.origin !== window.location.origin || target.pathname !== window.location.pathname) return;
+            if (target.pathname !== '/login' && target.pathname !== '/pages/public/login/login.html') return;
+            event.preventDefault();
+            history.pushState({}, '', target.href);
+            route();
+        });
+        window.addEventListener('hashchange', route);
         window.addEventListener('popstate', route);
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();

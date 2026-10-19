@@ -24,6 +24,17 @@ body.user-portal-body {
     padding-bottom: 60px;
 }
 
+/* Lock the page without making the portal body a new sticky scroll container. */
+@media (max-width: 1249.98px) {
+    html:has(body.user-portal-body .main-header.nav-open) {
+        overflow: hidden;
+    }
+
+    body.user-portal-body:has(.main-header.nav-open) {
+        overflow: clip !important;
+    }
+}
+
 /* User Sidebar Container */
 @media (min-width: 992px) {
     .user-portal-sidebar-col {

@@ -169,14 +169,19 @@ async function loadProducts() {
         const knownBrands = ['Royal Canin', 'Pedigree', 'Me-O', 'Whiskas', "Hill's", 'Purina', 'Kong', 'Taste of the Wild', 'Frontline', 'Furminator', 'Nylabone', 'Hartz', "King's Pet", 'Inaba', 'Nutrience', 'Zenith', 'Orijen', 'Acana', 'GimCat', 'Gimborn', 'TropiClean', 'Bio-Pharmachemie'];
 
         const products = rawProducts.map(item => {
+            // Prices belong to variants; use the lowest available active variant price.
             const variants = Array.isArray(item.product_variant) ? item.product_variant : [];
-            const primaryVar = variants.length > 0 ? variants[0] : null;
-
-            const effectiveSku = (primaryVar && primaryVar.sku_variant) ? primaryVar.sku_variant : (item.sku || '');
-            const effectiveCostPrice = (primaryVar && primaryVar.cost_price !== undefined) ? Number(primaryVar.cost_price) : (Number(item.cost_price) || 0);
-            const effectiveSalePrice = (primaryVar && primaryVar.sale_price !== undefined) ? Number(primaryVar.sale_price) : (Number(item.sale_price) || 0);
-
-            const sale = effectiveSalePrice < effectiveCostPrice;
+            const pricedVariants = variants
+                .filter(variant => (variant.status === 'dang_ban' || variant.status === 'ACTIVE') && variant.sale_price != null
+                    && Number.isFinite(Number(variant.sale_price)) && Number(variant.sale_price) >= 0)
+                .sort((a, b) => Number(a.sale_price) - Number(b.sale_price));
+            const baseVariant = pricedVariants[0] || variants[0] || null;
+            const price = baseVariant && baseVariant.sale_price != null ? Number(baseVariant.sale_price) : (Number(item.sale_price) || 0);
+            const compareAtPrice = baseVariant?.compare_at_price != null
+                ? Number(baseVariant.compare_at_price)
+                : (baseVariant?.cost_price != null ? Number(baseVariant.cost_price) : (Number(item.cost_price) || null));
+            const sale = price !== null && Number.isFinite(compareAtPrice) && compareAtPrice > price;
+            const effectiveSku = baseVariant?.sku_variant || item.sku || '';
             let images = [];
             if (Array.isArray(item.image_urls)) {
                 images = item.image_urls.map(url => rootPath + url);
@@ -216,9 +221,9 @@ async function loadProducts() {
                 targetPet: item.target_pet || 'Chó và Mèo',
                 category: item.category_id,
                 categoryName: item.product_category?.category_name || 'Khác',
-                price: effectiveSalePrice,
-                originalPrice: sale ? effectiveCostPrice : null,
-                oldPrice: sale ? effectiveCostPrice : null,
+                price,
+                originalPrice: sale ? compareAtPrice : null,
+                oldPrice: sale ? compareAtPrice : null,
                 image: images[0],
                 images: images,
                 inStock: item.status === 'ACTIVE' && stockCount > 0,

@@ -965,7 +965,7 @@
     }
 
     // -------------------------------------------------------------
-    // TÌM KIẾM TRÊN HEADER (ĐIỀU HƯỚNG TỚI /shop?search=...)
+    // TÌM KIẾM TRÊN HEADER (DỊCH VỤ HOẶC SẢN PHẨM)
     // -------------------------------------------------------------
     function setupHeaderSearch() {
         document.querySelectorAll('.search-bar').forEach(bar => {
@@ -977,11 +977,19 @@
             bar.dataset.searchBound = 'true';
 
             const executeSearch = (event) => {
-                event.preventDefault();
-                event.stopPropagation();
+                event?.preventDefault?.();
+                event?.stopPropagation?.();
                 const query = input.value.trim();
                 if (!query) return;
-                window.location.href = `/shop?search=${encodeURIComponent(query)}`;
+                const keyword = query.normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd').toLowerCase();
+                const serviceKeywords = new Set([
+                    'taxi', 'pet taxi', 'dua ruoc',
+                    'spa', 'pet spa',
+                    'hotel', 'pet hotel', 'khach san', 'luu tru'
+                ]);
+                const destination = serviceKeywords.has(keyword) ? '/services' : '/shop';
+                window.location.href = `${destination}?search=${encodeURIComponent(query)}`;
             };
 
             input.addEventListener('keydown', (e) => {

@@ -547,6 +547,27 @@
     height: 2.5px;
 }
 
+/* Keep the mobile drawer readable after the shared navigation styles. */
+@media (max-width: 1249.98px) {
+    .nav-menu a,
+    .nav-menu .nav-link {
+        color: rgba(255, 255, 255, 0.9);
+        opacity: 1;
+    }
+
+    /* Booking is an action, not the selected page in the mobile navigation. */
+    .nav-menu .mobile-cta-item .nav-link:not(.active) {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .nav-menu a:hover,
+    .nav-menu .nav-link:hover,
+    .nav-menu a:focus-visible,
+    .nav-menu .nav-link:focus-visible {
+        color: #ffffff;
+    }
+}
+
 /* Các hành động trên Header */
 .header-actions {
     display: flex;
