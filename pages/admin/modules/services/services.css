@@ -1268,21 +1268,30 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    text-decoration: none;
+    background: transparent;
+    border: none;
+    outline: none;
     cursor: pointer;
     padding: 3px 6px;
     border-radius: var(--admin-radius);
+    font-family: inherit;
+    text-decoration: none;
+    white-space: nowrap;
     transition: background-color 0.15s ease;
 }
 
 .catalog-rating-link:hover {
-    background-color: #FEF3C7;
+    background-color: #EEF5F1;
+}
+
+.catalog-rating-link:hover .star-rating-pill {
+    text-decoration: underline;
 }
 
 .catalog-rating-link .star-rating-pill {
     font-size: 12.5px;
     font-weight: 700;
-    color: #B45309;
+    color: #D97706;
 }
 
 .catalog-rating-link .reviews-count-text {

@@ -351,12 +351,12 @@
 
                     const hasMembership = !!memMap[c.id];
                     const isWalkInName = /vãng lai|vang lai/i.test(prof.full_name || c.full_name || '');
-                    const isTemp = Boolean(c.is_temporary || !hasMembership || isWalkInName);
+                    const isTemp = Boolean((c.is_temporary && !hasMembership) || isWalkInName);
 
                     let tier = 'NONE';
-                    let tierName = 'Vãng lai';
-                    let tierBadge = 'badge-neutral';
-                    if (!isTemp) {
+                    let tierName = (points > 0 || hasMembership) ? 'Bạc' : 'Vãng lai';
+                    let tierBadge = (points > 0 || hasMembership) ? 'badge-tier-silver' : 'badge-neutral';
+                    if (!isTemp || hasMembership) {
                         tier = 'SILVER';
                         tierName = 'Bạc';
                         tierBadge = 'badge-tier-silver';
@@ -402,7 +402,7 @@
                         tier,
                         tierName,
                         tierBadgeClass: tierBadge,
-                        points: isTemp ? 0 : points,
+                        points: points,
                         isMember: !isTemp,
                         status: isLocked ? 'LOCKED' : (isTemp ? 'TEMP' : 'ACTIVE'),
                         authStatus: isLocked ? 'Tài khoản bị khóa' : (isTemp ? 'Khách vãng lai' : 'Đã kích hoạt'),

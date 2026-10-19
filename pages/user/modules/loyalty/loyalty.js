@@ -1,9 +1,11 @@
+import { loyaltySummary } from '/scripts/shared/loyalty-summary.mjs';
 /**
  * modules/loyalty/loyalty.js - Module logic cho Điểm thưởng và Ưu đãi Paw Points
  * Chuẩn AGENTS.md: Giữ nguyên UI/UX thẻ thành viên, 9px radius, Flat Solid, Text-Only, Real Ticket Aesthetic
  */
 
 import { API } from '/scripts/api/api.js';
+import { loadCustomerMembership } from '/scripts/shared/customer-membership.mjs';
 
 const CURRENT_USER_KEY = 'pawpal_current_user';
 const PAWPAL_MY_VOUCHERS_KEY = 'pawpal_my_vouchers_db';
@@ -53,11 +55,13 @@ function setCurrentUser(user) {
 }
 
 function showToast(type, message, duration = 3000) {
-    let container = document.getElementById('toastContainer');
+    let container = document.getElementById('loyaltyToastContainer');
     if (!container) {
         container = document.createElement('div');
-        container.id = 'toastContainer';
+        container.id = 'loyaltyToastContainer';
         container.className = 'toast-container-custom';
+        container.setAttribute('aria-live', 'polite');
+        container.setAttribute('aria-atomic', 'true');
         document.body.appendChild(container);
     }
 
@@ -87,21 +91,42 @@ function showToast(type, message, duration = 3000) {
         transition: opacity 0.25s ease;
     `;
 
-    toast.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-weight: 700; font-size: 13px; color: ${cfg.bg};">${cfg.label}:</span>
-            <span style="font-size: 13px; color: #203A2C;">${message}</span>
-        </div>
-        <button type="button" style="border: none; background: transparent; color: #4F7A65; font-size: 16px; cursor: pointer; padding: 0 4px;">&times;</button>
-    `;
+    const content = document.createElement('div');
+    content.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+    const label = document.createElement('span');
+    label.style.cssText = `font-weight: 700; font-size: 13px; color: ${cfg.bg};`;
+    label.textContent = `${cfg.label}:`;
+    const messageEl = document.createElement('span');
+    messageEl.style.cssText = 'font-size: 13px; color: #203A2C;';
+    messageEl.textContent = message;
+    content.append(label, messageEl);
 
-    toast.querySelector('button').addEventListener('click', () => toast.remove());
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.setAttribute('aria-label', 'Đóng thông báo');
+    closeButton.style.cssText = 'border: none; background: transparent; color: #4F7A65; font-size: 16px; cursor: pointer; padding: 0 4px;';
+    closeButton.textContent = '×';
+    toast.append(content, closeButton);
+
+    closeButton.addEventListener('click', () => toast.remove());
     container.appendChild(toast);
 
     setTimeout(() => {
         toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 250);
     }, duration);
+}
+
+async function copyVoucherCode(code) {
+    if (!code) return false;
+    try {
+        await navigator.clipboard.writeText(code);
+        showToast('success', `Đã sao chép mã: ${code}`);
+        return true;
+    } catch (error) {
+        showToast('error', 'Không thể sao chép mã. Vui lòng thử lại.');
+        return false;
+    }
 }
 
 function escapeHtml(text) {
@@ -302,8 +327,21 @@ export async function initLoyalty() {
 
         window.PawPalVoucherRedeemList = vouchersMock;
         renderLoyaltyPage(currentUser, vouchersMock);
-        renderMyVouchers(currentUser);
+        await renderMyVouchers(currentUser);
+    } catch (error) {
+        console.warn('[Loyalty] Không thể tải dữ liệu:', error.message);
+        const countLabel = document.getElementById('myVouchersCountLabel');
+        if (countLabel?.textContent === 'Đang tải') countLabel.textContent = 'Không thể tải';
+        for (const id of ['loyalty-card-wrapper', 'my-vouchers-list', 'vouchers-grid']) {
+            const region = document.getElementById(id);
+            if (region?.querySelector('.pawpal-skeleton')) region.innerHTML = '<p role="status">Không thể tải dữ liệu. Vui lòng tải lại trang.</p>';
+        }
     } finally {
+        for (const id of ['loyalty-card-wrapper', 'my-vouchers-list', 'vouchers-grid']) {
+            const region = document.getElementById(id);
+            region?.setAttribute('aria-busy', 'false');
+            region?.classList.add('loyalty-loaded');
+        }
         isInitRunning = false;
     }
 }
@@ -329,9 +367,11 @@ async function syncLoyaltyFromSupabase(user) {
 
         if (error || !data) return user;
 
-        const profile = data.customer_profile?.[0] || {};
-        const membership = data.customer_membership?.[0] || {};
-        const tier = membership.membership_tier || {};
+        const profile = (Array.isArray(data.customer_profile) ? data.customer_profile[0] : data.customer_profile) || {};
+        const membership = (Array.isArray(data.customer_membership) ? data.customer_membership[0] : data.customer_membership) || {};
+        const tier = (Array.isArray(membership.membership_tier) ? membership.membership_tier[0] : membership.membership_tier) || {};
+        const accountMembership = await loadCustomerMembership(db, data.id);
+        const tierName = accountMembership?.tier || tier.tier_name || user.tier || user.membershipTier || 'Đang cập nhật';
         const isTemp = data.is_temporary !== undefined ? Boolean(data.is_temporary) : Boolean(user.is_temporary);
 
         const updatedUser = {
@@ -341,8 +381,10 @@ async function syncLoyaltyFromSupabase(user) {
             email: data.email || user.email || '',
             phone: data.phone_main || user.phone,
             is_temporary: isTemp,
-            points: membership.total_paw_points ?? user.points ?? 0,
-            tier: tier.tier_name || user.tier || 'Đồng',
+            points: accountMembership?.points ?? membership.total_paw_points ?? user.points ?? 0,
+            spend: accountMembership?.spend ?? null,
+            tier: tierName,
+            membershipTier: tierName,
             _source: 'supabase',
         };
 
@@ -353,21 +395,23 @@ async function syncLoyaltyFromSupabase(user) {
     }
 }
 
-function renderLoyaltyPage(user, vouchers) {
+export function renderLoyaltyPage(user, vouchers) {
     let tierClass = 'tier-silver';
-    let tierTitle = 'Hạng Bạc (Silver)';
+    const sourceTier = user.membershipTier || user.tier || 'Chưa có hạng';
+    const normalizedTier = sourceTier.toLocaleLowerCase('vi');
+    let tierTitle = /^(hạng|chưa)/i.test(sourceTier) ? sourceTier : `Hạng ${sourceTier}`;
     let nextTierName = 'Hạng Vàng';
     let nextTierLimit = 5000000;
-    let currentSpend = user.spend || 0;
+    const spendAvailable = Number.isFinite(user.spend);
+    const currentSpend = Math.max(0, Number(user.spend) || 0);
+    const progress = loyaltySummary(currentSpend);
 
-    if (currentSpend >= 15000000) {
+    if (normalizedTier.includes('kim cương') || normalizedTier.includes('diamond')) {
         tierClass = 'tier-diamond';
-        tierTitle = 'Hạng Kim Cương (Diamond)';
         nextTierName = 'Tối đa';
         nextTierLimit = 15000000;
-    } else if (currentSpend >= 5000000) {
+    } else if (normalizedTier.includes('vàng') || normalizedTier.includes('gold')) {
         tierClass = 'tier-gold';
-        tierTitle = 'Hạng Vàng (Gold)';
         nextTierName = 'Hạng Kim Cương';
         nextTierLimit = 15000000;
     }
@@ -400,15 +444,19 @@ function renderLoyaltyPage(user, vouchers) {
         }
     }
 
+    nextTierLimit = progress.nextTierLimit;
+    if (currentSpend < 1000000) nextTierName = 'Hạng Bạc';
     const cardEl = document.getElementById('loyalty-card-wrapper');
     if (cardEl) {
         const progressPercent = Math.min((currentSpend / nextTierLimit) * 100, 100);
-        const remainingToUpgrade = nextTierLimit - currentSpend;
+        const remainingToUpgrade = Math.max(0, nextTierLimit - currentSpend);
 
         let upgradeText = `Bạn cần chi tiêu thêm ${new Intl.NumberFormat('vi-VN').format(remainingToUpgrade)}đ để đạt ${nextTierName}`;
         if (currentSpend >= 15000000) {
             upgradeText = 'Bạn đã đạt cấp bậc thành viên cao nhất của PawPal!';
         }
+
+        if (!spendAvailable) upgradeText = 'Chưa tải được chi tiêu xét hạng. Vui lòng tải lại trang.';
 
         let pointsMultiplier = "1x Points";
         let mainPerk = "Tích điểm và Chăm sóc";
@@ -455,14 +503,15 @@ function renderLoyaltyPage(user, vouchers) {
                         <span class="label">Điểm tích lũy hiện tại:</span>
                         <strong id="current-points-display">${user.points} <span class="points-unit">Paw Points</span></strong>
                     </div>
-                    <div class="progress-upgrade-label">Tiến trình nâng hạng:</div>
+                    <div class="progress-upgrade-label">Tiến trình nâng hạng theo chi tiêu</div>
                     <div class="progress-upgrade-wrapper">
                         <div class="progress-bar-container">
                             <div class="progress-bar-fill" style="width: ${progressPercent}%"></div>
                         </div>
-                        <span class="progress-stats">${new Intl.NumberFormat('vi-VN').format(currentSpend)}đ / ${new Intl.NumberFormat('vi-VN').format(nextTierLimit)}đ</span>
+                        <span class="progress-stats">${spendAvailable ? new Intl.NumberFormat('vi-VN').format(currentSpend) + 'đ / ' + new Intl.NumberFormat('vi-VN').format(nextTierLimit) + 'đ' : 'Chưa có dữ liệu chi tiêu'}</span>
                     </div>
                     <p class="upgrade-remaining-desc">${escapeHtml(upgradeText)}</p>
+                    <p class="upgrade-remaining-desc">Chi tiêu xét hạng tính từ đơn đã giao hoặc hoàn thành và dịch vụ hoàn tất đã thanh toán, không gồm đơn hủy hoặc trả hàng.</p>
                 </div>
             </div>
         `;
@@ -472,8 +521,8 @@ function renderLoyaltyPage(user, vouchers) {
     if (gridEl) {
         if (!vouchers || vouchers.length === 0) {
             gridEl.innerHTML = `
-                <div class="empty-state text-center py-4 w-100" style="grid-column: 1 / -1;">
-                    <p class="text-muted mb-0">Hiện tại chưa có ưu đãi đổi điểm nào.</p>
+                <div class="loyalty-vouchers-empty" role="status" aria-live="polite">
+                    <p>Hiện tại chưa có ưu đãi đổi điểm nào.</p>
                 </div>
             `;
         } else {
@@ -516,7 +565,7 @@ function saveStoredMyVouchers(list) {
     } catch (e) {}
 }
 
-async function renderMyVouchers(user) {
+export async function renderMyVouchers(user) {
     const container = document.getElementById('my-vouchers-list');
     const countLabel = document.getElementById('myVouchersCountLabel');
     if (!container) return;
@@ -539,16 +588,10 @@ async function renderMyVouchers(user) {
     container.innerHTML = myVouchers.map((v, idx) => renderMyVoucherCard(v, idx)).join('');
 
     container.querySelectorAll('.btn-ticket-copy').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const code = btn.getAttribute('data-code');
-            if (code) {
-                navigator.clipboard.writeText(code).then(() => {
-                    showToast('success', `Đã sao chép mã: ${code}`);
-                }).catch(() => {
-                    showToast('info', `Mã voucher của bạn: ${code}`);
-                });
-            }
+            await copyVoucherCode(code);
         });
     });
 
@@ -768,13 +811,7 @@ function showVoucherDetailModal(voucher, user, isMyVoucher = false) {
 
         const btnCopyInline = bodyEl.querySelector('#btnCopyModalCode');
         if (btnCopyInline) {
-            btnCopyInline.onclick = () => {
-                navigator.clipboard.writeText(code).then(() => {
-                    showToast('success', `Đã sao chép mã: ${code}`);
-                }).catch(() => {
-                    showToast('info', `Mã voucher: ${code}`);
-                });
-            };
+            btnCopyInline.onclick = () => copyVoucherCode(code);
         }
     }
 
@@ -788,11 +825,7 @@ function showVoucherDetailModal(voucher, user, isMyVoucher = false) {
 
             const btnModalCopy = footerEl.querySelector('#btnModalCopyAction');
             if (btnModalCopy) {
-                btnModalCopy.onclick = () => {
-                    navigator.clipboard.writeText(code).then(() => {
-                        showToast('success', `Đã sao chép mã: ${code}`);
-                    });
-                };
+                btnModalCopy.onclick = () => copyVoucherCode(code);
             }
 
             const btnModalUseNow = footerEl.querySelector('#btnModalUseNowAction');
@@ -840,6 +873,7 @@ function showVoucherDetailModal(voucher, user, isMyVoucher = false) {
         modalEl.style.display = 'flex';
         modalEl.removeAttribute('aria-hidden');
         document.body.classList.add('modal-open');
+        document.addEventListener('keydown', handleDetailModalKeydown);
     };
 
     const closeDetailModal = () => {
@@ -847,6 +881,13 @@ function showVoucherDetailModal(voucher, user, isMyVoucher = false) {
         modalEl.style.display = 'none';
         modalEl.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('modal-open');
+        document.removeEventListener('keydown', handleDetailModalKeydown);
+    };
+
+    const handleDetailModalKeydown = (event) => {
+        if (event.key !== 'Escape' || !modalEl.classList.contains('show')) return;
+        event.preventDefault();
+        closeDetailModal();
     };
 
     modalEl.querySelectorAll('[data-bs-dismiss="modal"], .btn-modal-close').forEach(btn => {

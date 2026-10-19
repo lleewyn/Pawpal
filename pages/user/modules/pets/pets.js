@@ -13,32 +13,7 @@ const DEFAULT_PET_AVATARS = {
 };
 
 export function generatePetId() {
-    let maxNum = 0;
-    const checkList = (list) => {
-        if (Array.isArray(list)) {
-            list.forEach(p => {
-                const match = String(p.id || p.code || '').match(/PET-(\d+)/i);
-                if (match) {
-                    const n = parseInt(match[1], 10);
-                    if (n > maxNum) maxNum = n;
-                }
-            });
-        } else if (list && typeof list === 'object') {
-            Object.keys(list).forEach(key => {
-                const match = String(key).match(/PET-(\d+)/i);
-                if (match) {
-                    const n = parseInt(match[1], 10);
-                    if (n > maxNum) maxNum = n;
-                }
-            });
-        }
-    };
-    try {
-        checkList(JSON.parse(localStorage.getItem('pawpal_pets') || '[]'));
-        checkList(JSON.parse(sessionStorage.getItem('pawpal_admin_pets_data') || '{}'));
-    } catch (e) {}
-    if (maxNum === 0) maxNum = 10;
-    return 'PET-' + String(maxNum + 1).padStart(3, '0');
+    return 'PET-' + crypto.randomUUID().replace(/-/g, '').slice(0, 24);
 }
 
 export function calcAge(birthday) {
@@ -121,13 +96,13 @@ export async function initPetProfilePage() {
         loadPetBottomInsights();
 
         // Kiểm tra deep link tham số URL ví dụ ?action=create hoặc ?id=PET-xxx hoặc ?edit=PET-xxx
-        const urlParams = new URLSearchParams(window.location.search);
+        const urlParams = new URLSearchParams(window.location.hash.split('?')[1] || window.location.search);
         const actionParam = urlParams.get('action');
         const editId = urlParams.get('id') || urlParams.get('edit');
         if (actionParam === 'create') {
-            switchToPetFormScreen();
+            await switchToPetFormScreen();
         } else if (editId) {
-            switchToPetFormScreen(editId);
+            await switchToPetFormScreen(editId);
         }
     } catch (e) {
         console.error('Error during initPetProfilePage:', e);
@@ -151,7 +126,11 @@ export async function switchToPetFormScreen(petId = null) {
 
     if (petId) {
         const pets = await getPets();
-        const pet = pets.find(p => String(p.id) === String(petId));
+        const pet = pets.find(p => String(p.id) === String(petId) || String(p._supabaseId) === String(petId));
+        if (!pet) {
+            showToast('Không tìm thấy hồ sơ bé cưng.', 'error');
+            return;
+        }
         if (pet) {
             if (petIdInput) petIdInput.value = pet.id;
             if (titleEl) titleEl.textContent = `Hồ sơ bé cưng: ${pet.name}`;
@@ -609,17 +588,15 @@ function setupForm() {
             createdAt: petId ? (await getPets()).find(p => p.id === petId)?.createdAt || new Date().toISOString() : new Date().toISOString()
         };
 
-        let allPets = await getPets();
-        if (petId) {
-            allPets = allPets.map(p => p.id === petId ? { ...p, ...petData } : p);
-            showToast('Cập nhật hồ sơ bé cưng thành công!');
-        } else {
-            allPets.unshift(petData);
-            showToast('Thêm bé cưng thành công!');
+        const allPets = await getPets();
+        const existingPet = petId ? allPets.find(p => p.id === petId) : null;
+        try {
+            await savePets([{ ...existingPet, ...petData }]);
+            showToast(petId ? 'Cập nhật hồ sơ bé cưng thành công!' : 'Thêm bé cưng thành công!');
+            switchToPetListScreen();
+        } catch (error) {
+            showToast('Không thể lưu hồ sơ bé cưng. Vui lòng thử lại.', 'error');
         }
-
-        await savePets(allPets);
-        switchToPetListScreen();
     });
 }
 

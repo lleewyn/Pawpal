@@ -291,7 +291,7 @@ function validateCheckoutCart() {
 }
 
 function validateVoucher(code, showMessage = true) {
-    let voucher = checkoutState.vouchers.find(v => v.code === code && v.active);
+    let voucher = checkoutState.vouchers.find(v => v.code === code);
     if (!voucher) {
         voucher = checkoutState.myVouchers.find(v => v.code === code);
     }
@@ -300,9 +300,20 @@ function validateVoucher(code, showMessage = true) {
         return { valid: false, message: 'Mã giảm giá không tồn tại' };
     }
     
+    if (voucher.applicableUser && checkoutState.user) {
+        const uPhone = checkoutState.user.phone;
+        const uId = checkoutState.user.id;
+        if (voucher.applicableUser !== uPhone && voucher.applicableUser !== uId) {
+            return { valid: false, message: 'Mã giảm giá dành riêng cho tài khoản khác' };
+        }
+    }
+    if (voucher.ownerPhone && checkoutState.user?.phone && voucher.ownerPhone !== checkoutState.user.phone) {
+        return { valid: false, message: 'Mã giảm giá dành riêng cho tài khoản khác' };
+    }
+
     const now = new Date();
     const expiry = new Date(voucher.validUntil);
-    if (now > expiry) {
+    if (now > expiry || voucher.is_active === false) {
         return { valid: false, message: 'Mã giảm giá đã hết hạn' };
     }
     
@@ -1405,6 +1416,8 @@ async function handleCheckout() {
         products: checkoutState.cart.map(item => ({ ...item, total: (Number(item.price) || 0) * (Number(item.quantity) || 1) })),
         
         pricing: checkoutState.totals,
+        appliedVoucher: checkoutState.appliedVoucher,
+        voucherCode: checkoutState.appliedVoucher ? checkoutState.appliedVoucher.code : null,
         
         payment: {
             method: checkoutState.selectedPayment,

@@ -396,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261017_r12';
+    const MODULE_SCRIPT_VERSION = '20261018_r13';
 
     function resolveModulePath(path) {
         if (!path) return path;
@@ -751,6 +751,9 @@ document.addEventListener('DOMContentLoaded', () => {
             'tab-customer-profile': 'tab-profile',
             'tab-customer': 'tab-list',
             'tab-customers': 'tab-list',
+            'tab-customer-list': 'tab-list',
+            'tab-customer-pawpoint': 'tab-pawpoint',
+            'tab-pawpoints': 'tab-pawpoint',
             'tab-complaints': 'tab-complaint-services',
             'tab-calendar': 'tab-service-bookings',
             'tab-inventory': 'tab-order-products',

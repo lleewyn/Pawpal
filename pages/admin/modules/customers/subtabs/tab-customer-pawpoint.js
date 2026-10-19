@@ -386,7 +386,7 @@
 
             const { error: transactionError } = await client.from('paw_point_transaction').insert({
                 customer_id: custDbId,
-                reward_rule_id: null,
+                reward_rule_id: '92222222-2222-2222-2222-222222222222',
                 points: ptsSigned,
                 balance_after: newBalance,
                 description: reason

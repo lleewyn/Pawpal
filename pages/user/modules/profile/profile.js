@@ -1,3 +1,5 @@
+import { normalizeAddress, validateAddress, addressKey } from '/scripts/shared/address-validation.mjs';
+import { normalizeOrderStatus, getStatusLabel } from '/scripts/shared/order-status.mjs';
 /**
  * modules/profile/profile.js - Module logic cho Quản lý tài khoản Pawpal
  * Chuẩn AGENTS.md: 9px radius, Flat Solid, Text-Only, Toast Notifications, Address Book
@@ -5,7 +7,8 @@
 
 import { API } from '/scripts/api/api.js';
 import { getPets } from '/scripts/api/petService.js';
-import { applyProfileSnapshot, saveCustomerProfile } from '/scripts/shared/customer-profile.mjs';
+import { applyProfileSnapshot, saveCustomerProfile, loadCustomerProfileSnapshot } from '/scripts/shared/customer-profile.mjs';
+import { loadCustomerMembership } from '/scripts/shared/customer-membership.mjs';
 
 const CURRENT_USER_KEY = 'pawpal_current_user';
 const PAWPAL_USERS_KEY = 'pawpal_users_db';
@@ -127,7 +130,7 @@ async function syncUserProfileFromSupabase(user, cache = true) {
             customerId = custRecord.id;
             const [profRes, memRes, addrRes] = await Promise.all([
                 client.from('customer_profile').select('*').eq('customer_id', customerId).maybeSingle(),
-                client.from('customer_membership').select('*').eq('customer_id', customerId).maybeSingle(),
+                client.from('customer_membership').select('*, membership_tier(tier_name)').eq('customer_id', customerId).maybeSingle(),
                 client.from('customer_address').select('*').eq('customer_id', customerId).order('is_default', { ascending: false })
             ]);
             if (profRes.error || memRes.error || addrRes.error) throw new Error('Không thể tải hồ sơ mới nhất.');
@@ -146,12 +149,10 @@ async function syncUserProfileFromSupabase(user, cache = true) {
                 receiverPhone: a.receiver_phone || ''
             }));
 
-            const tierMap = {
-                'TIER_DIAMOND': 'Kim Cương',
-                'TIER_GOLD': 'Vàng',
-                'TIER_SILVER': 'Bạc',
-                'TIER_MEMBER': 'Thành viên'
-            };
+            const tierRecord = Array.isArray(membership.membership_tier)
+                ? membership.membership_tier[0] : membership.membership_tier;
+            const accountMembership = await loadCustomerMembership(client, customerId);
+            const membershipTier = accountMembership?.tier || tierRecord?.tier_name || user.tier || user.membershipTier || 'Đang cập nhật';
 
             const updatedUser = {
                 ...user,
@@ -164,16 +165,15 @@ async function syncUserProfileFromSupabase(user, cache = true) {
                 isLocked: custRecord.account_status === 'LOCKED',
                 points: Number(membership.total_paw_points ?? 0),
                 pawPoints: Number(membership.total_paw_points ?? 0),
-                membershipTier: tierMap[membership.tier_id] || user.membershipTier || 'Thành viên',
+                membershipTier,
+                tier: membershipTier,
                 addresses: dbAddresses
             };
 
             let freshUser = updatedUser;
             try {
-                const snapshot = await client.rpc('customer_profile_snapshot');
-                if (!snapshot.error && snapshot.data) {
-                    freshUser = applyProfileSnapshot(updatedUser, snapshot.data);
-                }
+                const snapshot = await loadCustomerProfileSnapshot(client);
+                freshUser = applyProfileSnapshot(updatedUser, snapshot);
             } catch (snapErr) {
                 console.warn('[Profile] RPC customer_profile_snapshot chưa sẵn sàng, dùng dữ liệu truy vấn trực tiếp');
             }
@@ -271,7 +271,7 @@ async function loadMyPets(user) {
         container.innerHTML = `
             <div class="p-3 text-muted">
                 Bạn chưa đăng ký bé cưng nào.
-                <a href="#pets" class="text-success ms-2 font-weight-bold">Thêm bé ngay</a>
+                <a href="#pets?action=create" class="text-success ms-2 font-weight-bold">Thêm bé ngay</a>
             </div>
         `;
         return;
@@ -284,7 +284,7 @@ async function loadMyPets(user) {
         const fallbackSrc = getPetDefaultAvatar(pet.species);
         html += `
             <div class="pet-avatar-item pawpal-smooth-entrance">
-                <a href="#pets" style="text-decoration: none;">
+                <a href="#pets?id=${encodeURIComponent(pet.id || pet._supabaseId)}" style="text-decoration: none;">
                     <img src="${petAvatar}" alt="${escapeHtml(pet.name || 'Bé cưng')}" class="pet-image-circle" onerror="this.onerror=null; this.src='${fallbackSrc}';">
                     <div class="pet-avatar-name">${escapeHtml(pet.name || 'Bé cưng')}</div>
                     <div class="pet-avatar-breed">${escapeHtml(pet.breed || speciesLabel)}</div>
@@ -295,7 +295,7 @@ async function loadMyPets(user) {
 
     html += `
         <div class="pet-avatar-item">
-            <a href="#pets" style="text-decoration: none;">
+            <a href="#pets?action=create" style="text-decoration: none;">
                 <div class="add-pet-circle">+</div>
                 <div class="pet-avatar-name">Thêm mới</div>
                 <div class="pet-avatar-breed">Đăng ký bé</div>
@@ -311,7 +311,7 @@ async function loadUpcomingBooking(user) {
     const container = document.getElementById('upcomingBookingCardContainer');
     if (!container) return;
 
-    let upcoming = null;
+    let upcomingBookings = [];
     try {
         const client = getSupabaseClient();
         if (client && user.id) {
@@ -319,27 +319,34 @@ async function loadUpcomingBooking(user) {
                 .select('id, appointment_code, appointment_date, appointment_time, appointment_status, service:service_id(service_name), pet_profile:pet_id(pet_name)')
                 .eq('customer_id', user.id)
                 .in('appointment_status', ['PENDING', 'CONFIRMED', 'IN_PROGRESS'])
+                .gte('appointment_date', new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()))
                 .order('appointment_date', { ascending: true })
-                .limit(1);
+                .order('appointment_time', { ascending: true })
+                .order('id', { ascending: true });
 
-            if (!error && data && data.length > 0) {
-                const b = data[0];
+            if (error) throw error;
+            upcomingBookings = (data || []).filter(b => {
+                const startsAt = new Date(`${b.appointment_date}T${b.appointment_time || '23:59:59'}+07:00`);
+                return startsAt >= new Date();
+            }).map(b => {
                 const srv = Array.isArray(b.service) ? b.service[0] : b.service;
                 const pet = Array.isArray(b.pet_profile) ? b.pet_profile[0] : b.pet_profile;
-                upcoming = {
+                return {
                     id: b.appointment_code || b.id,
                     date: b.appointment_date,
                     time: b.appointment_time ? b.appointment_time.slice(0, 5) : '',
                     serviceName: srv?.service_name || 'Dịch vụ chăm sóc',
                     petName: pet?.pet_name || 'Bé cưng'
                 };
-            }
+            });
         }
     } catch (e) {
         console.warn('[Profile] Lỗi tải booking từ Supabase:', e);
+        container.innerHTML = '<p class="p-3 text-muted" role="status">Không thể tải lịch hẹn sắp tới. Vui lòng thử lại.</p>';
+        return;
     }
 
-    if (!upcoming) {
+    if (!upcomingBookings.length) {
         container.innerHTML = `
             <div class="p-3 text-muted d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <span>Bạn chưa có lịch hẹn dịch vụ nào sắp tới.</span>
@@ -349,6 +356,7 @@ async function loadUpcomingBooking(user) {
         return;
     }
 
+    container.innerHTML = upcomingBookings.map(upcoming => {
     let dateDisplay = 'Hôm nay';
     let monthDisplay = 'LỊCH HẸN';
     if (upcoming.date) {
@@ -365,7 +373,7 @@ async function loadUpcomingBooking(user) {
     const timeVal = upcoming.time || 'Theo lịch hẹn';
     const petName = upcoming.petName || 'Bé cưng';
 
-    container.innerHTML = `
+    return `
         <div class="upcoming-booking-card">
             <div class="booking-date-badge">
                 <span class="badge-month">${escapeHtml(monthDisplay)}</span>
@@ -383,6 +391,7 @@ async function loadUpcomingBooking(user) {
             </div>
         </div>
     `;
+    }).join('');
 }
 
 // 5. Tải đơn hàng gần đây từ Supabase Live DB
@@ -403,7 +412,7 @@ async function loadRecentOrders(user) {
             if (error) throw error;
             if (data && data.length > 0) {
                 orders = data.map(o => ({
-                    code: o.order_code || `#${o.id}`,
+                    code: o.order_code || o.id,
                     total: Number(o.total_amount || 0),
                     status: (o.order_status || 'PENDING').toLowerCase(),
                     createdAt: o.created_at
@@ -421,27 +430,16 @@ async function loadRecentOrders(user) {
         return;
     }
 
-    const statusMap = {
-        'completed': { label: 'Hoàn thành', cls: 'status-completed' },
-        'done': { label: 'Hoàn thành', cls: 'status-completed' },
-        'delivering': { label: 'Đang giao', cls: 'status-delivering' },
-        'shipping': { label: 'Đang giao', cls: 'status-delivering' },
-        'in-progress': { label: 'Đang chuẩn bị', cls: 'status-in-progress' },
-        'confirmed': { label: 'Đã xác nhận', cls: 'status-in-progress' },
-        'pending': { label: 'Chờ xác nhận', cls: 'status-pending' },
-        'cancelled': { label: 'Đã hủy', cls: 'status-cancelled' }
-    };
-
     let html = '';
     orders.forEach(order => {
         const orderCode = order.code || '#ORD';
         const price = (order.total || 0).toLocaleString('vi-VN') + 'đ';
-        const stKey = String(order.status || 'pending').toLowerCase();
-        const stConfig = statusMap[stKey] || { label: order.status || 'Chờ xác nhận', cls: 'status-pending' };
+        const stKey = normalizeOrderStatus(order.status);
+        const stConfig = { label: getStatusLabel(order.status), cls: `status-${stKey}` };
         const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Gần đây';
 
         html += `
-            <a href="#orders" class="order-item-card">
+            <a href="#order-detail?id=${encodeURIComponent(order.code)}" class="order-item-card">
                 <div>
                     <div class="order-code-title">${escapeHtml(orderCode)}</div>
                     <div class="order-date-text">Ngày đặt: ${escapeHtml(orderDate)}</div>
@@ -478,7 +476,7 @@ function renderAddressesList() {
                 <div class="address-item-left">
                     <input type="radio" name="defaultAddressRadio" class="address-radio-input" data-idx="${idx}" ${isDef ? 'checked' : ''}>
                     <div class="address-text-wrap">
-                        <span>${escapeHtml(addr.street || addr.address || '')}</span>
+                        <span title="${escapeHtml(addr.street || addr.address || '')}">${escapeHtml(addr.street || addr.address || '')}</span>
                         ${isDef ? '<span class="address-default-tag">Mặc định</span>' : ''}
                     </div>
                 </div>
@@ -520,7 +518,48 @@ function initProfileEditModal(user) {
     const btnAddConfirm = document.getElementById('btnAddAddressConfirm');
 
     if (!btnEdit || !modalEl || !btnSave) return;
+    const nameInput = document.getElementById('profileNameInput');
+    const nameError = document.getElementById('profileNameError');
+    const setNameError = message => {
+        if (nameError) {
+            nameError.textContent = message;
+            nameError.hidden = !message;
+        }
+        nameInput?.setAttribute('aria-invalid', message ? 'true' : 'false');
+    };
+    nameInput?.addEventListener('input', () => setNameError(''));
+    const emailInput = document.getElementById('profileEmailInput');
+    const emailError = document.getElementById('profileEmailError');
+    const setEmailError = message => {
+        if (emailError) {
+            emailError.textContent = message;
+            emailError.hidden = !message;
+        }
+        emailInput?.setAttribute('aria-invalid', message ? 'true' : 'false');
+    };
+    emailInput?.addEventListener('input', () => setEmailError(''));
 
+    const addressFields = {
+        street_address: ['newAddressStreetInput', 'newAddressStreetError'],
+        district: ['newAddressDistrictInput', 'newAddressDistrictError'],
+        province: ['newAddressCityInput', 'newAddressCityError']
+    };
+    const showAddressErrors = errors => {
+        for (const [field, [inputId, errorId]] of Object.entries(addressFields)) {
+            const input = document.getElementById(inputId);
+            const error = document.getElementById(errorId);
+            input?.setAttribute('aria-invalid', errors[field] ? 'true' : 'false');
+            if (error) { error.textContent = errors[field] || ''; error.hidden = !errors[field]; }
+        }
+    };
+    for (const [inputId, errorId] of Object.values(addressFields)) {
+        document.getElementById(inputId)?.addEventListener('input', () => {
+            document.getElementById(inputId)?.setAttribute('aria-invalid', 'false');
+            const error = document.getElementById(errorId);
+            if (error) { error.hidden = true; error.textContent = ''; }
+        });
+    }
+    const saveError = document.getElementById('profileSaveError');
     const openModal = () => {
         if (modalEl.parentNode !== document.body) {
             document.body.appendChild(modalEl);
@@ -549,6 +588,10 @@ function initProfileEditModal(user) {
     });
 
     btnEdit.addEventListener('click', () => {
+        setNameError('');
+        setEmailError('');
+        showAddressErrors({});
+        if (saveError) saveError.hidden = true;
         const currentUser = getCurrentUser() || user;
         editUser = currentUser;
         const nameInput = document.getElementById('profileNameInput');
@@ -577,6 +620,7 @@ function initProfileEditModal(user) {
     if (btnToggleAdd && newAddressCollapse) {
         btnToggleAdd.addEventListener('click', () => {
             newAddressCollapse.classList.toggle('d-none');
+            showAddressErrors({});
             const streetIn = document.getElementById('newAddressStreetInput');
             const distIn = document.getElementById('newAddressDistrictInput');
             const cityIn = document.getElementById('newAddressCityInput');
@@ -597,16 +641,22 @@ function initProfileEditModal(user) {
 
     if (btnAddConfirm) {
         btnAddConfirm.addEventListener('click', () => {
-            const street = document.getElementById('newAddressStreetInput')?.value.trim();
-            const district = document.getElementById('newAddressDistrictInput')?.value.trim();
-            const city = document.getElementById('newAddressCityInput')?.value.trim();
-
-            if (!street) {
-                showToast('warning', 'Vui lòng nhập số nhà và tên đường');
+            const address = normalizeAddress({
+                street_address: document.getElementById('newAddressStreetInput')?.value,
+                district: document.getElementById('newAddressDistrictInput')?.value,
+                province: document.getElementById('newAddressCityInput')?.value
+            });
+            const errors = validateAddress(address);
+            if (!Object.keys(errors).length && tempAddresses.some(a => addressKey({
+                street_address: a.rawStreet ?? a.street, ward: a.ward, district: a.district, province: a.province
+            }) === addressKey(address))) errors.street_address = 'Địa chỉ này đã có trong sổ địa chỉ.';
+            showAddressErrors(errors);
+            if (Object.keys(errors).length) {
+                document.getElementById(addressFields[Object.keys(errors)[0]][0])?.focus();
                 return;
             }
-
-            const fullStreet = [street, district, city].filter(Boolean).join(', ');
+            const { street_address: street, district, province: city } = address;
+            const fullStreet = [street, district, city].join(', ');
             const isFirst = tempAddresses.length === 0;
             tempAddresses.push({
                 id: 'addr-' + Date.now(),
@@ -619,19 +669,33 @@ function initProfileEditModal(user) {
 
             renderAddressesList();
             if (newAddressCollapse) newAddressCollapse.classList.add('d-none');
-            showToast('success', 'Đã thêm địa chỉ vào sổ địa chỉ');
+            if (saveError) saveError.hidden = true;
         });
     }
 
     btnSave.addEventListener('click', async () => {
+        if (saveError) saveError.hidden = true;
         const nameVal = document.getElementById('profileNameInput')?.value.trim();
         const emailVal = document.getElementById('profileEmailInput')?.value.trim();
         const phoneVal = document.getElementById('profilePhoneInput')?.value.trim();
 
-        if (!nameVal || !phoneVal) {
-            showToast('error', 'Vui lòng nhập đầy đủ họ tên và số điện thoại');
+        if (!nameVal || nameVal.length > 150) {
+            setNameError(!nameVal ? 'Vui lòng nhập họ và tên.' : 'Họ và tên không được vượt quá 150 ký tự.');
+            nameInput?.focus();
             return;
         }
+        setNameError('');
+        if (!phoneVal) {
+            showToast('error', 'Vui lòng nhập số điện thoại');
+            return;
+        }
+
+        if (emailVal && (emailVal.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal))) {
+            setEmailError(emailVal.length > 254 ? 'Email không được vượt quá 254 ký tự.' : 'Vui lòng nhập email đúng định dạng, ví dụ an@example.com.');
+            emailInput?.focus();
+            return;
+        }
+        setEmailError('');
 
         const currentUser = editUser;
 
@@ -652,7 +716,12 @@ function initProfileEditModal(user) {
             closeModal();
             showToast('success', 'Cập nhật thông tin cá nhân thành công');
         } catch (error) {
-            showToast('error', error.message || 'Không thể lưu hồ sơ. Vui lòng thử lại.');
+            if (/email/i.test(error.message || '')) {
+                setEmailError(error.message);
+                emailInput?.focus();
+            } else {
+                if (saveError) { saveError.textContent = error.message || 'Không thể lưu hồ sơ. Vui lòng thử lại.'; saveError.hidden = false; }
+            }
         } finally {
             btnSave.disabled = false;
         }
@@ -663,11 +732,13 @@ let isInitRunning = false;
 let profileChannel;
 let profileClient;
 let refreshTimer;
+let upcomingRefreshTimer;
 let refreshVersion = 0;
 let profileModal;
 
 export function dispose() {
     clearTimeout(refreshTimer);
+    clearInterval(upcomingRefreshTimer);
     ++refreshVersion;
     if (profileChannel && profileClient) profileClient.removeChannel(profileChannel);
     profileChannel = null;
@@ -676,6 +747,14 @@ export function dispose() {
 }
 
 function watchProfile(user) {
+    clearInterval(upcomingRefreshTimer);
+    let loadingUpcoming = false;
+    upcomingRefreshTimer = setInterval(async () => {
+        if (document.hidden || loadingUpcoming || !document.getElementById('upcomingBookingCardContainer')) return;
+        loadingUpcoming = true;
+        try { await Promise.allSettled([loadUpcomingBooking(user), loadRecentOrders(user)]); }
+        finally { loadingUpcoming = false; }
+    }, 10000);
     profileClient = getSupabaseClient();
     if (!profileClient?.channel) return;
     const refresh = () => {
@@ -687,11 +766,12 @@ function watchProfile(user) {
                 if (version !== refreshVersion) return;
                 setCurrentUser(fresh);
                 loadProfileData(fresh);
+                await Promise.allSettled([loadUpcomingBooking(fresh), loadMyPets(fresh), loadRecentOrders(fresh)]);
             } catch { /* Keep the current view; a save still requires a matching revision. */ }
         }, 200);
     };
     profileChannel = profileClient.channel(`customer-profile-${user.id}`);
-    for (const table of ['customer_profile', 'customer_address', 'customer_membership']) {
+    for (const table of ['customer_profile', 'customer_address', 'customer_membership', 'appointment', 'pet_profile', 'sales_order']) {
         profileChannel.on('postgres_changes', { event: '*', schema: 'public', table, filter: `customer_id=eq.${user.id}` }, refresh);
     }
     profileChannel.on('postgres_changes', { event: '*', schema: 'public', table: 'customer', filter: `id=eq.${user.id}` }, refresh).subscribe();
@@ -725,6 +805,8 @@ export async function init() {
 
         // Tải và hiển thị dữ liệu chuẩn một lần duy nhất
         await loadProfileData(user);
+        initProfileEditModal(user);
+        profileModal = document.getElementById('profileEditModal');
         ['welcomeName', 'statPoints', 'statAccountType', 'profileName', 'profileEmail', 'profilePhone', 'profileAddress'].forEach(id => document.getElementById(id)?.classList.add('profile-data-ready'));
         await Promise.allSettled([
             loadMyPets(user).catch(error => {
@@ -741,8 +823,6 @@ export async function init() {
                 orders?.classList.add('profile-data-ready');
             })
         ]);
-        initProfileEditModal(user);
-        profileModal = document.getElementById('profileEditModal');
         watchProfile(user);
     } finally {
         isInitRunning = false;

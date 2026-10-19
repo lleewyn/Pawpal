@@ -36,7 +36,7 @@ async function cancelBookingOnSupabase(booking) {
     if (!db || !booking?._supabaseId) return;
     try {
         await db.from('appointment')
-            .update({ appointment_status: 'da_huy' })
+            .update({ appointment_status: 'CANCELLED' })
             .eq('id', booking._supabaseId);
         console.log('[BookingDetail] Cancel synced to Supabase');
     } catch (err) {
@@ -263,42 +263,98 @@ function renderBookingDetail(booking) {
     }
 }
 
+async function fetchRemoteServiceReview(appointmentId) {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db || !appointmentId) return null;
+    try {
+        const { data, error } = await db
+            .from('review')
+            .select('id, rating, review_content, created_at, shop_reply')
+            .eq('appointment_id', appointmentId)
+            .eq('review_type', 'SERVICE')
+            .maybeSingle();
+        if (error) {
+            console.warn('[BookingDetail] Lỗi kiểm tra đánh giá từ Supabase:', error);
+            return null;
+        }
+        return data ? {
+            id: data.id,
+            rating: Number(data.rating),
+            comment: data.review_content || '',
+            replyText: data.shop_reply || '',
+            createdAt: data.created_at
+        } : null;
+    } catch (e) {
+        console.warn('[BookingDetail] Exception khi nạp đánh giá từ Supabase:', e);
+        return null;
+    }
+}
+
 function renderServiceReviewSection(booking) {
     const section = document.getElementById('serviceReviewSection');
     if (!section) return;
 
     const normalizedStatus = resolveBookingStatus(booking);
     const reviewKey = getServiceReviewKey(booking);
-    const existingReview = loadServiceReview(reviewKey);
+    const localReview = loadServiceReview(reviewKey);
     const statusEl = document.getElementById('serviceReviewStatus');
     const hintEl = document.getElementById('serviceReviewHint');
     const textarea = document.getElementById('serviceReviewComment');
+    const submitBtn = document.getElementById('btnSubmitServiceReview');
 
     section.classList.toggle('d-none', normalizedStatus !== 'completed');
 
     if (normalizedStatus !== 'completed') return;
 
-    currentServiceReviewRating = Number(existingReview?.rating || 0);
-    if (statusEl) {
-        statusEl.textContent = existingReview ? 'Đã đánh giá' : 'Chưa đánh giá';
-    }
-    if (hintEl) {
-        hintEl.textContent = existingReview
-            ? `Bạn đã đánh giá ${existingReview.rating}/5 sao.`
-            : 'Hãy chọn mức độ hài lòng của bạn.';
-    }
-    if (textarea) {
-        textarea.value = existingReview?.comment || '';
-        textarea.disabled = Boolean(existingReview);
+    function applyReviewToUI(rev) {
+        if (!rev) return;
+        currentServiceReviewRating = Number(rev.rating || 0);
+        if (statusEl) statusEl.textContent = 'Đã đánh giá';
+        if (hintEl) hintEl.textContent = `Bạn đã đánh giá ${rev.rating}/5 sao.`;
+        if (textarea) {
+            textarea.value = rev.comment || '';
+            textarea.disabled = true;
+        }
+        syncServiceStarUI(currentServiceReviewRating);
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Đã gửi đánh giá';
+        }
     }
 
-    syncServiceStarUI(currentServiceReviewRating);
+    if (localReview) {
+        applyReviewToUI(localReview);
+    } else {
+        currentServiceReviewRating = 0;
+        if (statusEl) statusEl.textContent = 'Chưa đánh giá';
+        if (hintEl) hintEl.textContent = 'Hãy chọn mức độ hài lòng của bạn.';
+        if (textarea) {
+            textarea.value = '';
+            textarea.disabled = false;
+        }
+        syncServiceStarUI(0);
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Gửi đánh giá';
+            submitBtn.onclick = handleSubmitServiceReview;
+        }
+    }
 
-    const submitBtn = document.getElementById('btnSubmitServiceReview');
-    if (submitBtn) {
-        submitBtn.disabled = Boolean(existingReview);
-        submitBtn.textContent = existingReview ? 'Đã gửi đánh giá' : 'Gửi đánh giá';
-        submitBtn.onclick = handleSubmitServiceReview;
+    // Kiểm tra đồng bộ từ Supabase
+    const apptId = booking._supabaseId || booking.id;
+    if (apptId) {
+        fetchRemoteServiceReview(apptId).then(remoteRev => {
+            if (remoteRev) {
+                localStorage.setItem(reviewKey, JSON.stringify({
+                    bookingId: booking.id,
+                    service: booking.service || booking.serviceName || 'Dịch vụ PawPal',
+                    rating: remoteRev.rating,
+                    comment: remoteRev.comment,
+                    createdAt: remoteRev.createdAt
+                }));
+                applyReviewToUI(remoteRev);
+            }
+        });
     }
 
     const starButtons = document.querySelectorAll('#serviceStarRow .service-star-btn');
@@ -330,7 +386,7 @@ function loadServiceReview(key) {
     }
 }
 
-function handleSubmitServiceReview() {
+async function handleSubmitServiceReview() {
     if (!currentBooking) return;
 
     if (!currentServiceReviewRating) {
@@ -338,31 +394,90 @@ function handleSubmitServiceReview() {
         return;
     }
 
-    const reviewKey = getServiceReviewKey(currentBooking);
+    const apptId = currentBooking._supabaseId || currentBooking.id;
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     const commentEl = document.getElementById('serviceReviewComment');
-    const review = {
-        bookingId: currentBooking.id,
-        service: currentBooking.service || currentBooking.serviceName || currentBooking.selectedService?.name || 'Dịch vụ PawPal',
-        rating: currentServiceReviewRating,
-        comment: commentEl ? commentEl.value.trim() : '',
-        createdAt: new Date().toISOString()
-    };
-
-    localStorage.setItem(reviewKey, JSON.stringify(review));
-
-    const statusEl = document.getElementById('serviceReviewStatus');
-    const hintEl = document.getElementById('serviceReviewHint');
-    if (statusEl) statusEl.textContent = 'Đã đánh giá';
-    if (hintEl) hintEl.textContent = `Bạn đã đánh giá ${currentServiceReviewRating}/5 sao.`;
-    if (commentEl) commentEl.disabled = true;
-
+    const commentText = commentEl ? commentEl.value.trim() : '';
     const submitBtn = document.getElementById('btnSubmitServiceReview');
+
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Đã gửi đánh giá';
+        submitBtn.textContent = 'Đang gửi đánh giá...';
     }
 
-    showServiceReviewToast('Cảm ơn bạn đã gửi đánh giá cho dịch vụ này.');
+    try {
+        let savedDbReview = null;
+        if (db && apptId) {
+            // Lấy thông tin appointment chính xác từ DB để đảm bảo đúng customer_id và service_id
+            const { data: appt, error: apptErr } = await db
+                .from('appointment')
+                .select('id, customer_id, service_id, appointment_status')
+                .eq('id', apptId)
+                .maybeSingle();
+
+            if (apptErr) throw apptErr;
+
+            if (appt) {
+                const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+                const customerId = appt.customer_id || currentUser?.id;
+                const serviceId = appt.service_id || currentBooking.serviceId || currentBooking.serviceDbId;
+
+                const { data: inserted, error: insErr } = await db
+                    .from('review')
+                    .insert([{
+                        appointment_id: appt.id,
+                        customer_id: customerId,
+                        service_id: serviceId,
+                        review_type: 'SERVICE',
+                        rating: currentServiceReviewRating,
+                        review_content: commentText
+                    }])
+                    .select()
+                    .single();
+
+                if (insErr) {
+                    if (insErr.code === '23505' || insErr.message?.includes('duplicate') || insErr.message?.includes('unique')) {
+                        console.warn('[BookingDetail] Lịch hẹn này đã có đánh giá trong hệ thống.');
+                    } else {
+                        throw insErr;
+                    }
+                } else {
+                    savedDbReview = inserted;
+                }
+            }
+        }
+
+        const reviewKey = getServiceReviewKey(currentBooking);
+        const review = {
+            id: savedDbReview?.id || `rev-local-${Date.now()}`,
+            bookingId: currentBooking.id,
+            service: currentBooking.service || currentBooking.serviceName || currentBooking.selectedService?.name || 'Dịch vụ PawPal',
+            rating: currentServiceReviewRating,
+            comment: commentText,
+            createdAt: new Date().toISOString()
+        };
+        localStorage.setItem(reviewKey, JSON.stringify(review));
+
+        const statusEl = document.getElementById('serviceReviewStatus');
+        const hintEl = document.getElementById('serviceReviewHint');
+        if (statusEl) statusEl.textContent = 'Đã đánh giá';
+        if (hintEl) hintEl.textContent = `Bạn đã đánh giá ${currentServiceReviewRating}/5 sao.`;
+        if (commentEl) commentEl.disabled = true;
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Đã gửi đánh giá';
+        }
+
+        showServiceReviewToast('Cảm ơn bạn đã gửi đánh giá cho dịch vụ này.');
+    } catch (err) {
+        console.error('[BookingDetail] Lỗi lưu đánh giá:', err);
+        showToast('Không thể gửi đánh giá: ' + (err.message || 'Lỗi kết nối'), 'error');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Gửi đánh giá';
+        }
+    }
 }
 
 function showServiceReviewToast(message) {

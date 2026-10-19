@@ -16,6 +16,7 @@ const getCustomerAuth = () => {
 };
 app.post('/api/customer/auth/guest', (req, res) => getCustomerAuth().guest(req, res));
 app.post('/api/customer/auth/lookup', (req, res) => getCustomerAuth().lookup(req, res));
+app.post('/api/customer/auth/guest-records', (req, res) => getCustomerAuth().guestRecords(req, res));
 app.post('/api/customer/auth/login', (req, res) => getCustomerAuth().login(req, res));
 app.post('/api/customer/auth/otp/request', (req, res) => getCustomerAuth().requestOtp(req, res));
 app.post('/api/customer/auth/otp/complete', (req, res) => getCustomerAuth().completeOtp(req, res));

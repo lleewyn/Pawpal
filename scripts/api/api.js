@@ -1,3 +1,4 @@
+import { normalizeOrderStatus } from '/scripts/shared/order-status.mjs';
 import { resolveAuthenticatedCustomerId } from '/scripts/shared/customer-identity.mjs';
 
 const resolveCustomerId = resolveAuthenticatedCustomerId;
@@ -194,33 +195,7 @@ export const API = {
                 return url;
             };
 
-            const mapOrderStatus = (status) => {
-                if (!status) return 'placed';
-                const s = String(status).toLowerCase().trim();
-                const mapping = {
-                    'cho_thanh_toan':      'pending_payment',
-                    'cho_xac_nhan':        'placed',
-                    'da_xac_nhan':         'preparing',
-                    'dang_chuan_bi':       'preparing',
-                    'dang_giao':           'shipping',
-                    'da_giao':             'delivered',
-                    'da_hoan_tat':         'completed',
-                    'da_huy':              'cancelled',
-                    'thanh_toan_that_bai': 'cancelled',
-                    'pending':             'placed',
-                    'pending_payment':     'pending_payment',
-                    'confirmed':           'preparing',
-                    'packing':             'preparing',
-                    'preparing':           'preparing',
-                    'shipping':            'shipping',
-                    'shipped':             'shipping',
-                    'delivered':           'delivered',
-                    'completed':           'completed',
-                    'cancelled':           'cancelled',
-                    'returned':            'cancelled',
-                };
-                return mapping[s] || 'placed';
-            };
+            const mapOrderStatus = normalizeOrderStatus;
 
             const orders = (data || []).map(o => {
                 const details = o.sales_order_detail || [];
@@ -665,6 +640,18 @@ export const API = {
                 if (itemsError) throw itemsError;
             }
 
+            if (orderData.appliedVoucher?.code || orderData.voucherCode) {
+                const vCode = orderData.appliedVoucher?.code || orderData.voucherCode;
+                try {
+                    const { data: vRow } = await db.from('voucher').select('id, usage_count').ilike('voucher_code', vCode).maybeSingle();
+                    if (vRow) {
+                        await db.from('voucher').update({ usage_count: (vRow.usage_count || 0) + 1 }).eq('id', vRow.id);
+                    }
+                } catch (vErr) {
+                    console.warn('[API] Could not increment voucher usage_count:', vErr);
+                }
+            }
+
             return { success: true, orderId: newOrder.id };
         } catch (err) {
             console.error('Submit order error:', err);
@@ -780,7 +767,6 @@ export const API = {
             
             const { data, error } = await db.from('voucher')
                 .select('*')
-                .eq('is_active', true);
                 
             if (error) throw error;
             
@@ -810,6 +796,7 @@ export const API = {
                     maxUsage: v.max_usage,
                     applicableFor: v.applicable_for || ['all'],
                     description: v.description,
+                    is_active: v.is_active,
                     active: (() => {
                         if (v.is_active !== true) return false;
                         const now = Date.now();

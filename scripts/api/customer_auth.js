@@ -57,7 +57,14 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
         const c = result.data;
         const profile = Array.isArray(c.customer_profile) ? c.customer_profile[0] : c.customer_profile;
         const member = Array.isArray(c.customer_membership) ? c.customer_membership[0] : c.customer_membership;
-        return { id: c.id, auth_user_id: authId, phone: c.phone_main, email: c.email || '', name: profile?.full_name || c.phone_main, gender: profile?.gender || '', dob: profile?.date_of_birth || '', points: member?.total_paw_points || 0, tier: member?.membership_tier?.tier_name || 'Đồng', role: 'customer', is_temporary: false, _source: 'supabase' };
+        const [orders, appointments] = await Promise.all([
+            admin.from('sales_order').select('total_amount, order_status, payment_status').eq('customer_id', c.id),
+            admin.from('appointment').select('total_price, appointment_status, payment_status').eq('customer_id', c.id)
+        ]);
+        if (orders.error || appointments.error) throw new Error('Không thể tải chi tiêu xét hạng.');
+        const { eligibleSpend, loyaltySummary } = await import('../shared/loyalty-summary.mjs');
+        const loyalty = loyaltySummary(eligibleSpend(orders.data || [], appointments.data || []));
+        return { id: c.id, auth_user_id: authId, phone: c.phone_main, email: c.email || '', name: profile?.full_name || c.phone_main, gender: profile?.gender || '', dob: profile?.date_of_birth || '', points: member?.total_paw_points || 0, tier: loyalty.tier, spend: loyalty.spend, role: 'customer', is_temporary: false, _source: 'supabase' };
     }
     const wrap = handler => async (req, res) => {
         res.setHeader('Cache-Control', 'no-store');
@@ -85,6 +92,59 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
             const isMember = Boolean(c && !c.is_temporary && c.auth_user_id);
             const isTemporary = Boolean(c && (c.is_temporary || !c.auth_user_id));
             res.json({ success: true, exists: !!c, isMember, isTemporary });
+        }),
+        guestRecords: wrap(async (req, res) => {
+            await limit(`guest-records:${req.ip}`, 60, 60000);
+            const phone = phoneLocal(req.body.phone);
+            const c = await customer(phone);
+            if (!c) {
+                return res.json({ success: true, bookings: [], orders: [] });
+            }
+
+            const { data: bookingRows, error: bookingError } = await admin
+                .from('appointment')
+                .select(`
+                    id,
+                    appointment_code,
+                    appointment_date,
+                    appointment_time,
+                    appointment_status,
+                    payment_status,
+                    note,
+                    customer ( id, phone_main, customer_profile ( full_name ) ),
+                    service ( id, service_name, service_price_matrix ( unit_price ) ),
+                    pet_profile ( id, pet_name )
+                `)
+                .eq('customer_id', c.id)
+                .order('appointment_date', { ascending: false });
+
+            if (bookingError) console.warn('[GuestRecords] Booking lookup error:', bookingError);
+
+            const { data: orderRows, error: orderError } = await admin
+                .from('sales_order')
+                .select(`
+                    id,
+                    order_code,
+                    order_status,
+                    payment_status,
+                    total_amount,
+                    created_at,
+                    updated_at,
+                    note,
+                    customer ( phone_main ),
+                    customer_address ( receiver_name, receiver_phone, street_address, province ),
+                    sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product ( id, product_name, sku, image_urls ) )
+                `)
+                .eq('customer_id', c.id)
+                .order('created_at', { ascending: false });
+
+            if (orderError) console.warn('[GuestRecords] Order lookup error:', orderError);
+
+            res.json({
+                success: true,
+                bookings: bookingRows || [],
+                orders: orderRows || []
+            });
         }),
         login: wrap(async (req, res) => {
             await limit(`login-ip:${req.ip}`, 30, 600000);
@@ -196,7 +256,14 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
             const token = String(req.headers.authorization || '').replace(/^Bearer /, '');
             const { data, error } = await admin.auth.getUser(token);
             if (error || !data.user) throw new Error('Phiên đăng nhập đã hết hạn.');
-            res.json({ success: true, user: await identity(data.user.id) });
+            const user = await identity(data.user.id);
+            if (['profile-snapshot', 'profile-save'].includes(req.body?.action)) {
+                const service = require('./customer_profile_persistence').createCustomerProfileService(admin, clientFactory(token));
+                const profile = req.body.action === 'profile-save'
+                    ? await service.save(user.id, req.body.profile || {}) : await service.snapshot(user.id);
+                return res.json({ success: true, profile });
+            }
+            res.json({ success: true, user });
         }),
         changePassword: wrap(async (req, res) => {
             const token = String(req.headers.authorization || '').replace(/^Bearer /, '');
@@ -227,11 +294,13 @@ function configured() {
     const { SUPABASE_URL: url, SUPABASE_ANON_KEY: anon, SUPABASE_SERVICE_ROLE_KEY: service } = process.env;
     if (!url || !anon || !service) throw new Error('Chưa cấu hình Supabase Auth trên máy chủ.');
     const options = { auth: { persistSession: false, autoRefreshToken: false } };
-    instance = createCustomerAuth({ admin: createClient(url, service, options), clientFactory: () => createClient(url, anon, options), ...runtimeMode() });
+    instance = createCustomerAuth({ admin: createClient(url, service, options), clientFactory: token => createClient(url, anon, {
+        ...options, ...(token ? { global: { headers: { Authorization: `Bearer ${token}` } } } : {})
+    }), ...runtimeMode() });
     return instance;
 }
 module.exports = { createCustomerAuth, validPassword, phoneLocal, runtimeMode };
-for (const name of ['guest', 'lookup', 'login', 'requestOtp', 'completeOtp', 'me', 'changePassword']) {
+for (const name of ['guest', 'lookup', 'guestRecords', 'login', 'requestOtp', 'completeOtp', 'me', 'changePassword']) {
     module.exports[name] = async (req, res) => {
         try {
             return await configured()[name](req, res);

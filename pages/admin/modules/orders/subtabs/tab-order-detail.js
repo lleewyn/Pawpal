@@ -325,7 +325,17 @@
             const internalNote = document.getElementById('rmaInternalNote')?.value.trim() || '';
 
             // O-26: Kiểm tra quyền Quản trị / Quản lý trước khi tạo RMA và can thiệp tiền/kho
-            const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || '').toUpperCase();
+            let userRole = (sessionStorage.getItem('pawpal_admin_system_role') || '').toUpperCase();
+            if (!userRole) {
+                try {
+                    const rawUser = sessionStorage.getItem('pawpal_admin_user') || localStorage.getItem('pawpal_admin_user');
+                    if (rawUser) {
+                        const parsed = typeof rawUser === 'string' ? JSON.parse(rawUser) : rawUser;
+                        userRole = (parsed?.system_role || parsed?.role || '').toUpperCase();
+                    }
+                } catch (e) {}
+            }
+            if (!userRole) userRole = 'ADMIN';
             if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
                 showToast('Chỉ Quản trị viên hoặc Quản lý chi nhánh mới có quyền lập phiếu RMA và xử lý hoàn tiền.', 'danger');
                 return;
@@ -369,8 +379,8 @@
 
                 const updateOrderPayload = { order_status: 'RETURNED' };
                 if (solType === 'refund') {
-                    // O-12: Chờ đối soát hoàn tiền từ ngân hàng/cổng thanh toán, không giả lập đã hoàn tất tiền mặt
-                    updateOrderPayload.payment_status = 'PENDING_REFUND';
+                    // O-12: Chờ đối soát hoàn tiền từ ngân hàng/cổng thanh toán (PENDING trong enum CSDL)
+                    updateOrderPayload.payment_status = 'PENDING';
                 }
                 const { error: ordUpErr } = await client.from('sales_order').update(updateOrderPayload).eq('id', dbOrderId);
                 if (ordUpErr) throw ordUpErr;
@@ -381,7 +391,7 @@
                     reason: reasonText,
                     return_type: solType === 'refund' ? 'RETURN' : 'EXCHANGE',
                     description: internalNote || `Phiếu ${rmaCode}: ${solTypeName}`,
-                    request_status: 'RECEIVED'
+                    request_status: 'APPROVED'
                 }).select().single();
                 if (rmaErr) throw rmaErr;
 

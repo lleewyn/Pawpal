@@ -414,7 +414,7 @@
             if (!db) return [];
             const { data, error } = await withServicesQueryTimeout(
                 db.from('review')
-                  .select('id, appointment_id, rating, review_content, review_type, created_at, shop_reply, customer:customer_id(id, phone_main, customer_profile(full_name)), service:service_id(id, service_name, service_category), appointment:appointment_id(appointment_code, staff:staff_id(full_name))')
+                  .select('id, customer_id, service_id, appointment_id, rating, review_content, review_type, created_at, shop_reply, customer:customer_id(id, phone_main, customer_profile(full_name)), service:service_id(id, service_name, service_category), appointment:appointment_id(appointment_code, staff:staff_id(full_name))')
                   .eq('review_type', 'SERVICE')
                   .order('created_at', { ascending: false })
             );
@@ -518,9 +518,19 @@
                     prices: pricesObj,
                     desc: svc.description || '',
                     status: (svc.status === 'ACTIVE' || !svc.status) ? 'Đang phục vụ' : 'Tạm ẩn',
-                    image: svc.thumbnail_url || (group === 'hotel' ? '/assets/images/services/hotel/deluxe.webp' : (group === 'taxi' ? '/assets/images/services/taxi/car.webp' : '/assets/images/services/spa/process/spa01.webp'))
+                    image: svc.thumbnail_url || (group === 'hotel' ? '/assets/images/services/hotel/deluxe.webp' : (group === 'taxi' ? '/assets/images/services/taxi/car.webp' : '/assets/images/services/spa/process/spa01.webp')),
+                    reviewCount: 0,
+                    averageRating: null
                 };
             });
+
+            // Nếu reviewsData chưa được nạp, nạp ngầm để tính ratings
+            if (!PawpalServices.state.reviewsData || PawpalServices.state.reviewsData.length === 0) {
+                loadReviewsData({ force: false }).catch(() => {});
+            } else {
+                computeServiceRatings();
+            }
+
             return PawpalServices.state.servicesData;
         } catch (err) {
             console.error('[PawpalServices] Lỗi nạp danh mục dịch vụ:', err);
@@ -528,6 +538,33 @@
         }
     }
     PawpalServices.loadCatalogData = loadCatalogData;
+
+    function computeServiceRatings() {
+        const reviews = PawpalServices.state.reviewsData || [];
+        const ratingsMap = new Map();
+
+        for (const r of reviews) {
+            const svcId = r.serviceId || r.serviceDbId;
+            const star = Number(r.rating);
+            if (!svcId || !Number.isInteger(star) || star < 1 || star > 5) continue;
+
+            const acc = ratingsMap.get(svcId) || { sum: 0, count: 0 };
+            acc.sum += star;
+            acc.count++;
+            ratingsMap.set(svcId, acc);
+        }
+
+        for (const svc of PawpalServices.state.servicesData || []) {
+            const stat = ratingsMap.get(svc.dbId);
+            svc.reviewCount = stat ? stat.count : 0;
+            svc.averageRating = stat && stat.count > 0 ? (stat.sum / stat.count) : null;
+        }
+
+        if (PawpalServices.subtabs?.catalog?.renderCatalogTable) {
+            PawpalServices.subtabs.catalog.renderCatalogTable();
+        }
+    }
+    PawpalServices.computeServiceRatings = computeServiceRatings;
 
     async function loadReviewsData({ force = false } = {}) {
         try {
@@ -545,22 +582,32 @@
                 if (serviceCategory === 'PET_HOTEL' || sName.includes('Hotel') || sName.includes('Phòng')) cat = 'Hotel';
                 else if (serviceCategory === 'PET_TAXI' || sName.includes('Taxi') || sName.includes('Đón')) cat = 'Taxi';
 
+                const rawStar = Number(r.rating);
+                const rating = Number.isInteger(rawStar) && rawStar >= 1 && rawStar <= 5 ? rawStar : null;
+
                 return {
                     id: r.id,
                     reviewCode: `ĐG-${String(r.id || '').slice(0, 8).toUpperCase()}`,
                     dbId: r.id,
+                    serviceId: r.service_id || r.service?.id || null,
+                    serviceDbId: r.service_id || r.service?.id || null,
+                    serviceCode: r.service?.service_code || '',
                     bookingId: r.appointment?.appointment_code || '—',
+                    appointmentId: r.appointment_id || null,
                     customerName: getCustomerProfileName(r.customer) || 'Khách hàng PawPal',
                     phone: r.customer?.phone_main || '—',
                     serviceName: sName || 'Dịch vụ Spa và Grooming',
                     category: cat,
                     staff: r.appointment?.staff?.full_name || 'Chưa có thông tin',
-                    rating: Number.isFinite(Number(r.rating)) && Number(r.rating) >= 1 && Number(r.rating) <= 5 ? Number(r.rating) : 0,
+                    rating,
                     comment: r.review_content || '—',
                     status: r.shop_reply ? 'replied' : 'pending',
-                    replyText: r.shop_reply || ''
+                    replyText: r.shop_reply || '',
+                    createdAt: r.created_at
                 };
             });
+
+            computeServiceRatings();
             return PawpalServices.state.reviewsData;
         } catch (err) {
             console.error('[PawpalServices] Lỗi nạp đánh giá:', err);
@@ -600,7 +647,7 @@
                 if (s === 'CONFIRMED') status = 'confirmed';
                 else if (s === 'IN_PROGRESS' || s === 'PROCESSING' || s === 'CHECKED_IN') status = 'in_progress';
                 else if (s === 'COMPLETED') status = 'completed';
-                else if (s === 'CANCELLED') status = 'cancelled';
+                else if (s === 'CANCELLED' || s === 'DA_HUY' || s === 'CANCELED') status = 'cancelled';
 
                 const customerName = getCustomerProfileName(item.customer) || getCustomerProfileName(item.pet_profile?.customer) || 'Chưa cập nhật tên khách hàng';
                 const phone = item.customer?.phone_main || item.pet_profile?.customer?.phone_main || '—';
@@ -610,7 +657,10 @@
                 const rawStaffName = item.staff?.full_name || '';
                 const staff = rawStaffName && !rawStaffName.includes('@') ? rawStaffName : null;
                 const petWeight = Number(item.pet_profile?.weight) > 0 ? `${item.pet_profile.weight} kg` : 'Chưa cập nhật';
-                const petAllergy = item.pet_profile?.allergy && !/^(không|none)$/i.test(item.pet_profile.allergy.trim()) ? item.pet_profile.allergy : (item.note && item.note.toLowerCase().includes('dị ứng') ? item.note : null);
+                const rawAllergy = item.pet_profile?.allergy && !/^(không|none)$/i.test(item.pet_profile.allergy.trim()) ? item.pet_profile.allergy.trim() : null;
+                const rawRoutine = item.pet_profile?.routine && !/^(không|none)$/i.test(item.pet_profile.routine.trim()) ? item.pet_profile.routine.trim() : null;
+                const petAlertParts = [rawAllergy ? `Dị ứng: ${rawAllergy}` : null, rawRoutine ? `Lưu ý: ${rawRoutine}` : null].filter(Boolean);
+                const petAllergy = petAlertParts.length > 0 ? petAlertParts.join(' • ') : (item.note && item.note.toLowerCase().includes('dị ứng') ? item.note : null);
 
                 const taxiMatch = String(item.note || '').match(/\[Pawpal Taxi v1\]\nĐón: ([^\n]+)\nTrả: ([^\n]+)\nHình thức: ([^\n]+)\nCự ly: ([0-9.]+)\nBảng giá: ([^\n]+)\n\[\/Pawpal Taxi\]$/);
                 const taxiInfo = cat === 'Taxi' && taxiMatch ? {

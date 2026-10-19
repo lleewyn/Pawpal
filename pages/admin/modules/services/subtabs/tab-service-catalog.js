@@ -327,7 +327,14 @@
                         <button type="button" class="btn-view-sop-pill btn-view-service-sop" data-service-code="${esc(svc.code || svc.id)}" title="Xem quy trình chuẩn SOP">${stepCount} bước</button>
                     </td>
                     <td>
-                        <span style="font-size: 12.5px; font-weight: 600; color: #D97706;">${svc.averageRating != null ? svc.averageRating.toFixed(1) + ' ★' : '—'}</span>
+                        ${(svc.averageRating != null && svc.reviewCount > 0) ? `
+                            <button type="button" class="catalog-rating-link btn-view-service-reviews" data-service-id="${esc(svc.dbId)}" data-service-code="${esc(svc.code || svc.id)}" data-service-name="${esc(svc.name)}" title="Xem ${svc.reviewCount} lượt đánh giá của ${esc(svc.name)}" style="background: transparent; border: none; outline: none; padding: 2px 4px; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 4px;">
+                                <span class="star-rating-pill" style="font-size: 12.5px; font-weight: 700; color: #D97706;">${svc.averageRating.toFixed(1)} ★</span>
+                                <span class="reviews-count-text" style="font-size: 11.5px; color: var(--text-muted);">· ${svc.reviewCount} lượt</span>
+                            </button>
+                        ` : `
+                            <span style="font-size: 12px; color: var(--text-muted); font-style: italic;">Chưa có đánh giá</span>
+                        `}
                     </td>
                     <td style="text-align: center;">
                         <span class="admin-badge ${isHidden ? 'badge-neutral' : 'badge-success'}">${esc(svc.status || 'Đang phục vụ')}</span>
@@ -338,6 +345,19 @@
                 </tr>
             `;
         }).join('');
+
+        tbody.querySelectorAll('.btn-view-service-reviews').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const sId = btn.getAttribute('data-service-id');
+                const sCode = btn.getAttribute('data-service-code');
+                const sName = btn.getAttribute('data-service-name');
+                if (PawpalServices.subtabs?.reviews?.filterByService) {
+                    PawpalServices.subtabs.reviews.filterByService(sId, sCode, sName);
+                }
+                PawpalServices.switchSubtab('tab-service-reviews');
+            });
+        });
 
         tbody.querySelectorAll('.btn-view-service-sop').forEach(btn => {
             btn.addEventListener('click', () => {

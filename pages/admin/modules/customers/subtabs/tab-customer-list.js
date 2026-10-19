@@ -492,15 +492,22 @@
             'Ghi chú'
         ];
 
+        const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'ADMIN').toUpperCase();
+        const canViewFullPii = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'CSKH';
+
         const rows = allCusts.map(c => {
             const petsList = (c.pets || []).map(p => `${p.name} (${p.species || 'Chó/Mèo'})`).join('; ');
             const defaultAddr = (c.addresses || []).find(a => a.isDefault)?.address || (c.addresses?.[0]?.address || '');
             const statusText = c.status === 'ACTIVE' ? 'Đang hoạt động' : (c.status === 'TEMP' ? 'Tài khoản tạm' : 'Bị khóa');
+            const cleanPhone = (c.phone || '').trim();
+            const phoneDisplay = canViewFullPii 
+                ? cleanPhone 
+                : (cleanPhone.length >= 7 ? cleanPhone.slice(0, 3) + '••••' + cleanPhone.slice(-3) : '••••');
 
             return [
                 c.id || '',
                 c.name || '',
-                c.phone || '',
+                phoneDisplay,
                 c.email || '',
                 c.gender || '',
                 c.dob || '',
@@ -798,6 +805,7 @@
                             receiver_name: name,
                             receiver_phone: phone || '',
                             street_address: initialAddress.trim(),
+                            province: 'TP. Hồ Chí Minh',
                             is_default: true
                         });
                         if (addrErr) {
@@ -818,12 +826,15 @@
                     let petCreateWarning = null;
                     if (petName && petName.trim()) {
                         const spec = petSpecies === 'CAT' ? 'cat' : (petSpecies === 'OTHER' ? 'other' : 'dog');
+                        const genPetCode = 'PET-' + (window.crypto?.randomUUID ? window.crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase() : Date.now().toString(36).toUpperCase());
                         const { error: petErr } = await client.from('pet_profile').insert({
                             customer_id: newCust.id,
+                            pet_code: genPetCode,
                             pet_name: petName.trim(),
                             species: spec,
                             breed: petBreed || 'Chưa cập nhật',
-                            weight: petWeight === '' ? null : petWeight
+                            weight: petWeight === '' ? null : petWeight,
+                            status: 'ACTIVE'
                         });
                         if (petErr) {
                             console.error('[Customers] Lỗi tạo pet kèm theo:', petErr);

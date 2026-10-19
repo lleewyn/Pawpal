@@ -3,6 +3,15 @@
  */
 
 (async function () {
+    let redirecting = false;
+    function requireLogin() {
+        if (redirecting) return false;
+        redirecting = true;
+        sessionStorage.removeItem('pawpal_current_user');
+        sessionStorage.setItem('pawpal_redirect_after_login', location.pathname + location.search + location.hash);
+        window.location.replace('/login?reason=session-expired');
+        return false;
+    }
     // 1. Kiểm tra trạng thái đăng nhập & Bảo vệ cô lập 2 chiều
     function checkAuth() {
         let currentUser = null;
@@ -11,9 +20,7 @@
         } catch(e) {}
 
         if (!currentUser) {
-            sessionStorage.setItem('pawpal_redirect_after_login', window.location.href);
-            window.location.replace('/login');
-            return false;
+            return requireLogin();
         }
 
         if (currentUser.is_temporary) {
@@ -41,6 +48,17 @@
     }
 
     if (!checkAuth()) return;
+    document.addEventListener('click', event => {
+        if (!checkAuth()) { event.preventDefault(); event.stopImmediatePropagation(); }
+    }, true);
+    document.addEventListener('submit', event => {
+        if (!checkAuth()) { event.preventDefault(); event.stopImmediatePropagation(); }
+    }, true);
+    window.addEventListener('storage', event => {
+        if (event.storageArea === localStorage && (!event.key || event.key === 'pawpal_current_user')) checkAuth();
+    });
+    window.addEventListener('focus', checkAuth);
+    window.addEventListener('pageshow', checkAuth);
     
     // Đảm bảo window.PawpalCustomerAuth sẵn sàng
     if (!window.PawpalCustomerAuth) {
@@ -60,13 +78,13 @@
     if (window.PawpalCustomerAuth && window.PawpalCustomerAuth.request) {
         try {
             const result = await window.PawpalCustomerAuth.request('me', {}, true);
+            if (!checkAuth()) return;
             await window.PawpalCustomerAuth.accept(result);
         } catch (err) {
             console.warn('[UserPortal] Không thể xác nhận phiên khách hàng:', err.message);
             localStorage.removeItem('pawpal_current_user');
             sessionStorage.removeItem('pawpal_current_user');
-            sessionStorage.setItem('pawpal_redirect_after_login', window.location.href);
-            window.location.href = '/login';
+            requireLogin();
             return;
         }
     }

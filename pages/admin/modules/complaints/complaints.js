@@ -504,11 +504,7 @@
                 const serviceRef = appointments.find(a=>a.id===ref || a.appointment_code===ref);
                 const orderRef = orders.find(o=>o.id===ref || o.order_code===ref);
                 const isOrder = Boolean(orderRef) || ['payment','order','product','wrong_item','damaged','quality','return_request','missing_item','don_hang','thanh_toan','san_pham','hoan_tien'].includes(tType);
-                const isService = Boolean(serviceRef) || ['service','health','spa','hotel','taxi','dich_vu','grooming','kham_benh','luu_chuong'].includes(tType);
-
-                if (!isOrder && !isService && !serviceRef && !orderRef) {
-                    PawpalComplaints.state.unclassifiedTickets.push(t);
-                }
+                const isService = Boolean(serviceRef) || ['service','health','spa','hotel','taxi','dich_vu','grooming','kham_benh','luu_chuong','booking','contact','other','general','inquiry','cskh','tu_van'].includes(tType);
 
                 if (!isOrder) {
                     let appt = serviceRef || null;
@@ -684,11 +680,7 @@
                 select.innerHTML='<option value="ALL">Tất cả</option><option value="Chưa phân công">Chưa phân công</option>'+staffList.filter(staff=>staff.full_name).map(staff=>`<option value="${escapeHtml(staff.full_name)}">${escapeHtml(staff.full_name)}</option>`).join('');
                 if(Array.from(select.options).some(option=>option.value===value))select.value=value;
             });
-            document.querySelectorAll('.complaint-unclassified-notice').forEach(el=>{
-                const tickets=PawpalComplaints.state.unclassifiedTickets;
-                el.hidden=!tickets.length;
-                el.textContent=tickets.length ? `${tickets.length} khiếu nại chưa có loại hoặc liên kết giao dịch: ${tickets.map(t=>t.title || t.id).join('; ')}` : '';
-            });
+
 
             // Tự động kích hoạt render bảng dữ liệu và cập nhật KPIs
             updateComplaintsKpis();
@@ -826,39 +818,36 @@
             const alerts = [];
             const reprocessService = serviceComplaints.filter(i => i.status === 'reprocessing');
             if (reprocessService.length > 0) {
-                const ids = reprocessService.map(i => i.id).join(', ');
                 alerts.push({
                     type: 'danger',
                     prefix: 'Cảnh báo',
                     main: 'Khách chấm < 3 sao (Xử lý lần 2)',
-                    sub: `(${ids})`,
-                    text: `Có ${reprocessService.length} khiếu nại khách hàng không hài lòng cần Quản lý can thiệp (${ids})`,
+                    sub: '',
+                    text: `Có ${reprocessService.length} khiếu nại khách hàng không hài lòng cần Quản lý can thiệp`,
                     filter: 'REPROCESSING'
                 });
             }
 
             const waitMgrService = serviceComplaints.filter(i => i.status === 'waiting_manager_approval');
             if (waitMgrService.length > 0) {
-                const ids = waitMgrService.map(i => i.id).join(', ');
                 alerts.push({
                     type: 'warning',
                     prefix: `${waitMgrService.length} ca`,
                     main: 'Chờ quản lý duyệt bồi hoàn',
-                    sub: `(${ids})`,
-                    text: `${waitMgrService.length} khiếu nại dịch vụ chờ Quản lý phê duyệt ngân sách/tài sản (${ids})`,
+                    sub: '',
+                    text: `${waitMgrService.length} khiếu nại dịch vụ chờ Quản lý phê duyệt ngân sách/tài sản`,
                     filter: 'WAITING_MANAGER'
                 });
             }
 
             const overdueService = serviceComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed');
             if (overdueService.length > 0) {
-                const ids = overdueService.map(i => i.id).join(', ');
                 alerts.push({
                     type: 'danger',
                     prefix: `${overdueService.length} ca`,
                     main: 'Quá hạn SLA',
-                    sub: `(${ids})`,
-                    text: `${overdueService.length} khiếu nại dịch vụ quá hạn SLA (${ids})`,
+                    sub: '',
+                    text: `${overdueService.length} khiếu nại dịch vụ quá hạn SLA`,
                     filter: 'OVERDUE'
                 });
             }
@@ -867,7 +856,7 @@
                 <span class="alert-item-tag alert-${a.type}" data-filter="${a.filter}" title="${escapeHtml(a.text)}">
                     <span class="tag-highlight">${escapeHtml(a.prefix)}</span>
                     <span class="tag-main">${escapeHtml(a.main)}</span>
-                    <span class="tag-sub">${escapeHtml(a.sub)}</span>
+                    ${a.sub ? `<span class="tag-sub">${escapeHtml(a.sub)}</span>` : ''}
                 </span>
             `).join('');
 
@@ -883,39 +872,36 @@
             const alerts = [];
             const reprocessOrder = orderComplaints.filter(i => i.status === 'reprocessing');
             if (reprocessOrder.length > 0) {
-                const ids = reprocessOrder.map(i => i.id).join(', ');
                 alerts.push({
                     type: 'danger',
                     prefix: 'Cảnh báo',
                     main: 'Khách chấm < 3 sao (Xử lý lần 2)',
-                    sub: `(${ids})`,
-                    text: `Có ${reprocessOrder.length} khiếu nại đơn hàng cần Quản lý gọi điện xử lý lần 2 (${ids})`,
+                    sub: '',
+                    text: `Có ${reprocessOrder.length} khiếu nại đơn hàng cần Quản lý gọi điện xử lý lần 2`,
                     filter: 'REPROCESSING'
                 });
             }
 
             const waitMgrOrder = orderComplaints.filter(i => i.status === 'waiting_manager_approval');
             if (waitMgrOrder.length > 0) {
-                const ids = waitMgrOrder.map(i => i.id).join(', ');
                 alerts.push({
                     type: 'warning',
                     prefix: `${waitMgrOrder.length} ca`,
                     main: 'Chờ quản lý duyệt hoàn tiền/đổi trả',
-                    sub: `(${ids})`,
-                    text: `${waitMgrOrder.length} khiếu nại đơn hàng chờ Quản lý duyệt (${ids})`,
+                    sub: '',
+                    text: `${waitMgrOrder.length} khiếu nại đơn hàng chờ Quản lý duyệt`,
                     filter: 'WAITING_MANAGER'
                 });
             }
 
             const overdueOrder = orderComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed');
             if (overdueOrder.length > 0) {
-                const ids = overdueOrder.map(i => i.id).join(', ');
                 alerts.push({
                     type: 'danger',
                     prefix: `${overdueOrder.length} ca`,
                     main: 'Quá hạn SLA',
-                    sub: `(${ids})`,
-                    text: `${overdueOrder.length} khiếu nại đơn hàng quá hạn SLA (${ids})`,
+                    sub: '',
+                    text: `${overdueOrder.length} khiếu nại đơn hàng quá hạn SLA`,
                     filter: 'OVERDUE'
                 });
             }
@@ -924,7 +910,7 @@
                 <span class="alert-item-tag alert-${a.type}" data-filter="${a.filter}" title="${escapeHtml(a.text)}">
                     <span class="tag-highlight">${escapeHtml(a.prefix)}</span>
                     <span class="tag-main">${escapeHtml(a.main)}</span>
-                    <span class="tag-sub">${escapeHtml(a.sub)}</span>
+                    ${a.sub ? `<span class="tag-sub">${escapeHtml(a.sub)}</span>` : ''}
                 </span>
             `).join('');
 

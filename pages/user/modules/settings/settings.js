@@ -3,6 +3,8 @@
  * Chuẩn AGENTS.md: 9px radius, Flat Solid, Text-Only, Auto-Save, Zero JSON Mock
  */
 
+import { withDeadline } from '/scripts/shared/request-deadline.mjs';
+let passwordSaving = false;
 const PAWPAL_USERS_KEY = 'pawpal_users_db';
 const CURRENT_USER_KEY = 'pawpal_current_user';
 
@@ -44,14 +46,15 @@ function updateCurrentUserRecord(updatedUser) {
     } catch (e) {}
 }
 
-function showToast(type, message, duration = 3000) {
-    let container = document.getElementById('toastContainer');
+export function showToast(type, message, duration = 3000) {
+    let container = document.getElementById('settingsToastContainer');
     if (!container) {
         container = document.createElement('div');
-        container.id = 'toastContainer';
+        container.id = 'settingsToastContainer';
         container.className = 'toast-container-custom';
         document.body.appendChild(container);
     }
+    container.style.cssText = 'position:fixed;top:24px;right:24px;z-index:100000;display:flex;flex-direction:column;gap:8px;max-width:calc(100vw - 32px);';
 
     const toastColors = {
         success: { bg: '#236B48', label: 'Thành công' },
@@ -63,7 +66,7 @@ function showToast(type, message, duration = 3000) {
 
     const toast = document.createElement('div');
     toast.style.cssText = `
-        background: #ffffff;
+        background: ${type === 'success' ? '#236B48' : '#ffffff'};
         border: 1px solid #E2ECE5;
         border-radius: 9px;
         padding: 10px 16px;
@@ -82,10 +85,17 @@ function showToast(type, message, duration = 3000) {
     toast.innerHTML = `
         <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-weight: 700; font-size: 13px; color: ${cfg.bg};">${cfg.label}:</span>
-            <span style="font-size: 13px; color: #203A2C;">${message}</span>
+            <span style="font-size: 13px; color: #203A2C;"></span>
         </div>
         <button type="button" style="border: none; background: transparent; color: #4F7A65; font-size: 16px; cursor: pointer; padding: 0 4px;">&times;</button>
     `;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    const spans = toast.querySelectorAll('span');
+    spans[1].textContent = message;
+    if (type === 'success') {
+        spans.forEach(span => span.style.color = '#ffffff');
+        toast.querySelector('button').style.color = '#ffffff';
+    }
 
     toast.querySelector('button').addEventListener('click', () => toast.remove());
     container.appendChild(toast);
@@ -169,7 +179,7 @@ function validateChangePasswordForm() {
         if (errEl) errEl.classList.remove('d-block');
     }
 
-    btnSubmit.disabled = !(isCurrentValid && isPasswordValid && isConfirmMatch && isConfirmFilled);
+    btnSubmit.disabled = passwordSaving || !(isCurrentValid && isPasswordValid && isConfirmMatch && isConfirmFilled);
 }
 
 function initChangePasswordForm() {
@@ -206,24 +216,34 @@ function initChangePasswordForm() {
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (passwordSaving) return;
         const user = getCurrentUser();
-        if (!user) return;
+        if (!user) { showToast('error', 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'); return; }
 
+        passwordSaving = true;
         btnSubmit.disabled = true;
         btnSubmit.textContent = 'Đang lưu...';
 
         try {
             if (!currentPassword?.value || !newPassword.value || newPassword.value !== confirmNewPassword.value) throw new Error('Vui lòng kiểm tra mật khẩu hiện tại và mật khẩu nhập lại.');
-            const result = await window.PawpalCustomerAuth.request('change-password', {
+            const result = await withDeadline(() => window.PawpalCustomerAuth.request('change-password', {
                 currentPassword: currentPassword.value,
                 newPassword: newPassword.value
-            }, true);
-            await window.PawpalCustomerAuth.accept(result);
+            }, true), 20000, 'Chưa xác nhận được kết quả đổi mật khẩu do kết nối chậm. Vui lòng kiểm tra lại trước khi thử lần nữa.');
+            try {
+                await withDeadline(() => window.PawpalCustomerAuth.accept(result), 10000, 'Không thể đồng bộ phiên đăng nhập.');
+            } catch {
+                showToast('warning', 'Mật khẩu đã được cập nhật. Vui lòng đăng nhập lại nếu phiên hiện tại không hoạt động.', 7000);
+            }
         } catch (dbErr) {
             showToast('error', dbErr.message || 'Không thể cập nhật mật khẩu. Vui lòng thử lại.');
             btnSubmit.textContent = 'Cập nhật mật khẩu';
             validateChangePasswordForm();
             return;
+        } finally {
+            passwordSaving = false;
+            btnSubmit.textContent = 'Cập nhật mật khẩu';
+            validateChangePasswordForm();
         }
 
         const warning = document.getElementById('tempAccountWarning');

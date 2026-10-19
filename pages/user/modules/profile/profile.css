@@ -121,6 +121,7 @@
 
 .pet-avatar-item {
     text-align: center;
+    flex: 0 0 96px;
     min-width: 80px;
     display: flex;
     flex-direction: column;
@@ -418,12 +419,16 @@
 }
 
 .status-delivering,
+.status-shipping,
+.status-delivered,
+.status-preparing,
 .status-in-progress {
     background: #DCEAF2;
     color: #20495E;
 }
 
-.status-cancelled {
+.status-cancelled,
+.status-returned {
     background: #F7DCDC;
     color: #8F2424;
 }
@@ -553,6 +558,9 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    max-height: 240px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .address-item-card {
@@ -576,6 +584,7 @@
     align-items: flex-start;
     gap: 8px;
     flex: 1;
+    min-width: 0;
 }
 
 .address-radio-input {
@@ -587,6 +596,15 @@
 .address-text-wrap {
     font-size: 0.82rem;
     color: #203A2C;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.address-text-wrap > span:first-child {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .address-default-tag {
@@ -677,3 +695,13 @@
 .profile-data-ready { animation: profileDataReveal 240ms ease both; }
 @keyframes profileDataReveal { from { opacity: 0; } to { opacity: 1; } }
 @media(prefers-reduced-motion: reduce) { .profile-data-ready { animation: none; } }
+.profile-field-error {
+    color: #DC2626;
+    font-size: 13px;
+    margin-top: 6px;
+    overflow-wrap: anywhere;
+}
+
+.form-control-custom[aria-invalid="true"] {
+    border-color: #DC2626;
+}

@@ -162,6 +162,7 @@ async function testFullChatbotLifecycle() {
 
     } catch (err) {
         console.error('LỖI KIỂM THỬ CHATBOT:', err);
+        process.exitCode = 1;
     } finally {
         console.log('10. Dọn dẹp dữ liệu kiểm thử (Clean up test data)...');
         if (testCannedId) {

@@ -63,7 +63,7 @@
 @media (min-width: 1250px) {
     .header-container {
         display: grid;
-        grid-template-columns: auto 1fr auto;
+        grid-template-columns: auto minmax(0, 1fr) auto;
         align-items: center;
         gap: 0 8px;
     }
@@ -107,6 +107,8 @@
         width: 100%;
         flex-direction: row !important;
         gap: var(--space-xs);
+        flex-wrap: wrap;
+        min-width: 0;
     }
 
     .header-container > .header-actions {

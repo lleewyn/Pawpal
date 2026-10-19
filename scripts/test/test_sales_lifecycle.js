@@ -10,11 +10,14 @@ async function testFullSalesLifecycle() {
     let createdOrderId = null;
     let createdOrderDetailId = null;
     let createdRmaId = null;
+    let createdAddressId = null;
     let testProductId = null;
+    let testInventoryId = null;
     let initialStock = 0;
+    let stockDeducted = false;
 
     try {
-        // Bước 1: Tìm khách hàng và sản phẩm khả dụng để tạo đơn
+        // Bước 1: Tìm khách hàng và sản phẩm khả dụng để tạo đơn (QA-P0-01, QA-P0-02)
         console.log('1. Lấy khách hàng và sản phẩm mẫu từ Supabase...');
         const { data: customers, error: cErr } = await adminDb
             .from('customer')
@@ -23,26 +26,25 @@ async function testFullSalesLifecycle() {
         if (cErr) throw cErr;
         const customer = customers && customers.length > 0 ? customers[0] : null;
         const custName = customer?.customer_profile?.[0]?.full_name || customer?.customer_profile?.full_name || 'Khách vãng lai';
-        let shippingAddressId = customer?.customer_address?.[0]?.id;
         
-        if (!shippingAddressId) {
-            // Lấy bất kỳ địa chỉ nào từ bảng customer_address
-            const { data: addrs } = await adminDb.from('customer_address').select('id').limit(1);
-            if (addrs && addrs.length > 0) {
-                shippingAddressId = addrs[0].id;
-            } else if (customer?.id) {
-                const { data: newAddr } = await adminDb.from('customer_address').insert([{
-                    customer_id: customer.id,
-                    receiver_name: custName,
-                    receiver_phone: customer.phone_main || '0900000000',
-                    province: 'TP. Hồ Chí Minh',
-                    street_address: '123 Test Street'
-                }]).select().single();
-                if (newAddr) shippingAddressId = newAddr.id;
+        // QA-P0-02: Địa chỉ chỉ lấy của đúng customer này, tuyệt đối không lấy địa chỉ của khách khác
+        let shippingAddressId = customer?.customer_address?.[0]?.id;
+        if (!shippingAddressId && customer?.id) {
+            const { data: newAddr, error: addrErr } = await adminDb.from('customer_address').insert([{
+                customer_id: customer.id,
+                receiver_name: custName,
+                receiver_phone: customer.phone_main || '0900000000',
+                province: 'TP. Hồ Chí Minh',
+                street_address: '[QA Test Fixture] 123 Đường Kiểm Thử'
+            }]).select().single();
+            if (addrErr) throw addrErr;
+            if (newAddr) {
+                shippingAddressId = newAddr.id;
+                createdAddressId = newAddr.id;
             }
         }
         console.log('   -> Khách hàng:', customer ? `${custName} (${customer.phone_main})` : 'Không có (Sẽ tạo khách vãng lai)');
-        console.log('   -> Địa chỉ giao hàng ID:', shippingAddressId);
+        console.log('   -> Địa chỉ giao hàng ID:', shippingAddressId || 'Mua tại quầy');
 
         const { data: products, error: pErr } = await adminDb
             .from('product')
@@ -55,7 +57,18 @@ async function testFullSalesLifecycle() {
         const sampleProduct = products[0];
         testProductId = sampleProduct.id;
         const invRow = Array.isArray(sampleProduct.inventory) ? sampleProduct.inventory[0] : sampleProduct.inventory;
-        initialStock = invRow?.quantity_in_stock || 50;
+        
+        // QA-P0-01: Không dùng `|| 50` làm sai lệch tồn kho thật
+        if (invRow && invRow.quantity_in_stock !== null && invRow.quantity_in_stock !== undefined) {
+            initialStock = Number(invRow.quantity_in_stock);
+        } else {
+            throw new Error('Sản phẩm kiểm thử không có bản ghi inventory hợp lệ!');
+        }
+        testInventoryId = invRow.id;
+
+        if (initialStock < 2) {
+            throw new Error(`Tồn kho sản phẩm không đủ để bán thử nghiệm (cần tối thiểu 2, hiện có ${initialStock})`);
+        }
         console.log('   -> Sản phẩm:', sampleProduct.product_name, '| SKU:', sampleProduct.sku, '| Giá:', sampleProduct.sale_price, '| Tồn kho ban đầu:', initialStock);
 
         // Bước 2: Tạo đơn hàng mới (sales_order)
@@ -100,12 +113,13 @@ async function testFullSalesLifecycle() {
 
         // Bước 4: Trừ tồn kho khi đơn được xác nhận đóng gói (PACKING)
         console.log('\n4. Cập nhật trạng thái đơn sang PACKING và trừ tồn kho (inventory)...');
-        if (invRow?.id) {
+        if (testInventoryId) {
             const { error: invErr } = await adminDb
                 .from('inventory')
                 .update({ quantity_in_stock: initialStock - 2 })
-                .eq('id', invRow.id);
+                .eq('id', testInventoryId);
             if (invErr) throw invErr;
+            stockDeducted = true;
             console.log('   -> Tồn kho đã trừ: ' + (initialStock - 2));
         }
 
@@ -148,8 +162,8 @@ async function testFullSalesLifecycle() {
             .select()
             .single();
         if (rmaErr) {
-            console.warn('   -> Lưu ý bảng return_request:', rmaErr.message);
-        } else {
+            console.warn('   -> Bỏ qua RMA insert (chưa có quyền hoặc bảng không cho phép):', rmaErr.message);
+        } else if (newRma) {
             createdRmaId = newRma.id;
             console.log('   -> Đã tạo phiếu RMA thành công! ID:', createdRmaId, '| Loại:', newRma.return_type);
 
@@ -158,7 +172,7 @@ async function testFullSalesLifecycle() {
                 .insert([{
                     return_request_id: createdRmaId,
                     product_id: testProductId,
-                    quantity: 1,
+                    quantity: 2,
                     unit_price: sampleProduct.sale_price || 100000
                 }])
                 .select()
@@ -169,11 +183,12 @@ async function testFullSalesLifecycle() {
 
         // Bước 7: Phục hồi lại tồn kho sản phẩm về ban đầu
         console.log('\n7. Khôi phục lại tồn kho ban đầu cho sản phẩm...');
-        if (invRow?.id) {
+        if (testInventoryId && stockDeducted) {
             await adminDb
                 .from('inventory')
                 .update({ quantity_in_stock: initialStock })
-                .eq('id', invRow.id);
+                .eq('id', testInventoryId);
+            stockDeducted = false;
             console.log('   -> Tồn kho đã hoàn trả về:', initialStock);
         }
 
@@ -181,8 +196,19 @@ async function testFullSalesLifecycle() {
 
     } catch (error) {
         console.error('LỖI TRONG QUÁ TRÌNH KIỂM THỬ:', error);
+        // QA-P0-04: Đảm bảo khi test fail thì process thoát với code 1
+        process.exitCode = 1;
     } finally {
         console.log('8. Dọn dẹp dữ liệu kiểm thử (Clean up test data)...');
+        // QA-P0-01: Bảo đảm khôi phục tồn kho trong finally nếu gặp exception giữa chừng
+        if (testInventoryId && stockDeducted) {
+            try {
+                await adminDb.from('inventory').update({ quantity_in_stock: initialStock }).eq('id', testInventoryId);
+                console.log('   -> [Khôi phục sự cố] Tồn kho đã được hoàn trả về ban đầu:', initialStock);
+            } catch (invRestoreErr) {
+                console.error('   -> [LỖI KHÔI PHỤC KHO]:', invRestoreErr);
+            }
+        }
         if (createdRmaId) {
             await adminDb.from('return_request_detail').delete().eq('return_request_id', createdRmaId);
             await adminDb.from('return_request').delete().eq('id', createdRmaId);
@@ -195,6 +221,10 @@ async function testFullSalesLifecycle() {
         if (createdOrderId) {
             await adminDb.from('sales_order').delete().eq('id', createdOrderId);
             console.log('   -> Đã dọn dẹp đơn hàng:', createdOrderId);
+        }
+        if (createdAddressId) {
+            await adminDb.from('customer_address').delete().eq('id', createdAddressId);
+            console.log('   -> Đã dọn dẹp địa chỉ QA:', createdAddressId);
         }
         console.log('   -> Hoàn tất dọn dẹp!');
     }

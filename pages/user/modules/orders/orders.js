@@ -1,3 +1,4 @@
+import { normalizeOrderStatus, getStatusLabel } from '/scripts/shared/order-status.mjs';
 
 import { API } from '/scripts/api/api.js';
 import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
@@ -957,49 +958,6 @@ function saveOrderToLocalStorage(order) {
         allOrders.push(order);
     }
     localStorage.setItem('pawpal_orders', JSON.stringify(allOrders));
-}
-
-function getStatusLabel(status) {
-    const s = String(status || '').toLowerCase().trim();
-    const labels = {
-        cho_xac_nhan:        'Chờ xác nhận',
-        placed:              'Chờ xác nhận',
-        pending:             'Chờ xác nhận',
-        pending_payment:     'Chờ xác nhận',
-        cho_thanh_toan:      'Chờ xác nhận',
-        cho_lay_hang:        'Chờ lấy hàng',
-        dang_chuan_bi:       'Chờ lấy hàng',
-        preparing:           'Chờ lấy hàng',
-        confirmed:           'Chờ lấy hàng',
-        da_xac_nhan:         'Chờ lấy hàng',
-        dang_giao:           'Đang giao',
-        shipping:            'Đang giao',
-        da_giao:             'Đã giao',
-        delivered:           'Đã giao',
-        da_hoan_tat:         'Hoàn thành',
-        completed:           'Hoàn thành',
-        da_huy:              'Đã hủy',
-        cancelled:           'Đã hủy',
-        thanh_toan_that_bai: 'Đã hủy',
-        tra_hang:            'Trả hàng',
-        returned:            'Trả hàng',
-        return_pending:      'Chờ duyệt đổi trả',
-        return_approved:     'Đổi trả được duyệt',
-        refunded:            'Đã hoàn tiền'
-    };
-    return labels[s] || status || 'Chờ xử lý';
-}
-
-function normalizeOrderStatus(status) {
-    const s = String(status || '').toLowerCase().trim();
-    if (s === 'cho_xac_nhan' || s === 'placed' || s === 'pending' || s === 'pending_payment' || s === 'cho_thanh_toan') return 'pending';
-    if (s === 'cho_lay_hang' || s === 'preparing' || s === 'confirmed' || s === 'da_xac_nhan' || s === 'dang_chuan_bi') return 'preparing';
-    if (s === 'dang_giao' || s === 'shipping') return 'shipping';
-    if (s === 'da_giao' || s === 'delivered') return 'delivered';
-    if (s === 'da_hoan_tat' || s === 'completed') return 'completed';
-    if (s === 'da_huy' || s === 'cancelled' || s === 'thanh_toan_that_bai') return 'cancelled';
-    if (s === 'tra_hang' || s === 'returned' || s === 'return_pending' || s === 'return_approved' || s === 'refunded') return 'returned';
-    return s || 'pending';
 }
 
 function getPaymentMethodLabel(method) {

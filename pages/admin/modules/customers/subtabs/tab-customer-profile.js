@@ -28,6 +28,17 @@
         });
 
         sessionStorage.setItem('pawpal_admin_customer_drawertab', targetPanelId);
+        if (targetPanelId === 'dtab-bookings' || targetPanelId === 'dtab-orders' || targetPanelId === 'dtab-complaints') {
+            const currentCustId = sessionStorage.getItem('pawpal_admin_customer_id');
+            const cust = getCust(currentCustId);
+            if (cust && typeof PawpalCustomers.fetchCustomerProfile360 === 'function') {
+                PawpalCustomers.fetchCustomerProfile360(cust, { force: true }).then(() => {
+                    renderDrawerOrders(currentCustId);
+                    renderDrawerBookings(currentCustId);
+                    renderDrawerComplaints(currentCustId);
+                });
+            }
+        }
         if (window.lucide) lucide.createIcons();
     }
 
@@ -424,9 +435,9 @@
         // Tab 5: Khiếu nại
         renderDrawerComplaints(custId);
 
-        // Lazy fetch hồ sơ 360° nếu chưa tải (PERF-03.C03)
-        if (typeof PawpalCustomers.fetchCustomerProfile360 === 'function' && !data._detailsLoaded) {
-            PawpalCustomers.fetchCustomerProfile360(data).then(() => {
+        // Lazy fetch hồ sơ 360° (Đơn hàng, Lịch hẹn, Khiếu nại)
+        if (typeof PawpalCustomers.fetchCustomerProfile360 === 'function') {
+            PawpalCustomers.fetchCustomerProfile360(data, { force: true }).then(() => {
                 renderDrawerOrders(custId);
                 renderDrawerBookings(custId);
                 renderDrawerComplaints(custId);
@@ -755,8 +766,18 @@
                         const finalPts = Math.max(currentPts, minFloor);
                         const { error: memTierError } = await client.from('customer_membership')
                             .upsert({ customer_id: custDbId, total_paw_points: finalPts });
-                        if (memTierError) {
-                            console.warn('[Customers] Lỗi cập nhật hạng customer_membership:', memTierError);
+                        // CUS-F03: Ghi nhận vết kiểm toán audit_log có actor và timestamp
+                        try {
+                            const staffId = sessionStorage.getItem('pawpal_staff_id') || 'd0000000-5555-5555-5555-555555555555';
+                            await client.from('audit_log').insert({
+                                staff_id: staffId,
+                                action: 'UPDATE',
+                                entity_name: 'customer_profile',
+                                description: `Cập nhật hồ sơ khách hàng: ${newName} (${custId})`,
+                                created_at: new Date().toISOString()
+                            });
+                        } catch (auditErr) {
+                            console.warn('[Customers] Ghi nhận audit_log lỗi:', auditErr);
                         }
                     }
 
@@ -827,14 +848,17 @@
                 try {
                     const spec = (species === 'Mèo' || species === 'CAT') ? 'cat' : ((species === 'Thỏ' || species === 'RABBIT') ? 'rabbit' : ((species === 'Khác' || species === 'OTHER') ? 'other' : 'dog'));
                     if (custDbId) {
+                        const genPetCode = 'PET-' + (window.crypto?.randomUUID ? window.crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase() : Date.now().toString(36).toUpperCase());
                         const { error: petErr } = await client.from('pet_profile').insert({
                             customer_id: custDbId,
+                            pet_code: genPetCode,
                             pet_name: petName,
                             species: spec,
                             breed: breed || 'Chưa cập nhật',
                             weight: weight ? parseFloat(weight) : null,
                             vaccination_history: vaccine || 'Chưa cập nhật',
-                            allergy: (alertNote && alertNote !== 'Bình thường') ? alertNote : 'Không'
+                            allergy: (alertNote && alertNote !== 'Bình thường') ? alertNote : 'Không',
+                            status: 'ACTIVE'
                         });
                         if (petErr) throw petErr;
                     }

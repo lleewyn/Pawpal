@@ -94,7 +94,7 @@ body.user-sidebar-open .dashboard-sidebar-backdrop {
 .sidebar-link:hover {
     background-color: var(--color-primary-light);
     color: var(--color-primary-dark);
-    transform: translateX(4px);
+    transform: none;
 }
 
 .sidebar-link.active {
@@ -109,6 +109,7 @@ body.user-sidebar-open .dashboard-sidebar-backdrop {
     justify-content: center;
     width: 20px;
     height: 20px;
+    flex: 0 0 20px;
 }
 
 .sidebar-link .icon svg {
@@ -150,14 +151,20 @@ body.user-sidebar-open .dashboard-sidebar-backdrop {
 
 @media (max-width: 640px) {
     .sidebar-nav {
-        flex-direction: row;
-        flex-wrap: wrap;
+        flex-direction: column;
+        flex-wrap: nowrap;
+    }
+
+    .sidebar-group {
+        width: 100%;
+        min-width: 0;
     }
 
     .sidebar-link {
-        flex: 1;
-        min-width: calc(50% - var(--space-xs));
-        justify-content: center;
+        flex: none;
+        min-width: 0;
+        width: 100%;
+        justify-content: flex-start;
         font-size: var(--fs-small);
     }
 }

@@ -722,7 +722,9 @@
                     return;
                 }
 
-                const needsManager = (optVal === 'refund' || optVal === 'rma_refund');
+                const rewardPts = parseInt(document.getElementById('inputResolveRewardPoints')?.value, 10) || 0;
+                const rewardVc = (document.getElementById('inputResolveRewardVoucher')?.value || '').trim();
+                const needsManager = (optVal === 'refund' || optVal === 'rma_refund' || optVal === 'reward_voucher');
                 const newStatus = needsManager ? 'waiting_manager_approval' : 'resolved';
 
                 const allTickets = (PawpalComplaints.state.serviceComplaints || []).concat(PawpalComplaints.state.orderComplaints || []);
@@ -730,9 +732,22 @@
                 const currentStaffName = (typeof PawpalComplaints !== 'undefined' && PawpalComplaints.getCurrentStaffName) ? PawpalComplaints.getCurrentStaffName() : 'Quản trị viên';
                 if (ticket) {
                     ticket.status = newStatus;
+                    const optNames = {
+                        'redo_service': 'Làm lại dịch vụ miễn phí',
+                        'change_staff': 'Đổi kỹ thuật viên chăm sóc',
+                        'reward_voucher': 'Tặng Voucher và Pawpoint bồi hoàn',
+                        'refund': 'Hoàn tiền dịch vụ',
+                        'rma_replace': 'Đổi sản phẩm mới (Tạo mã RMA)',
+                        'rma_exchange': 'Đổi sản phẩm mới (Tạo mã RMA)',
+                        'rma_refund': 'Thu hồi và hoàn tiền',
+                        'explain': 'Giải thích quy trình và chăm sóc khách hàng'
+                    };
                     ticket.resolution = {
                         option: optVal,
+                        typeName: optNames[optVal] || 'Đề xuất giải quyết',
                         note: note,
+                        pawpoints: rewardPts,
+                        voucherCode: rewardVc,
                         resolvedAt: new Date().toISOString()
                     };
                     if (!ticket.timeline) ticket.timeline = [];
@@ -740,8 +755,8 @@
                     ticket.timeline.unshift({
                         time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} - ${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`,
                         author: `${currentStaffName} (CSKH)`,
-                        title: needsManager ? 'Đề xuất giải quyết (Chờ duyệt)' : 'Đã giải quyết khiếu nại',
-                        desc: `Phương án: ${optVal}. Lý do: ${note}`,
+                        title: needsManager ? 'Đề xuất giải quyết (Chờ quản lý duyệt)' : 'Đã giải quyết khiếu nại',
+                        desc: `Phương án: ${ticket.resolution.typeName}${rewardPts ? ` (+${rewardPts} điểm)` : ''}. Lý do: ${note}`,
                         isInternal: true
                     });
                 }
@@ -763,12 +778,14 @@
                 }
 
                 // Lưu vết đề xuất vào nhật ký xử lý support_ticket_message
-                await clientResolve.from('support_ticket_message').insert([{
-                    ticket_id: ticket.rawId,
-                    sender_type: 'cskh',
-                    content: `[Phương án xử lý] ${optVal}: ${note}`,
-                    agent_name: currentStaffName
-                }]).catch(() => null);
+                try {
+                    await clientResolve.from('support_ticket_message').insert([{
+                        ticket_id: ticket.rawId,
+                        sender_type: 'cskh',
+                        content: `[Phương án xử lý] ${optVal}: ${note}`,
+                        agent_name: currentStaffName
+                    }]);
+                } catch (_) {}
 
                 PawpalComplaints.saveComplaintsOverrides?.();
                 PawpalComplaints.updateComplaintsKpis?.();
@@ -1169,46 +1186,95 @@
                 const ticket = allTickets.find(t => t.id === ticketId || t.rawId === ticketId);
                 if (!ticket) return;
 
+                btnApprove.disabled = true;
+                btnApprove.textContent = 'Đang phê duyệt...';
+
                 const client = getDbClient();
                 const approverName = sessionStorage.getItem('pawpal_admin_user_name') || 'Quản lý';
-                if (client && ticket.rawId) {
-                    const { error } = await client.from('support_ticket').update({
-                        status: 'completed',
-                        updated_at: new Date().toISOString()
-                    }).eq('id', ticket.rawId);
-                    if (error) {
-                        PawpalComplaints.showToast('Không thể cập nhật phê duyệt: ' + error.message, 'danger');
-                        return;
+                try {
+                    let pointsGranted = 0;
+                    let newPointsBalance = null;
+                    if (ticket.resolution?.pawpoints && ticket.resolution.pawpoints > 0 && client) {
+                        pointsGranted = ticket.resolution.pawpoints;
+                        let targetCustomerId = ticket.customerId || ticket.user_id || ticket.userId;
+                        if (!targetCustomerId && ticket.rawId) {
+                            const { data: stRow } = await client.from('support_ticket').select('user_id').eq('id', ticket.rawId).maybeSingle();
+                            targetCustomerId = stRow?.user_id;
+                        }
+                        if (targetCustomerId) {
+                            const { data: memRow, error: memFetchErr } = await client.from('customer_membership').select('*').eq('customer_id', targetCustomerId).maybeSingle();
+                            if (memFetchErr) throw memFetchErr;
+                            const curBalance = memRow?.total_paw_points || 0;
+                            newPointsBalance = curBalance + pointsGranted;
+
+                            if (memRow) {
+                                const { error: memUpErr } = await client.from('customer_membership').update({ total_paw_points: newPointsBalance }).eq('customer_id', targetCustomerId);
+                                if (memUpErr) throw memUpErr;
+                            } else {
+                                const { error: memInErr } = await client.from('customer_membership').insert([{ customer_id: targetCustomerId, total_paw_points: newPointsBalance, tier_code: 'SILVER' }]);
+                                if (memInErr) throw memInErr;
+                            }
+
+                            const { error: txErr } = await client.from('paw_point_transaction').insert([{
+                                customer_id: targetCustomerId,
+                                reward_rule_id: '93333333-3333-3333-3333-333333333333',
+                                points: pointsGranted,
+                                balance_after: newPointsBalance,
+                                description: `Bồi hoàn điểm sự cố vé khiếu nại #${ticket.id || ticket.rawId}`,
+                                created_at: new Date().toISOString()
+                            }]);
+                            if (txErr) throw txErr;
+                        }
                     }
 
-                    // K-06: Ghi nhận vết phê duyệt vào tin nhắn nội bộ support_ticket_message
-                    try {
-                        await client.from('support_ticket_message').insert({
-                            ticket_id: ticket.rawId,
-                            sender_type: 'cskh',
-                            agent_name: approverName,
-                            message: `[PHÊ DUYỆT] Quản lý đã phê duyệt phương án bồi hoàn (${ticket.resolution?.typeName || ticket.resolution?.option || 'Bồi hoàn'}). Trạng thái chuyển thành Đã giải quyết.`,
-                            is_internal: true
-                        });
-                    } catch (_) {}
+                    if (client && ticket.rawId) {
+                        const { error: ticketUpErr } = await client.from('support_ticket').update({
+                            status: 'completed',
+                            updated_at: new Date().toISOString()
+                        }).eq('id', ticket.rawId);
+                        if (ticketUpErr) throw ticketUpErr;
+
+                        const approvalMsg = pointsGranted > 0 
+                            ? `[PHÊ DUYỆT BỒI HOÀN] Quản lý ${approverName} đã duyệt bồi hoàn +${pointsGranted} điểm Pawpoint cho khách hàng. Số dư mới: ${newPointsBalance} điểm.`
+                            : `[PHÊ DUYỆT] Quản lý đã phê duyệt phương án bồi hoàn (${ticket.resolution?.typeName || ticket.resolution?.option || 'Bồi hoàn'}). Trạng thái chuyển thành Đã giải quyết.`;
+
+                        try {
+                            await client.from('support_ticket_message').insert([{
+                                ticket_id: ticket.rawId,
+                                sender_type: 'cskh',
+                                agent_name: approverName,
+                                content: approvalMsg
+                            }]);
+                        } catch (_) {}
+                    }
+
+                    ticket.status = 'resolved';
+                    if (!ticket.timeline) ticket.timeline = [];
+                    const now = new Date();
+                    ticket.timeline.unshift({
+                        time: PawpalComplaints.formatDateTime ? PawpalComplaints.formatDateTime(now) : `${now.getHours()}:${now.getMinutes()} - ${now.toLocaleDateString('vi-VN')}`,
+                        author: `${approverName} (Quản lý)`,
+                        title: 'Phê duyệt phương án bồi hoàn',
+                        desc: pointsGranted > 0 
+                            ? `Quản lý đã duyệt cộng +${pointsGranted} điểm Pawpoint. Hồ sơ chuyển sang Đã giải quyết.`
+                            : `Quản lý đã phê duyệt phương án: ${ticket.resolution?.typeName || 'Bồi hoàn'}. Hồ sơ chuyển sang Đã giải quyết.`,
+                        isInternal: true
+                    });
+
+                    PawpalComplaints.saveComplaintsOverrides?.();
+                    PawpalComplaints.updateComplaintsKpis?.();
+                    PawpalComplaints.renderComplaintsAlertBar?.();
+                    renderTicketDetail(ticket.id);
+                    PawpalComplaints.subtabs.services?.renderServiceComplaintsTable?.();
+                    PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable?.();
+                    PawpalComplaints.showToast(pointsGranted > 0 ? `Đã phê duyệt và cộng thành công +${pointsGranted} điểm bồi hoàn cho khách!` : `Đã phê duyệt phương án giải quyết cho khiếu nại ${ticket.id}!`, 'success');
+                } catch (err) {
+                    console.error('[Complaints] Phê duyệt bồi hoàn lỗi:', err);
+                    PawpalComplaints.showToast(`Không thể hoàn tất phê duyệt bồi hoàn: ${err?.message || 'Lỗi CSDL'}`, 'danger');
+                } finally {
+                    btnApprove.disabled = false;
+                    btnApprove.textContent = 'Phê duyệt phương án';
                 }
-                ticket.status = 'resolved';
-                if (!ticket.timeline) ticket.timeline = [];
-                const now = new Date();
-                ticket.timeline.unshift({
-                    time: PawpalComplaints.formatDateTime ? PawpalComplaints.formatDateTime(now) : `${now.getHours()}:${now.getMinutes()} - ${now.toLocaleDateString('vi-VN')}`,
-                    author: `${approverName} (Quản lý)`,
-                    title: 'Phê duyệt phương án bồi hoàn',
-                    desc: `Quản lý đã phê duyệt phương án: ${ticket.resolution?.typeName || 'Bồi hoàn'}. Hồ sơ chuyển sang Đã giải quyết.`,
-                    isInternal: true
-                });
-                PawpalComplaints.saveComplaintsOverrides?.();
-                PawpalComplaints.updateComplaintsKpis?.();
-                PawpalComplaints.renderComplaintsAlertBar?.();
-                renderTicketDetail(ticket.id);
-                PawpalComplaints.subtabs.services?.renderServiceComplaintsTable?.();
-                PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable?.();
-                PawpalComplaints.showToast(`Đã phê duyệt phương án giải quyết cho khiếu nại ${ticket.id}!`, 'success');
             });
         }
 

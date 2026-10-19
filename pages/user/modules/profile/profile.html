@@ -130,11 +130,13 @@
                     <form id="profileUpdateForm" class="profile-update-form" novalidate>
                         <div class="form-group mb-3">
                             <label for="profileNameInput" class="form-label-custom">Họ và tên <span class="required-star">*</span></label>
-                            <input type="text" class="form-control-custom" id="profileNameInput" placeholder="Nhập tên của bạn" required>
+                            <input type="text" class="form-control-custom" id="profileNameInput" placeholder="Nhập tên của bạn" required aria-describedby="profileNameError">
+                            <div id="profileNameError" class="profile-field-error" role="alert" hidden></div>
                         </div>
                         <div class="form-group mb-3">
                             <label for="profileEmailInput" class="form-label-custom">Email</label>
-                            <input type="email" class="form-control-custom" id="profileEmailInput" placeholder="Nhập địa chỉ email">
+                            <input type="email" class="form-control-custom" id="profileEmailInput" placeholder="Nhập địa chỉ email" aria-describedby="profileEmailError">
+                            <div id="profileEmailError" class="profile-field-error" role="alert" hidden></div>
                         </div>
                         <div class="form-group mb-3">
                             <label for="profilePhoneInput" class="form-label-custom">Số điện thoại <span class="required-star">*</span></label>
@@ -155,13 +157,19 @@
                             <div id="newAddressFormCollapse" class="new-address-collapse d-none">
                                 <div class="row g-2">
                                     <div class="col-12">
-                                        <input id="newAddressStreetInput" class="form-control-custom" placeholder="Số nhà, tên đường, phường/xã">
+                                        <label for="newAddressStreetInput" class="form-label-custom">Số nhà và tên đường <span class="required-star">*</span></label>
+                                        <input id="newAddressStreetInput" class="form-control-custom" placeholder="Số nhà và tên đường" aria-describedby="newAddressStreetError">
+                                        <div id="newAddressStreetError" class="profile-field-error" role="alert" hidden></div>
                                     </div>
                                     <div class="col-6">
-                                        <input id="newAddressDistrictInput" class="form-control-custom" placeholder="Quận/Huyện">
+                                        <label for="newAddressDistrictInput" class="form-label-custom">Quận/huyện <span class="required-star">*</span></label>
+                                        <input id="newAddressDistrictInput" class="form-control-custom" placeholder="Quận/huyện" aria-describedby="newAddressDistrictError">
+                                        <div id="newAddressDistrictError" class="profile-field-error" role="alert" hidden></div>
                                     </div>
                                     <div class="col-6">
-                                        <input id="newAddressCityInput" class="form-control-custom" placeholder="Thành phố/Tỉnh">
+                                        <label for="newAddressCityInput" class="form-label-custom">Tỉnh/thành phố <span class="required-star">*</span></label>
+                                        <input id="newAddressCityInput" class="form-control-custom" placeholder="Tỉnh/thành phố" aria-describedby="newAddressCityError">
+                                        <div id="newAddressCityError" class="profile-field-error" role="alert" hidden></div>
                                     </div>
                                     <div class="col-12 d-flex justify-content-end gap-2 mt-2">
                                         <button type="button" class="btn-cancel-address-btn" id="btnCancelAddAddress">Hủy</button>
@@ -170,6 +178,7 @@
                                 </div>
                             </div>
                         </div>
+                        <div id="profileSaveError" class="profile-field-error" role="alert" hidden></div>
                     </form>
                 </div>
                 <div class="modal-footer profile-modal-footer">

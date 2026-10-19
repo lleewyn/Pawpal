@@ -116,17 +116,27 @@
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (client && entry.sku) {
             try {
-                client.from('inventory_log').insert({
-                    sku: entry.sku,
-                    change_type: entry.type || 'ADJUST',
-                    quantity_changed: parseInt(entry.change) || 0,
-                    before_stock: entry.beforeStock,
-                    after_stock: entry.afterStock,
-                    reference_code: entry.refCode || ('ADJ-' + entry.sku),
-                    reason: entry.typeLabel || entry.reason || 'Điều chỉnh tồn kho',
+                const transType = entry.type === 'IMPORT' ? 'IMPORT' : (entry.type === 'EXPORT' ? 'EXPORT' : 'ADJUSTMENT');
+                client.from('inventory_transaction').insert({
+                    transaction_type: transType,
+                    quantity: Math.abs(parseInt(entry.change) || 0),
+                    stock_before: Number(entry.beforeStock) || 0,
+                    stock_after: Number(entry.afterStock) || 0,
+                    note: [entry.sku, entry.typeLabel, entry.reason].filter(Boolean).join(' - '),
+                    staff_id: 'd0000000-5555-5555-5555-555555555555',
                     created_at: new Date().toISOString()
                 }).then(({ error }) => {
-                    if (error) console.warn('[Inventory Log] Chưa thể ghi vào inventory_log Supabase:', error.message);
+                    if (error) console.warn('[Inventory Transaction] Lỗi ghi inventory_transaction:', error.message);
+                });
+
+                client.from('audit_log').insert({
+                    staff_id: 'd0000000-5555-5555-5555-555555555555',
+                    action: 'UPDATE',
+                    entity_name: 'inventory',
+                    description: `Điều chỉnh tồn kho SKU ${entry.sku}: ${entry.beforeStock} -> ${entry.afterStock} (${entry.reason || entry.typeLabel || 'Điều chỉnh kho'})`,
+                    created_at: new Date().toISOString()
+                }).then(({ error }) => {
+                    if (error) console.warn('[Audit Log] Lỗi ghi audit_log inventory:', error.message);
                 });
             } catch (errLog) {}
         }

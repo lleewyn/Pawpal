@@ -10,6 +10,9 @@
     let reviewFilterCategory = 'ALL';
     let reviewFilterStaff = 'ALL';
     let reviewFilterStatus = 'ALL';
+    let reviewFilterServiceId = null;
+    let reviewFilterServiceCode = null;
+    let reviewFilterServiceName = null;
     let reviewCurrentPage = 1;
     const REVIEWS_PAGE_SIZE = 10;
     const esc = (s) => (PawpalServices.escapeHtml ? PawpalServices.escapeHtml(s) : String(s || ''));
@@ -46,6 +49,43 @@
         if (statLow) statLow.textContent = lowStarCount;
     }
 
+    // Hiển thị thanh thông báo khi đang lọc theo gói dịch vụ cụ thể
+    function renderActiveFilterBanner() {
+        let banner = document.getElementById('serviceReviewFilterBanner');
+        if (!reviewFilterServiceId && !reviewFilterServiceCode) {
+            if (banner) banner.remove();
+            return;
+        }
+
+        const subtab = document.getElementById('subtab-tab-service-reviews');
+        const masterCard = subtab?.querySelector('.service-master-card');
+        if (!masterCard) return;
+
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'serviceReviewFilterBanner';
+            banner.style.cssText = 'display: flex; align-items: center; justify-content: space-between; background: #EEF5F1; border-radius: 9px; padding: 10px 16px; margin-bottom: 14px; font-size: 13px; color: #236B48; border: 1px solid #C3DEC7;';
+            masterCard.parentNode.insertBefore(banner, masterCard);
+        }
+
+        const label = reviewFilterServiceName || reviewFilterServiceCode || 'Gói dịch vụ đã chọn';
+        banner.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span>Đang hiển thị đánh giá cho gói: <strong style="font-weight: 700; color: #236B48;">${esc(label)}</strong></span>
+            </div>
+            <button type="button" id="btnClearServiceReviewFilter" style="background: none; border: none; color: #DC2626; font-size: 12.5px; cursor: pointer; font-weight: 600; padding: 2px 6px;">✕ Bỏ lọc gói</button>
+        `;
+
+        document.getElementById('btnClearServiceReviewFilter')?.addEventListener('click', () => {
+            reviewFilterServiceId = null;
+            reviewFilterServiceCode = null;
+            reviewFilterServiceName = null;
+            renderActiveFilterBanner();
+            renderReviewsTable();
+            updateReviewKPIs();
+        });
+    }
+
     // Hiển thị bảng danh sách Đánh giá
     function renderReviewsTable() {
         const tbody = document.getElementById('servicesReviewTableBody') || document.getElementById('servicesReviewsTableBody');
@@ -64,6 +104,14 @@
         });
 
         const filtered = reviewsData.filter(r => {
+            if (reviewFilterServiceId || reviewFilterServiceCode) {
+                const matchId = (r.serviceId && r.serviceId === reviewFilterServiceId) ||
+                                (r.serviceDbId && r.serviceDbId === reviewFilterServiceId);
+                const matchCode = reviewFilterServiceCode && r.serviceCode && r.serviceCode.toUpperCase() === reviewFilterServiceCode.toUpperCase();
+                const matchName = reviewFilterServiceName && r.serviceName && r.serviceName.toLowerCase().includes(reviewFilterServiceName.toLowerCase());
+                if (!matchId && !matchCode && !matchName) return false;
+            }
+
             if (reviewSearchTerm) {
                 const termUnaccent = toUnaccent(reviewSearchTerm);
                 const termRaw = reviewSearchTerm.toLowerCase().trim();
@@ -493,11 +541,16 @@
                     if (!client) throw new Error('Chưa kết nối được CSDL.');
                     if (!review.dbId) throw new Error('Không tìm thấy định danh bản ghi đánh giá.');
 
-                    const { error } = await client.from('review').update({ shop_reply: text }).eq('id', review.dbId);
+                    const { data, error } = await client.from('review').update({ shop_reply: text }).eq('id', review.dbId).select('id, shop_reply').single();
                     if (error) throw error;
+                    if (!data || data.id !== review.dbId) throw new Error('Database chưa xác nhận lưu phản hồi.');
 
-                    review.replyText = text;
+                    review.replyText = data.shop_reply || text;
                     review.status = 'replied';
+
+                    if (window.PawpalDataStore) {
+                        window.PawpalDataStore.invalidate('services:reviews*');
+                    }
 
                     renderReviewsTable();
                     updateReviewKPIs();
@@ -552,6 +605,17 @@
             });
         }
 
+        renderActiveFilterBanner();
+        renderReviewsTable();
+        updateReviewKPIs();
+    }
+
+    function filterByService(serviceId, serviceCode, serviceName) {
+        reviewFilterServiceId = serviceId || null;
+        reviewFilterServiceCode = serviceCode || null;
+        reviewFilterServiceName = serviceName || null;
+        reviewCurrentPage = 1;
+        renderActiveFilterBanner();
         renderReviewsTable();
         updateReviewKPIs();
     }
@@ -561,7 +625,8 @@
         renderReviewsTable,
         updateReviewKPIs,
         openReplyReviewModal,
-        closeReplyReviewModal
+        closeReplyReviewModal,
+        filterByService
     };
 
     if (document.readyState === 'loading') {

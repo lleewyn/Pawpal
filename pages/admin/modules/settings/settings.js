@@ -300,9 +300,18 @@
                 } catch (e) {}
             }
 
+            if (!staffId) {
+                staffId = 'd0000000-5555-5555-5555-555555555555';
+            }
+
+            const validActions = ['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'IMPORT', 'EXPORT', 'READ'];
+            let normalizedAction = String(action || 'OTHER').toUpperCase().trim();
+            if (normalizedAction === 'INSERT') normalizedAction = 'CREATE';
+            if (!validActions.includes(normalizedAction)) normalizedAction = 'OTHER';
+
             const { error } = await client.from('audit_log').insert([{
-                staff_id: staffId || null,
-                action: action,
+                staff_id: staffId,
+                action: normalizedAction,
                 entity_name: entityName,
                 description: description,
                 created_at: new Date().toISOString()

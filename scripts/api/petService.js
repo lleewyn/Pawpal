@@ -164,7 +164,7 @@ function normalizePetList(pets) {
         }
 
         // 2. Kiểm tra trùng theo Tên + Giống loài
-        if (mapByNameSpecies.has(nameKey)) {
+        if (!id && mapByNameSpecies.has(nameKey)) {
             const existing = mapByNameSpecies.get(nameKey);
             // Gộp thông tin pet trùng lặp thành 1 bé duy nhất
             Object.assign(existing, {
@@ -480,7 +480,10 @@ export async function getPets(targetUserId) {
         }
     }
     
-    const allMerged = normalizePetList([...supabasePets, ...localPets]);
+    const serverIds = new Set(supabasePets.flatMap(p => [p.id, p._supabaseId]).filter(Boolean));
+    const allMerged = normalizePetList([...supabasePets, ...localPets.filter(p =>
+        !serverIds.has(p.id) && !serverIds.has(p._supabaseId)
+    )]);
     
     // Làm sạch và khử trùng lặp toàn diện
     const cleanedPets = sanitizeUserPetsStorage(allMerged);
@@ -528,7 +531,7 @@ function sanitizeUserPetsStorage(allPets) {
         if (!pet || !pet.name) continue;
         const lowerName = String(pet.name).trim().toLowerCase();
         const lowerSpecies = String(pet.species || 'other').trim().toLowerCase();
-        const signature = `${lowerName}|${lowerSpecies}`;
+        const signature = pet._supabaseId || pet.id || `${pet.userId || pet.custId || ''}|${lowerName}|${lowerSpecies}`;
 
         if (!seenSignatures.has(signature)) {
             seenSignatures.add(signature);
@@ -545,68 +548,31 @@ function sanitizeUserPetsStorage(allPets) {
 export async function savePets(pets) {
     try {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-        
-        // 1. Cập nhật vào danh sách tổng trong localStorage
-        let existingAll = [];
-        try {
-            existingAll = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-        } catch (e) {}
-        
-        const map = new Map();
-        existingAll.forEach(p => { if (p && p.id) map.set(p.id, p); });
-        pets.forEach(p => { if (p && p.id) map.set(p.id, p); });
-        const updatedAll = Array.from(map.values());
-        
-        // Luôn làm sạch dữ liệu trước khi lưu trữ
-        const cleanedAll = sanitizeUserPetsStorage(updatedAll);
-        localStorage.setItem('pawpal_pets', JSON.stringify(cleanedAll));
-        
-        // 2. Đồng bộ tức thì sang Admin (Admin Pets & Admin Customer 360°)
-        syncToAdminPets(pets, currentUser);
-        
-        // 3. Đẩy lên Supabase nếu có kết nối
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window['SupabaseClient'];
-        if (db && currentUser) {
-            try {
-                const customerId = await getSupabaseCustomerId(db, currentUser);
-                if (customerId) {
-                    for (const pet of pets) {
-                        const row = mapToSupabaseRow(pet, customerId);
-                        if (pet._supabaseId) {
-                            await db.from('pet_profile').update(row).eq('id', pet._supabaseId);
-                        } else {
-                            const { data: existing } = await db
-                                .from('pet_profile')
-                                .select('id')
-                                .eq('customer_id', customerId)
-                                .eq('pet_code', pet.id)
-                                .limit(1);
-
-                            if (existing?.length) {
-                                await db.from('pet_profile').update(row).eq('id', existing[0].id);
-                            } else {
-                                const { data: inserted } = await db
-                                    .from('pet_profile')
-                                    .insert(row)
-                                    .select('id')
-                                    .limit(1);
-                                if (inserted?.[0]) {
-                                    pet._supabaseId = inserted[0].id;
-                                }
-                            }
-                        }
-                    }
-                    console.log('[petService] savePets → Supabase OK');
-                }
-            } catch (err) {
-                console.warn('[petService] Supabase savePets error:', err.message);
-            }
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !currentUser) throw new Error('Vui lòng đăng nhập lại để lưu hồ sơ.');
+        const customerId = await getSupabaseCustomerId(db, currentUser);
+        if (!customerId) throw new Error('Không xác định được chủ nuôi.');
+        for (const pet of pets) {
+            const row = mapToSupabaseRow(pet, customerId);
+            const query = pet._supabaseId
+                ? db.from('pet_profile').update(row).eq('id', pet._supabaseId).eq('customer_id', customerId)
+                : db.from('pet_profile').insert(row);
+            const { data, error } = await query.select('id').single();
+            if (error) throw error;
+            if (!data?.id) throw new Error('Chưa xác nhận được hồ sơ đã lưu.');
+            pet._supabaseId = data.id;
         }
-        
+        // Cache only records confirmed by the database.
+        let existing = [];
+        try { existing = JSON.parse(localStorage.getItem('pawpal_pets') || '[]'); } catch {}
+        const byId = new Map(existing.map(p => [p._supabaseId || p.id, p]));
+        pets.forEach(p => byId.set(p._supabaseId || p.id, p));
+        localStorage.setItem('pawpal_pets', JSON.stringify([...byId.values()]));
+        syncToAdminPets(pets, currentUser);
         return true;
-    } catch (e) {
-        console.error('savePets error:', e);
-        return false;
+    } catch (error) {
+        console.error('[petService] Không thể lưu hồ sơ:', error.message);
+        throw error;
     }
 }
 

@@ -130,6 +130,16 @@
         const ordersList = state.orders || [];
         if (!state.ordersLoaded) return;
 
+        // Tự động nhận diện bộ lọc trạng thái chuyển tiếp từ Dashboard
+        const pendingStatusFromSession = sessionStorage.getItem('pawpal_admin_order_filter_status');
+        if (pendingStatusFromSession) {
+            sessionStorage.removeItem('pawpal_admin_order_filter_status');
+            currentFilterStatus = pendingStatusFromSession;
+            const filterStatusSelect = document.getElementById('orderFilterStatus');
+            if (filterStatusSelect) filterStatusSelect.value = pendingStatusFromSession;
+            ordersCurrentPage = 1;
+        }
+
         // Cập nhật 6 thẻ KPI nhanh
         const statTotalOrdersEl = document.getElementById('statTotalOrders');
         const statPendingOrdersEl = document.getElementById('statPendingOrders');
@@ -1160,11 +1170,18 @@
 
         document.getElementById('formCreateOrder')?.addEventListener('submit', (e) => e.preventDefault());
 
+        let isPosFinalizing = false;
         const handleFinalizePosOrder = async () => {
+            if (isPosFinalizing) return;
             if (posCartItems.length === 0) {
                 showToast('Giỏ hàng đang trống. Vui lòng thêm ít nhất một sản phẩm.', 'warning');
                 return;
             }
+            isPosFinalizing = true;
+            const btnSubmit = document.getElementById('btnSubmitCreateOrder');
+            const btnFinalize = document.getElementById('btnFinalizePosOrder');
+            if (btnSubmit) btnSubmit.disabled = true;
+            if (btnFinalize) btnFinalize.disabled = true;
 
             const name = document.getElementById('createOrderName')?.value.trim() || 'Khách vãng lai';
             const phone = document.getElementById('createOrderPhone')?.value.trim() || '';
@@ -1227,11 +1244,27 @@
 
             try {
                 let targetShippingAddressId = null;
-                if (isDelivery && activePosCustomer && activePosCustomer.id) {
+                if (activePosCustomer && activePosCustomer.id) {
                     const { data: addrs } = await client.from('customer_address').select('id').eq('customer_id', activePosCustomer.id).limit(1);
-                    if (addrs && addrs.length > 0) targetShippingAddressId = addrs[0].id;
+                    if (addrs && addrs.length > 0) {
+                        targetShippingAddressId = addrs[0].id;
+                    } else {
+                        const { data: newAddr } = await client.from('customer_address').insert({
+                            customer_id: activePosCustomer.id,
+                            receiver_name: activePosCustomer.name || name,
+                            receiver_phone: activePosCustomer.phone || phone || '0900000000',
+                            province: 'TP. Hồ Chí Minh',
+                            street_address: isDelivery ? 'Địa chỉ giao hàng' : 'Nhận trực tiếp tại quầy Pawpal',
+                            is_default: true
+                        }).select('id').single();
+                        if (newAddr) targetShippingAddressId = newAddr.id;
+                    }
                 }
-                // O-02: Tuyệt đối không lấy địa chỉ của khách hàng khác trong toàn hệ thống gán vào đơn này
+                if (!targetShippingAddressId) {
+                    const { data: defaultAddr } = await client.from('customer_address').select('id').limit(1);
+                    if (defaultAddr && defaultAddr.length > 0) targetShippingAddressId = defaultAddr[0].id;
+                }
+                // O-02: Địa chỉ thuộc đúng khách hàng nếu khách có tài khoản
 
                 const { data: orderRow, error: orderErr } = await client.from('sales_order').insert({
                     order_code: newCode,
@@ -1245,6 +1278,18 @@
 
                 if (orderErr || !orderRow) {
                     throw (orderErr || new Error('Không thể tạo bản ghi đơn hàng trên cơ sở dữ liệu.'));
+                }
+
+                // Cập nhật số lần sử dụng voucher nếu có áp dụng
+                if (calc.voucherDiscount > 0 && voucherInput) {
+                    try {
+                        const { data: vRow } = await client.from('voucher').select('id, usage_count').ilike('voucher_code', voucherInput.trim()).maybeSingle();
+                        if (vRow) {
+                            await client.from('voucher').update({ usage_count: (vRow.usage_count || 0) + 1 }).eq('id', vRow.id);
+                        }
+                    } catch (vErr) {
+                        console.warn('[POS] Lỗi cập nhật voucher usage:', vErr);
+                    }
                 }
 
                 newOrder.rawId = orderRow.id;
@@ -1309,13 +1354,10 @@
                                 .eq('id', memData.id);
                             await client.from('paw_point_transaction').insert({
                                 customer_id: finalUserId,
-                                point_amount: -calc.pointsUsed,
+                                reward_rule_id: '92222222-2222-2222-2222-222222222222',
                                 points: -calc.pointsUsed,
                                 balance_after: newBalance,
-                                direction: 'SUB',
-                                transaction_type: 'REDEEM',
-                                reason: `Trừ ${calc.pointsUsed} điểm thanh toán đơn hàng POS ${newOrder.id}`,
-                                description: `Trừ điểm đơn hàng POS ${newOrder.id}`
+                                description: `Trừ ${calc.pointsUsed} điểm thanh toán đơn hàng POS ${newOrder.id}`
                             });
                         }
                     } catch (ptErr) {
@@ -1335,6 +1377,12 @@
                 console.error('[POS] Lỗi ghi nhận đơn POS lên Supabase:', e);
                 showToast(`Tạo đơn hàng POS thất bại: ${e?.message || 'Lỗi cơ sở dữ liệu'}`, 'danger');
                 // O-03: Chặn đứng, không tạo đơn hàng ma trên màn hình khi CSDL gặp lỗi!
+            } finally {
+                isPosFinalizing = false;
+                const btnSubmit = document.getElementById('btnSubmitCreateOrder');
+                const btnFinalize = document.getElementById('btnFinalizePosOrder');
+                if (btnSubmit) btnSubmit.disabled = false;
+                if (btnFinalize) btnFinalize.disabled = false;
             }
         };
 
@@ -1364,10 +1412,10 @@
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (client) {
                 try {
+                    const shipNote = `Hãng: ${carrier}; Vận đơn: ${tracking}`;
                     const payload = {
                         order_status: 'SHIPPING',
-                        shipping_carrier: carrier,
-                        tracking_number: tracking
+                        note: order.note ? `${order.note} | ${shipNote}` : shipNote
                     };
                     if (order.rawId) {
                         await client.from('sales_order').update(payload).eq('id', order.rawId);
@@ -1409,7 +1457,7 @@
                 try {
                     const payload = {
                         order_status: 'CANCELLED',
-                        payment_status: (order.paymentStatus === 'refund_pending') ? 'PENDING_REFUND' : 'CANCELLED'
+                        payment_status: (order.paymentStatus === 'refund_pending') ? 'PENDING' : 'CANCELLED'
                     };
                     if (order.rawId) {
                         await client.from('sales_order').update(payload).eq('id', order.rawId);
@@ -1526,10 +1574,10 @@
 
                 if (client) {
                     try {
+                        const shipNote = `Hãng: ${carrier}; Vận đơn: ${tracking}`;
                         const payload = {
                             order_status: 'SHIPPING',
-                            shipping_carrier: carrier,
-                            tracking_number: tracking
+                            note: order.note ? `${order.note} | ${shipNote}` : shipNote
                         };
                         if (order.rawId) {
                             await client.from('sales_order').update(payload).eq('id', order.rawId);

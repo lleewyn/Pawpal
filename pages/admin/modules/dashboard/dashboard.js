@@ -73,6 +73,7 @@
     let livePetsMap = new Map();
     let liveStaffMap = new Map();
     let liveServicesMap = new Map();
+    let _dashLoadError = null;
 
     // Cache TTL 90 giây — không fetch lại nếu dữ liệu còn mới
     let _dashLastFetchedAt = 0;
@@ -113,7 +114,7 @@
                         chatsRes
                     ] = await Promise.all([
                         client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(2000),
-                        client.from('appointment').select('id, appointment_code, customer_id, pet_id, staff_id, service_id, appointment_date, appointment_time, appointment_status, total_price, note').order('appointment_date', { ascending: false }).limit(2000),
+                        client.from('appointment').select('id, appointment_code, customer_id, pet_id, staff_id, service_id, appointment_date, appointment_time, appointment_status, payment_status, total_price, note').order('appointment_date', { ascending: false }).limit(2000),
                         client.from('support_ticket').select('id, user_id, title, status, priority, created_at').order('created_at', { ascending: false }).limit(1000),
                         client.from('product').select('id, product_name, sku, status, inventory(quantity_in_stock, minimum_stock)'),
                         client.from('customer').select('id', { count: 'exact', head: true }),
@@ -198,8 +199,10 @@
                 services.forEach(srv => {
                     liveServicesMap.set(srv.id, srv.service_name);
                 });
+                _dashLoadError = null;
             } catch (err) {
                 console.error('[Dashboard] Lỗi nạp dữ liệu từ Supabase:', err);
+                _dashLoadError = err.message || 'Lỗi kết nối cơ sở dữ liệu';
             } finally {
                 _dashFetchPromise = null;
             }
@@ -232,7 +235,7 @@
         const todayServiceRevenue = liveAppointments
             .filter(a => {
                 const isToday = toDateKey(a.appointment_date) === todayStr;
-                const s = (a.appointment_status || '').toUpperCase();
+                const s = (a.appointment_status || a.status || '').toUpperCase();
                 const p = (a.payment_status || '').toUpperCase();
                 const isCompleted = s === 'COMPLETED' || s === 'DA_HOAN_THANH';
                 const isPaid = p === 'PAID' || p === 'DA_THANH_TOAN';
@@ -262,53 +265,67 @@
         });
 
         // Render DOM 5 thẻ KPI (100% số liệu thực)
+        // E2E-12D: Chốt chặn kiểm tra quyền hạn tài chính
+        const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'ADMIN').toUpperCase();
+        const canViewFinancials = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'ACCOUNTANT';
+
         const elRevenue = document.getElementById('dashboardRevenue');
-        if (elRevenue) elRevenue.textContent = `${labelCurrency(todayCompletedRevenue)} VNĐ`;
+        if (elRevenue) {
+            if (_dashLoadError) {
+                elRevenue.textContent = '— (Lỗi kết nối)';
+            } else {
+                elRevenue.textContent = canViewFinancials ? `${labelCurrency(todayCompletedRevenue)} VNĐ` : '••• (Giới hạn quyền)';
+            }
+        }
 
         const elBookings = document.getElementById('dashboardBookings');
-        if (elBookings) elBookings.textContent = todayBookingsCount;
+        if (elBookings) elBookings.textContent = _dashLoadError ? '—' : todayBookingsCount;
 
         const elOrders = document.getElementById('dashboardOrders');
-        if (elOrders) elOrders.textContent = pendingOrders.length;
+        if (elOrders) elOrders.textContent = _dashLoadError ? '—' : pendingOrders.length;
 
         const elCust = document.getElementById('dashboardCustomers');
-        if (elCust) elCust.textContent = liveCustomersCount;
+        if (elCust) elCust.textContent = _dashLoadError ? '—' : liveCustomersCount;
 
         const elPets = document.getElementById('dashboardPets');
-        if (elPets) elPets.textContent = livePetsCount;
+        if (elPets) elPets.textContent = _dashLoadError ? '—' : livePetsCount;
 
         // Render khối Ưu tiên xử lý
         const totalPriority = pendingTickets.length + pendingOrders.length;
         const elPriorityCount = document.getElementById('dashboardPriorityCount');
         if (elPriorityCount) {
-            elPriorityCount.textContent = `${totalPriority} việc`;
+            elPriorityCount.textContent = _dashLoadError ? '—' : `${totalPriority} việc`;
             elPriorityCount.className = `admin-badge ${totalPriority > 0 ? 'badge-warning' : 'badge-neutral'}`;
         }
 
         const elComplaintsBadge = document.getElementById('dashboardComplaintsBadge');
         if (elComplaintsBadge) {
-            elComplaintsBadge.textContent = pendingTickets.length;
+            elComplaintsBadge.textContent = _dashLoadError ? '—' : pendingTickets.length;
             elComplaintsBadge.className = `admin-badge ${pendingTickets.length > 0 ? 'badge-danger' : 'badge-neutral'}`;
         }
 
         const elComplaintsSub = document.getElementById('dashboardComplaintsSub');
         if (elComplaintsSub) {
-            elComplaintsSub.textContent = pendingTickets.length > 0 
-                ? `${pendingTickets.length} ticket cần nhân viên tiếp nhận`
-                : `Không có khiếu nại tồn đọng`;
+            elComplaintsSub.textContent = _dashLoadError 
+                ? 'Không thể nạp dữ liệu khiếu nại' 
+                : (pendingTickets.length > 0 
+                    ? `${pendingTickets.length} ticket cần nhân viên tiếp nhận`
+                    : `Không có khiếu nại tồn đọng`);
         }
 
         const elOrdersBadge = document.getElementById('dashboardOrdersBadge');
         if (elOrdersBadge) {
-            elOrdersBadge.textContent = pendingOrders.length;
+            elOrdersBadge.textContent = _dashLoadError ? '—' : pendingOrders.length;
             elOrdersBadge.className = `admin-badge ${pendingOrders.length > 0 ? 'badge-warning' : 'badge-neutral'}`;
         }
 
         const elOrdersSub = document.getElementById('dashboardOrdersSub');
         if (elOrdersSub) {
-            elOrdersSub.textContent = pendingOrders.length > 0
-                ? `${pendingOrders.length} đơn hàng mới cần xác nhận`
-                : `Tất cả đơn hàng đã được duyệt`;
+            elOrdersSub.textContent = _dashLoadError
+                ? 'Không thể nạp dữ liệu đơn hàng'
+                : (pendingOrders.length > 0
+                    ? `${pendingOrders.length} đơn hàng mới cần xác nhận`
+                    : `Tất cả đơn hàng đã được duyệt`);
         }
 
         // Dòng cảnh báo khẩn cấp (thuần chữ đỏ, không viền khung)
@@ -316,16 +333,39 @@
         const alertText = document.getElementById('dashboardAlertText');
         const alertBtn = document.getElementById('dashboardAlertAction');
         if (alertBanner && alertText && alertBtn) {
-            if (pendingTickets.length > 0) {
+            if (_dashLoadError) {
                 alertBanner.style.display = 'flex';
-                alertText.textContent = `Cảnh báo vận hành: Có ${pendingTickets.length} khiếu nại khách hàng đang chờ xử lý SLA khẩn cấp!`;
-                alertBtn.onclick = () => {
-                    sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-services');
-                    sessionStorage.setItem('pawpal_admin_complaint_filter_status', 'pending');
-                    const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
-                        .find(b => b.getAttribute('data-title') === 'Khiếu nại');
-                    if (target) target.click();
-                };
+                alertText.textContent = `Cảnh báo hệ thống: ${_dashLoadError}. Đang tạm dừng hiển thị số liệu đồng bộ.`;
+                alertBtn.textContent = 'Thử lại';
+                alertBtn.onclick = () => window.PawpalDashboard?.refresh();
+            } else if (pendingTickets.length > 0) {
+                const urgentTicket = pendingTickets.find(t => (t.priority || '').toLowerCase().includes('khẩn') || (t.priority || '').toLowerCase().includes('urgent')) || pendingTickets[0];
+                alertBanner.style.display = 'flex';
+                alertBtn.textContent = 'Xử lý ngay';
+                if (urgentTicket) {
+                    const ticketCode = (urgentTicket.id || '').slice(0, 8).toUpperCase();
+                    const ticketTitle = urgentTicket.title || 'Khiếu nại khách hàng';
+                    const createdTime = urgentTicket.created_at ? new Date(urgentTicket.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '';
+                    const timeText = createdTime ? ` lúc ${createdTime}` : '';
+                    alertText.textContent = `Cảnh báo vận hành: Ticket #${ticketCode} (${ticketTitle}${timeText}) - Mức độ: ${urgentTicket.priority || 'Khẩn cấp'} cần xử lý gấp! (Tổng ${pendingTickets.length} ticket chờ)`;
+                    alertBtn.onclick = () => {
+                        sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-detail');
+                        sessionStorage.setItem('pawpal_admin_complaint_selected_id', urgentTicket.id);
+                        sessionStorage.setItem('pawpal_admin_complaint_filter_status', 'pending');
+                        const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
+                            .find(b => b.getAttribute('data-title') === 'Khiếu nại');
+                        if (target) target.click();
+                    };
+                } else {
+                    alertText.textContent = `Cảnh báo vận hành: Có ${pendingTickets.length} khiếu nại khách hàng đang chờ xử lý SLA khẩn cấp!`;
+                    alertBtn.onclick = () => {
+                        sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-services');
+                        sessionStorage.setItem('pawpal_admin_complaint_filter_status', 'pending');
+                        const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
+                            .find(b => b.getAttribute('data-title') === 'Khiếu nại');
+                        if (target) target.click();
+                    };
+                }
             } else {
                 alertBanner.style.display = 'none';
             }
@@ -438,6 +478,13 @@
     function renderRevenueChart() {
         const chart = document.getElementById('dashboardRevenueChart');
         if (!chart) return;
+
+        const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'ADMIN').toUpperCase();
+        const canViewFinancials = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'ACCOUNTANT';
+        if (!canViewFinancials) {
+            chart.innerHTML = '<div style="padding: 48px; text-align: center; color: var(--text-muted); font-size: 13.5px;">Biểu đồ doanh thu tài chính chỉ dành riêng cho Quản lý / Kế toán.</div>';
+            return;
+        }
 
         // Tính ngày bắt đầu tuần hiện tại (Thứ 2)
         const now = new Date();

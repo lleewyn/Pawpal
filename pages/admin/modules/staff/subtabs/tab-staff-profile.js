@@ -68,11 +68,23 @@
             viewStaffNightShifts: staff?.nightShifts ? `${staff.nightShifts} ca` : '0 ca',
             viewStaffCompletedServices: staff?.completedServices ? `${staff.completedServices} ca` : 'Chưa có ca',
             viewStaffPunctuality: staff?.punctuality ? `${staff.punctuality}%` : 'Chưa có dữ liệu',
-            viewStaffBaseSalary: staff?.base_salary ? `${Number(staff.base_salary).toLocaleString('vi-VN')} đ` : 'Chưa cấu hình',
-            viewStaffServiceCommission: staff?.commission ? `${Number(staff.commission).toLocaleString('vi-VN')} đ` : 'Chưa có dữ liệu',
+            viewStaffBaseSalary: (() => {
+                const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'ADMIN').toUpperCase();
+                const canView = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'HR' || userRole === 'ACCOUNTANT';
+                return canView ? (staff?.base_salary ? `${Number(staff.base_salary).toLocaleString('vi-VN')} đ` : 'Chưa cấu hình') : '••• (Bảo mật)';
+            })(),
+            viewStaffServiceCommission: (() => {
+                const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'ADMIN').toUpperCase();
+                const canView = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'HR' || userRole === 'ACCOUNTANT';
+                return canView ? (staff?.commission ? `${Number(staff.commission).toLocaleString('vi-VN')} đ` : 'Chưa có dữ liệu') : '••• (Bảo mật)';
+            })(),
             viewStaffRequestedBonus: staff?.requestedBonus ? `+${Number(staff.requestedBonus).toLocaleString('vi-VN')} đ` : '0 đ',
             viewStaffSafetyBonus: staff?.safetyBonus ? `+${Number(staff.safetyBonus).toLocaleString('vi-VN')} đ` : '0 đ',
-            viewStaffTotalIncome: staff?.totalIncome ? `${Number(staff.totalIncome).toLocaleString('vi-VN')} đ` : 'Chưa tổng hợp',
+            viewStaffTotalIncome: (() => {
+                const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'ADMIN').toUpperCase();
+                const canView = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'HR' || userRole === 'ACCOUNTANT';
+                return canView ? (staff?.totalIncome ? `${Number(staff.totalIncome).toLocaleString('vi-VN')} đ` : 'Chưa tổng hợp') : '••• (Bảo mật)';
+            })(),
             viewStaffCsatScore: staff?.rating ? `${staff.rating}/5.0` : 'Chưa có đánh giá',
             viewStaffCsatReviews: staff?.reviewCount ? `Từ ${staff.reviewCount} lượt đánh giá` : 'Chưa có đánh giá',
             viewStaffRequestedCount: staff?.requestedCount ? `${staff.requestedCount} lượt` : '0 lượt',

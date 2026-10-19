@@ -24,8 +24,8 @@
                 try {
                     var u = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
                     if (!u) {
-                        sessionStorage.setItem('pawpal_redirect_after_login', window.location.href);
-                        window.location.replace('/login');
+                        sessionStorage.setItem('pawpal_redirect_after_login', window.location.pathname + window.location.search + window.location.hash);
+                        window.location.replace('/login?reason=session-expired');
                     } else if (u.is_temporary) {
                         window.location.replace('/login?action=guest-activate&phone=' + encodeURIComponent(u.phone || ''));
                     } else if (u.system_role === 'ADMIN' || u.system_role === 'STAFF' || u.system_role === 'MANAGER' || u.role === 'admin' || u.role === 'staff') {

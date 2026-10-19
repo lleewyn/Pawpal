@@ -222,9 +222,7 @@
                             var params = new URLSearchParams(window.location.search);
                             var targetPhone = params.get('phone');
                             if (!targetPhone || targetPhone === u.phone) {
-                                var redirect = params.get('redirect');
-                                var dest = redirect && !redirect.toLowerCase().includes('admin') ? redirect : '/user#profile';
-                                window.location.replace(dest);
+                                // login.js validates and consumes the saved return URL.
                                 return;
                             }
                             var auth = document.querySelector('.main-header .auth-actions');

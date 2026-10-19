@@ -1836,6 +1836,7 @@
 
             if (filtered.length > 0) {
                 return filtered.map(s => ({
+                    code: s.code || s.id || '',
                     name: s.name,
                     duration: s.duration || '60 phút',
                     price: s.prices?.under5 ? `Từ ${s.prices.under5} đ` : 'Liên hệ',
@@ -1853,9 +1854,10 @@
             const q = (query || '').toLowerCase().trim();
 
             const matches = allServices.filter(s => {
-                const name = s.name.toLowerCase();
+                const name = (s.name || '').toLowerCase();
+                const code = (s.code || '').toLowerCase();
                 const desc = (s.desc || '').toLowerCase();
-                return !q || name.includes(q) || desc.includes(q);
+                return !q || name.includes(q) || code.includes(q) || desc.includes(q);
             });
 
             if (matches.length === 0) {

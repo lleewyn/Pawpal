@@ -1,5 +1,6 @@
 /** Customer authentication: credentials and OTP are verified by the server. */
-(function () {
+(async function () {
+    const { consumeLoginTarget } = await import('/scripts/shared/login-redirect.mjs');
     const byId = id => document.getElementById(id);
     const value = id => byId(id)?.value.trim() || '';
     const password = id => byId(id)?.value || '';
@@ -113,7 +114,7 @@
         clearChallenge();
         for (const id of ['registerPassword', 'registerConfirmPassword', 'forgotNewPassword', 'forgotConfirmNewPassword']) if (byId(id)) byId(id).value = '';
         notice('Xác thực và lưu mật khẩu thành công.');
-        window.location.href = '/user#profile';
+        window.location.href = consumeLoginTarget(sessionStorage, location.origin, new URLSearchParams(location.search).get('redirect'));
     }
     function checkLoggedIn() {
         try {
@@ -131,11 +132,7 @@
                     }
                     return true;
                 }
-                const redirect = params.get('redirect');
-                const target = redirect ? new URL(redirect, location.origin) : null;
-                const dest = target && target.origin === location.origin && !target.pathname.toLowerCase().includes('admin')
-                    ? target.href
-                    : '/user#profile';
+                const dest = consumeLoginTarget(sessionStorage, location.origin, params.get('redirect'));
                 show('alreadyLoggedInSection');
                 if (byId('loggedInNameDisplay')) byId('loggedInNameDisplay').textContent = u.name || u.full_name || 'Khách hàng';
                 if (byId('loggedInPhoneDisplay')) byId('loggedInPhoneDisplay').textContent = u.phone || '';
@@ -181,6 +178,13 @@
     }
     function init() {
         route();
+        if (new URLSearchParams(location.search).get('reason') === 'session-expired') {
+            const message = document.createElement('p');
+            message.setAttribute('role', 'alert');
+            message.textContent = 'Phiên đăng nhập không còn hiệu lực. Vui lòng đăng nhập để tiếp tục.';
+            message.style.color = '#8F2424';
+            byId('loginForm')?.prepend(message);
+        }
         const on = (id, event, callback) => byId(id)?.addEventListener(event, callback);
         on('btnLogoutFromLogin', 'click', async () => {
             try {
@@ -220,9 +224,7 @@
                 const result = await auth().request('login', { phone: value('loginPhone'), password: password('loginPassword') });
                 await auth().accept(result);
                 byId('loginPassword').value = '';
-                const redirect = new URLSearchParams(location.search).get('redirect');
-                const target = redirect ? new URL(redirect, location.origin) : null;
-                location.href = target && target.origin === location.origin && !target.pathname.toLowerCase().includes('admin') ? target.href : '/user#profile';
+                location.href = consumeLoginTarget(sessionStorage, location.origin, new URLSearchParams(location.search).get('redirect'));
             });
         });
         const validateRegister = () => {
