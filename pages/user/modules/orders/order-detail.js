@@ -25,8 +25,9 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
                 created_at, updated_at, note,
                 tracking_code, shipping_provider_id, shipped_at,
                 sales_order_detail (
-                    id, quantity, unit_price, discount_amount, subtotal,
-                    product ( id, product_name, image_urls, sku )
+                    id, quantity, unit_price, discount_amount, subtotal, product_variant_id,
+                    product ( id, product_name, image_urls ),
+                    product_variant ( id, sku_variant, sale_price )
                 ),
                 customer_address ( receiver_name, receiver_phone, province, street_address ),
                 payment ( payment_method_id, payment_method_config_id, transaction_status )
@@ -44,7 +45,7 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
         const products = details.map(d => ({
             id:       d.product?.id || '',
             name:     d.product?.product_name || 'Sản phẩm',
-            sku:      d.product?.sku || '',
+            sku:      d.product_variant?.sku_variant || d.product?.sku || '',
             image:    normalizeImageUrl(d.product?.image_urls?.[0]),
             quantity: d.quantity,
             price:    d.unit_price,

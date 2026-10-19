@@ -376,7 +376,8 @@ async function loadUserEntities() {
                     sales_order_detail (
                         quantity,
                         unit_price,
-                        product:product_id ( name, sku )
+                        product:product_id ( id, product_name ),
+                        product_variant:product_variant_id ( id, sku_variant )
                     )
                 `)
                 .eq('customer_id', currentUser.id)
@@ -388,9 +389,9 @@ async function loadUserEntities() {
                     createdAt: o.created_at ? o.created_at.substring(0, 10) : '',
                     status: o.order_status,
                     products: (o.sales_order_detail || []).map(d => ({
-                        id: d.product?.sku || 'P-01',
-                        name: d.product?.name || 'Sản phẩm PawPal',
-                        sku: d.product?.sku || 'SKU',
+                        id: d.product?.id || d.product_variant?.sku_variant || 'P-01',
+                        name: d.product?.product_name || 'Sản phẩm PawPal',
+                        sku: d.product_variant?.sku_variant || 'SKU',
                         quantity: d.quantity || 1,
                         price: d.unit_price || 0
                     }))

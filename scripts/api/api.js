@@ -176,8 +176,9 @@ export const API = {
                     total_amount,
                     created_at, updated_at, note,
                     sales_order_detail (
-                        id, quantity, unit_price, discount_amount, subtotal,
-                        product ( id, product_name, image_urls, sku )
+                        id, quantity, unit_price, discount_amount, subtotal, product_variant_id,
+                        product ( id, product_name, image_urls ),
+                        product_variant ( id, sku_variant, sale_price )
                     ),
                     customer_address ( receiver_name, receiver_phone, province, street_address )
                 `)
@@ -202,7 +203,7 @@ export const API = {
                 const products = details.map(d => ({
                     id:       d.product?.id || '',
                     name:     d.product?.product_name || 'Sản phẩm',
-                    sku:      d.product?.sku || '',
+                    sku:      d.product_variant?.sku_variant || d.product?.sku || '',
                     image:    normalizeImageUrl(d.product?.image_urls?.[0]),
                     quantity: d.quantity,
                     price:    d.unit_price,
@@ -1400,7 +1401,7 @@ export const API = {
         if (!db) return [];
         try {
             const { data, error } = await db.from('inventory')
-                .select('*, product_variant(id, sku, variant_name, price, product(id, product_name, category_id))')
+                .select('*, product_variant(id, sku_variant, sale_price, product(id, product_name, category_id))')
                 .order('last_updated_at', { ascending: false });
 
             if (error) throw error;
@@ -1479,7 +1480,7 @@ export const API = {
         if (!db) return [];
         try {
             let query = db.from('return_request')
-                .select('*, return_request_detail(*, product_variant(id, sku, variant_name, price)), customer(id, phone_main, customer_profile(full_name))')
+                .select('*, return_request_detail(*, product_variant(id, sku_variant, sale_price)), customer(id, phone_main, customer_profile(full_name))')
                 .order('created_at', { ascending: false });
 
             if (customerId) query = query.eq('customer_id', customerId);

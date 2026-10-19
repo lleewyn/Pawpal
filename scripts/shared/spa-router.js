@@ -51,6 +51,12 @@
     ];
 
     function isSharedScript(src) {
+        if (src.includes('data-loader.js') && !window.DataLoader) {
+            return false;
+        }
+        if (src.includes('supabase-client.js') && !window.SupabaseClient) {
+            return false;
+        }
         return SHARED_SCRIPT_PATTERNS.some(p => src.includes(p));
     }
 

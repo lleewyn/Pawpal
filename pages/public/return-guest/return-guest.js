@@ -245,7 +245,7 @@ async function loadSupabaseGuestResults(phone) {
                 note,
                 customer!inner ( phone_main ),
                 customer_address ( receiver_name, receiver_phone, street_address, province ),
-                sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product ( id, product_name, sku, image_urls ) )
+                sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product ( id, product_name, image_urls ), product_variant ( id, sku_variant ) )
             `)
             .eq('customer.phone_main', normPhone)
             .order('created_at', { ascending: false });
@@ -265,7 +265,7 @@ async function loadSupabaseGuestResults(phone) {
                     updated_at,
                     note,
                     customer_address!inner ( receiver_name, receiver_phone, street_address, province ),
-                    sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product ( id, product_name, sku, image_urls ) )
+                    sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product ( id, product_name, image_urls ), product_variant ( id, sku_variant ) )
                 `)
                 .eq('customer_address.receiver_phone', normPhone)
                 .order('created_at', { ascending: false });
@@ -319,7 +319,7 @@ function mapSupabaseOrderRow(row) {
         ? row.sales_order_detail.map((detail) => ({
             id: detail.product?.id || '',
             name: detail.product?.product_name || 'Sản phẩm',
-            sku: detail.product?.sku || '',
+            sku: detail.product_variant?.sku_variant || detail.product?.sku || '',
             image: normalizeImageUrl(detail.product?.image_urls?.[0]),
             quantity: detail.quantity,
             price: detail.unit_price,

@@ -1717,6 +1717,16 @@ function initProcessTimeline() {
 
 
 
+function loadServiceWishlistIds() {
+    try {
+        const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        const key = user && user.phone ? `pawpal_service_wishlist_${user.phone}` : 'pawpal_service_wishlist_guest';
+        return JSON.parse(localStorage.getItem(key) || '[]');
+    } catch {
+        return [];
+    }
+}
+
 async function initServicesGrid() {
     const grid = document.getElementById('svcLandingGrid');
     if (!grid) return;

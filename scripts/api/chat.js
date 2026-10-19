@@ -817,7 +817,8 @@ const adminDbTools = {
                         quantity,
                         unit_price,
                         subtotal,
-                        product:product_id (product_name, sku)
+                        product:product_id (product_name),
+                        product_variant:product_variant_id (sku_variant)
                     )
                 `);
 
@@ -846,7 +847,7 @@ const adminDbTools = {
                 address: `${o.shipping_address?.street_address || ''}, ${o.shipping_address?.province || ''}`,
                 items: (o.sales_order_detail || []).map(it => ({
                     product: it.product?.product_name || 'Sản phẩm',
-                    sku: it.product?.sku || '',
+                    sku: it.product_variant?.sku_variant || it.product?.sku || '',
                     quantity: it.quantity,
                     unit_price: it.unit_price,
                     subtotal: it.subtotal

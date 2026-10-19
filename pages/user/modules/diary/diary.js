@@ -501,7 +501,7 @@ async function syncPetDiaryFromSupabase(pet) {
                 recorded_at,
                 care_action ( action_name ),
                 appointment ( appointment_code, appointment_date, appointment_status, service (service_name) ),
-                care_log_media ( media_url, Staff ( full_name ) )
+                care_log_media ( media_url, staff ( full_name ) )
             `)
             .eq('pet_id', petUuid)
             .order('recorded_at', { ascending: false });
