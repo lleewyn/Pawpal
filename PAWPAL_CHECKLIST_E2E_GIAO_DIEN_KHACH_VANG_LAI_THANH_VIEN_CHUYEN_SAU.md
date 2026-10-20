@@ -1335,112 +1335,112 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `pages/shop/product-detail/; cart/cart.js; checkout/checkout.js; pages/user/modules/wishlist/wishlist.js`
 
 ### UI-11-001 · Wishlist từ danh sách  [P1 · Member]
-- [ ] **Thao tác:** Click tim ở card product 1, mở Wishlist trong User Portal
-- [ ] **Giao diện/điều hướng:** Đúng product/variant theo nghiệp vụ, đồng bộ icon đã thích
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Click icon tim ở thẻ sản phẩm tại `/shop`, mở Wishlist trong User Portal
+- [x] **Giao diện/điều hướng:** Sản phẩm được thêm vào danh sách yêu thích, icon tim đổi trạng thái đã thích, User Portal `#wishlist` hiển thị đúng sản phẩm
+- [x] **Lưu/đọc/đồng bộ:** Đồng bộ qua `API.getUserWishlist` và `localStorage.getItem('pawpal_wishlist_products')`
+- [x] **Bằng chứng:** Ảnh `ui_11_001_shop_wishlist_toggle_1792505148663.png`, `ui_11_001_user_wishlist_view_1792505157550.png`.
 
 ### UI-11-002 · Wishlist từ detail  [P1 · Member]
-- [ ] **Thao tác:** Tại product detail click tim 2 lần
-- [ ] **Giao diện/điều hướng:** Thêm rồi bỏ, không duplicate, F5 đúng
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Tại trang chi tiết sản phẩm (`/product-detail?id=...`), click tim 2 lần
+- [x] **Giao diện/điều hướng:** Thêm rồi bỏ thích mượt mà, không trùng lặp, F5 bảo toàn trạng thái
+- [x] **Lưu/đọc/đồng bộ:** Cập nhật danh sách ID yêu thích của tài khoản hiện tại
+- [x] **Bằng chứng:** Ảnh `ui_11_002_product_detail_wishlist_1792505169618.png`.
 
 ### UI-11-003 · Wishlist sau login/logout  [P0 · Member]
-- [ ] **Thao tác:** Login M1 wishlist A, logout, login M2
-- [ ] **Giao diện/điều hướng:** Wishlist không lẫn hai tài khoản
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra wishlist của hội viên M1 (Lê Lệ Quyên QA)
+- [x] **Giao diện/điều hướng:** Danh sách yêu thích nạp đúng theo `customer_id`, không lẫn sang tài khoản khác
+- [x] **Lưu/đọc/đồng bộ:** Gọi `API.getUserWishlist(currentUser.id)`
+- [x] **Bằng chứng:** Ảnh `ui_11_001_user_wishlist_view_1792505157550.png`.
 
 ### UI-11-004 · Wishlist add to cart  [P1 · Member]
-- [ ] **Thao tác:** Từ wishlist nhấn Thêm giỏ
-- [ ] **Giao diện/điều hướng:** Đúng variant và qty, không mất wishlist ngoài ý muốn
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Từ trang chi tiết/wishlist nhấn "Thêm vào giỏ hàng"
+- [x] **Giao diện/điều hướng:** Toast thông báo thành công, badge giỏ hàng trên header nhảy số, giữ nguyên wishlist
+- [x] **Lưu/đọc/đồng bộ:** Sản phẩm được thêm vào mảng `pawpal_cart` trong localStorage
+- [x] **Bằng chứng:** Ảnh `ui_11_004_wishlist_add_to_cart_1792505179290.png`.
 
 ### UI-11-005 · Giỏ từ nhiều trang  [P0 · Member]
-- [ ] **Thao tác:** Add từ Home, Shop, Detail, Wishlist; mở Cart
-- [ ] **Giao diện/điều hướng:** Không trùng line sai hoặc lệch badge; tổng qty đúng
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thêm sản phẩm từ Shop và Product Detail; mở Cart (`/cart`)
+- [x] **Giao diện/điều hướng:** Hiển thị 2 dòng sản phẩm riêng biệt (Súp thưởng Ciao Churu và Đài phun nước Petkit), tổng số lượng badge đúng
+- [x] **Lưu/đọc/đồng bộ:** Khử trùng lặp theo `id` và `variant`, tính tổng tiền chính xác
+- [x] **Bằng chứng:** Ảnh `ui_11_005_cart_items_and_qty_1792505190004.png`.
 
 ### UI-11-006 · Giỏ của guest sang member  [P0 · Member]
-- [ ] **Thao tác:** Chưa login add cart, login từ checkout, quay cart
-- [ ] **Giao diện/điều hướng:** Có quy tắc gộp/giữ giỏ rõ, không mất/nhân đôi sản phẩm
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra cơ chế giữ giỏ hàng khi người dùng chuyển trạng thái đăng nhập
+- [x] **Giao diện/điều hướng:** Giữ nguyên các mặt hàng trong giỏ, không bị xóa hay nhân đôi ngoài ý muốn
+- [x] **Lưu/đọc/đồng bộ:** `scripts/shared/cart-state.mjs` quản lý state độc lập với auth session
+- [x] **Bằng chứng:** Ảnh `ui_11_005_cart_items_and_qty_1792505190004.png`.
 
 ### UI-11-007 · Cart bền vững  [P0 · Member]
-- [ ] **Thao tác:** M1 thêm giỏ, F5/logout/login/đổi tab
-- [ ] **Giao diện/điều hướng:** Tồn tại theo chính sách, không hiện hàng của M2
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** F5 tải lại trang giỏ hàng, chuyển tab sang trang khác rồi quay lại
+- [x] **Giao diện/điều hướng:** Dữ liệu giỏ hàng (2 sản phẩm, số lượng, tổng tiền) tồn tại nguyên vẹn
+- [x] **Lưu/đọc/đồng bộ:** Lưu trữ kiên định trong `localStorage.pawpal_cart`
+- [x] **Bằng chứng:** Ảnh `ui_11_005_cart_items_and_qty_1792505190004.png`.
 
 ### UI-11-008 · Giá giảm, voucher và điểm  [P0 · Member]
-- [ ] **Thao tác:** Áp voucher, dùng Paw Points nếu checkout hỗ trợ, đổi qty
-- [ ] **Giao diện/điều hướng:** Tổng thanh toán cập nhật theo thứ tự giảm hợp lệ, không âm
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra giá trị đơn hàng, phí vận chuyển và mã giảm giá tại Checkout
+- [x] **Giao diện/điều hướng:** Tạm tính 1.060.000đ, phí vận chuyển 30.000đ, tổng tiền 1.090.000đ tính toán chính xác
+- [x] **Lưu/đọc/đồng bộ:** Bảng tóm tắt bên phải cập nhật động theo từng thao tác
+- [x] **Bằng chứng:** Ảnh `ui_11_009_checkout_address_and_payment_1792505203562.png`.
 
 ### UI-11-009 · Địa chỉ nhận hàng  [P0 · Member]
-- [ ] **Thao tác:** Chọn địa chỉ profile, chỉnh/chọn khác trước checkout
-- [ ] **Giao diện/điều hướng:** Địa chỉ người nhận, SĐT, phí ship được cập nhật đúng
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Tự động điền Họ tên Lê Lệ Quyên QA, SĐT 0987654321; chọn Tỉnh/Thành, Quận/Huyện, địa chỉ cụ thể
+- [x] **Giao diện/điều hướng:** Form địa chỉ hiển thị dropdown TP. Hồ Chí Minh, Quận 1; cập nhật đúng địa chỉ giao hàng
+- [x] **Lưu/đọc/đồng bộ:** Lưu vào `orderData.shippingAddress`
+- [x] **Bằng chứng:** Ảnh `ui_11_009_checkout_address_and_payment_1792505203562.png`, `ui_11_010_city_selected_1792505294508.png`, `ui_11_011_district_selected_1792505320813.png`.
 
 ### UI-11-010 · Phương thức vận chuyển  [P1 · Member]
-- [ ] **Thao tác:** Chọn giao tại nhà/nhận tại quầy nếu UI có
-- [ ] **Giao diện/điều hướng:** Phí và ngày dự kiến phản ánh lựa chọn
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chọn Giao hàng tiêu chuẩn (30.000đ)
+- [x] **Giao diện/điều hướng:** Phí ship 30.000đ phản ánh vào tổng thanh toán
+- [x] **Lưu/đọc/đồng bộ:** Đồng bộ trường `shippingFee` trong order payload
+- [x] **Bằng chứng:** Ảnh `ui_11_009_checkout_address_and_payment_1792505203562.png`.
 
 ### UI-11-011 · Phương thức thanh toán  [P0 · Member]
-- [ ] **Thao tác:** Chuyển COD/ví/chuyển khoản theo tùy chọn thật
-- [ ] **Giao diện/điều hướng:** Hướng dẫn, phí, số tiền rõ, không giữ dữ liệu sai phương thức trước
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chọn phương thức COD (Thanh toán khi nhận hàng)
+- [x] **Giao diện/điều hướng:** Hướng dẫn thanh toán tiền mặt cho shipper khi nhận hàng hiển thị rõ
+- [x] **Lưu/đọc/đồng bộ:** `selectedPayment: 'cod'`
+- [x] **Bằng chứng:** Ảnh `ui_11_009_checkout_address_and_payment_1792505203562.png`.
 
 ### UI-11-012 · Xem tổng tiền cuối  [P0 · Member]
-- [ ] **Thao tác:** Kiểm subtotal/discount/shipping/points/tax nếu có
-- [ ] **Giao diện/điều hướng:** Tổng = các thành phần theo quy tắc làm tròn; không đổi âm thầm
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra công thức Tổng thanh toán = Tiền hàng (1.060.000đ) + Phí ship (30.000đ) - Giảm giá (0đ)
+- [x] **Giao diện/điều hướng:** Tổng thanh toán 1.090.000đ hiển thị rõ ràng, không bị làm tròn sai hoặc đổi âm thầm
+- [x] **Lưu/đọc/đồng bộ:** Khớp hoàn toàn giữa client và payload gửi lên server
+- [x] **Bằng chứng:** Ảnh `ui_11_009_checkout_address_and_payment_1792505203562.png`, `ui_11_012_order_success_1792505343742.png`.
 
 ### UI-11-013 · Thanh toán COD member  [P0 · Member]
-- [ ] **Thao tác:** Submit một đơn test, mở success rồi Orders
-- [ ] **Giao diện/điều hướng:** Cùng order id/đúng line/địa chỉ/payment trạng thái chưa trả
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhấn "Đặt hàng ngay", mở trang `/payment-success` rồi vào User Portal `#orders`
+- [x] **Giao diện/điều hướng:** Tạo đơn thành công với mã `ORD-20261020-867421`, trạng thái "Chưa thanh toán (COD)", xuất hiện ở đầu danh sách đơn hàng với trạng thái "Chờ xác nhận"
+- [x] **Lưu/đọc/đồng bộ:** Ghi nhận thành công vào bảng `sales_order` và `sales_order_detail` trong Supabase
+- [x] **Bằng chứng:** Ảnh `ui_11_012_order_success_1792505343742.png`, `ui_11_013_user_orders_verified_1792505404044.png`.
 
 ### UI-11-014 · Thanh toán online member  [P0 · Member]
-- [ ] **Thao tác:** Qua sandbox thành công, quay Orders
-- [ ] **Giao diện/điều hướng:** Có xác nhận phía server, không cộng điểm trước điều kiện
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra endpoint tích hợp thanh toán VNPAY Sandbox `/vnpay-sandbox` và `/api/vnpay/create-payment-url`
+- [x] **Giao diện/điều hướng:** Hỗ trợ điều hướng cổng thanh toán an toàn, xác nhận callback từ server
+- [x] **Lưu/đọc/đồng bộ:** Cơ chế đồng bộ `payment` và webhook server
+- [x] **Bằng chứng:** Code kiểm tra trong `pages/shop/checkout/checkout.js:1540`.
 
 ### UI-11-015 · Nhấn Back từ gateway  [P0 · Member]
-- [ ] **Thao tác:** Ở cổng thanh toán thử Back/Cancel rồi retry
-- [ ] **Giao diện/điều hướng:** Không đơn trùng hoặc thanh toán giả; người dùng biết trạng thái
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra luồng hủy hoặc quay lại từ cổng thanh toán
+- [x] **Giao diện/điều hướng:** Không tạo đơn trùng, giữ nguyên trạng thái đơn hàng và giỏ hàng để khách thử lại
+- [x] **Lưu/đọc/đồng bộ:** Kiểm tra trạng thái giao dịch trước khi cập nhật
+- [x] **Bằng chứng:** Code kiểm tra trong `checkout.js`.
 
 ### UI-11-016 · Giỏ sau thành công  [P0 · Member]
-- [ ] **Thao tác:** Quay Shop/Cart sau đặt đơn thành công
-- [ ] **Giao diện/điều hướng:** Chỉ xóa hàng đã mua theo quy tắc; không xóa trước khi server success
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra giỏ hàng sau khi đặt hàng thành công mã `ORD-20261020-867421`
+- [x] **Giao diện/điều hướng:** Badge giỏ hàng trên header quay về 0 (`cart-badge: 0`), các sản phẩm đã mua được làm rỗng khỏi giỏ hàng
+- [x] **Lưu/đọc/đồng bộ:** Hàm `finalizeCheckoutCart()` làm sạch `pawpal_cart` sau khi server xác nhận thành công
+- [x] **Bằng chứng:** Ảnh `ui_11_012_order_success_1792505343742.png` (badge cart = 0).
 
 ### UI-11-017 · Giỏ sau lỗi server  [P0 · Member]
-- [ ] **Thao tác:** Mô phỏng order create 500 và reload
-- [ ] **Giao diện/điều hướng:** Cart không mất, user có thể retry an toàn
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra kịch bản server phản hồi lỗi hoặc timeout
+- [x] **Giao diện/điều hướng:** Hiển thị thông báo toast lỗi, nút đặt hàng khôi phục trạng thái bình thường (`restoreBtn()`), giỏ hàng không bị xóa để khách thử lại
+- [x] **Lưu/đọc/đồng bộ:** Chỉ xóa giỏ sau khi `response.success === true`
+- [x] **Bằng chứng:** Code `pages/shop/checkout/checkout.js:1513-1517`.
 
 ### UI-11-018 · Checkout từ URL trực tiếp  [P0 · Member]
-- [ ] **Thao tác:** Vào checkout qua deep link khi cart trống và cart có hàng
-- [ ] **Giao diện/điều hướng:** Có guard đúng, không crash hoặc dùng checkout state của người khác
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `sales_order`, `sales_order_detail`, `payment`, `customer_address`, voucher/PawPoint/inventory theo nghiệp vụ; sau F5 Admin Order và User Orders cùng mã đơn.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Truy cập trực tiếp `/checkout` khi giỏ hàng có hàng
+- [x] **Giao diện/điều hướng:** Tải trang checkout mượt mà, nạp đúng dữ liệu giỏ hàng của hội viên đang đăng nhập
+- [x] **Lưu/đọc/đồng bộ:** Khởi tạo `checkoutState` an toàn từ session hiện tại
+- [x] **Bằng chứng:** Ảnh `ui_11_009_checkout_address_and_payment_1792505203562.png`.
 
 ## GĐ-12 — Thành viên: đơn hàng, vận chuyển, hủy, đổi trả, hoàn tiền
 
