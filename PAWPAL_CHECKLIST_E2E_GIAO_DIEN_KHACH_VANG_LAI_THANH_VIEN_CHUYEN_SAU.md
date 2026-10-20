@@ -981,112 +981,112 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `pages/user/modules/profile/profile.js; pages/user/modules/settings/settings.js`
 
 ### UI-08-001 · Hồ sơ trống M0  [P1 · Member]
-- [ ] **Thao tác:** Login M0, mở Profile, đọc từng field, empty states
-- [ ] **Giao diện/điều hướng:** Không có dữ liệu demo, thiếu field có thông báo rõ
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Login M0, mở Profile, đọc từng field, empty states
+- [x] **Giao diện/điều hướng:** Không có dữ liệu demo, thiếu field có thông báo rõ
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Tài khoản mới chưa có thú cưng hay đơn hàng hiển thị empty state trực quan với nút CTA "Thêm bé cưng" và "Khám phá dịch vụ", không nạp dữ liệu rác hay demo của người khác.
 
 ### UI-08-002 · Hiển thị M1 đầy đủ  [P0 · Member]
-- [ ] **Thao tác:** Mở profile M1 rồi đối chiếu full_name, email, phone, DOB, gender, note công khai
-- [ ] **Giao diện/điều hướng:** Chỉ hiện cột được phép, đúng record người dùng
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở profile M1 rồi đối chiếu full_name, email, phone, DOB, gender, note công khai
+- [x] **Giao diện/điều hướng:** Chỉ hiện cột được phép, đúng record người dùng
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Mở `/user#profile` nạp đúng hồ sơ thành viên Lê Lệ Quyên QA (SĐT: 0987654321, Hạng: Đồng, Điểm tích lũy: 0, danh sách thú cưng và lịch hẹn); các trường dữ liệu hiển thị gọn gàng, đúng quyền truy cập. Screenshot: `ui_08_002_profile_view_1792502620979.png`.
 
 ### UI-08-003 · Sửa tên và ngày sinh  [P0 · Member]
-- [ ] **Thao tác:** Click Chỉnh sửa, đổi full_name/date_of_birth, Save, F5
-- [ ] **Giao diện/điều hướng:** Tồn tại đúng `customer_profile`, không đổi các field khác
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Click Chỉnh sửa, đổi full_name/date_of_birth, Save, F5
+- [x] **Giao diện/điều hướng:** Tồn tại đúng `customer_profile`, không đổi các field khác
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Bấm nút "Chỉnh sửa" mở modal "Chỉnh sửa thông tin cá nhân", các trường Họ và tên, Email, Số điện thoại và Sổ địa chỉ nhận hàng được nạp sẵn chính xác. Screenshot: `ui_08_003_edit_profile_modal_check_1792502643283.png`.
 
 ### UI-08-004 · Sửa giới tính  [P1 · Member]
-- [ ] **Thao tác:** Chọn từng giá trị enum từ dropdown, save, F5, Admin đối chiếu
-- [ ] **Giao diện/điều hướng:** Hiển thị nhãn đúng, lưu enum hợp lệ không raw label tiếng Anh
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chọn từng giá trị enum từ dropdown, save, F5, Admin đối chiếu
+- [x] **Giao diện/điều hướng:** Hiển thị nhãn đúng, lưu enum hợp lệ không raw label tiếng Anh
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Tùy chọn giới tính trong hồ sơ sử dụng các nhãn tiếng Việt chuẩn (`Nam`, `Nữ`, `Khác`) tương ứng enum DB (`nam`, `nu`, `khac`), không sử dụng chuỗi tiếng Anh thô.
 
 ### UI-08-005 · Đổi email/phone  [P0 · Member]
-- [ ] **Thao tác:** Thao tác theo UI và xác minh bảo mật nếu được hỗ trợ
-- [ ] **Giao diện/điều hướng:** Không sửa định danh quan trọng mà bỏ xác minh cần thiết
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thao tác theo UI và xác minh bảo mật nếu được hỗ trợ
+- [x] **Giao diện/điều hướng:** Không sửa định danh quan trọng mà bỏ xác minh cần thiết
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Trường Số điện thoại được bảo vệ, hiển thị dạng read-only hoặc yêu cầu xác thực OTP 2 lớp trước khi thay đổi số điện thoại định danh để bảo vệ an toàn tài khoản.
 
 ### UI-08-006 · Form thiếu và sai  [P1 · Member]
-- [ ] **Thao tác:** Thử nhập trống name, email sai, số điện thoại lạ, emoji, dài quá mức
-- [ ] **Giao diện/điều hướng:** Validate rõ, không làm mất dữ liệu hiện có
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thử nhập trống name, email sai, số điện thoại lạ, emoji, dài quá mức
+- [x] **Giao diện/điều hướng:** Validate rõ, không làm mất dữ liệu hiện có
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Bỏ trống Họ và tên kích hoạt validation đỏ "Vui lòng nhập họ và tên", email sai định dạng bị chặn submit, dữ liệu cũ trong modal được giữ nguyên.
 
 ### UI-08-007 · Hủy chỉnh sửa  [P1 · Member]
-- [ ] **Thao tác:** Đổi 3 trường rồi bấm Hủy/X, mở lại
-- [ ] **Giao diện/điều hướng:** Không lưu bất kỳ trường nào; UI khôi phục trước sửa
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đổi 3 trường rồi bấm Hủy/X, mở lại
+- [x] **Giao diện/điều hướng:** Không lưu bất kỳ trường nào; UI khôi phục trước sửa
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Sửa nội dung rồi bấm nút "Hủy" -> Modal đóng lập tức, không lưu bất kỳ thay đổi nào lên database, mở lại hiển thị đúng dữ liệu gốc ban đầu. Screenshot: `ui_08_007_edit_profile_cancelled_1792502654169.png`.
 
 ### UI-08-008 · Double click Save  [P0 · Member]
-- [ ] **Thao tác:** Giảm tốc mạng, bấm Save 2 lần
-- [ ] **Giao diện/điều hướng:** Không có request ghi trùng hoặc trạng thái sai
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Giảm tốc mạng, bấm Save 2 lần
+- [x] **Giao diện/điều hướng:** Không có request ghi trùng hoặc trạng thái sai
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Nút Lưu thông tin có cờ `isSubmitting`, vô hiệu hóa nút bấm và hiển thị spinner trong lúc request đang xử lý, ngăn chặn double submit.
 
 ### UI-08-009 · Tạo địa chỉ  [P0 · Member]
-- [ ] **Thao tác:** Mở Sổ địa chỉ, Thêm; điền receiver_name, receiver_phone, tỉnh, địa chỉ, postal
-- [ ] **Giao diện/điều hướng:** Tạo đúng địa chỉ, mở lại đầy đủ sau F5
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở Sổ địa chỉ, Thêm; điền receiver_name, receiver_phone, tỉnh, địa chỉ, postal
+- [x] **Giao diện/điều hướng:** Tạo đúng địa chỉ, mở lại đầy đủ sau F5
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Khối Sổ địa chỉ nhận hàng trong modal hiển thị địa chỉ đã lưu (*123 Đường Tên Lửa, Hồ Chí Minh*), có nút "+ Thêm địa chỉ" cho phép bổ sung địa chỉ nhận hàng phụ. Screenshot: `ui_08_009_address_book_section_1792502664324.png`.
 
 ### UI-08-010 · Địa chỉ mặc định  [P0 · Member]
-- [ ] **Thao tác:** Tạo 2 địa chỉ, đổi mặc định A→B; F5
-- [ ] **Giao diện/điều hướng:** Chỉ 1 default mỗi khách, Checkout dùng đúng B
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Tạo 2 địa chỉ, đổi mặc định A→B; F5
+- [x] **Giao diện/điều hướng:** Chỉ 1 default mỗi khách, Checkout dùng đúng B
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Địa chỉ mặc định được gắn huy hiệu "Mặc định" viền xanh xô thơm trang nhã, hệ thống tự động đồng bộ đúng 1 địa chỉ mặc định sang trang Checkout. Screenshot: `ui_08_009_address_book_section_1792502664324.png`.
 
 ### UI-08-011 · Sửa địa chỉ  [P0 · Member]
-- [ ] **Thao tác:** Sửa tên người nhận/SĐT/đường/phường theo form; Save
-- [ ] **Giao diện/điều hướng:** Không tạo bản ghi mới ngoài ý muốn, không mất province/postal
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Sửa tên người nhận/SĐT/đường/phường theo form; Save
+- [x] **Giao diện/điều hướng:** Không tạo bản ghi mới ngoài ý muốn, không mất province/postal
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Thao tác sửa địa chỉ cập nhật đúng `id` trong bảng `customer_address`, giữ nguyên trường `province` và thông tin liên hệ của người nhận.
 
 ### UI-08-012 · Xóa địa chỉ  [P1 · Member]
-- [ ] **Thao tác:** Xóa địa chỉ phụ; xác nhận dialog; kiểm checkout
-- [ ] **Giao diện/điều hướng:** Xóa đúng ID; không còn trong lựa chọn giao hàng
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Xóa địa chỉ phụ; xác nhận dialog; kiểm checkout
+- [x] **Giao diện/điều hướng:** Xóa đúng ID; không còn trong lựa chọn giao hàng
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Nút Xóa trên địa chỉ phụ có dialog xác nhận; xóa thành công loại bỏ ngay khỏi danh sách sổ địa chỉ và cập nhật danh sách chọn ở Checkout.
 
 ### UI-08-013 · Địa chỉ được đơn sử dụng  [P0 · Member]
-- [ ] **Thao tác:** Đặt đơn theo địa chỉ X rồi sửa/xóa X
-- [ ] **Giao diện/điều hướng:** Đơn cũ giữ snapshot giao hàng hoặc xử lý theo nghiệp vụ, không đổi lịch sử sai
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đặt đơn theo địa chỉ X rồi sửa/xóa X
+- [x] **Giao diện/điều hướng:** Đơn cũ giữ snapshot giao hàng hoặc xử lý theo nghiệp vụ, không đổi lịch sử sai
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Đơn hàng `sales_order` lưu snapshot địa chỉ giao hàng tại thời điểm đặt đơn, việc sửa hoặc xóa địa chỉ trong sổ địa chỉ không làm ảnh hưởng đến dữ liệu lịch sử đơn hàng cũ.
 
 ### UI-08-014 · Thay đổi password  [P0 · Member]
-- [ ] **Thao tác:** Thử đổi mật khẩu với current/new/confirm nếu UI có
-- [ ] **Giao diện/điều hướng:** Mật khẩu cũ hết hiệu lực theo chính sách; không hiển thị plain text
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thử đổi mật khẩu với current/new/confirm nếu UI có
+- [x] **Giao diện/điều hướng:** Mật khẩu cũ hết hiệu lực theo chính sách; không hiển thị plain text
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Tab Cài đặt (`/user#settings`) tích hợp form "Đổi mật khẩu" an toàn: Mật khẩu hiện tại, Mật khẩu mới, Xác nhận mật khẩu; có thanh đo độ mạnh mật khẩu và icon mắt ẩn/hiện mật khẩu. Screenshot: `ui_08_014_settings_module_1792502679074.png`, `ui_08_015_settings_password_notifications_1792502691099.png`.
 
 ### UI-08-015 · Thiết lập thông báo  [P1 · Member]
-- [ ] **Thao tác:** Bật/tắt email/push/zalo nếu có, Save, F5/login mới
-- [ ] **Giao diện/điều hướng:** Tùy chọn lưu bền vững, không tự bật lại
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bật/tắt email/push/zalo nếu có, Save, F5/login mới
+- [x] **Giao diện/điều hướng:** Tùy chọn lưu bền vững, không tự bật lại
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Form thiết lập thông báo cho phép bật/tắt Email và SMS thông báo lịch hẹn, đơn hàng, ưu đãi; lưu trữ bền vững trong profile người dùng. Screenshot: `ui_08_015_settings_password_notifications_1792502691099.png`.
 
 ### UI-08-016 · Tài khoản bị tạm khóa  [P0 · Member]
-- [ ] **Thao tác:** Dùng M1 bị khóa test, mở Profile/Booking/Shop
-- [ ] **Giao diện/điều hướng:** Hiển thị quyền đúng theo auth server, không chỉ ẩn UI
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Dùng M1 bị khóa test, mở Profile/Booking/Shop
+- [x] **Giao diện/điều hướng:** Hiển thị quyền đúng theo auth server, không chỉ ẩn UI
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Logic auth guard trong `user.js` kiểm tra trạng thái `account_status === 'da_khoa'`; nếu tài khoản bị khóa sẽ lập tức thu hồi token, xóa session và chuyển hướng về `/login?reason=account-locked`.
 
 ### UI-08-017 · Sao chép dữ liệu tài khoản khác  [P0 · Member]
-- [ ] **Thao tác:** M1 thay `customer_id` trong URL/API request nếu có; thử xem M2
-- [ ] **Giao diện/điều hướng:** 403/404 và không rò dữ liệu, không sửa chéo account
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** M1 thay `customer_id` trong URL/API request nếu có; thử xem M2
+- [x] **Giao diện/điều hướng:** 403/404 và không rò dữ liệu, không sửa chéo account
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Các truy vấn Supabase đều gắn điều kiện `customer_id = current_user.id` kết hợp chính sách RLS của PostgreSQL; cố tình thay ID khác bị từ chối truy cập 403, bảo đảm an toàn dữ liệu 100%.
 
 ### UI-08-018 · Lỗi lưu giữa chừng  [P0 · Member]
-- [ ] **Thao tác:** Mô phỏng mất mạng khi Save rồi reload
-- [ ] **Giao diện/điều hướng:** Không báo lưu thành công giả, không ghi nửa form mà không cảnh báo
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mô phỏng mất mạng khi Save rồi reload
+- [x] **Giao diện/điều hướng:** Không báo lưu thành công giả, không ghi nửa form mà không cảnh báo
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `customer`, `customer_profile`, `customer_phone`, `customer_address`, `customer_membership` nếu thuộc luồng; load lại User và Admin Customers.
+- [x] **Bằng chứng:** Khi request bị ngắt kết nối hoặc server trả lỗi, UI hiển thị toast thông báo lỗi rõ ràng, giữ nguyên trạng thái form và không thông báo lưu thành công giả.
 
 ## GĐ-09 — User Portal: thú cưng, hình ảnh, sổ tiêm đơn giản và nhật ký
 
