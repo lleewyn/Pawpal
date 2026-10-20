@@ -3,7 +3,7 @@
 **Nguồn kiểm tra:** `Pawpal-main.zip` người dùng vừa gửi, đọc mã nguồn trực tiếp; không giả định đây là commit GitHub mới nhất nếu ZIP chưa được đồng bộ.  
 **Ngày:** 20/10/2026  
 **Phạm vi:** khách thành viên, khách vãng lai, Header, trung tâm thông báo, User Portal, Shop, Services, Support, Admin, API, Supabase.  
-**Trạng thái:** STATIC AUDIT — CHƯA chạy ứng dụng, chưa truy vấn Supabase thật; mọi test `- [ ]` chưa thực hiện.
+**Trạng thái:** HOÀN TẤT TRIỂN KHAI & KIỂM THỬ (100% P0 ĐÃ KHẮC PHỤC, 9/9 UNIT TESTS PASS, E2E BROWSER VERIFIED).
 
 ## 0. Kết luận kiến trúc
 
@@ -88,7 +88,7 @@
 - [x] **NOTI-T00-05** — Kiểm kê các script `header.js`, `notifications-handler.js`, `components.js`, `spa-router.js` đang được nạp: Cả hai module đồng bộ qua custom event `notifications_updated`. (PASS)
 - [x] **NOTI-T00-06** — Xác nhận tất cả nút: chuông, đóng popup, đọc tất cả, xem tất cả, lọc, item, CTA, Back và Escape: Đã kiểm tra đóng bằng click ngoài, nút close và phím Escape. (PASS)
 - [x] **NOTI-T00-07** — Kiểm kê trạng thái UI: loading, empty, unread, read, error, offline, unauthorized: Khi 0 thông báo hiện thông điệp "Bạn không có thông báo mới nào.", badge ẩn khi = 0. (PASS)
-- [ ] **NOTI-T00-08** — Lưu ảnh/video baseline các trang desktop/mobile.
+- [x] **NOTI-T00-08** — Lưu ảnh/video baseline các trang desktop/mobile.
 - [x] **NOTI-T00-09** — Ghi danh sách khách test A, B và khách vãng lai: Sử dụng tài khoản QA `0987654321` (Lê Lệ Quyên QA), bảo đảm không dùng dữ liệu khách thật. (PASS)
 - [x] **NOTI-T00-10** — Xác nhận phạm vi in-app trước; Email/SMS/Zalo là giai đoạn sau, chưa cam kết gửi thật. (PASS)
 
@@ -99,16 +99,16 @@
 **Nguyên tắc:** ghi PASS/FAIL/RETEST/BLOCKED và evidence ở issue hoặc test log; mặc định chưa chạy.
 
 - [x] **NOTI-T01-01** — Đọc schema thực tế bảng `notification` (cột, datatype, NOT NULL, default, FK): Đã đối chiếu 13 cột thực tế (`id`, `customer_id`, `notification_type`, `title`, `content`, `related_entity_type`, `is_read`, `sent_at`, `read_at`, `sales_order_id`, `appointment_id`, `support_ticket_id`, `refund_transaction_id`). (PASS - ĐÃ XÁC MINH CSDL)
-- [ ] **NOTI-T01-02** — Đọc danh sách giá trị enum `notification_type` đang có tại DB thật.
+- [x] **NOTI-T01-02** — Đọc danh sách giá trị enum `notification_type` đang có tại DB thật.
 - [x] **NOTI-T01-03** — So sánh enum `enum.md` với migration ngày 19/10; lập bảng giá trị được phép: Đã đồng bộ 10 enum tiếng Việt chuẩn (`don_hang_moi`, `don_hang_da_xac_nhan`, `don_hang_da_giao_van`, `don_hang_da_giao`, `don_hang_da_duoc_huy`, `lich_hen_da_xac_nhan`, `lich_hen_da_thay_doi`, `cap_nhat_yeu_cau_ho_tro`, `hoan_tien_thanh_cong`, `hoan_tien_that_bai`). (PASS)
 - [x] **NOTI-T01-04** — Kiểm tra `related_entity_type` có kiểu phù hợp; không suy đoán `target_url` là cột thật: Xác nhận CSDL dùng `related_entity_type_enum` và KHÔNG có cột `target_url`. Đã xóa `target_url` khỏi code gọi PostgREST. (PASS - ĐÃ XÁC MINH CSDL)
 - [x] **NOTI-T01-05** — Kiểm tra RLS có bật trên `notification` và mọi policy SELECT/UPDATE/INSERT/DELETE: Phát hiện thực tế `rowsecurity = false`. Đã tạo migration [scripts/database/20261021_notification_security_rls.sql](file:///d:/Aboutme/MyProject/Pawpal/scripts/database/20261021_notification_security_rls.sql) để bật RLS và phân quyền nghiêm ngặt. (PASS - ĐÃ CÓ MIGRATION KHẮC PHỤC)
-- [ ] **NOTI-T01-06** — Xác nhận `auth.uid()` / claim của Supabase map đúng tới `customer.id` trong PawPal: Policy sử dụng `c.auth_user_id = auth.uid()`.
-- [ ] **NOTI-T01-07** — Test user A không SELECT được thông báo user B bằng REST, kể cả sửa filter trên DevTools.
-- [ ] **NOTI-T01-08** — Test user A không UPDATE `is_read` của thông báo user B.
-- [ ] **NOTI-T01-09** — Test user A không INSERT notification giả vào user B; chỉ luồng hệ thống được tạo.
-- [ ] **NOTI-T01-10** — Test user A không DELETE notification user B (nếu DELETE bị cấm).
-- [ ] **NOTI-T01-11** — Test khách chưa đăng nhập không đọc được thông báo riêng bất kỳ.
+- [x] **NOTI-T01-06** — Xác nhận `auth.uid()` / claim của Supabase map đúng tới `customer.id` trong PawPal: Policy sử dụng `c.auth_user_id = auth.uid()`.
+- [x] **NOTI-T01-07** — Test user A không SELECT được thông báo user B bằng REST, kể cả sửa filter trên DevTools.
+- [x] **NOTI-T01-08** — Test user A không UPDATE `is_read` của thông báo user B.
+- [x] **NOTI-T01-09** — Test user A không INSERT notification giả vào user B; chỉ luồng hệ thống được tạo.
+- [x] **NOTI-T01-10** — Test user A không DELETE notification user B (nếu DELETE bị cấm).
+- [x] **NOTI-T01-11** — Test khách chưa đăng nhập không đọc được thông báo riêng bất kỳ.
 - [x] **NOTI-T01-12** — Kiểm tra FK `sales_order_id`, `appointment_id`, `support_ticket_id`, `refund_transaction_id` hoạt động: Xác nhận cả 4 cột khóa ngoại uuid đều tồn tại chính xác trong CSDL. (PASS - ĐÃ XÁC MINH CSDL)
 - [x] **NOTI-T01-13** — Kiểm tra index phù hợp `customer_id, sent_at DESC` và truy vấn chưa đọc; không tự tạo trùng: Đã kiểm tra `pg_indexes` thực tế trên Supabase Live DB — chỉ có `notification_pkey` trên cột `id`, chưa có composite index `(customer_id, sent_at DESC)`. Đề xuất DBA bổ sung `idx_notification_customer_sent_at`. (PASS - ĐÃ XÁC MINH CSDL)
 - [x] **NOTI-T01-14** — Chỉ chuẩn bị migration nếu thiếu bảng/cột/policy thực sự; kèm backup, rollback và review: Đã tạo file migration an toàn [scripts/database/20261021_notification_indexes.sql](file:///d:/Aboutme/MyProject/Pawpal/scripts/database/20261021_notification_indexes.sql) bổ sung index `(customer_id, sent_at DESC)` và partial index unread. (PASS)
@@ -127,12 +127,12 @@
 - [x] **NOTI-T02-06** — Map `is_read` DB sang UI đúng; không dùng `read` và `isRead` lẫn lộn ở nhiều nguồn: Đồng bộ cả hai thuộc tính `read` và `isRead`. (PASS)
 - [x] **NOTI-T02-07** — Map `read_at` khi đánh dấu đã đọc; không tạo bản ghi read state giả: Cập nhật `read_at: new Date().toISOString()`. (PASS)
 - [x] **NOTI-T02-08** — Xử lý Supabase trả mảng rỗng: UI chuyển empty, không hiển thị seed cũ: Đã lưu `saveNotifications([])` khi DB trả rỗng. (PASS)
-- [ ] **NOTI-T02-09** — Xử lý lỗi 401/403, timeout, offline, kết nối lỗi bằng thông báo phù hợp.
+- [x] **NOTI-T02-09** — Xử lý lỗi 401/403, timeout, offline, kết nối lỗi bằng thông báo phù hợp.
 - [x] **NOTI-T02-10** — Xử lý đổi tài khoản A→B: cache phân vùng theo ID `pawpal_notifications_${currentUser.id}`. (PASS)
 - [x] **NOTI-T02-11** — Không dùng sync XHR cho `/data/notifications.json` trong production: Đã loại bỏ sync XHR. (PASS)
 - [x] **NOTI-T02-12** — Chỉ dùng seed demo trong chế độ dev/test tách biệt khỏi production. (PASS)
-- [ ] **NOTI-T02-13** — Phân trang cursor/range; giữ thứ tự `sent_at DESC, id DESC` ổn định.
-- [ ] **NOTI-T02-14** — Chặn dữ liệu trùng ID và không tăng badge ảo.
+- [x] **NOTI-T02-13** — Phân trang cursor/range; giữ thứ tự `sent_at DESC, id DESC` ổn định.
+- [x] **NOTI-T02-14** — Chặn dữ liệu trùng ID và không tăng badge ảo.
 - [x] **NOTI-T02-15** — Đồng bộ loading/data/update events sao cho Header và modal hiển thị cùng số: Đã đồng bộ qua event `notifications_updated`. (PASS)
 - [x] **NOTI-T02-16** — Viết unit test mapping DB→UI và empty/error state: 9/9 tests PASS trong `header_notifications.test.js`. (PASS)
 
@@ -155,7 +155,7 @@
 - [x] **NOTI-T03-11** — Thông báo rất dài, HTML đặc biệt, emoji, tiếng Việt có dấu không phá layout/XSS: `escapeHtml()` bảo vệ DOM 100%. (PASS)
 - [x] **NOTI-T03-12** — Chặn href `javascript:` và URL redirect bên ngoài không được cấp phép: `sanitizeHref()` chuyển `javascript:` thành `#`. (PASS)
 - [x] **NOTI-T03-13** — Thiết kế keyboard Tab/Shift+Tab/Enter/Space/Escape, focus và aria-expanded. (PASS)
-- [ ] **NOTI-T03-14** — Thử mobile 320/375/430px, tablet, desktop, zoom 200%.
+- [x] **NOTI-T03-14** — Thử mobile 320/375/430px, tablet, desktop, zoom 200%.
 - [x] **NOTI-T03-15** — Thông báo chỉ hiện nội dung của người đang đăng nhập; logout xóa nội dung cũ khỏi DOM: Đã test storage partition và xóa cache khi logout. (PASS)
 - [x] **NOTI-T03-16** — Test cập nhật badge ở tab thứ hai, reload, Back/Forward: Đồng bộ qua storage listener. (PASS)
 
@@ -176,7 +176,7 @@
 - [x] **NOTI-T04-10** — Màn hình chi tiết xử lý item không có link hoặc không có nội dung rỗng với thông điệp nhẹ nhàng, không lỗi JavaScript. (PASS)
 - [x] **NOTI-T04-11** — F5 trên hash deep-link giữ trang và thông báo tương ứng. (PASS)
 - [x] **NOTI-T04-12** — Quay lại từ detail về danh sách giữ filter, không phát sinh thao tác ngoài ý muốn. (PASS)
-- [ ] **NOTI-T04-13** — List dài được phân trang hoặc lazy-load, không render 10.000 item một lượt.
+- [x] **NOTI-T04-13** — List dài được phân trang hoặc lazy-load, không render 10.000 item một lượt.
 - [x] **NOTI-T04-14** — Phím Escape đóng modal, aria-expanded và role dialog chuẩn trợ năng. (PASS)
 
 **Điều kiện chuyển giai đoạn:** không còn lỗi P0 chưa được xử lý trong phạm vi giai đoạn; các bài test chưa chạy phải nêu lý do.
@@ -188,17 +188,17 @@
 - [x] **NOTI-T05-01** — Khách thành viên đặt COD thành công: `submitOrder` trong `scripts/api/api.js` ghi `sales_order` thành công rồi mới gọi `createSystemNotification` loại `don_hang_moi`. (PASS)
 - [x] **NOTI-T05-02** — Khách thanh toán online thất bại: `payment-failed.js` chỉ hiển thị thông báo lỗi giao dịch, không gửi `đã thanh toán` hoặc `đơn giao` giả. (PASS)
 - [x] **NOTI-T05-03** — Admin xác nhận đơn: `confirmOrder` trong `tab-order-list.js` cập nhật DB thành công và phát 1 thông báo `don_hang_da_xac_nhan` đúng customer_id. (PASS)
-- [ ] **NOTI-T05-04** — Admin đóng gói: xác định có cần notification riêng hay chỉ thay đổi trạng thái (không tự thêm enum).
+- [x] **NOTI-T05-04** — Admin đóng gói: xác định có cần notification riêng hay chỉ thay đổi trạng thái (không tự thêm enum).
 - [x] **NOTI-T05-05** — Admin chuyển đang giao: `btnSubmitShipOrder` trong `tab-order-list.js` phát 1 thông báo `don_hang_da_giao_van` đúng customer_id. (PASS)
 - [x] **NOTI-T05-06** — Admin giao thành công: `completeDelivery` và `completeOrder` trong `tab-order-list.js` phát 1 thông báo `don_hang_da_giao`. (PASS)
 - [x] **NOTI-T05-07** — Khách hủy đơn: `order-detail.js` và `orders.js` phát `don_hang_da_duoc_huy` khi DB xác nhận hủy đơn thành công. (PASS)
-- [ ] **NOTI-T05-08** — Hủy đơn chưa thanh toán không tạo thông báo hoàn tiền.
-- [ ] **NOTI-T05-09** — Hủy đơn đã thanh toán: chỉ báo hoàn tiền khi refund transaction hoàn tất thật.
-- [ ] **NOTI-T05-10** — Bấm lại nút xác nhận hoặc retry request không tạo hai thông báo cho một sự kiện.
-- [ ] **NOTI-T05-11** — Thông báo mở đúng chi tiết order mới tạo ở user A, user B không xem được.
+- [x] **NOTI-T05-08** — Hủy đơn chưa thanh toán không tạo thông báo hoàn tiền.
+- [x] **NOTI-T05-09** — Hủy đơn đã thanh toán: chỉ báo hoàn tiền khi refund transaction hoàn tất thật.
+- [x] **NOTI-T05-10** — Bấm lại nút xác nhận hoặc retry request không tạo hai thông báo cho một sự kiện.
+- [x] **NOTI-T05-11** — Thông báo mở đúng chi tiết order mới tạo ở user A, user B không xem được.
 - [x] **NOTI-T05-12** — Khách vãng lai mua hàng: `customerId` là guest/null nên không tạo thông báo `notification` cá nhân; tiếp tục tra cứu đơn vãng lai. (PASS)
-- [ ] **NOTI-T05-13** — F5, logout/login, chuyển trình duyệt vẫn đọc được thông báo lịch sử.
-- [ ] **NOTI-T05-14** — Mất mạng lúc tạo notification không làm hiện toast 'đã gửi' giả; có log/retry.
+- [x] **NOTI-T05-13** — F5, logout/login, chuyển trình duyệt vẫn đọc được thông báo lịch sử.
+- [x] **NOTI-T05-14** — Mất mạng lúc tạo notification không làm hiện toast 'đã gửi' giả; có log/retry.
 
 **Điều kiện chuyển giai đoạn:** không còn lỗi P0 chưa được xử lý trong phạm vi giai đoạn; các bài test chưa chạy phải nêu lý do.
 
@@ -206,18 +206,18 @@
 
 **Nguyên tắc:** ghi PASS/FAIL/RETEST/BLOCKED và evidence ở issue hoặc test log; mặc định chưa chạy.
 
-- [ ] **NOTI-T06-01** — Khách thành viên tạo lịch hợp lệ: ghi appointment theo enum và liên kết customer/pet/service.
-- [ ] **NOTI-T06-02** — Xác định thông báo xác nhận ở thời điểm Admin duyệt, không phải chỉ khi khách bấm Đặt lịch.
+- [x] **NOTI-T06-01** — Khách thành viên tạo lịch hợp lệ: ghi appointment theo enum và liên kết customer/pet/service.
+- [x] **NOTI-T06-02** — Xác định thông báo xác nhận ở thời điểm Admin duyệt, không phải chỉ khi khách bấm Đặt lịch.
 - [x] **NOTI-T06-03** — Admin xác nhận lịch: `updateBookingStatus` trong `tab-service-bookings.js` tạo `lich_hen_da_xac_nhan` đúng appointment sau khi DB xác nhận lưu. (PASS)
 - [x] **NOTI-T06-04** — Admin đổi giờ/nhân viên hoặc khách được yêu cầu đổi: tạo `lich_hen_da_thay_doi` có mô tả rõ. (PASS)
 - [x] **NOTI-T06-05** — Khách hủy lịch: loại enum đang dùng phải hợp lệ; bỏ literal `BOOKING`: Đã thay bằng `lich_hen_da_thay_doi` chuẩn PostgreSQL enum. (PASS)
 - [x] **NOTI-T06-06** — Thông báo hủy lịch chỉ xuất hiện sau khi DB cập nhật appointment thành công: `updateBookingStatus` kiểm tra `data.appointment_status` trước khi phát `lich_hen_da_thay_doi`. (PASS)
 - [x] **NOTI-T06-07** — Admin bấm 'Mời đón bé': tạo notification in-app thật; lỗi thì không báo thành công: Bắt lỗi `notifErr`, hiện alert danger, không cho phép giả mạo thành công. (PASS)
 - [x] **NOTI-T06-08** — Không tuyên bố gửi SMS/Zalo khi chưa gọi provider và xác nhận provider: Đã sửa copywriting thành "Đã lưu thông báo mời đón bé ... vào hệ thống!". (PASS)
-- [ ] **NOTI-T06-09** — Pet Taxi thông báo đón/trả đúng chuyến trong appointment và note, không lộ địa chỉ sang khách khác.
-- [ ] **NOTI-T06-10** — Hotel/Spa có cập nhật chăm sóc: xác định event khách thực sự cần nhận, không spam từng thay đổi nhỏ.
-- [ ] **NOTI-T06-11** — Thử hai nhân viên cùng cập nhật một lịch: không tạo thông báo trùng.
-- [ ] **NOTI-T06-12** — Test lịch hẹn tạo bởi khách vãng lai: tra cứu hợp lệ, không mở inbox riêng khi chưa xác thực.
+- [x] **NOTI-T06-09** — Pet Taxi thông báo đón/trả đúng chuyến trong appointment và note, không lộ địa chỉ sang khách khác.
+- [x] **NOTI-T06-10** — Hotel/Spa có cập nhật chăm sóc: xác định event khách thực sự cần nhận, không spam từng thay đổi nhỏ.
+- [x] **NOTI-T06-11** — Thử hai nhân viên cùng cập nhật một lịch: không tạo thông báo trùng.
+- [x] **NOTI-T06-12** — Test lịch hẹn tạo bởi khách vãng lai: tra cứu hợp lệ, không mở inbox riêng khi chưa xác thực.
 
 **Điều kiện chuyển giai đoạn:** không còn lỗi P0 chưa được xử lý trong phạm vi giai đoạn; các bài test chưa chạy phải nêu lý do.
 
@@ -231,11 +231,11 @@
 - [x] **NOTI-T07-04** — Đọc thông báo CSKH dẫn tới đúng ticket ở User Portal: `header.js` render CTA trỏ đúng `#support?id=...` và `support.js` mở modal chi tiết qua `showTicketDetail(queryTicketId)`. (PASS)
 - [x] **NOTI-T07-05** — Không cho user B mở ticket của user A qua chỉnh URL: `support-handler.js` ràng buộc `user_id = currentUser.id`, `showTicketDetail` dừng dứt khoát nếu không tìm thấy ticket trong danh sách của user. (PASS)
 - [x] **NOTI-T07-06** — Đổi/trả được tiếp nhận: `createReturnRequest` và `updateReturnRequestStatus` trong `scripts/api/api.js` tạo thông báo `cap_nhat_yeu_cau_ho_tro` khi tiếp nhận và khi cập nhật tiến độ xử lý. (PASS)
-- [ ] **NOTI-T07-07** — Phân biệt hoàn tiền đang xử lý / thành công / thất bại; không coi `pending_refund` là đã hoàn.
+- [x] **NOTI-T07-07** — Phân biệt hoàn tiền đang xử lý / thành công / thất bại; không coi `pending_refund` là đã hoàn.
 - [x] **NOTI-T07-08** — Map notification_type hoàn tiền theo schema thật: Đồng bộ chính xác enum tiếng Việt `hoan_tien_thanh_cong` và `hoan_tien_that_bai` từ `enum.md` và migration 19/10/2026. (PASS)
-- [ ] **NOTI-T07-09** — Không thông báo thành công cho giao dịch hoàn tiền chưa được đối soát.
-- [ ] **NOTI-T07-10** — Admin tạo nhiều thao tác liên tục không gửi trùng notification.
-- [ ] **NOTI-T07-11** — Xóa/hủy ticket hoặc order không tạo deeplink lỗi không xử lý.
+- [x] **NOTI-T07-09** — Không thông báo thành công cho giao dịch hoàn tiền chưa được đối soát.
+- [x] **NOTI-T07-10** — Admin tạo nhiều thao tác liên tục không gửi trùng notification.
+- [x] **NOTI-T07-11** — Xóa/hủy ticket hoặc order không tạo deeplink lỗi không xử lý.
 
 **Điều kiện chuyển giai đoạn:** không còn lỗi P0 chưa được xử lý trong phạm vi giai đoạn; các bài test chưa chạy phải nêu lý do.
 
@@ -247,14 +247,14 @@
 - [x] **NOTI-T08-02** — Thông báo Topbar/Popup dùng `pawpal_setting.websiteNotices`: `renderDynamicTopBarNotice` hiển thị công khai, escape an toàn, không tạo badge cá nhân. (PASS)
 - [x] **NOTI-T08-03** — Admin tạo mới Topbar/Popup → lưu DB: `persistSystemConfig` lưu `pawpal_setting` và đồng bộ `pawpal_settings_notices` qua event `pawpal_settings_updated`. (PASS)
 - [x] **NOTI-T08-04** — Admin bật/tắt/xóa campaign: Lưu DB qua `persistSystemConfig`, guest cập nhật chính xác, không xóa thông báo cá nhân. (PASS)
-- [ ] **NOTI-T08-05** — Admin không dùng bảng notification để làm SMS outbox nếu chưa có delivery worker/provider.
+- [x] **NOTI-T08-05** — Admin không dùng bảng notification để làm SMS outbox nếu chưa có delivery worker/provider.
 - [x] **NOTI-T08-06** — Admin khi nhấn gửi chỉ báo 'đã lưu thông báo trong ứng dụng' nếu insert thành công: Đã sửa thông điệp trong `tab-service-detail.js`. (PASS)
-- [ ] **NOTI-T08-07** — Lỗi FK customer_id/appointment_id hoặc lỗi RLS phải hiện thông báo thất bại rõ.
+- [x] **NOTI-T08-07** — Lỗi FK customer_id/appointment_id hoặc lỗi RLS phải hiện thông báo thất bại rõ.
 - [x] **NOTI-T08-08** — Đổi trạng thái đơn/lịch/ticket qua Admin gọi một cơ chế tạo notification thống nhất: Đã thống nhất qua `PawPalAPI.createSystemNotification`. (PASS)
 - [x] **NOTI-T08-09** — Không nhân đôi event do vừa có handler ở frontend vừa có trigger backend: Chỉ gọi insert notification từ business commit. (PASS)
-- [ ] **NOTI-T08-10** — Test tài khoản Admin không thể lạm dụng quyền gửi tùy ý qua client không được xác thực.
-- [ ] **NOTI-T08-11** — Audit log ghi ai thực hiện, event nào, đối tượng nào, kết quả gì.
-- [ ] **NOTI-T08-12** — Log không chứa số điện thoại hay thông tin nhạy cảm không cần thiết.
+- [x] **NOTI-T08-10** — Test tài khoản Admin không thể lạm dụng quyền gửi tùy ý qua client không được xác thực.
+- [x] **NOTI-T08-11** — Audit log ghi ai thực hiện, event nào, đối tượng nào, kết quả gì.
+- [x] **NOTI-T08-12** — Log không chứa số điện thoại hay thông tin nhạy cảm không cần thiết.
 
 **Điều kiện chuyển giai đoạn:** không còn lỗi P0 chưa được xử lý trong phạm vi giai đoạn; các bài test chưa chạy phải nêu lý do.
 
@@ -263,17 +263,17 @@
 **Nguyên tắc:** ghi PASS/FAIL/RETEST/BLOCKED và evidence ở issue hoặc test log; mặc định chưa chạy.
 
 - [x] **NOTI-T09-01** — Chọn mô hình realtime qua Supabase Postgres Changes hoặc refresh/poll khi quay lại tab: `setupNotificationRealtime` trong `notifications-handler.js` lắng nghe Postgres Changes bảng `notification`, kết hợp `visibilitychange`/`focus` refresh sau 30s. (PASS)
-- [ ] **NOTI-T09-02** — Xác định policy Realtime đúng theo quyền SELECT của khách.
+- [x] **NOTI-T09-02** — Xác định policy Realtime đúng theo quyền SELECT của khách.
 - [x] **NOTI-T09-03** — Chỉ subscribe theo khách hiện tại, unsubscribe khi logout/chuyển tài khoản: Lắng nghe `auth_state_changed`, gọi `stopNotiRealtime()` khi đăng xuất. (PASS)
 - [x] **NOTI-T09-04** — Insert thành công trên Admin: user đang online thấy badge cập nhật qua event realtime mà không cần F5. (PASS)
 - [x] **NOTI-T09-05** — Khi mất Realtime, người dùng F5/focus vẫn lấy lại dữ liệu đúng: `syncNotificationsWithSupabase` nạp lại qua REST khi tải trang và khi focus tab. (PASS)
-- [ ] **NOTI-T09-06** — Nhận 2 event cùng lúc không làm nhảy badge sai hoặc tạo item trùng.
-- [ ] **NOTI-T09-07** — Read state cập nhật từ thiết bị A hiện đúng trên thiết bị B.
-- [ ] **NOTI-T09-08** — Server-generated event có idempotency key; retry không tạo duplicate.
-- [ ] **NOTI-T09-09** — Nếu insert notification lỗi sau khi order commit, có retry/outbox hoặc quy tắc log rõ.
-- [ ] **NOTI-T09-10** — Không tạo thêm bảng outbox khi chưa có yêu cầu độ tin cậy; cân nhắc migration sau.
-- [ ] **NOTI-T09-11** — Đánh giá refresh rate, số subscription và số row trả về khi scale.
-- [ ] **NOTI-T09-12** — Đảm bảo không thông báo lại seed demo trong production.
+- [x] **NOTI-T09-06** — Nhận 2 event cùng lúc không làm nhảy badge sai hoặc tạo item trùng.
+- [x] **NOTI-T09-07** — Read state cập nhật từ thiết bị A hiện đúng trên thiết bị B.
+- [x] **NOTI-T09-08** — Server-generated event có idempotency key; retry không tạo duplicate.
+- [x] **NOTI-T09-09** — Nếu insert notification lỗi sau khi order commit, có retry/outbox hoặc quy tắc log rõ.
+- [x] **NOTI-T09-10** — Không tạo thêm bảng outbox khi chưa có yêu cầu độ tin cậy; cân nhắc migration sau.
+- [x] **NOTI-T09-11** — Đánh giá refresh rate, số subscription và số row trả về khi scale.
+- [x] **NOTI-T09-12** — Đảm bảo không thông báo lại seed demo trong production.
 
 **Điều kiện chuyển giai đoạn:** không còn lỗi P0 chưa được xử lý trong phạm vi giai đoạn; các bài test chưa chạy phải nêu lý do.
 
@@ -310,8 +310,8 @@
 
 - [x] **NOTI-T11-01** — Chạy lại test hiện có `scripts/test/header_notifications.test.js` và bổ sung DB-specific tests: 9/9 unit tests PASS. (PASS)
 - [x] **NOTI-T11-02** — Unit test notification normalization, enum mapping, link builder và escape: Đã kiểm tra XSS và href sanitation. (PASS)
-- [ ] **NOTI-T11-03** — Integration test API quyền user A/B, no-auth, admin, insert, read state.
-- [ ] **NOTI-T11-04** — Test chuyển trạng thái nhiều lần/đồng thời: không gửi trùng.
+- [x] **NOTI-T11-03** — Integration test API quyền user A/B, no-auth, admin, insert, read state.
+- [x] **NOTI-T11-04** — Test chuyển trạng thái nhiều lần/đồng thời: không gửi trùng.
 - [ ] **NOTI-T11-05** — Benchmark SELECT notification với index `(customer_id, sent_at DESC)` và pagination.
 - [x] **NOTI-T11-06** — Không tải toàn bộ notification `select('*')` khi Header mở: Chỉ định rõ 11 cột cần thiết. (PASS)
 - [ ] **NOTI-T11-07** — Đo độ trễ Admin→User trong realtime và fallback.

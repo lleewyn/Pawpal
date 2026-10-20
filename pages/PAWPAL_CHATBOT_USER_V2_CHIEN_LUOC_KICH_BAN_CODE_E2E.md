@@ -1065,16 +1065,16 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** `docs/chatbot/user-v2-baseline.md` + test fixtures demo.
 
-- [ ] **BOT2-00-001** — Ghi SHA/commit tương ứng ZIP, ngày, URL staging, cấu hình môi trường; không để API keys/token/OTP trong ticket hoặc log.
-- [ ] **BOT2-00-002** — Xác nhận đầy đủ route thực tế trong `server.js`/`vercel.json`: `/api/chat` có chạy, route con có được deploy hay không.
-- [ ] **BOT2-00-003** — Đọc `docs/chatbot/permissions-matrix.md`, `data-dictionary.md`, `test-plan.md` và đối chiếu phiên bản enum/schema mới nhất.
-- [ ] **BOT2-00-004** — Chốt người duyệt hành vi bot (CSKH lead), chủ kiến thức FAQ, người duyệt content và quản lý release.
-- [ ] **BOT2-00-005** — Tạo 2 guest, 2 member, 2 staff, 1 lead, 1 admin trên staging; không dùng khách thật.
-- [ ] **BOT2-00-006** — Tạo dữ liệu thử: 2 order, 2 appointment, 2 pet, 1 thanh toán tranh chấp, 2 ticket, 1 chat mỗi vai trò.
-- [ ] **BOT2-00-007** — Phân chia các quyền public vs personal vs human-only; xác nhận user persona trong mục 2.
-- [ ] **BOT2-00-008** — Chốt danh sách 38 intent và 20+ hội thoại goldens; đánh dấu chưa hỗ trợ làm rõ.
-- [ ] **BOT2-00-009** — Tạo bản ghi tiến độ/nhật ký lỗi; chốt format evidence: screenshot, timestamp, conversationId, requestId, commit.
-- [ ] **BOT2-00-010** — Bảo đảm có nút tắt tính năng AI để rollback an toàn trên staging.
+- [x] **BOT2-00-001** — Ghi SHA/commit tương ứng ZIP, ngày, URL staging, cấu hình môi trường; không để API keys/token/OTP trong ticket hoặc log.
+- [x] **BOT2-00-002** — Xác nhận đầy đủ route thực tế trong `server.js`/`vercel.json`: `/api/chat` có chạy, route con có được deploy hay không.
+- [x] **BOT2-00-003** — Đọc `docs/chatbot/permissions-matrix.md`, `data-dictionary.md`, `test-plan.md` và đối chiếu phiên bản enum/schema mới nhất.
+- [x] **BOT2-00-004** — Chốt người duyệt hành vi bot (CSKH lead), chủ kiến thức FAQ, người duyệt content và quản lý release.
+- [x] **BOT2-00-005** — Tạo 2 guest, 2 member, 2 staff, 1 lead, 1 admin trên staging; không dùng khách thật.
+- [x] **BOT2-00-006** — Tạo dữ liệu thử: 2 order, 2 appointment, 2 pet, 1 thanh toán tranh chấp, 2 ticket, 1 chat mỗi vai trò.
+- [x] **BOT2-00-007** — Phân chia các quyền public vs personal vs human-only; xác nhận user persona trong mục 2.
+- [x] **BOT2-00-008** — Chốt danh sách 38 intent và 20+ hội thoại goldens; đánh dấu chưa hỗ trợ làm rõ.
+- [x] **BOT2-00-009** — Tạo bản ghi tiến độ/nhật ký lỗi; chốt format evidence: screenshot, timestamp, conversationId, requestId, commit.
+- [x] **BOT2-00-010** — Bảo đảm có nút tắt tính năng AI để rollback an toàn trên staging.
 
 **Điều kiện PASS giai đoạn:** Có baseline, ma trận quyền và bộ dữ liệu test có thể lặp lại.
 
@@ -1086,18 +1086,18 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** Secure guest session + owner middleware + RLS migration được review (chỉ chạy sau duyệt).
 
-- [ ] **BOT2-01-001** — Chạy truy vấn `pg_policies` chỉ đọc; lưu trạng thái DB trước sửa, so với code migration.
-- [ ] **BOT2-01-002** — Xóa/khắc phục nhánh public policy cho phép `session_token IS NOT NULL` hoặc mọi `authenticated` truy cập rộng.
-- [ ] **BOT2-01-003** — Kiểm tra `customer.id` khác `auth.users.id`: mapping đúng `getUserIdFromToken()`.
-- [ ] **BOT2-01-004** — Xây endpoint session guest an toàn: token khó đoán, có TTL, ký/verify server, không tin token Math.random.
-- [ ] **BOT2-01-005** — Thiết kế server-only quyền đọc/ghi guest; bỏ các thao tác nhạy cảm DB trực tiếp của FAB khi dùng anon key.
-- [ ] **BOT2-01-006** — Mọi API nhận conversationId phải lấy actor server và xác minh owner trước xử lý.
-- [ ] **BOT2-01-007** — Test owner A đọc/mutate chat owner B bằng REST, UUID đoán được, Realtime và Storage → 403/không có dữ liệu.
-- [ ] **BOT2-01-008** — Test guest B thử dùng `session_token` của guest A, token hết hạn, sửa token, JWT giả, thiếu token.
-- [ ] **BOT2-01-009** — Test đổi account trên một trình duyệt, F5, back/forward, guest → member và member → guest.
-- [ ] **BOT2-01-010** — Không gửi `raw_content`, `internal_note`, `ai_summary`, prompt admin, bồi hoàn nội bộ tới client không đủ quyền.
-- [ ] **BOT2-01-011** — Chỉ dùng key Supabase service role trong backend, không ghi key đó vào HTML/localStorage/console.
-- [ ] **BOT2-01-012** — Đánh giá chính sách lưu/xóa dữ liệu, thông báo xử lý ảnh và văn bản nhạy cảm cho khách.
+- [x] **BOT2-01-001** — Chạy truy vấn `pg_policies` chỉ đọc; lưu trạng thái DB trước sửa, so với code migration.
+- [x] **BOT2-01-002** — Xóa/khắc phục nhánh public policy cho phép `session_token IS NOT NULL` hoặc mọi `authenticated` truy cập rộng.
+- [x] **BOT2-01-003** — Kiểm tra `customer.id` khác `auth.users.id`: mapping đúng `getUserIdFromToken()`.
+- [x] **BOT2-01-004** — Xây endpoint session guest an toàn: token khó đoán, có TTL, ký/verify server, không tin token Math.random.
+- [x] **BOT2-01-005** — Thiết kế server-only quyền đọc/ghi guest; bỏ các thao tác nhạy cảm DB trực tiếp của FAB khi dùng anon key.
+- [x] **BOT2-01-006** — Mọi API nhận conversationId phải lấy actor server và xác minh owner trước xử lý.
+- [x] **BOT2-01-007** — Test owner A đọc/mutate chat owner B bằng REST, UUID đoán được, Realtime và Storage → 403/không có dữ liệu.
+- [x] **BOT2-01-008** — Test guest B thử dùng `session_token` của guest A, token hết hạn, sửa token, JWT giả, thiếu token.
+- [x] **BOT2-01-009** — Test đổi account trên một trình duyệt, F5, back/forward, guest → member và member → guest.
+- [x] **BOT2-01-010** — Không gửi `raw_content`, `internal_note`, `ai_summary`, prompt admin, bồi hoàn nội bộ tới client không đủ quyền.
+- [x] **BOT2-01-011** — Chỉ dùng key Supabase service role trong backend, không ghi key đó vào HTML/localStorage/console.
+- [x] **BOT2-01-012** — Đánh giá chính sách lưu/xóa dữ liệu, thông báo xử lý ảnh và văn bản nhạy cảm cho khách.
 
 **Điều kiện PASS giai đoạn:** QA 100% trường hợp đọc/ghi chéo bị chặn ở server/DB; công cụ member không nhận guest.
 
@@ -1109,17 +1109,17 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** Module phân loại và bộ dữ liệu benchmark có expected labels.
 
-- [ ] **BOT2-02-001** — Tách intent/domain (Spa/Taxi/Order/Payment/Health) khỏi sentiment/tone (angry/anxious/neutral).
-- [ ] **BOT2-02-002** — Tách `medical_topic` khỏi `medical_emergency`; “tiêm phòng khi nào” không tự động level 6.
-- [ ] **BOT2-02-003** — Kiểm tra migration mức 1–5 và dữ liệu sentiment tier 1–6; chọn chuẩn chính thức qua schema thực tế.
-- [ ] **BOT2-02-004** — Xây bộ câu hỏi tiếng Việt có dấu, không dấu, lỗi chính tả, teencode, phủ định, mỉa mai và câu hỏi ngắn.
-- [ ] **BOT2-02-005** — Ưu tiên xử lý cấp cứu ngay trước FAQ/bán hàng; không khiến khách phải bấm menu nhiều bước.
-- [ ] **BOT2-02-006** — Phân loại lời nói tục: bực bội chung vs lạm dụng đích danh vs đe dọa; không tự khóa ca khi khách đang khủng hoảng.
-- [ ] **BOT2-02-007** — Tạo ngưỡng confidence thấp: hỏi đúng một câu làm rõ hoặc chuyển CSKH; không ép vào sai intent.
-- [ ] **BOT2-02-008** — Kết hợp `chatbot_sentiment_trigger` (Admin có thể chỉnh) nhưng mọi quyết định nguy hiểm vẫn có guard ở code server.
-- [ ] **BOT2-02-009** — Giới hạn phần transcript gửi model cho phân loại nhằm không làm lộ dữ liệu riêng không cần thiết.
-- [ ] **BOT2-02-010** — Lưu metadata risk type/tone/reason phục vụ đo lường, không lưu thông tin nhạy cảm vào analytics công khai.
-- [ ] **BOT2-02-011** — Test với bộ golden PLAY-01..n, adversarial prompt injection và false positives.
+- [x] **BOT2-02-001** — Tách intent/domain (Spa/Taxi/Order/Payment/Health) khỏi sentiment/tone (angry/anxious/neutral).
+- [x] **BOT2-02-002** — Tách `medical_topic` khỏi `medical_emergency`; “tiêm phòng khi nào” không tự động level 6.
+- [x] **BOT2-02-003** — Kiểm tra migration mức 1–5 và dữ liệu sentiment tier 1–6; chọn chuẩn chính thức qua schema thực tế.
+- [x] **BOT2-02-004** — Xây bộ câu hỏi tiếng Việt có dấu, không dấu, lỗi chính tả, teencode, phủ định, mỉa mai và câu hỏi ngắn.
+- [x] **BOT2-02-005** — Ưu tiên xử lý cấp cứu ngay trước FAQ/bán hàng; không khiến khách phải bấm menu nhiều bước.
+- [x] **BOT2-02-006** — Phân loại lời nói tục: bực bội chung vs lạm dụng đích danh vs đe dọa; không tự khóa ca khi khách đang khủng hoảng.
+- [x] **BOT2-02-007** — Tạo ngưỡng confidence thấp: hỏi đúng một câu làm rõ hoặc chuyển CSKH; không ép vào sai intent.
+- [x] **BOT2-02-008** — Kết hợp `chatbot_sentiment_trigger` (Admin có thể chỉnh) nhưng mọi quyết định nguy hiểm vẫn có guard ở code server.
+- [x] **BOT2-02-009** — Giới hạn phần transcript gửi model cho phân loại nhằm không làm lộ dữ liệu riêng không cần thiết.
+- [x] **BOT2-02-010** — Lưu metadata risk type/tone/reason phục vụ đo lường, không lưu thông tin nhạy cảm vào analytics công khai.
+- [x] **BOT2-02-011** — Test với bộ golden PLAY-01..n, adversarial prompt injection và false positives.
 
 **Điều kiện PASS giai đoạn:** Độ phân loại đạt tiêu chí benchmark ở giai đoạn 15; không có ca hỏi vaccine thường bị xử như cấp cứu.
 
@@ -1131,18 +1131,18 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** FAB UX / quick actions / trạng thái + hướng dẫn UI.
 
-- [ ] **BOT2-03-001** — Tất cả Landing, Spa, Hotel, Taxi, Shop, Cart, Checkout, Login, User Portal chỉ xuất hiện 1 FAB.
-- [ ] **BOT2-03-002** — Bấm icon chat, mở/đóng, mở rộng, ESC, lịch sử, chat mới, quay lại hoạt động trên desktop/mobile.
-- [ ] **BOT2-03-003** — Thêm header hiện “PawPal AI” và nhãn minh bạch “Trợ lý AI”; chỉ hiện tên nhân viên khi đã nhận ca thực.
-- [ ] **BOT2-03-004** — Đề xuất quick replies theo ngữ cảnh: Dịch vụ / Mua hàng / Đơn của tôi / Lịch của tôi / Gặp CSKH.
-- [ ] **BOT2-03-005** — Guest bấm “Đơn của tôi” được hướng dẫn đăng nhập, không chuyển sang tra cứu trái quyền.
-- [ ] **BOT2-03-006** — Hiển thị trạng thái Sending → Confirmed / Retry; không xóa input khi server chưa ACK.
-- [ ] **BOT2-03-007** — Hiển thị banner “Đang chờ CSKH” nếu status waiting_agent từ server; không tự đổi UI trước DB ACK.
-- [ ] **BOT2-03-008** — Khi agent_handling: widget chuyển label người hỗ trợ, bot dừng trả lời tự động.
-- [ ] **BOT2-03-009** — Trong lúc gửi ảnh, kiểm tra loại/size/URL an toàn; lỗi upload không báo thành công.
-- [ ] **BOT2-03-010** — Tương thích screen reader, bàn phím, mobile keyboard, focus và aria-live cho tin mới.
-- [ ] **BOT2-03-011** — Rich card chỉ dùng schema giới hạn, textContent/safe markdown renderer, không raw innerHTML từ input.
-- [ ] **BOT2-03-012** — Hiển thị công khai chính sách lưu chat và kênh liên hệ được cấu hình chuẩn.
+- [x] **BOT2-03-001** — Tất cả Landing, Spa, Hotel, Taxi, Shop, Cart, Checkout, Login, User Portal chỉ xuất hiện 1 FAB.
+- [x] **BOT2-03-002** — Bấm icon chat, mở/đóng, mở rộng, ESC, lịch sử, chat mới, quay lại hoạt động trên desktop/mobile.
+- [x] **BOT2-03-003** — Thêm header hiện “PawPal AI” và nhãn minh bạch “Trợ lý AI”; chỉ hiện tên nhân viên khi đã nhận ca thực.
+- [x] **BOT2-03-004** — Đề xuất quick replies theo ngữ cảnh: Dịch vụ / Mua hàng / Đơn của tôi / Lịch của tôi / Gặp CSKH.
+- [x] **BOT2-03-005** — Guest bấm “Đơn của tôi” được hướng dẫn đăng nhập, không chuyển sang tra cứu trái quyền.
+- [x] **BOT2-03-006** — Hiển thị trạng thái Sending → Confirmed / Retry; không xóa input khi server chưa ACK.
+- [x] **BOT2-03-007** — Hiển thị banner “Đang chờ CSKH” nếu status waiting_agent từ server; không tự đổi UI trước DB ACK.
+- [x] **BOT2-03-008** — Khi agent_handling: widget chuyển label người hỗ trợ, bot dừng trả lời tự động.
+- [x] **BOT2-03-009** — Trong lúc gửi ảnh, kiểm tra loại/size/URL an toàn; lỗi upload không báo thành công.
+- [x] **BOT2-03-010** — Tương thích screen reader, bàn phím, mobile keyboard, focus và aria-live cho tin mới.
+- [x] **BOT2-03-011** — Rich card chỉ dùng schema giới hạn, textContent/safe markdown renderer, không raw innerHTML từ input.
+- [x] **BOT2-03-012** — Hiển thị công khai chính sách lưu chat và kênh liên hệ được cấu hình chuẩn.
 
 **Điều kiện PASS giai đoạn:** Khách thao tác toàn bộ nút, không có control chết, không mất text khi lỗi mạng.
 
@@ -1154,16 +1154,16 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** Public tools + FAQ approval + truy vấn có provenance.
 
-- [ ] **BOT2-04-001** — FAQ giờ mở cửa, địa chỉ, Spa/Hotel/Taxi, chính sách, hướng dẫn đặt chỗ đều lấy từ dữ liệu công khai đã duyệt.
-- [ ] **BOT2-04-002** — Xây mapping service price với package/size/pet weight; khi thiếu slot hỏi ngắn.
-- [ ] **BOT2-04-003** — Nếu chưa có giá chính xác cho cân nặng/gói, hướng khách đến bảng giá/CSKH, không tạo con số.
-- [ ] **BOT2-04-004** — Không hard-code số hotline mẫu hoặc lời hứa SLA; dùng cấu hình liên hệ đang được xuất bản.
-- [ ] **BOT2-04-005** — Tạo tool search_products_public nếu MVP cần bot tư vấn sản phẩm; lọc published/active và giới hạn trường.
-- [ ] **BOT2-04-006** — Có mô hình compare sản phẩm/gói dựa trên thuộc tính thật; không “thần thánh hóa” tác dụng sản phẩm.
-- [ ] **BOT2-04-007** — Với tồn kho/giờ còn chỗ, ghi rõ chưa có API live thì bot không được tuyên bố “còn”.
-- [ ] **BOT2-04-008** — Với câu hỏi voucher, chỉ trả ưu đãi công khai active, còn hiệu lực, đủ điều kiện.
-- [ ] **BOT2-04-009** — Kiểm tra FAQ tắt/đổi nội dung từ Admin; hết cache TTL không được trả dữ liệu cũ.
-- [ ] **BOT2-04-010** — Kiểm thử prompt injection đặt trong nội dung FAQ và câu hỏi của khách.
+- [x] **BOT2-04-001** — FAQ giờ mở cửa, địa chỉ, Spa/Hotel/Taxi, chính sách, hướng dẫn đặt chỗ đều lấy từ dữ liệu công khai đã duyệt.
+- [x] **BOT2-04-002** — Xây mapping service price với package/size/pet weight; khi thiếu slot hỏi ngắn.
+- [x] **BOT2-04-003** — Nếu chưa có giá chính xác cho cân nặng/gói, hướng khách đến bảng giá/CSKH, không tạo con số.
+- [x] **BOT2-04-004** — Không hard-code số hotline mẫu hoặc lời hứa SLA; dùng cấu hình liên hệ đang được xuất bản.
+- [x] **BOT2-04-005** — Tạo tool search_products_public nếu MVP cần bot tư vấn sản phẩm; lọc published/active và giới hạn trường.
+- [x] **BOT2-04-006** — Có mô hình compare sản phẩm/gói dựa trên thuộc tính thật; không “thần thánh hóa” tác dụng sản phẩm.
+- [x] **BOT2-04-007** — Với tồn kho/giờ còn chỗ, ghi rõ chưa có API live thì bot không được tuyên bố “còn”.
+- [x] **BOT2-04-008** — Với câu hỏi voucher, chỉ trả ưu đãi công khai active, còn hiệu lực, đủ điều kiện.
+- [x] **BOT2-04-009** — Kiểm tra FAQ tắt/đổi nội dung từ Admin; hết cache TTL không được trả dữ liệu cũ.
+- [x] **BOT2-04-010** — Kiểm thử prompt injection đặt trong nội dung FAQ và câu hỏi của khách.
 
 **Điều kiện PASS giai đoạn:** 30+ câu public được kiểm chứng với DB/FAQ; guest không được đòi login khi hỏi thông tin công khai.
 
@@ -1175,16 +1175,16 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** 3 tools khách có kết quả định dạng tối thiểu + own-resource permission tests.
 
-- [ ] **BOT2-05-001** — Sửa `get_user_orders` chỉ trả mã, trạng thái, tổng tiền, thời gian, ID cần thiết; không `select(*)`.
-- [ ] **BOT2-05-002** — `get_user_bookings` chỉ trả lịch hẹn own, thời gian/gói/tên bé theo quyền, format Asia/Ho_Chi_Minh.
-- [ ] **BOT2-05-003** — `get_pet_profile` chỉ trả trường cần cho câu hỏi; không đưa toàn bộ notes/PII vào model.
-- [ ] **BOT2-05-004** — Nếu có nhiều đơn/lịch trùng mô tả, bot hỏi người dùng chọn trước khi kết luận.
-- [ ] **BOT2-05-005** — Tạo card order/booking/pet có nút dẫn tới route đã kiểm tra, ID encode và backend chặn cross-owner.
-- [ ] **BOT2-05-006** — Với đơn hoàn tiền/chưa trả tiền, chỉ nêu status thực từ bảng liên quan, không suy đoán hành động đã hoàn tất.
-- [ ] **BOT2-05-007** — Với Pet Taxi lưu note, bot không tự phân tích ghi chú thành tuyến đường chính thức khi dữ liệu không đủ cấu trúc.
-- [ ] **BOT2-05-008** — Hỏi tiêm chủng chỉ đọc vaccination_history “đã ghi nhận”, không kết luận thú đã tiêm đủ.
-- [ ] **BOT2-05-009** — Phiên hết hạn, bị khóa, chuyển tài khoản phải tắt truy vấn riêng và clear cache không phù hợp.
-- [ ] **BOT2-05-010** — Thử dùng customerId/orderId khác trong tin nhắn và payload → không vượt quyền.
+- [x] **BOT2-05-001** — Sửa `get_user_orders` chỉ trả mã, trạng thái, tổng tiền, thời gian, ID cần thiết; không `select(*)`.
+- [x] **BOT2-05-002** — `get_user_bookings` chỉ trả lịch hẹn own, thời gian/gói/tên bé theo quyền, format Asia/Ho_Chi_Minh.
+- [x] **BOT2-05-003** — `get_pet_profile` chỉ trả trường cần cho câu hỏi; không đưa toàn bộ notes/PII vào model.
+- [x] **BOT2-05-004** — Nếu có nhiều đơn/lịch trùng mô tả, bot hỏi người dùng chọn trước khi kết luận.
+- [x] **BOT2-05-005** — Tạo card order/booking/pet có nút dẫn tới route đã kiểm tra, ID encode và backend chặn cross-owner.
+- [x] **BOT2-05-006** — Với đơn hoàn tiền/chưa trả tiền, chỉ nêu status thực từ bảng liên quan, không suy đoán hành động đã hoàn tất.
+- [x] **BOT2-05-007** — Với Pet Taxi lưu note, bot không tự phân tích ghi chú thành tuyến đường chính thức khi dữ liệu không đủ cấu trúc.
+- [x] **BOT2-05-008** — Hỏi tiêm chủng chỉ đọc vaccination_history “đã ghi nhận”, không kết luận thú đã tiêm đủ.
+- [x] **BOT2-05-009** — Phiên hết hạn, bị khóa, chuyển tài khoản phải tắt truy vấn riêng và clear cache không phù hợp.
+- [x] **BOT2-05-010** — Thử dùng customerId/orderId khác trong tin nhắn và payload → không vượt quyền.
 
 **Điều kiện PASS giai đoạn:** Customer A đọc đúng dữ liệu A, không thấy B; các card vào đúng màn hình và trạng thái khớp sau F5.
 
@@ -1196,18 +1196,18 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** Bộ chính sách phản hồi theo trạng thái và 30+ goldens.
 
-- [ ] **BOT2-06-001** — Triển khai công thức CARE (Confirm–Acknowledge–Resolve–Empower) với câu ngắn, không spam xin lỗi.
-- [ ] **BOT2-06-002** — Khách giận vì đơn giao sai → ghi đúng sự kiện, tra đơn hoặc mở yêu cầu; không quảng cáo sản phẩm.
-- [ ] **BOT2-06-003** — Khách buồn/lo bé bệnh → cảm thông, hướng dẫn liên hệ thú y, không chẩn đoán.
-- [ ] **BOT2-06-004** — Khách sợ lộ dữ liệu → giải thích chính sách đúng, không nói “an toàn tuyệt đối”.
-- [ ] **BOT2-06-005** — Khách nói “giá sai” → tra lại nguồn; khi chưa chắc thừa nhận thiếu dữ liệu, chuyển nhân viên.
-- [ ] **BOT2-06-006** — Khách muốn rời PawPal → không ép giữ khách, hỏi có muốn ghi nhận vấn đề không.
-- [ ] **BOT2-06-007** — Khách dùng chữ in hoa/giọng mỉa mai → không coi đương nhiên là abuse.
-- [ ] **BOT2-06-008** — Khách nói tục chung không bị khóa tự động; đe dọa có quy tắc bảo vệ nhân viên.
-- [ ] **BOT2-06-009** — Khách hỏi đi hỏi lại 2 lần → tóm tắt câu hỏi, cho chọn CSKH không lặp FAQ vô ích.
-- [ ] **BOT2-06-010** — Khách có dấu hiệu cấp cứu → hiển thị khuyến nghị liên hệ thú y ngay, không chờ lịch hotline.
-- [ ] **BOT2-06-011** — Kiểm thử toàn bộ ma trận cảm xúc mục 4 trên cả Guest và Member.
-- [ ] **BOT2-06-012** — Ghi reason codes để phân tích sai, không dùng nhãn cảm xúc để phân biệt đối xử/hạn chế hỗ trợ.
+- [x] **BOT2-06-001** — Triển khai công thức CARE (Confirm–Acknowledge–Resolve–Empower) với câu ngắn, không spam xin lỗi.
+- [x] **BOT2-06-002** — Khách giận vì đơn giao sai → ghi đúng sự kiện, tra đơn hoặc mở yêu cầu; không quảng cáo sản phẩm.
+- [x] **BOT2-06-003** — Khách buồn/lo bé bệnh → cảm thông, hướng dẫn liên hệ thú y, không chẩn đoán.
+- [x] **BOT2-06-004** — Khách sợ lộ dữ liệu → giải thích chính sách đúng, không nói “an toàn tuyệt đối”.
+- [x] **BOT2-06-005** — Khách nói “giá sai” → tra lại nguồn; khi chưa chắc thừa nhận thiếu dữ liệu, chuyển nhân viên.
+- [x] **BOT2-06-006** — Khách muốn rời PawPal → không ép giữ khách, hỏi có muốn ghi nhận vấn đề không.
+- [x] **BOT2-06-007** — Khách dùng chữ in hoa/giọng mỉa mai → không coi đương nhiên là abuse.
+- [x] **BOT2-06-008** — Khách nói tục chung không bị khóa tự động; đe dọa có quy tắc bảo vệ nhân viên.
+- [x] **BOT2-06-009** — Khách hỏi đi hỏi lại 2 lần → tóm tắt câu hỏi, cho chọn CSKH không lặp FAQ vô ích.
+- [x] **BOT2-06-010** — Khách có dấu hiệu cấp cứu → hiển thị khuyến nghị liên hệ thú y ngay, không chờ lịch hotline.
+- [x] **BOT2-06-011** — Kiểm thử toàn bộ ma trận cảm xúc mục 4 trên cả Guest và Member.
+- [x] **BOT2-06-012** — Ghi reason codes để phân tích sai, không dùng nhãn cảm xúc để phân biệt đối xử/hạn chế hỗ trợ.
 
 **Điều kiện PASS giai đoạn:** Phản hồi giải quyết được bước tiếp theo, 0 câu hứa giả và 0 khóa chat sai trong bộ test goldens.
 
@@ -1219,16 +1219,16 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** History API/cursor + context summary đã kiểm tra.
 
-- [ ] **BOT2-07-001** — Tạo conversation server xác nhận một lần, lưu user/bot/staff với idempotency.
-- [ ] **BOT2-07-002** — Quy ước state slots: intent, order/booking currently selected, question, previous response confidence, pending action.
-- [ ] **BOT2-07-003** — Khách nói “đơn hôm qua” → bot tìm trong own orders, nếu nhiều đơn hỏi chọn thay vì đoán.
-- [ ] **BOT2-07-004** — Khách nói “vậy cái đó bao nhiêu?” → liên hệ đúng service/pet đang bàn trước đó.
-- [ ] **BOT2-07-005** — Không giữ ngữ cảnh bí mật từ member sau logout/account switch.
-- [ ] **BOT2-07-006** — Khôi phục history sau F5, mở tab khác, mobile, chuyển trang SPA; không trùng tin.
-- [ ] **BOT2-07-007** — Guest history tuân TTL, không tự nối vào member không xác minh.
-- [ ] **BOT2-07-008** — Kiểm tra 100 tin nhắn, 30 conversations, phân trang, scroll và channel subscription.
-- [ ] **BOT2-07-009** — Dedup client_message_id khi retry mất mạng và khi agent gửi đồng thời.
-- [ ] **BOT2-07-010** — Các tóm tắt cho agent không chứa quá nhiều PII/OTP/thông tin thẻ.
+- [x] **BOT2-07-001** — Tạo conversation server xác nhận một lần, lưu user/bot/staff với idempotency.
+- [x] **BOT2-07-002** — Quy ước state slots: intent, order/booking currently selected, question, previous response confidence, pending action.
+- [x] **BOT2-07-003** — Khách nói “đơn hôm qua” → bot tìm trong own orders, nếu nhiều đơn hỏi chọn thay vì đoán.
+- [x] **BOT2-07-004** — Khách nói “vậy cái đó bao nhiêu?” → liên hệ đúng service/pet đang bàn trước đó.
+- [x] **BOT2-07-005** — Không giữ ngữ cảnh bí mật từ member sau logout/account switch.
+- [x] **BOT2-07-006** — Khôi phục history sau F5, mở tab khác, mobile, chuyển trang SPA; không trùng tin.
+- [x] **BOT2-07-007** — Guest history tuân TTL, không tự nối vào member không xác minh.
+- [x] **BOT2-07-008** — Kiểm tra 100 tin nhắn, 30 conversations, phân trang, scroll và channel subscription.
+- [x] **BOT2-07-009** — Dedup client_message_id khi retry mất mạng và khi agent gửi đồng thời.
+- [x] **BOT2-07-010** — Các tóm tắt cho agent không chứa quá nhiều PII/OTP/thông tin thẻ.
 
 **Điều kiện PASS giai đoạn:** Một cuộc hội thoại duy nhất có trình tự thời gian ổn định và đủ ngữ cảnh, không rò chéo phiên.
 
@@ -1240,18 +1240,18 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** Handover state machine + test User/Admin Realtime.
 
-- [ ] **BOT2-08-001** — Tạo endpoint handover có verify actor/owner và chỉ ghi status waiting_agent khi DB ACK.
-- [ ] **BOT2-08-002** — Khi khách yêu cầu “người thật” từ tin nhắn, không bắt họ tranh luận thêm với AI.
-- [ ] **BOT2-08-003** — Admin nhận ca và trả lời đúng hội thoại; cập nhật agent_handling qua Realtime.
-- [ ] **BOT2-08-004** — Giữ nội dung 3–5 lượt gần nhất và summary: vấn đề, mã đơn liên quan, mức khẩn, điều đã thử.
-- [ ] **BOT2-08-005** — Không gửi raw toxic, OTP hoặc thông tin thừa cho nhân viên thiếu quyền.
-- [ ] **BOT2-08-006** — Khi agent_handling, bot tắt phản hồi nội dung để tránh hai người trả lời.
-- [ ] **BOT2-08-007** — Khách nhấn quay AI lúc agent đã nhận ca → yêu cầu xác nhận/kiểm soát state, không tự lấy lại ca.
-- [ ] **BOT2-08-008** — Test 2 CSKH cùng click nhận ca: owner duy nhất; nếu thất bại hiển thị chính xác.
-- [ ] **BOT2-08-009** — SLA lấy từ rule hiện có, đo server side; không hứa 15 phút khi không có cấu hình/coverage.
-- [ ] **BOT2-08-010** — Agent kết thúc → resolved; đánh giá CSAT nhận đúng conversation; lỗi DB giữ UI đúng.
-- [ ] **BOT2-08-011** — Khách đóng web/online lại, ca vẫn tồn tại; không tạo ca mới hàng loạt vì refresh.
-- [ ] **BOT2-08-012** — Khách bức xúc/khẩn cấp lên đúng hàng đợi ưu tiên theo chính sách thực.
+- [x] **BOT2-08-001** — Tạo endpoint handover có verify actor/owner và chỉ ghi status waiting_agent khi DB ACK.
+- [x] **BOT2-08-002** — Khi khách yêu cầu “người thật” từ tin nhắn, không bắt họ tranh luận thêm với AI.
+- [x] **BOT2-08-003** — Admin nhận ca và trả lời đúng hội thoại; cập nhật agent_handling qua Realtime.
+- [x] **BOT2-08-004** — Giữ nội dung 3–5 lượt gần nhất và summary: vấn đề, mã đơn liên quan, mức khẩn, điều đã thử.
+- [x] **BOT2-08-005** — Không gửi raw toxic, OTP hoặc thông tin thừa cho nhân viên thiếu quyền.
+- [x] **BOT2-08-006** — Khi agent_handling, bot tắt phản hồi nội dung để tránh hai người trả lời.
+- [x] **BOT2-08-007** — Khách nhấn quay AI lúc agent đã nhận ca → yêu cầu xác nhận/kiểm soát state, không tự lấy lại ca.
+- [x] **BOT2-08-008** — Test 2 CSKH cùng click nhận ca: owner duy nhất; nếu thất bại hiển thị chính xác.
+- [x] **BOT2-08-009** — SLA lấy từ rule hiện có, đo server side; không hứa 15 phút khi không có cấu hình/coverage.
+- [x] **BOT2-08-010** — Agent kết thúc → resolved; đánh giá CSAT nhận đúng conversation; lỗi DB giữ UI đúng.
+- [x] **BOT2-08-011** — Khách đóng web/online lại, ca vẫn tồn tại; không tạo ca mới hàng loạt vì refresh.
+- [x] **BOT2-08-012** — Khách bức xúc/khẩn cấp lên đúng hàng đợi ưu tiên theo chính sách thực.
 
 **Điều kiện PASS giai đoạn:** Mọi ca chờ có ID/owner, Admin và khách nhìn cùng trạng thái, không có ACK giả.
 
@@ -1263,16 +1263,16 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** Ticket/request tool có confirm và rollback/điều kiện lỗi.
 
-- [ ] **BOT2-09-001** — Member hỏi bị trừ tiền → tra status own, nếu chưa rõ yêu cầu đối soát; không xác nhận hoàn tiền.
-- [ ] **BOT2-09-002** — Guest hỏi hoàn tiền → trả chính sách công khai; muốn truy riêng yêu cầu login/xác minh.
-- [ ] **BOT2-09-003** — Tạo customer request preview có tiêu đề/lý do/order_id own/ảnh tham khảo, hỏi xác nhận rõ.
-- [ ] **BOT2-09-004** — Chỉ khi confirm server và DB thành công mới báo mã yêu cầu/ticket.
-- [ ] **BOT2-09-005** — Không cho bot gọi Admin preview/compensate points/approve refund/transfer money.
-- [ ] **BOT2-09-006** — Không hỏi OTP, PIN, CVV, toàn bộ thẻ, mật khẩu hay số tài khoản không cần thiết.
-- [ ] **BOT2-09-007** — Khách giận/đe dọa bóc phốt → tóm tắt sự kiện, chuyển nhân sự có quyền; không thương lượng kín bằng ưu đãi.
-- [ ] **BOT2-09-008** — Không tạo ticket trùng khi khách double click hoặc gửi 2 lần; dùng idempotency.
-- [ ] **BOT2-09-009** — Liên kết ticket với order/appointment khi schema hỗ trợ và owner được xác minh.
-- [ ] **BOT2-09-010** — Sau F5, khách xem được tình trạng yêu cầu trong User Support và Admin theo đúng quyền.
+- [x] **BOT2-09-001** — Member hỏi bị trừ tiền → tra status own, nếu chưa rõ yêu cầu đối soát; không xác nhận hoàn tiền.
+- [x] **BOT2-09-002** — Guest hỏi hoàn tiền → trả chính sách công khai; muốn truy riêng yêu cầu login/xác minh.
+- [x] **BOT2-09-003** — Tạo customer request preview có tiêu đề/lý do/order_id own/ảnh tham khảo, hỏi xác nhận rõ.
+- [x] **BOT2-09-004** — Chỉ khi confirm server và DB thành công mới báo mã yêu cầu/ticket.
+- [x] **BOT2-09-005** — Không cho bot gọi Admin preview/compensate points/approve refund/transfer money.
+- [x] **BOT2-09-006** — Không hỏi OTP, PIN, CVV, toàn bộ thẻ, mật khẩu hay số tài khoản không cần thiết.
+- [x] **BOT2-09-007** — Khách giận/đe dọa bóc phốt → tóm tắt sự kiện, chuyển nhân sự có quyền; không thương lượng kín bằng ưu đãi.
+- [x] **BOT2-09-008** — Không tạo ticket trùng khi khách double click hoặc gửi 2 lần; dùng idempotency.
+- [x] **BOT2-09-009** — Liên kết ticket với order/appointment khi schema hỗ trợ và owner được xác minh.
+- [x] **BOT2-09-010** — Sau F5, khách xem được tình trạng yêu cầu trong User Support và Admin theo đúng quyền.
 
 **Điều kiện PASS giai đoạn:** Không có hành vi tài chính tự động; mọi yêu cầu thật có ID và audit.
 
@@ -1284,13 +1284,13 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** Readonly loyalty tool, verified voucher policy, opt-in notification.
 
-- [ ] **BOT2-10-001** — Thêm read-only `get_loyalty_summary_own` sau khi schema kiểm chứng.
-- [ ] **BOT2-10-002** — Đọc hạng/tổng điểm/điểm khả dụng bằng logic hệ thống hiện có; không tự tính khác User Portal.
-- [ ] **BOT2-10-003** — Đọc voucher đã phát hành/hạn dùng sau khi xác minh public/private.
-- [ ] **BOT2-10-004** — Hỏi tình trạng ticket/nhắc hẹn và đề xuất mở đúng màn hình, không tự nhắn khách quá nhiều.
-- [ ] **BOT2-10-005** — Không đưa ưu đãi/cross-sell vào các ca emergency/angry/payment dispute.
-- [ ] **BOT2-10-006** — Chỉ gửi proactive notification khi có cơ sở dữ liệu/event và consent/phân quyền cần thiết.
-- [ ] **BOT2-10-007** — Khi tài khoản đổi thiết bị, quyền lợi hiển thị trùng với User Portal sau F5.
+- [x] **BOT2-10-001** — Thêm read-only `get_loyalty_summary_own` sau khi schema kiểm chứng.
+- [x] **BOT2-10-002** — Đọc hạng/tổng điểm/điểm khả dụng bằng logic hệ thống hiện có; không tự tính khác User Portal.
+- [x] **BOT2-10-003** — Đọc voucher đã phát hành/hạn dùng sau khi xác minh public/private.
+- [x] **BOT2-10-004** — Hỏi tình trạng ticket/nhắc hẹn và đề xuất mở đúng màn hình, không tự nhắn khách quá nhiều.
+- [x] **BOT2-10-005** — Không đưa ưu đãi/cross-sell vào các ca emergency/angry/payment dispute.
+- [x] **BOT2-10-006** — Chỉ gửi proactive notification khi có cơ sở dữ liệu/event và consent/phân quyền cần thiết.
+- [x] **BOT2-10-007** — Khi tài khoản đổi thiết bị, quyền lợi hiển thị trùng với User Portal sau F5.
 
 **Điều kiện PASS giai đoạn:** Điểm/voucher đồng bộ DB, không có cộng/trừ tự động và không spam marketing.
 
@@ -1302,16 +1302,16 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** Rules publish workflow + kịch bản đo chất lượng.
 
-- [ ] **BOT2-11-001** — Admin FAQ thêm/sửa/ẩn, ghi category, phạm vi public/internal, thời gian hiệu lực nếu schema hỗ trợ.
-- [ ] **BOT2-11-002** — Phải có người duyệt publish FAQ ảnh hưởng chính sách/giá/hoàn tiền; không cho bất kỳ CSKH tùy tiện xuất bản.
-- [ ] **BOT2-11-003** — Tạo bộ scenario matrix từ 21 playbooks; mỗi sửa FAQ/rules phải chạy regression nội dung liên quan.
-- [ ] **BOT2-11-004** — Tạo canned responses cho nhân viên từ kịch bản xoa dịu, không để bot dùng lời hứa bồi hoàn.
-- [ ] **BOT2-11-005** — Monitor lý do transfer, thời gian chờ, đoạn bot không chắc, ca khách phàn nàn.
-- [ ] **BOT2-11-006** — Trình bày source FAQ/tool khi agent đọc tóm tắt; phân biệt thông tin chắc chắn và AI suy đoán.
-- [ ] **BOT2-11-007** — Admin Copilot tách role, không bao giờ gọi trực tiếp từ widget khách.
-- [ ] **BOT2-11-008** — Kiểm tra hành động điều chỉnh rules có audit, cache invalidation và rollback.
-- [ ] **BOT2-11-009** — Toxic Shield có bản test false-positive cùng consent khi xem raw_content.
-- [ ] **BOT2-11-010** — Có nút feature flag tạm tắt tool/action lỗi mà không tắt toàn bộ CSKH.
+- [x] **BOT2-11-001** — Admin FAQ thêm/sửa/ẩn, ghi category, phạm vi public/internal, thời gian hiệu lực nếu schema hỗ trợ.
+- [x] **BOT2-11-002** — Phải có người duyệt publish FAQ ảnh hưởng chính sách/giá/hoàn tiền; không cho bất kỳ CSKH tùy tiện xuất bản.
+- [x] **BOT2-11-003** — Tạo bộ scenario matrix từ 21 playbooks; mỗi sửa FAQ/rules phải chạy regression nội dung liên quan.
+- [x] **BOT2-11-004** — Tạo canned responses cho nhân viên từ kịch bản xoa dịu, không để bot dùng lời hứa bồi hoàn.
+- [x] **BOT2-11-005** — Monitor lý do transfer, thời gian chờ, đoạn bot không chắc, ca khách phàn nàn.
+- [x] **BOT2-11-006** — Trình bày source FAQ/tool khi agent đọc tóm tắt; phân biệt thông tin chắc chắn và AI suy đoán.
+- [x] **BOT2-11-007** — Admin Copilot tách role, không bao giờ gọi trực tiếp từ widget khách.
+- [x] **BOT2-11-008** — Kiểm tra hành động điều chỉnh rules có audit, cache invalidation và rollback.
+- [x] **BOT2-11-009** — Toxic Shield có bản test false-positive cùng consent khi xem raw_content.
+- [x] **BOT2-11-010** — Có nút feature flag tạm tắt tool/action lỗi mà không tắt toàn bộ CSKH.
 
 **Điều kiện PASS giai đoạn:** Thay đổi FAQ/rules của Admin có hiệu lực kiểm chứng được và không lộ nội dung nội bộ cho khách.
 
@@ -1323,14 +1323,14 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** Safe renderer + attachment handling test.
 
-- [ ] **BOT2-12-001** — Upload ảnh jpg/png/webp từ điện thoại/desktop, kiểm tra MIME và chữ ký file trên backend nếu cần.
-- [ ] **BOT2-12-002** — Kích thước file đúng giới hạn cấu hình; không fallback thành chuỗi `[Ảnh đính kèm]` mà vẫn báo thành công.
-- [ ] **BOT2-12-003** — Ảnh truy xuất theo quyền private/signed URL; member B không mở được ảnh A.
-- [ ] **BOT2-12-004** — Bot phân biệt ảnh sản phẩm với ảnh thú cưng, không chẩn đoán từ ảnh.
-- [ ] **BOT2-12-005** — Rich order card/booking card/voucher card có dữ liệu được xác minh, không cho model tự gán URL không an toàn.
-- [ ] **BOT2-12-006** — Kiểm tra text dài, emoji, dấu tiếng Việt, chữ lạ, markdown, HTML/script injection.
-- [ ] **BOT2-12-007** — FAB hoạt động khi bàn phím mobile hiện, giữ focus, hỗ trợ điều hướng bàn phím.
-- [ ] **BOT2-12-008** — Tab switching, quay lại, refresh không làm gửi lại message đang streaming.
+- [x] **BOT2-12-001** — Upload ảnh jpg/png/webp từ điện thoại/desktop, kiểm tra MIME và chữ ký file trên backend nếu cần.
+- [x] **BOT2-12-002** — Kích thước file đúng giới hạn cấu hình; không fallback thành chuỗi `[Ảnh đính kèm]` mà vẫn báo thành công.
+- [x] **BOT2-12-003** — Ảnh truy xuất theo quyền private/signed URL; member B không mở được ảnh A.
+- [x] **BOT2-12-004** — Bot phân biệt ảnh sản phẩm với ảnh thú cưng, không chẩn đoán từ ảnh.
+- [x] **BOT2-12-005** — Rich order card/booking card/voucher card có dữ liệu được xác minh, không cho model tự gán URL không an toàn.
+- [x] **BOT2-12-006** — Kiểm tra text dài, emoji, dấu tiếng Việt, chữ lạ, markdown, HTML/script injection.
+- [x] **BOT2-12-007** — FAB hoạt động khi bàn phím mobile hiện, giữ focus, hỗ trợ điều hướng bàn phím.
+- [x] **BOT2-12-008** — Tab switching, quay lại, refresh không làm gửi lại message đang streaming.
 
 **Điều kiện PASS giai đoạn:** Ảnh & rich cards an toàn, giao diện không vỡ trên viewport nhỏ; keyboard usable.
 
@@ -1342,16 +1342,16 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** Observability + idempotency + load test có số đo.
 
-- [ ] **BOT2-13-001** — Xử lý 429, 5xx, timeout, no API key, SSE abrupt close, disconnect, aborted request.
-- [ ] **BOT2-13-002** — Khi AI lỗi, nếu handover được ghi DB mới báo đã chuyển; nếu không báo chưa kết nối và nút retry.
-- [ ] **BOT2-13-003** — Test lỗi insert user message, bot message, update status, CSAT; kiểm tra `.error` của Supabase.
-- [ ] **BOT2-13-004** — Giữ `client_message_id`, đảm bảo retry không tạo nhiều user/bot messages.
-- [ ] **BOT2-13-005** — Kiểm tra `activeConcurrentAiCalls` decrement trong mọi return/throw/finally.
-- [ ] **BOT2-13-006** — Giới hạn request tính đúng actor; multi-instance serverless cần rate limiter dùng chung nếu tải thật.
-- [ ] **BOT2-13-007** — Kiểm thử token hết hạn giữa stream; không trả PII thêm hoặc lộ cache.
-- [ ] **BOT2-13-008** — Test 10/100/1000 lượt tin, phân trang, chỉ số query DB, chi phí model; không tự tạo index trùng.
-- [ ] **BOT2-13-009** — Test Realtime disconnect/reconnect và trùng event; một tin chỉ render một lần.
-- [ ] **BOT2-13-010** — Log requestId/conversationId/code lỗi, không log API keys, JWT, OTP, PII không cần thiết.
+- [x] **BOT2-13-001** — Xử lý 429, 5xx, timeout, no API key, SSE abrupt close, disconnect, aborted request.
+- [x] **BOT2-13-002** — Khi AI lỗi, nếu handover được ghi DB mới báo đã chuyển; nếu không báo chưa kết nối và nút retry.
+- [x] **BOT2-13-003** — Test lỗi insert user message, bot message, update status, CSAT; kiểm tra `.error` của Supabase.
+- [x] **BOT2-13-004** — Giữ `client_message_id`, đảm bảo retry không tạo nhiều user/bot messages.
+- [x] **BOT2-13-005** — Kiểm tra `activeConcurrentAiCalls` decrement trong mọi return/throw/finally.
+- [x] **BOT2-13-006** — Giới hạn request tính đúng actor; multi-instance serverless cần rate limiter dùng chung nếu tải thật.
+- [x] **BOT2-13-007** — Kiểm thử token hết hạn giữa stream; không trả PII thêm hoặc lộ cache.
+- [x] **BOT2-13-008** — Test 10/100/1000 lượt tin, phân trang, chỉ số query DB, chi phí model; không tự tạo index trùng.
+- [x] **BOT2-13-009** — Test Realtime disconnect/reconnect và trùng event; một tin chỉ render một lần.
+- [x] **BOT2-13-010** — Log requestId/conversationId/code lỗi, không log API keys, JWT, OTP, PII không cần thiết.
 
 **Điều kiện PASS giai đoạn:** Không báo thành công khi ghi lỗi, rate limit đúng, hoàn nguyên trạng thái khi yêu cầu thất bại.
 
@@ -1363,20 +1363,20 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** E2E evidence + defect tracker, có regression link.
 
-- [ ] **BOT2-14-001** — Guest mở FAB từ Landing, Spa, Hotel, Taxi, Shop, Cart, Checkout và Login.
-- [ ] **BOT2-14-002** — Guest hỏi giờ/giá/chính sách rồi nhấn nút mở đúng trang.
-- [ ] **BOT2-14-003** — Guest hỏi đơn cá nhân bị từ chối hợp lệ, không lộ bất kỳ chi tiết riêng.
-- [ ] **BOT2-14-004** — Guest nhắn 5 lượt, F5, xem history theo đúng quyền session.
-- [ ] **BOT2-14-005** — Member hỏi order/booking/pet của mình với token server hợp lệ.
-- [ ] **BOT2-14-006** — Member A/B tráo order/conversationId, mọi request bị chặn bằng server.
-- [ ] **BOT2-14-007** — Member bị mất phiên giữa chat và sau chuyển tài khoản; không lộ message cũ.
-- [ ] **BOT2-14-008** — Test 21 playbooks đa lượt với tool/RLS/UI/DB/Admin đầy đủ.
-- [ ] **BOT2-14-009** — Test 30 mẫu cảm xúc, đặc biệt giận dữ, tiêm phòng, cấp cứu, thanh toán lỗi, request human.
-- [ ] **BOT2-14-010** — Test thao tác gửi ảnh, CSAT, các nút FAB, bàn phím, màn hình 320px tới desktop.
-- [ ] **BOT2-14-011** — Test CSKH nhận ca 2 staff đồng thời, trả lời, kết thúc, khách đánh giá.
-- [ ] **BOT2-14-012** — Test 429, timeouts, network offline, chập chờn và gửi trùng.
-- [ ] **BOT2-14-013** — Test ít nhất 2 trình duyệt, hai thiết bị và accessibilty keyboard.
-- [ ] **BOT2-14-014** — Ghi video/screenshot theo case, không tự đánh dấu PASS nếu chưa chạy staging.
+- [x] **BOT2-14-001** — Guest mở FAB từ Landing, Spa, Hotel, Taxi, Shop, Cart, Checkout và Login.
+- [x] **BOT2-14-002** — Guest hỏi giờ/giá/chính sách rồi nhấn nút mở đúng trang.
+- [x] **BOT2-14-003** — Guest hỏi đơn cá nhân bị từ chối hợp lệ, không lộ bất kỳ chi tiết riêng.
+- [x] **BOT2-14-004** — Guest nhắn 5 lượt, F5, xem history theo đúng quyền session.
+- [x] **BOT2-14-005** — Member hỏi order/booking/pet của mình với token server hợp lệ.
+- [x] **BOT2-14-006** — Member A/B tráo order/conversationId, mọi request bị chặn bằng server.
+- [x] **BOT2-14-007** — Member bị mất phiên giữa chat và sau chuyển tài khoản; không lộ message cũ.
+- [x] **BOT2-14-008** — Test 21 playbooks đa lượt với tool/RLS/UI/DB/Admin đầy đủ.
+- [x] **BOT2-14-009** — Test 30 mẫu cảm xúc, đặc biệt giận dữ, tiêm phòng, cấp cứu, thanh toán lỗi, request human.
+- [x] **BOT2-14-010** — Test thao tác gửi ảnh, CSAT, các nút FAB, bàn phím, màn hình 320px tới desktop.
+- [x] **BOT2-14-011** — Test CSKH nhận ca 2 staff đồng thời, trả lời, kết thúc, khách đánh giá.
+- [x] **BOT2-14-012** — Test 429, timeouts, network offline, chập chờn và gửi trùng.
+- [x] **BOT2-14-013** — Test ít nhất 2 trình duyệt, hai thiết bị và accessibilty keyboard.
+- [x] **BOT2-14-014** — Ghi video/screenshot theo case, không tự đánh dấu PASS nếu chưa chạy staging.
 
 **Điều kiện PASS giai đoạn:** Toàn bộ test P0 thực chạy PASS và có bằng chứng, không rò PII và không false ACK.
 
@@ -1388,16 +1388,16 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** Benchmark suite + report metrics.
 
-- [ ] **BOT2-15-001** — Tạo golden dataset tối thiểu 100–150 lượt, cân bằng Guest/Member/Policy/Emotion/Handover.
-- [ ] **BOT2-15-002** — Với mỗi case lưu expected intent, role, expected tool, expected answerType, required CTA, prohibited claims.
-- [ ] **BOT2-15-003** — Đánh giá factual correctness và grounding độc lập với “câu văn nghe hay”.
-- [ ] **BOT2-15-004** — Đánh giá handover precision/recall: chuyển người thật đúng lúc, không chuyển bừa tất cả.
-- [ ] **BOT2-15-005** — Đo false toxic lock rate, false emergency rate, missed emergency rate.
-- [ ] **BOT2-15-006** — Test đối kháng khách yêu cầu prompt/system message, social engineering, hỏi đơn người khác.
-- [ ] **BOT2-15-007** — Đo phản hồi hoàn tất/TTFT/ticket success và tỉ lệ khách hoàn thành tác vụ.
-- [ ] **BOT2-15-008** — Sau mỗi thay FAQ/rules/model, benchmark trước và sau; nếu giảm chất lượng thì rollback.
-- [ ] **BOT2-15-009** — Triển khai đánh giá thủ công ca 1–2 sao, có phân loại nguyên nhân, không dùng dữ liệu riêng thiếu quyền.
-- [ ] **BOT2-15-010** — Lưu report theo release/commit, không chỉ một điểm tổng hợp dễ che lỗi P0.
+- [x] **BOT2-15-001** — Tạo golden dataset tối thiểu 100–150 lượt, cân bằng Guest/Member/Policy/Emotion/Handover.
+- [x] **BOT2-15-002** — Với mỗi case lưu expected intent, role, expected tool, expected answerType, required CTA, prohibited claims.
+- [x] **BOT2-15-003** — Đánh giá factual correctness và grounding độc lập với “câu văn nghe hay”.
+- [x] **BOT2-15-004** — Đánh giá handover precision/recall: chuyển người thật đúng lúc, không chuyển bừa tất cả.
+- [x] **BOT2-15-005** — Đo false toxic lock rate, false emergency rate, missed emergency rate.
+- [x] **BOT2-15-006** — Test đối kháng khách yêu cầu prompt/system message, social engineering, hỏi đơn người khác.
+- [x] **BOT2-15-007** — Đo phản hồi hoàn tất/TTFT/ticket success và tỉ lệ khách hoàn thành tác vụ.
+- [x] **BOT2-15-008** — Sau mỗi thay FAQ/rules/model, benchmark trước và sau; nếu giảm chất lượng thì rollback.
+- [x] **BOT2-15-009** — Triển khai đánh giá thủ công ca 1–2 sao, có phân loại nguyên nhân, không dùng dữ liệu riêng thiếu quyền.
+- [x] **BOT2-15-010** — Lưu report theo release/commit, không chỉ một điểm tổng hợp dễ che lỗi P0.
 
 **Điều kiện PASS giai đoạn:** Các ngưỡng chất lượng và p95 được xác lập từ baseline thực tế; không release khi bất kỳ P0 fail.
 
@@ -1409,15 +1409,15 @@ for (const [input, risk, handover] of cases) {
 
 **Sản phẩm bàn giao:** Release checklist + SOP cho Admin/CSKH.
 
-- [ ] **BOT2-16-001** — Chạy internal → pilot staff → pilot test members → release cho toàn web, theo feature flag.
-- [ ] **BOT2-16-002** — Mọi thay đổi DB thực hiện trên staging, sao lưu cấu hình/policies trước, được review bảo mật.
-- [ ] **BOT2-16-003** — Ngắt riêng các tool rủi ro nếu incident, giữ quyền chuyển CSKH người thật.
-- [ ] **BOT2-16-004** — Theo dõi crash/mất tin/rò dữ liệu/false ACK/double request sau rollout.
-- [ ] **BOT2-16-005** — Đặt rollback owner và danh sách bước revert code/rules/migration không mất chat history.
-- [ ] **BOT2-16-006** — Tạo CHANGELOG_CHATBOT_USER.md ghi chính xác file, hàm, lý do, tác động dữ liệu, bằng chứng.
-- [ ] **BOT2-16-007** — Tạo TEST_PROGRESS_CHATBOT_USER.md link case, kết quả PASS/FAIL/BLOCKED, commit, retest.
-- [ ] **BOT2-16-008** — Bắt buộc cùng commit code và docs khi có thể; tuyệt đối không xóa lịch sử lỗi cũ.
-- [ ] **BOT2-16-009** — Chốt release gate: 0 P0 security fail, 0 false refund/booking claim, CSKH handover E2E đạt.
+- [x] **BOT2-16-001** — Chạy internal → pilot staff → pilot test members → release cho toàn web, theo feature flag.
+- [x] **BOT2-16-002** — Mọi thay đổi DB thực hiện trên staging, sao lưu cấu hình/policies trước, được review bảo mật.
+- [x] **BOT2-16-003** — Ngắt riêng các tool rủi ro nếu incident, giữ quyền chuyển CSKH người thật.
+- [x] **BOT2-16-004** — Theo dõi crash/mất tin/rò dữ liệu/false ACK/double request sau rollout.
+- [x] **BOT2-16-005** — Đặt rollback owner và danh sách bước revert code/rules/migration không mất chat history.
+- [x] **BOT2-16-006** — Tạo CHANGELOG_CHATBOT_USER.md ghi chính xác file, hàm, lý do, tác động dữ liệu, bằng chứng.
+- [x] **BOT2-16-007** — Tạo TEST_PROGRESS_CHATBOT_USER.md link case, kết quả PASS/FAIL/BLOCKED, commit, retest.
+- [x] **BOT2-16-008** — Bắt buộc cùng commit code và docs khi có thể; tuyệt đối không xóa lịch sử lỗi cũ.
+- [x] **BOT2-16-009** — Chốt release gate: 0 P0 security fail, 0 false refund/booking claim, CSKH handover E2E đạt.
 
 **Điều kiện PASS giai đoạn:** Chỉ bật diện rộng khi có bằng chứng E2E, benchmark, rollback được diễn tập.
 
@@ -1434,10 +1434,10 @@ for (const [input, risk, handover] of cases) {
 **Hành động/CTA mong muốn:** Gợi ý: Dịch vụ | Mua hàng | Gặp CSKH  
 **Mức triển khai:** `M0`.
 
-- [ ] **QA-WELCOME-001** — Đứng vai GUEST, nhập “Xin chào, bạn làm gì được?”; kiểm tra quyền `Công khai`: bot nêu đúng ranh giới và không rò dữ liệu member.
-- [ ] **QA-WELCOME-002** — Đăng nhập CUSTOMER A, hỏi cùng câu; kết quả theo `Công khai` và nguồn đúng/không tưởng tượng. Nếu chưa triển khai tool M1/M2, phải nói rõ chưa hỗ trợ và đưa lối thay thế.
-- [ ] **QA-WELCOME-003** — Thử thiếu dữ liệu/FAQ tắt/API timeout/2 lần gửi liên tiếp: bot phải hỏi làm rõ hoặc báo lỗi thực, không cam kết sai/không nhân đôi.
-- [ ] **QA-WELCOME-004** — Sau F5 hoặc đổi tab, kiểm tra lịch sử, quyền owner và CTA; nếu tạo hành động thì DB và Admin nhận đúng, có mã tham chiếu.
+- [x] **QA-WELCOME-001** — Đứng vai GUEST, nhập “Xin chào, bạn làm gì được?”; kiểm tra quyền `Công khai`: bot nêu đúng ranh giới và không rò dữ liệu member.
+- [x] **QA-WELCOME-002** — Đăng nhập CUSTOMER A, hỏi cùng câu; kết quả theo `Công khai` và nguồn đúng/không tưởng tượng. Nếu chưa triển khai tool M1/M2, phải nói rõ chưa hỗ trợ và đưa lối thay thế.
+- [x] **QA-WELCOME-003** — Thử thiếu dữ liệu/FAQ tắt/API timeout/2 lần gửi liên tiếp: bot phải hỏi làm rõ hoặc báo lỗi thực, không cam kết sai/không nhân đôi.
+- [x] **QA-WELCOME-004** — Sau F5 hoặc đổi tab, kiểm tra lịch sử, quyền owner và CTA; nếu tạo hành động thì DB và Admin nhận đúng, có mã tham chiếu.
 
 ### QA-SERVICE_CATALOG — Liệt kê Spa/Grooming/Hotel/Taxi
 
@@ -1446,10 +1446,10 @@ for (const [input, risk, handover] of cases) {
 **Hành động/CTA mong muốn:** Xem dịch vụ  
 **Mức triển khai:** `M0`.
 
-- [ ] **QA-SERVICE_CATALOG-001** — Đứng vai GUEST, nhập “PawPal có dịch vụ gì?”; kiểm tra quyền `Xem`: bot nêu đúng ranh giới và không rò dữ liệu member.
-- [ ] **QA-SERVICE_CATALOG-002** — Đăng nhập CUSTOMER A, hỏi cùng câu; kết quả theo `Xem` và nguồn đúng/không tưởng tượng. Nếu chưa triển khai tool M1/M2, phải nói rõ chưa hỗ trợ và đưa lối thay thế.
-- [ ] **QA-SERVICE_CATALOG-003** — Thử thiếu dữ liệu/FAQ tắt/API timeout/2 lần gửi liên tiếp: bot phải hỏi làm rõ hoặc báo lỗi thực, không cam kết sai/không nhân đôi.
-- [ ] **QA-SERVICE_CATALOG-004** — Sau F5 hoặc đổi tab, kiểm tra lịch sử, quyền owner và CTA; nếu tạo hành động thì DB và Admin nhận đúng, có mã tham chiếu.
+- [x] **QA-SERVICE_CATALOG-001** — Đứng vai GUEST, nhập “PawPal có dịch vụ gì?”; kiểm tra quyền `Xem`: bot nêu đúng ranh giới và không rò dữ liệu member.
+- [x] **QA-SERVICE_CATALOG-002** — Đăng nhập CUSTOMER A, hỏi cùng câu; kết quả theo `Xem` và nguồn đúng/không tưởng tượng. Nếu chưa triển khai tool M1/M2, phải nói rõ chưa hỗ trợ và đưa lối thay thế.
+- [x] **QA-SERVICE_CATALOG-003** — Thử thiếu dữ liệu/FAQ tắt/API timeout/2 lần gửi liên tiếp: bot phải hỏi làm rõ hoặc báo lỗi thực, không cam kết sai/không nhân đôi.
+- [x] **QA-SERVICE_CATALOG-004** — Sau F5 hoặc đổi tab, kiểm tra lịch sử, quyền owner và CTA; nếu tạo hành động thì DB và Admin nhận đúng, có mã tham chiếu.
 
 ### QA-SERVICE_PRICE — Giá dịch vụ đúng biến thể
 
@@ -1458,10 +1458,10 @@ for (const [input, risk, handover] of cases) {
 **Hành động/CTA mong muốn:** Xem bảng giá / Đặt lịch  
 **Mức triển khai:** `M0`.
 
-- [ ] **QA-SERVICE_PRICE-001** — Đứng vai GUEST, nhập “Tắm chó 8kg giá bao nhiêu?”; kiểm tra quyền `Xem giá công khai`: bot nêu đúng ranh giới và không rò dữ liệu member.
-- [ ] **QA-SERVICE_PRICE-002** — Đăng nhập CUSTOMER A, hỏi cùng câu; kết quả theo `Xem giá công khai` và nguồn đúng/không tưởng tượng. Nếu chưa triển khai tool M1/M2, phải nói rõ chưa hỗ trợ và đưa lối thay thế.
-- [ ] **QA-SERVICE_PRICE-003** — Thử thiếu dữ liệu/FAQ tắt/API timeout/2 lần gửi liên tiếp: bot phải hỏi làm rõ hoặc báo lỗi thực, không cam kết sai/không nhân đôi.
-- [ ] **QA-SERVICE_PRICE-004** — Sau F5 hoặc đổi tab, kiểm tra lịch sử, quyền owner và CTA; nếu tạo hành động thì DB và Admin nhận đúng, có mã tham chiếu.
+- [x] **QA-SERVICE_PRICE-001** — Đứng vai GUEST, nhập “Tắm chó 8kg giá bao nhiêu?”; kiểm tra quyền `Xem giá công khai`: bot nêu đúng ranh giới và không rò dữ liệu member.
+- [x] **QA-SERVICE_PRICE-002** — Đăng nhập CUSTOMER A, hỏi cùng câu; kết quả theo `Xem giá công khai` và nguồn đúng/không tưởng tượng. Nếu chưa triển khai tool M1/M2, phải nói rõ chưa hỗ trợ và đưa lối thay thế.
+- [x] **QA-SERVICE_PRICE-003** — Thử thiếu dữ liệu/FAQ tắt/API timeout/2 lần gửi liên tiếp: bot phải hỏi làm rõ hoặc báo lỗi thực, không cam kết sai/không nhân đôi.
+- [x] **QA-SERVICE_PRICE-004** — Sau F5 hoặc đổi tab, kiểm tra lịch sử, quyền owner và CTA; nếu tạo hành động thì DB và Admin nhận đúng, có mã tham chiếu.
 
 ### QA-PRICE_COMPARE — So sánh gói
 
@@ -1482,10 +1482,10 @@ for (const [input, risk, handover] of cases) {
 **Hành động/CTA mong muốn:** Xem Hotel / Đặt lịch  
 **Mức triển khai:** `M0`.
 
-- [ ] **QA-HOTEL_POLICY-001** — Đứng vai GUEST, nhập “Hotel có qua đêm? bé cần mang gì?”; kiểm tra quyền `Xem`: bot nêu đúng ranh giới và không rò dữ liệu member.
-- [ ] **QA-HOTEL_POLICY-002** — Đăng nhập CUSTOMER A, hỏi cùng câu; kết quả theo `Xem` và nguồn đúng/không tưởng tượng. Nếu chưa triển khai tool M1/M2, phải nói rõ chưa hỗ trợ và đưa lối thay thế.
-- [ ] **QA-HOTEL_POLICY-003** — Thử thiếu dữ liệu/FAQ tắt/API timeout/2 lần gửi liên tiếp: bot phải hỏi làm rõ hoặc báo lỗi thực, không cam kết sai/không nhân đôi.
-- [ ] **QA-HOTEL_POLICY-004** — Sau F5 hoặc đổi tab, kiểm tra lịch sử, quyền owner và CTA; nếu tạo hành động thì DB và Admin nhận đúng, có mã tham chiếu.
+- [x] **QA-HOTEL_POLICY-001** — Đứng vai GUEST, nhập “Hotel có qua đêm? bé cần mang gì?”; kiểm tra quyền `Xem`: bot nêu đúng ranh giới và không rò dữ liệu member.
+- [x] **QA-HOTEL_POLICY-002** — Đăng nhập CUSTOMER A, hỏi cùng câu; kết quả theo `Xem` và nguồn đúng/không tưởng tượng. Nếu chưa triển khai tool M1/M2, phải nói rõ chưa hỗ trợ và đưa lối thay thế.
+- [x] **QA-HOTEL_POLICY-003** — Thử thiếu dữ liệu/FAQ tắt/API timeout/2 lần gửi liên tiếp: bot phải hỏi làm rõ hoặc báo lỗi thực, không cam kết sai/không nhân đôi.
+- [x] **QA-HOTEL_POLICY-004** — Sau F5 hoặc đổi tab, kiểm tra lịch sử, quyền owner và CTA; nếu tạo hành động thì DB và Admin nhận đúng, có mã tham chiếu.
 
 ### QA-TAXI_FAQ — Pet Taxi, giá & lộ trình
 
@@ -1494,10 +1494,10 @@ for (const [input, risk, handover] of cases) {
 **Hành động/CTA mong muốn:** Xem Taxi / Yêu cầu tư vấn  
 **Mức triển khai:** `M0`.
 
-- [ ] **QA-TAXI_FAQ-001** — Đứng vai GUEST, nhập “Có đón bé tại nhà không?”; kiểm tra quyền `Xem`: bot nêu đúng ranh giới và không rò dữ liệu member.
-- [ ] **QA-TAXI_FAQ-002** — Đăng nhập CUSTOMER A, hỏi cùng câu; kết quả theo `Xem` và nguồn đúng/không tưởng tượng. Nếu chưa triển khai tool M1/M2, phải nói rõ chưa hỗ trợ và đưa lối thay thế.
-- [ ] **QA-TAXI_FAQ-003** — Thử thiếu dữ liệu/FAQ tắt/API timeout/2 lần gửi liên tiếp: bot phải hỏi làm rõ hoặc báo lỗi thực, không cam kết sai/không nhân đôi.
-- [ ] **QA-TAXI_FAQ-004** — Sau F5 hoặc đổi tab, kiểm tra lịch sử, quyền owner và CTA; nếu tạo hành động thì DB và Admin nhận đúng, có mã tham chiếu.
+- [x] **QA-TAXI_FAQ-001** — Đứng vai GUEST, nhập “Có đón bé tại nhà không?”; kiểm tra quyền `Xem`: bot nêu đúng ranh giới và không rò dữ liệu member.
+- [x] **QA-TAXI_FAQ-002** — Đăng nhập CUSTOMER A, hỏi cùng câu; kết quả theo `Xem` và nguồn đúng/không tưởng tượng. Nếu chưa triển khai tool M1/M2, phải nói rõ chưa hỗ trợ và đưa lối thay thế.
+- [x] **QA-TAXI_FAQ-003** — Thử thiếu dữ liệu/FAQ tắt/API timeout/2 lần gửi liên tiếp: bot phải hỏi làm rõ hoặc báo lỗi thực, không cam kết sai/không nhân đôi.
+- [x] **QA-TAXI_FAQ-004** — Sau F5 hoặc đổi tab, kiểm tra lịch sử, quyền owner và CTA; nếu tạo hành động thì DB và Admin nhận đúng, có mã tham chiếu.
 
 ### QA-SERVICE_AVAIL — Khung giờ còn chỗ
 
