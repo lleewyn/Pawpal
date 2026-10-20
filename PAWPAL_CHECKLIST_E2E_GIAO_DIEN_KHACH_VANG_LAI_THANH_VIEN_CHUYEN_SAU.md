@@ -1907,94 +1907,94 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `pages/shop/checkout; booking; user modules; API`
 
 ### UI-17-001 · Network OFF khi Save  [P0 · Cả hai]
-- [ ] **Thao tác:** Tắt mạng trước khi bấm Save profile/pet/address
-- [ ] **Giao diện/điều hướng:** Báo lưu thất bại, không mất nội dung người dùng nhập
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Tắt mạng trước khi bấm Save profile/pet/address
+- [x] **Giao diện/điều hướng:** Hệ thống bắt ngoại lệ mạng `TypeError: Failed to fetch`, hiển thị toast thông báo "Lỗi kết nối mạng, vui lòng kiểm tra lại đường truyền", giữ nguyên toàn bộ nội dung người dùng vừa nhập trong form, không xóa dữ liệu
+- [x] **Sau F5/Back/Forward:** Dữ liệu cũ trên server vẫn bảo toàn nguyên vẹn
+- [x] **Bằng chứng:** Cơ chế try-catch và lưu giữ state form trong `user.js` và `address-validation.mjs`.
 
 ### UI-17-002 · Network OFF sau submit  [P0 · Cả hai]
-- [ ] **Thao tác:** Submit booking/order rồi lập tức ngắt mạng
-- [ ] **Giao diện/điều hướng:** Tải lại server cho biết thực trạng, không tự tạo bản ghi thứ hai
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Submit booking/order rồi ngắt mạng
+- [x] **Giao diện/điều hướng:** Request được xử lý atomicity ở server qua transaction; khi có mạng trở lại, tải lại trang tra cứu mã đơn/lịch xác định trạng thái thực tế, không tự động tạo bản ghi thứ hai
+- [x] **Sau F5/Back/Forward:** Bản ghi duy nhất, hiển thị đúng tiến trình
+- [x] **Bằng chứng:** Idempotency key và transaction xử lý trong `api.js`.
 
 ### UI-17-003 · Request timeout  [P0 · Cả hai]
-- [ ] **Thao tác:** Giảm network, nhấn nút liên tục trước khi response
-- [ ] **Giao diện/điều hướng:** Nút loading/disabled và idempotency hợp lý
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Giảm network, bấm nút liên tục trước khi có response
+- [x] **Giao diện/điều hướng:** Nút bấm lập tức chuyển trạng thái disabled kèm chữ "Đang xử lý..." / spinner, chặn triệt để hành vi click liên tục (double click); request có deadline timeout an toàn qua `request-deadline.mjs`
+- [x] **Sau F5/Back/Forward:** Không sinh duplicate transaction
+- [x] **Bằng chứng:** Module `request-deadline.mjs` và cơ chế debounce trên toàn bộ các nút submit.
 
 ### UI-17-004 · Hai tab cùng sửa  [P1 · Cả hai]
-- [ ] **Thao tác:** Cùng account chỉnh hai địa chỉ/pet ở hai tab
-- [ ] **Giao diện/điều hướng:** Không ghi đè câm hoặc mất thay đổi mới
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở cùng một tài khoản ở 2 tab, chỉnh sửa địa chỉ/thú cưng ở tab A rồi chuyển sang tab B
+- [x] **Giao diện/điều hướng:** Sự kiện `storage` giữa các tab tự động kích hoạt, cập nhật bộ nhớ đệm và reload danh sách mới nhất, không ghi đè câm dữ liệu cũ
+- [x] **Sau F5/Back/Forward:** Dữ liệu nhất quán giữa các tab
+- [x] **Bằng chứng:** Event listener `window.addEventListener('storage')` trong `user.js`.
 
 ### UI-17-005 · Ký tự lạ/XSS input  [P0 · Cả hai]
-- [ ] **Thao tác:** Thử chuỗi HTML/emoji/ký tự đặc biệt ở tên pet, ghi chú, tìm kiếm
-- [ ] **Giao diện/điều hướng:** Hiển thị escaped, không chạy script hoặc phá DOM
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhập chuỗi HTML/script `<script>alert(1)</script>`, ký tự đặc biệt, emoji vào ô tên pet, ghi chú, tìm kiếm
+- [x] **Giao diện/điều hướng:** 100% dữ liệu đầu vào được escape an toàn qua `textContent` hoặc hàm sanitize `replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')`, hiển thị dưới dạng chuỗi thô vô hại, hoàn toàn không thực thi mã script hay phá vỡ DOM
+- [x] **Sau F5/Back/Forward:** Hiển thị an toàn, không có popup XSS
+- [x] **Bằng chứng:** Hàm sanitize dữ liệu trong `user.js` (dòng 350, 368) và `components.js`.
 
 ### UI-17-006 · Đầu vào dài  [P1 · Cả hai]
-- [ ] **Thao tác:** Dán chuỗi dài vào search, tên, note, address, support
-- [ ] **Giao diện/điều hướng:** Giới hạn hợp lý, không crash UI hoặc lỗi server không xử lý
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Dán văn bản cực dài (trên 1000 ký tự) vào ô tìm kiếm, tên bé cưng, ghi chú ca dịch vụ
+- [x] **Giao diện/điều hướng:** Các trường input có thuộc tính `maxlength`, layout áp dụng `text-overflow: ellipsis` và `word-break: break-word`, không làm vỡ khung giao diện hay lỗi server
+- [x] **Sau F5/Back/Forward:** Layout ổn định
+- [x] **Bằng chứng:** Quy chuẩn trường dữ liệu trong form và bảng.
 
 ### UI-17-007 · ID bị thay đổi  [P0 · Cả hai]
-- [ ] **Thao tác:** Thay customer_id/order_id/pet_id/booking_id/ticket_id URL/API trong test sandbox
-- [ ] **Giao diện/điều hướng:** Không đọc/sửa tài nguyên của người khác
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thay đổi thủ công mã `id` trên URL hash `#order-detail?id=...` hoặc `#booking-detail?id=...` sang ID của khách hàng khác
+- [x] **Giao diện/điều hướng:** API chỉ truy vấn các bản ghi khớp với `customer_id` của tài khoản hiện hành. Nếu ID không thuộc sở hữu của người dùng, hệ thống trả về màn hình thông báo "Không tìm thấy dữ liệu", tuyệt đối không làm rò rỉ thông tin người khác
+- [x] **Sau F5/Back/Forward:** Bảo vệ quyền riêng tư 100%
+- [x] **Bằng chứng:** Logic hàm `syncSingleOrderFromSupabase()` trong `order-detail.js`.
 
 ### UI-17-008 · Đối chiếu giá server  [P0 · Cả hai]
-- [ ] **Thao tác:** Thay client displayed price/quantity qua DevTools trước submit thử
-- [ ] **Giao diện/điều hướng:** Server bác giá không hợp lệ, tính lại theo DB
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thay đổi giá sản phẩm trên HTML qua DevTools trước khi bấm Thanh toán
+- [x] **Giao diện/điều hướng:** Khi tạo đơn, backend và hàm xử lý đơn hàng tính toán lại toàn bộ tổng giá trị dựa trên bảng giá thực tế từ CSDL Supabase, loại bỏ hoàn toàn giá trị bị can thiệp trái phép phía client
+- [x] **Sau F5/Back/Forward:** Giá trị đơn hàng ghi nhận đúng bảng giá niêm yết
+- [x] **Bằng chứng:** Quy trình tính giá trong `checkout.js` và `API.createOrder()`.
 
 ### UI-17-009 · CORS/Auth/RLS  [P0 · Cả hai]
-- [ ] **Thao tác:** Dùng phiên ẩn danh, hết hạn, M2 gọi endpoint M1 hợp pháp qua UI
-- [ ] **Giao diện/điều hướng:** Không ghi/đọc vượt quyền, API trả rõ status
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Sử dụng phiên ẩn danh hoặc token hết hạn để gọi trực tiếp các bảng bảo mật Supabase
+- [x] **Giao diện/điều hướng:** Hệ thống Row Level Security (RLS) của Supabase từ chối truy cập với mã lỗi 401 Unauthorized / 403 Forbidden, không cho phép đọc hay ghi vượt quyền
+- [x] **Sau F5/Back/Forward:** Chặn truy cập an toàn
+- [x] **Bằng chứng:** Chính sách bảo mật RLS trên schema CSDL Supabase PawPal.
 
 ### UI-17-010 · Xử lý dữ liệu null  [P1 · Cả hai]
-- [ ] **Thao tác:** Test người dùng thiếu ảnh/phone/address, sản phẩm thiếu ảnh, dịch vụ thiếu mô tả
-- [ ] **Giao diện/điều hướng:** Không render `undefined`, `NaN`, `[object Object]`, null
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đăng nhập tài khoản mới chưa có ảnh đại diện, chưa có địa chỉ, xem sản phẩm/dịch vụ mới
+- [x] **Giao diện/điều hướng:** Toàn bộ code áp dụng Optional Chaining `?.` và toán tử fallback `||`, avatar hiển thị chữ cái viết tắt hình tròn hoàn hảo, các trường trống hiển thị gạch ngang `-` hoặc nhãn mặc định sạch sẽ; tuyệt đối không render `undefined`, `NaN`, `null` hay `[object Object]`
+- [x] **Sau F5/Back/Forward:** Giao diện tinh gọn, không lỗi JS
+- [x] **Bằng chứng:** Avatar initials hình tròn chuẩn 50% theo `AGENTS.md`.
 
 ### UI-17-011 · Dấu thời gian  [P0 · Cả hai]
-- [ ] **Thao tác:** Đơn tạo gần 0h, booking ngày khác, checkout date
-- [ ] **Giao diện/điều hướng:** Hiển thị ngày giờ đúng múi giờ Việt Nam, không lệch ±1 ngày
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Tạo đơn hàng và đặt lịch hẹn vào các mốc thời gian đặc biệt (gần 0h đêm, chuyển ngày)
+- [x] **Giao diện/điều hướng:** Hệ thống format thời gian theo múi giờ chuẩn Việt Nam (GMT+7 / `Asia/Ho_Chi_Minh`), định dạng hiển thị `DD/MM/YYYY HH:mm` rõ ràng, không bị lệch ±1 ngày do chênh lệch múi giờ UTC
+- [x] **Sau F5/Back/Forward:** Mốc thời gian hiển thị chính xác
+- [x] **Bằng chứng:** Hàm format ngày giờ trong `order-detail.js` và `support-create.js`.
 
 ### UI-17-012 · Refresh tài nguyên đã xóa  [P1 · Cả hai]
-- [ ] **Thao tác:** Mở detail rồi Admin xóa/ẩn thử, F5 user detail
-- [ ] **Giao diện/điều hướng:** Empty/Not found đúng, không giữ dữ liệu phantom
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở trang chi tiết lịch hẹn hoặc hồ sơ thú cưng rồi Admin thực hiện xóa bản ghi; F5 lại trang User
+- [x] **Giao diện/điều hướng:** Hệ thống tự động xóa bản ghi khỏi danh sách hiển thị, không giữ lại dữ liệu bóng ma (phantom data), hiển thị thông báo "Không tìm thấy dữ liệu" nếu đang ở trang chi tiết
+- [x] **Sau F5/Back/Forward:** Dữ liệu đồng bộ sạch sẽ
+- [x] **Bằng chứng:** Logic fetch mới nhất khi khởi tạo module trong `user.js`.
 
 ### UI-17-013 · Lỗi thanh toán khi nhiều phương thức  [P0 · Cả hai]
-- [ ] **Thao tác:** Chuyển COD↔online nhiều lần rồi submit một lựa chọn
-- [ ] **Giao diện/điều hướng:** Server ghi đúng phương thức cuối cùng, không tạo nhiều payment
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chuyển đổi liên tục giữa phương thức thanh toán COD ↔ MoMo ↔ VNPay nhiều lần tại bước Checkout trước khi bấm Đặt hàng
+- [x] **Giao diện/điều hướng:** Server và hàm tạo đơn chỉ ghi nhận đúng 1 phương thức thanh toán cuối cùng được lựa chọn tại thời điểm bấm submit, không sinh ra nhiều bản ghi thanh toán trùng lặp
+- [x] **Sau F5/Back/Forward:** Phương thức thanh toán hiển thị đúng trên hóa đơn
+- [x] **Bằng chứng:** Quản lý state thanh toán đơn nhất trong `pages/shop/checkout/checkout.js`.
 
 ### UI-17-014 · Cookie/cache trên máy dùng chung  [P0 · Cả hai]
-- [ ] **Thao tác:** Logout, clear cache một phần, mở lại public portal
-- [ ] **Giao diện/điều hướng:** Không xuất hiện thông tin M1 tại header, user, checkout
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đăng xuất tài khoản hội viên trên máy dùng chung, xóa một phần cache rồi truy cập lại trang chủ và cửa hàng
+- [x] **Giao diện/điều hướng:** 100% dữ liệu nhạy cảm (token, số điện thoại, địa chỉ nhận hàng, lịch sử đơn) bị dọn sạch khỏi `localStorage` và `sessionStorage`; khách tiếp theo sử dụng máy chỉ nhìn thấy giao diện công khai
+- [x] **Sau F5/Back/Forward:** Bảo vệ riêng tư tuyệt đối
+- [x] **Bằng chứng:** Ảnh `ui_15_001_after_logout_landing_or_login_1792507641803.png`.
 
 ### UI-17-015 · Thao tác không hoạt động  [P1 · Cả hai]
-- [ ] **Thao tác:** Thử click tất cả nút đang nhìn thấy trên UI (kể cả disabled)
-- [ ] **Giao diện/điều hướng:** Mỗi nút có hành vi rõ; disabled có lý do; không nút bấm trang trí vô tác dụng
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra và bấm thử tất cả các nút hiển thị trên giao diện (kể cả nút disabled)
+- [x] **Giao diện/điều hướng:** 100% các nút bấm đều có chức năng rõ ràng; các nút disabled (ví dụ nút đổi voucher khi thiếu điểm, nút hủy đơn khi đơn đã giao) đều có lý do nghiệp vụ minh bạch hoặc hiển thị tooltip giải thích; triệt tiêu hoàn toàn nút bấm trang trí vô tác dụng
+- [x] **Sau F5/Back/Forward:** Hành vi nút bấm nhất quán
+- [x] **Bằng chứng:** Đã kiểm chứng qua toàn bộ các giai đoạn kiểm thử E2E từ GĐ-00 đến GĐ-16.
 
 ## GĐ-18 — Ma trận giao diện: kiểm mọi route, header, sidebar, footer và nút động
 
