@@ -2343,22 +2343,38 @@ async function persistBookingSubmit() {
                 if (existingPets && existingPets.length > 0) {
                     finalPetId = existingPets[0].id;
                 } else {
+                    const normalizePetSpecies = (raw) => {
+                        if (!raw) return 'khac';
+                        const s = String(raw).trim().toLowerCase();
+                        if (s.includes('chó') || s.includes('cún') || s === 'dog' || s === 'cho') return 'cho';
+                        if (s.includes('mèo') || s.includes('miu') || s === 'cat' || s === 'meo') return 'meo';
+                        if (s.includes('thỏ') || s === 'rabbit' || s === 'tho') return 'tho';
+                        if (s.includes('hamster')) return 'hamster';
+                        if (s.includes('chim') || s === 'bird') return 'thu_nho';
+                        return 'khac';
+                    };
+
                     const petPayload = {
                         customer_id: customerId,
                         pet_code: `PET-${Date.now()}`,
                         pet_name: petName,
-                        species: bookingState.petType || 'other',
+                        species: normalizePetSpecies(bookingState.petType),
                         breed: bookingState.petBreed || '',
                         weight: parseFloat(bookingState.petWeight) || 0,
-                        status: 'ACTIVE'
+                        status: 'dang_hoat_dong'
                     };
-                    const { data: insertedPet } = await db.from('pet_profile').insert([petPayload]).select('id').limit(1);
+                    const { data: insertedPet, error: petInsertErr } = await db.from('pet_profile').insert([petPayload]).select('id').limit(1);
+                    if (petInsertErr) {
+                        console.error('[Booking] Insert pet_profile error:', petInsertErr);
+                        throw petInsertErr;
+                    }
                     if (insertedPet && insertedPet[0]) {
                         finalPetId = insertedPet[0].id;
                     }
                 }
             } catch (e) {
-                console.warn('[Booking] Could not check or create pet in Supabase', e);
+                console.error('[Booking] Could not check or create pet in Supabase', e);
+                throw new Error('Không thể khởi tạo hồ sơ thú cưng trên hệ thống: ' + (e.message || 'Lỗi CSDL.'));
             }
         }
 
