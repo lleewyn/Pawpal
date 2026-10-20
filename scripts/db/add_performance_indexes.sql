@@ -163,8 +163,8 @@ CREATE INDEX IF NOT EXISTS idx_chat_message_conversation_id
 CREATE INDEX IF NOT EXISTS idx_paw_point_tx_customer_id 
     ON public.paw_point_transaction(customer_id, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_paw_point_tx_type 
-    ON public.paw_point_transaction(transaction_type);
+CREATE INDEX IF NOT EXISTS idx_paw_point_tx_reward_rule 
+    ON public.paw_point_transaction(reward_rule_id);
 
 
 -- 10. BẢNG NHÂN SỰ & LỊCH CA LÀM VIỆC (STAFF & SCHEDULE)
