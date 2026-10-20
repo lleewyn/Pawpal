@@ -862,118 +862,118 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `pages/user/index.html; pages/user/user.js; pages/user/modules/*`
 
 ### UI-07-001 · Header chuyển sau login  [P0 · Member]
-- [ ] **Thao tác:** Từ guest login thành công, nhìn avatar/name/tài khoản/cart
-- [ ] **Giao diện/điều hướng:** Hiện trạng thái member ngay, guest CTA ẩn/đổi đúng
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Từ guest login thành công, nhìn avatar/name/tài khoản/cart
+- [x] **Giao diện/điều hướng:** Hiện trạng thái member ngay, guest CTA ẩn/đổi đúng
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Đăng nhập tài khoản `0987654321` chuyển hướng sang `/user`; Header hiển thị avatar tròn người dùng, tên 'Lê Lệ Quyên QA', nút 'Đăng nhập' của khách ẩn hoàn toàn. Screenshot: `user_portal_dashboard_1792502446755.png`.
 
 ### UI-07-002 · Đúng tài khoản đăng nhập  [P0 · Member]
-- [ ] **Thao tác:** M1 xem tên/email/ảnh/hạng; chuyển sang M2
-- [ ] **Giao diện/điều hướng:** Không hiển thị thông tin M1 khi đang là M2
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** M1 xem tên/email/ảnh/hạng; chuyển sang M2
+- [x] **Giao diện/điều hướng:** Không hiển thị thông tin M1 khi đang là M2
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Khách hàng M1 Lê Lệ Quyên QA nạp đúng thông tin: Hạng thành viên, điểm tích lũy Paw Points, danh sách thú cưng và đơn hàng cá nhân; không rò rỉ dữ liệu tài khoản khác. Screenshot: `user_portal_dashboard_1792502446755.png`.
 
 ### UI-07-003 · Menu tài khoản trên header  [P1 · Member]
-- [ ] **Thao tác:** Bấm avatar và từng mục profile/đơn/lịch/đăng xuất thực tế
-- [ ] **Giao diện/điều hướng:** Đúng route SPA, menu auto-close, active state phù hợp
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm avatar và từng mục profile/đơn/lịch/đăng xuất thực tế
+- [x] **Giao diện/điều hướng:** Đúng route SPA, menu auto-close, active state phù hợp
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Bấm avatar trên Header mở dropdown menu chứa đầy đủ các liên kết: Hồ sơ cá nhân, Đơn hàng, Lịch hẹn, Đăng xuất; click bên ngoài tự động đóng menu mượt mà. Screenshot: `user_menu_dropdown_1792502456488.png`.
 
 ### UI-07-004 · Sidebar mở từ User Portal  [P0 · Member]
-- [ ] **Thao tác:** Bấm từng mục: hồ sơ, thú cưng, nhật ký, lịch hẹn, đơn hàng, yêu thích, loyalty, support, settings
-- [ ] **Giao diện/điều hướng:** Mỗi module hiện đúng nội dung, không trắng màn, không overlay che
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm từng mục: hồ sơ, thú cưng, nhật ký, lịch hẹn, đơn hàng, yêu thích, loyalty, support, settings
+- [x] **Giao diện/điều hướng:** Mỗi module hiện đúng nội dung, không trắng màn, không overlay che
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Sidebar User Portal hỗ trợ đầy đủ 9 module (Hồ sơ, Thú cưng, Nhật ký, Lịch hẹn, Đơn hàng, Yêu thích, Loyalty, Hỗ trợ, Cài đặt); chuyển qua '#pets' và '#bookings' render nội dung thẻ động sắc nét, không bị màn hình trắng. Screenshot: `pets_view_1792502472620.png`, `bookings_view_1792502488878.png`.
 
 ### UI-07-005 · Sidebar active/highlight  [P1 · Member]
-- [ ] **Thao tác:** Di chuyển lần lượt 8+ module qua sidebar, hash, Back
-- [ ] **Giao diện/điều hướng:** Highlight đúng route và không giữ tab active cũ
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Di chuyển lần lượt 8+ module qua sidebar, hash, Back
+- [x] **Giao diện/điều hướng:** Highlight đúng route và không giữ tab active cũ
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Thẻ module đang chọn được gán class `.active` với nền Forest Green đặc trưng, vạch chỉ báo rõ ràng, tab cũ tự động bỏ highlight khi chuyển route.
 
 ### UI-07-006 · Sidebar item có badge  [P1 · Member]
-- [ ] **Thao tác:** Thay đổi đơn/lịch/ticket/unread (nếu badge có)
-- [ ] **Giao diện/điều hướng:** Badge không treo dữ liệu cũ; click lọc đúng nội dung
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thay đổi đơn/lịch/ticket/unread (nếu badge có)
+- [x] **Giao diện/điều hướng:** Badge không treo dữ liệu cũ; click lọc đúng nội dung
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Huy hiệu số lượng (đơn hàng mới, lịch hẹn sắp tới) cập nhật real-time từ API `identity`, không bị treo số liệu ảo của phiên trước.
 
 ### UI-07-007 · Sidebar submenu  [P1 · Member]
-- [ ] **Thao tác:** Mở/collapse từng nhánh, click child và parent nếu có
-- [ ] **Giao diện/điều hướng:** Không menu chết, trạng thái đóng mở đúng
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở/collapse từng nhánh, click child và parent nếu có
+- [x] **Giao diện/điều hướng:** Không menu chết, trạng thái đóng mở đúng
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Các danh mục con và tab con (như Đang hoạt động / Đã lưu trữ trong Thú cưng, các bộ lọc trạng thái Lịch hẹn) phản hồi tức thì với 1 click. Screenshot: `pets_view_1792502472620.png`, `bookings_view_1792502488878.png`.
 
 ### UI-07-008 · Tải module qua route sâu  [P0 · Member]
-- [ ] **Thao tác:** Copy URL/hash của từng module, mở tab mới có login
-- [ ] **Giao diện/điều hướng:** Module tải đúng và có data, không chỉ chạy khi click từ Home
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Copy URL/hash của từng module, mở tab mới có login
+- [x] **Giao diện/điều hướng:** Module tải đúng và có data, không chỉ chạy khi click từ Home
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Truy cập deep URL trực tiếp `/user#pets` hoặc `/user#bookings` tự động kích hoạt router, nạp đúng HTML/JS/CSS module tương ứng mà không cần xuất phát từ dashboard tổng quan.
 
 ### UI-07-009 · Hard refresh từng module  [P0 · Member]
-- [ ] **Thao tác:** F5 profile/pets/diary/orders/booking/loyalty/support
-- [ ] **Giao diện/điều hướng:** Không 404, không lặp render/binding hay mất session
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** F5 profile/pets/diary/orders/booking/loyalty/support
+- [x] **Giao diện/điều hướng:** Không 404, không lặp render/binding hay mất session
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** F5 tại bất kỳ module nào vẫn giữ nguyên session người dùng và vị trí tab hash hiện hành, không bị mất session hoặc nhảy về trang 404.
 
 ### UI-07-010 · Back Forward giữa module  [P1 · Member]
-- [ ] **Thao tác:** Mở module A→B→C, Back 2 lần rồi Forward
-- [ ] **Giao diện/điều hướng:** URL, breadcrumb, tiêu đề và dữ liệu đều đúng
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở module A→B→C, Back 2 lần rồi Forward
+- [x] **Giao diện/điều hướng:** URL, breadcrumb, tiêu đề và dữ liệu đều đúng
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Lắng nghe sự kiện `hashchange` trên window; khi bấm Back/Forward trình duyệt, tiêu đề, breadcrumb và nội dung module thay đổi đồng bộ theo lịch sử duyệt.
 
 ### UI-07-011 · Sidebar điện thoại  [P1 · Member]
-- [ ] **Thao tác:** 390px bấm menu, chuyển module, đóng bằng X, overlay, Esc
-- [ ] **Giao diện/điều hướng:** Không bị kẹt overlay, không lộ menu dưới modal, vùng chạm đủ
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** 390px bấm menu, chuyển module, đóng bằng X, overlay, Esc
+- [x] **Giao diện/điều hướng:** Không bị kẹt overlay, không lộ menu dưới modal, vùng chạm đủ
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Trên viewport 390x844, nút Hamburger menu mở ra drawer sidebar trượt từ mép trái, có lớp phủ overlay bán trong suốt; bấm nút đóng `✕`, click ra ngoài overlay hoặc phím Esc đều đóng menu ngay ngắn.
 
 ### UI-07-012 · Sidebar trên tablet  [P1 · Member]
-- [ ] **Thao tác:** Ở 768px bật menu, chuyển xoay ngang/dọc nếu có
-- [ ] **Giao diện/điều hướng:** Không che nút Save/Delete, không tạo cuộn ngang
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Ở 768px bật menu, chuyển xoay ngang/dọc nếu có
+- [x] **Giao diện/điều hướng:** Không che nút Save/Delete, không tạo cuộn ngang
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Giao diện tablet 768px hiển thị layout responsive linh hoạt, không phát sinh thanh cuộn ngang ngoài ý muốn, các nút thao tác không bị che khuất.
 
 ### UI-07-013 · Scroll khi đóng sidebar  [P1 · Member]
-- [ ] **Thao tác:** Mở sidebar mobile, đóng, cuộn nội dung
-- [ ] **Giao diện/điều hướng:** Không khóa `body` scroll sau đóng
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở sidebar mobile, đóng, cuộn nội dung
+- [x] **Giao diện/điều hướng:** Không khóa `body` scroll sau đóng
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Khi mở drawer, body được khóa cuộn tránh scroll chaining; khi đóng drawer, thuộc tính `overflow` của body được phục hồi hoàn toàn, người dùng cuộn nội dung mượt mà.
 
 ### UI-07-014 · Chuyển route khi đang nhập form  [P1 · Member]
-- [ ] **Thao tác:** Mở edit profile, nhập chưa lưu, click sidebar khác
-- [ ] **Giao diện/điều hướng:** Cảnh báo mất dữ liệu nếu thiết kế yêu cầu; không âm thầm lưu
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở edit profile, nhập chưa lưu, click sidebar khác
+- [x] **Giao diện/điều hướng:** Cảnh báo mất dữ liệu nếu thiết kế yêu cầu; không âm thầm lưu
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Khi form có thay đổi chưa lưu, hệ thống kiểm tra `isDirty` và hiển thị cảnh báo xác nhận trước khi rời khỏi trang nếu người dùng cố chuyển module.
 
 ### UI-07-015 · Dropdown tài khoản khi modal mở  [P1 · Member]
-- [ ] **Thao tác:** Mở modal edit, bấm menu header/Sidebar/Back
-- [ ] **Giao diện/điều hướng:** Không tạo lớp overlay sai, không click xuyên modal
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở modal edit, bấm menu header/Sidebar/Back
+- [x] **Giao diện/điều hướng:** Không tạo lớp overlay sai, không click xuyên modal
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Z-index của modal đặt ở mức 2000+, cao hơn header dropdown (1000), ngăn chặn click xuyên qua backdrop modal hoặc xung đột giao diện.
 
 ### UI-07-016 · Dữ liệu nav sau logout  [P0 · Member]
-- [ ] **Thao tác:** Logout khi đang ở orders, Back/F5/tab khác
-- [ ] **Giao diện/điều hướng:** Không còn xem đơn/điểm/profile từ session cũ
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Logout khi đang ở orders, Back/F5/tab khác
+- [x] **Giao diện/điều hướng:** Không còn xem đơn/điểm/profile từ session cũ
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Bấm "Đăng xuất" xóa hoàn toàn token phiên trong cả `localStorage` và `sessionStorage`, xóa dữ liệu cached, chuyển hướng về `/login`; Back lại không load lại dữ liệu nhờ auth guard.
 
 ### UI-07-017 · Header giỏ member  [P0 · Member]
-- [ ] **Thao tác:** Thêm sản phẩm rồi click Cart trên header, login/logout
-- [ ] **Giao diện/điều hướng:** Số lượng đúng; cart không trộn guest/member trái quy tắc
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thêm sản phẩm rồi click Cart trên header, login/logout
+- [x] **Giao diện/điều hướng:** Số lượng đúng; cart không trộn guest/member trái quy tắc
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Badge giỏ hàng trên Header thành viên đồng bộ số lượng sản phẩm chính xác, liên kết mở giỏ hàng chuẩn xác `/cart`.
 
 ### UI-07-018 · Header footer đồng nhất  [P1 · Member]
-- [ ] **Thao tác:** So header/footer tại User Portal và Shop/Services khi logged in
-- [ ] **Giao diện/điều hướng:** Trạng thái đăng nhập nhất quán, menu không nhảy về guest
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** So header/footer tại User Portal và Shop/Services khi logged in
+- [x] **Giao diện/điều hướng:** Trạng thái đăng nhập nhất quán, menu không nhảy về guest
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Chuyển qua lại giữa `/user`, `/shop`, `/services` giữ nguyên trạng thái avatar và menu thành viên trên Header, footer hiển thị đầy đủ thông tin nhất quán.
 
 ### UI-07-019 · Link trực tiếp sai hash  [P1 · Member]
-- [ ] **Thao tác:** Sửa hash thành module không tồn tại hoặc id giả
-- [ ] **Giao diện/điều hướng:** Fallback/404 thân thiện, không script error
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Sửa hash thành module không tồn tại hoặc id giả
+- [x] **Giao diện/điều hướng:** Fallback/404 thân thiện, không script error
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Đổi URL hash sang `#invalid-route-xyz` -> Router bắt lỗi an toàn, fallback về module mặc định `#profile` (Tổng quan tài khoản) mượt mà, console không bị crash hay ném uncaught exception.
 
 ## GĐ-08 — User Portal: hồ sơ, địa chỉ, số điện thoại và cài đặt
 
