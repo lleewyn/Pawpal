@@ -1,0 +1,305 @@
+diff --git a/pages/admin/modules/complaints/subtabs/tab-complaint-detail.js b/pages/admin/modules/complaints/subtabs/tab-complaint-detail.js
+index 009a6b3..9489e7e 100644
+--- a/pages/admin/modules/complaints/subtabs/tab-complaint-detail.js
++++ b/pages/admin/modules/complaints/subtabs/tab-complaint-detail.js
+@@ -24,6 +24,35 @@
+         return PawpalComplaints.getDbClient?.() || (window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient);
+     }
+ 
++    async function sendTicketNotification(ticket, title, content) {
++        if (!ticket) return;
++        try {
++            let custId = ticket.customerId || ticket.user_id || ticket.userId;
++            const targetDbId = ticket.rawId || ticket.id;
++            const isUuid = typeof custId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(custId);
++            if (!isUuid && targetDbId) {
++                const client = getDbClient();
++                if (client) {
++                    const { data } = await client.from('support_ticket').select('user_id').eq('id', targetDbId).maybeSingle();
++                    if (data?.user_id) custId = data.user_id;
++                }
++            }
++            if (custId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(custId)) {
++                if (window.PawPalAPI?.createSystemNotification) {
++                    await window.PawPalAPI.createSystemNotification({
++                        customerId: custId,
++                        type: 'cap_nhat_yeu_cau_ho_tro',
++                        title: title || 'Cập nhật yêu cầu hỗ trợ',
++                        content,
++                        ticketId: targetDbId
++                    });
++                }
++            }
++        } catch (e) {
++            console.warn('[Complaints] Could not send ticket notification:', e);
++        }
++    }
++
+     function openTicketDetail(ticketId) {
+         if (!PawpalComplaints.state) PawpalComplaints.state = {};
+         PawpalComplaints.state.currentTicketId = ticketId;
+@@ -806,6 +835,8 @@
+                     }]);
+                 } catch (_) {}
+ 
++                await sendTicketNotification(ticket, 'Xử lý hoàn tất yêu cầu hỗ trợ', `Yêu cầu hỗ trợ #${ticket.id || ticket.rawId} đã được xử lý hoàn tất.`);
++
+                 PawpalComplaints.saveComplaintsOverrides?.();
+                 PawpalComplaints.updateComplaintsKpis?.();
+                 PawpalComplaints.renderComplaintsAlertBar?.();
+@@ -996,6 +1027,8 @@
+                 if (currentTicket) currentTicket._messagesLoaded = false;
+                 renderTicketDetail(targetDbId);
+ 
++                await sendTicketNotification(currentTicket, 'Phản hồi yêu cầu hỗ trợ', `Yêu cầu hỗ trợ #${currentTicket?.id || targetDbId} có phản hồi mới từ đội ngũ CSKH PawPal.`);
++
+                 messageInput.value = '';
+                 PawpalComplaints.showToast('Đã gửi phản hồi tới khách hàng!');
+             });
+@@ -1074,6 +1107,8 @@
+                 if (ticket) {
+                     ticket.status = 'waiting_customer';
+                     ticket.waitingCustomerSince = new Date().toISOString();
++
++                    await sendTicketNotification(ticket, 'Yêu cầu bổ sung thông tin', `Yêu cầu hỗ trợ #${ticket.id || ticket.rawId} cần bổ sung thêm thông tin.`);
+                     if (!ticket.timeline) ticket.timeline = [];
+                     const now = new Date();
+                     ticket.timeline.unshift({
+diff --git a/pages/admin/modules/orders/subtabs/tab-order-list.js b/pages/admin/modules/orders/subtabs/tab-order-list.js
+index 50e1e2c..d4d1cc8 100644
+--- a/pages/admin/modules/orders/subtabs/tab-order-list.js
++++ b/pages/admin/modules/orders/subtabs/tab-order-list.js
+@@ -27,6 +27,34 @@
+     let filterUrgentOnly = false;
+     let filterSlaOverdueOnly = false;
+ 
++    async function sendOrderNotification(order, type, title, content) {
++        if (!order) return;
++        try {
++            let custId = order.userId;
++            const isUuid = typeof custId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(custId);
++            if (!isUuid && order.rawId) {
++                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
++                if (client) {
++                    const { data } = await client.from('sales_order').select('customer_id').eq('id', order.rawId).maybeSingle();
++                    if (data?.customer_id) custId = data.customer_id;
++                }
++            }
++            if (custId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(custId)) {
++                if (window.PawPalAPI?.createSystemNotification) {
++                    await window.PawPalAPI.createSystemNotification({
++                        customerId: custId,
++                        type,
++                        title,
++                        content,
++                        orderId: order.rawId
++                    });
++                }
++            }
++        } catch (e) {
++            console.warn('[Orders] Could not send notification:', e);
++        }
++    }
++
+     // Render phân trang đơn hàng
+     function renderOrdersPagination(totalPages) {
+         const pagContainer = document.getElementById('ordersPagination');
+@@ -1442,6 +1470,12 @@
+                     } else {
+                         await client.from('sales_order').update(payload).eq('order_code', order.id);
+                     }
++                    await sendOrderNotification(
++                        order,
++                        'don_hang_da_giao_van',
++                        'Đơn hàng đang được giao',
++                        `Đơn hàng #${order.id} đã được bàn giao cho đơn vị vận chuyển ${carrier || ''}${tracking ? ` (Mã vận đơn: ${tracking})` : ''}.`
++                    );
+                 } catch (e) {}
+             }
+ 
+@@ -1484,6 +1518,12 @@
+                     } else {
+                         await client.from('sales_order').update(payload).eq('order_code', order.id);
+                     }
++                    await sendOrderNotification(
++                        order,
++                        'don_hang_da_duoc_huy',
++                        'Đơn hàng đã bị hủy',
++                        `Đơn hàng #${order.id} đã bị hủy bởi nhân viên quản trị. Lý do: ${reason}${detail ? ` (${detail})` : ''}.`
++                    );
+                 } catch (e) {}
+             }
+ 
+@@ -1845,6 +1885,13 @@
+             }
+             if (res?.error) throw res.error;
+ 
++            await sendOrderNotification(
++                order,
++                'don_hang_da_giao',
++                'Giao hàng thành công',
++                `Đơn hàng #${order.id} đã hoàn tất thành công. Cảm ơn bạn đã tin tưởng PawPal!`
++            );
++
+             order.status = 'completed';
+             const pointsEarned = Math.floor(order.total / 10000);
+             order.timeline.push({
+@@ -1885,6 +1932,13 @@
+             }
+             if (res?.error) throw res.error;
+ 
++            await sendOrderNotification(
++                order,
++                'don_hang_da_xac_nhan',
++                'Đơn hàng đã được xác nhận',
++                `Đơn hàng #${order.id} của bạn đã được duyệt và đang chuẩn bị đóng gói.`
++            );
++
+             order.status = 'confirmed';
+             order.timeline.push({
+                 title: 'Đã xác nhận đơn hàng',
+@@ -1924,6 +1978,13 @@
+             }
+             if (res?.error) throw res.error;
+ 
++            await sendOrderNotification(
++                order,
++                'don_hang_da_giao',
++                'Giao hàng thành công',
++                `Đơn hàng #${order.id} đã được giao thành công đến bạn. Cảm ơn bạn đã tin tưởng PawPal!`
++            );
++
+             order.status = 'delivered';
+             if (order.paymentMethod === 'cod' && order.paymentStatus === 'unpaid') {
+                 order.paymentStatus = 'cod_pending';
+diff --git a/pages/admin/modules/services/subtabs/tab-service-bookings.js b/pages/admin/modules/services/subtabs/tab-service-bookings.js
+index 9237a59..edfcef6 100644
+--- a/pages/admin/modules/services/subtabs/tab-service-bookings.js
++++ b/pages/admin/modules/services/subtabs/tab-service-bookings.js
+@@ -772,6 +772,36 @@
+             // Không chờ lần tải dữ liệu kế tiếp để tránh bảng giữ nhãn trạng thái cũ.
+             booking.rawStatus = data.appointment_status;
+             booking.status = newStatus;
++
++            try {
++                let custId = booking.userId;
++                if (!custId && booking.dbId) {
++                    const { data: apptRow } = await client.from('appointment').select('customer_id').eq('id', booking.dbId).maybeSingle();
++                    if (apptRow?.customer_id) custId = apptRow.customer_id;
++                }
++                if (custId && window.PawPalAPI?.createSystemNotification) {
++                    if (newStatus === 'confirmed') {
++                        await window.PawPalAPI.createSystemNotification({
++                            customerId: custId,
++                            type: 'lich_hen_da_xac_nhan',
++                            title: 'Lịch hẹn đã được xác nhận',
++                            content: `Lịch hẹn dịch vụ #${booking.id} (${booking.serviceName || 'Dịch vụ'}) vào lúc ${booking.time || ''} ngày ${booking.date || ''} đã được xác nhận.`,
++                            appointmentId: booking.dbId
++                        });
++                    } else if (newStatus === 'cancelled') {
++                        await window.PawPalAPI.createSystemNotification({
++                            customerId: custId,
++                            type: 'lich_hen_da_thay_doi',
++                            title: 'Lịch hẹn đã bị hủy',
++                            content: `Lịch hẹn #${booking.id} đã bị hủy.${reason ? ` Lý do: ${reason.trim()}` : ''}`,
++                            appointmentId: booking.dbId
++                        });
++                    }
++                }
++            } catch (notifErr) {
++                console.warn('[Services] Could not send appointment status notification:', notifErr);
++            }
++
+             renderBookingsTable(); updateKPIs(); renderUpcomingBar();
+             if (PawpalServices.state.selectedBookingId === booking.id) PawpalServices.subtabs.detail?.renderBookingDetail?.(booking.id);
+ 
+diff --git a/pages/user/modules/orders/order-detail.js b/pages/user/modules/orders/order-detail.js
+index 18ebdbd..7fcaa79 100644
+--- a/pages/user/modules/orders/order-detail.js
++++ b/pages/user/modules/orders/order-detail.js
+@@ -1138,6 +1138,22 @@ function cancelOrder() {
+                 : 'Khách hàng đã hủy đơn hàng'
+         });
+         saveOrderToLocalStorage(currentOrder);
++
++        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
++        if (currentUser?.id && window.PawPalAPI?.createSystemNotification) {
++            try {
++                await window.PawPalAPI.createSystemNotification({
++                    customerId: currentUser.id,
++                    type: 'don_hang_da_duoc_huy',
++                    title: 'Đã hủy đơn hàng',
++                    content: `Bạn đã hủy thành công đơn hàng #${currentOrder.id}.`,
++                    orderId: currentOrder._supabaseId || currentOrder.id
++                });
++            } catch (e) {
++                console.warn('[OrderDetail] Could not send cancel notification:', e);
++            }
++        }
++
+         window.location.hash = '#orders';
+     });
+ }
+diff --git a/pages/user/modules/orders/orders.js b/pages/user/modules/orders/orders.js
+index 784dc1d..9a47b8e 100644
+--- a/pages/user/modules/orders/orders.js
++++ b/pages/user/modules/orders/orders.js
+@@ -658,6 +658,21 @@ function cancelOrder(orderId) {
+         order.updatedAt = new Date().toISOString();
+         saveOrderToLocalStorage(order);
+ 
++        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
++        if (currentUser?.id && window.PawPalAPI?.createSystemNotification) {
++            try {
++                await window.PawPalAPI.createSystemNotification({
++                    customerId: currentUser.id,
++                    type: 'don_hang_da_duoc_huy',
++                    title: 'Đã hủy đơn hàng',
++                    content: `Bạn đã hủy thành công đơn hàng #${order.id || orderId}.`,
++                    orderId: order._supabaseId || order.id || orderId
++                });
++            } catch (e) {
++                console.warn('[Orders] Could not send cancel notification:', e);
++            }
++        }
++
+         updateTabCounts();
+         applyFilters();
+ 
+diff --git a/scripts/api/api.js b/scripts/api/api.js
+index 563e9f8..5affba4 100644
+--- a/scripts/api/api.js
++++ b/scripts/api/api.js
+@@ -869,6 +869,20 @@ export const API = {
+                 }
+             }
+ 
++            if (customerId) {
++                try {
++                    await this.createSystemNotification({
++                        customerId,
++                        type: 'don_hang_moi',
++                        title: 'Đặt hàng thành công',
++                        content: `Đơn hàng #${orderData.orderId} của bạn đã được ghi nhận và đang chờ xử lý.`,
++                        orderId: newOrder.id
++                    });
++                } catch (notifErr) {
++                    console.warn('[API] SubmitOrder notification warning:', notifErr);
++                }
++            }
++
+             return { success: true, orderId: newOrder.id };
+         } catch (err) {
+             console.error('Submit order error:', err);
+@@ -2014,6 +2028,11 @@ export const API = {
+             }]).select().single();
+ 
+             if (error) throw error;
++            try {
++                if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
++                    window.dispatchEvent(new CustomEvent('notifications_updated', { detail: { action: 'created', notification: data } }));
++                }
++            } catch (_) {}
+             return { success: true, data };
+         } catch (e) {
+             console.warn('[API] createSystemNotification warning:', e);
