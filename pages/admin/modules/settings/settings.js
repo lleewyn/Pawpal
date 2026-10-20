@@ -491,17 +491,15 @@
         const fetcher = async () => {
             const client = getSupabaseClient();
             if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
-            const [bannersRes, vouchersRes, notifsRes] = await Promise.all([
+            const [bannersRes, vouchersRes] = await Promise.all([
                 client.from('banner').select('*').order('created_at', { ascending: false }),
-                client.from('voucher').select('*').order('created_at', { ascending: false }),
-                client.from('notification').select('*').order('sent_at', { ascending: false })
+                client.from('voucher').select('*').order('created_at', { ascending: false })
             ]);
             if (bannersRes.error) throw bannersRes.error;
             if (vouchersRes.error) throw vouchersRes.error;
             return {
                 banners: bannersRes.data || [],
-                vouchers: vouchersRes.data || [],
-                notifs: notifsRes.data || []
+                vouchers: vouchersRes.data || []
             };
         };
 
@@ -580,14 +578,6 @@
             const websiteNotices = PawpalSettings.state?.systemConfig?.websiteNotices;
             if (Array.isArray(websiteNotices) && websiteNotices.length > 0) {
                 PawpalSettings.state.notificationsList = websiteNotices;
-            } else if (notifs && notifs.length > 0) {
-                PawpalSettings.state.notificationsList = notifs.map(n => ({
-                    id: n.id,
-                    content: n.content || n.title || 'Thông báo từ hệ thống PawPal',
-                    type: (String(n.notification_type || n.type || '').toUpperCase() === 'POPUP' || n.type === 'popup') ? 'POPUP' : 'TOPBAR',
-                    date: formatDate(n.sent_at || n.created_at || new Date()),
-                    isActive: Boolean(n.is_active ?? true)
-                }));
             } else {
                 PawpalSettings.state.notificationsList = [];
             }

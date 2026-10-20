@@ -1161,11 +1161,14 @@ PawPal kính mời Anh/Chị ghé tiệm để đón bé về sum vầy cùng gi
                             sent_at: new Date().toISOString()
                         });
                         if (notifErr) {
-                            console.warn('Lỗi ghi hàng đợi thông báo đón bé:', notifErr);
+                            console.warn('Lỗi ghi thông báo đón bé vào hệ thống:', notifErr);
+                            PawpalServices.showToast('Không thể lưu thông báo đón bé vào hệ thống. Vui lòng thử lại!', 'danger');
+                            return;
                         }
                     }
-                    PawpalServices.showToast(`Đã xếp hàng gửi thông báo đón bé ${petName} qua ${channel}!`, 'success');
+                    PawpalServices.showToast(`Đã lưu thông báo mời đón bé ${petName} vào hệ thống!`, 'success');
                     modal.classList.remove('active');
+                    modal.style.display = 'none';
                 } catch (e) {
                     console.error('Lỗi gửi thông báo đón bé:', e);
                     PawpalServices.showToast('Không thể gửi thông báo lúc này. Vui lòng liên hệ trực tiếp chủ nuôi.', 'danger');

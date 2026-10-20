@@ -21,17 +21,32 @@
         return;
     }
 
-    function readNotificationsSeed() {
-        try {
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', NOTI_SEED_URL, false);
-            xhr.send(null);
-            if (xhr.status >= 200 && xhr.status < 300) {
-                return JSON.parse(xhr.responseText);
-            }
-        } catch (error) {
-            console.warn('[notifications] Cannot load seed data:', error);
+    function getStorageKey() {
+        const u = getCurrentUser();
+        return (u && u.id) ? `pawpal_notifications_${u.id}` : NOTI_KEY;
+    }
+
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function sanitizeHref(url) {
+        if (!url || typeof url !== 'string') return '#';
+        const trimmed = url.trim();
+        if (/^(javascript|data):/i.test(trimmed)) {
+            return '#';
         }
+        return trimmed;
+    }
+
+    function readNotificationsSeed() {
+        // Return empty array for production/real sessions, avoid synchronous XHR blocking
         return [];
     }
 
@@ -61,6 +76,7 @@
                 content: personalizeText(item.content || ''),
                 time,
                 read: Boolean(item.read),
+                isRead: Boolean(item.read),
                 link: item.link || '#'
             };
         });
@@ -68,13 +84,20 @@
 
     async function fetchNotificationsFromSupabase() {
         try {
+            const currentUser = getCurrentUser();
+            if (!currentUser || !currentUser.id || currentUser.is_temporary) return [];
             const db = window.SupabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : null);
             if (!db) return null;
             const { data, error } = await db.from('notification')
-                .select('*')
-                .order('sent_at', { ascending: false });
-            if (error) return null;
-            if (data && data.length > 0) {
+                .select('id, notification_type, title, content, is_read, sent_at, target_url, sales_order_id, appointment_id, support_ticket_id, refund_transaction_id')
+                .eq('customer_id', currentUser.id)
+                .order('sent_at', { ascending: false })
+                .limit(30);
+            if (error) {
+                console.warn('[notifications] Error fetching Supabase notices:', error.message);
+                return null;
+            }
+            if (Array.isArray(data)) {
                 return data.map(n => ({
                     id: n.id,
                     type: (n.notification_type || 'info').toLowerCase(),
@@ -82,6 +105,7 @@
                     content: personalizeText(n.content || n.message || ''),
                     time: n.sent_at || n.created_at || new Date().toISOString(),
                     read: Boolean(n.is_read),
+                    isRead: Boolean(n.is_read),
                     link: n.target_url || n.link || '#'
                 }));
             }
@@ -94,34 +118,40 @@
     const initialNotifications = hydrateSeedNotifications(readNotificationsSeed());
 
     function getNotifications() {
+        const key = getStorageKey();
         try {
-            const stored = JSON.parse(localStorage.getItem(NOTI_KEY));
+            const stored = JSON.parse(localStorage.getItem(key));
             if (Array.isArray(stored)) {
                 return stored;
             }
-
-            localStorage.setItem(NOTI_KEY, JSON.stringify(initialNotifications));
-            return initialNotifications;
+            if (key !== NOTI_KEY) {
+                const legacy = JSON.parse(localStorage.getItem(NOTI_KEY));
+                if (Array.isArray(legacy)) return legacy;
+            }
+            return [];
         } catch {
-            localStorage.setItem(NOTI_KEY, JSON.stringify(initialNotifications));
-            return initialNotifications;
+            return [];
         }
     }
 
     function saveNotifications(notis) {
-        localStorage.setItem(NOTI_KEY, JSON.stringify(notis));
+        const key = getStorageKey();
+        const dataStr = JSON.stringify(notis);
+        localStorage.setItem(key, dataStr);
+        localStorage.setItem(NOTI_KEY, dataStr);
         document.dispatchEvent(new CustomEvent('notifications_updated'));
     }
 
     // Tự động đồng bộ từ Supabase Live DB khi tải trang
     (async function initSupabaseNotis() {
+        if (!canUseNotifications()) return;
         let attempts = 0;
         while (!window.SupabaseClient && attempts < 20) {
             await new Promise(r => setTimeout(r, 100));
             attempts++;
         }
         const dbNotis = await fetchNotificationsFromSupabase();
-        if (dbNotis && dbNotis.length > 0) {
+        if (Array.isArray(dbNotis)) {
             saveNotifications(dbNotis);
         }
     })();
@@ -175,25 +205,27 @@
 
         sortedNotis.forEach(noti => {
             const item = document.createElement('a');
-            item.href = noti.link || '#';
-            item.className = `notification-item-dropdown ${noti.read ? '' : 'unread'}`;
+            const safeLink = sanitizeHref(noti.link);
+            item.href = safeLink;
+            item.className = `notification-item-dropdown ${noti.read || noti.isRead ? '' : 'unread'}`;
 
             const relativeTime = getRelativeTimeString(new Date(noti.time));
+            const safeTitle = escapeHtml(noti.title);
+            const safeContent = escapeHtml(noti.content);
             item.innerHTML = `
-                ${noti.read ? '' : '<span class="unread-dot"></span>'}
+                ${noti.read || noti.isRead ? '' : '<span class="unread-dot"></span>'}
                 <span class="item-content">
-                    <span class="item-title">${noti.title}</span>
-                    <span class="item-text">${noti.content}</span>
+                    <span class="item-title">${safeTitle}</span>
+                    <span class="item-text">${safeContent}</span>
                     <span class="item-time">${relativeTime}</span>
                 </span>
             `;
 
             item.addEventListener('click', (e) => {
                 e.preventDefault();
-                noti.read = true;
-                saveNotifications(notis);
-                if (noti.link && noti.link !== '#' && noti.link !== '') {
-                    window.location.href = noti.link;
+                markAsRead(noti.id);
+                if (safeLink && safeLink !== '#' && safeLink !== '') {
+                    window.location.href = safeLink;
                 } else if (typeof window.openAllNotificationsModal === 'function') {
                     window.openAllNotificationsModal(noti);
                 }
@@ -228,7 +260,7 @@
             <div id="${toastId}" class="toast-custom toast-${type}">
                 <span class="toast-content">
                     <div class="toast-title">${titleMap[type] || 'Thông báo'}</div>
-                    <p class="toast-message">${message}</p>
+                    <p class="toast-message">${escapeHtml(message)}</p>
                 </span>
                 <button type="button" class="toast-close" aria-label="Đóng">&times;</button>
             </div>
@@ -256,20 +288,45 @@
         setTimeout(() => toastElement.remove(), 300);
     }
 
-    function markAllAsRead() {
+    async function markAllAsRead() {
         const notis = getNotifications();
-        notis.forEach(n => (n.read = true));
+        notis.forEach(n => { n.read = true; n.isRead = true; });
         saveNotifications(notis);
         updateHeaderDropdown();
+
+        const currentUser = getCurrentUser();
+        const db = window.SupabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : null);
+        if (db && currentUser?.id) {
+            try {
+                await db.from('notification')
+                    .update({ is_read: true, read_at: new Date().toISOString() })
+                    .eq('customer_id', currentUser.id)
+                    .eq('is_read', false);
+            } catch (err) {
+                console.warn('[notifications] markAllAsRead db update error:', err);
+            }
+        }
     }
 
-    function markAsRead(id) {
+    async function markAsRead(id) {
         const notis = getNotifications();
-        const item = notis.find(n => n.id === id);
+        const item = notis.find(n => String(n.id) === String(id));
         if (!item) return;
         item.read = true;
+        item.isRead = true;
         saveNotifications(notis);
         updateHeaderDropdown();
+
+        const db = window.SupabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : null);
+        if (db && id && !String(id).startsWith('seed-') && !String(id).startsWith('local-')) {
+            try {
+                await db.from('notification')
+                    .update({ is_read: true, read_at: new Date().toISOString() })
+                    .eq('id', id);
+            } catch (err) {
+                console.warn('[notifications] markAsRead db update error:', err);
+            }
+        }
     }
 
     function deleteNotification(id) {

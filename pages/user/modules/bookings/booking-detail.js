@@ -949,14 +949,19 @@ async function confirmCancelBooking(onDone) {
     try {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (db && currentUser?.id) {
-            await db.from('notification').insert({
+            const { error: notifErr } = await db.from('notification').insert({
                 customer_id: currentUser.id,
-                notification_type: 'BOOKING',
+                notification_type: 'lich_hen_da_thay_doi',
                 title: 'Xác nhận hủy lịch hẹn',
                 content: `Lịch hẹn #${currentBooking.id || currentBooking.code} của bé ${currentBooking.petName || 'cưng'} đã được hủy thành công.`,
+                appointment_id: currentBooking.rawId || currentBooking.id || null,
+                related_entity_type: 'appointment',
                 is_read: false,
                 sent_at: new Date().toISOString()
             });
+            if (notifErr) {
+                console.warn('[BookingDetail] Lỗi ghi thông báo hủy lịch:', notifErr.message);
+            }
         }
     } catch (notifErr) {
         console.warn('[BookingDetail] Không thể ghi thông báo hủy lịch vào Supabase:', notifErr.message);

@@ -29,8 +29,32 @@
         return './';
     }
 
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function sanitizeHref(url) {
+        if (!url || typeof url !== 'string') return '#';
+        const trimmed = url.trim();
+        if (/^(javascript|data):/i.test(trimmed)) {
+            return '#';
+        }
+        return trimmed;
+    }
+
     function getSharedNotifications() {
         try {
+            const currentUser = getCurrentUser();
+            if (currentUser && currentUser.id) {
+                const userNotis = JSON.parse(localStorage.getItem(`pawpal_notifications_${currentUser.id}`) || 'null');
+                if (Array.isArray(userNotis)) return userNotis;
+            }
             const notis = JSON.parse(localStorage.getItem('pawpal_notifications') || '[]');
             if (Array.isArray(notis) && notis.length > 0) return notis;
         } catch (e) {}
@@ -66,16 +90,22 @@
             `;
         }
         const sorted = [...notis].sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
-        return sorted.map(n => `
-            <a href="${n.link || n.url || '#'}" class="notification-item-dropdown ${n.read || n.isRead ? '' : 'unread'}" data-id="${n.id}">
-                ${!(n.read || n.isRead) ? '<span class="unread-dot"></span>' : ''}
-                <span class="item-content">
-                    <span class="item-title">${n.title || 'Thông báo'}</span>
-                    <span class="item-text">${n.content || n.message || ''}</span>
-                    <span class="item-time">${getRelativeTimeString(n.time || n.sent_at)}</span>
-                </span>
-            </a>
-        `).join('');
+        return sorted.map(n => {
+            const safeLink = sanitizeHref(n.link || n.url || '#');
+            const safeTitle = escapeHtml(n.title || 'Thông báo');
+            const safeContent = escapeHtml(n.content || n.message || '');
+            const isRead = Boolean(n.read || n.isRead);
+            return `
+                <a href="${safeLink}" class="notification-item-dropdown ${isRead ? '' : 'unread'}" data-id="${escapeHtml(n.id)}">
+                    ${!isRead ? '<span class="unread-dot"></span>' : ''}
+                    <span class="item-content">
+                        <span class="item-title">${safeTitle}</span>
+                        <span class="item-text">${safeContent}</span>
+                        <span class="item-time">${getRelativeTimeString(n.time || n.sent_at)}</span>
+                    </span>
+                </a>
+            `;
+        }).join('');
     }
 
     window.updateNotificationBadge = function() {
@@ -103,8 +133,22 @@
                     if (targetNoti) {
                         targetNoti.read = true;
                         targetNoti.isRead = true;
+                        const currentUser = getCurrentUser();
+                        if (currentUser && currentUser.id) {
+                            localStorage.setItem(`pawpal_notifications_${currentUser.id}`, JSON.stringify(allNotis));
+                        }
                         localStorage.setItem('pawpal_notifications', JSON.stringify(allNotis));
                         window.updateNotificationBadge();
+
+                        // Cập nhật bền vững lên Supabase
+                        const client = window.getSupabaseClient?.() || window.SupabaseClient;
+                        if (client && notiId && !String(notiId).startsWith('seed-') && !String(notiId).startsWith('local-')) {
+                            client.from('notification')
+                                .update({ is_read: true, read_at: new Date().toISOString() })
+                                .eq('id', notiId)
+                                .then()
+                                .catch(() => {});
+                        }
                     }
                 });
             });
@@ -494,14 +538,30 @@
                 btnMarkAll.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    const currentUser = getCurrentUser();
                     try {
                         const notis = getSharedNotifications();
                         if (Array.isArray(notis)) {
                             notis.forEach(n => { n.read = true; n.isRead = true; });
+                            if (currentUser && currentUser.id) {
+                                localStorage.setItem(`pawpal_notifications_${currentUser.id}`, JSON.stringify(notis));
+                            }
                             localStorage.setItem('pawpal_notifications', JSON.stringify(notis));
                             document.dispatchEvent(new CustomEvent('notifications_updated'));
                         }
                     } catch(err) {}
+
+                    // Cập nhật bền vững lên Supabase
+                    const client = window.getSupabaseClient?.() || window.SupabaseClient;
+                    if (client && currentUser?.id) {
+                        client.from('notification')
+                            .update({ is_read: true, read_at: new Date().toISOString() })
+                            .eq('customer_id', currentUser.id)
+                            .eq('is_read', false)
+                            .then()
+                            .catch(() => {});
+                    }
+
                     const list = document.getElementById('headerNotificationList');
                     if (list) list.innerHTML = renderNotifications();
                     const badge = document.getElementById('notificationBadge');
@@ -604,11 +664,13 @@
     }
 
     function getNotiCategoryName(noti) {
-        const type = String(noti.type || '').toLowerCase();
+        const type = String(noti.type || noti.notification_type || '').toLowerCase();
         const title = String(noti.title || '').toLowerCase();
-        if (type === 'service' || title.includes('dịch vụ') || title.includes('spa') || title.includes('lịch') || title.includes('khám')) return 'Dịch vụ';
-        if (type === 'order' || title.includes('đơn hàng') || title.includes('giao')) return 'Đơn hàng';
-        if (type === 'promo' || title.includes('khuyến mãi') || title.includes('giảm giá') || title.includes('voucher') || title.includes('pawpoint')) return 'Ưu đãi';
+        if (type.includes('lich_hen') || type.includes('service') || type === 'booking' || title.includes('dịch vụ') || title.includes('spa') || title.includes('lịch') || title.includes('khám')) return 'Dịch vụ';
+        if (type.includes('don_hang') || type.includes('order') || title.includes('đơn hàng') || title.includes('giao')) return 'Đơn hàng';
+        if (type.includes('ho_tro') || type.includes('support') || title.includes('hỗ trợ') || title.includes('khiếu nại')) return 'Hỗ trợ';
+        if (type.includes('hoan_tien') || type.includes('refund') || title.includes('hoàn tiền')) return 'Hoàn tiền';
+        if (type.includes('uu_dai') || type.includes('promo') || title.includes('khuyến mãi') || title.includes('giảm giá') || title.includes('voucher') || title.includes('pawpoint')) return 'Ưu đãi';
         return 'Thông báo';
     }
 
@@ -669,14 +731,30 @@
 
             // Đánh dấu đã đọc tất cả
             overlay.querySelector('#btnModalMarkAllRead').addEventListener('click', () => {
+                const currentUser = getCurrentUser();
                 try {
                     const notis = getSharedNotifications();
                     if (Array.isArray(notis)) {
                         notis.forEach(n => { n.read = true; n.isRead = true; });
+                        if (currentUser && currentUser.id) {
+                            localStorage.setItem(`pawpal_notifications_${currentUser.id}`, JSON.stringify(notis));
+                        }
                         localStorage.setItem('pawpal_notifications', JSON.stringify(notis));
                         document.dispatchEvent(new CustomEvent('notifications_updated'));
                     }
                 } catch(e) {}
+
+                // Cập nhật bền vững lên Supabase
+                const client = window.getSupabaseClient?.() || window.SupabaseClient;
+                if (client && currentUser?.id) {
+                    client.from('notification')
+                        .update({ is_read: true, read_at: new Date().toISOString() })
+                        .eq('customer_id', currentUser.id)
+                        .eq('is_read', false)
+                        .then()
+                        .catch(() => {});
+                }
+
                 const badge = document.getElementById('notificationBadge');
                 if (badge) {
                     badge.style.display = 'none';
@@ -735,10 +813,24 @@
                         found.read = true;
                         found.isRead = true;
                     }
+                    const currentUser = getCurrentUser();
+                    if (currentUser && currentUser.id) {
+                        localStorage.setItem(`pawpal_notifications_${currentUser.id}`, JSON.stringify(notis));
+                    }
                     localStorage.setItem('pawpal_notifications', JSON.stringify(notis));
                     document.dispatchEvent(new CustomEvent('notifications_updated'));
                 }
             } catch(e) {}
+
+            // Cập nhật bền vững lên Supabase
+            const client = window.getSupabaseClient?.() || window.SupabaseClient;
+            if (client && noti.id && !String(noti.id).startsWith('seed-') && !String(noti.id).startsWith('local-')) {
+                client.from('notification')
+                    .update({ is_read: true, read_at: new Date().toISOString() })
+                    .eq('id', noti.id)
+                    .then()
+                    .catch(() => {});
+            }
 
             // Cập nhật giao diện thẻ bên trái
             const activeCard = overlay.querySelector(`.pawpal-noti-modal-item[data-id="${noti.id}"]`);
@@ -754,33 +846,37 @@
             
             // Xử lý link đích nếu có
             let actionText = '';
-            let targetUrl = noti.url || noti.link || '#';
+            let rawUrl = noti.url || noti.link || '#';
             if (category === 'Dịch vụ') {
                 actionText = 'Xem lịch hẹn của bé';
-                if (!targetUrl || targetUrl === '#') targetUrl = '/pages/user/#bookings';
+                if (!rawUrl || rawUrl === '#') rawUrl = '/pages/user/#bookings';
             } else if (category === 'Đơn hàng') {
                 actionText = 'Xem đơn hàng của bé';
-                if (!targetUrl || targetUrl === '#') targetUrl = '/pages/user/#orders';
+                if (!rawUrl || rawUrl === '#') rawUrl = '/pages/user/#orders';
             } else if (category === 'Ưu đãi') {
                 actionText = 'Xem ưu đãi Paw Points';
-                if (!targetUrl || targetUrl === '#') targetUrl = '/pages/user/#loyalty';
-            } else if (targetUrl && targetUrl !== '#' && targetUrl !== '') {
+                if (!rawUrl || rawUrl === '#') rawUrl = '/pages/user/#loyalty';
+            } else if (category === 'Hỗ trợ') {
+                actionText = 'Xem phiếu hỗ trợ';
+                if (!rawUrl || rawUrl === '#') rawUrl = '/pages/user/#support';
+            } else if (rawUrl && rawUrl !== '#' && rawUrl !== '') {
                 actionText = 'Đến trang liên kết';
             }
+            const safeTargetUrl = sanitizeHref(rawUrl);
 
             detailPane.innerHTML = `
                 <div class="pawpal-noti-detail-pane-content">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="pawpal-noti-category-badge">${category}</span>
-                        <span class="pawpal-noti-detail-time">${formattedTime}</span>
+                        <span class="pawpal-noti-category-badge">${escapeHtml(category)}</span>
+                        <span class="pawpal-noti-detail-time">${escapeHtml(formattedTime)}</span>
                     </div>
-                    <h4 class="pawpal-noti-detail-title">${noti.title}</h4>
+                    <h4 class="pawpal-noti-detail-title">${escapeHtml(noti.title)}</h4>
                     <div class="pawpal-noti-detail-content">
-                        ${noti.content || 'Không có nội dung chi tiết cho thông báo này.'}
+                        ${escapeHtml(noti.content || 'Không có nội dung chi tiết cho thông báo này.')}
                     </div>
                     ${actionText ? `
                         <div class="pawpal-noti-detail-action mt-4">
-                            <a href="${targetUrl}" class="btn-noti-action-cta" id="btnNotiDetailCTA">${actionText}</a>
+                            <a href="${safeTargetUrl}" class="btn-noti-action-cta" id="btnNotiDetailCTA">${escapeHtml(actionText)}</a>
                         </div>
                     ` : ''}
                 </div>
@@ -814,7 +910,7 @@
                         content: s.content || s.message,
                         time: s.time,
                         isRead: Boolean(s.read || s.isRead),
-                        type: s.type || 'info',
+                        type: s.type || s.notification_type || 'info',
                         url: s.link || s.url || '#'
                     }));
                 }
@@ -824,9 +920,9 @@
             if (filterType === 'unread') {
                 filtered = items.filter(n => !n.isRead);
             } else if (filterType === 'service') {
-                filtered = items.filter(n => n.type === 'service' || (n.title || '').toLowerCase().includes('dịch vụ') || (n.title || '').toLowerCase().includes('spa') || (n.title || '').toLowerCase().includes('lịch'));
+                filtered = items.filter(n => getNotiCategoryName(n) === 'Dịch vụ');
             } else if (filterType === 'order') {
-                filtered = items.filter(n => n.type === 'order' || (n.title || '').toLowerCase().includes('đơn hàng'));
+                filtered = items.filter(n => getNotiCategoryName(n) === 'Đơn hàng');
             }
 
             if (!filtered.length) {
@@ -854,15 +950,15 @@
                 const displayTime = formatNotiTime(n.time);
                 const isSelected = selectedItem && String(selectedItem.id) === String(n.id);
                 return `
-                    <div class="pawpal-noti-modal-item ${n.isRead ? '' : 'unread'} ${isSelected ? 'selected' : ''}" data-id="${n.id}">
+                    <div class="pawpal-noti-modal-item ${n.isRead ? '' : 'unread'} ${isSelected ? 'selected' : ''}" data-id="${escapeHtml(n.id)}">
                         ${!n.isRead ? '<span class="pawpal-noti-unread-dot"></span>' : ''}
                         <div class="pawpal-noti-modal-item-content">
                             <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="pawpal-noti-category-badge">${category}</span>
-                                <span class="pawpal-noti-modal-item-time">${displayTime}</span>
+                                <span class="pawpal-noti-category-badge">${escapeHtml(category)}</span>
+                                <span class="pawpal-noti-modal-item-time">${escapeHtml(displayTime)}</span>
                             </div>
-                            <div class="pawpal-noti-modal-item-title">${n.title}</div>
-                            <div class="pawpal-noti-modal-item-text">${n.content || ''}</div>
+                            <div class="pawpal-noti-modal-item-title">${escapeHtml(n.title)}</div>
+                            <div class="pawpal-noti-modal-item-text">${escapeHtml(n.content || '')}</div>
                         </div>
                     </div>
                 `;

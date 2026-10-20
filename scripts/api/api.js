@@ -1980,6 +1980,22 @@ export const API = {
         }
     },
 
+    async markAllNotificationsAsRead(customerId) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !customerId) return { success: false };
+        try {
+            const { data, error } = await db.from('notification')
+                .update({ is_read: true, read_at: new Date().toISOString() })
+                .eq('customer_id', customerId)
+                .eq('is_read', false);
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (e) {
+            return { success: false, error: e.message };
+        }
+    },
+
     async createSystemNotification({ customerId, type = 'don_hang_moi', title, content, orderId = null, appointmentId = null, ticketId = null, refundId = null }) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !customerId || !title || !content) return { success: false };

@@ -54,3 +54,71 @@ test('clearing storage in another tab hides an existing badge', () => {
     f.events.storage({ key: null });
     assert.equal(f.badge.style.display, 'none');
 });
+
+test('XSS content is escaped and javascript: urls are sanitized', () => {
+    const values = new Map();
+    const documentEvents = {};
+    const badge = { textContent: '', style: {} };
+    const list = { innerHTML: '', querySelectorAll: () => [] };
+    const context = {
+        localStorage: {
+            getItem: key => values.get(key) || null,
+            setItem: (key, val) => values.set(key, val)
+        },
+        document: {
+            readyState: 'loading',
+            addEventListener: (name, handler) => { documentEvents[name] = handler; },
+            getElementById: id => {
+                if (id === 'notificationBadge') return badge;
+                if (id === 'headerNotificationList') return list;
+                return null;
+            },
+        },
+        window: { addEventListener: () => {} },
+    };
+    vm.runInNewContext(fs.readFileSync('components/header/header.js', 'utf8'), context);
+    values.set('pawpal_notifications', JSON.stringify([{
+        id: 1,
+        title: '<img src=x onerror=alert(1)>',
+        content: '<script>alert("xss")</script>',
+        link: 'javascript:alert(1)',
+        read: false
+    }]));
+    context.window.updateNotificationBadge();
+    assert.ok(!list.innerHTML.includes('<script>'), 'script tag must not appear raw in innerHTML');
+    assert.ok(list.innerHTML.includes('&lt;script&gt;'), 'script tag must be HTML escaped');
+    assert.ok(!list.innerHTML.includes('href="javascript:'), 'javascript: url must be blocked');
+    assert.ok(list.innerHTML.includes('href="#"'), 'sanitized href must fallback to #');
+});
+
+test('customer-scoped notifications are loaded when logged in', () => {
+    const values = new Map();
+    const documentEvents = {};
+    const badge = { textContent: '', style: {} };
+    const context = {
+        localStorage: {
+            getItem: key => values.get(key) || null,
+            setItem: (key, val) => values.set(key, val)
+        },
+        document: {
+            readyState: 'loading',
+            addEventListener: (name, handler) => { documentEvents[name] = handler; },
+            getElementById: id => (id === 'notificationBadge' ? badge : null),
+        },
+        window: { addEventListener: () => {} },
+    };
+    values.set('pawpal_current_user', JSON.stringify({ id: 'cust_qa_001', name: 'User A' }));
+    values.set('pawpal_notifications_cust_qa_001', JSON.stringify([
+        { id: 'notif_1', title: 'Thông báo của A', read: false }
+    ]));
+    // Legacy / other user notifications
+    values.set('pawpal_notifications', JSON.stringify([
+        { id: 'notif_other', title: 'Thông báo cũ', read: true }
+    ]));
+
+    vm.runInNewContext(fs.readFileSync('components/header/header.js', 'utf8'), context);
+    context.window.updateNotificationBadge();
+    assert.equal(String(badge.textContent), '1');
+    assert.equal(badge.style.display, 'flex');
+});
+
