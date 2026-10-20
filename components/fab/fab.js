@@ -439,7 +439,28 @@ function initFab() {
             } catch(e) { return match; }
         });
 
-        // 4. Thẻ Đánh giá mức độ hài lòng (CSAT Loop): :::csat_survey { ... } :::
+        // 5. Thẻ Phiếu hỗ trợ / Khiếu nại: :::ticket { ... } ::: (R2: Tra cứu tiến độ sự cố)
+        html = html.replace(/:::ticket\s*(\{[\s\S]*?\})\s*:::/g, (match, jsonStr) => {
+            try {
+                const data = JSON.parse(jsonStr);
+                const st = data.status || 'Đang xử lý';
+                const statusBadge = (st === 'Đã giải quyết' || st === 'Đóng') ? 'badge-active' : (st === 'Hủy' ? 'badge-danger' : 'badge-info');
+                const code = data.code || data.id || 'TK';
+                return `<div class="fab-rich-card fab-rich-card--ticket"><div class="fab-rich-card-header"><span class="fab-rich-card-tag">Phiếu hỗ trợ #${code}</span><span class="admin-badge ${statusBadge}">${st}</span></div><div class="fab-rich-card-body"><div class="fab-rich-card-title">${data.title || 'Yêu cầu hỗ trợ PawPal'}</div><div class="fab-rich-card-desc">Chuyên mục: <strong>${data.category || 'CSKH'}</strong>${data.date ? ' • ' + data.date : ''}</div></div><a href="/pages/user/#support" class="fab-rich-card-action">Xem tiến độ phiếu hỗ trợ</a></div>`;
+            } catch(e) { return match; }
+        });
+
+        // 6. Thẻ Điểm tích lũy và Hạng thành viên: :::loyalty { ... } ::: (R2: Tra cứu quyền lợi)
+        html = html.replace(/:::loyalty\s*(\{[\s\S]*?\})\s*:::/g, (match, jsonStr) => {
+            try {
+                const data = JSON.parse(jsonStr);
+                const tier = data.tier || 'Đồng';
+                const points = data.points !== undefined ? data.points : 0;
+                return `<div class="fab-rich-card fab-rich-card--loyalty"><div class="fab-rich-card-header"><span class="fab-rich-card-tag">Paw Loyalty</span><span class="admin-badge badge-active">Hạng ${tier}</span></div><div class="fab-rich-card-body"><div class="fab-rich-card-title">Điểm khả dụng: <strong>${Number(points).toLocaleString('vi-VN')} Pawpoint</strong></div><div class="fab-rich-card-desc">Ưu đãi giảm giá dịch vụ: <strong>${data.discount || '0%'}</strong></div></div><a href="/pages/user/#loyalty" class="fab-rich-card-action">Xem chi tiết ví điểm và đổi voucher</a></div>`;
+            } catch(e) { return match; }
+        });
+
+        // 7. Thẻ Đánh giá mức độ hài lòng (CSAT Loop): :::csat_survey { ... } :::
         html = html.replace(/:::csat_survey\s*(\{[\s\S]*?\})\s*:::/g, (match, jsonStr) => {
             try {
                 const data = JSON.parse(jsonStr);

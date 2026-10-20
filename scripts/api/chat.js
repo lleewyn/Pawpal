@@ -748,6 +748,53 @@ const dbTools = {
             console.error("Knowledge search error:", e);
             return { context: "PawPal cung cấp dịch vụ chăm sóc cho chó, mèo và các thú cưng. Vui lòng liên hệ hotline để được hỗ trợ." };
         }
+    },
+    get_loyalty_summary_own: async (user_id) => {
+        if (!user_id) return { error: "Yêu cầu đăng nhập để tra cứu điểm tích lũy và hạng thành viên." };
+        try {
+            const { data, error } = await supabase
+                .from('customer_membership')
+                .select('total_paw_points, tier_points, membership_tier:membership_tier_id(tier_name, discount_percent)')
+                .eq('customer_id', user_id)
+                .maybeSingle();
+            if (error) throw error;
+            if (data) {
+                return {
+                    points: data.total_paw_points || 0,
+                    tier: data.membership_tier?.tier_name || 'Đồng',
+                    discount: data.membership_tier?.discount_percent ? `${data.membership_tier.discount_percent}%` : '0%'
+                };
+            }
+            return { points: 0, tier: 'Đồng', discount: '0%' };
+        } catch (e) {
+            return { error: "Lỗi truy vấn điểm thành viên từ Supabase" };
+        }
+    },
+    get_user_tickets: async (user_id) => {
+        if (!user_id) return { error: "Yêu cầu đăng nhập để tra cứu phiếu khiếu nại và hỗ trợ." };
+        try {
+            const { data, error } = await supabase
+                .from('support_ticket')
+                .select('id, ticket_code, title, subject, category, status, priority, created_at')
+                .or(`user_id.eq.${user_id},customer_id.eq.${user_id}`)
+                .order('created_at', { ascending: false })
+                .limit(5);
+            if (error) throw error;
+            if (data && data.length > 0) {
+                const list = data.map(t => ({
+                    code: t.ticket_code || t.id.substring(0, 8),
+                    title: t.title || t.subject || 'Phiếu hỗ trợ',
+                    category: t.category || 'Khiếu nại',
+                    status: t.status || 'Đang xử lý',
+                    priority: t.priority || 'Bình thường',
+                    date: t.created_at ? t.created_at.split('T')[0] : ''
+                }));
+                return { tickets: list };
+            }
+            return { message: "Bạn hiện chưa có phiếu khiếu nại hoặc hỗ trợ nào trên hệ thống." };
+        } catch (e) {
+            return { error: "Lỗi truy vấn phiếu hỗ trợ từ Supabase" };
+        }
     }
 };
 
@@ -780,6 +827,14 @@ const toolsDeclaration = [
             {
                 name: "get_public_vouchers",
                 description: "Lấy danh sách mã giảm giá, voucher khuyến mãi đang có hiệu lực công khai của PawPal.",
+            },
+            {
+                name: "get_loyalty_summary_own",
+                description: "Tra cứu điểm tích lũy Pawpoint và hạng thành viên hiện tại của khách hàng đang đăng nhập.",
+            },
+            {
+                name: "get_user_tickets",
+                description: "Tra cứu danh sách các phiếu khiếu nại, phản ánh và yêu cầu hỗ trợ (Support Ticket) của khách hàng.",
             },
             {
                 name: "get_pet_profile",
@@ -2156,6 +2211,8 @@ module.exports = async function handler(req, res) {
         systemInstruction += "  + Đơn hàng: :::order {\"code\": \"Mã_Đơn\", \"status\": \"Trạng_Thái\", \"total\": \"Tổng_Tiền\", \"items\": \"Tóm_Tắt_Món\"} :::\n";
         systemInstruction += "  + Lịch hẹn: :::booking {\"service\": \"Tên_Dịch_Vụ\", \"pet\": \"Tên_Bé\", \"time\": \"Giờ_Hẹn\", \"status\": \"Trạng_Thái\"} :::\n";
         systemInstruction += "  + Ưu đãi: :::voucher {\"code\": \"MÃ_VOUCHER\", \"discount\": \"Mức_Giảm\", \"minOrder\": \"Điều_Kiện\", \"expiry\": \"HSD\"} :::\n";
+        systemInstruction += "  + Phiếu hỗ trợ: :::ticket {\"code\": \"Mã_Ticket\", \"title\": \"Tiêu_Đề\", \"category\": \"Chuyên_Mục\", \"status\": \"Trạng_Thái\"} :::\n";
+        systemInstruction += "  + Điểm và Hạng: :::loyalty {\"tier\": \"Hạng\", \"points\": \"Số_Điểm\", \"discount\": \"Mức_Giảm\"} :::\n";
 
         // Bổ sung các chỉ thị cấu hình từ database
         if (systemPrompts && systemPrompts.length > 0) {
@@ -2315,6 +2372,10 @@ module.exports = async function handler(req, res) {
                     toolResult = await dbTools.search_products_public(toolArgs?.query);
                 } else if (toolName === 'get_public_vouchers') {
                     toolResult = await dbTools.get_public_vouchers();
+                } else if (toolName === 'get_loyalty_summary_own') {
+                    toolResult = await dbTools.get_loyalty_summary_own(userId);
+                } else if (toolName === 'get_user_tickets') {
+                    toolResult = await dbTools.get_user_tickets(userId);
                 } else if (toolName === 'get_pet_profile') {
                     toolResult = await dbTools.get_pet_profile(userId);
                 } else if (toolName === 'search_store_info') {

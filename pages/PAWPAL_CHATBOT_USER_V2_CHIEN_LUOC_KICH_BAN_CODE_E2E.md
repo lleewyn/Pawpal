@@ -2534,6 +2534,34 @@ Admin Copilot = luồng NỘI BỘ riêng, không dùng token/quyền admin cho 
 - **Hồi quy liên quan:** 0 regression.
 - **Rollback/Việc chưa xong:** Tiếp tục Phase R2.
 
+### CHG-CHAT-003 — Đợt R2: Trợ lý giải quyết sự cố (GĐ-08, GĐ-09, GĐ-10)
+- **Ngày/giờ:** 21/10/2026 00:22 (Asia/Ho_Chi_Minh)
+- **Commit GitHub:** (Đợt R2 commit)
+- **Giai đoạn/Testcase:** Đợt R2 — Trợ lý giải quyết sự cố M1 (GĐ-08: Handover & Mute bot, GĐ-09: Support Ticket, GĐ-10: Loyalty & Points)
+- **Trước khi sửa:**
+  - Khách hàng không thể tra cứu điểm tích lũy Pawpoint và hạng thành viên qua bot.
+  - Khách hàng không thể tra cứu danh sách phiếu khiếu nại, phản ánh và hỗ trợ (Support Ticket).
+  - Chưa có định dạng thẻ tương tác trực quan cho Phiếu hỗ trợ (`:::ticket`) và Điểm/Hạng (`:::loyalty`).
+- **Nguyên nhân đã xác minh:** Thiếu công cụ tra cứu bảng `customer_membership` và `support_ticket` trong `dbTools`/`toolsDeclaration`; `components/fab/fab.js` chưa có parser hiển thị thẻ ticket và loyalty.
+- **File/hàm/dòng sửa:**
+  - `scripts/api/chat.js`: Bổ sung `get_loyalty_summary_own` và `get_user_tickets` trong `dbTools`, khai báo trong `toolsDeclaration`, điều phối xử lý tool trong vòng lặp stream AI, cập nhật `systemInstruction` hướng dẫn xuất thẻ `:::ticket` và `:::loyalty`.
+  - `components/fab/fab.js`: Thêm parser cho thẻ `:::ticket { ... } :::` và `:::loyalty { ... } :::` dẫn đúng deep links `/pages/user/#support` và `/pages/user/#loyalty`.
+  - `scripts/test/test_chat_r2_incident_resolution.test.js`: Bộ kiểm thử mới 5/5 test cases.
+- **Bảng/cột/RLS/API bị ảnh hưởng:** `customer_membership`, `membership_tier`, `support_ticket`, `chat_message`.
+- **Sau khi sửa:**
+  - Thành viên tra cứu điểm và hạng thành viên chính xác từ `customer_membership` (chặn 100% khách vãng lai).
+  - Thành viên theo dõi tiến độ khiếu nại/phiếu hỗ trợ từ `support_ticket`.
+  - Thẻ trực quan hiển thị đẹp mắt, bo góc 9px phẳng chuẩn `AGENTS.md`.
+- **Test đã chạy:**
+  - `node --test scripts/test/test_chat_r2_incident_resolution.test.js`: 5/5 PASS.
+  - `node --test scripts/test/test_chat_r1_assistant.test.js`: 4/4 PASS.
+  - `node --test scripts/test/test_chat_r0_foundation.test.js`: 5/5 PASS.
+  - `node --test scripts/test/header_notifications.test.js`: 9/9 PASS.
+- **Kết quả:** PASS (23/23 tests).
+- **Bằng chứng:** Terminal logs sạch sẽ, không có ngoại lệ.
+- **Hồi quy liên quan:** 0 regression.
+- **Rollback/Việc chưa xong:** Tiếp tục Phase R3.
+
 ## 6. Thứ tự triển khai thực tế
 
 1. **Khóa rủi ro P0:** GĐ-00 → GĐ-01; kiểm tra RLS + danh tính guest/member trước khi mở rộng chức năng.
