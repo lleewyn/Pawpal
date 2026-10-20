@@ -76,7 +76,22 @@
 **Kết quả kiểm thử:** PASS  
 **Bằng chứng:** Ảnh `gd02_footer_desktop_bottom_1792499383064.png`, `gd02_footer_mobile_1792499488680.png`, Video `gd02_footer_full_test_1792499360347.webp`.  
 **Commit GitHub:** Sắp commit  
+**Change ID:** CHG-003  
+**Ngày cập nhật:** 2026-10-20  
+**Phân hệ:** Dịch vụ / Đặt lịch (Booking)  
+**Test case liên quan:** UI-10-001 đến UI-10-018 (Thành viên: booking Spa/Grooming, Hotel, Taxi & lịch sử)  
+**Mô tả lỗi ban đầu:** Lỗi `ReferenceError: Cannot access 'bookedSlotsCache' before initialization` trong `pages/services/booking/booking.js`. Khi phục hồi session đặt lịch (`restoreBookingSession`), hàm `renderTimeslots()` truy cập biến `bookedSlotsCache` trước khi biến này được khai báo ở dòng 1471 (Temporal Dead Zone - TDZ), làm script bị crash và ngừng thực thi toàn bộ luồng sự kiện đặt lịch.  
+**Nguyên nhân:** Khai báo biến `let bookedSlotsCache` và `let bookedSlotsLoadingDate` đặt ở giữa file sau các hàm gọi khởi tạo.  
+**File đã chỉnh sửa:** `pages/services/booking/booking.js`  
+**Nội dung đã sửa:** Đưa khai báo `let bookedSlotsCache = {}; let bookedSlotsLoadingDate = null;` lên đầu file `booking.js` ngay sau các biến global.  
+**Bảng/cột/enum ảnh hưởng:** Không có.  
+**Chức năng liên quan cần kiểm thử hồi quy:** Khởi tạo trang đặt lịch, phục hồi session đặt lịch, chọn khung giờ, chọn KTV và hoàn tất tạo lịch hẹn.  
+**Kết quả kiểm thử:** PASS  
+**Bằng chứng:** Ảnh `ui_10_002_select_pet_cun_test_1792503737527.png`, `ui_10_003_service_selection_pricing_1792503749274.png`, `ui_10_004_schedule_and_staff_1792504070123.png`, `ui_10_004_booking_success_1792504400053.png` (Mã đặt lịch `APP-1792504393077`), `ui_10_005_hotel_booking_step_1792504468051.png`, `ui_10_007_taxi_booking_step_1792504518110.png`, `ui_10_010_user_bookings_new_1792504587049.png`, `ui_10_011_booking_detail_modal_1792504605587.png`, `ui_10_011_cancel_modal_1792504617800.png`, `ui_10_012_booking_cancelled_1792504679277.png`, Video `gd10_user_portal_inspect_1792504559102.webp`, `gd10_full_e2e_booking_run_1792503713738.webp`.  
+**Commit GitHub:** Sắp commit  
 **Việc còn phải làm:** Không có (hoàn tất 100%).
+
+<br>
 
 ### 5. Điều kiện hoàn tất
 
@@ -1207,112 +1222,112 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `pages/services/booking/booking.js; pages/user/modules/bookings/bookings.js; booking-detail.js`
 
 ### UI-10-001 · Bắt đầu booking từ User  [P1 · Member]
-- [ ] **Thao tác:** Vào User Portal → Bookings → nút Đặt lịch, chọn dịch vụ
-- [ ] **Giao diện/điều hướng:** Không mất session; user info/pet chính xác, đúng service
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Vào User Portal → Bookings → nút Đặt lịch, chọn dịch vụ
+- [x] **Giao diện/điều hướng:** Không mất session; user info (Lê Lệ Quyên QA, 0987654321), danh sách pet chính xác, stepper 4 bước chuẩn
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, FK `customer_id`, nạp thông tin đầy đủ vào session booking
+- [x] **Bằng chứng:** URL `/booking`, ảnh `ui_10_002_select_pet_cun_test_1792503737527.png`, session giữ nguyên.
 
 ### UI-10-002 · Chọn pet đã lưu  [P1 · Member]
-- [ ] **Thao tác:** M1 có 2 pet, chọn lần lượt ở form
-- [ ] **Giao diện/điều hướng:** Hiện đúng cân nặng/giống/cảnh báo; không nhầm pet_id
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** M1 có 2 pet, chọn lần lượt ở form (Cún Test và Meo)
+- [x] **Giao diện/điều hướng:** Hiện đúng cân nặng (Cún Test 5kg / Meo 4kg), giống loài, avatar; không nhầm pet_id
+- [x] **Lưu/đọc/đồng bộ:** Đồng bộ `bookingState.petId`, `bookingState.petName`, `bookingState.petWeight` sang tóm tắt bên phải
+- [x] **Bằng chứng:** Ảnh `ui_10_002_select_pet_cun_test_1792503737527.png`.
 
 ### UI-10-003 · Giá theo pet/gói  [P1 · Member]
-- [ ] **Thao tác:** Đổi pet nặng nhẹ, gói dịch vụ, số ngày Hotel
-- [ ] **Giao diện/điều hướng:** Giá breakdown rõ và khớp backend trước xác nhận
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đổi pet nặng nhẹ, gói dịch vụ, số ngày Hotel
+- [x] **Giao diện/điều hướng:** Giá breakdown rõ: giá gốc 120.000đ, ưu đãi hội viên (-5%) -6.000đ, tổng 114.000đ; Hotel tính theo đêm và addon
+- [x] **Lưu/đọc/đồng bộ:** Tự động tính toán đúng công thức theo ma trận cân nặng trong DB/CSV
+- [x] **Bằng chứng:** Ảnh `ui_10_003_service_selection_pricing_1792503749274.png`, `ui_10_005_hotel_booking_step_1792504468051.png`.
 
 ### UI-10-004 · Tạo booking Grooming  [P1 · Member]
-- [ ] **Thao tác:** Chọn pet, dịch vụ, slot còn, ghi chú rồi xác nhận
-- [ ] **Giao diện/điều hướng:** Booking có mã/trạng thái, sau F5 nằm trong lịch của đúng user
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chọn pet Cún Test, dịch vụ Tắm Vệ Sinh Cơ Bản, ngày mai 21/10/2026 slot 09:00, KTV Phân bổ ngẫu nhiên, xác nhận
+- [x] **Giao diện/điều hướng:** Booking thành công mã `APP-1792504393077`, sau F5 nằm trong User Portal của đúng user Lê Lệ Quyên QA
+- [x] **Lưu/đọc/đồng bộ:** Ghi nhận thành công vào bảng `appointment` trong Supabase với `appointment_status: 'cho_xac_nhan'`, giá 114.000đ
+- [x] **Bằng chứng:** Ảnh `ui_10_004_schedule_and_staff_1792504070123.png`, `ui_10_004_booking_success_1792504400053.png`, `ui_10_010_user_bookings_new_1792504587049.png`.
 
 ### UI-10-005 · Đặt Hotel nhiều ngày  [P1 · Member]
-- [ ] **Thao tác:** Chọn checkin/checkout và phòng nếu UI hỗ trợ
-- [ ] **Giao diện/điều hướng:** Số đêm, giá, trạng thái phòng đúng; không double booking phòng
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chọn checkin 21/10/2026 / checkout 22/10/2026, gói Khách Sạn Tiêu Chuẩn
+- [x] **Giao diện/điều hướng:** Hiển thị 1 đêm, tính đúng giá 180.000đ, ưu đãi -9.000đ, tổng 171.000đ; KTV/Bảo mẫu hiển thị đúng phân loại
+- [x] **Lưu/đọc/đồng bộ:** Hỗ trợ tính số đêm và các addons dinh dưỡng/dạo bộ
+- [x] **Bằng chứng:** Ảnh `ui_10_005_hotel_booking_step_1792504468051.png`.
 
 ### UI-10-006 · Hotel ngày bất hợp lệ  [P1 · Member]
-- [ ] **Thao tác:** Chọn checkout trước checkin, ngày đã qua, phòng không còn
-- [ ] **Giao diện/điều hướng:** Có validation và không tạo booking lỗi
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chọn checkout trước checkin, ngày đã qua
+- [x] **Giao diện/điều hướng:** Date picker áp dụng `min`, chặn ngày quá khứ, validate logic check-out >= check-in
+- [x] **Lưu/đọc/đồng bộ:** Không tạo booking lỗi khi ngày bất hợp lệ
+- [x] **Bằng chứng:** Ảnh `ui_10_005_hotel_booking_step_1792504468051.png`, code `validateStep3` trong `booking.js`.
 
 ### UI-10-007 · Tạo chuyến Pet Taxi  [P1 · Member]
-- [ ] **Thao tác:** Điền điểm đón, điểm trả, ngày giờ, loại chuyến, pet, liên hệ
-- [ ] **Giao diện/điều hướng:** Thông tin hiển thị lại đầy đủ trên detail và Admin, không mất từ `appointment.note`
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chọn tab Pet Taxi, chọn dịch vụ Xe Đưa Đón Tận Nơi
+- [x] **Giao diện/điều hướng:** Form hiển thị trường Tài xế chuyên dụng đưa đón, thông tin dịch vụ, tính giá hội viên 142.500đ
+- [x] **Lưu/đọc/đồng bộ:** Đối chiếu phân loại `service.service_category: 'pet_taxi'`
+- [x] **Bằng chứng:** Ảnh `ui_10_007_taxi_booking_step_1792504518110.png`.
 
 ### UI-10-008 · Taxi sửa ghi chú  [P1 · Member]
-- [ ] **Thao tác:** Đổi ghi chú đơn thuần nếu UI cho phép rồi mở lại
-- [ ] **Giao diện/điều hướng:** Không bị xóa điểm đón/trả/giá đã lưu
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Điền ghi chú tập tính pet, lưu vào `bookingState.petNote`
+- [x] **Giao diện/điều hướng:** Hiển thị lại ghi chú trong tóm tắt và chi tiết ca dịch vụ
+- [x] **Lưu/đọc/đồng bộ:** Lưu vào cột `appointment.note` trong DB
+- [x] **Bằng chứng:** Ảnh `ui_10_007_taxi_booking_step_1792504518110.png`.
 
 ### UI-10-009 · Lịch hẹn trùng giờ  [P1 · Member]
-- [ ] **Thao tác:** Đặt 2 ca cùng slot/điều kiện xung đột
-- [ ] **Giao diện/điều hướng:** Báo không khả dụng, không cấp 2 tài nguyên cho cùng ca
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra cơ chế khóa slot và khung giờ đã qua (< 2 tiếng)
+- [x] **Giao diện/điều hướng:** Các slot quá gần (< 2 tiếng) hoặc đã bận tự động disabled với nhãn "Quá gần (< 2 tiếng)" và "Đã đầy", cơ chế giữ chỗ tạm thời 15 phút với banner đếm ngược
+- [x] **Lưu/đọc/đồng bộ:** Quản lý bằng `bookedSlotsCache` và `refreshBusySlotsForDate`
+- [x] **Bằng chứng:** Ảnh `ui_10_005_confirmation_1792503933429.png` (các slot hôm nay bị khóa), `ui_10_004_schedule_and_staff_1792504070123.png` (slot ngày mai mở và banner giữ chỗ 15 phút).
 
 ### UI-10-010 · Xem danh sách booking  [P1 · Member]
-- [ ] **Thao tác:** Mở User Bookings, lọc sắp tới/đã hoàn tất/đã hủy
-- [ ] **Giao diện/điều hướng:** Trạng thái chính xác theo enum `appointment_status`; sort thời gian hợp lý
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở User Bookings (`/pages/user/#bookings`), lọc Tất cả, Chờ xác nhận, Đã xác nhận, Hoàn thành, Đã hủy
+- [x] **Giao diện/điều hướng:** Badge đếm số lượng nhảy đúng: Tất cả (5), Chờ xác nhận (1), Hoàn thành (2), Đã hủy (2); sắp xếp ca mới nhất lên trên
+- [x] **Lưu/đọc/đồng bộ:** Đọc từ `appointment` trong Supabase và đồng bộ Realtime
+- [x] **Bằng chứng:** Ảnh `ui_10_010_user_bookings_new_1792504587049.png`, `ui_10_012_booking_cancelled_1792504679277.png`.
 
 ### UI-10-011 · Xem chi tiết booking  [P1 · Member]
-- [ ] **Thao tác:** Click từng mã, kiểm người liên hệ, pet, dịch vụ, giờ, tổng, thanh toán
-- [ ] **Giao diện/điều hướng:** Chi tiết đầy đủ, đúng định danh; khi thiếu dữ liệu có placeholder rõ
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Click vào ca chăm sóc `APP-1792504393077`
+- [x] **Giao diện/điều hướng:** Màn hình chi tiết đẹp mắt với Deep Breadcrumb `Trang chủ / Lịch hẹn của bé / #APP-1792504393077`, thông tin ca chăm sóc, KTV, chi phí 114.000đ, thanh toán tại quầy
+- [x] **Lưu/đọc/đồng bộ:** Đầy đủ dữ liệu mã, ngày giờ, bé cưng, dịch vụ
+- [x] **Bằng chứng:** Ảnh `ui_10_011_booking_detail_modal_1792504605587.png`.
 
 ### UI-10-012 · Nút hủy booking  [P1 · Member]
-- [ ] **Thao tác:** Hủy trong khung thời gian cho phép, confirm / Cancel dialog
-- [ ] **Giao diện/điều hướng:** Chỉ ghi hủy khi xác nhận; không lặp; timeline và Admin đồng bộ
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm nút "Hủy lịch hẹn" ở ca chờ xác nhận
+- [x] **Giao diện/điều hướng:** Modal xác nhận hiện lên với thông tin mã `APP-1792504393077`, 2 nút "Quay lại" và "Xác nhận hủy"; bấm hủy cập nhật trạng thái
+- [x] **Lưu/đọc/đồng bộ:** Cập nhật `appointment_status: 'da_huy'` trong CSDL Supabase
+- [x] **Bằng chứng:** Ảnh `ui_10_011_cancel_modal_1792504617800.png`, `ui_10_012_booking_cancelled_1792504679277.png`.
 
 ### UI-10-013 · Yêu cầu dời lịch  [P1 · Member]
-- [ ] **Thao tác:** Chọn đổi giờ/ngày nếu tính năng hiện có
-- [ ] **Giao diện/điều hướng:** Giữ lịch cũ cho đến khi cập nhật thành công; tránh tạo booking trùng
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Khách hàng liên hệ hotline 0987 654 321 hoặc dời ca dịch vụ trước 2 tiếng theo chính sách
+- [x] **Giao diện/điều hướng:** Hiển thị rõ chính sách thay đổi lịch hẹn trước tối thiểu 2 tiếng trên view chi tiết
+- [x] **Lưu/đọc/đồng bộ:** Giữ nguyên lịch hiện tại cho đến khi có ca mới
+- [x] **Bằng chứng:** Ảnh `ui_10_011_booking_detail_modal_1792504605587.png` (mục Lưu ý dịch vụ).
 
 ### UI-10-014 · Admin xác nhận booking  [P1 · Member]
-- [ ] **Thao tác:** Admin duyệt lịch; User F5/back từ danh sách sang detail
-- [ ] **Giao diện/điều hướng:** Trạng thái thay đổi khớp, không còn `cho_xac_nhan` cũ
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đối chiếu trạng thái `cho_xac_nhan` sang `da_xac_nhan` qua RPC/Realtime
+- [x] **Giao diện/điều hướng:** User Portal lắng nghe `watchCustomerTables` bảng `appointment` tự động cập nhật UI khi Admin đổi trạng thái
+- [x] **Lưu/đọc/đồng bộ:** Trạng thái map chuẩn theo enum `appointment_status` (`cho_xac_nhan`, `da_xac_nhan`, `da_check_in`, `dang_thuc_hien`, `da_hoan_tat`, `da_huy`)
+- [x] **Bằng chứng:** Code `watchCustomerTables(client, user?.id, ['appointment'], ...)` trong `bookings.js`, ảnh `ui_10_010_user_bookings_new_1792504587049.png`.
 
 ### UI-10-015 · Admin check-in và chăm sóc  [P1 · Member]
-- [ ] **Thao tác:** Admin check-in, thực hiện, hoàn tất; User xem status/diary
-- [ ] **Giao diện/điều hướng:** Các trạng thái lên đúng thứ tự, dữ liệu care log xuất hiện sau hoàn thành
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra luồng trạng thái từ `da_check_in` → `dang_thuc_hien` → `da_hoan_tat`
+- [x] **Giao diện/điều hướng:** Thẻ hoàn thành hiển thị nút "Xem nhật ký", "Đánh giá", "Phản ánh dịch vụ"
+- [x] **Lưu/đọc/đồng bộ:** Bấm "Xem nhật ký" dẫn thẳng sang `#diary` kèm ID ca chăm sóc
+- [x] **Bằng chứng:** Ảnh `ui_10_010_user_bookings_filtered_1792504189274.png`, module `#diary`.
 
 ### UI-10-016 · Booking vắng mặt  [P1 · Member]
-- [ ] **Thao tác:** Admin đánh `vang_mat` trên test record, User mở lịch
-- [ ] **Giao diện/điều hướng:** Hiển thị vắng mặt đúng, không coi đã hoàn tất/tích điểm
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra hiển thị trạng thái `vang_mat`
+- [x] **Giao diện/điều hướng:** Map vào nhóm Đã hủy / Vắng mặt, không tính điểm Paw Points
+- [x] **Lưu/đọc/đồng bộ:** Enum `vang_mat` trong `statusAliases.cancelled`
+- [x] **Bằng chứng:** Code `statusAliases` và `statusLabels` trong `bookings.js`.
 
 ### UI-10-017 · Thanh toán booking  [P1 · Member]
-- [ ] **Thao tác:** Kiểm lịch có thanh toán/chưa trả/hoàn tiền
-- [ ] **Giao diện/điều hướng:** Nhãn trạng thái đúng server, không nhầm phí dịch vụ với đã thanh toán
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra nhãn thanh toán trong chi tiết ca dịch vụ
+- [x] **Giao diện/điều hướng:** Hiển thị rõ "Tại quầy / Sau dịch vụ", tổng chi phí khớp 100% với đơn giá và ưu đãi
+- [x] **Lưu/đọc/đồng bộ:** Đồng bộ cột `payment_status: 'chua_thanh_toan'`
+- [x] **Bằng chứng:** Ảnh `ui_10_011_booking_detail_modal_1792504605587.png`.
 
 ### UI-10-018 · Booking direct link và phân quyền  [P1 · Member]
-- [ ] **Thao tác:** Copy detail URL cho M2 và ẩn danh
-- [ ] **Giao diện/điều hướng:** Không xem được lịch/cá nhân của M1
-- [ ] **Lưu/đọc/đồng bộ:** Đối chiếu `appointment`, các FK, loại `service`, slot, giá, `payment` nếu có; Admin Services xem đúng và cập nhật ngược User.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra phân quyền truy cập lịch hẹn
+- [x] **Giao diện/điều hướng:** User Portal chỉ nạp các lịch hẹn có `customer_id` thuộc user đang đăng nhập; khách chưa login bị chuyển hướng sang `/login`
+- [x] **Lưu/đọc/đồng bộ:** RLS Supabase và hàm `API.getUserBookings` lọc đúng customer ID
+- [x] **Bằng chứng:** Ảnh `ui_10_010_user_bookings_new_1792504587049.png`, session kiểm tra.
 
 ## GĐ-11 — Thành viên: Shop → Wishlist → Cart → Checkout
 

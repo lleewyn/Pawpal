@@ -8,6 +8,8 @@ const MEMBER_DISCOUNT_TEXT = 'Ưu đãi hội viên';
 let selectedService = null;
 let bookingVouchers = null;
 let appliedBookingVoucher = null;
+let bookedSlotsCache = {};
+let bookedSlotsLoadingDate = null;
 
 async function ensureBookingVouchersLoaded() {
     if (bookingVouchers) return bookingVouchers;
@@ -1468,8 +1470,7 @@ window.updateAddonQty = function (id, delta) {
     saveBookingSession();
 };
 
-let bookedSlotsCache = {};
-let bookedSlotsLoadingDate = null;
+
 
 async function refreshBusySlotsForDate(date) {
     if (!date || bookedSlotsCache[date] || bookedSlotsLoadingDate === date) return;
