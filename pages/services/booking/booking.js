@@ -2330,15 +2330,24 @@ async function persistBookingSubmit() {
 
         customerId = await getSupabaseCustomerId(dbUser);
 
-        let finalPetId = bookingState.petId || null;
+        let finalPetId = null;
+        if (customerId && bookingState.petId) {
+            finalPetId = await getSupabasePetId(db, customerId, bookingState.petId);
+        }
+
         if (customerId && !finalPetId) {
             try {
-                const petName = bookingState.petName || 'Bé cưng';
-                const { data: existingPets } = await db.from('pet_profile')
-                    .select('id')
+                const petName = (bookingState.petName || 'Bé cưng').trim();
+                let petQuery = db.from('pet_profile')
+                    .select('id, breed, species')
                     .eq('customer_id', customerId)
-                    .ilike('pet_name', petName)
-                    .limit(1);
+                    .ilike('pet_name', petName);
+
+                if (bookingState.petBreed && bookingState.petBreed !== 'Chưa rõ') {
+                    petQuery = petQuery.ilike('breed', bookingState.petBreed);
+                }
+
+                const { data: existingPets } = await petQuery.limit(1);
 
                 if (existingPets && existingPets.length > 0) {
                     finalPetId = existingPets[0].id;

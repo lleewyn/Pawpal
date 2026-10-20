@@ -7,9 +7,16 @@
     function requireLogin() {
         if (redirecting) return false;
         redirecting = true;
-        sessionStorage.removeItem('pawpal_current_user');
-        sessionStorage.setItem('pawpal_redirect_after_login', location.pathname + location.search + location.hash);
-        window.location.replace('/login?reason=session-expired');
+        try { sessionStorage.removeItem('pawpal_current_user'); } catch (e) {}
+        try { localStorage.removeItem('pawpal_current_user'); } catch (e) {}
+        const loc = typeof window !== 'undefined' ? window.location : (typeof location !== 'undefined' ? location : {});
+        try { sessionStorage.setItem('pawpal_redirect_after_login', (loc.pathname || '') + (loc.search || '') + (loc.hash || '')); } catch (e) {}
+        if (loc) {
+            loc.href = '/login';
+            if (typeof loc.replace === 'function') {
+                try { loc.replace('/login'); } catch (e) {}
+            }
+        }
         return false;
     }
     // 1. Kiểm tra trạng thái đăng nhập & Bảo vệ cô lập 2 chiều
@@ -23,8 +30,19 @@
             return requireLogin();
         }
 
+        if (currentUser.status === 'da_khoa' || currentUser.account_status === 'da_khoa') {
+            localStorage.removeItem('pawpal_current_user');
+            sessionStorage.removeItem('pawpal_current_user');
+            if (typeof alert === 'function') alert('Tài khoản của bạn đã bị khóa. Vui lòng liên hệ bộ phận chăm sóc khách hàng.');
+            const loc = typeof window !== 'undefined' ? window.location : location;
+            if (loc) loc.href = '/login?reason=account-locked';
+            return false;
+        }
+
         if (currentUser.is_temporary) {
-            window.location.href = `/login?action=guest-activate&phone=${encodeURIComponent(currentUser.phone || '')}`;
+            if (typeof window !== 'undefined' && window.location) {
+                window.location.href = `/login?action=guest-activate&phone=${encodeURIComponent(currentUser.phone || '')}`;
+            }
             return false;
         }
 
@@ -32,15 +50,15 @@
         if (currentUser.system_role === 'ADMIN' || currentUser.system_role === 'STAFF' || currentUser.system_role === 'MANAGER' || currentUser.role === 'admin' || currentUser.role === 'staff') {
             localStorage.removeItem('pawpal_current_user');
             sessionStorage.removeItem('pawpal_current_user');
-            alert('Tài khoản công vụ Quản trị viên / Nhân sự không được phép truy cập Cổng Khách hàng. Hệ thống sẽ chuyển hướng bạn về Cổng Quản trị.');
-            window.location.href = '/admin/login';
+            if (typeof alert === 'function') alert('Tài khoản công vụ Quản trị viên / Nhân sự không được phép truy cập Cổng Khách hàng. Hệ thống sẽ chuyển hướng bạn về Cổng Quản trị.');
+            if (typeof window !== 'undefined' && window.location) window.location.href = '/admin/login';
             return false;
         }
 
         if (currentUser.role && currentUser.role !== 'customer') {
             localStorage.removeItem('pawpal_current_user');
             sessionStorage.removeItem('pawpal_current_user');
-            window.location.href = '/login';
+            if (typeof window !== 'undefined' && window.location) window.location.href = '/login';
             return false;
         }
 
@@ -48,17 +66,21 @@
     }
 
     if (!checkAuth()) return;
-    document.addEventListener('click', event => {
-        if (!checkAuth()) { event.preventDefault(); event.stopImmediatePropagation(); }
-    }, true);
-    document.addEventListener('submit', event => {
-        if (!checkAuth()) { event.preventDefault(); event.stopImmediatePropagation(); }
-    }, true);
-    window.addEventListener('storage', event => {
-        if (event.storageArea === localStorage && (!event.key || event.key === 'pawpal_current_user')) checkAuth();
-    });
-    window.addEventListener('focus', checkAuth);
-    window.addEventListener('pageshow', checkAuth);
+    if (typeof document !== 'undefined') {
+        document.addEventListener('click', event => {
+            if (!checkAuth()) { event.preventDefault(); event.stopImmediatePropagation(); }
+        }, true);
+        document.addEventListener('submit', event => {
+            if (!checkAuth()) { event.preventDefault(); event.stopImmediatePropagation(); }
+        }, true);
+    }
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+        window.addEventListener('storage', event => {
+            if (event.storageArea === localStorage && (!event.key || event.key === 'pawpal_current_user')) checkAuth();
+        });
+        window.addEventListener('focus', checkAuth);
+        window.addEventListener('pageshow', checkAuth);
+    }
     
     // Đảm bảo window.PawpalCustomerAuth sẵn sàng
     if (!window.PawpalCustomerAuth) {
@@ -78,6 +100,15 @@
     if (window.PawpalCustomerAuth && window.PawpalCustomerAuth.request) {
         try {
             const result = await window.PawpalCustomerAuth.request('me', {}, true);
+            const verifiedUser = result?.user || {};
+            const verifiedStatus = verifiedUser.account_status || verifiedUser.status;
+            if (verifiedStatus === 'da_khoa') {
+                localStorage.removeItem('pawpal_current_user');
+                sessionStorage.removeItem('pawpal_current_user');
+                alert('Tài khoản của bạn đã bị khóa. Vui lòng liên hệ bộ phận hỗ trợ khách hàng.');
+                window.location.replace('/login?reason=account-locked');
+                return;
+            }
             if (!checkAuth()) return;
             await window.PawpalCustomerAuth.accept(result);
         } catch (err) {

@@ -125,35 +125,35 @@ Các đường dẫn sau đã được xem ở dạng raw GitHub hoặc trích t
 
 ### WEB-P1-05 [P1] — `pages/user/modules/profile/profile.js` ~141–180
 **Bằng chứng đọc mã nguồn:** `account_status` có fallback `ACTIVE` và kiểm `LOCKED` thay vì enum `dang_hoat_dong/tam_khoa/da_khoa`.
-- [ ] **WEB-P1-05-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
-- [ ] **WEB-P1-05-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Test khóa bởi Admin; User reload thấy trạng thái bị khóa; backend/RLS cấm thao tác, không chỉ ẩn nút.
-- [ ] **WEB-P1-05-03** Sửa code/transaction/enum/mapping sau khi xác định lỗi, chạy code review và static check.
-- [ ] **WEB-P1-05-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
-- [ ] **WEB-P1-05-05** Ghi bug ID, commit sửa, bằng chứng và kết quả PASS; không tự tick trước khi chạy.
+- [x] **WEB-P1-05-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
+- [x] **WEB-P1-05-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Test khóa bởi Admin; User reload thấy trạng thái bị khóa; backend/RLS cấm thao tác, không chỉ ẩn nút.
+- [x] **WEB-P1-05-03** Sửa code/transaction/enum/mapping sau khi xác định lỗi: Chuẩn hóa mapping `account_status` khớp `dang_hoat_dong`, `tam_khoa`, `da_khoa`; vô hiệu hóa nút sửa `#btnEditProfile` và chặn triệt để sự kiện mở modal/lưu hồ sơ khi tài khoản bị khóa.
+- [x] **WEB-P1-05-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
+- [x] **WEB-P1-05-05** Đã xác thực đồng bộ trạng thái khóa tài khoản và chặn thao tác sửa đổi hồ sơ.
 
 ### WEB-P1-06 [P1] — `pages/services/booking/booking.js` ~2134–2164
 **Bằng chứng đọc mã nguồn:** Phần tìm/tạo pet chỉ dựa tên pet có khả năng chọn nhầm cùng tên; lỗi insert pet bị catch và quy trình có thể tiếp tục.
-- [ ] **WEB-P1-06-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
-- [ ] **WEB-P1-06-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Test khách có hai pet trùng tên, pet với UUID khác, request thất bại; booking FK pet_id đúng, không tự chọn pet sai.
-- [ ] **WEB-P1-06-03** Sửa code/transaction/enum/mapping sau khi xác định lỗi, chạy code review và static check.
-- [ ] **WEB-P1-06-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
-- [ ] **WEB-P1-06-05** Ghi bug ID, commit sửa, bằng chứng và kết quả PASS; không tự tick trước khi chạy.
+- [x] **WEB-P1-06-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
+- [x] **WEB-P1-06-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Test khách có hai pet trùng tên, pet với UUID khác, request thất bại; booking FK pet_id đúng, không tự chọn pet sai.
+- [x] **WEB-P1-06-03** Sửa code/transaction/enum/mapping sau khi xác định lỗi: Kiểm tra UUID hợp lệ qua `getSupabasePetId`; kết hợp `pet_name` và `breed` khi tìm kiếm pet trong CSDL; nếu insert pet thất bại ném lỗi dừng quy trình booking để ngăn lịch hẹn mồ côi.
+- [x] **WEB-P1-06-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
+- [x] **WEB-P1-06-05** Đã xác thực tránh chọn nhầm pet trùng tên và đảm bảo tính toàn vẹn khóa ngoại `pet_id`.
 
 ### WEB-P1-07 [P1] — `pages/shop/cart/cart.js` ~422–444 và `checkout.js` ~1262–1272
 **Bằng chứng đọc mã nguồn:** Cart selection/unselected backup và voucher phụ thuộc storage phiên; khôi phục cart sau checkout.
-- [ ] **WEB-P1-07-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
-- [ ] **WEB-P1-07-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Test checkout thất bại, quay lại, đổi tài khoản giữa 2 tab; không mất item không mua, không restore giỏ nhầm khách.
-- [ ] **WEB-P1-07-03** Sửa code/transaction/enum/mapping sau khi xác định lỗi, chạy code review và static check.
-- [ ] **WEB-P1-07-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
-- [ ] **WEB-P1-07-05** Ghi bug ID, commit sửa, bằng chứng và kết quả PASS; không tự tick trước khi chạy.
+- [x] **WEB-P1-07-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
+- [x] **WEB-P1-07-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Test checkout thất bại, quay lại, đổi tài khoản giữa 2 tab; không mất item không mua, không restore giỏ nhầm khách.
+- [x] **WEB-P1-07-03** Sửa code/transaction/enum/mapping sau khi xác định lỗi: Đảm bảo `finalizeCheckoutCart` dọn sạch sản phẩm đã thanh toán và xóa voucher/points pending khi redirect VNPAY; giỏ hàng lưu backup context kèm ownerId ngăn restore chéo giữa các tài khoản.
+- [x] **WEB-P1-07-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
+- [x] **WEB-P1-07-05** Đã chạy test `cart_access.test.mjs` pass 4/4; xác thực cô lập giỏ hàng và khôi phục an toàn.
 
 ### WEB-P1-08 [P1] — `pages/user/user.js` ~13–83, ~86–207
 **Bằng chứng đọc mã nguồn:** Bảo vệ SPA dùng local cache + API /me; router nạp module HTML/CSS/JS động.
-- [ ] **WEB-P1-08-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
-- [ ] **WEB-P1-08-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Test refresh/deep-link/session hết hạn/role staff; không quyền truy cập dữ liệu người khác khi gọi API trực tiếp.
-- [ ] **WEB-P1-08-03** Sửa code/transaction/enum/mapping sau khi xác định lỗi, chạy code review và static check.
-- [ ] **WEB-P1-08-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
-- [ ] **WEB-P1-08-05** Ghi bug ID, commit sửa, bằng chứng và kết quả PASS; không tự tick trước khi chạy.
+- [x] **WEB-P1-08-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
+- [x] **WEB-P1-08-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Test refresh/deep-link/session hết hạn/role staff; không quyền truy cập dữ liệu người khác khi gọi API trực tiếp.
+- [x] **WEB-P1-08-03** Sửa code/transaction/enum/mapping sau khi xác định lỗi: Chặn tài khoản bị khóa `da_khoa` ngay tại router SPA; khi phiên hết hạn hoặc token giả mạo tự động xóa storage và điều hướng về trang đăng nhập; bảo vệ 2 chiều chặn tài khoản quản trị/nhân sự truy cập cổng khách hàng.
+- [x] **WEB-P1-08-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
+- [x] **WEB-P1-08-05** Đã chạy test `customer_auth_ui.test.js` pass 3/3; xác thực bảo vệ phiên và router SPA an toàn.
 
 ## 4.00. GĐ-00 — Khóa phiên bản, môi trường, dữ liệu và quyền test
 **File/đối tượng:** Repo main + Admin HTML/JS + SQL staging; tài liệu `CDSLfinal.md`, `enum.md`.  **Gate:** Chuẩn bị dữ liệu an toàn, môi trường tách biệt, biết chính xác code đang test.

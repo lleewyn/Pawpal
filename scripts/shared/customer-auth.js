@@ -8,8 +8,8 @@
     // Remove previously cached plaintext credentials, safely handling storage restrictions
     try {
         const storages = [];
-        try { if (typeof window !== 'undefined' && window.localStorage) storages.push(window.localStorage); } catch {}
-        try { if (typeof window !== 'undefined' && window.sessionStorage) storages.push(window.sessionStorage); } catch {}
+        try { if (typeof localStorage !== 'undefined') storages.push(localStorage); else if (typeof window !== 'undefined' && window.localStorage) storages.push(window.localStorage); } catch {}
+        try { if (typeof sessionStorage !== 'undefined') storages.push(sessionStorage); else if (typeof window !== 'undefined' && window.sessionStorage) storages.push(window.sessionStorage); } catch {}
         for (const storage of storages) {
             for (const key of ['pawpal_current_user', 'pawpal_users', 'pawpal_users_db']) {
                 try {

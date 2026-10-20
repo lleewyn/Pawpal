@@ -24,7 +24,7 @@ test('failed password change keeps form values and does not report success or ch
     const original = '{"id":"customer"}';
     const context = { console, localStorage: storage({ pawpal_current_user: original }), document: { getElementById: id => elements[id] || null }, window: { PawpalCustomerAuth: { request: async () => { throw new Error('Mật khẩu hiện tại không đúng.'); }, accept: async () => accepts++ } } };
     vm.createContext(context);
-    vm.runInContext(fs.readFileSync('pages/user/modules/settings/settings.js', 'utf8').replace(/^export /gm, ''), context);
+    vm.runInContext(fs.readFileSync('pages/user/modules/settings/settings.js', 'utf8').replace(/^import .*?;/gm, 'const withDeadline = async (fn) => fn();').replace(/^export /gm, ''), context);
     vm.runInContext('globalThis.toasts=[];showToast=(type,message)=>toasts.push({type,message});initChangePasswordForm();', context);
     await elements.changePasswordForm.submit({ preventDefault() {} });
     assert.equal(context.toasts.length, 1); assert.equal(context.toasts[0].type, 'error');

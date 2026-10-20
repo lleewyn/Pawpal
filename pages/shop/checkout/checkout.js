@@ -1533,6 +1533,9 @@ async function handleCheckout() {
         localStorage.removeItem(PENDING_POINTS_KEY);
         window.location.href = `/payment-success?orderId=${orderData.orderId}`;
     } else if (checkoutState.selectedPayment === 'vnpay') {
+        await finalizeCheckoutCart();
+        localStorage.removeItem('pawpal_applied_voucher_code');
+        localStorage.removeItem(PENDING_POINTS_KEY);
         // Ưu tiên gọi Backend để lấy URL Cổng VNPAY Sandbox thật
         try {
             const vnpRes = await fetch('/api/vnpay/create-payment-url', {

@@ -154,6 +154,9 @@ async function syncUserProfileFromSupabase(user, cache = true) {
             const accountMembership = await loadCustomerMembership(client, customerId);
             const membershipTier = accountMembership?.tier || tierRecord?.tier_name || user.tier || user.membershipTier || 'Đang cập nhật';
 
+            const rawStatus = custRecord.account_status || 'dang_hoat_dong';
+            const isAccountLockedState = ['tam_khoa', 'da_khoa', 'LOCKED'].includes(rawStatus);
+
             const updatedUser = {
                 ...user,
                 id: customerId,
@@ -161,8 +164,9 @@ async function syncUserProfileFromSupabase(user, cache = true) {
                 fullName: profile.full_name || user.name || 'Khách hàng',
                 phone: custRecord.phone_main || user.phone || '',
                 email: normalizeProfileEmail(custRecord.email) || normalizeProfileEmail(user.email),
-                status: custRecord.account_status || 'ACTIVE',
-                isLocked: custRecord.account_status === 'LOCKED',
+                status: rawStatus,
+                account_status: rawStatus,
+                isLocked: isAccountLockedState,
                 points: Number(membership.total_paw_points ?? 0),
                 pawPoints: Number(membership.total_paw_points ?? 0),
                 membershipTier,
@@ -192,11 +196,22 @@ async function loadProfileData(user) {
     if (!user) return;
 
     // Kiểm tra trạng thái tài khoản bị khóa trực tiếp từ Database
-    let isAccountLocked = Boolean(user.isLocked || user.status === 'LOCKED');
+    let isAccountLocked = Boolean(user.isLocked || ['tam_khoa', 'da_khoa', 'LOCKED'].includes(user.status || user.account_status));
     const lockAlertEl = document.getElementById('userAccountLockAlert');
     if (lockAlertEl) {
         if (isAccountLocked) lockAlertEl.classList.remove('d-none');
         else lockAlertEl.classList.add('d-none');
+    }
+
+    const btnEditProfileEl = document.getElementById('btnEditProfile');
+    if (btnEditProfileEl) {
+        if (isAccountLocked) {
+            btnEditProfileEl.disabled = true;
+            btnEditProfileEl.title = 'Tài khoản đang bị tạm khóa hoặc đã khóa.';
+        } else {
+            btnEditProfileEl.disabled = false;
+            btnEditProfileEl.removeAttribute('title');
+        }
     }
 
     // Header stats
@@ -588,11 +603,15 @@ function initProfileEditModal(user) {
     });
 
     btnEdit.addEventListener('click', () => {
+        const currentUser = getCurrentUser() || user;
+        if (['tam_khoa', 'da_khoa', 'LOCKED'].includes(currentUser.status || currentUser.account_status) || currentUser.isLocked) {
+            showToast('error', 'Tài khoản của bạn đang bị khóa, không thể chỉnh sửa hồ sơ.');
+            return;
+        }
         setNameError('');
         setEmailError('');
         showAddressErrors({});
         if (saveError) saveError.hidden = true;
-        const currentUser = getCurrentUser() || user;
         editUser = currentUser;
         const nameInput = document.getElementById('profileNameInput');
         const emailInput = document.getElementById('profileEmailInput');
@@ -698,6 +717,10 @@ function initProfileEditModal(user) {
         setEmailError('');
 
         const currentUser = editUser;
+        if (['tam_khoa', 'da_khoa', 'LOCKED'].includes(currentUser.status || currentUser.account_status) || currentUser.isLocked) {
+            showToast('error', 'Tài khoản đang bị khóa, không thể lưu thay đổi.');
+            return;
+        }
 
         if (phoneVal !== currentUser.phone) {
             showToast('error', 'Không thể thay số điện thoại đăng nhập tại đây');
