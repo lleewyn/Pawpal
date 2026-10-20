@@ -6,16 +6,16 @@
 
 ## A. QUY TẮC TEST VÀ ĐIỀU KIỆN PASS
 
-- [ ] Trước khi sửa: backup schema/data, tách staging, tạo tài khoản test với vai trò Admin/CSKH/lễ tân/KTV, không dùng service-role key trong trình duyệt.
-- [ ] Với mỗi thao tác ghi: chụp DB trước → bấm UI → xác nhận Network request/method/payload → xem response/error → truy vấn DB sau → reload tab → mở lại chi tiết → đối chiếu Dashboard/chức năng liên quan.
-- [ ] Không đánh PASS chỉ vì toast “thành công”; phải xác nhận bản ghi thực tồn tại và khóa ngoại đúng, không bị tạo trùng sau double-click.
-- [ ] Với nút không ghi: kiểm tra điều hướng, filter/sort/pagination, modal đóng/mở, focus, disabled, CSV/Excel, in ấn, thông báo và khả năng reset.
-- [ ] Với field: test required/null/empty/Unicode/độ dài/bounds/số âm/mã hóa/XSS/enum; kiểm tra round-trip (save → fetch → render) và cột DB đích; không để mất dữ liệu ngầm.
-- [ ] Với enum: UI value (ví dụ `pending`, `dog`) chỉ là internal; dữ liệu Supabase phải đúng enum thực tế, mapping hai chiều đầy đủ, trạng thái ngoài tập phải báo lỗi.
-- [ ] Với bảng: kiểm tra tất cả `th` hiển thị khớp nguồn JS, sort/filter, empty state, hết trang, đúng timezone, đúng quan hệ; không thay dữ liệu lỗi bằng 0/[] hay placeholder như thể thành công.
-- [ ] Với cập nhật đa bảng: đảm bảo transaction/RPC/compensation, idempotency, concurrency và rollback khi bất cứ bước ghi nào lỗi.
-- [ ] Mỗi test lưu `Người test | Ngày | Môi trường | ID bản ghi trước/sau | Screenshot | Network | SQL proof | PASS/FAIL/BLOCKED | Bug ID`.
-- [ ] Chỉ được đóng giai đoạn khi 100% P0/P1 trong phạm vi PASS retest; không còn lỗi silent failure/đếm sai/mất dữ liệu/RLS vượt quyền.
+- [x] Trước khi sửa: backup schema/data, tách staging, tạo tài khoản test với vai trò Admin/CSKH/lễ tân/KTV, không dùng service-role key trong trình duyệt.
+- [x] Với mỗi thao tác ghi: chụp DB trước → bấm UI → xác nhận Network request/method/payload → xem response/error → truy vấn DB sau → reload tab → mở lại chi tiết → đối chiếu Dashboard/chức năng liên quan.
+- [x] Không đánh PASS chỉ vì toast “thành công”; phải xác nhận bản ghi thực tồn tại và khóa ngoại đúng, không bị tạo trùng sau double-click.
+- [x] Với nút không ghi: kiểm tra điều hướng, filter/sort/pagination, modal đóng/mở, focus, disabled, CSV/Excel, in ấn, thông báo và khả năng reset.
+- [x] Với field: test required/null/empty/Unicode/độ dài/bounds/số âm/mã hóa/XSS/enum; kiểm tra round-trip (save → fetch → render) và cột DB đích; không để mất dữ liệu ngầm.
+- [x] Với enum: UI value (ví dụ `pending`, `dog`) chỉ là internal; dữ liệu Supabase phải đúng enum thực tế, mapping hai chiều đầy đủ, trạng thái ngoài tập phải báo lỗi.
+- [x] Với bảng: kiểm tra tất cả `th` hiển thị khớp nguồn JS, sort/filter, empty state, hết trang, đúng timezone, đúng quan hệ; không thay dữ liệu lỗi bằng 0/[] hay placeholder như thể thành công.
+- [x] Với cập nhật đa bảng: đảm bảo transaction/RPC/compensation, idempotency, concurrency và rollback khi bất cứ bước ghi nào lỗi.
+- [x] Mỗi test lưu `Người test | Ngày | Môi trường | ID bản ghi trước/sau | Screenshot | Network | SQL proof | PASS/FAIL/BLOCKED | Bug ID`.
+- [x] Chỉ được đóng giai đoạn khi 100% P0/P1 trong phạm vi PASS retest; không còn lỗi silent failure/đếm sai/mất dữ liệu/RLS vượt quyền.
 
 ### A1. Báo cáo bằng chứng mẫu (sao chép cho mỗi test)
 
