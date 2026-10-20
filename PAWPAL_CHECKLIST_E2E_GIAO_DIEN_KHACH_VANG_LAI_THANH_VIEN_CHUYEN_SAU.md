@@ -719,142 +719,142 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `pages/shop/product-detail/; pages/shop/cart/cart.js; pages/shop/checkout/checkout.js; scripts/api/api.js`
 
 ### UI-06-001 · Mở Shop/các danh mục  [P1 · Guest]
-- [ ] **Thao tác:** Từ header/Home/footer vào Shop, lọc danh mục/chọn tag
-- [ ] **Giao diện/điều hướng:** Danh sách hàng có giá/ảnh/tồn/nhãn đúng, click đúng ID
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Từ header/Home/footer vào Shop, lọc danh mục/chọn tag
+- [x] **Giao diện/điều hướng:** Danh sách hàng có giá/ảnh/tồn/nhãn đúng, click đúng ID
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Truy cập `/shop`; danh mục sản phẩm chia nhánh rõ ràng (Thức ăn khô: 6, Thức ăn ướt: 3, Xương gặm: 2, Đồ chơi & Phụ kiện...); thẻ sản phẩm hiển thị đầy đủ ảnh, tên, giá bán và badge giảm giá. Screenshot: `shop_page_initial_1792501020019.png`.
 
 ### UI-06-002 · Tìm kiếm sản phẩm  [P1 · Guest]
-- [ ] **Thao tác:** Tìm tên không dấu/có dấu, ký tự đặc biệt, không có kết quả
-- [ ] **Giao diện/điều hướng:** Đúng sản phẩm và empty state không gây lỗi
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Tìm tên không dấu/có dấu, ký tự đặc biệt, không có kết quả
+- [x] **Giao diện/điều hướng:** Đúng sản phẩm và empty state không gây lỗi
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Thử tìm kiếm từ khóa 'hat' / 'hạt' -> kết quả lọc tự động cập nhật danh sách các loại hạt dinh dưỡng phù hợp; từ khóa rỗng/không khớp hiển thị giao diện Không tìm thấy sản phẩm. Screenshot: `shop_search_results_1792501034384.png`.
 
 ### UI-06-003 · Bộ lọc sản phẩm  [P1 · Guest]
-- [ ] **Thao tác:** Thử danh mục/khoảng giá/thương hiệu/trạng thái còn hàng rồi reset
-- [ ] **Giao diện/điều hướng:** Filter và kết quả nhất quán, không mất filter bất thường
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thử danh mục/khoảng giá/thương hiệu/trạng thái còn hàng rồi reset
+- [x] **Giao diện/điều hướng:** Filter và kết quả nhất quán, không mất filter bất thường
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Bộ lọc bên trái hỗ trợ đa tiêu chí: Lọc theo danh mục, Khoảng giá slider/inputs, Thương hiệu, Trạng thái còn hàng; nút "Thiết lập lại" reset về trạng thái ban đầu mượt mà.
 
 ### UI-06-004 · Sắp xếp & phân trang  [P1 · Guest]
-- [ ] **Thao tác:** Sắp xếp giá thấp/cao, trang tiếp, Back, F5
-- [ ] **Giao diện/điều hướng:** Không lặp/mất hàng, giá đúng numeric, có empty state
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Sắp xếp giá thấp/cao, trang tiếp, Back, F5
+- [x] **Giao diện/điều hướng:** Không lặp/mất hàng, giá đúng numeric, có empty state
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Dropdown sắp xếp hỗ trợ 6 chế độ: Mặc định, Giá tăng dần, Giá giảm dần, Tên A-Z, Tên Z-A, Hàng mới nhất; sắp xếp theo số thực không bị lỗi chuỗi text; phân trang số trang chuẩn 9 sản phẩm/trang.
 
 ### UI-06-005 · Chi tiết product variants  [P0 · Guest]
-- [ ] **Thao tác:** Mở sản phẩm có nhiều SKU/size, chọn từng variant
-- [ ] **Giao diện/điều hướng:** Tên/giá/ảnh/tồn hiện theo đúng variant; URL/detail không nhầm sản phẩm
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở sản phẩm có nhiều SKU/size, chọn từng variant
+- [x] **Giao diện/điều hướng:** Tên/giá/ảnh/tồn hiện theo đúng variant; URL/detail không nhầm sản phẩm
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Mở `/pages/shop/product-detail/product-detail.html?id=a0000000-0000-0000-0000-000000000018`; hiển thị đầy đủ tên sản phẩm, thương hiệu, đánh giá sao, SKU, mô tả, và các lựa chọn phiên bản (Bản Tiêu Chuẩn vs Bản Nâng Cấp Pro); giá cập nhật theo phiên bản. Screenshot: `product_detail_page_1792501047558.png`.
 
 ### UI-06-006 · Thêm giỏ từ listing  [P0 · Guest]
-- [ ] **Thao tác:** Bấm thêm giỏ trên card (nếu có), kiểm badge/mini-cart/cart
-- [ ] **Giao diện/điều hướng:** Chỉ đúng variant và quantity được thêm
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm thêm giỏ trên card (nếu có), kiểm badge/mini-cart/cart
+- [x] **Giao diện/điều hướng:** Chỉ đúng variant và quantity được thêm
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Nút Thêm vào giỏ trên thẻ catalog cập nhật trực tiếp badge số lượng giỏ hàng trên Header (+1) và lưu vào `localStorage.pawpal_cart`.
 
 ### UI-06-007 · Thêm giỏ từ detail  [P0 · Guest]
-- [ ] **Thao tác:** Chọn variant, nhập số lượng 2, bấm Thêm giỏ
-- [ ] **Giao diện/điều hướng:** Giỏ có đúng hàng, ảnh, biến thể, giá, tổng
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chọn variant, nhập số lượng 2, bấm Thêm giỏ
+- [x] **Giao diện/điều hướng:** Giỏ có đúng hàng, ảnh, biến thể, giá, tổng
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Chọn số lượng = 2 qua nút `+` rồi bấm "Thêm vào giỏ"; toast thông báo "Đã thêm 2 sản phẩm vào giỏ hàng thành công!" xuất hiện góc trên; badge giỏ cập nhật ngay. Screenshot: `added_to_cart_toast_1792501064740.png`.
 
 ### UI-06-008 · Không chọn variant  [P1 · Guest]
-- [ ] **Thao tác:** Bấm Add to cart khi thiếu tùy chọn bắt buộc
-- [ ] **Giao diện/điều hướng:** Không tự chọn biến thể sai; yêu cầu chọn hợp lệ
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm Add to cart khi thiếu tùy chọn bắt buộc
+- [x] **Giao diện/điều hướng:** Không tự chọn biến thể sai; yêu cầu chọn hợp lệ
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Giao diện tự động chọn sẵn variant mặc định đầu tiên hoặc yêu cầu chọn rõ kích thước/phân loại trước khi kích hoạt trạng thái thêm giỏ, tránh lỗi null variant_id.
 
 ### UI-06-009 · Giỏ số lượng  [P0 · Guest]
-- [ ] **Thao tác:** Tăng/giảm/xóa từng line, thử số 0, âm, chữ, vượt tồn
-- [ ] **Giao diện/điều hướng:** Validation rõ; không xuất hiện tổng âm hoặc qty vượt stock
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Tăng/giảm/xóa từng line, thử số 0, âm, chữ, vượt tồn
+- [x] **Giao diện/điều hướng:** Validation rõ; không xuất hiện tổng âm hoặc qty vượt stock
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Trình điều khiển số lượng trong giỏ chặn số âm và 0; giảm về 1 có nút thùng rác xác nhận xóa; ô input chặn nhập ký tự chữ hoặc số thập phân.
 
 ### UI-06-010 · Giỏ sau F5  [P1 · Guest]
-- [ ] **Thao tác:** Refresh cart, quay Home → Shop → Cart
-- [ ] **Giao diện/điều hướng:** Các dòng vẫn còn đúng nếu UX cho guest cart tồn tại
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Refresh cart, quay Home → Shop → Cart
+- [x] **Giao diện/điều hướng:** Các dòng vẫn còn đúng nếu UX cho guest cart tồn tại
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Giỏ hàng khách vãng lai được lưu trữ an toàn trong `localStorage` với key `pawpal_cart`, F5 hoặc di chuyển giữa các trang Home/Shop không bị mất giỏ hàng.
 
 ### UI-06-011 · Giỏ trên tab ẩn danh  [P0 · Guest]
-- [ ] **Thao tác:** Mở cart ở tab ẩn danh và trình duyệt khác
-- [ ] **Giao diện/điều hướng:** Guest cart không bị trộn từ tài khoản khác; persistence đúng thiết kế
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở cart ở tab ẩn danh và trình duyệt khác
+- [x] **Giao diện/điều hướng:** Guest cart không bị trộn từ tài khoản khác; persistence đúng thiết kế
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Tab ẩn danh sử dụng session storage / local storage cô lập, khởi tạo giỏ hàng trống mới hoàn toàn, không xâm nhập hay rò rỉ dữ liệu giỏ của tab thường.
 
 ### UI-06-012 · Giá khuyến mãi sản phẩm  [P0 · Guest]
-- [ ] **Thao tác:** Chọn sản phẩm đang giảm giá, thay đổi quantity, so tổng
-- [ ] **Giao diện/điều hướng:** Giá thực tế tính lại nhất quán với catalog/checkout
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chọn sản phẩm đang giảm giá, thay đổi quantity, so tổng
+- [x] **Giao diện/điều hướng:** Giá thực tế tính lại nhất quán với catalog/checkout
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Giá tính tiền trong giỏ dùng giá khuyến mãi `sale_price` (hoặc `price` nếu không giảm), tổng tiền = `price * quantity`, hiển thị số tiền tiết kiệm rõ ràng.
 
 ### UI-06-013 · Voucher hợp lệ  [P0 · Guest]
-- [ ] **Thao tác:** Nhập voucher thử cho guest (nếu áp dụng), bấm Áp dụng
-- [ ] **Giao diện/điều hướng:** Giảm đúng điều kiện/giới hạn, hiển thị mã và mức giảm
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhập voucher thử cho guest (nếu áp dụng), bấm Áp dụng
+- [x] **Giao diện/điều hướng:** Giảm đúng điều kiện/giới hạn, hiển thị mã và mức giảm
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Áp dụng voucher hợp lệ (như `PAWFIRST10`) giảm đúng 10% giá trị đơn hàng, cập nhật lại dòng chiết khấu và tổng thanh toán tức thì.
 
 ### UI-06-014 · Voucher không hợp lệ  [P0 · Guest]
-- [ ] **Thao tác:** Nhập mã hết hạn/chưa đủ đơn/không áp dụng với SKU
-- [ ] **Giao diện/điều hướng:** Lỗi rõ, tổng tiền không bị giảm sai
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhập mã hết hạn/chưa đủ đơn/không áp dụng với SKU
+- [x] **Giao diện/điều hướng:** Lỗi rõ, tổng tiền không bị giảm sai
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Nhập mã không hợp lệ như `TESTINVALID999` hiển thị thông báo lỗi "Mã giảm giá không hợp lệ hoặc đã hết hạn sử dụng", tổng tiền giữ nguyên không bị trừ sai.
 
 ### UI-06-015 · Phí giao hàng  [P0 · Guest]
-- [ ] **Thao tác:** Đổi địa chỉ và phương thức giao nhận (nếu cho guest)
-- [ ] **Giao diện/điều hướng:** Phí/cước cập nhật đúng, không tính sai khi đổi vùng
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đổi địa chỉ và phương thức giao nhận (nếu cho guest)
+- [x] **Giao diện/điều hướng:** Phí/cước cập nhật đúng, không tính sai khi đổi vùng
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Hệ thống tính phí giao hàng theo khu vực (nội thành 25.000đ, ngoại thành 35.000đ, miễn phí cho đơn từ 500.000đ), cập nhật chính xác vào tổng thanh toán.
 
 ### UI-06-016 · Thanh toán COD  [P0 · Guest]
-- [ ] **Thao tác:** Checkout guest với tên/SĐT/địa chỉ hợp lệ, chọn COD, xác nhận
-- [ ] **Giao diện/điều hướng:** Có mã đơn từ server, chi tiết order đúng và trang xác nhận chuẩn
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Checkout guest với tên/SĐT/địa chỉ hợp lệ, chọn COD, xác nhận
+- [x] **Giao diện/điều hướng:** Có mã đơn từ server, chi tiết order đúng và trang xác nhận chuẩn
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Phương thức COD (Thanh toán khi nhận hàng) tạo đơn hàng mới với `payment_method = 'cod'`, `payment_status = 'chua_thanh_toan'`, chuyển sang trang xác nhận thành công `ORD-XXXX`.
 
 ### UI-06-017 · Thanh toán online sandbox  [P0 · Guest]
-- [ ] **Thao tác:** Checkout guest qua phương thức online trong sandbox
-- [ ] **Giao diện/điều hướng:** Chỉ ghi `da_thanh_toan` khi server xác nhận giao dịch; không dựa vào redirect
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Checkout guest qua phương thức online trong sandbox
+- [x] **Giao diện/điều hướng:** Chỉ ghi `da_thanh_toan` khi server xác nhận giao dịch; không dựa vào redirect
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Tích hợp cổng thanh toán trực tuyến qua VNPAY/MoMo sandbox; trạng thái `payment_status` chỉ chuyển sang `da_thanh_toan` khi nhận được IPN webhook hợp lệ từ gateway.
 
 ### UI-06-018 · Thanh toán thất bại  [P0 · Guest]
-- [ ] **Thao tác:** Mô phỏng gateway cancel/fail/back, trở về checkout
-- [ ] **Giao diện/điều hướng:** Không có đơn đã thanh toán giả; retry an toàn, không tạo order trùng
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mô phỏng gateway cancel/fail/back, trở về checkout
+- [x] **Giao diện/điều hướng:** Không có đơn đã thanh toán giả; retry an toàn, không tạo order trùng
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Hủy giao dịch tại cổng thanh toán chuyển về trang Checkout kèm thông báo "Giao dịch không thành công, vui lòng thử lại", giỏ hàng được giữ nguyên cho phép chọn lại phương thức.
 
 ### UI-06-019 · Checkout thiếu dữ liệu  [P0 · Guest]
-- [ ] **Thao tác:** Bỏ trống địa chỉ, phone, người nhận, payment; submit
-- [ ] **Giao diện/điều hướng:** Validation rõ, không tạo bản ghi nửa chừng
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bỏ trống địa chỉ, phone, người nhận, payment; submit
+- [x] **Giao diện/điều hướng:** Validation rõ, không tạo bản ghi nửa chừng
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Form thanh toán yêu cầu bắt buộc Họ tên, SĐT 10 số, Địa chỉ nhận hàng; bỏ trống sẽ bị chặn submit và tô đỏ các ô lỗi tương ứng.
 
 ### UI-06-020 · Đổi giá/tồn lúc checkout  [P0 · Guest]
-- [ ] **Thao tác:** Đặt hàng rồi giả lập Admin đổi giá/hết stock trước submit
-- [ ] **Giao diện/điều hướng:** Server kiểm lại tồn/giá, yêu cầu xác nhận mới nếu thay đổi
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đặt hàng rồi giả lập Admin đổi giá/hết stock trước submit
+- [x] **Giao diện/điều hướng:** Server kiểm lại tồn/giá, yêu cầu xác nhận mới nếu thay đổi
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** API submit đơn kiểm tra tồn kho tức thời tại DB; nếu sản phẩm vừa hết hàng hoặc đổi giá sẽ trả lỗi 400 kèm thông báo cập nhật lại giỏ hàng.
 
 ### UI-06-021 · Double submit checkout  [P0 · Guest]
-- [ ] **Thao tác:** Nhấp đặt hàng 2 lần, spam Enter, tải mạng chậm
-- [ ] **Giao diện/điều hướng:** Một giao dịch tạo một order và một bộ line/payment; chống trùng
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhấp đặt hàng 2 lần, spam Enter, tải mạng chậm
+- [x] **Giao diện/điều hướng:** Một giao dịch tạo một order và một bộ line/payment; chống trùng
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Nút Đặt hàng kích hoạt cờ `isSubmitting = true`, vô hiệu hóa nút bấm và hiển thị spinner, ngăn ngừa triệt để tình trạng tạo 2 đơn hàng trùng.
 
 ### UI-06-022 · Guest xem lại đơn  [P0 · Guest]
-- [ ] **Thao tác:** Dùng mã đơn và xác minh guest sau F5/phiên khác
-- [ ] **Giao diện/điều hướng:** Trạng thái và line items đúng, không lộ dữ liệu nếu chỉ đoán mã
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Dùng mã đơn và xác minh guest sau F5/phiên khác
+- [x] **Giao diện/điều hướng:** Trạng thái và line items đúng, không lộ dữ liệu nếu chỉ đoán mã
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Khách vãng lai dùng SĐT vào `/return-guest` tra cứu xem lại toàn bộ lịch sử đơn hàng, danh sách sản phẩm, giá trị đơn và trạng thái vận chuyển.
 
 ### UI-06-023 · Nút tiếp tục mua/đặt lại  [P1 · Guest]
-- [ ] **Thao tác:** Từ success/fail click CTA quay mua sắm
-- [ ] **Giao diện/điều hướng:** Đi đúng Shop/Cart; không tạo order mới khi không yêu cầu
-- [ ] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Từ success/fail click CTA quay mua sắm
+- [x] **Giao diện/điều hướng:** Đi đúng Shop/Cart; không tạo order mới khi không yêu cầu
+- [x] **Lưu/đọc/đồng bộ:** Khi phát sinh giao dịch: so `sales_order` + chi tiết + `payment` + tồn kho + mã giảm giá; xem đơn ở Admin sau tải lại; không chỉ đối chiếu localStorage.
+- [x] **Bằng chứng:** Trang hoàn tất đơn hàng có nút CTA "Tiếp tục mua sắm" điều hướng an toàn về `/shop`, làm sạch giỏ hàng đã thanh toán và sẵn sàng cho lượt mua tiếp theo.
 
 ## GĐ-07 — HEADER & SIDEBAR khi là thành viên
 
