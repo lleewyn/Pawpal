@@ -363,13 +363,13 @@ export const API = {
             try { if (localStorage.getItem('pawpal_cart_owner') === String(userId)) cached = JSON.parse(localStorage.getItem('pawpal_cart') || '[]'); } catch {}
             return publishCart((items || []).map(item => {
                 const prod = item.product_variant?.product || {};
-                const prodId = prod.id || item.product_variant_id;
+                const prodId = prod.id || item.product_variant_id || item.product_id || item.id;
                 const cachedItem = Array.isArray(cached) ? cached.find(c => String(c.id) === String(prodId) || String(c.id) === String(item.product_variant_id) || String(c.variantId) === String(item.product_variant_id)) : null;
                 return {
                     ...(cachedItem || {}),
                     id: prodId,
-                    variantId: item.product_variant_id,
-                    product_variant_id: item.product_variant_id,
+                    variantId: item.product_variant_id || prodId,
+                    product_variant_id: item.product_variant_id || prodId,
                     name: prod.product_name || cachedItem?.name || 'Sản phẩm',
                     sku: item.product_variant?.sku_variant || cachedItem?.sku || '',
                     quantity: Number(item.quantity),

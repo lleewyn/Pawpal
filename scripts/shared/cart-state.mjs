@@ -10,15 +10,16 @@ export function normalizeCartItems(items) {
     if (!Array.isArray(items)) throw new Error('Dữ liệu giỏ hàng không hợp lệ.');
     const grouped = new Map();
     for (const item of items) {
-        if (!item?.id) throw new Error('Sản phẩm trong giỏ hàng không hợp lệ.');
+        const rawId = item?.id || item?.product_id;
+        if (!rawId) throw new Error('Sản phẩm trong giỏ hàng không hợp lệ.');
         const raw = item.quantity ?? item.qty ?? 1;
         const quantity = Number(raw);
         if (!Number.isSafeInteger(quantity) || quantity < 1) throw new Error('Số lượng sản phẩm phải là số nguyên lớn hơn 0.');
-        const id = String(item.id);
+        const id = String(rawId);
         const previous = grouped.get(id);
         const total = (previous?.quantity || 0) + quantity;
         if (!Number.isSafeInteger(total)) throw new Error('Số lượng sản phẩm không hợp lệ.');
-        grouped.set(id, { ...previous, ...item, id, quantity: total, qty: total });
+        grouped.set(id, { ...previous, ...item, id, product_id: item.product_id || id, quantity: total, qty: total });
     }
     return [...grouped.values()];
 }

@@ -15,6 +15,7 @@ function fixture(initial = [{ id: 'row-1', cart_id: 'cart-1', product_id: 'SP01'
         const query = {
             select() { return this; }, eq(key, value) { filters.push(row => row[key] === value); return this; },
             in(key, values) { filters.push(row => values.includes(row[key])); return this; },
+            or(condition) { return this; },
             update(value) { action = 'update'; values = value; return this; },
             insert(value) { action = 'insert'; values = value; return this; },
             delete() { action = 'delete'; return this; },
