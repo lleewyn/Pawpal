@@ -849,16 +849,28 @@
             let rawUrl = noti.url || noti.link || '#';
             if (category === 'Dịch vụ') {
                 actionText = 'Xem lịch hẹn của bé';
-                if (!rawUrl || rawUrl === '#') rawUrl = '/pages/user/#bookings';
+                if (!rawUrl || rawUrl === '#') {
+                    rawUrl = noti.appointment_id
+                        ? `/pages/user/#booking-detail?id=${encodeURIComponent(noti.appointment_id)}`
+                        : '/pages/user/#bookings';
+                }
             } else if (category === 'Đơn hàng') {
                 actionText = 'Xem đơn hàng của bé';
-                if (!rawUrl || rawUrl === '#') rawUrl = '/pages/user/#orders';
+                if (!rawUrl || rawUrl === '#') {
+                    rawUrl = noti.sales_order_id
+                        ? `/pages/user/#order-detail?id=${encodeURIComponent(noti.sales_order_id)}`
+                        : '/pages/user/#orders';
+                }
             } else if (category === 'Ưu đãi') {
                 actionText = 'Xem ưu đãi Paw Points';
                 if (!rawUrl || rawUrl === '#') rawUrl = '/pages/user/#loyalty';
             } else if (category === 'Hỗ trợ') {
                 actionText = 'Xem phiếu hỗ trợ';
-                if (!rawUrl || rawUrl === '#') rawUrl = '/pages/user/#support';
+                if (!rawUrl || rawUrl === '#') {
+                    rawUrl = noti.support_ticket_id
+                        ? `/pages/user/#support?id=${encodeURIComponent(noti.support_ticket_id)}`
+                        : '/pages/user/#support';
+                }
             } else if (rawUrl && rawUrl !== '#' && rawUrl !== '') {
                 actionText = 'Đến trang liên kết';
             }
@@ -911,7 +923,11 @@
                         time: s.time,
                         isRead: Boolean(s.read || s.isRead),
                         type: s.type || s.notification_type || 'info',
-                        url: s.link || s.url || '#'
+                        url: s.link || s.url || '#',
+                        sales_order_id: s.sales_order_id,
+                        appointment_id: s.appointment_id,
+                        support_ticket_id: s.support_ticket_id,
+                        refund_transaction_id: s.refund_transaction_id
                     }));
                 }
             } catch(e) {}

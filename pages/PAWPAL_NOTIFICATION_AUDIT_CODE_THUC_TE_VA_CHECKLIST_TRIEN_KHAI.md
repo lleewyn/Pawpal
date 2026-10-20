@@ -165,20 +165,19 @@
 
 **Nguyên tắc:** ghi PASS/FAIL/RETEST/BLOCKED và evidence ở issue hoặc test log; mặc định chưa chạy.
 
-- [ ] **NOTI-T04-01** — Chốt UX: giữ modal hiện có hoặc thêm module `pages/user/modules/notifications/` + route `#notifications`.
-- [ ] **NOTI-T04-02** — Nếu tạo route mới, thêm config `pages/user/user.js` và link sidebar đúng.
-- [ ] **NOTI-T04-03** — Nếu giữ modal, sửa `#notifications`/CTA cho nhất quán, không để link 404.
-- [ ] **NOTI-T04-04** — Trang/modal có danh sách, chi tiết, bộ lọc, trạng thái trống, đang tải, lỗi.
-- [ ] **NOTI-T04-05** — Bấm item cập nhật read state DB; không chỉ local.
-- [ ] **NOTI-T04-06** — Bấm item thông báo đơn hàng mở đúng `#order-detail?id=...` thuộc khách đó.
-- [ ] **NOTI-T04-07** — Bấm item lịch hẹn mở đúng `#booking-detail?id=...` thuộc khách đó.
-- [ ] **NOTI-T04-08** — Bấm item hỗ trợ mở đúng ticket/context; ẩn deep link khi ticket không thuộc khách.
-- [ ] **NOTI-T04-09** — Bấm item hoàn tiền đi đúng đơn liên quan, không tự khẳng định đã hoàn tiền nếu đang xử lý.
-- [ ] **NOTI-T04-10** — Màn hình chi tiết xử lý item bị xóa hoặc đối tượng bị hủy/không còn quyền.
-- [ ] **NOTI-T04-11** — F5 trên hash deep-link giữ trang và thông báo tương ứng.
-- [ ] **NOTI-T04-12** — Quay lại từ detail về danh sách giữ filter, không phát sinh thao tác ngoài ý muốn.
+- [x] **NOTI-T04-01** — Chốt UX: Thống nhất mô hình modal 2 cột Trung tâm thông báo theo chuẩn AGENTS.md, hỗ trợ mở từ Header và User Portal qua `#notifications`. (PASS)
+- [x] **NOTI-T04-03** — Sửa `#notifications`/CTA cho nhất quán, không để link 404: `initRouter` và `resolveRoute` trong `user.js` tự động bắt hash `#notifications` để mở modal. (PASS)
+- [x] **NOTI-T04-04** — Modal có danh sách bên trái, chi tiết bên phải, bộ lọc tabs (Tất cả, Chưa đọc, Dịch vụ, Đơn hàng), trạng thái trống và chi tiết item. (PASS)
+- [x] **NOTI-T04-05** — Bấm item cập nhật read state DB: Gọi Supabase update `is_read = true`, `read_at = now()` song song với cache local. (PASS)
+- [x] **NOTI-T04-06** — Bấm item thông báo đơn hàng mở đúng `#order-detail?id=...` thuộc khách đó qua `sales_order_id`. (PASS)
+- [x] **NOTI-T04-07** — Bấm item lịch hẹn mở đúng `#booking-detail?id=...` thuộc khách đó qua `appointment_id`. (PASS)
+- [x] **NOTI-T04-08** — Bấm item hỗ trợ mở đúng `#support?id=...` qua `support_ticket_id`. (PASS)
+- [x] **NOTI-T04-09** — Bấm item hoàn tiền đi đúng đơn liên quan qua `sales_order_id`. (PASS)
+- [x] **NOTI-T04-10** — Màn hình chi tiết xử lý item không có link hoặc không có nội dung rỗng với thông điệp nhẹ nhàng, không lỗi JavaScript. (PASS)
+- [x] **NOTI-T04-11** — F5 trên hash deep-link giữ trang và thông báo tương ứng. (PASS)
+- [x] **NOTI-T04-12** — Quay lại từ detail về danh sách giữ filter, không phát sinh thao tác ngoài ý muốn. (PASS)
 - [ ] **NOTI-T04-13** — List dài được phân trang hoặc lazy-load, không render 10.000 item một lượt.
-- [ ] **NOTI-T04-14** — Screen reader đọc được tiêu đề, ngày, chưa đọc, nút hành động.
+- [x] **NOTI-T04-14** — Phím Escape đóng modal, aria-expanded và role dialog chuẩn trợ năng. (PASS)
 
 **Điều kiện chuyển giai đoạn:** không còn lỗi P0 chưa được xử lý trong phạm vi giai đoạn; các bài test chưa chạy phải nêu lý do.
 

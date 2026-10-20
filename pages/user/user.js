@@ -250,6 +250,13 @@
     function resolveRoute(hashStr) {
         if (!hashStr) return 'profile';
         const clean = hashStr.replace(/^#\/?/, '').split('?')[0].split('/')[0].toLowerCase();
+        if (clean === 'notifications') {
+            if (typeof window.openAllNotificationsModal === 'function') {
+                setTimeout(() => window.openAllNotificationsModal(), 50);
+            }
+            const prev = sessionStorage.getItem('pawpal_user_active_tab') || 'profile';
+            return prev !== 'notifications' ? prev : 'profile';
+        }
         if (ROUTE_CONFIG[clean]) return clean;
 
         for (const [key, conf] of Object.entries(ROUTE_CONFIG)) {
@@ -694,7 +701,12 @@
     // 12. Lắng nghe thay đổi Hash và Khởi chạy SPA
     function initRouter() {
         const handleRoute = () => {
-            const rawHash = window.location.hash;
+            const rawHash = window.location.hash || '';
+            if (rawHash.includes('notifications')) {
+                if (typeof window.openAllNotificationsModal === 'function') {
+                    window.openAllNotificationsModal();
+                }
+            }
             const route = resolveRoute(rawHash);
             sessionStorage.setItem('pawpal_user_active_tab', route);
             loadModule(route);
@@ -709,7 +721,7 @@
             const pathPetId = window.location.hash.replace(/^#\/?pets\/?/i, '').split('?')[0];
             if (pathPetId) routeQuery = `?id=${encodeURIComponent(decodeURIComponent(pathPetId))}`;
         }
-        if (window.location.hash !== `#${targetRoute}${routeQuery}`) {
+        if (window.location.hash !== `#${targetRoute}${routeQuery}` && !window.location.hash.includes('notifications')) {
             window.history.replaceState(null, '', `#${targetRoute}${routeQuery}`);
         }
         handleRoute();
