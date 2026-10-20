@@ -1073,8 +1073,15 @@
                 }
             }
 
+            const safeContent = escapeHtml(activeTopNotice.content || '');
+            const rawNoticeLink = activeTopNotice.link;
+            const safeNoticeLink = rawNoticeLink && rawNoticeLink !== '#' ? sanitizeHref(rawNoticeLink) : '';
+            const noticeBodyHtml = safeNoticeLink && safeNoticeLink !== '#'
+                ? `<a href="${safeNoticeLink}" style="color: #FFFFFF; text-decoration: underline; font-weight: 600;">${safeContent}</a>`
+                : `<span>${safeContent}</span>`;
+
             topBarEl.innerHTML = `
-                <span>${activeTopNotice.content}</span>
+                ${noticeBodyHtml}
                 <button type="button" id="btnCloseTopBarNotice" style="background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer; font-size: 14px; padding: 0 4px; line-height: 1;" title="Đóng">✕</button>
             `;
 

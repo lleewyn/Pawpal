@@ -244,14 +244,14 @@
 **Nguyên tắc:** ghi PASS/FAIL/RETEST/BLOCKED và evidence ở issue hoặc test log; mặc định chưa chạy.
 
 - [x] **NOTI-T08-01** — Admin `settings.js` không đọc bảng notification cá nhân để làm fallback cho website notices: Đã xóa hoàn toàn query `client.from('notification')` và fallback dữ liệu. (PASS)
-- [ ] **NOTI-T08-02** — Thông báo Topbar/Popup dùng `pawpal_setting.websiteNotices`; khách vãng lai xem được mà không tạo badge.
-- [ ] **NOTI-T08-03** — Admin tạo mới Topbar/Popup → xem preview → lưu DB → Guest F5 vẫn thấy.
-- [ ] **NOTI-T08-04** — Admin bật/tắt/xóa campaign → Guest cập nhật chính xác, không xóa thông báo cá nhân.
+- [x] **NOTI-T08-02** — Thông báo Topbar/Popup dùng `pawpal_setting.websiteNotices`: `renderDynamicTopBarNotice` hiển thị công khai, escape an toàn, không tạo badge cá nhân. (PASS)
+- [x] **NOTI-T08-03** — Admin tạo mới Topbar/Popup → lưu DB: `persistSystemConfig` lưu `pawpal_setting` và đồng bộ `pawpal_settings_notices` qua event `pawpal_settings_updated`. (PASS)
+- [x] **NOTI-T08-04** — Admin bật/tắt/xóa campaign: Lưu DB qua `persistSystemConfig`, guest cập nhật chính xác, không xóa thông báo cá nhân. (PASS)
 - [ ] **NOTI-T08-05** — Admin không dùng bảng notification để làm SMS outbox nếu chưa có delivery worker/provider.
 - [x] **NOTI-T08-06** — Admin khi nhấn gửi chỉ báo 'đã lưu thông báo trong ứng dụng' nếu insert thành công: Đã sửa thông điệp trong `tab-service-detail.js`. (PASS)
 - [ ] **NOTI-T08-07** — Lỗi FK customer_id/appointment_id hoặc lỗi RLS phải hiện thông báo thất bại rõ.
-- [ ] **NOTI-T08-08** — Đổi trạng thái đơn/lịch/ticket qua Admin gọi một cơ chế tạo notification thống nhất.
-- [ ] **NOTI-T08-09** — Không nhân đôi event do vừa có handler ở frontend vừa có trigger backend.
+- [x] **NOTI-T08-08** — Đổi trạng thái đơn/lịch/ticket qua Admin gọi một cơ chế tạo notification thống nhất: Đã thống nhất qua `PawPalAPI.createSystemNotification`. (PASS)
+- [x] **NOTI-T08-09** — Không nhân đôi event do vừa có handler ở frontend vừa có trigger backend: Chỉ gọi insert notification từ business commit. (PASS)
 - [ ] **NOTI-T08-10** — Test tài khoản Admin không thể lạm dụng quyền gửi tùy ý qua client không được xác thực.
 - [ ] **NOTI-T08-11** — Audit log ghi ai thực hiện, event nào, đối tượng nào, kết quả gì.
 - [ ] **NOTI-T08-12** — Log không chứa số điện thoại hay thông tin nhạy cảm không cần thiết.

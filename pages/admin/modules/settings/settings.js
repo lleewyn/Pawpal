@@ -452,6 +452,20 @@
             PawpalSettings.state.systemConfig = JSON.parse(JSON.stringify(newCfg));
             PawpalSettings.state.hasSystemConfig = true;
             localStorage.setItem('pawpal_admin_system_config', JSON.stringify(newCfg));
+
+            if (Array.isArray(newCfg.websiteNotices)) {
+                const publicNotices = newCfg.websiteNotices.map(n => ({
+                    id: n.id,
+                    content: n.content,
+                    type: n.type,
+                    status: n.isActive ? 'active' : 'inactive',
+                    link: n.link || '#'
+                }));
+                localStorage.setItem('pawpal_settings_notices', JSON.stringify(publicNotices));
+                try {
+                    window.dispatchEvent(new CustomEvent('pawpal_settings_updated'));
+                } catch (_) {}
+            }
         } catch (e) {
             console.error('[Settings] Không thể lưu pawpal_setting trên Supabase:', e.message);
             throw e;
