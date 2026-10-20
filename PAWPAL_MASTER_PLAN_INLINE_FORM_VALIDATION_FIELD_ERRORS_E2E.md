@@ -312,18 +312,41 @@ Không tự áp trần cân nặng, giới hạn ký tự, giá tiền, ngày đ
 ## 7. Lộ trình theo 18 giai đoạn — có điều kiện nghiệm thu rõ ràng
 ### GĐ-00 — Audit & baseline toàn bộ form
 **Ưu tiên:** P0 · **Mục tiêu nghiệm thu:** Kiểm kê field thật, xác nhận branch/commit, Supabase thực tế; không chỉnh code ngay.
+**Cập nhật 20/10/2026:** ĐANG THỰC HIỆN — chưa đạt gate GĐ-00, chưa sửa mã chức năng. Các mục dưới đây mới hoàn thành một phần nên giữ checkbox chưa tích. [Báo cáo và bằng chứng](docs/audits/gd00-20261020/README.md).
+
 - [ ] **VAL-00-01:** Đóng băng mã commit đang test; chụp backup và gắn phiên bản ZIP.
+  - **Đã làm:** ghi branch `main`, HEAD đầu đợt `9a2d45224d6ac489170e4afdc2b9a749810e2d4c`; lưu trạng thái, tracked diff có sẵn và hash nguồn trong thư mục audit.
+  - **Còn lại:** xác minh ZIP/backup đầy đủ; chốt lại baseline vì HEAD đổi trong đợt audit thành `b078d165fc131e7048eab4449e4d1a1dc2068031` do hoạt động ngoài audit. Chưa đóng băng phiên bản xuyên suốt.
 - [ ] **VAL-00-02:** Liệt kê từng trang, từng modal/drawer, wizard và form do JS render; so với phụ lục kiểm kê tự động bên dưới.
+  - **Đã làm:** kiểm kê 47 file HTML, 83 form và 798 control tĩnh, khớp số đếm phụ lục; xuất [forms.csv](docs/audits/gd00-20261020/forms.csv) và [fields.csv](docs/audits/gd00-20261020/fields.csv). Script kiểm kê chạy exit `0`.
+  - **Còn lại:** rà 1.731 dòng tín hiệu JavaScript và mở các form động/modal/drawer/wizard; số tín hiệu không phải số form hay coverage E2E.
 - [ ] **VAL-00-03:** Phân loại field là input, select, radio, checkbox, tệp, ngày/giờ, autocomplete, read-only hoặc filter.
+  - **Đã làm:** ghi type, id/name, required, readonly/disabled, ARIA, pattern và min/max/maxlength; phân loại sơ bộ hidden, readonly, search/filter và editable trong fields.csv.
+  - **Còn lại:** xác nhận phân loại nghiệp vụ, autocomplete, nhóm trường và điều kiện hiển thị theo từng form; chưa tự đặt thêm required.
 - [ ] **VAL-00-04:** Đánh dấu field quan trọng; tách lỗi field, lỗi cross-field, lỗi nghiệp vụ, lỗi mạng, lỗi xác thực.
+  - **Đã làm:** lập backlog GD00-01–07, phân tầng UI/API/DB/flow; ưu tiên P0 cho contact, checkout, profile và xác minh DB, P1 cho modal khách hàng/lifecycle.
+  - **Còn lại:** rà sâu và phân loại đầy đủ các form còn lại, lỗi cross-field, mạng và xác thực.
 - [ ] **VAL-00-05:** Đối chiếu loại field với `CDSLfinal.md`, `enum.md`, constraints, API response và RLS thực tế.
+  - **Đã làm:** đọc cấu trúc customer/customer_profile/customer_address, enum nghiệp vụ và migration phone/weight tiêu biểu; ghi các điểm cần đối chiếu trong báo cáo.
+  - **Còn lại — NOT RUN:** schema/constraint/index/trigger/RLS live và API response thực tế; chưa xác nhận migration đã apply, chưa chạy migration hoặc sửa CSDL.
 - [ ] **VAL-00-06:** Xác minh tính tồn tại của `scripts/shared/address-validation.mjs` trên deployment/GitHub.
+  - **Đã làm:** xác minh file tồn tại local, được profile.js và customer_profile_persistence.js import; nghi vấn thiếu file trong ZIP không được coi là lỗi local hiện tại.
+  - **Còn lại — NOT RUN:** xác minh artifact deployment và GitHub tương ứng.
 - [ ] **VAL-00-07:** Lấy baseline screenshot của form lỗi ở desktop/mobile; lưu Console/Network, thời gian xử lý và hành vi focus.
+  - **Đã chạy:** Admin → Khách hàng → Thêm khách → để trống → Lưu: popup native tiếng Anh `Please fill out this field.`, focus `quickAddName`; **FAIL so với UX mục tiêu**. Đóng modal bằng nút Đóng thành công. [Ảnh desktop baseline](docs/audits/gd00-20261020/customer-empty-baseline.png).
+  - **Còn lại — NOT RUN:** mobile, Console/Network, thời gian, positive/save/F5/DB và các form khác. Đây chỉ là phần required của FM-037; chưa hoàn thành FM-037/E2E-ADMIN-01, chưa xác nhận số request ghi bằng Network.
 - [ ] **VAL-00-08:** Kiểm tra file AGENTS.md/SPA mount conventions/Admin modal actions, không phá rule thiết kế.
+  - **Đã làm:** đọc toàn bộ AGENTS.md và global modal handler; ghi nhận quy tắc Admin text-only ngoài sidebar, không viền trái summary, kiểm từng modal theo mục 8. Đã quan sát mở/đóng modal Thêm khách.
+  - **Còn lại:** kiểm mount/unmount, listener trùng, data-close-modal và đủ các cách đóng trên toàn hệ thống; chưa kết luận mọi modal đúng.
 - [ ] **VAL-00-09:** Tạo backlog theo form: P0/P1/P2, owner, thời hạn, nguyên nhân, test ID liên quan.
+  - **Đã làm:** backlog GD00-01–07 có ưu tiên, bằng chứng/nguyên nhân hoặc nghi vấn và mã VAL/FM liên quan; owner thực hiện Codex, thứ tự xử lý đề xuất đã ghi trong báo cáo.
+  - **Còn lại:** hoàn thiện backlog toàn bộ form, nhóm P2 và thời hạn cụ thể; chưa có cam kết ngày hoàn tất.
 - [ ] **VAL-00-10:** Báo cáo phân biệt lỗi đã xác minh với các nghi vấn từ đọc tĩnh; không mặc định DB test đã PASS.
+  - **Đã làm:** lưu báo cáo riêng, tách FAIL UI đã tái hiện ở FM-037 với phát hiện từ mã (contact tự tạo mã hỗ trợ, checkout toast chung, profile Error chuỗi) và các mục DB/deployment chưa xác minh.
+  - **Còn lại:** bổ sung bằng chứng cho phạm vi chưa kiểm và nghiệm thu cuối GĐ-00. Không đánh dấu PASS từ việc đọc mã hoặc script kiểm kê chạy thành công.
 
 **Gate GĐ-00:** Chỉ chuyển qua giai đoạn kế tiếp khi các ca P0 của giai đoạn đạt kiểm thử thực tế; mục chưa thể test ghi `BLOCKED` + lý do + owner, không ghi PASS.
+**Kết quả gate hiện tại:** CHƯA ĐẠT — tiếp tục GĐ-00; chưa chuyển GĐ-01. Các mục chưa thực thi ghi NOT RUN, không tự coi là BLOCKED.
 ### GĐ-01 — UX design system và nội dung tiếng Việt
 **Ưu tiên:** P1 · **Mục tiêu nghiệm thu:** Một thông điệp dễ hiểu, một kiểu hiển thị, không phá nhận diện PawPal.
 - [ ] **VAL-01-01:** Định nghĩa `pristine`, `touched`, `invalid`, `pending`, `valid`, `server-error`, `conflict`.

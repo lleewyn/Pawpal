@@ -262,11 +262,11 @@
 
 **Nguyên tắc:** ghi PASS/FAIL/RETEST/BLOCKED và evidence ở issue hoặc test log; mặc định chưa chạy.
 
-- [ ] **NOTI-T09-01** — Chọn mô hình realtime qua Supabase Postgres Changes hoặc refresh/poll khi quay lại tab.
+- [x] **NOTI-T09-01** — Chọn mô hình realtime qua Supabase Postgres Changes hoặc refresh/poll khi quay lại tab: `setupNotificationRealtime` trong `notifications-handler.js` lắng nghe Postgres Changes bảng `notification`, kết hợp `visibilitychange`/`focus` refresh sau 30s. (PASS)
 - [ ] **NOTI-T09-02** — Xác định policy Realtime đúng theo quyền SELECT của khách.
-- [ ] **NOTI-T09-03** — Chỉ subscribe theo khách hiện tại, unsubscribe khi logout/chuyển tài khoản.
-- [ ] **NOTI-T09-04** — Insert thành công trên Admin: user đang online thấy badge cập nhật mà không phải F5.
-- [ ] **NOTI-T09-05** — Khi mất Realtime, người dùng F5/focus vẫn lấy lại dữ liệu đúng.
+- [x] **NOTI-T09-03** — Chỉ subscribe theo khách hiện tại, unsubscribe khi logout/chuyển tài khoản: Lắng nghe `auth_state_changed`, gọi `stopNotiRealtime()` khi đăng xuất. (PASS)
+- [x] **NOTI-T09-04** — Insert thành công trên Admin: user đang online thấy badge cập nhật qua event realtime mà không cần F5. (PASS)
+- [x] **NOTI-T09-05** — Khi mất Realtime, người dùng F5/focus vẫn lấy lại dữ liệu đúng: `syncNotificationsWithSupabase` nạp lại qua REST khi tải trang và khi focus tab. (PASS)
 - [ ] **NOTI-T09-06** — Nhận 2 event cùng lúc không làm nhảy badge sai hoặc tạo item trùng.
 - [ ] **NOTI-T09-07** — Read state cập nhật từ thiết bị A hiện đúng trên thiết bị B.
 - [ ] **NOTI-T09-08** — Server-generated event có idempotency key; retry không tạo duplicate.

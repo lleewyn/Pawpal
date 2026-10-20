@@ -142,19 +142,90 @@
         document.dispatchEvent(new CustomEvent('notifications_updated'));
     }
 
-    // Tự động đồng bộ từ Supabase Live DB khi tải trang
-    (async function initSupabaseNotis() {
+    let stopNotiRealtime = null;
+    let lastNotiFetchTime = 0;
+
+    function setupNotificationRealtime(db, customerId) {
+        if (!db?.channel || !customerId) return;
+        if (stopNotiRealtime) {
+            try { stopNotiRealtime(); } catch (_) {}
+            stopNotiRealtime = null;
+        }
+        let timer, disposed = false;
+        const channelName = `customer-notis-${customerId}-${Math.random().toString(36).slice(2)}`;
+        const channel = db.channel(channelName);
+        channel.on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'notification',
+            filter: `customer_id=eq.${customerId}`
+        }, () => {
+            clearTimeout(timer);
+            timer = setTimeout(async () => {
+                if (!disposed) {
+                    const freshNotis = await fetchNotificationsFromSupabase();
+                    if (Array.isArray(freshNotis)) {
+                        saveNotifications(freshNotis);
+                    }
+                }
+            }, 300);
+        });
+        channel.subscribe();
+        stopNotiRealtime = () => {
+            disposed = true;
+            clearTimeout(timer);
+            try { db.removeChannel(channel); } catch (_) {}
+        };
+    }
+
+    // Tự động đồng bộ từ Supabase Live DB khi tải trang và thiết lập Realtime
+    async function syncNotificationsWithSupabase() {
         if (!canUseNotifications()) return;
         let attempts = 0;
-        while (!window.SupabaseClient && attempts < 20) {
+        while (!window.SupabaseClient && !(window.getSupabaseClient && window.getSupabaseClient()) && attempts < 20) {
             await new Promise(r => setTimeout(r, 100));
             attempts++;
         }
+        const db = window.SupabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : null);
+        const currentUser = getCurrentUser();
+        if (db && currentUser?.id && !currentUser.is_temporary) {
+            setupNotificationRealtime(db, currentUser.id);
+        }
         const dbNotis = await fetchNotificationsFromSupabase();
+        lastNotiFetchTime = Date.now();
         if (Array.isArray(dbNotis)) {
             saveNotifications(dbNotis);
         }
-    })();
+    }
+    syncNotificationsWithSupabase();
+
+    // Lắng nghe visibilitychange và focus: tự động cập nhật khi quay lại tab nếu quá 30s
+    if (typeof document !== 'undefined') {
+        const handleTabRevisit = async () => {
+            if (document.visibilityState === 'visible' && canUseNotifications()) {
+                if (Date.now() - lastNotiFetchTime > 30000) {
+                    lastNotiFetchTime = Date.now();
+                    const fresh = await fetchNotificationsFromSupabase();
+                    if (Array.isArray(fresh)) saveNotifications(fresh);
+                }
+            }
+        };
+        document.addEventListener('visibilitychange', handleTabRevisit);
+        if (typeof window !== 'undefined') {
+            window.addEventListener('focus', handleTabRevisit);
+        }
+
+        document.addEventListener('auth_state_changed', (e) => {
+            if (!e.detail) {
+                if (stopNotiRealtime) {
+                    try { stopNotiRealtime(); } catch (_) {}
+                    stopNotiRealtime = null;
+                }
+            } else {
+                syncNotificationsWithSupabase();
+            }
+        });
+    }
 
     function getRelativeTimeString(date) {
         if (!date || isNaN(date.getTime())) return '';
