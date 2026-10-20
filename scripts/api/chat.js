@@ -576,15 +576,89 @@ const dbTools = {
         try {
             const { data, error } = await supabase
                 .from('service_price_matrix')
-                .select('id, package_name, pet_size, price, duration_minutes, service:service_id(service_name)')
+                .select('id, service_id, weight_from, weight_to, unit_price, status, service:service_id(service_name)')
+                .eq('status', 'dang_hoat_dong')
                 .limit(30);
             if (error) throw error;
             if (data && data.length > 0) {
-                return { context: "Dữ liệu bảng giá:\n" + JSON.stringify(data) };
+                const list = data.map(item => ({
+                    service: item.service?.service_name || 'Dịch vụ PawPal',
+                    weight_range: `${item.weight_from}kg - ${item.weight_to}kg`,
+                    price: `${Number(item.unit_price).toLocaleString('vi-VN')}đ`
+                }));
+                return { context: "Dữ liệu bảng giá hiện hành:\n" + JSON.stringify(list, null, 2) };
             }
             return { error: "Không tìm thấy dữ liệu giá dịch vụ" };
         } catch (e) {
             return { error: "Lỗi đọc dữ liệu giá dịch vụ từ Supabase" };
+        }
+    },
+    search_products_public: async (query) => {
+        try {
+            const cleanQuery = (query || '').trim();
+            let req = supabase
+                .from('product')
+                .select(`
+                    id,
+                    product_name,
+                    brand_name,
+                    target_pet,
+                    benefits,
+                    variants:product_variant(sale_price, sku_variant)
+                `)
+                .eq('status', 'dang_ban')
+                .limit(6);
+
+            if (cleanQuery) {
+                req = req.or(`product_name.ilike.%${cleanQuery}%,brand_name.ilike.%${cleanQuery}%,target_pet.ilike.%${cleanQuery}%`);
+            }
+
+            const { data, error } = await req;
+            if (error) throw error;
+            if (data && data.length > 0) {
+                const list = data.map(p => {
+                    const minPrice = p.variants?.length ? Math.min(...p.variants.map(v => v.sale_price)) : null;
+                    return {
+                        name: p.product_name,
+                        brand: p.brand_name,
+                        target_pet: p.target_pet,
+                        price: minPrice ? `${minPrice.toLocaleString('vi-VN')}đ` : 'Liên hệ cửa hàng',
+                        benefits: p.benefits ? p.benefits.substring(0, 120) + '...' : ''
+                    };
+                });
+                return { products: list };
+            }
+            return { message: `Không tìm thấy sản phẩm nào phù hợp với từ khóa "${cleanQuery}"` };
+        } catch (e) {
+            return { error: "Lỗi tra cứu sản phẩm từ Supabase" };
+        }
+    },
+    get_public_vouchers: async () => {
+        try {
+            const nowIso = new Date().toISOString();
+            const { data, error } = await supabase
+                .from('voucher')
+                .select('voucher_code, voucher_name, discount_value, minimum_order_amount, type, description, end_date')
+                .eq('is_active', true)
+                .gte('end_date', nowIso)
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            if (error) throw error;
+            if (data && data.length > 0) {
+                const list = data.map(v => ({
+                    code: v.voucher_code,
+                    name: v.voucher_name,
+                    discount: v.type === 'percentage' ? `${v.discount_value}%` : `${Number(v.discount_value).toLocaleString('vi-VN')}đ`,
+                    min_order: `${Number(v.minimum_order_amount).toLocaleString('vi-VN')}đ`,
+                    description: v.description,
+                    expires: v.end_date ? v.end_date.split('T')[0] : 'Không thời hạn'
+                }));
+                return { vouchers: list };
+            }
+            return { message: "Hiện tại cửa hàng chưa có mã giảm giá công khai mới." };
+        } catch (e) {
+            return { error: "Lỗi đọc dữ liệu ưu đãi từ Supabase" };
         }
     },
     get_pet_profile: async (user_id) => {
@@ -690,7 +764,22 @@ const toolsDeclaration = [
             },
             {
                 name: "get_services_price",
-                description: "Lấy bảng giá các dịch vụ Spa, Grooming, Hotel của PawPal (Sử dụng khi khách hỏi về giá cả, bảng giá, bao nhiêu tiền).",
+                description: "Lấy bảng giá dịch vụ Spa, Grooming, Hotel của PawPal theo khoảng cân nặng (dùng khi khách hỏi về giá cả, bảng giá, bao nhiêu tiền).",
+            },
+            {
+                name: "search_products_public",
+                description: "Tìm kiếm các sản phẩm mua sắm trên PawPal Shop (thức ăn, pate, máy lọc nước, phụ kiện...).",
+                parameters: {
+                    type: "OBJECT",
+                    properties: {
+                        query: { type: "STRING", description: "Tên hoặc từ khóa sản phẩm cần tìm" }
+                    },
+                    required: ["query"]
+                }
+            },
+            {
+                name: "get_public_vouchers",
+                description: "Lấy danh sách mã giảm giá, voucher khuyến mãi đang có hiệu lực công khai của PawPal.",
             },
             {
                 name: "get_pet_profile",
@@ -2053,15 +2142,20 @@ module.exports = async function handler(req, res) {
             }
         }
 
-        // 6. THIẾT LẬP SYSTEM PROMPT CHO GEMINI (CB-04 / PR-01: Bỏ req.body.systemPrompt, chỉ dùng cấu hình server)
-        let systemInstruction = "Bạn là Trợ lý AI chăm sóc thú cưng của hệ thống PawPal. Hãy tư vấn chu đáo, chuẩn mực, thân thiện bằng tiếng Việt. KHÔNG SỬ DỤNG EMOJI. Chỉ dùng in đậm (**text**) để làm nổi bật thông tin quan trọng.\n";
-        systemInstruction += "- ĐỐI TƯỢNG PHỤC VỤ: PawPal nhận chăm sóc Chó, Mèo, Thỏ và thú cưng nhỏ. Không nói chỉ nhận chó mèo.\n";
-        systemInstruction += "- KHÔNG ẢO GIÁC: Chỉ trả lời dựa trên dữ liệu do Tools trả về. Nếu không có dữ liệu, hãy nhận lỗi chân thành và chuyển nhân viên trong 15 phút.\n";
-        systemInstruction += "- AN TOÀN Y TẾ: Tuyệt đối không tự ý chẩn đoán bệnh thú y, không kê đơn thuốc, không hứa bồi thường tiền mặt.\n";
+        // 6. THIẾT LẬP SYSTEM PROMPT CHO GEMINI (CB-04 / PR-01 / R1: CARE Framework & Zero False SLA)
+        let systemInstruction = "Bạn là Trợ lý AI chăm sóc khách hàng tuyến đầu của hệ sinh thái PawPal. Hãy tư vấn chu đáo, chuẩn mực, đồng cảm và thân thiện bằng tiếng Việt. KHÔNG SỬ DỤNG EMOJI. Chỉ dùng in đậm (**text**) để làm nổi bật thông tin quan trọng.\n";
+        systemInstruction += "- ĐỐI TƯỢNG PHỤC VỤ: PawPal nhận chăm sóc Chó, Mèo, Thỏ và thú cưng nhỏ. Tuyệt đối không nói chỉ nhận chó mèo.\n";
+        systemInstruction += "- KHÔNG ẢO GIÁC: Chỉ trả lời dựa trên dữ liệu do Tools hoặc CSDL trả về. Nếu chưa có dữ liệu hoặc không chắc chắn, hãy nhận lỗi chân thành và đề xuất chuyển tới chuyên viên CSKH; TUYỆT ĐỐI KHÔNG tự ý hứa thời gian SLA (như 'trong 15 phút') hoặc số hotline chưa được kiểm chứng.\n";
+        systemInstruction += "- NGUYÊN TẮC CARE KHI KHÁCH KHIẾU NẠI/BỨC XÚC:\n";
+        systemInstruction += "  + C (Confirm): Xác nhận chính xác sự việc và mã đơn/lịch hẹn khách đang phản ánh.\n";
+        systemInstruction += "  + A (Acknowledge): Thừa nhận cảm xúc bất tiện của khách, tuyệt đối không bao biện hoặc đổ lỗi cho đơn vị vận chuyển/đối tác.\n";
+        systemInstruction += "  + R (Resolve): Đưa giải pháp hành động cụ thể (tra cứu CSDL, kích hoạt chuyển chuyên viên tiếp nhận xử lý dứt điểm).\n";
+        systemInstruction += "  + E (Empower): Trao quyền lựa chọn cho khách (tiếp tục theo dõi hoặc kết nối gặp chuyên viên ngay).\n";
+        systemInstruction += "- AN TOÀN Y TẾ: Tuyệt đối không tự ý chẩn đoán bệnh thú y, không kê đơn thuốc, không tự hứa bồi hoàn tiền hoặc tặng điểm.\n";
         systemInstruction += "- ĐỊNH DẠNG THẺ TƯƠNG TÁC (RICH CARDS): Khi người dùng hỏi hoặc khi tra cứu thông tin đơn hàng, lịch hẹn, ưu đãi, hãy chèn khối thẻ trực quan:\n";
         systemInstruction += "  + Đơn hàng: :::order {\"code\": \"Mã_Đơn\", \"status\": \"Trạng_Thái\", \"total\": \"Tổng_Tiền\", \"items\": \"Tóm_Tắt_Món\"} :::\n";
         systemInstruction += "  + Lịch hẹn: :::booking {\"service\": \"Tên_Dịch_Vụ\", \"pet\": \"Tên_Bé\", \"time\": \"Giờ_Hẹn\", \"status\": \"Trạng_Thái\"} :::\n";
-        systemInstruction += "  + Ưu đãi: :::voucher {\"code\": \"MÃ_VOUCHER\", \"discount\": \"Mức_Giảm\", \"minOrder\": \"Điều_Kiện\", \"expiry\": \"Hạn_Dùng\"} :::\n";
+        systemInstruction += "  + Ưu đãi: :::voucher {\"code\": \"MÃ_VOUCHER\", \"discount\": \"Mức_Giảm\", \"minOrder\": \"Điều_Kiện\", \"expiry\": \"HSD\"} :::\n";
 
         // Bổ sung các chỉ thị cấu hình từ database
         if (systemPrompts && systemPrompts.length > 0) {
@@ -2217,6 +2311,10 @@ module.exports = async function handler(req, res) {
                     toolResult = await dbTools.get_user_bookings(userId);
                 } else if (toolName === 'get_services_price') {
                     toolResult = await dbTools.get_services_price();
+                } else if (toolName === 'search_products_public') {
+                    toolResult = await dbTools.search_products_public(toolArgs?.query);
+                } else if (toolName === 'get_public_vouchers') {
+                    toolResult = await dbTools.get_public_vouchers();
                 } else if (toolName === 'get_pet_profile') {
                     toolResult = await dbTools.get_pet_profile(userId);
                 } else if (toolName === 'search_store_info') {
@@ -2366,4 +2464,6 @@ module.exports = async function handler(req, res) {
 
 module.exports.evaluateToxicAndSentiment = evaluateToxicAndSentiment;
 module.exports.adminDbTools = adminDbTools;
+module.exports.dbTools = dbTools;
+module.exports.toolsDeclaration = toolsDeclaration;
 

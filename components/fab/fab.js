@@ -398,24 +398,24 @@ function initFab() {
         // Thay thế in đậm
         html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-        // 1. Thẻ Đơn hàng: :::order { ... } :::
+        // 1. Thẻ Đơn hàng: :::order { ... } ::: (R1: Deep-linking chuẩn route SPA)
         html = html.replace(/:::order\s*(\{[\s\S]*?\})\s*:::/g, (match, jsonStr) => {
             try {
                 const data = JSON.parse(jsonStr);
                 const st = data.status || 'Đang xử lý';
                 const statusBadge = (st === 'Đã giao' || st === 'Hoàn thành') ? 'badge-active' : (st === 'Đã hủy' ? 'badge-danger' : 'badge-info');
                 const code = data.code || data.id || 'DH';
-                return `<div class="fab-rich-card fab-rich-card--order"><div class="fab-rich-card-header"><span class="fab-rich-card-tag">Đơn hàng #${code}</span><span class="admin-badge ${statusBadge}">${st}</span></div><div class="fab-rich-card-body"><div class="fab-rich-card-title">${data.items || 'Sản phẩm PawPal'}</div><div class="fab-rich-card-desc">Tổng thanh toán: <strong>${data.total || '0đ'}</strong>${data.date ? ' • ' + data.date : ''}</div></div><a href="/pages/orders/?order=${code}" class="fab-rich-card-action">Theo dõi đơn hàng</a></div>`;
+                return `<div class="fab-rich-card fab-rich-card--order"><div class="fab-rich-card-header"><span class="fab-rich-card-tag">Đơn hàng #${code}</span><span class="admin-badge ${statusBadge}">${st}</span></div><div class="fab-rich-card-body"><div class="fab-rich-card-title">${data.items || 'Sản phẩm PawPal'}</div><div class="fab-rich-card-desc">Tổng thanh toán: <strong>${data.total || '0đ'}</strong>${data.date ? ' • ' + data.date : ''}</div></div><a href="/pages/user/#order-detail?id=${code}" class="fab-rich-card-action">Xem chi tiết đơn hàng</a></div>`;
             } catch(e) { return match; }
         });
 
-        // 2. Thẻ Lịch hẹn Dịch vụ: :::booking { ... } :::
+        // 2. Thẻ Lịch hẹn Dịch vụ: :::booking { ... } ::: (R1: Deep-linking chuẩn route SPA)
         html = html.replace(/:::booking\s*(\{[\s\S]*?\})\s*:::/g, (match, jsonStr) => {
             try {
                 const data = JSON.parse(jsonStr);
                 const st = data.status || 'Đã xác nhận';
                 const statusBadge = (st === 'Hoàn thành' || st === 'Đang thực hiện') ? 'badge-active' : (st === 'Đã hủy' ? 'badge-danger' : 'badge-info');
-                return `<div class="fab-rich-card fab-rich-card--booking"><div class="fab-rich-card-header"><span class="fab-rich-card-tag">Lịch hẹn dịch vụ</span><span class="admin-badge ${statusBadge}">${st}</span></div><div class="fab-rich-card-body"><div class="fab-rich-card-title">${data.service || 'Chăm sóc thú cưng'}</div><div class="fab-rich-card-desc">Bé: <strong>${data.pet || 'Bé cưng'}</strong> • Giờ hẹn: <strong>${data.time || 'Hôm nay'}</strong></div></div><a href="/user#bookings" class="fab-rich-card-action">Xem lịch hẹn</a></div>`;
+                return `<div class="fab-rich-card fab-rich-card--booking"><div class="fab-rich-card-header"><span class="fab-rich-card-tag">Lịch hẹn dịch vụ</span><span class="admin-badge ${statusBadge}">${st}</span></div><div class="fab-rich-card-body"><div class="fab-rich-card-title">${data.service || 'Chăm sóc thú cưng'}</div><div class="fab-rich-card-desc">Bé: <strong>${data.pet || 'Bé cưng'}</strong> • Giờ hẹn: <strong>${data.time || 'Hôm nay'}</strong></div></div><a href="/pages/user/#bookings" class="fab-rich-card-action">Xem danh sách lịch hẹn</a></div>`;
             } catch(e) { return match; }
         });
 
@@ -425,6 +425,17 @@ function initFab() {
                 const data = JSON.parse(jsonStr);
                 const code = data.code || 'PAWPAL';
                 return `<div class="fab-rich-card fab-rich-card--voucher"><div class="fab-rich-card-header"><span class="fab-rich-card-tag">Ưu đãi PawPal</span><span class="fab-voucher-code">${code}</span></div><div class="fab-rich-card-body"><div class="fab-rich-card-title">${data.discount || 'Giảm giá đặc biệt'}</div><div class="fab-rich-card-desc">${data.minOrder || 'Áp dụng mọi đơn'} • ${data.expiry || 'HSD: 30 ngày'}</div></div><button type="button" class="fab-rich-card-action copy-code-btn" data-code="${code}">Sao chép mã voucher</button></div>`;
+            } catch(e) { return match; }
+        });
+
+        // 4. Thẻ Sản phẩm Shop: :::product { ... } :::
+        html = html.replace(/:::product\s*(\{[\s\S]*?\})\s*:::/g, (match, jsonStr) => {
+            try {
+                const data = JSON.parse(jsonStr);
+                const name = data.name || 'Sản phẩm PawPal';
+                const price = data.price || 'Liên hệ cửa hàng';
+                const brand = data.brand ? `Thương hiệu: <strong>${data.brand}</strong>` : '';
+                return `<div class="fab-rich-card fab-rich-card--product"><div class="fab-rich-card-header"><span class="fab-rich-card-tag">Sản phẩm PawPal Shop</span><span class="admin-badge badge-active">${price}</span></div><div class="fab-rich-card-body"><div class="fab-rich-card-title">${name}</div><div class="fab-rich-card-desc">${brand}</div></div><a href="/pages/shop/" class="fab-rich-card-action">Xem trên PawPal Shop</a></div>`;
             } catch(e) { return match; }
         });
 

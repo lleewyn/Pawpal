@@ -2504,6 +2504,36 @@ Admin Copilot = luồng NỘI BỘ riêng, không dùng token/quyền admin cho 
 - **Hồi quy liên quan:** 0 regression, các bài test CHAT-F01 đến CHAT-F14 bảo toàn 100%.
 - **Rollback/Việc chưa xong:** Tiếp tục GĐ-01/GĐ-02 mở rộng.
 
+### CHG-CHAT-002 — Đợt R1: Trợ lý tư vấn thực dụng (GĐ-04, GĐ-05, GĐ-06 / P0-05)
+- **Ngày/giờ:** 21/10/2026 00:15 (Asia/Ho_Chi_Minh)
+- **Commit GitHub:** (Đợt R1 commit)
+- **Giai đoạn/Testcase:** Đợt R1 — Trợ lý tư vấn thực dụng M0 (GĐ-04: FAQ/Service/Price/Shop/Voucher, GĐ-05: Member orders/bookings/pets, GĐ-06: Cảm xúc CARE, P0-05: Triệt tiêu fake SLA 15 phút)
+- **Trước khi sửa:**
+  - `systemInstruction` chứa câu cam kết ảo: "chuyển nhân viên trong 15 phút" (P0-05).
+  - `get_services_price` truy vấn các cột không tồn tại (`package_name`, `pet_size`, `price`), gây lỗi khi bot tra cứu bảng giá.
+  - Thiếu công cụ tra cứu sản phẩm Shop (`search_products_public`) và mã giảm giá (`get_public_vouchers`).
+  - Nút CTA thẻ đơn hàng trong `components/fab/fab.js` trỏ link sai `/pages/orders/?order=...` thay vì `/pages/user/#order-detail?id=...`; thẻ lịch hẹn trỏ `/user#bookings` thay vì `/pages/user/#bookings`; thiếu thẻ hiển thị sản phẩm shop.
+- **Nguyên nhân đã xác minh:** Prompt hard-code lời hứa SLA chưa được duyệt; query bảng giá không khớp schema `service_price_matrix`; các thẻ tương tác chưa đồng bộ theo kiến trúc SPA User Portal.
+- **File/hàm/dòng sửa:**
+  - `scripts/api/chat.js`: Sửa `systemInstruction` (loại bỏ cam kết 15 phút, áp dụng CARE framework), cấu trúc lại `get_services_price`, bổ sung `search_products_public` và `get_public_vouchers` trong `dbTools`, khai báo trong `toolsDeclaration`, điều phối trong tool execution loop, xuất `dbTools` trong `module.exports`.
+  - `components/fab/fab.js`: Cập nhật `formatChatContent` deep-linking chuẩn `#order-detail` và `#bookings`, thêm parser thẻ `:::product { ... } :::`.
+  - `scripts/test/test_chat_r1_assistant.test.js`: Bộ kiểm thử mới 4/4 test cases.
+- **Bảng/cột/RLS/API bị ảnh hưởng:** `service_price_matrix`, `product`, `product_variant`, `voucher`, `chat_message`.
+- **Sau khi sửa:**
+  - Bot tư vấn giá theo khoảng cân nặng chính xác từ `service_price_matrix`.
+  - Bot tìm kiếm sản phẩm đang bán kèm giá từ `product` và `product_variant`.
+  - Bot liệt kê voucher còn hạn từ `voucher`.
+  - Thẻ đơn hàng và lịch hẹn dẫn chuẩn xác vào màn hình chi tiết trên User Portal.
+  - Áp dụng nguyên tắc CARE (Confirm - Acknowledge - Resolve - Empower) khi khách khiếu nại.
+- **Test đã chạy:**
+  - `node --test scripts/test/test_chat_r1_assistant.test.js`: 4/4 PASS.
+  - `node --test scripts/test/test_chat_r0_foundation.test.js`: 5/5 PASS.
+  - `node scripts/test/test_chat_f01_f14_suite.js`: 14/14 PASS.
+- **Kết quả:** PASS (23/23 tests).
+- **Bằng chứng:** Test log terminal thực tế, không lỗi ngoại lệ.
+- **Hồi quy liên quan:** 0 regression.
+- **Rollback/Việc chưa xong:** Tiếp tục Phase R2.
+
 ## 6. Thứ tự triển khai thực tế
 
 1. **Khóa rủi ro P0:** GĐ-00 → GĐ-01; kiểm tra RLS + danh tính guest/member trước khi mở rộng chức năng.
