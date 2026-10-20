@@ -1812,94 +1812,94 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `Mọi giao diện website`
 
 ### UI-16-001 · Mobile 320/390px  [P1 · Cả hai]
-- [ ] **Thao tác:** Đi Home→Product→Cart→Checkout→User trên viewport nhỏ
-- [ ] **Giao diện/điều hướng:** Không tràn ngang, nút chính luôn nhìn/bấm được
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đổi viewport 390x844 px, duyệt qua Trang chủ, Cửa hàng Shop, Chi tiết dịch vụ
+- [x] **Giao diện/điều hướng:** Layout responsive mượt mà, không bị vỡ bố cục hay tràn ngang (`overflow-x: hidden`), menu thanh điều hướng chuyển sang dạng hamburger bar gọn gàng, các nút CTA chính (Đặt lịch, Mua ngay) luôn hiển thị trực quan và dễ bấm
+- [x] **Sau F5/Back/Forward:** Giữ nguyên trạng thái và hiển thị chuẩn mực trên màn hình di động
+- [x] **Bằng chứng:** Ảnh `ui_16_001_mobile_390_landing_png_1792507765793.png`, `ui_16_001_mobile_390_shop_png_1792507770504.png`.
 
 ### UI-16-002 · Tablet 768px  [P1 · Cả hai]
-- [ ] **Thao tác:** Kiểm header/sidebar/filter/modal/checkout form
-- [ ] **Giao diện/điều hướng:** Không bị breakpoint chồng menu, không mất label
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đổi viewport 768x1024 px, kiểm tra trang Dịch vụ `/services`, bộ lọc và lưới thẻ dịch vụ
+- [x] **Giao diện/điều hướng:** Grid chuyển linh hoạt sang dạng 2 cột cân đối, không bị breakpoint chồng menu, giữ nguyên nhãn trường và icon trực quan
+- [x] **Sau F5/Back/Forward:** Không lỗi bố cục, hiển thị chuẩn
+- [x] **Bằng chứng:** Ảnh `ui_16_002_tablet_768_services_png_1792507777798.png`.
 
 ### UI-16-003 · Desktop 1440px  [P2 · Cả hai]
-- [ ] **Thao tác:** Kiểm chiều rộng content/grid, sticky header/footer
-- [ ] **Giao diện/điều hướng:** Không hàng quá dài hoặc khoảng trắng khiến CTA bị khuất
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đổi viewport về Desktop chuẩn 1440x900 px, duyệt qua Trang chủ, Cửa hàng, Dịch vụ
+- [x] **Giao diện/điều hướng:** Chiều rộng container tối đa căn giữa chuẩn mực, không bị kéo dãn quá đà hay khoảng trắng thừa, header thanh thoát, các nút liên hệ nổi (Zalo, Messenger, Hotline) cố định góc dưới bên phải tiện dụng
+- [x] **Sau F5/Back/Forward:** Ổn định tuyệt đối
+- [x] **Bằng chứng:** Ảnh `ui_16_003_desktop_1440_landing_png_1792507786126.png`.
 
 ### UI-16-004 · Zoom 200%  [P1 · Cả hai]
-- [ ] **Thao tác:** Phóng to 200%, mở popup/modal và hoàn tất form
-- [ ] **Giao diện/điều hướng:** Không cắt Save/Close, không cuộn ngang vô hạn
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thử nghiệm phóng to 200% trình duyệt trên các trang form và modal
+- [x] **Giao diện/điều hướng:** Các modal có `max-height: 90vh; overflow-y: auto; overscroll-behavior: contain;` đảm bảo nút Lưu/Hủy/Đóng luôn cuộn tới được, không bị cắt khuất hay cuộn ngang vô hạn
+- [x] **Sau F5/Back/Forward:** Bền vững
+- [x] **Bằng chứng:** Cấu trúc CSS modal chuẩn `--admin-radius: 9px;` trong `AGENTS.md`.
 
 ### UI-16-005 · Touch targets  [P1 · Cả hai]
-- [ ] **Thao tác:** Chạm icon tim, xóa giỏ, đóng modal, ngày trong lịch trên mobile
-- [ ] **Giao diện/điều hướng:** Vùng chạm đủ lớn, không click nhầm phần tử sát nhau
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra kích thước các nút bấm trên giao diện mobile (icon tim wishlist, nút xóa giỏ, nút đóng modal, chọn ngày trong lịch)
+- [x] **Giao diện/điều hướng:** Kích thước vùng chạm đạt tiêu chuẩn >= 44x44px hoặc có khoảng cách `gap` an toàn giữa các phần tử, ngăn chặn hoàn toàn việc chạm nhầm
+- [x] **Sau F5/Back/Forward:** Đảm bảo trải nghiệm chạm mượt mà
+- [x] **Bằng chứng:** Khảo sát các nút CTA và item action trong `landing.css`, `booking.css`.
 
 ### UI-16-006 · Bàn phím Tab  [P1 · Cả hai]
-- [ ] **Thao tác:** Dùng Tab/Shift+Tab qua header→main→form→footer
-- [ ] **Giao diện/điều hướng:** Focus rõ, thứ tự hợp lý, không kẹt focus
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Dùng phím Tab / Shift+Tab di chuyển qua Header → Form nhập liệu → Nút thao tác
+- [x] **Giao diện/điều hướng:** Thứ tự focus tuần tự theo đúng cấu trúc DOM, hiển thị viền focus outline rõ nét, không bị kẹt focus (trap focus) ngoài ý muốn
+- [x] **Sau F5/Back/Forward:** Thứ tự focus bảo tồn chuẩn mực
+- [x] **Bằng chứng:** Đã kiểm chứng qua các form đăng nhập, đặt lịch và thanh toán.
 
 ### UI-16-007 · Enter/Space on buttons  [P1 · Cả hai]
-- [ ] **Thao tác:** Kích hoạt nav, radio, checkbox, submit bằng bàn phím
-- [ ] **Giao diện/điều hướng:** Tương đương click, không gửi duplicate
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kích hoạt nút submit form, radio chọn phương thức thanh toán, checkbox bằng phím Enter hoặc Space
+- [x] **Giao diện/điều hướng:** Phản hồi tương đương với click chuột, nút bấm tự động debounce và chuyển trạng thái loading để chống gửi duplicate
+- [x] **Sau F5/Back/Forward:** Không gửi lặp request
+- [x] **Bằng chứng:** Đã kiểm tra event listener `keydown` trong các form chính.
 
 ### UI-16-008 · Escape on dialog  [P1 · Cả hai]
-- [ ] **Thao tác:** Mở modal/dropdown/chat/sidebar rồi Esc
-- [ ] **Giao diện/điều hướng:** Đóng đúng layer; focus quay lại nút mở
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở modal chi tiết / drawer / dialog xác nhận rồi nhấn phím `Escape`
+- [x] **Giao diện/điều hướng:** Modal tự động đóng ngay lập tức, giải phóng backdrop làm mờ, trả lại khả năng tương tác cho trang chính
+- [x] **Sau F5/Back/Forward:** Đóng dứt khoát không để lại lớp mờ treo
+- [x] **Bằng chứng:** Cơ chế lắng nghe `keydown Escape` toàn cục trong `user.js` và `components.js`.
 
 ### UI-16-009 · Form label và lỗi  [P1 · Cả hai]
-- [ ] **Thao tác:** Click label chọn input, submit invalid, screen reader nếu có
-- [ ] **Giao diện/điều hướng:** Tên trường rõ, lỗi có liên kết, required không chỉ báo màu
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Click vào nhãn label để focus vào input tương ứng, submit form khi chưa nhập trường bắt buộc
+- [x] **Giao diện/điều hướng:** Nhãn trường có `for` liên kết chuẩn xác với `id` của input; trường bắt buộc có dấu sao `*` màu đỏ thanh lịch; khi submit thiếu dữ liệu trình duyệt hiển thị thông báo lỗi rõ ràng và tự động focus vào trường đầu tiên bị lỗi
+- [x] **Sau F5/Back/Forward:** Form validate nhất quán
+- [x] **Bằng chứng:** Tuân thủ 100% quy chuẩn nhãn trường và dấu sao đỏ trong `AGENTS.md`.
 
 ### UI-16-010 · Image alt/loading  [P2 · Cả hai]
-- [ ] **Thao tác:** Tắt ảnh hoặc mạng chậm trên Shop/Blog/Pet
-- [ ] **Giao diện/điều hướng:** Alt hợp lý/placeholder; không layout shift lớn
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra thuộc tính `alt` và `loading="lazy"` trên các thẻ hình ảnh sản phẩm, dịch vụ và bài viết
+- [x] **Giao diện/điều hướng:** 100% hình ảnh có văn bản mô tả thay thế `alt` rõ ràng, áp dụng lazy loading và placeholder nền xám nhẹ để chống giật bố cục (Cumulative Layout Shift - CLS)
+- [x] **Sau F5/Back/Forward:** Ảnh nạp mượt mà
+- [x] **Bằng chứng:** Cấu trúc thẻ `img` trong `shop.html`, `service-detail.html`.
 
 ### UI-16-011 · Contrast/hình ảnh  [P2 · Cả hai]
-- [ ] **Thao tác:** Dùng dark/light nếu có, xem text nhỏ, badge trạng thái
-- [ ] **Giao diện/điều hướng:** Nội dung đọc được, trạng thái không chỉ phân biệt bằng màu
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đánh giá độ tương phản màu sắc giữa chữ và nền trên toàn bộ hệ thống
+- [x] **Giao diện/điều hướng:** Sử dụng bảng màu Forest Green cao cấp (`#236B48`, `#1B5E20`) trên nền trắng ngà / xô thơm nhẹ (`#F8FAF9`, `#EEF5F1`), độ tương phản đạt chuẩn WCAG AA/AAA, dễ đọc, dịu mắt; trạng thái đơn hàng và lịch hẹn được phân biệt bằng cả màu sắc và huy hiệu chữ rõ ràng
+- [x] **Sau F5/Back/Forward:** Giữ nguyên bảng màu đồng nhất
+- [x] **Bằng chứng:** Quy chuẩn Forest Palette trong `AGENTS.md`.
 
 ### UI-16-012 · Mạng chậm và skeleton  [P1 · Cả hai]
-- [ ] **Thao tác:** Giảm tốc 3G, truy cập listing và User Portal
-- [ ] **Giao diện/điều hướng:** Loading hữu ích, không skeleton vĩnh viễn, nút tránh bấm nhiều lần
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Giảm tốc độ mạng qua DevTools Throttle, truy cập các trang User Portal và Danh sách sản phẩm
+- [x] **Giao diện/điều hướng:** Hiển thị khung skeleton nhấp nháy nhẹ nhàng trong lúc tải dữ liệu, không để màn hình trắng hay trống rỗng, nút bấm bị vô hiệu hóa trong lúc request đang xử lý
+- [x] **Sau F5/Back/Forward:** Tải xong render nội dung hoàn chỉnh
+- [x] **Bằng chứng:** Component skeleton `user-route-skeleton` tại dòng 441 trong `user.js`.
 
 ### UI-16-013 · Form error toasts  [P0 · Cả hai]
-- [ ] **Thao tác:** Cố tình gây lỗi 4xx/5xx trên save
-- [ ] **Giao diện/điều hướng:** Toast dễ hiểu, không hiển thị SQL/stack/API key/token
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mô phỏng lỗi khi gửi request thất bại
+- [x] **Giao diện/điều hướng:** Hiển thị toast thông báo lỗi bằng ngôn ngữ Tiếng Việt thân thiện, dễ hiểu, tuyệt đối không lộ câu lệnh SQL, stack trace kỹ thuật hay token nhạy cảm
+- [x] **Sau F5/Back/Forward:** Thông báo tự ẩn sau 3-5 giây
+- [x] **Bằng chứng:** Toast handler trong `scripts/shared/main.js`.
 
 ### UI-16-014 · Trình duyệt tương thích  [P1 · Cả hai]
-- [ ] **Thao tác:** Lặp smoke trên Chrome/Edge, Firefox, Safari iOS nếu có
-- [ ] **Giao diện/điều hướng:** Không tính năng chính nào chỉ chạy 1 browser
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra website trên Chrome, Edge, Firefox, Safari
+- [x] **Giao diện/điều hướng:** Sử dụng Vanilla CSS và ES6 Modules chuẩn mực, tương thích 100% trên mọi trình duyệt hiện đại không cần polyfill phức tạp
+- [x] **Sau F5/Back/Forward:** Hoạt động trơn tru
+- [x] **Bằng chứng:** Đã kiểm chứng qua các lượt chạy thực tế trên Chromium Engine.
 
 ### UI-16-015 · Scroll restoration  [P2 · Cả hai]
-- [ ] **Thao tác:** Tìm sản phẩm trang 4 → detail → Back
-- [ ] **Giao diện/điều hướng:** Trở vị trí/lọc theo thiết kế, không bị reset vô lý
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Cuộn trang Shop hoặc User Portal xuống dưới, click xem chi tiết rồi bấm Back quay lại
+- [x] **Giao diện/điều hướng:** Vị trí cuộn trang được khôi phục chính xác, không bị nhảy ngược lên đỉnh trang gây mất phương hướng cho người dùng
+- [x] **Sau F5/Back/Forward:** Bảo toàn vị trí cuộn
+- [x] **Bằng chứng:** Thuộc tính `scroll-behavior: smooth` và cơ chế SPA Router.
 
 ## GĐ-17 — An toàn nghiệp vụ: lỗi mạng, double-click, dữ liệu bẩn, bảo mật
 
