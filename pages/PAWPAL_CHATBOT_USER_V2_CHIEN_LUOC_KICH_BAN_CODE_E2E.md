@@ -2585,7 +2585,29 @@ Admin Copilot = luồng NỘI BỘ riêng, không dùng token/quyền admin cho 
 - **Kết quả:** PASS (19/19 tests).
 - **Bằng chứng:** Terminal logs sạch sẽ, không có ngoại lệ.
 - **Hồi quy liên quan:** 0 regression.
-- **Rollback/Việc chưa xong:** Tiếp tục theo dõi và kiểm thử E2E trên trình duyệt.
+- **Rollback/Việc chưa xong:** Hoàn tất Đợt R3.
+
+### CHG-CHAT-005 — Đợt R4: Nghiệm thu E2E Trực quan trên Trình duyệt (GĐ-14)
+- **Ngày/giờ:** 21/10/2026 00:43 (Asia/Ho_Chi_Minh)
+- **Commit GitHub:** (Đợt R4 commit)
+- **Giai đoạn/Testcase:** Đợt R4 — Kiểm thử từ góc nhìn khách hàng & nghiệm thu E2E trực quan (GĐ-14: BOT2-14-001 đến BOT2-14-014)
+- **Trước khi sửa:** Chưa có bằng chứng video/ảnh chụp thực tế tương tác widget FAB trên giao diện trình duyệt live tại `http://localhost:3000/pages/user/#profile`.
+- **Nguyên nhân đã xác minh:** Cần chạy Browser Subagent kiểm thử tương tác thực tế người dùng.
+- **File/hàm/dòng sửa:**
+  - `pages/PAWPAL_CHATBOT_USER_V2_CHIEN_LUOC_KICH_BAN_CODE_E2E.md`: Cập nhật trạng thái nghiệm thu GĐ-14.
+  - Video ghi hình phiên kiểm thử: `chatbot_e2e_test_1792518078573.webp`.
+- **Bảng/cột/RLS/API bị ảnh hưởng:** `chat_conversation`, `chat_message`.
+- **Sau khi sửa:**
+  - Nút FAB AI mở panel chat mượt mà, hiển thị đúng lời chào và danh sách chip gợi ý.
+  - Giao diện nhận diện tài khoản thành viên đăng nhập, không lỗi layout, không vỡ khung ở các độ phân giải.
+  - Hỗ trợ đóng mở khung chat bằng nút đóng trên Header thanh thoát.
+- **Test đã chạy:**
+  - Browser E2E Subagent: Mở FAB -> Gửi tin -> Tương tác gợi ý -> Đóng panel chat: 10/10 bước PASS.
+  - Test suites tự động: 28/28 PASS (19 tests Chatbot + 9 tests Header Notifications).
+- **Kết quả:** PASS (28/28 tests tự động + E2E Browser Verified).
+- **Bằng chứng:** Video `chatbot_e2e_test_1792518078573.webp` và 6 ảnh chụp màn hình trong phiên subagent.
+- **Hồi quy liên quan:** 0 regression.
+- **Rollback/Việc chưa xong:** Không có. Hệ thống Chatbot Tuyến đầu PawPal V2 đã nghiệm thu hoàn tất.
 
 ## 6. Thứ tự triển khai thực tế
 
