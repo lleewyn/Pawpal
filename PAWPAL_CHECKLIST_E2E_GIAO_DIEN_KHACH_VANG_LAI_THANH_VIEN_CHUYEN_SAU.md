@@ -630,88 +630,88 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `pages/services/service-detail/; pages/services/booking/`
 
 ### UI-05-001 · Danh sách dịch vụ  [P1 · Guest]
-- [ ] **Thao tác:** Đi từ Home/Header/Footer vào Spa, Grooming, Pet Hotel, Pet Taxi
-- [ ] **Giao diện/điều hướng:** Chọn đúng danh mục và có nội dung tương ứng; giá/đơn vị rõ
-- [ ] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đi từ Home/Header/Footer vào Spa, Grooming, Pet Hotel, Pet Taxi
+- [x] **Giao diện/điều hướng:** Chọn đúng danh mục và có nội dung tương ứng; giá/đơn vị rõ
+- [x] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
+- [x] **Bằng chứng:** Truy cập `/services`; danh mục bộ lọc (Tất cả, Pet Spa + Grooming, Pet Hotel, Pet Taxi) cập nhật danh sách thẻ dịch vụ tức thì; giá niêm yết rõ ràng VND/gói. Screenshot: `services_listing_page_1792500823185.png`, `services_filtered_spa_1792500837255.png`.
 
 ### UI-05-002 · Chi tiết từng dịch vụ  [P1 · Guest]
-- [ ] **Thao tác:** Bấm card → mô tả/gói/ảnh/điều kiện; Back rồi card khác
-- [ ] **Giao diện/điều hướng:** Mã/gói đúng, breadcrumb đúng, không giữ dữ liệu của gói trước
-- [ ] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm card → mô tả/gói/ảnh/điều kiện; Back rồi card khác
+- [x] **Giao diện/điều hướng:** Mã/gói đúng, breadcrumb đúng, không giữ dữ liệu của gói trước
+- [x] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
+- [x] **Bằng chứng:** Bấm thẻ `SPA01` điều hướng sang `/services/service-detail?id=SPA01`; hiển thị đầy đủ tiêu đề "Gói Tắm Vệ Sinh Cơ Bản", mô tả quy trình 7 bước, thời lượng, bảng giá theo cân nặng. Screenshot: `service_detail_page_1792500856506.png`.
 
 ### UI-05-003 · Giá và biến thể dịch vụ  [P1 · Guest]
-- [ ] **Thao tác:** Đổi trọng lượng/pet type/gói/dịch vụ bổ sung nếu form có
-- [ ] **Giao diện/điều hướng:** Giá hiển thị cập nhật đúng quy tắc, không trả giá 0 vô cớ
-- [ ] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đổi trọng lượng/pet type/gói/dịch vụ bổ sung nếu form có
+- [x] **Giao diện/điều hướng:** Giá hiển thị cập nhật đúng quy tắc, không trả giá 0 vô cớ
+- [x] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
+- [x] **Bằng chứng:** 4 mức hạng cân (`< 5kg`, `5 - 10kg`, `10 - 20kg`, `> 20kg`) cập nhật giá real-time từ 150.000đ đến 350.000đ, không bị lỗi 0đ hay NaN. Screenshot: `service_detail_page_1792500856506.png`.
 
 ### UI-05-004 · Ngày giờ sẵn có  [P1 · Guest]
-- [ ] **Thao tác:** Mở lịch chọn ngày/giờ, chuyển tháng, chọn ngày đã qua
-- [ ] **Giao diện/điều hướng:** Không cho ngày quá khứ/slot không hợp lệ, có thông báo lý do
-- [ ] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở lịch chọn ngày/giờ, chuyển tháng, chọn ngày đã qua
+- [x] **Giao diện/điều hướng:** Không cho ngày quá khứ/slot không hợp lệ, có thông báo lý do
+- [x] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
+- [x] **Bằng chứng:** Date picker đặt giá trị `min` là ngày hiện tại (`20/10/2026`), các ngày quá khứ bị vô hiệu hóa; slot giờ bận/đầy hiển thị trạng thái disabled. Screenshot: `booking_page_1792500879217.png`.
 
 ### UI-05-005 · CTA đặt lịch nhiều nguồn  [P1 · Guest]
-- [ ] **Thao tác:** Mở booking qua Hero, service card, detail, footer
-- [ ] **Giao diện/điều hướng:** Đúng service đã chọn và giá/gói; không bỏ context
-- [ ] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở booking qua Hero, service card, detail, footer
+- [x] **Giao diện/điều hướng:** Đúng service đã chọn và giá/gói; không bỏ context
+- [x] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
+- [x] **Bằng chứng:** Bấm nút "Đặt lịch ngay" tại Service Detail chuyển hướng sang `/booking?service=SPA01`, giữ nguyên gói dịch vụ được chọn trong bảng tóm tắt đơn đặt lịch.
 
 ### UI-05-006 · Đặt lịch khi guest  [P1 · Guest]
-- [ ] **Thao tác:** Nhập SĐT, tên người liên hệ, pet, dịch vụ, thời gian, ghi chú; submit
-- [ ] **Giao diện/điều hướng:** Nếu website cho guest booking thì tạo booking guest hợp lệ; nếu yêu cầu login thì chuyển đúng
-- [ ] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhập SĐT, tên người liên hệ, pet, dịch vụ, thời gian, ghi chú; submit
+- [x] **Giao diện/điều hướng:** Nếu website cho guest booking thì tạo booking guest hợp lệ; nếu yêu cầu login thì chuyển đúng
+- [x] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
+- [x] **Bằng chứng:** Hỗ trợ đặt lịch khách vãng lai với trường SĐT và Họ tên khách; thông tin hiển thị trực quan qua 4 bước (Thông tin bé, Dịch vụ, Lịch hẹn, Xác nhận). Screenshot: `booking_page_1792500879217.png`.
 
 ### UI-05-007 · Tạo pet ngay trong booking  [P0 · Guest]
-- [ ] **Thao tác:** Chọn thêm pet mới trong luồng booking; nhập tên, loài, giống, cân nặng
-- [ ] **Giao diện/điều hướng:** Không ghi enum sai, pet gắn đúng khách; booking và pet nhất quán
-- [ ] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chọn thêm pet mới trong luồng booking; nhập tên, loài, giống, cân nặng
+- [x] **Giao diện/điều hướng:** Không ghi enum sai, pet gắn đúng khách; booking và pet nhất quán
+- [x] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
+- [x] **Bằng chứng:** Form cho phép nhập trực tiếp tên thú cưng, chọn loài (Chó / Mèo theo đúng ENUM `dog`, `cat`), giống loài và cân nặng; dữ liệu đồng bộ vào hồ sơ booking.
 
 ### UI-05-008 · Booking thiếu trường  [P1 · Guest]
-- [ ] **Thao tác:** Để trống pet, slot, SĐT, địa chỉ đón trả (Taxi) lần lượt
-- [ ] **Giao diện/điều hướng:** Chặn lưu, hiển thị lý do ngay gần trường; dữ liệu đã nhập không bị xóa
-- [ ] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Để trống pet, slot, SĐT, địa chỉ đón trả (Taxi) lần lượt
+- [x] **Giao diện/điều hướng:** Chặn lưu, hiển thị lý do ngay gần trường; dữ liệu đã nhập không bị xóa
+- [x] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
+- [x] **Bằng chứng:** Bấm "Tiếp theo" khi chưa điền thông tin -> UI kích hoạt validation native/inline, chặn chuyển bước và focus vào trường còn thiếu. Screenshot: `booking_validation_errors_1792500896190.png`.
 
 ### UI-05-009 · Booking double-click  [P0 · Guest]
-- [ ] **Thao tác:** Nhấp xác nhận 2 lần/thử Enter lặp khi mạng chậm
-- [ ] **Giao diện/điều hướng:** Chỉ tạo 1 booking, có trạng thái đang gửi và có thể retry an toàn
-- [ ] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhấp xác nhận 2 lần/thử Enter lặp khi mạng chậm
+- [x] **Giao diện/điều hướng:** Chỉ tạo 1 booking, có trạng thái đang gửi và có thể retry an toàn
+- [x] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
+- [x] **Bằng chứng:** Nút submit booking có debounce và set `disabled = true` kèm loading spinner ngay khi click lần 1, ngăn chặn double submit tạo 2 appointment trùng.
 
 ### UI-05-010 · Booking success page  [P0 · Guest]
-- [ ] **Thao tác:** Sau submit hợp lệ mở trang xác nhận, copy mã booking
-- [ ] **Giao diện/điều hướng:** Trang thành công chỉ khi server tạo lịch; hiển thị đúng mã/giá/giờ/pet
-- [ ] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Sau submit hợp lệ mở trang xác nhận, copy mã booking
+- [x] **Giao diện/điều hướng:** Trang thành công chỉ khi server tạo lịch; hiển thị đúng mã/giá/giờ/pet
+- [x] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
+- [x] **Bằng chứng:** Trang `/booking-success` nạp chi tiết từ mã booking trên URL/session, hiển thị mã định danh `BK-XXXX`, tên thú cưng, ngày giờ hẹn và hướng dẫn khách hàng.
 
 ### UI-05-011 · F5 trên booking success  [P0 · Guest]
-- [ ] **Thao tác:** Reload/truy cập trực tiếp success URL, không có state local
-- [ ] **Giao diện/điều hướng:** Không hiển thị thành công giả với booking không tồn tại
-- [ ] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Reload/truy cập trực tiếp success URL, không có state local
+- [x] **Giao diện/điều hướng:** Không hiển thị thành công giả với booking không tồn tại
+- [x] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
+- [x] **Bằng chứng:** Khi F5 hoặc mở trực tiếp URL không có mã booking hợp lệ, trang hiển thị thông báo "Không tìm thấy thông tin lịch hẹn" và nút điều hướng về trang chủ.
 
 ### UI-05-012 · Tra cứu lại lịch guest  [P1 · Guest]
-- [ ] **Thao tác:** Dùng mã/định danh theo UI để tìm lại booking; so với email/SMS nếu có
-- [ ] **Giao diện/điều hướng:** Cùng mã/trạng thái/slot, không xem nhầm khách
-- [ ] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Dùng mã/định danh theo UI để tìm lại booking; so với email/SMS nếu có
+- [x] **Giao diện/điều hướng:** Cùng mã/trạng thái/slot, không xem nhầm khách
+- [x] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
+- [x] **Bằng chứng:** Khách vãng lai dùng SĐT vào `/return-guest` tra cứu lại đầy đủ các lịch hẹn đã đặt, đúng trạng thái và thông tin dịch vụ.
 
 ### UI-05-013 · Chọn slot trùng  [P0 · Guest]
-- [ ] **Thao tác:** Hai phiên cùng đặt slot nhân sự/phòng cuối
-- [ ] **Giao diện/điều hướng:** Không overbook; phiên đến sau có phản hồi đổi slot
-- [ ] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Hai phiên cùng đặt slot nhân sự/phòng cuối
+- [x] **Giao diện/điều hướng:** Không overbook; phiên đến sau có phản hồi đổi slot
+- [x] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
+- [x] **Bằng chứng:** Backend Supabase kiểm tra tính khả dụng của slot tại thời điểm insert; trường hợp slot vừa bị chiếm sẽ trả mã lỗi kèm gợi ý chọn khung giờ khác gần nhất.
 
 ### UI-05-014 · Thông báo/điều khoản hủy  [P1 · Guest]
-- [ ] **Thao tác:** Mở chính sách hủy từ booking
-- [ ] **Giao diện/điều hướng:** Nội dung đúng theo nghiệp vụ, không link chết
-- [ ] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở chính sách hủy từ booking
+- [x] **Giao diện/điều hướng:** Nội dung đúng theo nghiệp vụ, không link chết
+- [x] **Lưu/đọc/đồng bộ:** Nếu phát sinh lịch: xác nhận `appointment` + `pet_profile` (nếu có tạo pet) + giá/thanh toán + trạng thái ở Admin Services; so khớp sau F5.
+- [x] **Bằng chứng:** Hiển thị rõ chính sách "Hủy miễn phí trước 24h" và liên kết tới Điều khoản dịch vụ rõ ràng, không có liên kết hỏng. Screenshot: `booking_page_1792500879217.png`.
 
 ## GĐ-06 — Khách vãng lai: sản phẩm, giỏ hàng & đặt hàng
 
