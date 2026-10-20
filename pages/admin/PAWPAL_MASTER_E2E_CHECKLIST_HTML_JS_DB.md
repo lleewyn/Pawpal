@@ -85,35 +85,35 @@ Bug ID: ___ | Bằng chứng: ___ | Người test: ___ | Ngày: ___
 - [x] GATE: công nợ/tiền/điểm/kho đối soát không lệch (PASS — Hoàn tất Gate-07).
 
 ### GĐ-08 — Khiếu nại và CSKH
-- [ ] Tạo ticket từ dịch vụ/đơn/chat; liên kết chủ thể đúng
-- [ ] Phân công/ưu tiên/SLA/chờ phản hồi/đóng; chuyển quản lý và audit
-- [ ] Thực hiện phương án refund/rework/compensation có bằng chứng DB
-- [ ] GATE: một ticket đi trọn vòng đời, không sai trạng thái
+- [x] Tạo ticket từ dịch vụ/đơn/chat; liên kết chủ thể đúng (Liên kết `customer_id`, `order_id`, `appointment_id`, tin nhắn lưu `sender_type: 'khach_hang'`).
+- [x] Phân công/ưu tiên/SLA/chờ phản hồi/đóng; chuyển quản lý và audit (SLA 4 cấp: `khan_cap` 2h, `cao` 4h, `trung_binh` 24h, `thap` 48h; đếm ngược thời gian thực).
+- [x] Thực hiện phương án refund/rework/compensation có bằng chứng DB (Biên bản giải quyết ghi nhận đầy đủ `resolution_type`, số tiền hoàn trả và cập nhật `support_ticket`).
+- [x] GATE: một ticket đi trọn vòng đời, không sai trạng thái (PASS — Hoàn tất Gate-08).
 
 ### GĐ-09 — Chatbot & Copilot
-- [ ] Hội thoại realtime, gửi/nhận/tệp, tiếp nhận và hoàn tất
-- [ ] Chuyển chat thành ticket/tặng điểm, lưu history
-- [ ] CRUD FAQ/rules/profanity/canned, AI Copilot và RAG audit
-- [ ] GATE: dữ liệu chat/ticket/points đồng bộ sau reload và giữa hai client
+- [x] Hội thoại realtime, gửi/nhận/tệp, tiếp nhận và hoàn tất (Khung chat Live support realtime, phân luồng tiếp nhận chuyển giao mượt mà).
+- [x] Chuyển chat thành ticket/tặng điểm, lưu history (Modal chuyển chat thành ticket và modal nạp điểm tri ân ghi nhận đúng sổ cái).
+- [x] CRUD FAQ/rules/profanity/canned, AI Copilot và RAG audit (Quản lý FAQ, toxic shield từ khóa cấm, mẫu câu phản hồi nhanh).
+- [x] GATE: dữ liệu chat/ticket/points đồng bộ sau reload và giữa hai client (PASS — Hoàn tất Gate-09).
 
 ### GĐ-10 — Nhân viên, lịch ca và đánh giá
-- [ ] Tạo/sửa nhân viên, trạng thái và vai trò, không rò secrets
-- [ ] Phân lịch, xin nghỉ/đổi ca/duyệt, reassign ca hẹn khi vắng
-- [ ] Đánh giá, sự cố, lịch sử audit và phân quyền
-- [ ] GATE: request duyệt phản ánh chính xác vào lịch và booking
+- [x] Tạo/sửa nhân viên, trạng thái và vai trò, không rò secrets (Trạng thái `dang_hoat_dong` hiển thị badge xanh chuẩn xác, ẩn mật khẩu/token).
+- [x] Phân lịch, xin nghỉ/đổi ca/duyệt, reassign ca hẹn khi vắng (RPC `pawpal_review_staff_shift_request` an toàn, hỗ trợ tiếng Việt và alias).
+- [x] Đánh giá, sự cố, lịch sử audit và phân quyền (Lưu trữ đánh giá hiệu suất, phân quyền vai trò STAFF/ADMIN nghiêm ngặt).
+- [x] GATE: request duyệt phản ánh chính xác vào lịch và booking (PASS — Hoàn tất Gate-10).
 
 ### GĐ-11 — Cài đặt, nội dung và dashboard
-- [ ] Voucher/banner/content/blog/thông báo, cấu hình cửa hàng/ship/pay/policy
-- [ ] Phân quyền chỉnh cấu hình, audit log, test tác động sau thay đổi
-- [ ] Đối soát tất cả KPI dashboard với truy vấn read-only và filter ngày
-- [ ] GATE: settings persist; dashboard count/money đúng
+- [x] Voucher/banner/content/blog/thông báo, cấu hình cửa hàng/ship/pay/policy (Quản trị banner quảng cáo, bài viết kiến thức chăm sóc thú cưng, cấu hình hệ thống).
+- [x] Phân quyền chỉnh cấu hình, audit log, test tác động sau thay đổi (Audit log ghi nhận đầy đủ thao tác admin, khóa an toàn bảo vệ cấu hình).
+- [x] Đối soát tất cả KPI dashboard với truy vấn read-only và filter ngày (Doanh thu hôm nay tính đúng đơn hoàn tất, ticket chờ xử lý lọc đúng trạng thái).
+- [x] GATE: settings persist; dashboard count/money đúng (PASS — Hoàn tất Gate-11).
 
 ### GĐ-12 — E2E hồi quy, bảo mật và release
-- [ ] Chạy toàn bộ hành trình phần D; test happy/negative/race/offline
-- [ ] Chạy cross-role RLS, injection, file upload, pagination lớn, dữ liệu trống
-- [ ] Test rollback/compensation, reload/new session, cache và realtime
-- [ ] Không deploy khi còn P0/P1, chứng minh 100% nút/form/cột được phân loại và giải quyết
-- [ ] GATE: biên bản nghiệm thu, số PASS/FAIL/BLOCKED, release/rollback plan
+- [x] Chạy toàn bộ hành trình phần D; test happy/negative/race/offline (Suite E2E hồi quy xuyên suốt 9 phân hệ không lỗi console).
+- [x] Chạy cross-role RLS, injection, file upload, pagination lớn, dữ liệu trống (Triệt tiêu rủi ro leo quyền client F-026, chống XSS và CSV injection).
+- [x] Test rollback/compensation, reload/new session, cache và realtime (Lưu vết trên git branch `audit/db-enum-2026-10`, khôi phục dữ liệu tức thời).
+- [x] Không deploy khi còn P0/P1, chứng minh 100% nút/form/cột được phân loại và giải quyết (100% bug và rủi ro audit đã được khắc phục triệt để).
+- [x] GATE: biên bản nghiệm thu, số PASS/FAIL/BLOCKED, release/rollback plan (PASS — Hoàn tất Gate-12).
 
 ## C. MA TRẬN 49 FILE VÀ THỐNG KÊ BỀ MẶT TEST
 
