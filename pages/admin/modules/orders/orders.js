@@ -889,10 +889,21 @@
                 }
 
                 const rawStatus = (o.order_status || 'PENDING').toLowerCase();
-                const mappedStatus = (rawStatus === 'packing') ? 'confirmed' : rawStatus;
+                let mappedStatus = rawStatus;
+                if (['cho_xac_nhan', 'pending'].includes(rawStatus)) mappedStatus = 'pending';
+                else if (['dang_dong_goi', 'packing', 'da_xac_nhan', 'confirmed', 'dang_chuan_bi'].includes(rawStatus)) mappedStatus = 'confirmed';
+                else if (['dang_giao_hang', 'shipping'].includes(rawStatus)) mappedStatus = 'shipping';
+                else if (['da_giao_hang', 'delivered', 'completed', 'da_giao', 'hoan_tat'].includes(rawStatus)) mappedStatus = 'completed';
+                else if (['da_huy', 'cancelled'].includes(rawStatus)) mappedStatus = 'cancelled';
+                else if (['da_tra_hang', 'returned', 'doi_tra'].includes(rawStatus)) mappedStatus = 'returned';
+
                 const rawPaymentStatus = (o.payment_status || 'UNPAID').toLowerCase();
                 let mappedPaymentStatus = rawPaymentStatus;
-                if (rawPaymentStatus === 'pending_refund') mappedPaymentStatus = 'refund_pending';
+                if (['da_thanh_toan', 'paid', 'completed'].includes(rawPaymentStatus)) mappedPaymentStatus = 'paid';
+                else if (['chua_thanh_toan', 'unpaid', 'pending'].includes(rawPaymentStatus)) mappedPaymentStatus = 'unpaid';
+                else if (['da_hoan_tien', 'refunded'].includes(rawPaymentStatus)) mappedPaymentStatus = 'refunded';
+                else if (['cho_hoan_tien', 'pending_refund', 'refund_pending'].includes(rawPaymentStatus)) mappedPaymentStatus = 'refund_pending';
+                else if (['cod_pending'].includes(rawPaymentStatus)) mappedPaymentStatus = 'cod_pending';
 
                 let payMethod = 'cod';
                 const payObj = Array.isArray(o.payment) ? o.payment[0] : (o.payment || {});
@@ -939,39 +950,39 @@
                 let alertType = null;
                 let alertMessage = null;
 
-                if (rmaInfo || rawStatus === 'returned') {
+                if (rmaInfo || mappedStatus === 'returned' || rawStatus === 'returned' || rawStatus === 'da_tra_hang') {
                     alertType = 'danger';
                     alertMessage = 'Đổi trả / RMA';
-                } else if (rawStatus === 'pending' && elapsedMinutes > 30) {
+                } else if ((mappedStatus === 'pending' || rawStatus === 'pending' || rawStatus === 'cho_xac_nhan') && elapsedMinutes > 30) {
                     alertType = 'danger';
                     alertMessage = 'Quá hạn SLA (>30p)';
-                } else if (rawStatus === 'delivered' && mappedPaymentStatus === 'cod_pending') {
+                } else if ((mappedStatus === 'completed' || mappedStatus === 'shipping' || rawStatus === 'delivered' || rawStatus === 'da_giao_hang') && mappedPaymentStatus === 'cod_pending') {
                     alertType = 'warning';
                     alertMessage = 'Chờ đối soát COD';
                 }
 
                 const carrierMatch = o.note ? o.note.match(/Hãng:\s*([^\n;]+)/i)?.[1] : null;
                 const trackingMatch = o.note ? o.note.match(/Vận đơn:\s*([^\n;]+)/i)?.[1] : null;
-                const resolvedCarrier = o.shipping_provider_id || o.carrier || carrierMatch || (rawStatus === 'shipping' || rawStatus === 'delivered' ? 'Bưu cục đối tác' : 'Chưa phân công');
+                const resolvedCarrier = o.shipping_provider_id || o.carrier || carrierMatch || (['shipping', 'delivered', 'completed', 'dang_giao_hang', 'da_giao_hang'].includes(mappedStatus) ? 'Bưu cục đối tác' : 'Chưa phân công');
                 const resolvedTracking = o.tracking_code || o.tracking_number || trackingMatch || '--';
 
                 const timeline = [
                     { title: 'Tạo đơn hàng thành công', time: formatTime(o.created_at) + ' - ' + formatDate(o.created_at), desc: 'Đơn hàng được ghi nhận vào hệ thống PawPal', done: true }
                 ];
 
-                if (['confirmed', 'shipping', 'delivered', 'completed'].includes(rawStatus)) {
+                if (['confirmed', 'shipping', 'delivered', 'completed'].includes(mappedStatus)) {
                     timeline.push({ title: 'Đã xác nhận đơn hàng', time: 'Chưa ghi nhận thời gian', desc: 'Nhân viên đã duyệt đơn và xuất kho đóng gói', done: true });
                 }
-                if (['shipping', 'delivered', 'completed'].includes(rawStatus)) {
+                if (['shipping', 'delivered', 'completed'].includes(mappedStatus)) {
                     timeline.push({ title: 'Đã bàn giao vận chuyển', time: 'Chưa ghi nhận thời gian', desc: `Đã bàn giao cho ${resolvedCarrier}. Mã vận đơn: ${resolvedTracking}`, done: true });
                 }
-                if (['delivered', 'completed'].includes(rawStatus)) {
+                if (['delivered', 'completed'].includes(mappedStatus)) {
                     timeline.push({ title: 'Đã giao hàng thành công', time: 'Chưa ghi nhận thời gian', desc: 'Khách hàng đã nhận đủ sản phẩm', done: true });
                 }
-                if (rawStatus === 'completed') {
+                if (mappedStatus === 'completed') {
                     timeline.push({ title: 'Hoàn tất đơn hàng', time: 'Chưa ghi nhận thời gian', desc: 'Đơn hàng đã hoàn thành và cộng điểm Pawpoint', done: true });
                 }
-                if (rawStatus === 'cancelled') {
+                if (mappedStatus === 'cancelled') {
                     timeline.push({ title: 'Đã hủy đơn hàng', time: 'Chưa ghi nhận thời gian', desc: 'Đơn hàng bị hủy bởi quản trị viên hoặc khách yêu cầu', done: true });
                 }
 

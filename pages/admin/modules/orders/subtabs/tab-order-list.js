@@ -149,11 +149,11 @@
         const statCancelledOrdersEl = document.getElementById('statCancelledOrders');
 
         if (statTotalOrdersEl) statTotalOrdersEl.textContent = ordersList.filter(order => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(order.createdAt)) === new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())).length;
-        if (statPendingOrdersEl) statPendingOrdersEl.textContent = ordersList.filter(o => o.status === 'pending').length;
-        if (statPreparingOrdersEl) statPreparingOrdersEl.textContent = ordersList.filter(o => o.status === 'confirmed').length;
-        if (statShippingOrdersEl) statShippingOrdersEl.textContent = ordersList.filter(o => o.status === 'shipping' || o.status === 'delivered').length;
-        if (statCompletedOrdersEl) statCompletedOrdersEl.textContent = ordersList.filter(o => o.status === 'completed').length;
-        if (statCancelledOrdersEl) statCancelledOrdersEl.textContent = ordersList.filter(o => o.status === 'cancelled' || o.status === 'returned').length;
+        if (statPendingOrdersEl) statPendingOrdersEl.textContent = ordersList.filter(o => ['pending', 'cho_xac_nhan'].includes(o.status)).length;
+        if (statPreparingOrdersEl) statPreparingOrdersEl.textContent = ordersList.filter(o => ['confirmed', 'packing', 'dang_dong_goi', 'da_xac_nhan'].includes(o.status)).length;
+        if (statShippingOrdersEl) statShippingOrdersEl.textContent = ordersList.filter(o => ['shipping', 'dang_giao_hang'].includes(o.status)).length;
+        if (statCompletedOrdersEl) statCompletedOrdersEl.textContent = ordersList.filter(o => ['completed', 'delivered', 'da_giao_hang', 'da_giao'].includes(o.status)).length;
+        if (statCancelledOrdersEl) statCancelledOrdersEl.textContent = ordersList.filter(o => ['cancelled', 'returned', 'da_huy', 'da_tra_hang'].includes(o.status)).length;
 
         const searchVal = (document.getElementById('orderSearchInput')?.value || '').trim();
         const btnOrderClearFilters = document.getElementById('btnOrderClearFilters');
@@ -263,27 +263,27 @@
             const sla = getOrderSlaInfo(o);
 
             let statusBadge = '';
-            if (o.status === 'pending') statusBadge = '<span class="admin-badge badge-warning">Chờ xác nhận</span>';
-            else if (o.status === 'confirmed') statusBadge = '<span class="admin-badge badge-neutral">Đang chuẩn bị</span>';
-            else if (o.status === 'shipping') statusBadge = '<span class="admin-badge badge-info">Đang giao</span>';
-            else if (o.status === 'delivered') statusBadge = '<span class="admin-badge badge-success">Đã giao</span>';
-            else if (o.status === 'completed') statusBadge = '<span class="admin-badge badge-success">Hoàn tất</span>';
-            else if (o.status === 'cancelled') statusBadge = '<span class="admin-badge badge-danger">Đã hủy</span>';
-            else if (o.status === 'returned') statusBadge = '<span class="admin-badge badge-danger">Đổi trả</span>';
+            if (['pending', 'cho_xac_nhan'].includes(o.status)) statusBadge = '<span class="admin-badge badge-warning">Chờ xác nhận</span>';
+            else if (['confirmed', 'packing', 'dang_dong_goi', 'da_xac_nhan'].includes(o.status)) statusBadge = '<span class="admin-badge badge-neutral">Đang chuẩn bị</span>';
+            else if (['shipping', 'dang_giao_hang'].includes(o.status)) statusBadge = '<span class="admin-badge badge-info">Đang giao</span>';
+            else if (['delivered', 'completed', 'da_giao_hang'].includes(o.status)) statusBadge = '<span class="admin-badge badge-success">Hoàn tất</span>';
+            else if (['cancelled', 'da_huy'].includes(o.status)) statusBadge = '<span class="admin-badge badge-danger">Đã hủy</span>';
+            else if (['returned', 'da_tra_hang'].includes(o.status)) statusBadge = '<span class="admin-badge badge-danger">Đổi trả</span>';
+            else statusBadge = `<span class="admin-badge badge-neutral">${o.status}</span>`;
 
             let payBadge = '';
-            if (o.paymentStatus === 'paid') {
+            if (['paid', 'da_thanh_toan'].includes(o.paymentStatus)) {
                 payBadge = '<span class="admin-badge badge-success">Đã thanh toán</span>';
-            } else if (o.paymentStatus === 'refund_pending' || o.paymentStatus === 'pending_refund') {
+            } else if (['refund_pending', 'pending_refund', 'cho_hoan_tien'].includes(o.paymentStatus)) {
                 payBadge = '<span class="admin-badge badge-warning">Chờ hoàn tiền</span>';
-            } else if (o.paymentStatus === 'refunded') {
+            } else if (['refunded', 'da_hoan_tien'].includes(o.paymentStatus)) {
                 payBadge = '<span class="admin-badge badge-danger">Đã hoàn tiền</span>';
-            } else if (o.paymentStatus === 'cancelled') {
+            } else if (['cancelled', 'da_huy'].includes(o.paymentStatus)) {
                 payBadge = '<span class="admin-badge badge-danger">Đã hủy</span>';
-            } else if (o.paymentStatus === 'cod_pending') {
+            } else if (['cod_pending'].includes(o.paymentStatus)) {
                 payBadge = '<span class="admin-badge badge-warning">Chờ đối soát COD</span>';
             } else {
-                payBadge = '<span class="admin-badge badge-unpaid">Chưa thanh toán</span>';
+                payBadge = '<span class="admin-badge badge-neutral">Chưa thanh toán</span>';
             }
 
             let rowAlertClass = '';
@@ -1270,8 +1270,8 @@
                     order_code: newCode,
                     customer_id: (finalUserId && finalUserId.length > 20) ? finalUserId : null,
                     shipping_address_id: targetShippingAddressId,
-                    order_status: isDelivery ? 'PACKING' : 'DELIVERED',
-                    payment_status: (isDelivery && payMethod === 'cod') ? 'UNPAID' : 'PAID',
+                    order_status: isDelivery ? 'dang_dong_goi' : 'da_giao_hang',
+                    payment_status: (isDelivery && payMethod === 'cod') ? 'chua_thanh_toan' : 'da_thanh_toan',
                     total_amount: calc.grandTotal,
                     note: noteVal || 'Đơn POS'
                 }).select().single();
