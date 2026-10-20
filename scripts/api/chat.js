@@ -795,6 +795,74 @@ const dbTools = {
         } catch (e) {
             return { error: "Lỗi truy vấn phiếu hỗ trợ từ Supabase" };
         }
+    },
+    create_customer_support_ticket: async (user_id, { title, category, content, order_id } = {}) => {
+        if (!user_id) return { error: "Yêu cầu đăng nhập để tạo phiếu hỗ trợ." };
+        try {
+            const ticketCode = 'TK-' + Date.now().toString(36).toUpperCase().slice(-6);
+            const insertPayload = {
+                ticket_code: ticketCode,
+                customer_id: user_id,
+                user_id: user_id,
+                order_id: order_id || null,
+                channel: 'chat',
+                category: category || 'service_complaint',
+                title: title || 'Yêu cầu hỗ trợ qua PawPal AI',
+                subject: title || 'Yêu cầu hỗ trợ qua PawPal AI',
+                description: content || 'Khách hàng tạo yêu cầu hỗ trợ qua chatbot',
+                priority: 'normal',
+                status: 'pending'
+            };
+            const { data, error } = await supabase.from('support_ticket').insert([insertPayload]).select().maybeSingle();
+            if (error) throw error;
+            return {
+                ok: true,
+                ticket_code: ticketCode,
+                message: `Đã tạo phiếu hỗ trợ ${ticketCode} thành công. Chuyên viên CSKH sẽ liên hệ hỗ trợ bạn sớm nhất!`
+            };
+        } catch (e) {
+            return { error: "Lỗi tạo phiếu hỗ trợ trên hệ thống: " + e.message };
+        }
+    },
+    get_service_availability: async ({ date, service_name } = {}) => {
+        return {
+            operating_hours: "08:00 - 20:00 hàng ngày (kể cả Thứ Bảy, Chủ Nhật)",
+            service: service_name || "Dịch vụ PawPal",
+            policy: "Khung giờ nhận dịch vụ cách nhau 30 phút. Quý khách vui lòng đặt hẹn trước tối thiểu 2 giờ để trung tâm chuẩn bị chu đáo nhất.",
+            booking_link: "#booking"
+        };
+    },
+    check_product_stock: async ({ product_name } = {}) => {
+        try {
+            const clean = (product_name || '').trim();
+            if (!clean) return { message: "Vui lòng cung cấp tên sản phẩm cần kiểm tra tồn kho." };
+            const { data, error } = await supabase
+                .from('product')
+                .select(`
+                    id,
+                    product_name,
+                    status,
+                    variants:product_variant(sale_price, sku_variant)
+                `)
+                .ilike('product_name', `%${clean}%`)
+                .limit(3);
+            if (error) throw error;
+            if (data && data.length > 0) {
+                return {
+                    products: data.map(p => {
+                        const minPrice = p.variants?.length ? Math.min(...p.variants.map(v => v.sale_price)) : null;
+                        return {
+                            name: p.product_name,
+                            price: minPrice ? `${minPrice.toLocaleString('vi-VN')}đ` : 'Liên hệ cửa hàng',
+                            stock_status: p.status === 'dang_ban' ? 'Còn hàng tại kho PawPal Shop' : 'Tạm hết hàng'
+                        };
+                    })
+                };
+            }
+            return { message: `Không tìm thấy sản phẩm "${clean}" trong kho hàng.` };
+        } catch (e) {
+            return { error: "Lỗi kiểm tra kho hàng: " + e.message };
+        }
     }
 };
 
@@ -835,6 +903,42 @@ const toolsDeclaration = [
             {
                 name: "get_user_tickets",
                 description: "Tra cứu danh sách các phiếu khiếu nại, phản ánh và yêu cầu hỗ trợ (Support Ticket) của khách hàng.",
+            },
+            {
+                name: "create_customer_support_ticket",
+                description: "Tạo phiếu khiếu nại hoặc yêu cầu hỗ trợ mới cho khách hàng.",
+                parameters: {
+                    type: "OBJECT",
+                    properties: {
+                        title: { type: "STRING", description: "Tiêu đề ngắn về vấn đề cần hỗ trợ" },
+                        category: { type: "STRING", description: "Chuyên mục (service_complaint, billing, delivery, general)" },
+                        content: { type: "STRING", description: "Chi tiết nội dung cần khiếu nại hoặc hỗ trợ" },
+                        order_id: { type: "STRING", description: "Mã UUID đơn hàng liên quan nếu có" }
+                    },
+                    required: ["title", "content"]
+                }
+            },
+            {
+                name: "get_service_availability",
+                description: "Tra cứu giờ mở cửa và thông tin lịch còn chỗ của dịch vụ.",
+                parameters: {
+                    type: "OBJECT",
+                    properties: {
+                        service_name: { type: "STRING", description: "Tên dịch vụ cần tra cứu" },
+                        date: { type: "STRING", description: "Ngày cần tra cứu (YYYY-MM-DD)" }
+                    }
+                }
+            },
+            {
+                name: "check_product_stock",
+                description: "Kiểm tra tình trạng còn hàng hay hết hàng của sản phẩm trong kho.",
+                parameters: {
+                    type: "OBJECT",
+                    properties: {
+                        product_name: { type: "STRING", description: "Tên sản phẩm cần kiểm tra" }
+                    },
+                    required: ["product_name"]
+                }
             },
             {
                 name: "get_pet_profile",
@@ -2530,8 +2634,197 @@ module.exports = async function handler(req, res) {
     }
 };
 
+// ------------------------------------------------------------------------------
+// CÁC ENDPOINT RESTFUL CONTRACT MỞ RỘNG (MỤC 6.4)
+// ------------------------------------------------------------------------------
+async function handleChatSession(req, res) {
+    try {
+        const userId = await getUserIdFromToken(req.headers['authorization']);
+        if (userId) {
+            return res.status(200).json({ ok: true, isGuest: false, customerId: userId });
+        }
+        const { getJwtSigningSecret } = require('./staff_auth.js');
+        const sessionToken = jwt.sign(
+            { role: 'guest', sessionId: require('crypto').randomUUID() },
+            getJwtSigningSecret(),
+            { expiresIn: '7d' }
+        );
+        return res.status(200).json({ ok: true, isGuest: true, sessionToken });
+    } catch (e) {
+        return res.status(500).json({ ok: false, error: e.message });
+    }
+}
+
+async function handleGetConversations(req, res) {
+    try {
+        const userId = await getUserIdFromToken(req.headers['authorization']);
+        const sessionToken = req.headers['x-session-token'] || req.query.session_token;
+        if (!userId && !sessionToken) {
+            return res.status(401).json({ ok: false, error: 'Yêu cầu phiên làm việc hợp lệ.' });
+        }
+        let query = supabase.from('chat_conversation')
+            .select('id, status, sentiment_level, is_urgent, updated_at, created_at, csat_score')
+            .order('updated_at', { ascending: false })
+            .limit(20);
+        if (userId) {
+            query = query.eq('customer_id', userId);
+        } else {
+            query = query.eq('session_token', sessionToken);
+        }
+        const { data, error } = await query;
+        if (error) return res.status(500).json({ ok: false, error: error.message });
+        return res.status(200).json({ ok: true, conversations: data || [] });
+    } catch (e) {
+        return res.status(500).json({ ok: false, error: e.message });
+    }
+}
+
+async function handleGetConversationMessages(req, res) {
+    try {
+        const conversationId = req.params.id;
+        if (!conversationId) return res.status(400).json({ ok: false, error: 'Thiếu mã cuộc hội thoại.' });
+        const userId = await getUserIdFromToken(req.headers['authorization']);
+        const sessionToken = req.headers['x-session-token'] || req.query.session_token;
+
+        const { data: conv, error: convErr } = await supabase
+            .from('chat_conversation')
+            .select('id, customer_id, session_token')
+            .eq('id', conversationId)
+            .maybeSingle();
+
+        if (convErr || !conv) return res.status(404).json({ ok: false, error: 'Không tìm thấy cuộc hội thoại.' });
+        const isOwner = (userId && conv.customer_id === userId) || (sessionToken && conv.session_token === sessionToken);
+        if (!isOwner) return res.status(403).json({ ok: false, error: 'Bạn không có quyền truy cập cuộc hội thoại này.' });
+
+        const { data: messages, error: msgErr } = await supabase
+            .from('chat_message')
+            .select('id, sender_type, content, created_at')
+            .eq('conversation_id', conversationId)
+            .order('created_at', { ascending: true })
+            .limit(50);
+
+        if (msgErr) return res.status(500).json({ ok: false, error: msgErr.message });
+        return res.status(200).json({ ok: true, messages: messages || [] });
+    } catch (e) {
+        return res.status(500).json({ ok: false, error: e.message });
+    }
+}
+
+async function handleHandover(req, res) {
+    try {
+        const { conversationId, reason } = req.body || {};
+        if (!conversationId) return res.status(400).json({ ok: false, error: 'Thiếu conversationId.' });
+        const userId = await getUserIdFromToken(req.headers['authorization']);
+        const sessionToken = req.headers['x-session-token'] || req.body?.session_token;
+
+        const { data: conv, error: convErr } = await supabase
+            .from('chat_conversation')
+            .select('id, customer_id, session_token, status')
+            .eq('id', conversationId)
+            .maybeSingle();
+
+        if (convErr || !conv) return res.status(404).json({ ok: false, error: 'Không tìm thấy cuộc hội thoại.' });
+        const isOwner = (userId && conv.customer_id === userId) || (sessionToken && conv.session_token === sessionToken);
+        if (!isOwner) return res.status(403).json({ ok: false, error: 'Không có quyền sở hữu cuộc hội thoại.' });
+
+        const { data, error } = await supabase
+            .from('chat_conversation')
+            .update({
+                status: 'waiting_agent',
+                is_urgent: true,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', conversationId)
+            .select()
+            .single();
+
+        if (error) return res.status(500).json({ ok: false, error: error.message });
+        return res.status(200).json({ ok: true, status: 'waiting_agent', message: 'Yêu cầu gặp nhân viên đã được tiếp nhận.' });
+    } catch (e) {
+        return res.status(500).json({ ok: false, error: e.message });
+    }
+}
+
+async function handleBackToAi(req, res) {
+    try {
+        const { conversationId } = req.body || {};
+        if (!conversationId) return res.status(400).json({ ok: false, error: 'Thiếu conversationId.' });
+        const userId = await getUserIdFromToken(req.headers['authorization']);
+        const sessionToken = req.headers['x-session-token'] || req.body?.session_token;
+
+        const { data: conv, error: convErr } = await supabase
+            .from('chat_conversation')
+            .select('id, customer_id, session_token, status')
+            .eq('id', conversationId)
+            .maybeSingle();
+
+        if (convErr || !conv) return res.status(404).json({ ok: false, error: 'Không tìm thấy cuộc hội thoại.' });
+        const isOwner = (userId && conv.customer_id === userId) || (sessionToken && conv.session_token === sessionToken);
+        if (!isOwner) return res.status(403).json({ ok: false, error: 'Không có quyền sở hữu cuộc hội thoại.' });
+
+        if (conv.status === 'agent_handling') {
+            return res.status(409).json({ ok: false, error: 'Nhân viên CSKH đang trực tiếp hỗ trợ bạn. Vui lòng xác nhận trước khi hủy.' });
+        }
+
+        const { data, error } = await supabase
+            .from('chat_conversation')
+            .update({
+                status: 'bot_handling',
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', conversationId)
+            .select()
+            .single();
+
+        if (error) return res.status(500).json({ ok: false, error: error.message });
+        return res.status(200).json({ ok: true, status: 'bot_handling', message: 'Đã quay trở lại trò chuyện cùng PawPal AI.' });
+    } catch (e) {
+        return res.status(500).json({ ok: false, error: e.message });
+    }
+}
+
+async function handleCsat(req, res) {
+    try {
+        const { conversationId, score, feedback } = req.body || {};
+        if (!conversationId) return res.status(400).json({ ok: false, error: 'Thiếu conversationId.' });
+        const userId = await getUserIdFromToken(req.headers['authorization']);
+        const sessionToken = req.headers['x-session-token'] || req.body?.session_token;
+
+        const { data: conv, error: convErr } = await supabase
+            .from('chat_conversation')
+            .select('id, customer_id, session_token')
+            .eq('id', conversationId)
+            .maybeSingle();
+
+        if (convErr || !conv) return res.status(404).json({ ok: false, error: 'Không tìm thấy cuộc hội thoại.' });
+        const isOwner = (userId && conv.customer_id === userId) || (sessionToken && conv.session_token === sessionToken);
+        if (!isOwner) return res.status(403).json({ ok: false, error: 'Không có quyền đánh giá cuộc hội thoại này.' });
+
+        const csatScore = Math.min(5, Math.max(1, Number(score) || 5));
+        const { error } = await supabase
+            .from('chat_conversation')
+            .update({
+                csat_score: csatScore,
+                csat_feedback: feedback || '',
+                resolved_at: new Date().toISOString()
+            })
+            .eq('id', conversationId);
+
+        if (error) return res.status(500).json({ ok: false, error: error.message });
+        return res.status(200).json({ ok: true, persisted: true, message: 'Cảm ơn quý khách đã gửi đánh giá dịch vụ!' });
+    } catch (e) {
+        return res.status(500).json({ ok: false, error: e.message });
+    }
+}
+
 module.exports.evaluateToxicAndSentiment = evaluateToxicAndSentiment;
 module.exports.adminDbTools = adminDbTools;
 module.exports.dbTools = dbTools;
 module.exports.toolsDeclaration = toolsDeclaration;
+module.exports.handleChatSession = handleChatSession;
+module.exports.handleGetConversations = handleGetConversations;
+module.exports.handleGetConversationMessages = handleGetConversationMessages;
+module.exports.handleHandover = handleHandover;
+module.exports.handleBackToAi = handleBackToAi;
+module.exports.handleCsat = handleCsat;
 

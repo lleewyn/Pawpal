@@ -173,6 +173,67 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
+// Các endpoint RESTful hợp đồng mở rộng của Chatbot (Mục 6.4)
+app.post('/api/chat/session', async (req, res) => {
+    try {
+        delete require.cache[require.resolve('./scripts/api/chat.js')];
+        const { handleChatSession } = require('./scripts/api/chat.js');
+        await handleChatSession(req, res);
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
+app.get('/api/chat/conversations', async (req, res) => {
+    try {
+        delete require.cache[require.resolve('./scripts/api/chat.js')];
+        const { handleGetConversations } = require('./scripts/api/chat.js');
+        await handleGetConversations(req, res);
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
+app.get('/api/chat/conversations/:id', async (req, res) => {
+    try {
+        delete require.cache[require.resolve('./scripts/api/chat.js')];
+        const { handleGetConversationMessages } = require('./scripts/api/chat.js');
+        await handleGetConversationMessages(req, res);
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
+app.post('/api/chat/handover', async (req, res) => {
+    try {
+        delete require.cache[require.resolve('./scripts/api/chat.js')];
+        const { handleHandover } = require('./scripts/api/chat.js');
+        await handleHandover(req, res);
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
+app.post('/api/chat/back-to-ai', async (req, res) => {
+    try {
+        delete require.cache[require.resolve('./scripts/api/chat.js')];
+        const { handleBackToAi } = require('./scripts/api/chat.js');
+        await handleBackToAi(req, res);
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
+app.post('/api/chat/csat', async (req, res) => {
+    try {
+        delete require.cache[require.resolve('./scripts/api/chat.js')];
+        const { handleCsat } = require('./scripts/api/chat.js');
+        await handleCsat(req, res);
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
 // Route chuyên biệt cho PawPal AI Copilot Quản trị viên (G3-01)
 app.post('/api/admin/copilot', async (req, res) => {
     try {
