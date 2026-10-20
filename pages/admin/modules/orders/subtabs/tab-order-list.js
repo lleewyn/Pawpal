@@ -27,6 +27,34 @@
     let filterUrgentOnly = false;
     let filterSlaOverdueOnly = false;
 
+    async function sendOrderNotification(order, type, title, content) {
+        if (!order) return;
+        try {
+            let custId = order.userId;
+            const isUuid = typeof custId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(custId);
+            if (!isUuid && order.rawId) {
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client) {
+                    const { data } = await client.from('sales_order').select('customer_id').eq('id', order.rawId).maybeSingle();
+                    if (data?.customer_id) custId = data.customer_id;
+                }
+            }
+            if (custId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(custId)) {
+                if (window.PawPalAPI?.createSystemNotification) {
+                    await window.PawPalAPI.createSystemNotification({
+                        customerId: custId,
+                        type,
+                        title,
+                        content,
+                        orderId: order.rawId
+                    });
+                }
+            }
+        } catch (e) {
+            console.warn('[Orders] Could not send notification:', e);
+        }
+    }
+
     // Render phân trang đơn hàng
     function renderOrdersPagination(totalPages) {
         const pagContainer = document.getElementById('ordersPagination');
@@ -1442,6 +1470,12 @@
                     } else {
                         await client.from('sales_order').update(payload).eq('order_code', order.id);
                     }
+                    await sendOrderNotification(
+                        order,
+                        'don_hang_da_giao_van',
+                        'Đơn hàng đang được giao',
+                        `Đơn hàng #${order.id} đã được bàn giao cho đơn vị vận chuyển ${carrier || ''}${tracking ? ` (Mã vận đơn: ${tracking})` : ''}.`
+                    );
                 } catch (e) {}
             }
 
@@ -1484,6 +1518,12 @@
                     } else {
                         await client.from('sales_order').update(payload).eq('order_code', order.id);
                     }
+                    await sendOrderNotification(
+                        order,
+                        'don_hang_da_duoc_huy',
+                        'Đơn hàng đã bị hủy',
+                        `Đơn hàng #${order.id} đã bị hủy bởi nhân viên quản trị. Lý do: ${reason}${detail ? ` (${detail})` : ''}.`
+                    );
                 } catch (e) {}
             }
 
@@ -1845,6 +1885,13 @@
             }
             if (res?.error) throw res.error;
 
+            await sendOrderNotification(
+                order,
+                'don_hang_da_giao',
+                'Giao hàng thành công',
+                `Đơn hàng #${order.id} đã hoàn tất thành công. Cảm ơn bạn đã tin tưởng PawPal!`
+            );
+
             order.status = 'completed';
             const pointsEarned = Math.floor(order.total / 10000);
             order.timeline.push({
@@ -1885,6 +1932,13 @@
             }
             if (res?.error) throw res.error;
 
+            await sendOrderNotification(
+                order,
+                'don_hang_da_xac_nhan',
+                'Đơn hàng đã được xác nhận',
+                `Đơn hàng #${order.id} của bạn đã được duyệt và đang chuẩn bị đóng gói.`
+            );
+
             order.status = 'confirmed';
             order.timeline.push({
                 title: 'Đã xác nhận đơn hàng',
@@ -1923,6 +1977,13 @@
                 res = await client.from('sales_order').update({ order_status: 'da_giao_hang' }).eq('order_code', order.id);
             }
             if (res?.error) throw res.error;
+
+            await sendOrderNotification(
+                order,
+                'don_hang_da_giao',
+                'Giao hàng thành công',
+                `Đơn hàng #${order.id} đã được giao thành công đến bạn. Cảm ơn bạn đã tin tưởng PawPal!`
+            );
 
             order.status = 'delivered';
             if (order.paymentMethod === 'cod' && order.paymentStatus === 'unpaid') {

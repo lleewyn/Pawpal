@@ -772,6 +772,36 @@
             // Không chờ lần tải dữ liệu kế tiếp để tránh bảng giữ nhãn trạng thái cũ.
             booking.rawStatus = data.appointment_status;
             booking.status = newStatus;
+
+            try {
+                let custId = booking.userId;
+                if (!custId && booking.dbId) {
+                    const { data: apptRow } = await client.from('appointment').select('customer_id').eq('id', booking.dbId).maybeSingle();
+                    if (apptRow?.customer_id) custId = apptRow.customer_id;
+                }
+                if (custId && window.PawPalAPI?.createSystemNotification) {
+                    if (newStatus === 'confirmed') {
+                        await window.PawPalAPI.createSystemNotification({
+                            customerId: custId,
+                            type: 'lich_hen_da_xac_nhan',
+                            title: 'Lịch hẹn đã được xác nhận',
+                            content: `Lịch hẹn dịch vụ #${booking.id} (${booking.serviceName || 'Dịch vụ'}) vào lúc ${booking.time || ''} ngày ${booking.date || ''} đã được xác nhận.`,
+                            appointmentId: booking.dbId
+                        });
+                    } else if (newStatus === 'cancelled') {
+                        await window.PawPalAPI.createSystemNotification({
+                            customerId: custId,
+                            type: 'lich_hen_da_thay_doi',
+                            title: 'Lịch hẹn đã bị hủy',
+                            content: `Lịch hẹn #${booking.id} đã bị hủy.${reason ? ` Lý do: ${reason.trim()}` : ''}`,
+                            appointmentId: booking.dbId
+                        });
+                    }
+                }
+            } catch (notifErr) {
+                console.warn('[Services] Could not send appointment status notification:', notifErr);
+            }
+
             renderBookingsTable(); updateKPIs(); renderUpcomingBar();
             if (PawpalServices.state.selectedBookingId === booking.id) PawpalServices.subtabs.detail?.renderBookingDetail?.(booking.id);
 

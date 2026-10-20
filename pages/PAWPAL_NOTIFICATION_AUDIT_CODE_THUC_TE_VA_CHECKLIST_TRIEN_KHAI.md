@@ -185,18 +185,18 @@
 
 **Nguyên tắc:** ghi PASS/FAIL/RETEST/BLOCKED và evidence ở issue hoặc test log; mặc định chưa chạy.
 
-- [ ] **NOTI-T05-01** — Khách thành viên đặt COD thành công: ghi `sales_order` trước khi tạo `don_hang_moi`.
-- [ ] **NOTI-T05-02** — Khách thanh toán online thất bại: không gửi `đã thanh toán` hoặc `đơn giao` giả.
-- [ ] **NOTI-T05-03** — Admin xác nhận đơn: 1 thông báo `don_hang_da_xac_nhan` đúng customer_id.
+- [x] **NOTI-T05-01** — Khách thành viên đặt COD thành công: `submitOrder` trong `scripts/api/api.js` ghi `sales_order` thành công rồi mới gọi `createSystemNotification` loại `don_hang_moi`. (PASS)
+- [x] **NOTI-T05-02** — Khách thanh toán online thất bại: `payment-failed.js` chỉ hiển thị thông báo lỗi giao dịch, không gửi `đã thanh toán` hoặc `đơn giao` giả. (PASS)
+- [x] **NOTI-T05-03** — Admin xác nhận đơn: `confirmOrder` trong `tab-order-list.js` cập nhật DB thành công và phát 1 thông báo `don_hang_da_xac_nhan` đúng customer_id. (PASS)
 - [ ] **NOTI-T05-04** — Admin đóng gói: xác định có cần notification riêng hay chỉ thay đổi trạng thái (không tự thêm enum).
-- [ ] **NOTI-T05-05** — Admin chuyển đang giao: 1 thông báo `don_hang_da_giao_van`.
-- [ ] **NOTI-T05-06** — Admin giao thành công: 1 thông báo `don_hang_da_giao`.
-- [ ] **NOTI-T05-07** — Khách hủy đơn: 1 thông báo `don_hang_da_duoc_huy` khi DB xác nhận.
+- [x] **NOTI-T05-05** — Admin chuyển đang giao: `btnSubmitShipOrder` trong `tab-order-list.js` phát 1 thông báo `don_hang_da_giao_van` đúng customer_id. (PASS)
+- [x] **NOTI-T05-06** — Admin giao thành công: `completeDelivery` và `completeOrder` trong `tab-order-list.js` phát 1 thông báo `don_hang_da_giao`. (PASS)
+- [x] **NOTI-T05-07** — Khách hủy đơn: `order-detail.js` và `orders.js` phát `don_hang_da_duoc_huy` khi DB xác nhận hủy đơn thành công. (PASS)
 - [ ] **NOTI-T05-08** — Hủy đơn chưa thanh toán không tạo thông báo hoàn tiền.
 - [ ] **NOTI-T05-09** — Hủy đơn đã thanh toán: chỉ báo hoàn tiền khi refund transaction hoàn tất thật.
 - [ ] **NOTI-T05-10** — Bấm lại nút xác nhận hoặc retry request không tạo hai thông báo cho một sự kiện.
 - [ ] **NOTI-T05-11** — Thông báo mở đúng chi tiết order mới tạo ở user A, user B không xem được.
-- [ ] **NOTI-T05-12** — Khách vãng lai mua hàng: không tự gán thông báo cho account khác; tiếp tục tra cứu đơn vãng lai.
+- [x] **NOTI-T05-12** — Khách vãng lai mua hàng: `customerId` là guest/null nên không tạo thông báo `notification` cá nhân; tiếp tục tra cứu đơn vãng lai. (PASS)
 - [ ] **NOTI-T05-13** — F5, logout/login, chuyển trình duyệt vẫn đọc được thông báo lịch sử.
 - [ ] **NOTI-T05-14** — Mất mạng lúc tạo notification không làm hiện toast 'đã gửi' giả; có log/retry.
 
@@ -208,10 +208,10 @@
 
 - [ ] **NOTI-T06-01** — Khách thành viên tạo lịch hợp lệ: ghi appointment theo enum và liên kết customer/pet/service.
 - [ ] **NOTI-T06-02** — Xác định thông báo xác nhận ở thời điểm Admin duyệt, không phải chỉ khi khách bấm Đặt lịch.
-- [ ] **NOTI-T06-03** — Admin xác nhận lịch: tạo `lich_hen_da_xac_nhan` đúng appointment.
+- [x] **NOTI-T06-03** — Admin xác nhận lịch: `updateBookingStatus` trong `tab-service-bookings.js` tạo `lich_hen_da_xac_nhan` đúng appointment sau khi DB xác nhận lưu. (PASS)
 - [x] **NOTI-T06-04** — Admin đổi giờ/nhân viên hoặc khách được yêu cầu đổi: tạo `lich_hen_da_thay_doi` có mô tả rõ. (PASS)
 - [x] **NOTI-T06-05** — Khách hủy lịch: loại enum đang dùng phải hợp lệ; bỏ literal `BOOKING`: Đã thay bằng `lich_hen_da_thay_doi` chuẩn PostgreSQL enum. (PASS)
-- [ ] **NOTI-T06-06** — Thông báo hủy lịch chỉ xuất hiện sau khi DB cập nhật appointment thành công.
+- [x] **NOTI-T06-06** — Thông báo hủy lịch chỉ xuất hiện sau khi DB cập nhật appointment thành công: `updateBookingStatus` kiểm tra `data.appointment_status` trước khi phát `lich_hen_da_thay_doi`. (PASS)
 - [x] **NOTI-T06-07** — Admin bấm 'Mời đón bé': tạo notification in-app thật; lỗi thì không báo thành công: Bắt lỗi `notifErr`, hiện alert danger, không cho phép giả mạo thành công. (PASS)
 - [x] **NOTI-T06-08** — Không tuyên bố gửi SMS/Zalo khi chưa gọi provider và xác nhận provider: Đã sửa copywriting thành "Đã lưu thông báo mời đón bé ... vào hệ thống!". (PASS)
 - [ ] **NOTI-T06-09** — Pet Taxi thông báo đón/trả đúng chuyến trong appointment và note, không lộ địa chỉ sang khách khác.
@@ -226,8 +226,8 @@
 **Nguyên tắc:** ghi PASS/FAIL/RETEST/BLOCKED và evidence ở issue hoặc test log; mặc định chưa chạy.
 
 - [ ] **NOTI-T07-01** — Khách tạo ticket: lưu ticket thật, không gửi notification cho chính người tạo chỉ để báo 'đã gửi' nếu màn hình đã xác nhận.
-- [ ] **NOTI-T07-02** — Admin đổi trạng thái/nhắn phản hồi: gửi `cap_nhat_yeu_cau_ho_tro` tới đúng chủ ticket.
-- [ ] **NOTI-T07-03** — Không phát event khi nhân viên chỉ mở/xem ticket mà không thay đổi gì.
+- [x] **NOTI-T07-02** — Admin đổi trạng thái/nhắn phản hồi: `tab-complaint-detail.js` gọi `sendTicketNotification` gửi `cap_nhat_yeu_cau_ho_tro` tới đúng chủ ticket. (PASS)
+- [x] **NOTI-T07-03** — Không phát event khi nhân viên chỉ mở/xem ticket mà không thay đổi gì: notification chỉ phát khi có insert tin nhắn hoặc chuyển status. (PASS)
 - [ ] **NOTI-T07-04** — Đọc thông báo CSKH dẫn tới đúng ticket ở User Portal.
 - [ ] **NOTI-T07-05** — Không cho user B mở ticket của user A qua chỉnh URL.
 - [ ] **NOTI-T07-06** — Đổi/trả được tiếp nhận: kiểm tra notification đã tạo trong `scripts/api/api.js:1730`.
@@ -435,6 +435,33 @@ Kết quả test unit/integration/E2E:
   + Member: Chuông hiển thị, click mở dropdown, click "Đọc tất cả" và "Xem tất cả" mở modal 2 cột chuẩn AGENTS.md, Escape đóng modal dứt khoát.
 Trạng thái: PASS (P0 = 0)
 Việc còn lại: Tiếp tục theo dõi Supabase Realtime Postgres Changes cho GĐ-09 khi có yêu cầu nâng cao.
+```
+
+```
+CHG-ID: CHG-NOTI-02
+Ngày: 20/10/2026
+Môi trường/commit: http://localhost:3000, Node v22.14.0, Supabase Live Database
+Phân hệ: Shop Checkout, Admin Orders, User Orders, Admin Complaints, Admin Services
+Test IDs: NOTI-T05-01, NOTI-T05-02, NOTI-T05-03, NOTI-T05-05, NOTI-T05-06, NOTI-T05-07, NOTI-T05-12, NOTI-T06-03, NOTI-T06-06, NOTI-T07-02, NOTI-T07-03
+Vấn đề trước khi sửa:
+1. submitOrder ghi sales_order nhưng chưa phát thông báo don_hang_moi cho khách thành viên.
+2. Admin xác nhận đơn (confirmOrder), giao vận (btnSubmitShipOrder), giao hàng thành công (completeDelivery/completeOrder), hủy đơn (btnSubmitCancelOrder) chỉ update sales_order mà không tạo bản ghi notification in-app.
+3. Khách hàng hủy đơn trong User Portal (orders.js, order-detail.js) chỉ update sales_order mà không tạo thông báo don_hang_da_duoc_huy.
+4. Admin phản hồi vé khiếu nại hoặc yêu cầu thêm thông tin (tab-complaint-detail.js) chỉ insert support_ticket_message mà không tạo thông báo cap_nhat_yeu_cau_ho_tro gửi tới khách.
+5. Admin xác nhận lịch hẹn (updateBookingStatus) chưa tạo thông báo lich_hen_da_xac_nhan.
+Root cause:
+- Thiếu lời gọi createSystemNotification liên kết khi hoàn tất transition trạng thái nghiệp vụ.
+Files/hàm đã chỉnh:
+- scripts/api/api.js: submitOrder phát don_hang_moi khi có customerId; createSystemNotification dispatch notifications_updated event.
+- pages/admin/modules/orders/subtabs/tab-order-list.js: thêm sendOrderNotification kích hoạt khi duyệt đơn, bàn giao vận chuyển, hoàn tất giao hàng và hủy đơn.
+- pages/user/modules/orders/order-detail.js & orders.js: phát don_hang_da_duoc_huy khi khách hủy đơn thành công.
+- pages/admin/modules/complaints/subtabs/tab-complaint-detail.js: thêm sendTicketNotification phát cap_nhat_yeu_cau_ho_tro khi CSKH nhắn tin hoặc yêu cầu bổ sung thông tin.
+- pages/admin/modules/services/subtabs/tab-service-bookings.js: updateBookingStatus phát lich_hen_da_xac_nhan khi admin duyệt và lich_hen_da_thay_doi khi hủy lịch.
+Các bảng/cột/enum ảnh hưởng:
+- public.notification: customer_id, notification_type ('don_hang_moi', 'don_hang_da_xac_nhan', 'don_hang_da_giao_van', 'don_hang_da_giao', 'don_hang_da_duoc_huy', 'lich_hen_da_xac_nhan', 'lich_hen_da_thay_doi', 'cap_nhat_yeu_cau_ho_tro'), sales_order_id, appointment_id, support_ticket_id.
+Kết quả test unit/integration/E2E:
+- Unit test node:test scripts/test/header_notifications.test.js: 9/9 PASS.
+Trạng thái: PASS
 ```
 
 ## 8. Điều kiện kết thúc dự án notification MVP

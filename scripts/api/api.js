@@ -869,6 +869,20 @@ export const API = {
                 }
             }
 
+            if (customerId) {
+                try {
+                    await this.createSystemNotification({
+                        customerId,
+                        type: 'don_hang_moi',
+                        title: 'Đặt hàng thành công',
+                        content: `Đơn hàng #${orderData.orderId} của bạn đã được ghi nhận và đang chờ xử lý.`,
+                        orderId: newOrder.id
+                    });
+                } catch (notifErr) {
+                    console.warn('[API] SubmitOrder notification warning:', notifErr);
+                }
+            }
+
             return { success: true, orderId: newOrder.id };
         } catch (err) {
             console.error('Submit order error:', err);
@@ -2014,6 +2028,11 @@ export const API = {
             }]).select().single();
 
             if (error) throw error;
+            try {
+                if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+                    window.dispatchEvent(new CustomEvent('notifications_updated', { detail: { action: 'created', notification: data } }));
+                }
+            } catch (_) {}
             return { success: true, data };
         } catch (e) {
             console.warn('[API] createSystemNotification warning:', e);

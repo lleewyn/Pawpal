@@ -24,6 +24,35 @@
         return PawpalComplaints.getDbClient?.() || (window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient);
     }
 
+    async function sendTicketNotification(ticket, title, content) {
+        if (!ticket) return;
+        try {
+            let custId = ticket.customerId || ticket.user_id || ticket.userId;
+            const targetDbId = ticket.rawId || ticket.id;
+            const isUuid = typeof custId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(custId);
+            if (!isUuid && targetDbId) {
+                const client = getDbClient();
+                if (client) {
+                    const { data } = await client.from('support_ticket').select('user_id').eq('id', targetDbId).maybeSingle();
+                    if (data?.user_id) custId = data.user_id;
+                }
+            }
+            if (custId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(custId)) {
+                if (window.PawPalAPI?.createSystemNotification) {
+                    await window.PawPalAPI.createSystemNotification({
+                        customerId: custId,
+                        type: 'cap_nhat_yeu_cau_ho_tro',
+                        title: title || 'Cập nhật yêu cầu hỗ trợ',
+                        content,
+                        ticketId: targetDbId
+                    });
+                }
+            }
+        } catch (e) {
+            console.warn('[Complaints] Could not send ticket notification:', e);
+        }
+    }
+
     function openTicketDetail(ticketId) {
         if (!PawpalComplaints.state) PawpalComplaints.state = {};
         PawpalComplaints.state.currentTicketId = ticketId;
@@ -806,6 +835,8 @@
                     }]);
                 } catch (_) {}
 
+                await sendTicketNotification(ticket, 'Xử lý hoàn tất yêu cầu hỗ trợ', `Yêu cầu hỗ trợ #${ticket.id || ticket.rawId} đã được xử lý hoàn tất.`);
+
                 PawpalComplaints.saveComplaintsOverrides?.();
                 PawpalComplaints.updateComplaintsKpis?.();
                 PawpalComplaints.renderComplaintsAlertBar?.();
@@ -996,6 +1027,8 @@
                 if (currentTicket) currentTicket._messagesLoaded = false;
                 renderTicketDetail(targetDbId);
 
+                await sendTicketNotification(currentTicket, 'Phản hồi yêu cầu hỗ trợ', `Yêu cầu hỗ trợ #${currentTicket?.id || targetDbId} có phản hồi mới từ đội ngũ CSKH PawPal.`);
+
                 messageInput.value = '';
                 PawpalComplaints.showToast('Đã gửi phản hồi tới khách hàng!');
             });
@@ -1074,6 +1107,8 @@
                 if (ticket) {
                     ticket.status = 'waiting_customer';
                     ticket.waitingCustomerSince = new Date().toISOString();
+
+                    await sendTicketNotification(ticket, 'Yêu cầu bổ sung thông tin', `Yêu cầu hỗ trợ #${ticket.id || ticket.rawId} cần bổ sung thêm thông tin.`);
                     if (!ticket.timeline) ticket.timeline = [];
                     const now = new Date();
                     ticket.timeline.unshift({

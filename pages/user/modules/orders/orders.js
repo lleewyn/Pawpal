@@ -658,6 +658,21 @@ function cancelOrder(orderId) {
         order.updatedAt = new Date().toISOString();
         saveOrderToLocalStorage(order);
 
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        if (currentUser?.id && window.PawPalAPI?.createSystemNotification) {
+            try {
+                await window.PawPalAPI.createSystemNotification({
+                    customerId: currentUser.id,
+                    type: 'don_hang_da_duoc_huy',
+                    title: 'Đã hủy đơn hàng',
+                    content: `Bạn đã hủy thành công đơn hàng #${order.id || orderId}.`,
+                    orderId: order._supabaseId || order.id || orderId
+                });
+            } catch (e) {
+                console.warn('[Orders] Could not send cancel notification:', e);
+            }
+        }
+
         updateTabCounts();
         applyFilters();
 

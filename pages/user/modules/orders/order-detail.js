@@ -1138,6 +1138,22 @@ function cancelOrder() {
                 : 'Khách hàng đã hủy đơn hàng'
         });
         saveOrderToLocalStorage(currentOrder);
+
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        if (currentUser?.id && window.PawPalAPI?.createSystemNotification) {
+            try {
+                await window.PawPalAPI.createSystemNotification({
+                    customerId: currentUser.id,
+                    type: 'don_hang_da_duoc_huy',
+                    title: 'Đã hủy đơn hàng',
+                    content: `Bạn đã hủy thành công đơn hàng #${currentOrder.id}.`,
+                    orderId: currentOrder._supabaseId || currentOrder.id
+                });
+            } catch (e) {
+                console.warn('[OrderDetail] Could not send cancel notification:', e);
+            }
+        }
+
         window.location.hash = '#orders';
     });
 }
