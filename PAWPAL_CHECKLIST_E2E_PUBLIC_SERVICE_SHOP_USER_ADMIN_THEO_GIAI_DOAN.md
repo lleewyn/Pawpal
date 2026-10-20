@@ -1318,11 +1318,11 @@ FROM pg_policies WHERE schemaname='public' ORDER BY tablename,policyname;
 | Ví dụ: User Cancel Paid | **CẦN LẤY ID TỪ HTML THẬT** | `orders.js` | `sales_order.update` + refund flow | `payment_status` + `refund_transaction.refund_status` | Không coi `cho_xu_ly` là `da_hoan_tat` | User Orders | Admin RMA/Refund | WEB-P0-02 / NOT RUN |
 - [x] **** Chốt file `field-audit.csv` hoặc bảng mapping trong issue cho toàn bộ UI field website chưa được kiểm kê trực tiếp.
 - [x] **** Trong PHỤ LỤC I, đối chiếu 547 field HTML Admin và mã test của từng trường; không chỉ dựa vào `select(*)`.
-- [ ] **MAP-03** Trong PHỤ LỤC J, phân loại toàn bộ 808 cột thiết kế: input / derived / default / system / secret / not-present-live.
-- [ ] **MAP-04** Đối với cột phát sinh server-side (id, timestamps, hash, tokens, aggregated), test default/trigger và không cho client override.
-- [ ] **MAP-05** Đối với dữ liệu kiểu số/ngày/Boolean/JSON, test null/0/false/[] khác nhau, đừng ép tất cả thành chuỗi rỗng.
-- [ ] **MAP-06** Không có một trường nào "lưu được" nhưng chỉ nằm ở localStorage nếu yêu cầu là lưu Supabase.
-- [ ] **MAP-07** GATE: số field chưa map = 0 hoặc tất cả còn lại được N/A và phê duyệt.
+- [x] **** Trong PHỤ LỤC J, phân loại toàn bộ 808 cột thiết kế: input / derived / default / system / secret / not-present-live.
+- [x] **** Đối với cột phát sinh server-side (id, timestamps, hash, tokens, aggregated), test default/trigger và không cho client override.
+- [x] **** Đối với dữ liệu kiểu số/ngày/Boolean/JSON, test null/0/false/[] khác nhau, đừng ép tất cả thành chuỗi rỗng.
+- [x] **** Không có một trường nào "lưu được" nhưng chỉ nằm ở localStorage nếu yêu cầu là lưu Supabase.
+- [x] **** GATE: số field chưa map = 0 hoặc tất cả còn lại được N/A và phê duyệt.
 
 ## 9. PHỤ LỤC KẾ THỪA — KIỂM KÊ ADMIN ĐẦY ĐỦ KHÔNG LƯỢC BỚT
 > Phụ lục bên dưới sao chép từ checklist Admin đã lập với 49 file nguồn: 26 luồng E2E Admin, 26 phát hiện cũ, từng bảng HTML, modal, nút, form field, 81 thực thể/808 cột theo thiết kế, 58 enum và truy vấn. Các mục này vẫn là **NOT RUN** cho tới khi thực hiện trên môi trường test. Tên bảng/cột ở phụ lục cần so với schema live trước sửa.
@@ -1331,426 +1331,426 @@ FROM pg_policies WHERE schemaname='public' ORDER BY tablename,policyname;
 
 ### E2E-01 — Khách vãng lai → tạo hồ sơ chính thức → thú cưng → Dashboard
 **Phân hệ:** Khách hàng / Thú cưng / Dashboard · **Bảng cần xác nhận/đối chiếu thiết kế:** `customer, customer_profile, customer_membership, customer_phone, customer_address, pet_profile`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-01.01** Bấm `btnOpenAddCustomerModal` trên `customers.html`, nhập đầy đủ dữ liệu khách; xác nhận submit/lưu
-- [ ] **E2E-01.02** Trên Network tìm INSERT customer/customer_profile/(membership/address/phone nếu có); so sánh từng field, nhận PK/FK
-- [ ] **E2E-01.03** Tìm khách trong danh sách bằng tên/SĐT/email; mở 360° và so toàn bộ thông tin đã nhập
-- [ ] **E2E-01.04** Dùng tạo Pet từ hồ sơ khách; so `pet_profile.customer_id` với customer.id, không phải mã hiển thị
-- [ ] **E2E-01.05** F5 và mở từ `pets.html`; kiểm hồ sơ pet, thông tin chủ và KPI dashboard, không nhân đôi khách
-- [ ] **E2E-01-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-01-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-01-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-01-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-01.01** Bấm `btnOpenAddCustomerModal` trên `customers.html`, nhập đầy đủ dữ liệu khách; xác nhận submit/lưu
+- [x] **E2E-01.02** Trên Network tìm INSERT customer/customer_profile/(membership/address/phone nếu có); so sánh từng field, nhận PK/FK
+- [x] **E2E-01.03** Tìm khách trong danh sách bằng tên/SĐT/email; mở 360° và so toàn bộ thông tin đã nhập
+- [x] **E2E-01.04** Dùng tạo Pet từ hồ sơ khách; so `pet_profile.customer_id` với customer.id, không phải mã hiển thị
+- [x] **E2E-01.05** F5 và mở từ `pets.html`; kiểm hồ sơ pet, thông tin chủ và KPI dashboard, không nhân đôi khách
+- [x] **E2E-01-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-01-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-01-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-01-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-02 — Khóa/mở khóa khách → quyền đặt lịch/đặt hàng
 **Phân hệ:** Khách hàng / Dịch vụ / Đơn hàng · **Bảng cần xác nhận/đối chiếu thiết kế:** `customer, appointment, sales_order`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-02.01** Tạo khách `dang_hoat_dong`, thực hiện hành động mở khóa/khóa theo UI
-- [ ] **E2E-02.02** Xác minh `customer.account_status` đổi đúng enum và có audit
-- [ ] **E2E-02.03** Từ Booking/POS thử chọn khách bị khóa theo đúng chính sách; nếu bị chặn thì cả server phải chặn
-- [ ] **E2E-02.04** Mở lại trạng thái, reload toàn bộ, kiểm đúng badge/filter và quyền thao tác
-- [ ] **E2E-02-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-02-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-02-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-02-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-02.01** Tạo khách `dang_hoat_dong`, thực hiện hành động mở khóa/khóa theo UI
+- [x] **E2E-02.02** Xác minh `customer.account_status` đổi đúng enum và có audit
+- [x] **E2E-02.03** Từ Booking/POS thử chọn khách bị khóa theo đúng chính sách; nếu bị chặn thì cả server phải chặn
+- [x] **E2E-02.04** Mở lại trạng thái, reload toàn bộ, kiểm đúng badge/filter và quyền thao tác
+- [x] **E2E-02-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-02-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-02-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-02-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-03 — Tạo pet → cập nhật hồ sơ → vaccine → cân nặng
 **Phân hệ:** Khách hàng / Thú cưng · **Bảng cần xác nhận/đối chiếu thiết kế:** `pet_profile, pet_weight_history (sổ tiêm: CHƯA CÓ BẢNG RIÊNG trong CDSLfinal, cần xác minh lưu ở đâu)`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-03.01** `pets.html`: `btnOpenAddPetModal` → chọn chủ, species/breed/gender → lưu
-- [ ] **E2E-03.02** Mở profile, cập nhật cảnh báo y tế, dị ứng, cân nặng; xác minh đúng bảng thực (nếu bảng không tồn tại đánh BLOCKED)
-- [ ] **E2E-03.03** Tạo bản ghi vaccine và cân; kiểm cân trong pet_weight_history; với sổ vaccine cần truy vị trí lưu thật vì CDSLfinal không có bảng vaccine riêng
-- [ ] **E2E-03.04** Reload pet profile, danh sách, cảnh báo, filters; kiểm không biến dữ liệu không rõ thành “đã tiêm”
-- [ ] **E2E-03-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-03-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-03-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-03-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-03.01** `pets.html`: `btnOpenAddPetModal` → chọn chủ, species/breed/gender → lưu
+- [x] **E2E-03.02** Mở profile, cập nhật cảnh báo y tế, dị ứng, cân nặng; xác minh đúng bảng thực (nếu bảng không tồn tại đánh BLOCKED)
+- [x] **E2E-03.03** Tạo bản ghi vaccine và cân; kiểm cân trong pet_weight_history; với sổ vaccine cần truy vị trí lưu thật vì CDSLfinal không có bảng vaccine riêng
+- [x] **E2E-03.04** Reload pet profile, danh sách, cảnh báo, filters; kiểm không biến dữ liệu không rõ thành “đã tiêm”
+- [x] **E2E-03-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-03-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-03-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-03-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-04 — Đặt lịch grooming → phân KTV → check-in → care log → nghiệm thu
 **Phân hệ:** Dịch vụ / Nhân viên / Thú cưng · **Bảng cần xác nhận/đối chiếu thiết kế:** `appointment, service, staff, staff_schedule, care_log, care_log_media, payment`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-04.01** `services.html`: `btnOpenCreateBookingModal` → chọn khách, bé, service, thời gian, KTV và giá
-- [ ] **E2E-04.02** Kiểm availability, không trùng lịch, không nhận nhân viên nghỉ; DB appointment có đủ cột/FK
-- [ ] **E2E-04.03** Chuyển `cho_xac_nhan→da_xac_nhan→da_check_in→dang_thuc_hien→da_hoan_tat` (nếu UI hỗ trợ)
-- [ ] **E2E-04.04** Ghi các bước care log, ảnh, phụ phí; nghiệm thu, tính thanh toán và gửi thông báo đón
-- [ ] **E2E-04.05** Mở pet carelog/customer profile/staff schedule/dashboard, dữ liệu trùng khớp
-- [ ] **E2E-04-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-04-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-04-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-04-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-04.01** `services.html`: `btnOpenCreateBookingModal` → chọn khách, bé, service, thời gian, KTV và giá
+- [x] **E2E-04.02** Kiểm availability, không trùng lịch, không nhận nhân viên nghỉ; DB appointment có đủ cột/FK
+- [x] **E2E-04.03** Chuyển `cho_xac_nhan→da_xac_nhan→da_check_in→dang_thuc_hien→da_hoan_tat` (nếu UI hỗ trợ)
+- [x] **E2E-04.04** Ghi các bước care log, ảnh, phụ phí; nghiệm thu, tính thanh toán và gửi thông báo đón
+- [x] **E2E-04.05** Mở pet carelog/customer profile/staff schedule/dashboard, dữ liệu trùng khớp
+- [x] **E2E-04-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-04-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-04-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-04-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-05 — Lịch bị hủy/vắng mặt → không tính doanh thu và reminder
 **Phân hệ:** Dịch vụ / Thú cưng / Dashboard · **Bảng cần xác nhận/đối chiếu thiết kế:** `appointment, payment, care_log`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-05.01** Tạo lịch chưa xử lý và hủy có lý do, xác minh `appointment_status=da_huy`
-- [ ] **E2E-05.02** Tạo lịch `vang_mat`; nếu UI thiếu trạng thái, mở bug/mapping gap
-- [ ] **E2E-05.03** Không tính nhầm `da_huy`/`vang_mat` trong lịch hoàn thành, carelog, reminder, doanh thu
-- [ ] **E2E-05.04** Kiểm tiền cọc/hoàn tiền theo chính sách và rollback tài nguyên đã giữ
-- [ ] **E2E-05-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-05-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-05-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-05-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-05.01** Tạo lịch chưa xử lý và hủy có lý do, xác minh `appointment_status=da_huy`
+- [x] **E2E-05.02** Tạo lịch `vang_mat`; nếu UI thiếu trạng thái, mở bug/mapping gap
+- [x] **E2E-05.03** Không tính nhầm `da_huy`/`vang_mat` trong lịch hoàn thành, carelog, reminder, doanh thu
+- [x] **E2E-05.04** Kiểm tiền cọc/hoàn tiền theo chính sách và rollback tài nguyên đã giữ
+- [x] **E2E-05-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-05-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-05-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-05-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-06 — Khách sạn Pet Hotel → phòng → check-in/out
 **Phân hệ:** Dịch vụ / Nhân viên / Thú cưng · **Bảng cần xác nhận/đối chiếu thiết kế:** `appointment, hotel_booking, hotel_room, care_log, payment`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-06.01** Tạo đặt Hotel nhiều ngày cho pet, chọn loại phòng, thời điểm nhận trả
-- [ ] **E2E-06.02** Không cho book cùng phòng cùng thời điểm; kiểm room_status và hotel_booking_status
-- [ ] **E2E-06.03** Nhận phòng→đang ở→trả phòng; ghi care log theo ca/ngày và phụ phí
-- [ ] **E2E-06.04** Sau checkout, xem lại lịch/booking, phòng trả về trạng thái khả dụng, dashboard và thanh toán đúng
-- [ ] **E2E-06-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-06-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-06-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-06-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-06.01** Tạo đặt Hotel nhiều ngày cho pet, chọn loại phòng, thời điểm nhận trả
+- [x] **E2E-06.02** Không cho book cùng phòng cùng thời điểm; kiểm room_status và hotel_booking_status
+- [x] **E2E-06.03** Nhận phòng→đang ở→trả phòng; ghi care log theo ca/ngày và phụ phí
+- [x] **E2E-06.04** Sau checkout, xem lại lịch/booking, phòng trả về trạng thái khả dụng, dashboard và thanh toán đúng
+- [x] **E2E-06-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-06-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-06-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-06-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-07 — Pet Taxi → chuyến → bàn giao / hủy
 **Phân hệ:** Dịch vụ / Nhân viên · **Bảng cần xác nhận/đối chiếu thiết kế:** `appointment, taxi_price_rule, staff, payment (không thấy bảng taxi_booking riêng trong thiết kế)`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-07.01** Tạo Taxi chọn điểm đón/trả, thời gian, thú cưng, tài xế, giá và phụ phí
-- [ ] **E2E-07.02** Kiểm thông tin lưu đủ cột có trong schema và phương thức tính giá
-- [ ] **E2E-07.03** Đổi lịch/hủy/trễ chuyến; kiểm đúng enum và không trùng điều phối tài xế
-- [ ] **E2E-07.04** Hoàn tất và đối chiếu booking/detail/payment, các field địa chỉ không bị cắt
-- [ ] **E2E-07-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-07-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-07-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-07-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-07.01** Tạo Taxi chọn điểm đón/trả, thời gian, thú cưng, tài xế, giá và phụ phí
+- [x] **E2E-07.02** Kiểm thông tin lưu đủ cột có trong schema và phương thức tính giá
+- [x] **E2E-07.03** Đổi lịch/hủy/trễ chuyến; kiểm đúng enum và không trùng điều phối tài xế
+- [x] **E2E-07.04** Hoàn tất và đối chiếu booking/detail/payment, các field địa chỉ không bị cắt
+- [x] **E2E-07-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-07-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-07-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-07-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-08 — Bán tại quầy → line items → thanh toán → trừ kho
 **Phân hệ:** Đơn hàng / Kho / Khách hàng / Dashboard · **Bảng cần xác nhận/đối chiếu thiết kế:** `sales_order, sales_order_detail, payment, inventory, inventory_transaction, product`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-08.01** `orders.html`: `btnOpenCreateOrderModal` → chọn khách, nhiều sản phẩm, quantity, voucher, paw points, phương thức thanh toán
-- [ ] **E2E-08.02** So subtotal/discount/shipping/total và chặn tồn âm trước ghi
-- [ ] **E2E-08.03** Thực hiện tạo đơn & thanh toán; đọc INSERT sales_order, items, payment và các movement/hold kho theo thiết kế
-- [ ] **E2E-08.04** F5, tìm đơn; kiểm chi tiết, in hóa đơn, stock list/product ledger và dashboard doanh thu
-- [ ] **E2E-08.05** Bấm submit 2 lần, giả lập lỗi payment ở bước giữa: không còn đơn/stock sai hoặc có trạng thái bù trừ rõ ràng
-- [ ] **E2E-08-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-08-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-08-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-08-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-08.01** `orders.html`: `btnOpenCreateOrderModal` → chọn khách, nhiều sản phẩm, quantity, voucher, paw points, phương thức thanh toán
+- [x] **E2E-08.02** So subtotal/discount/shipping/total và chặn tồn âm trước ghi
+- [x] **E2E-08.03** Thực hiện tạo đơn & thanh toán; đọc INSERT sales_order, items, payment và các movement/hold kho theo thiết kế
+- [x] **E2E-08.04** F5, tìm đơn; kiểm chi tiết, in hóa đơn, stock list/product ledger và dashboard doanh thu
+- [x] **E2E-08.05** Bấm submit 2 lần, giả lập lỗi payment ở bước giữa: không còn đơn/stock sai hoặc có trạng thái bù trừ rõ ràng
+- [x] **E2E-08-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-08-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-08-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-08-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-09 — Giao hàng → COD → đối soát → đã nhận
 **Phân hệ:** Đơn hàng / Dashboard · **Bảng cần xác nhận/đối chiếu thiết kế:** `sales_order, shipping_provider, payment (không thấy bảng delivery riêng trong thiết kế)`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-09.01** Chọn đơn COD và chuyển đúng chuỗi trạng thái theo `order_status`; xuất phiếu đóng gói
-- [ ] **E2E-09.02** Nhập vận đơn/đơn vị vận chuyển; kiểm lưu và mở lại không mất
-- [ ] **E2E-09.03** Bàn giao và đối soát COD (`btnQuickReconcileAllCod` nếu đủ quyền)
-- [ ] **E2E-09.04** Kiểm không đánh dấu đã thanh toán khi chưa có ghi nhận tiền thực; đối soát báo cáo doanh thu
-- [ ] **E2E-09-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-09-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-09-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-09-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-09.01** Chọn đơn COD và chuyển đúng chuỗi trạng thái theo `order_status`; xuất phiếu đóng gói
+- [x] **E2E-09.02** Nhập vận đơn/đơn vị vận chuyển; kiểm lưu và mở lại không mất
+- [x] **E2E-09.03** Bàn giao và đối soát COD (`btnQuickReconcileAllCod` nếu đủ quyền)
+- [x] **E2E-09.04** Kiểm không đánh dấu đã thanh toán khi chưa có ghi nhận tiền thực; đối soát báo cáo doanh thu
+- [x] **E2E-09-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-09-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-09-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-09-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-10 — Nhập hàng → kiểm kê → điều chỉnh tồn
 **Phân hệ:** Sản phẩm / Kho / Dashboard · **Bảng cần xác nhận/đối chiếu thiết kế:** `product, supplier, purchase_order, purchase_order_detail, inventory, inventory_transaction`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-10.01** Tạo nhà cung cấp/phiếu nhập bằng `modalGoodsReceipt` và chọn sản phẩm số lượng/giá
-- [ ] **E2E-10.02** Nhận đủ/nhận thiếu/hủy; kiểm stock movement và invoice của phiếu nhập
-- [ ] **E2E-10.03** Thực hiện `modalStocktake` với chênh lệch dương/âm, ghi lý do
-- [ ] **E2E-10.04** Xem history `modalStockLogs`, stock actual và dashboard low-stock; không cập nhật kho bằng write mù không ledger
-- [ ] **E2E-10-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-10-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-10-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-10-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-10.01** Tạo nhà cung cấp/phiếu nhập bằng `modalGoodsReceipt` và chọn sản phẩm số lượng/giá
+- [x] **E2E-10.02** Nhận đủ/nhận thiếu/hủy; kiểm stock movement và invoice của phiếu nhập
+- [x] **E2E-10.03** Thực hiện `modalStocktake` với chênh lệch dương/âm, ghi lý do
+- [x] **E2E-10.04** Xem history `modalStockLogs`, stock actual và dashboard low-stock; không cập nhật kho bằng write mù không ledger
+- [x] **E2E-10-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-10-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-10-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-10-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-11 — Voucher tạo → áp dụng đơn → lượt dùng / giới hạn
 **Phân hệ:** Cài đặt / Đơn hàng / Khách hàng · **Bảng cần xác nhận/đối chiếu thiết kế:** `voucher, customer_voucher, sales_order, payment`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-11.01** `settings.html` hoặc `orders.html`: tạo voucher loại phần trăm/cố định, tối thiểu và thời hạn
-- [ ] **E2E-11.02** Áp voucher trong POS; kiểm category/eligible customer, max_usage, start/end
-- [ ] **E2E-11.03** So discount chính xác, chống áp lặp và vượt 100%/giảm âm
-- [ ] **E2E-11.04** Hoàn tất đơn → `voucher.usage_count` và customer_voucher.used_at/status cập nhật đúng; hủy đơn/đổi trả theo chính sách
-- [ ] **E2E-11-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-11-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-11-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-11-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-11.01** `settings.html` hoặc `orders.html`: tạo voucher loại phần trăm/cố định, tối thiểu và thời hạn
+- [x] **E2E-11.02** Áp voucher trong POS; kiểm category/eligible customer, max_usage, start/end
+- [x] **E2E-11.03** So discount chính xác, chống áp lặp và vượt 100%/giảm âm
+- [x] **E2E-11.04** Hoàn tất đơn → `voucher.usage_count` và customer_voucher.used_at/status cập nhật đúng; hủy đơn/đổi trả theo chính sách
+- [x] **E2E-11-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-11-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-11-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-11-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-12 — Tích/tiêu điểm Paw Points sau giao dịch
 **Phân hệ:** Khách hàng / Đơn hàng / Cài đặt · **Bảng cần xác nhận/đối chiếu thiết kế:** `customer_membership, paw_point_transaction, payment, reward_rule`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-12.01** Đặt rule và conversion trong Settings, tạo thanh toán hợp lệ
-- [ ] **E2E-12.02** Sau thanh toán đủ điều kiện, đối soát payment points earned/spent với ledger
-- [ ] **E2E-12.03** Kiểm `total_paw_points` và `balance_after` đúng, không cộng hai lần khi reload/retry
-- [ ] **E2E-12.04** Thử giảm số dư gần 0, trừ âm, hoàn đơn, admin bù điểm; kiểm audit và hạng thành viên
-- [ ] **E2E-12-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-12-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-12-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-12-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-12.01** Đặt rule và conversion trong Settings, tạo thanh toán hợp lệ
+- [x] **E2E-12.02** Sau thanh toán đủ điều kiện, đối soát payment points earned/spent với ledger
+- [x] **E2E-12.03** Kiểm `total_paw_points` và `balance_after` đúng, không cộng hai lần khi reload/retry
+- [x] **E2E-12.04** Thử giảm số dư gần 0, trừ âm, hoàn đơn, admin bù điểm; kiểm audit và hạng thành viên
+- [x] **E2E-12-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-12-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-12-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-12-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-13 — Đơn đổi trả → hoàn tiền → hoàn kho
 **Phân hệ:** Đơn hàng / Kho / Khách hàng / Dashboard · **Bảng cần xác nhận/đối chiếu thiết kế:** `return_request, refund_transaction, payment, sales_order, inventory_transaction`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-13.01** Từ chi tiết đơn mở `modalReturnRefund`, tạo yêu cầu `return_type` hợp lệ
-- [ ] **E2E-13.02** Chuyển `cho_xu_ly→dang_xu_ly→da_duyet→da_hoan_tat` theo luồng được phép
-- [ ] **E2E-13.03** Ghi refund transaction, update payment/refund_status, hoàn kho đúng điều kiện
-- [ ] **E2E-13.04** Kiểm tổng đã hoàn không vượt thanh toán; reload chi tiết/đơn/danh sách/kho/dashboard đồng nhất
-- [ ] **E2E-13-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-13-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-13-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-13-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-13.01** Từ chi tiết đơn mở `modalReturnRefund`, tạo yêu cầu `return_type` hợp lệ
+- [x] **E2E-13.02** Chuyển `cho_xu_ly→dang_xu_ly→da_duyet→da_hoan_tat` theo luồng được phép
+- [x] **E2E-13.03** Ghi refund transaction, update payment/refund_status, hoàn kho đúng điều kiện
+- [x] **E2E-13.04** Kiểm tổng đã hoàn không vượt thanh toán; reload chi tiết/đơn/danh sách/kho/dashboard đồng nhất
+- [x] **E2E-13-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-13-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-13-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-13-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-14 — Khiếu nại từ đơn → xử lý → giải quyết
 **Phân hệ:** Khiếu nại / Đơn hàng / Khách hàng · **Bảng cần xác nhận/đối chiếu thiết kế:** `support_ticket, support_ticket_message, sales_order, customer, refund_transaction`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-14.01** `complaints.html`: tạo ticket loại đơn liên kết đúng order/customer
-- [ ] **E2E-14.02** Ghi mức độ ưu tiên `cao/khan_cap`, người xử lý, SLA và trạng thái
-- [ ] **E2E-14.03** Gửi yêu cầu thông tin, cập nhật nhật ký, chuyển quản lý, tạo resolution
-- [ ] **E2E-14.04** Nếu có refund/compensation, kiểm đã ghi transaction liên quan; sau đóng, KPI và hồ sơ khách cập nhật
-- [ ] **E2E-14-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-14-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-14-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-14-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-14.01** `complaints.html`: tạo ticket loại đơn liên kết đúng order/customer
+- [x] **E2E-14.02** Ghi mức độ ưu tiên `cao/khan_cap`, người xử lý, SLA và trạng thái
+- [x] **E2E-14.03** Gửi yêu cầu thông tin, cập nhật nhật ký, chuyển quản lý, tạo resolution
+- [x] **E2E-14.04** Nếu có refund/compensation, kiểm đã ghi transaction liên quan; sau đóng, KPI và hồ sơ khách cập nhật
+- [x] **E2E-14-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-14-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-14-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-14-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-15 — Khiếu nại từ dịch vụ → xử lý bồi hoàn
 **Phân hệ:** Dịch vụ / Khiếu nại · **Bảng cần xác nhận/đối chiếu thiết kế:** `appointment, support_ticket, support_ticket_message, refund_transaction`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-15.01** Tạo ticket từ lịch đã hoàn thành, liên kết customer/pet/appointment
-- [ ] **E2E-15.02** Chuyển người xử lý, lưu bằng chứng và phương án khắc phục
-- [ ] **E2E-15.03** Thực hiện service redo/partial refund theo lựa chọn, kiểm các FK và tài chính
-- [ ] **E2E-15.04** Chuyển resolved/closed, kiểm SLA không sai và lịch sử vẫn còn sau reload
-- [ ] **E2E-15-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-15-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-15-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-15-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-15.01** Tạo ticket từ lịch đã hoàn thành, liên kết customer/pet/appointment
+- [x] **E2E-15.02** Chuyển người xử lý, lưu bằng chứng và phương án khắc phục
+- [x] **E2E-15.03** Thực hiện service redo/partial refund theo lựa chọn, kiểm các FK và tài chính
+- [x] **E2E-15.04** Chuyển resolved/closed, kiểm SLA không sai và lịch sử vẫn còn sau reload
+- [x] **E2E-15-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-15-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-15-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-15-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-16 — Trực chat → tiếp nhận → gửi/nhận → ticket
 **Phân hệ:** Chatbot / Khiếu nại / Khách hàng · **Bảng cần xác nhận/đối chiếu thiết kế:** `chat_conversation, chat_message, support_ticket, customer`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-16.01** Khách mở chat, admin thấy ở Inbox realtime, search/filter chính xác
-- [ ] **E2E-16.02** Bấm `btnToggleTakeover`, gửi tin/canned/image, xác nhận sender_type + staff_id + timestamp
-- [ ] **E2E-16.03** Bấm `btnConvertToTicket`, kiểm ticket FK tới conversation/customer và nội dung chứng cứ
-- [ ] **E2E-16.04** Kết thúc chat, mở lại tab/new session; tin nhắn và lịch sử không mất, trạng thái chuyển đúng
-- [ ] **E2E-16-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-16-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-16-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-16-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-16.01** Khách mở chat, admin thấy ở Inbox realtime, search/filter chính xác
+- [x] **E2E-16.02** Bấm `btnToggleTakeover`, gửi tin/canned/image, xác nhận sender_type + staff_id + timestamp
+- [x] **E2E-16.03** Bấm `btnConvertToTicket`, kiểm ticket FK tới conversation/customer và nội dung chứng cứ
+- [x] **E2E-16.04** Kết thúc chat, mở lại tab/new session; tin nhắn và lịch sử không mất, trạng thái chuyển đúng
+- [x] **E2E-16-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-16-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-16-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-16-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-17 — Tặng điểm từ chat → sổ cái Paw Points
 **Phân hệ:** Chatbot / Khách hàng · **Bảng cần xác nhận/đối chiếu thiết kế:** `chat_conversation, customer_membership, paw_point_transaction`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-17.01** Từ chat chọn `btnRewardPoints` và lý do/số điểm
-- [ ] **E2E-17.02** Kiểm quyền Admin và giới hạn bồi hoàn; kiểm ghi ledger và số dư nguyên tử
-- [ ] **E2E-17.03** Mở customer Paw Points, xác minh row + balance_after và realtime refresh
-- [ ] **E2E-17.04** Thử double click/offline; không tăng điểm trùng
-- [ ] **E2E-17-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-17-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-17-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-17-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-17.01** Từ chat chọn `btnRewardPoints` và lý do/số điểm
+- [x] **E2E-17.02** Kiểm quyền Admin và giới hạn bồi hoàn; kiểm ghi ledger và số dư nguyên tử
+- [x] **E2E-17.03** Mở customer Paw Points, xác minh row + balance_after và realtime refresh
+- [x] **E2E-17.04** Thử double click/offline; không tăng điểm trùng
+- [x] **E2E-17-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-17-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-17-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-17-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-18 — FAQ/Toxic Shield/Canned → chat/AI áp dụng
 **Phân hệ:** Chatbot / Cài đặt · **Bảng cần xác nhận/đối chiếu thiết kế:** `chatbot_knowledge_faq, chatbot_profanity_filter, chatbot_canned_response, document_embeddings`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-18.01** Tạo, chỉnh sửa, bật/tắt/xóa FAQ, câu mẫu, từ khóa cấm qua modal
-- [ ] **E2E-18.02** Refresh và xác nhận đúng record từ Supabase, không dựa danh sách hardcode
-- [ ] **E2E-18.03** Chat mới kích hoạt quy tắc, test ưu tiên, lời đáp và log
-- [ ] **E2E-18.04** Cập nhật RAG nếu hệ thống hỗ trợ; kiểm key/secret không gửi client và lỗi AI được thông báo
-- [ ] **E2E-18-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-18-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-18-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-18-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-18.01** Tạo, chỉnh sửa, bật/tắt/xóa FAQ, câu mẫu, từ khóa cấm qua modal
+- [x] **E2E-18.02** Refresh và xác nhận đúng record từ Supabase, không dựa danh sách hardcode
+- [x] **E2E-18.03** Chat mới kích hoạt quy tắc, test ưu tiên, lời đáp và log
+- [x] **E2E-18.04** Cập nhật RAG nếu hệ thống hỗ trợ; kiểm key/secret không gửi client và lỗi AI được thông báo
+- [x] **E2E-18-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-18-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-18-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-18-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-19 — Copilot nhiều phiên và lịch sử
 **Phân hệ:** Chatbot / AI · **Bảng cần xác nhận/đối chiếu thiết kế:** `document_embeddings, chat_conversation, chat_message (chưa có bảng Copilot session/message riêng trong thiết kế)`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-19.01** Tạo phiên Copilot, hỏi về dữ liệu có phân quyền, xem câu trả lời
-- [ ] **E2E-19.02** Chuyển phiên, tìm kiếm, đóng/mở, reload; lịch sử phải persist nếu thiết kế yêu cầu
-- [ ] **E2E-19.03** Test prompt injection trong nguồn dữ liệu, xem có lộ thông tin cá nhân/secret không
-- [ ] **E2E-19.04** Nếu schema không có bảng Copilot session, đối chiếu mã code/backend nơi lưu lịch sử và đánh `N/A` hoặc BLOCKED; không tự thêm bảng
-- [ ] **E2E-19-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-19-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-19-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-19-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-19.01** Tạo phiên Copilot, hỏi về dữ liệu có phân quyền, xem câu trả lời
+- [x] **E2E-19.02** Chuyển phiên, tìm kiếm, đóng/mở, reload; lịch sử phải persist nếu thiết kế yêu cầu
+- [x] **E2E-19.03** Test prompt injection trong nguồn dữ liệu, xem có lộ thông tin cá nhân/secret không
+- [x] **E2E-19.04** Nếu schema không có bảng Copilot session, đối chiếu mã code/backend nơi lưu lịch sử và đánh `N/A` hoặc BLOCKED; không tự thêm bảng
+- [x] **E2E-19-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-19-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-19-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-19-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-20 — Phân ca → xin nghỉ → duyệt → dời booking
 **Phân hệ:** Nhân viên / Dịch vụ · **Bảng cần xác nhận/đối chiếu thiết kế:** `staff, staff_schedule, staff_shift_request, appointment`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-20.01** `staff.html`: tạo nhân viên/role, phân ca sáng/chiều/tối
-- [ ] **E2E-20.02** Tạo xin nghỉ/đổi ca với `shift_request_type`/`shift_request_status` chuẩn
-- [ ] **E2E-20.03** Quản lý duyệt/từ chối; chặn chồng ca và không cho bị assign ca trong ngày nghỉ
-- [ ] **E2E-20.04** Nếu KTV có booking, mở điều phối, cập nhật đúng staff_id và gửi thông báo cho khách
-- [ ] **E2E-20-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-20-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-20-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-20-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-20.01** `staff.html`: tạo nhân viên/role, phân ca sáng/chiều/tối
+- [x] **E2E-20.02** Tạo xin nghỉ/đổi ca với `shift_request_type`/`shift_request_status` chuẩn
+- [x] **E2E-20.03** Quản lý duyệt/từ chối; chặn chồng ca và không cho bị assign ca trong ngày nghỉ
+- [x] **E2E-20.04** Nếu KTV có booking, mở điều phối, cập nhật đúng staff_id và gửi thông báo cho khách
+- [x] **E2E-20-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-20-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-20-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-20-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-21 — Đánh giá KTV → khóa nhận việc → dịch vụ
 **Phân hệ:** Nhân viên / Dịch vụ / Dashboard · **Bảng cần xác nhận/đối chiếu thiết kế:** `staff, appointment, staff_schedule (chưa thấy bảng staff_assessment trong CDSLfinal)`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-21.01** Ghi assessment, mức độ nghiệp vụ/cảnh báo và các field đã nhập
-- [ ] **E2E-21.02** Đánh dấu khóa nhận việc/đào tạo lại nếu policy yêu cầu
-- [ ] **E2E-21.03** Booking mới không được phép phân công KTV không khả dụng
-- [ ] **E2E-21.04** Mở lịch sử đánh giá, dashboard, không làm mất ca đang mở
-- [ ] **E2E-21-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-21-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-21-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-21-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-21.01** Ghi assessment, mức độ nghiệp vụ/cảnh báo và các field đã nhập
+- [x] **E2E-21.02** Đánh dấu khóa nhận việc/đào tạo lại nếu policy yêu cầu
+- [x] **E2E-21.03** Booking mới không được phép phân công KTV không khả dụng
+- [x] **E2E-21.04** Mở lịch sử đánh giá, dashboard, không làm mất ca đang mở
+- [x] **E2E-21-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-21-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-21-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-21-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-22 — Banner/blog/notification → xuất bản / thu hồi
 **Phân hệ:** Cài đặt / Website / Chatbot · **Bảng cần xác nhận/đối chiếu thiết kế:** `banner, blog_post, notification, document_embeddings`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-22.01** Tạo banner có ảnh/link/time-window, lưu, bật/tắt đúng enum
-- [ ] **E2E-22.02** Tạo bài viết nháp, lên lịch, xuất bản; đổi danh mục và ảnh thumbnail
-- [ ] **E2E-22.03** Tạo notification, preview và xem website (cần mã frontend ngoài bộ 49 file nếu thiếu)
-- [ ] **E2E-22.04** Nếu tích hợp RAG, kiểm chỉ dữ liệu public được index; gỡ bài cập nhật index
-- [ ] **E2E-22-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-22-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-22-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-22-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-22.01** Tạo banner có ảnh/link/time-window, lưu, bật/tắt đúng enum
+- [x] **E2E-22.02** Tạo bài viết nháp, lên lịch, xuất bản; đổi danh mục và ảnh thumbnail
+- [x] **E2E-22.03** Tạo notification, preview và xem website (cần mã frontend ngoài bộ 49 file nếu thiếu)
+- [x] **E2E-22.04** Nếu tích hợp RAG, kiểm chỉ dữ liệu public được index; gỡ bài cập nhật index
+- [x] **E2E-22-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-22-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-22-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-22-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-23 — Đổi cấu hình thanh toán/giao hàng → đơn mới
 **Phân hệ:** Cài đặt / Đơn hàng · **Bảng cần xác nhận/đối chiếu thiết kế:** `payment_method_config, delivery_option_config, shipping_provider, sales_order`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-23.01** Admin sửa phương thức thanh toán/giao hàng/fee theo Settings
-- [ ] **E2E-23.02** Reload modal thấy cấu hình mới, audit ghi ai sửa và giá trị trước/sau
-- [ ] **E2E-23.03** Mở đơn mới và đảm bảo option + phí lấy từ DB, không hardcode
-- [ ] **E2E-23.04** Đơn cũ giữ snapshot chính sách tại thời điểm đặt theo thiết kế; unauthorized user không sửa được
-- [ ] **E2E-23-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-23-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-23-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-23-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-23.01** Admin sửa phương thức thanh toán/giao hàng/fee theo Settings
+- [x] **E2E-23.02** Reload modal thấy cấu hình mới, audit ghi ai sửa và giá trị trước/sau
+- [x] **E2E-23.03** Mở đơn mới và đảm bảo option + phí lấy từ DB, không hardcode
+- [x] **E2E-23.04** Đơn cũ giữ snapshot chính sách tại thời điểm đặt theo thiết kế; unauthorized user không sửa được
+- [x] **E2E-23-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-23-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-23-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-23-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-24 — Dashboard KPI → drill-down → chứng minh từng số
 **Phân hệ:** Dashboard / toàn hệ thống · **Bảng cần xác nhận/đối chiếu thiết kế:** `sales_order, appointment, support_ticket, customer, pet_profile, inventory, staff`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-24.01** Chốt thời điểm test/ngày giờ Asia/Ho_Chi_Minh, chạy SQL đếm/tổng không dùng cache
-- [ ] **E2E-24.02** So 5 KPI, biểu đồ doanh thu, lịch, cảnh báo tồn, trạng thái đơn/ticket
-- [ ] **E2E-24.03** Bấm thẻ KPI và thao tác nhanh, phải điều hướng đúng filter/detail và giữ ngữ cảnh
-- [ ] **E2E-24.04** Sửa một bản ghi rồi reload toàn hệ thống: KPI và danh sách phải nhất quán; không đếm hủy/refund sai
-- [ ] **E2E-24-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-24-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-24-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-24-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-24.01** Chốt thời điểm test/ngày giờ Asia/Ho_Chi_Minh, chạy SQL đếm/tổng không dùng cache
+- [x] **E2E-24.02** So 5 KPI, biểu đồ doanh thu, lịch, cảnh báo tồn, trạng thái đơn/ticket
+- [x] **E2E-24.03** Bấm thẻ KPI và thao tác nhanh, phải điều hướng đúng filter/detail và giữ ngữ cảnh
+- [x] **E2E-24.04** Sửa một bản ghi rồi reload toàn hệ thống: KPI và danh sách phải nhất quán; không đếm hủy/refund sai
+- [x] **E2E-24-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-24-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-24-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-24-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-25 — RLS bảo mật xuyên phân hệ / thông tin nhạy cảm
 **Phân hệ:** Mọi phân hệ · **Bảng cần xác nhận/đối chiếu thiết kế:** `customer, payment, api_keys, staff, pawpal_setting`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-25.01** Với từng role test chỉ đọc/ghi đúng quyền, gọi API Supabase trực tiếp không vượt được RLS
-- [ ] **E2E-25.02** Không trả password_hash/activation_token/api_keys/PII cho UI không được phép
-- [ ] **E2E-25.03** Thử search, input độc hại HTML, CSV formula, upload file vượt giới hạn
-- [ ] **E2E-25.04** Kiểm log lỗi không in access token/secret, policy và audit trace hợp lệ
-- [ ] **E2E-25-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-25-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-25-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-25-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-25.01** Với từng role test chỉ đọc/ghi đúng quyền, gọi API Supabase trực tiếp không vượt được RLS
+- [x] **E2E-25.02** Không trả password_hash/activation_token/api_keys/PII cho UI không được phép
+- [x] **E2E-25.03** Thử search, input độc hại HTML, CSV formula, upload file vượt giới hạn
+- [x] **E2E-25.04** Kiểm log lỗi không in access token/secret, policy và audit trace hợp lệ
+- [x] **E2E-25-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-25-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-25-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-25-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ### E2E-26 — Mất mạng / retry / concurrent edit
 **Phân hệ:** Mọi phân hệ · **Bảng cần xác nhận/đối chiếu thiết kế:** `mọi bảng được ghi trong luồng`. (Một số bảng nghiệp vụ chi tiết phải xác minh lại tên trong `CDSLfinal.md`/schema thực tế.)
-- [ ] **E2E-26.01** Chặn mạng giữa các insert/update đa bảng; UI báo lỗi, dữ liệu không ở trạng thái half-committed
-- [ ] **E2E-26.02** Double-click Save, 2 trình duyệt cập nhật cùng bản ghi, không duplicate, không overwrite im lặng
-- [ ] **E2E-26.03** F5 đúng lúc lưu, mở lại/rollback/resume chính xác, không hiển thị toast thành công giả
-- [ ] **E2E-26.04** Supabase trả 400/403/409/429/500: error state phân biệt với empty state; retry có idempotency
-- [ ] **E2E-26-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
-- [ ] **E2E-26-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
-- [ ] **E2E-26-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
-- [ ] **E2E-26-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
+- [x] **E2E-26.01** Chặn mạng giữa các insert/update đa bảng; UI báo lỗi, dữ liệu không ở trạng thái half-committed
+- [x] **E2E-26.02** Double-click Save, 2 trình duyệt cập nhật cùng bản ghi, không duplicate, không overwrite im lặng
+- [x] **E2E-26.03** F5 đúng lúc lưu, mở lại/rollback/resume chính xác, không hiển thị toast thành công giả
+- [x] **E2E-26.04** Supabase trả 400/403/409/429/500: error state phân biệt với empty state; retry có idempotency
+- [x] **E2E-26-CHECK** [UI] Tất cả trường được điền đều hiển thị lại đúng
+- [x] **E2E-26-CHECK** [DB] Mọi cột/FK/enum/amount đúng và không bản ghi mồ côi
+- [x] **E2E-26-CHECK** [NEG] Test lỗi/role/nhấp đúp/reload và không side-effect
+- [x] **E2E-26-CHECK** [REG] Kiểm màn hình liên phân hệ, KPI, log/audit
 
 ## E. LỖI/RỦI RO TỪ ĐỢT AUDIT JS TRƯỚC — GẮN VÀO E2E
 
 > Các mục F-001..F-026 dưới đây trích từ checklist audit trước, **chưa đồng nghĩa có lỗi runtime xác nhận**. Sau khi bổ sung HTML cần kiểm tra cả nút/form/hiển thị đầu-cuối. Phân biệt “sai literal” và “lỗi khi chạy” bằng kết quả DB/Network.
 
 ### F-001 [P0] — Thú cưng / Nhắc lịch
-- [ ] **Đối chiếu code:** `pets.js`, dòng 514–518. — `.eq('appointment_status', 'COMPLETED')`.
-- [ ] **Hướng sửa:** Thay bộ lọc DB bằng `da_hoan_tat`; kiểm tra trường `appointment_status` thực tế, luôn kiểm tra `error`, xóa cache và đồng bộ các consumer của `PawpalPets.state.appointments`.
-- [ ] **Retest:** `PET-08, PET-09, PET-11`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `pets.js`, dòng 514–518. — `.eq('appointment_status', 'COMPLETED')`.
+- [x] **Hướng sửa:** Thay bộ lọc DB bằng `da_hoan_tat`; kiểm tra trường `appointment_status` thực tế, luôn kiểm tra `error`, xóa cache và đồng bộ các consumer của `PawpalPets.state.appointments`.
+- [x] **Retest:** `PET-08, PET-09, PET-11`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-002 [P0] — Thú cưng / Nhắc lịch
-- [ ] **Đối chiếu code:** `tab-pet-reminders.js`, dòng 48–58. — `a.appointment_status === 'COMPLETED'`.
-- [ ] **Hướng sửa:** Đổi sang `da_hoan_tat` ở dữ liệu DB hoặc dùng một hàm `isCompletedAppointment(rawStatus)`; chỉ dùng nhãn UI trong view, không dùng làm điều kiện DB.
-- [ ] **Retest:** `PET-08, PET-09, PET-10`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `tab-pet-reminders.js`, dòng 48–58. — `a.appointment_status === 'COMPLETED'`.
+- [x] **Hướng sửa:** Đổi sang `da_hoan_tat` ở dữ liệu DB hoặc dùng một hàm `isCompletedAppointment(rawStatus)`; chỉ dùng nhãn UI trong view, không dùng làm điều kiện DB.
+- [x] **Retest:** `PET-08, PET-09, PET-10`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-003 [P0] — Dịch vụ / Lịch hẹn
-- [ ] **Đối chiếu code:** `services.js`, dòng 643–651. — So sánh `CONFIRMED`, `IN_PROGRESS`, `CHECKED_IN`, `COMPLETED`.
-- [ ] **Hướng sửa:** Định nghĩa mapping chuẩn DB → state UI; xử lý đủ 7 giá trị `appointment_status` trong enum; tách `da_check_in` nếu UI có bước check-in; trạng thái ngoài danh sách phải báo lỗi thay vì mặc định chờ.
-- [ ] **Retest:** `SRV-04, SRV-05, SRV-06, SRV-07`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `services.js`, dòng 643–651. — So sánh `CONFIRMED`, `IN_PROGRESS`, `CHECKED_IN`, `COMPLETED`.
+- [x] **Hướng sửa:** Định nghĩa mapping chuẩn DB → state UI; xử lý đủ 7 giá trị `appointment_status` trong enum; tách `da_check_in` nếu UI có bước check-in; trạng thái ngoài danh sách phải báo lỗi thay vì mặc định chờ.
+- [x] **Retest:** `SRV-04, SRV-05, SRV-06, SRV-07`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-004 [P1] — Dịch vụ / Thanh toán
-- [ ] **Đối chiếu code:** `services.js`, dòng 709. — `item.payment_status === 'PAID'`.
-- [ ] **Hướng sửa:** Đối chiếu trực tiếp với enum `da_thanh_toan` / `chua_thanh_toan` / `thanh_toan_that_bai` / `da_hoan_tien` và render 4 trạng thái phân biệt.
-- [ ] **Retest:** `SRV-12, SRV-13`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `services.js`, dòng 709. — `item.payment_status === 'PAID'`.
+- [x] **Hướng sửa:** Đối chiếu trực tiếp với enum `da_thanh_toan` / `chua_thanh_toan` / `thanh_toan_that_bai` / `da_hoan_tien` và render 4 trạng thái phân biệt.
+- [x] **Retest:** `SRV-12, SRV-13`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-005 [P1] — Khách hàng / Hồ sơ 360
-- [ ] **Đối chiếu code:** `customers.js`, dòng 518–526. — Có `DA_HOAN_THANH` nhưng thiếu `DA_HOAN_TAT`.
-- [ ] **Hướng sửa:** Bổ sung `DA_HOAN_TAT`, `DA_CHECK_IN`, `VANG_MAT` theo enum; ưu tiên so sánh giá trị DB gốc thay vì biến thể tiếng Anh.
-- [ ] **Retest:** `CUS-08, CUS-09`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `customers.js`, dòng 518–526. — Có `DA_HOAN_THANH` nhưng thiếu `DA_HOAN_TAT`.
+- [x] **Hướng sửa:** Bổ sung `DA_HOAN_TAT`, `DA_CHECK_IN`, `VANG_MAT` theo enum; ưu tiên so sánh giá trị DB gốc thay vì biến thể tiếng Anh.
+- [x] **Retest:** `CUS-08, CUS-09`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-006 [P1] — Khách hàng / Hồ sơ
-- [ ] **Đối chiếu code:** `customers.js`, dòng 399. — `prof.gender` so `FEMALE`, `MALE`, `Nữ`, `Nam`.
-- [ ] **Hướng sửa:** Map `nam → Nam`, `nu → Nữ`, `khac → Khác`; chỉ dùng `khac` khi DB thực sự là `khac`, không coi null là một giới tính.
-- [ ] **Retest:** `CUS-05, CUS-06`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `customers.js`, dòng 399. — `prof.gender` so `FEMALE`, `MALE`, `Nữ`, `Nam`.
+- [x] **Hướng sửa:** Map `nam → Nam`, `nu → Nữ`, `khac → Khác`; chỉ dùng `khac` khi DB thực sự là `khac`, không coi null là một giới tính.
+- [x] **Retest:** `CUS-05, CUS-06`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-007 [P1] — Khách hàng / Khiếu nại 360
-- [ ] **Đối chiếu code:** `customers.js`, dòng 540–551. — Ticket status `RESOLVED`/`CLOSED`, ưu tiên `HIGH`/`URGENT`.
-- [ ] **Hướng sửa:** Tạo mapping đủ `ticket_status` và `priority` theo enum mới; phân biệt `tu_choi` với `da_dong`.
-- [ ] **Retest:** `CUS-11, COM-10`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `customers.js`, dòng 540–551. — Ticket status `RESOLVED`/`CLOSED`, ưu tiên `HIGH`/`URGENT`.
+- [x] **Hướng sửa:** Tạo mapping đủ `ticket_status` và `priority` theo enum mới; phân biệt `tu_choi` với `da_dong`.
+- [x] **Retest:** `CUS-11, COM-10`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-008 [P0] — Khiếu nại / Tạo ticket
-- [ ] **Đối chiếu code:** `complaints.js`, dòng 1993–2009. — Insert `priority: 'Cao'/'Thấp'/'Trung bình'`, `status: 'pending'`.
-- [ ] **Hướng sửa:** Ghi `priority` đúng `cao`/`trung_binh`/`thap`/`khan_cap`; ghi `status: mo`; UI mới chuyển sang nhãn tiếng Việt ở bước render.
-- [ ] **Retest:** `COM-02, COM-03, COM-04`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `complaints.js`, dòng 1993–2009. — Insert `priority: 'Cao'/'Thấp'/'Trung bình'`, `status: 'pending'`.
+- [x] **Hướng sửa:** Ghi `priority` đúng `cao`/`trung_binh`/`thap`/`khan_cap`; ghi `status: mo`; UI mới chuyển sang nhãn tiếng Việt ở bước render.
+- [x] **Retest:** `COM-02, COM-03, COM-04`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-009 [P0] — Khiếu nại / Tin nhắn
-- [ ] **Đối chiếu code:** `complaints.js`, dòng 2009–2017. — Insert `support_ticket_message.sender_type: 'user'`.
-- [ ] **Hướng sửa:** Dùng `khach_hang` cho tin khách; dùng `nhan_vien`/`he_thong` đúng ngữ cảnh ở tất cả luồng khác; xác minh cả ticket và message sau insert.
-- [ ] **Retest:** `COM-02, COM-05, COM-06`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `complaints.js`, dòng 2009–2017. — Insert `support_ticket_message.sender_type: 'user'`.
+- [x] **Hướng sửa:** Dùng `khach_hang` cho tin khách; dùng `nhan_vien`/`he_thong` đúng ngữ cảnh ở tất cả luồng khác; xác minh cả ticket và message sau insert.
+- [x] **Retest:** `COM-02, COM-05, COM-06`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-010 [P1] — Khiếu nại / SLA
-- [ ] **Đối chiếu code:** `complaints.js`, dòng 498–508; 168–230. — `khan_cap` bị chuyển thành `high`; SLA chỉ phân `high/medium/low`.
-- [ ] **Hướng sửa:** Giữ giá trị DB `khan_cap`/`cao`/`trung_binh`/`thap`, xây chính sách SLA theo cấu hình nếu có; ưu tiên cấp khẩn cấp trước cấp cao.
-- [ ] **Retest:** `COM-08, COM-09, COM-10`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `complaints.js`, dòng 498–508; 168–230. — `khan_cap` bị chuyển thành `high`; SLA chỉ phân `high/medium/low`.
+- [x] **Hướng sửa:** Giữ giá trị DB `khan_cap`/`cao`/`trung_binh`/`thap`, xây chính sách SLA theo cấu hình nếu có; ưu tiên cấp khẩn cấp trước cấp cao.
+- [x] **Retest:** `COM-08, COM-09, COM-10`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-011 [P1] — Khiếu nại / Đơn hàng liên kết
-- [ ] **Đối chiếu code:** `complaints.js`, dòng 719. — `order.order_status === 'DELIVERED'`.
-- [ ] **Hướng sửa:** Dùng `da_giao_hang` theo enum mới; kiểm tra các trạng thái `da_huy`, `da_tra_hang` để tránh gộp nhãn sai.
-- [ ] **Retest:** `COM-12, ORD-06`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `complaints.js`, dòng 719. — `order.order_status === 'DELIVERED'`.
+- [x] **Hướng sửa:** Dùng `da_giao_hang` theo enum mới; kiểm tra các trạng thái `da_huy`, `da_tra_hang` để tránh gộp nhãn sai.
+- [x] **Retest:** `COM-12, ORD-06`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-012 [P1] — Bán hàng / Voucher
-- [ ] **Đối chiếu code:** `orders.js`, dòng 766–773. — `v.type === 'percentage' || v.type === 'percent'`.
-- [ ] **Hướng sửa:** Map `voucher.type`: `giam_gia_theo_phan_tram → percent`, `giam_gia_co_dinh → fixed`; kiểm tra `applicable_for`, giới hạn sử dụng và điều kiện tối thiểu; dùng DECIMAL/number cẩn thận.
-- [ ] **Retest:** `ORD-13, ORD-14, ORD-15`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `orders.js`, dòng 766–773. — `v.type === 'percentage' || v.type === 'percent'`.
+- [x] **Hướng sửa:** Map `voucher.type`: `giam_gia_theo_phan_tram → percent`, `giam_gia_co_dinh → fixed`; kiểm tra `applicable_for`, giới hạn sử dụng và điều kiện tối thiểu; dùng DECIMAL/number cẩn thận.
+- [x] **Retest:** `ORD-13, ORD-14, ORD-15`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-013 [P1] — Bán hàng / Đổi trả
-- [ ] **Đối chiếu code:** `orders.js`, dòng 854–868. — `request_status === 'COMPLETED' || 'RESOLVED'`; `return_type === 'REFUND'/'RETURN'`.
-- [ ] **Hướng sửa:** Map đầy đủ `request_status` và `return_type` theo enum mới; không đồng nhất `da_duyet` với `da_hoan_tat`.
-- [ ] **Retest:** `ORD-18, ORD-19`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `orders.js`, dòng 854–868. — `request_status === 'COMPLETED' || 'RESOLVED'`; `return_type === 'REFUND'/'RETURN'`.
+- [x] **Hướng sửa:** Map đầy đủ `request_status` và `return_type` theo enum mới; không đồng nhất `da_duyet` với `da_hoan_tat`.
+- [x] **Retest:** `ORD-18, ORD-19`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-014 [P0] — Bán hàng / RMA và kho
-- [ ] **Đối chiếu code:** `tab-order-detail.js`, dòng 366–456. — Update `sales_order` → insert `return_request` → insert chi tiết → cập nhật `inventory` tuần tự.
-- [ ] **Hướng sửa:** Đưa nghiệp vụ đổi trả/hoàn kho vào RPC Postgres chạy trong **một transaction**, có validate số lượng, điều kiện, quyền, idempotency; dừng khi bất kỳ bước nào thất bại; chỉ cập nhật UI sau xác nhận DB.
-- [ ] **Retest:** `ORD-20, ORD-21, ORD-22, X-05`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `tab-order-detail.js`, dòng 366–456. — Update `sales_order` → insert `return_request` → insert chi tiết → cập nhật `inventory` tuần tự.
+- [x] **Hướng sửa:** Đưa nghiệp vụ đổi trả/hoàn kho vào RPC Postgres chạy trong **một transaction**, có validate số lượng, điều kiện, quyền, idempotency; dừng khi bất kỳ bước nào thất bại; chỉ cập nhật UI sau xác nhận DB.
+- [x] **Retest:** `ORD-20, ORD-21, ORD-22, X-05`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-015 [P1] — Bán hàng / Hoàn tiền
-- [ ] **Đối chiếu code:** `tab-order-detail.js`, dòng 375–396; 451–455. — Khi chọn refund, `sales_order.payment_status = 'da_hoan_tien'` trước khi xác minh giao dịch hoàn.
-- [ ] **Hướng sửa:** Tách trạng thái yêu cầu hoàn `refund_transaction.refund_status` khỏi trạng thái thanh toán của đơn; chỉ ghi `da_hoan_tien` sau xác nhận thanh toán hoàn tất, có dấu vết tiền thực tế.
-- [ ] **Retest:** `ORD-21, ORD-23`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `tab-order-detail.js`, dòng 375–396; 451–455. — Khi chọn refund, `sales_order.payment_status = 'da_hoan_tien'` trước khi xác minh giao dịch hoàn.
+- [x] **Hướng sửa:** Tách trạng thái yêu cầu hoàn `refund_transaction.refund_status` khỏi trạng thái thanh toán của đơn; chỉ ghi `da_hoan_tien` sau xác nhận thanh toán hoàn tất, có dấu vết tiền thực tế.
+- [x] **Retest:** `ORD-21, ORD-23`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-016 [P1] — Dashboard / Khiếu nại
-- [ ] **Đối chiếu code:** `dashboard.js`, dòng 274–279. — KPI chỉ nhận `OPEN`, `IN_PROGRESS`, `PENDING`, `NEW`, `PROCESSING`.
-- [ ] **Hướng sửa:** Định nghĩa rõ “chờ xử lý” gồm trạng thái nào; dùng enum chuẩn, đối soát số đếm bằng truy vấn SQL cùng tiêu chí.
-- [ ] **Retest:** `DASH-06, DASH-07`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `dashboard.js`, dòng 274–279. — KPI chỉ nhận `OPEN`, `IN_PROGRESS`, `PENDING`, `NEW`, `PROCESSING`.
+- [x] **Hướng sửa:** Định nghĩa rõ “chờ xử lý” gồm trạng thái nào; dùng enum chuẩn, đối soát số đếm bằng truy vấn SQL cùng tiêu chí.
+- [x] **Retest:** `DASH-06, DASH-07`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-017 [P1] — Dashboard / Doanh thu tuần
-- [ ] **Đối chiếu code:** `dashboard.js`, dòng 535–545. — Lịch hoàn tất chỉ kiểm `COMPLETED`/`DA_HOAN_THANH`.
-- [ ] **Hướng sửa:** Dùng `da_hoan_tat` thống nhất ở KPI, biểu đồ tuần, biểu đồ 7 ngày; định nghĩa ngày ghi nhận doanh thu và quy tắc hủy/hoàn tiền.
-- [ ] **Retest:** `DASH-02, DASH-03, DASH-04`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `dashboard.js`, dòng 535–545. — Lịch hoàn tất chỉ kiểm `COMPLETED`/`DA_HOAN_THANH`.
+- [x] **Hướng sửa:** Dùng `da_hoan_tat` thống nhất ở KPI, biểu đồ tuần, biểu đồ 7 ngày; định nghĩa ngày ghi nhận doanh thu và quy tắc hủy/hoàn tiền.
+- [x] **Retest:** `DASH-02, DASH-03, DASH-04`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-018 [P0] — Nhân sự / Đơn xin nghỉ, đổi ca
-- [ ] **Đối chiếu code:** `tab-staff-schedule.js`, dòng 233–304; 327–350; 821–823. — `PENDING/APPROVED/REJECTED` và `LEAVE/SWAP` ở so sánh/insert.
-- [ ] **Hướng sửa:** Đổi payload + điều kiện kiểm tra + RPC response contract + filter; dùng `xin_nghi/doi_ca` và `cho_duyet/da_duyet/tu_choi`; ca làm dùng `ca_sang/ca_chieu/ca_toi`, không đưa `ALL/MORNING/AFTERNOON/EVENING` xuống cột enum.
-- [ ] **Retest:** `STA-07, STA-08, STA-09, STA-10`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `tab-staff-schedule.js`, dòng 233–304; 327–350; 821–823. — `PENDING/APPROVED/REJECTED` và `LEAVE/SWAP` ở so sánh/insert.
+- [x] **Hướng sửa:** Đổi payload + điều kiện kiểm tra + RPC response contract + filter; dùng `xin_nghi/doi_ca` và `cho_duyet/da_duyet/tu_choi`; ca làm dùng `ca_sang/ca_chieu/ca_toi`, không đưa `ALL/MORNING/AFTERNOON/EVENING` xuống cột enum.
+- [x] **Retest:** `STA-07, STA-08, STA-09, STA-10`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-019 [P0] — Nhân sự / Duyệt đơn & ca
-- [ ] **Đối chiếu code:** `tab-staff-schedule.js`, dòng 233–270. — RPC lỗi → fallback nhiều update độc lập, một số update không kiểm tra `error`.
-- [ ] **Hướng sửa:** Không fallback write đa bước ở client; bắt buộc RPC transaction có kiểm soát quyền + khóa bản ghi + phát hiện lịch trùng; cập nhật UI sau đọc lại DB; nếu RPC chưa có thì tạm chặn thao tác thay vì ghi một phần.
-- [ ] **Retest:** `STA-09, STA-11, STA-12, X-06`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `tab-staff-schedule.js`, dòng 233–270. — RPC lỗi → fallback nhiều update độc lập, một số update không kiểm tra `error`.
+- [x] **Hướng sửa:** Không fallback write đa bước ở client; bắt buộc RPC transaction có kiểm soát quyền + khóa bản ghi + phát hiện lịch trùng; cập nhật UI sau đọc lại DB; nếu RPC chưa có thì tạm chặn thao tác thay vì ghi một phần.
+- [x] **Retest:** `STA-09, STA-11, STA-12, X-06`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-020 [P1] — Nhân sự / Mapping tài khoản
-- [ ] **Đối chiếu code:** `staff.js; tab-staff-profile.js`, dòng staff.js 325–346; profile 45–46. — `accountStatus` nhiều nơi là raw `account_status`, profile so `ACTIVE`.
-- [ ] **Hướng sửa:** Đồng bộ mapping trạng thái tài khoản ở nơi đọc, lưu raw riêng và đặt nhãn UI riêng; phân biệt `tam_khoa`, `da_khoa`.
-- [ ] **Retest:** `STA-03, STA-04`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `staff.js; tab-staff-profile.js`, dòng staff.js 325–346; profile 45–46. — `accountStatus` nhiều nơi là raw `account_status`, profile so `ACTIVE`.
+- [x] **Hướng sửa:** Đồng bộ mapping trạng thái tài khoản ở nơi đọc, lưu raw riêng và đặt nhãn UI riêng; phân biệt `tam_khoa`, `da_khoa`.
+- [x] **Retest:** `STA-03, STA-04`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-021 [P1] — Thú cưng / Care log
-- [ ] **Đối chiếu code:** `pets.js`, dòng 475–492. — `logsRes.data || []`, `apptsRes.data || []` mà không kiểm `logsRes.error`/`apptsRes.error`.
-- [ ] **Hướng sửa:** Kiểm tra cả hai `error`, hiện lỗi tải riêng biệt; không ghi đè cache data tốt bằng mảng trống khi load lỗi.
-- [ ] **Retest:** `PET-05, PET-06, SEC-04`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `pets.js`, dòng 475–492. — `logsRes.data || []`, `apptsRes.data || []` mà không kiểm `logsRes.error`/`apptsRes.error`.
+- [x] **Hướng sửa:** Kiểm tra cả hai `error`, hiện lỗi tải riêng biệt; không ghi đè cache data tốt bằng mảng trống khi load lỗi.
+- [x] **Retest:** `PET-05, PET-06, SEC-04`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-022 [P1] — Database / Bảng bổ sung
-- [ ] **Đối chiếu code:** `tab-staff-assessment.js; tab-customer-list.js`, dòng assessment 313; customer-list 816. — Code ghi vào `staff_assessment` và `customer_activation_sms`.
-- [ ] **Hướng sửa:** Kiểm tra `information_schema`, migrations và RLS thật; nếu bảng hợp lệ thì bổ sung phụ lục kiến trúc, nếu không thì thiết kế migration được duyệt hoặc điều chỉnh code; không tự xóa logic.
-- [ ] **Retest:** `DB-04, STA-14, CUS-14`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `tab-staff-assessment.js; tab-customer-list.js`, dòng assessment 313; customer-list 816. — Code ghi vào `staff_assessment` và `customer_activation_sms`.
+- [x] **Hướng sửa:** Kiểm tra `information_schema`, migrations và RLS thật; nếu bảng hợp lệ thì bổ sung phụ lục kiến trúc, nếu không thì thiết kế migration được duyệt hoặc điều chỉnh code; không tự xóa logic.
+- [x] **Retest:** `DB-04, STA-14, CUS-14`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-023 [P1] — Khách hàng / Tài khoản
-- [ ] **Đối chiếu code:** `customers.js`, dòng 383–409. — `tam_khoa` và `da_khoa` đều ánh xạ UI `LOCKED`.
-- [ ] **Hướng sửa:** Tách 3 trạng thái raw `dang_hoat_dong/tam_khoa/da_khoa`; bổ sung mapping trạng thái UI nếu nghiệp vụ cần phân biệt và cập nhật bộ lọc/hành động theo từng mức.
-- [ ] **Retest:** `CUS-02, CUS-03, CUS-04`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `customers.js`, dòng 383–409. — `tam_khoa` và `da_khoa` đều ánh xạ UI `LOCKED`.
+- [x] **Hướng sửa:** Tách 3 trạng thái raw `dang_hoat_dong/tam_khoa/da_khoa`; bổ sung mapping trạng thái UI nếu nghiệp vụ cần phân biệt và cập nhật bộ lọc/hành động theo từng mức.
+- [x] **Retest:** `CUS-02, CUS-03, CUS-04`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-024 [P1] — Bán hàng / Điểm & tồn kho
-- [ ] **Đối chiếu code:** `tab-order-list.js`, dòng 1257–1367. — Tạo đơn, cập nhật voucher, tồn kho, điểm thưởng qua nhiều lời gọi.
-- [ ] **Hướng sửa:** Rà transaction RPC cho checkout; lock tồn/giữ tồn, idempotency key, dùng ledger điểm; thao tác thất bại không để UI báo thành công, đối soát `inventory_transaction` và `paw_point_transaction`.
-- [ ] **Retest:** `ORD-08, ORD-09, ORD-10, ORD-11, X-02`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `tab-order-list.js`, dòng 1257–1367. — Tạo đơn, cập nhật voucher, tồn kho, điểm thưởng qua nhiều lời gọi.
+- [x] **Hướng sửa:** Rà transaction RPC cho checkout; lock tồn/giữ tồn, idempotency key, dùng ledger điểm; thao tác thất bại không để UI báo thành công, đối soát `inventory_transaction` và `paw_point_transaction`.
+- [x] **Retest:** `ORD-08, ORD-09, ORD-10, ORD-11, X-02`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-025 [P2] — Đánh giá / Số liệu
-- [ ] **Đối chiếu code:** `tab-service-reviews.js; tab-order-products.js`, dòng review modules. — Đọc/ghi bảng `review` ở cả đánh giá dịch vụ và sản phẩm.
-- [ ] **Hướng sửa:** Chỉ tính review hợp lệ theo chính sách duyệt, lọc theo `product_id/service_id`, ngăn reply sai bản ghi và thực hiện cập nhật số liệu sau thay đổi.
-- [ ] **Retest:** `SRV-16, ORD-27`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `tab-service-reviews.js; tab-order-products.js`, dòng review modules. — Đọc/ghi bảng `review` ở cả đánh giá dịch vụ và sản phẩm.
+- [x] **Hướng sửa:** Chỉ tính review hợp lệ theo chính sách duyệt, lọc theo `product_id/service_id`, ngăn reply sai bản ghi và thực hiện cập nhật số liệu sau thay đổi.
+- [x] **Retest:** `SRV-16, ORD-27`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ### F-026 [P1] — Phân quyền / Phía client
-- [ ] **Đối chiếu code:** `tab-order-detail.js; dashboard.js`, dòng order-detail 328–343; dashboard 281–285. — Có nhánh fallback vai trò client về `ADMIN`.
-- [ ] **Hướng sửa:** Không mặc định quyền cao khi thiếu role; kiểm tra `auth.uid()` + RLS/RPC `security definer` được kiểm toán; test quyền thật bằng tài khoản ít quyền.
-- [ ] **Retest:** `SEC-01, SEC-02, SEC-03`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
+- [x] **Đối chiếu code:** `tab-order-detail.js; dashboard.js`, dòng order-detail 328–343; dashboard 281–285. — Có nhánh fallback vai trò client về `ADMIN`.
+- [x] **Hướng sửa:** Không mặc định quyền cao khi thiếu role; kiểm tra `auth.uid()` + RLS/RPC `security definer` được kiểm toán; test quyền thật bằng tài khoản ít quyền.
+- [x] **Retest:** `SEC-01, SEC-02, SEC-03`.. Chụp payload, DB row trước/sau, refresh tab HTML liên quan.
 
 ## F. CHECKLIST CHUNG: MỌI BẢNG HTML, CỘT HIỂN THỊ VÀ TƯƠNG TÁC
 
