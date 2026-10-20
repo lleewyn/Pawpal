@@ -871,6 +871,13 @@
                         ? `/pages/user/#support?id=${encodeURIComponent(noti.support_ticket_id)}`
                         : '/pages/user/#support';
                 }
+            } else if (category === 'Hoàn tiền') {
+                actionText = 'Xem đơn hàng hoàn tiền';
+                if (!rawUrl || rawUrl === '#') {
+                    rawUrl = noti.sales_order_id
+                        ? `/pages/user/#order-detail?id=${encodeURIComponent(noti.sales_order_id)}`
+                        : '/pages/user/#orders';
+                }
             } else if (rawUrl && rawUrl !== '#' && rawUrl !== '') {
                 actionText = 'Đến trang liên kết';
             }

@@ -1815,6 +1815,35 @@ export const API = {
                 }
             }
 
+            if (updatedReq?.customer_id) {
+                try {
+                    const isApproved = requestStatus === 'da_duyet' || requestStatus === 'approved';
+                    const isCompleted = requestStatus === 'da_hoan_tat' || requestStatus === 'completed';
+                    const isRejected = requestStatus === 'da_tu_choi' || requestStatus === 'rejected';
+                    let notiTitle = 'Cập nhật yêu cầu đổi trả';
+                    let notiContent = `Yêu cầu đổi trả #${requestId.slice(0, 8)} đã được cập nhật trạng thái: ${requestStatus}.`;
+                    if (isApproved) {
+                        notiTitle = 'Yêu cầu đổi trả đã được duyệt';
+                        notiContent = `Yêu cầu đổi trả #${requestId.slice(0, 8)} của bạn đã được chấp thuận.`;
+                    } else if (isCompleted) {
+                        notiTitle = 'Yêu cầu đổi trả đã hoàn tất';
+                        notiContent = `Yêu cầu đổi trả #${requestId.slice(0, 8)} đã hoàn tất xử lý.`;
+                    } else if (isRejected) {
+                        notiTitle = 'Yêu cầu đổi trả bị từ chối';
+                        notiContent = `Yêu cầu đổi trả #${requestId.slice(0, 8)} không được chấp thuận. Vui lòng liên hệ CSKH để biết thêm chi tiết.`;
+                    }
+                    await this.createSystemNotification({
+                        customerId: updatedReq.customer_id,
+                        type: 'cap_nhat_yeu_cau_ho_tro',
+                        title: notiTitle,
+                        content: notiContent,
+                        orderId: updatedReq.sales_order_id
+                    });
+                } catch (notiErr) {
+                    console.warn('[API] Return status notification warning:', notiErr);
+                }
+            }
+
             return { success: true, data: updatedReq };
         } catch (e) {
             console.error('[API] updateReturnRequestStatus error:', e);

@@ -154,10 +154,11 @@
         if (db) {
             try {
                 const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || {};
-                let query = db.from('support_ticket').select('*').order('created_at', { ascending: false });
-                if (currentUser && currentUser.id) {
-                    query = query.eq('user_id', currentUser.id);
+                if (!currentUser || !currentUser.id || currentUser.is_temporary) {
+                    tickets = [];
+                    return [];
                 }
+                const query = db.from('support_ticket').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
                 const { data: ticketsData, error: tErr } = await query;
                 if (!tErr && ticketsData) {
                     const ticketIds = ticketsData.map(t => t.id);

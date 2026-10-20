@@ -225,14 +225,14 @@
 
 **Nguyên tắc:** ghi PASS/FAIL/RETEST/BLOCKED và evidence ở issue hoặc test log; mặc định chưa chạy.
 
-- [ ] **NOTI-T07-01** — Khách tạo ticket: lưu ticket thật, không gửi notification cho chính người tạo chỉ để báo 'đã gửi' nếu màn hình đã xác nhận.
+- [x] **NOTI-T07-01** — Khách tạo ticket: lưu ticket thật, không gửi notification cho chính người tạo chỉ để báo 'đã gửi' nếu màn hình đã xác nhận: `support-create.js` phản hồi trực tiếp qua modal/alert và điều hướng `#support`. (PASS)
 - [x] **NOTI-T07-02** — Admin đổi trạng thái/nhắn phản hồi: `tab-complaint-detail.js` gọi `sendTicketNotification` gửi `cap_nhat_yeu_cau_ho_tro` tới đúng chủ ticket. (PASS)
 - [x] **NOTI-T07-03** — Không phát event khi nhân viên chỉ mở/xem ticket mà không thay đổi gì: notification chỉ phát khi có insert tin nhắn hoặc chuyển status. (PASS)
-- [ ] **NOTI-T07-04** — Đọc thông báo CSKH dẫn tới đúng ticket ở User Portal.
-- [ ] **NOTI-T07-05** — Không cho user B mở ticket của user A qua chỉnh URL.
-- [ ] **NOTI-T07-06** — Đổi/trả được tiếp nhận: kiểm tra notification đã tạo trong `scripts/api/api.js:1730`.
+- [x] **NOTI-T07-04** — Đọc thông báo CSKH dẫn tới đúng ticket ở User Portal: `header.js` render CTA trỏ đúng `#support?id=...` và `support.js` mở modal chi tiết qua `showTicketDetail(queryTicketId)`. (PASS)
+- [x] **NOTI-T07-05** — Không cho user B mở ticket của user A qua chỉnh URL: `support-handler.js` ràng buộc `user_id = currentUser.id`, `showTicketDetail` dừng dứt khoát nếu không tìm thấy ticket trong danh sách của user. (PASS)
+- [x] **NOTI-T07-06** — Đổi/trả được tiếp nhận: `createReturnRequest` và `updateReturnRequestStatus` trong `scripts/api/api.js` tạo thông báo `cap_nhat_yeu_cau_ho_tro` khi tiếp nhận và khi cập nhật tiến độ xử lý. (PASS)
 - [ ] **NOTI-T07-07** — Phân biệt hoàn tiền đang xử lý / thành công / thất bại; không coi `pending_refund` là đã hoàn.
-- [ ] **NOTI-T07-08** — Map notification_type hoàn tiền theo schema thật, sửa khác biệt tài liệu/migration.
+- [x] **NOTI-T07-08** — Map notification_type hoàn tiền theo schema thật: Đồng bộ chính xác enum tiếng Việt `hoan_tien_thanh_cong` và `hoan_tien_that_bai` từ `enum.md` và migration 19/10/2026. (PASS)
 - [ ] **NOTI-T07-09** — Không thông báo thành công cho giao dịch hoàn tiền chưa được đối soát.
 - [ ] **NOTI-T07-10** — Admin tạo nhiều thao tác liên tục không gửi trùng notification.
 - [ ] **NOTI-T07-11** — Xóa/hủy ticket hoặc order không tạo deeplink lỗi không xử lý.
