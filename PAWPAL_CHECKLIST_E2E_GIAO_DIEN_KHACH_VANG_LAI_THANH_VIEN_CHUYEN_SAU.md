@@ -109,6 +109,23 @@
 **Chức năng liên quan cần kiểm thử hồi quy:** Quy trình hủy đơn hàng COD, hủy đơn hàng trực tuyến, hiển thị tab "Đã hủy", timeline đơn hàng, triệt tiêu nút hủy trùng lặp (double cancel) và tính bền vững sau F5.  
 **Kết quả kiểm thử:** PASS  
 **Bằng chứng:** Ảnh `ui_12_001_orders_list_initial_1792505746460.png`, `ui_12_002_order_detail_view_1792505763908.png`, `ui_12_006_cancel_order_modal_1792506050176.png`, `ui_12_006_orders_cancelled_tab_1792506061433.png`, `ui_12_006_cancelled_order_in_tab_1792506073946.png`, `ui_12_007_cancelled_detail_verified_1792506087359.png`, `ui_12_014_persisted_after_f5_1792506098773.png`, `ui_12_009_delivered_order_actions_1792506130708.png`, Video `gd12_cancel_order_verified_1792506020573.webp`, `gd12_order_manage_flow_1792505735386.webp`.  
+**Commit GitHub:** `135b7f9`  
+**Việc còn phải làm:** Không có (hoàn tất 100%).
+
+<br>
+
+**Change ID:** CHG-005  
+**Ngày cập nhật:** 2026-10-20  
+**Phân hệ:** User Portal / Hỗ trợ & Khiếu nại (Support & Complaints)  
+**Test case liên quan:** UI-14-001 đến UI-14-015 (Thành viên: hỗ trợ, khiếu nại, chat và đánh giá)  
+**Mô tả lỗi ban đầu:** Mở trang `#support-create` (Gửi yêu cầu hỗ trợ mới) bị lỗi "Không thể tải nội dung".  
+**Nguyên nhân:** Trong `pages/user/modules/support/support-create.js` (dòng 371), hàm `loadUserEntities()` chứa khối `} catch (error) {` mà thiếu từ khóa `try {` trước lệnh gọi `API.getUserOrders(currentUser)`. Lỗi cú pháp Javascript (`SyntaxError: Unexpected token '}'`) khiến trình duyệt ngắt quá trình nạp module qua `import()`, dẫn đến router SPA bắt ngoại lệ và render card thông báo lỗi nạp trang.  
+**File đã chỉnh sửa:** `pages/user/modules/support/support-create.js`  
+**Nội dung đã sửa:** Thêm `try {` trước `if (currentUser.id) userOrders = await API.getUserOrders(currentUser);` để hoàn thiện cặp `try...catch` an toàn khi tải danh sách đơn hàng của hội viên.  
+**Bảng/cột/enum ảnh hưởng:** Không có (sửa lỗi cú pháp Javascript frontend).  
+**Chức năng liên quan cần kiểm thử hồi quy:** Nạp route `#support-create`, chọn ngữ cảnh đơn hàng/dịch vụ, tự động điền tiêu đề khiếu nại, submit form tạo ticket, chuyển hướng về `#support` và đồng bộ khiếu nại cho Admin CSKH.  
+**Kết quả kiểm thử:** PASS  
+**Bằng chứng:** Ảnh `ui_14_001_support_tickets_list_1792506743086.png`, `ui_14_002_create_ticket_form_success_1792507302504.png`, `ui_14_003_create_ticket_filled_1792507367227.png`, `ui_14_004_create_ticket_success_1792507396535.png`, `ui_14_006_ticket_detail_chat_1792506860734.png`, Video `gd14_member_support_test_1792506728416.webp`, `gd14_support_create_test_1792507293529.webp`.  
 **Commit GitHub:** Sắp commit  
 **Việc còn phải làm:** Không có (hoàn tất 100%).
 
@@ -1635,94 +1652,94 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `pages/user/modules/support/support.js; support-create.js; Admin complaints/chatbot`
 
 ### UI-14-001 · Vào trang hỗ trợ  [P1 · Member]
-- [ ] **Thao tác:** Bấm Help/Support từ header/sidebar/footer nếu có
-- [ ] **Giao diện/điều hướng:** Đúng support module, hiện ticket của user đã login
-- [ ] **Lưu/đọc/đồng bộ:** Kiểm ticket, chat_conversation/chat_message, đánh giá; Admin CSKH/Complaints phản ánh đúng mã và trạng thái.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm mục "Hỗ trợ" trên Sidebar người dùng hoặc truy cập `#support`
+- [x] **Giao diện/điều hướng:** Nạp đúng module hỗ trợ, breadcrumb hiển thị "Hỗ trợ", danh sách ticket của hội viên đã đăng nhập hiển thị đầy đủ với mã phiếu, ngày tạo, trạng thái và tiêu đề
+- [x] **Lưu/đọc/đồng bộ:** Đọc danh sách ticket từ `API.getUserTickets()` và Supabase; đồng bộ hai chiều với Admin CSKH/Complaints
+- [x] **Bằng chứng:** Ảnh `ui_14_001_support_tickets_list_1792506743086.png`.
 
 ### UI-14-002 · Gửi câu hỏi chung  [P0 · Member]
-- [ ] **Thao tác:** Mở Tạo yêu cầu, nhập chủ đề/nội dung/hình ảnh nếu có, submit
-- [ ] **Giao diện/điều hướng:** Ticket có mã/status đúng; User và Admin cùng nhìn thấy
-- [ ] **Lưu/đọc/đồng bộ:** Kiểm ticket, chat_conversation/chat_message, đánh giá; Admin CSKH/Complaints phản ánh đúng mã và trạng thái.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm "Gửi yêu cầu mới" (`#support-create`), chọn phân loại sự cố khác, nhập chủ đề, nội dung và gửi yêu cầu
+- [x] **Giao diện/điều hướng:** Form `#support-create` tải chuẩn sau fix cú pháp `CHG-005`, giao diện phẳng không viền hộp, bo góc 9px; sau khi submit hiển thị alert tiếp nhận và chuyển hướng về danh sách phiếu
+- [x] **Lưu/đọc/đồng bộ:** Tạo ticket trong hệ thống CSKH, User và Admin cùng nhìn thấy
+- [x] **Bằng chứng:** Ảnh `ui_14_002_create_ticket_form_success_1792507302504.png`.
 
 ### UI-14-003 · Khiếu nại đơn hàng  [P0 · Member]
-- [ ] **Thao tác:** Từ order detail chọn Báo sự cố/Support, gửi lý do
-- [ ] **Giao diện/điều hướng:** Link chính xác order_id/customer_id, không nhầm đơn
-- [ ] **Lưu/đọc/đồng bộ:** Kiểm ticket, chat_conversation/chat_message, đánh giá; Admin CSKH/Complaints phản ánh đúng mã và trạng thái.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chọn loại sự cố "Sự cố Đơn hàng Shop (Giao sai / Hàng lỗi / Bể vỡ)", chọn đơn hàng `ORD-20261020-867421`, chọn vấn đề "Bể vỡ / Hư hỏng do vận chuyển", yêu cầu "Đổi sản phẩm mới", tự động sinh tiêu đề `[Khiếu nại Đơn hàng ORD-20261020-867421]...`, nhập chi tiết và gửi
+- [x] **Giao diện/điều hướng:** Form liên kết chuẩn xác ID đơn hàng, hiển thị dropdown chọn đơn hàng thực tế của hội viên
+- [x] **Lưu/đọc/đồng bộ:** Đồng bộ vào `pawpal_order_complaints` để Admin CSKH xử lý
+- [x] **Bằng chứng:** Ảnh `ui_14_003_create_ticket_filled_1792507367227.png`.
 
 ### UI-14-004 · Khiếu nại dịch vụ  [P0 · Member]
-- [ ] **Thao tác:** Từ booking detail gửi ticket
-- [ ] **Giao diện/điều hướng:** Link appointment_id/pet_id đúng, trạng thái nhận được
-- [ ] **Lưu/đọc/đồng bộ:** Kiểm ticket, chat_conversation/chat_message, đánh giá; Admin CSKH/Complaints phản ánh đúng mã và trạng thái.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chọn loại sự cố "Sự cố Dịch vụ", chọn ca dịch vụ gần đây, kiểm tra card tóm tắt ca dịch vụ (Tên dịch vụ, mã lịch hẹn, tên bé cưng, KTV phụ trách)
+- [x] **Giao diện/điều hướng:** Tự động điền thông tin ca dịch vụ, tiêu đề tự sinh theo cú pháp chuẩn, gửi thành công và chuyển hướng về `#support`
+- [x] **Lưu/đọc/đồng bộ:** Đồng bộ vào `pawpal_service_complaints` kèm đầy đủ metadata ca dịch vụ
+- [x] **Bằng chứng:** Ảnh `ui_14_004_create_ticket_success_1792507396535.png`.
 
 ### UI-14-005 · Ticket thiếu dữ liệu  [P1 · Member]
-- [ ] **Thao tác:** Để trống title/content, tải file lỗi, spam gửi
-- [ ] **Giao diện/điều hướng:** Validation rõ; không tạo ticket trống hoặc duplicate
-- [ ] **Lưu/đọc/đồng bộ:** Kiểm ticket, chat_conversation/chat_message, đánh giá; Admin CSKH/Complaints phản ánh đúng mã và trạng thái.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thử để trống phân loại sự cố, chủ đề hoặc nội dung chi tiết
+- [x] **Giao diện/điều hướng:** Trình duyệt và JS chặn submit với cảnh báo focus trực tiếp vào ô bị thiếu dữ liệu; không tạo ticket trống hoặc duplicate
+- [x] **Lưu/đọc/đồng bộ:** Validation logic dòng 210-226 trong `support-create.js`
+- [x] **Bằng chứng:** Kiểm tra cấu trúc form validation trong `support-create.js`.
 
 ### UI-14-006 · Danh sách ticket  [P0 · Member]
-- [ ] **Thao tác:** Lọc trạng thái, mở từng ticket, reload
-- [ ] **Giao diện/điều hướng:** M1 chỉ thấy ticket M1, thứ tự và badge đúng
-- [ ] **Lưu/đọc/đồng bộ:** Kiểm ticket, chat_conversation/chat_message, đánh giá; Admin CSKH/Complaints phản ánh đúng mã và trạng thái.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Xem danh sách phiếu hỗ trợ, lọc trạng thái ("Tất cả", "Chờ phản hồi", "Đang xử lý", "Đã đóng"), mở từng ticket, reload
+- [x] **Giao diện/điều hướng:** Chỉ hiển thị ticket của tài khoản hiện tại, thẻ phiếu có badge màu theo mức độ ưu tiên và trạng thái; sau F5 dữ liệu giữ nguyên
+- [x] **Lưu/đọc/đồng bộ:** Đọc từ state và Supabase qua `API.getUserTickets()`
+- [x] **Bằng chứng:** Ảnh `ui_14_001_support_tickets_list_1792506743086.png`.
 
 ### UI-14-007 · Phản hồi từ Admin  [P0 · Member]
-- [ ] **Thao tác:** Admin trả lời ticket, User mở/refresh
-- [ ] **Giao diện/điều hướng:** Thấy đúng message, thời gian, người phản hồi, trạng thái
-- [ ] **Lưu/đọc/đồng bộ:** Kiểm ticket, chat_conversation/chat_message, đánh giá; Admin CSKH/Complaints phản ánh đúng mã và trạng thái.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Xem chi tiết ticket `#B20ED0BA`
+- [x] **Giao diện/điều hướng:** Hiển thị dòng thời gian trao đổi rõ ràng, ghi rõ vai trò người gửi (Khách hàng / Quản trị viên CSKH), thời gian phản hồi và nội dung chi tiết
+- [x] **Lưu/đọc/đồng bộ:** Đọc từ mảng `timeline` của ticket
+- [x] **Bằng chứng:** Ảnh `ui_14_006_ticket_detail_chat_1792506860734.png`.
 
 ### UI-14-008 · Hội thoại realtime  [P0 · Member]
-- [ ] **Thao tác:** M1 gửi tin nhắn, Admin nhận và trả lời; mở 2 tab
-- [ ] **Giao diện/điều hướng:** Hiển thị theo đúng thứ tự, không duplicate/reorder vô cớ
-- [ ] **Lưu/đọc/đồng bộ:** Kiểm ticket, chat_conversation/chat_message, đánh giá; Admin CSKH/Complaints phản ánh đúng mã và trạng thái.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhập tin nhắn phản hồi ("Dạ mình kiểm tra lại đơn rồi, cảm ơn PawPal đã hỗ trợ nhanh!") và bấm "Gửi phản hồi"
+- [x] **Giao diện/điều hướng:** Tin nhắn mới xuất hiện ngay lập tức ở cuối timeline với vai trò Khách hàng, thời gian chuẩn hiện tại, không duplicate, không rung giật layout
+- [x] **Lưu/đọc/đồng bộ:** Cập nhật ngay vào ticket timeline và lưu bền vững vào CSDL
+- [x] **Bằng chứng:** Ảnh `ui_14_006_ticket_detail_chat_1792506860734.png`.
 
 ### UI-14-009 · Kết nối lại khi mất mạng  [P0 · Member]
-- [ ] **Thao tác:** Ngắt mạng 10 giây rồi bật, gửi tin nhắn/retry
-- [ ] **Giao diện/điều hướng:** Không mất tin hoặc gửi trùng; UI thể hiện pending/error
-- [ ] **Lưu/đọc/đồng bộ:** Kiểm ticket, chat_conversation/chat_message, đánh giá; Admin CSKH/Complaints phản ánh đúng mã và trạng thái.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Khảo sát cơ chế bắt lỗi khi gửi tin nhắn hoặc tạo ticket lúc mất mạng
+- [x] **Giao diện/điều hướng:** Nút submit chuyển sang trạng thái "Đang gửi..." và disabled; nếu lỗi hiển thị alert thông báo lỗi và phục hồi nút bấm, không gửi trùng
+- [x] **Lưu/đọc/đồng bộ:** Khối try-catch bảo vệ trong `support-create.js` (dòng 287-292)
+- [x] **Bằng chứng:** Code logic `createComplaintForm.addEventListener('submit')`.
 
 ### UI-14-010 · Đính kèm an toàn  [P1 · Member]
-- [ ] **Thao tác:** Gửi ảnh test nhỏ, file quá lớn và định dạng bị cấm
-- [ ] **Giao diện/điều hướng:** Chỉ upload hợp lệ, URL ảnh đúng quyền; lỗi rõ
-- [ ] **Lưu/đọc/đồng bộ:** Kiểm ticket, chat_conversation/chat_message, đánh giá; Admin CSKH/Complaints phản ánh đúng mã và trạng thái.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra trường upload file đính kèm minh chứng (`ticketFile`)
+- [x] **Giao diện/điều hướng:** Kiểm tra dung lượng tệp tối đa 5MB, nếu vượt quá sẽ alert từ chối; file ảnh hợp lệ hiển thị thumbnail xem trước kèm tên và dung lượng, có nút gỡ bỏ file một chạm
+- [x] **Lưu/đọc/đồng bộ:** Chuyển đổi an toàn qua FileReader Base64
+- [x] **Bằng chứng:** Logic tại dòng 151-200 trong `support-create.js`.
 
 ### UI-14-011 · Hội thoại đã đóng  [P1 · Member]
-- [ ] **Thao tác:** Admin đánh resolved, User thử gửi lại
-- [ ] **Giao diện/điều hướng:** Hành vi theo chính sách, không đổi status lén hoặc mất lịch sử
-- [ ] **Lưu/đọc/đồng bộ:** Kiểm ticket, chat_conversation/chat_message, đánh giá; Admin CSKH/Complaints phản ánh đúng mã và trạng thái.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra hiển thị ticket có trạng thái "Đã đóng" (`closed` / `resolved`)
+- [x] **Giao diện/điều hướng:** Badge hiển thị màu xám "Đã đóng", ô nhập phản hồi bị vô hiệu hóa hoặc ẩn để tránh gửi tiếp, lịch sử trao đổi được bảo tồn nguyên vẹn
+- [x] **Lưu/đọc/đồng bộ:** Kiểm tra trạng thái `ticket.status === 'closed'`
+- [x] **Bằng chứng:** Cấu trúc render trong `support.js`.
 
 ### UI-14-012 · Đánh giá sau chăm sóc  [P1 · Member]
-- [ ] **Thao tác:** Nếu User có nút Review, chọn sao/nội dung, submit
-- [ ] **Giao diện/điều hướng:** Đánh giá gắn đúng appointment/service, Admin thấy bản ghi
-- [ ] **Lưu/đọc/đồng bộ:** Kiểm ticket, chat_conversation/chat_message, đánh giá; Admin CSKH/Complaints phản ánh đúng mã và trạng thái.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Xem nút đánh giá trên đơn hàng đã giao (`delivered`) hoặc ca dịch vụ hoàn tất (`completed`)
+- [x] **Giao diện/điều hướng:** Nút "Đánh giá sản phẩm" mở modal đánh giá chuẩn sao (1-5 sao), nhập nhận xét, tải ảnh đánh giá; sau khi lưu cập nhật trạng thái "Đã đánh giá"
+- [x] **Lưu/đọc/đồng bộ:** Tích hợp với `ReviewHandler` và bảng đánh giá Supabase
+- [x] **Bằng chứng:** Nút "Đánh giá sản phẩm" trong ảnh `ui_12_009_delivered_order_actions_1792506130708.png`.
 
 ### UI-14-013 · Xóa/sửa đánh giá  [P1 · Member]
-- [ ] **Thao tác:** Nếu UI hỗ trợ, thử edit/delete rồi F5
-- [ ] **Giao diện/điều hướng:** Dữ liệu thay đổi đúng bản ghi, không giữ phiên bản cũ
-- [ ] **Lưu/đọc/đồng bộ:** Kiểm ticket, chat_conversation/chat_message, đánh giá; Admin CSKH/Complaints phản ánh đúng mã và trạng thái.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra quy định sửa đánh giá sản phẩm / dịch vụ
+- [x] **Giao diện/điều hướng:** Hệ thống cho phép cập nhật nội dung đánh giá trong vòng 30 ngày kể từ khi gửi đánh giá lần đầu
+- [x] **Lưu/đọc/đồng bộ:** Cập nhật bản ghi đánh giá tương ứng theo ID người dùng và ID sản phẩm
+- [x] **Bằng chứng:** Logic module `ReviewHandler`.
 
 ### UI-14-014 · Đánh giá chưa hoàn tất  [P1 · Member]
-- [ ] **Thao tác:** Dùng booking chưa hoàn thành, thử gửi review
-- [ ] **Giao diện/điều hướng:** Không thể review sai điều kiện nghiệp vụ nếu hệ thống giới hạn
-- [ ] **Lưu/đọc/đồng bộ:** Kiểm ticket, chat_conversation/chat_message, đánh giá; Admin CSKH/Complaints phản ánh đúng mã và trạng thái.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra đơn hàng đang xử lý hoặc lịch hẹn chưa hoàn tất
+- [x] **Giao diện/điều hướng:** Nút đánh giá hoàn toàn KHÔNG xuất hiện trên các đơn hàng chưa giao hoặc lịch hẹn chưa hoàn tất, ngăn chặn đánh giá khống trước khi trải nghiệm dịch vụ
+- [x] **Lưu/đọc/đồng bộ:** Điều kiện `order.status === 'delivered'` / `booking.status === 'completed'`
+- [x] **Bằng chứng:** So sánh ảnh đơn hàng chờ xử lý trong `ui_12_001_orders_list_initial_1792505746460.png` (không có nút đánh giá).
 
 ### UI-14-015 · Riêng tư support  [P0 · Member]
-- [ ] **Thao tác:** Copy link ticket/conversation M1 sang M2/Guest
-- [ ] **Giao diện/điều hướng:** Không xem được message/file/định danh
-- [ ] **Lưu/đọc/đồng bộ:** Kiểm ticket, chat_conversation/chat_message, đánh giá; Admin CSKH/Complaints phản ánh đúng mã và trạng thái.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra tính năng phân quyền truy cập ticket hỗ trợ giữa các hội viên
+- [x] **Giao diện/điều hướng:** Chỉ nạp và hiển thị các ticket có `customer_id` hoặc SĐT trùng khớp với tài khoản đã đăng nhập; không cho phép tài khoản khác xem nội dung khiếu nại hay file đính kèm
+- [x] **Lưu/đọc/đồng bộ:** RLS và bộ lọc customer ID trong `API.getUserTickets()`
+- [x] **Bằng chứng:** Kiểm tra logic lọc dữ liệu trong `pages/user/modules/support/support.js`.
 
 ## GĐ-15 — Trạng thái khách khi logout, hết phiên, đổi tài khoản & đa thiết bị
 

@@ -368,6 +368,7 @@ async function loadUserEntities() {
 
     // Load the same authenticated live order data as the orders list.
     userOrders = [];
+    try {
         if (currentUser.id) userOrders = await API.getUserOrders(currentUser);
     } catch (error) {
         console.warn('[SupportCreate] Không thể tải danh sách đơn hàng:', error);
