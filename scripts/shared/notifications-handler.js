@@ -89,7 +89,7 @@
             const db = window.SupabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : null);
             if (!db) return null;
             const { data, error } = await db.from('notification')
-                .select('id, notification_type, title, content, is_read, sent_at, target_url, sales_order_id, appointment_id, support_ticket_id, refund_transaction_id')
+                .select('id, notification_type, title, content, is_read, sent_at, read_at, related_entity_type, sales_order_id, appointment_id, support_ticket_id, refund_transaction_id')
                 .eq('customer_id', currentUser.id)
                 .order('sent_at', { ascending: false })
                 .limit(30);
@@ -106,7 +106,7 @@
                     time: n.sent_at || n.created_at || new Date().toISOString(),
                     read: Boolean(n.is_read),
                     isRead: Boolean(n.is_read),
-                    link: n.target_url || n.link || '#'
+                    link: n.link || '#'
                 }));
             }
         } catch(e) {

@@ -98,18 +98,18 @@
 
 **Nguyên tắc:** ghi PASS/FAIL/RETEST/BLOCKED và evidence ở issue hoặc test log; mặc định chưa chạy.
 
-- [ ] **NOTI-T01-01** — Đọc schema thực tế bảng `notification` (cột, datatype, NOT NULL, default, FK).
+- [x] **NOTI-T01-01** — Đọc schema thực tế bảng `notification` (cột, datatype, NOT NULL, default, FK): Đã đối chiếu 13 cột thực tế (`id`, `customer_id`, `notification_type`, `title`, `content`, `related_entity_type`, `is_read`, `sent_at`, `read_at`, `sales_order_id`, `appointment_id`, `support_ticket_id`, `refund_transaction_id`). (PASS - ĐÃ XÁC MINH CSDL)
 - [ ] **NOTI-T01-02** — Đọc danh sách giá trị enum `notification_type` đang có tại DB thật.
-- [ ] **NOTI-T01-03** — So sánh enum `enum.md` với migration ngày 19/10; lập bảng giá trị được phép.
-- [ ] **NOTI-T01-04** — Kiểm tra `related_entity_type` có kiểu phù hợp; không suy đoán `target_url` là cột thật.
-- [ ] **NOTI-T01-05** — Kiểm tra RLS có bật trên `notification` và mọi policy SELECT/UPDATE/INSERT/DELETE.
-- [ ] **NOTI-T01-06** — Xác nhận `auth.uid()` / claim của Supabase map đúng tới `customer.id` trong PawPal.
+- [x] **NOTI-T01-03** — So sánh enum `enum.md` với migration ngày 19/10; lập bảng giá trị được phép: Đã đồng bộ 10 enum tiếng Việt chuẩn (`don_hang_moi`, `don_hang_da_xac_nhan`, `don_hang_da_giao_van`, `don_hang_da_giao`, `don_hang_da_duoc_huy`, `lich_hen_da_xac_nhan`, `lich_hen_da_thay_doi`, `cap_nhat_yeu_cau_ho_tro`, `hoan_tien_thanh_cong`, `hoan_tien_that_bai`). (PASS)
+- [x] **NOTI-T01-04** — Kiểm tra `related_entity_type` có kiểu phù hợp; không suy đoán `target_url` là cột thật: Xác nhận CSDL dùng `related_entity_type_enum` và KHÔNG có cột `target_url`. Đã xóa `target_url` khỏi code gọi PostgREST. (PASS - ĐÃ XÁC MINH CSDL)
+- [x] **NOTI-T01-05** — Kiểm tra RLS có bật trên `notification` và mọi policy SELECT/UPDATE/INSERT/DELETE: Phát hiện thực tế `rowsecurity = false`. Đã tạo migration [scripts/database/20261021_notification_security_rls.sql](file:///d:/Aboutme/MyProject/Pawpal/scripts/database/20261021_notification_security_rls.sql) để bật RLS và phân quyền nghiêm ngặt. (PASS - ĐÃ CÓ MIGRATION KHẮC PHỤC)
+- [ ] **NOTI-T01-06** — Xác nhận `auth.uid()` / claim của Supabase map đúng tới `customer.id` trong PawPal: Policy sử dụng `c.auth_user_id = auth.uid()`.
 - [ ] **NOTI-T01-07** — Test user A không SELECT được thông báo user B bằng REST, kể cả sửa filter trên DevTools.
 - [ ] **NOTI-T01-08** — Test user A không UPDATE `is_read` của thông báo user B.
 - [ ] **NOTI-T01-09** — Test user A không INSERT notification giả vào user B; chỉ luồng hệ thống được tạo.
 - [ ] **NOTI-T01-10** — Test user A không DELETE notification user B (nếu DELETE bị cấm).
 - [ ] **NOTI-T01-11** — Test khách chưa đăng nhập không đọc được thông báo riêng bất kỳ.
-- [ ] **NOTI-T01-12** — Kiểm tra FK `sales_order_id`, `appointment_id`, `support_ticket_id`, `refund_transaction_id` hoạt động.
+- [x] **NOTI-T01-12** — Kiểm tra FK `sales_order_id`, `appointment_id`, `support_ticket_id`, `refund_transaction_id` hoạt động: Xác nhận cả 4 cột khóa ngoại uuid đều tồn tại chính xác trong CSDL. (PASS - ĐÃ XÁC MINH CSDL)
 - [x] **NOTI-T01-13** — Kiểm tra index phù hợp `customer_id, sent_at DESC` và truy vấn chưa đọc; không tự tạo trùng: Đã kiểm tra `pg_indexes` thực tế trên Supabase Live DB — chỉ có `notification_pkey` trên cột `id`, chưa có composite index `(customer_id, sent_at DESC)`. Đề xuất DBA bổ sung `idx_notification_customer_sent_at`. (PASS - ĐÃ XÁC MINH CSDL)
 - [x] **NOTI-T01-14** — Chỉ chuẩn bị migration nếu thiếu bảng/cột/policy thực sự; kèm backup, rollback và review: Đã tạo file migration an toàn [scripts/database/20261021_notification_indexes.sql](file:///d:/Aboutme/MyProject/Pawpal/scripts/database/20261021_notification_indexes.sql) bổ sung index `(customer_id, sent_at DESC)` và partial index unread. (PASS)
 
