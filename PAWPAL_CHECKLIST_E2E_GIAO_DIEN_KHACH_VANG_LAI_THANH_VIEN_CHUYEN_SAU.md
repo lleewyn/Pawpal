@@ -187,112 +187,112 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `components/ (header, navigation: cần kiểm kê DOM mới)`
 
 ### UI-01-001 · Logo PawPal  [P1 · Guest]
-- [ ] **Thao tác:** Bấm logo ở Home, trang Shop, trang dịch vụ, Blog, Cart; dùng cả chuột và Enter
-- [ ] **Giao diện/điều hướng:** Quay đúng trang chủ; không xóa giỏ/draft một cách bất ngờ
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm logo ở Home, trang Shop, trang dịch vụ, Blog, Cart; dùng cả chuột và Enter
+- [x] **Giao diện/điều hướng:** Quay đúng trang chủ; không xóa giỏ/draft một cách bất ngờ
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-002 · Menu Home/Public  [P1 · Guest]
-- [ ] **Thao tác:** Bấm từng link top-nav hiển thị; mở menu con nếu có; kiểm tra URL
-- [ ] **Giao diện/điều hướng:** Từng link đến đúng trang/section, active state chính xác và không 404
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm từng link top-nav hiển thị; mở menu con nếu có; kiểm tra URL
+- [x] **Giao diện/điều hướng:** Từng link đến đúng trang/section, active state chính xác và không 404
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-003 · Menu dịch vụ  [P1 · Guest]
-- [ ] **Thao tác:** Hover/click Services, mở từng dịch vụ Spa/Grooming, Hotel, Taxi (nếu có)
-- [ ] **Giao diện/điều hướng:** Đi đúng trang giới thiệu, card/CTA dẫn tới booking đúng loại
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Hover/click Services, mở từng dịch vụ Spa/Grooming, Hotel, Taxi (nếu có)
+- [x] **Giao diện/điều hướng:** Đi đúng trang giới thiệu, card/CTA dẫn tới booking đúng loại
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-004 · Menu Shop  [P1 · Guest]
-- [ ] **Thao tác:** Bấm Shop, danh mục sản phẩm, menu con, breadcrumb
-- [ ] **Giao diện/điều hướng:** Không đưa đến trang trống/404; dữ liệu danh mục hiển thị
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm Shop, danh mục sản phẩm, menu con, breadcrumb
+- [x] **Giao diện/điều hướng:** Không đưa đến trang trống/404; dữ liệu danh mục hiển thị
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-005 · Icon tài khoản khi chưa đăng nhập  [P1 · Guest]
-- [ ] **Thao tác:** Bấm avatar/account, các tùy chọn đăng nhập/đăng ký/tra cứu (nếu có)
-- [ ] **Giao diện/điều hướng:** Không được hiển thị tên/điểm/dữ liệu người dùng khác
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm avatar/account, các tùy chọn đăng nhập/đăng ký/tra cứu (nếu có)
+- [x] **Giao diện/điều hướng:** Không được hiển thị tên/điểm/dữ liệu người dùng khác
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-006 · Icon giỏ hàng và badge  [P1 · Guest]
-- [ ] **Thao tác:** Thêm sản phẩm khi guest, trở về Home, click icon Cart
-- [ ] **Giao diện/điều hướng:** Badge đúng tổng số lượng; giỏ mở đúng, không lệch với cart page
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thêm sản phẩm khi guest, trở về Home, click icon Cart
+- [x] **Giao diện/điều hướng:** Badge đúng tổng số lượng; giỏ mở đúng, không lệch với cart page
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-007 · Wishlist/Heart  [P1 · Guest]
-- [ ] **Thao tác:** Nhấn tim sản phẩm khi chưa đăng nhập
-- [ ] **Giao diện/điều hướng:** Đúng quy tắc website: yêu cầu login hoặc lưu guest rõ ràng; không ghi wishlist sang khách khác
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhấn tim sản phẩm khi chưa đăng nhập
+- [x] **Giao diện/điều hướng:** Đúng quy tắc website: yêu cầu login hoặc lưu guest rõ ràng; không ghi wishlist sang khách khác
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-008 · Tìm kiếm trên header  [P1 · Guest]
-- [ ] **Thao tác:** Nhập tên hàng/dịch vụ và Enter, bấm icon tìm kiếm, xóa từ khóa
-- [ ] **Giao diện/điều hướng:** Search hiển thị kết quả phù hợp hoặc empty state, không chuyển URL lỗi
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhập tên hàng/dịch vụ và Enter, bấm icon tìm kiếm, xóa từ khóa
+- [x] **Giao diện/điều hướng:** Search hiển thị kết quả phù hợp hoặc empty state, không chuyển URL lỗi
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-009 · Nút Chat/Hotline trên header  [P1 · Guest]
-- [ ] **Thao tác:** Bấm các icon chat/gọi điện nếu xuất hiện
-- [ ] **Giao diện/điều hướng:** Mở chức năng đúng, không âm thầm gửi thông tin cá nhân
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm các icon chat/gọi điện nếu xuất hiện
+- [x] **Giao diện/điều hướng:** Mở chức năng đúng, không âm thầm gửi thông tin cá nhân
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-010 · Dropdown tương tác  [P1 · Guest]
-- [ ] **Thao tác:** Mở từng dropdown rồi click ngoài, Esc, chuyển trang, cuộn
-- [ ] **Giao diện/điều hướng:** Dropdown đóng đúng, không chặn thao tác phía sau, focus hợp lý
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở từng dropdown rồi click ngoài, Esc, chuyển trang, cuộn
+- [x] **Giao diện/điều hướng:** Dropdown đóng đúng, không chặn thao tác phía sau, focus hợp lý
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-011 · Sticky header khi scroll  [P1 · Guest]
-- [ ] **Thao tác:** Cuộn dài Home/Blog/Shop rồi back to top
-- [ ] **Giao diện/điều hướng:** Header không che tiêu đề/CTA, không rung/nhảy hoặc phủ modal
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Cuộn dài Home/Blog/Shop rồi back to top
+- [x] **Giao diện/điều hướng:** Header không che tiêu đề/CTA, không rung/nhảy hoặc phủ modal
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-012 · Back/Forward sau dùng header  [P1 · Guest]
-- [ ] **Thao tác:** Đi 5 link liên tục, browser Back/Forward, F5 deep link
-- [ ] **Giao diện/điều hướng:** Đúng trang và state, không lỗi router hoặc mất auth
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đi 5 link liên tục, browser Back/Forward, F5 deep link
+- [x] **Giao diện/điều hướng:** Đúng trang và state, không lỗi router hoặc mất auth
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-013 · Mở link mới  [P1 · Guest]
-- [ ] **Thao tác:** Ctrl/Cmd+click link nav, mở tab mới và quay tab cũ
-- [ ] **Giao diện/điều hướng:** Không làm thay đổi state của tab cũ, URL mới hợp lệ
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Ctrl/Cmd+click link nav, mở tab mới và quay tab cũ
+- [x] **Giao diện/điều hướng:** Không làm thay đổi state của tab cũ, URL mới hợp lệ
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-014 · Mobile burger/overlay  [P1 · Guest]
-- [ ] **Thao tác:** Thu viewport mobile, bấm hamburger → từng mục → đóng bằng X/overlay/Esc
-- [ ] **Giao diện/điều hướng:** Menu mở được, không cuộn nền khi overlay, đóng xong thao tác trang bình thường
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thu viewport mobile, bấm hamburger → từng mục → đóng bằng X/overlay/Esc
+- [x] **Giao diện/điều hướng:** Menu mở được, không cuộn nền khi overlay, đóng xong thao tác trang bình thường
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-015 · Tablet navigation  [P1 · Guest]
-- [ ] **Thao tác:** Ở 768px, mở sidebar/dropdown và xoay màn hình nếu thiết bị hỗ trợ
-- [ ] **Giao diện/điều hướng:** Không cắt menu hoặc che nút quan trọng, đúng breakpoint
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Ở 768px, mở sidebar/dropdown và xoay màn hình nếu thiết bị hỗ trợ
+- [x] **Giao diện/điều hướng:** Không cắt menu hoặc che nút quan trọng, đúng breakpoint
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-016 · Header loading/login transition  [P1 · Guest]
-- [ ] **Thao tác:** Từ khách nhấn đăng nhập, login xong quay lại shop
-- [ ] **Giao diện/điều hướng:** Avatar, tên và trạng thái member cập nhật ngay không cần F5
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Từ khách nhấn đăng nhập, login xong quay lại shop
+- [x] **Giao diện/điều hướng:** Avatar, tên và trạng thái member cập nhật ngay không cần F5
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-017 · Nút ưu đãi/banner gắn header  [P1 · Guest]
-- [ ] **Thao tác:** Bấm từng CTA banner/announcement strip nếu có
-- [ ] **Giao diện/điều hướng:** Đi đúng landing/detail với điều kiện ưu đãi chính xác
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm từng CTA banner/announcement strip nếu có
+- [x] **Giao diện/điều hướng:** Đi đúng landing/detail với điều kiện ưu đãi chính xác
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-01-018 · Ngôn ngữ và định dạng  [P1 · Guest]
-- [ ] **Thao tác:** Duyệt tất cả nhãn/icon/badge trên header
-- [ ] **Giao diện/điều hướng:** Không trộn nhãn placeholder, lỗi encoding hoặc icon mất
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Duyệt tất cả nhãn/icon/badge trên header
+- [x] **Giao diện/điều hướng:** Không trộn nhãn placeholder, lỗi encoding hoặc icon mất
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ## GĐ-02 — FOOTER trên mọi trang trước đăng nhập
 
