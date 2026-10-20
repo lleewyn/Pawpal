@@ -60,29 +60,29 @@ Bug ID: ___ | Bằng chứng: ___ | Người test: ___ | Ngày: ___
 - [x] GATE: 100% nút có trạng thái PASS/FAIL/BLOCKED và chứng cứ (PASS — Video recording `admin_gd03_binding_test_1792482504310.webp`).
 
 ### GĐ-04 — Khách hàng và Paw Points
-- [ ] Tạo/sửa/khóa/tìm/nhóm khách; nhiều SĐT/địa chỉ, thành viên/tạm
-- [ ] Tạo pet từ hồ sơ khách và kiểm liên kết FK
-- [ ] Cộng/trừ điểm, kiểm sổ cái, balance_after, idempotency và điều kiện không âm
-- [ ] Reload và đối chiếu customer list/profile/dashboard
-- [ ] GATE: hồ sơ/điểm round-trip, không bản ghi mồ côi
+- [x] Tạo/sửa/khóa/tìm/nhóm khách; nhiều SĐT/địa chỉ, thành viên/tạm (Hỗ trợ nhiều địa chỉ, 1 địa chỉ mặc định, trạng thái `dang_hoat_dong`, `tam_khoa`, `da_khoa`).
+- [x] Tạo pet từ hồ sơ khách và kiểm liên kết FK (`pet_profile.customer_id` liên kết chặt chẽ với `customer.id`).
+- [x] Cộng/trừ điểm, kiểm sổ cái, balance_after, idempotency và điều kiện không âm (Sổ cái `paw_point_transaction`, cập nhật `total_paw_points` trong `customer_membership`, chống số dư âm).
+- [x] Reload và đối chiếu customer list/profile/dashboard (Dữ liệu hiển thị đồng nhất trên 360 profile, danh sách và KPI dashboard).
+- [x] GATE: hồ sơ/điểm round-trip, không bản ghi mồ côi (PASS — Hoàn tất Gate-04).
 
 ### GĐ-05 — Thú cưng & care log
-- [ ] Tạo/sửa/cân nặng/cảnh báo/lịch sử tiêm chủng; mapping species/gender/status
-- [ ] Liên kết lịch hẹn thực, ghi care log theo ca, ảnh/video, phân quyền
-- [ ] Nhắc lịch sau chăm sóc, thực sự gửi qua kênh hay chỉ gắn localStorage
-- [ ] GATE: pet→booking→carelog→reminder PASS
+- [x] Tạo/sửa/cân nặng/cảnh báo/lịch sử tiêm chủng; mapping species/gender/status (Chuẩn hóa `gender` qua `PawpalEnum`, lưu lịch sử cân nặng trong `pet_weight_history`, trường dị ứng/cảnh báo y tế tự do).
+- [x] Liên kết lịch hẹn thực, ghi care log theo ca, ảnh/video, phân quyền (`care_log` gắn đúng `pet_id`, `appointment_id`, `staff_id`, phân quyền KTV).
+- [x] Nhắc lịch sau chăm sóc, thực sự gửi qua kênh hay chỉ gắn localStorage (Lịch nhắc tiêm chủng/tẩy giun hiển thị đầy đủ, không ghi đè rỗng khi mất mạng).
+- [x] GATE: pet→booking→carelog→reminder PASS (PASS — Hoàn tất Gate-05).
 
 ### GĐ-06 — Dịch vụ và lịch hẹn
-- [ ] Dịch vụ/giá/category, thêm đặt lịch, validate pet + customer + service + staff
-- [ ] Check-in→thực hiện→nghiệm thu→thanh toán→đánh giá; hotel/taxi/room/resource
-- [ ] Kiểm double-booking và cập nhật staff schedule
-- [ ] GATE: trạng thái và tiền phụ phí đúng các bảng DB
+- [x] Dịch vụ/giá/category, thêm đặt lịch, validate pet + customer + service + staff (Xác thực ràng buộc 4 thực thể trước khi ghi, modal chọn gói dịch vụ thông minh).
+- [x] Check-in→thực hiện→nghiệm thu→thanh toán→đánh giá; hotel/taxi/room/resource (Hỗ trợ đủ chuỗi trạng thái `cho_xac_nhan→da_xac_nhan→da_check_in→dang_thuc_hien→da_hoan_tat`, trường Hotel/Taxi hiển thị có điều kiện).
+- [x] Kiểm double-booking và cập nhật staff schedule (Chặn trùng lịch cùng KTV/phòng cùng thời điểm, trạng thái `vang_mat/da_huy` không cộng nhầm doanh thu).
+- [x] GATE: trạng thái và tiền phụ phí đúng các bảng DB (PASS — Hoàn tất Gate-06).
 
 ### GĐ-07 — Bán hàng, kho, voucher, hoàn tiền
-- [ ] Tạo đơn/line items/voucher/điểm/ship/payment; tính tổng và thuế/phí nếu có
-- [ ] Trừ/giữ kho đúng thời điểm; xác nhận/đóng gói/giao/huỷ/đổi trả
-- [ ] Đối soát COD, hoàn kho, phiếu nhập và kiểm kê; không write một phần
-- [ ] GATE: công nợ/tiền/điểm/kho đối soát không lệch
+- [x] Tạo đơn/line items/voucher/điểm/ship/payment; tính tổng và thuế/phí nếu có (POS tạo đơn với 6 trạng thái `order_status` và 3 trạng thái `payment_status`, tính tổng và chiết khấu chuẩn xác).
+- [x] Trừ/giữ kho đúng thời điểm; xác nhận/đóng gói/giao/huỷ/đổi trả (Kiểm tra tồn kho khả dụng, trừ kho khi xuất hàng, khôi phục tồn khi hủy đơn).
+- [x] Đối soát COD, hoàn kho, phiếu nhập và kiểm kê; không write một phần (Biên bản RMA trả hàng, hoàn kho nguyên seal, đối soát COD đồng bộ).
+- [x] GATE: công nợ/tiền/điểm/kho đối soát không lệch (PASS — Hoàn tất Gate-07).
 
 ### GĐ-08 — Khiếu nại và CSKH
 - [ ] Tạo ticket từ dịch vụ/đơn/chat; liên kết chủ thể đúng
