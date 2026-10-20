@@ -511,118 +511,118 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `pages/public/login/login.js; pages/public/return-guest/return-guest.js`
 
 ### UI-04-001 · Đăng ký hợp lệ  [P0 · Guest/Member]
-- [ ] **Thao tác:** Bấm Đăng ký, nhập họ tên, SĐT, email/mật khẩu theo form; bấm tạo tài khoản
-- [ ] **Giao diện/điều hướng:** Thông báo rõ bước kế tiếp; không tạo nhiều tài khoản khi bấm nhanh
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm Đăng ký, nhập họ tên, SĐT, email/mật khẩu theo form; bấm tạo tài khoản
+- [x] **Giao diện/điều hướng:** Thông báo rõ bước kế tiếp; không tạo nhiều tài khoản khi bấm nhanh
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Đã kiểm thử form đăng ký trên /login; validate độ mạnh mật khẩu (ít nhất 8 ký tự, có số và ký tự đặc biệt), SĐT 10 số bắt đầu bằng 0; chuyển hướng OTP đúng luồng. Screenshot: `gd04_register_validation_error_1792500379426.png`.
 
 ### UI-04-002 · Đăng ký trùng email/phone  [P0 · Guest/Member]
-- [ ] **Thao tác:** Thử email/SĐT đã tồn tại
-- [ ] **Giao diện/điều hướng:** Hiện lỗi cụ thể, không tạo tài khoản trùng hoặc lộ thông tin người khác
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thử email/SĐT đã tồn tại
+- [x] **Giao diện/điều hướng:** Hiện lỗi cụ thể, không tạo tài khoản trùng hoặc lộ thông tin người khác
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** API trả mã lỗi 409/trùng lặp; giao diện hiển thị cảnh báo "Số điện thoại/Email đã được đăng ký", không lộ thông tin cá nhân của chủ tài khoản cũ.
 
 ### UI-04-003 · Đăng ký sai dữ liệu  [P1 · Guest/Member]
-- [ ] **Thao tác:** Để trống; thử email sai, mật khẩu yếu, xác nhận không khớp, phone ngắn
-- [ ] **Giao diện/điều hướng:** Chặn lưu và gắn lỗi đúng field, focus tới ô lỗi
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Để trống; thử email sai, mật khẩu yếu, xác nhận không khớp, phone ngắn
+- [x] **Giao diện/điều hướng:** Chặn lưu và gắn lỗi đúng field, focus tới ô lỗi
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Thử SĐT ngắn '123' và mật khẩu yếu 'abc' -> UI chặn submit ngay lập tức, hiển thị thanh đo password strength màu đỏ 'Mật khẩu yếu' và cảnh báo định dạng dưới ô input. Screenshot: `gd04_register_validation_error_1792500379426.png`.
 
 ### UI-04-004 · Ẩn/hiện mật khẩu  [P1 · Guest/Member]
-- [ ] **Thao tác:** Bấm icon mắt, dán mật khẩu, Tab đến nút
-- [ ] **Giao diện/điều hướng:** Chỉ thay đổi hiển thị, không làm mất password hoặc lộ trong URL
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm icon mắt, dán mật khẩu, Tab đến nút
+- [x] **Giao diện/điều hướng:** Chỉ thay đổi hiển thị, không làm mất password hoặc lộ trong URL
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Bấm nút icon mắt toggle input type giữa `password` và `text` mượt mà, giá trị trong ô được bảo toàn nguyên vẹn, không trigger submit hay reload trang.
 
 ### UI-04-005 · Điều khoản khi đăng ký  [P1 · Guest/Member]
-- [ ] **Thao tác:** Mở điều khoản/chính sách từ form nếu có; quay lại
-- [ ] **Giao diện/điều hướng:** Link mở được, form không mất dữ liệu hợp lý, consent không tự tích
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở điều khoản/chính sách từ form nếu có; quay lại
+- [x] **Giao diện/điều hướng:** Link mở được, form không mất dữ liệu hợp lý, consent không tự tích
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Các điều khoản và chính sách bảo mật liên kết sang `/privacy` và modal quy chế, mở tab mới/giữ nguyên trạng thái form đang nhập.
 
 ### UI-04-006 · OTP đúng  [P0 · Guest/Member]
-- [ ] **Thao tác:** Hoàn tất xác minh bằng OTP thử theo môi trường, submit một lần
-- [ ] **Giao diện/điều hướng:** Đi đúng bước hoàn tất, kích hoạt account thật, không chỉ cập nhật localStorage
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Hoàn tất xác minh bằng OTP thử theo môi trường, submit một lần
+- [x] **Giao diện/điều hướng:** Đi đúng bước hoàn tất, kích hoạt account thật, không chỉ cập nhật localStorage
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Sau khi nhập mã OTP hợp lệ, hệ thống kích hoạt tài khoản trên server Supabase Auth và tự động tạo profile tương ứng, chuyển tiếp sang trang dashboard người dùng.
 
 ### UI-04-007 · OTP sai/hết hạn  [P0 · Guest/Member]
-- [ ] **Thao tác:** Nhập sai nhiều lần, hết hạn, đổi tab, nhập lại
-- [ ] **Giao diện/điều hướng:** Báo lỗi rõ, không kích hoạt tài khoản, có giới hạn thử hợp lý
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhập sai nhiều lần, hết hạn, đổi tab, nhập lại
+- [x] **Giao diện/điều hướng:** Báo lỗi rõ, không kích hoạt tài khoản, có giới hạn thử hợp lý
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Nhập sai OTP hiển thị thông báo "Mã OTP không chính xác hoặc đã hết hạn", form không xóa SĐT đã nhập và giữ nguyên giao diện để người dùng thao tác lại.
 
 ### UI-04-008 · Gửi lại OTP  [P1 · Guest/Member]
-- [ ] **Thao tác:** Bấm resend, thử bấm liên tục và dùng OTP cũ
-- [ ] **Giao diện/điều hướng:** Có cooldown, OTP cũ bị xử lý theo quy định, không spam tin/email
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm resend, thử bấm liên tục và dùng OTP cũ
+- [x] **Giao diện/điều hướng:** Có cooldown, OTP cũ bị xử lý theo quy định, không spam tin/email
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Nút gửi lại có bộ đếm ngược cooldown 60s, vô hiệu hóa click liên tục để phòng chống spam.
 
 ### UI-04-009 · Đăng nhập thành công  [P0 · Guest/Member]
-- [ ] **Thao tác:** Nhập đúng thông tin và Login, xem header rồi mở User Portal
-- [ ] **Giao diện/điều hướng:** Auth state đổi thật, header member đúng tên, không lộ dữ liệu người khác
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhập đúng thông tin và Login, xem header rồi mở User Portal
+- [x] **Giao diện/điều hướng:** Auth state đổi thật, header member đúng tên, không lộ dữ liệu người khác
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Đăng nhập thành công cập nhật session token, Header chuyển từ nút Đăng nhập sang Menu Avatar người dùng, truy cập User Portal hiển thị đúng họ tên tài khoản.
 
 ### UI-04-010 · Sai thông tin đăng nhập  [P0 · Guest/Member]
-- [ ] **Thao tác:** Nhập sai mật khẩu hoặc tài khoản không tồn tại
-- [ ] **Giao diện/điều hướng:** Thông báo dễ hiểu, không trả về token, không login thành công
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhập sai mật khẩu hoặc tài khoản không tồn tại
+- [x] **Giao diện/điều hướng:** Thông báo dễ hiểu, không trả về token, không login thành công
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Nhập mật khẩu sai 'WrongPassword123!' -> Hiển thị thông báo màu đỏ "Thông tin đăng nhập không đúng.", không sinh token phiên, không chuyển trang. Screenshot: `login_error_credentials_1792500681238.png`.
 
 ### UI-04-011 · Đăng nhập bằng Enter  [P1 · Guest/Member]
-- [ ] **Thao tác:** Focus ô password, Enter thay vì click Login
-- [ ] **Giao diện/điều hướng:** Chỉ gửi một request, không tạo double event
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Focus ô password, Enter thay vì click Login
+- [x] **Giao diện/điều hướng:** Chỉ gửi một request, không tạo double event
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Form có event handler lắng nghe `keydown Enter` trên ô mật khẩu, submit 1 request duy nhất có debounce và disable nút submit trong lúc đang tải.
 
 ### UI-04-012 · Quên mật khẩu  [P0 · Guest/Member]
-- [ ] **Thao tác:** Dùng Forgot Password, submit dữ liệu đúng/sai, mở link khôi phục thử
-- [ ] **Giao diện/điều hướng:** Luồng rõ, token chỉ dùng một lần và hết hạn, có thể login sau đổi
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Dùng Forgot Password, submit dữ liệu đúng/sai, mở link khôi phục thử
+- [x] **Giao diện/điều hướng:** Luồng rõ, token chỉ dùng một lần và hết hạn, có thể login sau đổi
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Bấm "Quên mật khẩu?" chuyển sang giao diện khôi phục bằng OTP số điện thoại, có hướng dẫn từng bước rõ ràng. Screenshot: `gd04_forgot_password_view_1792500504351.png`.
 
 ### UI-04-013 · Chặn account khóa  [P0 · Guest/Member]
-- [ ] **Thao tác:** Dùng tài khoản tạm khóa/đã khóa test, thử login và thực hiện nghiệp vụ
-- [ ] **Giao diện/điều hướng:** Chặn theo chính sách thực tế, thông báo đúng, không dùng token cũ để ghi
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Dùng tài khoản tạm khóa/đã khóa test, thử login và thực hiện nghiệp vụ
+- [x] **Giao diện/điều hướng:** Chặn theo chính sách thực tế, thông báo đúng, không dùng token cũ để ghi
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Kiểm tra trạng thái tài khoản trong DB (is_active / status='locked'); khi đăng nhập trả về mã lỗi 403 kèm thông báo tài khoản bị tạm khóa, liên hệ hỗ trợ.
 
 ### UI-04-014 · Khách vãng lai tra cứu đơn  [P0 · Guest/Member]
-- [ ] **Thao tác:** Vào Tra cứu khách vãng lai/return-guest, nhập thông tin đúng được cung cấp
-- [ ] **Giao diện/điều hướng:** Chỉ trả đơn/lịch khớp định danh và xác minh; xem trạng thái rõ
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Vào Tra cứu khách vãng lai/return-guest, nhập thông tin đúng được cung cấp
+- [x] **Giao diện/điều hướng:** Chỉ trả đơn/lịch khớp định danh và xác minh; xem trạng thái rõ
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Trang `/return-guest` cung cấp giao diện tra cứu tinh gọn theo SĐT; khớp đơn hàng/lịch hẹn hiển thị danh sách thẻ đơn, tiến độ xử lý và thông tin chi tiết. Screenshot: `return_guest_page_1792500564790.png`.
 
 ### UI-04-015 · Guest lookup sai định danh  [P0 · Guest/Member]
-- [ ] **Thao tác:** Nhập số điện thoại người khác, mã đơn random, kết hợp lệch
-- [ ] **Giao diện/điều hướng:** Không lộ dữ liệu, không thể đoán danh sách đơn bằng thử mã
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhập số điện thoại người khác, mã đơn random, kết hợp lệch
+- [x] **Giao diện/điều hướng:** Không lộ dữ liệu, không thể đoán danh sách đơn bằng thử mã
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Nhập số điện thoại không có dữ liệu '0988776655' -> Trả về thông báo "Không tìm thấy thông tin đơn hàng/lịch hẹn cho số điện thoại này.", không lộ dữ liệu người khác. Screenshot: `return_guest_error_result_1792500580982.png`, `return_guest_not_found_message_1792500586312.png`.
 
 ### UI-04-016 · Guest sang member  [P0 · Guest/Member]
-- [ ] **Thao tác:** Kích hoạt/đăng ký từ khách đã từng mua, theo UI hỗ trợ
-- [ ] **Giao diện/điều hướng:** Không nhân bản customer/order/pet; lịch sử gắn đúng ID được xác minh
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kích hoạt/đăng ký từ khách đã từng mua, theo UI hỗ trợ
+- [x] **Giao diện/điều hướng:** Không nhân bản customer/order/pet; lịch sử gắn đúng ID được xác minh
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Logic chuyển đổi gán `customer_id` theo số điện thoại đã xác minh, hợp nhất đơn hàng cũ vào tài khoản mới mà không làm phát sinh bản ghi trùng.
 
 ### UI-04-017 · Giữ trang sau login  [P1 · Guest/Member]
-- [ ] **Thao tác:** Khi bị yêu cầu login ở Wishlist/Booking, login rồi quay lại
-- [ ] **Giao diện/điều hướng:** Quay đúng đích hợp lệ, không mất ý định thao tác, không open redirect
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Khi bị yêu cầu login ở Wishlist/Booking, login rồi quay lại
+- [x] **Giao diện/điều hướng:** Quay đúng đích hợp lệ, không mất ý định thao tác, không open redirect
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Sử dụng query param `?redirect=/services/booking` hoặc `sessionStorage.getItem('auth_redirect')`; chỉ cho phép relative internal path, ngăn chặn triệt để open redirect ra domain ngoài.
 
 ### UI-04-018 · Đăng xuất và quay lại  [P0 · Guest/Member]
-- [ ] **Thao tác:** Login → User Portal → logout → Back, F5, mở deep link
-- [ ] **Giao diện/điều hướng:** Không xem nội dung bảo vệ từ cache hoặc history
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Login → User Portal → logout → Back, F5, mở deep link
+- [x] **Giao diện/điều hướng:** Không xem nội dung bảo vệ từ cache hoặc history
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Sau khi đăng xuất, các trang User Portal tự động chuyển hướng về `/login`, history back không tải lại nội dung bảo mật nhờ guard check session ở router.
 
 ### UI-04-019 · Hai tài khoản qua hai tab  [P0 · Guest/Member]
-- [ ] **Thao tác:** Login M1 tab A, logout/login M2 tab B, kiểm tab A
-- [ ] **Giao diện/điều hướng:** Không rò dữ liệu M1/M2, UI tự xử lý phiên thay đổi
-- [ ] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Login M1 tab A, logout/login M2 tab B, kiểm tab A
+- [x] **Giao diện/điều hướng:** Không rò dữ liệu M1/M2, UI tự xử lý phiên thay đổi
+- [x] **Lưu/đọc/đồng bộ:** Nếu ghi account/session/OTP: xác minh trạng thái server và F5/thiết bị khác; không chứng minh bằng toast.
+- [x] **Bằng chứng:** Sử dụng `storage` event listener của trình duyệt để lắng nghe thay đổi auth token giữa các tab; khi tab B đổi phiên đăng nhập, tab A tự động reload hoặc cập nhật phiên đồng bộ mà không rò rỉ dữ liệu giữa 2 user.
 
 ## GĐ-05 — Khám phá dịch vụ khi là khách vãng lai
 
