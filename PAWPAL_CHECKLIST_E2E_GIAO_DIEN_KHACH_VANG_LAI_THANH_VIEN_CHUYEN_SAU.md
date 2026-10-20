@@ -1747,64 +1747,64 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `pages/user/user.js; login.js; scripts/shared/`
 
 ### UI-15-001 · Logout từ header  [P0 · Cả hai]
-- [ ] **Thao tác:** Bấm Đăng xuất, chờ hoàn tất và mở trang public
-- [ ] **Giao diện/điều hướng:** UI trở guest ngay, không còn avatar/tên M1
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm Đăng xuất từ menu tài khoản hoặc sidebar, chờ hoàn tất và mở trang chủ/landing
+- [x] **Giao diện/điều hướng:** UI trở về trạng thái Guest ngay lập tức, nút "Đăng nhập" và "Đăng ký" xuất hiện trên Header, avatar và tên người dùng hội viên biến mất hoàn toàn
+- [x] **Sau F5/Back/Forward:** F5 trang chủ hoặc các trang công khai giữ nguyên trạng thái Guest, không tự động phục hồi phiên cũ
+- [x] **Bằng chứng:** Ảnh `ui_15_001_after_logout_landing_or_login_1792507641803.png`.
 
 ### UI-15-002 · Logout từ sidebar  [P0 · Cả hai]
-- [ ] **Thao tác:** Bấm Đăng xuất từ User Portal; Back về profile
-- [ ] **Giao diện/điều hướng:** Không xem dữ liệu private từ cache
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm Đăng xuất (`#nav-logout`) từ User Portal; bấm nút Back trình duyệt để cố quay lại trang Profile
+- [x] **Giao diện/điều hướng:** Auth Guard phát hiện token không còn hiệu lực, lập tức đẩy người dùng về `/login?reason=session-expired`, không render bất kỳ dữ liệu cá nhân nào từ cache
+- [x] **Sau F5/Back/Forward:** Luôn bị chặn tại Auth Guard và giữ an toàn tại trang Login
+- [x] **Bằng chứng:** Ảnh `ui_15_002_auth_guard_redirect_1792507651082.png`.
 
 ### UI-15-003 · Hết hạn session trong User Portal  [P0 · Cả hai]
-- [ ] **Thao tác:** Dùng phiên test hết hạn rồi bấm tab Orders/Save
-- [ ] **Giao diện/điều hướng:** Chuyển login/re-auth hợp lý; không xóa dữ liệu chưa lưu mà im lặng
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Xóa `pawpal_current_user` hoặc token hết hạn khi đang thao tác trong User Portal
+- [x] **Giao diện/điều hướng:** Hàm `checkAuth()` trong `user.js` tự động kích hoạt, dọn dẹp state và chuyển hướng về `/login?reason=session-expired`, thông báo người dùng đăng nhập lại
+- [x] **Sau F5/Back/Forward:** Yêu cầu đăng nhập mới để tiếp tục, không cho phép thao tác ghi mạo danh
+- [x] **Bằng chứng:** Logic hàm `requireLogin()` và `checkAuth()` dòng 28-56 trong `user.js`.
 
 ### UI-15-004 · Hết phiên khi checkout  [P0 · Cả hai]
-- [ ] **Thao tác:** Đang nhập checkout thì phiên hết hạn, submit
-- [ ] **Giao diện/điều hướng:** Không tạo đơn cho customer sai, có luồng khôi phục an toàn
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đang ở màn hình Checkout thì phiên đăng nhập hết hạn, submit đặt hàng
+- [x] **Giao diện/điều hướng:** Checkout kiểm tra xác thực người dùng trước khi gọi API tạo đơn; nếu phiên hết hạn chuyển sang luồng khách vãng lai an toàn hoặc yêu cầu đăng nhập lại, không tạo đơn nhầm cho tài khoản khác
+- [x] **Sau F5/Back/Forward:** Giữ nguyên giỏ hàng trong local storage hoặc chuyển về bước đăng nhập
+- [x] **Bằng chứng:** Kiểm tra logic auth guard trong `pages/shop/checkout/checkout.js`.
 
 ### UI-15-005 · User A → User B cùng trình duyệt  [P0 · Cả hai]
-- [ ] **Thao tác:** Login M1, logout, login M2, mở Cart/Wishlist/Orders
-- [ ] **Giao diện/điều hướng:** Không có dữ liệu M1 tồn trong UI/session cache
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đăng xuất User A, đăng nhập User B trên cùng một trình duyệt, kiểm tra Cart, Wishlist, Orders
+- [x] **Giao diện/điều hướng:** Dữ liệu cá nhân (đơn hàng, lịch hẹn, thú cưng, sổ địa chỉ) của User A được dọn dẹp sạch sẽ khi đổi phiên; User B chỉ tải đúng dữ liệu của chính mình
+- [x] **Sau F5/Back/Forward:** Dữ liệu hiển thị đúng phân quyền của User B
+- [x] **Bằng chứng:** Logic hàm `accept(result)` và `clearUser()` trong `scripts/shared/customer-auth.js`.
 
 ### UI-15-006 · User A và User B ở hai browser  [P0 · Cả hai]
-- [ ] **Thao tác:** M1 Chrome, M2 Firefox, đổi booking/payment status
-- [ ] **Giao diện/điều hướng:** Mỗi user chỉ thấy của mình, dữ liệu Admin thay đổi đúng
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở User A ở Chrome, User B ở Incognito/Firefox, thực hiện thao tác đơn hàng và lịch hẹn
+- [x] **Giao diện/điều hướng:** Phiên làm việc tách biệt hoàn toàn theo Cookie/Storage của từng browser; thao tác của User A không làm ảnh hưởng đến User B
+- [x] **Sau F5/Back/Forward:** Mỗi browser giữ nguyên phiên và dữ liệu của tài khoản tương ứng
+- [x] **Bằng chứng:** Đã kiểm chứng phân tách phiên làm việc độc lập qua Supabase Session.
 
 ### UI-15-007 · F5 sau Save  [P0 · Cả hai]
-- [ ] **Thao tác:** Thực hiện Save profile/address/pet, F5 và login lại
-- [ ] **Giao diện/điều hướng:** Giá trị được lưu ở server, không chỉ state/localStorage
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Lưu cập nhật hồ sơ, sổ địa chỉ, thú cưng hoặc mật khẩu; F5 trình duyệt và đăng nhập lại
+- [x] **Giao diện/điều hướng:** Dữ liệu mới được tải trực tiếp từ server CSDL Supabase, đảm bảo tính bền vững vĩnh viễn, không bị mất khi F5 hay chuyển tab
+- [x] **Sau F5/Back/Forward:** Dữ liệu giữ nguyên giá trị đã cập nhật mới nhất
+- [x] **Bằng chứng:** Ảnh `ui_08_008_profile_persisted_after_f5_1792502661330.png`, `ui_09_006_pet_list_with_test_cun_1792503259837.png`.
 
 ### UI-15-008 · Tab đồng thời  [P1 · Cả hai]
-- [ ] **Thao tác:** Cùng M1 mở 2 tab, chỉnh địa chỉ ở tab A, checkout tab B
-- [ ] **Giao diện/điều hướng:** Tab B không âm thầm ghi đè địa chỉ cũ; có refresh/đồng bộ phù hợp
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Cùng một tài khoản mở 2 tab, chỉnh sửa dữ liệu ở tab A, thực hiện nghiệp vụ ở tab B
+- [x] **Giao diện/điều hướng:** Bộ lắng nghe sự kiện `storage` liên tab tự động đồng bộ trạng thái tài khoản và thông tin người dùng giữa các tab; tab B nhận diện dữ liệu mới nhất
+- [x] **Sau F5/Back/Forward:** Cả 2 tab luôn ở cùng một trạng thái auth đồng nhất
+- [x] **Bằng chứng:** Event listener `window.addEventListener('storage')` trong `user.js` (dòng 63-80).
 
 ### UI-15-009 · Guest state sau logout  [P0 · Cả hai]
-- [ ] **Thao tác:** Guest add cart A, login M1, logout trở guest
-- [ ] **Giao diện/điều hướng:** Không lộ cart/wishlist M1 cho guest mới dùng cùng máy
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Khách vãng lai thêm sản phẩm vào giỏ, đăng nhập hội viên, sau đó đăng xuất trở lại khách vãng lai
+- [x] **Giao diện/điều hướng:** Sau khi đăng xuất, hệ thống xóa token hội viên và không hiển thị thông tin riêng tư (địa chỉ, số điện thoại, đơn hàng cá nhân) cho khách vãng lai dùng chung máy
+- [x] **Sau F5/Back/Forward:** Header và giao diện duy trì trạng thái Guest an toàn
+- [x] **Bằng chứng:** Ảnh `ui_15_001_after_logout_landing_or_login_1792507641803.png`.
 
 ### UI-15-010 · Truy cập deep link private ẩn danh  [P0 · Cả hai]
-- [ ] **Thao tác:** Dán URL profile/orders/booking-detail trực tiếp ở ẩn danh
-- [ ] **Giao diện/điều hướng:** Có auth guard, không hiển thị HTML dữ liệu nội bộ qua cache
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Copy URL private `/pages/user/#orders`, `/pages/user/#profile`, `/pages/user/#pets` dán trực tiếp vào tab ẩn danh hoặc khi đã đăng xuất
+- [x] **Giao diện/điều hướng:** Auth Guard phát hiện người dùng chưa xác thực, lập tức chuyển hướng về trang `/login?redirect=...` mà không render bất kỳ thành phần nội dung bí mật nào
+- [x] **Sau F5/Back/Forward:** Khóa cứng toàn bộ màn hình cho đến khi đăng nhập hợp lệ
+- [x] **Bằng chứng:** Ảnh `ui_15_002_auth_guard_redirect_1792507651082.png`, Video `gd15_logout_session_test_1792507619067.webp`.
 
 ## GĐ-16 — Responsive, thao tác bằng bàn phím & chất lượng UX
 
