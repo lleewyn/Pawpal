@@ -1096,11 +1096,11 @@ export const API = {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db) return;
         try {
-            const now = new Date().toISOString();
+            const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
             await db.from('appointment')
                 .update({ appointment_status: 'da_het_han' })
                 .eq('appointment_status', 'dang_giu_cho')
-                .lt('hold_expires_at', now);
+                .lt('created_at', fifteenMinsAgo);
         } catch (e) {
             console.warn('[API] releaseExpiredHoldSlots error:', e);
         }
@@ -1111,10 +1111,10 @@ export const API = {
         if (!db) return { available: true };
         try {
             await this.releaseExpiredHoldSlots();
-            const now = new Date().toISOString();
+            const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
 
             let query = db.from('appointment')
-                .select('id, appointment_status, hold_expires_at')
+                .select('id, appointment_status, created_at')
                 .eq('appointment_date', date)
                 .eq('appointment_time', time.length === 5 ? time + ':00' : time)
                 .not('appointment_status', 'in', '("da_huy","da_het_han")');
@@ -1127,7 +1127,7 @@ export const API = {
 
             const activeHold = (data || []).find(row => {
                 if (row.appointment_status === 'dang_giu_cho') {
-                    return row.hold_expires_at && row.hold_expires_at > now;
+                    return row.created_at && row.created_at > fifteenMinsAgo;
                 }
                 return ['cho_xac_nhan', 'da_xac_nhan', 'da_check_in', 'dang_thuc_hien'].includes(row.appointment_status);
             });
@@ -1159,7 +1159,6 @@ export const API = {
                 staff_id: staffId || null,
                 appointment_date: date,
                 appointment_time: time.length === 5 ? time + ':00' : time,
-                hold_expires_at: holdExpiresAt,
                 appointment_status: 'dang_giu_cho',
                 payment_status: 'chua_thanh_toan',
                 total_price: totalPrice,
@@ -1188,7 +1187,6 @@ export const API = {
                 .update({
                     appointment_status: newStatus,
                     payment_status: payStatus,
-                    hold_expires_at: null,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', appointmentId)

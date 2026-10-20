@@ -616,9 +616,9 @@
                     return;
                 }
 
-                let dbStatus = 'ACTIVE';
-                if (status === 'Lưu trú Hotel' || status === 'HOTEL') dbStatus = 'HOTEL';
-                else if (status === 'Lưu trữ' || status === 'INACTIVE' || status === 'ARCHIVED') dbStatus = 'INACTIVE';
+                let dbStatus = 'dang_hoat_dong';
+                if (status === 'Lưu trữ' || status === 'INACTIVE' || status === 'ARCHIVED' || status === 'tam_ngung') dbStatus = 'tam_ngung';
+                else if (status === 'Đã mất' || status === 'DECEASED' || status === 'da_an') dbStatus = 'da_an';
 
                 try {
                     const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -627,7 +627,7 @@
                             pet_name: name,
                             species: species,
                             breed: breed,
-                            gender: gender === 'Cái' ? 'FEMALE' : 'MALE',
+                            gender: (gender === 'Cái' || gender === 'female' || gender === 'nu') ? 'nu' : 'nam',
                             date_of_birth: dob || null,
                             weight: weight,
                             color: color,

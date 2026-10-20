@@ -288,7 +288,7 @@
                         const specBreed = `${speciesNameMap[spec] || 'Chó'} ${br}`.trim();
                         const wNum = Number(p.weight);
                         const allg = p.allergy && p.allergy !== 'Không' ? p.allergy : '';
-                        const isArch = p.status === 'INACTIVE' || p.status === 'ARCHIVED';
+                        const isArch = p.status === 'INACTIVE' || p.status === 'ARCHIVED' || p.status === 'tam_ngung' || p.status === 'da_an';
                         
                         const ownerObj = custMap[p.customer_id] || {};
                         const ownerName = ownerObj.name || (p.customer_id ? 'Chưa tải được thông tin chủ nuôi' : 'Thiếu liên kết chủ nuôi');
@@ -327,7 +327,7 @@
                             species: spec,
                             speciesBreed: specBreed,
                             breed: br,
-                            gender: (p.gender === 'FEMALE' || p.gender === 'female' || p.gender === 'Cái') ? 'Cái' : ((p.gender === 'MALE' || p.gender === 'male' || p.gender === 'Đực') ? 'Đực' : 'Chưa rõ'),
+                            gender: (p.gender === 'FEMALE' || p.gender === 'female' || p.gender === 'Cái' || p.gender === 'nu') ? 'Cái' : ((p.gender === 'MALE' || p.gender === 'male' || p.gender === 'Đực' || p.gender === 'nam') ? 'Đực' : 'Chưa rõ'),
                             weight: Number.isFinite(wNum) && wNum > 0 ? `${wNum} kg` : 'Chưa cập nhật',
                             weightNum: wNum,
                             dob: dobFormatted,

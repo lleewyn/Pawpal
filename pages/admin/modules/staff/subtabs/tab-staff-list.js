@@ -863,7 +863,7 @@
                         throw new Error('Chưa kết nối được cơ sở dữ liệu Supabase. Vui lòng kiểm tra lại phiên làm việc.');
                     }
 
-                    const dbRole = PawpalStaff.mapPositionToDbRole ? PawpalStaff.mapPositionToDbRole(position) : 'STAFF';
+                    const dbRole = PawpalStaff.mapPositionToDbRole ? PawpalStaff.mapPositionToDbRole(position) : 'cham_soc_thu_cung';
 
                     if (editingId) {
                         const staffList = PawpalStaff.state?.mockStaff || [];

@@ -11,7 +11,7 @@ STT	THỰC THỂ	MÔ TẢ	THUỘC TÍNH	Ý NGHĨA THUỘC TÍNH
 			registered_at	Thời điểm khách hàng đăng ký
 			note	Ghi chú nội bộ về khách hàng
 			created_at	Thời điểm tạo tài khoản
-			updated_at	Thời điểm cập nhật tài khoản gần nhất
+			updated_at	Thờproi điểm cập nhật tài khoản gần nhất
 			activation_token	
 			activation_token_expires_at	
 2	customer_profile	Lưu thông tin hồ sơ cá nhân của khách hàng	id	Mã định danh hồ sơ
@@ -401,6 +401,7 @@ STT	THỰC THỂ	MÔ TẢ	THUỘC TÍNH	Ý NGHĨA THUỘC TÍNH
 			paw_points_used	Số Paw Points khách sử dụng để thanh toán/giảm giá.
 			paw_points_earned	Số Paw Points khách được cộng từ giao dịch.
 			transaction_status	Trạng thái xử lý giao dịch thanh toán.
+			succeeded_at	Thời điểm khoản thanh toán được xác nhận thu thành công.
 			created_at	Thời điểm tạo giao dịch thanh toán.
 			updated_at	Thời điểm cập nhật giao dịch thanh toán gần nhất.
 42	payment_method_config	Lưu thông tin các loại phương thức thanh toán khả dụng	id	Mã định danh phương thức thanh toán.
@@ -674,6 +675,8 @@ STT	THỰC THỂ	MÔ TẢ	THUỘC TÍNH	Ý NGHĨA THUỘC TÍNH
 			weight	Trọng lượng ghi nhận (kg).
 			measured_at	Thời điểm thực hiện cân đo.
 			recorded_by_name	Tên kỹ thuật viên hoặc nhân viên ghi nhận.
+			recorded_by	Nhân viên ghi nhận nếu đã định danh.
+			note	Ghi chú của lần cân.
 			created_at	Thời điểm tạo bản ghi.
 66	chat_conversation	Quản lý các phiên hội thoại trực tuyến giữa khách hàng và AI Chatbot hoặc nhân viên tư vấn	id	Mã định danh duy nhất của phiên hội thoại.
 			customer_id	Khách hàng tham gia hội thoại.
@@ -686,6 +689,9 @@ STT	THỰC THỂ	MÔ TẢ	THUỘC TÍNH	Ý NGHĨA THUỘC TÍNH
 			ai_summary	Tóm tắt nội dung hội thoại tự động bởi AI.
 			internal_note	Ghi chú nội bộ giữa các nhân viên hỗ trợ.
 			sla_deadline	Hạn chót thời gian cam kết phản hồi (SLA).
+			resolved_at	Thời điểm hội thoại được đóng thực tế.
+			resolved_reason	Lý do đóng hội thoại.
+			resolved_by	Nhân viên đóng hội thoại.
 			violation_count	Số lần vi phạm quy tắc ngôn từ của phiên.
 			blocked_until	Thời gian tạm khóa người dùng nếu vi phạm nặng.
 			channel	Kênh tiếp nhận hội thoại (web, zalo, facebook).

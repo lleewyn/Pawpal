@@ -483,11 +483,11 @@
                             const { error: dbErr } = await db.from('review').insert({
                                 customer_id: customerId,
                                 product_id: rv.productId.length >= 32 ? rv.productId : null, // Handle UUID check
-                                review_type: 'PRODUCT',
+                                review_type: 'san_pham',
                                 rating: rv.rating,
                                 review_content: rv.comment,
                                 image_urls: rv.media.map(m => m.src),
-                                review_status: 'APPROVED', // Default as per plan
+                                review_status: 'da_duyet', // Default as per plan
                                 created_at: rv.createdAt
                             });
                             if (dbErr) console.warn('[ReviewHandler] Supabase insert failed:', dbErr);

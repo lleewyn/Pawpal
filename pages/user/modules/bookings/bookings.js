@@ -164,7 +164,7 @@ async function loadBookings(status) {
                 const { data: reviews, error: reviewErr } = await db.from('review')
                     .select('appointment_id')
                     .eq('customer_id', currentUser.id)
-                    .eq('review_type', 'SERVICE');
+                    .eq('review_type', 'dich_vu');
                 if (reviewErr) throw reviewErr;
                 reviewedAppointmentIds = new Set((reviews || []).map((r) => String(r.appointment_id)).filter(Boolean));
             }

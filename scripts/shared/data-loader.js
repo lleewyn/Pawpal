@@ -581,7 +581,7 @@ async function getProductReviews(productId) {
                 )
             `)
             .eq('product_id', productId)
-            .eq('review_status', 'APPROVED')
+            .eq('review_status', 'da_duyet')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -626,7 +626,7 @@ async function getServiceReviews(serviceId) {
                     response_content
                 )
             `)
-            .eq('review_type', 'SERVICE')
+            .eq('review_type', 'dich_vu')
             .eq('service_id', serviceId)
             .order('created_at', { ascending: false });
 

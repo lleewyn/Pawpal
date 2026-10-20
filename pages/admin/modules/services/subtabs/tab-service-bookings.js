@@ -1511,7 +1511,7 @@
                     } else {
                         const { data: prices, error: priceError } = await client.from('service_price_matrix').select('*').eq('service_id', service.dbId);
                         if (priceError) throw priceError;
-                        const applicable = (prices || []).filter(p => ['ACTIVE', 'dang_ap_dung'].includes(p.status) && weight >= Number(p.weight_from) && (p.weight_to == null || weight < Number(p.weight_to)) && (!p.effective_from || Date.parse(p.effective_from) <= at) && (!p.effective_to || Date.parse(p.effective_to) > at));
+                        const applicable = (prices || []).filter(p => ['ACTIVE', 'dang_ap_dung', 'dang_hoat_dong'].includes(p.status) && weight >= Number(p.weight_from) && (p.weight_to == null || weight < Number(p.weight_to)) && (!p.effective_from || Date.parse(p.effective_from) <= at) && (!p.effective_to || Date.parse(p.effective_to) > at));
                         if (applicable.length !== 1 || applicable[0].unit_price == null || !Number.isFinite(Number(applicable[0].unit_price)) || Number(applicable[0].unit_price) < 0) throw new Error('Chưa xác định được đúng một mức giá cho cân nặng và ngày hẹn.');
                         totalPrice = Number(applicable[0].unit_price);
                     }
@@ -2017,7 +2017,7 @@
                         skinCoat:skinList.join(', '),eyesEars:eyesEarsList.join(', '),wounds:woundsStr,woundNote,
                         temperament:selectedTemp,belongings:belongings.join(', '),belongingsNote,
                         recordedAt:booking.intakeRecord?.recordedAt||new Date().toISOString(),updatedAt:new Date().toISOString()
-                    },{appointment_status:'IN_PROGRESS',staff_id:staffMatches[0].id});
+                    },{appointment_status:'dang_thuc_hien',staff_id:staffMatches[0].id});
                     PawpalServices.showToast('Đã lưu biên bản tiếp nhận và trạng thái ca dịch vụ.');
                 } catch(err) {PawpalServices.showToast('Không thể tiếp nhận: '+err.message,'danger');return;}
                 finally {btnConfirmIntake.disabled=false;}
@@ -2072,7 +2072,7 @@
                     await PawpalServices.saveBookingRecord(booking,'handover',{
                         qualityAccepted:true,belongingsReturned:true,recordedAt:new Date().toISOString(),
                         intakeRecordedAt:booking.intakeRecord.recordedAt,total:booking.total
-                    },{appointment_status:'COMPLETED'});
+                    },{appointment_status:'da_hoan_tat'});
                     PawpalServices.showToast('Đã lưu biên bản bàn giao và hoàn tất ca. Trạng thái thanh toán giữ nguyên.');
                 } catch(err) {PawpalServices.showToast('Không thể hoàn tất ca: '+err.message,'danger');return;}
                 finally {btnSubmitComplete.disabled=false;}

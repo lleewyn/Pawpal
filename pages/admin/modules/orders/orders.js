@@ -552,9 +552,9 @@
                     rating, review_count, image_urls,
                     category_id,
                     product_category (id, category_name),
-                    inventory (quantity_in_stock, minimum_stock),
                     product_variant (
                         id, sku_variant, cost_price, sale_price, compare_at_price, status,
+                        inventory (quantity_in_stock, minimum_stock),
                         variant_size (id, size_name),
                         variant_color (id, color_name),
                         variant_flavor (id, flavor_name)
@@ -583,14 +583,28 @@
             const prodData = res.products || [];
             currentProductsList = prodData.map(p => {
                 const catObj = p.product_category || {};
-                const invObj = Array.isArray(p.inventory) ? p.inventory[0] : (p.inventory || {});
-                const imgs = Array.isArray(p.image_urls) ? p.image_urls : (typeof p.image_urls === 'string' && p.image_urls ? p.image_urls.split(',').map(s => s.trim()) : []);
-                const hasInv = invObj && invObj.quantity_in_stock !== undefined && invObj.quantity_in_stock !== null;
-                const stockVal = hasInv ? Number(invObj.quantity_in_stock) : null;
-                const minStockVal = invObj && invObj.minimum_stock !== undefined && invObj.minimum_stock !== null ? Number(invObj.minimum_stock) : null;
-
                 const variants = Array.isArray(p.product_variant) ? p.product_variant : [];
                 const primaryVar = variants.length > 0 ? variants[0] : null;
+
+                // Tồn kho tổng hợp từ inventory của các biến thể
+                let totalStock = 0;
+                let minStock = null;
+                let hasAnyInv = false;
+                variants.forEach(v => {
+                    const vInv = Array.isArray(v.inventory) ? v.inventory[0] : (v.inventory || {});
+                    if (vInv && vInv.quantity_in_stock !== undefined && vInv.quantity_in_stock !== null) {
+                        totalStock += Number(vInv.quantity_in_stock);
+                        hasAnyInv = true;
+                    }
+                    if (vInv && vInv.minimum_stock !== undefined && vInv.minimum_stock !== null) {
+                        const mVal = Number(vInv.minimum_stock);
+                        minStock = minStock === null ? mVal : Math.min(minStock, mVal);
+                    }
+                });
+
+                const imgs = Array.isArray(p.image_urls) ? p.image_urls : (typeof p.image_urls === 'string' && p.image_urls ? p.image_urls.split(',').map(s => s.trim()) : []);
+                const stockVal = hasAnyInv ? totalStock : null;
+                const minStockVal = minStock;
 
                 const effectiveSku = (primaryVar && primaryVar.sku_variant) ? primaryVar.sku_variant : 'SKU-000';
                 const effectiveCostPrice = (primaryVar && primaryVar.cost_price !== undefined) ? Number(primaryVar.cost_price) : 0;
@@ -630,6 +644,11 @@
                         a1 = v.sku_variant || '';
                     }
 
+                    const vInv = Array.isArray(v.inventory) ? v.inventory[0] : (v.inventory || {});
+                    const vStock = (vInv && vInv.quantity_in_stock !== undefined && vInv.quantity_in_stock !== null)
+                        ? Number(vInv.quantity_in_stock)
+                        : (stockVal !== null ? Math.round(stockVal / (variants.length || 1)) : 20);
+
                     return {
                         id: v.id,
                         sku: v.sku_variant,
@@ -639,7 +658,7 @@
                         costPrice: Number(v.cost_price) || 0,
                         price: Number(v.sale_price) || 0,
                         originalPrice: v.compare_at_price ? Number(v.compare_at_price) : (Number(v.sale_price) || 0),
-                        stock: stockVal !== null ? Math.round(stockVal / (variants.length || 1)) : 20,
+                        stock: vStock,
                         status: v.status
                     };
                 });

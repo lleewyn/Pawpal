@@ -642,8 +642,8 @@
 
                 let status = 'draft';
                 const sUpper = (a.status || '').toUpperCase();
-                if (sUpper === 'PUBLISHED' || sUpper === 'DA_DANG' || sUpper === 'ACTIVE') status = 'published';
-                else if (sUpper === 'DRAFT' || sUpper === 'BAN_NHAP') status = 'draft';
+                if (sUpper === 'PUBLISHED' || sUpper === 'DA_DANG' || sUpper === 'DA_XUAT_BAN' || sUpper === 'ACTIVE') status = 'published';
+                else if (sUpper === 'DRAFT' || sUpper === 'BAN_NHAP' || sUpper === 'NHAP') status = 'draft';
                 else if (sUpper === 'ARCHIVED' || sUpper === 'HIDDEN' || sUpper === 'DA_AN') status = 'hidden';
                 else if (sUpper === 'PENDING_REVIEW' || sUpper === 'CHO_DUYET') status = 'pending_review';
                 else status = 'draft';

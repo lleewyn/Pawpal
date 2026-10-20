@@ -288,16 +288,12 @@ async function provisionAccount(req, res) {
         // 5. Ghi nhật ký Audit Log
         try {
             await supabase.from('audit_log').insert({
-                user_id: staffId,
+                staff_id: staffId,
                 action: 'STAFF_ACCOUNT_PROVISIONED',
-                entity: 'staff',
+                entity_name: 'staff',
                 entity_id: staffId,
-                old_data: null,
-                new_data: {
-                    auth_user_id: authUserId,
-                    system_role: systemRole,
-                    account_status: 'ACTIVE'
-                }
+                description: `Cấp tài khoản Auth (${authUserId}) cho nhân viên với vai trò ${systemRole}`,
+                created_at: new Date().toISOString()
             });
         } catch (auditErr) {}
 

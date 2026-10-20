@@ -37,14 +37,14 @@ async function runPetTestSuite() {
     pet_name: 'Bé Corgi QA Mỡ Mỡ',
     species: 'dog',
     breed: 'Corgi Pembroke',
-    gender: 'MALE',
+    gender: 'nam',
     date_of_birth: '2023-05-15',
     color: 'Vàng trắng',
     weight: 11.2,
     allergy: 'Dị ứng phấn hoa và hải sản, viêm kẽ móng',
     routine: 'Hơi nhút nhát với máy sấy công suất lớn, thích thưởng snack gà sấy',
     vaccination_history: 'Đã tiêm 7 bệnh (Mũi 3: 15/01/2026), Dại (20/02/2026)',
-    status: 'ACTIVE',
+    status: 'dang_hoat_dong',
     avatar_url: '/assets/images/pets/corgi-test.jpg'
   }).select().single();
   if (petErr) throw petErr;
@@ -168,7 +168,7 @@ async function runPetTestSuite() {
   console.log('\n--- PET-F07 [P1]: Nhắc lịch tiêm / tẩy giun Outbox ---');
   const { data: reminderNotif, error: remErr } = await supabase.from('notification').insert({
     customer_id: testCustomerId,
-    notification_type: 'SYSTEM',
+    notification_type: 'lich_hen_da_thay_doi',
     title: `Nhắc lịch tiêm phòng định kỳ cho bé ${createdPet.pet_name}`,
     content: `Bé ${createdPet.pet_name} sắp đến hạn tiêm nhắc lại mũi Dại hàng năm. Ba mẹ nhớ đưa bé đến Pawpal nhé!`,
     is_read: false,
@@ -246,10 +246,10 @@ async function runPetTestSuite() {
   // PET-F12 [P1]: Không xóa nhầm lịch sử y tế/đơn khi archive pet (Soft-delete)
   // -------------------------------------------------------------------------
   console.log('\n--- PET-F12 [P1]: Lưu trữ / Lưu kho thú cưng (Soft Archive Policy) ---');
-  // Chuyển trạng thái sang INACTIVE
+  // Chuyển trạng thái sang tam_ngung
   const { error: archErr } = await supabase
     .from('pet_profile')
-    .update({ status: 'INACTIVE' })
+    .update({ status: 'tam_ngung' })
     .eq('id', createdPet.id);
   if (archErr) throw archErr;
 

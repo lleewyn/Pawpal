@@ -604,7 +604,7 @@
                     service_category: groupKey === 'hotel' ? 'PET_HOTEL' : (groupKey === 'taxi' ? 'PET_TAXI' : 'GROOMING_SPA'),
                     estimated_duration: parseInt(sDuration, 10) || 60,
                     description: serviceObj.desc,
-                    status: serviceObj.status === 'Đang phục vụ' ? 'ACTIVE' : 'INACTIVE',
+                    status: serviceObj.status === 'Đang phục vụ' ? 'dang_hoat_dong' : 'tam_ngung',
                     checklist: serviceObj.steps
                 }, { onConflict: 'service_code' }).select('id, service_code').single();
             if (error) throw error;
@@ -627,25 +627,25 @@
                 unit_price,
                 effective_from: new Date().toISOString(),
                 effective_to: null,
-                status: 'ACTIVE'
+                status: 'dang_hoat_dong'
             }));
             if (priceRows.some(row => !Number.isSafeInteger(row.unit_price) || row.unit_price < 0)) {
                 throw new Error('Giá dịch vụ không hợp lệ.');
             }
             const now = new Date().toISOString();
             const { error: archivePriceError } = await db.from('service_price_matrix')
-                .update({ status: 'INACTIVE', effective_to: now })
+                .update({ status: 'tam_ngung', effective_to: now })
                 .eq('service_id', data.id)
-                .eq('status', 'ACTIVE')
+                .in('status', ['dang_hoat_dong', 'ACTIVE'])
                 .is('effective_to', null);
             if (archivePriceError) throw archivePriceError;
             const { data: savedPrices, error: priceError } = await db.from('service_price_matrix')
                 .insert(priceRows)
                 .select('id, unit_price');
             if (priceError) {
-                // Rollback: khôi phục trạng thái ACTIVE cho bộ giá vừa bị lưu trữ
+                // Rollback: khôi phục trạng thái dang_hoat_dong cho bộ giá vừa bị lưu trữ
                 await db.from('service_price_matrix')
-                    .update({ status: 'ACTIVE', effective_to: null })
+                    .update({ status: 'dang_hoat_dong', effective_to: null })
                     .eq('service_id', data.id)
                     .eq('effective_to', now);
                 throw priceError;

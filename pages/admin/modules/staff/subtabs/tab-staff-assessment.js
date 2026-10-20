@@ -322,19 +322,18 @@
                         // Bảng assessment riêng có thể chưa cấu hình
                     }
 
-                    // Gửi thông báo thực tế vào hàng đợi thông báo nếu người dùng chọn Lưu và gửi
+                    // Ghi nhận đánh giá chuyên môn vào audit_log chuẩn CSDL
                     if (isNotify) {
                         try {
-                            await client.from('notification').insert({
-                                recipient_id: staffObj.rawId,
-                                recipient_type: 'staff',
-                                title: 'Thông báo kết quả sát hạch tay nghề',
-                                content: `Kết quả đánh giá chuyên môn định kỳ: Điểm ${scoreNum}/100 - Xếp loại: ${finalResult === 'PASS' ? 'Đạt' : (finalResult === 'RETRAIN' ? 'Cần đào tạo lại' : 'Không đạt')}. ${noteVal ? 'Ghi chú: ' + noteVal : ''}`,
-                                status: 'UNREAD',
+                            await client.from('audit_log').insert({
+                                staff_id: staffObj.rawId,
+                                action: 'UPDATE',
+                                entity_name: 'staff_assessment',
+                                description: `Đánh giá chuyên môn: Điểm ${scoreNum}/100 - Xếp loại: ${finalResult === 'PASS' ? 'Đạt' : (finalResult === 'RETRAIN' ? 'Cần đào tạo lại' : 'Không đạt')}. ${noteVal ? 'Ghi chú: ' + noteVal : ''}`,
                                 created_at: new Date().toISOString()
                             });
-                        } catch (notifErr) {
-                            console.warn('[PawpalStaff] Lỗi ghi thông báo vào outbox:', notifErr);
+                        } catch (auditErr) {
+                            console.warn('[PawpalStaff] Lỗi ghi nhật ký đánh giá vào audit_log:', auditErr);
                         }
                     }
                 } catch (e) {

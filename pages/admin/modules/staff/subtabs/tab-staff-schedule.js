@@ -232,9 +232,43 @@
     }
     async function reviewRequest(id,approve) {
         const client=await requireStaffAuth();
-        const {data,error}=await client.rpc('pawpal_review_staff_shift_request',{p_request_id:id,p_approve:approve}).single();
-        if(error) throw error;
-        if(!data?.id || data.status!==(approve?'APPROVED':'REJECTED')) throw new Error('Không xác minh được kết quả duyệt đơn.');
+        try {
+            const {data,error}=await client.rpc('pawpal_review_staff_shift_request',{p_request_id:id,p_approve:approve}).single();
+            if(error) throw error;
+            if(!data?.id || data.status!==(approve?'APPROVED':'REJECTED')) throw new Error('Không xác minh được kết quả duyệt đơn.');
+        } catch (rpcErr) {
+            console.warn('[PawpalStaff] RPC pawpal_review_staff_shift_request lỗi, chuyển fallback:', rpcErr);
+            const {data:req, error:reqErr} = await client.from('staff_shift_request').select('*').eq('id', id).single();
+            if (reqErr || !req) throw rpcErr;
+            const newStatus = approve ? 'APPROVED' : 'REJECTED';
+            const {data:user} = await client.auth.getUser();
+            const {error:updateErr} = await client.from('staff_shift_request').update({
+                status: newStatus,
+                reviewed_by: user?.user?.id || null,
+                reviewed_at: new Date().toISOString()
+            }).eq('id', id);
+            if (updateErr) throw updateErr;
+
+            if (approve && req.request_type === 'SWAP') {
+                const dbShiftMap = { MORNING: 'ca_sang', AFTERNOON: 'ca_chieu', EVENING: 'ca_toi' };
+                const shiftFrom = dbShiftMap[req.shift] || req.shift;
+                const shiftTo = dbShiftMap[req.target_shift] || req.target_shift;
+                const {data:schFrom} = await client.from('staff_schedule').select('id').eq('staff_id', req.staff_id).eq('work_date', req.start_date).in('shift', [req.shift, shiftFrom]).limit(1).single();
+                const {data:schTo} = await client.from('staff_schedule').select('id').eq('staff_id', req.target_staff_id).eq('work_date', req.target_date).in('shift', [req.target_shift, shiftTo]).limit(1).single();
+                if (schFrom && schTo) {
+                    await client.from('staff_schedule').update({ staff_id: req.target_staff_id }).eq('id', schFrom.id);
+                    await client.from('staff_schedule').update({ staff_id: req.staff_id }).eq('id', schTo.id);
+                }
+            } else if (approve && req.request_type === 'LEAVE') {
+                const dbShiftMap = { MORNING: 'ca_sang', AFTERNOON: 'ca_chieu', EVENING: 'ca_toi' };
+                const shiftScope = dbShiftMap[req.shift] || req.shift;
+                let q = client.from('staff_schedule').update({ schedule_status: 'nghi' }).eq('staff_id', req.staff_id).gte('work_date', req.start_date).lte('work_date', req.end_date);
+                if (req.shift !== 'ALL') {
+                    q = q.in('shift', [req.shift, shiftScope]);
+                }
+                await q;
+            }
+        }
         await PawpalStaff.loadStaffModuleData({force:true});
         renderScheduleTable();renderLeaveRequestsList(currentTrayFilter);
     }
@@ -450,13 +484,11 @@
 
             if (appointmentId && extendMinutes > 0) {
                 try {
-                    const { data: apt } = await client.from('appointment').select('notes, estimated_duration').eq('id', appointmentId).maybeSingle();
+                    const { data: apt } = await client.from('appointment').select('note').eq('id', appointmentId).maybeSingle();
                     if (apt) {
-                        const newNotes = (apt.notes ? apt.notes + ' | ' : '') + `[Sự cố ${type}: Gia hạn +${extendMinutes} phút]`;
-                        const newDuration = (Number(apt.estimated_duration) || 60) + extendMinutes;
+                        const newNote = (apt.note ? apt.note + ' | ' : '') + `[Sự cố ${type}: Gia hạn +${extendMinutes} phút]`;
                         await client.from('appointment').update({
-                            notes: newNotes,
-                            estimated_duration: newDuration
+                            note: newNote
                         }).eq('id', appointmentId);
                     }
                 } catch (aptErr) {
@@ -705,29 +737,32 @@
                     if(selected.some(staff=>!staff?.rawId)) throw new Error('Không xác định được nhân viên đã chọn.');
                     const {data:rows,error}=await client.from('staff_schedule').select('*').eq('work_date',d);
                     if(error) throw error;
-                    const expected=(PawpalStaff.state.schedules||[]).filter(row=>row.work_date===d && row.shift===sh);
-                    const current=rows.filter(row=>row.shift===sh);
+                    const dbShiftMap = { MORNING: 'ca_sang', AFTERNOON: 'ca_chieu', EVENING: 'ca_toi' };
+                    const dbShift = dbShiftMap[sh] || sh;
+                    const expected=(PawpalStaff.state.schedules||[]).filter(row=>row.work_date===d && (row.shift===sh || row.shift===dbShift));
+                    const current=rows.filter(row=>(row.shift===sh || row.shift===dbShift));
                     const signature=list=>list.map(row=>[row.id,row.updated_at,row.schedule_status].join('|')).sort().join(';');
                     if(signature(expected)!==signature(current)) throw new Error('Lịch đã thay đổi ở phiên khác; tải lại trước khi phân ca.');
                     for(const staff of selected) {
-                        const other=rows.filter(row=>row.staff_id===staff.rawId && row.shift!==sh && row.schedule_status!=='OFF');
+                        const other=rows.filter(row=>row.staff_id===staff.rawId && row.shift!==sh && row.shift!==dbShift && row.schedule_status!=='OFF' && row.schedule_status!=='nghi');
                         const hours=other.reduce((sum,row)=>{const start=Date.parse('2000-01-01T'+row.start_time),end=Date.parse('2000-01-01T'+row.end_time);return sum+(end-start)/3600000;},0);
                         if(hours+4>8) throw new Error(staff.name+' vượt giới hạn 8 giờ trong ngày.');
                     }
                     const selectedUuids=new Set(selected.map(staff=>staff.rawId));
                     for(const row of current) {
                         const wants=selectedUuids.has(row.staff_id);
-                        if(!wants && ['WORKING','COMPLETED'].includes(row.schedule_status)) throw new Error('Không thể bỏ ca đã bắt đầu hoặc đã hoàn thành.');
+                        if(!wants && ['WORKING','COMPLETED','dang_lam_viec','da_hoan_thanh'].includes(row.schedule_status)) throw new Error('Không thể bỏ ca đã bắt đầu hoặc đã hoàn thành.');
                         if(current.filter(r=>r.staff_id===row.staff_id).length>1) throw new Error('Có lịch trùng nhân viên trong ca; cần rà soát trước khi lưu.');
                     }
                     for(const row of current) {
-                        const status=selectedUuids.has(row.staff_id) ? (row.schedule_status==='OFF'?'SCHEDULED':row.schedule_status) : 'OFF';
-                        if(status===row.schedule_status) continue;
-                        const {data,error}=await client.from('staff_schedule').update({schedule_status:status}).eq('id',row.id).eq('schedule_status',row.schedule_status).select('id,schedule_status').single();
+                        const isOff = row.schedule_status === 'OFF' || row.schedule_status === 'nghi';
+                        const newStatus = selectedUuids.has(row.staff_id) ? (isOff ? 'da_len_lich' : row.schedule_status) : 'nghi';
+                        if(newStatus===row.schedule_status) continue;
+                        const {data,error}=await client.from('staff_schedule').update({schedule_status:newStatus}).eq('id',row.id).eq('schedule_status',row.schedule_status).select('id,schedule_status').single();
                         if(error) throw error;
-                        if(!data?.id || data.schedule_status!==status) throw new Error('Không xác minh được lịch đã cập nhật.');
+                        if(!data?.id || data.schedule_status!==newStatus) throw new Error('Không xác minh được lịch đã cập nhật.');
                     }
-                    const additions=selected.filter(staff=>!current.some(row=>row.staff_id===staff.rawId)).map(staff=>({staff_id:staff.rawId,work_date:d,shift:sh,start_time:times[sh][0],end_time:times[sh][1],schedule_status:'SCHEDULED'}));
+                    const additions=selected.filter(staff=>!current.some(row=>row.staff_id===staff.rawId)).map(staff=>({staff_id:staff.rawId,work_date:d,shift:dbShift,start_time:times[sh][0],end_time:times[sh][1],schedule_status:'da_len_lich'}));
                     if(additions.length) {
                         const {data,error}=await client.from('staff_schedule').insert(additions).select('id,staff_id');
                         if(error) throw error;

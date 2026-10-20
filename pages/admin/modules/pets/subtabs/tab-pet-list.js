@@ -522,9 +522,9 @@
                 try {
                     const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                     if (!client || !pet.rawId) throw new Error('Thiếu kết nối hoặc mã hồ sơ thú cưng.');
-                    const { data: restoredRows, error: restoreError } = await client.from('pet_profile').update({ status: 'ACTIVE' }).eq('id', pet.rawId).select('id, status');
+                    const { data: restoredRows, error: restoreError } = await client.from('pet_profile').update({ status: 'dang_hoat_dong' }).eq('id', pet.rawId).select('id, status');
                     if (restoreError) throw restoreError;
-                    if (!Array.isArray(restoredRows) || restoredRows.length !== 1 || restoredRows[0].status !== 'ACTIVE') throw new Error('Không xác minh được trạng thái khôi phục trong CSDL.');
+                    if (!Array.isArray(restoredRows) || restoredRows.length !== 1 || (restoredRows[0].status !== 'dang_hoat_dong' && restoredRows[0].status !== 'ACTIVE')) throw new Error('Không xác minh được trạng thái khôi phục trong CSDL.');
                 } catch (rErr) {
                     console.error('Supabase restore error:', rErr);
                     PawpalPets.showToast('Không thể khôi phục hồ sơ: ' + (rErr.message || 'Lỗi CSDL.'), 'danger');
@@ -1029,7 +1029,7 @@
                     const { data: newCust, error: custErr } = await client.from('customer').insert({
                         email: null,
                         phone_main: phone,
-                        account_status: 'ACTIVE',
+                        account_status: 'dang_hoat_dong',
                         is_temporary: true,
                         note: 'Khách tạo nhanh tại quầy tiếp nhận thú cưng.',
                         activation_token: activationToken,
@@ -1045,7 +1045,7 @@
                     const { error: profErr } = await client.from('customer_profile').insert({
                         customer_id: newCust.id,
                         full_name: name,
-                        gender: 'OTHER'
+                        gender: 'khac'
                     });
                     if (profErr) {
                         console.error('Supabase create profile error:', profErr);
@@ -1256,7 +1256,7 @@
                             pet_name: name,
                             species: species,
                             breed: breed,
-                            gender: gender === 'Cái' ? 'FEMALE' : 'MALE',
+                            gender: (gender === 'Cái' || gender === 'female' || gender === 'nu') ? 'nu' : 'nam',
                             date_of_birth: dob || null,
                             weight: weight,
                             color: color,
@@ -1264,7 +1264,7 @@
                             allergy: allergy,
                             vaccination_history: null, // P-03: Không tự động tạo xác nhận tiêm chủng giả
                             avatar_url: species === 'cat' ? '/assets/images/publics/catcute5.jpg' : '/assets/images/publics/dogcute3.jpg',
-                            status: 'ACTIVE'
+                            status: 'dang_hoat_dong'
                         };
 
                         const { data: createdPet, error: petErr } = await client.from('pet_profile').insert(insertPayload).select().single();

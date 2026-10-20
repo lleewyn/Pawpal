@@ -53,7 +53,7 @@ async function sanitizeText(text) {
     try {
         const { data: filters } = await supabase
             .from('chatbot_profanity_filter')
-            .select('keyword, replacement')
+            .select('keyword, replacement_text')
             .eq('is_active', true);
 
         let sanitized = text;
@@ -62,7 +62,7 @@ async function sanitizeText(text) {
                 if (!f.keyword) continue;
                 const regex = buildSafeKeywordRegex(f.keyword);
                 if (regex) {
-                    sanitized = sanitized.replace(regex, f.replacement || '***');
+                    sanitized = sanitized.replace(regex, f.replacement_text || '***');
                 }
             }
         }

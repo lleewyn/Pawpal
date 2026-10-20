@@ -1151,13 +1151,14 @@ PawPal kính mời Anh/Chị ghé tiệm để đón bé về sum vầy cùng gi
                     const client = PawpalServices.getSupabaseClient ? PawpalServices.getSupabaseClient() : window.SupabaseClient;
                     if (client) {
                         const { error: notifErr } = await client.from('notification').insert({
-                            user_id: booking.userId || null,
-                            type: 'SERVICE_PICKUP',
+                            customer_id: booking.customerId || booking.userId || null,
+                            notification_type: 'lich_hen_da_thay_doi',
                             title: `Mời đón bé ${petName} tại Pawpal`,
                             content: messageText,
-                            status: 'QUEUED',
-                            channel: channel.includes('Zalo') ? 'ZALO' : (channel.includes('SMS') ? 'SMS' : 'APP'),
-                            phone: custPhone ? custPhone.replace(/\D/g, '') : null
+                            appointment_id: booking.rawId || booking.id || null,
+                            related_entity_type: 'appointment',
+                            is_read: false,
+                            sent_at: new Date().toISOString()
                         });
                         if (notifErr) {
                             console.warn('Lỗi ghi hàng đợi thông báo đón bé:', notifErr);

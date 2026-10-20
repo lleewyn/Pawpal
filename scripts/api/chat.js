@@ -407,7 +407,7 @@ async function checkCustomerVipAttention(customerId) {
         // CB-17: Đọc số dư authoritative từ customer_membership thay vì tải toàn bộ sổ cái paw_point_transaction
         const [ticketsRes, membershipRes] = await Promise.all([
             supabase.from('support_ticket').select('id', { count: 'exact', head: true }).eq('user_id', customerId),
-            supabase.from('customer_membership').select('total_paw_points, tier_name').eq('customer_id', customerId).maybeSingle()
+            supabase.from('customer_membership').select('total_paw_points, membership_tier_id').eq('customer_id', customerId).maybeSingle()
         ]);
         const ticketCount = ticketsRes.count || 0;
         let totalPoints = membershipRes.data?.total_paw_points;

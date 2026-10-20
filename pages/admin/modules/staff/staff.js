@@ -192,27 +192,26 @@
     function mapDbRoleToStaffRole(dbRole, specialization = '') {
         const r = (dbRole || '').toUpperCase();
         const s = (specialization || '').toLowerCase();
-        if (r === 'ADMIN') return 'Admin';
+        if (r === 'ADMIN' || r === 'QUAN_TRI_VIEN') return 'Admin';
+        if (r === 'MANAGER' || r === 'QUAN_LY') return 'Manager';
         if (r === 'VET' || s.includes('bác sĩ') || s.includes('thú y')) return 'Veterinarian';
         if (r === 'DRIVER' || s.includes('tài xế') || s.includes('taxi')) return 'Driver';
-        if (r === 'RECEPTIONIST' || s.includes('lễ tân')) return 'Receptionist';
-        if (r === 'CSKH' || s.includes('cskh') || s.includes('chăm sóc khách')) return 'CSKH';
+        if (r === 'RECEPTIONIST' || r === 'LE_TAN' || s.includes('lễ tân')) return 'Receptionist';
+        if (r === 'CSKH' || r === 'CHAM_SOC_KHACH_HANG' || s.includes('cskh') || s.includes('chăm sóc khách')) return 'CSKH';
         if (r === 'CAREGIVER' || s.includes('bảo mẫu') || s.includes('hotel') || s.includes('lưu trú')) return 'Caregiver';
-        if (r === 'GROOMER' || s.includes('groom') || s.includes('cắt tỉa') || s.includes('spa')) return 'Groomer';
+        if (r === 'GROOMER' || r === 'CHAM_SOC_THU_CUNG' || s.includes('groom') || s.includes('cắt tỉa') || s.includes('spa')) return 'Groomer';
         if (!r && !s) return 'Chưa phân loại';
         return r || 'Chưa phân loại';
     }
 
     function mapPositionToDbRole(pos) {
         const p = (pos || '').toLowerCase();
-        if (p.includes('quản trị') || p.includes('admin')) return 'ADMIN';
-        if (p.includes('lễ tân') || p.includes('receptionist')) return 'RECEPTIONIST';
-        if (p.includes('bảo mẫu') || p.includes('hotel') || p.includes('lưu trú') || p.includes('caregiver')) return 'CAREGIVER';
-        if (p.includes('chăm sóc khách') || p.includes('cskh')) return 'CSKH';
-        if (p.includes('tài xế') || p.includes('taxi') || p.includes('driver')) return 'DRIVER';
-        if (p.includes('bác sĩ') || p.includes('thú y') || p.includes('vet')) return 'VET';
-        if (p.includes('groom') || p.includes('cắt tỉa') || p.includes('spa')) return 'GROOMER';
-        return 'STAFF';
+        if (p.includes('quản trị') || p.includes('admin')) return 'quan_tri_vien';
+        if (p.includes('quản lý') || p.includes('manager')) return 'quan_ly';
+        if (p.includes('lễ tân') || p.includes('receptionist')) return 'le_tan';
+        if (p.includes('chăm sóc khách') || p.includes('cskh')) return 'cham_soc_khach_hang';
+        if (p.includes('chủ') || p.includes('owner')) return 'chu_he_thong';
+        return 'cham_soc_thu_cung';
     }
     PawpalStaff.mapPositionToDbRole = mapPositionToDbRole;
 
@@ -397,14 +396,18 @@
             PawpalStaff.state.scheduleError = false;
             PawpalStaff.state.schedules = schedules || [];
             PawpalStaff.state.mockRoster = {};
+            const shiftNormMap = { ca_sang: 'MORNING', ca_chieu: 'AFTERNOON', ca_toi: 'EVENING' };
             (schedules || []).forEach(row => {
-                if (row.schedule_status === 'OFF') return;
+                if (row.schedule_status === 'OFF' || row.schedule_status === 'nghi') return;
                 const date = String(row.schedule_date || row.work_date || row.date || row.start_time || '').slice(0, 10);
                 const staff = PawpalStaff.state.mockStaff.find(staff => staff.rawId === row.staff_id);
-                const shift = row.shift || row.shift_type;
-                if (!staff || !date || !shift) return;
+                const rawShift = row.shift || row.shift_type;
+                if (!staff || !date || !rawShift) return;
+                const normShift = shiftNormMap[rawShift] || rawShift;
                 const roster = PawpalStaff.state.mockRoster[date] ||= {};
-                (roster[staff.id] ||= []).push(shift);
+                const list = roster[staff.id] ||= [];
+                if (!list.includes(normShift)) list.push(normShift);
+                if (rawShift !== normShift && !list.includes(rawShift)) list.push(rawShift);
             });
             PawpalStaff.state.isLoaded = true;
             PawpalStaff.state.loadError = null;

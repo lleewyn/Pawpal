@@ -415,7 +415,7 @@
             const { data, error } = await withServicesQueryTimeout(
                 db.from('review')
                   .select('id, customer_id, service_id, appointment_id, rating, review_content, review_type, created_at, shop_reply, customer:customer_id(id, phone_main, customer_profile(full_name)), service:service_id(id, service_name, service_category), appointment:appointment_id(appointment_code, staff:staff_id(full_name))')
-                  .eq('review_type', 'SERVICE')
+                  .eq('review_type', 'dich_vu')
                   .order('created_at', { ascending: false })
             );
             if (error) throw error;
@@ -517,7 +517,7 @@
                     duration: svc.estimated_duration ? `${svc.estimated_duration} phút` : '60 phút',
                     prices: pricesObj,
                     desc: svc.description || '',
-                    status: (svc.status === 'ACTIVE' || !svc.status) ? 'Đang phục vụ' : 'Tạm ẩn',
+                    status: (svc.status === 'dang_hoat_dong' || svc.status === 'ACTIVE' || !svc.status) ? 'Đang phục vụ' : 'Tạm ẩn',
                     image: svc.thumbnail_url || (group === 'hotel' ? '/assets/images/services/hotel/deluxe.webp' : (group === 'taxi' ? '/assets/images/services/taxi/car.webp' : '/assets/images/services/spa/process/spa01.webp')),
                     reviewCount: 0,
                     averageRating: null

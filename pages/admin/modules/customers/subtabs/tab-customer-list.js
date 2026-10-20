@@ -762,7 +762,7 @@
                     const { data: newCust, error: custErr } = await client.from('customer').insert({
                         email: null,
                         phone_main: phone || null,
-                        account_status: 'ACTIVE',
+                        account_status: 'dang_hoat_dong',
                         is_temporary: true,
                         note: 'Khách tiếp nhận nhanh tại quầy.',
                         activation_token: activationToken,
@@ -778,7 +778,7 @@
                     const { error: profErr } = await client.from('customer_profile').insert({
                         customer_id: newCust.id,
                         full_name: name,
-                        gender: 'OTHER'
+                        gender: 'khac'
                     });
                     if (profErr) {
                         console.error('[Customers] Lỗi tạo customer_profile, rollback customer:', profErr);

@@ -1255,7 +1255,7 @@
                                 const { error: memUpErr } = await client.from('customer_membership').update({ total_paw_points: newPointsBalance }).eq('customer_id', targetCustomerId);
                                 if (memUpErr) throw memUpErr;
                             } else {
-                                const { error: memInErr } = await client.from('customer_membership').insert([{ customer_id: targetCustomerId, total_paw_points: newPointsBalance, tier_code: 'SILVER' }]);
+                                const { error: memInErr } = await client.from('customer_membership').insert([{ customer_id: targetCustomerId, total_paw_points: newPointsBalance, membership_tier_id: '22222222-2222-2222-2222-222222222222' }]);
                                 if (memInErr) throw memInErr;
                             }
 
@@ -1381,7 +1381,7 @@
                             ticket_id: ticket.rawId,
                             sender_type: 'cskh',
                             agent_name: approverName,
-                            message: `[TỪ CHỐI] Quản lý đã từ chối phương án đề xuất. Yêu cầu CSKH rà soát và đề xuất lại.`,
+                            content: `[TỪ CHỐI] Quản lý đã từ chối phương án đề xuất. Yêu cầu CSKH rà soát và đề xuất lại.`,
                             is_internal: true
                         });
                     } catch (_) {}

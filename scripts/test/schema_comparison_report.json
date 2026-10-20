@@ -13,6 +13,39 @@
       ],
       "mdColsCount": 20,
       "sbColsCount": 21
+    },
+    {
+      "stt": "41",
+      "table": "payment",
+      "missingInSb": [
+        "succeeded_at"
+      ],
+      "extraInSb": [],
+      "mdColsCount": 15,
+      "sbColsCount": 14
+    },
+    {
+      "stt": "65",
+      "table": "pet_weight_history",
+      "missingInSb": [
+        "recorded_by",
+        "note"
+      ],
+      "extraInSb": [],
+      "mdColsCount": 8,
+      "sbColsCount": 6
+    },
+    {
+      "stt": "66",
+      "table": "chat_conversation",
+      "missingInSb": [
+        "resolved_at",
+        "resolved_reason",
+        "resolved_by"
+      ],
+      "extraInSb": [],
+      "mdColsCount": 19,
+      "sbColsCount": 16
     }
   ]
 }

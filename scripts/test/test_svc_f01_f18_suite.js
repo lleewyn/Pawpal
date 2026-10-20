@@ -74,8 +74,8 @@ async function runServiceTestSuite() {
     appointment_date: todayStr,
     appointment_time: '14:00:00',
     total_price: basePrice,
-    appointment_status: 'CONFIRMED',
-    payment_status: 'PENDING',
+    appointment_status: 'da_xac_nhan',
+    payment_status: 'chua_thanh_toan',
     note: 'Khách yêu cầu sấy kỹ vùng tai và chân'
   }).select().single();
   if (apptErr) throw apptErr;
@@ -100,16 +100,16 @@ async function runServiceTestSuite() {
   const cancelReason = 'Khách bận đột xuất, dời sang cuối tuần';
   const { error: cancelErr } = await supabase
     .from('appointment')
-    .update({ appointment_status: 'CANCELLED', note: `[HỦY LỊCH]: ${cancelReason}` })
+    .update({ appointment_status: 'da_huy', note: `[HỦY LỊCH]: ${cancelReason}` })
     .eq('id', createdAppt.id);
   if (cancelErr) throw cancelErr;
 
   const { data: checkCancelled } = await supabase.from('appointment').select('appointment_status, note').eq('id', createdAppt.id).single();
   console.log(`- Trạng thái sau hủy: ${checkCancelled.appointment_status} (Ghi chú: "${checkCancelled.note}")`);
-  if (checkCancelled.appointment_status !== 'CANCELLED') throw new Error('Hủy lịch không cập nhật đúng DB!');
+  if (checkCancelled.appointment_status !== 'da_huy') throw new Error('Hủy lịch không cập nhật đúng DB!');
 
-  // Khôi phục lại trạng thái CONFIRMED để tiếp tục các bước kiểm thử ca
-  await supabase.from('appointment').update({ appointment_status: 'CONFIRMED' }).eq('id', createdAppt.id);
+  // Khôi phục lại trạng thái da_xac_nhan để tiếp tục các bước kiểm thử ca
+  await supabase.from('appointment').update({ appointment_status: 'da_xac_nhan' }).eq('id', createdAppt.id);
   console.log('[PASS] SVC-F03: Hủy ca dịch vụ cập nhật chuẩn xác trạng thái CSDL và ghi nhận lý do rõ ràng!');
 
   // -------------------------------------------------------------------------
@@ -121,7 +121,7 @@ async function runServiceTestSuite() {
   const { error: ciErr } = await supabase
     .from('appointment')
     .update({
-      appointment_status: 'IN_PROGRESS',
+      appointment_status: 'dang_thuc_hien',
       note: checkInNote
     })
     .eq('id', createdAppt.id);
@@ -182,15 +182,15 @@ async function runServiceTestSuite() {
   // -------------------------------------------------------------------------
   console.log('\n--- SVC-F08 [P0]: Thanh toán và hoàn tất ca dịch vụ ---');
   const { error: payErr } = await supabase.from('appointment').update({
-    payment_status: 'PAID',
-    appointment_status: 'COMPLETED'
+    payment_status: 'da_thanh_toan',
+    appointment_status: 'da_hoan_tat'
   }).eq('id', createdAppt.id);
   if (payErr) throw payErr;
 
   const { data: paidAppt } = await supabase.from('appointment').select('appointment_status, payment_status, total_price').eq('id', createdAppt.id).single();
   console.log(`- Trạng thái ca: ${paidAppt.appointment_status}`);
   console.log(`- Trạng thái thanh toán: ${paidAppt.payment_status}`);
-  if (paidAppt.appointment_status !== 'COMPLETED' || paidAppt.payment_status !== 'PAID') {
+  if (paidAppt.appointment_status !== 'da_hoan_tat' || paidAppt.payment_status !== 'da_thanh_toan') {
     throw new Error('Đồng bộ thanh toán không thành công!');
   }
   console.log('[PASS] SVC-F08: Thanh toán và trạng thái ca hoàn tất đồng bộ 100%, không tính trùng doanh thu!');
@@ -225,8 +225,8 @@ async function runServiceTestSuite() {
     service_id: serviceIdSpa01,
     rating: testRating,
     review_content: testComment,
-    review_type: 'SERVICE',
-    review_status: 'APPROVED'
+    review_type: 'dich_vu',
+    review_status: 'da_duyet'
   }).select().single();
   if (revErr) throw revErr;
 
@@ -242,7 +242,7 @@ async function runServiceTestSuite() {
     .from('review')
     .select('rating')
     .eq('service_id', serviceIdSpa01)
-    .eq('review_status', 'APPROVED');
+    .eq('review_status', 'da_duyet');
   if (srErr) throw srErr;
 
   const validRatings = (serviceReviews || []).map(r => Number(r.rating)).filter(r => Number.isFinite(r) && r > 0);
@@ -294,11 +294,12 @@ async function runServiceTestSuite() {
   console.log(`- Phát hiện đánh giá ${lowRating}★ (Thấp <= 2 sao): Kích hoạt ticket = ${isLowRating}`);
   
   const { data: complaintTicket, error: ctErr } = await adminClient.from('support_ticket').insert({
-    user_id: testCustomerId,
+    customer_id: testCustomerId,
     title: `Sự cố dịch vụ từ đánh giá ${lowRating}★ (Đơn ${testApptCode})`,
+    subject: `Sự cố dịch vụ từ đánh giá ${lowRating}★ (Đơn ${testApptCode})`,
     type: 'service',
-    status: 'open',
-    priority: 'Cao'
+    status: 'mo',
+    priority: 'cao'
   }).select().single();
   if (ctErr) throw ctErr;
 
@@ -328,7 +329,7 @@ async function runServiceTestSuite() {
   const { data: taxiService, error: txiErr } = await supabase
     .from('service')
     .select('service_code, service_name, service_category')
-    .eq('service_category', 'PET_TAXI')
+    .eq('service_category', 'pet_taxi')
     .limit(1)
     .single();
   if (txiErr) throw txiErr;

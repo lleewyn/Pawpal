@@ -46,7 +46,7 @@ async function runCustomerTestSuite() {
   const { data: newCust, error: cErr } = await supabase.from('customer').insert({
     email: null,
     phone_main: testPhone,
-    account_status: 'ACTIVE',
+    account_status: 'dang_hoat_dong',
     is_temporary: true,
     note: 'Khách test CUS-F02'
   }).select().single();
@@ -56,7 +56,7 @@ async function runCustomerTestSuite() {
   const { data: newProf, error: pErr } = await supabase.from('customer_profile').insert({
     customer_id: newCust.id,
     full_name: testCustName,
-    gender: 'OTHER'
+    gender: 'khac'
   }).select().single();
   if (pErr) throw pErr;
 
@@ -119,8 +119,8 @@ async function runCustomerTestSuite() {
   const petCode1 = 'PET-QA-' + Date.now().toString().slice(-6) + '-1';
   const petCode2 = 'PET-QA-' + Date.now().toString().slice(-6) + '-2';
   const { error: petErr } = await supabase.from('pet_profile').insert([
-    { customer_id: newCust.id, pet_code: petCode1, pet_name: 'Mèo Miu Miu', species: 'cat', breed: 'Anh lông ngắn', status: 'ACTIVE' },
-    { customer_id: newCust.id, pet_code: petCode2, pet_name: 'Cún Lu Lu', species: 'dog', breed: 'Poodle', status: 'ACTIVE' }
+    { customer_id: newCust.id, pet_code: petCode1, pet_name: 'Mèo Miu Miu', species: 'cat', breed: 'Anh lông ngắn', status: 'dang_hoat_dong' },
+    { customer_id: newCust.id, pet_code: petCode2, pet_name: 'Cún Lu Lu', species: 'dog', breed: 'Poodle', status: 'dang_hoat_dong' }
   ]);
   if (petErr) throw petErr;
 
@@ -217,24 +217,24 @@ async function runCustomerTestSuite() {
   // Khóa tài khoản
   const { data: lockedCust, error: lockErr } = await supabase
     .from('customer')
-    .update({ account_status: 'LOCKED' })
+    .update({ account_status: 'da_khoa' })
     .eq('id', newCust.id)
     .select('id, account_status')
     .single();
   if (lockErr) throw lockErr;
   console.log(`- Đã khóa tài khoản: account_status = ${lockedCust.account_status}`);
-  if (lockedCust.account_status !== 'LOCKED') throw new Error('Khóa tài khoản không thành công!');
+  if (lockedCust.account_status !== 'da_khoa') throw new Error('Khóa tài khoản không thành công!');
 
   // Mở khóa tài khoản
   const { data: unlockedCust, error: unlockErr } = await supabase
     .from('customer')
-    .update({ account_status: 'ACTIVE' })
+    .update({ account_status: 'dang_hoat_dong' })
     .eq('id', newCust.id)
     .select('id, account_status')
     .single();
   if (unlockErr) throw unlockErr;
   console.log(`- Đã mở khóa tài khoản: account_status = ${unlockedCust.account_status}`);
-  if (unlockedCust.account_status !== 'ACTIVE') throw new Error('Mở khóa tài khoản không thành công!');
+  if (unlockedCust.account_status !== 'dang_hoat_dong') throw new Error('Mở khóa tài khoản không thành công!');
   console.log('[PASS] CUS-F09: Khóa và mở tài khoản thực thi trực tiếp trên Server CSDL Supabase!');
 
   // -------------------------------------------------------------------------
@@ -270,7 +270,7 @@ async function runCustomerTestSuite() {
   console.log('\n--- CUS-F12 [P1]: Ghi nhận Outbox SMS / Thông báo ---');
   const { data: notif, error: nErr } = await supabase.from('notification').insert({
     customer_id: newCust.id,
-    notification_type: 'SYSTEM',
+    notification_type: 'cap_nhat_yeu_cau_ho_tro',
     title: 'Liên kết tạo mật khẩu Pawpal',
     content: `Mã xác thực kích hoạt tài khoản Pawpal của bạn đã được gửi đến số ${testPhone}.`,
     is_read: false,

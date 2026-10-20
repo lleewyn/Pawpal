@@ -255,9 +255,9 @@ async function runCmpF01ToF15TestSuite() {
             sales_order_id: ordRow.id,
             customer_id: customerA.id,
             reason: 'Khiếu nại giao thiếu/lỗi bao bì từ vé #' + ticket1.id.slice(0, 8),
-            return_type: 'RETURN',
+            return_type: 'tra_san_pham',
             description: `Xử lý bồi hoàn cho vé ${ticket1.id}`,
-            request_status: 'COMPLETED'
+            request_status: 'da_hoan_tat'
         }).select().single();
         if (rmaLinkErr) throw rmaLinkErr;
 
@@ -279,7 +279,7 @@ async function runCmpF01ToF15TestSuite() {
         const closureNotifContent = `PawPal đã xử lý xong khiếu nại "${ticket1.title}". PawPal đã gửi tặng bù +${pointsCompensated} điểm Pawpoint vào tài khoản của bạn.`;
         const { data: closeNotif, error: closeNotifErr } = await adminClient.from('notification').insert({
             customer_id: customerA.id,
-            notification_type: 'SYSTEM',
+            notification_type: 'cap_nhat_yeu_cau_ho_tro',
             title: closureNotifTitle,
             content: closureNotifContent,
             is_read: false,
@@ -316,10 +316,10 @@ async function runCmpF01ToF15TestSuite() {
             customer_id: customerA.id,
             service_id: 'c0000000-0000-0000-0000-000000000001',
             appointment_id: null,
-            review_type: 'SERVICE',
+            review_type: 'dich_vu',
             rating: 2,
             review_content: 'Bé làm về bị trễ 30 phút và KTV sấy chưa thật kỹ',
-            review_status: 'APPROVED'
+            review_status: 'da_duyet'
         }).select().single();
         if (lowRevErr) throw lowRevErr;
         testEntities.reviewIds.push(lowReview.id);

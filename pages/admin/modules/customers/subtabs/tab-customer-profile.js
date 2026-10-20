@@ -398,13 +398,12 @@
                     const client = PawpalCustomers.getSupabaseClient();
                     if (client) {
                         const { error: notifErr } = await client.from('notification').insert({
-                            user_id: data.dbId || null,
-                            type: 'SMS_OTP',
+                            customer_id: data.dbId || null,
+                            notification_type: 'cap_nhat_yeu_cau_ho_tro',
                             title: 'Liên kết tạo mật khẩu Pawpal',
                             content: `Mã xác thực kích hoạt tài khoản Pawpal của bạn đã được gửi đến số ${phoneDigits}.`,
-                            status: 'QUEUED',
-                            channel: 'SMS',
-                            phone: phoneDigits
+                            is_read: false,
+                            sent_at: new Date().toISOString()
                         });
                         if (notifErr) {
                             console.warn('[Customers] Ghi thông báo SMS outbox lỗi:', notifErr);

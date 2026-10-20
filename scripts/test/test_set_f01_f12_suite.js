@@ -88,7 +88,7 @@ async function runSetF01ToF12TestSuite() {
             slug: blogSlug,
             summary: 'Những lưu ý vàng cho người mới nuôi mèo con',
             content: 'Nội dung chi tiết cẩm nang...',
-            status: 'DRAFT',
+            status: 'nhap',
             publish_at: new Date().toISOString()
         }).select().single();
         if (blErr) throw blErr;
@@ -98,17 +98,17 @@ async function runSetF01ToF12TestSuite() {
         const { data: publicBlogs } = await adminClient.from('blog_post')
             .select('id, status')
             .eq('id', blogDraft.id)
-            .eq('status', 'PUBLISHED');
+            .eq('status', 'da_xuat_ban');
         console.log(`   -> Bài DRAFT trên giao diện khách: ${publicBlogs?.length ? 'BỊ LỘ (LỖI)' : 'ẨN HOÀN TOÀN (CHÍNH XÁC)'}`);
         if (publicBlogs && publicBlogs.length > 0) throw new Error('Bài viết DRAFT bị hiển thị công khai!');
 
         // Xuất bản bài viết
-        await adminClient.from('blog_post').update({ status: 'PUBLISHED' }).eq('id', blogDraft.id);
+        await adminClient.from('blog_post').update({ status: 'da_xuat_ban' }).eq('id', blogDraft.id);
         const { data: publishedBlogs } = await adminClient.from('blog_post')
             .select('id, status')
             .eq('id', blogDraft.id)
-            .eq('status', 'PUBLISHED');
-        if (!publishedBlogs || publishedBlogs.length === 0) throw new Error('Bài viết sau PUBLISHED không hiển thị!');
+            .eq('status', 'da_xuat_ban');
+        if (!publishedBlogs || publishedBlogs.length === 0) throw new Error('Bài viết sau da_xuat_ban không hiển thị!');
         console.log(`   -> Sau xuất bản: Bài viết ID: ${blogDraft.id} hiển thị công khai cho độc giả.`);
         passedTests++;
         console.log('   => PASS SET-F02\n');

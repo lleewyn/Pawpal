@@ -297,7 +297,7 @@
                 try {
                     const { data: authData } = await client.auth.getUser();
                     if (authData?.user?.id) {
-                        const { data: staffMatch } = await client.from('staff').select('id').eq('user_id', authData.user.id).maybeSingle();
+                        const { data: staffMatch } = await client.from('staff').select('id').eq('auth_user_id', authData.user.id).maybeSingle();
                         authorId = staffMatch?.id || authData.user.id;
                     }
                 } catch (e) {}
@@ -320,9 +320,9 @@
                     return;
                 }
 
-                let dbStatus = 'PUBLISHED';
-                if (status === 'draft') dbStatus = 'DRAFT';
-                else if (status === 'hidden') dbStatus = 'ARCHIVED';
+                let dbStatus = 'da_xuat_ban';
+                if (status === 'draft') dbStatus = 'nhap';
+                else if (status === 'hidden') dbStatus = 'da_an';
 
                 const { data: insertedRows, error } = await client.from('blog_post').insert([{
                     title: title,
@@ -462,7 +462,7 @@
             const article = articlesList.find(a => a.id === currentId);
             if (!article) return;
 
-            const newStatus = article.status === 'published' ? 'ARCHIVED' : 'PUBLISHED';
+            const newStatus = (article.status === 'published' || article.status === 'da_xuat_ban') ? 'da_an' : 'da_xuat_ban';
             try {
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Không kết nối được Supabase.');
@@ -475,7 +475,7 @@
                 if (!updatedRows || updatedRows.length === 0) throw new Error('Không tìm thấy bài viết để cập nhật.');
 
                 // CFG-17: Nếu bài viết chuyển sang ẩn, gỡ bài viết khỏi danh sách RAG của Chatbot
-                if (newStatus === 'ARCHIVED') {
+                if (newStatus === 'da_an' || newStatus === 'ARCHIVED') {
                     const sysConfig = PawpalSettings.state?.systemConfig || {};
                     if (Array.isArray(sysConfig.ragSyncedArticleIds) && sysConfig.ragSyncedArticleIds.includes(currentId)) {
                         sysConfig.ragSyncedArticleIds = sysConfig.ragSyncedArticleIds.filter(id => id !== currentId);
@@ -488,7 +488,7 @@
                 await PawpalSettings.loadSettingsModuleData?.();
                 populateBlogCategories();
                 renderArticles();
-                showToast(`Bài viết "${article.title}" hiện đã chuyển sang trạng thái: ${newStatus === 'PUBLISHED' ? 'Công khai' : 'Tạm ẩn'}.`, 'info');
+                showToast(`Bài viết "${article.title}" hiện đã chuyển sang trạng thái: ${newStatus === 'da_xuat_ban' || newStatus === 'PUBLISHED' ? 'Công khai' : 'Tạm ẩn'}.`, 'info');
             } catch (e) {
                 console.error('[Settings] Lỗi đổi trạng thái bài viết:', e);
                 showToast('Không thể cập nhật bài viết.', 'danger');
