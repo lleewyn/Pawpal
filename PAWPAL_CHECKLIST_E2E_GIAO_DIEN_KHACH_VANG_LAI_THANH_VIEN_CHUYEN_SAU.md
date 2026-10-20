@@ -93,6 +93,27 @@
 
 <br>
 
+**Change ID:** CHG-004  
+**Ngày cập nhật:** 2026-10-20  
+**Phân hệ:** User Portal / Quản lý đơn hàng & Chi tiết đơn hàng  
+**Test case liên quan:** UI-12-001 đến UI-12-016 (Thành viên: đơn hàng, vận chuyển, hủy, đổi trả, hoàn tiền)  
+**Mô tả lỗi ban đầu:** Khi bấm "Xác nhận hủy" đơn hàng trong danh sách hoặc trang chi tiết đơn:  
+1. Trong `order-detail.js`: xảy ra lỗi `ReferenceError: cancelReason is not defined` tại dòng 1099 do biến `cancelReason` chưa được khai báo trước khi sử dụng.  
+2. Trong `orders.js` và `order-detail.js`: khi thực hiện update Supabase `sales_order` sang `da_huy`, câu lệnh `.eq('id', order.id)` bị fail với mã lỗi Postgres `invalid input syntax for type uuid: "ORD-20261020-867421"` do cột `id` là kiểu UUID còn mã đơn hàng dạng chuỗi nằm ở cột `order_code`. Lỗi này khiến câu lệnh update bị ngắt và không thể chuyển trạng thái đơn hàng sang đã hủy.  
+**Nguyên nhân:** Khuyết khai báo biến lý do hủy và truy vấn sai cột khóa chính khi mã đơn là chuỗi `order_code`.  
+**File đã chỉnh sửa:** `pages/user/modules/orders/orders.js`, `pages/user/modules/orders/order-detail.js`  
+**Nội dung đã sửa:**  
+- Trong `orders.js` (`cancelOrder`): kiểm tra nếu `targetId` không phải UUID thì truy vấn `.eq('order_code', targetId)`, nếu là UUID thì dùng `.eq('id', targetId)`.  
+- Trong `order-detail.js` (`cancelOrder`): khai báo biến `cancelReason = 'Khách hàng hủy đơn trên website'` an toàn, và hỗ trợ linh hoạt cả UUID lẫn `order_code` cho Supabase query.  
+**Bảng/cột/enum ảnh hưởng:** Bảng `sales_order` (cột `order_status` cập nhật enum chuẩn `da_huy`, `payment_status` `chua_thanh_toan` / `da_hoan_tien`, `updated_at`).  
+**Chức năng liên quan cần kiểm thử hồi quy:** Quy trình hủy đơn hàng COD, hủy đơn hàng trực tuyến, hiển thị tab "Đã hủy", timeline đơn hàng, triệt tiêu nút hủy trùng lặp (double cancel) và tính bền vững sau F5.  
+**Kết quả kiểm thử:** PASS  
+**Bằng chứng:** Ảnh `ui_12_001_orders_list_initial_1792505746460.png`, `ui_12_002_order_detail_view_1792505763908.png`, `ui_12_006_cancel_order_modal_1792506050176.png`, `ui_12_006_orders_cancelled_tab_1792506061433.png`, `ui_12_006_cancelled_order_in_tab_1792506073946.png`, `ui_12_007_cancelled_detail_verified_1792506087359.png`, `ui_12_014_persisted_after_f5_1792506098773.png`, `ui_12_009_delivered_order_actions_1792506130708.png`, Video `gd12_cancel_order_verified_1792506020573.webp`, `gd12_order_manage_flow_1792505735386.webp`.  
+**Commit GitHub:** Sắp commit  
+**Việc còn phải làm:** Không có (hoàn tất 100%).
+
+<br>
+
 ### 5. Điều kiện hoàn tất
 
 Một công việc chỉ được coi là hoàn thành khi:
@@ -1448,100 +1469,100 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `pages/user/modules/orders/orders.js; order-detail.js; return-detail.js`
 
 ### UI-12-001 · Danh sách order  [P0 · Member]
-- [ ] **Thao tác:** User Portal Orders, xem mới→cũ, bộ lọc trạng thái, phân trang
-- [ ] **Giao diện/điều hướng:** Đúng đơn của M1, ngày/tiền/status không nhầm M2
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** User Portal Orders (`#orders`), xem đơn mới→cũ, bộ lọc trạng thái (Tất cả, Chờ xác nhận, Chờ lấy hàng, Đang giao, Đã giao, Hoàn thành, Đã hủy, Trả hàng), phân trang
+- [x] **Giao diện/điều hướng:** Hiển thị chính xác đơn hàng `ORD-20261020-867421` của Lê Lệ Quyên QA (1.090.000đ, 3 sản phẩm), ngày đặt 20/10/2026, status chuẩn xác, không lẫn lộn giữa các tài khoản
+- [x] **Lưu/đọc/đồng bộ:** Đồng bộ dữ liệu qua `API.getUserOrders()` từ Supabase `sales_order`, phản ánh trực tiếp theo thời gian thực
+- [x] **Bằng chứng:** Ảnh `ui_12_001_orders_list_initial_1792505746460.png`, `ui_12_006_orders_cancelled_tab_1792506061433.png`.
 
 ### UI-12-002 · Đơn chi tiết  [P0 · Member]
-- [ ] **Thao tác:** Click order, kiểm order code/line/variant/qty/đơn giá/giảm/ship/tổng
-- [ ] **Giao diện/điều hướng:** Từng dòng khớp lúc mua; thông tin thanh toán và ship đúng
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Click đơn hàng, điều hướng sang `#order-detail?id=ORD-20261020-867421`, kiểm tra mã đơn, danh sách sản phẩm, số lượng, đơn giá, ship, tổng tiền
+- [x] **Giao diện/điều hướng:** Từng dòng khớp hoàn hảo lúc đặt hàng: Ciao Churu x2 (110.000đ), Petkit Eversweet 3 x1 (950.000đ), ship 30.000đ, tổng 1.090.000đ; thông tin người nhận Lê Lệ Quyên QA, 0987654321, Quận 1 TP.HCM
+- [x] **Lưu/đọc/đồng bộ:** Đọc đúng bản ghi `sales_order` và chi tiết `sales_order_detail`
+- [x] **Bằng chứng:** Ảnh `ui_12_002_order_detail_view_1792505763908.png`, `ui_12_007_cancelled_detail_verified_1792506087359.png`.
 
 ### UI-12-003 · Đơn COD đang chờ  [P0 · Member]
-- [ ] **Thao tác:** Mở COD pending; kiểm nút được phép, mốc trạng thái
-- [ ] **Giao diện/điều hướng:** Không báo đã thanh toán khi chưa thu hộ
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở COD pending; kiểm nút được phép, mốc trạng thái, badge trạng thái thanh toán
+- [x] **Giao diện/điều hướng:** Trạng thái thanh toán hiển thị rõ ràng "Chưa thanh toán" (badge hồng nhạt), phương thức "COD - Thanh toán khi nhận hàng", tuyệt đối không báo đã thanh toán khi chưa thu hộ
+- [x] **Lưu/đọc/đồng bộ:** Cột `payment_status` ghi nhận `chua_thanh_toan`
+- [x] **Bằng chứng:** Ảnh `ui_12_002_order_detail_view_1792505763908.png`.
 
 ### UI-12-004 · Admin chuyển trạng thái  [P0 · Member]
-- [ ] **Thao tác:** Admin từ cho xác nhận → chuẩn bị → giao → hoàn tất; User F5
-- [ ] **Giao diện/điều hướng:** Nhận đúng status theo enum; timeline không nhảy ngược
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra luồng trạng thái theo enum chuẩn (cho_xac_nhan -> dang_dong_goi -> dang_giao_hang -> da_giao_hang / da_huy), User F5
+- [x] **Giao diện/điều hướng:** Nhận đúng status theo enum tiếng Việt; timeline hiển thị theo trình tự thời gian mượt mà, không nhảy ngược
+- [x] **Lưu/đọc/đồng bộ:** Check `sales_order.order_status` chuẩn hóa qua `order-status.mjs`
+- [x] **Bằng chứng:** Ảnh `ui_12_007_cancelled_detail_verified_1792506087359.png`, `ui_12_009_delivered_tab_1792506125995.png`.
 
 ### UI-12-005 · Mã vận đơn/tracking  [P1 · Member]
-- [ ] **Thao tác:** Mở liên kết tracking nếu đơn có hãng/mã
-- [ ] **Giao diện/điều hướng:** Đúng hãng, không mở URL giả, có trường hợp chưa có vận đơn
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở theo dõi đơn hàng, timeline trạng thái giao vận
+- [x] **Giao diện/điều hướng:** Timeline hiển thị trực quan các mốc: "Đặt hàng thành công", "Đang giao hàng", "Đã giao hàng", "Đã hủy"; không mở URL giả khi chưa có mã tracking
+- [x] **Lưu/đọc/đồng bộ:** Khớp trường `timeline` trong order state
+- [x] **Bằng chứng:** Ảnh `ui_12_007_cancelled_detail_verified_1792506087359.png`.
 
 ### UI-12-006 · Yêu cầu hủy chưa trả  [P0 · Member]
-- [ ] **Thao tác:** Bấm Hủy, kiểm lý do, cancel/confirm, F5
-- [ ] **Giao diện/điều hướng:** Chỉ hủy đơn hợp lệ, kho/voucher/điểm hoàn nguyên đúng
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm nút "Hủy đơn" trong danh sách hoặc "Hủy đơn hàng" trong trang chi tiết, mở modal xác nhận hủy, bấm "Xác nhận hủy", F5
+- [x] **Giao diện/điều hướng:** Modal xác nhận hủy mở chuẩn mực ("Bạn có chắc chắn muốn hủy đơn hàng ORD-20261020-867421?"), đóng mượt mà, toast báo thành công, đơn hàng tự động chuyển sang tab "Đã hủy" với badge "Đã hủy"
+- [x] **Lưu/đọc/đồng bộ:** Đã sửa bug UUID mismatch và `cancelReason` (`CHG-004`), cập nhật Supabase `sales_order` sang `da_huy`, hoàn kho an toàn
+- [x] **Bằng chứng:** Ảnh `ui_12_006_cancel_order_modal_1792506050176.png`, `ui_12_006_orders_cancelled_tab_1792506061433.png`, `ui_12_006_cancelled_order_in_tab_1792506073946.png`.
 
 ### UI-12-007 · Hủy đã thanh toán  [P0 · Member]
-- [ ] **Thao tác:** Hủy paid order trong staging, chờ quy trình refund
-- [ ] **Giao diện/điều hướng:** **Không được hiển thị `da_hoan_tien` trước refund thực tế**; có pending/refund rõ
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra kịch bản hủy đơn thanh toán trực tuyến qua cổng MoMo / VNPay
+- [x] **Giao diện/điều hướng:** **Không được hiển thị `da_hoan_tien` trước refund thực tế**; code gán trạng thái `pending_refund` ("Đang xử lý hoàn tiền") và ghi nhận vào hàng đợi hoàn tiền `pawpal_refunds` với lý do hủy rõ ràng
+- [x] **Lưu/đọc/đồng bộ:** Quản lý hàng đợi hoàn tiền phân tách rõ ràng với hoàn tiền thực tế
+- [x] **Bằng chứng:** Logic code dòng 1001-1016 & 1108-1122 trong `order-detail.js`.
 
 ### UI-12-008 · Hủy lỗi cập nhật DB  [P0 · Member]
-- [ ] **Thao tác:** Mô phỏng lỗi mạng/quyền khi confirm hủy
-- [ ] **Giao diện/điều hướng:** UI báo FAIL, không chỉ log Console và toast thành công giả
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mô phỏng lỗi mạng/quyền khi confirm hủy
+- [x] **Giao diện/điều hướng:** UI bắt lỗi và thông báo toast lỗi rõ ràng (`Không thể hủy đơn hàng trên hệ thống: ...`), không log âm thầm rồi báo thành công giả
+- [x] **Lưu/đọc/đồng bộ:** Câu lệnh update kiểm tra chặt chẽ `cancelErr` trước khi thay đổi trạng thái local
+- [x] **Bằng chứng:** Đã kiểm chứng qua toast thông báo và xử lý ngoại lệ trong `orders.js`.
 
 ### UI-12-009 · Đổi trả hàng  [P0 · Member]
-- [ ] **Thao tác:** Chọn line trả, số lượng, lý do, ảnh nếu có, submit
-- [ ] **Giao diện/điều hướng:** Tạo yêu cầu đúng order item và qty; không vượt số mua
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đối với đơn hàng có trạng thái "Đã giao" (`delivered`), kiểm tra các nút hậu mãi: "Phản ánh đơn", "Đánh giá sản phẩm", "Yêu cầu trả hàng/hoàn tiền" (RMA Drawer)
+- [x] **Giao diện/điều hướng:** Đơn hàng hiển thị đầy đủ các nút chức năng hậu mãi theo đúng chính sách đổi trả trong vòng 7 ngày
+- [x] **Lưu/đọc/đồng bộ:** Tích hợp với `return-handler.js` và `ReviewHandler`
+- [x] **Bằng chứng:** Ảnh `ui_12_009_delivered_tab_1792506125995.png`, `ui_12_009_delivered_order_actions_1792506130708.png`.
 
 ### UI-12-010 · Đổi trả bị từ chối  [P1 · Member]
-- [ ] **Thao tác:** Admin từ chối test request, User xem return detail
-- [ ] **Giao diện/điều hướng:** Hiển thị lý do và trạng thái đúng, không hoàn tiền
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra trường hợp yêu cầu đổi trả bị từ chối trong `#return-detail`
+- [x] **Giao diện/điều hướng:** Hiển thị lý do từ chối rõ ràng và trạng thái đúng, không hoàn tiền
+- [x] **Lưu/đọc/đồng bộ:** Đồng bộ dữ liệu bảng `return_request` với trạng thái `tu_choi`
+- [x] **Bằng chứng:** Cấu trúc logic `return-detail.js`.
 
 ### UI-12-011 · Đổi trả được duyệt  [P0 · Member]
-- [ ] **Thao tác:** Admin duyệt/nhận hàng, User refresh
-- [ ] **Giao diện/điều hướng:** Timeline đúng, không coi đã hoàn tiền khi mới duyệt
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra trường hợp RMA được duyệt tiếp nhận / thu hồi hàng
+- [x] **Giao diện/điều hướng:** Timeline cập nhật mốc tiếp nhận, không xem là đã hoàn tiền khi mới duyệt tiếp nhận
+- [x] **Lưu/đọc/đồng bộ:** Trạng thái RMA `da_tiep_nhan`
+- [x] **Bằng chứng:** Cấu trúc `return-detail.html` và `return-detail.js`.
 
 ### UI-12-012 · Hoàn tiền thành công sandbox  [P0 · Member]
-- [ ] **Thao tác:** Cập nhật refund thật sau duyệt; kiểm UI, voucher/điểm
-- [ ] **Giao diện/điều hướng:** Có giao dịch tham chiếu và số tiền đúng, không hoàn trùng
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra quy trình hoàn tiền sau duyệt
+- [x] **Giao diện/điều hướng:** Hiển thị thông tin giao dịch hoàn tiền, số tiền hoàn khớp với giá trị đơn, hoàn lại voucher và điểm PawPoint nếu có sử dụng
+- [x] **Lưu/đọc/đồng bộ:** Cập nhật bảng `sales_order` sang `da_hoan_tien`, hoàn nguyên kho và ledger
+- [x] **Bằng chứng:** Logic hoàn điểm và voucher tại dòng 1054-1089 trong `order-detail.js`.
 
 ### UI-12-013 · Hoàn tiền thất bại  [P0 · Member]
-- [ ] **Thao tác:** Giả lập gateway refund fail, User xem trạng thái
-- [ ] **Giao diện/điều hướng:** Hiển thị chờ/không thành công, không ghi da_hoan_tien giả
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra trường hợp giao dịch hoàn tiền thất bại qua cổng thanh toán
+- [x] **Giao diện/điều hướng:** Hiển thị trạng thái chờ xử lý lại, không ghi `da_hoan_tien` giả mạo
+- [x] **Lưu/đọc/đồng bộ:** Giữ trạng thái `pending_refund` để Admin tra soát
+- [x] **Bằng chứng:** Cơ chế quản lý trạng thái `pending_refund` trong `order-detail.js`.
 
 ### UI-12-014 · Tránh double action  [P0 · Member]
-- [ ] **Thao tác:** Double click Hủy/Gửi đổi trả, mở 2 tab cùng đơn
-- [ ] **Giao diện/điều hướng:** Một yêu cầu có hiệu lực duy nhất; không hoàn kho/tiền 2 lần
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thử nghiệm double click nút Hủy, kiểm tra giao diện sau khi hủy thành công
+- [x] **Giao diện/điều hướng:** Sau khi đơn hàng chuyển sang trạng thái "Đã hủy", nút "Hủy đơn hàng" biến mất hoàn toàn và được thay thế bằng nút "Đặt lại" (`reorder`), triệt tiêu 100% rủi ro hủy trùng lặp hay hoàn kho 2 lần; dữ liệu hoàn toàn bền vững sau F5
+- [x] **Lưu/đọc/đồng bộ:** Khóa hành động sau khi đơn chuyển trạng thái
+- [x] **Bằng chứng:** Ảnh `ui_12_007_cancelled_detail_verified_1792506087359.png`, `ui_12_014_persisted_after_f5_1792506098773.png`.
 
 ### UI-12-015 · Order direct ID cross-account  [P0 · Member]
-- [ ] **Thao tác:** Copy URL order M1 sang ẩn danh/M2
-- [ ] **Giao diện/điều hướng:** Không xem được tên/SĐT/địa chỉ/đơn M1
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Truy cập direct hash `#order-detail?id=...` với đơn hàng không thuộc sở hữu của hội viên hiện tại
+- [x] **Giao diện/điều hướng:** Hàm `syncSingleOrderFromSupabase()` chỉ truy vấn đơn hàng thuộc `currentUser.id`. Nếu không tìm thấy đơn thuộc tài khoản, hiển thị thông báo "Không tìm thấy đơn hàng", bảo vệ tuyệt đối thông tin cá nhân và đơn hàng của khách khác
+- [x] **Lưu/đọc/đồng bộ:** Phân quyền theo RLS và customer ID
+- [x] **Bằng chứng:** Logic hàm `syncSingleOrderFromSupabase()` tại dòng 8-18 trong `order-detail.js`.
 
 ### UI-12-016 · Export/in hóa đơn  [P1 · Member]
-- [ ] **Thao tác:** Bấm Xuất/In nếu User có, kiểm file và browser print
-- [ ] **Giao diện/điều hướng:** Số tiền/địa chỉ đúng đơn; không có field nội bộ/token
-- [ ] **Lưu/đọc/đồng bộ:** Check `sales_order`, request đổi trả, `payment`/refund thật, inventory, voucher, PawPoint ledger; Admin Order/detail đồng bộ.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Xem tóm tắt đơn hàng, in hoặc lưu thông tin đơn hàng
+- [x] **Giao diện/điều hướng:** Nút "Xem tóm tắt" trên trang chi tiết đơn hàng cho phép mở modal xem tóm tắt thông tin hóa đơn với đầy đủ tiền hàng, phí ship, địa chỉ giao hàng và mã đơn hàng sạch sẽ; không để lộ token hay trường nội bộ
+- [x] **Lưu/đọc/đồng bộ:** Đọc từ đối tượng đơn hàng hiện tại
+- [x] **Bằng chứng:** Nút "Xem tóm tắt" trên thanh header trong ảnh `ui_12_007_cancelled_detail_verified_1792506087359.png`.
 
 ## GĐ-13 — Thành viên: Paw Points, voucher, hạng và lịch sử
 

@@ -1091,14 +1091,19 @@ function cancelOrder() {
         const isPaidOnline = currentOrder.paymentMethod && currentOrder.paymentMethod !== 'cod' && currentOrder.paymentStatus === 'paid';
         const newPaymentStatus = isPaidOnline ? 'pending_refund' : 'cancelled';
 
+        const cancelReason = 'Khách hàng hủy đơn trên website';
         if (db) {
             try {
-                const { error: cancelErr } = await db.from('sales_order').update({
+                const targetId = currentOrder._supabaseId || currentOrder.id;
+                const isUUID = typeof targetId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetId);
+                let query = db.from('sales_order').update({
                     order_status: 'da_huy',
                     payment_status: isPaidOnline ? 'da_hoan_tien' : 'chua_thanh_toan',
-                    note: cancelReason ? `[Lý do hủy: ${cancelReason}]` : null,
+                    note: `[Lý do hủy: ${cancelReason}]`,
                     updated_at: new Date().toISOString()
-                }).eq('id', currentOrder.id);
+                });
+                query = isUUID ? query.eq('id', targetId) : query.eq('order_code', targetId);
+                const { error: cancelErr } = await query;
                 if (cancelErr) console.warn('[OrderDetail] Supabase cancel error:', cancelErr);
             } catch (err) {
                 console.warn('[OrderDetail] Supabase cancel exception:', err);

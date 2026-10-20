@@ -619,11 +619,15 @@ function cancelOrder(orderId) {
 
         if (db) {
             try {
-                const { error: cancelErr } = await db.from('sales_order').update({
+                const targetId = order._supabaseId || order.id || orderId;
+                const isUUID = typeof targetId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetId);
+                let query = db.from('sales_order').update({
                     order_status: 'da_huy',
                     payment_status: newPaymentStatus,
                     updated_at: new Date().toISOString()
-                }).eq('id', order.id);
+                });
+                query = isUUID ? query.eq('id', targetId) : query.eq('order_code', targetId);
+                const { error: cancelErr } = await query;
 
                 if (cancelErr) {
                     console.error('[Orders] Supabase cancel error:', cancelErr);
