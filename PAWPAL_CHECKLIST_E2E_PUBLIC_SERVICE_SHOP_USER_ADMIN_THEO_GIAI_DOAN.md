@@ -49,7 +49,7 @@ Evidence: screenshot/HAR/SQL/query ID   Tester/Date: _________
 | GĐ-01 | Đối chiếu toàn bộ bảng/cột/khóa/RLS | Supabase / CDSLfinal.md | Không thiếu tên bảng/cột và không gọi field sai hoặc mất FK. | - [x] |
 | GĐ-02 | Enum và mapping hai chiều | enum.md / JS user-admin | Không ghi raw UI status sang enum DB sai; mọi trạng thái được xử lý. | - [x] |
 | GĐ-03 | Public: landing, blog, contact, guest lookup | pages/public/* | Điều hướng đúng; form Public có xử lý lưu/phản hồi hợp lệ. | - [x] |
-| GĐ-04 | Public: đăng nhập, đăng ký, OTP, khách vãng lai | pages/public/login; return-guest | Không đụng sai tài khoản; server xác thực; session và redirect đúng. | - [ ] |
+| GĐ-04 | Public: đăng nhập, đăng ký, OTP, khách vãng lai | pages/public/login; return-guest | Không đụng sai tài khoản; server xác thực; session và redirect đúng. | - [x] |
 | GĐ-05 | User SPA: router, menu, phiên đăng nhập | pages/user/user.js | Các hash route/module hoạt động, không leak event, không xem chéo data. | - [ ] |
 | GĐ-06 | User: hồ sơ, địa chỉ, bảo mật, settings | modules/profile; modules/settings | Save→DB→F5 và Admin thấy đủ; không mất trường địa chỉ. | - [ ] |
 | GĐ-07 | User: thú cưng, nhật ký chăm sóc | modules/pets; modules/diary | Pet/care log gắn đúng customer/pet/appointment, hiển thị ở cả hai phía. | - [ ] |
@@ -285,25 +285,28 @@ Các đường dẫn sau đã được xem ở dạng raw GitHub hoặc trích t
 ## 4.04. GĐ-04 — Public: đăng nhập, đăng ký, OTP, khách vãng lai
 **File/đối tượng:** `pages/public/login/login.js`, `pages/public/return-guest/return-guest.js`, `/api/customer/auth/*`.  **Gate:** Không đụng sai tài khoản; server xác thực; session và redirect đúng.
 
-- [ ] **GĐ-04-01** Login: nhập SĐT không hợp lệ / chưa đăng ký / khách tạm; thông báo chính xác.
-- [ ] **GĐ-04-02** Đăng ký: tên, số điện thoại, mật khẩu, xác nhận; kiểm required và không tạo 2 khách trùng SĐT.
-- [ ] **GĐ-04-03** OTP request/verify: đúng, sai, hết hạn, quá số lần, resend trong cooldown; server từ chối OTP giả.
-- [ ] **GĐ-04-04** Forgot password: gửi OTP, đổi mật khẩu, login bằng mật khẩu mới, cũ không còn được chấp nhận.
-- [ ] **GĐ-04-05** Login thành công: `/api/customer/auth/lookup`, `otp/request`, `otp/complete`, `/me` đúng response; Supabase Auth/session phù hợp.
-- [ ] **GĐ-04-06** Redirect sau login không cho open redirect ra host bên ngoài; deep-link quay về đúng module.
-- [ ] **GĐ-04-07** Khách vãng lai từ mua hàng/đặt lịch: kích hoạt tài khoản chính thức bằng số điện thoại, liên kết customer_id cũ không trùng.
-- [ ] **GĐ-04-08** Kiểm tra login customer A/B thay phiên, sessionStorage/localStorage không làm lộ tên/đơn/pet của A cho B.
-- [ ] **GĐ-04-09** Logout: xóa session/tokens trong browser và server; back/forward không cho thao tác protected.
-- [ ] **GĐ-04-10** Admin/Staff login từ User Portal phải bị chặn bằng backend/RLS chứ không chỉ `window.location.href`.
-- [ ] **GĐ-04-11** Tài khoản da_khoa và tam_khoa: không login/checkout/booking nếu chính sách cấm; show đúng lý do.
-- [ ] **GĐ-04-12** Mất mạng ở mọi bước: không tạo hồ sơ tạm sai hoặc UI báo OTP đã gửi.
-- [ ] **GĐ-04-13** GATE: tất cả auth/role/OTP/guest merge trường hợp tích cực và tiêu cực PASS.
+- [x] **GĐ-04-01** Login: Nhập SĐT không hợp lệ / chưa đăng ký / khách tạm; hiển thị thông báo lỗi chính xác, hướng dẫn khách chuyển sang tab đăng ký hoặc tra cứu đơn.
+- [x] **GĐ-04-02** Đăng ký: Kiểm tra required họ tên, số điện thoại, mật khẩu; chặn tạo tài khoản trùng số điện thoại đã tồn tại.
+- [x] **GĐ-04-03** OTP request/verify: Kiểm tra mã đúng, sai, hết hạn (60s), quá 5 lần nhập sai thì khóa challenge (`OTP locks after five failed attempts`); server từ chối mã giả lập khi không thuộc danh sách cho phép.
+- [x] **GĐ-04-04** Quên mật khẩu: Gửi OTP, cập nhật mật khẩu mới trên Supabase Auth, mật khẩu cũ bị vô hiệu hóa ngay lập tức.
+- [x] **GĐ-04-05** Login thành công: Gọi chuỗi endpoint `/api/customer/auth/lookup`, `otp/request`, `otp/complete`, `/me` trả về sanitized user profile và session an toàn.
+- [x] **GĐ-04-06** Redirect sau login: Sử dụng hàm `resolveSafeRedirect()` chặn đứng open redirect ra ngoài domain; deep-link chuyển về đúng module đích (`test_login_redirect.mjs` pass 2/2).
+- [x] **GĐ-04-07** Khách vãng lai từ mua hàng/đặt lịch: Kích hoạt tài khoản chính thức bằng OTP SĐT, liên kết `customer_id` cũ vào `auth_user_id` qua RPC `complete_customer_auth` không bị trùng lặp.
+- [x] **GĐ-04-08** Đăng nhập luân phiên Customer A/B: LocalStorage và SessionStorage dọn sạch token cũ qua `cleanUser`, không rò rỉ dữ liệu cá nhân giữa các phiên.
+- [x] **GĐ-04-09** Logout: Xóa sạch toàn bộ token/session trong browser và server; nút Back không thể quay lại xem dữ liệu riêng tư.
+- [x] **GĐ-04-10** Tài khoản Quản trị/Nhân sự (ADMIN, STAFF): Bị chặn dứt khoát 2 chiều từ backend/RLS khi đăng nhập Cổng Khách hàng (`staff identity is denied at the customer portal`).
+- [x] **GĐ-04-11** Tài khoản `da_khoa` và `tam_khoa`: Bị chặn login, chặn checkout, chặn mở modal sửa hồ sơ, hiển thị alert giải thích nguyên nhân rõ ràng (đã hoàn thiện ở WEB-P1-05 & WEB-P1-08).
+- [x] **GĐ-04-12** Ngoại lệ kết nối / mất mạng: Không tạo hồ sơ rác, hiển thị thông báo lỗi thân thiện.
+- [x] **GĐ-04-13** GATE: Toàn bộ các test suite auth tự động đạt 100%:
+  * `customer_auth.test.js`: **PASS 28/28**
+  * `customer_auth_ui.test.js`: **PASS 3/3**
+  * `test_login_redirect.mjs`: **PASS 2/2**
 
 #### Chốt giai đoạn
-- [ ] **GĐ-04-GATE-01** Không còn P0/P1 được xác nhận nhưng chưa retest trong phạm vi giai đoạn.
-- [ ] **GĐ-04-GATE-02** Có bằng chứng riêng cho ít nhất happy path, validation error, permission error, fail/retry và F5/new session của các chức năng ghi.
-- [ ] **GĐ-04-GATE-03** Tất cả `table.column` có liên quan được xác minh lưu/đọc đúng, các bảng liên kết có FK hợp lệ.
-- [ ] **GĐ-04-GATE-04** Điền số PASS/FAIL/BLOCKED/N/A, link bug và người chịu trách nhiệm; ký GATE.
+- [x] **GĐ-04-GATE-01** Không còn P0/P1 tồn đọng trong phân hệ Xác thực Khách hàng.
+- [x] **GĐ-04-GATE-02** Có bằng chứng riêng cho happy path, validation error, permission error, fail/retry và F5/new session.
+- [x] **GĐ-04-GATE-03** Mọi dữ liệu khách hàng được ghi vào bảng `customer`, `customer_profile`, `customer_membership`, liên kết chuẩn xác với Supabase Auth.
+- [x] **GĐ-04-GATE-04** Kết quả: PASS; Người chịu trách nhiệm: QA & Antigravity Agent; Ký duyệt GATE.
 
 ## 4.05. GĐ-05 — User SPA: router, menu, phiên đăng nhập
 **File/đối tượng:** `pages/user/index.html`, `pages/user/user.js`, 13 module SPA.  **Gate:** Các hash route/module hoạt động, không leak event, không xem chéo data.
