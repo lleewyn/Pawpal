@@ -1395,9 +1395,15 @@
     word-break: normal;
 }
 
-#servicesReviewTable .service-review-content-cell > div {
+#servicesReviewTable .service-review-content-cell .review-comment-text {
     max-width: 260px;
     white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+#servicesReviewTable .service-review-content-cell .review-reply-box {
+    max-width: 260px;
+    white-space: normal;
     overflow-wrap: anywhere;
 }
 

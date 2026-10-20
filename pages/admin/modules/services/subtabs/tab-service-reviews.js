@@ -218,12 +218,8 @@
                         ${starsHtml} <span style="font-size: 12px; font-weight: 600; color: var(--text-main); margin-left: 2px;">${starNum}★</span>
                     </td>
                     <td class="service-review-content-cell" style="max-width: 260px; font-size: 12.5px; line-height: 1.45;">
-                        <div style="color: var(--text-main);">${esc(r.comment || 'Khách không để lại nhận xét bằng lời.')}</div>
-                        ${isReplied ? `
-                            <div style="margin-top: 6px; padding: 4px 8px; background: #EEF5F1; border-radius: 6px; font-size: 11.5px; color: #236B48;">
-                                <span style="font-weight: 600;">Phản hồi:</span> ${esc(r.replyText)}
-                            </div>
-                        ` : ''}
+                        <div class="review-comment-text" style="color: var(--text-main);">${esc(r.comment || 'Khách không để lại nhận xét bằng lời.')}</div>
+                        ${isReplied ? `<div class="review-reply-box" style="margin-top: 6px; padding: 6px 10px; background: #EEF5F1; border-radius: 6px; font-size: 11.5px; color: #236B48; line-height: 1.45;"><span style="font-weight: 600;">Phản hồi:</span> ${esc(r.replyText)}</div>` : ''}
                     </td>
                     <td>${esc(r.staff || 'Chưa phân công')}</td>
                     <td>
