@@ -335,7 +335,7 @@
                     }
                 } catch (e) {}
             }
-            if (!userRole) userRole = 'ADMIN';
+            if (!userRole) userRole = 'STAFF';
             if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
                 showToast('Chỉ Quản trị viên hoặc Quản lý chi nhánh mới có quyền lập phiếu RMA và xử lý hoàn tiền.', 'danger');
                 return;
@@ -377,14 +377,6 @@
 
                 if (!dbOrderId) throw new Error('Không tìm thấy bản ghi đơn hàng tương ứng trên cơ sở dữ liệu.');
 
-                const updateOrderPayload = { order_status: 'da_tra_hang' };
-                if (solType === 'refund') {
-                    // O-12: Chờ đối soát hoàn tiền từ ngân hàng/cổng thanh toán (da_hoan_tien trong enum CSDL)
-                    updateOrderPayload.payment_status = 'da_hoan_tien';
-                }
-                const { error: ordUpErr } = await client.from('sales_order').update(updateOrderPayload).eq('id', dbOrderId);
-                if (ordUpErr) throw ordUpErr;
-
                 const { data: rmaRow, error: rmaErr } = await client.from('return_request').insert({
                     sales_order_id: dbOrderId,
                     customer_id: (order.userId && order.userId.length > 20) ? order.userId : null,
@@ -411,9 +403,14 @@
                     }
                     if (rmaDetails.length > 0) {
                         const { error: detErr } = await client.from('return_request_detail').insert(rmaDetails);
-                        if (detErr) console.warn('[RMA] Lỗi lưu chi tiết phiếu trả:', detErr);
+                        if (detErr) throw new Error('Lỗi lưu chi tiết phiếu RMA: ' + (detErr.message || 'Lỗi CSDL'));
                     }
                 }
+
+                // Cập nhật trạng thái đơn hàng sang đã trả hàng sau khi RMA và chi tiết đã tạo thành công
+                const updateOrderPayload = { order_status: 'da_tra_hang' };
+                const { error: ordUpErr } = await client.from('sales_order').update(updateOrderPayload).eq('id', dbOrderId);
+                if (ordUpErr) throw ordUpErr;
 
                 // O-11: Chỉ sau khi tạo phiếu RMA thành công và kiểm định đạt chuẩn mới nhập lại kho khả dụng
                 if (restockVal === 'restock') {

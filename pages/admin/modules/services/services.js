@@ -199,19 +199,34 @@
     PawpalServices.showConfirmModal = showServiceConfirmModal;
 
     function getStatusBadge(status) {
-        switch (status) {
+        if (window.PawpalEnum && window.PawpalEnum.appointmentStatus) {
+            const mapped = window.PawpalEnum.appointmentStatus(status);
+            return `<span class="admin-badge ${mapped.badgeClass}">${mapped.label}</span>`;
+        }
+        switch (String(status || '').toLowerCase()) {
             case 'pending':
+            case 'cho_xac_nhan':
                 return '<span class="admin-badge badge-warning">Chờ xác nhận</span>';
             case 'confirmed':
-                return '<span class="admin-badge badge-neutral">Đã xác nhận</span>';
+            case 'da_xac_nhan':
+                return '<span class="admin-badge badge-info">Đã xác nhận</span>';
+            case 'checked_in':
+            case 'da_check_in':
+                return '<span class="admin-badge badge-primary">Đã check-in</span>';
             case 'in_progress':
+            case 'dang_thuc_hien':
                 return '<span class="admin-badge badge-info">Đang thực hiện</span>';
             case 'completed':
-                return '<span class="admin-badge badge-success">Hoàn thành</span>';
+            case 'da_hoan_tat':
+                return '<span class="admin-badge badge-success">Đã hoàn tất</span>';
             case 'cancelled':
-                return '<span class="admin-badge badge-danger">Đã hủy</span>';
+            case 'da_huy':
+                return '<span class="admin-badge badge-neutral">Đã hủy</span>';
+            case 'no_show':
+            case 'vang_mat':
+                return '<span class="admin-badge badge-danger">Vắng mặt</span>';
             default:
-                return `<span class="admin-badge badge-neutral">${status}</span>`;
+                return `<span class="admin-badge badge-neutral">${status || 'Chưa rõ'}</span>`;
         }
     }
 
@@ -643,11 +658,42 @@
                 else if (catRaw.includes('TAXI') || /taxi|đưa đón/i.test(serviceLabel)) cat = 'Taxi';
 
                 let status = 'pending';
-                const s = String(item.appointment_status || '').toUpperCase();
-                if (s === 'CONFIRMED') status = 'confirmed';
-                else if (s === 'IN_PROGRESS' || s === 'PROCESSING' || s === 'CHECKED_IN') status = 'in_progress';
-                else if (s === 'COMPLETED') status = 'completed';
-                else if (s === 'CANCELLED' || s === 'DA_HUY' || s === 'CANCELED') status = 'cancelled';
+                if (window.PawpalEnum && window.PawpalEnum.appointmentStatus) {
+                    const mapped = window.PawpalEnum.appointmentStatus(item.appointment_status);
+                    status = mapped.code ? mapped.code.toLowerCase() : 'pending';
+                } else {
+                    const s = String(item.appointment_status || '').toLowerCase();
+                    if (s === 'confirmed' || s === 'da_xac_nhan') status = 'confirmed';
+                    else if (s === 'checked_in' || s === 'da_check_in') status = 'checked_in';
+                    else if (s === 'in_progress' || s === 'processing' || s === 'dang_thuc_hien') status = 'in_progress';
+                    else if (s === 'completed' || s === 'da_hoan_tat' || s === 'da_hoan_thanh') status = 'completed';
+                    else if (s === 'cancelled' || s === 'da_huy' || s === 'canceled') status = 'cancelled';
+                    else if (s === 'no_show' || s === 'vang_mat') status = 'no_show';
+                    else status = 'pending';
+                }
+
+                let paymentStatusText = 'Chưa thu';
+                let paymentBadgeClass = 'badge-warning';
+                if (window.PawpalEnum && window.PawpalEnum.paymentStatus) {
+                    const payMapped = window.PawpalEnum.paymentStatus(item.payment_status);
+                    paymentStatusText = payMapped.label || 'Chưa thu';
+                    paymentBadgeClass = payMapped.badgeClass || 'badge-warning';
+                } else {
+                    const pRaw = String(item.payment_status || '').toLowerCase();
+                    if (pRaw === 'da_thanh_toan' || pRaw === 'paid') {
+                        paymentStatusText = 'Đã thanh toán';
+                        paymentBadgeClass = 'badge-success';
+                    } else if (pRaw === 'thanh_toan_that_bai' || pRaw === 'failed') {
+                        paymentStatusText = 'Thanh toán thất bại';
+                        paymentBadgeClass = 'badge-danger';
+                    } else if (pRaw === 'da_hoan_tien' || pRaw === 'refunded') {
+                        paymentStatusText = 'Đã hoàn tiền';
+                        paymentBadgeClass = 'badge-neutral';
+                    } else {
+                        paymentStatusText = 'Chưa thu';
+                        paymentBadgeClass = 'badge-warning';
+                    }
+                }
 
                 const customerName = getCustomerProfileName(item.customer) || getCustomerProfileName(item.pet_profile?.customer) || 'Chưa cập nhật tên khách hàng';
                 const phone = item.customer?.phone_main || item.pet_profile?.customer?.phone_main || '—';
@@ -706,7 +752,9 @@
                     accompanyingServices: charges.filter(c => c.kind === 'service').map(c => ({ ...c, price: c.amount, note: c.reason })),
                     price: Number(item.total_price || 0) - charges.reduce((sum, c) => sum + c.amount, 0),
                     total: item.total_price || 0,
-                    paymentStatus: item.payment_status === 'PAID' ? 'Đã thanh toán' : 'Chưa thu',
+                    paymentStatus: paymentStatusText,
+                    paymentBadgeClass,
+                    rawPaymentStatus: item.payment_status,
                     status,
                     alertType: isBookingUpcoming({ status, date: item.appointment_date, time: item.appointment_time }) ? 'upcoming' : null,
                     careLogs: [],

@@ -45,7 +45,14 @@
             });
         }
 
-        const completed = (PawpalPets.state.appointments || []).filter(a => a.appointment_status === 'COMPLETED');
+        // GĐ-04 & F-002: Nhận diện da_hoan_tat (giá trị enum CSDL Supabase) và alias COMPLETED
+        const completed = (PawpalPets.state.appointments || []).filter(a => {
+            if (window.PawpalEnum?.isAppointmentCompleted) {
+                return window.PawpalEnum.isAppointmentCompleted(a.appointment_status);
+            }
+            const st = String(a.appointment_status || '').toLowerCase();
+            return st === 'da_hoan_tat' || st === 'completed' || st === 'da_hoan_thanh';
+        });
         const sentMap = getSentReminders();
 
         for (const pet of Object.values(PawpalPets.state.petsData || {})) {

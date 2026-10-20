@@ -42,8 +42,10 @@
 
         const status = {ACTIVE:'Đang làm việc',LEAVE:'Nghỉ phép',PAUSE:'Tạm nghỉ',RESIGNED:'Nghỉ việc'}[staff?.status] || 'Chưa cập nhật';
         const hasAcc = Boolean(staff?.authUserId);
-        const accStatusText = hasAcc ? (staff?.accountStatus === 'ACTIVE' ? 'Đang hoạt động' : 'Đã khóa') : 'Chưa cấp tài khoản';
-        const accBadgeClass = hasAcc ? (staff?.accountStatus === 'ACTIVE' ? 'badge-success' : 'badge-danger') : 'badge-neutral';
+        const isAccActive = staff?.accountStatus === 'ACTIVE' || staff?.accountStatus === 'dang_hoat_dong';
+        const isAccPaused = staff?.accountStatus === 'tam_khoa' || staff?.accountStatus === 'PAUSED';
+        const accStatusText = hasAcc ? (isAccActive ? 'Đang hoạt động' : (isAccPaused ? 'Tạm khóa' : 'Đã khóa')) : 'Chưa cấp tài khoản';
+        const accBadgeClass = hasAcc ? (isAccActive ? 'badge-success' : (isAccPaused ? 'badge-warning' : 'badge-danger')) : 'badge-neutral';
 
         const lastLoginFormatted = staff?.lastLoginAt ? PawpalStaff.formatDateVN(staff.lastLoginAt) : 'Chưa đăng nhập';
 

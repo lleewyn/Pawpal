@@ -470,7 +470,7 @@
         return pet;
     };
 
-    // Helper lazy-fetch care logs cho subtab Care Log
+    // Helper lazy-fetch care logs cho subtab Care Log (GĐ-04 & F-021: Kiểm tra error rõ ràng)
     PawpalPets.fetchCareLogsTab = async function({ force = false, limit = 100 } = {}) {
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!client) return [];
@@ -485,6 +485,18 @@
                     .select('id, customer_id, pet_id')
                     .limit(500)
             ]);
+
+            if (logsRes.error) {
+                console.warn('[PawpalPets] Cảnh báo nạp care_log từ Supabase:', logsRes.error);
+                PawpalPets.state.careLogsLoadError = logsRes.error;
+            } else {
+                delete PawpalPets.state.careLogsLoadError;
+            }
+
+            if (apptsRes.error) {
+                console.warn('[PawpalPets] Cảnh báo nạp appointment từ Supabase:', apptsRes.error);
+            }
+
             return {
                 logs: logsRes.data || [],
                 appts: apptsRes.data || []
@@ -505,17 +517,22 @@
         return PawpalPets.state.careLogs;
     };
 
-    // Helper lazy-fetch appointments cho subtab Nhắc lịch (Reminders)
+    // Helper lazy-fetch appointments cho subtab Nhắc lịch (GĐ-04 & F-001: Lọc da_hoan_tat chuẩn CSDL)
     PawpalPets.fetchRemindersAppointments = async function({ force = false } = {}) {
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!client) return [];
 
         const fetchAppts = async () => {
-            const { data } = await client.from('appointment')
+            const { data, error } = await client.from('appointment')
                 .select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_status, service:service_id(service_name)')
-                .eq('appointment_status', 'COMPLETED')
+                .in('appointment_status', ['da_hoan_tat', 'COMPLETED', 'da_hoan_thanh'])
                 .order('appointment_date', { ascending: false })
                 .limit(500);
+
+            if (error) {
+                console.warn('[PawpalPets] Lỗi nạp lịch hẹn hoàn tất nhắc nhở:', error);
+                return [];
+            }
             return data || [];
         };
 

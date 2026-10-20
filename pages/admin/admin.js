@@ -62,6 +62,245 @@ if (typeof window !== 'undefined') {
     window.matchSearch = matchSearch;
 }
 
+// ====================================================================
+// GĐ-02: HỢP ĐỒNG ÁNH XẠ ENUM VÀ CHUẨN HÓA DỮ LIỆU TOÀN HỆ THỐNG
+// Đồng bộ 100% giữa Database Supabase (tiếng Việt snake_case) và UI Admin
+// ====================================================================
+const PawpalEnum = {
+    // 1. APPOINTMENT STATUS (Lịch hẹn dịch vụ)
+    appointmentStatus(val) {
+        const raw = String(val || '').toLowerCase().trim();
+        switch (raw) {
+            case 'da_hoan_tat':
+            case 'completed':
+            case 'da_hoan_thanh':
+                return { raw: 'da_hoan_tat', label: 'Đã hoàn tất', badgeClass: 'badge-success', isCompleted: true };
+            case 'dang_thuc_hien':
+            case 'in_progress':
+            case 'processing':
+                return { raw: 'dang_thuc_hien', label: 'Đang thực hiện', badgeClass: 'badge-primary', isCompleted: false };
+            case 'da_xac_nhan':
+            case 'confirmed':
+                return { raw: 'da_xac_nhan', label: 'Đã xác nhận', badgeClass: 'badge-info', isCompleted: false };
+            case 'cho_xac_nhan':
+            case 'pending':
+                return { raw: 'cho_xac_nhan', label: 'Chờ xác nhận', badgeClass: 'badge-warning', isCompleted: false };
+            case 'da_check_in':
+            case 'checked_in':
+                return { raw: 'da_check_in', label: 'Đã check-in', badgeClass: 'badge-info', isCompleted: false };
+            case 'vang_mat':
+            case 'no_show':
+                return { raw: 'vang_mat', label: 'Vắng mặt', badgeClass: 'badge-secondary', isCompleted: false };
+            case 'da_huy':
+            case 'cancelled':
+            case 'canceled':
+                return { raw: 'da_huy', label: 'Đã hủy', badgeClass: 'badge-danger', isCompleted: false };
+            default:
+                return { raw: raw || 'chua_ro', label: raw ? raw : 'Chưa rõ', badgeClass: 'badge-secondary', isCompleted: false };
+        }
+    },
+    isAppointmentCompleted(val) {
+        const raw = String(val || '').toLowerCase().trim();
+        return raw === 'da_hoan_tat' || raw === 'completed' || raw === 'da_hoan_thanh';
+    },
+
+    // 2. ORDER STATUS (Đơn hàng sản phẩm)
+    orderStatus(val) {
+        const raw = String(val || '').toLowerCase().trim();
+        switch (raw) {
+            case 'da_giao_hang':
+            case 'delivered':
+            case 'completed':
+                return { raw: 'da_giao_hang', label: 'Đã giao hàng', badgeClass: 'badge-success', isFinal: true };
+            case 'dang_giao_hang':
+            case 'shipping':
+            case 'delivering':
+                return { raw: 'dang_giao_hang', label: 'Đang giao hàng', badgeClass: 'badge-primary', isFinal: false };
+            case 'dang_dong_goi':
+            case 'packing':
+            case 'processing':
+                return { raw: 'dang_dong_goi', label: 'Đang đóng gói', badgeClass: 'badge-info', isFinal: false };
+            case 'cho_xac_nhan':
+            case 'pending':
+            case 'confirmed':
+                return { raw: 'cho_xac_nhan', label: 'Chờ xác nhận', badgeClass: 'badge-warning', isFinal: false };
+            case 'da_tra_hang':
+            case 'returned':
+                return { raw: 'da_tra_hang', label: 'Đã trả hàng', badgeClass: 'badge-danger', isFinal: true };
+            case 'da_huy':
+            case 'cancelled':
+            case 'canceled':
+                return { raw: 'da_huy', label: 'Đã hủy', badgeClass: 'badge-danger', isFinal: true };
+            default:
+                return { raw: raw || 'chua_ro', label: raw ? raw : 'Chưa rõ', badgeClass: 'badge-secondary', isFinal: false };
+        }
+    },
+
+    // 3. PAYMENT STATUS (Trạng thái thanh toán)
+    paymentStatus(val) {
+        const raw = String(val || '').toLowerCase().trim();
+        switch (raw) {
+            case 'da_thanh_toan':
+            case 'paid':
+                return { raw: 'da_thanh_toan', label: 'Đã thanh toán', badgeClass: 'badge-success', isPaid: true };
+            case 'da_hoan_tien':
+            case 'refunded':
+                return { raw: 'da_hoan_tien', label: 'Đã hoàn tiền', badgeClass: 'badge-info', isPaid: false };
+            case 'chua_thanh_toan':
+            case 'unpaid':
+            case 'pending':
+                return { raw: 'chua_thanh_toan', label: 'Chưa thanh toán', badgeClass: 'badge-warning', isPaid: false };
+            default:
+                return { raw: raw || 'chua_thanh_toan', label: 'Chưa thanh toán', badgeClass: 'badge-warning', isPaid: false };
+        }
+    },
+
+    // 4. GENDER (Khách hàng & Thú cưng - Khắc phục F-006: không gán NULL thành Khác)
+    gender(val) {
+        if (!val || val === 'null' || val === 'undefined') return 'Chưa cập nhật';
+        const raw = String(val).toLowerCase().trim();
+        if (raw === 'nam' || raw === 'male') return 'Nam';
+        if (raw === 'nu' || raw === 'nữ' || raw === 'female') return 'Nữ';
+        if (raw === 'khac' || raw === 'khác' || raw === 'other') return 'Khác';
+        return String(val);
+    },
+
+    // 5. ACCOUNT STATUS (Khách hàng & Nhân sự - Khắc phục F-020, F-023: tách biệt tạm khóa và đã khóa)
+    accountStatus(val) {
+        const raw = String(val || '').toLowerCase().trim();
+        switch (raw) {
+            case 'dang_hoat_dong':
+            case 'active':
+                return { raw: 'dang_hoat_dong', label: 'Đang hoạt động', badgeClass: 'badge-success', isLocked: false };
+            case 'tam_khoa':
+            case 'temporary_locked':
+                return { raw: 'tam_khoa', label: 'Tạm khóa', badgeClass: 'badge-warning', isLocked: true };
+            case 'da_khoa':
+            case 'locked':
+            case 'inactive':
+                return { raw: 'da_khoa', label: 'Đã khóa', badgeClass: 'badge-danger', isLocked: true };
+            default:
+                return { raw: raw || 'dang_hoat_dong', label: 'Đang hoạt động', badgeClass: 'badge-success', isLocked: false };
+        }
+    },
+
+    // 6. SUPPORT TICKET STATUS (Khắc phục F-007, F-016: phân biệt rõ từ chối vs đã đóng)
+    ticketStatus(val) {
+        const raw = String(val || '').toLowerCase().trim();
+        switch (raw) {
+            case 'mo':
+            case 'pending':
+            case 'open':
+            case 'new':
+                return { raw: 'mo', label: 'Chờ xử lý', badgeClass: 'badge-warning', isPending: true, isClosed: false };
+            case 'dang_xu_ly':
+            case 'processing':
+            case 'in_progress':
+                return { raw: 'dang_xu_ly', label: 'Đang xử lý', badgeClass: 'badge-primary', isPending: true, isClosed: false };
+            case 'cho_khach_hang':
+            case 'waiting_customer':
+                return { raw: 'cho_khach_hang', label: 'Chờ khách hàng', badgeClass: 'badge-info', isPending: true, isClosed: false };
+            case 'da_giai_quyet':
+            case 'completed':
+            case 'resolved':
+                return { raw: 'da_giai_quyet', label: 'Đã giải quyết', badgeClass: 'badge-success', isPending: false, isClosed: true };
+            case 'da_dong':
+            case 'closed':
+                return { raw: 'da_dong', label: 'Đã đóng', badgeClass: 'badge-secondary', isPending: false, isClosed: true };
+            case 'tu_choi':
+            case 'rejected':
+                return { raw: 'tu_choi', label: 'Từ chối', badgeClass: 'badge-danger', isPending: false, isClosed: true };
+            default:
+                return { raw: raw || 'mo', label: raw || 'Chờ xử lý', badgeClass: 'badge-warning', isPending: true, isClosed: false };
+        }
+    },
+
+    // 7. PRIORITY (Mức ưu tiên khiếu nại - Bảo toàn mức khẩn cấp riêng)
+    priority(val) {
+        const raw = String(val || '').toLowerCase().trim();
+        if (raw.includes('khan_cap') || raw.includes('khẩn cấp') || raw === 'urgent' || raw === 'emergency') {
+            return { raw: 'khan_cap', label: 'Khẩn cấp', badgeClass: 'badge-danger', level: 4 };
+        }
+        if (raw === 'cao' || raw === 'high') {
+            return { raw: 'cao', label: 'Cao', badgeClass: 'badge-warning', level: 3 };
+        }
+        if (raw.includes('trung_binh') || raw.includes('trung bình') || raw.includes('bình thường') || raw === 'normal' || raw === 'medium') {
+            return { raw: 'trung_binh', label: 'Trung bình', badgeClass: 'badge-info', level: 2 };
+        }
+        if (raw === 'thap' || raw === 'thấp' || raw === 'low') {
+            return { raw: 'thap', label: 'Thấp', badgeClass: 'badge-secondary', level: 1 };
+        }
+        return { raw: raw || 'trung_binh', label: 'Trung bình', badgeClass: 'badge-info', level: 2 };
+    },
+
+    // 8. SHIFT REQUEST TYPE & STATUS (Khắc phục F-018: không gửi LEAVE/SWAP hay PENDING/APPROVED)
+    shiftRequestType(val) {
+        const raw = String(val || '').toLowerCase().trim();
+        switch (raw) {
+            case 'xin_nghi':
+            case 'leave':
+                return { raw: 'xin_nghi', label: 'Nghỉ phép' };
+            case 'doi_ca':
+            case 'swap':
+                return { raw: 'doi_ca', label: 'Đổi ca' };
+            case 'tang_ca':
+            case 'overtime':
+                return { raw: 'tang_ca', label: 'Tăng ca' };
+            default:
+                return { raw: raw || 'xin_nghi', label: 'Nghỉ phép' };
+        }
+    },
+    shiftRequestStatus(val) {
+        const raw = String(val || '').toLowerCase().trim();
+        switch (raw) {
+            case 'cho_duyet':
+            case 'pending':
+                return { raw: 'cho_duyet', label: 'Chờ duyệt', badgeClass: 'badge-warning' };
+            case 'da_duyet':
+            case 'approved':
+                return { raw: 'da_duyet', label: 'Đã duyệt', badgeClass: 'badge-success' };
+            case 'tu_choi':
+            case 'rejected':
+                return { raw: 'tu_choi', label: 'Từ chối', badgeClass: 'badge-danger' };
+            default:
+                return { raw: raw || 'cho_duyet', label: 'Chờ duyệt', badgeClass: 'badge-warning' };
+        }
+    },
+
+    // 9. SHIFT TIME (Ca làm việc)
+    shift(val) {
+        const raw = String(val || '').toLowerCase().trim();
+        switch (raw) {
+            case 'ca_sang':
+            case 'morning':
+                return { raw: 'ca_sang', label: 'Ca sáng (08:00 - 12:00)' };
+            case 'ca_chieu':
+            case 'afternoon':
+                return { raw: 'ca_chieu', label: 'Ca chiều (13:00 - 17:00)' };
+            case 'ca_toi':
+            case 'evening':
+                return { raw: 'ca_toi', label: 'Ca tối (18:00 - 21:00)' };
+            default:
+                return { raw: raw || 'ca_sang', label: raw || 'Ca sáng' };
+        }
+    },
+
+    // 10. SPECIES (Loài thú cưng)
+    species(val) {
+        const raw = String(val || '').toLowerCase().trim();
+        if (raw === 'dog' || raw === 'cho' || raw === 'chó') return { raw: 'cho', label: 'Chó' };
+        if (raw === 'cat' || raw === 'meo' || raw === 'mèo') return { raw: 'meo', label: 'Mèo' };
+        if (raw === 'rabbit' || raw === 'tho' || raw === 'thỏ') return { raw: 'tho', label: 'Thỏ' };
+        if (raw.includes('hamster') || raw.includes('chuột')) return { raw: 'hamster', label: 'Chuột Hamster' };
+        if (raw.includes('thu_nho') || raw.includes('thú nhỏ')) return { raw: 'thu_nho', label: 'Thú nhỏ' };
+        return { raw: 'khac', label: val || 'Khác' };
+    }
+};
+
+if (typeof window !== 'undefined') {
+    window.PawpalEnum = PawpalEnum;
+}
+
 function getAdminSessionUser() {
     try {
         const raw = sessionStorage.getItem('pawpal_admin_user') 

@@ -275,12 +275,12 @@
         // 4. Khiếu nại chờ xử lý (hỗ trợ cả cột status và ticket_status từ Supabase support_ticket)
         const pendingTickets = liveTickets.filter(t => {
             const s = (t.status || t.ticket_status || '').toUpperCase();
-            return s === 'OPEN' || s === 'IN_PROGRESS' || s === 'PENDING' || s === 'NEW' || s === 'PROCESSING';
+            return s === 'OPEN' || s === 'IN_PROGRESS' || s === 'PENDING' || s === 'NEW' || s === 'PROCESSING' || s === 'MO' || s === 'DANG_XU_LY' || s === 'CHO_KHACH_HANG';
         });
 
         // Render DOM 5 thẻ KPI (100% số liệu thực)
         // E2E-12D: Chốt chặn kiểm tra quyền hạn tài chính
-        const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'ADMIN').toUpperCase();
+        const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'STAFF').toUpperCase();
         const canViewFinancials = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'ACCOUNTANT';
 
         const elRevenue = document.getElementById('dashboardRevenue');
@@ -353,7 +353,10 @@
                 alertBtn.textContent = 'Thử lại';
                 alertBtn.onclick = () => window.PawpalDashboard?.refresh();
             } else if (pendingTickets.length > 0) {
-                const urgentTicket = pendingTickets.find(t => (t.priority || '').toLowerCase().includes('khẩn') || (t.priority || '').toLowerCase().includes('urgent')) || pendingTickets[0];
+                const urgentTicket = pendingTickets.find(t => {
+                    const p = (t.priority || '').toLowerCase();
+                    return p === 'khan_cap' || p.includes('khẩn') || p.includes('urgent');
+                }) || pendingTickets[0];
                 alertBanner.style.display = 'flex';
                 alertBtn.textContent = 'Xử lý ngay';
                 if (urgentTicket) {

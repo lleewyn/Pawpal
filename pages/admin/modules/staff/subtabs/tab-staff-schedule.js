@@ -235,12 +235,14 @@
         try {
             const {data,error}=await client.rpc('pawpal_review_staff_shift_request',{p_request_id:id,p_approve:approve}).single();
             if(error) throw error;
-            if(!data?.id || data.status!==(approve?'APPROVED':'REJECTED')) throw new Error('Không xác minh được kết quả duyệt đơn.');
+            const isApproved = data?.status === 'APPROVED' || data?.status === 'da_duyet';
+            const isRejected = data?.status === 'REJECTED' || data?.status === 'tu_choi';
+            if(!data?.id || (approve ? !isApproved : !isRejected)) throw new Error('Không xác minh được kết quả duyệt đơn.');
         } catch (rpcErr) {
             console.warn('[PawpalStaff] RPC pawpal_review_staff_shift_request lỗi, chuyển fallback:', rpcErr);
             const {data:req, error:reqErr} = await client.from('staff_shift_request').select('*').eq('id', id).single();
             if (reqErr || !req) throw rpcErr;
-            const newStatus = approve ? 'APPROVED' : 'REJECTED';
+            const newStatus = approve ? 'da_duyet' : 'tu_choi';
             const {data:user} = await client.auth.getUser();
             const {error:updateErr} = await client.from('staff_shift_request').update({
                 status: newStatus,
@@ -298,7 +300,8 @@
             const client=await requireStaffAuth();
             const {data,error}=await client.from('staff_shift_request').insert(payload).select('id,status').single();
             if(error) throw error;
-            if(!data?.id||data.status!=='PENDING') throw new Error('Không xác minh được đơn đã lưu.');
+            const isSavedPending = data?.status === 'PENDING' || data?.status === 'cho_duyet';
+            if(!data?.id || !isSavedPending) throw new Error('Không xác minh được đơn đã lưu.');
             savedId=data.id;
             modal.classList.remove('active');
             if(approveImmediately) await reviewRequest(savedId,true);
@@ -324,7 +327,7 @@
 
         PawpalStaff.state.mockLeaveSwapRequests ||= [];
         const requests = PawpalStaff.state.mockLeaveSwapRequests;
-        const pendingCount = requests.filter(r => r.status === 'PENDING').length;
+        const pendingCount = requests.filter(r => r.status === 'PENDING' || r.status === 'cho_duyet').length;
 
         if (countPendingEl) countPendingEl.textContent = pendingCount;
         if (trayPendingCountEl) trayPendingCountEl.textContent = pendingCount;
@@ -336,7 +339,15 @@
 
         let filtered = requests;
         if (filterStatus !== 'ALL') {
-            filtered = requests.filter(r => r.status === filterStatus);
+            if (filterStatus === 'PENDING') {
+                filtered = requests.filter(r => r.status === 'PENDING' || r.status === 'cho_duyet');
+            } else if (filterStatus === 'APPROVED') {
+                filtered = requests.filter(r => r.status === 'APPROVED' || r.status === 'da_duyet');
+            } else if (filterStatus === 'REJECTED') {
+                filtered = requests.filter(r => r.status === 'REJECTED' || r.status === 'tu_choi');
+            } else {
+                filtered = requests.filter(r => r.status === filterStatus);
+            }
         }
 
         if (filtered.length === 0) {
@@ -345,9 +356,11 @@
         }
 
         container.innerHTML = filtered.map(req => {
-            const isPending = req.status === 'PENDING';
-            const badgeClass = req.status === 'APPROVED' ? 'badge-success' : (req.status === 'REJECTED' ? 'badge-danger' : 'badge-warning');
-            const badgeText = req.status === 'APPROVED' ? 'Đã duyệt' : (req.status === 'REJECTED' ? 'Từ chối' : 'Chờ duyệt');
+            const isPending = req.status === 'PENDING' || req.status === 'cho_duyet';
+            const isApproved = req.status === 'APPROVED' || req.status === 'da_duyet';
+            const isRejected = req.status === 'REJECTED' || req.status === 'tu_choi';
+            const badgeClass = isApproved ? 'badge-success' : (isRejected ? 'badge-danger' : 'badge-warning');
+            const badgeText = isApproved ? 'Đã duyệt' : (isRejected ? 'Từ chối' : 'Chờ duyệt');
 
             return `
                 <div class="leave-request-card" style="padding: 12px 14px; border: 1px solid var(--border-neutral); border-radius: var(--admin-radius); background-color: #FFFFFF; display: flex; justify-content: space-between; align-items: center; gap: 12px;">

@@ -326,11 +326,18 @@
                     const rawStatus = (s.status || s.employment_status || '').toUpperCase();
                     let mappedStatus = 'ACTIVE';
                     if (rawStatus === 'RESIGNED' || rawStatus === 'TERMINATED') mappedStatus = 'RESIGNED';
-                    else if (rawStatus === 'LOCKED' || s.account_status === 'locked' || s.account_status === 'LOCKED') mappedStatus = 'LOCKED';
+                    else if (rawStatus === 'LOCKED' || s.account_status === 'locked' || s.account_status === 'LOCKED' || s.account_status === 'da_khoa') mappedStatus = 'LOCKED';
                     else if (rawStatus === 'LEAVE') mappedStatus = 'LEAVE';
-                    else if (rawStatus === 'PAUSE') mappedStatus = 'PAUSE';
-                    else if (rawStatus === 'ACTIVE' || !rawStatus) mappedStatus = 'ACTIVE';
+                    else if (rawStatus === 'PAUSE' || s.account_status === 'tam_khoa') mappedStatus = 'PAUSE';
+                    else if (rawStatus === 'ACTIVE' || !rawStatus || s.account_status === 'dang_hoat_dong') mappedStatus = 'ACTIVE';
                     else mappedStatus = rawStatus;
+
+                    const rawAcc = String(s.account_status || '').toLowerCase();
+                    let mappedAccStatus = 'dang_hoat_dong';
+                    if (rawAcc === 'tam_khoa' || rawAcc === 'paused') mappedAccStatus = 'tam_khoa';
+                    else if (rawAcc === 'da_khoa' || rawAcc === 'locked') mappedAccStatus = 'da_khoa';
+                    else if (rawAcc === 'dang_hoat_dong' || rawAcc === 'active' || rawStatus === 'ACTIVE') mappedAccStatus = 'dang_hoat_dong';
+                    else mappedAccStatus = s.account_status || (mappedStatus === 'LOCKED' ? 'da_khoa' : 'dang_hoat_dong');
 
                     return {
                         id: code,
@@ -342,7 +349,7 @@
                         email: s.email || 'Chưa cập nhật',
                         shift: s.shift || '',
                         status: mappedStatus,
-                        accountStatus: s.account_status || (mappedStatus === 'LOCKED' ? 'LOCKED' : 'ACTIVE'),
+                        accountStatus: mappedAccStatus,
                         join_date: joinDateFormatted,
                         dob: s.dob ? formatDateVN(s.dob) : 'Chưa cập nhật',
                         address: s.address || 'Chưa cập nhật',

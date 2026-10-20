@@ -210,12 +210,14 @@
             } else if (currentCustomerFilter === 'TEMP') {
                 matchCategory = (c.status === 'TEMP');
             } else if (currentCustomerFilter === 'LOCKED') {
-                matchCategory = (c.status === 'LOCKED');
+                matchCategory = (c.status === 'LOCKED' || c.status === 'SUSPENDED');
             } else if (currentCustomerFilter === 'COMPLAINT') {
                 matchCategory = Boolean(c.emergencyAlert || (c.complaints && c.complaints.some(tc => tc.status !== 'Đã giải quyết')));
             }
 
-            const matchStatus = (selectedStatus === 'ALL') || (c.status === selectedStatus);
+            const matchStatus = (selectedStatus === 'ALL') || 
+                (selectedStatus === 'LOCKED' && (c.status === 'LOCKED' || c.status === 'SUSPENDED')) ||
+                (c.status === selectedStatus);
 
             return matchQuery && matchTier && matchCategory && matchStatus;
         });
@@ -241,7 +243,8 @@
         }
 
         tbody.innerHTML = pageItems.map(c => {
-            const isLocked = (c.status === 'LOCKED');
+            const isSuspended = (c.status === 'SUSPENDED');
+            const isLocked = (c.status === 'LOCKED') || isSuspended;
             const activeComplaint = c.complaints && c.complaints.find(tc => tc.status !== 'Đã giải quyết');
             const hasEmergency = Boolean(c.emergencyAlert || activeComplaint);
             const alertPet = (c.pets && Array.isArray(c.pets)) ? c.pets.find(p => isRealPetAlert(p.alertNote)) : null;
@@ -269,8 +272,10 @@
             }
 
             let statusBadgeHtml = '<span class="admin-badge badge-success">Thành viên</span>';
-            if (isLocked) {
-                statusBadgeHtml = '<span class="admin-badge badge-danger">Bị khóa</span>';
+            if (isSuspended) {
+                statusBadgeHtml = '<span class="admin-badge badge-warning">Tạm khóa</span>';
+            } else if (c.status === 'LOCKED') {
+                statusBadgeHtml = '<span class="admin-badge badge-danger">Đã khóa</span>';
             } else if (c.status === 'TEMP') {
                 statusBadgeHtml = '<span class="admin-badge badge-neutral">Vãng lai</span>';
             }

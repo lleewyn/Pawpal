@@ -197,10 +197,10 @@
                             id: mo.id,
                             date: PawpalCustomers.formatDate(mo.createdAt),
                             total: Number(mo.total).toLocaleString('vi-VN') + ' đ',
-                            payment: mo.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán',
-                            paymentClass: mo.paymentStatus === 'paid' ? 'badge-success' : 'badge-warning',
-                            status: mo.status === 'completed' ? 'Hoàn thành' : mo.status === 'shipping' ? 'Đang giao' : mo.status === 'confirmed' ? 'Đang chuẩn bị' : 'Chờ xác nhận',
-                            statusClass: mo.status === 'completed' ? 'badge-success' : mo.status === 'shipping' ? 'badge-info' : 'badge-warning'
+                            payment: (window.PawpalEnum?.paymentStatus(mo.paymentStatus)?.label) || (mo.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'),
+                            paymentClass: (window.PawpalEnum?.paymentStatus(mo.paymentStatus)?.badgeClass) || 'badge-warning',
+                            status: (window.PawpalEnum?.orderStatus(mo.status)?.label) || 'Chờ xác nhận',
+                            statusClass: (window.PawpalEnum?.orderStatus(mo.status)?.badgeClass) || 'badge-warning'
                         });
                     }
                 });

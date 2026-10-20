@@ -148,9 +148,10 @@
     // SLA Calculation
     function calculateSla(item) {
         if (!item) return;
-        if (item.status === 'resolved' || item.status === 'closed') {
+        const normSt = String(item.status || '').toLowerCase();
+        if (['resolved', 'closed', 'completed', 'da_giai_quyet', 'da_dong', 'tu_choi', 'rejected'].includes(normSt)) {
             item.slaStatus = 'DONE';
-            item.slaRemainingText = item.status === 'resolved' ? 'Đã giải quyết' : 'Đã đóng';
+            item.slaRemainingText = (normSt === 'resolved' || normSt === 'da_giai_quyet') ? 'Đã giải quyết' : (normSt === 'tu_choi' ? 'Từ chối' : 'Đã đóng');
             return;
         }
 
@@ -171,8 +172,19 @@
             }
         }
 
-        const isUrgent = item.priority === 'high' || item.issueType === 'injury' || item.issueType === 'damaged';
-        const totalSlaMs = (isUrgent ? 2 : 4) * 60 * 60 * 1000;
+        // F-010: Cấu hình giờ SLA rõ ràng theo mức độ ưu tiên: khan_cap (2h), cao (4h), trung_binh (24h), thap (48h)
+        const pLower = String(item.priority || '').toLowerCase();
+        let totalSlaHours = 24;
+        if (pLower === 'khan_cap' || pLower === 'urgent' || item.issueType === 'injury') {
+            totalSlaHours = 2;
+        } else if (pLower === 'high' || pLower === 'cao' || item.issueType === 'damaged') {
+            totalSlaHours = 4;
+        } else if (pLower === 'low' || pLower === 'thap') {
+            totalSlaHours = 48;
+        } else {
+            totalSlaHours = 24;
+        }
+        const totalSlaMs = totalSlaHours * 60 * 60 * 1000;
         const deadline = createTime + totalSlaMs;
         const remainingMs = deadline - Date.now();
 
@@ -211,8 +223,9 @@
         calculateSla(a);
         calculateSla(b);
 
-        const isDoneA = (a.status === 'resolved' || a.status === 'closed');
-        const isDoneB = (b.status === 'resolved' || b.status === 'closed');
+        const doneStatuses = ['resolved', 'closed', 'completed', 'da_giai_quyet', 'da_dong', 'tu_choi', 'rejected'];
+        const isDoneA = doneStatuses.includes(String(a.status || '').toLowerCase());
+        const isDoneB = doneStatuses.includes(String(b.status || '').toLowerCase());
         if (isDoneA !== isDoneB) return isDoneA ? 1 : -1;
 
         const slaRank = { 'OVERDUE': 1, 'URGENT': 2, 'NORMAL': 3, 'DONE': 4 };
@@ -220,24 +233,29 @@
         const sRankB = slaRank[b.slaStatus] || 3;
         if (sRankA !== sRankB) return sRankA - sRankB;
 
-        const priorityRank = { 'high': 1, 'medium': 2, 'low': 3 };
-        const pA = priorityRank[a.priority] || 2;
-        const pB = priorityRank[b.priority] || 2;
+        // F-010: Sắp xếp theo ưu tiên chuẩn: khan_cap (1) > cao (2) > trung_binh (3) > thap (4)
+        const priorityRank = {
+            'khan_cap': 1, 'urgent': 1,
+            'cao': 2, 'high': 2,
+            'trung_binh': 3, 'medium': 3, 'binh_thuong': 3,
+            'thap': 4, 'low': 4
+        };
+        const pA = priorityRank[String(a.priority || '').toLowerCase()] || 3;
+        const pB = priorityRank[String(b.priority || '').toLowerCase()] || 3;
         if (pA !== pB) return pA - pB;
 
         const statusRank = {
-            'new': 1,
+            'mo': 1, 'new': 1, 'pending': 1,
             'reprocessing': 2,
             'waiting_manager_approval': 3,
-            'processing': 4,
-            'waiting_return': 4,
-            'refunding': 4,
-            'waiting_customer': 5,
-            'resolved': 6,
-            'closed': 7
+            'dang_xu_ly': 4, 'processing': 4, 'waiting_return': 4, 'refunding': 4,
+            'cho_khach_hang': 5, 'waiting_customer': 5,
+            'da_giai_quyet': 6, 'resolved': 6,
+            'da_dong': 7, 'closed': 7, 'completed': 7,
+            'tu_choi': 8, 'rejected': 8
         };
-        const stA = statusRank[a.status] || 5;
-        const stB = statusRank[b.status] || 5;
+        const stA = statusRank[String(a.status || '').toLowerCase()] || 5;
+        const stB = statusRank[String(b.status || '').toLowerCase()] || 5;
         if (stA !== stB) return stA - stB;
 
         const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -498,20 +516,21 @@
 
                 let normPriority = 'medium';
                 const pLower = (t.priority || '').toLowerCase();
-                if (pLower.includes('cao') || pLower === 'high' || pLower==='khan_cap') normPriority = 'high';
+                if (pLower === 'khan_cap' || pLower === 'urgent') normPriority = 'khan_cap';
+                else if (pLower.includes('cao') || pLower === 'high') normPriority = 'high';
                 else if (pLower.includes('thấp') || pLower === 'low' || pLower === 'thap') normPriority = 'low';
 
                 let normStatus = 'new';
                 const sLower = (t.status || '').toLowerCase();
-                if (sLower === 'pending' || sLower === 'new') normStatus = 'new';
-                else if (sLower === 'processing' || sLower === 'in_progress' || sLower==='dang_xu_ly') normStatus = 'processing';
-                else if (sLower === 'waiting_customer' || sLower==='cho_khach_hang') normStatus = 'waiting_customer';
+                if (sLower === 'pending' || sLower === 'new' || sLower === 'mo') normStatus = 'new';
+                else if (sLower === 'processing' || sLower === 'in_progress' || sLower === 'dang_xu_ly') normStatus = 'processing';
+                else if (sLower === 'waiting_customer' || sLower === 'cho_khach_hang') normStatus = 'waiting_customer';
                 else if (sLower === 'waiting_manager_approval') normStatus = 'waiting_manager_approval';
                 else if (sLower === 'reprocessing') normStatus = 'reprocessing';
                 else if (sLower === 'waiting_return') normStatus = 'waiting_return';
                 else if (sLower === 'refunding') normStatus = 'refunding';
-                else if (sLower === 'completed' || sLower === 'resolved' || sLower==='da_giai_quyet') normStatus = 'resolved';
-                else if (sLower === 'closed' || sLower==='da_dong' || sLower==='tu_choi') normStatus = 'closed';
+                else if (sLower === 'completed' || sLower === 'resolved' || sLower === 'da_giai_quyet') normStatus = 'resolved';
+                else if (sLower === 'closed' || sLower === 'da_dong' || sLower === 'tu_choi' || sLower === 'rejected') normStatus = 'closed';
 
                 if (t.rating && Number(t.rating) < 3 && normStatus === 'resolved') {
                     normStatus = 'reprocessing';
@@ -716,7 +735,7 @@
                         warehousePhotos: [],
                         carrier: order && order.carrier ? order.carrier : 'Chưa bàn giao đơn vị vận chuyển',
                         trackingCode: order && order.tracking_code ? order.tracking_code : 'Chưa cấp mã vận đơn',
-                        deliveryStatus: order && order.order_status ? (order.order_status === 'DELIVERED' ? 'Giao thành công' : 'Đang xử lý') : 'Chưa rõ',
+                        deliveryStatus: order && order.order_status ? (['DELIVERED', 'delivered', 'da_giao_hang', 'completed', 'da_hoan_tat'].includes(order.order_status) ? 'Giao thành công' : (['dang_giao_hang', 'shipped'].includes(order.order_status) ? 'Đang giao hàng' : 'Đang xử lý')) : 'Chưa rõ',
                         timeline: timeline
                     };
 
@@ -1991,11 +2010,12 @@
                     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
                     const validCustId = targetCustomerId && isUuid.test(targetCustomerId) ? targetCustomerId : null;
                     const generatedTicketCode = `TKT-${String(Math.floor(100000 + Math.random() * 900000))}`;
+                    const dbPriority = priority === 'urgent' || priority === 'khan_cap' ? 'khan_cap' : (priority === 'high' || priority === 'cao' ? 'cao' : (priority === 'low' || priority === 'thap' ? 'thap' : 'trung_binh'));
                     const insertPayload = {
                         title: titleWithRef,
                         type: type === 'order' ? 'order' : 'service',
-                        priority: priority === 'high' ? 'Cao' : (priority === 'low' ? 'Thấp' : 'Trung bình'),
-                        status: 'pending',
+                        priority: dbPriority,
+                        status: 'mo',
                         ticket_code: generatedTicketCode,
                         customer_id: validCustId,
                         order_id: (type === 'order' && refId && isUuid.test(refId)) ? refId : null,
@@ -2008,7 +2028,7 @@
                     newId = insertedTickets[0].id;
                     const { error: messageErr } = await client.from('support_ticket_message').insert([{
                         ticket_id: newId,
-                        sender_type: 'user',
+                        sender_type: 'khach_hang',
                         content: refId ? `[Tham chiếu: ${refId}]\n${content}` : content
                     }]);
                     if (messageErr) {

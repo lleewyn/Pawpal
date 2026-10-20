@@ -64,7 +64,7 @@
                     Hủy lịch hẹn
                 </button>
             `;
-        } else if (booking.status === 'confirmed') {
+        } else if (booking.status === 'confirmed' || booking.status === 'checked_in') {
             menuHtml += `
                 <button type="button" class="dropdown-item" data-action="intake-safety">
                     Tiếp nhận an toàn
@@ -91,7 +91,7 @@
                     Tạo khiếu nại
                 </button>
             `;
-        } else if (booking.status === 'completed') {
+        } else if (booking.status === 'completed' || booking.status === 'no_show') {
             menuHtml += `
                 <button type="button" class="dropdown-item" data-action="escalate-complaint">
                     Tạo khiếu nại
@@ -381,7 +381,7 @@
                         ${formatCurrency(item.total || item.price || 0)}
                     </td>
                     <td style="min-width: 110px; text-align: center;">
-                        <span class="admin-badge ${item.paymentStatus === 'Đã thanh toán' ? 'badge-success' : 'badge-neutral'}">${escapeBookingText(item.paymentStatus || 'Chưa thu')}</span>
+                        <span class="admin-badge ${item.paymentBadgeClass || (item.paymentStatus === 'Đã thanh toán' ? 'badge-success' : 'badge-warning')}">${escapeBookingText(item.paymentStatus || 'Chưa thu')}</span>
                     </td>
                     <td style="min-width: 110px; text-align: center;">
                         ${getStatusBadge(item.status)}
@@ -743,8 +743,23 @@
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             const booking = (PawpalServices.state?.bookingsData || []).find(b => b.id === bookingId || b.dbId === bookingId);
             if (!client || !booking?.dbId || !booking.rawStatus) throw new Error('Thiếu dữ liệu lịch hẹn; vui lòng tải lại trang.');
-            const statuses = { confirmed: 'da_xac_nhan', in_progress: 'dang_thuc_hien', completed: 'da_hoan_tat', cancelled: 'da_huy', pending: 'cho_xac_nhan' };
-            const transitions = { pending: ['confirmed', 'cancelled'], confirmed: ['in_progress', 'cancelled'], in_progress: ['completed'] };
+            const statuses = {
+                confirmed: 'da_xac_nhan',
+                checked_in: 'da_check_in',
+                in_progress: 'dang_thuc_hien',
+                completed: 'da_hoan_tat',
+                cancelled: 'da_huy',
+                no_show: 'vang_mat',
+                pending: 'cho_xac_nhan'
+            };
+            const transitions = {
+                pending: ['confirmed', 'cancelled', 'no_show'],
+                confirmed: ['checked_in', 'in_progress', 'cancelled', 'no_show'],
+                checked_in: ['in_progress', 'cancelled'],
+                in_progress: ['completed', 'cancelled'],
+                no_show: ['cancelled'],
+                completed: []
+            };
             if (!statuses[newStatus] || !transitions[booking.status]?.includes(newStatus)) throw new Error('Trạng thái hiện tại không cho phép thao tác này.');
             if (newStatus==='in_progress' || newStatus==='completed') throw new Error('Vui lòng dùng biên bản tiếp nhận hoặc bàn giao để chuyển trạng thái.');
             const payload = { appointment_status: statuses[newStatus] };

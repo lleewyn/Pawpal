@@ -220,7 +220,7 @@
             if (carrierEl) carrierEl.textContent = matchedOrder?.shipping_carrier || ticket.carrier || 'Giao Hàng Nhanh (GHN)';
             if (shippingCodeEl) shippingCodeEl.textContent = matchedOrder?.shipping_code || ticket.trackingCode || `GHN${ticket.orderId ? String(ticket.orderId).replace(/[^0-9]/g, '') : '88291039'}VN`;
             if (deliveryStatusEl) {
-                const isDelivered = matchedOrder?.order_status === 'delivered' || matchedOrder?.order_status === 'completed';
+                const isDelivered = ['delivered', 'completed', 'da_giao_hang', 'da_hoan_tat', 'DELIVERED'].includes(matchedOrder?.order_status);
                 deliveryStatusEl.textContent = isDelivered ? 'Giao thành công • Người nhận đã ký nhận kiện hàng' : (ticket.deliveryStatus || 'Giao thành công • Đang đối soát');
                 deliveryStatusEl.style.color = isDelivered ? '#166534' : '#734718';
             }

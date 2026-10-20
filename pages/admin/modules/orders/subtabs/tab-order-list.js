@@ -1313,6 +1313,7 @@
                         const { error: detailErr } = await client.from('sales_order_detail').insert(detailRows);
                         if (detailErr) {
                             console.error('[POS] Lỗi lưu chi tiết đơn hàng:', detailErr);
+                            showToast('Cảnh báo: Không thể lưu đầy đủ chi tiết mặt hàng vào đơn hàng.', 'warning');
                         }
                     }
 

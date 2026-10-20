@@ -36,9 +36,9 @@
     }
 
     function sortComplaintsByUrgencyAndSla(a, b) {
-        const priorityOrder = { 'high': 1, 'medium': 2, 'low': 3 };
-        const pA = priorityOrder[a.priority] || 4;
-        const pB = priorityOrder[b.priority] || 4;
+        const priorityOrder = { 'khan_cap': 1, 'urgent': 1, 'cao': 2, 'high': 2, 'trung_binh': 3, 'medium': 3, 'binh_thuong': 3, 'thap': 4, 'low': 4 };
+        const pA = priorityOrder[String(a.priority || '').toLowerCase()] || 4;
+        const pB = priorityOrder[String(b.priority || '').toLowerCase()] || 4;
         if (pA !== pB) return pA - pB;
         if (a.slaStatus === 'OVERDUE' && b.slaStatus !== 'OVERDUE') return -1;
         if (b.slaStatus === 'OVERDUE' && a.slaStatus !== 'OVERDUE') return 1;

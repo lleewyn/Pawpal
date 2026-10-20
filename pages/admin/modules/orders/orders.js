@@ -763,7 +763,7 @@
             }
 
             const vouchersList = (voucherData || []).map(v => {
-                const isPct = v.type === 'percentage' || v.type === 'percent';
+                const isPct = String(v.type || '').toLowerCase().includes('phan_tram') || v.type === 'percentage' || v.type === 'percent';
                 const rawDiscount = Number(v.discount_value) || 0;
                 const safeDiscount = isPct ? Math.min(100, Math.max(0, rawDiscount)) : Math.max(0, rawDiscount);
                 const discountVal = isPct ? `${safeDiscount}%` : formatVND(safeDiscount);
@@ -851,7 +851,8 @@
 
             const rmaMapByOrderId = {};
             (res.rma || []).forEach(r => {
-                const isResolved = r.request_status === 'COMPLETED' || r.request_status === 'RESOLVED';
+                const reqStatus = String(r.request_status || '').toLowerCase();
+                const isResolved = reqStatus === 'da_hoan_tat' || reqStatus === 'completed' || reqStatus === 'resolved';
                 const items = (r.return_request_detail || []).map(d => ({
                     sku: d.product_variant?.sku_variant || d.product?.product_variant?.[0]?.sku_variant || 'SKU',
                     name: d.product_variant?.product?.product_name || d.product?.product_name || 'Sản phẩm',
@@ -859,10 +860,24 @@
                     price: d.unit_price || 0
                 }));
 
+                const retType = String(r.return_type || '').toLowerCase();
+                let solutionType = 'exchange';
+                let solutionTypeName = 'Đổi hàng mới';
+                if (retType.includes('hoan_tien') || retType === 'refund') {
+                    solutionType = 'refund';
+                    solutionTypeName = 'Hoàn tiền';
+                } else if (retType.includes('tra_san_pham') || retType === 'return') {
+                    solutionType = 'return';
+                    solutionTypeName = 'Trả hàng';
+                } else {
+                    solutionType = 'exchange';
+                    solutionTypeName = 'Đổi hàng mới';
+                }
+
                 rmaMapByOrderId[r.sales_order_id] = {
                     id: r.id.slice(0, 12).toUpperCase(),
-                    solutionType: (r.return_type === 'REFUND' || r.return_type === 'RETURN') ? 'refund' : 'exchange',
-                    solutionTypeName: (r.return_type === 'REFUND' || r.return_type === 'RETURN') ? 'Hoàn tiền' : 'Đổi hàng mới',
+                    solutionType: solutionType,
+                    solutionTypeName: solutionTypeName,
                     reason: r.reason,
                     reasonText: r.reason,
                     restockAction: 'restock',

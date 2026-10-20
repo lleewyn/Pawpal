@@ -382,12 +382,20 @@
                     }
 
                     const rawAccountStatus = String(c.account_status || '').toLowerCase();
-                    // C-13: Nhận diện đầy đủ các trạng thái tài khoản: đã khóa, tạm khóa (tam_khoa/suspended/temp) và hoạt động
-                    const isSuspended = rawAccountStatus === 'tam_khoa' || rawAccountStatus === 'suspended' || rawAccountStatus === 'temp';
-                    const isLocked = c.account_status === 'LOCKED' || rawAccountStatus === 'da_khoa' || isSuspended;
+                    // GĐ-03 & F-023: Tách biệt rõ ràng 3 trạng thái tài khoản theo PawpalEnum
+                    const accMeta = (window.PawpalEnum?.accountStatus)
+                        ? window.PawpalEnum.accountStatus(c.account_status)
+                        : { raw: rawAccountStatus, label: 'Đang hoạt động', isLocked: false };
+                    const isSuspended = accMeta.raw === 'tam_khoa' || rawAccountStatus === 'suspended';
+                    const isLocked = accMeta.isLocked;
 
                     // Xác định số điện thoại ưu tiên: c.phone_main -> số người nhận trong sổ địa chỉ -> '—'
                     const phoneVal = c.phone_main || addrs.find(a => a.receiverPhone)?.receiverPhone || '—';
+
+                    // GĐ-03 & F-006: Chuẩn hóa mapping giới tính qua PawpalEnum, không gán NULL thành Khác
+                    const genderVal = (window.PawpalEnum?.gender)
+                        ? window.PawpalEnum.gender(prof.gender)
+                        : (prof.gender || 'Chưa cập nhật');
 
                     freshDb[custKey] = {
                         id: custKey,
@@ -396,7 +404,7 @@
                         name: prof.full_name || c.full_name || ('Khách hàng ' + (phoneVal !== '—' ? phoneVal : custKey)),
                         phone: phoneVal,
                         email: c.email || (prof.email || 'Chưa cập nhật'),
-                        gender: (prof.gender === 'FEMALE' || prof.gender === 'Nữ') ? 'Nữ' : ((prof.gender === 'MALE' || prof.gender === 'Nam') ? 'Nam' : 'Khác'),
+                        gender: genderVal,
                         dob: prof.date_of_birth ? PawpalCustomers.formatDate(prof.date_of_birth) : 'Chưa cập nhật',
                         dobRaw: prof.date_of_birth || '',
                         tier,
@@ -404,8 +412,9 @@
                         tierBadgeClass: tierBadge,
                         points: points,
                         isMember: !isTemp,
-                        status: isLocked ? 'LOCKED' : (isTemp ? 'TEMP' : 'ACTIVE'),
-                        authStatus: isLocked ? 'Tài khoản bị khóa' : (isTemp ? 'Khách vãng lai' : 'Đã kích hoạt'),
+                        status: isSuspended ? 'SUSPENDED' : (isLocked ? 'LOCKED' : (isTemp ? 'TEMP' : 'ACTIVE')),
+                        authStatus: isSuspended ? 'Tạm khóa' : (isLocked ? 'Đã khóa' : (isTemp ? 'Khách vãng lai' : 'Đang hoạt động')),
+                        accountStatusLabel: accMeta.label,
                         note: c.note || (isTemp ? 'Khách vãng lai tiếp nhận dịch vụ tại quầy.' : 'Khách hàng thành viên Pawpal Pet Center.'),
                         emergencyAlert: emergency,
                         addresses: addrs,
@@ -511,44 +520,41 @@
                 };
             });
 
-            // Map appts
+            // GĐ-03 & F-005: Map appts qua PawpalEnum nhận diện da_hoan_tat, da_check_in, vang_mat
             cust.bookings = (payload.appts || []).map(a => {
                 const aTime = a.appointment_time ? ` ${a.appointment_time.slice(0, 5)}` : '';
                 const aDate = a.appointment_date ? (PawpalCustomers.formatDate(a.appointment_date) + aTime) : '—';
-                const apptStatus = (a.appointment_status || '').toUpperCase();
-                let st = 'Chưa rõ';
-                let stClass = 'badge-neutral';
-                if (apptStatus === 'COMPLETED' || apptStatus === 'DA_HOAN_THANH') { st = 'Hoàn thành'; stClass = 'badge-success'; }
-                else if (apptStatus === 'PENDING' || apptStatus === 'CHO_XAC_NHAN') { st = 'Chờ xác nhận'; stClass = 'badge-warning'; }
-                else if (apptStatus === 'CONFIRMED' || apptStatus === 'DA_XAC_NHAN') { st = 'Đã xác nhận'; stClass = 'badge-info'; }
-                else if (apptStatus === 'IN_PROGRESS' || apptStatus === 'DANG_THUC_HIEN') { st = 'Đang thực hiện'; stClass = 'badge-info'; }
-                else if (apptStatus === 'CANCELLED' || apptStatus === 'DA_HUY') { st = 'Đã hủy'; stClass = 'badge-danger'; }
+                const apptMeta = (window.PawpalEnum?.appointmentStatus)
+                    ? window.PawpalEnum.appointmentStatus(a.appointment_status)
+                    : { raw: a.appointment_status, label: a.appointment_status || 'Chưa rõ', badgeClass: 'badge-neutral' };
                 return {
                     id: a.appointment_code || `APT-${a.id.slice(0, 4)}`,
                     rawId: a.id,
                     date: aDate,
                     service: a.service?.service_name || 'Dịch vụ Spa & Grooming',
                     staff: a.staff?.full_name || 'KTV Pawpal',
-                    status: st,
-                    statusClass: stClass
+                    status: apptMeta.label,
+                    statusClass: apptMeta.badgeClass
                 };
             });
 
-            // Map complaints
+            // GĐ-03 & F-007: Map complaints qua PawpalEnum phân biệt tu_choi, da_dong, mo, khẩn cấp
             cust.complaints = (payload.tickets || []).map(t => {
                 const tDate = t.created_at ? PawpalCustomers.formatDateTime(t.created_at) : '—';
-                let st = 'Đang xử lý';
-                let stClass = 'badge-warning';
-                if (t.status === 'RESOLVED' || t.status === 'CLOSED') { st = 'Đã giải quyết'; stClass = 'badge-success'; }
-                else if (t.status === 'OPEN' || t.status === 'NEW') { st = 'Chưa xử lý'; stClass = 'badge-danger'; }
+                const ticketMeta = (window.PawpalEnum?.ticketStatus)
+                    ? window.PawpalEnum.ticketStatus(t.status)
+                    : { label: t.status || 'Chờ xử lý', badgeClass: 'badge-warning' };
+                const priorityMeta = (window.PawpalEnum?.priority)
+                    ? window.PawpalEnum.priority(t.priority)
+                    : { label: t.priority || 'Trung bình' };
                 return {
-                    id: `TK-${t.id.slice(0, 4)}`,
+                    id: t.ticket_code || `TK-${t.id.slice(0, 4)}`,
                     rawId: t.id,
                     date: tDate,
-                    issue: t.title || 'Phản ánh chất lượng dịch vụ',
-                    level: t.priority === 'HIGH' ? 'Cao' : (t.priority === 'URGENT' ? 'Khẩn cấp' : 'Trung bình'),
-                    status: st,
-                    statusClass: stClass
+                    issue: t.title || t.subject || 'Phản ánh chất lượng dịch vụ',
+                    level: priorityMeta.label,
+                    status: ticketMeta.label,
+                    statusClass: ticketMeta.badgeClass
                 };
             });
 
