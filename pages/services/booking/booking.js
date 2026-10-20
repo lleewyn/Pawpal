@@ -228,7 +228,7 @@ function clearBookingSession() {
         if (window.location.hash.startsWith('#step=')) {
             history.replaceState(null, '', window.location.pathname + window.location.search);
         }
-    } catch (e) {}
+    } catch (e) { }
 }
 
 function populateFormInputsFromState(state) {
@@ -307,7 +307,7 @@ async function restoreBookingSession() {
     const targetServiceName = String(saved.serviceName || (saved.selectedServiceObj && saved.selectedServiceObj.name) || '').toLowerCase();
 
     if (allServices && allServices.length > 0) {
-        const foundSvc = allServices.find(s => 
+        const foundSvc = allServices.find(s =>
             (targetServiceId && (String(s.serviceId).toLowerCase() === targetServiceId || String(s.id).toLowerCase() === targetServiceId || String(s.dbId || '').toLowerCase() === targetServiceId)) ||
             (targetServiceName && String(s.name).toLowerCase() === targetServiceName)
         );
@@ -571,159 +571,159 @@ function finishBookingLoading() {
 
 async function initBookingModule() {
     try {
-    console.log('=== BOOKING MODULE INITIALIZING ===');
+        console.log('=== BOOKING MODULE INITIALIZING ===');
 
-    setupStepActions();
+        setupStepActions();
 
-    const earlySaved = loadBookingSession();
-    if (earlySaved) {
-        bookingState = { ...bookingState, ...earlySaved };
-        if (earlySaved.selectedServiceObj) {
-            selectedService = earlySaved.selectedServiceObj;
-        }
-        populateFormInputsFromState(earlySaved);
-        updateSummary();
-    }
-
-    let earlyStep = bookingState.step || 1;
-    const hashMatch = window.location.hash.match(/#step=([1-4])/);
-    if (hashMatch) earlyStep = parseInt(hashMatch[1], 10);
-    if (earlyStep > 1 && earlyStep <= 4) {
-        goToStep(earlyStep);
-    }
-    document.documentElement.className = document.documentElement.className.replace(/booking-pre-step-\d/g, '').trim();
-
-    await loadBookingConfig();
-
-    const btnApplyBookingVoucher = document.getElementById('btnApplyBookingVoucher');
-    if (btnApplyBookingVoucher) {
-        btnApplyBookingVoucher.addEventListener('click', handleApplyBookingVoucher);
-        const voucherInput = document.getElementById('bookingVoucherInput');
-        const voucherDropdown = document.getElementById('bookingVoucherDropdown');
-
-        voucherInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleApplyBookingVoucher();
-        });
-
-        voucherInput.addEventListener('focus', async () => {
-            await ensureBookingVouchersLoaded();
-            renderVoucherDropdown();
-            voucherDropdown.style.display = 'block';
-        });
-
-        voucherDropdown.addEventListener('wheel', (e) => {
-            e.stopPropagation();
-        }, { passive: true });
-
-        voucherDropdown.addEventListener('touchmove', (e) => {
-            e.stopPropagation();
-        }, { passive: true });
-
-        document.addEventListener('click', (e) => {
-            if (voucherInput && voucherDropdown) {
-                if (!voucherInput.contains(e.target) && !voucherDropdown.contains(e.target)) {
-                    voucherDropdown.style.display = 'none';
-                }
+        const earlySaved = loadBookingSession();
+        if (earlySaved) {
+            bookingState = { ...bookingState, ...earlySaved };
+            if (earlySaved.selectedServiceObj) {
+                selectedService = earlySaved.selectedServiceObj;
             }
-        });
-    }
-
-    try {
-        if (window.DataLoader && typeof window.DataLoader.loadServices === 'function') {
-            allServices = await window.DataLoader.loadServices();
-            initDiagnostics = `DataLoader found. Loaded ${allServices.length} services.`;
-            console.log(` Loaded ${allServices.length} services via DataLoader`);
-            if (allServices.length === 0) {
-                console.log('DataLoader returned empty, attempting direct load...');
-                allServices = await loadServicesDirectly();
-                initDiagnostics = `DataLoader empty. Direct loader loaded ${allServices.length} services.`;
-            }
-        } else {
-            console.log('DataLoader not found. Attempting direct load...');
-            allServices = await loadServicesDirectly();
-            initDiagnostics = `Direct loader success. Loaded ${allServices.length} services.`;
-        }
-    } catch (error) {
-        initDiagnostics = `Error loading services (direct fallback): ${error.message}`;
-        console.error('Error loading services:', error);
-        allServices = await loadServicesDirectly();
-    }
-
-    const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-    const isMemberUser = Boolean(currentUser && (!currentUser.is_temporary));
-    if (isMemberUser) {
-        const resolvedPets = await getPets(currentUser.id || currentUser.phone || currentUser.phone_main || null);
-        const activePets = (Array.isArray(resolvedPets) ? resolvedPets : []).filter(p => !p.isArchived);
-
-        if (activePets.length === 0) {
-            document.getElementById('memberFlow').classList.add('d-none');
-            document.getElementById('guestFlow').classList.remove('d-none');
-            document.getElementById('guestInfoNote').classList.add('d-none');
-            bookingState.isMemberWithNoPets = true;
-            bookingState.isGuest = true;
-
-            const ownerNameInput = document.getElementById('ownerName');
-            const ownerPhoneInput = document.getElementById('ownerPhone');
-
-            const resolvedName = resolveCurrentUserName(currentUser);
-            const resolvedPhone = resolveCurrentUserPhone(currentUser);
-
-            if (ownerNameInput && !ownerNameInput.value) ownerNameInput.value = resolvedName;
-            if (ownerPhoneInput && !ownerPhoneInput.value) ownerPhoneInput.value = resolvedPhone;
-
-            if (!bookingState.ownerName) bookingState.ownerName = resolvedName;
-            if (!bookingState.ownerPhone) bookingState.ownerPhone = resolvedPhone;
-
-            setupGuestValidation();
-            bindQuickAddPetModal(currentUser);
-        } else {
-            document.getElementById('memberFlow').classList.remove('d-none');
-            document.getElementById('guestFlow').classList.add('d-none');
-            document.getElementById('guestInfoNote').classList.add('d-none');
-            await loadMemberPets(currentUser);
-            bindQuickAddPetModal(currentUser);
-        }
-    } else {
-        document.getElementById('memberFlow').classList.add('d-none');
-        document.getElementById('guestFlow').classList.remove('d-none');
-        document.getElementById('guestInfoNote').classList.remove('d-none');
-        setupGuestValidation();
-        bindQuickAddPetModal(currentUser);
-    }
-
-    setupServiceSelection();
-    setupScheduleSelection();
-    setupConfirmation();
-    validateStep1();
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const preselectedServiceId = urlParams.get('service');
-    if (preselectedServiceId && allServices.length > 0) {
-        const found = allServices.find(s => s.serviceId === preselectedServiceId);
-        if (found) {
-            selectedService = found;
-            bookingState.serviceId = preselectedServiceId;
-            const foundGroup = getServiceGroup(found);
-
-            const tabs = document.querySelectorAll('.svc-type-tab');
-            tabs.forEach(tab => {
-                if (tab.dataset.type === foundGroup) {
-                    tab.classList.add('active');
-                } else {
-                    tab.classList.remove('active');
-                }
-            });
-
-            const step2Next = document.getElementById('step2Next');
-            if (step2Next) step2Next.disabled = false;
-
-            renderServices(foundGroup);
+            populateFormInputsFromState(earlySaved);
             updateSummary();
         }
-    }
 
-    await restoreBookingSession();
-    if (!allServices.length) throw new Error('No services available');
+        let earlyStep = bookingState.step || 1;
+        const hashMatch = window.location.hash.match(/#step=([1-4])/);
+        if (hashMatch) earlyStep = parseInt(hashMatch[1], 10);
+        if (earlyStep > 1 && earlyStep <= 4) {
+            goToStep(earlyStep);
+        }
+        document.documentElement.className = document.documentElement.className.replace(/booking-pre-step-\d/g, '').trim();
+
+        await loadBookingConfig();
+
+        const btnApplyBookingVoucher = document.getElementById('btnApplyBookingVoucher');
+        if (btnApplyBookingVoucher) {
+            btnApplyBookingVoucher.addEventListener('click', handleApplyBookingVoucher);
+            const voucherInput = document.getElementById('bookingVoucherInput');
+            const voucherDropdown = document.getElementById('bookingVoucherDropdown');
+
+            voucherInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleApplyBookingVoucher();
+            });
+
+            voucherInput.addEventListener('focus', async () => {
+                await ensureBookingVouchersLoaded();
+                renderVoucherDropdown();
+                voucherDropdown.style.display = 'block';
+            });
+
+            voucherDropdown.addEventListener('wheel', (e) => {
+                e.stopPropagation();
+            }, { passive: true });
+
+            voucherDropdown.addEventListener('touchmove', (e) => {
+                e.stopPropagation();
+            }, { passive: true });
+
+            document.addEventListener('click', (e) => {
+                if (voucherInput && voucherDropdown) {
+                    if (!voucherInput.contains(e.target) && !voucherDropdown.contains(e.target)) {
+                        voucherDropdown.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        try {
+            if (window.DataLoader && typeof window.DataLoader.loadServices === 'function') {
+                allServices = await window.DataLoader.loadServices();
+                initDiagnostics = `DataLoader found. Loaded ${allServices.length} services.`;
+                console.log(` Loaded ${allServices.length} services via DataLoader`);
+                if (allServices.length === 0) {
+                    console.log('DataLoader returned empty, attempting direct load...');
+                    allServices = await loadServicesDirectly();
+                    initDiagnostics = `DataLoader empty. Direct loader loaded ${allServices.length} services.`;
+                }
+            } else {
+                console.log('DataLoader not found. Attempting direct load...');
+                allServices = await loadServicesDirectly();
+                initDiagnostics = `Direct loader success. Loaded ${allServices.length} services.`;
+            }
+        } catch (error) {
+            initDiagnostics = `Error loading services (direct fallback): ${error.message}`;
+            console.error('Error loading services:', error);
+            allServices = await loadServicesDirectly();
+        }
+
+        const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+        const isMemberUser = Boolean(currentUser && (!currentUser.is_temporary));
+        if (isMemberUser) {
+            const resolvedPets = await getPets(currentUser.id || currentUser.phone || currentUser.phone_main || null);
+            const activePets = (Array.isArray(resolvedPets) ? resolvedPets : []).filter(p => !p.isArchived);
+
+            if (activePets.length === 0) {
+                document.getElementById('memberFlow').classList.add('d-none');
+                document.getElementById('guestFlow').classList.remove('d-none');
+                document.getElementById('guestInfoNote').classList.add('d-none');
+                bookingState.isMemberWithNoPets = true;
+                bookingState.isGuest = true;
+
+                const ownerNameInput = document.getElementById('ownerName');
+                const ownerPhoneInput = document.getElementById('ownerPhone');
+
+                const resolvedName = resolveCurrentUserName(currentUser);
+                const resolvedPhone = resolveCurrentUserPhone(currentUser);
+
+                if (ownerNameInput && !ownerNameInput.value) ownerNameInput.value = resolvedName;
+                if (ownerPhoneInput && !ownerPhoneInput.value) ownerPhoneInput.value = resolvedPhone;
+
+                if (!bookingState.ownerName) bookingState.ownerName = resolvedName;
+                if (!bookingState.ownerPhone) bookingState.ownerPhone = resolvedPhone;
+
+                setupGuestValidation();
+                bindQuickAddPetModal(currentUser);
+            } else {
+                document.getElementById('memberFlow').classList.remove('d-none');
+                document.getElementById('guestFlow').classList.add('d-none');
+                document.getElementById('guestInfoNote').classList.add('d-none');
+                await loadMemberPets(currentUser);
+                bindQuickAddPetModal(currentUser);
+            }
+        } else {
+            document.getElementById('memberFlow').classList.add('d-none');
+            document.getElementById('guestFlow').classList.remove('d-none');
+            document.getElementById('guestInfoNote').classList.remove('d-none');
+            setupGuestValidation();
+            bindQuickAddPetModal(currentUser);
+        }
+
+        setupServiceSelection();
+        setupScheduleSelection();
+        setupConfirmation();
+        validateStep1();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const preselectedServiceId = urlParams.get('service');
+        if (preselectedServiceId && allServices.length > 0) {
+            const found = allServices.find(s => s.serviceId === preselectedServiceId);
+            if (found) {
+                selectedService = found;
+                bookingState.serviceId = preselectedServiceId;
+                const foundGroup = getServiceGroup(found);
+
+                const tabs = document.querySelectorAll('.svc-type-tab');
+                tabs.forEach(tab => {
+                    if (tab.dataset.type === foundGroup) {
+                        tab.classList.add('active');
+                    } else {
+                        tab.classList.remove('active');
+                    }
+                });
+
+                const step2Next = document.getElementById('step2Next');
+                if (step2Next) step2Next.disabled = false;
+
+                renderServices(foundGroup);
+                updateSummary();
+            }
+        }
+
+        await restoreBookingSession();
+        if (!allServices.length) throw new Error('No services available');
     } catch (error) {
         console.error('Không thể khởi tạo đặt lịch:', error);
         const layout = document.querySelector('.booking-layout');
@@ -1016,7 +1016,7 @@ function bindQuickAddPetModal(user) {
 
 function setupGuestValidation() {
     const inputs = ['ownerName', 'ownerPhone', 'petName', 'petType', 'petTypeOther', 'petWeight', 'petBreed', 'petNote'];
-    
+
     const syncGuestState = (immediate = false) => {
         const ownerName = document.getElementById('ownerName')?.value.trim() || '';
         const ownerPhone = document.getElementById('ownerPhone')?.value.trim() || '';
@@ -1034,7 +1034,7 @@ function setupGuestValidation() {
         bookingState.petBreed = petBreed || 'Chưa rõ';
         bookingState.petWeight = petWeight;
         bookingState.petNote = petNote;
-        
+
         if (immediate) {
             saveBookingSession(false);
         } else {
@@ -1771,8 +1771,8 @@ function renderStaff() {
         const words = staff.name.split(' ').filter(Boolean);
         const initials = isRandom ? 'PB' : words.map(w => w[0]).slice(-2).join('').toUpperCase();
         const disabledClass = !staff.isAvailable ? 'disabled-staff' : '';
-        const statusBadge = staff.isAvailable 
-            ? `<span style="color: #236B48; font-size: 0.76rem; font-weight: 500;">${staff.desc}</span>` 
+        const statusBadge = staff.isAvailable
+            ? `<span style="color: #236B48; font-size: 0.76rem; font-weight: 500;">${staff.desc}</span>`
             : `<span style="color: #DC2626; font-size: 0.76rem; font-weight: 500;">${staff.desc}</span>`;
 
         return `
@@ -2339,7 +2339,7 @@ async function persistBookingSubmit() {
                     .eq('customer_id', customerId)
                     .ilike('pet_name', petName)
                     .limit(1);
-                
+
                 if (existingPets && existingPets.length > 0) {
                     finalPetId = existingPets[0].id;
                 } else {
@@ -2381,7 +2381,7 @@ async function persistBookingSubmit() {
             const allPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
             const pName = bookingState.petName.trim();
             const pSpecies = bookingState.petType || 'other';
-            let matchedPet = allPets.find(p => 
+            let matchedPet = allPets.find(p =>
                 String(p.ownerPhone || '').trim() === String(bookingState.ownerPhone || '').trim() &&
                 String(p.name || '').trim().toLowerCase() === pName.toLowerCase()
             );

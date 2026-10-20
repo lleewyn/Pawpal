@@ -614,19 +614,26 @@ function cancelOrder(orderId) {
             }
         }
 
-        const isPaid = order.paymentMethod && order.paymentMethod !== 'cod' && order.paymentStatus === 'paid';
-        const newPaymentStatus = isPaid ? 'pending_refund' : 'cancelled';
+        const isPaid = order.paymentMethod && order.paymentMethod !== 'cod' && (order.paymentStatus === 'paid' || order.paymentStatus === 'da_thanh_toan');
+        const newPaymentStatus = isPaid ? 'da_thanh_toan' : 'chua_thanh_toan';
 
         if (db) {
             try {
                 const { error: cancelErr } = await db.from('sales_order').update({
                     order_status: 'da_huy',
-                    payment_status: isPaid ? 'da_hoan_tien' : 'chua_thanh_toan',
+                    payment_status: newPaymentStatus,
                     updated_at: new Date().toISOString()
                 }).eq('id', order.id);
-                if (cancelErr) console.warn('[Orders] Supabase cancel error:', cancelErr);
+
+                if (cancelErr) {
+                    console.error('[Orders] Supabase cancel error:', cancelErr);
+                    showOrdersToast(`Không thể hủy đơn hàng trên hệ thống: ${cancelErr.message || 'Lỗi CSDL'}`, 'error');
+                    return;
+                }
             } catch (err) {
-                console.warn('[Orders] Supabase cancel exception:', err);
+                console.error('[Orders] Supabase cancel exception:', err);
+                showOrdersToast(`Không thể hủy đơn hàng trên hệ thống: ${err.message || 'Lỗi kết nối'}`, 'error');
+                return;
             }
         }
 
@@ -643,14 +650,18 @@ function cancelOrder(orderId) {
         }
 
         order.status = 'cancelled';
-        order.paymentStatus = newPaymentStatus;
+        order.paymentStatus = isPaid ? 'pending_refund' : 'cancelled';
         order.updatedAt = new Date().toISOString();
         saveOrderToLocalStorage(order);
 
         updateTabCounts();
         applyFilters();
 
-        showOrdersToast(`Đơn hàng ${orderId} đã được hủy thành công.`, 'success');
+        if (isPaid) {
+            showOrdersToast(`Đơn hàng ${orderId} đã được hủy. Yêu cầu hoàn tiền đã ghi nhận và sẽ được xử lý trong 24-48 giờ.`, 'success');
+        } else {
+            showOrdersToast(`Đơn hàng ${orderId} đã được hủy thành công.`, 'success');
+        }
     });
 }
 

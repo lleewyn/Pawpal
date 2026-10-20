@@ -782,7 +782,17 @@ export const API = {
                 }
             }
 
-            const paymentMethodStr = String(orderData.payment?.method || 'cod').toLowerCase();
+            const mapPaymentMethodConfigId = (method) => {
+                const m = String(method || 'cod').toLowerCase().trim();
+                if (m === 'cod') return 'cod';
+                if (m === 'momo') return 'momo';
+                if (m === 'vnpay') return 'vnpay';
+                if (m === 'vietqr' || m === 'qr') return 'vietqr';
+                if (m === 'bank' || m === 'bank_transfer' || m === 'banking') return 'bank';
+                return 'cod';
+            };
+
+            const paymentMethodConfigId = mapPaymentMethodConfigId(orderData.payment?.method);
             const isPaid = orderData.payment?.status === 'paid' || orderData.payment?.status === 'PAID';
             
             const initialOrderStatus = isPaid ? 'da_xac_nhan' : 'cho_xac_nhan';
@@ -801,39 +811,50 @@ export const API = {
             const { data: newOrder, error: orderError } = await db.from('sales_order').insert(salesOrder).select('id').single();
             if (orderError) throw orderError;
 
-            const paymentCode = 'PAY-' + Date.now();
-            const paymentInsert = {
-                payment_code: paymentCode,
-                order_id: newOrder.id,
-                payment_type: 'mua_hang',
-                payment_method_config_id: paymentMethodStr,
-                amount: isNaN(totalOrderAmount) ? 0 : totalOrderAmount,
-                transaction_status: isPaid ? 'thanh_cong' : 'cho_xu_ly'
-            };
-            const { error: payError } = await db.from('payment').insert(paymentInsert);
-            if (payError) console.error('[API] Failed to insert payment:', payError);
-
-            if (orderData.items && orderData.items.length > 0) {
-                const orderDetails = [];
-                for (const item of orderData.items) {
-                    const uPrice = Number(item.price || 0);
-                    const qty = Number(item.qty || item.quantity || 1);
-                    let vId = item.variantId || item.product_variant_id;
-                    if (!vId && item.id) {
-                        const { data: vData } = await db.from('product_variant').select('id').eq('product_id', item.id).limit(1);
-                        vId = vData?.[0]?.id || item.id;
-                    }
-                    orderDetails.push({
-                        order_id: newOrder.id,
-                        product_variant_id: vId,
-                        quantity: isNaN(qty) ? 1 : qty,
-                        unit_price: isNaN(uPrice) ? 0 : uPrice,
-                        discount_amount: 0,
-                        subtotal: (isNaN(uPrice) ? 0 : uPrice) * (isNaN(qty) ? 1 : qty)
-                    });
+            // Bọc quá trình tạo payment và order_detail trong cơ chế rollback dọn dẹp nếu có lỗi
+            try {
+                const paymentCode = 'PAY-' + Date.now();
+                const paymentInsert = {
+                    payment_code: paymentCode,
+                    order_id: newOrder.id,
+                    payment_type: 'mua_hang',
+                    payment_method_config_id: paymentMethodConfigId,
+                    amount: isNaN(totalOrderAmount) ? 0 : totalOrderAmount,
+                    transaction_status: isPaid ? 'thanh_cong' : 'cho_xu_ly'
+                };
+                const { error: payError } = await db.from('payment').insert(paymentInsert);
+                if (payError) {
+                    console.error('[API] Failed to insert payment:', payError);
+                    throw payError;
                 }
-                const { error: itemsError } = await db.from('sales_order_detail').insert(orderDetails);
-                if (itemsError) throw itemsError;
+
+                if (orderData.items && orderData.items.length > 0) {
+                    const orderDetails = [];
+                    for (const item of orderData.items) {
+                        const uPrice = Number(item.price || 0);
+                        const qty = Number(item.qty || item.quantity || 1);
+                        let vId = item.variantId || item.product_variant_id;
+                        if (!vId && item.id) {
+                            const { data: vData } = await db.from('product_variant').select('id').eq('product_id', item.id).limit(1);
+                            vId = vData?.[0]?.id || item.id;
+                        }
+                        orderDetails.push({
+                            order_id: newOrder.id,
+                            product_variant_id: vId,
+                            quantity: isNaN(qty) ? 1 : qty,
+                            unit_price: isNaN(uPrice) ? 0 : uPrice,
+                            discount_amount: 0,
+                            subtotal: (isNaN(uPrice) ? 0 : uPrice) * (isNaN(qty) ? 1 : qty)
+                        });
+                    }
+                    const { error: itemsError } = await db.from('sales_order_detail').insert(orderDetails);
+                    if (itemsError) throw itemsError;
+                }
+            } catch (subErr) {
+                // Rollback: Xóa bản ghi sales_order nếu tạo payment hoặc detail thất bại để tránh đơn mồ côi
+                console.error('[API] Rollback sales_order do lỗi tạo chi tiết/thanh toán:', subErr);
+                await db.from('sales_order').delete().eq('id', newOrder.id);
+                throw subErr;
             }
 
             if (orderData.appliedVoucher?.code || orderData.voucherCode) {

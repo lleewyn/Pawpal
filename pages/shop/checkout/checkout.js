@@ -1502,16 +1502,21 @@ async function handleCheckout() {
         return;
     }
 
-    if (window.API && window.API.submitOrder) {
-        const response = await window.API.submitOrder(orderData);
-        if (response && !response.success) {
-            showToast('Lỗi kết nối khi tạo đơn hàng trên hệ thống. Vui lòng thử lại!', 'error');
-            restoreBtn();
-            return;
-        }
-        if (response && response.success && response.orderId) {
-            orderData.orderId = response.orderId;
-        }
+    if (!window.API || !window.API.submitOrder) {
+        showToast('Chưa kết nối được cổng tạo đơn hàng hệ thống. Vui lòng thử lại sau giây lát!', 'error');
+        restoreBtn();
+        return;
+    }
+
+    const response = await window.API.submitOrder(orderData);
+    if (!response || !response.success) {
+        const errorMsg = response?.error?.message || response?.error || 'Lỗi kết nối khi tạo đơn hàng trên hệ thống. Vui lòng thử lại!';
+        showToast(typeof errorMsg === 'string' ? errorMsg : 'Lỗi tạo đơn hàng trên hệ thống.', 'error');
+        restoreBtn();
+        return;
+    }
+    if (response.success && response.orderId) {
+        orderData.orderId = response.orderId;
     }
 
     localStorage.setItem('pawpal_current_order', JSON.stringify(orderData));
