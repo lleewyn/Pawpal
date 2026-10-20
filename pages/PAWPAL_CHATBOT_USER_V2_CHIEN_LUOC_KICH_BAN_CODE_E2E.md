@@ -2474,6 +2474,36 @@ Admin Copilot = luồng NỘI BỘ riêng, không dùng token/quyền admin cho 
 
 **Quy tắc:** Mỗi commit sửa chatbot cần cập nhật checklist hoặc tiến độ Markdown, không sửa trạng thái `[x]` nếu chưa chạy test; không xóa lịch sử lỗi cũ. Nếu chưa có bằng chứng E2E, ghi **NOT RUN**. Không hardcode khóa API/DB vào file Markdown hoặc commit.
 
+### CHG-CHAT-001 — Đợt R0: Cứng hóa nền tảng & Bảo mật Chatbot (P0-02, P0-03, P0-04, P1-06)
+- **Ngày/giờ:** 21/10/2026 00:06 (Asia/Ho_Chi_Minh)
+- **Commit GitHub:** (Đợt R0 commit)
+- **Giai đoạn/Testcase:** Đợt R0 — Nền tảng P0 (P0-02, P0-03, P0-04, P1-06)
+- **Trước khi sửa:**
+  - P0-03: `evaluateToxicAndSentiment` gộp tiêm phòng/vắc xin vào `special_care` mức 6, biến câu hỏi y tế thông thường thành ca cấp cứu và ép chuyển người trực tiếp.
+  - P0-02: `currentSessionToken` sinh bằng `Math.random()`.
+  - P0-04: `requestHumanHandover` và `switchBackToAi` đổi trạng thái giao diện UI trước khi DB cập nhật thành công (báo thành công giả khi lỗi mạng).
+  - P1-06: `dbTools` (`get_user_orders`, `get_user_bookings`, `get_pet_profile`) dùng `select('*')` làm rò rỉ dữ liệu PII vào context mô hình AI.
+  - Ràng buộc DB: Bảng `chat_conversation` có ràng buộc `CHECK (sentiment_level BETWEEN 1 AND 5)`.
+- **Nguyên nhân đã xác minh:** Regex và logic thiếu tách biệt giữa `medical_topic` và `medical_emergency`; UI cập nhật bất đồng bộ thiếu await/check error; PostgREST queries chưa thu hẹp cột.
+- **File/hàm/dòng sửa:**
+  - `scripts/api/chat.js`: `evaluateToxicAndSentiment`, `getOrCreateConversation`, `dbTools` (`get_user_orders`, `get_user_bookings`, `get_pet_profile`).
+  - `components/fab/fab.js`: `generateSecureGuestToken`, `requestHumanHandover`, `switchBackToAi`.
+  - `scripts/test/test_chat_r0_foundation.test.js`: Bộ kiểm thử mới 5/5 test cases.
+- **Bảng/cột/RLS/API bị ảnh hưởng:** `chat_conversation`, `chat_message`, `sales_order`, `appointment`, `pet_profile`.
+- **Sau khi sửa:**
+  - Tiêm phòng/vắc xin là `medical_topic`, không kích hoạt handover và level <= 3.
+  - Cấp cứu y tế co giật/khó thở là `medical_emergency` (tier 6), kích hoạt handover với urgency `critical`, khi lưu CSDL được clamp an toàn ở mức 5.
+  - Guest token sinh bằng `crypto.randomUUID()` hoặc `crypto.getRandomValues()`.
+  - UI chỉ chuyển chế độ sau khi DB ACK thành công.
+  - `dbTools` chỉ chọn các trường tối thiểu cần thiết cho bot.
+- **Test đã chạy:**
+  - `node --test scripts/test/test_chat_r0_foundation.test.js`: 5/5 PASS.
+  - `node scripts/test/test_chat_f01_f14_suite.js`: 14/14 PASS.
+- **Kết quả:** PASS (19/19 tests).
+- **Bằng chứng:** Log test suite terminal hoàn tất sạch sẽ, không có ngoại lệ.
+- **Hồi quy liên quan:** 0 regression, các bài test CHAT-F01 đến CHAT-F14 bảo toàn 100%.
+- **Rollback/Việc chưa xong:** Tiếp tục GĐ-01/GĐ-02 mở rộng.
+
 ## 6. Thứ tự triển khai thực tế
 
 1. **Khóa rủi ro P0:** GĐ-00 → GĐ-01; kiểm tra RLS + danh tính guest/member trước khi mở rộng chức năng.

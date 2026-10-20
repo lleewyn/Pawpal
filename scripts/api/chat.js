@@ -327,14 +327,18 @@ function evaluateToxicAndSentiment(userText, filters, triggers) {
         }
     });
 
-    // 3. Phân loại loại rủi ro (Risk Type) theo ngữ cảnh thực tế
+    // 3. Phân loại loại rủi ro (Risk Type) theo ngữ cảnh thực tế (R0 / P0-03)
     let riskType = 'none';
     if (/chảy máu|ngộ độc|co giật|hấp hối|thở dốc|tai nạn|gãy chân|nuốt dị vật|sơ cứu/i.test(lower)) {
         riskType = 'medical_emergency';
-        detectedLevel = 6;
-    } else if (/mang thai|có bầu|chửa|sinh con|tiêm phòng|vắc xin/i.test(lower)) {
+        detectedLevel = 6; // Cấp 6: Khẩn cấp theo thang đo chatbot_sentiment_tier (1 - 6)
+    } else if (/mang thai|có bầu|chửa|sinh con/i.test(lower)) {
         riskType = 'special_care';
-        detectedLevel = Math.max(detectedLevel, 6);
+        detectedLevel = Math.max(detectedLevel, 3);
+    } else if (/tiêm phòng|vắc xin|vacxin|xổ giun|sổ tiêm|lịch tiêm/i.test(lower)) {
+        // P0-03: Chủ đề sức khỏe thông thường, KHÔNG coi là cấp cứu và KHÔNG tự động chuyển ca
+        riskType = 'medical_topic';
+        detectedLevel = Math.max(detectedLevel, 2);
     } else if (/trừ tiền|chưa nhận được tiền|sai tiền|hoàn tiền|mất tiền|thanh toán lỗi/i.test(lower)) {
         riskType = 'billing_dispute';
         detectedLevel = Math.max(detectedLevel, 4);
@@ -362,12 +366,18 @@ function evaluateToxicAndSentiment(userText, filters, triggers) {
                              lower.includes('người thật') || 
                              lower.includes('tư vấn viên');
 
-    const shouldHandover = isAgentRequested || detectedLevel >= 4 || riskType !== 'none';
+    // P0-03: Chỉ kích hoạt handover khi có yêu cầu người thật, cấp độ >= 4, hoặc sự cố y tế khẩn cấp / tranh chấp tiền / khiếu nại dịch vụ
+    // Chủ đề y tế thông thường (medical_topic như hỏi lịch tiêm phòng) KHÔNG tự động kích hoạt handover
+    const shouldHandover = isAgentRequested || 
+                           detectedLevel >= 4 || 
+                           riskType === 'medical_emergency' || 
+                           riskType === 'billing_dispute' || 
+                           riskType === 'service_complaint';
 
     let handoverReason = '';
     if (isAgentRequested) handoverReason = 'Khách yêu cầu gặp tư vấn viên trực tiếp';
     else if (riskType === 'medical_emergency') handoverReason = 'Cảnh báo y tế khẩn cấp cho thú cưng';
-    else if (riskType === 'special_care') handoverReason = 'Tư vấn chế độ chăm sóc y tế đặc biệt';
+    else if (riskType === 'special_care' && shouldHandover) handoverReason = 'Tư vấn chế độ chăm sóc y tế đặc biệt';
     else if (riskType === 'billing_dispute') handoverReason = 'Khiếu nại / đối soát sự cố thanh toán';
     else if (riskType === 'service_complaint') handoverReason = 'Khiếu nại chất lượng dịch vụ / vận chuyển';
     else if (isToxic) handoverReason = 'Ngôn từ kích động / vi phạm tiêu chuẩn văn minh';
@@ -515,8 +525,8 @@ async function getOrCreateConversation({ conversationId, customerId, sessionToke
                 customer_id: customerId || null,
                 session_token: sessionToken || null,
                 status: 'bot_handling',
-                sentiment_level: sentimentLevel || 2,
-                is_urgent: isUrgent || false,
+                sentiment_level: Math.min(5, Math.max(1, sentimentLevel || 2)),
+                is_urgent: Boolean(isUrgent),
                 channel: 'web'
             })
             .select()
@@ -537,14 +547,14 @@ async function getOrCreateConversation({ conversationId, customerId, sessionToke
 const ragKnowledgeCache = new Map();
 
 // ------------------------------------------------------------------------------
-// DATABASE TOOLS CHO GEMINI FUNCTION CALLING
+// DATABASE TOOLS CHO GEMINI FUNCTION CALLING (R0 / P1-06: DATA MINIMIZATION)
 // ------------------------------------------------------------------------------
 const dbTools = {
     get_user_orders: async (user_id) => {
         if (!user_id) return { error: "Yêu cầu đăng nhập để xem đơn hàng" };
         const { data, error } = await supabase
             .from('sales_order')
-            .select('*')
+            .select('id, order_code, order_status, payment_status, total_amount, shipping_fee, created_at, items:sales_order_item(product_name, quantity, unit_price)')
             .eq('customer_id', user_id)
             .order('created_at', { ascending: false })
             .limit(10);
@@ -555,16 +565,19 @@ const dbTools = {
         if (!user_id) return { error: "Yêu cầu đăng nhập để xem lịch hẹn" };
         const { data, error } = await supabase
             .from('appointment')
-            .select('*, service(service_name)')
+            .select('id, appointment_code, appointment_date, appointment_time, appointment_status, total_amount, service:service_id(service_name), pet_profile:pet_id(pet_name)')
             .eq('customer_id', user_id)
-            .order('created_at', { ascending: false })
+            .order('appointment_date', { ascending: false })
             .limit(5);
         if (error) return { error: error.message };
         return data && data.length ? data : { message: "Không có lịch hẹn nào sắp tới" };
     },
     get_services_price: async () => {
         try {
-            const { data, error } = await supabase.from('service_price_matrix').select('*, service(service_name)').limit(30);
+            const { data, error } = await supabase
+                .from('service_price_matrix')
+                .select('id, package_name, pet_size, price, duration_minutes, service:service_id(service_name)')
+                .limit(30);
             if (error) throw error;
             if (data && data.length > 0) {
                 return { context: "Dữ liệu bảng giá:\n" + JSON.stringify(data) };
@@ -577,7 +590,10 @@ const dbTools = {
     get_pet_profile: async (user_id) => {
         if (!user_id) return { error: "Yêu cầu đăng nhập để xem hồ sơ thú cưng" };
         try {
-            const { data, error } = await supabase.from('pet_profile').select('*').eq('customer_id', user_id);
+            const { data, error } = await supabase
+                .from('pet_profile')
+                .select('id, pet_name, species, breed, gender, weight, date_of_birth, allergy_history')
+                .eq('customer_id', user_id);
             if (error) throw error;
             return data && data.length ? data : { message: "Bạn chưa có hồ sơ thú cưng nào trên hệ thống" };
         } catch (e) {

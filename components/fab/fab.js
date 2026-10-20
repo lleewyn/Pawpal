@@ -159,17 +159,29 @@ function initFab() {
         }
     } catch(e) {}
 
-    // Quản lý Guest Session Token với TTL 24 giờ
+    // Quản lý Guest Session Token với TTL 24 giờ (R0 / P0-02: Cryptographically Secure Token)
     const GUEST_TOKEN_KEY = 'pawpal_fab_guest_token';
     const GUEST_TS_KEY = 'pawpal_fab_guest_token_ts';
     const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+
+    function generateSecureGuestToken() {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return 'st_' + crypto.randomUUID().replace(/-/g, '');
+        }
+        if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+            const arr = new Uint8Array(16);
+            crypto.getRandomValues(arr);
+            return 'st_' + Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+        }
+        return 'st_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 12);
+    }
 
     let currentSessionToken = localStorage.getItem(GUEST_TOKEN_KEY);
     const guestTs = parseInt(localStorage.getItem(GUEST_TS_KEY) || '0', 10);
     const now = Date.now();
 
     if (!currentSessionToken || !guestTs || (now - guestTs > SESSION_TTL_MS)) {
-        currentSessionToken = 'st_' + Math.random().toString(36).substring(2, 12);
+        currentSessionToken = generateSecureGuestToken();
         localStorage.setItem(GUEST_TOKEN_KEY, currentSessionToken);
         localStorage.setItem(GUEST_TS_KEY, String(now));
     }
@@ -288,7 +300,7 @@ function initFab() {
         return null;
     }
 
-    // Yêu cầu chuyển giao cho chuyên viên KTV
+    // Yêu cầu chuyển giao cho chuyên viên KTV (R0 / P0-04: DB ACK before UI mode switch)
     async function requestHumanHandover(reason = 'Khách yêu cầu hỗ trợ trực tiếp') {
         const convId = await ensureConversationExists();
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -297,17 +309,24 @@ function initFab() {
         conversationHistory.push({ role: 'user', content: 'Tôi cần gặp chuyên viên tư vấn trực tiếp.' });
         saveChatHistory();
 
-        updateHeaderMode('waiting_agent');
-        appendSystemNotice('Đang kết nối tới chuyên viên CSKH PawPal... Vui lòng đợi trong giây lát, chuyên viên sẽ tiếp nhận hỗ trợ sen ngay ạ!');
-
         if (db && convId) {
             try {
                 // 1. Cập nhật trạng thái hội thoại sang waiting_agent + is_urgent = true
-                await db.from('chat_conversation').update({
+                const { error: updateErr } = await db.from('chat_conversation').update({
                     status: 'waiting_agent',
                     is_urgent: true,
                     updated_at: new Date().toISOString()
                 }).eq('id', convId);
+
+                if (updateErr) {
+                    console.error('[FAB] Không thể chuyển giao chuyên viên:', updateErr.message);
+                    appendSystemNotice('Chưa thể kết nối chuyên viên lúc này do sự cố mạng. Bạn vui lòng thử lại sau giây lát nhé!');
+                    return;
+                }
+
+                // Đổi trạng thái giao diện chỉ sau khi DB xác nhận thành công
+                updateHeaderMode('waiting_agent');
+                appendSystemNotice('Đang kết nối tới chuyên viên CSKH PawPal... Vui lòng đợi trong giây lát, chuyên viên sẽ tiếp nhận hỗ trợ bạn ngay ạ!');
 
                 // 2. Ghi tin nhắn yêu cầu vào chat_message để hiển thị trên màn hình CSKH Admin
                 await db.from('chat_message').insert([{
@@ -320,28 +339,42 @@ function initFab() {
                 }]);
             } catch(e) {
                 console.error('[FAB] Lỗi khi chuyển giao chuyên viên:', e);
+                appendSystemNotice('Chưa thể kết nối chuyên viên lúc này do sự cố mạng. Bạn vui lòng thử lại sau giây lát nhé!');
             }
+        } else {
+            updateHeaderMode('waiting_agent');
+            appendSystemNotice('Đang kết nối tới chuyên viên CSKH PawPal... Vui lòng đợi trong giây lát!');
         }
     }
 
-    // Chuyển lại quyền trò chuyện cho AI bot
+    // Chuyển lại quyền trò chuyện cho AI bot (R0 / P0-04: DB ACK before UI mode switch)
     async function switchBackToAi() {
         const convId = activeConversationId;
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
 
-        updateHeaderMode('bot_handling');
-        appendSystemNotice('Đã chuyển lại quyền trò chuyện cho <strong>Trợ lý AI PawPal</strong>. Sen có thể tiếp tục hỏi bất kỳ điều gì!');
-
         if (db && convId) {
             try {
-                await db.from('chat_conversation').update({
+                const { error: switchErr } = await db.from('chat_conversation').update({
                     status: 'bot_handling',
                     is_urgent: false,
                     updated_at: new Date().toISOString()
                 }).eq('id', convId);
+
+                if (switchErr) {
+                    console.error('[FAB] Lỗi khi chuyển về AI:', switchErr.message);
+                    appendSystemNotice('Chưa thể chuyển lại AI do sự cố mạng. Vui lòng thử lại!');
+                    return;
+                }
+
+                updateHeaderMode('bot_handling');
+                appendSystemNotice('Đã chuyển lại quyền trò chuyện cho <strong>Trợ lý AI PawPal</strong>. Bạn có thể tiếp tục hỏi bất kỳ điều gì!');
             } catch(e) {
                 console.error('[FAB] Lỗi khi chuyển về AI:', e);
+                appendSystemNotice('Chưa thể chuyển lại AI do sự cố mạng. Vui lòng thử lại!');
             }
+        } else {
+            updateHeaderMode('bot_handling');
+            appendSystemNotice('Đã chuyển lại quyền trò chuyện cho <strong>Trợ lý AI PawPal</strong>.');
         }
     }
 
