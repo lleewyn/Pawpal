@@ -1,11 +1,19 @@
 
 const BOOKING_STATUS = {
-    upcoming:      { label: 'Đã xác nhận',    cls: 'rg-badge-confirmed' },
-    confirmed:     { label: 'Đã xác nhận',    cls: 'rg-badge-confirmed' },
-    pending:       { label: 'Chờ xác nhận',   cls: 'rg-badge-pending' },
-    'in-progress': { label: 'Đang thực hiện', cls: 'rg-badge-inprogress' },
-    completed:     { label: 'Hoàn thành',     cls: 'rg-badge-completed' },
-    cancelled:     { label: 'Đã hủy',         cls: 'rg-badge-cancelled' },
+    upcoming:        { label: 'Đã xác nhận',    cls: 'rg-badge-confirmed' },
+    confirmed:       { label: 'Đã xác nhận',    cls: 'rg-badge-confirmed' },
+    pending:         { label: 'Chờ xác nhận',   cls: 'rg-badge-pending' },
+    'in-progress':   { label: 'Đang thực hiện', cls: 'rg-badge-inprogress' },
+    completed:       { label: 'Hoàn thành',     cls: 'rg-badge-completed' },
+    cancelled:       { label: 'Đã hủy',         cls: 'rg-badge-cancelled' },
+    // Enum tiếng Việt CSDL Supabase
+    cho_xac_nhan:    { label: 'Chờ xác nhận',   cls: 'rg-badge-pending' },
+    da_xac_nhan:     { label: 'Đã xác nhận',    cls: 'rg-badge-confirmed' },
+    da_check_in:     { label: 'Đã check-in',    cls: 'rg-badge-confirmed' },
+    dang_thuc_hien:  { label: 'Đang thực hiện', cls: 'rg-badge-inprogress' },
+    da_hoan_tat:     { label: 'Đã hoàn tất',    cls: 'rg-badge-completed' },
+    da_huy:          { label: 'Đã hủy',         cls: 'rg-badge-cancelled' },
+    vang_mat:        { label: 'Vắng mặt',       cls: 'rg-badge-cancelled' },
 };
 
 const ORDER_STATUS = {
@@ -17,6 +25,14 @@ const ORDER_STATUS = {
     cancelled:       { label: 'Đã hủy',         cls: 'rg-badge-cancelled' },
     returned:        { label: 'Trả hàng',       cls: 'rg-badge-pending' },
     return_pending:  { label: 'Chờ đổi trả',    cls: 'rg-badge-pending' },
+    // Enum tiếng Việt CSDL Supabase
+    cho_xac_nhan:    { label: 'Chờ xác nhận',   cls: 'rg-badge-pending' },
+    da_xac_nhan:     { label: 'Đã xác nhận',    cls: 'rg-badge-confirmed' },
+    dang_dong_goi:   { label: 'Đang đóng gói',  cls: 'rg-badge-inprogress' },
+    dang_giao_hang:  { label: 'Đang giao hàng', cls: 'rg-badge-shipping' },
+    da_giao_hang:    { label: 'Đã giao hàng',   cls: 'rg-badge-confirmed' },
+    da_huy:          { label: 'Đã hủy',         cls: 'rg-badge-cancelled' },
+    da_tra_hang:     { label: 'Đã trả hàng',    cls: 'rg-badge-pending' },
 };
 
 let rgOtpFlowActive = false;
@@ -383,6 +399,17 @@ function mapSupabaseOrderRow(row) {
 }
 
 function mapSupabaseBookingRow(row) {
+    const rawStatus = String(row.appointment_status || 'pending').toLowerCase();
+    const normalizedBookingStatus = {
+        'cho_xac_nhan': 'pending',
+        'da_xac_nhan': 'confirmed',
+        'da_check_in': 'confirmed',
+        'dang_thuc_hien': 'in-progress',
+        'da_hoan_tat': 'completed',
+        'da_huy': 'cancelled',
+        'vang_mat': 'cancelled'
+    }[rawStatus] || rawStatus;
+
     return {
         id: row.appointment_code || row.id,
         _supabaseId: row.id,                  
@@ -390,7 +417,7 @@ function mapSupabaseBookingRow(row) {
         date: row.appointment_date,
         time: row.appointment_time,
         timeStart: row.appointment_time,
-        status: String(row.appointment_status || 'pending').toLowerCase(),
+        status: normalizedBookingStatus,
         paymentStatus: row.payment_status || 'pending',
         note: row.note || '',
         petName: row.pet_profile?.pet_name || (Array.isArray(row.customer?.customer_profile) ? row.customer.customer_profile[0]?.full_name : row.customer?.customer_profile?.full_name) || 'Bé cưng',
@@ -411,15 +438,23 @@ function mapOrderStatus(status) {
     return {
         'PENDING':         'pending',
         'PENDING_PAYMENT': 'pending',
-        'CONFIRMED':       'preparing',
-        'PREPARING':       'preparing',
-        'SHIPPING':        'shipping',
-        'DELIVERED':       'delivered',
+        'CONFIRMED':       'da_xac_nhan',
+        'PREPARING':       'dang_dong_goi',
+        'SHIPPING':        'dang_giao_hang',
+        'DELIVERED':       'da_giao_hang',
         'COMPLETED':       'completed',
-        'CANCELLED':       'cancelled',
-        'RETURNED':        'returned',
-        'REFUNDED':        'returned',
-        'RETURN_PENDING':  'return_pending'
+        'CANCELLED':       'da_huy',
+        'RETURNED':        'da_tra_hang',
+        'REFUNDED':        'da_tra_hang',
+        'RETURN_PENDING':  'return_pending',
+        'CHO_XAC_NHAN':    'cho_xac_nhan',
+        'DA_XAC_NHAN':     'da_xac_nhan',
+        'DANG_DONG_GOI':   'dang_dong_goi',
+        'DANG_GIAO_HANG':  'dang_giao_hang',
+        'DA_GIAO_HANG':    'da_giao_hang',
+        'DA_HUY':          'da_huy',
+        'DA_TRA_HANG':     'da_tra_hang',
+        'HOAN_THANH':      'completed'
     }[s] || String(status || 'pending').toLowerCase();
 }
 
