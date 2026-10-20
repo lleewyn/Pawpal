@@ -263,7 +263,7 @@ function buildSafeKeywordRegex(keyword) {
     return new RegExp(`${prefix}${escaped}${suffix}`, 'giu');
 }
 
-function evaluateToxicAndSentiment(userText, filters, triggers) {
+function evaluateToxicAndSentiment(userText, filters = [], triggers = []) {
     const rawText = String(userText || '');
     const lower = rawText.toLowerCase();
     const detectedKeywords = [];

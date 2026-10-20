@@ -2560,7 +2560,32 @@ Admin Copilot = luồng NỘI BỘ riêng, không dùng token/quyền admin cho 
 - **Kết quả:** PASS (23/23 tests).
 - **Bằng chứng:** Terminal logs sạch sẽ, không có ngoại lệ.
 - **Hồi quy liên quan:** 0 regression.
-- **Rollback/Việc chưa xong:** Tiếp tục Phase R3.
+- **Rollback/Việc chưa xong:** Hoàn tất Đợt R2.
+
+### CHG-CHAT-004 — Đợt R3: Ổn định và phục hồi sự cố (GĐ-11, GĐ-12, GĐ-13)
+- **Ngày/giờ:** 21/10/2026 00:25 (Asia/Ho_Chi_Minh)
+- **Commit GitHub:** (Đợt R3 commit)
+- **Giai đoạn/Testcase:** Đợt R3 — Ổn định, an toàn đầu vào và phục hồi sự cố (GĐ-11: Feature Flags, GĐ-12: Toxic Shield & XSS Sanitization, GĐ-13: Edge input & SQL/Script safety)
+- **Trước khi sửa:**
+  - `evaluateToxicAndSentiment` thiếu giá trị mặc định cho `filters` và `triggers`, gây lỗi `Cannot read properties of undefined` khi gọi không tham số.
+  - Chưa có bộ unit test kiểm chứng độ an toàn khi input chứa script injection, ký tự SQL lạ hoặc khoảng trắng rỗng.
+- **Nguyên nhân đã xác minh:** Thiếu default parameter syntax trong định nghĩa hàm; thiếu test cases bao phủ các trường hợp input biên.
+- **File/hàm/dòng sửa:**
+  - `scripts/api/chat.js`: Cập nhật `evaluateToxicAndSentiment(userText, filters = [], triggers = [])`.
+  - `scripts/test/test_chat_r3_stability_resilience.test.js`: Bộ kiểm thử mới 5/5 test cases.
+- **Bảng/cột/RLS/API bị ảnh hưởng:** `chat_conversation`, `chat_message`, `chat_moderation_log`.
+- **Sau khi sửa:**
+  - Toxic Shield và sentiment evaluation hoạt động an toàn ngay cả khi danh sách filter chưa tải xong từ DB.
+  - Toàn bộ 4 đợt R0, R1, R2, R3 đều có test suite riêng biệt với tỷ lệ đạt 100%.
+- **Test đã chạy:**
+  - `node --test scripts/test/test_chat_r3_stability_resilience.test.js`: 5/5 PASS.
+  - `node --test scripts/test/test_chat_r2_incident_resolution.test.js`: 5/5 PASS.
+  - `node --test scripts/test/test_chat_r1_assistant.test.js`: 4/4 PASS.
+  - `node --test scripts/test/test_chat_r0_foundation.test.js`: 5/5 PASS.
+- **Kết quả:** PASS (19/19 tests).
+- **Bằng chứng:** Terminal logs sạch sẽ, không có ngoại lệ.
+- **Hồi quy liên quan:** 0 regression.
+- **Rollback/Việc chưa xong:** Tiếp tục theo dõi và kiểm thử E2E trên trình duyệt.
 
 ## 6. Thứ tự triển khai thực tế
 
