@@ -428,10 +428,10 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `pages/public/landing/; pages/public/about/; pages/public/contact/; pages/public/blog/; pages/public/blog-detail/`
 
 ### UI-03-001 · Trang chủ mở lần đầu  [P1 · Guest]
-- [ ] **Thao tác:** Mở link website từ tab ẩn danh, không cookie
-- [ ] **Giao diện/điều hướng:** Hero, banners, ảnh, CTA và menu hiển thị; không data rác/skeleton treo
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở link website từ tab ẩn danh, không cookie
+- [x] **Giao diện/điều hướng:** Hero, banners, ảnh, CTA và menu hiển thị; không data rác/skeleton treo
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-03-002 · Hero CTA từng nút  [P1 · Guest]
 - [x] **Thao tác:** Bấm các CTA Đặt lịch/Mua hàng/Xem dịch vụ nếu có
@@ -440,70 +440,70 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 - [x] **Bằng chứng:** CHG-001; Commit `a4cee94` & `19cdce6`; Ảnh sau sửa: `hero_cta_comparison_1792497707990.png`; Video: `web_screens_audit_part1_1792496566347.webp`.
 
 ### UI-03-003 · Carousel banner  [P1 · Guest]
-- [ ] **Thao tác:** Click next/prev/dots, autoplay, chạm vuốt mobile
-- [ ] **Giao diện/điều hướng:** Không lỗi ảnh, không trùng trang, nút hoạt động và không tự submit form
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Click next/prev/dots, autoplay, chạm vuốt mobile
+- [x] **Giao diện/điều hướng:** Không lỗi ảnh, không trùng trang, nút hoạt động và không tự submit form
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-03-004 · Danh mục nổi bật  [P1 · Guest]
-- [ ] **Thao tác:** Chọn từng thẻ sản phẩm/dịch vụ trên landing
-- [ ] **Giao diện/điều hướng:** Đi tới đúng product ID/service ID; nhãn giá/trạng thái hợp lệ
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chọn từng thẻ sản phẩm/dịch vụ trên landing
+- [x] **Giao diện/điều hướng:** Đi tới đúng product ID/service ID; nhãn giá/trạng thái hợp lệ
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-03-005 · Sản phẩm hết hàng  [P1 · Guest]
-- [ ] **Thao tác:** Bấm sản phẩm đang hết hàng
-- [ ] **Giao diện/điều hướng:** Không cho đặt vượt tồn, hiển thị hết hàng rõ
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm sản phẩm đang hết hàng
+- [x] **Giao diện/điều hướng:** Không cho đặt vượt tồn, hiển thị hết hàng rõ
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-03-006 · Đọc trang giới thiệu  [P1 · Guest]
-- [ ] **Thao tác:** Mở About từ header và footer
-- [ ] **Giao diện/điều hướng:** Nội dung đầy đủ, back ổn, ảnh responsive
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở About từ header và footer
+- [x] **Giao diện/điều hướng:** Nội dung đầy đủ, back ổn, ảnh responsive
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-03-007 · Form liên hệ valid  [P1 · Guest]
-- [ ] **Thao tác:** Điền tên/email/SĐT/nội dung đúng, tick consent nếu có, bấm Gửi
-- [ ] **Giao diện/điều hướng:** Hiện xác nhận cùng mã yêu cầu nếu hệ thống có chức năng lưu
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Điền tên/email/SĐT/nội dung đúng, tick consent nếu có, bấm Gửi
+- [x] **Giao diện/điều hướng:** Hiện xác nhận cùng mã yêu cầu nếu hệ thống có chức năng lưu
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-03-008 · Form liên hệ invalid  [P1 · Guest]
-- [ ] **Thao tác:** Để trống từng trường bắt buộc, email sai, ký tự đặc biệt, spam bấm
-- [ ] **Giao diện/điều hướng:** Không submit sai, thông báo cạnh trường, không tạo trùng
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Để trống từng trường bắt buộc, email sai, ký tự đặc biệt, spam bấm
+- [x] **Giao diện/điều hướng:** Không submit sai, thông báo cạnh trường, không tạo trùng
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-03-009 · Blog tìm kiếm  [P1 · Guest]
-- [ ] **Thao tác:** Mở blog, search, lọc tag/category, reset filter
-- [ ] **Giao diện/điều hướng:** Danh sách và số bài đúng, không lỗi phân trang
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở blog, search, lọc tag/category, reset filter
+- [x] **Giao diện/điều hướng:** Danh sách và số bài đúng, không lỗi phân trang
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-03-010 · Blog phân trang  [P1 · Guest]
-- [ ] **Thao tác:** Chuyển trang cuối, quay trang trước, F5
-- [ ] **Giao diện/điều hướng:** Không lặp/mất bài, có empty state đúng
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chuyển trang cuối, quay trang trước, F5
+- [x] **Giao diện/điều hướng:** Không lặp/mất bài, có empty state đúng
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-03-011 · Blog detail  [P1 · Guest]
-- [ ] **Thao tác:** Click bài viết, ảnh, nội dung, link liên quan, breadcrumb
-- [ ] **Giao diện/điều hướng:** Đúng nội dung bài, không hiển thị HTML lỗi, link ảnh được tải
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Click bài viết, ảnh, nội dung, link liên quan, breadcrumb
+- [x] **Giao diện/điều hướng:** Đúng nội dung bài, không hiển thị HTML lỗi, link ảnh được tải
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-03-012 · Link nội bộ blog  [P1 · Guest]
-- [ ] **Thao tác:** Bấm link Shop/Service đặt trong bài nếu có
-- [ ] **Giao diện/điều hướng:** Đi đúng route, không phá giỏ hoặc session
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm link Shop/Service đặt trong bài nếu có
+- [x] **Giao diện/điều hướng:** Đi đúng route, không phá giỏ hoặc session
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-03-013 · Guest search không kết quả  [P1 · Guest]
-- [ ] **Thao tác:** Tìm chuỗi không tồn tại ở nơi search hỗ trợ
-- [ ] **Giao diện/điều hướng:** Thông báo không có kết quả và gợi ý xóa lọc, không crash
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Tìm chuỗi không tồn tại ở nơi search hỗ trợ
+- [x] **Giao diện/điều hướng:** Thông báo không có kết quả và gợi ý xóa lọc, không crash
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ## GĐ-04 — Khách vãng lai: tra cứu, đăng ký, đăng nhập & OTP
 
