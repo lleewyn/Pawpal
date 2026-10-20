@@ -979,311 +979,311 @@ Mục này là **khung bắt buộc để kiểm kê hết nút và field** củ
 ## 6. MA TRẬN JOURNEY KHÁCH HÀNG → SUPABASE → ADMIN → KHÁCH HÀNG
 ### X-01 — Guest mua COD
 **Luồng:** Public → Cart → Checkout Guest → Admin Orders → Guest tra đơn  \  **Bảng kiểm chứng:** `customer, customer_address, sales_order, sales_order_detail, payment`.
-- [ ] **X-01-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-01-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-01-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-01-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-01-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-01-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-01-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-01-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-01-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-01-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-01-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-01-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-01-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-01-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-01-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-01-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-02 — Guest đặt lịch grooming
 **Luồng:** Public/Services → Booking Guest → Admin Services → User book detail  \  **Bảng kiểm chứng:** `customer, pet_profile, appointment`.
-- [ ] **X-02-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-02-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-02-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-02-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-02-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-02-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-02-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-02-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-02-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-02-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-02-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-02-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-02-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-02-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-02-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-02-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-03 — Guest kích hoạt tài khoản
 **Luồng:** Guest order/booking → OTP → User Profile → Admin Customers  \  **Bảng kiểm chứng:** `customer, customer_profile, customer_membership`.
-- [ ] **X-03-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-03-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-03-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-03-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-03-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-03-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-03-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-03-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-03-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-03-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-03-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-03-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-03-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-03-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-03-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-03-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-04 — Khách đăng ký thường
 **Luồng:** Login OTP → Profile → Add Pet → Admin Customers/Pets  \  **Bảng kiểm chứng:** `customer, customer_profile, pet_profile`.
-- [ ] **X-04-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-04-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-04-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-04-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-04-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-04-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-04-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-04-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-04-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-04-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-04-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-04-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-04-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-04-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-04-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-04-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-05 — Hồ sơ + địa chỉ
 **Luồng:** User edit profile/address → DB → Admin Customers → User reload  \  **Bảng kiểm chứng:** `customer_profile, customer_address`.
-- [ ] **X-05-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-05-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-05-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-05-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-05-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-05-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-05-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-05-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-05-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-05-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-05-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-05-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-05-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-05-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-05-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-05-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-06 — Dịch vụ Grooming
 **Luồng:** Service detail → Booking → Admin checkin → Care log → User diary  \  **Bảng kiểm chứng:** `appointment, care_log, care_log_media, payment`.
-- [ ] **X-06-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-06-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-06-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-06-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-06-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-06-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-06-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-06-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-06-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-06-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-06-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-06-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-06-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-06-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-06-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-06-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-07 — Đặt Hotel
 **Luồng:** Service booking → Hotel room → Admin checkin/out → User diary  \  **Bảng kiểm chứng:** `appointment, hotel_booking, hotel_room, care_log`.
-- [ ] **X-07-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-07-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-07-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-07-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-07-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-07-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-07-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-07-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-07-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-07-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-07-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-07-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-07-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-07-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-07-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-07-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-08 — Đặt Taxi
 **Luồng:** Service booking → Dispatch → Admin complete → User booking  \  **Bảng kiểm chứng:** `appointment, taxi_price_rule, staff`.
-- [ ] **X-08-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-08-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-08-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-08-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-08-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-08-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-08-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-08-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-08-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-08-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-08-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-08-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-08-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-08-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-08-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-08-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-09 — Booking hủy/vắng
 **Luồng:** User cancel/no-show → Admin state → Dashboard excludes  \  **Bảng kiểm chứng:** `appointment, payment, notification`.
-- [ ] **X-09-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-09-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-09-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-09-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-09-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-09-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-09-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-09-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-09-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-09-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-09-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-09-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-09-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-09-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-09-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-09-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-10 — Giỏ & variant
 **Luồng:** Product detail → Cart variant → reload → Checkout  \  **Bảng kiểm chứng:** `product, product_variant, cart, cart_item`.
-- [ ] **X-10-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-10-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-10-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-10-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-10-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-10-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-10-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-10-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-10-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-10-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-10-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-10-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-10-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-10-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-10-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-10-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-11 — Đơn COD
 **Luồng:** Cart → Checkout COD → Admin fulfilment → User Orders → COD reconcile  \  **Bảng kiểm chứng:** `sales_order, sales_order_detail, payment, inventory`.
-- [ ] **X-11-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-11-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-11-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-11-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-11-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-11-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-11-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-11-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-11-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-11-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-11-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-11-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-11-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-11-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-11-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-11-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-12 — Thanh toán online
 **Luồng:** Checkout online → Gateway callback → Payment success → Admin/User  \  **Bảng kiểm chứng:** `sales_order, payment, sales_order_detail`.
-- [ ] **X-12-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-12-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-12-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-12-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-12-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-12-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-12-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-12-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-12-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-12-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-12-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-12-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-12-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-12-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-12-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-12-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-13 — Thanh toán thất bại
 **Luồng:** Gateway decline → Payment failed → Retry/Cart restore  \  **Bảng kiểm chứng:** `payment, sales_order, cart_item`.
-- [ ] **X-13-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-13-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-13-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-13-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-13-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-13-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-13-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-13-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-13-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-13-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-13-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-13-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-13-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-13-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-13-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-13-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-14 — Đơn thay đổi trạng thái
 **Luồng:** Admin packing/shipping/delivered → User order-detail/timeline  \  **Bảng kiểm chứng:** `sales_order, notification`.
-- [ ] **X-14-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-14-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-14-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-14-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-14-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-14-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-14-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-14-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-14-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-14-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-14-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-14-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-14-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-14-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-14-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-14-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-15 — Hủy đơn đã trả tiền
 **Luồng:** User cancel paid → Admin refund processing → paid refund → User refresh  \  **Bảng kiểm chứng:** `sales_order, refund_transaction, payment`.
-- [ ] **X-15-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-15-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-15-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-15-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-15-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-15-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-15-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-15-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-15-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-15-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-15-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-15-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-15-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-15-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-15-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-15-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-16 — Đổi/trả hàng
 **Luồng:** User return request → Admin inspect → Refund → Inventory adjustment  \  **Bảng kiểm chứng:** `return_request, return_request_detail, inventory_transaction, refund_transaction`.
-- [ ] **X-16-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-16-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-16-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-16-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-16-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-16-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-16-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-16-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-16-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-16-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-16-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-16-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-16-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-16-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-16-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-16-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-17 — Sử dụng voucher
 **Luồng:** Admin create → User collect/apply → Checkout → Loyalty/Promo reports  \  **Bảng kiểm chứng:** `voucher, customer_voucher, sales_order`.
-- [ ] **X-17-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-17-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-17-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-17-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-17-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-17-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-17-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-17-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-17-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-17-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-17-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-17-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-17-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-17-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-17-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-17-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-18 — Paw Points
 **Luồng:** Payment success → Ledger award → User Wallet → Spend → Admin  \  **Bảng kiểm chứng:** `customer_membership, paw_point_transaction, reward_rule`.
-- [ ] **X-18-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-18-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-18-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-18-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-18-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-18-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-18-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-18-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-18-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-18-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-18-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-18-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-18-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-18-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-18-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-18-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-19 — User hỗ trợ
 **Luồng:** User create support ticket → Admin Assign/SLA → Reply → User realtime  \  **Bảng kiểm chứng:** `support_ticket, support_ticket_message`.
-- [ ] **X-19-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-19-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-19-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-19-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-19-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-19-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-19-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-19-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-19-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-19-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-19-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-19-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-19-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-19-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-19-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-19-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-20 — Chat chuyển Ticket
 **Luồng:** User live chat → Admin takeover/convert → User support  \  **Bảng kiểm chứng:** `chat_conversation, chat_message, support_ticket`.
-- [ ] **X-20-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-20-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-20-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-20-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-20-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-20-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-20-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-20-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-20-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-20-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-20-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-20-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-20-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-20-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-20-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-20-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-21 — Nhật ký chăm sóc
 **Luồng:** Admin Care log/photo → User Diary → Service Review  \  **Bảng kiểm chứng:** `care_log, care_log_media, review`.
-- [ ] **X-21-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-21-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-21-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-21-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-21-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-21-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-21-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-21-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-21-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-21-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-21-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-21-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-21-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-21-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-21-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-21-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-22 — Đánh giá
 **Luồng:** User review → Admin moderation/respond → Public/Service/Product  \  **Bảng kiểm chứng:** `review, review_response`.
-- [ ] **X-22-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-22-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-22-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-22-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-22-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-22-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-22-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-22-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-22-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-22-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-22-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-22-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-22-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-22-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-22-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-22-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-23 — Staff nghỉ ảnh hưởng booking
 **Luồng:** Staff request → Manager approval → resource reassignment → User notice  \  **Bảng kiểm chứng:** `staff_shift_request, staff_schedule, appointment`.
-- [ ] **X-23-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-23-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-23-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-23-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-23-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-23-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-23-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-23-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-23-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-23-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-23-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-23-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-23-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-23-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-23-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-23-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-24 — Banner/blog
 **Luồng:** Admin Settings publish → Public landing/blog → hide/expire  \  **Bảng kiểm chứng:** `banner, blog_post`.
-- [ ] **X-24-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-24-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-24-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-24-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-24-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-24-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-24-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-24-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-24-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-24-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-24-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-24-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-24-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-24-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-24-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-24-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-25 — KPI drilldown
 **Luồng:** User order/booking/ticket → Admin Dashboard → SQL count proof  \  **Bảng kiểm chứng:** `sales_order, appointment, support_ticket`.
-- [ ] **X-25-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-25-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-25-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-25-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-25-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-25-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-25-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-25-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-25-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-25-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-25-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-25-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-25-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-25-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-25-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-25-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-26 — Hai khách + RLS
 **Luồng:** Customer A/B + Admin roles → authorized reads/writes only  \  **Bảng kiểm chứng:** `customer, pet_profile, sales_order, support_ticket`.
-- [ ] **X-26-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-26-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-26-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-26-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-26-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-26-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-26-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-26-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-26-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-26-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-26-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-26-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-26-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-26-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-26-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-26-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-27 — Cross-device persistence
 **Luồng:** Browser A creates/edits → Browser B fetch → Admin sees same  \  **Bảng kiểm chứng:** `all tables affected`.
-- [ ] **X-27-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-27-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-27-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-27-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-27-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-27-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-27-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-27-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-27-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-27-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-27-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-27-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-27-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-27-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-27-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-27-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ### X-28 — Failed mid-transaction
 **Luồng:** Server commits partial / retry duplicate → rollback/compensate  \  **Bảng kiểm chứng:** `sales_order, payment, sales_order_detail, inventory_transaction`.
-- [ ] **X-28-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
-- [ ] **X-28-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
-- [ ] **X-28-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
-- [ ] **X-28-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
-- [ ] **X-28-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
-- [ ] **X-28-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
-- [ ] **X-28-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
-- [ ] **X-28-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
+- [x] **X-28-01** Chuẩn bị tài khoản/role, ID dữ liệu trước, số lượng tồn/điểm/bản ghi trước.
+- [x] **X-28-02** Thực hiện tuần tự tất cả hành động UI nêu trong luồng; mỗi nút click chỉ tạo một event và đúng modal/form.
+- [x] **X-28-03** Kiểm request/response từng bước; ID dùng FK liên phân hệ phải là ID thực từ DB.
+- [x] **X-28-04** Đối chiếu từng bảng nêu trên (sau khi xác minh schema) và từng cột đã đổi; không cột bị null/sai enum/bị mất.
+- [x] **X-28-05** F5 trang User và Admin, refresh new session/browser; xem đúng trạng thái và nhãn.
+- [x] **X-28-06** Đối chiếu KPI/notification/report/ledger/stock nếu tác động; không ghi hai lần.
+- [x] **X-28-07** Chạy đường lỗi: validation, thiếu quyền, mạng lỗi, double-submit, retry; không thông báo thành công giả.
+- [x] **X-28-08** Lưu evidence + PASS/FAIL/BLOCKED/N/A + Bug ID; retest sau patch.
 
 ## 7. SQL CHỈ ĐỌC DÙNG XÁC MINH SCHEMA / ENUM / POLICIES TRÊN STAGING
 > Các lệnh bên dưới **chỉ đọc**. Người chạy vẫn phải sử dụng tài khoản có quyền thích hợp, không paste dữ liệu cá nhân vào báo cáo.
@@ -1316,8 +1316,8 @@ FROM pg_policies WHERE schemaname='public' ORDER BY tablename,policyname;
 |---|---|---|---|---|---|---|---|---|
 | Ví dụ: Service Booking Pet | **CẦN LẤY ID TỪ HTML THẬT** | `booking.js` | `pet_profile.insert` | `pet_profile.species` | `cho/meo/tho/...` | User Pets | Admin Pets | WEB-P0-01 / NOT RUN |
 | Ví dụ: User Cancel Paid | **CẦN LẤY ID TỪ HTML THẬT** | `orders.js` | `sales_order.update` + refund flow | `payment_status` + `refund_transaction.refund_status` | Không coi `cho_xu_ly` là `da_hoan_tat` | User Orders | Admin RMA/Refund | WEB-P0-02 / NOT RUN |
-- [ ] **MAP-01** Chốt file `field-audit.csv` hoặc bảng mapping trong issue cho toàn bộ UI field website chưa được kiểm kê trực tiếp.
-- [ ] **MAP-02** Trong PHỤ LỤC I, đối chiếu 547 field HTML Admin và mã test của từng trường; không chỉ dựa vào `select(*)`.
+- [x] **** Chốt file `field-audit.csv` hoặc bảng mapping trong issue cho toàn bộ UI field website chưa được kiểm kê trực tiếp.
+- [x] **** Trong PHỤ LỤC I, đối chiếu 547 field HTML Admin và mã test của từng trường; không chỉ dựa vào `select(*)`.
 - [ ] **MAP-03** Trong PHỤ LỤC J, phân loại toàn bộ 808 cột thiết kế: input / derived / default / system / secret / not-present-live.
 - [ ] **MAP-04** Đối với cột phát sinh server-side (id, timestamps, hash, tokens, aggregated), test default/trigger và không cho client override.
 - [ ] **MAP-05** Đối với dữ liệu kiểu số/ngày/Boolean/JSON, test null/0/false/[] khác nhau, đừng ép tất cả thành chuỗi rỗng.
