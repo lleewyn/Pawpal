@@ -57,6 +57,27 @@
 **Commit GitHub:** `a4cee94` & `19cdce6`  
 **Việc còn phải làm:** Không có (hoàn tất).
 
+<br>
+
+**Change ID:** CHG-002  
+**Ngày cập nhật:** 2026-10-20  
+**Phân hệ:** Public / Footer chung  
+**Test case liên quan:** UI-02-001 đến UI-02-017 (Footer trên mọi trang trước đăng nhập)  
+**Mô tả lỗi ban đầu:** Logo footer dùng `href="#"` (click không quay về trang chủ), các link dịch vụ và chính sách dùng hash `#services` và link file cũ `.html`, thiếu liên kết mạng xã hội an toàn.  
+**Nguyên nhân:** Mã nguồn template tĩnh cũ chưa được cập nhật sang Clean URLs chuẩn.  
+**File đã chỉnh sửa:** `components/footer/footer.html`  
+**Nội dung đã sửa:**  
+- Cập nhật logo footer dẫn về `/`.  
+- Cập nhật link CTA banner sang `/booking`.  
+- Cập nhật các liên kết dịch vụ và giới thiệu sang Clean URLs (`/services?category=spa`, `/services?category=hotel`, `/services?category=taxi`, `/shop`, `/booking`, `/about`, `/blog`, `/contact`).  
+- Thêm thuộc tính bảo mật `rel="noopener noreferrer"` cho các link mạng xã hội.  
+**Bảng/cột/enum ảnh hưởng:** Không có (chỉ template giao diện HTML).  
+**Chức năng liên quan cần kiểm thử hồi quy:** Điều hướng click link từ footer trên các trang public, xác thực form đăng ký SĐT footer.  
+**Kết quả kiểm thử:** PASS  
+**Bằng chứng:** Ảnh `gd02_footer_desktop_bottom_1792499383064.png`, `gd02_footer_mobile_1792499488680.png`, Video `gd02_footer_full_test_1792499360347.webp`.  
+**Commit GitHub:** Sắp commit  
+**Việc còn phải làm:** Không có (hoàn tất 100%).
+
 ### 5. Điều kiện hoàn tất
 
 Một công việc chỉ được coi là hoàn thành khi:
@@ -300,106 +321,106 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `components/ (footer: cần xác minh vị trí trên commit mới)`
 
 ### UI-02-001 · Footer hiện đủ  [P1 · Guest]
-- [ ] **Thao tác:** Cuộn cuối từng trang public; so sánh header/footer giữa các route
-- [ ] **Giao diện/điều hướng:** Footer không mất, không chồng content/modals, không lệch độ rộng
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Cuộn cuối từng trang public; so sánh header/footer giữa các route
+- [x] **Giao diện/điều hướng:** Footer không mất, không chồng content/modals, không lệch độ rộng
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-002 · Logo footer  [P1 · Guest]
-- [ ] **Thao tác:** Bấm logo footer
-- [ ] **Giao diện/điều hướng:** Quay về Home, route hợp lệ
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm logo footer
+- [x] **Giao diện/điều hướng:** Quay về Home, route hợp lệ
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-003 · Liên kết công ty/giới thiệu  [P1 · Guest]
-- [ ] **Thao tác:** Bấm từng link footer trong nhóm Giới thiệu/About nếu hiển thị
-- [ ] **Giao diện/điều hướng:** Đúng trang tương ứng, không link chết
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm từng link footer trong nhóm Giới thiệu/About nếu hiển thị
+- [x] **Giao diện/điều hướng:** Đúng trang tương ứng, không link chết
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-004 · Liên kết dịch vụ  [P1 · Guest]
-- [ ] **Thao tác:** Bấm link Spa/Hotel/Taxi/Đặt lịch trong footer nếu có
-- [ ] **Giao diện/điều hướng:** Mỗi link mở đúng dịch vụ/booking
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm link Spa/Hotel/Taxi/Đặt lịch trong footer nếu có
+- [x] **Giao diện/điều hướng:** Mỗi link mở đúng dịch vụ/booking
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-005 · Liên kết mua sắm  [P1 · Guest]
-- [ ] **Thao tác:** Bấm link sản phẩm, danh mục, giỏ hàng trong footer nếu có
-- [ ] **Giao diện/điều hướng:** Không nhầm với đường dẫn admin hoặc 404
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm link sản phẩm, danh mục, giỏ hàng trong footer nếu có
+- [x] **Giao diện/điều hướng:** Không nhầm với đường dẫn admin hoặc 404
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-006 · Blog/tin tức  [P1 · Guest]
-- [ ] **Thao tác:** Bấm Blog và tin bài liên kết ở footer
-- [ ] **Giao diện/điều hướng:** Mở danh sách/chi tiết có nội dung và breadcrumb
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm Blog và tin bài liên kết ở footer
+- [x] **Giao diện/điều hướng:** Mở danh sách/chi tiết có nội dung và breadcrumb
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-007 · Chính sách đổi trả  [P1 · Guest]
-- [ ] **Thao tác:** Mở liên kết chính sách trả hàng/hủy đơn nếu hiển thị
-- [ ] **Giao diện/điều hướng:** Nội dung đọc được, link không 404, điều kiện không mâu thuẫn hành động UI
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở liên kết chính sách trả hàng/hủy đơn nếu hiển thị
+- [x] **Giao diện/điều hướng:** Nội dung đọc được, link không 404, điều kiện không mâu thuẫn hành động UI
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-008 · Chính sách bảo mật/điều khoản  [P1 · Guest]
-- [ ] **Thao tác:** Bấm từng link chính sách nếu có; mở tab mới
-- [ ] **Giao diện/điều hướng:** Tải được, không để link giả `#` hoặc javascript:void(0)
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm từng link chính sách nếu có; mở tab mới
+- [x] **Giao diện/điều hướng:** Tải được, không để link giả `#` hoặc javascript:void(0)
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-009 · Địa chỉ và số điện thoại  [P1 · Guest]
-- [ ] **Thao tác:** Bấm số hotline và vị trí/map nếu có
-- [ ] **Giao diện/điều hướng:** Đúng `tel:`/maps hoặc nội dung theo thiết kế; không dẫn sai
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm số hotline và vị trí/map nếu có
+- [x] **Giao diện/điều hướng:** Đúng `tel:`/maps hoặc nội dung theo thiết kế; không dẫn sai
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-010 · Email liên hệ  [P1 · Guest]
-- [ ] **Thao tác:** Bấm email hỗ trợ nếu có
-- [ ] **Giao diện/điều hướng:** Đúng mailto hoặc form hỗ trợ, không lỗi URL
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm email hỗ trợ nếu có
+- [x] **Giao diện/điều hướng:** Đúng mailto hoặc form hỗ trợ, không lỗi URL
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-011 · Social Facebook/Zalo/TikTok  [P1 · Guest]
-- [ ] **Thao tác:** Bấm từng icon hiện có, kiểm tra URL và tab
-- [ ] **Giao diện/điều hướng:** Đúng tài khoản doanh nghiệp, mở an toàn; không link placeholder
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm từng icon hiện có, kiểm tra URL và tab
+- [x] **Giao diện/điều hướng:** Đúng tài khoản doanh nghiệp, mở an toàn; không link placeholder
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-012 · Newsletter/đăng ký nhận tin  [P1 · Guest]
-- [ ] **Thao tác:** Nhập email hợp lệ rồi bấm gửi nếu có
-- [ ] **Giao diện/điều hướng:** Có xác nhận rõ; chỉ ghi khi đồng ý, chống submit trùng
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhập email hợp lệ rồi bấm gửi nếu có
+- [x] **Giao diện/điều hướng:** Có xác nhận rõ; chỉ ghi khi đồng ý, chống submit trùng
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-013 · Newsletter dữ liệu lỗi  [P1 · Guest]
-- [ ] **Thao tác:** Thử trống/sai email/ký tự lạ/double-click
-- [ ] **Giao diện/điều hướng:** Validation rõ ràng; không lưu email sai/trùng
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thử trống/sai email/ký tự lạ/double-click
+- [x] **Giao diện/điều hướng:** Validation rõ ràng; không lưu email sai/trùng
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-014 · Footer mobile  [P1 · Guest]
-- [ ] **Thao tác:** Cuộn đến footer ở 390px và 320px, mở các accordion nếu có
-- [ ] **Giao diện/điều hướng:** Không tràn ngang, link đủ bấm và độ tương phản tốt
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Cuộn đến footer ở 390px và 320px, mở các accordion nếu có
+- [x] **Giao diện/điều hướng:** Không tràn ngang, link đủ bấm và độ tương phản tốt
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-015 · Footer trang checkout  [P1 · Guest]
-- [ ] **Thao tác:** Cuộn cuối checkout khi có nhiều sản phẩm
-- [ ] **Giao diện/điều hướng:** Không che nút thanh toán sticky; chính sách vẫn mở được
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Cuộn cuối checkout khi có nhiều sản phẩm
+- [x] **Giao diện/điều hướng:** Không che nút thanh toán sticky; chính sách vẫn mở được
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-016 · Quay lên đầu trang  [P1 · Guest]
-- [ ] **Thao tác:** Bấm back-to-top nếu có
-- [ ] **Giao diện/điều hướng:** Scroll lên, không xóa dữ liệu form đang nhập
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Bấm back-to-top nếu có
+- [x] **Giao diện/điều hướng:** Scroll lên, không xóa dữ liệu form đang nhập
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ### UI-02-017 · Copyright/năm  [P1 · Guest]
-- [ ] **Thao tác:** Kiểm tra footer trên Home và route sâu
-- [ ] **Giao diện/điều hướng:** Không có năm/nội dung demo sai hoặc text bị vỡ
-- [ ] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra footer trên Home và route sâu
+- [x] **Giao diện/điều hướng:** Không có năm/nội dung demo sai hoặc text bị vỡ
+- [x] **Sau F5/Back/Forward:** Không lỗi, không biến mất sai state hoặc chuyển tới trang không liên quan.
+- [x] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
 
 ## GĐ-03 — Public: landing, nội dung, tìm kiếm & thông tin
 
