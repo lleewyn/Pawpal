@@ -300,8 +300,14 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
 let instance;
 function runtimeMode(env = process.env) {
     const mode = env.PAWPAL_SMS_MODE || 'demo';
+    const isProduction = env.VERCEL_ENV === 'production' || env.NODE_ENV === 'production' || env.VERCEL === '1';
+    if (['preview', 'console'].includes(mode)) {
+        if (isProduction) throw new Error('Không được phép sử dụng chế độ SMS giả lập trong môi trường Production.');
+        if (mode === 'preview' && !env.PAWPAL_AUTH_TEST_PHONES) throw new Error('Chế độ preview yêu cầu cấu hình danh sách số điện thoại thử nghiệm PAWPAL_AUTH_TEST_PHONES.');
+    }
     const allowedTestPhones = String(env.PAWPAL_AUTH_TEST_PHONES || '').split(',').map(p => p.trim()).filter(Boolean);
-    return { mode, allowedTestPhones, randomCode: () => '555666' };
+    const randomCode = mode === 'preview' ? () => '555666' : undefined;
+    return { mode, allowedTestPhones, randomCode };
 }
 function configured() {
     if (instance) return instance;

@@ -22,7 +22,7 @@ function fixture({ simulated = true, locked = false, staff = false, temporary = 
             async getUser(token) { return token === 'valid-token' ? { data: { user: { id: 'auth-1' } } } : { data: {}, error: new Error('Invalid token') }; },
             admin: {
                 async updateUserById(id, update) { writes.push(update); return { error: null }; },
-                async getUserById() { return { data: { user: { app_metadata: { pawpal_test: !realAccount } } } }; }
+                async getUserById() { return { data: { user: { email: 'customer-auth-1@demo.pawpal.invalid', app_metadata: { pawpal_test: !realAccount } } } }; }
             }
         }
     };
