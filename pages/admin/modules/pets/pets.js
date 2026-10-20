@@ -525,7 +525,7 @@
         const fetchAppts = async () => {
             const { data, error } = await client.from('appointment')
                 .select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_status, service:service_id(service_name)')
-                .in('appointment_status', ['da_hoan_tat', 'COMPLETED', 'da_hoan_thanh'])
+                .in('appointment_status', ['da_hoan_tat'])
                 .order('appointment_date', { ascending: false })
                 .limit(500);
 

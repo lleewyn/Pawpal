@@ -333,7 +333,7 @@ async function loadUpcomingBooking(user) {
             const { data, error } = await client.from('appointment')
                 .select('id, appointment_code, appointment_date, appointment_time, appointment_status, service:service_id(service_name), pet_profile:pet_id(pet_name)')
                 .eq('customer_id', user.id)
-                .in('appointment_status', ['cho_xac_nhan', 'da_xac_nhan', 'dang_thuc_hien', 'PENDING', 'CONFIRMED', 'IN_PROGRESS'])
+                .in('appointment_status', ['cho_xac_nhan', 'da_xac_nhan', 'dang_thuc_hien'])
                 .gte('appointment_date', new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()))
                 .order('appointment_date', { ascending: true })
                 .order('appointment_time', { ascending: true })

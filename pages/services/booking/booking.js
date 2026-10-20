@@ -1484,7 +1484,7 @@ async function refreshBusySlotsForDate(date) {
         const { data, error } = await db.from('appointment')
             .select('appointment_time')
             .eq('appointment_date', date)
-            .in('appointment_status', ['cho_xac_nhan', 'da_xac_nhan', 'da_check_in', 'dang_thuc_hien', 'PENDING', 'CONFIRMED']);
+            .in('appointment_status', ['cho_xac_nhan', 'da_xac_nhan', 'da_check_in', 'dang_thuc_hien']);
         if (error) throw error;
         bookedSlotsCache[date] = new Set((data || [])
             .map(r => (r.appointment_time || '').slice(0, 5))

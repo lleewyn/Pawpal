@@ -425,7 +425,7 @@
                     .from('appointment')
                     .select('id,appointment_code,pet_id,service_id,appointment_time,appointment_status')
                     .eq('appointment_date', currentScheduleDate)
-                    .in('appointment_status', ['da_xac_nhan', 'da_check_in', 'dang_thuc_hien', 'CONFIRMED', 'CHECKED_IN', 'IN_PROGRESS'])
+                    .in('appointment_status', ['da_xac_nhan', 'da_check_in', 'dang_thuc_hien'])
                     .order('appointment_time', { ascending: true });
                 if (error) throw error;
                 const petIds = [...new Set((appointments || []).map(item => item.pet_id).filter(Boolean))];
