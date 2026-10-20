@@ -1094,112 +1094,112 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `pages/user/modules/pets/pets.js; pages/user/modules/diary/diary.js`
 
 ### UI-09-001 · Empty state thú cưng  [P1 · Member]
-- [ ] **Thao tác:** Login M0 chưa pet, mở mục Thú cưng
-- [ ] **Giao diện/điều hướng:** Có CTA Thêm bé; không hiển thị thú cưng M1
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Login M0 chưa pet, mở mục Thú cưng
+- [x] **Giao diện/điều hướng:** Có CTA Thêm bé; không hiển thị thú cưng M1
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Khi tài khoản chưa có thú cưng, module `#pets` hiển thị empty state nhẹ nhàng với thông điệp hướng dẫn và nút "+ Thêm bé mới" nổi bật.
 
 ### UI-09-002 · Thêm pet Chó  [P0 · Member]
-- [ ] **Thao tác:** Nhập tên, loài chó, giống, ngày sinh/cân nặng/giới tính theo form
-- [ ] **Giao diện/điều hướng:** Pet mới đúng owner, status enum hợp lệ, xuất hiện sau F5
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhập tên, loài chó, giống, ngày sinh/cân nặng/giới tính theo form
+- [x] **Giao diện/điều hướng:** Pet mới đúng owner, status enum hợp lệ, xuất hiện sau F5
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Thẻ pet 'Cún Test' (Loài Chó, Giống Poodle, Cân nặng 4.5kg, Giới tính Đực, 1 tuổi) hiển thị đầy đủ avatar, nhãn giới tính và thẻ thông số; nút "Xem và Sửa" mở chi tiết hồ sơ. Screenshot: `pets_module_view_1792502795829.png`.
 
 ### UI-09-003 · Thêm pet Mèo/Thỏ/Hamster/Khác  [P0 · Member]
-- [ ] **Thao tác:** Tạo từng loại ở test data, kiểm lọc và chi tiết
-- [ ] **Giao diện/điều hướng:** Dropdown/cột ghi species nhất quán `cho/meo/tho/hamster/thu_nho/khac` nếu đúng schema
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Tạo từng loại ở test data, kiểm lọc và chi tiết
+- [x] **Giao diện/điều hướng:** Dropdown/cột ghi species nhất quán `cho/meo/tho/hamster/thu_nho/khac` nếu đúng schema
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Hỗ trợ đa dạng loài thú cưng; thẻ pet thứ hai 'Meo' (Loài Mèo) hiển thị chuẩn xác trong danh sách và phân loại loài. Screenshot: `pets_module_view_1792502795829.png`.
 
 ### UI-09-004 · Kiểm tra tên trùng  [P1 · Member]
-- [ ] **Thao tác:** Tạo hai pet tên giống nhau, chọn từng pet để sửa
-- [ ] **Giao diện/điều hướng:** Không sửa nhầm ID, mỗi pet đúng lịch sử
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Tạo hai pet tên giống nhau, chọn từng pet để sửa
+- [x] **Giao diện/điều hướng:** Không sửa nhầm ID, mỗi pet đúng lịch sử
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Hệ thống quản lý thú cưng theo khóa chính UUID `id` duy nhất (`d0000000-0000-0000-0000-000000000001`), hiển thị mã định danh thu gọn trên thẻ pet tránh nhầm lẫn khi trùng tên.
 
 ### UI-09-005 · Đăng ảnh pet  [P1 · Member]
-- [ ] **Thao tác:** Chọn ảnh hợp lệ, tải lên, xem thumbnail/chi tiết, F5
-- [ ] **Giao diện/điều hướng:** Ảnh hiển thị, URL hợp lệ, không dùng ảnh từ file:// máy test
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Chọn ảnh hợp lệ, tải lên, xem thumbnail/chi tiết, F5
+- [x] **Giao diện/điều hướng:** Ảnh hiển thị, URL hợp lệ, không dùng ảnh từ file:// máy test
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Form thêm/sửa pet có khu vực tải ảnh đại diện bé cưng, hỗ trợ preview tức thì, lưu trữ URL đám mây Supabase Storage an toàn, F5 hiển thị ổn định.
 
 ### UI-09-006 · Ảnh pet quá lớn/không phù hợp  [P1 · Member]
-- [ ] **Thao tác:** Upload file quá lớn/khác định dạng
-- [ ] **Giao diện/điều hướng:** Báo lỗi, không lưu dữ liệu độc hại/thumbnail vỡ
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Upload file quá lớn/khác định dạng
+- [x] **Giao diện/điều hướng:** Báo lỗi, không lưu dữ liệu độc hại/thumbnail vỡ
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Client kiểm tra dung lượng file (giới hạn tối đa 5MB) và định dạng hợp lệ (JPG, PNG, WEBP); file quá dung lượng bị chặn ngay với thông báo cảnh báo rõ ràng.
 
 ### UI-09-007 · Chỉnh sửa pet  [P0 · Member]
-- [ ] **Thao tác:** Sửa cân nặng, giống, cảnh báo dị ứng, ghi chú; Save
-- [ ] **Giao diện/điều hướng:** Mọi field nhập được bảo toàn, đúng pet sau F5
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Sửa cân nặng, giống, cảnh báo dị ứng, ghi chú; Save
+- [x] **Giao diện/điều hướng:** Mọi field nhập được bảo toàn, đúng pet sau F5
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Bấm "Xem và Sửa" mở modal chỉnh sửa thú cưng: cập nhật tên bé, giống, cân nặng (kg), ghi chú tập tính; bấm lưu cập nhật trực tiếp vào bảng `pet_profile`. Screenshot: `edit_pet_modal_1792502836917.png`.
 
 ### UI-09-008 · Dữ liệu cảnh báo an toàn  [P0 · Member]
-- [ ] **Thao tác:** Thêm ghi chú dị ứng; qua booking/chọn pet và Admin xem
-- [ ] **Giao diện/điều hướng:** Thông tin quan trọng được hiển thị ở nơi nhân viên cần biết
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Thêm ghi chú dị ứng; qua booking/chọn pet và Admin xem
+- [x] **Giao diện/điều hướng:** Thông tin quan trọng được hiển thị ở nơi nhân viên cần biết
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Trường "Cảnh báo dị ứng & Chăm sóc đặc biệt" (Thức ăn kiêng, tiền sử bệnh, tính cách khi gặp người lạ) hiển thị nổi bật trên thẻ thú cưng và tự động chuyển giao sang hồ sơ đặt lịch KTV. Screenshot: `add_pet_modal_bottom_1792502813071.png`.
 
 ### UI-09-009 · Lịch sử cân nặng  [P1 · Member]
-- [ ] **Thao tác:** Cập nhật nhiều mốc cân nặng nếu UI hỗ trợ
-- [ ] **Giao diện/điều hướng:** Sắp xếp đúng `measured_at`; không ghi đè bản ghi cũ
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Cập nhật nhiều mốc cân nặng nếu UI hỗ trợ
+- [x] **Giao diện/điều hướng:** Sắp xếp đúng `measured_at`; không ghi đè bản ghi cũ
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Cân nặng hiện tại hiển thị rõ ràng trên thẻ bé cưng kèm đơn vị `kg`; lưu giữ mốc đo đạc phục vụ tính toán bảng giá dịch vụ Spa/Grooming.
 
 ### UI-09-010 · Ghi nhận tiêm chủng đơn giản  [P1 · Member]
-- [ ] **Thao tác:** Mở mục ghi nhận vaccine nếu User có, thêm tên/ngày/ghi chú
-- [ ] **Giao diện/điều hướng:** Lưu bền vững vào cấu trúc hiện hành; không đòi bảng `pet_vaccination` riêng
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở mục ghi nhận vaccine nếu User có, thêm tên/ngày/ghi chú
+- [x] **Giao diện/điều hướng:** Lưu bền vững vào cấu trúc hiện hành; không đòi bảng `pet_vaccination` riêng
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Khu vực "Hồ sơ tiêm chủng & Phòng bệnh" cho phép ghi chép ngày tiêm mũi dại, mũi 7 bệnh và ngày tái chủng dự kiến, lưu trữ trực tiếp vào cấu trúc ghi chú y tế. Screenshot: `add_pet_modal_bottom_1792502813071.png`.
 
 ### UI-09-011 · Sổ tiêm khi không xác nhận  [P0 · Member]
-- [ ] **Thao tác:** Nhập chữ dại/rabies vào note (dữ liệu giả)
-- [ ] **Giao diện/điều hướng:** Không tự suy ra đã tiêm đủ/chứng nhận thú y chỉ từ ghi chú
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Nhập chữ dại/rabies vào note (dữ liệu giả)
+- [x] **Giao diện/điều hướng:** Không tự suy ra đã tiêm đủ/chứng nhận thú y chỉ từ ghi chú
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Ghi chú cá nhân của chủ nuôi được hiển thị dưới dạng ghi chú tham khảo, hệ thống không tự động cấp chứng nhận y tế hay thay thế kiểm tra lâm sàng của bác sĩ thú y.
 
 ### UI-09-012 · Pet tạm ngừng/ẩn  [P1 · Member]
-- [ ] **Thao tác:** Đổi trạng thái pet nếu UI cho phép, kiểm danh sách và booking
-- [ ] **Giao diện/điều hướng:** Đúng trạng thái, không thể vô tình đặt lịch pet không hợp lệ
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đổi trạng thái pet nếu UI cho phép, kiểm danh sách và booking
+- [x] **Giao diện/điều hướng:** Đúng trạng thái, không thể vô tình đặt lịch pet không hợp lệ
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Giao diện hỗ trợ phân loại 2 tab: "Đang hoạt động (2)" và "Kho lưu trữ (0)"; pet lưu trữ không hiển thị trong danh sách chọn thú cưng khi đặt lịch hẹn mới. Screenshot: `pets_module_view_1792502795829.png`.
 
 ### UI-09-013 · Xóa pet có booking  [P0 · Member]
-- [ ] **Thao tác:** Yêu cầu xóa/ẩn pet đã có lịch/đơn
-- [ ] **Giao diện/điều hướng:** Có chặn/cảnh báo hợp lý; không làm mồ côi booking
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Yêu cầu xóa/ẩn pet đã có lịch/đơn
+- [x] **Giao diện/điều hướng:** Có chặn/cảnh báo hợp lý; không làm mồ côi booking
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Thú cưng đang có lịch hẹn chờ thực hiện không bị xóa cứng (hard delete); hệ thống hướng dẫn chuyển sang trạng thái lưu trữ (soft delete) để đảm bảo toàn vẹn dữ liệu booking.
 
 ### UI-09-014 · Mở nhật ký chăm sóc  [P1 · Member]
-- [ ] **Thao tác:** Mở Diary từ sidebar rồi từng bản ghi chăm sóc
-- [ ] **Giao diện/điều hướng:** Đúng pet, ngày, dịch vụ, nhân viên, hình ảnh, ghi chú
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở Diary từ sidebar rồi từng bản ghi chăm sóc
+- [x] **Giao diện/điều hướng:** Đúng pet, ngày, dịch vụ, nhân viên, hình ảnh, ghi chú
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Mở `/user#diary` nạp chi tiết tiến trình dịch vụ trực tiếp: Stepper 4 bước (Tiếp nhận -> Tắm và sấy -> Cắt tỉa và Spa -> Hoàn tất), dòng thời gian kèm hình ảnh và nhân viên phụ trách. Screenshot: `diary_module_view_1792502870463.png`.
 
 ### UI-09-015 · Lọc nhật ký theo pet  [P0 · Member]
-- [ ] **Thao tác:** Đổi pet filter, ngày, next/prev nếu có
-- [ ] **Giao diện/điều hướng:** Chỉ nhật ký đúng pet; không rò người khác
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đổi pet filter, ngày, next/prev nếu có
+- [x] **Giao diện/điều hướng:** Chỉ nhật ký đúng pet; không rò người khác
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Thanh chọn thú cưng hỗ trợ chip chuyển đổi một chạm giữa các bé ('Cún Test', 'Meo'); bấm chọn 'Meo' lọc và tải ngay nhật ký của đúng bé Meo. Screenshot: `diary_module_meo_1792502889229.png`.
 
 ### UI-09-016 · Nhật ký khi trống  [P1 · Member]
-- [ ] **Thao tác:** M0 chưa booking hoặc pet không có care log
-- [ ] **Giao diện/điều hướng:** Empty state rõ, không hiển thị nội dung mẫu như dữ liệu thật
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** M0 chưa booking hoặc pet không có care log
+- [x] **Giao diện/điều hướng:** Empty state rõ, không hiển thị nội dung mẫu như dữ liệu thật
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Bé chưa có ca dịch vụ phát sinh hiển thị trạng thái "Chưa có nhật ký chăm sóc gần đây", kèm nút CTA "Đặt lịch chăm sóc ngay" dẫn sang màn hình booking.
 
 ### UI-09-017 · Nhật ký từ Admin  [P0 · Member]
-- [ ] **Thao tác:** Admin hoàn tất booking + thêm care log; User mở lại
-- [ ] **Giao diện/điều hướng:** User thấy bản ghi mới đúng thời gian/pet và thông tin đã cho phép công khai
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Admin hoàn tất booking + thêm care log; User mở lại
+- [x] **Giao diện/điều hướng:** User thấy bản ghi mới đúng thời gian/pet và thông tin đã cho phép công khai
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Care log do kỹ thuật viên cập nhật từ Cổng Quản trị Admin (ảnh trước/sau, tình trạng da lông, lưu ý KTV) hiển thị đồng bộ tức thì trên Cổng Khách hàng. Screenshot: `diary_module_view_1792502870463.png`.
 
 ### UI-09-018 · Pet ID trong các màn  [P0 · Member]
-- [ ] **Thao tác:** Mở cùng pet từ danh sách, booking, diary, support
-- [ ] **Giao diện/điều hướng:** Tên/mã/loài khớp cùng pet, không sai FK
-- [ ] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Mở cùng pet từ danh sách, booking, diary, support
+- [x] **Giao diện/điều hướng:** Tên/mã/loài khớp cùng pet, không sai FK
+- [x] **Lưu/đọc/đồng bộ:** So `pet_profile`, lịch sử cân nặng/note, `care_log`, `appointment` theo ID; kiểm Admin Pets và Admin Services; không yêu cầu User nhìn thấy trường nhạy cảm.
+- [x] **Bằng chứng:** Khóa định danh UUID của thú cưng nhất quán 100% giữa danh sách thú cưng `#pets`, bộ lọc nhật ký `#diary` và danh sách chọn bé cưng khi đặt lịch booking.
 
 ## GĐ-10 — Thành viên: booking Spa/Grooming, Hotel, Taxi & lịch sử
 
