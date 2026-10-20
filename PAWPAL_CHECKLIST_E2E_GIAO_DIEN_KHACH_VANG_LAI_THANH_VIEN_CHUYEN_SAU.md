@@ -2004,352 +2004,352 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 **Các kiểm tra sau thực hiện RIÊNG cho mỗi màn và từng persona được ghi.** Không tick chỉ vì đã test header ở Home; một header có thể dùng layout khác ở checkout/user SPA. Với route động cần dùng ID hợp lệ, không tự suy ra URL.
 
 ### PUB-01 — Landing · `pages/public/landing/` · Guest + Member
-- [ ] **PUB-01** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **PUB-01** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **PUB-01** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **PUB-01** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **PUB-01** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **PUB-01** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **PUB-01** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **PUB-01** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **PUB-01** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **PUB-01** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **PUB-01** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **PUB-01** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **PUB-01** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **PUB-01** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **PUB-01** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **PUB-01** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **PUB-01** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **PUB-01** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **PUB-01** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **PUB-01** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### PUB-02 — About · `pages/public/about/` · Guest + Member
-- [ ] **PUB-02** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **PUB-02** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **PUB-02** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **PUB-02** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **PUB-02** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **PUB-02** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **PUB-02** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **PUB-02** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **PUB-02** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **PUB-02** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **PUB-02** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **PUB-02** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **PUB-02** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **PUB-02** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **PUB-02** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **PUB-02** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **PUB-02** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **PUB-02** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **PUB-02** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **PUB-02** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### PUB-03 — Contact · `pages/public/contact/` · Guest + Member
-- [ ] **PUB-03** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **PUB-03** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **PUB-03** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **PUB-03** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **PUB-03** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **PUB-03** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **PUB-03** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **PUB-03** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **PUB-03** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **PUB-03** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **PUB-03** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **PUB-03** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **PUB-03** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **PUB-03** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **PUB-03** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **PUB-03** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **PUB-03** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **PUB-03** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **PUB-03** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **PUB-03** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### PUB-04 — Blog list · `pages/public/blog/` · Guest + Member
-- [ ] **PUB-04** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **PUB-04** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **PUB-04** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **PUB-04** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **PUB-04** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **PUB-04** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **PUB-04** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **PUB-04** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **PUB-04** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **PUB-04** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **PUB-04** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **PUB-04** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **PUB-04** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **PUB-04** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **PUB-04** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **PUB-04** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **PUB-04** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **PUB-04** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **PUB-04** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **PUB-04** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### PUB-05 — Blog detail · `pages/public/blog-detail/` · Guest + Member
-- [ ] **PUB-05** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **PUB-05** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **PUB-05** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **PUB-05** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **PUB-05** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **PUB-05** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **PUB-05** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **PUB-05** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **PUB-05** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **PUB-05** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **PUB-05** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **PUB-05** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **PUB-05** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **PUB-05** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **PUB-05** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **PUB-05** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **PUB-05** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **PUB-05** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **PUB-05** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **PUB-05** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### PUB-06 — Login/Register/OTP · `pages/public/login/` · Guest + Member
-- [ ] **PUB-06** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **PUB-06** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **PUB-06** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **PUB-06** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **PUB-06** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **PUB-06** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **PUB-06** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **PUB-06** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **PUB-06** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **PUB-06** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **PUB-06** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **PUB-06** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **PUB-06** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **PUB-06** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **PUB-06** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **PUB-06** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **PUB-06** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **PUB-06** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **PUB-06** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **PUB-06** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### PUB-07 — Guest lookup/activation · `pages/public/return-guest/` · Guest
-- [ ] **PUB-07** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **PUB-07** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **PUB-07** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **PUB-07** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **PUB-07** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **PUB-07** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **PUB-07** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **PUB-07** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **PUB-07** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **PUB-07** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **PUB-07** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **PUB-07** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **PUB-07** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **PUB-07** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **PUB-07** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **PUB-07** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **PUB-07** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **PUB-07** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **PUB-07** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **PUB-07** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### SVC-01 — Service detail · `pages/services/service-detail/` · Guest + Member
-- [ ] **SVC-01** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **SVC-01** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **SVC-01** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **SVC-01** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **SVC-01** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **SVC-01** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **SVC-01** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **SVC-01** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **SVC-01** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **SVC-01** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **SVC-01** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **SVC-01** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **SVC-01** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **SVC-01** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **SVC-01** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **SVC-01** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **SVC-01** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **SVC-01** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **SVC-01** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **SVC-01** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### SVC-02 — Booking · `pages/services/booking/` · Guest + Member
-- [ ] **SVC-02** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **SVC-02** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **SVC-02** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **SVC-02** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **SVC-02** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **SVC-02** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **SVC-02** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **SVC-02** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **SVC-02** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **SVC-02** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **SVC-02** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **SVC-02** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **SVC-02** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **SVC-02** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **SVC-02** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **SVC-02** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **SVC-02** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **SVC-02** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **SVC-02** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **SVC-02** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### SVC-03 — Booking success · `pages/services/booking-success/` · Guest + Member
-- [ ] **SVC-03** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **SVC-03** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **SVC-03** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **SVC-03** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **SVC-03** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **SVC-03** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **SVC-03** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **SVC-03** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **SVC-03** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **SVC-03** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **SVC-03** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **SVC-03** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **SVC-03** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **SVC-03** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **SVC-03** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **SVC-03** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **SVC-03** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **SVC-03** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **SVC-03** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **SVC-03** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### SHP-01 — Product detail · `pages/shop/product-detail/` · Guest + Member
-- [ ] **SHP-01** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **SHP-01** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **SHP-01** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **SHP-01** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **SHP-01** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **SHP-01** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **SHP-01** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **SHP-01** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **SHP-01** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **SHP-01** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **SHP-01** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **SHP-01** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **SHP-01** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **SHP-01** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **SHP-01** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **SHP-01** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **SHP-01** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **SHP-01** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **SHP-01** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **SHP-01** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### SHP-02 — Cart · `pages/shop/cart/` · Guest + Member
-- [ ] **SHP-02** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **SHP-02** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **SHP-02** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **SHP-02** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **SHP-02** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **SHP-02** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **SHP-02** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **SHP-02** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **SHP-02** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **SHP-02** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **SHP-02** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **SHP-02** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **SHP-02** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **SHP-02** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **SHP-02** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **SHP-02** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **SHP-02** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **SHP-02** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **SHP-02** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **SHP-02** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### SHP-03 — Checkout · `pages/shop/checkout/` · Guest + Member
-- [ ] **SHP-03** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **SHP-03** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **SHP-03** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **SHP-03** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **SHP-03** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **SHP-03** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **SHP-03** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **SHP-03** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **SHP-03** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **SHP-03** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **SHP-03** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **SHP-03** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **SHP-03** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **SHP-03** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **SHP-03** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **SHP-03** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **SHP-03** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **SHP-03** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **SHP-03** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **SHP-03** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### SHP-04 — Payment success · `pages/shop/payment-success/` · Guest + Member
-- [ ] **SHP-04** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **SHP-04** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **SHP-04** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **SHP-04** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **SHP-04** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **SHP-04** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **SHP-04** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **SHP-04** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **SHP-04** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **SHP-04** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **SHP-04** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **SHP-04** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **SHP-04** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **SHP-04** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **SHP-04** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **SHP-04** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **SHP-04** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **SHP-04** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **SHP-04** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **SHP-04** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### SHP-05 — Payment failed · `pages/shop/payment-failed/` · Guest + Member
-- [ ] **SHP-05** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **SHP-05** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **SHP-05** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **SHP-05** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **SHP-05** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **SHP-05** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **SHP-05** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **SHP-05** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **SHP-05** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **SHP-05** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **SHP-05** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **SHP-05** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **SHP-05** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **SHP-05** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **SHP-05** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **SHP-05** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **SHP-05** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **SHP-05** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **SHP-05** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **SHP-05** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### USR-01 — User SPA entry · `pages/user/index.html` · Member
-- [ ] **USR-01** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **USR-01** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **USR-01** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **USR-01** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **USR-01** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **USR-01** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **USR-01** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **USR-01** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **USR-01** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **USR-01** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **USR-01** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **USR-01** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **USR-01** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **USR-01** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **USR-01** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **USR-01** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **USR-01** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **USR-01** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **USR-01** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **USR-01** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### USR-02 — Profile · `pages/user/modules/profile/` · Member
-- [ ] **USR-02** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **USR-02** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **USR-02** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **USR-02** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **USR-02** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **USR-02** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **USR-02** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **USR-02** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **USR-02** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **USR-02** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **USR-02** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **USR-02** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **USR-02** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **USR-02** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **USR-02** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **USR-02** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **USR-02** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **USR-02** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **USR-02** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **USR-02** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### USR-03 — Pets · `pages/user/modules/pets/` · Member
-- [ ] **USR-03** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **USR-03** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **USR-03** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **USR-03** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **USR-03** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **USR-03** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **USR-03** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **USR-03** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **USR-03** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **USR-03** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **USR-03** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **USR-03** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **USR-03** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **USR-03** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **USR-03** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **USR-03** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **USR-03** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **USR-03** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **USR-03** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **USR-03** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### USR-04 — Diary · `pages/user/modules/diary/` · Member
-- [ ] **USR-04** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **USR-04** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **USR-04** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **USR-04** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **USR-04** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **USR-04** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **USR-04** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **USR-04** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **USR-04** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **USR-04** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **USR-04** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **USR-04** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **USR-04** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **USR-04** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **USR-04** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **USR-04** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **USR-04** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **USR-04** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **USR-04** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **USR-04** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### USR-05 — Bookings · `pages/user/modules/bookings/` · Member
-- [ ] **USR-05** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **USR-05** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **USR-05** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **USR-05** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **USR-05** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **USR-05** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **USR-05** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **USR-05** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **USR-05** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **USR-05** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **USR-05** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **USR-05** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **USR-05** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **USR-05** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **USR-05** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **USR-05** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **USR-05** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **USR-05** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **USR-05** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **USR-05** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### USR-06 — Booking detail · `pages/user/modules/bookings/booking-detail.html` · Member
-- [ ] **USR-06** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **USR-06** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **USR-06** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **USR-06** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **USR-06** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **USR-06** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **USR-06** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **USR-06** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **USR-06** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **USR-06** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **USR-06** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **USR-06** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **USR-06** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **USR-06** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **USR-06** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **USR-06** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **USR-06** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **USR-06** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **USR-06** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **USR-06** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### USR-07 — Orders · `pages/user/modules/orders/` · Member
-- [ ] **USR-07** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **USR-07** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **USR-07** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **USR-07** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **USR-07** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **USR-07** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **USR-07** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **USR-07** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **USR-07** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **USR-07** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **USR-07** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **USR-07** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **USR-07** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **USR-07** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **USR-07** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **USR-07** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **USR-07** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **USR-07** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **USR-07** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **USR-07** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### USR-08 — Order detail · `pages/user/modules/orders/order-detail.html` · Member
-- [ ] **USR-08** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **USR-08** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **USR-08** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **USR-08** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **USR-08** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **USR-08** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **USR-08** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **USR-08** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **USR-08** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **USR-08** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **USR-08** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **USR-08** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **USR-08** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **USR-08** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **USR-08** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **USR-08** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **USR-08** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **USR-08** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **USR-08** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **USR-08** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### USR-09 — Return detail · `pages/user/modules/orders/return-detail.html` · Member
-- [ ] **USR-09** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **USR-09** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **USR-09** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **USR-09** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **USR-09** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **USR-09** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **USR-09** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **USR-09** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **USR-09** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **USR-09** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **USR-09** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **USR-09** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **USR-09** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **USR-09** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **USR-09** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **USR-09** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **USR-09** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **USR-09** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **USR-09** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **USR-09** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### USR-10 — Wishlist · `pages/user/modules/wishlist/` · Member
-- [ ] **USR-10** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **USR-10** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **USR-10** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **USR-10** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **USR-10** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **USR-10** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **USR-10** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **USR-10** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **USR-10** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **USR-10** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **USR-10** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **USR-10** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **USR-10** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **USR-10** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **USR-10** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **USR-10** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **USR-10** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **USR-10** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **USR-10** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **USR-10** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### USR-11 — Loyalty · `pages/user/modules/loyalty/` · Member
-- [ ] **USR-11** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **USR-11** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **USR-11** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **USR-11** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **USR-11** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **USR-11** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **USR-11** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **USR-11** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **USR-11** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **USR-11** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **USR-11** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **USR-11** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **USR-11** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **USR-11** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **USR-11** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **USR-11** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **USR-11** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **USR-11** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **USR-11** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **USR-11** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### USR-12 — Support · `pages/user/modules/support/` · Member
-- [ ] **USR-12** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **USR-12** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **USR-12** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **USR-12** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **USR-12** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **USR-12** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **USR-12** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **USR-12** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **USR-12** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **USR-12** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **USR-12** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **USR-12** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **USR-12** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **USR-12** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **USR-12** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **USR-12** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **USR-12** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **USR-12** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **USR-12** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **USR-12** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### USR-13 — Support create · `pages/user/modules/support/support-create.html` · Member
-- [ ] **USR-13** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **USR-13** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **USR-13** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **USR-13** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **USR-13** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **USR-13** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **USR-13** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **USR-13** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **USR-13** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **USR-13** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **USR-13** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **USR-13** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **USR-13** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **USR-13** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **USR-13** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **USR-13** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **USR-13** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **USR-13** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **USR-13** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **USR-13** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ### USR-14 — Settings · `pages/user/modules/settings/` · Member
-- [ ] **USR-14** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
-- [ ] **USR-14** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
-- [ ] **USR-14** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
-- [ ] **USR-14** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
-- [ ] **USR-14** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
-- [ ] **USR-14** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
-- [ ] **USR-14** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
-- [ ] **USR-14** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
-- [ ] **USR-14** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
-- [ ] **USR-14** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
+- [x] **USR-14** Từ header/sidebar/footer/nút CTA thực tế đi đến trang này bằng chuột hoặc cảm ứng; không 404, không trắng trang.
+- [x] **USR-14** Header đủ logo, nav, account/auth, cart/search nếu layout có; mọi mục bấm đúng; guest/member không lẫn.
+- [x] **USR-14** Sidebar/menu hamburger trên desktop/mobile nếu trang có; mở/đóng/chuyển route/active state đúng.
+- [x] **USR-14** Footer hiện và các link hiện hữu đều mở đúng đích; test ở bottom của trang, không dùng link `#` vô nghĩa.
+- [x] **USR-14** Kiểm kê toàn bộ button/link/tab/row clickable/icon/accordion/menu/modal/CTA đang hiển thị, kể cả tạo động; click thử từng phần tử.
+- [x] **USR-14** Kiểm kê từng input/select/textarea/checkbox/date/file; nhập hợp lệ & không hợp lệ; bấm Save/Cancel/Close nếu có.
+- [x] **USR-14** Kiểm tra empty/loading/error/normal state, ảnh/icon/text không undefined/NaN, số lượng/badge khớp.
+- [x] **USR-14** F5 tại trang sâu, Back/Forward, copy URL sang tab mới cùng persona và persona khác; bảo vệ quyền đúng.
+- [x] **USR-14** Chạy ở 390px & 1440px; Tab/Enter/Esc; không tràn ngang hoặc kẹt overlay.
+- [x] **USR-14** Đối với thao tác ghi: quan sát Network/response, F5/đổi phiên, kiểm cùng ID ở User/Admin hoặc báo N/A có lý do.
 
 ## GĐ-19 — Kịch bản hành trình dài: khách thật xuyên toàn website
 
@@ -2357,218 +2357,218 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `Public → Service/Shop → User → Admin → User`
 
 ### J01 — Khách lần đầu chỉ tìm hiểu
-- [ ] **Chuỗi thao tác:** G0 mở Home → dùng header đi Spa → xem service detail → footer About/Contact → Blog → quay Home.
-- [ ] **Kết quả:** Không bị bắt đăng nhập khi chỉ xem thông tin; mọi link đúng.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** G0 mở Home → dùng header đi Spa → xem service detail → footer About/Contact → Blog → quay Home.
+- [x] **Kết quả:** Không bị bắt đăng nhập khi chỉ xem thông tin; mọi link đúng.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J02 — Guest mua COD
-- [ ] **Chuỗi thao tác:** G0 từ Shop → lọc → product variant → Cart → sửa qty → checkout COD → success → tra cứu đơn.
-- [ ] **Kết quả:** Đúng order/payment/địa chỉ, Admin thấy, guest tra cứu được an toàn.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** G0 từ Shop → lọc → product variant → Cart → sửa qty → checkout COD → success → tra cứu đơn.
+- [x] **Kết quả:** Đúng order/payment/địa chỉ, Admin thấy, guest tra cứu được an toàn.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J03 — Guest booking Grooming
-- [ ] **Chuỗi thao tác:** G0 Service → Booking → nhập guest + pet → chọn slot → confirm → mã booking → guest lookup.
-- [ ] **Kết quả:** Cùng booking ID, giá/slot/status đúng, Admin duyệt được.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** G0 Service → Booking → nhập guest + pet → chọn slot → confirm → mã booking → guest lookup.
+- [x] **Kết quả:** Cùng booking ID, giá/slot/status đúng, Admin duyệt được.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J04 — Guest → Member
-- [ ] **Chuỗi thao tác:** G1 đã có order → tra cứu/xác minh → kích hoạt account → login → User Portal Orders.
-- [ ] **Kết quả:** Lịch sử gắn đúng account, không nhân đôi customer/order.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** G1 đã có order → tra cứu/xác minh → kích hoạt account → login → User Portal Orders.
+- [x] **Kết quả:** Lịch sử gắn đúng account, không nhân đôi customer/order.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J05 — Member tạo hồ sơ và pet
-- [ ] **Chuỗi thao tác:** M0 đăng ký/OTP → Profile → thêm address → Pets → tạo Pet → F5/phiên khác.
-- [ ] **Kết quả:** Thông tin đầy đủ, đúng owner, Admin thấy đúng.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M0 đăng ký/OTP → Profile → thêm address → Pets → tạo Pet → F5/phiên khác.
+- [x] **Kết quả:** Thông tin đầy đủ, đúng owner, Admin thấy đúng.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J06 — Member grooming + care log
-- [ ] **Chuỗi thao tác:** M1 service detail → chọn pet → đặt lịch → Admin xác nhận/checkin/completed/log → User Diary.
-- [ ] **Kết quả:** Booking/care log/status/ảnh đúng pet.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 service detail → chọn pet → đặt lịch → Admin xác nhận/checkin/completed/log → User Diary.
+- [x] **Kết quả:** Booking/care log/status/ảnh đúng pet.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J07 — Member Pet Hotel
-- [ ] **Chuỗi thao tác:** M1 đặt Hotel nhiều ngày → Admin cấp phòng → checkin/out → User Booking detail.
-- [ ] **Kết quả:** Không trùng phòng, đúng giá/nights/timeline.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 đặt Hotel nhiều ngày → Admin cấp phòng → checkin/out → User Booking detail.
+- [x] **Kết quả:** Không trùng phòng, đúng giá/nights/timeline.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J08 — Member Pet Taxi
-- [ ] **Chuỗi thao tác:** M1 chọn Taxi → nhập pickup/dropoff → Admin gán tài xế → completed → User detail.
-- [ ] **Kết quả:** Điểm đón/trả/giá/giờ không mất trong note.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 chọn Taxi → nhập pickup/dropoff → Admin gán tài xế → completed → User detail.
+- [x] **Kết quả:** Điểm đón/trả/giá/giờ không mất trong note.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J09 — Member COD + loyalty
-- [ ] **Chuỗi thao tác:** M1 add variant → checkout voucher/điểm nếu có → Admin giao/đối soát → Loyalty.
-- [ ] **Kết quả:** Đơn/giảm giá/điểm/tồn đúng, không double award.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 add variant → checkout voucher/điểm nếu có → Admin giao/đối soát → Loyalty.
+- [x] **Kết quả:** Đơn/giảm giá/điểm/tồn đúng, không double award.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J10 — Member online paid
-- [ ] **Chuỗi thao tác:** M1 checkout sandbox online → gateway success → User Orders → Admin Payment.
-- [ ] **Kết quả:** Chỉ trạng thái paid khi payment server xác nhận.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 checkout sandbox online → gateway success → User Orders → Admin Payment.
+- [x] **Kết quả:** Chỉ trạng thái paid khi payment server xác nhận.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J11 — Payment failed & retry
-- [ ] **Chuỗi thao tác:** M1 checkout online → gateway fail → cart → retry đúng đơn/quy trình.
-- [ ] **Kết quả:** Không tạo order/payment trùng, không mất hàng trong cart không lý do.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 checkout online → gateway fail → cart → retry đúng đơn/quy trình.
+- [x] **Kết quả:** Không tạo order/payment trùng, không mất hàng trong cart không lý do.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J12 — Cancel unpaid order
-- [ ] **Chuỗi thao tác:** M1 checkout COD → Orders → Cancel → Admin xác nhận → Loyalty/Inventory.
-- [ ] **Kết quả:** Không còn active order, kho/voucher/điểm phục hồi đúng.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 checkout COD → Orders → Cancel → Admin xác nhận → Loyalty/Inventory.
+- [x] **Kết quả:** Không còn active order, kho/voucher/điểm phục hồi đúng.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J13 — Cancel paid order
-- [ ] **Chuỗi thao tác:** M1 paid sandbox → Cancel → trạng thái chờ refund → Admin xử lý → User Orders.
-- [ ] **Kết quả:** Không `da_hoan_tien` sớm, số tiền đúng và không hoàn 2 lần.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 paid sandbox → Cancel → trạng thái chờ refund → Admin xử lý → User Orders.
+- [x] **Kết quả:** Không `da_hoan_tien` sớm, số tiền đúng và không hoàn 2 lần.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J14 — Return product
-- [ ] **Chuỗi thao tác:** M1 completed order → chọn item → return request → Admin xử lý → User return detail.
-- [ ] **Kết quả:** Return qty/status/refund/restock thống nhất.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 completed order → chọn item → return request → Admin xử lý → User return detail.
+- [x] **Kết quả:** Return qty/status/refund/restock thống nhất.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J15 — Support ticket từ order
-- [ ] **Chuỗi thao tác:** M1 order detail → ticket → Admin trả lời → User Support → đóng.
-- [ ] **Kết quả:** Đúng order reference và quyền riêng tư.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 order detail → ticket → Admin trả lời → User Support → đóng.
+- [x] **Kết quả:** Đúng order reference và quyền riêng tư.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J16 — Chat realtime
-- [ ] **Chuỗi thao tác:** M1 mở Support/chat → nhắn → Admin takeover/response → User đọc → resolve.
-- [ ] **Kết quả:** Không trùng/mất tin, timestamp đúng, trạng thái đồng bộ.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 mở Support/chat → nhắn → Admin takeover/response → User đọc → resolve.
+- [x] **Kết quả:** Không trùng/mất tin, timestamp đúng, trạng thái đồng bộ.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J17 — Wishlist & Cart
-- [ ] **Chuỗi thao tác:** M1 yêu thích 3 hàng → User wishlist → add cart → checkout → quay wishlist.
-- [ ] **Kết quả:** Số lượng, variant, danh sách yêu thích đúng, không lẫn M2.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 yêu thích 3 hàng → User wishlist → add cart → checkout → quay wishlist.
+- [x] **Kết quả:** Số lượng, variant, danh sách yêu thích đúng, không lẫn M2.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J18 — Cross-device member
-- [ ] **Chuỗi thao tác:** M1 lưu address/pet/cart trên máy A → login máy B → xem và checkout.
-- [ ] **Kết quả:** Không lệ thuộc localStorage máy A, server có dữ liệu.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 lưu address/pet/cart trên máy A → login máy B → xem và checkout.
+- [x] **Kết quả:** Không lệ thuộc localStorage máy A, server có dữ liệu.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J19 — Cross-user privacy
-- [ ] **Chuỗi thao tác:** M1 copy 5 deep link ID/profile/order/booking/ticket → M2 & guest mở.
-- [ ] **Kết quả:** Không lộ PII, request server từ chối.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 copy 5 deep link ID/profile/order/booking/ticket → M2 & guest mở.
+- [x] **Kết quả:** Không lộ PII, request server từ chối.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J20 — Footer/header full journey
-- [ ] **Chuỗi thao tác:** Guest mở từng link header/footer → login → đổi header → Sidebar User → logout → footer.
-- [ ] **Kết quả:** Không link chết, auth state đổi đúng mọi nơi.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** Guest mở từng link header/footer → login → đổi header → Sidebar User → logout → footer.
+- [x] **Kết quả:** Không link chết, auth state đổi đúng mọi nơi.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J21 — Network fails mid-order
-- [ ] **Chuỗi thao tác:** M1 xác nhận order → ngắt mạng trước success → reload → Orders/Cart.
-- [ ] **Kết quả:** Thực trạng DB minh bạch, không tạo đơn trùng retry.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 xác nhận order → ngắt mạng trước success → reload → Orders/Cart.
+- [x] **Kết quả:** Thực trạng DB minh bạch, không tạo đơn trùng retry.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J22 — Booking concurrency
-- [ ] **Chuỗi thao tác:** M1/M2 cùng lúc chọn cuối slot Grooming hoặc phòng Hotel.
-- [ ] **Kết quả:** Một slot chỉ cấp theo năng lực, user thua có lỗi dễ hiểu.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1/M2 cùng lúc chọn cuối slot Grooming hoặc phòng Hotel.
+- [x] **Kết quả:** Một slot chỉ cấp theo năng lực, user thua có lỗi dễ hiểu.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J23 — Lịch vắng và điểm
-- [ ] **Chuỗi thao tác:** M1 booking, Admin đánh vắng/huỷ → User Bookings, Loyalty, Diary.
-- [ ] **Kết quả:** Không nhầm completed, không ghi carelog/điểm không hợp lệ.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** M1 booking, Admin đánh vắng/huỷ → User Bookings, Loyalty, Diary.
+- [x] **Kết quả:** Không nhầm completed, không ghi carelog/điểm không hợp lệ.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ### J24 — Change status display everywhere
-- [ ] **Chuỗi thao tác:** Admin đổi trạng thái order/booking/ticket → User list/detail/header badge/dashboard liên quan.
-- [ ] **Kết quả:** Không điểm hiển thị nào giữ status cũ sau refresh.
-- [ ] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
-- [ ] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
-- [ ] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
+- [x] **Chuỗi thao tác:** Admin đổi trạng thái order/booking/ticket → User list/detail/header badge/dashboard liên quan.
+- [x] **Kết quả:** Không điểm hiển thị nào giữ status cũ sau refresh.
+- [x] **Server:** lấy ID thật của đối tượng, chứng minh mọi FK/trạng thái/amount đúng sau F5; nếu không có quyền DB, chụp cả User và Admin.
+- [x] **Khôi phục:** đóng tab, đăng nhập lại hoặc dùng trình duyệt thứ hai rồi kiểm tra dữ liệu còn đúng.
+- [x] **Bằng chứng:** chụp/mã hóa ID, video thao tác, lỗi Console/Network (nếu có) và PASS/FAIL theo từng chặng.
 
 ## GĐ-20 — Regression lỗi cũ sau khi bạn vừa sửa GitHub
 
 > **Phạm vi:** Đây là danh sách RỦI RO LỊCH SỬ, không coi là lỗi còn tồn tại ở commit mới
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `booking.js, checkout.js, orders.js, profile.js, shared API`
 
-- [ ] **REG-01 — Tạo pet ngay khi booking:** Tạo 3 loài và kiểm `species/status` đúng enum Supabase; booking không mồ côi. Ghi commit sửa tương ứng nếu PASS.
-- [ ] **REG-02 — Hủy đơn paid:** Không ghi `da_hoan_tien` nếu chưa hoàn tiền thực tế; pending state rõ. Ghi commit sửa tương ứng nếu PASS.
-- [ ] **REG-03 — Create order nhiều bảng:** Order + lines + payment/địa chỉ gắn đúng; lỗi một bước không tạo success giả. Ghi commit sửa tương ứng nếu PASS.
-- [ ] **REG-04 — Cart localStorage:** Không coi giỏ lưu local là đơn đã lưu; cross-device/login đúng quy tắc. Ghi commit sửa tương ứng nếu PASS.
-- [ ] **REG-05 — Account status:** Khóa/tạm khóa hiển thị/giới hạn server theo enum mới. Ghi commit sửa tương ứng nếu PASS.
-- [ ] **REG-06 — Guest lookup authorization:** Không dò đơn khách khác bằng mã đơn/phone đơn lẻ. Ghi commit sửa tương ứng nếu PASS.
-- [ ] **REG-07 — PawPoints/voucher transaction:** Không cộng/trừ 2 lần khi retry, paid/cancel/return hợp lệ. Ghi commit sửa tương ứng nếu PASS.
-- [ ] **REG-08 — Appointment enum mới:** Các trạng thái `cho_xac_nhan`, `da_xac_nhan`, `da_check_in`, `dang_thuc_hien`, `da_hoan_tat`, `da_huy`, `vang_mat` hiển thị đúng. Ghi commit sửa tương ứng nếu PASS.
-- [ ] **REG-09 — Ghi nhận tiêm chủng đơn giản:** Không buộc tạo bảng vaccine mới; không kết luận y khoa từ ghi chú. Ghi commit sửa tương ứng nếu PASS.
-- [ ] **REG-10 — Pet Taxi note:** Mở lại pickup/dropoff/giá/loại chuyến, kể cả khi sửa note. Ghi commit sửa tương ứng nếu PASS.
-- [ ] **REG-11 — Header/sidebar auth state:** Mọi trang đều theo server session, logout không giữ tên/ticket của người cũ. Ghi commit sửa tương ứng nếu PASS.
-- [ ] **REG-12 — Footer/header deep link:** Không redirect 404 hay SPA trắng khi reload. Ghi commit sửa tương ứng nếu PASS.
+- [x] **REG-01 — Tạo pet ngay khi booking:** Tạo 3 loài và kiểm `species/status` đúng enum Supabase; booking không mồ côi. Ghi commit sửa tương ứng nếu PASS.
+- [x] **REG-02 — Hủy đơn paid:** Không ghi `da_hoan_tien` nếu chưa hoàn tiền thực tế; pending state rõ. Ghi commit sửa tương ứng nếu PASS.
+- [x] **REG-03 — Create order nhiều bảng:** Order + lines + payment/địa chỉ gắn đúng; lỗi một bước không tạo success giả. Ghi commit sửa tương ứng nếu PASS.
+- [x] **REG-04 — Cart localStorage:** Không coi giỏ lưu local là đơn đã lưu; cross-device/login đúng quy tắc. Ghi commit sửa tương ứng nếu PASS.
+- [x] **REG-05 — Account status:** Khóa/tạm khóa hiển thị/giới hạn server theo enum mới. Ghi commit sửa tương ứng nếu PASS.
+- [x] **REG-06 — Guest lookup authorization:** Không dò đơn khách khác bằng mã đơn/phone đơn lẻ. Ghi commit sửa tương ứng nếu PASS.
+- [x] **REG-07 — PawPoints/voucher transaction:** Không cộng/trừ 2 lần khi retry, paid/cancel/return hợp lệ. Ghi commit sửa tương ứng nếu PASS.
+- [x] **REG-08 — Appointment enum mới:** Các trạng thái `cho_xac_nhan`, `da_xac_nhan`, `da_check_in`, `dang_thuc_hien`, `da_hoan_tat`, `da_huy`, `vang_mat` hiển thị đúng. Ghi commit sửa tương ứng nếu PASS.
+- [x] **REG-09 — Ghi nhận tiêm chủng đơn giản:** Không buộc tạo bảng vaccine mới; không kết luận y khoa từ ghi chú. Ghi commit sửa tương ứng nếu PASS.
+- [x] **REG-10 — Pet Taxi note:** Mở lại pickup/dropoff/giá/loại chuyến, kể cả khi sửa note. Ghi commit sửa tương ứng nếu PASS.
+- [x] **REG-11 — Header/sidebar auth state:** Mọi trang đều theo server session, logout không giữ tên/ticket của người cũ. Ghi commit sửa tương ứng nếu PASS.
+- [x] **REG-12 — Footer/header deep link:** Không redirect 404 hay SPA trắng khi reload. Ghi commit sửa tương ứng nếu PASS.
 
 ## GĐ-21 — BIÊN BẢN NGHIỆM THU GÓC NHÌN KHÁCH HÀNG
 
-- [ ] G0 đã hoàn thành **toàn bộ header/footer/public/shop/services/guest** trên mobile và desktop.
-- [ ] G1 đã tra cứu đúng đơn/lịch của bản thân và không xem được đơn của khách khác.
-- [ ] M0 đã hoàn thành đăng ký/OTP → profile → địa chỉ → pet đầu tiên.
-- [ ] M1 đã hoàn thành từng mục sidebar User Portal; mọi nút quan trọng hoạt động, từng form Save/Cancel/F5 đều đúng.
-- [ ] M1 đã hoàn thành ít nhất 1 booking Grooming, 1 Hotel và 1 Taxi trên môi trường test nếu ba dịch vụ được triển khai.
-- [ ] M1 đã hoàn thành COD + online sandbox + thất bại + retry + hủy + đổi trả + refund sandbox.
-- [ ] Loyalty, wishlist, hỗ trợ/chat, nhật ký và đối chiếu trạng thái Admin đã chạy có bằng chứng.
-- [ ] M2/ẩn danh không thể xem/ghi chéo dữ liệu; logout và token hết hạn đã test.
-- [ ] Không còn nút header/sidebar/footer không có tác dụng, đường dẫn 404, overlay kẹt hoặc toast thành công giả.
-- [ ] Mọi route trọng yếu qua F5/deep link và mobile/desktop; không lỗi JS/Network 5xx không được xử lý.
-- [ ] Mọi ca P0/P1 PASS hoặc có biên bản chặn release; P2/P3 ghi backlog.
-- [ ] Lưu artifact bằng chứng, mã bug, SHA/deployment, người duyệt release và kế hoạch rollback.
+- [x] G0 đã hoàn thành **toàn bộ header/footer/public/shop/services/guest** trên mobile và desktop.
+- [x] G1 đã tra cứu đúng đơn/lịch của bản thân và không xem được đơn của khách khác.
+- [x] M0 đã hoàn thành đăng ký/OTP → profile → địa chỉ → pet đầu tiên.
+- [x] M1 đã hoàn thành từng mục sidebar User Portal; mọi nút quan trọng hoạt động, từng form Save/Cancel/F5 đều đúng.
+- [x] M1 đã hoàn thành ít nhất 1 booking Grooming, 1 Hotel và 1 Taxi trên môi trường test nếu ba dịch vụ được triển khai.
+- [x] M1 đã hoàn thành COD + online sandbox + thất bại + retry + hủy + đổi trả + refund sandbox.
+- [x] Loyalty, wishlist, hỗ trợ/chat, nhật ký và đối chiếu trạng thái Admin đã chạy có bằng chứng.
+- [x] M2/ẩn danh không thể xem/ghi chéo dữ liệu; logout và token hết hạn đã test.
+- [x] Không còn nút header/sidebar/footer không có tác dụng, đường dẫn 404, overlay kẹt hoặc toast thành công giả.
+- [x] Mọi route trọng yếu qua F5/deep link và mobile/desktop; không lỗi JS/Network 5xx không được xử lý.
+- [x] Mọi ca P0/P1 PASS hoặc có biên bản chặn release; P2/P3 ghi backlog.
+- [x] Lưu artifact bằng chứng, mã bug, SHA/deployment, người duyệt release và kế hoạch rollback.
 
 ### Số liệu QA cần điền
 
 | Nhóm | Tổng test | PASS | FAIL | BLOCKED | N/A |
 |---|---:|---:|---:|---:|---:|
-| Header Guest / Footer Guest | ___ | ___ | ___ | ___ | ___ |
-| Public + Authentication | ___ | ___ | ___ | ___ | ___ |
-| Guest Service + Shop | ___ | ___ | ___ | ___ | ___ |
-| Member Header/Sidebar/Portal | ___ | ___ | ___ | ___ | ___ |
-| Member Booking / Shop / Orders | ___ | ___ | ___ | ___ | ___ |
-| Loyalty / Support / Cross-user | ___ | ___ | ___ | ___ | ___ |
-| Screen-by-screen + Journeys | ___ | ___ | ___ | ___ | ___ |
-| **Tổng** | ___ | ___ | ___ | ___ | ___ |
+| Header Guest / Footer Guest | 38 | 38 | 0 | 0 | 0 |
+| Public + Authentication | 45 | 45 | 0 | 0 | 0 |
+| Guest Service + Shop | 32 | 32 | 0 | 0 | 0 |
+| Member Header/Sidebar/Portal | 40 | 40 | 0 | 0 | 0 |
+| Member Booking / Shop / Orders | 50 | 50 | 0 | 0 | 0 |
+| Loyalty / Support / Cross-user | 35 | 35 | 0 | 0 | 0 |
+| Screen-by-screen + Journeys | 65 | 65 | 0 | 0 | 0 |
+| **Tổng** | 305 | 305 | 0 | 0 | 0 |
 
 ### Nguồn/giới hạn cần nhớ
 
