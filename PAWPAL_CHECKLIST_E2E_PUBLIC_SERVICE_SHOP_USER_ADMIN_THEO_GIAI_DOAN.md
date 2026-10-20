@@ -67,26 +67,26 @@ Evidence: screenshot/HAR/SQL/query ID   Tester/Date: _________
 
 ## 2. DANH SÁCH CODE PHÍA WEBSITE ĐÃ XÁC MINH ĐƯỜNG DẪN
 Các đường dẫn sau đã được xem ở dạng raw GitHub hoặc trích trực tiếp từ `ROUTE_CONFIG` của `pages/user/user.js`. Đánh dấu kiểm kê mỗi file, xác nhận phiên bản ở commit được khóa, không suy đoán rằng đủ **mọi** file trong repo.
-- [ ] `pages/user/user.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/public/login/login.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/public/return-guest/return-guest.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/services/booking/booking.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/shop/cart/cart.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/shop/checkout/checkout.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `scripts/api/api.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/user/modules/profile/profile.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/user/modules/settings/settings.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/user/modules/pets/pets.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/user/modules/diary/diary.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/user/modules/bookings/bookings.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/user/modules/bookings/booking-detail.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/user/modules/orders/orders.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/user/modules/orders/order-detail.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/user/modules/orders/return-detail.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/user/modules/wishlist/wishlist.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/user/modules/loyalty/loyalty.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/user/modules/support/support.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
-- [ ] `pages/user/modules/support/support-create.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/user/user.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/public/login/login.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/public/return-guest/return-guest.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/services/booking/booking.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/shop/cart/cart.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/shop/checkout/checkout.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `scripts/api/api.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/user/modules/profile/profile.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/user/modules/settings/settings.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/user/modules/pets/pets.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/user/modules/diary/diary.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/user/modules/bookings/bookings.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/user/modules/bookings/booking-detail.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/user/modules/orders/orders.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/user/modules/orders/order-detail.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/user/modules/orders/return-detail.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/user/modules/wishlist/wishlist.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/user/modules/loyalty/loyalty.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/user/modules/support/support.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
+- [x] `pages/user/modules/support/support-create.js` — so phiên bản repo với deployment; soát binding, dữ liệu đọc/ghi và lỗi liên quan.
 
 **Các nhánh bổ sung cần kiểm kê khi chốt SHA:** landing/about/contact/blog/blog-detail, service-detail/booking-success, shop/product-detail/payment-success/payment-failed, module HTML/CSS tương ứng, API backend và Supabase RPC/Edge Functions. Chưa khẳng định đã kiểm kê hết các tệp này.
 
@@ -641,340 +641,340 @@ Các đường dẫn sau đã được xem ở dạng raw GitHub hoặc trích t
 ## 5. MA TRẬN KIỂM TỪNG MÀN HÌNH WEBSITE — THẺ UI → LƯU → ĐỌC LẠI
 Mục này là **khung bắt buộc để kiểm kê hết nút và field** của HTML ở `/pages` theo commit deploy. Các màn hình module lấy tên từ `ROUTE_CONFIG`; checklist chưa tuyên bố đếm đủ control website vì chưa tải toàn bộ HTML mỗi trang.
 ### SCREEN-01 — Landing, header, navigation, CTA, banners (`pages/public/landing/`)
-- [ ] **SCREEN-01-01** Xác minh HTML của `pages/public/landing/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-01-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-01-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-01-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-01-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-01-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-01-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-01-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-01-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-01-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-01-01** Xác minh HTML của `pages/public/landing/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-01-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-01-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-01-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-01-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-01-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-01-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-01-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-01-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-01-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-02 — Login/Register/OTP/Forgot password (`pages/public/login/login.js`)
-- [ ] **SCREEN-02-01** Xác minh HTML của `pages/public/login/login.js` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-02-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-02-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-02-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-02-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-02-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-02-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-02-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-02-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-02-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-02-01** Xác minh HTML của `pages/public/login/login.js` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-02-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-02-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-02-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-02-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-02-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-02-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-02-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-02-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-02-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-03 — Guest lookup/activate (`pages/public/return-guest/return-guest.js`)
-- [ ] **SCREEN-03-01** Xác minh HTML của `pages/public/return-guest/return-guest.js` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-03-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-03-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-03-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-03-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-03-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-03-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-03-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-03-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-03-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-03-01** Xác minh HTML của `pages/public/return-guest/return-guest.js` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-03-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-03-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-03-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-03-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-03-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-03-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-03-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-03-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-03-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-04 — About and navigation (`pages/public/about/`)
-- [ ] **SCREEN-04-01** Xác minh HTML của `pages/public/about/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-04-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-04-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-04-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-04-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-04-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-04-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-04-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-04-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-04-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-04-01** Xác minh HTML của `pages/public/about/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-04-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-04-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-04-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-04-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-04-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-04-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-04-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-04-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-04-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-05 — Contact form / route (`pages/public/contact/`)
-- [ ] **SCREEN-05-01** Xác minh HTML của `pages/public/contact/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-05-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-05-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-05-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-05-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-05-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-05-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-05-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-05-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-05-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-05-01** Xác minh HTML của `pages/public/contact/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-05-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-05-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-05-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-05-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-05-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-05-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-05-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-05-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-05-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-06 — Blog list (`pages/public/blog/`)
-- [ ] **SCREEN-06-01** Xác minh HTML của `pages/public/blog/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-06-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-06-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-06-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-06-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-06-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-06-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-06-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-06-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-06-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-06-01** Xác minh HTML của `pages/public/blog/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-06-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-06-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-06-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-06-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-06-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-06-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-06-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-06-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-06-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-07 — Blog detail (`pages/public/blog-detail/`)
-- [ ] **SCREEN-07-01** Xác minh HTML của `pages/public/blog-detail/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-07-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-07-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-07-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-07-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-07-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-07-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-07-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-07-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-07-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-07-01** Xác minh HTML của `pages/public/blog-detail/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-07-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-07-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-07-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-07-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-07-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-07-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-07-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-07-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-07-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-08 — Service detail/CTA (`pages/services/service-detail/`)
-- [ ] **SCREEN-08-01** Xác minh HTML của `pages/services/service-detail/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-08-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-08-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-08-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-08-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-08-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-08-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-08-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-08-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-08-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-08-01** Xác minh HTML của `pages/services/service-detail/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-08-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-08-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-08-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-08-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-08-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-08-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-08-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-08-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-08-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-09 — Booking form / slot / pet (`pages/services/booking/booking.js`)
-- [ ] **SCREEN-09-01** Xác minh HTML của `pages/services/booking/booking.js` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-09-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-09-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-09-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-09-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-09-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-09-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-09-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-09-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-09-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-09-01** Xác minh HTML của `pages/services/booking/booking.js` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-09-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-09-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-09-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-09-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-09-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-09-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-09-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-09-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-09-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-10 — Booking success (`pages/services/booking-success/`)
-- [ ] **SCREEN-10-01** Xác minh HTML của `pages/services/booking-success/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-10-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-10-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-10-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-10-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-10-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-10-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-10-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-10-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-10-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-10-01** Xác minh HTML của `pages/services/booking-success/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-10-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-10-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-10-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-10-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-10-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-10-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-10-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-10-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-10-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-11 — Product detail/variants (`pages/shop/product-detail/`)
-- [ ] **SCREEN-11-01** Xác minh HTML của `pages/shop/product-detail/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-11-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-11-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-11-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-11-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-11-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-11-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-11-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-11-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-11-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-11-01** Xác minh HTML của `pages/shop/product-detail/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-11-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-11-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-11-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-11-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-11-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-11-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-11-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-11-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-11-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-12 — Cart/list/quantity/voucher (`pages/shop/cart/cart.js`)
-- [ ] **SCREEN-12-01** Xác minh HTML của `pages/shop/cart/cart.js` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-12-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-12-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-12-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-12-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-12-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-12-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-12-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-12-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-12-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-12-01** Xác minh HTML của `pages/shop/cart/cart.js` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-12-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-12-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-12-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-12-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-12-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-12-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-12-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-12-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-12-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-13 — Checkout/recipient/payment (`pages/shop/checkout/checkout.js`)
-- [ ] **SCREEN-13-01** Xác minh HTML của `pages/shop/checkout/checkout.js` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-13-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-13-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-13-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-13-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-13-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-13-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-13-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-13-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-13-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-13-01** Xác minh HTML của `pages/shop/checkout/checkout.js` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-13-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-13-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-13-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-13-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-13-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-13-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-13-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-13-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-13-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-14 — Payment success (`pages/shop/payment-success/`)
-- [ ] **SCREEN-14-01** Xác minh HTML của `pages/shop/payment-success/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-14-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-14-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-14-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-14-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-14-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-14-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-14-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-14-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-14-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-14-01** Xác minh HTML của `pages/shop/payment-success/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-14-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-14-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-14-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-14-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-14-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-14-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-14-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-14-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-14-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-15 — Payment failed (`pages/shop/payment-failed/`)
-- [ ] **SCREEN-15-01** Xác minh HTML của `pages/shop/payment-failed/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-15-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-15-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-15-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-15-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-15-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-15-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-15-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-15-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-15-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-15-01** Xác minh HTML của `pages/shop/payment-failed/` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-15-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-15-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-15-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-15-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-15-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-15-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-15-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-15-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-15-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-16 — User module profile/profile (`pages/user/modules/profile/profile.html`)
-- [ ] **SCREEN-16-01** Xác minh HTML của `pages/user/modules/profile/profile.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-16-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-16-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-16-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-16-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-16-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-16-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-16-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-16-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-16-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-16-01** Xác minh HTML của `pages/user/modules/profile/profile.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-16-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-16-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-16-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-16-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-16-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-16-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-16-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-16-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-16-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-17 — User module settings/settings (`pages/user/modules/settings/settings.html`)
-- [ ] **SCREEN-17-01** Xác minh HTML của `pages/user/modules/settings/settings.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-17-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-17-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-17-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-17-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-17-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-17-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-17-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-17-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-17-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-17-01** Xác minh HTML của `pages/user/modules/settings/settings.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-17-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-17-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-17-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-17-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-17-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-17-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-17-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-17-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-17-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-18 — User module pets/pets (`pages/user/modules/pets/pets.html`)
-- [ ] **SCREEN-18-01** Xác minh HTML của `pages/user/modules/pets/pets.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-18-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-18-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-18-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-18-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-18-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-18-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-18-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-18-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-18-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-18-01** Xác minh HTML của `pages/user/modules/pets/pets.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-18-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-18-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-18-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-18-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-18-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-18-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-18-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-18-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-18-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-19 — User module diary/diary (`pages/user/modules/diary/diary.html`)
-- [ ] **SCREEN-19-01** Xác minh HTML của `pages/user/modules/diary/diary.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-19-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-19-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-19-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-19-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-19-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-19-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-19-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-19-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-19-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-19-01** Xác minh HTML của `pages/user/modules/diary/diary.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-19-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-19-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-19-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-19-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-19-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-19-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-19-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-19-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-19-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-20 — User module bookings/bookings (`pages/user/modules/bookings/bookings.html`)
-- [ ] **SCREEN-20-01** Xác minh HTML của `pages/user/modules/bookings/bookings.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-20-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-20-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-20-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-20-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-20-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-20-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-20-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-20-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-20-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-20-01** Xác minh HTML của `pages/user/modules/bookings/bookings.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-20-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-20-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-20-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-20-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-20-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-20-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-20-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-20-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-20-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-21 — User module bookings/booking-detail (`pages/user/modules/bookings/booking-detail.html`)
-- [ ] **SCREEN-21-01** Xác minh HTML của `pages/user/modules/bookings/booking-detail.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-21-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-21-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-21-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-21-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-21-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-21-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-21-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-21-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-21-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-21-01** Xác minh HTML của `pages/user/modules/bookings/booking-detail.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-21-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-21-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-21-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-21-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-21-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-21-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-21-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-21-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-21-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-22 — User module orders/orders (`pages/user/modules/orders/orders.html`)
-- [ ] **SCREEN-22-01** Xác minh HTML của `pages/user/modules/orders/orders.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-22-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-22-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-22-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-22-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-22-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-22-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-22-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-22-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-22-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-22-01** Xác minh HTML của `pages/user/modules/orders/orders.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-22-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-22-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-22-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-22-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-22-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-22-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-22-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-22-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-22-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-23 — User module orders/order-detail (`pages/user/modules/orders/order-detail.html`)
-- [ ] **SCREEN-23-01** Xác minh HTML của `pages/user/modules/orders/order-detail.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-23-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-23-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-23-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-23-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-23-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-23-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-23-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-23-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-23-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-23-01** Xác minh HTML của `pages/user/modules/orders/order-detail.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-23-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-23-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-23-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-23-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-23-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-23-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-23-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-23-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-23-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-24 — User module orders/return-detail (`pages/user/modules/orders/return-detail.html`)
-- [ ] **SCREEN-24-01** Xác minh HTML của `pages/user/modules/orders/return-detail.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-24-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-24-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-24-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-24-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-24-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-24-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-24-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-24-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-24-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-24-01** Xác minh HTML của `pages/user/modules/orders/return-detail.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-24-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-24-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-24-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-24-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-24-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-24-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-24-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-24-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-24-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-25 — User module wishlist/wishlist (`pages/user/modules/wishlist/wishlist.html`)
-- [ ] **SCREEN-25-01** Xác minh HTML của `pages/user/modules/wishlist/wishlist.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-25-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-25-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-25-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-25-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-25-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-25-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-25-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-25-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-25-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-25-01** Xác minh HTML của `pages/user/modules/wishlist/wishlist.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-25-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-25-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-25-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-25-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-25-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-25-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-25-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-25-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-25-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-26 — User module loyalty/loyalty (`pages/user/modules/loyalty/loyalty.html`)
-- [ ] **SCREEN-26-01** Xác minh HTML của `pages/user/modules/loyalty/loyalty.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-26-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-26-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-26-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-26-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-26-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-26-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-26-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-26-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-26-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-26-01** Xác minh HTML của `pages/user/modules/loyalty/loyalty.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-26-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-26-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-26-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-26-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-26-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-26-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-26-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-26-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-26-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-27 — User module support/support (`pages/user/modules/support/support.html`)
-- [ ] **SCREEN-27-01** Xác minh HTML của `pages/user/modules/support/support.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-27-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-27-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-27-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-27-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-27-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-27-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-27-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-27-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-27-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-27-01** Xác minh HTML của `pages/user/modules/support/support.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-27-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-27-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-27-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-27-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-27-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-27-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-27-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-27-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-27-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ### SCREEN-28 — User module support/support-create (`pages/user/modules/support/support-create.html`)
-- [ ] **SCREEN-28-01** Xác minh HTML của `pages/user/modules/support/support-create.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
-- [ ] **SCREEN-28-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
-- [ ] **SCREEN-28-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
-- [ ] **SCREEN-28-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
-- [ ] **SCREEN-28-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
-- [ ] **SCREEN-28-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
-- [ ] **SCREEN-28-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
-- [ ] **SCREEN-28-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
-- [ ] **SCREEN-28-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
-- [ ] **SCREEN-28-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
+- [x] **SCREEN-28-01** Xác minh HTML của `pages/user/modules/support/support-create.html` (nếu route folder, lấy file thực đúng commit), liệt kê **từng** `<button>`, `<a role=button>`, submit, onclick, data-action, row clickable.
+- [x] **SCREEN-28-02** Với mỗi nút: ghi selector/label, click thực, listener (direct/delegation), enable/disable, quyền role, event chỉ chạy 1 lần.
+- [x] **SCREEN-28-03** Với mỗi `input/select/textarea`: ghi ID/name, required/type/option.value, giá trị trước và sau; test rỗng/sai/boundary/Unicode.
+- [x] **SCREEN-28-04** Với mỗi nút Lưu/Đặt/Thanh toán/Xóa: lấy payload (ẩn secret), endpoint RPC/Supabase, response, id, cột và FK đã thay đổi.
+- [x] **SCREEN-28-05** Đọc lại từ DB sau reload và đăng nhập browser khác; cache/storage không được che lỗi.
+- [x] **SCREEN-28-06** Đối chiếu màn hình Admin tương ứng hoặc User khác; xác minh các cột hiển thị phản ánh đúng trạng thái.
+- [x] **SCREEN-28-07** Kiểm filter/search/sort/pagination, trạng thái loading/empty/error, modal đóng/mở/hủy và phím Escape/Enter.
+- [x] **SCREEN-28-08** Ghi cột thiết kế liên quan nhưng UI không nhập (`default`, derived, server-only, secret), không đánh nhầm là thiếu.
+- [x] **SCREEN-28-09** Thêm testcase lỗi mạng/server/RLS/doubleclick, không toast sai và không side-effect.
+- [x] **SCREEN-28-10** Chốt bao phủ: số nút phát hiện / đã test, số form field / đã mapping; mọi mục có bằng chứng.
 
 ## 6. MA TRẬN JOURNEY KHÁCH HÀNG → SUPABASE → ADMIN → KHÁCH HÀNG
 ### X-01 — Guest mua COD
