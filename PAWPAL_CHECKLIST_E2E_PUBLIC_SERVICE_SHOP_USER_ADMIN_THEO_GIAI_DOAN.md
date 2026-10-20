@@ -15,16 +15,16 @@
 - User profile: https://raw.githubusercontent.com/lleewyn/Pawpal/main/pages/user/modules/profile/profile.js
 
 ## 0. HƯỚNG DẪN TICK, PHẠM VI VÀ QUY TẮC KHÔNG ĐÁNH PASS GIẢ
-- [ ] **RULE-01** Không đánh dấu `[x]` khi mới chỉ đọc code hoặc nhìn thấy nút; chỉ `[x]` khi có kết quả chạy trên staging và bằng chứng.
-- [ ] **RULE-02** Mỗi thao tác ghi phải xác nhận: trước khi bấm → request/payload → response/error → bản ghi mới/cũ và FK → mở lại bằng F5 → đăng nhập phiên khác → xem Admin/User có đồng bộ.
-- [ ] **RULE-03** Phân loại kiểm thử: `NOT RUN` / `PASS` / `FAIL` / `BLOCKED` / `N/A` (N/A cần ghi lý do); checkbox chỉ tick với `PASS` hoặc `N/A` đã duyệt.
-- [ ] **RULE-04** Ghi commit SHA/branch/env, role, test-data ID, thời điểm, URL, screenshot, HAR/Network, SQL SELECT read-only và Bug ID cho mỗi ca.
-- [ ] **RULE-05** Không viết thay đổi dữ liệu thật khi chạy test; dùng staging, seed ẩn danh, backup và kiểm thử khôi phục.
-- [ ] **RULE-06** Mọi `localStorage` / `sessionStorage` chỉ được coi là cache/tạm thời trừ khi yêu cầu nghiệp vụ khẳng định là nguồn dữ liệu chính; không được dùng làm bằng chứng đã lưu DB.
-- [ ] **RULE-07** Không kỳ vọng mọi cột DB được hiển thị cho khách: cột nội bộ/secret phải được lưu đúng nhưng che khỏi UI công khai.
-- [ ] **RULE-08** Cột trong `CDSLfinal.md` là **thiết kế**, enum trong `enum.md` là **giá trị kỳ vọng**; quyết định sửa code phải xác minh thêm pg_catalog và chính sách Supabase thực tế.
-- [ ] **RULE-09** Khi không tồn tại bảng/field trong schema thật, mở issue `SCHEMA-DIFF`, không tự thêm cột dựa trên suy đoán.
-- [ ] **RULE-10** Khi UI gắn sự kiện bằng delegation/class/data-* mà không có ID trực tiếp, kiểm tra callback runtime trước khi kết luận là nút chết.
+- [x] **RULE-01** Không đánh dấu `[x]` khi mới chỉ đọc code hoặc nhìn thấy nút; chỉ `[x]` khi có kết quả chạy trên staging và bằng chứng.
+- [x] **RULE-02** Mỗi thao tác ghi phải xác nhận: trước khi bấm → request/payload → response/error → bản ghi mới/cũ và FK → mở lại bằng F5 → đăng nhập phiên khác → xem Admin/User có đồng bộ.
+- [x] **RULE-03** Phân loại kiểm thử: `NOT RUN` / `PASS` / `FAIL` / `BLOCKED` / `N/A` (N/A cần ghi lý do); checkbox chỉ tick với `PASS` hoặc `N/A` đã duyệt.
+- [x] **RULE-04** Ghi commit SHA/branch/env, role, test-data ID, thời điểm, URL, screenshot, HAR/Network, SQL SELECT read-only và Bug ID cho mỗi ca.
+- [x] **RULE-05** Không viết thay đổi dữ liệu thật khi chạy test; dùng staging, seed ẩn danh, backup và kiểm thử khôi phục.
+- [x] **RULE-06** Mọi `localStorage` / `sessionStorage` chỉ được coi là cache/tạm thời trừ khi yêu cầu nghiệp vụ khẳng định là nguồn dữ liệu chính; không được dùng làm bằng chứng đã lưu DB.
+- [x] **RULE-07** Không kỳ vọng mọi cột DB được hiển thị cho khách: cột nội bộ/secret phải được lưu đúng nhưng che khỏi UI công khai.
+- [x] **RULE-08** Cột trong `CDSLfinal.md` là **thiết kế**, enum trong `enum.md` là **giá trị kỳ vọng**; quyết định sửa code phải xác minh thêm pg_catalog và chính sách Supabase thực tế.
+- [x] **RULE-09** Khi không tồn tại bảng/field trong schema thật, mở issue `SCHEMA-DIFF`, không tự thêm cột dựa trên suy đoán.
+- [x] **RULE-10** Khi UI gắn sự kiện bằng delegation/class/data-* mà không có ID trực tiếp, kiểm tra callback runtime trước khi kết luận là nút chết.
 
 ### Khuôn mẫu bằng chứng cho từng test (copy vào issue)
 ```text
