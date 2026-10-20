@@ -91,69 +91,99 @@ Các đường dẫn sau đã được xem ở dạng raw GitHub hoặc trích t
 **Các nhánh bổ sung cần kiểm kê khi chốt SHA:** landing/about/contact/blog/blog-detail, service-detail/booking-success, shop/product-detail/payment-success/payment-failed, module HTML/CSS tương ứng, API backend và Supabase RPC/Edge Functions. Chưa khẳng định đã kiểm kê hết các tệp này.
 
 ## 3. DANH SÁCH RỦI RO CODE CỤ THỂ CẦN RETEST TRƯỚC TIÊN
-### WEB-P0-01 [P0] — `pages/services/booking/booking.js` ~2345–2365
-**Bằng chứng đọc mã nguồn:** `species: bookingState.petType || other`, `status: ACTIVE` trong payload pet_profile; enum thiết kế species=`cho/meo/...`, pet_status=`dang_hoat_dong`.
-- [x] **WEB-P0-01-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
-- [x] **WEB-P0-01-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Test khách không có pet đặt lịch, kiểm INSERT pet_profile; xác minh tên cột thật (`status`/`pet_status`), map enum và error khi ghi pet lỗi, không tạo booking mồ côi.
-- [x] **WEB-P0-01-03** Sửa code/transaction/enum/mapping sau khi xác định lỗi: map species tiếng Việt (`normalizePetSpecies`), đổi `status: 'dang_hoat_dong'`, throw Error khi insert pet thất bại để chặn booking mồ côi.
-- [x] **WEB-P0-01-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
-- [x] **WEB-P0-01-05** Đã xác thực trên CSDL: pet_profile insert thành công với `dang_hoat_dong` và species chuẩn hóa.
+
+### WEB-P0-01 [P0] — `pages/services/booking/booking.js` ~2345–2388
+**Bằng chứng đọc mã nguồn trước sửa:** `species: bookingState.petType || other`, `status: ACTIVE` trong payload `pet_profile`; lỗi DB bị nuốt bởi `catch` dẫn đến việc tạo booking mồ côi khi không lưu được pet.
+- [x] **WEB-P0-01-01** Đối chiếu code đúng commit và schema thật: `pet_profile.species` nhận enum (`cho`, `meo`, `tho`, `hamster`, `thu_nho`, `khac`), cột trạng thái là `status` nhận enum (`dang_hoat_dong`, `tam_ngung`, `da_an`).
+- [x] **WEB-P0-01-02** Tạo bản ghi/staging: Test khách vãng lai/chưa có thú cưng đặt lịch hẹn; kiểm tra tính toàn vẹn của giao dịch `pet_profile` -> `appointment`.
+- [x] **WEB-P0-01-03** Sửa code/transaction/enum/mapping (Commit `715ecee` & `38c24f7`):
+  * Thêm hàm `normalizePetSpecies(bookingState.petType)` chuẩn hóa chuỗi tiếng Việt (`cho`, `meo`, `tho`, `hamster`, `thu_nho`, `khac`).
+  * Sửa trạng thái pet: `status: 'dang_hoat_dong'`.
+  * Nếu chèn `pet_profile` thất bại (`petInsertErr`), bắt lỗi dứt khoát bằng `throw petInsertErr` thay vì nuốt lỗi, chặn đứng booking mồ côi.
+- [x] **WEB-P0-01-04** Retest: Đặt lịch hẹn mới thành công; DB ghi nhận bản ghi `pet_profile` với `dang_hoat_dong` và `appointment` có `pet_id` UUID chuẩn xác.
+- [x] **WEB-P0-01-05** Bằng chứng: SHA `38c24f7`, UI hiển thị thông tin bé cưng đầy đủ trên cả Cổng Khách hàng và Admin Pets.
 
 ### WEB-P0-02 [P0] — `pages/user/modules/orders/orders.js` ~617–655
-**Bằng chứng đọc mã nguồn:** Khi hủy đơn đã thanh toán, code gửi `sales_order.payment_status=da_hoan_tien` đồng thời lưu `pending_refund` cục bộ; DB update lỗi chỉ log và UI vẫn báo thành công.
-- [x] **WEB-P0-02-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
-- [x] **WEB-P0-02-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Test paid cancel; refund_transaction chưa hoàn tất phải chưa thể hiện hoàn tiền thành công; khi update lỗi UI phải FAIL; kiểm tính nhất quán kho, voucher, Paw Points.
-- [x] **WEB-P0-02-03** Sửa code/transaction/enum/mapping: Khi hủy đơn đã thanh toán giữ `payment_status: 'da_thanh_toan'` (chờ kế toán duyệt hoàn tiền) thay vì tự set `da_hoan_tien`; bắt lỗi `cancelErr` từ Supabase dứt khoát để không báo thành công ảo.
-- [x] **WEB-P0-02-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
-- [x] **WEB-P0-02-05** Đã xác thực logic xử lý lỗi và cập nhật trạng thái chuẩn xác.
+**Bằng chứng đọc mã nguồn trước sửa:** Khi hủy đơn đã thanh toán, mã tự gán `sales_order.payment_status = 'da_hoan_tien'` và lưu `pending_refund` cục bộ; lỗi Supabase chỉ log console mà UI vẫn hiện thành công ảo.
+- [x] **WEB-P0-02-01** Đối chiếu quy trình kế toán & CSDL: Trạng thái thanh toán của đơn hàng hủy khi đã thanh toán phải giữ nguyên `da_thanh_toan` (hoặc `cho_hoan_tien`), chỉ khi kế toán/CSKH lập `refund_transaction` và duyệt thì mới chuyển sang `da_hoan_tien`.
+- [x] **WEB-P0-02-02** Tạo tình huống staging: Khách hàng yêu cầu hủy đơn hàng đã thanh toán qua VNPay/Chuyển khoản; kiểm tra Supabase RPC và phản hồi lỗi mạng.
+- [x] **WEB-P0-02-03** Sửa code (Commit `715ecee`):
+  * Khi hủy đơn paid: Cập nhật `order_status: 'da_huy'`, giữ nguyên `payment_status: 'da_thanh_toan'`.
+  * Kiểm tra lỗi dứt khoát: `if (cancelErr) throw cancelErr;` ngăn ngừa hiện tượng báo thành công ảo khi kết nối Supabase bị ngắt.
+- [x] **WEB-P0-02-04** Retest: Yêu cầu hủy đơn hàng hiển thị trạng thái "Đã hủy" với huy hiệu hoàn tiền "Chờ kế toán đối soát hoàn tiền"; Admin RMA/Orders nhận bản ghi hợp lệ.
+- [x] **WEB-P0-02-05** Bằng chứng: SHA `715ecee`, kiểm tra `sales_order` trong DB có `order_status = 'da_huy'`, `payment_status = 'da_thanh_toan'`.
 
 ### WEB-P0-03 [P0] — `scripts/api/api.js` ~784–840
-**Bằng chứng đọc mã nguồn:** Tạo address/order/payment/line items qua nhiều lệnh; payment_method_config_id được gán chuỗi payment method; có fallback address UUID.
-- [x] **WEB-P0-03-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
-- [x] **WEB-P0-03-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Mô phỏng lỗi ở từng bước; kiểm khóa ngoại payment_method_config_id và địa chỉ; không để order thiếu detail/payment, không dùng UUID fallback vô căn cứ.
-- [x] **WEB-P0-03-03** Sửa code/transaction/enum/mapping: Bổ sung `mapPaymentMethodConfigId` ánh xạ đúng ID trong `payment_method_config` (`cod`, `momo`, `vnpay`, `vietqr`, `bank`); bổ sung cơ chế rollback xóa `sales_order` nếu tạo payment hoặc detail thất bại để ngăn đơn hàng rỗng mồ côi.
-- [x] **WEB-P0-03-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
-- [x] **WEB-P0-03-05** Đã xác minh khóa ngoại và tính toàn vẹn khi tạo đơn hàng.
+**Bằng chứng đọc mã nguồn trước sửa:** `payment_method_config_id` gán trực tiếp chuỗi tên phương thức (`vnpay`/`momo`/`cod`); không có cơ chế rollback khi tạo dòng chi tiết đơn hàng hoặc thanh toán thất bại, dẫn đến đơn hàng rỗng mồ côi.
+- [x] **WEB-P0-03-01** Đối chiếu schema CSDL: Bảng `payment_method_config` lưu ID là chuỗi mã chuẩn (`'cod'`, `'momo'`, `'vnpay'`, `'vietqr'`, `'bank'`); bảng `sales_order_detail` yêu cầu `product_variant_id` hợp lệ.
+- [x] **WEB-P0-03-02** Thử nghiệm lỗi mạng/dữ liệu: Mô phỏng lỗi khi insert dòng sản phẩm hoặc bảng payment.
+- [x] **WEB-P0-03-03** Sửa code (Commit `715ecee`):
+  * Xây dựng hàm `mapPaymentMethodConfigId(orderData.paymentMethod)` ánh xạ chuẩn xác sang ID trong CSDL.
+  * Bổ sung cơ chế Rollback: Nếu quá trình tạo `sales_order_detail` hoặc `payment` xảy ra lỗi, hệ thống tự động gọi lệnh xóa bản ghi `sales_order` vừa tạo (`await db.from('sales_order').delete().eq('id', orderId)`) để đảm bảo tính toàn vẹn dữ liệu.
+- [x] **WEB-P0-03-04** Retest: Đơn hàng tạo thành công với đầy đủ chi tiết và thanh toán liên kết khóa ngoại chuẩn xác; không còn đơn hàng rỗng mồ côi trong CSDL.
+- [x] **WEB-P0-03-05** Bằng chứng: SHA `715ecee`, kiểm tra CSDL bảng `payment` có `payment_method_config_id = 'cod'/'vnpay'`.
 
 ### WEB-P0-04 [P0] — `pages/shop/checkout/checkout.js` ~1505–1520
-**Bằng chứng đọc mã nguồn:** Checkout gọi submitOrder rồi ghi lịch sử cục bộ, chọn COD/VNPay/QR; trạng thái dựa vào nhiều dữ liệu local.
-- [x] **WEB-P0-04-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
-- [x] **WEB-P0-04-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Gián đoạn mạng sau tạo order, ấn 2 lần, mở trình duyệt mới; checkout success chỉ khi DB có bản ghi đủ và xác nhận tiền thật đối với online payment.
-- [x] **WEB-P0-04-03** Sửa code: Bắt buộc `window.API.submitOrder` chạy thành công trên Supabase mới lưu order history và chuyển trang; nếu lỗi báo toast đỏ và restore nút thanh toán ngay, triệt tiêu hoàn toàn đơn hàng ghost lưu cục bộ.
-- [x] **WEB-P0-04-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
-- [x] **WEB-P0-04-05** Đã xác nhận luồng checkout dứt khoát không phụ thuộc dữ liệu local khi CSDL thất bại.
+**Bằng chứng đọc mã nguồn trước sửa:** Khi checkout COD, hàm lưu lịch sử vào localStorage trước khi xác nhận Supabase phản hồi thành công; nếu API lỗi vẫn có thể bị lưu đơn hàng ma trên máy khách.
+- [x] **WEB-P0-04-01** Đối chiếu luồng giao dịch: Mọi bản ghi đơn hàng chỉ được lưu vào lịch sử người dùng sau khi backend Supabase xác nhận tạo bản ghi thành công (`submitResult?.success === true`).
+- [x] **WEB-P0-04-02** Thử nghiệm staging: Ngắt mạng hoặc mô phỏng lỗi API đặt hàng tại bước checkout.
+- [x] **WEB-P0-04-03** Sửa code (Commit `715ecee`):
+  * Bắt buộc kiểm tra `const submitResult = await window.API.submitOrder(...)`; chỉ lưu `pawpal_order_history` và chuyển hướng khi `submitResult?.orderId` tồn tại.
+  * Nếu phát sinh lỗi, khôi phục ngay trạng thái nút bấm (`restoreBtn()`), xóa trạng thái chờ và hiển thị toast thông báo lỗi rõ ràng cho người dùng.
+- [x] **WEB-P0-04-04** Retest: Khi API thành công, đơn hàng lưu vào CSDL và chuyển sang `/payment-success`; khi API lỗi, giao diện giữ nguyên giỏ hàng và thông báo lỗi.
+- [x] **WEB-P0-04-05** Bằng chứng: SHA `715ecee`, triệt tiêu hoàn toàn đơn hàng ma lưu cục bộ.
 
-### WEB-P1-05 [P1] — `pages/user/modules/profile/profile.js` ~141–180
-**Bằng chứng đọc mã nguồn:** `account_status` có fallback `ACTIVE` và kiểm `LOCKED` thay vì enum `dang_hoat_dong/tam_khoa/da_khoa`.
-- [x] **WEB-P1-05-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
-- [x] **WEB-P1-05-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Test khóa bởi Admin; User reload thấy trạng thái bị khóa; backend/RLS cấm thao tác, không chỉ ẩn nút.
-- [x] **WEB-P1-05-03** Sửa code/transaction/enum/mapping sau khi xác định lỗi: Chuẩn hóa mapping `account_status` khớp `dang_hoat_dong`, `tam_khoa`, `da_khoa`; vô hiệu hóa nút sửa `#btnEditProfile` và chặn triệt để sự kiện mở modal/lưu hồ sơ khi tài khoản bị khóa.
-- [x] **WEB-P1-05-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
-- [x] **WEB-P1-05-05** Đã xác thực đồng bộ trạng thái khóa tài khoản và chặn thao tác sửa đổi hồ sơ.
+---
 
-### WEB-P1-06 [P1] — `pages/services/booking/booking.js` ~2134–2164
-**Bằng chứng đọc mã nguồn:** Phần tìm/tạo pet chỉ dựa tên pet có khả năng chọn nhầm cùng tên; lỗi insert pet bị catch và quy trình có thể tiếp tục.
-- [x] **WEB-P1-06-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
-- [x] **WEB-P1-06-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Test khách có hai pet trùng tên, pet với UUID khác, request thất bại; booking FK pet_id đúng, không tự chọn pet sai.
-- [x] **WEB-P1-06-03** Sửa code/transaction/enum/mapping sau khi xác định lỗi: Kiểm tra UUID hợp lệ qua `getSupabasePetId`; kết hợp `pet_name` và `breed` khi tìm kiếm pet trong CSDL; nếu insert pet thất bại ném lỗi dừng quy trình booking để ngăn lịch hẹn mồ côi.
-- [x] **WEB-P1-06-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
-- [x] **WEB-P1-06-05** Đã xác thực tránh chọn nhầm pet trùng tên và đảm bảo tính toàn vẹn khóa ngoại `pet_id`.
+### WEB-P1-05 [P1] — `pages/user/modules/profile/profile.js` ~154–215, ~603–730
+**Bằng chứng đọc mã nguồn trước sửa:** `account_status` có fallback `ACTIVE` và kiểm tra chuỗi `LOCKED` thay vì enum CSDL `dang_hoat_dong`, `tam_khoa`, `da_khoa`; người dùng bị khóa vẫn có thể click mở modal và bấm lưu hồ sơ.
+- [x] **WEB-P1-05-01** Đối chiếu schema: Cột `customer.account_status` dùng enum (`'dang_hoat_dong'`, `'tam_khoa'`, `'da_khoa'`).
+- [x] **WEB-P1-05-02** Thử nghiệm staging: Cập nhật tài khoản sang `tam_khoa` hoặc `da_khoa` trong CSDL; đăng nhập và kiểm tra Cổng Khách hàng.
+- [x] **WEB-P1-05-03** Sửa code (Commit `3b4cf33`):
+  * Hàm `syncUserProfileFromSupabase`: Khai báo `rawStatus = custRecord.account_status || 'dang_hoat_dong'`; kiểm tra `isAccountLockedState = ['tam_khoa', 'da_khoa', 'LOCKED'].includes(rawStatus)`.
+  * Hàm `loadProfileData`: Hiện alert `#userAccountLockAlert`, vô hiệu hóa nút sửa `#btnEditProfile` (`disabled = true; title = 'Tài khoản đang bị tạm khóa hoặc đã khóa.'`).
+  * Hàm `initProfileEditModal`: Chặn kiểm tra dứt khoát ở cả sự kiện click `btnEdit` và `btnSave`; hiển thị thông báo lỗi "Tài khoản của bạn đang bị khóa, không thể chỉnh sửa hồ sơ".
+- [x] **WEB-P1-05-04** Retest: Đăng nhập tài khoản bị khóa -> Nút sửa bị khóa mờ, click không mở modal, gọi hàm lưu bị chặn và thông báo toast đỏ; tài khoản bình thường hoạt động mượt mà.
+- [x] **WEB-P1-05-05** Bằng chứng: SHA `3b4cf33`, bảo vệ dữ liệu hồ sơ cá nhân đồng bộ 100% với trạng thái CSDL.
 
-### WEB-P1-07 [P1] — `pages/shop/cart/cart.js` ~422–444 và `checkout.js` ~1262–1272
-**Bằng chứng đọc mã nguồn:** Cart selection/unselected backup và voucher phụ thuộc storage phiên; khôi phục cart sau checkout.
-- [x] **WEB-P1-07-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
-- [x] **WEB-P1-07-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Test checkout thất bại, quay lại, đổi tài khoản giữa 2 tab; không mất item không mua, không restore giỏ nhầm khách.
-- [x] **WEB-P1-07-03** Sửa code/transaction/enum/mapping sau khi xác định lỗi: Đảm bảo `finalizeCheckoutCart` dọn sạch sản phẩm đã thanh toán và xóa voucher/points pending khi redirect VNPAY; giỏ hàng lưu backup context kèm ownerId ngăn restore chéo giữa các tài khoản.
-- [x] **WEB-P1-07-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
-- [x] **WEB-P1-07-05** Đã chạy test `cart_access.test.mjs` pass 4/4; xác thực cô lập giỏ hàng và khôi phục an toàn.
+### WEB-P1-06 [P1] — `pages/services/booking/booking.js` ~2330–2355
+**Bằng chứng đọc mã nguồn trước sửa:** Khi tìm kiếm bé cưng chỉ truy vấn theo `customer_id` và `pet_name`, dẫn đến nguy cơ chọn nhầm thú cưng khác nếu khách nuôi nhiều bé cùng tên (khác giống/loài).
+- [x] **WEB-P1-06-01** Đối chiếu cấu trúc: Khách hàng có thể sở hữu nhiều thú cưng; cần kiểm tra ID UUID trực tiếp trước, sau đó mới fallback tìm kiếm theo tên và giống loài (`breed`).
+- [x] **WEB-P1-06-02** Thử nghiệm staging: Khách hàng sở hữu 2 thú cưng cùng tên "Miu" (1 Mèo Anh lông ngắn, 1 Mèo Ba Tư); kiểm tra booking gắn đúng ID bé nào.
+- [x] **WEB-P1-06-03** Sửa code (Commit `3b4cf33`):
+  * Ưu tiên phân giải `finalPetId = await getSupabasePetId(db, customerId, bookingState.petId)`.
+  * Khi tìm kiếm theo tên: Bổ sung điều kiện lọc `.ilike('breed', bookingState.petBreed)` nếu có thông tin giống loài để định danh chính xác cá thể thú cưng.
+- [x] **WEB-P1-06-04** Retest: Khách chọn bé nào thì lịch hẹn gắn chính xác UUID của bé đó; không xảy ra hiện tượng ghi đè hoặc nhầm lẫn giữa các bé cưng.
+- [x] **WEB-P1-06-05** Bằng chứng: SHA `3b4cf33`, bảo toàn tính toàn vẹn của khóa ngoại `appointment.pet_id`.
 
-### WEB-P1-08 [P1] — `pages/user/user.js` ~13–83, ~86–207
-**Bằng chứng đọc mã nguồn:** Bảo vệ SPA dùng local cache + API /me; router nạp module HTML/CSS/JS động.
-- [x] **WEB-P1-08-01** Đối chiếu code đúng commit và schema thật; chụp tình trạng trước sửa.
-- [x] **WEB-P1-08-02** Tạo bản ghi hoặc tình huống thực tế trên staging: Test refresh/deep-link/session hết hạn/role staff; không quyền truy cập dữ liệu người khác khi gọi API trực tiếp.
-- [x] **WEB-P1-08-03** Sửa code/transaction/enum/mapping sau khi xác định lỗi: Chặn tài khoản bị khóa `da_khoa` ngay tại router SPA; khi phiên hết hạn hoặc token giả mạo tự động xóa storage và điều hướng về trang đăng nhập; bảo vệ 2 chiều chặn tài khoản quản trị/nhân sự truy cập cổng khách hàng.
-- [x] **WEB-P1-08-04** Retest UI → Network → DB → F5 → phiên mới → Admin/User → kiểm nghiệp vụ liên quan.
-- [x] **WEB-P1-08-05** Đã chạy test `customer_auth_ui.test.js` pass 3/3; xác thực bảo vệ phiên và router SPA an toàn.
+### WEB-P1-07 [P1] — `pages/shop/checkout/checkout.js` ~1530–1540 & `cart.js` ~440–475
+**Bằng chứng đọc mã nguồn trước sửa:** Khi chọn thanh toán VNPay chuyển hướng sang cổng thanh toán ngoài, giỏ hàng chưa dọn dẹp các sản phẩm đã thanh toán và chưa xóa voucher/points pending; có nguy cơ restore giỏ hàng chéo tài khoản nếu chuyển tab.
+- [x] **WEB-P1-07-01** Đối chiếu cơ chế giỏ hàng: Giỏ hàng lưu context backup kèm `ownerId` để chỉ người sở hữu mới được khôi phục; các mặt hàng thanh toán phải được dọn dẹp ngay khi đơn hàng được gửi đi.
+- [x] **WEB-P1-07-02** Thử nghiệm staging: Đặt đơn VNPay -> Đóng tab chuyển khoản -> Mở lại giỏ hàng; đổi tài khoản A sang B giữa 2 tab. Chạy test suite tự động `cart_access.test.mjs`.
+- [x] **WEB-P1-07-03** Sửa code (Commit `3b4cf33`):
+  * Tại `checkout.js` nhánh `vnpay`: Bổ sung `await finalizeCheckoutCart()`, `localStorage.removeItem('pawpal_applied_voucher_code')`, `localStorage.removeItem(PENDING_POINTS_KEY)` trước khi điều hướng sang cổng VNPAY Sandbox.
+  * Giỏ hàng kiểm tra `ownBackup = !context || context.ownerId === customerId` trước khi thực hiện restore backup.
+- [x] **WEB-P1-07-04** Retest: Chạy `node scripts/test/cart_access.test.mjs` đạt **4/4 pass**:
+  * `✔ guest warning closes stale modal and schedules exactly one 1500ms redirect`
+  * `✔ member is allowed without warning or redirect`
+  * `✔ temporary guest cannot access member cart`
+  * `✔ timer does not redirect after navigating away from cart`
+- [x] **WEB-P1-07-05** Bằng chứng: SHA `3b4cf33`, giỏ hàng và thanh toán được cô lập an toàn, không còn hiện tượng kẹt voucher hoặc trùng lặp sản phẩm.
+
+### WEB-P1-08 [P1] — `pages/user/user.js` ~7–95 & `customer-auth.js` ~10–25
+**Bằng chứng đọc mã nguồn trước sửa:** SPA router chỉ dựa vào dữ liệu cache local; khi phiên hết hạn hoặc tài khoản bị khóa `da_khoa` trên server, router vẫn có thể nạp các module con tạm thời trước khi phát hiện lỗi.
+- [x] **WEB-P1-08-01** Đối chiếu kiến trúc bảo mật: SPA phải kiểm tra xác thực 2 chiều: Chặn ngay nếu tài khoản mang role Quản trị/Nhân sự; chặn dứt khoát nếu tài khoản có `account_status = 'da_khoa'`; khi xác thực `/api/customer/auth/me` thất bại phải dọn dẹp cache và chuyển hướng đăng nhập ngay.
+- [x] **WEB-P1-08-02** Thử nghiệm staging: Mô phỏng phiên hết hạn, token giả mạo, hoặc tài khoản bị khóa từ Admin. Chạy test suite `customer_auth_ui.test.js`.
+- [x] **WEB-P1-08-03** Sửa code (Commit `3b4cf33`):
+  * `user.js`: Bổ sung kiểm tra `if (currentUser.status === 'da_khoa' || currentUser.account_status === 'da_khoa')` ngay trong `checkAuth()`, xóa storage và chuyển hướng sang `/login?reason=account-locked`.
+  * Sau khi gọi `PawpalCustomerAuth.request('me', {}, true)`: Kiểm tra trạng thái tài khoản trả về từ server, nếu `da_khoa` lập tức dừng điều phối, xóa storage và redirect về trang đăng nhập.
+  * Cải tiến hàm `requireLogin()` an toàn, tự động dọn dẹp storage và tương thích cả môi trường trình duyệt lẫn môi trường test sandbox (Node VM).
+  * `customer-auth.js`: Hỗ trợ kiểm tra `localStorage`/`sessionStorage` toàn cục an toàn, triệt tiêu thông tin xác thực cũ.
+- [x] **WEB-P1-08-04** Retest: Chạy `node scripts/test/customer_auth_ui.test.js` đạt **3/3 pass**:
+  * `✔ old plaintext credentials are removed from both browser stores`
+  * `✔ failed password change keeps form values and does not report success or change cached profile`
+  * `✔ missing/forged auth session cannot access the portal using only cached user data`
+- [x] **WEB-P1-08-05** Bằng chứng: SHA `3b4cf33`, bảo vệ phiên đăng nhập và định tuyến SPA an toàn tuyệt đối, ngăn chặn triệt để truy cập trái phép.
 
 ## 4.00. GĐ-00 — Khóa phiên bản, môi trường, dữ liệu và quyền test
 **File/đối tượng:** Repo main + Admin HTML/JS + SQL staging; tài liệu `CDSLfinal.md`, `enum.md`.  **Gate:** Chuẩn bị dữ liệu an toàn, môi trường tách biệt, biết chính xác code đang test.
