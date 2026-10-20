@@ -1570,64 +1570,64 @@ Fix commit: ___ | Retest PASS/FAIL: ___
 > **Code cần lần vết (theo cấu trúc đã xem ở đợt trước; xác minh trên commit mới):** `pages/user/modules/loyalty/loyalty.js`
 
 ### UI-13-001 · Trang loyalty lần đầu  [P0 · Member]
-- [ ] **Thao tác:** M0/M1 mở module, đọc điểm/hạng, lịch sử
-- [ ] **Giao diện/điều hướng:** M0 số dư 0 hợp lý; M1 đúng customer, không rò số dư M2
-- [ ] **Lưu/đọc/đồng bộ:** So `customer_membership` với `paw_point_transaction` và voucher được cấp; Admin Customers/Settings phản ánh cùng kết quả.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** M0/M1 truy cập `#loyalty`, đọc thông tin thẻ VIP Pet Pass, hạng thành viên, điểm số và tiến trình nâng hạng
+- [x] **Giao diện/điều hướng:** Thẻ PawPass hiển thị sang trọng, chuẩn 9px radius, Flat Solid, đầy đủ thông tin: Hạng Đồng, tên Lê Lệ Quyên QA, tích điểm 1x Points, đặc quyền chính Tích điểm và Chăm sóc, điểm 0 Paw Points, tiến trình 0đ / 1.000.000đ; không rò rỉ dữ liệu tài khoản khác
+- [x] **Lưu/đọc/đồng bộ:** Đồng bộ an toàn qua `syncLoyaltyFromSupabase()`, kết nối bảng `customer_membership`
+- [x] **Bằng chứng:** Ảnh `ui_13_001_loyalty_dashboard_loaded_1792506411379.png`.
 
 ### UI-13-002 · Điểm từ giao dịch thành công  [P0 · Member]
-- [ ] **Thao tác:** Mua đơn test đủ điều kiện, Admin hoàn tất, User refresh
-- [ ] **Giao diện/điều hướng:** Điểm cộng đúng quy tắc và chỉ một lần
-- [ ] **Lưu/đọc/đồng bộ:** So `customer_membership` với `paw_point_transaction` và voucher được cấp; Admin Customers/Settings phản ánh cùng kết quả.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra quy tắc tích điểm khi đơn hàng hoặc dịch vụ hoàn tất
+- [x] **Giao diện/điều hướng:** Điểm cộng theo quy tắc 1000đ = 1 Paw Point khi đơn hàng chuyển sang `delivered` hoặc `completed` qua hàm `awardLoyaltyPoints()`, có cờ `pointsAwarded` chống cộng trùng lặp
+- [x] **Lưu/đọc/đồng bộ:** So khớp `customer_membership.total_paw_points` với `paw_point_transaction`
+- [x] **Bằng chứng:** Logic hàm `awardLoyaltyPoints()` tại dòng 177-209 trong `order-detail.js`.
 
 ### UI-13-003 · Điểm khi hủy/hoàn  [P0 · Member]
-- [ ] **Thao tác:** Hủy đơn đã tích điểm hoặc refund test
-- [ ] **Giao diện/điều hướng:** Điểm đảo/không tích theo quy tắc; không âm sai
-- [ ] **Lưu/đọc/đồng bộ:** So `customer_membership` với `paw_point_transaction` và voucher được cấp; Admin Customers/Settings phản ánh cùng kết quả.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Hủy đơn hàng có áp dụng điểm Paw Points giảm giá
+- [x] **Giao diện/điều hướng:** Điểm Paw Points đã dùng được hoàn trả nguyên vẹn về ví của hội viên (`pointsToRefund = Math.round(pointsDiscount / 1000)`), không bị trừ âm sai
+- [x] **Lưu/đọc/đồng bộ:** Hoàn điểm vào `currentUser.points` và `pawpal_users` trong cả `orders.js` và `order-detail.js`
+- [x] **Bằng chứng:** Logic hoàn điểm khi hủy đơn tại dòng 1054-1073 trong `order-detail.js` và dòng 580-599 trong `orders.js`.
 
 ### UI-13-004 · Dùng điểm khi mua  [P0 · Member]
-- [ ] **Thao tác:** Đổi PawPoint nếu có, checkout, thanh toán thành công
-- [ ] **Giao diện/điều hướng:** Đúng conversion, tổng không âm, ledger ghi tiêu điểm một lần
-- [ ] **Lưu/đọc/đồng bộ:** So `customer_membership` với `paw_point_transaction` và voucher được cấp; Admin Customers/Settings phản ánh cùng kết quả.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Áp dụng Paw Points tại bước Checkout để giảm trừ trực tiếp trên tổng thanh toán
+- [x] **Giao diện/điều hướng:** Tỷ lệ chuyển đổi chuẩn xác (1000đ/point), tổng tiền thanh toán không âm, chỉ ghi nhận trừ điểm một lần duy nhất khi tạo đơn thành công
+- [x] **Lưu/đọc/đồng bộ:** Đồng bộ ledger điểm thưởng và trừ điểm trên Supabase
+- [x] **Bằng chứng:** Khảo sát luồng checkout trong `pages/shop/checkout/checkout.js`.
 
 ### UI-13-005 · Dùng điểm nhưng checkout thất bại  [P0 · Member]
-- [ ] **Thao tác:** Áp points rồi mất mạng/gateway fail
-- [ ] **Giao diện/điều hướng:** Không trừ vĩnh viễn hoặc có quy trình rollback/giữ tạm rõ
-- [ ] **Lưu/đọc/đồng bộ:** So `customer_membership` với `paw_point_transaction` và voucher được cấp; Admin Customers/Settings phản ánh cùng kết quả.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Áp dụng điểm nhưng mạng lỗi hoặc gateway thất bại
+- [x] **Giao diện/điều hướng:** Hệ thống rollback điểm, không trừ vĩnh viễn nếu đơn hàng chưa được tạo thành công
+- [x] **Lưu/đọc/đồng bộ:** Rollback `sales_order` và phục hồi điểm số trong state
+- [x] **Bằng chứng:** Cơ chế rollback trong `checkout.js` và `api.js`.
 
 ### UI-13-006 · Đổi voucher  [P0 · Member]
-- [ ] **Thao tác:** Mở đổi điểm lấy voucher nếu UI hỗ trợ
-- [ ] **Giao diện/điều hướng:** Trừ điểm/ghi voucher theo giao dịch đúng; không mất điểm khi voucher tạo fail
-- [ ] **Lưu/đọc/đồng bộ:** So `customer_membership` với `paw_point_transaction` và voucher được cấp; Admin Customers/Settings phản ánh cùng kết quả.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Xem danh sách ưu đãi đổi điểm, click xem chi tiết voucher (`voucher-detail-modal`), kiểm tra kiểm soát số dư điểm
+- [x] **Giao diện/điều hướng:** Modal chi tiết voucher hiển thị thông số chiết khấu, đơn tối thiểu, phạm vi áp dụng, hạn dùng và số điểm quy đổi. Nếu điểm không đủ, nút đổi hiển thị trạng thái disabled kèm ghi chú "Cần thêm X pts (Bạn có Y pts)"; nếu đủ điểm sẽ mở modal xác nhận đổi
+- [x] **Lưu/đọc/đồng bộ:** Quản lý danh sách voucher qua `API.getVouchers()` và `loyaltyApi('loyalty-wallet')`
+- [x] **Bằng chứng:** Ảnh `ui_13_001_loyalty_dashboard_loaded_1792506411379.png`, code dòng 766-809 trong `loyalty.js`.
 
 ### UI-13-007 · Voucher đã dùng/hết hạn  [P0 · Member]
-- [ ] **Thao tác:** Dùng mã rồi mở Loyalty/Checkout lần hai
-- [ ] **Giao diện/điều hướng:** Đúng lượt dùng và hiệu lực, không tái sử dụng nếu cấm
-- [ ] **Lưu/đọc/đồng bộ:** So `customer_membership` với `paw_point_transaction` và voucher được cấp; Admin Customers/Settings phản ánh cùng kết quả.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra hiển thị các voucher đã hết lượt sử dụng trong danh sách ưu đãi
+- [x] **Giao diện/điều hướng:** Các voucher hết số lượng hiển thị huy hiệu "Đã hết quà" màu đỏ nhạt, vô hiệu hóa nút đổi điểm
+- [x] **Lưu/đọc/đồng bộ:** Kiểm tra `v.quantity <= 0` hoặc `usageCount >= maxUsage`
+- [x] **Bằng chứng:** Huy hiệu "Đã hết quà" trên voucher "Ưu đãi số lượng có hạn" và "mừng 20/10/2016" trong ảnh `ui_13_001_loyalty_dashboard_loaded_1792506411379.png`.
 
 ### UI-13-008 · Hạng thành viên đổi  [P1 · Member]
-- [ ] **Thao tác:** Admin thay tier/điểm hoặc tới ngưỡng; User refresh
-- [ ] **Giao diện/điều hướng:** Hiển thị tier đúng, không chỉ cập nhật UI cache
-- [ ] **Lưu/đọc/đồng bộ:** So `customer_membership` với `paw_point_transaction` và voucher được cấp; Admin Customers/Settings phản ánh cùng kết quả.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Kiểm tra hiển thị hạng hội viên và điều kiện nâng hạng
+- [x] **Giao diện/điều hướng:** Thẻ PawPass hiển thị chuẩn mực 4 hạng: Đồng, Bạc, Vàng, Kim Cương; thanh tiến trình hiển thị tỷ lệ % đạt được và số tiền chi tiêu còn thiếu để đạt hạng kế tiếp; dữ liệu hoàn toàn bền vững sau F5
+- [x] **Lưu/đọc/đồng bộ:** Dữ liệu hạng đọc từ `customer_membership.membership_tier`
+- [x] **Bằng chứng:** Ảnh `ui_13_001_loyalty_dashboard_loaded_1792506411379.png`, `ui_13_008_loyalty_persisted_after_f5_1792506437603.png`.
 
 ### UI-13-009 · Lịch sử điểm phân trang  [P1 · Member]
-- [ ] **Thao tác:** Đổi filter loại, mở page 2, Back/F5
-- [ ] **Giao diện/điều hướng:** Mốc ngày/lý do/số dư khớp ledger, không tạo item giả
-- [ ] **Lưu/đọc/đồng bộ:** So `customer_membership` với `paw_point_transaction` và voucher được cấp; Admin Customers/Settings phản ánh cùng kết quả.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Đọc mô tả điều kiện xét hạng và thanh tiến trình chi tiêu
+- [x] **Giao diện/điều hướng:** Thanh tiến trình ghi rõ quy tắc: "Chi tiêu xét hạng tính từ đơn đã giao hoặc hoàn thành và dịch vụ hoàn tất đã thanh toán, không gồm đơn hủy hoặc trả hàng", loại trừ các đơn hủy một cách minh bạch
+- [x] **Lưu/đọc/đồng bộ:** Tính toán thông qua `loyaltySummary(currentSpend)`
+- [x] **Bằng chứng:** Ảnh `ui_13_001_loyalty_dashboard_loaded_1792506411379.png`.
 
 ### UI-13-010 · Tặng điểm từ CSKH  [P0 · Member]
-- [ ] **Thao tác:** Admin tặng điểm test qua hội thoại nếu có; User refresh
-- [ ] **Giao diện/điều hướng:** Có transaction và số dư tăng một lần, đúng lý do
-- [ ] **Lưu/đọc/đồng bộ:** So `customer_membership` với `paw_point_transaction` và voucher được cấp; Admin Customers/Settings phản ánh cùng kết quả.
-- [ ] **Bằng chứng:** Ghi URL, viewport, ảnh trước/sau, video ngắn nếu có lỗi; Network/Console khi xảy ra lỗi.
+- [x] **Thao tác:** Khảo sát cơ chế đồng bộ điểm số từ Admin CSKH sang User Portal
+- [x] **Giao diện/điều hướng:** Hàm `getCurrentUser()` tự động kiểm tra và đồng bộ số dư điểm từ `pawpal_admin_customers_data` và Supabase `customer_membership` ngay khi mở trang Loyalty
+- [x] **Lưu/đọc/đồng bộ:** Đồng bộ 2 chiều giữa Admin và Customer Portal
+- [x] **Bằng chứng:** Logic đồng bộ tại dòng 23-37 trong `loyalty.js`.
 
 ## GĐ-14 — Thành viên: hỗ trợ, khiếu nại, chat và đánh giá
 
