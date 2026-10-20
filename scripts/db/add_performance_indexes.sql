@@ -75,7 +75,7 @@ CREATE INDEX IF NOT EXISTS idx_care_log_pet_id
 
 
 -- 4. BẢNG BÁN HÀNG & ĐƠN HÀNG (SALES ORDER & DETAILS)
--- Tối ưu hóa tìm mã đơn hàng, đối soát COD và chi tiết theo biến thể SKU
+-- Tối ưu hóa tìm mã đơn hàng, đối soát COD và chi tiết theo biến thể SKU (product_variant_id)
 CREATE INDEX IF NOT EXISTS idx_sales_order_code 
     ON public.sales_order(order_code);
 
@@ -91,23 +91,32 @@ CREATE INDEX IF NOT EXISTS idx_sales_order_payment_status
 CREATE INDEX IF NOT EXISTS idx_sales_order_detail_order_id 
     ON public.sales_order_detail(order_id);
 
-CREATE INDEX IF NOT EXISTS idx_sales_order_detail_product_id 
-    ON public.sales_order_detail(product_id);
-
 CREATE INDEX IF NOT EXISTS idx_sales_order_detail_variant_id 
     ON public.sales_order_detail(product_variant_id);
 
 
--- 5. BẢNG KHO HÀNG & BIẾN ĐỘNG TỒN (INVENTORY & TRANSACTIONS)
--- Tối ưu hóa kiểm tra tồn kho theo sản phẩm & biến thể SKU, lịch sử kiểm kê
-CREATE INDEX IF NOT EXISTS idx_inventory_product_id 
-    ON public.inventory(product_id);
+-- 5. BẢNG SẢN PHẨM & BIẾN THỂ SKU (PRODUCT & PRODUCT VARIANT)
+-- Tối ưu hóa liên kết sản phẩm cha - con và tra cứu theo mã SKU
+CREATE INDEX IF NOT EXISTS idx_product_variant_product_id 
+    ON public.product_variant(product_id);
 
+CREATE INDEX IF NOT EXISTS idx_product_variant_sku 
+    ON public.product_variant(sku_variant);
+
+CREATE INDEX IF NOT EXISTS idx_product_variant_status 
+    ON public.product_variant(status);
+
+CREATE INDEX IF NOT EXISTS idx_product_category_id 
+    ON public.product(category_id);
+
+CREATE INDEX IF NOT EXISTS idx_product_status 
+    ON public.product(status);
+
+
+-- 6. BẢNG KHO HÀNG & BIẾN ĐỘNG TỒN (INVENTORY & TRANSACTIONS)
+-- Tối ưu hóa kiểm tra tồn kho theo biến thể SKU và lịch sử kiểm kê
 CREATE INDEX IF NOT EXISTS idx_inventory_variant_id 
     ON public.inventory(product_variant_id);
-
-CREATE INDEX IF NOT EXISTS idx_inventory_transaction_product_id 
-    ON public.inventory_transaction(product_id, created_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_inventory_tx_variant_date 
     ON public.inventory_transaction(product_variant_id, created_at DESC);
@@ -116,7 +125,7 @@ CREATE INDEX IF NOT EXISTS idx_inventory_transaction_type
     ON public.inventory_transaction(transaction_type);
 
 
--- 6. BẢNG KHIẾU NẠI & HỖ TRỢ CSKH (SUPPORT TICKET & MESSAGES)
+-- 7. BẢNG KHIẾU NẠI & HỖ TRỢ CSKH (SUPPORT TICKET & MESSAGES)
 -- Tối ưu hóa đếm ticket chờ xử lý, sắp xếp theo mức độ khẩn cấp (SLA)
 CREATE INDEX IF NOT EXISTS idx_support_ticket_customer_id 
     ON public.support_ticket(customer_id);
@@ -137,7 +146,7 @@ CREATE INDEX IF NOT EXISTS idx_support_ticket_msg_ticket_id
     ON public.support_ticket_message(ticket_id, created_at ASC);
 
 
--- 7. BẢNG TRỰC CHAT CSKH & LỊCH SỬ TIN NHẮN (CHAT CONVERSATION)
+-- 8. BẢNG TRỰC CHAT CSKH & LỊCH SỬ TIN NHẮN (CHAT CONVERSATION)
 -- Tối ưu hóa tải Inbox hội thoại realtime và tra cứu khách hàng
 CREATE INDEX IF NOT EXISTS idx_chat_conversation_customer_id 
     ON public.chat_conversation(customer_id);
@@ -149,7 +158,7 @@ CREATE INDEX IF NOT EXISTS idx_chat_message_conversation_id
     ON public.chat_message(conversation_id, created_at ASC);
 
 
--- 8. BẢNG SỔ CÁI ĐIỂM THƯỞNG PAW POINTS
+-- 9. BẢNG SỔ CÁI ĐIỂM THƯỞNG PAW POINTS
 -- Tối ưu hóa lịch sử tích/tiêu điểm và đối soát số dư thành viên
 CREATE INDEX IF NOT EXISTS idx_paw_point_tx_customer_id 
     ON public.paw_point_transaction(customer_id, created_at DESC);
@@ -158,7 +167,7 @@ CREATE INDEX IF NOT EXISTS idx_paw_point_tx_type
     ON public.paw_point_transaction(transaction_type);
 
 
--- 9. BẢNG NHÂN SỰ & LỊCH CA LÀM VIỆC (STAFF & SCHEDULE)
+-- 10. BẢNG NHÂN SỰ & LỊCH CA LÀM VIỆC (STAFF & SCHEDULE)
 -- Tối ưu hóa kiểm tra trùng ca làm việc và điều phối nhân sự theo ngày
 CREATE INDEX IF NOT EXISTS idx_staff_account_status 
     ON public.staff(account_status);
@@ -173,7 +182,7 @@ CREATE INDEX IF NOT EXISTS idx_staff_shift_request_status
     ON public.staff_shift_request(status, created_at DESC);
 
 
--- 10. BẢNG NHẬT KÝ THAO TÁC HỆ THỐNG (AUDIT LOG)
+-- 11. BẢNG NHẬT KÝ THAO TÁC HỆ THỐNG (AUDIT LOG)
 -- Tối ưu hóa tra cứu nhật ký audit theo nhân sự thực hiện
 CREATE INDEX IF NOT EXISTS idx_audit_log_created_at 
     ON public.audit_log(created_at DESC);
