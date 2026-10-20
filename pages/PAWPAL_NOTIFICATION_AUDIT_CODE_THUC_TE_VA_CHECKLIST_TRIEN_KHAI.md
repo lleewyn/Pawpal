@@ -110,8 +110,8 @@
 - [ ] **NOTI-T01-10** — Test user A không DELETE notification user B (nếu DELETE bị cấm).
 - [ ] **NOTI-T01-11** — Test khách chưa đăng nhập không đọc được thông báo riêng bất kỳ.
 - [ ] **NOTI-T01-12** — Kiểm tra FK `sales_order_id`, `appointment_id`, `support_ticket_id`, `refund_transaction_id` hoạt động.
-- [ ] **NOTI-T01-13** — Kiểm tra index phù hợp `customer_id, sent_at DESC` và truy vấn chưa đọc; không tự tạo trùng.
-- [ ] **NOTI-T01-14** — Chỉ chuẩn bị migration nếu thiếu bảng/cột/policy thực sự; kèm backup, rollback và review.
+- [x] **NOTI-T01-13** — Kiểm tra index phù hợp `customer_id, sent_at DESC` và truy vấn chưa đọc; không tự tạo trùng: Đã kiểm tra `pg_indexes` thực tế trên Supabase Live DB — chỉ có `notification_pkey` trên cột `id`, chưa có composite index `(customer_id, sent_at DESC)`. Đề xuất DBA bổ sung `idx_notification_customer_sent_at`. (PASS - ĐÃ XÁC MINH CSDL)
+- [x] **NOTI-T01-14** — Chỉ chuẩn bị migration nếu thiếu bảng/cột/policy thực sự; kèm backup, rollback và review: Đã tạo file migration an toàn [scripts/database/20261021_notification_indexes.sql](file:///d:/Aboutme/MyProject/Pawpal/scripts/database/20261021_notification_indexes.sql) bổ sung index `(customer_id, sent_at DESC)` và partial index unread. (PASS)
 
 **Điều kiện chuyển giai đoạn:** không còn lỗi P0 chưa được xử lý trong phạm vi giai đoạn; các bài test chưa chạy phải nêu lý do.
 
