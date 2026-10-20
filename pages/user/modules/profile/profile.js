@@ -540,9 +540,11 @@ function initProfileEditModal(user) {
             nameError.textContent = message;
             nameError.hidden = !message;
         }
-        nameInput?.setAttribute('aria-invalid', message ? 'true' : 'false');
+        if (typeof nameInput?.setAttribute === 'function') {
+            nameInput.setAttribute('aria-invalid', message ? 'true' : 'false');
+        }
     };
-    nameInput?.addEventListener('input', () => setNameError(''));
+    nameInput?.addEventListener?.('input', () => setNameError(''));
     const emailInput = document.getElementById('profileEmailInput');
     const emailError = document.getElementById('profileEmailError');
     const setEmailError = message => {
@@ -550,9 +552,11 @@ function initProfileEditModal(user) {
             emailError.textContent = message;
             emailError.hidden = !message;
         }
-        emailInput?.setAttribute('aria-invalid', message ? 'true' : 'false');
+        if (typeof emailInput?.setAttribute === 'function') {
+            emailInput.setAttribute('aria-invalid', message ? 'true' : 'false');
+        }
     };
-    emailInput?.addEventListener('input', () => setEmailError(''));
+    emailInput?.addEventListener?.('input', () => setEmailError(''));
 
     const addressFields = {
         street_address: ['newAddressStreetInput', 'newAddressStreetError'],
@@ -739,6 +743,7 @@ function initProfileEditModal(user) {
             closeModal();
             showToast('success', 'Cập nhật thông tin cá nhân thành công');
         } catch (error) {
+            showToast('error', error.message || 'Không thể lưu hồ sơ. Vui lòng thử lại.');
             if (/email/i.test(error.message || '')) {
                 setEmailError(error.message);
                 emailInput?.focus();
