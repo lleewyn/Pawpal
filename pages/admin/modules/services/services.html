@@ -212,7 +212,7 @@
                                 <span class="info-value" id="detailBookingCategoryText">Spa và Grooming</span>
                             </div>
                             <div class="info-pair">
-                                <span class="info-label">Dịch vụ đi kèm (Add-on):</span>
+                                <span class="info-label">Dịch vụ đi kèm:</span>
                                 <span class="info-value" id="detailBookingAddonsText">Không có</span>
                             </div>
                         </div>
@@ -248,11 +248,11 @@
                             </div>
                             <div class="info-pair">
                                 <span class="info-label">Cân nặng tiếp nhận:</span>
-                                <span class="info-value" id="detailPetWeight">4.2 kg</span>
+                                <span class="info-value" id="detailPetWeight">Chưa ghi nhận</span>
                             </div>
                             <div class="info-pair">
                                 <span class="info-label">Tuổi:</span>
-                                <span class="info-value" id="detailPetAge">2 tuổi</span>
+                                <span class="info-value" id="detailPetAge">Chưa ghi nhận</span>
                             </div>
                         </div>
                         <div class="info-pair" style="margin-top: 10px;">
@@ -264,7 +264,7 @@
                     <!-- KHỐI 2B: BIÊN BẢN TIẾP NHẬN AN TOÀN (ZERO-CLAIM INTAKE ASSESSMENT) -->
                     <div class="detail-info-group" id="detailIntakeSafetySection">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <div class="detail-section-title" style="margin-bottom: 0;">Biên bản tiếp nhận an toàn (Zero-Claim)</div>
+                            <div class="detail-section-title" style="margin-bottom: 0;">Biên bản tiếp nhận an toàn</div>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <button type="button" class="btn-text-action" id="btnPrintIntakeWaiver">In biên bản tiếp nhận</button>
                                 <button type="button" class="btn-text-action" id="btnEditIntakeSafety">Sửa biên bản tiếp nhận</button>
@@ -277,7 +277,7 @@
                             <div class="info-grid-2col">
                                 <div class="info-pair">
                                     <span class="info-label">Cân nặng thực tế</span>
-                                    <span class="info-value" id="detailIntakeActualWeight">4.2 kg</span>
+                                    <span class="info-value" id="detailIntakeActualWeight">Chưa ghi nhận</span>
                                 </div>
                                 <div class="info-pair">
                                     <span class="info-label">Đánh giá cân nặng</span>
@@ -300,8 +300,8 @@
                                     <span class="info-value" id="detailIntakeTemperament">Ngoan hiền</span>
                                 </div>
                                 <div class="info-pair">
-                                    <span class="info-label">KTV đón bé</span>
-                                    <span class="info-value" id="detailIntakeStaff">Ngọc Anh (13:50)</span>
+                                    <span class="info-label">Người lập biên bản</span>
+                                    <span class="info-value" id="detailIntakeStaff">Chưa ghi nhận</span>
                                 </div>
                                 <div class="info-pair">
                                     <span class="info-label">Tư trang gửi lại</span>
@@ -310,7 +310,7 @@
                             </div>
                             <!-- Khung ảnh bằng chứng tiếp nhận ngoại quan ban đầu -->
                             <div style="margin-top: 10px;">
-                                <div class="info-label" style="margin-bottom: 6px;">Ảnh bằng chứng tiếp nhận ban đầu (Đối chứng Zero-Claim):</div>
+                                <div class="info-label" style="margin-bottom: 6px;">Ảnh tiếp nhận đã lưu</div>
                                 <div class="intake-proof-grid" id="detailIntakeProofGrid">
                                     <!-- Nạp động ảnh thumbnail -->
                                 </div>
@@ -323,7 +323,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <div class="detail-section-title" style="margin-bottom: 0;">Bảng kê chi phí và Dịch vụ đi cùng</div>
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <button type="button" class="btn-text-action text-success" id="btnSettleToPos" style="font-weight: 700; color: #165335; background: #DCEEE2; padding: 3px 8px; border-radius: 6px;">Thanh toán tại POS</button>
+                                <button type="button" class="btn-text-action" id="btnSettleToPos">Thu ngân</button>
                                 <button type="button" class="btn-text-action" id="btnOpenAddAccompanyingServiceModal">Thêm dịch vụ đi cùng</button>
                                 <button type="button" class="btn-text-action" id="btnOpenAddSurchargeModal">Thêm phụ phí</button>
                             </div>
@@ -390,7 +390,7 @@
                                 </select>
                             </div>
                             <input type="text" class="admin-input" id="newLogStepNote" placeholder="Ghi chú chi tiết cho chủ nuôi...">
-                            
+
                             <!-- ĐÍNH KÈM HÌNH ẢNH MINH CHỨNG THỰC TẾ -->
                             <div class="carelog-image-upload-wrapper">
                                 <input type="file" id="carelogImageFileInput" accept="image/*" multiple style="display: none;">
@@ -512,7 +512,7 @@
                             <option value="5">5 sao (Xuất sắc)</option>
                             <option value="4">4 sao (Tốt)</option>
                             <option value="3">3 sao (Trung bình)</option>
-                            <option value="LOW">1-2 sao (Cần xử lý)</option>
+                            <option value="LOW">1–3 sao cần lưu ý</option>
                         </select>
                     </div>
                     <div class="filter-dropdown-group">
@@ -536,7 +536,7 @@
                             <option value="ALL">Tất cả</option>
                             <option value="pending">Chưa phản hồi</option>
                             <option value="replied">Đã phản hồi</option>
-                            <option value="escalated">Đã chuyển CSKH</option>
+                            <option value="escalated">Ca có phiếu hỗ trợ</option>
                         </select>
                     </div>
                 </div>
@@ -654,20 +654,17 @@
                         <div class="form-group-item">
                             <label class="form-label-clean">Loại phòng và chuồng</label>
                             <select class="admin-select" id="newBookingHotelRoomType">
-                                <option value="Phòng Standard (STD-01)">Phòng Standard (STD-01)</option>
-                                <option value="Phòng Deluxe (DLX-04)">Phòng Deluxe (DLX-04 - Máy lạnh 24/7)</option>
-                                <option value="Phòng VIP Penthouse (VIP-02)">Phòng VIP Penthouse (VIP-02 - Camera riêng)</option>
+                                <option value="">Chọn phòng từ danh mục</option>
                             </select>
                         </div>
                         <div class="form-group-item">
                             <label class="form-label-clean">Khẩu phần dinh dưỡng</label>
-                            <select class="admin-select" id="newBookingHotelDiet">
-                                <option value="Pate tươi dinh dưỡng + Thịt bò luộc (2 bữa/ngày)">Pate tươi dinh dưỡng (2 bữa/ngày)</option>
-                                <option value="Hạt cao cấp Royal Canin (2 bữa/ngày)">Hạt cao cấp Royal Canin (2 bữa/ngày)</option>
-                                <option value="Thức ăn riêng chủ nuôi tự gửi">Thức ăn riêng chủ nuôi tự gửi</option>
-                            </select>
+                            <input type="text" class="admin-input" id="newBookingHotelDiet" placeholder="Ghi yêu cầu ăn uống của bé">
                         </div>
                     </div>
+                    <label class="form-label-clean">Lưu ý chăm sóc khi lưu trú</label>
+                    <textarea class="admin-input" id="newBookingHotelCareNotes"></textarea>
+                    <div style="font-size:12px;color:var(--text-muted);">Giữ riêng một phòng cho bé. Giá mỗi 24 giờ, làm tròn lên một ngày. Phòng được kiểm tra lại khi lưu.</div>
                 </div>
 
                 <!-- CÁC TRƯỜNG ĐẶC THÙ CHO PET TAXI -->
@@ -680,22 +677,27 @@
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Địa chỉ trả</label>
-                        <input type="text" class="admin-input" id="newBookingTaxiDropoff" placeholder="Nhập địa chỉ trả (Mặc định: PawPal Chi nhánh Quận 1)...">
+                        <input type="text" class="admin-input" id="newBookingTaxiDropoff" placeholder="Nhập địa chỉ trả bé">
                     </div>
                     <div class="form-row-2col">
                         <div class="form-group-item">
                             <label class="form-label-clean">Hình thức đưa đón</label>
                             <select class="admin-select" id="newBookingTaxiTripType">
-                                <option value="2 chiều khứ hồi">2 chiều khứ hồi (Đón đến và Chở về)</option>
-                                <option value="1 chiều (Đón đến quầy)">1 chiều (Đón đến quầy)</option>
-                                <option value="1 chiều (Chở về nhà)">1 chiều (Chở về nhà)</option>
+                                <option value="one_way">Một chiều</option>
+                                <option value="round_trip">Khứ hồi</option>
                             </select>
                         </div>
                         <div class="form-group-item">
-                            <label class="form-label-clean">Khoảng cách ước tính (km)</label>
-                            <input type="number" step="0.1" class="admin-input" id="newBookingTaxiDistance" value="4.0" placeholder="4.0">
+                            <label class="form-label-clean">Cự ly mỗi lượt (km)</label>
+                            <input type="number" step="0.1" class="admin-input" id="newBookingTaxiDistance" min="0.1">
                         </div>
                     </div>
+                </div>
+
+                <div id="newBookingTaxiReturnFields" style="display:none;">
+                    <label class="form-label-clean">Thời điểm bắt đầu lượt về <span style="color:#DC2626;">*</span></label>
+                    <input type="datetime-local" class="admin-input" id="newBookingTaxiReturnAt">
+                    <div style="font-size:12px;color:var(--text-muted);">Lượt về đảo hướng cùng lộ trình và cự ly. Tổng giá là giá hai lượt theo thời điểm tương ứng. Giữ lịch tài xế từ giờ đi đến hết lượt về.</div>
                 </div>
 
                 <!-- CÁC TRƯỜNG ĐẶC THÙ CHO SPA VÀ GROOMING (CHỈ HIỂN THỊ KHI CHỌN DỊCH VỤ CẮT TỈA / TẠO KIỂU) -->
@@ -704,15 +706,11 @@
                     <div class="form-row-2col">
                         <div class="form-group-item">
                             <label class="form-label-clean">Kiểu dáng tạo hình yêu cầu</label>
-                            <input type="text" class="admin-input" id="newBookingSpaStyle" placeholder="VD: Mặt tròn Boo, bo 4 chân phồng, tỉa form Poodle...">
+                            <input type="text" class="admin-input" id="newBookingSpaStyle" maxlength="500" placeholder="Ví dụ: tạo kiểu theo mẫu đã trao đổi">
                         </div>
                         <div class="form-group-item">
-                            <label class="form-label-clean">Cấp độ KTV Groomer</label>
-                            <select class="admin-select" id="newBookingSpaGroomerLevel">
-                                <option value="Senior Groomer">Senior Groomer</option>
-                                <option value="Master Groomer">Master Groomer</option>
-                                <option value="Junior Groomer">Junior Groomer</option>
-                            </select>
+                            <label class="form-label-clean">Cấp độ yêu cầu của gói</label>
+                            <input class="admin-input" id="newBookingSpaGroomerLevel" readonly>
                         </div>
                     </div>
                 </div>
@@ -724,13 +722,6 @@
                             <option value="">Chưa phân công (Phân công sau)</option>
                         </select>
                         <div id="newBookingStaffWorkloadHint" style="display: none; margin-top: 4px; font-size: 11.5px; padding: 4px 8px; border-radius: var(--admin-radius);"></div>
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Cơ sở chi nhánh</label>
-                        <select class="admin-select" id="newBookingBranch">
-                            <option value="PawPal Chi nhánh Quận 1">PawPal Chi nhánh Quận 1</option>
-                            <option value="PawPal Chi nhánh Quận 10">PawPal Chi nhánh Quận 10</option>
-                        </select>
                     </div>
                 </div>
                 <div class="form-group-item">
@@ -813,14 +804,15 @@
 
                 <!-- MA TRẬN GIÁ THEO CÂN NẶNG / QUY MÔ -->
                 <div class="form-group-item">
-                    <label class="form-label-clean">Ma trận giá theo phân khúc cân nặng (VNĐ)</label>
+                    <label class="form-label-clean"><input type="checkbox" id="formReplaceServicePrices"> Thay bảng giá chăm sóc bằng bốn khung dưới đây</label>
+                    <p style="color:var(--text-muted);font-size:12px;">Để trống lựa chọn này để giữ nguyên bảng giá hiện có. Giá khách sạn và xe đưa đón sử dụng cấu hình riêng.</p>
                     <table class="price-matrix-table">
                         <thead>
                             <tr>
                                 <th>Dưới 5kg</th>
-                                <th>Từ 5 - 10kg</th>
-                                <th>Từ 10 - 20kg</th>
-                                <th>Trên 20kg</th>
+                                <th>Từ 5 đến dưới 10 kg</th>
+                                <th>Từ 10 đến dưới 20 kg</th>
+                                <th>Từ 20 kg</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -842,16 +834,10 @@
                 <!-- CẤU HÌNH CÁC BƯỚC QUY TRÌNH CHĂM SÓC CHUẨN (CARE-LOG SOP TEMPLATE) -->
                 <div class="form-group-item">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; flex-wrap: wrap; gap: 6px;">
-                        <label class="form-label-clean" style="margin-bottom: 0;">Quy trình các bước chăm sóc chuẩn (Care-log SOP)</label>
-                        <select class="admin-select" id="serviceSopPresetSelect" style="width: auto; max-width: 280px; font-size: 12px; height: 30px; padding: 2px 8px;">
-                            <option value="CUSTOM">-- Chọn mẫu quy trình có sẵn --</option>
-                            <option value="SOP_SPA_FULL">Mẫu Spa trọn gói (7 bước)</option>
-                            <option value="SOP_GROOMING_STYLE">Mẫu Cắt tỉa tạo kiểu (6 bước)</option>
-                            <option value="SOP_PET_HOTEL">Mẫu Khách sạn lưu trú (6 bước)</option>
-                            <option value="SOP_PET_TAXI">Mẫu Pet Taxi đưa đón (4 bước)</option>
-                        </select>
+                        <label class="form-label-clean" style="margin-bottom: 0;">Quy trình chăm sóc</label>
+
                     </div>
-                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Các bước này sẽ tự động khởi tạo vào Care-Log khi khách đặt lịch dịch vụ này.</div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Quy trình được lưu vào danh mục. Nhật ký chỉ phát sinh khi nhân viên ghi nhận công việc thực tế.</div>
                     <div class="service-steps-config-box" id="serviceStepsListContainer">
                         <!-- Nạp động danh sách các bước chuẩn -->
                     </div>
@@ -1097,7 +1083,7 @@
 
                 <div class="modal-footer-clean">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAddSurcharge" data-close-modal="modalAddSurcharge">Hủy</button>
-                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitAddSurcharge">Lưu phụ phí</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitAddSurcharge">Lưu đề xuất phụ phí</button>
                 </div>
             </form>
         </div>
@@ -1229,6 +1215,7 @@
 
                 <div class="modal-footer-clean">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAddAccompanying" data-close-modal="modalAddAccompanyingService">Hủy</button>
+                    <label class="intake-check-item"><input type="checkbox" id="accompanyingConsentConfirmed"> Khách hàng đã đồng ý dịch vụ và giá báo</label>
                     <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitAddAccompanying">Lưu dịch vụ đi cùng</button>
                 </div>
             </form>
@@ -1256,7 +1243,7 @@
                     <div class="form-group-item">
                         <label class="form-label-clean">
                             Cân nặng thực tế tại quầy (kg) <span style="color: #DC2626;">*</span>
-                            <span id="intakeOriginalWeightLabel" style="font-size: 11.5px; color: var(--text-muted); font-weight: normal; margin-left: 6px;">(Đăng ký: 4.2 kg)</span>
+                            <span id="intakeOriginalWeightLabel" style="font-size: 11.5px; color: var(--text-muted); font-weight: normal; margin-left: 6px;">Chưa ghi nhận cân nặng đăng ký</span>
                         </label>
                         <input type="number" step="0.1" class="admin-input" id="intakePetWeightInput" placeholder="VD: 4.5" required>
                     </div>
@@ -1269,17 +1256,14 @@
                 </div>
 
                 <!-- CẢNH BÁO LỆCH KHUNG CÂN NẶNG (THUẦN CHỮ HỔ PHÁCH/ĐỎ, KHÔNG VIỀN KHUNG DÀY) -->
-                <div id="intakeWeightAlertBox" class="intake-weight-alert" style="display: none; padding: 8px 12px; margin-bottom: 12px; background: #FEF3C7; border-radius: var(--admin-radius); font-size: 12.5px; color: #92400E;">
+                <div id="intakeWeightAlertBox" class="intake-weight-alert" style="display:none;margin-bottom:12px;background:transparent;border:none;font-size:12.5px;color:#DC2626;">
                     <div id="intakeWeightAlertText" style="font-weight: 600; margin-bottom: 4px;"></div>
-                    <label class="intake-check-item" style="margin-top: 4px; font-weight: normal; color: #78350F;">
-                        <input type="checkbox" id="checkAutoAddWeightSurcharge" checked>
-                        <span id="checkAutoAddWeightSurchargeLabel">Tự động cộng phụ phí chênh lệch phân khúc cân nặng vào ca</span>
-                    </label>
+                    <span>Phụ phí cần được đề xuất và duyệt riêng sau khi đối chiếu bảng giá và trao đổi với khách.</span>
                 </div>
 
                 <!-- KHỐI 2: CHECKLIST NGOẠI QUAN 4 VÙNG AN TOÀN (ZERO-CLAIM INSPECTION) -->
                 <div class="form-group-item">
-                    <label class="form-label-clean">Kiểm tra ngoại quan an toàn (Đối chứng Zero-Claim)</label>
+                    <label class="form-label-clean">Kiểm tra ngoại quan an toàn</label>
                     <div class="intake-checklist-grid">
                         <!-- Vùng 1: Da và Lông -->
                         <div class="intake-check-section">
@@ -1385,7 +1369,8 @@
 
                 <div class="modal-footer-clean">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelEditIntakeInfo" data-close-modal="modalEditIntakeInfo">Hủy</button>
-                    <button type="button" class="admin-btn admin-btn-primary" id="intakeModalSubmitBtn">Xác nhận tiếp nhận và bắt đầu ca</button>
+                    <label class="intake-check-item"><input type="checkbox" id="intakeCustomerConfirmed"> Khách hàng đã xác nhận nội dung biên bản này</label>
+                    <button type="button" class="admin-btn admin-btn-primary" id="intakeModalSubmitBtn">Lưu biên bản và tiếp nhận bé</button>
                 </div>
             </form>
         </div>
@@ -1454,10 +1439,7 @@
                     <label class="form-label-clean">Phạm vi bàn giao ca dịch vụ</label>
                     <div style="display: flex; flex-direction: column; gap: 6px;">
                         <label class="intake-check-item">
-                            <input type="radio" name="changeStaffScope" value="next_steps" checked> Tiếp quản các bước kỹ thuật tiếp theo (KTV cũ đã hoàn thành các bước trước)
-                        </label>
-                        <label class="intake-check-item">
-                            <input type="radio" name="changeStaffScope" value="all_steps"> Bàn giao toàn bộ ca dịch vụ (KTV mới phụ trách toàn bộ từ đầu)
+                            <input type="radio" name="changeStaffScope" value="next_steps" checked> Người mới phụ trách các công việc tiếp theo; nhật ký cũ giữ nguyên người thực hiện
                         </label>
                     </div>
                 </div>
@@ -1493,7 +1475,7 @@
                     </div>
                     <label class="intake-check-item" style="margin-top: 4px;">
                         <input type="checkbox" id="completeCheckQuality" required>
-                        Xác nhận toàn bộ quy trình chăm sóc và vệ sinh đã đạt tiêu chuẩn spa
+                        Xác nhận chất lượng dịch vụ và tình trạng bé trước khi bàn giao
                     </label>
                 </div>
 
@@ -1525,26 +1507,6 @@
                             <span>Phụ phí phát sinh</span>
                             <span id="completePriceAddons" style="font-weight: 600;">+0 đ</span>
                         </div>
-                        <div class="form-row-2col" style="margin-top: 6px; margin-bottom: 6px; gap: 8px;">
-                            <div>
-                                <label style="font-size: 11.5px; color: var(--text-muted); display: block; margin-bottom: 2px;">Mã ưu đãi hoặc voucher</label>
-                                <select class="admin-select" id="completeVoucherSelect" style="height: 32px; font-size: 12px; padding: 0 8px;">
-                                    <option value="0" data-code="">-- Không dùng voucher --</option>
-                                    <option value="50000" data-code="PAWSPA50">PAWSPA50 - Giảm 50.000 đ</option>
-                                    <option value="100000" data-code="VIPCARE100">VIPCARE100 - Giảm 100.000 đ</option>
-                                    <option value="0.1" data-code="MEMBER10">MEMBER10 - Giảm 10% tổng bill</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style="font-size: 11.5px; color: var(--text-muted); display: block; margin-bottom: 2px;">Dùng điểm Pawpoint</label>
-                                <select class="admin-select" id="completePointsSelect" style="height: 32px; font-size: 12px; padding: 0 8px;">
-                                    <option value="0">-- Không trừ điểm --</option>
-                                    <option value="100">Dùng 100 điểm (-10.000 đ)</option>
-                                    <option value="200">Dùng 200 điểm (-20.000 đ)</option>
-                                    <option value="500">Dùng 500 điểm (-50.000 đ)</option>
-                                </select>
-                            </div>
-                        </div>
                         <div class="summary-row" style="padding: 3px 0; color: #15803D;">
                             <span>Giảm giá hoặc ưu đãi thành viên</span>
                             <span id="completePriceDiscount" style="font-weight: 600;">-0 đ</span>
@@ -1554,33 +1516,13 @@
                             <span id="completePriceTotal" style="font-size: 16px; font-weight: 700; color: #236B48;">250.000 đ</span>
                         </div>
                         <div style="font-size: 11.5px; color: #165335; margin-top: 4px; display: flex; align-items: center; justify-content: space-between;">
-                            <span>Tích điểm thành viên (10.000 đ = 1 điểm)</span>
-                            <span id="completeEarnedPointsText" style="font-weight: 700;">+25 Pawpoint</span>
+                            <span>Điểm thành viên</span>
+                            <span id="completeEarnedPointsText" style="font-weight: 700;">Chưa ghi nhận</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- KHỐI 4: PHƯƠNG THỨC THANH TOÁN VÀ XÁC NHẬN THU TIỀN -->
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Hình thức thanh toán <span style="color: #DC2626;">*</span></label>
-                        <select class="admin-select" id="completePaymentMethodSelect">
-                            <option value="Tiền mặt (Tại quầy)">Tiền mặt (Tại quầy)</option>
-                            <option value="Chuyển khoản VietQR">Chuyển khoản VietQR</option>
-                            <option value="Thẻ ngân hàng (POS)">Thẻ ngân hàng (POS)</option>
-                            <option value="Ví MoMo hoặc VNPay">Ví MoMo hoặc VNPay</option>
-                            <option value="Đã thanh toán trước Online">Đã thanh toán trước Online</option>
-                        </select>
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Trạng thái thu ngân</label>
-                        <label class="intake-check-item" style="height: 38px; display: flex; align-items: center;">
-                            <input type="checkbox" id="completeCheckPaid">
-                            Đã thanh toán theo dữ liệu thu ngân
-                        </label>
-                    </div>
-                </div>
-
+                <p style="color:var(--text-muted);">Bàn giao không ghi thu tiền hoặc cộng điểm. Kiểm tra các khoản thu và hoàn tại chức năng Thu ngân.</p>
                 <!-- KHỐI 5: ẢNH CHỤP THÀNH PHẨM SAU CA (BEFORE / AFTER SHOWCASE) -->
                 <div class="form-group-item">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
@@ -1595,6 +1537,7 @@
 
                 <div class="modal-footer-clean">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelCompleteBooking" data-close-modal="modalCompleteBooking">Hủy</button>
+                    <label class="intake-check-item"><input type="checkbox" id="handoverCustomerConfirmed"> Khách hàng đã xác nhận bàn giao bé và tư trang</label>
                     <button type="button" class="admin-btn admin-btn-primary" id="completeModalSubmitBtn">Lưu biên bản bàn giao</button>
                 </div>
             </form>
@@ -1645,7 +1588,7 @@
                 </div>
                 <button type="button" class="modal-btn-close-text" id="btnCloseIntakeWaiver" data-close-modal="modalPrintIntakeWaiver">Đóng</button>
             </div>
-            
+
             <div class="modal-body-clean" style="max-height: 72vh; overflow-y: auto;">
                 <!-- VÙNG IN BIÊN BẢN CHUẨN A4/A5 (PRINTABLE RECEIPT CARD) -->
                 <div class="waiver-receipt-card" id="intakeWaiverPrintArea">
@@ -1679,7 +1622,7 @@
 
                     <!-- PHẦN 2: KẾT QUẢ KIỂM TRA NGOẠI QUAN BAN ĐẦU (ZERO-CLAIM) -->
                     <div class="waiver-section-box">
-                        <div class="waiver-section-title">2. Tình trạng ngoại quan khi tiếp nhận tại quầy (Zero-Claim)</div>
+                        <div class="waiver-section-title">2. Tình trạng ngoại quan khi tiếp nhận tại quầy</div>
                         <div class="waiver-grid-2col">
                             <div><strong>Cân nặng thực tế</strong> <span id="waiverActualWeight">4.2 kg</span></div>
                             <div><strong>Đánh giá thể trọng</strong> <span id="waiverWeightEval">Đúng khung giá chuẩn</span></div>
@@ -1699,7 +1642,7 @@
                         <div class="waiver-grid-2col">
                             <div><strong>Gói dịch vụ chính</strong> <span id="waiverServiceName">Gói Tắm Vệ Sinh Cơ Bản</span></div>
                             <div><strong>Giá gói chính</strong> <span id="waiverPriceBase">250.000 đ</span></div>
-                            <div><strong>KTV tiếp nhận</strong> <span id="waiverStaffName">Ngọc Anh</span></div>
+                            <div><strong>Người lập biên bản</strong> <span id="waiverStaffName">Chưa ghi nhận</span></div>
                             <div><strong>Thời lượng ước tính</strong> <span id="waiverDuration">60 phút</span></div>
                         </div>
                         <div id="waiverExtraItemsBlock" style="margin-top: 6px; font-size: 12px; display: none;">
@@ -1747,72 +1690,58 @@
     </div>
 
     <!-- ====================================================================
-         MODAL 13: BÁO KHÁCH ĐÓN BÉ QUA ZALO / SMS (PICKUP DISPATCH NOTIFICATION)
+         MODAL 13: THÔNG BÁO NỘI BỘ MỜI ĐÓN BÉ
          ==================================================================== -->
     <div class="admin-modal-overlay" id="modalNotifyPickup">
-        <div class="admin-modal-card" style="width: 580px; max-width: 95vw;">
+        <div class="admin-modal-card" style="width: 580px; max-width: 94vw; padding: 26px 30px; overscroll-behavior: contain;">
             <div class="modal-header-clean">
                 <div>
-                    <div class="modal-title-clean">Thông báo hoàn thành dịch vụ và mời đón bé</div>
+                    <div class="modal-title-clean">Thông báo mời đón bé</div>
                     <div id="notifyPickupMeta" style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
-                        Mã ca BKG-1001 • Bé Miu Con • Chủ nuôi Lê Lệ Quyên (0901234567)
+                        —
                     </div>
                 </div>
                 <button type="button" class="modal-btn-close-text" id="btnCloseNotifyPickup" data-close-modal="modalNotifyPickup">Đóng</button>
             </div>
 
             <form id="formNotifyPickup" class="modal-body-clean" style="max-height: 70vh; overflow-y: auto;" novalidate onsubmit="return false;">
-                <!-- KÊNH GỬI THÔNG BÁO -->
                 <div class="form-group-item">
-                    <label class="form-label-clean">Kênh gửi thông báo</label>
-                    <div class="channel-radio-group" style="display: flex; gap: 16px;">
-                        <label class="intake-check-item" style="cursor: pointer;">
-                            <input type="radio" name="pickupChannel" value="Zalo ZNS" checked>
-                            <strong>Zalo ZNS và OA</strong> (Khuyến nghị - Tiết kiệm và tương tác cao)
-                        </label>
-                        <label class="intake-check-item" style="cursor: pointer;">
-                            <input type="radio" name="pickupChannel" value="SMS Brandname">
-                            <strong>SMS Brandname</strong>
-                        </label>
-                    </div>
+                    <p style="color: var(--text-muted); margin: 0;">Lưu vào hệ thống nội bộ. Chưa gửi Zalo, SMS hoặc email; cần liên hệ chủ nuôi riêng.</p>
                 </div>
 
                 <!-- THÔNG TIN TÓM TẮT CA -->
-                <div class="notify-summary-banner" style="background: #EEF5F1; border: 1px solid #C3DEC7; border-radius: var(--admin-radius); padding: 10px 14px; font-size: 12.5px; margin-bottom: 12px; color: var(--text-main);">
+                <div class="notify-summary-banner" style="background: transparent; border: none; padding: 0; font-size: 12.5px; margin-bottom: 12px; color: var(--text-main);">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                        <span>Gói dịch vụ <strong id="notifyPickupServiceName">Gói Tắm Vệ Sinh Cơ Bản</strong></span>
-                        <span>Tổng chi phí <strong id="notifyPickupTotalCost" style="color: #236B48;">250.000 đ</strong></span>
+                        <span>Gói dịch vụ <strong id="notifyPickupServiceName">—</strong></span>
+                        <span>Tổng chi phí <strong id="notifyPickupTotalCost" style="color: #236B48;">—</strong></span>
                     </div>
                     <div style="display: flex; justify-content: space-between; color: var(--text-muted);">
-                        <span>KTV phụ trách <strong id="notifyPickupStaffName">Ngọc Anh</strong></span>
-                        <span>Tư trang cần bàn giao <strong id="notifyPickupBelongings">01 Dây dắt đỏ</strong></span>
+                        <span>Người phụ trách <strong id="notifyPickupStaffName">—</strong></span>
+                        <span>Tư trang đã ghi nhận <strong id="notifyPickupBelongings">—</strong></span>
                     </div>
                 </div>
 
                 <!-- SOẠN THẢO VÀ XEM TRƯỚC NỘI DUNG TIN NHẮN -->
                 <div class="form-group-item">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                        <label class="form-label-clean" style="margin-bottom: 0;">Nội dung tin nhắn gửi khách hàng</label>
+                        <label for="notifyPickupMessageText" class="form-label-clean" style="margin-bottom: 0;">Nội dung thông báo <span style="color: #DC2626;">*</span></label>
                         <button type="button" class="btn-text-action" id="btnResetNotifyTemplate" style="font-size: 11.5px;">Khôi phục mẫu chuẩn</button>
                     </div>
-                    <textarea class="admin-input" id="notifyPickupMessageText" rows="6" style="height: auto; padding: 10px; font-size: 13px; line-height: 1.5; resize: vertical;"></textarea>
+                    <textarea class="admin-input" id="notifyPickupMessageText" rows="6" maxlength="4000" required aria-describedby="notifyPickupError" style="height: auto; padding: 10px; font-size: 13px; line-height: 1.5; resize: vertical;"></textarea>
                 </div>
 
                 <!-- TÙY CHỌN KÈM THEO -->
                 <div class="form-group-item">
                     <label class="intake-check-item" style="font-size: 12.5px;">
-                        <input type="checkbox" id="notifyIncludeCarelogLink" checked>
-                        Đính kèm đường dẫn xem ảnh thành phẩm và nhật ký chăm sóc thực tế
-                    </label>
-                    <label class="intake-check-item" style="font-size: 12.5px; margin-top: 4px;">
-                        <input type="checkbox" id="notifyLogTimelineEvent" checked>
-                        Ghi nhận sự kiện thông báo này vào Timeline Care-Log
+                        <input type="checkbox" id="notifyPickupReady" required aria-describedby="notifyPickupError">
+                        Đã kiểm tra bé sẵn sàng để đón <span style="color: #DC2626;">*</span>
                     </label>
                 </div>
 
+                <p id="notifyPickupError" role="alert" style="color: #DC2626; background: transparent; border: none; margin: 0;"></p>
                 <div class="modal-footer-clean">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelNotifyPickup" data-close-modal="modalNotifyPickup">Hủy</button>
-                    <button type="button" class="admin-btn admin-btn-primary" id="btnSendNotifyPickup">Gửi thông báo ngay</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSendNotifyPickup">Lưu thông báo</button>
                 </div>
             </form>
         </div>
@@ -1824,27 +1753,28 @@
     <div class="admin-modal-overlay" id="modalStaffSchedule">
         <div class="admin-modal-card" style="width: 820px; max-width: 96vw;">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Lịch trực và điều phối kỹ thuật viên (25/06/2026)</div>
+                <div class="modal-title-clean" id="staffScheduleTitle">Lịch trực và điều phối kỹ thuật viên</div>
                 <button type="button" class="modal-btn-close-text" id="btnCloseStaffSchedule" data-close-modal="modalStaffSchedule">Đóng</button>
             </div>
-            
+
             <div class="modal-body-clean" style="max-height: 72vh; overflow-y: auto;">
+                <div class="form-group-item"><label for="staffScheduleDate" class="form-label-clean">Ngày làm việc</label><input id="staffScheduleDate" type="date" class="admin-input"></div>
                 <!-- THANH TỔNG QUAN TẢI TOÀN HỆ THỐNG (THOÁNG ĐÃNG, TINH GỌN) -->
                 <div class="staff-schedule-summary-strip">
                     <div class="schedule-summary-item">
                         <span class="summary-item-label">Tổng KTV trực ca</span>
-                        <span class="summary-item-val" id="summaryTotalStaffCount">4</span>
+                        <span class="summary-item-val" id="summaryTotalStaffCount">—</span>
                     </div>
                     <div class="schedule-summary-item">
-                        <span class="summary-item-label">Tổng ca hôm nay</span>
-                        <span class="summary-item-val" id="summaryTotalAssignedBookings">8 ca</span>
+                        <span class="summary-item-label">Lịch hẹn đã phân công</span>
+                        <span class="summary-item-val" id="summaryTotalAssignedBookings">—</span>
                     </div>
                     <div class="schedule-summary-item">
-                        <span class="summary-item-label">Công suất trung bình</span>
-                        <span class="summary-item-val" id="summaryAvgCapacity" style="color: #165335;">50%</span>
+                        <span class="summary-item-label">Lịch hẹn chưa phân công</span>
+                        <span class="summary-item-val" id="summaryAvgCapacity" style="color: #165335;">—</span>
                     </div>
                     <div class="schedule-summary-item">
-                        <span class="summary-item-label">Cảnh báo đầy tải</span>
+                        <span class="summary-item-label">Nhân viên có lịch trùng</span>
                         <span class="summary-item-val" id="summaryOverloadedCount" style="color: #734718;">0</span>
                     </div>
                 </div>
@@ -1855,9 +1785,9 @@
                     <span class="subtab-divider">|</span>
                     <button type="button" class="staff-shift-tab-btn" data-shift-filter="MORNING">Ca sáng (08:00 - 12:00)</button>
                     <span class="subtab-divider">|</span>
-                    <button type="button" class="staff-shift-tab-btn" data-shift-filter="AFTERNOON">Ca chiều (13:00 - 17:00)</button>
+                    <button type="button" class="staff-shift-tab-btn" data-shift-filter="AFTERNOON">Ca chiều (12:00 - 17:00)</button>
                     <span class="subtab-divider">|</span>
-                    <button type="button" class="staff-shift-tab-btn" data-shift-filter="EVENING">Ca tối (17:00 - 21:00)</button>
+                    <button type="button" class="staff-shift-tab-btn" data-shift-filter="EVENING">Ca tối (17:00 - 24:00)</button>
                 </div>
 
                 <!-- LƯỚI DANH SÁCH THẺ KTV VÀ CÔNG SUẤT -->
@@ -1870,6 +1800,42 @@
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnNavToStaffModule">Quản lý nhân sự</button>
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissStaffSchedule" data-close-modal="modalStaffSchedule">Đóng</button>
             </div>
+        </div>
+    </div>
+    <div class="admin-modal-overlay" id="modalServiceCashier">
+        <div class="admin-modal-card" style="width:760px;max-width:95vw;padding:26px 30px;overscroll-behavior:contain;">
+            <div class="modal-header-clean"><div class="modal-title-clean">Thu ngân dịch vụ</div><button type="button" class="modal-btn-close-text" data-close-modal="modalServiceCashier">Đóng</button></div>
+            <form id="formServiceCashier" class="modal-body-clean" onsubmit="return false;" novalidate style="max-height:72vh;overflow-y:auto;overscroll-behavior:contain;">
+                <p id="cashierMeta" style="color:var(--text-muted);margin:0;"></p>
+                <div style="display:flex;gap:24px;flex-wrap:wrap;"><span>Tổng chi phí <strong id="cashierTotal">—</strong></span><span>Đã thu sau hoàn <strong id="cashierCollected">—</strong></span><span>Còn phải thu <strong id="cashierRemaining">—</strong></span></div>
+                <div id="cashierHistory" style="max-height:200px;overflow-y:auto;overscroll-behavior:contain;"></div>
+                <div class="form-row-2col">
+                    <div class="form-group-item"><label for="cashierAction" class="form-label-clean">Thao tác</label><select id="cashierAction" class="admin-select"><option value="collect">Thu tiền</option><option value="refund">Hoàn tiền</option></select></div>
+                    <div class="form-group-item"><label for="cashierMethod" class="form-label-clean">Phương thức <span style="color:#DC2626;">*</span></label><select id="cashierMethod" class="admin-select" required></select></div>
+                </div>
+                <div id="cashierPaymentField" class="form-group-item" style="display:none;"><label for="cashierPayment" class="form-label-clean">Khoản thu gốc <span style="color:#DC2626;">*</span></label><select id="cashierPayment" class="admin-select"></select></div>
+                <div class="form-row-2col">
+                    <div class="form-group-item"><label for="cashierAmount" class="form-label-clean">Số tiền <span style="color:#DC2626;">*</span></label><input id="cashierAmount" class="admin-input" type="number" min="1" step="1" required></div>
+                    <div id="cashierReferenceField" class="form-group-item" style="display:none;"><label for="cashierReference" class="form-label-clean">Mã giao dịch ngân hàng <span style="color:#DC2626;">*</span></label><input id="cashierReference" class="admin-input" maxlength="200" autocomplete="off"></div>
+                </div>
+                <div class="form-group-item"><label for="cashierReason" class="form-label-clean">Lý do hoặc ghi chú <span style="color:#DC2626;">*</span></label><textarea id="cashierReason" class="admin-input" maxlength="2000" rows="2" required style="height:auto;"></textarea></div>
+                <label class="intake-check-item"><input id="cashierConfirmed" type="checkbox" required><span id="cashierConfirmationText">Đã nhận đủ số tiền ghi ở trên</span> <span style="color:#DC2626;">*</span></label>
+                <p style="color:var(--text-muted);margin:0;">Chỉ ghi số tiền đã thực nhận hoặc thực hoàn. Giao dịch này không tự cộng điểm, áp voucher hoặc xét hạng.</p>
+                <p id="cashierError" role="alert" style="color:#DC2626;background:transparent;border:none;margin:0;"></p>
+                <div class="modal-footer-clean"><button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalServiceCashier">Hủy</button><button type="button" id="btnSaveServiceMoney" class="admin-btn admin-btn-primary">Lưu giao dịch</button></div>
+            </form>
+        </div>
+    </div>
+    <div class="admin-modal-overlay" id="modalServiceTicket">
+        <div class="admin-modal-card" style="width:580px;max-width:94vw;padding:26px 30px;overscroll-behavior:contain;">
+            <div class="modal-header-clean"><div class="modal-title-clean">Phản ánh dịch vụ</div><button type="button" class="modal-btn-close-text" data-close-modal="modalServiceTicket">Đóng</button></div>
+            <form id="formServiceTicket" class="modal-body-clean" onsubmit="return false;" novalidate style="max-height:70vh;overflow-y:auto;overscroll-behavior:contain;">
+                <p id="serviceTicketMeta" style="color:var(--text-muted);margin:0;"></p>
+                <div id="serviceTicketHistory" style="max-height:160px;overflow-y:auto;overscroll-behavior:contain;"></div>
+                <div class="form-group-item"><label for="serviceTicketDescription" class="form-label-clean">Nội dung phản ánh <span style="color:#DC2626;">*</span></label><textarea id="serviceTicketDescription" class="admin-input" rows="5" maxlength="4000" required style="height:auto;"></textarea></div>
+                <p id="serviceTicketError" role="alert" style="color:#DC2626;background:transparent;border:none;margin:0;"></p>
+                <div class="modal-footer-clean"><button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalServiceTicket">Hủy</button><button type="button" id="btnSaveServiceTicket" class="admin-btn admin-btn-primary">Lưu phiếu phản ánh</button></div>
+            </form>
         </div>
     </div>
     <!-- ====================================================================

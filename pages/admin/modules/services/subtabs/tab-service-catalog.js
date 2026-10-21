@@ -6,22 +6,22 @@
     PawpalServices.subtabs = PawpalServices.subtabs || {};
 
     let currentCatalogGroup = 'spa';
+    let catalogPage=1;
     let catalogSearchTerm = '';
     let catalogFilterStatus = 'ALL';
     let currentEditingServiceSteps = [];
-    let selectedPetTypes = ['Chó', 'Mèo'];
-    const DEFAULT_PET_SPECIES = ['Chó', 'Mèo', 'Thỏ', 'Hamster', 'Bọ ú', 'Chim cảnh', 'Thú nhỏ'];
-    let availablePetSpecies = [...DEFAULT_PET_SPECIES];
+    let selectedPetTypes = [];
+    let availablePetSpecies = [];
     const esc = (s) => (PawpalServices.escapeHtml ? PawpalServices.escapeHtml(s) : String(s || ''));
 
     function parsePetTypes(str) {
-        if (!str) return ['Chó', 'Mèo'];
+        if (!str) return [];
         if (Array.isArray(str)) return str;
         const parts = String(str)
             .split(/[\/,]| và | & /i)
             .map(s => s.trim())
             .filter(Boolean);
-        return parts.length > 0 ? Array.from(new Set(parts)) : ['Chó', 'Mèo'];
+        return parts.length > 0 ? Array.from(new Set(parts)) : [];
     }
 
     function renderPetTypeTags() {
@@ -37,8 +37,8 @@
             chip.className = 'pet-type-tag-chip';
             chip.style.cssText = 'display: inline-flex; align-items: center; gap: 4px; background: #EEF5F1; color: #236B48; padding: 3px 8px; border-radius: 9px; font-size: 12px; font-weight: 500;';
             chip.innerHTML = `
-                <span>${tag}</span>
-                <button type="button" class="btn-remove-pet-type-tag" data-tag="${tag}" style="background: none; border: none; color: #236B48; cursor: pointer; padding: 0 2px; font-size: 12px; font-weight: 700; line-height: 1;">✕</button>
+                <span>${esc(tag)}</span>
+                <button type="button" class="btn-remove-pet-type-tag" data-tag="${esc(tag)}" style="background: none; border: none; color: #236B48; cursor: pointer; padding: 0 2px; font-size: 12px; font-weight: 700; line-height: 1;">✕</button>
             `;
             if (textInput) {
                 container.insertBefore(chip, textInput);
@@ -67,21 +67,18 @@
         if (!dropdown) return;
 
         const q = (filterText || '').trim().toLowerCase();
+        availablePetSpecies=(PawpalServices.state.liveSpecies||[]).map(s=>s.species_name);
         let list = availablePetSpecies.filter(s => !q || s.toLowerCase().includes(q));
 
         let html = '';
         if (list.length === 0 && q) {
-            html += `
-                <div class="pet-type-dropdown-item btn-add-custom-species" data-species="${filterText.trim()}" style="padding: 9px 12px; font-size: 13px; color: #236B48; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F4F2;">
-                    <span>Thêm mới loài "${filterText.trim()}"</span>
-                </div>
-            `;
+            html = '<div style="padding:9px 12px;">Không tìm thấy loài trong danh mục.</div>';
         } else {
             html = list.map(s => {
                 const isSelected = selectedPetTypes.includes(s);
                 return `
-                    <div class="pet-type-dropdown-item" data-species="${s}" style="padding: 8px 12px; font-size: 13px; color: #203A2C; cursor: pointer; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F4F2; transition: background 0.15s ease;" onmouseover="this.style.background='#EEF5F1'" onmouseout="this.style.background='transparent'">
-                        <span style="font-weight: ${isSelected ? '600' : '400'}; color: ${isSelected ? '#236B48' : '#203A2C'};">${s}</span>
+                    <div class="pet-type-dropdown-item" data-species="${esc(s)}" style="padding: 8px 12px; font-size: 13px; color: #203A2C; cursor: pointer; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F4F2; transition: background 0.15s ease;" onmouseover="this.style.background='#EEF5F1'" onmouseout="this.style.background='transparent'">
+                        <span style="font-weight: ${isSelected ? '600' : '400'}; color: ${isSelected ? '#236B48' : '#203A2C'};">${esc(s)}</span>
                         ${isSelected ? '<span style="font-size: 11.5px; color: #236B48; font-weight: 600;">✓ Đã chọn</span>' : '<span style="font-size: 11.5px; color: var(--text-muted);">Thêm</span>'}
                     </div>
                 `;
@@ -149,7 +146,7 @@
             if (e.key === 'Enter' || e.key === ',') {
                 e.preventDefault();
                 const val = textInput.value.replace(/,/g, '').trim();
-                if (val && !selectedPetTypes.includes(val)) {
+                if (availablePetSpecies.includes(val) && !selectedPetTypes.includes(val)) {
                     selectedPetTypes.push(val);
                     if (!availablePetSpecies.includes(val)) availablePetSpecies.push(val);
                     renderPetTypeTags();
@@ -170,45 +167,7 @@
         });
     }
 
-    const SOP_PRESETS = {
-        SOP_SPA_FULL: [
-            'Khám da lông và tư vấn liệu trình',
-            'Vệ sinh tai, mắt và bấm móng',
-            'Chải gỡ rối và cạo đệm chân',
-            'Tắm thảo dược khử khuẩn lần 1',
-            'Tắm dưỡng mượt lông lần 2',
-            'Sấy khô và chải phồng tự nhiên',
-            'Thoa tinh dầu dưỡng và xịt thơm'
-        ],
-        SOP_GROOMING_STYLE: [
-            'Tiếp nhận và thảo luận mẫu tạo kiểu',
-            'Vệ sinh thân thể và tắm sấy cơ bản',
-            'Cắt tỉa định hình form toàn thân',
-            'Tỉa chi tiết vùng mặt và chân tròn',
-            'Khử khuẩn dụng cụ và vệ sinh tai',
-            'Kiểm tra form dáng và bàn giao'
-        ],
-        SOP_PET_HOTEL: [
-            'Tiếp nhận phòng và kiểm tra sức khỏe',
-            'Bữa ăn sáng và cấp nước sạch',
-            'Giờ vui chơi tự do có giám sát',
-            'Bữa ăn chiều và kiểm tra chuồng',
-            'Chải lông và vệ sinh đệm nằm',
-            'Chụp ảnh gửi chủ nuôi báo cáo ngày'
-        ],
-        SOP_PET_TAXI: [
-            'Tiếp nhận tại nhà và kiểm tra lồng vận chuyển',
-            'Di chuyển an toàn theo lộ trình định vị',
-            'Bàn giao tại cơ sở hoặc điểm đến',
-            'Khử khuẩn khoang xe và lồng vận chuyển'
-        ]
-    };
-
-    function getDefaultStepsForGroup(group) {
-        if (group === 'hotel') return [...SOP_PRESETS.SOP_PET_HOTEL];
-        if (group === 'taxi') return [...SOP_PRESETS.SOP_PET_TAXI];
-        return [...SOP_PRESETS.SOP_SPA_FULL];
-    }
+    function getDefaultStepsForGroup() { return []; }
 
     function renderServiceSteps() {
         const container = document.getElementById('serviceStepsListContainer');
@@ -217,7 +176,7 @@
         if (currentEditingServiceSteps.length === 0) {
             container.innerHTML = `
                 <div style="font-size: 12.5px; color: var(--text-muted); padding: 8px 12px; background: #FAFDFB; border-radius: 9px; text-align: center;">
-                    Chưa có bước quy trình nào. Vui lòng chọn mẫu có sẵn hoặc thêm bước bên dưới.
+                    Chưa có bước quy trình nào. Nhập các bước thực tế bên dưới.
                 </div>
             `;
             return;
@@ -227,7 +186,7 @@
             <div class="service-step-item" style="display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; background: #EEF5F1; border-radius: 9px; margin-bottom: 6px; gap: 8px;">
                 <div style="font-size: 12.5px; color: #203A2C;">
                     <strong style="color: #236B48; margin-right: 6px;">Bước ${idx + 1}:</strong>
-                    <span>${step}</span>
+                    <span>${esc(step)}</span>
                 </div>
                 <button type="button" class="btn-remove-sop-step" data-step-index="${idx}" style="background: none; border: none; color: #DC2626; font-size: 12px; font-weight: 500; cursor: pointer; padding: 2px 6px;">Xóa</button>
             </div>
@@ -248,6 +207,9 @@
     function renderCatalogTable() {
         const tbody = document.getElementById('servicesCatalogTableBody');
         if (!tbody) return;
+        let pager=document.getElementById('servicesCatalogPagination');
+        if(!pager){pager=document.createElement('div');pager.id='servicesCatalogPagination';pager.className='pagination-container';pager.style.cssText='display:flex;justify-content:center;gap:4px;background:transparent;border:none;padding:2px 0;margin-top:-6px;';tbody.closest('.service-master-card').after(pager);}
+        pager.replaceChildren();
         if (PawpalServices.state.loadError || !PawpalServices.state.isLoaded) {
             if (PawpalServices.state.loadError) {
                 delete tbody.dataset.loadingSkeleton;
@@ -283,6 +245,9 @@
             return true;
         });
 
+        const pages=Math.ceil(filtered.length/10);catalogPage=Math.min(Math.max(catalogPage,1),Math.max(pages,1));
+        if(pages>1)for(const [label,page] of [['<',catalogPage-1],...Array.from({length:pages},(_,i)=>[String(i+1),i+1]),['>',catalogPage+1]]){const button=document.createElement('button');button.type='button';button.textContent=label;button.className='btn-pagination'+(String(catalogPage)===label?' active':'');button.disabled=page<1||page>pages;button.onclick=()=>{catalogPage=page;renderCatalogTable();};pager.append(button);}
+        filtered=filtered.slice((catalogPage-1)*10,catalogPage*10);
         if (filtered.length === 0) {
             tbody.innerHTML = `
                 <tr>
@@ -296,33 +261,26 @@
 
         tbody.innerHTML = filtered.map(svc => {
             const isHidden = svc.status === 'Tạm ẩn';
-            const prices = svc.prices || {
-                under5: '120.000',
-                to10: '150.000',
-                to20: '200.000',
-                over20: '250.000'
-            };
-
-            const minPrice = prices.under5 || '120.000';
+            const minPrice = svc.minPrice != null ? svc.minPrice.toLocaleString('vi-VN')+' đ' : 'Chưa có giá theo cân nặng';
             const groupName = svc.group === 'hotel' ? 'Pet Hotel' : (svc.group === 'taxi' ? 'Pet Taxi' : 'Spa và Grooming');
-            const stepCount = (svc.steps && svc.steps.length) || (svc.group === 'taxi' ? 4 : (svc.group === 'hotel' ? 6 : 7));
+            const stepCount = svc.steps?.length || 0;
 
             return `
                 <tr class="${isHidden ? 'row-locked' : ''}" data-service-code="${esc(svc.code || svc.id)}">
                     <td style="text-align: center;">
-                        <img src="${esc(svc.image || '/assets/images/services/spa/process/spa01.webp')}" class="service-thumb-cell" alt="${esc(svc.name)}" style="width: 38px; height: 38px; border-radius: 9px; object-fit: cover;">
+                        ${svc.image ? `<img src="${esc(svc.image)}" class="service-thumb-cell" alt="${esc(svc.name)}" style="width:38px;height:38px;border-radius:9px;object-fit:cover;">` : '—'}
                     </td>
                     <td>
                         <span style="font-weight: 600; color: #203A2C; font-size: 13px;">${esc(svc.code || svc.id)}</span>
                     </td>
                     <td>
                         <div style="font-weight: 600; color: var(--text-heading);">${esc(svc.name)}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${esc(svc.desc || 'Chăm sóc toàn diện')}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${esc(svc.desc || '')}</div>
                     </td>
                     <td>${esc(groupName)}</td>
-                    <td>${esc(svc.petType || 'Chó và Mèo')}</td>
-                    <td>${esc(svc.duration || '60 phút')}</td>
-                    <td style="font-weight: 600; color: #236B48;">${esc(minPrice)} đ</td>
+                    <td>${esc(svc.petType || 'Chưa khai báo')}</td>
+                    <td>${esc(svc.duration || 'Chưa khai báo')}</td>
+                    <td style="font-weight: 600; color: #236B48;">${esc(minPrice)}</td>
                     <td>
                         <button type="button" class="btn-view-sop-pill btn-view-service-sop" data-service-code="${esc(svc.code || svc.id)}" title="Xem quy trình chuẩn SOP">${stepCount} bước</button>
                     </td>
@@ -384,18 +342,20 @@
         const metaEl = document.getElementById('sopViewerMeta');
         const container = document.getElementById('sopViewerStepsList');
 
-        const sName = svc ? svc.name : 'Gói cắt tỉa tạo kiểu';
+        if(!svc)return;
+        const sName = svc.name;
         const sCode = svc ? (svc.code || svc.id) : 'SPA02';
         const sGroup = svc ? (svc.group === 'hotel' ? 'Pet Hotel' : (svc.group === 'taxi' ? 'Pet Taxi' : 'Spa và Grooming')) : 'Spa và Grooming';
-        const sDuration = svc ? (svc.duration || '60 phút') : '90 phút';
-        const sCommission = svc ? (svc.commission || 15) : 15;
+        const sDuration = svc?.duration || 'Chưa khai báo';
+        const sCommission = svc.commission ?? 'Chưa cấu hình';
 
         if (titleEl) titleEl.textContent = `Quy trình chuẩn: ${sName}`;
         if (metaEl) {
-            metaEl.innerHTML = `Mã gói ${sCode} • Nhóm ${sGroup} • Thời lượng ${sDuration} • Hoa hồng KTV ${sCommission}%`;
+            metaEl.textContent = `Mã gói ${sCode} • Nhóm ${sGroup} • Thời lượng ${sDuration} • Hoa hồng KTV ${sCommission}%`;
         }
 
-        const steps = (svc && svc.steps && svc.steps.length > 0) ? svc.steps : getDefaultStepsForGroup(svc ? svc.group : 'spa');
+        const steps = svc.steps || [];
+        if(container&&!steps.length){container.textContent='Chưa có quy trình được lưu cho dịch vụ này.';modal.classList.add('active');modal.style.display='flex';return;}
 
         if (container) {
             container.innerHTML = steps.map((step, idx) => {
@@ -404,7 +364,7 @@
                     <div class="sop-flow-step-item">
                         <div class="sop-flow-step-badge">Bước ${stepNum}</div>
                         <div class="sop-flow-step-content">
-                            <div class="sop-flow-step-title">${step}</div>
+                            <div class="sop-flow-step-title">${esc(step)}</div>
                             <div style="font-size: 11.5px; color: var(--text-muted);">Áp dụng quy chuẩn kỹ thuật và giám sát Care-Log PawPal.</div>
                         </div>
                     </div>
@@ -418,7 +378,13 @@
         if (card) card.scrollTop = 0;
     }
 
+    function configureCatalogForm() {
+        const select=document.getElementById('formServiceStaffLevel');
+        select?.replaceChildren(new Option('Không yêu cầu cấp độ',''),...(PawpalServices.state.liveLevels||[]).map(l=>new Option(l.level_name,l.id)));
+        availablePetSpecies=(PawpalServices.state.liveSpecies||[]).map(s=>s.species_name);
+    }
     function openCreateServiceModal() {
+        configureCatalogForm();
         const modal = document.getElementById('modalServiceForm');
         if (!modal) return;
 
@@ -440,41 +406,14 @@
         const idInput = document.getElementById('formServiceId');
         if (idInput) {
             const prefix = currentCatalogGroup === 'hotel' ? 'HTL' : (currentCatalogGroup === 'taxi' ? 'TXI' : 'SPA');
-            const randNum = Math.floor(10 + Math.random() * 90);
+            const randNum = crypto.randomUUID().replace(/-/g,'').slice(0,8).toUpperCase();
             idInput.value = `${prefix}${randNum}`;
         }
 
-        const durationInput = document.getElementById('formServiceDuration');
-        if (durationInput) {
-            durationInput.value = currentCatalogGroup === 'hotel' ? 'Theo ngày' : (currentCatalogGroup === 'taxi' ? 'Theo km' : '60 phút');
-        }
-
-        const pUnder5 = document.getElementById('formPriceUnder5');
-        const p5To10 = document.getElementById('formPrice5To10');
-        const p10To20 = document.getElementById('formPrice10To20');
-        const pOver20 = document.getElementById('formPriceOver20');
-
-        if (currentCatalogGroup === 'hotel') {
-            if (pUnder5) pUnder5.value = '200.000';
-            if (p5To10) p5To10.value = '280.000';
-            if (p10To20) p10To20.value = '350.000';
-            if (pOver20) pOver20.value = '450.000';
-        } else if (currentCatalogGroup === 'taxi') {
-            if (pUnder5) pUnder5.value = '50.000';
-            if (p5To10) p5To10.value = '70.000';
-            if (p10To20) p10To20.value = '100.000';
-            if (pOver20) pOver20.value = '130.000';
-        } else {
-            if (pUnder5) pUnder5.value = '120.000';
-            if (p5To10) p5To10.value = '150.000';
-            if (p10To20) p10To20.value = '200.000';
-            if (pOver20) pOver20.value = '250.000';
-        }
-
-        currentEditingServiceSteps = getDefaultStepsForGroup(currentCatalogGroup);
-        renderServiceSteps();
-
-        selectedPetTypes = ['Chó', 'Mèo'];
+        document.getElementById('formServiceDuration').value='';
+        for(const id of ['formPriceUnder5','formPrice5To10','formPrice10To20','formPriceOver20','formServiceCommission'])document.getElementById(id).value='';
+        document.getElementById('formReplaceServicePrices').checked=false;
+        currentEditingServiceSteps=[];renderServiceSteps();selectedPetTypes=[];
         renderPetTypeTags();
 
         modal.classList.add('active');
@@ -484,6 +423,7 @@
     }
 
     function openEditServiceModal(serviceCode) {
+        configureCatalogForm();
         const servicesData = PawpalServices.state?.servicesData || [];
         const svc = servicesData.find(s => s.code === serviceCode || s.id === serviceCode);
         const modal = document.getElementById('modalServiceForm');
@@ -508,12 +448,13 @@
             if (idInput) idInput.value = svc.code || svc.id || '';
             if (groupSelect) groupSelect.value = svc.group === 'hotel' ? 'Hotel' : (svc.group === 'taxi' ? 'Taxi' : 'Spa');
             if (nameInput) nameInput.value = svc.name || '';
-            if (durationInput) durationInput.value = svc.duration || '60 phút';
+            if (durationInput) durationInput.value = svc.duration || '';
             if (descInput) descInput.value = svc.desc || '';
-            if (commInput) commInput.value = svc.commission || 15;
-            if (staffLevelSelect) staffLevelSelect.value = svc.staffLevel || 'Junior Groomer';
+            if (commInput) commInput.value = svc.commission ?? '';
+            if (staffLevelSelect) staffLevelSelect.value = svc.staffLevelId || '';
             if (statusSelect) statusSelect.value = svc.status || 'Đang phục vụ';
 
+            document.getElementById('formReplaceServicePrices').checked=false;
             selectedPetTypes = parsePetTypes(svc.petType);
             renderPetTypeTags();
 
@@ -524,9 +465,9 @@
             const pOver20 = document.getElementById('formPriceOver20');
 
             if (pUnder5) pUnder5.value = prices.under5 || '120.000';
-            if (p5To10) p5To10.value = prices.to10 || '150.000';
-            if (p10To20) p10To20.value = prices.to20 || '200.000';
-            if (pOver20) pOver20.value = prices.over20 || '250.000';
+            if (p5To10) p5To10.value = /^\d/.test(prices.to10||'') ? prices.to10 : '';
+            if (p10To20) p10To20.value = /^\d/.test(prices.to20||'') ? prices.to20 : '';
+            if (pOver20) pOver20.value = /^\d/.test(prices.over20||'') ? prices.over20 : '';
 
             currentEditingServiceSteps = (svc.steps && svc.steps.length > 0) ? [...svc.steps] : getDefaultStepsForGroup(svc.group);
             renderServiceSteps();
@@ -539,136 +480,31 @@
     }
 
     async function handleSaveService() {
-        const idInput = document.getElementById('formServiceId');
-        const nameInput = document.getElementById('formServiceName');
-        const durationInput = document.getElementById('formServiceDuration');
-        const groupSelect = document.getElementById('formServiceGroup');
-        const petTypeInput = document.getElementById('formServicePetType');
-        const descInput = document.getElementById('formServiceDesc');
-        const statusSelect = document.getElementById('formServiceStatus');
-        const hiddenCode = document.getElementById('editServiceCodeHidden');
-
-        const sCode = idInput?.value.trim();
-        const sName = nameInput?.value.trim();
-        const sDuration = durationInput?.value.trim();
-
-        if (!sCode || !sName || !sDuration) {
-            alert('Vui lòng điền đầy đủ Mã dịch vụ, Tên dịch vụ và Thời lượng thực hiện.');
-            return;
-        }
-
-        const groupVal = (groupSelect?.value || 'Spa').toLowerCase();
-        const groupKey = groupVal === 'hotel' ? 'hotel' : (groupVal === 'taxi' ? 'taxi' : 'spa');
-
-        const pUnder5 = document.getElementById('formPriceUnder5')?.value.trim() || '120.000';
-        const p5To10 = document.getElementById('formPrice5To10')?.value.trim() || '150.000';
-        const p10To20 = document.getElementById('formPrice10To20')?.value.trim() || '200.000';
-        const pOver20 = document.getElementById('formPriceOver20')?.value.trim() || '250.000';
-
-        const serviceObj = {
-            id: sCode,
-            code: sCode,
-            name: sName,
-            group: groupKey,
-            category: groupKey,
-            petType: selectedPetTypes.join(', ') || 'Chó, Mèo',
-            duration: sDuration,
-            desc: descInput?.value.trim() || '',
-            status: statusSelect?.value || 'Đang phục vụ',
-            commission: parseInt(document.getElementById('formServiceCommission')?.value, 10) || 15,
-            staffLevel: document.getElementById('formServiceStaffLevel')?.value || 'Junior Groomer',
-            prices: {
-                under5: pUnder5,
-                to10: p5To10,
-                to20: p10To20,
-                over20: pOver20
-            },
-            steps: [...currentEditingServiceSteps],
-            image: groupKey === 'hotel' ? '/assets/images/services/hotel/deluxe.webp' : (groupKey === 'taxi' ? '/assets/images/services/taxi/car.webp' : '/assets/images/services/spa/process/spa01.webp')
-        };
-
-        const servicesData = PawpalServices.state?.servicesData || [];
-        const isEditing = Boolean(hiddenCode?.value);
-
-        // Ghi Supabase trước; không đổi state hoặc báo thành công khi CSDL lỗi.
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) {
-            PawpalServices.showToast?.('Không có kết nối CSDL để lưu dịch vụ.', 'danger');
-            return;
-        }
+        const btn=document.getElementById('btnSubmitServiceForm');if(btn.disabled)return;btn.disabled=true;
         try {
-            const { data, error } = await db.from('service').upsert({
-                    service_code: sCode,
-                    service_name: sName,
-                    // Giá trị phải khớp enum service_category_enum trên Supabase.
-                    service_category: groupKey === 'hotel' ? 'PET_HOTEL' : (groupKey === 'taxi' ? 'PET_TAXI' : 'GROOMING_SPA'),
-                    estimated_duration: parseInt(sDuration, 10) || 60,
-                    description: serviceObj.desc,
-                    status: serviceObj.status === 'Đang phục vụ' ? 'dang_hoat_dong' : 'tam_ngung',
-                    checklist: serviceObj.steps
-                }, { onConflict: 'service_code' }).select('id, service_code').single();
-            if (error) throw error;
-            if (!data?.id || data.service_code !== sCode) throw new Error('Không xác minh được dịch vụ đã lưu.');
-
-            // Ma trận giá là bảng quan hệ riêng, không nằm trong bảng service.
-            // Đóng hiệu lực mức giá cũ trước khi tạo bộ giá mới để vẫn giữ lịch sử.
-            const amount = (value) => Number(String(value || '').replace(/[^\d]/g, ''));
-            const priceRows = [
-                [0, 5, amount(pUnder5)],
-                [5, 10, amount(p5To10)],
-                [10, 20, amount(p10To20)],
-                // Schema dùng numeric giới hạn; 999.99 vẫn biểu diễn đúng khoảng trên 20 kg
-                // mà không làm tràn cột weight_to.
-                [20, 999.99, amount(pOver20)]
-            ].map(([weight_from, weight_to, unit_price]) => ({
-                service_id: data.id,
-                weight_from,
-                weight_to,
-                unit_price,
-                effective_from: new Date().toISOString(),
-                effective_to: null,
-                status: 'dang_hoat_dong'
-            }));
-            if (priceRows.some(row => !Number.isSafeInteger(row.unit_price) || row.unit_price < 0)) {
-                throw new Error('Giá dịch vụ không hợp lệ.');
+            const input=id=>document.getElementById(id)?.value.trim()||'';
+            const code=input('formServiceId'),old=(PawpalServices.state.servicesData||[]).find(s=>s.code===input('editServiceCodeHidden'));
+            const duration=input('formServiceDuration');if(!/^\d+\s*(phút)?$/i.test(duration))throw Error('Thời lượng phải là số phút nguyên dương.');
+            const group=input('formServiceGroup');
+            const details={service_code:code,service_name:input('formServiceName'),duration_minutes:parseInt(duration,10),category_code:group==='Hotel'?'pet_hotel':group==='Taxi'?'pet_taxi':'grooming_spa',description:input('formServiceDesc'),status:input('formServiceStatus')==='Đang phục vụ'?'active':'inactive',commission_rate:input('formServiceCommission')||null,staff_level_id:input('formServiceStaffLevel')||null,steps:currentEditingServiceSteps,species_ids:selectedPetTypes.map(name=>PawpalServices.state.liveSpecies.find(s=>s.species_name===name)?.id)};
+            if(!details.species_ids.length||details.species_ids.some(id=>!id))throw Error('Vui lòng chọn loài được hỗ trợ từ danh mục.');
+            let prices=null;
+            if(document.getElementById('formReplaceServicePrices').checked){
+                if(group!=='Spa')throw Error('Giá khách sạn và xe đưa đón được cấu hình ở bảng giá riêng.');
+                const values=['formPriceUnder5','formPrice5To10','formPrice10To20','formPriceOver20'].map(id=>{const raw=input(id);if(!/^(?:\d+|\d{1,3}(?:\.\d{3})+)$/.test(raw))throw Error('Nhập đủ bốn mức giá bằng số nguyên không âm.');return Number(raw.replace(/\./g,''));});
+                prices=values.map((unit_price,i)=>({weight_from:[0,5,10,20][i],weight_to:[5,10,20,null][i],unit_price}));
             }
-            const now = new Date().toISOString();
-            const { error: archivePriceError } = await db.from('service_price_matrix')
-                .update({ status: 'tam_ngung', effective_to: now })
-                .eq('service_id', data.id)
-                .in('status', ['dang_hoat_dong', 'ACTIVE'])
-                .is('effective_to', null);
-            if (archivePriceError) throw archivePriceError;
-            const { data: savedPrices, error: priceError } = await db.from('service_price_matrix')
-                .insert(priceRows)
-                .select('id, unit_price');
-            if (priceError) {
-                // Rollback: khôi phục trạng thái dang_hoat_dong cho bộ giá vừa bị lưu trữ
-                await db.from('service_price_matrix')
-                    .update({ status: 'dang_hoat_dong', effective_to: null })
-                    .eq('service_id', data.id)
-                    .eq('effective_to', now);
-                throw priceError;
-            }
-            if (savedPrices?.length !== priceRows.length) throw new Error('Không xác minh được ma trận giá đã lưu.');
-            await PawpalServices.loadServicesData({ force: true });
-        } catch (err) {
-            PawpalServices.showToast?.('Không thể lưu dịch vụ: ' + err.message, 'danger');
-            return;
-        }
-
-        // Đóng modal
-        const modal = document.getElementById('modalServiceForm');
-        if (modal) {
-            modal.classList.remove('active');
-            modal.style.display = 'none';
-        }
-
-        if (PawpalServices.showToast) {
-            PawpalServices.showToast(isEditing ? 'Đã cập nhật dịch vụ thành công!' : 'Đã thêm dịch vụ mới thành công!');
-        }
-
-        renderCatalogTable();
+            const modal=document.getElementById('modalServiceForm');
+            const request=JSON.stringify(details)+JSON.stringify(prices);
+            if(modal.dataset.requestSignature!==request){modal.dataset.requestSignature=request;modal.dataset.requestId=crypto.randomUUID();}
+            const id=old?.dbId||modal.dataset.requestId;
+            const {data,error}=await window.getSupabaseClient().rpc('save_admin_service_catalog',{p_id:id,p_expected_updated_at:old?.updatedAt||null,p_details:details,p_prices:prices});
+            if(error)throw error;if(data!==id)throw Error('Không xác minh được dịch vụ đã lưu.');
+            await PawpalServices.loadCatalogData({force:true});renderCatalogTable();
+            modal.classList.remove('active');modal.style.display='none';delete modal.dataset.requestSignature;delete modal.dataset.requestId;
+            PawpalServices.showToast('Đã lưu dịch vụ và các cấu hình liên quan.');
+        }catch(error){PawpalServices.showToast('Không thể lưu dịch vụ: '+PawpalServices.errorMessage(error),'danger');}
+        finally{btn.disabled=false;}
     }
 
     function initCatalogSubtab() {
@@ -677,7 +513,7 @@
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.catalog-tab-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                currentCatalogGroup = btn.getAttribute('data-group') || btn.getAttribute('data-catalog-group') || 'spa';
+                currentCatalogGroup = btn.getAttribute('data-group') || btn.getAttribute('data-catalog-group') || 'spa';catalogPage=1;
                 renderCatalogTable();
             });
         });
@@ -689,7 +525,7 @@
             searchInput.addEventListener('input', () => {
                 clearTimeout(catalogSearchTimer);
                 catalogSearchTimer = setTimeout(() => {
-                    catalogSearchTerm = searchInput.value.trim();
+                    catalogSearchTerm = searchInput.value.trim();catalogPage=1;
                     renderCatalogTable();
                 }, 300);
             });
@@ -698,7 +534,7 @@
         const filterStatus = document.getElementById('catalogFilterStatus');
         if (filterStatus) {
             filterStatus.addEventListener('change', () => {
-                catalogFilterStatus = filterStatus.value;
+                catalogFilterStatus = filterStatus.value;catalogPage=1;
                 renderCatalogTable();
             });
         }
@@ -714,18 +550,6 @@
         if (btnSubmitService) {
             btnSubmitService.addEventListener('click', handleSaveService);
             btnSubmitService.dataset.catalogSaveBound = 'true';
-        }
-
-        // Chọn mẫu SOP có sẵn
-        const presetSelect = document.getElementById('serviceSopPresetSelect');
-        if (presetSelect) {
-            presetSelect.addEventListener('change', () => {
-                const val = presetSelect.value;
-                if (SOP_PRESETS[val]) {
-                    currentEditingServiceSteps = [...SOP_PRESETS[val]];
-                    renderServiceSteps();
-                }
-            });
         }
 
         // Thêm bước mới

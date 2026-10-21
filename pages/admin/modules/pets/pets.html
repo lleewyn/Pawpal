@@ -78,14 +78,7 @@
                         </select>
                     </div>
 
-                    <div class="filter-dropdown-group">
-                        <label class="filter-label">Tiêm chủng</label>
-                        <select class="admin-select" id="petFilterVaccine">
-                            <option value="ALL">Tất cả</option>
-                            <option value="VACCINATED">Đã tiêm đủ</option>
-                            <option value="NOT_VACCINATED">Chưa xác nhận</option>
-                        </select>
-                    </div>
+
 
                     <button type="button" class="admin-btn-filter-toggle" id="btnFilterHotelOnly">Đang ở Hotel</button>
 
@@ -197,10 +190,7 @@
             <div class="drawer-subtabs-row">
                 <div class="drawer-subtabs-bar">
                     <button type="button" class="drawer-tab-btn active" data-drawertab="ptab-traits">Thể trạng và Đặc tính</button>
-                    <button type="button" class="drawer-tab-btn" data-drawertab="ptab-vaccine">
-                        <span>Xác nhận tiêm chủng</span>
-                        <span class="tab-badge-count" id="ptabVaccineBadge" style="display: none;">!</span>
-                    </button>
+
                     <button type="button" class="drawer-tab-btn" data-drawertab="ptab-carelog">
                         <span>Nhật ký chăm sóc</span>
                         <span class="tab-badge-count" style="display: none;">0</span>
@@ -208,7 +198,7 @@
                     <button type="button" class="drawer-tab-btn" data-drawertab="ptab-history">Lịch sử dịch vụ</button>
                 </div>
                 <div class="drawer-subtabs-status-extra">
-                    <span class="admin-badge badge-success" id="petHotelEligibleBadge" style="font-size: 12.5px; padding: 4px 10px; display: none;">Đủ điều kiện nhận phòng Hotel</span>
+
                 </div>
             </div>
 
@@ -269,18 +259,7 @@
                 </div>
 
                 <!-- TAB CON 2: XÁC NHẬN TIÊM CHỦNG -->
-                <div class="drawer-tab-panel" id="ptab-vaccine">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
-                        <div>
-                            <h4 class="detail-box-title" style="margin-bottom: 2px;">Hồ sơ dịch tễ và tiêm chủng của bé</h4>
-                            <div style="font-size: 12.5px; color: var(--text-muted);">Theo dõi định kỳ vắc-xin dại, bệnh truyền nhiễm và phòng ký sinh trùng</div>
-                        </div>
-                        <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnOpenAddVaccineModal">Ghi nhận tiêm chủng hoặc xổ giun</button>
-                    </div>
-                    <div class="vaccine-card-grid" id="petVaccineContainer">
-                        <!-- Render động theo bé cưng -->
-                    </div>
-                </div>
+
 
                 <!-- TAB CON 3: NHẬT KÝ CHĂM SÓC DỊCH VỤ -->
                 <div class="drawer-tab-panel" id="ptab-carelog">
@@ -363,10 +342,7 @@
                 <span class="kpi-label">Khách quen gửi Pet Hotel</span>
                 <span class="kpi-val text-success" id="remKpiValHotel"><span class="skeleton-kpi"></span></span>
             </div>
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Cảnh báo sổ tiêm ngoài cho Hotel</span>
-                <span class="kpi-val" id="remKpiValVaccineAlert" style="color: #D97706;"><span class="skeleton-kpi"></span></span>
-            </div>
+
         </div>
 
         <!-- BẢNG DANH SÁCH NHẮC LỊCH -->
@@ -389,7 +365,7 @@
                             <option value="BATH">Tắm sấy định kỳ (quá 14 ngày)</option>
                             <option value="GROOM">Cắt tỉa tạo kiểu lông (quá 30 ngày)</option>
                             <option value="HOTEL">Gửi Pet Hotel cuối tuần</option>
-                            <option value="HOTEL_VACCINE">Cảnh báo sổ tiêm ngoài cho Hotel</option>
+
                             <option value="SHOP_REFILL">Mua lại thức ăn và Cát vệ sinh</option>
                         </select>
                     </div>
@@ -510,13 +486,7 @@
                             <div class="autocomplete-dropdown" id="newPetColorDropdown" style="display: none;"></div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Xác nhận tiêm phòng</label>
-                        <select class="admin-select" id="newPetVaccinated">
-                            <option value="true">Đã tiêm đủ dại và bệnh truyền nhiễm</option>
-                            <option value="false">Chưa xác nhận tiêm</option>
-                        </select>
-                    </div>
+
                 </div>
 
                 <div class="form-group">
@@ -634,7 +604,7 @@
                         <option value="SPA_BATH">Mẫu 1: Nhắc tắm sấy và vệ sinh định kỳ (Tặng voucher 10% Spa)</option>
                         <option value="GROOM">Mẫu 2: Nhắc cắt tỉa tạo kiểu lông (Chải lông xả rối và cắt móng)</option>
                         <option value="HOTEL">Mẫu 3: Mời đặt trước phòng Pet Hotel cuối tuần và dịp nghỉ lễ</option>
-                        <option value="HOTEL_VACCINE">Mẫu 4: Cảnh báo sổ tiêm ngoài quá hạn trước khi nhận phòng Hotel</option>
+
                         <option value="SHOP">Mẫu 5: Nhắc mua lại thức ăn hạt dinh dưỡng và Cát vệ sinh</option>
                     </select>
                 </div>
@@ -667,7 +637,7 @@
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalSendReminder">Hủy</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitSendReminder">Gửi tin nhắn</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitSendReminder">Ghi nhận đã liên hệ</button>
                     </div>
                 </div>
             </form>
@@ -884,15 +854,6 @@
                         <label class="form-label">Số điện thoại <span style="color: #DC2626;">*</span></label>
                         <input type="tel" class="admin-input" id="quickOwnerPhone" placeholder="Ví dụ: 0988112233" required>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Hạng thành viên</label>
-                        <select class="admin-select" id="quickOwnerTier">
-                            <option value="Khách mới">Khách mới</option>
-                            <option value="Đồng">Hạng Đồng</option>
-                            <option value="Bạc">Hạng Bạc</option>
-                            <option value="Vàng">Hạng Vàng</option>
-                        </select>
-                    </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Địa chỉ liên hệ</label>
@@ -915,7 +876,7 @@
                 <span class="admin-modal-title">Xem trước thẻ đeo cổ và thẻ chuồng</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalCollarTagPreview">Đóng</button>
             </div>
-            
+
             <div class="thermal-tag-preview-card">
                 <div class="thermal-tag-header">
                     <div class="thermal-tag-brand">PAWPAL CARE CENTER</div>
@@ -977,65 +938,7 @@
     <!-- ====================================================================
          MODAL 8: GHI NHẬN TIÊM CHỦNG VÀ DỊCH TỄ
          ==================================================================== -->
-    <div class="admin-modal-backdrop" id="modalAddVaccine">
-        <div class="admin-modal-card" style="width: 560px; max-width: 94vw;">
-            <div class="admin-modal-header">
-                <span class="admin-modal-title">Ghi nhận sổ tiêm chủng và dịch tễ</span>
-                <button type="button" class="btn-modal-close" data-close-modal="modalAddVaccine">Đóng</button>
-            </div>
-            <form id="formAddVaccine" onsubmit="return false;">
-                <div class="form-group">
-                    <label class="form-label">Loại vắc-xin hoặc dịch tễ ghi trên sổ <span style="color: #DC2626;">*</span></label>
-                    <select class="admin-select" id="newVaccineType" required>
-                        <option value="Vắc-xin phòng dại">Vắc-xin phòng dại</option>
-                        <option value="Vắc-xin 7 bệnh cho chó">Vắc-xin 7 bệnh cho chó</option>
-                        <option value="Vắc-xin 4 bệnh cho mèo">Vắc-xin 4 bệnh cho mèo</option>
-                        <option value="Xổ giun định kỳ và nhỏ gáy ve rận">Xổ giun định kỳ và nhỏ gáy ve rận</option>
-                        <option value="Tiêm phòng nấm da và ghẻ">Tiêm phòng nấm da và ghẻ</option>
-                        <option value="Khác">Khác</option>
-                    </select>
-                </div>
-                <div class="form-group" id="groupCustomVaccineName" style="display: none;">
-                    <label class="form-label">Tên mũi tiêm tùy chỉnh <span style="color: #DC2626;">*</span></label>
-                    <input type="text" class="admin-input" id="newCustomVaccineName" placeholder="Ví dụ: Vắc-xin Ho cũi chó...">
-                </div>
-                <div class="form-row-two-col">
-                    <div class="form-group">
-                        <label class="form-label">Ngày tiêm gần nhất <span style="color: #DC2626;">*</span></label>
-                        <input type="date" class="admin-input" id="newVaccineDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Ngày tái chủng dự kiến</label>
-                        <input type="date" class="admin-input" id="newVaccineNextDate">
-                    </div>
-                </div>
-                <div class="form-row-two-col">
-                    <div class="form-group">
-                        <label class="form-label">Nguồn đối chiếu hoặc cơ sở tiêm ngoài</label>
-                        <input type="text" class="admin-input" id="newVaccinePlace" placeholder="Ví dụ: Sổ tiêm đối chiếu, PK Thú y 24/7..." value="Sổ tiêm đối chiếu" autocomplete="off">
-                        <div class="adjust-reason-quick-tags" id="newVaccinePlaceChips">
-                            <button type="button" class="reason-quick-chip">Sổ tiêm đối chiếu</button>
-                            <button type="button" class="reason-quick-chip">PK Thú y 24/7</button>
-                            <button type="button" class="reason-quick-chip">Bệnh viện PetCare</button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Trạng thái</label>
-                        <select class="admin-select" id="newVaccineStatus">
-                            <option value="Đã tiêm đủ">Đã tiêm đủ</option>
-                            <option value="Đã thực hiện">Đã thực hiện</option>
-                            <option value="Đạt chuẩn">Đạt chuẩn</option>
-                            <option value="Sắp đến hạn">Sắp đến hạn</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-actions-footer">
-                    <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalAddVaccine">Hủy</button>
-                    <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitAddVaccine">Lưu sổ tiêm</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
 
     <!-- ====================================================================
          MODAL 9: XEM TRƯỚC GIAO DIỆN APP SEN (PAWPAL DIARY MÔ PHỎNG)
@@ -1343,7 +1246,7 @@
                 <span class="admin-modal-title" id="selectPhotoModalTitle">Chọn ảnh thực tế</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalSelectPhoto">Đóng</button>
             </div>
-            
+
             <div class="photo-picker-grid" id="photoPickerGrid">
                 <!-- Danh sách ảnh thumbnail được nạp động từ javascript -->
             </div>

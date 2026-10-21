@@ -484,10 +484,11 @@
                 const modalWeigh = document.getElementById('modalWeighPet');
                 if (weighPetName) weighPetName.value = pet.name;
                 if (weighOldWeight) weighOldWeight.value = pet.weight;
-                if (weighNewWeightInput) weighNewWeightInput.value = pet.weightNum || parseFloat(pet.weight) || 8.5;
+                if (weighNewWeightInput) weighNewWeightInput.value = pet.weightNum || parseFloat(pet.weight) || '';
                 if (PawpalPets.subtabs.profile?.updatePriceMatrix) {
                     PawpalPets.subtabs.profile.updatePriceMatrix(weighNewWeightInput ? weighNewWeightInput.value : 8.5);
                 }
+                sessionStorage.setItem('pawpal_admin_pet_id',pet.code);
                 if (modalWeigh) modalWeigh.classList.add('open');
             } else if (action === 'print') {
                 openCollarTagPreview(pet);
@@ -503,9 +504,7 @@
                         try {
                             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                             if (!client || !pet.rawId) throw new Error('Thiếu kết nối hoặc mã hồ sơ thú cưng.');
-                            const { data: archivedRows, error: archiveError } = await client.from('pet_profile').update({ status: 'INACTIVE' }).eq('id', pet.rawId).select('id, status');
-                            if (archiveError) throw archiveError;
-                            if (!Array.isArray(archivedRows) || archivedRows.length !== 1 || archivedRows[0].status !== 'INACTIVE') throw new Error('Không xác minh được trạng thái lưu trữ trong CSDL.');
+                            await PawpalPets.saveProfile(pet,{status:'archived'});
                         } catch (aErr) {
                             console.error('Supabase archive error:', aErr);
                             PawpalPets.showToast('Không thể lưu trữ hồ sơ: ' + (aErr.message || 'Lỗi CSDL.'), 'danger');
@@ -522,9 +521,7 @@
                 try {
                     const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                     if (!client || !pet.rawId) throw new Error('Thiếu kết nối hoặc mã hồ sơ thú cưng.');
-                    const { data: restoredRows, error: restoreError } = await client.from('pet_profile').update({ status: 'dang_hoat_dong' }).eq('id', pet.rawId).select('id, status');
-                    if (restoreError) throw restoreError;
-                    if (!Array.isArray(restoredRows) || restoredRows.length !== 1 || (restoredRows[0].status !== 'dang_hoat_dong' && restoredRows[0].status !== 'ACTIVE')) throw new Error('Không xác minh được trạng thái khôi phục trong CSDL.');
+                    await PawpalPets.saveProfile(pet,{status:'active'});
                 } catch (rErr) {
                     console.error('Supabase restore error:', rErr);
                     PawpalPets.showToast('Không thể khôi phục hồ sơ: ' + (rErr.message || 'Lỗi CSDL.'), 'danger');
@@ -795,7 +792,7 @@
                     const custTier = item.getAttribute('data-tier');
 
                     if (newPetOwnerHidden) newPetOwnerHidden.value = custId;
-                    newPetOwnerInput.value = `${custName} - ${custPhone}`;
+                    newPetOwnerInput.value = `${esc(custName)} - ${esc(custPhone)}`;
                     if (newPetOwnerSelectedCard) {
                         newPetOwnerSelectedCard.innerHTML = `
                             <span>Chủ sở hữu: <strong>${esc(custName)}</strong> (${esc(custPhone || 'Chưa có SĐT')})</span>
@@ -824,13 +821,6 @@
         function setupBreedAutocomplete(inputEl, dropdownEl, speciesSelectEl) {
             if (!inputEl || !dropdownEl) return;
 
-            const popularBreedsBySpecies = {
-                'dog': ['Poodle', 'Corgi', 'Golden', 'Phốc sóc', 'Pug', 'Husky', 'Alaska', 'Shiba', 'Samoyed', 'Chihuahua', 'Lạp xưởng', 'Bull Pháp', 'Becgie', 'Pomeranian'],
-                'cat': ['Mèo ALN', 'Mèo Ba Tư', 'Mèo Anh lông dài', 'Mèo Xiêm', 'Ragdoll', 'Mèo Nga', 'Mèo Bengal', 'Mèo Scottish Fold', 'Mèo Sphynx', 'Mèo Mướp', 'Mèo Mun'],
-                'rabbit': ['Thỏ Minilop', 'Thỏ New Zealand', 'Thỏ Lionhead', 'Thỏ Hà Lan', 'Thỏ cảnh Rex'],
-                'other': ['Hamster Bear', 'Hamster Winter White', 'Bọ ú Guinea Pig', 'Nhím kiểng', 'Sóc bay']
-            };
-
             function getBreedsData() {
                 const sp = (speciesSelectEl?.value || 'dog').toLowerCase();
                 const petsData = PawpalPets.state?.petsData || {};
@@ -849,8 +839,8 @@
                     }
                 });
 
-                const baseList = popularBreedsBySpecies[sp] || popularBreedsBySpecies['dog'];
-                const allBreeds = Array.from(new Set([...Object.keys(dbCounts), ...baseList]));
+                const baseList = (PawpalPets.state.breeds||[]).filter(b=>b.is_active&&b.species?.is_active&&b.speciesCode===sp&&!/chưa|unknown|undefined|null/i.test(b.breed_name)).map(b=>b.breed_name);
+                const allBreeds = Array.from(new Set(baseList));
 
                 return allBreeds.map(name => ({
                     name,
@@ -869,9 +859,9 @@
                     dropdownEl.innerHTML = breeds.map(b => {
                         const badgeText = b.count > 0 ? `${b.count} bé trong tiệm` : 'Phổ biến';
                         return `
-                            <div class="autocomplete-item" data-value="${b.name}">
+                            <div class="autocomplete-item" data-value="${esc(b.name)}">
                                 <div class="autocomplete-meta">
-                                    <div class="autocomplete-item-name">${b.name}</div>
+                                    <div class="autocomplete-item-name">${esc(b.name)}</div>
                                     <div class="autocomplete-item-phone">${b.speciesName}</div>
                                 </div>
                                 <div class="autocomplete-item-badge">${badgeText}</div>
@@ -904,12 +894,6 @@
         function setupColorAutocomplete(inputEl, dropdownEl) {
             if (!inputEl || !dropdownEl) return;
 
-            const baseColors = [
-                'Vàng trắng', 'Xám khói', 'Nâu đỏ', 'Đen tuyền', 'Trắng kem',
-                'Tam thể', 'Bicolor', 'Xám tro', 'Vàng kem', 'Nâu socola',
-                'Vằn vện Tabby', 'Trắng tuyết', 'Tricolor', 'Xám xanh', 'Đốm đen trắng'
-            ];
-
             function getColorsData() {
                 const petsData = PawpalPets.state?.petsData || {};
                 const dbCounts = {};
@@ -922,7 +906,7 @@
                     dbCounts[c] = (dbCounts[c] || 0) + 1;
                 });
 
-                const allColors = Array.from(new Set([...Object.keys(dbCounts), ...baseColors]));
+                const allColors = Object.keys(dbCounts);
                 return allColors.map(name => ({
                     name,
                     count: dbCounts[name] || 0
@@ -939,9 +923,9 @@
                     dropdownEl.innerHTML = colors.map(c => {
                         const badgeText = c.count > 0 ? `${c.count} bé` : 'Màu phổ biến';
                         return `
-                            <div class="autocomplete-item" data-value="${c.name}">
+                            <div class="autocomplete-item" data-value="${esc(c.name)}">
                                 <div class="autocomplete-meta">
-                                    <div class="autocomplete-item-name">${c.name}</div>
+                                    <div class="autocomplete-item-name">${esc(c.name)}</div>
                                     <div class="autocomplete-item-phone">Màu sắc bộ lông</div>
                                 </div>
                                 <div class="autocomplete-item-badge">${badgeText}</div>
@@ -1023,58 +1007,9 @@
                         return;
                     }
 
-                    const activationToken = (window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`).replace(/-/g, '');
-                    const activationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-
-                    const { data: newCust, error: custErr } = await client.from('customer').insert({
-                        email: null,
-                        phone_main: phone,
-                        account_status: 'dang_hoat_dong',
-                        is_temporary: true,
-                        note: 'Khách tạo nhanh tại quầy tiếp nhận thú cưng.',
-                        activation_token: activationToken,
-                        activation_token_expires_at: activationExpiresAt
-                    }).select().single();
-
-                    if (custErr || !newCust) {
-                        console.error('Supabase create customer error:', custErr);
-                        PawpalPets.showToast('Lỗi tạo chủ nuôi: ' + (custErr?.message || 'Không thể tạo tài khoản'), 'danger');
-                        return;
-                    }
-
-                    const { error: profErr } = await client.from('customer_profile').insert({
-                        customer_id: newCust.id,
-                        full_name: name,
-                        gender: 'khac'
-                    });
-                    if (profErr) {
-                        console.error('Supabase create profile error:', profErr);
-                        await client.from('customer').delete().eq('id', newCust.id);
-                        PawpalPets.showToast('Lỗi tạo hồ sơ chủ nuôi: ' + profErr.message, 'danger');
-                        return;
-                    }
-
-                    const { error: memErr } = await client.from('customer_membership').insert({
-                        customer_id: newCust.id,
-                        total_paw_points: 0
-                    });
-                    if (memErr) {
-                        console.warn('Lỗi tạo membership cho chủ nuôi:', memErr);
-                    }
-
-                    if (address) {
-                        const { error: addrErr } = await client.from('customer_address').insert({
-                            customer_id: newCust.id,
-                            receiver_name: name,
-                            receiver_phone: phone,
-                            street_address: address,
-                            is_default: true
-                        });
-                        if (addrErr) {
-                            console.warn('Lỗi lưu địa chỉ chủ nuôi:', addrErr);
-                        }
-                    }
-
+                    const {data: customerId,error: customerError}=await client.rpc('create_customer_quick',{p_full_name:name,p_phone:phone,p_address:address||null});
+                    if(customerError)throw customerError;
+                    const newCust={id:customerId};
                     if (!PawpalPets.state.customersData) PawpalPets.state.customersData = {};
                     PawpalPets.state.customersData[newCust.id] = {
                         id: newCust.id,
@@ -1188,6 +1123,7 @@
 
         if (btnSubmitAddPet) {
             btnSubmitAddPet.addEventListener('click', async (e) => {
+                if(btnSubmitAddPet.disabled)return;
                 if (e) e.preventDefault();
                 const nameInput = document.getElementById('newPetName');
                 const name = nameInput?.value.trim() || '';
@@ -1229,6 +1165,7 @@
                 const alertText = document.getElementById('newPetAlert')?.value.trim() || '';
                 const allergy = document.getElementById('newPetAllergy')?.value.trim() || 'Không ghi nhận';
 
+                btnSubmitAddPet.disabled=true;
                 const petsData = PawpalPets.state?.petsData || {};
                 const randSuffix = Math.floor(100 + Math.random() * 900);
                 const newPetId = 'PET-' + String(Date.now()).slice(-4) + '-' + randSuffix;
@@ -1238,59 +1175,14 @@
                 try {
                     const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                     if (client) {
-                        const { data: duplicatePets, error: duplicateCheckError } = await client
-                            .from('pet_profile')
-                            .select('id, pet_name')
-                            .eq('customer_id', ownerCustId)
-                            .ilike('pet_name', name)
-                            .limit(1);
-                        if (duplicateCheckError) throw duplicateCheckError;
-                        if (duplicatePets?.length) {
-                            PawpalPets.showToast(`Chủ nuôi đã có bé cưng tên "${name}". Vui lòng dùng tên khác.`, 'warning');
-                            nameInput?.focus();
-                            return;
-                        }
-                        const insertPayload = {
-                            customer_id: ownerCustId,
-                            pet_code: newPetId,
-                            pet_name: name,
-                            species: species,
-                            breed: breed,
-                            gender: (gender === 'Cái' || gender === 'female' || gender === 'nu') ? 'nu' : 'nam',
-                            date_of_birth: dob || null,
-                            weight: weight,
-                            color: color,
-                            routine: alertText ? `Cảnh báo: ${alertText}` : 'Hồ sơ tạo mới.',
-                            allergy: allergy,
-                            vaccination_history: null, // P-03: Không tự động tạo xác nhận tiêm chủng giả
-                            avatar_url: species === 'cat' ? '/assets/images/publics/catcute5.jpg' : '/assets/images/publics/dogcute3.jpg',
-                            status: 'dang_hoat_dong'
-                        };
-
-                        const { data: createdPet, error: petErr } = await client.from('pet_profile').insert(insertPayload).select().single();
-                        if (petErr) {
-                            console.error('Supabase insert pet error:', petErr);
-                            PawpalPets.showToast('Lỗi lưu bé cưng vào CSDL: ' + petErr.message, 'danger');
-                            return;
-                        }
-
-                        const { error: initialWeightError } = await client.from('pet_weight_history').insert({
-                            pet_id: createdPet.id,
-                            weight: weight,
-                            measured_at: new Date().toISOString(),
-                            recorded_by_name: 'Nhân viên PawPal'
-                        });
-                        if (initialWeightError) {
-                            console.error('Supabase initial pet weight history error:', initialWeightError);
-                            PawpalPets.showToast('Đã tạo hồ sơ nhưng chưa ghi được lịch sử cân nặng: ' + initialWeightError.message, 'danger');
-                        }
-
+                        const breedId=PawpalPets.resolveBreed(species,breed);
+                        const createdPet=await PawpalPets.saveProfile(null,{customer_id:ownerCustId,pet_name:name,breed_id:breedId,gender:gender==='Cái'?'female':'male',date_of_birth:dob||null,color:color==='Chưa cập nhật'?null:color,safety_note:alertText||null,allergy:allergy==='Không ghi nhận'?null:allergy,routine:null},weight);
                         window.PawpalDataStore?.emitMutation?.('pet_profile', 'INSERT', createdPet);
                         await PawpalPets.loadPetsModuleData({ force: true });
                         renderPetsTable();
                         updatePetKPIs();
 
-                        PawpalPets.showToast(`Thêm bé ${name} (${newPetId}) thành công!`, 'success');
+                        PawpalPets.showToast(`Đã thêm bé ${name}.`, 'success');
                         if (modalAddPet) {
                             modalAddPet.classList.remove('open');
                             modalAddPet.classList.remove('show');
@@ -1302,7 +1194,7 @@
                 } catch (err) {
                     console.error('Add pet exception:', err);
                     PawpalPets.showToast('Lỗi khi thêm bé cưng: ' + err.message, 'danger');
-                }
+                } finally { btnSubmitAddPet.disabled=false; }
             });
         }
     }
@@ -1331,133 +1223,6 @@
                 closePetGlobalDropdown();
             }
         });
-    }
-
-    function setupWeighModal() {
-        const modalWeighPet = document.getElementById('modalWeighPet');
-        const weighNewWeightInput = document.getElementById('weighPetNewWeight');
-        const btnSubmitWeigh = document.getElementById('btnSubmitWeigh');
-        const formWeighPet = document.getElementById('formWeighPet');
-
-        if (formWeighPet) formWeighPet.addEventListener('submit', (e) => e.preventDefault());
-
-        if (weighNewWeightInput) {
-            weighNewWeightInput.addEventListener('input', (e) => {
-                if (PawpalPets.subtabs.profile?.updatePriceMatrix) {
-                    PawpalPets.subtabs.profile.updatePriceMatrix(e.target.value);
-                }
-            });
-        }
-
-        document.addEventListener('click', (e) => {
-            const btnWeigh = e.target.closest('.btn-open-weigh-modal');
-            if (btnWeigh) {
-                currentWeighingPetId = btnWeigh.getAttribute('data-id') || sessionStorage.getItem('pawpal_admin_pet_id') || 'PET-001';
-                const petsData = PawpalPets.state?.petsData || {};
-                const pet = petsData[currentWeighingPetId];
-                if (!pet) return;
-                
-                const weighPetName = document.getElementById('weighPetName');
-                const weighOldWeight = document.getElementById('weighPetOldWeight');
-                if (weighPetName) weighPetName.value = pet.name;
-                if (weighOldWeight) weighOldWeight.value = pet.weight;
-                if (weighNewWeightInput) weighNewWeightInput.value = pet.weightNum || parseFloat(pet.weight) || '';
-
-                if (modalWeighPet) {
-                    modalWeighPet.classList.add('open');
-                    if (PawpalPets.subtabs.profile?.updatePriceMatrix) {
-                        PawpalPets.subtabs.profile.updatePriceMatrix(weighNewWeightInput.value);
-                    }
-                }
-            }
-        });
-
-        if (btnSubmitWeigh) {
-            btnSubmitWeigh.addEventListener('click', async (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                const weightValue = weighNewWeightInput?.value.trim() || '';
-                const newKg = Number(weightValue);
-                const petsData = PawpalPets.state?.petsData || {};
-                const pet = petsData[currentWeighingPetId];
-                if (!pet) return;
-
-                if (!weightValue || !Number.isFinite(newKg) || newKg <= 0 || newKg < 0.1) {
-                    PawpalPets.showToast('Vui lòng nhập cân nặng lớn hơn 0 kg.', 'warning');
-                    weighNewWeightInput?.focus();
-                    return;
-                }
-
-                try {
-                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                    if (!client || !pet.rawId) {
-                        PawpalPets.showToast('Không thể lưu cân nặng khi chưa kết nối được hồ sơ thú cưng.', 'danger');
-                        return;
-                    }
-
-                    const measuredAt = new Date().toISOString();
-                    const { error: historyError } = await client.from('pet_weight_history').insert({
-                        pet_id: pet.rawId,
-                        weight: newKg,
-                        measured_at: measuredAt,
-                        recorded_by_name: window.currentUser?.full_name || window.currentUser?.name || 'Nhân viên PawPal'
-                    });
-                    // Nếu môi trường gặp sự cố với bảng lịch sử cân hoặc chưa phân quyền RLS cho anon, vẫn đảm bảo cập nhật cân nặng hiện tại
-                    if (historyError && !/schema cache|relation .* does not exist|Could not find the table|permission denied/i.test(historyError.message || '')) {
-                        throw historyError;
-                    }
-
-                    const { error: wErr } = await client.from('pet_profile').update({ weight: newKg }).eq('id', pet.rawId);
-                    if (wErr) throw wErr;
-                } catch (err) {
-                    console.error('Weight update error:', err);
-                    PawpalPets.showToast('Lỗi lưu cân nặng: ' + (err.message || 'Không thể ghi dữ liệu.'), 'danger');
-                    return;
-                }
-
-                window.PawpalDataStore?.emitMutation?.('pet_profile', 'UPDATE', { id: pet.rawId });
-                window.PawpalDataStore?.emitMutation?.('pet_weight_history', 'INSERT', { pet_id: pet.rawId });
-                await PawpalPets.loadPetsModuleData({ force: true });
-                renderPetsTable();
-                updatePetKPIs();
-
-                const updatedPet = PawpalPets.state?.petsData?.[currentWeighingPetId];
-                if (updatedPet && PawpalPets.subtabs.profile?.renderPetSubtabs) {
-                    PawpalPets.subtabs.profile.renderPetSubtabs(updatedPet);
-                }
-
-                PawpalPets.showToast(`Đã lưu cân nặng mới (${newKg} kg) cho bé ${pet.name}!`);
-                if (modalWeighPet) modalWeighPet.classList.remove('open');
-            });
-        }
-
-        // P-17: Nối nút tải ảnh từ thiết bị với file input
-        const btnUploadPetPhoto = document.getElementById('btnUploadPetPhoto');
-        const petPhotoFileInput = document.getElementById('petPhotoFileInput');
-        if (btnUploadPetPhoto && petPhotoFileInput) {
-            btnUploadPetPhoto.addEventListener('click', () => petPhotoFileInput.click());
-            petPhotoFileInput.addEventListener('change', () => {
-                const file = petPhotoFileInput.files?.[0];
-                if (!file) return;
-                if (file.size > 5 * 1024 * 1024) {
-                    PawpalPets.showToast('Dung lượng ảnh vượt quá giới hạn 5 MB. Vui lòng chọn ảnh nhẹ hơn.', 'warning');
-                    petPhotoFileInput.value = '';
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const dataUrl = e.target?.result;
-                    if (dataUrl) {
-                        const avatarPreview = document.getElementById('editPetAvatarPreview') || document.getElementById('newPetAvatarPreview');
-                        if (avatarPreview) avatarPreview.src = dataUrl;
-                        PawpalPets.showToast('Đã nạp ảnh từ thiết bị thành công!', 'success');
-                        const modalSelectPhoto = document.getElementById('modalSelectPhoto');
-                        if (modalSelectPhoto) modalSelectPhoto.classList.remove('open');
-                    }
-                };
-                reader.readAsDataURL(file);
-            });
-        }
     }
 
     PawpalPets.subtabs.list = {

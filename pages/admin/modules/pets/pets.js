@@ -224,18 +224,21 @@
                 if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
 
                 const fetchPetsList = async () => {
-                    const [custAccRes, custProfRes, petsRes] = await Promise.all([
-                        client.from('customer').select('id, email, phone_main, account_status'),
-                        client.from('customer_profile').select('id, customer_id, full_name, gender'),
-                        client.from('pet_profile').select('id, customer_id, pet_code, pet_name, avatar_url, species, breed, gender, date_of_birth, color, routine, weight, vaccination_history, allergy, status, created_at').order('created_at', { ascending: false })
+                    const [custAccRes, custProfRes, petsRes, phoneRes, weightRes, breedRes] = await Promise.all([
+                        client.from('customer').select('id, contact_email, customer_status'),
+                        client.from('customer_profile').select('customer_id, full_name, gender'),
+                        client.from('pet_profile').select('*').order('created_at', { ascending: false }),
+                        client.from('customer_phone').select('customer_id,phone_number').eq('is_primary',true),
+                        client.from('pet_current_weight').select('pet_id,weight'),
+                        client.from('pet_breed').select('id,breed_name,is_active,species:species_id(id,species_name,is_active)')
                     ]);
-                    for (const res of [custAccRes, custProfRes, petsRes]) {
+                    for (const res of [custAccRes, custProfRes, petsRes, phoneRes, weightRes, breedRes]) {
                         if (res.error) throw res.error;
                     }
                     return {
                         custAcc: custAccRes.data || [],
                         custProf: custProfRes.data || [],
-                        pets: petsRes.data || []
+                        pets: petsRes.data || [], phones: phoneRes.data || [], weights: weightRes.data || [], breeds: breedRes.data || []
                     };
                 };
 
@@ -248,7 +251,19 @@
 
                 const custAccData = data.custAcc || [];
                 const custProfData = data.custProf || [];
-                const petsDataList = data.pets || [];
+                const speciesCode = name => ({'Chó':'dog','Mèo':'cat','Thỏ':'rabbit','Hamster':'hamster'}[name] || name || 'other');
+                PawpalPets.state.breeds = (data.breeds||[]).map(b=>({...b,speciesCode:speciesCode(b.species?.species_name)}));
+                const speciesOptions=[...new Map(PawpalPets.state.breeds.filter(b=>b.species?.is_active).map(b=>[b.speciesCode,b.species.species_name])).entries()];
+                for(const id of ['newPetSpecies','editPetSpecies','petFilterSpecies']){
+                    const select=document.getElementById(id);if(!select)continue;
+                    const signature=speciesOptions.map(([code,name])=>code+':'+name).join('|');if(select.dataset.catalog===signature)continue;
+                    const selected=select.value;select.replaceChildren();
+                    if(id==='petFilterSpecies')select.add(new Option('Tất cả','ALL'));
+                    for(const [code,name] of speciesOptions)select.add(new Option(name,code));
+                    if([...select.options].some(o=>o.value===selected))select.value=selected;
+                    select.dataset.catalog=signature;
+                }
+                const petsDataList = (data.pets || []).map(p=>{const breed=data.breeds.find(b=>b.id===p.breed_id);return {...p,species:speciesCode(breed?.species?.species_name),speciesName:breed?.species?.species_name,breed:breed?.breed_name,weight:data.weights.find(w=>w.pet_id===p.id)?.weight};});
 
                 PawpalPets.state.weightTimeout = false;
                 PawpalPets.state.weightLoadError = null;
@@ -257,8 +272,8 @@
                 const custMap = Object.fromEntries(custAccData.map(customer => [customer.id, {
                     id: customer.id,
                     name: profiles.get(customer.id)?.full_name || 'Chưa cập nhật tên',
-                    phone: customer.phone_main || '',
-                    email: customer.email || ''
+                    phone: data.phones.find(p=>p.customer_id===customer.id)?.phone_number || '',
+                    email: customer.contact_email || ''
                 }]));
 
                 // Hồ sơ chủ nuôi có thể đọc được dù bảng tài khoản bị giới hạn bởi RLS.
@@ -280,26 +295,26 @@
 
                     petsDataList.forEach((p, idx) => {
                         const code = p.pet_code || (p.id ? `PET-${p.id.replace(/-/g, '').slice(0, 8).toUpperCase()}` : `PET-${String(idx + 1).padStart(3, '0')}`);
-                        const spec = (p.species || 'dog').toLowerCase();
+                        const spec = (p.species || 'other').toLowerCase();
                         // Không đưa mã số/giá trị placeholder vào tên giống hiển thị.
                         const rawBreed = String(p.breed || '').trim();
                         const invalidBreed = !rawBreed || /^\d+$/.test(rawBreed) || /^(?:null|undefined|unknown|chưa rõ|chưa cập nhật)$/i.test(rawBreed);
                         const br = invalidBreed ? 'Chưa cập nhật' : rawBreed;
-                        const specBreed = `${speciesNameMap[spec] || 'Chó'} ${br}`.trim();
+                        const specBreed = `${p.speciesName || speciesNameMap[spec] || ''} ${br}`.trim();
                         const wNum = Number(p.weight);
-                        const allg = p.allergy && p.allergy !== 'Không' ? p.allergy : '';
-                        const isArch = p.status === 'INACTIVE' || p.status === 'ARCHIVED' || p.status === 'tam_ngung' || p.status === 'da_an';
+                        const allg = p.allergy && !/^(?:không|không có|không ghi nhận|chưa ghi nhận|none|no)$/i.test(p.allergy.trim()) ? p.allergy : '';
+                        const isArch = p.status === 'archived';
                         
                         const ownerObj = custMap[p.customer_id] || {};
                         const ownerName = ownerObj.name || (p.customer_id ? 'Chưa tải được thông tin chủ nuôi' : 'Thiếu liên kết chủ nuôi');
                         const routine = p.routine || '';
                         const allergyText = allg ? `Dị ứng: ${allg}` : '';
-                        const routineAlert = routine.trim() && routine.trim() !== 'Tiếp nhận mới tại quầy.'
+                        const routineAlert = routine.trim() && !/^(?:Tiếp nhận mới tại quầy\.|Hồ sơ tạo mới\.|Chưa có ghi chú đặc biệt\.|Không ghi nhận)$/i.test(routine.trim())
                             ? (/^(?:lưu ý|cảnh báo|tập tính)\s*:/i.test(routine.trim())
                                 ? routine.trim()
                                 : `Lưu ý: ${routine.trim()}`)
                             : '';
-                        const alertParts = [routineAlert, allergyText].filter(Boolean);
+                        const alertParts = [p.safety_note, routineAlert, allergyText].filter(Boolean);
 
                         let statusStr = 'Đang nuôi';
                         if (p.status === 'HOTEL') statusStr = 'Lưu trú Hotel';
@@ -307,21 +322,11 @@
 
                         const dobFormatted = p.date_of_birth ? formatDate(p.date_of_birth) : 'Chưa cập nhật';
 
-                        const vaccinesList = (p.vaccination_history || '').split('\n\n').filter(Boolean).map(record => {
-                            const field = label => record.split('\n').find(line => line.startsWith(label + ': '))?.slice(label.length + 2) || '';
-                            const legacy = record.match(/^Đã tiêm (.+) \((\d{2}\/\d{2}\/\d{4})\)$/);
-                            return {
-                                title: field('Loại') || legacy?.[1] || record,
-                                status: field('Trạng thái') || 'Chưa xác nhận',
-                                date: field('Ngày ghi nhận') || legacy?.[2] || 'Chưa cập nhật',
-                                nextDate: field('Ngày tái chủng'),
-                                place: field('Nguồn đối chiếu') || 'Chưa cập nhật'
-                            };
-                        });
+                        const vaccinesList = [];
 
                         petsMap[code] = {
                             id: code,
-                            rawId: p.id,
+                            rawId: p.id, updatedAt: p.updated_at, breedId: p.breed_id, safetyNote: p.safety_note || '', statusRaw: p.status,
                             code: code,
                             name: p.pet_name || 'Bé cưng',
                             species: spec,
@@ -329,7 +334,7 @@
                             breed: br,
                             gender: (p.gender === 'FEMALE' || p.gender === 'female' || p.gender === 'Cái' || p.gender === 'nu') ? 'Cái' : ((p.gender === 'MALE' || p.gender === 'male' || p.gender === 'Đực' || p.gender === 'nam') ? 'Đực' : 'Chưa rõ'),
                             weight: Number.isFinite(wNum) && wNum > 0 ? `${wNum} kg` : 'Chưa cập nhật',
-                            weightNum: wNum,
+                            weightNum: Number.isFinite(wNum) && wNum>0 ? wNum : null,
                             dob: dobFormatted,
                             dobRaw: p.date_of_birth || '',
                             color: p.color || 'Chưa cập nhật',
@@ -387,25 +392,29 @@
             const fetchDetails = async () => {
                 const [wRes, cRes, aRes] = await Promise.all([
                     client.from('pet_weight_history')
-                        .select('id, pet_id, weight, measured_at, recorded_by_name, created_at')
+                        .select('id, pet_id, weight, measured_at, note, staff:recorded_by(full_name), created_at')
                         .eq('pet_id', pet.rawId)
                         .order('measured_at', { ascending: false })
                         .limit(30),
                     client.from('care_log')
-                        .select('id, appointment_id, pet_id, description, health_status, recorded_at, created_at')
-                        .eq('pet_id', pet.rawId)
+                        .select('id, appointment_id, description, observed_condition, action_name_snapshot, staff:recorded_by(full_name), recorded_at, created_at, media:care_log_media(media_type,media_url), appointment:appointment_id(pet_id)')
+                        .eq('appointment.pet_id', pet.rawId)
                         .order('recorded_at', { ascending: false })
                         .limit(30),
                     client.from('appointment')
-                        .select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_time, appointment_status, total_price, service:service_id(service_name), staff:staff_id(full_name)')
+                        .select('id, appointment_code, customer_id, pet_id, scheduled_start_at, scheduled_end_at, appointment_status, items:appointment_item(name_snapshot,weight_snapshot,status), staff:staff_id(full_name)')
                         .eq('pet_id', pet.rawId)
-                        .order('appointment_date', { ascending: false })
+                        .order('scheduled_start_at', { ascending: false })
                         .limit(30)
                 ]);
+                for(const response of [wRes,cRes,aRes])if(response.error)throw response.error;
+                const ids=(aRes.data||[]).map(a=>a.id);
+                const totals=ids.length?await client.from('appointment_totals').select('appointment_id,total_price').in('appointment_id',ids):{data:[]};
+                if(totals.error)throw totals.error;
                 return {
                     weight: wRes.data || [],
-                    careLogs: cRes.data || [],
-                    appts: aRes.data || []
+                    careLogs: (cRes.data || []).filter(c=>c.appointment?.pet_id===pet.rawId),
+                    appts: (aRes.data || []).map(a=>({...a,total_price:totals.data.find(t=>t.appointment_id===a.id)?.total_price}))
                 };
             };
 
@@ -424,7 +433,7 @@
                     date: formatDate(measuredAt),
                     weight: `${measuredWeight} kg`,
                     tier: measuredWeight < 5 ? 'Dưới 5 kg' : (measuredWeight <= 10 ? 'Từ 5 đến 10 kg' : 'Trên 10 kg'),
-                    by: record.recorded_by_name || 'Nhân viên PawPal',
+                    by: record.staff?.full_name || 'Chưa ghi nhận người cân',
                     measuredAt: new Date(measuredAt).getTime()
                 };
             });
@@ -433,20 +442,20 @@
             pet.carelogs = (details.careLogs || []).map(cl => ({
                 time: cl.recorded_at ? formatDateTime(cl.recorded_at) : '',
                 service: cl.description || 'Chưa có ghi chú',
-                ktv: 'Kỹ thuật viên PawPal',
-                imgBefore: '',
-                imgAfter: '',
-                checkText: cl.health_status ? `Tình trạng: ${cl.health_status}` : 'Chưa ghi nhận',
+                ktv: cl.staff?.full_name || 'Chưa ghi nhận nhân viên',
+                imgBefore: (cl.media||[]).find(m=>/before|trước/i.test(m.media_type))?.media_url || '',
+                imgAfter: (cl.media||[]).find(m=>/after|sau/i.test(m.media_type))?.media_url || '',
+                checkText: cl.observed_condition ? `Tình trạng: ${cl.observed_condition}` : 'Chưa ghi nhận',
                 appStatus: 'Đã ghi nhận',
                 careId: cl.id
             }));
 
             // Map history appointments
             pet.history = (details.appts || []).map(app => {
-                const sName = app.service?.service_name || 'Dịch vụ Spa và Grooming';
-                const appDate = app.appointment_date ? formatDate(app.appointment_date) : '';
-                const appTime = app.appointment_time ? app.appointment_time.slice(0, 5) : '';
-                const priceStr = app.total_price != null ? Number(app.total_price).toLocaleString('vi-VN') + 'đ' : 'Chưa cập nhật';
+                const sName = (app.items||[]).map(i=>i.name_snapshot).join(', ') || 'Chưa ghi nhận dịch vụ';
+                const appDate = app.scheduled_start_at ? formatDate(app.scheduled_start_at) : '';
+                const appTime = app.scheduled_start_at ? formatTime(app.scheduled_start_at) : '';
+                const priceStr = app.total_price!=null?Number(app.total_price).toLocaleString('vi-VN')+'đ':'Chưa có giá trị đối soát';
                 const stRaw = (app.appointment_status || '').toUpperCase();
                 let stText = 'Chờ xác nhận';
                 if (stRaw === 'COMPLETED' || stRaw === 'DA_HOAN_TAT' || stRaw === 'DA_HOAN_THANH') stText = 'Đã hoàn thành';
@@ -465,9 +474,9 @@
                 };
             });
 
-            pet._detailsLoaded = true;
+            pet._detailsError = null; pet._detailsLoaded = true;
         } catch (e) {
-            console.warn('[PawpalPets] Lỗi tải chi tiết bé cưng:', e);
+            pet._detailsError = 'Không thể tải chi tiết hồ sơ. Vui lòng thử lại.'; pet._detailsLoaded=false; console.warn('[PawpalPets] Lỗi tải chi tiết bé cưng:', e);
         }
         return pet;
     };
@@ -481,7 +490,7 @@
         const fetchLogs = async () => {
             const [logsRes, apptsRes] = await Promise.all([
                 client.from('care_log')
-                    .select('id, appointment_id, pet_id, description, health_status, recorded_at, created_at')
+                    .select('id, appointment_id, description, observed_condition, action_name_snapshot, staff:recorded_by(full_name), recorded_at, created_at, appointment:appointment_id(pet_id)')
                     .order('recorded_at', { ascending: false })
                     .limit(limit),
                 client.from('appointment')
@@ -502,7 +511,7 @@
             if (logsRes.error || apptsRes.error) throw (logsRes.error || apptsRes.error);
 
             return {
-                logs: logsRes.data || [],
+                logs: (logsRes.data || []).map(l=>({...l,pet_id:l.appointment?.pet_id,health_status:l.observed_condition})),
                 appts: apptsRes.data || []
             };
         };
@@ -535,16 +544,20 @@
 
         const fetchAppts = async () => {
             const { data, error } = await client.from('appointment')
-                .select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_status, service:service_id(service_name)')
-                .in('appointment_status', ['da_hoan_tat'])
-                .order('appointment_date', { ascending: false })
+                .select('id, appointment_code, customer_id, pet_id, scheduled_start_at, appointment_status, items:appointment_item(name_snapshot,status)')
+                .eq('appointment_status', 'completed')
+                .order('scheduled_start_at', { ascending: false })
                 .limit(500);
 
             if (error) {
                 console.warn('[PawpalPets] Lỗi nạp lịch hẹn hoàn tất nhắc nhở:', error);
                 throw error;
             }
-            return data || [];
+            const contacts=await client.from('audit_log').select('entity_id,description,created_at').eq('action','PET_CONTACT').eq('entity_name','pet_profile').order('created_at',{ascending:false});
+            if(contacts.error)throw contacts.error;
+            PawpalPets.state.reminderContacts={};
+            for(const contact of contacts.data||[]){try{const detail=JSON.parse(contact.description);const key=`${contact.entity_id}:${detail.type}:${detail.appointment_id}`;if(!PawpalPets.state.reminderContacts[key])PawpalPets.state.reminderContacts[key]={sentAt:contact.created_at,channel:detail.channel};}catch{}}
+            return (data || []).map(a=>({...a,appointment_date:a.scheduled_start_at,service:{service_name:(a.items||[]).filter(i=>i.status==='completed').map(i=>i.name_snapshot).join(', ')}}));
         };
 
         try {
@@ -564,6 +577,24 @@
         }
     };
 
+    PawpalPets.saveProfile = async function(pet,changes={},weight=null){
+        const db=window.getSupabaseClient();
+        const detail={customer_id:pet?.custId,pet_name:pet?.name,breed_id:pet?.breedId,gender:pet?.gender==='Cái'?'female':pet?.gender==='Đực'?'male':'unknown',date_of_birth:pet?.dobRaw||null,color:pet?.color==='Chưa cập nhật'?null:pet?.color,safety_note:pet?.safetyNote||null,allergy:pet?.allergies||null,routine:pet?.notes||null,status:pet?.statusRaw||'active',...changes};
+        const id=pet?.rawId||crypto.randomUUID();
+        const result=await db.rpc('save_admin_pet',{p_pet_id:id,p_expected_updated_at:pet?.updatedAt||null,p_details:detail,p_weight:weight});
+        if(result.error)throw result.error;
+        window.PawpalDataStore?.invalidate?.('pets:*');window.PawpalDataStore?.invalidate?.('customers:*');
+        return {id:result.data};
+    };
+    PawpalPets.recordWeight = async function(pet,weight,note=''){
+        if(!pet)throw Error('Không tìm thấy hồ sơ.');
+        const result=await window.getSupabaseClient().rpc('record_admin_pet_weight',{p_pet_id:pet.rawId,p_expected_updated_at:pet.updatedAt,p_measurement_id:crypto.randomUUID(),p_weight:weight,p_note:note});
+        if(result.error)throw result.error;return result.data;
+    };
+    PawpalPets.resolveBreed = function(species,name){
+        const breed=(PawpalPets.state.breeds||[]).find(b=>b.is_active&&b.species?.is_active&&b.speciesCode===species&&b.breed_name.trim().toLowerCase()===String(name||'').trim().toLowerCase());
+        if(!breed)throw Error('Vui lòng chọn giống có trong danh mục của đúng loài.');return breed.id;
+    };
     PawpalPets.getPet = function(idOrCode) {
         if (!idOrCode) return null;
         const db = PawpalPets.state?.petsData || {};
@@ -711,7 +742,7 @@
                     });
                 }
             };
-            ['pet_profile', 'customer', 'customer_profile', 'appointment', 'care_log', 'pet_weight_history'].forEach(table => {
+            ['pet_profile', 'pet_breed', 'pet_species', 'customer', 'customer_profile', 'customer_phone', 'appointment', 'appointment_item', 'care_log', 'pet_weight_history'].forEach(table => {
                 channel.on('postgres_changes', { event: '*', schema: 'public', table }, refresh);
             });
             channel.subscribe();

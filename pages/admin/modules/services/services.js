@@ -28,81 +28,212 @@
             .replace(/'/g, '&#39;');
     };
 
+    PawpalServices.errorMessage = function(error) {
+        const messages = {
+            service_ticket_forbidden:'Bạn chưa có quyền tạo phiếu phản ánh dịch vụ.',
+            invalid_service_ticket:'Nhập nội dung phản ánh từ 2 đến 4.000 ký tự.',
+            service_ticket_review_mismatch:'Đánh giá không thuộc ca dịch vụ đã chọn.',
+            service_cashier_forbidden:'Bạn chưa có quyền xem hoặc ghi thu/hoàn tiền dịch vụ.',
+            staff_not_available:'Nhân viên có lịch nghỉ hoặc không khả dụng trong thời gian đã chọn.',
+            invalid_service_money:'Nhập số tiền nguyên dương, lý do và xác nhận đã thực nhận hoặc thực hoàn.',
+            service_money_method_invalid:'Phương thức không còn khả dụng hoặc chưa được hỗ trợ tại quầy.',
+            service_money_reference_required:'Cần mã giao dịch ngân hàng đã đối soát.',
+            service_money_reference_duplicate:'Mã giao dịch ngân hàng này đã được ghi nhận.',
+            service_cashier_changed:'Số dư hoặc hồ sơ đã thay đổi. Đóng và mở lại thu ngân để đối chiếu.',
+            service_money_exceeds_balance:'Số tiền vượt số còn phải thu hoặc số còn được hoàn của lần thu gốc.',
+            service_refund_source_invalid:'Chọn khoản thu thành công thuộc đúng ca dịch vụ.',
+            service_refund_ledger_review_required:'Khoản thu cũ đã liên kết chi tiêu xét hạng hoặc điểm; cần đối soát sổ trước khi hoàn.',
+            service_money_booking_closed:'Không thu thêm tiền cho ca đã hủy hoặc khách vắng mặt.',
+            pickup_notification_forbidden:'Bạn chưa có quyền lưu thông báo đón bé.',
+            pickup_notification_invalid:'Nhập nội dung tối đa 4.000 ký tự và xác nhận bé đã sẵn sàng để đón.',
+            pickup_notification_not_ready:'Chỉ lưu lời mời đón bé cho ca đang thực hiện hoặc đã hoàn tất.',
+            invalid_logistics_category:'Vui lòng chọn đúng nhóm khách sạn hoặc xe đưa đón.',
+            logistics_write_forbidden:'Bạn chưa có quyền xử lý lưu trú hoặc chuyến xe.',
+            invalid_hotel_stay:'Vui lòng kiểm tra phòng, thời gian nhận/trả và ghi chú lưu trú.',
+            hotel_room_unavailable:'Phòng đã tạm ngừng sử dụng. Vui lòng chọn phòng khác.',
+            hotel_room_conflict:'Phòng đã được giữ trong khoảng thời gian này.',
+            hotel_checkin_time_or_room_invalid:'Chưa đến giờ nhận phòng, đã quá giờ trả dự kiến hoặc phòng đang ngừng sử dụng.',
+            hotel_room_occupied:'Phòng vẫn còn bé đang lưu trú; cần hoàn tất trả phòng trước.',
+            hotel_not_checked_in:'Chỉ trả phòng cho ca đang lưu trú và đã nhận phòng.',
+            invalid_taxi_return:'Giờ về phải sau khi kết thúc lượt đi; chuyến một chiều không có giờ về.',
+            ambiguous_taxi_return_price:'Chưa có đúng một bảng giá cho lượt về tại thời điểm đã chọn.',
+            taxi_trip_not_due:'Chưa đến giờ khởi hành của chuyến xe.',
+            taxi_return_not_due:'Chưa đến giờ lượt về, không thể hoàn tất chuyến khứ hồi.',
+            legacy_logistics_missing:'Lịch cũ chưa có thông tin phòng hoặc chuyến xe. Cần đối soát trước khi tiếp nhận hay bàn giao.',
+            service_record_forbidden:'Bạn chưa có quyền lập biên bản và ghi nhận cân nặng.',
+            invalid_service_record:'Vui lòng kiểm tra nội dung biên bản.',
+            intake_observations_required:'Vui lòng ghi nhận đủ cân nặng, da lông, mắt tai, vết thương và tập tính.',
+            handover_confirmation_required:'Cần kiểm tra chất lượng, trả tư trang và ghi nhận xác nhận của khách trước khi bàn giao.',
+            confirmed_intake_required:'Biên bản tiếp nhận mới nhất chưa được khách xác nhận.',
+            pending_service_adjustments:'Cần xử lý các đề xuất phụ phí còn chờ trước khi hoàn tất ca.',
+            hotel_checkout_required:'Ca lưu trú cần hoàn tất thủ tục trả phòng trước khi bàn giao.',
+            service_request_conflict:'Yêu cầu này đã được lưu với nội dung khác. Vui lòng tải lại hồ sơ.',
+            service_log_forbidden:'Bạn chưa có quyền thay đổi nhật ký chăm sóc.',
+            invalid_service_log:'Vui lòng kiểm tra tên bước, người thực hiện và thời gian ghi nhận.',
+            care_log_requires_active_service:'Chỉ thay đổi nhật ký khi ca đang thực hiện.',
+            care_log_changed:'Nhật ký đã thay đổi. Vui lòng tải lại trước khi lưu.',
+            care_log_has_media:'Cần xử lý ảnh đính kèm trước khi xóa nhật ký.',
+            service_charge_forbidden:'Bạn chưa có quyền xử lý chi phí phát sinh.',
+            invalid_service_charge:'Vui lòng kiểm tra số tiền, tên phụ phí, lý do và xác nhận của khách.',
+            service_charges_locked:'Ca đã kết thúc hoặc đã có khoản thu; cần xử lý qua thu ngân.',
+            service_adjustment_not_active:'Điều chỉnh này đã được xử lý. Vui lòng tải lại hồ sơ.',
+            charge_consent_required:'Cần ghi nhận khách đã đồng ý trước khi duyệt phụ phí hoặc thêm dịch vụ.',
+            service_quote_changed:'Giá nhập chưa khớp bảng giá của bé tại ngày hẹn. Vui lòng kiểm tra lại.',
+            booking_write_forbidden:'Bạn chưa có quyền thay đổi lịch hẹn.',
+            active_customer_required:'Khách hàng cần ở trạng thái hoạt động.',
+            pet_owner_mismatch:'Bé cưng không thuộc khách hàng đã chọn hoặc đã ngừng hoạt động.',
+            service_species_not_supported:'Dịch vụ chưa khai báo hỗ trợ loài của bé. Vui lòng kiểm tra danh mục dịch vụ.',
+            active_service_required:'Vui lòng chọn dịch vụ đang phục vụ và có thời lượng hợp lệ.',
+            pet_weight_required:'Cần cập nhật cân nặng của bé trước khi tính giá.',
+            future_booking_required:'Thời gian hẹn phải ở tương lai.',
+            ambiguous_service_price:'Chưa xác định được đúng một mức giá cho cân nặng và ngày hẹn.',
+            ambiguous_taxi_price:'Chưa xác định được đúng một mức giá đưa đón cho cự ly, cân nặng và ngày hẹn.',
+            invalid_taxi_details:'Vui lòng kiểm tra địa chỉ, khoảng cách và hình thức đưa đón.',
+            hotel_requires_room_reservation:'Đặt khách sạn cần bổ sung việc chọn phòng và giữ phòng trước khi lưu.',
+            staff_not_eligible:'Nhân viên chưa đáp ứng điều kiện phụ trách dịch vụ.',
+            staff_level_required:'Cấp độ nhân viên chưa đáp ứng yêu cầu dịch vụ.',
+            staff_schedule_conflict:'Nhân viên đã có lịch trùng thời gian này.',
+            booking_changed_reload_required:'Lịch hẹn đã thay đổi. Vui lòng tải lại trước khi lưu.',
+            booking_request_conflict:'Yêu cầu này đã được sử dụng với nội dung khác. Vui lòng tải lại danh sách.',
+            booking_has_not_started:'Chưa đến giờ hẹn để ghi nhận vắng mặt.',
+            invalid_booking_transition:'Trạng thái hiện tại không cho phép thao tác này.',
+            cancellation_reason_required:'Vui lòng nhập lý do hủy lịch.',
+            paid_booking_requires_refund_workflow:'Lịch hẹn có khoản thu đã ghi nhận; cần xử lý hoàn tiền trước khi hủy.',
+            invalid_staff_assignment:'Vui lòng kiểm tra trạng thái lịch hẹn và lý do đổi nhân viên.',
+            service_catalog_forbidden:'Bạn chưa có quyền cập nhật danh mục dịch vụ.',
+            service_catalog_changed:'Dịch vụ đã thay đổi. Vui lòng tải lại trước khi lưu.',
+            invalid_service_catalog:'Vui lòng kiểm tra mã, tên, thời lượng, hoa hồng và loài hỗ trợ.',
+            invalid_service_catalog_reference:'Nhóm dịch vụ hoặc cấp độ nhân viên không còn hợp lệ.',
+            invalid_service_species:'Vui lòng chọn loài đang hoạt động trong danh mục.',
+            invalid_service_step:'Tên bước chăm sóc phải có từ 1 đến 200 ký tự và không trùng nhau.',
+            invalid_service_price_ranges:'Các khoảng giá phải liên tiếp từ 0 kg và không chồng lấn.',
+            scheduled_service_price_requires_review:'Dịch vụ có bảng giá đặt trước; cần đối soát trước khi thay giá.',
+            review_reply_changed:'Phản hồi đã thay đổi. Vui lòng tải lại đánh giá.',
+            review_reply_forbidden:'Bạn chưa có quyền phản hồi đánh giá.',
+            invalid_review_reply:'Nội dung phản hồi phải có từ 1 đến 5.000 ký tự.'
+        };
+        return messages[error?.message] || (error?.code==='23505'?'Mã hoặc nội dung đã tồn tại. Vui lòng kiểm tra lại.':error?.message||'Không thể lưu dữ liệu.');
+    };
+
+    // Keep the native value store for existing event handlers; expose a text-only live popover.
+    PawpalServices.enhanceEntitySelects = function() {
+        for(const id of ['intakeStaffSelect','newLogStepStaff','editCarelogStepStaff','accompanyingServiceItemSelect','accompanyingStaffSelect','newBookingHotelRoomType','changeStaffSelect','newBookingStaff','cashierMethod','cashierPayment']) {
+            const select=document.getElementById(id);if(!select)continue;
+            if(select._entityInput){select._entityInput.disabled=select.disabled;if(document.activeElement!==select._entityInput)select._entityInput.value=select.value?select.selectedOptions[0]?.textContent||'':'';continue;}
+            const wrapper=document.createElement('div');wrapper.style.cssText='position:relative;width:100%;';
+            const input=document.createElement('input');input.type='text';input.className='admin-input';input.autocomplete='off';input.id=id+'Search';input.placeholder='Tìm và chọn từ danh sách';input.setAttribute('aria-label',select.closest('.form-group-item')?.querySelector('label')?.textContent||'Chọn thông tin');
+            const popover=document.createElement('div');popover.className='customer-autocomplete-popover';popover.style.cssText='display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;max-height:240px;overflow-y:auto;overscroll-behavior:contain;z-index:2500;border:1px solid #ECF2EE;border-radius:9px;background:#FFF;box-shadow:0 10px 28px rgba(35,107,72,.14);';
+            select.before(wrapper);wrapper.append(select,input,popover);select.hidden=true;select.style.display='none';input.disabled=select.disabled;select._entityInput=input;
+            const render=()=>{
+                popover.replaceChildren();const q=input.value.trim().toLocaleLowerCase('vi');
+                const options=[...select.options].filter(o=>o.value&&!o.disabled&&o.textContent.trim().toLocaleLowerCase('vi').includes(q));
+                for(const option of options){const button=document.createElement('button');button.type='button';button.className='customer-autocomplete-item';button.style.cssText='display:block;width:100%;text-align:left;padding:9px 12px;border:none;background:transparent;color:#203A2C;font-weight:600;';button.textContent=option.textContent;
+                    button.addEventListener('mousedown',e=>e.preventDefault());button.addEventListener('click',()=>{select.value=option.value;input.value=option.textContent;popover.style.display='none';select.dispatchEvent(new Event('change',{bubbles:true}));});popover.append(button);}
+                if(!options.length){const text=document.createElement('div');text.style.padding='10px 12px';text.textContent='Không có lựa chọn phù hợp.';popover.append(text);}
+                popover.style.display='block';
+            };
+            input.addEventListener('focus',render);input.addEventListener('input',()=>{select.value='';select.dispatchEvent(new Event('change',{bubbles:true}));render();});input.addEventListener('keydown',e=>{if(e.key==='Escape')popover.style.display='none';if(e.key==='Enter'){e.preventDefault();popover.querySelector('button')?.click();}});
+            document.addEventListener('click',e=>{if(!wrapper.contains(e.target))popover.style.display='none';});
+        }
+    };
+    document.addEventListener('click',()=>queueMicrotask(()=>PawpalServices.enhanceEntitySelects()));
+
     function assertHandoverReady(booking) {
         if(booking?.status!=='in_progress') throw new Error('Chỉ hoàn tất ca đang thực hiện.');
         const intake=booking.intakeRecord;
         if(!intake || !Number.isFinite(Date.parse(intake.recordedAt)) || !/^[0-9a-f-]{36}$/i.test(intake.staffId||'') || !(intake.actualWeight>0)) throw new Error('Ca chưa có biên bản tiếp nhận hợp lệ đã lưu.');
     }
     PawpalServices.assertHandoverReady=assertHandoverReady;
-    function recordPattern(kind) { return new RegExp('\\[Pawpal '+kind+' v1\\]\\n([\\s\\S]*?)\\n\\[\\/Pawpal '+kind+'\\]\\n?'); }
-    function readBookingRecord(note,kind) {
-        const match=String(note||'').match(recordPattern(kind));
-        if(!match) return null;
-        return Object.fromEntries(match[1].split('\n').filter(Boolean).map(line=>line.split('\t').map(decodeURIComponent)));
+    function mapRecord(records,kind,petId) {
+        const r=[...(records||[])].filter(r=>r.record_type===kind).sort((a,b)=>b.revision_no-a.revision_no)[0];
+        if(!r)return null;
+        const lines=Object.fromEntries(String(r.condition_note||'').split('\n').map(line=>{const n=line.indexOf(': ');return n<0?['','']:[line.slice(0,n),line.slice(n+2)];}));
+        const weight=(PawpalServices.state.weightMeasurements||[]).find(w=>w.pet_id===petId&&w.measured_at===r.recorded_at);
+        return {id:r.id,recordedAt:r.recorded_at,staffId:r.recorded_by,recordedByName:r.recorder?.full_name||'',conditionNote:r.condition_note,
+            actualWeight:weight?Number(weight.weight):null,skinCoat:lines['Da và lông']||'',eyesEars:lines['Mắt và tai']||'',wounds:lines['Vết thương']||'',temperament:lines['Tập tính']||'',belongings:(lines['Tư trang']||'').split(', ').filter(Boolean),belongingsNote:r.note||'',
+            confirmationStatus:r.customer_confirmation_status,safetyNote:r.safety_note_snapshot,allergy:r.allergy_note_snapshot,note:r.note,proofPhotos:[]};
     }
-    const recordSaves=new Set();
-    PawpalServices.saveBookingRecord=async function(booking,kind,record,payload) {
-        if(recordSaves.has(booking.dbId)) throw new Error('Đang lưu hồ sơ, vui lòng chờ.');
-        recordSaves.add(booking.dbId);
-        try {
-            if(!['intake','handover'].includes(kind)) throw new Error('Loại biên bản không hợp lệ.');
-            const block='[Pawpal '+kind+' v1]\n'+Object.entries(record).map(pair=>pair.map(value=>encodeURIComponent(String(value))).join('\t')).join('\n')+'\n[/Pawpal '+kind+']\n';
-            const note=block+String(booking.rawNote||'').replace(recordPattern(kind),'');
-            let query=window.getSupabaseClient().from('appointment').update({...payload,note}).eq('id',booking.dbId).eq('appointment_status',booking.rawStatus).eq('total_price',booking.total);
-            query=booking.rawNote==null ? query.is('note',null) : query.eq('note',booking.rawNote);
-            const {data,error}=await query.select('id,appointment_status,note,staff_id,payment_status,total_price').single();
-            if(error) throw error;
-            if(!data?.id || data.note!==note || data.appointment_status!==payload.appointment_status) throw new Error('Không xác minh được biên bản đã lưu.');
-            if(payload.staff_id && data.staff_id!==payload.staff_id) throw new Error('Không xác minh được nhân viên tiếp nhận.');
-            if (window.PawpalDataStore) {
-                window.PawpalDataStore.invalidate('services:bookings*');
-                window.PawpalDataStore.invalidate(`services:carelogs:${booking.dbId}`);
-                window.PawpalDataStore.invalidate('dashboard:*');
-                window.PawpalDataStore.emitMutation({ entity: 'appointment', type: 'UPDATE', id: booking.dbId });
-            }
-            await PawpalServices.loadServicesData({force:true});
-            PawpalServices.subtabs.bookings?.renderBookingsTable();
-            PawpalServices.subtabs.bookings?.updateKPIs();
-            PawpalServices.subtabs.detail?.renderBookingDetail(booking.id);
-        } finally {recordSaves.delete(booking.dbId);}
-    };
-    const financePattern = /\[Pawpal charges v1\]\n([\s\S]*?)\n\[\/Pawpal charges\]\n?/;
-    function readCharges(note) {
-        const match = String(note || '').match(financePattern);
-        if (!match) return [];
-        return match[1].split('\n').filter(Boolean).map(line => {
-            const [id, kind, amount, name, reason, staff, serviceId] = line.split('\t').map(decodeURIComponent);
-            if (!['surcharge', 'service'].includes(kind) || !Number.isFinite(Number(amount)) || Number(amount) < 0) throw new Error('Chi tiết chi phí đã lưu không hợp lệ.');
-            return { id, kind, amount: Number(amount), name, reason, staff, serviceId };
+    async function refreshBooking(booking) {
+        window.PawpalDataStore?.invalidate('services:*');
+        window.PawpalDataStore?.invalidate('dashboard:*');
+        window.PawpalDataStore?.emitMutation({entity:'appointment',type:'UPDATE',id:booking.dbId});
+        await PawpalServices.loadServicesData({force:true});
+        const current=PawpalServices.state.bookingsData.find(b=>b.dbId===booking.dbId);
+        if(current){const logs=await PawpalServices.fetchBookingCareLogs(current.dbId,{force:true});current.careLogs=logs;current.carelogs=logs;current._careLogsLoaded=true;}
+        PawpalServices.subtabs.bookings?.renderBookingsTable();PawpalServices.subtabs.bookings?.updateKPIs();
+        PawpalServices.subtabs.detail?.renderBookingDetail(booking.id);
+    }
+    PawpalServices.closeHotelStay=async function(booking){
+        await performBookingWrite(booking,async db=>{
+            const {data,error}=await db.rpc('close_admin_hotel_stay',{p_appointment_id:booking.dbId,p_expected_updated_at:booking.updatedAt});
+            if(error)throw error;if(!data)throw Error('Không xác minh được việc trả phòng.');
         });
+    };
+    const pendingWrites=new Set();
+    async function performBookingWrite(booking,operation) {
+        if(pendingWrites.has(booking.dbId))throw Error('Đang lưu hồ sơ, vui lòng chờ.');
+        pendingWrites.add(booking.dbId);
+        try{await operation(window.getSupabaseClient());await refreshBooking(booking);}finally{pendingWrites.delete(booking.dbId);}
     }
-    PawpalServices.readCharges = readCharges;
-    const savingCharges = new Set();
-    PawpalServices.saveCharges = async function(booking, charges) {
-        if (savingCharges.has(booking.dbId)) throw new Error('Đang lưu chi phí, vui lòng chờ.');
-        savingCharges.add(booking.dbId);
-        try {
-            if (!['pending', 'confirmed', 'in_progress'].includes(booking.status) || booking.paymentStatus === 'Đã thanh toán') throw new Error('Ca đã kết thúc hoặc đã thanh toán, không thể đổi chi phí.');
-            if (charges.some(c => !Number.isSafeInteger(c.amount) || c.amount <= 0 || !c.name)) throw new Error('Số tiền phải là số nguyên dương.');
-            const db = window.getSupabaseClient();
-            const oldCharges = readCharges(booking.rawNote);
-            const total = Number(booking.total) - oldCharges.reduce((sum,c)=>sum+c.amount,0) + charges.reduce((sum,c)=>sum+c.amount,0);
-            const block = charges.length ? '[Pawpal charges v1]\n' + charges.map(c => [c.id,c.kind,c.amount,c.name,c.reason||'',c.staff||'',c.serviceId||''].map(value=>encodeURIComponent(String(value))).join('\t')).join('\n') + '\n[/Pawpal charges]\n' : '';
-            const note = block + String(booking.rawNote || '').replace(financePattern, '');
-            let query = db.from('appointment').update({ note: note || null, total_price: total }).eq('id',booking.dbId).eq('appointment_status',booking.rawStatus).eq('total_price',booking.total);
-            query = booking.rawNote == null ? query.is('note',null) : query.eq('note',booking.rawNote);
-            const { data,error } = await query.select('id,total_price,note').single();
-            if (error) throw error;
-            if (!data?.id || Number(data.total_price)!==total || (data.note||'')!==note) throw new Error('Không xác minh được chi phí đã lưu.');
-            if (window.PawpalDataStore) {
-                window.PawpalDataStore.invalidate('services:bookings*');
-                window.PawpalDataStore.invalidate('dashboard:*');
-                window.PawpalDataStore.emitMutation({ entity: 'appointment', type: 'UPDATE', id: booking.dbId });
-            }
-            await PawpalServices.loadServicesData({force:true});
-            PawpalServices.subtabs.bookings?.renderBookingsTable();
-            PawpalServices.subtabs.detail?.renderBookingDetail(booking.id);
-        } finally { savingCharges.delete(booking.dbId); }
+    const requestIds=new Map();
+    function requestId(key,payload) {
+        const signature=JSON.stringify(payload),prior=requestIds.get(key);
+        if(prior?.signature===signature)return prior.id;
+        const id=crypto.randomUUID();requestIds.set(key,{signature,id});return id;
+    }
+    PawpalServices.savePickupNotification=async function(booking,content,ready) {
+        const details={content:content.trim(),ready},key=booking.dbId+':pickup',id=requestId(key,details);
+        await performBookingWrite(booking,async db=>{
+            const {data,error}=await db.rpc('save_admin_pickup_notification',{p_id:id,p_appointment_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_content:details.content,p_ready:ready});
+            if(error)throw error;if(data!==id)throw Error('Không xác minh được thông báo đã lưu.');
+        });
+        requestIds.delete(key);
+    };
+    PawpalServices.saveServiceMoney=async function(booking,context,action,details){
+        const key=booking.dbId+':money',id=requestId(key,{action,details});
+        await performBookingWrite(booking,async db=>{
+            const {data,error}=await db.rpc('post_admin_service_money',{p_request_id:id,p_appointment_id:booking.dbId,p_expected_state:context.version,p_action:action,p_details:details});
+            if(error)throw error;if(data!==id)throw Error('Không xác minh được giao dịch đã ghi.');
+        });requestIds.delete(key);return id;
+    };
+    PawpalServices.saveServiceTicket=async function(booking,reviewId,description){
+        const key=booking.dbId+':ticket',id=requestId(key,{reviewId,description});
+        const {data,error}=await window.getSupabaseClient().rpc('create_admin_service_ticket',{p_id:id,p_appointment_id:booking.dbId,p_review_id:reviewId||null,p_description:description.trim()});
+        if(error)throw error;if(data!==id)throw Error('Không xác minh được phiếu đã lưu.');
+        await PawpalServices.loadReviewsData({force:true});requestIds.delete(key);return id;
+    };
+    PawpalServices.saveBookingRecord=async function(booking,kind,record) {
+        const {recordedAt,updatedAt,staffName,intakeRecordedAt,total,...details}=record;
+        const key=booking.dbId+':'+kind,id=requestId(key,details);
+        await performBookingWrite(booking,async db=>{
+            const {data,error}=await db.rpc('save_admin_service_record',{p_id:id,p_appointment_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_type:kind,p_details:details});
+            if(error)throw error;if(data!==id)throw Error('Không xác minh được biên bản đã lưu.');
+            requestIds.delete(key);
+        });
+    };
+    PawpalServices.changeCharge=async function(booking,id,action,details={}) {
+        await performBookingWrite(booking,async db=>{
+            const {data,error}=await db.rpc('change_admin_service_charge',{p_id:id,p_appointment_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_action:action,p_details:details});
+            if(error)throw error;if(data!==id)throw Error('Không xác minh được điều chỉnh đã lưu.');
+        });
+    };
+    // Preserve rows and audit history. One click proposes/adds/cancels one entity.
+    PawpalServices.saveCharges=async function(booking,charges) {
+        const before=booking.charges||[],added=charges.filter(c=>!before.some(old=>old.id===c.id)),removed=before.filter(c=>!charges.some(next=>next.id===c.id));
+        if(added.length+removed.length!==1)throw Error('Vui lòng xử lý từng điều chỉnh một.');
+        if(removed.length){const c=removed[0];return PawpalServices.changeCharge(booking,c.id,c.kind==='service'?'cancel_service':'cancel_adjustment');}
+        const c=added[0];
+        const details={name:c.name,amount:c.amount,reason:c.reason,service_id:c.serviceId||null,consent:c.consent||'pending'};
+        const key=booking.dbId+':charge',id=requestId(key,details);
+        await PawpalServices.changeCharge(booking,id,c.kind==='service'?'add_service':'propose',details);requestIds.delete(key);
+    };
+    PawpalServices.saveCareLog=async function(booking,log,action,details) {
+        const key=booking.dbId+':carelog',id=log?.id||requestId(key,details);
+        await performBookingWrite(booking,async db=>{
+            const {data,error}=await db.rpc('save_admin_service_care_log',{p_id:id,p_appointment_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_expected_log_updated_at:log?.updated_at||null,p_action:action,p_details:details});
+            if(error)throw error;if(data!==id)throw Error('Không xác minh được nhật ký đã lưu.');
+            requestIds.delete(key);
+        });
     };
 
     // Helper: Chuyển chuỗi tiếng Việt không dấu
@@ -336,124 +467,100 @@
         return Promise.race([query, timeout]).finally(() => window.clearTimeout(timeoutId));
     }
 
+    const one = value => Array.isArray(value) ? value[0] : value;
+    const primaryPhone = customer => (customer?.customer_phone || []).find(p => p.is_primary)?.phone_number || '';
+    const categoryCode = service => one(service?.category)?.category_code || '';
+    async function readRows(query) {
+        const {data,error} = await withServicesQueryTimeout(query);
+        if (error) throw error;
+        return data || [];
+    }
+    // Fetch every page explicitly; PostgREST's row limit must not truncate a directory silently.
+    async function allRows(makeQuery) {
+        const rows=[];
+        for(let offset=0;;offset+=500){const page=await readRows(makeQuery().range(offset,offset+499));rows.push(...page);if(page.length<500)return rows;}
+    }
+    const customerFields='id,customer_status,customer_profile(full_name),customer_phone(phone_number,is_primary)';
+    const petFields='id,customer_id,pet_code,pet_name,breed_id,date_of_birth,allergy,routine,safety_note,avatar_url,status,breed:breed_id(breed_name,species:species_id(species_name))';
     async function fetchBookingsRaw({ force = false } = {}) {
-        const fetcher = async () => {
-            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!db) throw new Error('Không thể kết nối cơ sở dữ liệu.');
-            const { data, error } = await withServicesQueryTimeout(
-                db.from('appointment')
-                  .select(`
-                      id, 
-                      appointment_code,
-                      customer_id,
-                      pet_id,
-                      appointment_date, 
-                      appointment_time, 
-                      appointment_status, 
-                      payment_status, 
-                      total_price, 
-                      note, 
-                      customer:customer_id (id, phone_main, customer_profile (full_name)), 
-                      pet_profile:pet_id (id, customer_id, pet_code, pet_name, species, breed, weight, date_of_birth, allergy, vaccination_history, routine, avatar_url, customer:customer_id (id, phone_main, customer_profile (full_name))),
-                      service:service_id (id, service_code, service_name, service_category, estimated_duration, checklist, benefits, amenities), 
-                      staff:staff_id (id, full_name, role)
-                  `)
-                  .order('created_at', { ascending: false })
-            );
-            if (error) throw error;
-            return data || [];
-        };
-
-        if (window.PawpalDataStore) {
-            return window.PawpalDataStore.fetch('services:bookings', fetcher, {
-                ttlMs: window.PawpalDataStore.TTL_TIERS.OPERATIONAL,
-                force
+        const fetcher=async()=>{
+            const db=window.getSupabaseClient();
+            const [appointments,totals,weights,payments,customers,pets,measurements,rooms]=await Promise.all([
+                allRows(()=>db.from('appointment').select('*,customer:customer_id('+customerFields+'),pet_profile:pet_id('+petFields+'),staff:staff_id(id,full_name,job_title),items:appointment_item(*,service:service_id(id,service_code,service_name,estimated_duration,category:category_id(category_code))),records:appointment_record(*,recorder:recorded_by(full_name)),adjustments:appointment_adjustment(*),taxi:taxi_trip(*),hotel:hotel_booking(*,room:room_id(room_number,type:room_type_id(room_type)))').order('created_at',{ascending:false}).order('id')),
+                allRows(()=>db.from('appointment_totals').select('*').order('appointment_id')),
+                allRows(()=>db.from('pet_current_weight').select('pet_id,weight').order('pet_id')),
+                allRows(()=>db.from('payment').select('id,appointment_id,amount,transaction_status,refund_transaction(refund_status,refunded_amount)').not('appointment_id','is',null).order('id')),
+                allRows(()=>db.from('customer').select(customerFields).order('id')),
+                allRows(()=>db.from('pet_profile').select(petFields).order('id')),
+                allRows(()=>db.from('pet_weight_history').select('pet_id,weight,measured_at').order('id')),
+                allRows(()=>db.from('hotel_room').select('id,room_number,status,type:room_type_id(id,room_type,daily_price,status)').order('id'))
+            ]);
+            PawpalServices.state.liveRooms=rooms;
+            PawpalServices.state.weightMeasurements=measurements;
+            const weightMap=new Map(weights.map(w=>[w.pet_id,Number(w.weight)]));
+            const adaptPet=p=>({...p,breed:one(p.breed)?.breed_name||'',species:one(one(p.breed)?.species)?.species_name||'',weight:weightMap.get(p.id)??null});
+            const petDirectory=pets.map(p=>{
+                const c=customers.find(c=>c.id===p.customer_id);
+                return {...adaptPet(p),customer:{id:c?.id,phone_main:primaryPhone(c),customer_profile:one(c?.customer_profile)}};
             });
-        }
-        return fetcher();
+            PawpalServices.state.livePetDirectory=petDirectory;
+            PawpalServices.state.liveCustomerDirectory=customers.filter(c=>c.customer_status==='active').map(c=>({...c,phone_main:primaryPhone(c),pet_profile:petDirectory.filter(p=>p.customer_id===c.id&&p.status==='active')}));
+            const totalsMap=new Map(totals.map(t=>[t.appointment_id,Number(t.total_price)]));
+            return appointments.map(a=>{
+                const item=a.items.find(i=>i.is_primary&&i.status!=='cancelled')||a.items.find(i=>i.is_primary);
+                const at=new Date(a.scheduled_start_at);
+                const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(at).map(p=>[p.type,p.value]));
+                const service=item?.service ? {...item.service,service_name:item.name_snapshot,estimated_duration:item.duration_minutes,service_category:categoryCode(item.service)} : null;
+                const collected=payments.filter(p=>p.appointment_id===a.id&&p.transaction_status==='succeeded').reduce((sum,p)=>sum+Number(p.amount)-(p.refund_transaction||[]).filter(r=>r.refund_status==='succeeded').reduce((n,r)=>n+Number(r.refunded_amount),0),0);
+                return {...a,service,customer:{...a.customer,phone_main:primaryPhone(a.customer)},pet_profile:adaptPet(a.pet_profile||{}),
+                    appointment_date:parts.year+'-'+parts.month+'-'+parts.day,appointment_time:parts.hour+':'+parts.minute,
+                    total_price:totalsMap.get(a.id)??0,collected,payment_status:collected>0&&collected>=(totalsMap.get(a.id)??0)?'paid':collected>0?'partial':'unpaid'};
+            });
+        };
+        return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:bookings',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.OPERATIONAL,force}) : fetcher();
     }
 
     async function fetchStaffRaw({ force = false } = {}) {
-        const fetcher = async () => {
-            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!db) return [];
-            const { data, error } = await withServicesQueryTimeout(
-                db.from('staff')
-                  .select('id, full_name, role, specialization, phone_number')
-                  .order('full_name', { ascending: true })
-            );
-            if (error) {
-                console.warn('[PawpalServices] Lỗi nạp staff:', error);
-                return [];
-            }
-            return data || [];
-        };
-
-        if (window.PawpalDataStore) {
-            return window.PawpalDataStore.fetch('services:staff', fetcher, {
-                ttlMs: window.PawpalDataStore.TTL_TIERS.CATALOG,
-                force
-            });
-        }
-        return fetcher();
+        const fetcher=()=>allRows(()=>window.getSupabaseClient().from('staff').select('id,full_name,job_title,specialization,phone_number,staff_level_id,service_locked').eq('employment_status','active').order('id'));
+        return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:staff',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.CATALOG,force}) : fetcher();
     }
 
     async function fetchCatalogRaw({ force = false } = {}) {
-        const fetcher = async () => {
-            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!db) return { services: [], prices: [] };
-            const [svcRes, priceRes] = await Promise.all([
-                withServicesQueryTimeout(db.from('service').select('*').order('service_code', { ascending: true })),
-                withServicesQueryTimeout(db.from('service_price_matrix').select('*'))
+        const fetcher=async()=>{
+            const db=window.getSupabaseClient();
+            const [services,prices,species,levels]=await Promise.all([
+                allRows(()=>db.from('service').select('*,category:category_id(id,category_code,category_name),level:staff_level_required_id(id,level_name),supported:service_supported_species(species:species_id(id,species_name)),actions:service_care_action(display_order,estimated_duration,care_action:care_action_id(id,action_name,is_active))').order('id')),
+                allRows(()=>db.from('service_price_matrix').select('*').order('id')),
+                readRows(db.from('pet_species').select('id,species_name').eq('is_active',true).order('species_name')),
+                readRows(db.from('staff_level').select('id,level_name').eq('is_active',true).order('rank_order'))
             ]);
-            if (svcRes.error) throw svcRes.error;
-            return {
-                services: svcRes.data || [],
-                prices: priceRes.data || [],
-                priceError: priceRes.error ? priceRes.error.message : null
-            };
+            PawpalServices.state.liveSpecies=species;PawpalServices.state.liveLevels=levels;
+            return {services:services.map(s=>({...s,service_category:categoryCode(s)})),prices,priceError:null};
         };
-
-        if (window.PawpalDataStore) {
-            return window.PawpalDataStore.fetch('services:catalog', fetcher, {
-                ttlMs: window.PawpalDataStore.TTL_TIERS.CATALOG,
-                force
-            });
-        }
-        return fetcher();
+        return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:catalog',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.CATALOG,force}) : fetcher();
     }
 
     async function fetchReviewsRaw({ force = false } = {}) {
-        const fetcher = async () => {
-            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!db) return [];
-            const { data, error } = await withServicesQueryTimeout(
-                db.from('review')
-                  .select('id, customer_id, service_id, appointment_id, rating, review_content, review_type, created_at, shop_reply, customer:customer_id(id, phone_main, customer_profile(full_name)), service:service_id(id, service_name, service_category), appointment:appointment_id(appointment_code, staff:staff_id(full_name))')
-                  .eq('review_type', 'dich_vu')
-                  .order('created_at', { ascending: false })
-            );
-            if (error) throw error;
-            return data || [];
-        };
-
-        if (window.PawpalDataStore) {
-            return window.PawpalDataStore.fetch('services:reviews', fetcher, {
-                ttlMs: window.PawpalDataStore.TTL_TIERS.LIST,
-                force
+        const fetcher=async()=>{
+            const tickets=await allRows(()=>window.getSupabaseClient().from('support_ticket').select('id,appointment_id').not('appointment_id','is',null).order('id'));
+            const rows=await allRows(()=>window.getSupabaseClient().from('review').select('*,responses:review_response(*),item:appointment_item_id(id,service_id,name_snapshot,service:service_id(id,service_code,service_name,category:category_id(category_code)),appointment:appointment_id(id,appointment_code,customer:customer_id('+customerFields+'),staff:staff_id(full_name)))').not('appointment_item_id','is',null).order('created_at',{ascending:false}).order('id'));
+            return rows.map(r=>{
+                const item=one(r.item),appointment=one(item?.appointment),response=[...r.responses].sort((a,b)=>Date.parse(b.updated_at)-Date.parse(a.updated_at))[0];
+                return {...r,hasServiceTicket:tickets.some(t=>t.appointment_id===appointment?.id),service_id:item?.service_id,service:{...item?.service,service_name:item?.name_snapshot,service_category:categoryCode(item?.service)},appointment_id:appointment?.id,appointment,
+                    customer:{...appointment?.customer,phone_main:primaryPhone(appointment?.customer)},shop_reply:response?.response_content||'',responseId:response?.id||null,responseUpdatedAt:response?.updated_at||null};
             });
-        }
-        return fetcher();
+        };
+        return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:reviews',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.LIST,force}) : fetcher();
     }
 
-    async function fetchBookingCareLogs(bookingDbId) {
+    async function fetchBookingCareLogs(bookingDbId,{force=false}={}) {
         if (!bookingDbId) return [];
         const fetcher = async () => {
             const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (!db) return [];
             const { data, error } = await withServicesQueryTimeout(
                 db.from('care_log')
-                  .select('id, appointment_id, pet_id, care_action_id, description, health_status, recorded_at, created_at, care_action:care_action_id(id, action_name)')
+                  .select('id,appointment_id,care_action_id,description,observed_condition,recorded_at,created_at,updated_at,action_name_snapshot,recorded_by,staff:recorded_by(id,full_name),care_action:care_action_id(id,action_name),care_log_media(media_url)')
                   .eq('appointment_id', bookingDbId)
                   .order('recorded_at', { ascending: true })
             );
@@ -465,8 +572,8 @@
                 const author = String(log.description || '').match(/\n?Nhân viên: (.*) \(([0-9a-f-]{36})\)$/i);
                 return {
                     ...log,
-                    step_name: log.care_action?.action_name || 'Ghi nhận chăm sóc',
-                    ktv: author?.[1] || '',
+                    step_name: log.action_name_snapshot || log.care_action?.action_name || 'Ghi nhận chăm sóc',
+                    ktv: log.staff?.full_name || '',
                     note: author ? String(log.description).slice(0, author.index).trim() : (log.description || ''),
                     images: (log.care_log_media || []).map(media => media.media_url)
                 };
@@ -475,7 +582,8 @@
 
         if (window.PawpalDataStore) {
             return window.PawpalDataStore.fetch(`services:carelogs:${bookingDbId}`, fetcher, {
-                ttlMs: window.PawpalDataStore.TTL_TIERS.OPERATIONAL
+                ttlMs: window.PawpalDataStore.TTL_TIERS.OPERATIONAL,
+                force
             });
         }
         return fetcher();
@@ -487,6 +595,7 @@
             const { services, prices, priceError } = await fetchCatalogRaw({ force });
             PawpalServices.state.auxiliaryErrors = PawpalServices.state.auxiliaryErrors || {};
             PawpalServices.state.auxiliaryErrors.price = priceError;
+            PawpalServices.state.auxiliaryErrors.catalog = null;
 
             PawpalServices.state.servicesData = (services || []).map(svc => {
                 let group = 'spa';
@@ -500,7 +609,7 @@
                     group = 'taxi';
                 }
 
-                const svcPrices = (prices || []).filter(p => p.service_id === svc.id);
+                const svcPrices = (prices || []).filter(p => p.service_id === svc.id && p.status === 'active' && Date.parse(p.effective_from) <= Date.now() && (!p.effective_to || Date.parse(p.effective_to) > Date.now()));
                 const defaultPriceLabel = priceError ? 'Lỗi tải giá' : 'Chưa có giá';
                 const pricesObj = {
                     under5: defaultPriceLabel,
@@ -511,13 +620,13 @@
 
                 let minPriceVal = null;
                 if (svcPrices.length > 0) {
-                    const validPrices = svcPrices.map(p => Number(p.unit_price) || 0).filter(p => p > 0);
+                    const validPrices = svcPrices.map(p => Number(p.unit_price)).filter(p => Number.isFinite(p) && p >= 0);
                     if (validPrices.length > 0) minPriceVal = Math.min(...validPrices);
                     svcPrices.forEach(p => {
                         const formatted = (Number(p.unit_price) || 0).toLocaleString('vi-VN');
-                        if (p.weight_to <= 5) pricesObj.under5 = formatted;
-                        else if (p.weight_from >= 5 && p.weight_to <= 10) pricesObj.to10 = formatted;
-                        else if (p.weight_from >= 10 && p.weight_to <= 20) pricesObj.to20 = formatted;
+                        if (p.weight_to != null && p.weight_to <= 5) pricesObj.under5 = formatted;
+                        else if (p.weight_from >= 5 && p.weight_to != null && p.weight_to <= 10) pricesObj.to10 = formatted;
+                        else if (p.weight_from >= 10 && p.weight_to != null && p.weight_to <= 20) pricesObj.to20 = formatted;
                         else if (p.weight_from >= 20) pricesObj.over20 = formatted;
                     });
                 }
@@ -529,11 +638,20 @@
                     group: group,
                     category: group,
                     name: svc.service_name,
-                    duration: svc.estimated_duration ? `${svc.estimated_duration} phút` : '60 phút',
+                    duration: svc.estimated_duration ? `${svc.estimated_duration} phút` : 'Chưa cập nhật',
+                    updatedAt: svc.updated_at,
+                    categoryId: svc.category_id,
+                    staffLevelId: svc.staff_level_required_id,
+                    staffLevel: one(svc.level)?.level_name || '',
+                    commission: svc.commission_rate,
+                    petType: svc.supported.map(p=>one(p.species)?.species_name).filter(Boolean).join(', '),
+                    steps: [...svc.actions].sort((a,b)=>a.display_order-b.display_order).map(a=>a.care_action.action_name),
                     prices: pricesObj,
+                    priceRows: svcPrices,
+                    minPrice: minPriceVal,
                     desc: svc.description || '',
-                    status: (svc.status === 'dang_hoat_dong' || svc.status === 'ACTIVE' || !svc.status) ? 'Đang phục vụ' : 'Tạm ẩn',
-                    image: svc.thumbnail_url || (group === 'hotel' ? '/assets/images/services/hotel/deluxe.webp' : (group === 'taxi' ? '/assets/images/services/taxi/car.webp' : '/assets/images/services/spa/process/spa01.webp')),
+                    status: (svc.status === 'active') ? 'Đang phục vụ' : 'Tạm ẩn',
+                    image: svc.thumbnail_url || '',
                     reviewCount: 0,
                     averageRating: null
                 };
@@ -548,6 +666,8 @@
 
             return PawpalServices.state.servicesData;
         } catch (err) {
+            PawpalServices.state.auxiliaryErrors={...PawpalServices.state.auxiliaryErrors,catalog:'Không thể tải danh mục dịch vụ.'};
+            PawpalServices.state.servicesData=[];
             console.error('[PawpalServices] Lỗi nạp danh mục dịch vụ:', err);
             return [];
         }
@@ -584,6 +704,7 @@
     async function loadReviewsData({ force = false } = {}) {
         try {
             const rawReviews = await fetchReviewsRaw({ force });
+            PawpalServices.state.auxiliaryErrors={...PawpalServices.state.auxiliaryErrors,reviews:null};
             const getCustomerProfileName = (customer) => {
                 const profile = customer?.customer_profile;
                 if (Array.isArray(profile)) return profile.find(p => p?.full_name)?.full_name || '';
@@ -604,6 +725,8 @@
                     id: r.id,
                     reviewCode: `ĐG-${String(r.id || '').slice(0, 8).toUpperCase()}`,
                     dbId: r.id,
+                    responseId: r.responseId,
+                    responseUpdatedAt: r.responseUpdatedAt,
                     serviceId: r.service_id || r.service?.id || null,
                     serviceDbId: r.service_id || r.service?.id || null,
                     serviceCode: r.service?.service_code || '',
@@ -611,13 +734,14 @@
                     appointmentId: r.appointment_id || null,
                     customerName: getCustomerProfileName(r.customer) || 'Khách hàng PawPal',
                     phone: r.customer?.phone_main || '—',
-                    serviceName: sName || 'Dịch vụ Spa và Grooming',
+                    serviceName: sName || 'Chưa có thông tin dịch vụ',
                     category: cat,
                     staff: r.appointment?.staff?.full_name || 'Chưa có thông tin',
                     rating,
                     comment: r.review_content || '—',
                     status: r.shop_reply ? 'replied' : 'pending',
                     replyText: r.shop_reply || '',
+                    hasServiceTicket:r.hasServiceTicket,
                     createdAt: r.created_at
                 };
             });
@@ -625,6 +749,8 @@
             computeServiceRatings();
             return PawpalServices.state.reviewsData;
         } catch (err) {
+            PawpalServices.state.auxiliaryErrors={...PawpalServices.state.auxiliaryErrors,reviews:'Không thể tải đánh giá dịch vụ.'};
+            PawpalServices.state.reviewsData=[];
             console.error('[PawpalServices] Lỗi nạp đánh giá:', err);
             return [];
         }
@@ -657,49 +783,16 @@
                 if (catRaw.includes('HOTEL') || /phòng|hotel|suite/i.test(serviceLabel)) cat = 'Hotel';
                 else if (catRaw.includes('TAXI') || /taxi|đưa đón/i.test(serviceLabel)) cat = 'Taxi';
 
-                let status = 'pending';
-                if (window.PawpalEnum && window.PawpalEnum.appointmentStatus) {
-                    const mapped = window.PawpalEnum.appointmentStatus(item.appointment_status);
-                    status = mapped.code ? mapped.code.toLowerCase() : 'pending';
-                } else {
-                    const s = String(item.appointment_status || '').toLowerCase();
-                    if (s === 'confirmed' || s === 'da_xac_nhan') status = 'confirmed';
-                    else if (s === 'checked_in' || s === 'da_check_in') status = 'checked_in';
-                    else if (s === 'in_progress' || s === 'processing' || s === 'dang_thuc_hien') status = 'in_progress';
-                    else if (s === 'completed' || s === 'da_hoan_tat' || s === 'da_hoan_thanh') status = 'completed';
-                    else if (s === 'cancelled' || s === 'da_huy' || s === 'canceled') status = 'cancelled';
-                    else if (s === 'no_show' || s === 'vang_mat') status = 'no_show';
-                    else status = 'pending';
-                }
+                const status = item.appointment_status;
 
-                let paymentStatusText = 'Chưa thu';
-                let paymentBadgeClass = 'badge-warning';
-                if (window.PawpalEnum && window.PawpalEnum.paymentStatus) {
-                    const payMapped = window.PawpalEnum.paymentStatus(item.payment_status);
-                    paymentStatusText = payMapped.label || 'Chưa thu';
-                    paymentBadgeClass = payMapped.badgeClass || 'badge-warning';
-                } else {
-                    const pRaw = String(item.payment_status || '').toLowerCase();
-                    if (pRaw === 'da_thanh_toan' || pRaw === 'paid') {
-                        paymentStatusText = 'Đã thanh toán';
-                        paymentBadgeClass = 'badge-success';
-                    } else if (pRaw === 'thanh_toan_that_bai' || pRaw === 'failed') {
-                        paymentStatusText = 'Thanh toán thất bại';
-                        paymentBadgeClass = 'badge-danger';
-                    } else if (pRaw === 'da_hoan_tien' || pRaw === 'refunded') {
-                        paymentStatusText = 'Đã hoàn tiền';
-                        paymentBadgeClass = 'badge-neutral';
-                    } else {
-                        paymentStatusText = 'Chưa thu';
-                        paymentBadgeClass = 'badge-warning';
-                    }
-                }
+                const paymentStatusText=item.payment_status==='paid'?'Đã thanh toán':item.payment_status==='partial'?'Thu một phần':'Chưa thu';
+                const paymentBadgeClass=item.payment_status==='paid'?'badge-success':'badge-warning';
 
                 const customerName = getCustomerProfileName(item.customer) || getCustomerProfileName(item.pet_profile?.customer) || 'Chưa cập nhật tên khách hàng';
                 const phone = item.customer?.phone_main || item.pet_profile?.customer?.phone_main || '—';
                 const petName = item.pet_profile?.pet_name || 'Pet cưng';
                 const petBreed = item.pet_profile?.breed || 'Thú cưng';
-                const serviceName = item.service?.service_name || 'Dịch vụ Spa';
+                const serviceName = item.service?.service_name || 'Chưa có thông tin dịch vụ';
                 const rawStaffName = item.staff?.full_name || '';
                 const staff = rawStaffName && !rawStaffName.includes('@') ? rawStaffName : null;
                 const petWeight = Number(item.pet_profile?.weight) > 0 ? `${item.pet_profile.weight} kg` : 'Chưa cập nhật';
@@ -708,20 +801,23 @@
                 const petAlertParts = [rawAllergy ? `Dị ứng: ${rawAllergy}` : null, rawRoutine ? `Lưu ý: ${rawRoutine}` : null].filter(Boolean);
                 const petAllergy = petAlertParts.length > 0 ? petAlertParts.join(' • ') : (item.note && item.note.toLowerCase().includes('dị ứng') ? item.note : null);
 
-                const taxiMatch = String(item.note || '').match(/\[Pawpal Taxi v1\]\nĐón: ([^\n]+)\nTrả: ([^\n]+)\nHình thức: ([^\n]+)\nCự ly: ([0-9.]+)\nBảng giá: ([^\n]+)\n\[\/Pawpal Taxi\]$/);
-                const taxiInfo = cat === 'Taxi' && taxiMatch ? {
-                    pickupAddress: taxiMatch[1], dropoffAddress: taxiMatch[2],
-                    tripType: taxiMatch[3], distanceKm: Number(taxiMatch[4])
-                } : {};
-                const intake = readBookingRecord(item.note, 'intake');
-                const intakeRecord = intake ? { ...intake, actualWeight: Number(intake.actualWeight), belongings: (intake.belongings || '').split(', ').filter(Boolean), proofPhotos: [] } : null;
-                const charges = readCharges(item.note);
+                const intake = mapRecord(item.records, 'intake',item.pet_id);
+                const intakeRecord = intake;
+                const charges = [
+                    ...item.adjustments.filter(a=>!['cancelled','rejected'].includes(a.approval_status)).map(a=>({id:a.id,kind:'surcharge',name:a.reason.split(String.fromCharCode(10))[0],reason:a.reason,amount:Number(a.amount_delta),approvalStatus:a.approval_status,consent:a.customer_consent_status,effective:a.approval_status==='approved'&&a.customer_consent_status==='confirmed'})),
+                    ...item.items.filter(i=>!i.is_primary&&i.status!=='cancelled').map(i=>({id:i.id,kind:'service',name:i.name_snapshot,amount:Number(i.quantity)*Number(i.unit_price)-Number(i.discount_amount),serviceId:i.service_id,effective:true}))
+                ];
 
                 return {
                     id: item.appointment_code || (item.id ? `BKG-${item.id.replace(/-/g, '').slice(0, 8).toUpperCase()}` : `BKG-${1000 + idx}`),
                     dbId: item.id,
                     rawStatus: item.appointment_status,
+                    updatedAt: item.updated_at,
+                    primaryItem: item.items.find(i=>i.is_primary),
+                    collected: item.collected,
+                    allItems: item.items,
                     staffId: item.staff?.id || null,
+                    scheduledStartAt:item.scheduled_start_at,scheduledEndAt:item.scheduled_end_at,
                     rawNote: item.note,
                     petDbId: item.pet_id,
                     serviceDbId: item.service?.id,
@@ -729,28 +825,39 @@
                     userId: item.customer_id || null,
                     customerName,
                     phone,
-                    ...taxiInfo,
-                    customerNote: taxiMatch ? String(item.note || '').slice(0, taxiMatch.index).replace(financePattern, '').replace(recordPattern('intake'),'').replace(recordPattern('handover'),'').trim() : String(item.note || '').replace(financePattern, '').replace(recordPattern('intake'),'').replace(recordPattern('handover'),'').trim(),
+                    hotelStay: one(item.hotel)||null,
+                    roomCode: one(item.hotel)?.room?.room_number||'',
+                    dietPlan: one(item.hotel)?.special_diet_notes||'',
+                    billableDays: one(item.hotel) ? item.items.find(i=>i.is_primary)?.quantity : null,
+                    checkInDate: one(item.hotel) ? new Date(one(item.hotel).check_in_at).toLocaleDateString('vi-VN',{timeZone:'Asia/Bangkok'}) : '',
+                    checkOutDate: one(item.hotel) ? new Date(one(item.hotel).check_out_at).toLocaleDateString('vi-VN',{timeZone:'Asia/Bangkok'}) : '',
+                    checkInTime: one(item.hotel) ? new Date(one(item.hotel).check_in_at).toLocaleTimeString('vi-VN',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'}) : '',
+                    taxiTrip: one(item.taxi)||null,
+                    pickupAddress: one(item.taxi)?.pickup_address || '',
+                    dropoffAddress: one(item.taxi)?.dropoff_address || '',
+                    tripType: one(item.taxi)?.trip_type || '',
+                    distanceKm: one(item.taxi)?.distance_km ?? null,
+                    customerNote: item.note || '',
                     petName,
                     petBreed,
-                    petId: item.pet_profile?.pet_code || 'PET-001',
+                    petId: item.pet_profile?.pet_code || '—',
                     petWeight: intakeRecord ? `${intakeRecord.actualWeight} kg` : petWeight,
                     petAge: item.pet_profile?.date_of_birth ? (() => { const months = Math.floor((Date.now()-Date.parse(item.pet_profile.date_of_birth))/2629800000); return months >= 12 ? `${Math.floor(months/12)} tuổi` : months >= 0 ? `${months} tháng` : 'Chưa cập nhật'; })() : 'Chưa cập nhật',
                     petAlert: petAllergy,
                     category: cat,
                     categoryName: cat === 'Hotel' ? 'Pet Hotel' : (cat === 'Taxi' ? 'Pet Taxi' : 'Spa và Grooming'),
                     serviceName,
-                    duration: item.service?.estimated_duration ? `${item.service.estimated_duration} phút` : '60 phút',
+                    duration: item.service?.estimated_duration ? `${item.service.estimated_duration} phút` : 'Chưa cập nhật',
                     date: item.appointment_date || '',
                     time: item.appointment_time ? item.appointment_time.substring(0, 5) : '',
                     staff,
                     intakeRecord,
-                    handoverRecord: readBookingRecord(item.note, 'handover'),
-                    originalWeight: petWeight,
+                    handoverRecord: mapRecord(item.records, 'handover',item.pet_id),
+                    originalWeight: item.items.find(i=>i.is_primary)?.weight_snapshot != null ? String(item.items.find(i=>i.is_primary).weight_snapshot)+' kg' : 'Chưa ghi nhận',
                     charges,
                     surcharges: charges.filter(c => c.kind === 'surcharge'),
                     accompanyingServices: charges.filter(c => c.kind === 'service').map(c => ({ ...c, price: c.amount, note: c.reason })),
-                    price: Number(item.total_price || 0) - charges.reduce((sum, c) => sum + c.amount, 0),
+                    price: Number(item.total_price || 0) - charges.filter(c=>c.effective).reduce((sum, c) => sum + c.amount, 0),
                     total: item.total_price || 0,
                     paymentStatus: paymentStatusText,
                     paymentBadgeClass,
@@ -961,6 +1068,7 @@
 
         setupServicesRealtimeSync();
 
+        document.querySelectorAll('.services-module form').forEach(form=>form.addEventListener('submit',event=>event.preventDefault()));
         // BỘ LẮNG NGHE ĐÓNG MODAL 4 CHIỀU TOÀN CỤC CHUẨN RULE AGENTS.MD
         document.addEventListener('click', (e) => {
             const closeBtn = e.target.closest('[data-close-modal]');
@@ -1001,7 +1109,8 @@
                         moduleName: 'Dịch vụ',
                         invalidatePattern: invalidatePattern || 'services:*',
                         onActiveRefresh: async () => {
-                            await loadServicesData({ force: true });
+                            await Promise.all([loadServicesData({ force: true }),loadCatalogData({force:true}),loadReviewsData({force:true})]);
+                            PawpalServices.refreshStaffSchedule?.();
                             if (typeof refreshFn === 'function') {
                                 refreshFn();
                             } else {
@@ -1013,6 +1122,7 @@
                     });
                 } else if (sessionStorage.getItem('pawpal_admin_active_module') === 'Dịch vụ') {
                     loadServicesData({ force: true }).then(() => {
+                        PawpalServices.refreshStaffSchedule?.();
                         PawpalServices.subtabs?.bookings?.renderBookingsTable?.();
                         PawpalServices.subtabs?.bookings?.updateKPIs?.();
                     });
@@ -1022,8 +1132,23 @@
             _servicesRealtimeChannel = client.channel('admin-services-live-sync')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment' }, () => triggerServiceSync('services:bookings*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'service' }, () => triggerServiceSync('services:catalog*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'service_price' }, () => triggerServiceSync('services:catalog*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'service_review' }, () => triggerServiceSync('services:reviews*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'service_price_matrix' }, () => triggerServiceSync('services:catalog*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'review' }, () => triggerServiceSync('services:reviews*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'appointment_item'},()=>triggerServiceSync('services:*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'appointment_record'},()=>triggerServiceSync('services:*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'appointment_adjustment'},()=>triggerServiceSync('services:*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'payment'},()=>triggerServiceSync('services:*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'refund_transaction'},()=>triggerServiceSync('services:*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'taxi_trip'},()=>triggerServiceSync('services:*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'hotel_booking'},()=>triggerServiceSync('services:*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'care_log'},()=>triggerServiceSync('services:*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'review_response'},()=>triggerServiceSync('services:*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'service_care_action'},()=>triggerServiceSync('services:*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'service_supported_species'},()=>triggerServiceSync('services:*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'pet_weight_history'},()=>triggerServiceSync('services:*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'customer_phone'},()=>triggerServiceSync('services:*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'staff_schedule'},()=>PawpalServices.refreshStaffSchedule?.())
+                .on('postgres_changes', {event:'*',schema:'public',table:'support_ticket'},()=>triggerServiceSync('services:reviews*'))
                 .subscribe();
 
             window.PawpalDataStore?.recordMetric?.('channel-add', 'admin-services-live-sync');

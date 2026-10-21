@@ -7,7 +7,9 @@ const cloudMode=process.argv.includes('--cloud');
 const cloudConfig=cloudMode?require('dotenv').parse(fs.readFileSync(infra+'/CLOUD-MIGRATION.private.env')):null;
 const expectedUrl=cloudMode?cloudConfig.DESTINATION_SUPABASE_URL:fs.readFileSync(infra+'/demo-tunnel.stderr.log','utf8').match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/)[0];
 const credentials=fs.readFileSync(infra+'/PAWPAL-ADMIN.private.txt','utf8');
-const origin='https://pawpalgr3.vercel.app';
+const localMode=process.argv.includes('--local');
+if(localMode&&!cloudMode)throw Error('Local web acceptance requires --cloud --local');
+const origin=localMode?'http://localhost:3000':'https://pawpalgr3.vercel.app';
 (async()=>{
  const configResponse=await fetch(origin+'/api/admin-config',{signal:AbortSignal.timeout(20000)});
  assert.equal(configResponse.status,200,'Production config endpoint must be ready');
@@ -37,7 +39,7 @@ const origin='https://pawpalgr3.vercel.app';
   await page.reload();
   await page.waitForFunction(()=>window.PawpalCustomers?.state.listLoadStatus==='loaded',null,{timeout:45000});
   assert.deepEqual(failures,[]);assert.deepEqual(oldCloud,[]);
-  await page.screenshot({path:infra+'/verification/vercel-production-'+(cloudMode?'cloud-':'')+'customers.png',fullPage:true});
-  console.log('PASS actual Vercel Production: correct public config, protected password endpoint, Admin login, 35 customers, 7964 points, Realtime joined, reload and no old Cloud requests.');
+  await page.screenshot({path:infra+'/verification/'+(localMode?'local-web-':'vercel-production-')+(cloudMode?'cloud-':'')+'customers.png',fullPage:true});
+  console.log('PASS actual '+(localMode?'local web':'Vercel Production')+': correct public config, protected password endpoint, Admin login, 35 customers, 7964 points, Realtime joined, reload and no old Cloud requests.');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e.message);process.exitCode=1;});

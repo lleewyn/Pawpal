@@ -14,6 +14,7 @@
     let isAllergyFilterActive = false;
     let isSlaFilterActive = false;
     let currentBookingPage = 1;
+    let exportBookings=[];
     const BOOKINGS_PER_PAGE = 10;
 
     let activeDropdownBookingId = null;
@@ -254,6 +255,7 @@
             return true;
         });
 
+        exportBookings=filtered;
         const totalRecords = filtered.length;
         const totalPages = Math.ceil(totalRecords / BOOKINGS_PER_PAGE);
 
@@ -319,12 +321,12 @@
                 serviceCellHtml = `
                     <div style="font-weight: 500; color: var(--text-main);">${escapeBookingText(item.serviceName)}</div>
                     <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
-                        ${[escapeBookingText(item.roomCode), item.nights ? `${escapeBookingText(item.nights)} đêm` : '', escapeBookingText(item.dietPlan)].filter(Boolean).join(' • ')}
+                        ${[escapeBookingText(item.roomCode), item.billableDays ? `${escapeBookingText(item.billableDays)} ngày tính phí` : '', escapeBookingText(item.dietPlan)].filter(Boolean).join(' • ')}
                     </div>
                 `;
                 datetimeCellHtml = `
                     <div style="font-weight: 600; color: var(--text-main);">${item.checkInDate ? `${escapeBookingText(item.checkInDate)} ➔ ${escapeBookingText(item.checkOutDate)}` : escapeBookingText(item.date)}</div>
-                    <div style="font-size: 11.5px; color: var(--text-muted);">${item.nights ? `${escapeBookingText(item.nights)} đêm (${escapeBookingText(item.checkInTime || '08:00')} check-in)` : escapeBookingText(item.time)}</div>
+                    <div style="font-size: 11.5px; color: var(--text-muted);">${item.billableDays ? `${escapeBookingText(item.billableDays)} ngày tính phí · Nhận ${escapeBookingText(item.checkInTime)}` : escapeBookingText(item.time)}</div>
                 `;
             } else if (item.category === 'Taxi') {
                 const shortPickup = item.pickupAddress ? (item.pickupAddress.length > 22 ? item.pickupAddress.substring(0, 22) + '...' : item.pickupAddress) : 'Đón tận nơi';
@@ -701,21 +703,10 @@
             btnExport.addEventListener('click', () => {
                 const bookingsData = PawpalServices.state?.bookingsData || [];
                 const headers = ['Mã lịch hẹn', 'Thời gian', 'Ngày', 'Khách hàng', 'Số điện thoại', 'Thú cưng', 'Dịch vụ', 'Kỹ thuật viên', 'Tổng tiền', 'Thanh toán', 'Trạng thái'];
-                const rows = bookingsData.map(b => [
-                    `"${b.id || ''}"`,
-                    `"${b.time || ''}"`,
-                    `"${b.date || ''}"`,
-                    `"${b.customerName || ''}"`,
-                    `"${b.phone || ''}"`,
-                    `"${b.petName || ''}"`,
-                    `"${b.serviceName || ''}"`,
-                    `"${b.staff || 'Chưa phân công'}"`,
-                    `"${b.total || b.price || 0}"`,
-                    `"${b.paymentStatus || 'Chưa thu'}"`,
-                    `"${b.status || ''}"`
-                ]);
-
-                const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+                if(PawpalServices.state.loadError||!PawpalServices.state.isLoaded){PawpalServices.showToast('Chưa tải xong dữ liệu để xuất.','warning');return;}
+                const rows=exportBookings.map(b=>[b.id,b.time,b.date,b.customerName,b.phone,b.petName,b.serviceName,b.staff||'Chưa phân công',b.total??0,b.paymentStatus||'Chưa thu',PawpalServices.getStatusBadge(b.status).replace(/<[^>]*>/g,'')]);
+                const cell=value=>{let text=String(value??'');if(/^[=+\-@\t\r]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"';};
+                const csvContent='\uFEFF'+[headers,...rows].map(row=>row.map(cell).join(',')).join('\r\n');
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
@@ -743,76 +734,20 @@
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             const booking = (PawpalServices.state?.bookingsData || []).find(b => b.id === bookingId || b.dbId === bookingId);
             if (!client || !booking?.dbId || !booking.rawStatus) throw new Error('Thiếu dữ liệu lịch hẹn; vui lòng tải lại trang.');
-            const statuses = {
-                confirmed: 'da_xac_nhan',
-                checked_in: 'da_check_in',
-                in_progress: 'dang_thuc_hien',
-                completed: 'da_hoan_tat',
-                cancelled: 'da_huy',
-                no_show: 'vang_mat',
-                pending: 'cho_xac_nhan'
-            };
-            const transitions = {
-                pending: ['confirmed', 'cancelled', 'no_show'],
-                confirmed: ['checked_in', 'in_progress', 'cancelled', 'no_show'],
-                checked_in: ['in_progress', 'cancelled'],
-                in_progress: ['completed', 'cancelled'],
-                no_show: ['cancelled'],
-                completed: []
-            };
-            if (!statuses[newStatus] || !transitions[booking.status]?.includes(newStatus)) throw new Error('Trạng thái hiện tại không cho phép thao tác này.');
-            if (newStatus==='in_progress' || newStatus==='completed') throw new Error('Vui lòng dùng biên bản tiếp nhận hoặc bàn giao để chuyển trạng thái.');
-            const payload = { appointment_status: statuses[newStatus] };
-            if (newStatus === 'cancelled' && reason.trim()) payload.note = `Lý do hủy: ${reason.trim()}\n${booking.rawNote || ''}`;
-            const { data, error } = await client.from('appointment').update(payload).eq('id', booking.dbId)
-                .eq('appointment_status', booking.rawStatus).select('id, appointment_status').single();
-            if (error) throw error;
-            if (!data?.id || data.appointment_status !== statuses[newStatus]) throw new Error('Không xác minh được trạng thái đã lưu.');
-            // Chỉ cập nhật giao diện sau khi Supabase đã trả về bản ghi vừa ghi.
-            // Không chờ lần tải dữ liệu kế tiếp để tránh bảng giữ nhãn trạng thái cũ.
-            booking.rawStatus = data.appointment_status;
-            booking.status = newStatus;
-
-            try {
-                let custId = booking.userId;
-                if (!custId && booking.dbId) {
-                    const { data: apptRow } = await client.from('appointment').select('customer_id').eq('id', booking.dbId).maybeSingle();
-                    if (apptRow?.customer_id) custId = apptRow.customer_id;
-                }
-                if (custId && window.PawPalAPI?.createSystemNotification) {
-                    if (newStatus === 'confirmed') {
-                        await window.PawPalAPI.createSystemNotification({
-                            customerId: custId,
-                            type: 'lich_hen_da_xac_nhan',
-                            title: 'Lịch hẹn đã được xác nhận',
-                            content: `Lịch hẹn dịch vụ #${booking.id} (${booking.serviceName || 'Dịch vụ'}) vào lúc ${booking.time || ''} ngày ${booking.date || ''} đã được xác nhận.`,
-                            appointmentId: booking.dbId
-                        });
-                    } else if (newStatus === 'cancelled') {
-                        await window.PawPalAPI.createSystemNotification({
-                            customerId: custId,
-                            type: 'lich_hen_da_thay_doi',
-                            title: 'Lịch hẹn đã bị hủy',
-                            content: `Lịch hẹn #${booking.id} đã bị hủy.${reason ? ` Lý do: ${reason.trim()}` : ''}`,
-                            appointmentId: booking.dbId
-                        });
-                    }
-                }
-            } catch (notifErr) {
-                console.warn('[Services] Could not send appointment status notification:', notifErr);
-            }
-
+            const {data,error}=await client.rpc('update_admin_service_booking',{p_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_action:'status',p_value:newStatus,p_reason:reason.trim()});
+            if(error)throw error;
+            if(data!==booking.dbId)throw Error('Không xác minh được trạng thái đã lưu.');
             renderBookingsTable(); updateKPIs(); renderUpcomingBar();
             if (PawpalServices.state.selectedBookingId === booking.id) PawpalServices.subtabs.detail?.renderBookingDetail?.(booking.id);
 
             await PawpalServices.loadServicesData({ force: true });
             renderBookingsTable(); updateKPIs(); renderUpcomingBar();
             if (PawpalServices.state.selectedBookingId === booking.id) PawpalServices.subtabs.detail?.renderBookingDetail?.(booking.id);
-            const labels = { confirmed: 'Đã xác nhận', in_progress: 'Đang thực hiện', completed: 'Hoàn thành', cancelled: 'Đã hủy' };
+            const labels = { confirmed:'Đã xác nhận',checked_in:'Đã đến',no_show:'Vắng mặt',cancelled:'Đã hủy' };
             PawpalServices.showToast(`Đã lưu trạng thái ${labels[newStatus]} cho lịch hẹn ${booking.id}.`);
             return true;
         } catch (err) {
-            PawpalServices.showToast('Không thể đổi trạng thái lịch hẹn: ' + err.message, 'danger');
+            PawpalServices.showToast('Không thể đổi trạng thái lịch hẹn: ' + PawpalServices.errorMessage(err), 'danger');
             return false;
         } finally { pendingStatusUpdates.delete(bookingId); }
     }
@@ -894,12 +829,12 @@
             staffSelect.innerHTML = '<option value="">-- Chọn KTV tiếp nhận --</option>';
             staffList.forEach(s => {
                 const opt = document.createElement('option');
-                opt.value = s.full_name;
+                opt.value = s.id;
                 opt.textContent = s.full_name;
                 staffSelect.appendChild(opt);
             });
             if (booking && booking.staff) {
-                staffSelect.value = booking.staff;
+                staffSelect.value = booking.staffId||'';
             }
         }
 
@@ -923,6 +858,7 @@
 
         // Nạp dữ liệu checklist ngoại quan
         const intake = booking?.intakeRecord || {};
+        const customerConfirmation=document.getElementById('intakeCustomerConfirmed');if(customerConfirmation)customerConfirmation.checked=false;
         const hasIntakeRecord = Boolean(booking?.intakeRecord && (intake.skinCoat || intake.eyesEars || intake.wounds || intake.temperament));
         const setCheck = (id, val) => { const el = document.getElementById(id); if (el) el.checked = Boolean(val); };
 
@@ -988,25 +924,14 @@
             const staffList = PawpalServices.state?.liveStaffList || [];
             staffSelect.innerHTML = '<option value="">-- Chọn KTV mới --</option>';
             staffList.forEach(s => {
-                if (s.full_name !== currentStaffName) {
+                if (s.id !== booking?.staffId && !s.service_locked) {
                     const opt = document.createElement('option');
-                    opt.value = s.full_name;
-                    opt.textContent = `${s.full_name} (${s.specialty || 'KTV Spa'})`;
+                    opt.value = s.id;
+                    opt.textContent = `${s.full_name} · ${s.id.slice(0,8)}`;
                     staffSelect.appendChild(opt);
                 }
             });
-            // Nếu chưa có KTV nào khác trong danh sách, nạp danh sách mẫu
-            if (staffSelect.options.length <= 1) {
-                const sampleStaffs = ['Trần Minh Hoàng', 'Hoàng Bảo Vy', 'Nguyễn Văn Đạt', 'Lê Khánh Linh'];
-                sampleStaffs.forEach(name => {
-                    if (name !== currentStaffName) {
-                        const opt = document.createElement('option');
-                        opt.value = name;
-                        opt.textContent = `${name} (KTV Chuyên sâu)`;
-                        staffSelect.appendChild(opt);
-                    }
-                });
-            }
+            PawpalServices.enhanceEntitySelects();
         }
 
         // Reset lý do
@@ -1089,6 +1014,7 @@
 
     function openCompleteBookingModal(bookingId) {
         const modal = document.getElementById('modalCompleteBooking');
+        const handoverConfirmation=document.getElementById('handoverCustomerConfirmed');if(handoverConfirmation)handoverConfirmation.checked=false;
         if (!modal) return;
 
         const bookingsData = PawpalServices.state?.bookingsData || [];
@@ -1108,9 +1034,10 @@
         if (progressEl) {
             const logs = booking?.carelogs || booking?.careLogs || [];
             const serviceObj = (PawpalServices.state?.servicesData || []).find(s => s.id === booking?.serviceId || s.name === booking?.serviceName);
-            const totalSopSteps = Array.isArray(serviceObj?.steps) && serviceObj.steps.length > 0 ? serviceObj.steps.length : (Array.isArray(booking?.sopSteps) && booking.sopSteps.length > 0 ? booking.sopSteps.length : 6);
+            const totalSopSteps = Array.isArray(serviceObj?.steps) ? serviceObj.steps.length : (booking?.sopSteps?.length||0);
             const doneCount = logs.length;
-            if (doneCount > 0) {
+            if (!totalSopSteps) {progressEl.textContent=`${doneCount} lượt ghi nhật ký; chưa cấu hình quy trình.`;progressEl.style.color='var(--text-muted)';}
+            else if (doneCount > 0) {
                 const pct = Math.min(100, Math.round((doneCount / totalSopSteps) * 100));
                 progressEl.textContent = `${doneCount}/${totalSopSteps} bước đã thực hiện (${pct}%)`;
                 progressEl.style.color = doneCount >= totalSopSteps ? '#16A34A' : '#D97706';
@@ -1195,35 +1122,8 @@
     }
 
     function escalateBookingToComplaint(bookingId) {
-        if (!bookingId) {
-            PawpalServices.showToast('Không tìm thấy mã ca dịch vụ để tạo khiếu nại.', 'warning');
-            return;
-        }
-        const booking = (PawpalServices.state?.bookingsData || []).find(b => b.id === bookingId || b.dbId === bookingId);
-        const resolvedId = booking?.dbId || bookingId;
-        const displayCode = booking?.id || bookingId;
-
-        sessionStorage.setItem('pawpal_admin_complaint_from_booking', resolvedId);
-        sessionStorage.setItem('pawpal_admin_complaint_from_booking_code', displayCode);
-        sessionStorage.setItem('pawpal_admin_active_module', 'Khiếu nại');
-        sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-services');
-
-        PawpalServices.showToast(`Đang chuyển sang phân hệ Khiếu nại để lập hồ sơ cho ca ${displayCode}...`, 'info');
-
-        const complaintBtn = Array.from(document.querySelectorAll('.sidebar-menu-btn, .admin-nav-item')).find(b => {
-            const title = b.getAttribute('data-title') || b.getAttribute('data-module');
-            return title === 'Khiếu nại';
-        });
-
-        if (window.PawpalRouter?.navigateToModule) {
-            window.PawpalRouter.navigateToModule('Khiếu nại', 'tab-complaint-services');
-        } else if (complaintBtn) {
-            complaintBtn.click();
-        } else if (window.PawpalAdmin?.loadModule) {
-            window.PawpalAdmin.loadModule('Khiếu nại');
-        } else {
-            window.location.hash = '#tab-complaint-services';
-        }
+        const booking=(PawpalServices.state.bookingsData||[]).find(b=>b.id===bookingId||b.dbId===bookingId);
+        PawpalServices.openServiceTicket(booking);
     }
 
     function setupBookingModals() {
@@ -1246,103 +1146,38 @@
         // ====================================================================
         // MODAL 14: LỊCH TRỰC VÀ ĐIỀU PHỐI KỸ THUẬT VIÊN
         // ====================================================================
-        function renderStaffScheduleModal(shiftFilter = 'ALL') {
-            const grid = document.getElementById('staffScheduleGrid');
-            const totalStaffEl = document.getElementById('summaryTotalStaffCount');
-            const totalAssignedEl = document.getElementById('summaryTotalAssignedBookings');
-            const avgCapacityEl = document.getElementById('summaryAvgCapacity');
-            const overloadedEl = document.getElementById('summaryOverloadedCount');
-            if (!grid) return;
-
-            const liveStaff = PawpalServices.state?.liveStaffList || [];
-            const defaultStaffList = [
-                { id: 'STF-01', name: 'Nguyễn Ngọc Anh', role: 'Senior Groomer', shift: 'MORNING' },
-                { id: 'STF-02', name: 'Trần Văn Nhân Viên', role: 'Junior Groomer', shift: 'MORNING' },
-                { id: 'STF-03', name: 'Lê Thu Trang', role: 'Senior Groomer', shift: 'AFTERNOON' },
-                { id: 'STF-04', name: 'Phạm Minh Trí', role: 'Grooming Master', shift: 'AFTERNOON' },
-                { id: 'STF-05', name: 'Vũ Hoàng Nam', role: 'Bather Specialist', shift: 'EVENING' },
-                { id: 'STF-06', name: 'Đặng Thảo Vy', role: 'Pet Care Associate', shift: 'EVENING' }
-            ];
-
-            const staffList = liveStaff.length > 0 
-                ? liveStaff.map((s, idx) => ({
-                    id: s.id || `STF-0${idx + 1}`,
-                    name: s.full_name || s.name,
-                    role: s.role || 'Kỹ thuật viên',
-                    shift: idx % 3 === 0 ? 'MORNING' : (idx % 3 === 1 ? 'AFTERNOON' : 'EVENING')
-                }))
-                : defaultStaffList;
-
-            const bookings = PawpalServices.state?.bookingsData || [];
-            
-            // Lọc theo ca
-            const filteredStaff = shiftFilter === 'ALL' 
-                ? staffList 
-                : staffList.filter(s => s.shift === shiftFilter);
-
-            let totalAssigned = 0;
-            let overloadedCount = 0;
-
-            const cardsHtml = filteredStaff.map(staff => {
-                const assignedBookings = bookings.filter(b => (b.staff || '').toLowerCase().includes(staff.name.toLowerCase()) || staff.name.toLowerCase().includes((b.staff || '').toLowerCase()));
-                const count = assignedBookings.length || Math.floor(Math.random() * 3) + 1;
-                totalAssigned += count;
-                const maxCap = 4;
-                const capPct = Math.min(100, Math.round((count / maxCap) * 100));
-                if (capPct >= 100) overloadedCount++;
-
-                const statusClass = capPct >= 100 ? 'danger' : (capPct >= 75 ? 'warning' : '');
-                const initials = staff.name.split(' ').map(w => w[0]).slice(-2).join('').toUpperCase();
-
-                const shiftLabel = staff.shift === 'MORNING' ? 'Ca sáng (08:00 - 12:00)' : (staff.shift === 'AFTERNOON' ? 'Ca chiều (13:00 - 17:00)' : 'Ca tối (17:00 - 21:00)');
-
-                return `
-                    <div class="ktv-schedule-card">
-                        <div class="ktv-schedule-card-header">
-                            <div class="ktv-schedule-avatar">${initials}</div>
-                            <div class="ktv-schedule-info">
-                                <div class="ktv-schedule-name">${staff.name}</div>
-                                <div class="ktv-schedule-role">${staff.role} • ${shiftLabel}</div>
-                            </div>
-                            <span class="admin-badge ${capPct >= 100 ? 'badge-danger' : (capPct >= 75 ? 'badge-warning' : 'badge-success')}">
-                                ${count}/${maxCap} ca (${capPct}%)
-                            </span>
-                        </div>
-                        <div>
-                            <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-muted);">
-                                <span>Tiến độ tải ca trong ngày</span>
-                                <span>${count >= maxCap ? 'Đầy tải' : 'Sẵn sàng nhận thêm'}</span>
-                            </div>
-                            <div class="ktv-workload-bar-wrap">
-                                <div class="ktv-workload-bar-fill ${statusClass}" style="width: ${capPct}%;"></div>
-                            </div>
-                        </div>
-                        <div class="ktv-assigned-bookings-list">
-                            ${assignedBookings.length > 0 ? assignedBookings.slice(0, 3).map(b => `
-                                <div class="ktv-assigned-booking-chip">
-                                    <span style="font-weight: 600; color: #203A2C;">${b.id} • ${b.petName || 'Bé cưng'}</span>
-                                    <span style="color: var(--text-muted);">${b.time || '10:00'} (${b.service || 'Spa'})</span>
-                                </div>
-                            `).join('') : `
-                                <div style="font-size: 11.5px; color: var(--text-muted); font-style: italic; padding: 4px 0;">
-                                    Chưa có ca được chỉ định trong khung giờ này.
-                                </div>
-                            `}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            grid.innerHTML = cardsHtml;
-
-            if (totalStaffEl) totalStaffEl.textContent = filteredStaff.length;
-            if (totalAssignedEl) totalAssignedEl.textContent = `${totalAssigned} ca`;
-            if (avgCapacityEl) {
-                const avg = filteredStaff.length > 0 ? Math.round((totalAssigned / (filteredStaff.length * 4)) * 100) : 0;
-                avgCapacityEl.textContent = `${avg}%`;
-            }
-            if (overloadedEl) overloadedEl.textContent = overloadedCount;
+        let scheduleRequest=0;
+        async function renderStaffScheduleModal(shiftFilter = 'ALL') {
+            const request=++scheduleRequest,grid=document.getElementById('staffScheduleGrid');if(!grid)return;
+            const date=document.getElementById('staffScheduleDate').value;
+            if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return;
+            const start=new Date(date+'T00:00:00+07:00'),end=new Date(+start+86400000);
+            const ranges={ALL:[0,24],MORNING:[8,12],AFTERNOON:[12,17],EVENING:[17,24]},hours=ranges[shiftFilter]||ranges.ALL;
+            const from=+start+hours[0]*3600000,to=+start+hours[1]*3600000;
+            document.getElementById('staffScheduleTitle').textContent='Lịch trực và điều phối kỹ thuật viên ('+date.split('-').reverse().join('/')+')';
+            grid.textContent='Đang tải lịch làm việc…';
+            try {
+                const db=window.getSupabaseClient(),shifts=[];
+                for(let offset=0;;offset+=500){const {data,error}=await db.from('staff_schedule').select('id,staff_id,start_at,end_at,availability_status,reason').eq('schedule_status','active').gt('end_at',start.toISOString()).lt('start_at',end.toISOString()).order('id').range(offset,offset+499);if(error)throw error;shifts.push(...data);if(data.length<500)break;}
+                if(request!==scheduleRequest)return;
+                const staff=PawpalServices.state.liveStaffList||[],bookings=(PawpalServices.state.bookingsData||[]).filter(b=>!['cancelled','no_show'].includes(b.status)&&Date.parse(b.scheduledStartAt)<to&&Date.parse(b.scheduledEndAt)>from);
+                let conflicts=0;const clock=value=>new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'}).format(new Date(value));
+                const cards=staff.map(person=>{
+                    const work=shifts.filter(w=>w.staff_id===person.id&&Date.parse(w.start_at)<to&&Date.parse(w.end_at)>from),assigned=bookings.filter(b=>b.staffId===person.id);
+                    if(shiftFilter!=='ALL'&&!work.length&&!assigned.length)return '';
+                    const overlapping=assigned.some((b,i)=>assigned.slice(i+1).some(c=>b.status!=='completed'&&c.status!=='completed'&&Date.parse(b.scheduledStartAt)<Date.parse(c.scheduledEndAt)&&Date.parse(b.scheduledEndAt)>Date.parse(c.scheduledStartAt)));
+                    if(overlapping)conflicts++;
+                    return '<section style="background:transparent;border:none;padding:8px 0;"><strong style="color:#236B48;">'+escapeBookingText(person.full_name)+'</strong><div style="color:#4F7A65;font-size:12px;">'+(work.length?work.map(w=>clock(w.start_at)+'–'+clock(w.end_at)+' · '+(w.availability_status==='available'?'Có lịch làm việc':'Không khả dụng')+(w.reason?' · '+escapeBookingText(w.reason):'')).join('<br>'):'Chưa có lịch làm việc được phân')+'</div>'+(overlapping?'<p style="color:#DC2626;">Có lịch hẹn trùng giờ cần điều phối.</p>':'')+(assigned.length?assigned.map(b=>'<div style="margin-top:6px;">'+escapeBookingText(clock(b.scheduledStartAt)+' · '+b.petName+' · '+b.id)+'</div>').join(''):'<p style="color:#4F7A65;">Chưa có lịch hẹn được phân công.</p>')+'</section>';
+                }).filter(Boolean);
+                grid.innerHTML=cards.join('')||'<p>Chưa có nhân viên hoặc lịch làm việc trong khoảng đã chọn.</p>';
+                document.getElementById('summaryTotalStaffCount').textContent=shifts.filter(w=>w.availability_status==='available'&&Date.parse(w.start_at)<to&&Date.parse(w.end_at)>from).map(w=>w.staff_id).filter((id,i,a)=>a.indexOf(id)===i).length;
+                document.getElementById('summaryTotalAssignedBookings').textContent=bookings.filter(b=>b.staffId).length;
+                document.getElementById('summaryAvgCapacity').textContent=bookings.filter(b=>!b.staffId).length;
+                document.getElementById('summaryOverloadedCount').textContent=conflicts;
+            }catch(error){if(request===scheduleRequest){grid.textContent='Không thể tải lịch làm việc. Vui lòng thử lại.';for(const id of ['summaryTotalStaffCount','summaryTotalAssignedBookings','summaryAvgCapacity','summaryOverloadedCount'])document.getElementById(id).textContent='—';}}
         }
+        PawpalServices.refreshStaffSchedule=()=>{if(document.getElementById('modalStaffSchedule')?.classList.contains('active'))renderStaffScheduleModal(document.querySelector('.staff-shift-tab-btn.active')?.dataset.shiftFilter||'ALL');};
+        document.getElementById('staffScheduleDate')?.addEventListener('change',()=>PawpalServices.refreshStaffSchedule());
 
         // Gắn sự kiện tab ca trực trong Modal 14
         document.querySelectorAll('.staff-shift-tab-btn').forEach(btn => {
@@ -1370,8 +1205,10 @@
         const modalStaffSchedule = document.getElementById('modalStaffSchedule');
         if (btnOpenStaffSchedule && modalStaffSchedule) {
             btnOpenStaffSchedule.addEventListener('click', () => {
+                document.getElementById('staffScheduleDate').value=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+                document.querySelectorAll('.staff-shift-tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.shiftFilter==='ALL'));
                 renderStaffScheduleModal('ALL');
-                modalStaffSchedule.classList.add('active');
+                modalStaffSchedule.style.removeProperty('display');modalStaffSchedule.classList.add('active');
             });
         }
 
@@ -1459,11 +1296,12 @@
                 // Điền danh sách KTV vào select nếu chưa có
                 const staffSelect = document.getElementById('newBookingStaff');
                 const staffList = PawpalServices.state?.liveStaffList || [];
-                if (staffSelect && staffList.length > 0 && staffSelect.options.length <= 1) {
-                    staffList.forEach(s => {
+                if (staffSelect) {
+                    staffSelect.replaceChildren(new Option('Chưa phân công',''));
+                    staffList.filter(s=>!s.service_locked).forEach(s => {
                         const opt = document.createElement('option');
-                        opt.value = s.full_name;
-                        opt.textContent = `${s.full_name} (${s.specialization || s.role || 'KTV'})`;
+                        opt.value = s.id;
+                        opt.textContent = `${s.full_name} (${s.specialization || s.job_title || 'KTV'})`;
                         staffSelect.appendChild(opt);
                     });
                 }
@@ -1489,9 +1327,9 @@
                 const petName = (document.getElementById('newBookingPetName')?.value || '').trim();
                 const category = document.getElementById('newBookingCategory')?.value || 'Spa';
                 const serviceSelect = document.getElementById('newBookingServiceSelect');
-                const serviceName = serviceSelect?.value || (category === 'Hotel' ? 'Phòng Deluxe' : (category === 'Taxi' ? 'Dịch Vụ Xe Đưa Đón Tận Nơi' : 'Gói Tắm Dưỡng Premium'));
+                const serviceName = serviceSelect?.value || '';
                 const date = document.getElementById('newBookingDate')?.value || new Date().toISOString().split('T')[0];
-                const time = document.getElementById('newBookingTime')?.value || '09:00';
+                const time = document.getElementById('newBookingTime')?.value || '';
                 const staff = document.getElementById('newBookingStaff')?.value || 'Chưa phân công';
                 const petAlert = (document.getElementById('newBookingPetAlert')?.value || '').trim();
                 const note = (document.getElementById('newBookingNotes')?.value || '').trim();
@@ -1516,66 +1354,38 @@
                     const petRef = selectedBookingPet;
                     const petId = petRef?.rawId || petRef?.id;
                     if (!petId || (petRef.pet_name || petRef.name) !== petName) throw new Error('Vui lòng chọn lại bé cưng từ danh sách gợi ý.');
-                    const { data: petRow, error: petError } = await client.from('pet_profile').select('id, customer_id, weight').eq('id', petId).single();
-                    if (petError) throw petError;
-                    const ownerId = selectedCustomerObj?.rawId || selectedCustomerObj?.id;
-                    if (!ownerId || ownerId !== petRow.customer_id) throw new Error('Khách hàng đã chọn không khớp chủ nuôi của bé.');
-                    if ((selectedCustomerObj.name || '') !== customer) throw new Error('Vui lòng chọn lại khách hàng từ danh sách gợi ý.');
-                    const matches = (PawpalServices.state.servicesData || []).filter(s => s.name === serviceSelect?.value && s.status === 'Đang phục vụ');
-                    if (matches.length !== 1) throw new Error('Vui lòng chọn một gói dịch vụ đang phục vụ.');
-                    const service = matches[0];
-                    if (category === 'Hotel') throw new Error('Chưa thể lưu Hotel khi chưa xác minh được phòng và thời gian giữ phòng.');
-                    if (!date || !time) throw new Error('Vui lòng chọn ngày và giờ hẹn.');
-                    const at = new Date(date + 'T' + time + ':00+07:00').getTime();
-                    if (!Number.isFinite(at) || at <= Date.now()) throw new Error('Thời gian hẹn phải ở tương lai.');
-                    const weight = Number(petRow.weight);
-                    if (petRow.weight == null || !Number.isFinite(weight) || weight <= 0) throw new Error('Cần cập nhật cân nặng hợp lệ của bé trước khi tính giá.');
-                    let totalPrice;
-                    let tripNote = '';
-                    if (category === 'Taxi') {
-                        const pickup = document.getElementById('newBookingTaxiPickup').value.trim();
-                        const dropoff = document.getElementById('newBookingTaxiDropoff').value.trim();
-                        const tripType = document.getElementById('newBookingTaxiTripType').value;
-                        const distanceText = document.getElementById('newBookingTaxiDistance').value;
-                        const distance = Number(distanceText);
-                        if (!pickup || !dropoff) throw new Error('Vui lòng nhập đầy đủ địa chỉ đón và địa chỉ trả.');
-                        if (!distanceText || !Number.isFinite(distance) || distance <= 0) throw new Error('Khoảng cách phải lớn hơn 0 km.');
-                        if (!['1 chiều (Đón đến quầy)', '1 chiều (Chở về nhà)'].includes(tripType)) throw new Error('Chuyến khứ hồi cần bổ sung giờ về và quy tắc tính giá; vui lòng chọn chuyến một chiều.');
-                        if ([pickup, dropoff].some(value => /[\r\n]|\[\/?Pawpal Taxi/.test(value))) throw new Error('Địa chỉ không hợp lệ.');
-                        const { data: rules, error: ruleError } = await client.from('taxi_price_rule').select('*');
-                        if (ruleError) throw ruleError;
-                        const applicable = (rules || []).filter(r => ['ACTIVE', 'dang_ap_dung'].includes(r.status)
-                            && distance >= Number(r.distance_from) && (r.distance_to == null || distance <= Number(r.distance_to))
-                            && weight >= Number(r.weight_from) && (r.weight_to == null || weight <= Number(r.weight_to))
-                            && (!r.effective_from || Date.parse(r.effective_from) <= at) && (!r.effective_to || Date.parse(r.effective_to) > at));
-                        if (applicable.length !== 1) throw new Error('Chưa xác định được đúng một bảng giá Taxi cho cự ly, cân nặng và ngày hẹn.');
-                        const rule = applicable[0];
-                        totalPrice = Number(rule.base_price) + Number(rule.surcharge);
-                        if (rule.base_price == null || rule.surcharge == null || !Number.isFinite(totalPrice) || totalPrice < 0) throw new Error('Bảng giá Taxi không hợp lệ.');
-                        tripNote = `[Pawpal Taxi v1]\nĐón: ${pickup}\nTrả: ${dropoff}\nHình thức: ${tripType}\nCự ly: ${distance}\nBảng giá: ${rule.id}\n[/Pawpal Taxi]`;
-                    } else {
-                        const { data: prices, error: priceError } = await client.from('service_price_matrix').select('*').eq('service_id', service.dbId);
-                        if (priceError) throw priceError;
-                        const applicable = (prices || []).filter(p => ['ACTIVE', 'dang_ap_dung', 'dang_hoat_dong'].includes(p.status) && weight >= Number(p.weight_from) && (p.weight_to == null || weight < Number(p.weight_to)) && (!p.effective_from || Date.parse(p.effective_from) <= at) && (!p.effective_to || Date.parse(p.effective_to) > at));
-                        if (applicable.length !== 1 || applicable[0].unit_price == null || !Number.isFinite(Number(applicable[0].unit_price)) || Number(applicable[0].unit_price) < 0) throw new Error('Chưa xác định được đúng một mức giá cho cân nặng và ngày hẹn.');
-                        totalPrice = Number(applicable[0].unit_price);
+                    const ownerId=selectedCustomerObj?.rawId || selectedCustomerObj?.id;
+                    if(!ownerId || (selectedCustomerObj.name||'')!==customer)throw Error('Vui lòng chọn lại khách hàng từ danh sách gợi ý.');
+                    const matches=(PawpalServices.state.servicesData||[]).filter(s=>s.dbId===serviceSelect?.dataset.serviceId&&s.name===serviceSelect?.value&&s.status==='Đang phục vụ');
+                    if(matches.length!==1)throw Error('Vui lòng chọn đúng một dịch vụ đang phục vụ.');
+                    if(!date||!time)throw Error('Vui lòng chọn ngày và giờ hẹn.');
+                    const at=new Date(date+'T'+time+':00+07:00');
+                    if(!Number.isFinite(+at)||+at<=Date.now())throw Error('Thời gian hẹn phải ở tương lai.');
+                    const staffMatches=(PawpalServices.state.liveStaffList||[]).filter(s=>s.id===staff);
+                    if(staff!=='Chưa phân công'&&staffMatches.length!==1)throw Error('Vui lòng chọn lại nhân viên phụ trách.');
+                    const style=category==='Spa'&&isGroomingService(matches[0].name)?document.getElementById('newBookingSpaStyle').value.trim():'';
+                    const details={customer_id:ownerId,pet_id:petId,service_id:matches[0].dbId,staff_id:staffMatches[0]?.id||null,scheduled_start_at:at.toISOString(),note:[note,petAlert,style?'Yêu cầu tạo kiểu: '+style:''].filter(Boolean).join('\n')};
+                    if(category==='Hotel'){
+                        const endDate=document.getElementById('newBookingHotelCheckOutDate').value,endTime=document.getElementById('newBookingHotelCheckOutTime').value;
+                        if(!endDate||!endTime)throw Error('Vui lòng chọn ngày và giờ trả phòng.');
+                        Object.assign(details,{room_id:document.getElementById('newBookingHotelRoomType').value,check_out_at:new Date(endDate+'T'+endTime+':00+07:00').toISOString(),diet_notes:document.getElementById('newBookingHotelDiet').value.trim(),care_notes:document.getElementById('newBookingHotelCareNotes').value.trim()});
                     }
-                    const staffMatches = (PawpalServices.state.liveStaffList || []).filter(s => s.full_name === staff);
-                    if (staff !== 'Chưa phân công' && staffMatches.length !== 1) throw new Error('Vui lòng chọn lại nhân viên phụ trách.');
-                    newId = 'BKG-' + crypto.randomUUID();
-                    const { data: inserted, error } = await client.from('appointment').insert({
-                        appointment_code: newId, customer_id: ownerId, pet_id: petRow.id,
-                        service_id: service.dbId, staff_id: staffMatches[0]?.id || null,
-                        appointment_date: date, appointment_time: time + ':00',
-                        appointment_status: 'cho_xac_nhan', payment_status: 'chua_thanh_toan',
-                        total_price: totalPrice, change_count: 0,
-                        note: [note, petAlert, tripNote].filter(Boolean).join('\n') || null
-                    }).select('id, customer_id, pet_id, service_id').single();
-                    if (error) throw error;
-                    if (!inserted?.id || inserted.customer_id !== ownerId || inserted.pet_id !== petRow.id || inserted.service_id !== service.dbId) throw new Error('Không xác minh được lịch hẹn đã ghi.');
+                    if(category==='Taxi'){
+                        const trip=document.getElementById('newBookingTaxiTripType').value,back=document.getElementById('newBookingTaxiReturnAt').value;
+                        if(trip==='round_trip'&&!back)throw Error('Vui lòng chọn thời điểm bắt đầu lượt về.');
+                        Object.assign(details,{pickup_address:document.getElementById('newBookingTaxiPickup').value.trim(),dropoff_address:document.getElementById('newBookingTaxiDropoff').value.trim(),distance_km:document.getElementById('newBookingTaxiDistance').value,trip_type:trip,return_at:trip==='round_trip'?new Date(back+':00+07:00').toISOString():null});
+                    }
+                    // Retain the request ID on a network failure so retry cannot create a second booking.
+                    const signature=JSON.stringify(details);
+                    if(modalCreateBooking.dataset.requestSignature!==signature){modalCreateBooking.dataset.requestSignature=signature;modalCreateBooking.dataset.requestId=crypto.randomUUID();}
+                    const {data,error}=await client.rpc(category==='Spa'?'create_admin_service_booking':'create_admin_logistics_booking',{p_id:modalCreateBooking.dataset.requestId,p_details:details});
+                    if(error)throw error;
+                    if(data!==modalCreateBooking.dataset.requestId)throw Error('Không xác minh được lịch hẹn đã lưu.');
+                    newId='BKG-'+data.replace(/-/g,'').toUpperCase();
+                    delete modalCreateBooking.dataset.requestSignature;delete modalCreateBooking.dataset.requestId;
                     await PawpalServices.loadServicesData({ force: true });
                 } catch (err) {
-                    PawpalServices.showToast('Không thể lưu lịch hẹn: ' + err.message, 'danger');
+                    PawpalServices.showToast('Không thể lưu lịch hẹn: ' + PawpalServices.errorMessage(err), 'danger');
                     return;
                 } finally {
                     btnSubmitCreateBooking.disabled = false;
@@ -1597,6 +1407,11 @@
         const taxiFields = document.getElementById('createBookingTaxiFields');
         const spaFields = document.getElementById('createBookingSpaFields');
 
+        function updateTaxiReturnFields(){
+            const field=document.getElementById('newBookingTaxiReturnFields');
+            if(field)field.style.display=catSelect?.value==='Taxi'&&document.getElementById('newBookingTaxiTripType').value==='round_trip'?'':'none';
+        }
+        document.getElementById('newBookingTaxiTripType')?.addEventListener('change',updateTaxiReturnFields);
         function isGroomingService(serviceName) {
             if (!serviceName) return false;
             const s = serviceName.toLowerCase();
@@ -1608,11 +1423,17 @@
             const svcName = serviceHidden ? serviceHidden.value : '';
             if (spaFields) {
                 spaFields.style.display = (val === 'Spa' && isGroomingService(svcName)) ? 'block' : 'none';
+                if(spaFields.style.display==='none')document.getElementById('newBookingSpaStyle').value='';
+                const service=PawpalServices.state.servicesData.find(s=>s.dbId===serviceHidden?.dataset.serviceId&&s.name===svcName);
+                document.getElementById('newBookingSpaGroomerLevel').value=service?(service.staffLevel||'Không yêu cầu cấp độ'):'Chưa chọn gói';
             }
         }
 
         function updateCategoryOptions() {
             const val = catSelect ? catSelect.value : 'Spa';
+            const rooms=document.getElementById('newBookingHotelRoomType');
+            if(rooms){const selected=rooms.value;rooms.replaceChildren(new Option('Chọn phòng từ danh mục',''),...(PawpalServices.state.liveRooms||[]).filter(r=>['active','available'].includes(r.status)&&r.type?.status==='active').map(r=>new Option(r.room_number+' · '+r.type.room_type+' · '+Number(r.type.daily_price).toLocaleString('vi-VN')+' đ/ngày',r.id)));rooms.value=selected;}
+            updateTaxiReturnFields();
             if (hotelFields) hotelFields.style.display = (val === 'Hotel') ? 'block' : 'none';
             if (taxiFields) taxiFields.style.display = (val === 'Taxi') ? 'block' : 'none';
             
@@ -1621,6 +1442,7 @@
             if (serviceHidden) serviceHidden.value = '';
             if (serviceSelectedCard) serviceSelectedCard.style.display = 'none';
             updateGroomingFields();
+            PawpalServices.enhanceEntitySelects();
             if (serviceDropdown?.style.display === 'block') renderServiceAutocomplete('');
         }
         if (catSelect) catSelect.addEventListener('change', updateCategoryOptions);
@@ -1637,12 +1459,6 @@
 
         function getAllCustomersList() {
             // 1. Ưu tiên lấy từ phân hệ khách hàng nếu đã nạp
-            if (window.PawpalCustomers?.state?.customerDatabase) {
-                const list = Object.values(window.PawpalCustomers.state.customerDatabase);
-                if (list.length > 0) return list;
-            }
-
-            // 2. Lấy từ liveCustomerDirectory trong phân hệ Dịch vụ
             const live = PawpalServices.state?.liveCustomerDirectory || [];
             if (live.length > 0) {
                 return live.map(c => {
@@ -1704,11 +1520,11 @@
                 // 100% FLAT TEXT-ONLY: CẤM ICON / AVATAR TRÒN THEO RULE AGENTS.MD
                 item.innerHTML = `
                     <div class="customer-autocomplete-meta" style="flex: 1;">
-                        <div class="customer-autocomplete-name" style="font-weight: 600; color: #203A2C; font-size: 13.5px;">${name}</div>
-                        <div class="customer-autocomplete-phone" style="color: #4F7A65; font-size: 11.5px; margin-top: 2px;">${phone}${petList}</div>
+                        <div class="customer-autocomplete-name" style="font-weight: 600; color: #203A2C; font-size: 13.5px;">${PawpalServices.escapeHtml(name)}</div>
+                        <div class="customer-autocomplete-phone" style="color: #4F7A65; font-size: 11.5px; margin-top: 2px;">${PawpalServices.escapeHtml(phone)}${PawpalServices.escapeHtml(petList)}</div>
                     </div>
                     <div class="customer-autocomplete-pets" style="font-size: 11.5px; color: #236B48; background: #EEF5F1; padding: 2px 8px; border-radius: 9px; font-weight: 500;">
-                        ${tier}
+                        ${PawpalServices.escapeHtml(tier)}
                     </div>
                 `;
 
@@ -1732,7 +1548,7 @@
 
             if (customerSelectedCard) {
                 customerSelectedCard.innerHTML = `
-                    <span>Đã chọn: <strong>${name}</strong> (${phone || 'Chưa có SĐT'})</span>
+                    <span>Đã chọn: <strong>${PawpalServices.escapeHtml(name)}</strong> (${phone || 'Chưa có SĐT'})</span>
                     <button type="button" class="btn-clear-selection" style="background: none; border: none; color: #236B48; font-size: 12px; cursor: pointer; font-weight: 600; padding: 0 4px;">✕ Bỏ chọn</button>
                 `;
                 customerSelectedCard.style.display = 'flex';
@@ -1800,11 +1616,11 @@
 
                 item.innerHTML = `
                     <div class="customer-autocomplete-meta" style="flex: 1;">
-                        <div class="customer-autocomplete-name" style="font-weight: 600; color: #203A2C; font-size: 13.5px;">${pName}</div>
-                        <div class="customer-autocomplete-phone" style="color: #4F7A65; font-size: 11.5px; margin-top: 2px;">${details}</div>
+                        <div class="customer-autocomplete-name" style="font-weight: 600; color: #203A2C; font-size: 13.5px;">${PawpalServices.escapeHtml(pName)}</div>
+                        <div class="customer-autocomplete-phone" style="color: #4F7A65; font-size: 11.5px; margin-top: 2px;">${PawpalServices.escapeHtml(details)}</div>
                     </div>
                     <div class="customer-autocomplete-pets" style="font-size: 11.5px; color: #236B48; background: #EEF5F1; padding: 2px 8px; border-radius: 9px; font-weight: 500;">
-                        ${ownerName}
+                        ${PawpalServices.escapeHtml(ownerName)}
                     </div>
                 `;
 
@@ -1823,13 +1639,11 @@
             selectedBookingPet = p;
             const petNameStr = p.pet_name || p.name || 'Bé cưng';
             if (petInput) petInput.value = petNameStr;
-            if (p.allergy && petAlertInput && !petAlertInput.value) {
-                petAlertInput.value = p.allergy;
-            }
+            if(petAlertInput)petAlertInput.value=[p.allergy,p.safety_note].filter(Boolean).join('; ');
 
             if (petSelectedCard) {
                 petSelectedCard.innerHTML = `
-                    <span>Đã chọn bé: <strong>${petNameStr}</strong> (${p.breed || p.species || 'Thú cưng'})</span>
+                    <span>Đã chọn bé: <strong>${PawpalServices.escapeHtml(petNameStr)}</strong> (${PawpalServices.escapeHtml(p.breed || p.species || 'Thú cưng')})</span>
                     <button type="button" class="btn-clear-selection" style="background: none; border: none; color: #236B48; font-size: 12px; cursor: pointer; font-weight: 600; padding: 0 4px;">✕ Bỏ chọn</button>
                 `;
                 petSelectedCard.style.display = 'flex';
@@ -1842,12 +1656,11 @@
             if (petDropdown) petDropdown.style.display = 'none';
 
             // Nếu chưa chọn chủ mà pet có thông tin chủ, tự động điền luôn chủ
-            if (!selectedCustomerObj && p.customer) {
-                const custName = p.customer.customer_profile?.full_name;
-                const custPhone = p.customer.phone_main;
-                if (custName && customerInput && !customerInput.value) customerInput.value = custName;
-                if (custPhone && phoneInput && !phoneInput.value) phoneInput.value = custPhone;
+            if(!selectedCustomerObj || selectedCustomerObj.id!==p.customer_id){
+                const owner=getAllCustomersList().find(c=>(c.rawId||c.id)===p.customer_id);
+                if(owner){selectCustomerItem({...owner,pets:[]});selectedCustomerObj=owner;}
             }
+
         }
 
         PawpalServices.subtabs.bookings.openForPet = pet => {
@@ -1881,10 +1694,11 @@
 
             if (filtered.length > 0) {
                 return filtered.map(s => ({
+                    dbId:s.dbId,
                     code: s.code || s.id || '',
                     name: s.name,
                     duration: s.duration || '60 phút',
-                    price: s.prices?.under5 ? `Từ ${s.prices.under5} đ` : 'Liên hệ',
+                    price: s.minPrice != null ? 'Từ '+s.minPrice.toLocaleString('vi-VN')+' đ' : 'Chưa có bảng giá',
                     desc: s.desc || ''
                 }));
             }
@@ -1918,11 +1732,11 @@
 
                 item.innerHTML = `
                     <div class="customer-autocomplete-meta" style="flex: 1;">
-                        <div class="customer-autocomplete-name" style="font-weight: 600; color: #203A2C; font-size: 13.5px;">${s.name}</div>
-                        <div class="customer-autocomplete-phone" style="color: #4F7A65; font-size: 11.5px; margin-top: 2px;">${s.duration}${s.desc ? ` • ${s.desc}` : ''}</div>
+                        <div class="customer-autocomplete-name" style="font-weight: 600; color: #203A2C; font-size: 13.5px;">${PawpalServices.escapeHtml(s.name)}</div>
+                        <div class="customer-autocomplete-phone" style="color: #4F7A65; font-size: 11.5px; margin-top: 2px;">${PawpalServices.escapeHtml(s.duration)}${s.desc ? ` • ${PawpalServices.escapeHtml(s.desc)}` : ''}</div>
                     </div>
                     <div class="customer-autocomplete-pets" style="font-size: 11.5px; color: #236B48; background: #EEF5F1; padding: 2px 8px; border-radius: 9px; font-weight: 500;">
-                        ${s.price}
+                        ${PawpalServices.escapeHtml(s.price)}
                     </div>
                 `;
 
@@ -1940,11 +1754,12 @@
         function selectServiceItem(s) {
             if (serviceInput) serviceInput.value = s.name;
             if (serviceHidden) serviceHidden.value = s.name;
+            if (serviceHidden) serviceHidden.dataset.serviceId=s.dbId;
             updateGroomingFields();
 
             if (serviceSelectedCard) {
                 serviceSelectedCard.innerHTML = `
-                    <span>Đã chọn: <strong>${s.name}</strong> (${s.duration})</span>
+                    <span>Đã chọn: <strong>${PawpalServices.escapeHtml(s.name)}</strong> (${PawpalServices.escapeHtml(s.duration)})</span>
                     <button type="button" class="btn-clear-selection" style="background: none; border: none; color: #236B48; font-size: 12px; cursor: pointer; font-weight: 600; padding: 0 4px;">✕ Bỏ chọn</button>
                 `;
                 serviceSelectedCard.style.display = 'flex';
@@ -2037,9 +1852,9 @@
 
                 const woundNone = document.getElementById('checkWoundNone')?.checked;
                 const woundNote = document.getElementById('intakeExistingWoundNote')?.value || '';
-                const woundsStr = woundNone ? 'Không có vết thương cũ' : (woundNote ? `Có vết thương cũ: ${woundNote}` : 'Có vết trầy xước hoặc sẹo cũ');
+                const woundsStr = woundNone ? 'Không có vết thương cũ' : document.getElementById('checkWoundExisting')?.checked ? (woundNote ? `Có vết thương cũ: ${woundNote}` : 'Có vết trầy xước hoặc sẹo cũ') : '';
 
-                const selectedTemp = document.querySelector('input[name="intakeTemperamentRadio"]:checked')?.value || 'Ngoan hiền';
+                const selectedTemp = document.querySelector('input[name="intakeTemperamentRadio"]:checked')?.value || '';
 
                 const belongings = [];
                 document.querySelectorAll('.check-belonging-item:checked').forEach(cb => belongings.push(cb.value));
@@ -2048,23 +1863,22 @@
                 if(btnConfirmIntake.disabled) return;
                 btnConfirmIntake.disabled=true;
                 try {
-                    if(!['confirmed','in_progress'].includes(booking.status)) throw new Error('Chỉ tiếp nhận ca đã xác nhận hoặc cập nhật ca đang thực hiện.');
+                    if(!['confirmed','checked_in','in_progress'].includes(booking.status)) throw new Error('Chỉ tiếp nhận ca đã xác nhận hoặc cập nhật ca đang thực hiện.');
                     if(!Number.isFinite(actualWeight)||actualWeight<=0) throw new Error('Cân nặng tiếp nhận phải lớn hơn 0.');
-                    const staffMatches=(PawpalServices.state.liveStaffList||[]).filter(s=>s.full_name===staff);
+                    const staffMatches=(PawpalServices.state.liveStaffList||[]).filter(s=>s.id===staff);
                     if(staffMatches.length!==1) throw new Error('Vui lòng chọn đúng một nhân viên tiếp nhận.');
                     if(intakeProofImagesTemp.length) throw new Error('Phần ảnh đang được bỏ qua; vui lòng bỏ ảnh tạm trước khi lưu.');
-                    if(actualWeight-parseFloat(booking.originalWeight||booking.petWeight)>=0.5 && document.getElementById('checkAutoAddWeightSurcharge')?.checked) throw new Error('Vui lòng ghi phụ phí cân nặng bằng chức năng Thêm phụ phí.');
                     if(document.getElementById('checkSkinNormal')?.checked && skinList.length>1) throw new Error('Không chọn đồng thời da sạch và tình trạng bất thường.');
                     if(document.getElementById('checkEyesEarsNormal')?.checked && eyesEarsList.length>1) throw new Error('Không chọn đồng thời mắt tai bình thường và tình trạng bất thường.');
                     if(woundNone && document.getElementById('checkWoundExisting')?.checked) throw new Error('Vui lòng chọn đúng tình trạng vết thương.');
                     await PawpalServices.saveBookingRecord(booking,'intake',{
-                        actualWeight,staffId:staffMatches[0].id,staffName:staff,
+                        actualWeight,staffId:staffMatches[0].id,staffName:staffMatches[0].full_name,customerConfirmed:!!document.getElementById('intakeCustomerConfirmed')?.checked,
                         skinCoat:skinList.join(', '),eyesEars:eyesEarsList.join(', '),wounds:woundsStr,woundNote,
                         temperament:selectedTemp,belongings:belongings.join(', '),belongingsNote,
                         recordedAt:booking.intakeRecord?.recordedAt||new Date().toISOString(),updatedAt:new Date().toISOString()
                     },{appointment_status:'dang_thuc_hien',staff_id:staffMatches[0].id});
                     PawpalServices.showToast('Đã lưu biên bản tiếp nhận và trạng thái ca dịch vụ.');
-                } catch(err) {PawpalServices.showToast('Không thể tiếp nhận: '+err.message,'danger');return;}
+                } catch(err) {PawpalServices.showToast('Không thể tiếp nhận: '+PawpalServices.errorMessage(err),'danger');return;}
                 finally {btnConfirmIntake.disabled=false;}
                 if (modal) modal.classList.remove('active');
             });
@@ -2115,11 +1929,11 @@
                     if(Number(document.getElementById('completeVoucherSelect')?.value||0)||Number(document.getElementById('completePointsSelect')?.value||0)) throw new Error('Voucher và đổi điểm phải được xử lý trong luồng thu ngân.');
                     if(completeProofImagesTemp.length) throw new Error('Phần ảnh đang được bỏ qua; vui lòng bỏ ảnh tạm trước khi lưu.');
                     await PawpalServices.saveBookingRecord(booking,'handover',{
-                        qualityAccepted:true,belongingsReturned:true,recordedAt:new Date().toISOString(),
+                        qualityAccepted:true,belongingsReturned:true,customerConfirmed:!!document.getElementById('handoverCustomerConfirmed')?.checked,recordedAt:new Date().toISOString(),
                         intakeRecordedAt:booking.intakeRecord.recordedAt,total:booking.total
                     },{appointment_status:'da_hoan_tat'});
                     PawpalServices.showToast('Đã lưu biên bản bàn giao và hoàn tất ca. Trạng thái thanh toán giữ nguyên.');
-                } catch(err) {PawpalServices.showToast('Không thể hoàn tất ca: '+err.message,'danger');return;}
+                } catch(err) {PawpalServices.showToast('Không thể hoàn tất ca: '+PawpalServices.errorMessage(err),'danger');return;}
                 finally {btnSubmitComplete.disabled=false;}
                 if (modal) modal.classList.remove('active');
             });
@@ -2140,7 +1954,7 @@
                 changeStaffHint.style.display = 'block';
                 changeStaffHint.style.background = '#EEF5F1';
                 changeStaffHint.style.color = '#236B48';
-                changeStaffHint.textContent = `KTV ${staffName}: Đang sẵn sàng tiếp nhận ca (Tải hiện tại: 1 ca đang xử lý).`;
+                changeStaffHint.textContent = 'Lịch trùng và điều kiện nhận ca được kiểm tra khi lưu.';
             });
         }
 
@@ -2189,20 +2003,17 @@
                     btnSubmitChangeStaff.disabled = true;
                     try {
                         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                        const candidates = (PawpalServices.state.liveStaffList || []).filter(s => s.full_name === newStaff);
+                        const candidates = (PawpalServices.state.liveStaffList || []).filter(s => s.id === newStaff);
                         if (!client || !booking.dbId || candidates.length !== 1) throw new Error('Không xác định được đúng nhân viên đã chọn.');
-                        if (!['pending', 'confirmed', 'in_progress'].includes(booking.status)) throw new Error('Lịch hẹn đã kết thúc, không thể điều phối.');
+                        if (!['pending', 'confirmed', 'checked_in', 'in_progress'].includes(booking.status)) throw new Error('Lịch hẹn đã kết thúc, không thể điều phối.');
                         const scope = document.querySelector('input[name="changeStaffScope"]:checked')?.value || 'next_steps';
                         if (scope === 'all_steps' && booking.careLogs?.length) throw new Error('Chưa hỗ trợ đổi người thực hiện các nhật ký đã ghi.');
-                        const note = `Điều phối: ${booking.staff || 'Chưa phân công'} → ${newStaff}. Lý do: ${reason}\n${booking.rawNote || ''}`;
-                        let query = client.from('appointment').update({ staff_id: candidates[0].id, note }).eq('id', booking.dbId).eq('appointment_status', booking.rawStatus);
-                        query = booking.staffId ? query.eq('staff_id', booking.staffId) : query.is('staff_id', null);
-                        const { data, error } = await query.select('id, staff_id').single();
-                        if (error) throw error;
-                        if (!data?.id || data.staff_id !== candidates[0].id) throw new Error('Không xác minh được nhân viên đã lưu.');
+                        const {data,error}=await client.rpc('update_admin_service_booking',{p_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_action:'assign',p_value:candidates[0].id,p_reason:reason});
+                        if(error)throw error;
+                        if(data!==booking.dbId)throw Error('Không xác minh được nhân viên đã lưu.');
                         await PawpalServices.loadServicesData({ force: true });
                     } catch (err) {
-                        PawpalServices.showToast('Không thể điều phối: ' + err.message, 'danger');
+                        PawpalServices.showToast('Không thể điều phối: ' + PawpalServices.errorMessage(err), 'danger');
                         return;
                     } finally { btnSubmitChangeStaff.disabled = false; }
 
@@ -2332,12 +2143,12 @@
                         if (surchargeProofImagesTemp.length) throw new Error('Ảnh phụ phí chưa được lưu lên máy chủ; vui lòng bỏ ảnh trước khi lưu.');
                         await PawpalServices.saveCharges(booking, [...(booking.charges || []), {
                             id: crypto.randomUUID(), kind: 'surcharge', name, amount,
-                            reason: [reason, consent, consentNote].filter(Boolean).join(' — ')
+                            reason: [reason, consent, consentNote].filter(Boolean).join(' — '),consent:consent&&consent!=='Chưa có xác nhận của chủ nuôi'?'confirmed':'pending'
                         }]);
-                    } catch (err) { PawpalServices.showToast('Không thể lưu phụ phí: '+err.message,'danger'); return; }
+                    } catch (err) { PawpalServices.showToast('Không thể lưu phụ phí: '+PawpalServices.errorMessage(err),'danger'); return; }
                     finally { btnSubmitSurcharge.disabled = false; }
                     const formatCur = PawpalServices.formatCurrency || (num => `${num.toLocaleString('vi-VN')} đ`);
-                    PawpalServices.showToast(`Đã thêm phụ phí ${name} (+${formatCur(amount)}) cho ca ${booking.id}!`);
+                    PawpalServices.showToast(`Đã lưu đề xuất phụ phí ${PawpalServices.escapeHtml(name)} (${formatCur(amount)}) cho ca ${booking.id}!`);
                     if (modal) modal.classList.remove('active');
                 }
             });

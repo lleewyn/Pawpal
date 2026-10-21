@@ -4,6 +4,19 @@ Bộ này tạo đúng danh sách **105 bảng / 906 cột** tại mục 15 củ
 
 ## Thành phần
 
+- `018_admin_service_ticket.sql`: tạo phiếu phản ánh từ lịch/đánh giá vào `support_ticket`, lấy khách và người tạo từ nguồn thật; giao dịch cùng audit, chống trùng, không chuyển sang màn hình cũ để giả lập việc đã tạo phiếu. Kiểm thử: `scripts/test/service_ticket_v1_stage.cjs`.
+- `017_admin_service_cashier.sql`: giao dịch máy chủ hẹp cho thu/hoàn tiền thực tế, khóa số dư và kiểm tra phiên bản, chống trùng/mã ngân hàng dùng lại; không mở ghi trực tiếp bảng tiền. Bổ sung cấu hình Tiền mặt, hủy lịch sau hoàn hết và chặn nhân viên không khả dụng. Giữ nguyên 105 bảng/906 cột. Kiểm thử: `scripts/test/service_cashier_v1_stage.cjs` và `scripts/test/services_v1_completion_stage.cjs`.
+
+- `016_admin_pickup_notification.sql`: lưu thông báo nội bộ đón bé và kiểm toán trong cùng giao dịch, kiểm tra quyền/trạng thái/phiên bản/xác nhận sẵn sàng, chống trùng khi thử lại. Không gửi Zalo/SMS/email và không tạo nhật ký chăm sóc giả. Kiểm thử giao diện, bốn cách đóng, đồng thời và rollback: `scripts/test/pickup_notification_v1_stage.cjs`.
+
+- `015_admin_service_logistics.sql`: đặt phòng độc quyền, nhận/trả phòng và xe một chiều/khứ hồi; giá khách sạn làm tròn lên theo 24 giờ, giá xe cộng hai lượt theo thời điểm từng lượt. Giữ nguyên schema V1. Kiểm tra ghi trên bản phục hồi: `scripts/test/logistics_v1_stage.cjs`; chính sách và giới hạn được ghi trong tài liệu nghiệm thu Dịch vụ.
+
+- `014_admin_service_records.sql`: giao dịch biên bản tiếp nhận/bàn giao, nhật ký chăm sóc và phụ phí/dịch vụ đi cùng; có phiên bản, kiểm tra quyền, đồng ý của khách, duyệt và nhật ký kiểm toán. Không thêm bảng/cột, không tạo thanh toán hoặc điểm giả. Kiểm tra ghi: `scripts/test/service_records_v1_stage.cjs` trên bản phục hồi riêng.
+
+- `013_admin_service_bookings.sql`: giao dịch V1 cho tạo lịch chăm sóc/xe một chiều, xác nhận/hủy/đổi nhân viên, danh mục và phản hồi đánh giá. Giữ nguyên 105 bảng/906 cột; đã thử ghi trên bản phục hồi trước khi áp dụng local và Cloud mới. Xem [tiến độ Dịch vụ V1](../../../PAWPAL_DICH_VU_V1_NGHIEM_THU.md) để phân biệt phần đã đạt với biên bản, chi phí và lưu trú còn cần chuyển.
+
+- `012_admin_pet_profile.sql`: RPC của phân hệ Thú cưng (`save_admin_pet`, `record_admin_pet_weight`, `record_pet_contact`), giữ RLS và ghi hồ sơ/cân/audit trong transaction. Đã thử trên bản phục hồi trước khi áp dụng local và Cloud mới. Xem [nghiệm thu Thú cưng](../../../PAWPAL_THU_CUNG_V1_NGHIEM_THU.md). Không chạy lại bootstrap schema cho thay đổi này.
+
 - `model.cjs`: đọc từ điển V1, chỉ định kiểu/NULL/default; dừng nếu danh sách không còn 105 bảng/906 cột hoặc có thuộc tính chưa định kiểu.
 - `generate.cjs`: sinh `001_schema.sql` cùng [từ điển vật lý](../../../PAWPAL_DATABASE_V1_DAC_TA_VAT_LY.md); không tự chạy migration.
 - `001_schema.sql`: bảng/cột/comment, 160 FK, PK/UQ/CHECK, unique tổ hợp/partial và exclusion cho khoảng giá/đặt phòng/lịch ca; RLS bật toàn bộ bảng.

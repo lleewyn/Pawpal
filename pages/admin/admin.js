@@ -738,7 +738,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         'Dịch vụ':    {
             html: 'modules/services/services.html',
-            scripts: ['modules/services/services.js', 'modules/services/subtabs/tab-service-bookings.js', 'modules/services/subtabs/tab-service-detail.js', 'modules/services/subtabs/tab-service-catalog.js', 'modules/services/subtabs/tab-service-reviews.js'],
+            scripts: ['modules/services/services.js', 'modules/services/subtabs/tab-service-bookings.js', 'modules/services/subtabs/tab-service-detail.js', 'modules/services/subtabs/tab-service-catalog.js', 'modules/services/subtabs/tab-service-reviews.js', 'modules/services/subtabs/tab-service-cashier.js', 'modules/services/subtabs/tab-service-support.js'],
             postLoad: async () => {
                 if (sessionStorage.getItem('pawpal_admin_services_open_booking_modal') === 'true') {
                     await window.PawpalServices?.init?.();

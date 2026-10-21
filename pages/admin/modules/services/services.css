@@ -1472,6 +1472,9 @@
 .admin-modal-overlay.active {
     display: flex;
 }
+/* Keep the active class authoritative across global modal close handlers. */
+.services-module .admin-modal-overlay:not(.active) { display: none !important; }
+.services-module .admin-modal-overlay.active { display: flex !important; }
 
 .admin-modal-card {
     width: 560px;

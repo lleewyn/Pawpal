@@ -2,6 +2,10 @@
 
 Ngày kiểm tra: 21/10/2026. Project đích `cpzuvaplseielhgcnqrn`. Website `https://pawpalgr3.vercel.app`.
 
+**Cập nhật sau lượt đối soát:** phân hệ Thú cưng đã được chuyển V1, bổ sung migration 012 và kiểm tra đọc trên Cloud/ghi trên bản phục hồi. Các lỗi Thú cưng trong bảng dưới là mốc baseline trước sửa; kết quả mới tại [nghiệm thu Thú cưng V1](PAWPAL_THU_CUNG_V1_NGHIEM_THU.md). Các phân hệ khác vẫn cần xử lý theo báo cáo này.
+
+**Dịch vụ — các đợt tiếp theo:** truy vấn lịch hẹn, danh mục và đánh giá đã chuyển V1; migration 013 bổ sung tạo lịch, xác nhận/hủy/đổi nhân viên, danh mục và phản hồi đánh giá. Migration 014 chuyển biên bản tiếp nhận/bàn giao, ghi/sửa/xóa nhật ký và phụ phí/dịch vụ đi cùng với xác nhận/phê duyệt. Các lỗi Dịch vụ trong bảng baseline dưới đây cần xem cùng [tiến độ Dịch vụ V1](PAWPAL_DICH_VU_V1_NGHIEM_THU.md). Lưu trú, xe khứ hồi, thu ngân và thông báo còn cần xử lý.
+
 ## Kết luận
 
 Database Cloud mới khớp bản V1 local trên cả 105 bảng. Phần Khách hàng đã có kiểm tra Production riêng; các phân hệ còn lại chưa được nghiệm thu toàn bộ. Rà soát đã mở 9 phân hệ, 30 tab Admin và 10 đường dẫn phía khách, phát hiện các truy vấn legacy không tương thích V1 và trang khách vẫn dùng Cloud cũ.
@@ -83,6 +87,12 @@ Mã backend còn dùng các RPC Auth khách cũ, `wishlist_item`, bảng cấu h
 6. Cổng khách: Auth liên kết hồ sơ, catalog/RLS public, giỏ/đặt lịch/thanh toán và loại bỏ dữ liệu nghiệp vụ JSON; chỉ sau kiểm tra mới đổi các biến Cloud cũ còn lại.
 
 ## Bằng chứng và cách chạy lại
+
+Cập nhật hoàn thiện Dịch vụ (017–018): thu/hoàn thực tế, hủy sau hoàn hết, lịch trực thật/đổi KTV bằng ID/chặn lịch nghỉ, bộ lọc/phân trang/xuất file, các modal, lưu yêu cầu tạo kiểu và tạo phiếu phản ánh đã được kiểm thử riêng và áp dụng local/Cloud mới. Schema vẫn 105 bảng/906 cột/160 FK; chỉ thêm cấu hình phương thức Tiền mặt, không tạo khoản thu giả hoặc sửa dữ liệu nghiệp vụ nguồn. Xem mục 10 của [nghiệm thu Dịch vụ V1](PAWPAL_DICH_VU_V1_NGHIEM_THU.md) để biết đầy đủ bằng chứng và giới hạn.
+
+Cập nhật đợt 016: thông báo mời đón bé đã lưu nội bộ qua giao dịch V1 và kiểm toán, được thử riêng rồi triển khai Cloud/Vercel. Chưa tích hợp gửi Zalo/SMS/email. Schema và dữ liệu nguồn không đổi; thu ngân còn cần chuyển tiếp. Xem phần 9 của [nghiệm thu Dịch vụ V1](PAWPAL_DICH_VU_V1_NGHIEM_THU.md).
+
+Cập nhật 22/10/2026: Dịch vụ đã chuyển tiếp lưu trú và xe khứ hồi bằng migration 015; chính sách giá, luồng nhận/trả, bằng chứng kiểm thử và các giới hạn còn lại nằm trong [nghiệm thu Dịch vụ V1](PAWPAL_DICH_VU_V1_NGHIEM_THU.md). Đối chiếu Cloud sau migration vẫn đúng 105 bảng/906 cột/160 khóa ngoại; dữ liệu cả 105 bảng không đổi. Thu ngân, thông báo và các phân hệ chưa chuyển vẫn cần xử lý tiếp.
 
 - `node scripts/database/v1/audit_cloud_all.cjs`: schema, hash 105 bảng, quyền đọc anon/Admin và kiểm kê.
 - `node scripts/test/cloud_all_modules_audit.cjs`: điều hướng 30 tab Production; chặn thao tác ghi tự phát, chụp ảnh và lưu lỗi riêng.

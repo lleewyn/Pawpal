@@ -14,6 +14,7 @@
     let reviewFilterServiceCode = null;
     let reviewFilterServiceName = null;
     let reviewCurrentPage = 1;
+    let reviewExportRows=[];
     const REVIEWS_PAGE_SIZE = 10;
     const esc = (s) => (PawpalServices.escapeHtml ? PawpalServices.escapeHtml(s) : String(s || ''));
 
@@ -126,7 +127,7 @@
             if (reviewFilterStar !== 'ALL') {
                 const rStar = Number.isFinite(Number(r.rating)) && Number(r.rating) >= 1 && Number(r.rating) <= 5 ? Math.round(Number(r.rating)) : null;
                 if (reviewFilterStar === 'LOW') {
-                    if (rStar === null || rStar > 2) return false;
+                    if (rStar === null || rStar > 3) return false;
                 } else if (rStar === null || parseInt(reviewFilterStar, 10) !== rStar) {
                     return false;
                 }
@@ -144,11 +145,13 @@
                 const isReplied = Boolean(r.replyText || r.status === 'replied');
                 if (reviewFilterStatus === 'replied' && !isReplied) return false;
                 if (reviewFilterStatus === 'pending' && isReplied) return false;
+                if (reviewFilterStatus === 'escalated' && !r.hasServiceTicket) return false;
             }
 
             return true;
         });
 
+        reviewExportRows=filtered;
         if (filtered.length === 0) {
             if (!isLoaded) {
                 tbody.dataset.loadingSkeleton = 'true';
@@ -480,24 +483,9 @@
                 const reviewsData = PawpalServices.state?.reviewsData || [];
                 const review = reviewsData.find(r => r.id === rId);
 
-                const refCode = review?.bookingId || rId || 'đánh giá';
-                const bookingId = review?.bookingId || review?.id;
-                sessionStorage.setItem('pawpal_admin_complaint_from_booking', bookingId);
-                sessionStorage.setItem('pawpal_admin_active_module', 'Khiếu nại');
-                sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-services');
-                window.location.hash = '#tab-complaint-services';
-
-                if (PawpalServices.showToast) {
-                    PawpalServices.showToast(`Đang chuyển ${refCode} sang phân hệ giải quyết khiếu nại dịch vụ...`, 'info');
-                }
                 closeReplyReviewModal();
-
-                const complaintBtn = Array.from(document.querySelectorAll('.sidebar-menu-btn')).find(b => b.getAttribute('data-title') === 'Khiếu nại');
-                if (complaintBtn) {
-                    complaintBtn.click();
-                } else if (window.PawpalAdmin?.loadModule) {
-                    window.PawpalAdmin.loadModule('Khiếu nại');
-                }
+                const booking=PawpalServices.state.bookingsData.find(b=>b.dbId===review?.appointmentId);
+                PawpalServices.openServiceTicket(booking,review);
             });
         }
 
@@ -537,17 +525,10 @@
                     if (!client) throw new Error('Chưa kết nối được CSDL.');
                     if (!review.dbId) throw new Error('Không tìm thấy định danh bản ghi đánh giá.');
 
-                    const { data, error } = await client.from('review').update({ shop_reply: text }).eq('id', review.dbId).select('id, shop_reply').single();
-                    if (error) throw error;
-                    if (!data || data.id !== review.dbId) throw new Error('Database chưa xác nhận lưu phản hồi.');
-
-                    review.replyText = data.shop_reply || text;
-                    review.status = 'replied';
-
-                    if (window.PawpalDataStore) {
-                        window.PawpalDataStore.invalidate('services:reviews*');
-                    }
-
+                    const {data,error}=await client.rpc('reply_admin_service_review',{p_review_id:review.dbId,p_response_id:review.responseId,p_expected_updated_at:review.responseUpdatedAt,p_text:text});
+                    if(error)throw error;
+                    if(!data)throw Error('Không xác minh được phản hồi đã lưu.');
+                    await PawpalServices.loadReviewsData({force:true});
                     renderReviewsTable();
                     updateReviewKPIs();
                     if (PawpalServices.showToast) {
@@ -568,7 +549,7 @@
         const btnExport = document.getElementById('btnExportReviewReport');
         if (btnExport) {
             btnExport.addEventListener('click', () => {
-                const rows = PawpalServices.state?.reviewsData || [];
+                const rows = reviewExportRows;
                 if (rows.length === 0) {
                     PawpalServices.showToast?.('Không có đánh giá để xuất.', 'warning');
                     return;
