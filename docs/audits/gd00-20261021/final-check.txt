@@ -1,0 +1,1 @@
+﻿HEAD final: 37c274561460ff5351dafd175636cfc79697f6b0 git diff --check exit: 0 Tracked files changed: PAWPAL_MASTER_PLAN_INLINE_FORM_VALIDATION_FIELD_ERRORS_E2E.md Application source changed: no; only master plan tracked and new docs/audits/gd00-20261021 artifacts. Runtime and DB E2E: not passed; see README blockers.

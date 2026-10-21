@@ -1,0 +1,14 @@
+Command: python docs/audits/gd00-20261021/verify.py
+Source HEAD: 37c274561460ff5351dafd175636cfc79697f6b0
+Archive: source-baseline.zip
+SHA256: 0c916d408acccdfa4d622afb13fd96a56fb289c26269ff9e32301e9a2a681f40
+Entries: 468
+CRC: OK
+No env files: True
+Scope: tracked pages, scripts, styles, components, server.js, package files, AGENTS.md, CDSLfinal.md, enum.md, index.html, master plan.
+Not original Pawpal-main.zip, not a complete workspace or database backup.
+Static controls: 798; form opening tags: 83; paired lexical form scopes: 82
+Scope mismatch: {'pages/public/login/login.html': 1}
+Lexical mismatch requires manual source review; does not establish browser DOM structure.
+Runtime, CRUD, E2E, RLS: NOT RUN by this verification.
+Exit: 0

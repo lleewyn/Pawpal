@@ -1,0 +1,51 @@
+Local time (Asia/Bangkok): 2026-10-21 09:18:18
+Branch: main
+HEAD: 37c274561460ff5351dafd175636cfc79697f6b0
+Node: v24.15.0
+Status at snapshot (includes audit artifacts):
+?? docs/audits/gd00-20261021/
+
+Changes since previous audit HEAD:
+A	CHANGELOG_CHATBOT_USER.md
+A	PAWPAL_MASTER_PLAN_INLINE_FORM_VALIDATION_FIELD_ERRORS_E2E.md
+M	components/fab/fab.js
+M	components/header/header.js
+A	docs/audits/gd00-20261020/README.md
+A	docs/audits/gd00-20261020/counts.md
+A	docs/audits/gd00-20261020/customer-empty-baseline.png
+A	docs/audits/gd00-20261020/dynamic-signals.csv
+A	docs/audits/gd00-20261020/fields.csv
+A	docs/audits/gd00-20261020/forms.csv
+A	docs/audits/gd00-20261020/initial-status.txt
+A	docs/audits/gd00-20261020/inventory.cjs
+A	docs/audits/gd00-20261020/pre-existing-changes.patch
+A	docs/audits/gd00-20261020/source-hashes.csv
+A	pages/PAWPAL_AI_API_ADMIN_TOI_UU_QUA_TAI_CHECKLIST_THEO_CODE.md
+A	pages/PAWPAL_AI_CHECKLIST_KICH_BAN_KIEM_THU_CHATBOT.md
+A	pages/PAWPAL_CHATBOT_USER_V2_CHIEN_LUOC_KICH_BAN_CODE_E2E.md
+M	pages/PAWPAL_NOTIFICATION_AUDIT_CODE_THUC_TE_VA_CHECKLIST_TRIEN_KHAI.md
+A	pages/admin/PAWPAL_GD1_MA_TRAN_TRUONG_UI.md
+M	pages/admin/modules/chatbot/chatbot.js
+M	pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js
+M	pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js
+M	pages/admin/modules/pets/pets.js
+M	pages/admin/modules/settings/settings.js
+M	pages/admin/modules/staff/subtabs/tab-staff-list.js
+M	pages/admin/modules/staff/subtabs/tab-staff-schedule.js
+M	pages/services/booking/booking.js
+M	pages/user/modules/profile/profile.js
+M	scripts/api/api.js
+M	scripts/api/chat.js
+A	scripts/database/20261021_notification_indexes.sql
+A	scripts/database/20261021_notification_security_rls.sql
+M	scripts/shared/notifications-handler.js
+M	scripts/shared/support-handler.js
+A	scripts/test/test_api_admin_overload_resilience.test.js
+A	scripts/test/test_chat_r0_foundation.test.js
+A	scripts/test/test_chat_r1_assistant.test.js
+A	scripts/test/test_chat_r2_incident_resolution.test.js
+A	scripts/test/test_chat_r3_stability_resilience.test.js
+A	scripts/test/test_chat_r4_intents_e2e.test.js
+A	scripts/test/test_chat_r5_extended_endpoints.test.js
+A	scripts/test/test_chatbot_manual_qa_automated.test.js
+M	server.js

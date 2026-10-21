@@ -1,0 +1,5 @@
+Initial sandbox attempt: EACCES; exit 1. Retry used approved escalation.
+Read-only metadata attempt anon failed: HTTP_401; exit 1
+No URL, credentials or response data stored.
+Read-only metadata attempt service role failed: HTTP_402; 2026-10-21T02:19:22.678Z; exit 1
+No URL, credentials or response data stored.

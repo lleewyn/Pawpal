@@ -1,0 +1,11 @@
+Command: node docs/audits/gd00-20261021/inventory.cjs
+Exit: 0
+| Khu vực | HTML | Form | Control tĩnh |
+|---|---:|---:|---:|
+| admin | 12 | 62 | 551 |
+| public | 8 | 12 | 49 |
+| services | 5 | 1 | 83 |
+| shop | 8 | 4 | 69 |
+| user | 14 | 4 | 46 |
+
+Fields: 798; forms: 83; dynamic signals: 1732. Lexical inventory only; runtime NOT RUN.

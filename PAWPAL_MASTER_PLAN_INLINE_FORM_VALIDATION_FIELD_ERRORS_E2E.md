@@ -1842,3 +1842,18 @@ _Không có field định danh tĩnh đủ rõ; cần kiểm tra UI runtime._
 3. Hoàn thiện kiểm kê form động, mobile, Console/Network và xác minh metadata Supabase bằng quyền đọc phù hợp.
 
 Không đánh dấu hoàn thành checkbox hoặc E2E PASS từ kết quả script kiểm kê. Chưa chuyển GĐ-01. Khi triển khai Admin, mẫu icon và viền trái summary trong kế hoạch phải nhường quy tắc AGENTS.md: text-only ngoài sidebar, không viền trái ngoài alert trong bảng.
+
+## Nhật ký tiếp tục GĐ-00 — 21/10/2026
+
+- **ĐANG THỰC HIỆN; gate CHƯA ĐẠT; chưa chuyển GĐ-01.** Phiên này tiếp tục audit, không sửa mã chức năng.
+- Baseline mới: `main` / `37c274561460ff5351dafd175636cfc79697f6b0`, working tree sạch trước khi thêm audit. Đã lưu archive nguồn tracked có chọn phạm vi và kiểm CRC/SHA-256; không phải ZIP gốc/full workspace/DB backup.
+- Báo cáo mới: [docs/audits/gd00-20261021/README.md](docs/audits/gd00-20261021/README.md). Giữ nguyên lịch sử và ảnh đợt 20/10.
+- Kiểm kê lại: **47 HTML, 83 form mở, 798 control tĩnh**, 1.732 dòng tín hiệu JS và 56 literal control/form trong JS cần rà runtime. Không xem các số này là coverage hoặc E2E PASS.
+- Parser ghép 82 cặp form; đã truy nguyên source `login.html` thiếu thẻ đóng của `forgotNewPasswordForm`. Chưa xác minh DOM runtime.
+- Đã phân loại rule 7 field của modal Thêm khách; bổ sung backlog về custom validity còn lưu sau sửa, nguy cơ submit trùng/ghi nhiều bảng từng phần, khác biệt policy phone và conditional weight. Đây là bằng chứng source, runtime NOT RUN.
+- Đã trace profile-save qua `/api/customer/auth/me`: wrapper hiện trả exception dưới dạng HTTP 400 + message, chưa có field error contract. Cần kiểm API thực tế trước khi nghiệm thu.
+- GET `/admin`, `/contact`, `/login`, `/booking`, `/checkout`: HTTP 200. GET `address-validation.mjs`: HTTP 200 và SHA-256 khớp local. GitHub fetch_file tại đúng commit audit xác nhận file tồn tại, blob SHA khớp local; production chưa xác minh.
+- **Browser runtime BLOCKED:** inventory không có browser/app, Chrome và iab không khả dụng; kiểm lại sau phản hồi người dùng vẫn chưa có surface. Chưa tạo ảnh/Console/Network/mobile hoặc chạy lại FM-037 trong phiên này. Ảnh FAIL cũ chỉ là bằng chứng ngày 20/10.
+- **Metadata live BLOCKED qua cấu hình hiện tại:** sandbox EACCES; sau escalation anon HTTP 401, cấu hình backend HTTP 402. Không suy đoán nguyên nhân 402; chưa truy cập schema/constraint/index/trigger/RLS, không đọc dòng nghiệp vụ hay ghi DB.
+- `refresh.cjs` và `verify.py` exit 0 chỉ xác nhận artifact audit. VAL-00-01–10 vẫn còn phạm vi chưa hoàn tất; giữ checkbox chưa tích, không đánh dấu E2E PASS.
+- Tiếp tục khi có môi trường: kiểm trực quan modal Thêm khách hiện tại và metadata/catalog chỉ đọc; báo cáo nghiệm thu modal theo AGENTS.md mục 8 trước khi chuyển sang modal khác.
