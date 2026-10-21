@@ -54,6 +54,20 @@
         return window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     }
 
+    async function loadStaffContext(db) {
+        const { data, error } = await db.rpc('get_staff_login_context');
+        if (error) throw new Error('Không thể kiểm tra quyền đăng nhập. Vui lòng thử lại.');
+        return data;
+    }
+
+    async function clearAdminLogin(db) {
+        currentAuthenticatedUser = null;
+        currentStaffRecord = null;
+        localStorage.removeItem('pawpal_admin_user');
+        sessionStorage.removeItem('pawpal_admin_user');
+        await db.auth.signOut({ scope: 'local' });
+    }
+
     // Xử lý Đăng nhập Cổng Quản trị
     if (formLogin) {
         formLogin.addEventListener('submit', async (e) => {
@@ -94,37 +108,13 @@
                 const authUser = authData.user;
                 currentAuthenticatedUser = authUser;
 
-                // 2. KIỂM TRA CÔ LẬP 2 CHIỀU: Xác thực quyền hạn nhân sự (STAFF/ADMIN)
-                let isStaff = false;
-                let isActive = false;
-                let staffRecord = null;
+                // V1: trạng thái công việc và quyền lấy từ quan hệ vai trò trên máy chủ.
+                const context = await loadStaffContext(db);
+                const staffRecord = context?.staff;
 
-                try {
-                    const { data: checkData, error: rpcErr } = await db.rpc('check_user_account_type', {
-                        check_auth_id: authUser.id
-                    });
-                    if (!rpcErr && Array.isArray(checkData) && checkData.length > 0) {
-                        isStaff = checkData[0].user_type === 'STAFF';
-                        isActive = checkData[0].is_active;
-                    }
-                } catch (e) {}
-
-                // Truy vấn trực tiếp hồ sơ nhân sự trong bảng public.staff
-                const { data: staffList, error: staffErr } = await db
-                    .from('staff')
-                    .select('*')
-                    .eq('auth_user_id', authUser.id)
-                    .limit(1);
-
-                if (!staffErr && staffList && staffList.length > 0) {
-                    staffRecord = staffList[0];
-                    isStaff = true;
-                    isActive = staffRecord.account_status === 'ACTIVE';
-                }
-
-                if (!isStaff) {
+                if (!context?.is_staff || !staffRecord) {
                     // TÀI KHOẢN KHÁCH HÀNG HOẶC KHÔNG THUỘC STAFF -> TỪ CHỐI VÀ ĐĂNG XUẤT NGAY LẬP TỨC
-                    await db.auth.signOut();
+                    await clearAdminLogin(db);
                     showError('Tài khoản này không có quyền truy cập Cổng Quản trị Pawpal-er. Vui lòng đăng nhập tại Cổng Khách hàng.');
                     btnSubmit.disabled = false;
                     btnSubmit.textContent = 'Đăng nhập hệ thống';
@@ -132,17 +122,9 @@
                 }
 
                 // 3. Kiểm tra trạng thái hoạt động của nhân viên
-                if (!isActive || staffRecord?.account_status !== 'ACTIVE') {
-                    await db.auth.signOut();
+                if (!context.is_active) {
+                    await clearAdminLogin(db);
                     showError('Tài khoản công vụ của bạn đã bị khóa hoặc tạm ngưng hoạt động. Vui lòng liên hệ Quản lý.');
-                    btnSubmit.disabled = false;
-                    btnSubmit.textContent = 'Đăng nhập hệ thống';
-                    return;
-                }
-
-                if (!staffRecord) {
-                    await db.auth.signOut();
-                    showError('Không tìm thấy thông tin hồ sơ nhân viên tương ứng.');
                     btnSubmit.disabled = false;
                     btnSubmit.textContent = 'Đăng nhập hệ thống';
                     return;
@@ -159,12 +141,19 @@
                     return;
                 }
 
-                // 6. Đăng nhập thành công -> Cập nhật last_login_at và chuyển hướng vào Admin
+                // Auth quản lý thời điểm đăng nhập; không ghi last_login_at vào staff V1.
+                if (!staff.permission_codes?.length) {
+                    await clearAdminLogin(db);
+                    showError('Tài khoản chưa được cấp quyền quản trị. Vui lòng liên hệ Quản lý.');
+                    return;
+                }
                 await finalizeAdminLogin(staff, authUser);
 
             } catch (err) {
                 console.error('[AdminLogin] Exception:', err);
-                showError('Đã xảy ra sự cố trong quá trình xác thực. Vui lòng thử lại.');
+                await clearAdminLogin(db);
+                showError(err.message || 'Đã xảy ra sự cố trong quá trình xác thực. Vui lòng thử lại.');
+            } finally {
                 btnSubmit.disabled = false;
                 btnSubmit.textContent = 'Đăng nhập hệ thống';
             }
@@ -194,31 +183,29 @@
 
             const db = getDb();
             try {
-                // Cập nhật mật khẩu trong Supabase Auth
-                const { error: updateAuthErr } = await db.auth.updateUser({
-                    password: newPass
+                const { data: sessionData, error: sessionError } = await db.auth.getSession();
+                if (sessionError || !sessionData?.session?.access_token) throw new Error('Phiên đăng nhập đã hết hạn.');
+                const response = await fetch('/api/admin/auth/complete-password-change', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + sessionData.session.access_token },
+                    body: JSON.stringify({ password: newPass })
                 });
-
-                if (updateAuthErr) {
-                    showChangePassError('Lỗi cập nhật mật khẩu: ' + updateAuthErr.message);
-                    btnSubmitChangePass.disabled = false;
-                    btnSubmitChangePass.textContent = 'Lưu mật khẩu và vào hệ thống';
-                    return;
+                if (!response.ok) throw new Error('Không thể hoàn tất đổi mật khẩu công vụ. Vui lòng thử lại.');
+                const { data: renewed, error: renewError } = await db.auth.signInWithPassword({ email: currentAuthenticatedUser.email, password: newPass });
+                if (renewError || !renewed?.user) throw new Error('Mật khẩu đã đổi. Vui lòng đăng nhập lại.');
+                const context = await loadStaffContext(db);
+                if (!context?.is_active || context.staff?.must_change_password || !context.staff?.permission_codes?.length) {
+                    await clearAdminLogin(db);
+                    throw new Error('Tài khoản chưa có quyền quản trị. Vui lòng liên hệ Quản lý.');
                 }
-
-                // Cập nhật must_change_password = false trong bảng public.staff
-                if (currentStaffRecord) {
-                    await db.from('staff').update({
-                        must_change_password: false,
-                        updated_at: new Date().toISOString()
-                    }).eq('id', currentStaffRecord.id);
-                }
-
-                await finalizeAdminLogin(currentStaffRecord, currentAuthenticatedUser);
+                await finalizeAdminLogin(context.staff, renewed.user);
 
             } catch (err) {
                 console.error('[ChangePassword] Exception:', err);
                 showChangePassError('Không thể cập nhật mật khẩu: ' + err.message);
+                btnSubmitChangePass.disabled = false;
+                btnSubmitChangePass.textContent = 'Lưu mật khẩu và vào hệ thống';
+            } finally {
                 btnSubmitChangePass.disabled = false;
                 btnSubmitChangePass.textContent = 'Lưu mật khẩu và vào hệ thống';
             }
@@ -227,14 +214,8 @@
 
     // Hoàn tất phiên đăng nhập và chuyển hướng
     async function finalizeAdminLogin(staff, authUser) {
-        const db = getDb();
-        try {
-            if (staff?.id) {
-                await db.from('staff').update({
-                    last_login_at: new Date().toISOString()
-                }).eq('id', staff.id);
-            }
-        } catch (e) {}
+        const roles = Array.isArray(staff.access_roles) ? staff.access_roles : [];
+        const primaryRole = roles.includes('ADMIN') ? 'ADMIN' : (roles[0] || 'STAFF');
 
         const adminSession = {
             id: staff.id,
@@ -244,10 +225,11 @@
             full_name: staff.full_name || 'Nhân viên PawPal',
             phone: staff.phone_number || staff.phone || '',
             email: authUser.email || staff.email || '',
-            role: (staff.system_role || 'ADMIN').toLowerCase(),
-            system_role: staff.system_role || 'STAFF',
-            position: staff.specialization || staff.role || 'Quản trị viên',
-            permissions: Array.isArray(staff.permissions) ? staff.permissions : [],
+            role: primaryRole.toLowerCase(),
+            system_role: primaryRole,
+            access_roles: roles,
+            position: staff.job_title || staff.specialization || 'Nhân viên',
+            permissions: Array.isArray(staff.permission_codes) ? staff.permission_codes : [],
             _source: 'supabase_auth'
         };
 
@@ -263,6 +245,6 @@
             }
         } catch (e) {}
 
-        window.location.replace('/admin');
+        window.location.replace('/admin#tab-list');
     }
 })();

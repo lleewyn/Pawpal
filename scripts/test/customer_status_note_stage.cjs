@@ -1,0 +1,27 @@
+const assert=require('node:assert/strict');const crypto=require('node:crypto');const {execFileSync}=require('node:child_process');
+const h=require('./customer_completion_helpers.cjs');
+(async()=>{const {browser,page}=await h.browserPage();try{
+ const c=await h.customer('Status and note verification');await h.refresh(page);
+ const uid=crypto.randomUUID();
+ execFileSync('docker',['exec','supabase-db','psql','-U','supabase_admin','-d',h.state.stage,'-v','ON_ERROR_STOP=1','-c',`INSERT INTO auth.users(id) VALUES('${uid}'); UPDATE public.customer SET auth_user_id='${uid}' WHERE id='${c.id}';`],{stdio:'pipe'});
+ await h.refresh(page);
+ const key=await page.evaluate(id=>Object.values(window.PawpalCustomers.state.customerDatabase).find(c=>c.dbId===id).id,c.id);
+ const own=()=>fetch('http://localhost:8011/customer?id=eq.'+c.id,{headers:{Authorization:'Bearer '+h.token(uid)}}).then(r=>r.json());
+ assert.equal((await own()).length,1);
+ await page.locator('#custSearchInput').fill(c.phone);
+ await page.waitForFunction(()=>document.querySelectorAll('#customerTableTbody tr[data-id]').length===1);
+ await page.locator(`#customerTableTbody .btn-action-more[data-id="${key}"]`).click();
+ await page.locator('#customerGlobalActionDropdown [data-action="toggle-lock"]').click();
+ await page.screenshot({path:h.infra+'/verification/v1-customer-lock.png',fullPage:true});
+ await page.locator('#btnAcceptCustConfirm').click();
+ await page.waitForFunction(id=>Object.values(window.PawpalCustomers.state.customerDatabase).some(c=>c.dbId===id&&c.status==='LOCKED'),c.id);
+ assert.equal((await own()).length,0);
+ await page.locator(`#customerTableTbody .btn-action-more[data-id="${key}"]`).click();await page.locator('#customerGlobalActionDropdown [data-action="toggle-lock"]').click();await page.locator('#btnAcceptCustConfirm').click();
+ await page.waitForFunction(id=>Object.values(window.PawpalCustomers.state.customerDatabase).some(c=>c.dbId===id&&c.status==='ACTIVE'),c.id);
+ assert.equal((await own()).length,1);
+ await h.showProfile(page,c.id);await page.locator('#drawerCustNote').fill('Verified note from customer profile');await page.locator('#btnSaveCustomerNote').click();
+ await page.locator('#adminGlobalToast').filter({hasText:/Đã lưu ghi chú/}).waitFor();
+ assert.equal((await h.ok(h.service.from('customer').select('note').eq('id',c.id).single())).note,'Verified note from customer profile');
+ assert.equal(await page.locator('#btnResendSmsToken').count(),0);
+ console.log('PASS lock/unlock UI, customer RLS access revoked/restored, note persistence and no misleading SMS control');
+}finally{await browser.close();}})().catch(e=>{console.error(e.message);process.exitCode=1;});

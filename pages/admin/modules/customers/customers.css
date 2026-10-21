@@ -895,7 +895,7 @@
    ========================================================================== */
 .pawpoint-grid-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 16px;
     align-items: start;
     width: 100%;
@@ -911,6 +911,13 @@
 .pawpoint-grid-layout .admin-table {
     width: 100%;
     min-width: 0;
+    table-layout: fixed;
+}
+
+.pawpoint-grid-layout .admin-table th,
+.pawpoint-grid-layout .admin-table td {
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .pawpoint-grid-layout .pawpoint-toolbar {
@@ -1278,3 +1285,54 @@
     background-color: #DCEEE2;
 }
 
+/* Imported V1 codes and notes may be long; keep the list rows compact. */
+#customerDataTable .customer-code-text {
+    display: block;
+    max-width: 125px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#customerDataTable .alert-indicator {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    white-space: normal;
+    min-width: 100px;
+    max-width: 180px;
+}
+
+#modalEditCustomer .address-book-header {
+    border-bottom: none;
+}
+
+#modalEditCustomer .address-row-card:not(.is-default) {
+    background: transparent;
+    border-color: transparent;
+}
+
+.drawer-tab-panel > .admin-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.drawer-tab-panel > .admin-table th,
+.drawer-tab-panel > .admin-table td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.drawer-tab-panel > .admin-table .admin-btn {
+    max-width: 100%;
+    white-space: normal;
+}
+
+.pet-card-head-left {
+    min-width: 0;
+}
+
+.pet-card-name {
+    overflow-wrap: anywhere;
+}

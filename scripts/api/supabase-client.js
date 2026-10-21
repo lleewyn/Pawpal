@@ -5,6 +5,7 @@
 
     function readConfig() {
         const explicit = window['__PAWPAL_SUPABASE_CONFIG__'] || window['__SUPABASE_CONFIG__'] || {};
+        if (explicit.required) return { url: explicit.url || '', anonKey: explicit.anonKey || '' };
         const storedUrl = window.localStorage?.getItem?.('pawpal_supabase_url');
         const storedAnonKey = window.localStorage?.getItem?.('pawpal_supabase_anon_key');
 
@@ -20,6 +21,47 @@
 
     function setStatus(initialized, configured, error) {
         window['SupabaseClientStatus'] = { initialized, configured, error };
+    }
+
+    function createBandwidthAwareFetch(projectUrl) {
+        const nativeFetch = window.fetch.bind(window);
+        const restPrefix = `${projectUrl.replace(/\/$/, '')}/rest/v1/`;
+        const inFlightReads = new Map();
+        let quotaResponse = null;
+        let quotaRetryAt = 0;
+
+        return async function bandwidthAwareFetch(input, init = {}) {
+            const url = typeof input === 'string' ? input : input instanceof URL ? input.href : '';
+            const method = (init.method || 'GET').toUpperCase();
+            // Không gộp thao tác ghi, Auth, RPC POST hoặc request có AbortSignal riêng.
+            if (!url.startsWith(restPrefix) || !['GET', 'HEAD'].includes(method)) {
+                return nativeFetch(input, init);
+            }
+            if (quotaResponse && Date.now() < quotaRetryAt) return quotaResponse.clone();
+
+            const headers = [...new Headers(init.headers).entries()].sort(([a], [b]) => a.localeCompare(b));
+            const key = JSON.stringify([method, url, headers, init.credentials, init.cache]);
+            const canShare = !init.signal;
+            if (canShare && inFlightReads.has(key)) return (await inFlightReads.get(key)).clone();
+
+            const request = (async () => {
+                const response = await nativeFetch(input, init);
+                if (response.status === 402) {
+                    const message = await response.clone().text();
+                    if (/egress|bandwidth/i.test(message)) {
+                        quotaResponse = response.clone();
+                        quotaRetryAt = Date.now() + 60_000;
+                    }
+                }
+                return response;
+            })();
+            if (canShare) inFlightReads.set(key, request);
+            try {
+                return (await request).clone();
+            } finally {
+                if (canShare && inFlightReads.get(key) === request) inFlightReads.delete(key);
+            }
+        };
     }
 
     function initClient() {
@@ -45,6 +87,7 @@
         try {
             const isAdminPortal = /^\/(?:admin(?:\/|$)|pages\/admin(?:\/|$))/i.test(window.location.pathname);
             window['SupabaseClient'] = window['supabase'].createClient(config.url, config.anonKey, {
+                global: { fetch: createBandwidthAwareFetch(config.url) },
                 auth: {
                     persistSession: true,
                     autoRefreshToken: true,

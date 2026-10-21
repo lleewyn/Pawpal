@@ -287,27 +287,8 @@
     }
     PawpalComplaints.getDbClient = getComplaintsDbClient;
 
-    // Supabase client dùng anon role không mang session nhân sự để đọc support_ticket
-    // (Bảo đảm không bị chặn bởi RLS user_id = auth.uid() của bảng support_ticket trên CSDL)
-    function getComplaintsAnonClient() {
-        if (!window._pawpalComplaintsAnonClient) {
-            const config = window.SupabaseClientConfig || (window.getSupabaseClient && window.getSupabaseClient()?.supabaseUrl ? {
-                url: window.getSupabaseClient().supabaseUrl,
-                anonKey: window.getSupabaseClient().supabaseKey
-            } : (window.SupabaseClient ? {
-                url: window.SupabaseClient.supabaseUrl,
-                anonKey: window.SupabaseClient.supabaseKey
-            } : null));
-
-            if (config?.url && config?.anonKey && window.supabase && typeof window.supabase.createClient === 'function') {
-                window._pawpalComplaintsAnonClient = window.supabase.createClient(config.url, config.anonKey, {
-                    auth: { persistSession: false, autoRefreshToken: false }
-                });
-            }
-        }
-        return window._pawpalComplaintsAnonClient || getComplaintsDbClient();
-    }
-    PawpalComplaints.getAnonDbClient = getComplaintsAnonClient;
+    // Giữ alias cho các tab cũ; mọi truy vấn phải mang phiên Admin và chịu RLS.
+    PawpalComplaints.getAnonDbClient = getComplaintsDbClient;
 
     // ====================================================================
     // DATA STORE 100% TRỰC TIẾP TỪ SUPABASE LIVE DATABASE (ZERO JSON MOCK)
@@ -337,7 +318,7 @@
             }
 
             const fetchComplaintsData = async () => {
-                const ticketClient = getComplaintsAnonClient() || client;
+                const ticketClient = client;
                 const [
                     ticketsRes,
                     customersRes,
@@ -843,7 +824,7 @@
     // Helper lazy-fetch tin nhắn khi mở 1 ticket cụ thể (PERF-03.K02)
     PawpalComplaints.fetchTicketMessages = async function(ticketId, { force = false } = {}) {
         if (!ticketId) return [];
-        const client = getComplaintsAnonClient() || getComplaintsDbClient();
+        const client = getComplaintsDbClient();
         if (!client) return [];
 
         const fetchMessages = async () => {
@@ -1135,7 +1116,7 @@
     // Supabase Realtime Subscription
     let complaintsRealtimeSubscription = null;
     function setupComplaintsRealtimeChannel() {
-        const client = getComplaintsAnonClient() || getComplaintsDbClient();
+        const client = getComplaintsDbClient();
         if (!client || typeof client.channel !== 'function') return;
 
         try {

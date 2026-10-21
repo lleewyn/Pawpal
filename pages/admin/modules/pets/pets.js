@@ -358,6 +358,8 @@
                 PawpalPets.state.customersData = custMap;
                 PawpalPets.state.appointments = [];
                 PawpalPets.state.careLogs = [];
+                PawpalPets.state.careLogsLoadStatus = 'idle';
+                PawpalPets.state.remindersLoadStatus = 'idle';
                 PawpalPets.state.isLoaded = true;
                 _petsLastFetchedAt = Date.now();
             } catch (err) {
@@ -473,7 +475,8 @@
     // Helper lazy-fetch care logs cho subtab Care Log (GĐ-04 & F-021: Kiểm tra error rõ ràng)
     PawpalPets.fetchCareLogsTab = async function({ force = false, limit = 100 } = {}) {
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!client) return [];
+        if (!client) { PawpalPets.state.careLogsLoadStatus = 'error'; return []; }
+        PawpalPets.state.careLogsLoadStatus = 'loading';
 
         const fetchLogs = async () => {
             const [logsRes, apptsRes] = await Promise.all([
@@ -496,6 +499,7 @@
             if (apptsRes.error) {
                 console.warn('[PawpalPets] Cảnh báo nạp appointment từ Supabase:', apptsRes.error);
             }
+            if (logsRes.error || apptsRes.error) throw (logsRes.error || apptsRes.error);
 
             return {
                 logs: logsRes.data || [],
@@ -503,24 +507,31 @@
             };
         };
 
-        const res = window.PawpalDataStore?.fetch
-            ? await window.PawpalDataStore.fetch(`pets:carelogs:recent:${limit}`, fetchLogs, {
-                ttlMs: window.PawpalDataStore.TTL.LIST,
-                force
-            })
-            : await fetchLogs();
+        try {
+            const res = window.PawpalDataStore?.fetch
+                ? await window.PawpalDataStore.fetch(`pets:carelogs:recent:${limit}`, fetchLogs, {
+                    ttlMs: window.PawpalDataStore.TTL.LIST,
+                    force
+                })
+                : await fetchLogs();
 
-        PawpalPets.state.careLogs = res.logs || [];
-        if (res.appts?.length > 0) {
-            PawpalPets.state.appointments = res.appts;
+            PawpalPets.state.careLogs = res.logs || [];
+            if (res.appts?.length > 0) {
+                PawpalPets.state.appointments = res.appts;
+            }
+            PawpalPets.state.careLogsLoadStatus = 'loaded';
+            return PawpalPets.state.careLogs;
+        } catch (error) {
+            PawpalPets.state.careLogsLoadStatus = 'error';
+            throw error;
         }
-        return PawpalPets.state.careLogs;
     };
 
     // Helper lazy-fetch appointments cho subtab Nhắc lịch (GĐ-04 & F-001: Lọc da_hoan_tat chuẩn CSDL)
     PawpalPets.fetchRemindersAppointments = async function({ force = false } = {}) {
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!client) return [];
+        if (!client) { PawpalPets.state.remindersLoadStatus = 'error'; return []; }
+        PawpalPets.state.remindersLoadStatus = 'loading';
 
         const fetchAppts = async () => {
             const { data, error } = await client.from('appointment')
@@ -531,20 +542,26 @@
 
             if (error) {
                 console.warn('[PawpalPets] Lỗi nạp lịch hẹn hoàn tất nhắc nhở:', error);
-                return [];
+                throw error;
             }
             return data || [];
         };
 
-        const appts = window.PawpalDataStore?.fetch
-            ? await window.PawpalDataStore.fetch('pets:appointments:completed', fetchAppts, {
-                ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
-                force
-            })
-            : await fetchAppts();
+        try {
+            const appts = window.PawpalDataStore?.fetch
+                ? await window.PawpalDataStore.fetch('pets:appointments:completed', fetchAppts, {
+                    ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
+                    force
+                })
+                : await fetchAppts();
 
-        PawpalPets.state.appointments = appts;
-        return appts;
+            PawpalPets.state.appointments = appts;
+            PawpalPets.state.remindersLoadStatus = 'loaded';
+            return appts;
+        } catch (error) {
+            PawpalPets.state.remindersLoadStatus = 'error';
+            throw error;
+        }
     };
 
     PawpalPets.getPet = function(idOrCode) {

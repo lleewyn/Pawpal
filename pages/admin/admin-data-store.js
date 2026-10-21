@@ -16,6 +16,7 @@
     const MAX_CACHE_ENTRIES = 200; // Giới hạn kích thước bộ nhớ in-memory (PERF-02.14)
     const _store = new Map();
     const _inFlightPromises = new Map();
+    let _cacheGeneration = 0;
 
     // Lấy định danh người dùng quản trị hiện tại để cô lập cache hoàn toàn (PERF-02.03, PERF-02.12)
     function getCurrentActorId() {
@@ -92,20 +93,24 @@
             // Chạy revalidate ngầm ở nền nếu cho phép, trả về dữ liệu cũ ngay lập tức (0ms UI wait)
             if (options.backgroundRevalidate !== false) {
                 revalidateInBackground(key, fetcherFn, entry.version);
+                return entry.data;
             }
-            return entry.data;
         }
 
         // 4. Bắt đầu fetch mới
         evictOldestIfFull();
-        const nextVersion = (entry?.version || 0) + 1;
+        const baseVersion = entry?.version || 0;
+        const nextVersion = baseVersion + 1;
+        const generation = _cacheGeneration;
+        // Đăng ký cả request đang tải để invalidation giữa chừng không bị mất.
+        _store.set(key, entry || { hasLoaded: false, version: baseVersion, stale: true });
 
         const job = (async () => {
             try {
-                const result = await fetcherFn();
+                const result = await Promise.resolve().then(fetcherFn);
                 const latestEntry = _store.get(key);
                 // Xử lý race-condition: Chỉ commit nếu phiên bản hiện tại khớp với lúc fetch (PERF-02.09)
-                if (!latestEntry || latestEntry.version <= nextVersion) {
+                if (generation === _cacheGeneration && latestEntry?.version === baseVersion) {
                     _store.set(key, {
                         data: result,
                         status: 'success',
@@ -120,7 +125,7 @@
                 return result;
             } catch (err) {
                 const latestEntry = _store.get(key);
-                if (!latestEntry || latestEntry.version <= nextVersion) {
+                if (generation === _cacheGeneration && latestEntry?.version === baseVersion) {
                     _store.set(key, {
                         data: latestEntry?.data ?? null,
                         status: 'error',
@@ -134,7 +139,7 @@
                 }
                 throw err;
             } finally {
-                _inFlightPromises.delete(key);
+                if (_inFlightPromises.get(key) === job) _inFlightPromises.delete(key);
             }
         })();
 
@@ -146,11 +151,12 @@
     function revalidateInBackground(key, fetcherFn, baseVersion) {
         if (_inFlightPromises.has(key)) return;
         const nextVersion = baseVersion + 1;
+        const generation = _cacheGeneration;
         const bgJob = (async () => {
             try {
-                const fresh = await fetcherFn();
+                const fresh = await Promise.resolve().then(fetcherFn);
                 const current = _store.get(key);
-                if (current && current.version <= nextVersion) {
+                if (generation === _cacheGeneration && current?.version === baseVersion) {
                     _store.set(key, {
                         ...current,
                         data: fresh,
@@ -169,7 +175,7 @@
             } catch (e) {
                 console.warn(`[DataStore] Revalidate ngầm thất bại cho ${key}:`, e);
             } finally {
-                _inFlightPromises.delete(key);
+                if (_inFlightPromises.get(key) === bgJob) _inFlightPromises.delete(key);
             }
         })();
         _inFlightPromises.set(key, bgJob);
@@ -207,8 +213,12 @@
      * Xóa sạch toàn bộ dữ liệu trong bộ nhớ (khi đăng xuất, chuyển tài khoản hoặc đổi chi nhánh) (PERF-02.12)
      */
     function clearAll() {
+        _cacheGeneration++;
         _store.clear();
         _inFlightPromises.clear();
+        _realtimeDebounceTimers.forEach(timer => clearTimeout(timer));
+        _realtimeDebounceTimers.clear();
+        _hiddenRealtimeRefreshes.clear();
         console.log('[DataStore] Đã dọn dẹp sạch toàn bộ cache bộ nhớ.');
     }
 
@@ -244,6 +254,9 @@
         if (typeof first === 'string' && first.startsWith('pawpal:')) {
             eventName = first;
             detail = second || {};
+        } else if (first && typeof first === 'object') {
+            detail = first;
+            eventName = `pawpal:${first.entity}-mutated`;
         } else {
             const entity = first;
             const action = second;
@@ -260,34 +273,43 @@
     // ====================================================================
     // LẮNG NGHE SỰ KIỆN INVALIDATION LIÊN PHÂN HỆ (PERF-02.15)
     // ====================================================================
+    function invalidateDashboard(resources) {
+        // Giữ cache Dashboard cũ tương thích, cache mới vô hiệu hóa theo từng nhóm.
+        invalidate(/dashboard(?!:)/);
+        invalidate('dashboard:summary');
+        resources.forEach(resource => invalidate(`dashboard:${resource}:*`));
+    }
+
     window.addEventListener('pawpal:order-mutated', () => {
         invalidate('order');
         invalidate('sales_order');
         invalidate('stock');
-        invalidate('dashboard');
+        invalidateDashboard(['orders', 'products']);
     });
 
     window.addEventListener('pawpal:appointment-mutated', () => {
         invalidate('appointment');
         invalidate('service');
         invalidate('staff');
-        invalidate('dashboard');
+        invalidateDashboard(['appointments', 'staff']);
     });
 
     window.addEventListener('pawpal:customer-mutated', () => {
         invalidate('customer');
         invalidate('pawpoint');
+        invalidateDashboard(['customer-count', 'profiles']);
     });
 
     window.addEventListener('pawpal:pet-mutated', () => {
         invalidate('pet');
         invalidate('customer');
+        invalidateDashboard(['pet-count', 'pets']);
     });
 
     window.addEventListener('pawpal:ticket-mutated', () => {
         invalidate('ticket');
         invalidate('complaint');
-        invalidate('dashboard');
+        invalidateDashboard(['tickets']);
     });
 
     window.addEventListener('pawpal:setting-mutated', () => {
@@ -344,6 +366,25 @@
 
     // Map lưu bộ đệm debounce cho từng phân hệ
     const _realtimeDebounceTimers = new Map();
+    const _hiddenRealtimeRefreshes = new Map();
+
+    if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) return;
+            for (const [moduleName, options] of _hiddenRealtimeRefreshes) {
+                if (!isModuleActive(moduleName)) continue;
+                _hiddenRealtimeRefreshes.delete(moduleName);
+                handleRealtimeChange(options);
+            }
+        });
+    }
+    window.addEventListener('admin:module-show', () => {
+        for (const [moduleName, options] of _hiddenRealtimeRefreshes) {
+            if (!isModuleActive(moduleName)) continue;
+            _hiddenRealtimeRefreshes.delete(moduleName);
+            handleRealtimeChange(options);
+        }
+    });
 
     /**
      * Bộ xử lý chuẩn hóa cho sự kiện Supabase Realtime (PERF-04.03, PERF-04.04, PERF-04.05)
@@ -364,6 +405,11 @@
             return;
         }
 
+        if (typeof document !== 'undefined' && document.hidden) {
+            _hiddenRealtimeRefreshes.set(moduleName, { moduleName, onActiveRefresh, debounceMs });
+            return;
+        }
+
         // Nếu module đang hiển thị: Gom cụm debounce và gọi callback refresh (PERF-04.04)
         if (typeof onActiveRefresh === 'function') {
             const timerKey = `${moduleName}:realtime_refresh`;
@@ -375,6 +421,10 @@
                 _realtimeDebounceTimers.delete(timerKey);
                 // Kiểm tra lại trạng thái active tại thời điểm timer hết hạn
                 if (isModuleActive(moduleName)) {
+                    if (typeof document !== 'undefined' && document.hidden) {
+                        _hiddenRealtimeRefreshes.set(moduleName, { moduleName, onActiveRefresh, debounceMs });
+                        return;
+                    }
                     recordMetric('refresh');
                     try {
                         await onActiveRefresh();
@@ -410,6 +460,7 @@
             inFlightCount: _inFlightPromises.size,
             realtimeEvents: _metrics.realtimeEvents,
             activeRefreshes: _metrics.refreshes,
+            pendingRealtimeRefreshes: _realtimeDebounceTimers.size,
             invalidations: _metrics.invalidations,
             activeChannelsCount: _metrics.activeChannels.size
         })

@@ -1,4 +1,5 @@
 TÀI LIỆU ĐẶC TẢ PHÂN HỆ QUẢN LÝ KHÁCH HÀNG
+LƯU Ý: Bản đặc tả cũ, giữ để tham khảo lịch sử. Triển khai V1 hiện tại theo PAWPAL_KHACH_HANG_V1_NGHIEM_THU.md và tài liệu 3NF V1; không triển khai SMS activation hoặc cột legacy từ bản này.
 Dành cho: Developer Frontend và Backend
 Phân hệ: Quản lý Khách hàng và Thành viên
 

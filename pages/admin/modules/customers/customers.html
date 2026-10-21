@@ -59,6 +59,7 @@
                         <label class="filter-label">Hạng thẻ</label>
                         <select class="admin-select" id="custFilterTier">
                             <option value="ALL">Tất cả</option>
+                            <option value="BRONZE">Đồng</option>
                             <option value="SILVER">Bạc</option>
                             <option value="GOLD">Vàng</option>
                             <option value="DIAMOND">Kim Cương</option>
@@ -89,7 +90,7 @@
                         <th>Họ tên</th>
                         <th>Số điện thoại</th>
                         <th>Thú cưng</th>
-                        <th>Hạng và Điểm</th>
+                        <th>Hạng và điểm</th>
                         <th>Cảnh báo</th>
                         <th>Trạng thái</th>
                         <th style="width: 70px; min-width: 70px; text-align: center;">Tác vụ</th>
@@ -230,10 +231,10 @@
                                 </div>
                             </div>
                             <div class="data-pair-row" style="border-bottom: none; padding-top: 10px;">
-                                <span class="data-key">Tài khoản và SMS:</span>
+                                <span class="data-key">Trạng thái hồ sơ</span>
                                 <span class="data-val" id="profileValAuthStatus" style="display: flex; align-items: center; gap: 8px;">
                                     <span class="admin-badge badge-success">—</span>
-                                    <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnResendSmsToken" style="font-size: 11.5px; padding: 3px 8px;">Gửi lại SMS</button>
+
                                 </span>
                             </div>
                         </div>
@@ -301,7 +302,7 @@
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th>Mã Ticket</th>
+                                <th>Mã phiếu</th>
                                 <th>Ngày gửi</th>
                                 <th>Sự cố phản ánh</th>
                                 <th>Mức độ</th>
@@ -338,26 +339,7 @@
                             <th>Quyền lợi</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><span class="admin-badge badge-tier-silver">Bạc</span></td>
-                            <td>3.000.000 đ</td>
-                            <td>5%</td>
-                            <td>Quà tặng sinh nhật bé cưng</td>
-                        </tr>
-                        <tr>
-                            <td><span class="admin-badge badge-tier-gold">Vàng</span></td>
-                            <td>8.000.000 đ</td>
-                            <td>8%</td>
-                            <td>Ưu tiên giữ phòng Pet Hotel ngày lễ</td>
-                        </tr>
-                        <tr>
-                            <td><span class="admin-badge badge-tier-diamond">Kim Cương</span></td>
-                            <td>20.000.000 đ</td>
-                            <td>12%</td>
-                            <td>Miễn phí đưa đón Pet Taxi bán kính 5km</td>
-                        </tr>
-                    </tbody>
+                    <tbody id="membershipTierPolicyTbody"></tbody>
                 </table>
             </div>
 
@@ -413,7 +395,7 @@
                 <div class="form-group mb-3">
                     <label class="form-label">Số điện thoại <span style="color: #DC2626;">*</span></label>
                     <input type="tel" class="admin-input" id="quickAddPhone" placeholder="0901234567 (Bắt buộc 10 số)" required>
-                    <div id="quickAddPhoneAlert" style="display: none; font-size: 12.5px; color: #DC2626; margin-top: 6px; padding: 6px 10px; border-radius: var(--admin-radius); background: #FEE2E2;">
+                    <div id="quickAddPhoneAlert" style="display: none; font-size: 12.5px; color: #DC2626; margin-top: 6px;">
                         Số điện thoại này đã thuộc về khách hàng <strong id="quickAddDupName"></strong> (<span id="quickAddDupId"></span>).
                         <a href="javascript:void(0)" id="btnOpenDupCustomer" style="color: #236B48; text-decoration: underline; font-weight: 600; margin-left: 6px;">Mở hồ sơ ngay</a>
                     </div>
@@ -425,11 +407,10 @@
                 <div class="form-row-two-col mb-3">
                     <div class="form-group">
                         <label class="form-label">Loài thú cưng</label>
-                        <select class="admin-select" id="quickAddPetSpecies">
-                            <option value="DOG">Chó</option>
-                            <option value="CAT">Mèo</option>
-                            <option value="OTHER">Khác</option>
-                        </select>
+                        <div class="pet-field-autocomplete-wrapper">
+                            <input type="text" class="admin-input" id="quickAddPetSpecies" placeholder="Tìm loài thú cưng" autocomplete="off">
+                            <div class="autocomplete-dropdown" id="quickAddPetSpeciesDropdown" style="display: none;"></div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Cân nặng (kg)</label>
@@ -446,6 +427,10 @@
                 <div class="form-group mb-3">
                     <label class="form-label">Địa chỉ nhận hàng ban đầu</label>
                     <input type="text" class="admin-input" id="quickAddAddress" placeholder="Ví dụ: 120 Nguyễn Thị Minh Khai, Phường 6, Quận 3...">
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Tỉnh hoặc thành phố</label>
+                    <input type="text" class="admin-input" id="quickAddProvince" placeholder="Nhập khi có địa chỉ nhận hàng">
                 </div>
 
                 <div class="modal-actions-footer">
@@ -536,9 +521,10 @@
                     <div class="form-group">
                         <label class="form-label">Giới tính</label>
                         <select class="admin-select" id="editCustGender">
-                            <option value="Nam">Nam</option>
-                            <option value="Nữ">Nữ</option>
-                            <option value="Khác">Khác</option>
+                            <option value="">Chưa cung cấp</option>
+                            <option value="MALE">Nam</option>
+                            <option value="FEMALE">Nữ</option>
+                            <option value="OTHER">Khác</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -549,9 +535,7 @@
                 <div class="form-group mb-3">
                     <label class="form-label">Hạng thành viên</label>
                     <select class="admin-select" id="editCustTier">
-                        <option value="SILVER">Bạc</option>
-                        <option value="GOLD">Vàng</option>
-                        <option value="DIAMOND">Kim Cương</option>
+                        <option value="">Chưa có hạng</option>
                     </select>
                 </div>
                 <div class="address-book-wrapper">
@@ -589,33 +573,22 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Loài thú cưng <span style="color: #DC2626;">*</span></label>
-                        <select class="admin-select" id="addPetSpecies">
-                            <option value="Chó">Chó</option>
-                            <option value="Mèo">Mèo</option>
-                            <option value="Khác">Khác</option>
-                        </select>
+                        <div class="pet-field-autocomplete-wrapper"><input class="admin-input" id="addPetSpecies" autocomplete="off" placeholder="Tìm loài thú cưng"><div class="autocomplete-dropdown" id="addPetSpeciesDropdown" style="display:none"></div></div>
                     </div>
                 </div>
                 <div class="form-row-two-col mb-3">
                     <div class="form-group">
-                        <label class="form-label">Giống loài</label>
-                        <input type="text" class="admin-input" id="addPetBreed" placeholder="Ví dụ: Poodle, Corgi, Golden, Mèo Anh..." autocomplete="off">
-                        <div class="adjust-reason-quick-tags" id="addPetBreedChips">
-                            <button type="button" class="reason-quick-chip">Poodle</button>
-                            <button type="button" class="reason-quick-chip">Corgi</button>
-                            <button type="button" class="reason-quick-chip">Golden</button>
-                            <button type="button" class="reason-quick-chip">Phốc sóc</button>
-                            <button type="button" class="reason-quick-chip">Mèo ALN</button>
-                        </div>
+                        <label class="form-label">Giống loài <span style="color:#DC2626">*</span></label>
+                        <div class="pet-field-autocomplete-wrapper"><input class="admin-input" id="addPetBreed" autocomplete="off" placeholder="Tìm giống thuộc loài đã chọn"><div class="autocomplete-dropdown" id="addPetBreedDropdown" style="display:none"></div></div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Cân nặng (kg)</label>
                         <input type="number" step="0.1" class="admin-input" id="addPetWeight" placeholder="Ví dụ: 5.2">
                     </div>
                 </div>
-                <div class="form-group mb-3">
-                    <label class="form-label">Tiền sử tiêm chủng</label>
-                    <input type="text" class="admin-input" id="addPetVaccine" placeholder="Ví dụ: Đã tiêm dại và 7 bệnh mũi 2...">
+                <div class="form-row-two-col mb-3">
+                    <div class="form-group"><label class="form-label">Dị ứng</label><input class="admin-input" id="addPetAllergy" placeholder="Thông tin dị ứng nếu có"></div>
+                    <div class="form-group"><label class="form-label">Tập tính</label><input class="admin-input" id="addPetRoutine" placeholder="Thói quen cần lưu ý nếu có"></div>
                 </div>
                 <div class="form-group mb-4">
                     <label class="form-label">Cảnh báo an toàn</label>
@@ -648,26 +621,22 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Loài thú cưng <span style="color: #DC2626;">*</span></label>
-                        <select class="admin-select" id="editPetSpecies">
-                            <option value="Chó">Chó</option>
-                            <option value="Mèo">Mèo</option>
-                            <option value="Khác">Khác</option>
-                        </select>
+                        <div class="pet-field-autocomplete-wrapper"><input class="admin-input" id="editPetSpecies" autocomplete="off" placeholder="Tìm loài thú cưng"><div class="autocomplete-dropdown" id="editPetSpeciesDropdown" style="display:none"></div></div>
                     </div>
                 </div>
                 <div class="form-row-two-col mb-3">
                     <div class="form-group">
-                        <label class="form-label">Giống loài</label>
-                        <input type="text" class="admin-input" id="editPetBreed" placeholder="Ví dụ: Poodle, Corgi, Golden, Mèo Anh..." autocomplete="off">
+                        <label class="form-label">Giống loài <span style="color:#DC2626">*</span></label>
+                        <div class="pet-field-autocomplete-wrapper"><input class="admin-input" id="editPetBreed" autocomplete="off" placeholder="Tìm giống thuộc loài đã chọn"><div class="autocomplete-dropdown" id="editPetBreedDropdown" style="display:none"></div></div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Cân nặng (kg)</label>
                         <input type="number" step="0.1" class="admin-input" id="editPetWeight" placeholder="Ví dụ: 5.2">
                     </div>
                 </div>
-                <div class="form-group mb-3">
-                    <label class="form-label">Tiền sử tiêm chủng</label>
-                    <input type="text" class="admin-input" id="editPetVaccine" placeholder="Ví dụ: Đã tiêm dại và 7 bệnh mũi 2...">
+                <div class="form-row-two-col mb-3">
+                    <div class="form-group"><label class="form-label">Dị ứng</label><input class="admin-input" id="editPetAllergy" placeholder="Thông tin dị ứng nếu có"></div>
+                    <div class="form-group"><label class="form-label">Tập tính</label><input class="admin-input" id="editPetRoutine" placeholder="Thói quen cần lưu ý nếu có"></div>
                 </div>
                 <div class="form-group mb-4">
                     <label class="form-label">Cảnh báo an toàn</label>

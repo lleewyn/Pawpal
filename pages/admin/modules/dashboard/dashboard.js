@@ -37,8 +37,8 @@
         return `${year}-${month}-${day}`;
     }
 
-    // Chuẩn hóa cả kiểu DATE (YYYY-MM-DD) và TIMESTAMP từ Supabase về cùng một khóa ngày.
-    // Nếu không chuẩn hóa, các lịch hẹn có timestamp sẽ bị bỏ sót khỏi KPI và lịch.
+    // DATE giữ nguyên ngày nghiệp vụ; TIMESTAMP đổi sang ngày theo múi giờ trình duyệt.
+    // Không cắt chuỗi UTC vì đơn sau nửa đêm giờ địa phương có thể thuộc ngày trước ở UTC.
     function toDateKey(value) {
         if (!value) return '';
         if (value instanceof Date) {
@@ -48,7 +48,7 @@
             return `${year}-${month}-${day}`;
         }
         const raw = String(value);
-        const isoDate = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+        const isoDate = raw.match(/^(\d{4}-\d{2}-\d{2})$/);
         if (isoDate) return isoDate[1];
         const parsed = new Date(raw);
         if (Number.isNaN(parsed.getTime())) return '';
@@ -56,6 +56,27 @@
         const month = String(parsed.getMonth() + 1).padStart(2, '0');
         const day = String(parsed.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
+    }
+
+    function dashboardRole() {
+        try {
+            const actor = JSON.parse(sessionStorage.getItem('pawpal_admin_user') || localStorage.getItem('pawpal_admin_user') || 'null');
+            if (actor?.system_role) return String(actor.system_role).toUpperCase();
+        } catch (_) {}
+        return (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'STAFF').toUpperCase();
+    }
+
+    function orderCountsAsRevenue(order) {
+        const status = String(order.order_status || '').toUpperCase();
+        const payment = String(order.payment_status || '').toUpperCase();
+        if (['CANCELLED', 'DA_HUY', 'REFUNDED', 'DA_HOAN_TIEN'].includes(status) || ['REFUNDED', 'DA_HOAN_TIEN'].includes(payment)) return false;
+        return ['PAID', 'DA_THANH_TOAN'].includes(payment) ||
+            (['COMPLETED', 'DELIVERED', 'DA_GIAO', 'DA_GIAO_HANG'].includes(status) && !['UNPAID', 'CHUA_THANH_TOAN', 'COD_PENDING'].includes(payment));
+    }
+
+    function appointmentCountsAsRevenue(appointment) {
+        return ['COMPLETED', 'DA_HOAN_THANH', 'DA_HOAN_TAT'].includes(String(appointment.appointment_status || appointment.status || '').toUpperCase()) &&
+            ['PAID', 'DA_THANH_TOAN'].includes(String(appointment.payment_status || '').toUpperCase());
     }
 
     // ====================================================================
@@ -79,26 +100,71 @@
     let _dashLastFetchedAt = 0;
     const DASH_CACHE_TTL_MS = 90_000;
     let _dashFetchPromise = null;
+    let _dashInvalidationVersion = 0;
+
+    // Mỗi nhóm có cache riêng: một biến động đơn hàng không tải lại toàn bộ Dashboard.
+    function dashboardKey(resource, params = {}) {
+        const store = window.PawpalDataStore;
+        return `dashboard:${resource}:${store?.buildKey ? store.buildKey('data', params) : JSON.stringify(params)}`;
+    }
+
+    function invalidateDashboardResources(resources) {
+        _dashLastFetchedAt = 0;
+        _dashInvalidationVersion++;
+        for (const resource of resources) {
+            window.PawpalDataStore?.invalidate?.(`dashboard:${resource}:*`);
+        }
+    }
     // Ghi nhớ thời điểm tab bị ẩn — chỉ reload sau 5 phút bỏ qua
     let _dashHiddenAt = 0;
     const DASH_FOCUS_RELOAD_AFTER_MS = 5 * 60_000;
 
     async function loadDashboardData({ force = false } = {}) {
-        if (_dashFetchPromise) return _dashFetchPromise;
-
-        // Bỏ qua nếu dữ liệu còn trong TTL và không force
-        if (!force && Date.now() - _dashLastFetchedAt < DASH_CACHE_TTL_MS) {
+        if (_dashFetchPromise) {
+            await _dashFetchPromise;
+            if (!_dashLastFetchedAt && !_dashLoadError) return loadDashboardData({ force });
             return;
         }
 
-        _dashFetchPromise = (async () => {
+        // Bỏ qua nếu dữ liệu còn trong TTL và không force
+        if (!force && !_dashLoadError && Date.now() - _dashLastFetchedAt < DASH_CACHE_TTL_MS) {
+            return;
+        }
+
+        const loadVersion = _dashInvalidationVersion;
+        _dashFetchPromise = Promise.resolve().then(async () => {
             try {
                 const client = getSupabaseClient();
                 if (!client) {
-                    console.warn('[Dashboard] Supabase client chưa sẵn sàng.');
-                    return;
+                    throw new Error('Kết nối dữ liệu chưa sẵn sàng.');
                 }
 
+                const store = window.PawpalDataStore;
+                const read = (resource, query, ttlMs = DASH_CACHE_TTL_MS, params = {}) => {
+                    const fetcher = async () => {
+                        const result = await query();
+                        if (result.error) throw result.error;
+                        return result;
+                    };
+                    return store?.fetch
+                        ? store.fetch(dashboardKey(resource, params), fetcher, { ttlMs, force, backgroundRevalidate: false })
+                        : fetcher();
+                };
+                const fetchProducts = async () => {
+                    const result = await client.from('product').select('id, product_name, status, product_variant(id, sku_variant, inventory(quantity_in_stock, minimum_stock))');
+                    // Chỉ dùng truy vấn tương thích khi thiếu quan hệ; danh sách rỗng là hợp lệ.
+                    if (!result.error || !['PGRST200', 'PGRST201'].includes(result.error.code)) return result;
+                    const [products, inventory] = await Promise.all([
+                        client.from('product').select('id, product_name, status, product_variant(id, sku_variant)'),
+                        client.from('inventory').select('product_variant_id, quantity_in_stock, minimum_stock')
+                    ]);
+                    if (products.error || inventory.error) return { error: products.error || inventory.error };
+                    const inventoryByVariant = new Map((inventory.data || []).map(inv => [inv.product_variant_id, inv]));
+                    return { data: (products.data || []).map(product => ({
+                        ...product,
+                        inventory: inventoryByVariant.get(product.product_variant?.[0]?.id) || null
+                    })) };
+                };
                 const fetchDashboardPayload = async () => {
                     const [
                         ordersRes,
@@ -107,23 +173,36 @@
                         productsRes,
                         custCountRes,
                         petCountRes,
-                        profilesRes,
-                        petsRes,
                         staffRes,
                         servicesRes,
                         chatsRes
                     ] = await Promise.all([
-                        client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(2000),
-                        client.from('appointment').select('id, appointment_code, customer_id, pet_id, staff_id, service_id, appointment_date, appointment_time, appointment_status, payment_status, total_price, note').order('appointment_date', { ascending: false }).limit(2000),
-                        client.from('support_ticket').select('id, user_id, title, status, priority, created_at').order('created_at', { ascending: false }).limit(1000),
-                        client.from('product').select('id, product_name, status, product_variant(id, sku_variant, inventory(quantity_in_stock, minimum_stock))'),
-                        client.from('customer').select('id', { count: 'exact', head: true }),
-                        client.from('pet_profile').select('id', { count: 'exact', head: true }),
-                        client.from('customer_profile').select('customer_id, full_name'),
-                        client.from('pet_profile').select('id, pet_name, customer_id, species, breed'),
-                        client.from('staff').select('id, full_name, role, account_status'),
-                        client.from('service').select('id, service_name'),
-                        client.from('chat_conversation').select('id, status, created_at').limit(200)
+                        read('orders', () => client.from('sales_order').select('id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(2000)),
+                        read('appointments', () => client.from('appointment').select('id, appointment_code, customer_id, pet_id, staff_id, service_id, appointment_date, appointment_time, appointment_status, payment_status, total_price, note').order('appointment_date', { ascending: false }).limit(2000)),
+                        read('tickets', () => client.from('support_ticket').select('id, status, title, priority, created_at').order('created_at', { ascending: false }).limit(1000)),
+                        read('products', fetchProducts),
+                        read('customer-count', () => client.from('customer').select('id', { count: 'exact', head: true }), store?.TTL.LIST || 120_000),
+                        read('pet-count', () => client.from('pet_profile').select('id', { count: 'exact', head: true }), store?.TTL.LIST || 120_000),
+                        read('staff', () => client.from('staff').select('id, full_name, role, account_status'), store?.TTL.LIST || 120_000),
+                        read('services', () => client.from('service').select('id, service_name'), store?.TTL.CATALOG || 300_000),
+                        read('chats', () => client.from('chat_conversation').select('id, status').order('created_at', { ascending: false }).limit(200))
+                    ]);
+
+                    // Chỉ lấy tên chủ nuôi và bé có trong lịch, không tải cả hai bảng hồ sơ.
+                    const customerIds = [...new Set((apptsRes.data || []).map(a => a.customer_id).filter(Boolean))].sort();
+                    const petIds = [...new Set((apptsRes.data || []).map(a => a.pet_id).filter(Boolean))].sort();
+                    const readRelated = async (resource, table, idColumn, columns, ids) => {
+                        const pages = [];
+                        for (let offset = 0; offset < ids.length; offset += 100) {
+                            const batch = ids.slice(offset, offset + 100);
+                            const result = await read(resource, () => client.from(table).select(columns).in(idColumn, batch), store?.TTL.LIST || 120_000, { ids: batch.join(',') });
+                            pages.push(...(result.data || []));
+                        }
+                        return pages;
+                    };
+                    const [profiles, pets] = await Promise.all([
+                        readRelated('profiles', 'customer_profile', 'customer_id', 'customer_id, full_name', customerIds),
+                        readRelated('pets', 'pet_profile', 'id', 'id, pet_name', petIds)
                     ]);
 
                     return {
@@ -133,62 +212,36 @@
                         products: productsRes.data || [],
                         custCount: custCountRes.count,
                         petCount: petCountRes.count,
-                        profiles: profilesRes.data || [],
-                        pets: petsRes.data || [],
+                        profiles,
+                        pets,
                         staff: staffRes.data || [],
                         services: servicesRes.data || [],
                         chats: chatsRes.data || []
                     };
                 };
 
-                const data = window.PawpalDataStore?.fetch
-                    ? await window.PawpalDataStore.fetch('dashboard:summary', fetchDashboardPayload, {
-                        ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
-                        force
-                    })
-                    : await fetchDashboardPayload();
+                const data = await fetchDashboardPayload();
 
-                _dashLastFetchedAt = Date.now();
+                _dashLastFetchedAt = loadVersion === _dashInvalidationVersion ? Date.now() : 0;
                 liveSalesOrders = data.orders || [];
                 liveAppointments = data.appts || [];
                 liveTickets = data.tickets || [];
                 liveProducts = data.products || [];
 
-                // Fallback nếu relation inventory không liên kết trực tiếp
-                if (liveProducts.length === 0) {
-                    const [productFallback, inventoryFallback] = await Promise.all([
-                        client.from('product').select('id, product_name, status, product_variant(id, sku_variant)'),
-                        client.from('inventory').select('product_variant_id, quantity_in_stock, minimum_stock')
-                    ]);
-                    if (!productFallback.error && !inventoryFallback.error) {
-                        const inventoryByVariant = new Map((inventoryFallback.data || []).map(inv => [inv.product_variant_id, inv]));
-                        liveProducts = (productFallback.data || []).map(product => {
-                            const firstVarId = product.product_variant?.[0]?.id;
-                            return {
-                                ...product,
-                                sku: product.product_variant?.[0]?.sku_variant || 'SKU-000',
-                                inventory: inventoryByVariant.get(firstVarId) || null
-                            };
-                        });
-                    }
-                } else {
-                    liveProducts = liveProducts.map(p => {
-                        const firstVar = p.product_variant?.[0];
-                        const inv = p.inventory || (firstVar && Array.isArray(firstVar.inventory) ? firstVar.inventory[0] : firstVar?.inventory) || null;
-                        return {
-                            ...p,
-                            sku: p.sku || firstVar?.sku_variant || 'SKU-000',
-                            inventory: inv
-                        };
-                    });
-                }
+                liveProducts = liveProducts.map(p => {
+                    const firstVar = p.product_variant?.[0];
+                    const inv = p.inventory || (firstVar && Array.isArray(firstVar.inventory) ? firstVar.inventory[0] : firstVar?.inventory) || null;
+                    return {
+                        ...p,
+                        sku: p.sku || firstVar?.sku_variant || 'SKU-000',
+                        inventory: inv
+                    };
+                });
 
                 liveStaffList = data.staff || [];
                 liveChatConversations = data.chats || [];
                 const profiles = data.profiles || [];
-                liveCustomersCount = data.custCount !== null && data.custCount !== undefined && data.custCount > 0
-                    ? data.custCount
-                    : profiles.length;
+                liveCustomersCount = data.custCount ?? 0;
                 livePetsCount = data.petCount !== null && data.petCount !== undefined ? data.petCount : 0;
 
                 // Maps tra cứu nhanh
@@ -220,7 +273,7 @@
             } finally {
                 _dashFetchPromise = null;
             }
-        })();
+        });
 
         return _dashFetchPromise;
     }
@@ -233,27 +286,18 @@
 
         // 1. Doanh thu hôm nay (chỉ tính đơn bán hàng và ca dịch vụ đã thanh toán thành công, loại trừ đơn hủy/hoàn tiền)
         const todayOrders = liveSalesOrders.filter(o => {
-            const dateStr = o.created_at ? o.created_at.substring(0, 10) : '';
+            const dateStr = toDateKey(o.created_at);
             return dateStr === todayStr;
         });
 
         const todayOrderRevenue = todayOrders
-            .filter(o => {
-                const s = (o.order_status || '').toUpperCase();
-                const p = (o.payment_status || '').toUpperCase();
-                if (s === 'CANCELLED' || s === 'DA_HUY' || s === 'REFUNDED' || s === 'DA_HOAN_TIEN' || p === 'REFUNDED') return false;
-                return p === 'PAID' || p === 'DA_THANH_TOAN' || ((s === 'COMPLETED' || s === 'DELIVERED' || s === 'DA_GIAO' || s === 'DA_GIAO_HANG') && p !== 'UNPAID' && p !== 'CHUA_THANH_TOAN' && p !== 'COD_PENDING');
-            })
+            .filter(orderCountsAsRevenue)
             .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
 
         const todayServiceRevenue = liveAppointments
             .filter(a => {
                 const isToday = toDateKey(a.appointment_date) === todayStr;
-                const s = (a.appointment_status || a.status || '').toUpperCase();
-                const p = (a.payment_status || '').toUpperCase();
-                const isCompleted = s === 'COMPLETED' || s === 'DA_HOAN_THANH' || s === 'DA_HOAN_TAT';
-                const isPaid = p === 'PAID' || p === 'DA_THANH_TOAN';
-                return isToday && isCompleted && isPaid;
+                return isToday && appointmentCountsAsRevenue(a);
             })
             .reduce((sum, a) => sum + (parseFloat(a.total_price || a.price || 0) || 0), 0);
 
@@ -275,12 +319,12 @@
         // 4. Khiếu nại chờ xử lý (hỗ trợ cả cột status và ticket_status từ Supabase support_ticket)
         const pendingTickets = liveTickets.filter(t => {
             const s = (t.status || t.ticket_status || '').toUpperCase();
-            return s === 'OPEN' || s === 'IN_PROGRESS' || s === 'PENDING' || s === 'NEW' || s === 'PROCESSING' || s === 'MO' || s === 'DANG_XU_LY' || s === 'CHO_KHACH_HANG';
+            return s === 'OPEN' || s === 'IN_PROGRESS' || s === 'PENDING' || s === 'NEW' || s === 'PROCESSING' || s === 'MO' || s === 'DANG_XU_LY' || s === 'CHO_XU_LY' || s === 'CHO_KHACH_HANG';
         });
 
         // Render DOM 5 thẻ KPI (100% số liệu thực)
         // E2E-12D: Chốt chặn kiểm tra quyền hạn tài chính
-        const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'STAFF').toUpperCase();
+        const userRole = dashboardRole();
         const canViewFinancials = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'ACCOUNTANT';
 
         const elRevenue = document.getElementById('dashboardRevenue');
@@ -346,43 +390,32 @@
         const alertBanner = document.getElementById('dashboardAlertBanner');
         const alertText = document.getElementById('dashboardAlertText');
         const alertBtn = document.getElementById('dashboardAlertAction');
+        const urgentTicket = pendingTickets.find(t => {
+            const priority = String(t.priority || '').toLowerCase();
+            return priority === 'khan_cap' || priority === 'critical' || priority.includes('khẩn') || priority.includes('urgent');
+        });
         if (alertBanner && alertText && alertBtn) {
             if (_dashLoadError) {
                 alertBanner.style.display = 'flex';
                 alertText.textContent = `Cảnh báo hệ thống: ${_dashLoadError}. Đang tạm dừng hiển thị số liệu đồng bộ.`;
                 alertBtn.textContent = 'Thử lại';
                 alertBtn.onclick = () => window.PawpalDashboard?.refresh();
-            } else if (pendingTickets.length > 0) {
-                const urgentTicket = pendingTickets.find(t => {
-                    const p = (t.priority || '').toLowerCase();
-                    return p === 'khan_cap' || p.includes('khẩn') || p.includes('urgent');
-                }) || pendingTickets[0];
+            } else if (urgentTicket) {
                 alertBanner.style.display = 'flex';
                 alertBtn.textContent = 'Xử lý ngay';
-                if (urgentTicket) {
-                    const ticketCode = (urgentTicket.id || '').slice(0, 8).toUpperCase();
-                    const ticketTitle = urgentTicket.title || 'Khiếu nại khách hàng';
-                    const createdTime = urgentTicket.created_at ? new Date(urgentTicket.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '';
-                    const timeText = createdTime ? ` lúc ${createdTime}` : '';
-                    alertText.textContent = `Cảnh báo vận hành: Ticket #${ticketCode} (${ticketTitle}${timeText}) - Mức độ: ${urgentTicket.priority || 'Khẩn cấp'} cần xử lý gấp! (Tổng ${pendingTickets.length} ticket chờ)`;
-                    alertBtn.onclick = () => {
-                        sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-detail');
-                        sessionStorage.setItem('pawpal_admin_complaint_selected_id', urgentTicket.id);
-                        sessionStorage.setItem('pawpal_admin_complaint_filter_status', 'pending');
-                        const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
-                            .find(b => b.getAttribute('data-title') === 'Khiếu nại');
-                        if (target) target.click();
-                    };
-                } else {
-                    alertText.textContent = `Cảnh báo vận hành: Có ${pendingTickets.length} khiếu nại khách hàng đang chờ xử lý SLA khẩn cấp!`;
-                    alertBtn.onclick = () => {
-                        sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-services');
-                        sessionStorage.setItem('pawpal_admin_complaint_filter_status', 'pending');
-                        const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
-                            .find(b => b.getAttribute('data-title') === 'Khiếu nại');
-                        if (target) target.click();
-                    };
-                }
+                const ticketCode = (urgentTicket.id || '').slice(0, 8).toUpperCase();
+                const ticketTitle = urgentTicket.title || 'Khiếu nại khách hàng';
+                const createdTime = urgentTicket.created_at ? new Date(urgentTicket.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '';
+                const timeText = createdTime ? ` lúc ${createdTime}` : '';
+                alertText.textContent = `Khiếu nại khẩn cấp #${ticketCode}: ${ticketTitle}${timeText}. Tổng ${pendingTickets.length} khiếu nại đang chờ.`;
+                alertBtn.onclick = () => {
+                    sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-detail');
+                    sessionStorage.setItem('pawpal_admin_complaint_selected_id', urgentTicket.id);
+                    sessionStorage.setItem('pawpal_admin_complaint_filter_status', 'pending');
+                    const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
+                        .find(b => b.getAttribute('data-title') === 'Khiếu nại');
+                    if (target) target.click();
+                };
             } else {
                 alertBanner.style.display = 'none';
             }
@@ -496,7 +529,7 @@
         const chart = document.getElementById('dashboardRevenueChart');
         if (!chart) return;
 
-        const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'ADMIN').toUpperCase();
+        const userRole = dashboardRole();
         const canViewFinancials = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'ACCOUNTANT';
         if (!canViewFinancials) {
             chart.innerHTML = '<div style="padding: 48px; text-align: center; color: var(--text-muted); font-size: 13.5px;">Biểu đồ doanh thu tài chính chỉ dành riêng cho Quản lý / Kế toán.</div>';
@@ -533,35 +566,25 @@
         });
 
         // Tính doanh thu theo ngày từ các đơn hàng đã thanh toán và lịch dịch vụ hoàn tất đã thanh toán
-        const completedOrders = liveSalesOrders.filter(o => {
-            const s = (o.order_status || '').toUpperCase();
-            const p = (o.payment_status || '').toUpperCase();
-            if (s === 'CANCELLED' || s === 'DA_HUY' || s === 'REFUNDED' || s === 'DA_HOAN_TIEN' || p === 'REFUNDED') return false;
-            return p === 'PAID' || p === 'DA_THANH_TOAN' || ((s === 'COMPLETED' || s === 'DELIVERED' || s === 'DA_GIAO') && p !== 'UNPAID' && p !== 'CHUA_THANH_TOAN' && p !== 'COD_PENDING');
-        });
-
-        const completedAppts = liveAppointments.filter(a => {
-            const s = (a.appointment_status || '').toUpperCase();
-            const p = (a.payment_status || '').toUpperCase();
-            return (s === 'COMPLETED' || s === 'DA_HOAN_THANH') && (p === 'PAID' || p === 'DA_THANH_TOAN');
-        });
+        const completedOrders = liveSalesOrders.filter(orderCountsAsRevenue);
+        const completedAppts = liveAppointments.filter(appointmentCountsAsRevenue);
 
         const currentWeek = currentWeekDays.map(dateStr => {
             const orderSum = completedOrders
-                .filter(o => o.created_at && o.created_at.substring(0, 10) === dateStr)
+                .filter(o => toDateKey(o.created_at) === dateStr)
                 .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
             const apptSum = completedAppts
-                .filter(a => (toDateKey(a.appointment_date) === dateStr || toDateKey(a.created_at) === dateStr))
+                .filter(a => toDateKey(a.appointment_date || a.created_at) === dateStr)
                 .reduce((sum, a) => sum + (parseFloat(a.total_price || a.price || 0) || 0), 0);
             return (orderSum + apptSum) / 100000; // Đơn vị: 100k
         });
 
         const previousWeek = previousWeekDays.map(dateStr => {
             const orderSum = completedOrders
-                .filter(o => o.created_at && o.created_at.substring(0, 10) === dateStr)
+                .filter(o => toDateKey(o.created_at) === dateStr)
                 .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
             const apptSum = completedAppts
-                .filter(a => (a.appointment_date === dateStr || (a.created_at && a.created_at.substring(0, 10) === dateStr)))
+                .filter(a => toDateKey(a.appointment_date || a.created_at) === dateStr)
                 .reduce((sum, a) => sum + (parseFloat(a.total_price || a.price || 0) || 0), 0);
             return (orderSum + apptSum) / 100000;
         });
@@ -619,7 +642,12 @@
     // -------------------------------------------------------------
     // 4. RENDER LỊCH HẸN VÀ AGENDA THỰC TẾ (THÁNG / TUẦN / NGÀY)
     // -------------------------------------------------------------
+    let refreshDashboardCalendar = null;
     function setupDashboardCalendar() {
+        if (refreshDashboardCalendar) {
+            refreshDashboardCalendar();
+            return;
+        }
         const monthLabel = document.getElementById('dashboardCalendarMonth');
         const daysGrid = document.getElementById('dashboardCalendarDays');
         const weekdays = document.getElementById('dashboardCalendarWeekdays');
@@ -997,6 +1025,7 @@
             });
         });
 
+        refreshDashboardCalendar = renderCalendar;
         renderCalendar();
     }
 
@@ -1262,6 +1291,45 @@
     // GIAI ĐOẠN 4: REALTIME CHANNEL LẮNG NGHE DỮ LIỆU THAY ĐỔI
     // -------------------------------------------------------------
     let dashboardRealtimeSub = null;
+    const dashboardTableResources = {
+        sales_order: ['orders'],
+        appointment: ['appointments'],
+        support_ticket: ['tickets'],
+        customer: ['customer-count', 'profiles'],
+        customer_profile: ['profiles'],
+        pet_profile: ['pet-count', 'pets'],
+        product: ['products'],
+        product_variant: ['products'],
+        inventory: ['products'],
+        staff: ['staff'],
+        service: ['services'],
+        chat_conversation: ['chats']
+    };
+
+    function renderDashboardData() {
+        renderDashboardKPIs();
+        renderDashboardStockList();
+        renderRevenueChart();
+        renderChatbotAndStaffMetrics();
+        setupDashboardCalendar();
+    }
+
+    function scheduleDashboardSync(resources) {
+        invalidateDashboardResources(resources);
+        if (window.PawpalDataStore?.handleRealtimeChange) {
+            window.PawpalDataStore.handleRealtimeChange({
+                moduleName: 'Dashboard',
+                onActiveRefresh: async () => {
+                    await loadDashboardData();
+                    renderDashboardData();
+                },
+                debounceMs: 500
+            });
+        } else if (!document.hidden && sessionStorage.getItem('pawpal_admin_active_module') === 'Dashboard') {
+            loadDashboardData().then(renderDashboardData);
+        }
+    }
+
     function setupDashboardRealtimeSync() {
         const client = getSupabaseClient();
         if (!client || typeof client.channel !== 'function') return;
@@ -1272,76 +1340,13 @@
                 window.PawpalDataStore?.recordMetric?.('channel-remove', 'admin-dashboard-live-sync');
             }
 
-            const triggerSync = (invalidatePattern, refreshFn) => {
-                if (window.PawpalDataStore?.handleRealtimeChange) {
-                    window.PawpalDataStore.handleRealtimeChange({
-                        moduleName: 'Dashboard',
-                        invalidatePattern: invalidatePattern || 'dashboard:*',
-                        onActiveRefresh: async () => {
-                            await loadDashboardData({ force: true });
-                            if (typeof refreshFn === 'function') {
-                                refreshFn();
-                            } else {
-                                renderDashboardKPIs();
-                                renderDashboardStockList();
-                                renderRevenueChart();
-                                renderChatbotAndStaffMetrics();
-                            }
-                        },
-                        debounceMs: 300
-                    });
-                } else if (sessionStorage.getItem('pawpal_admin_active_module') === 'Dashboard') {
-                    loadDashboardData({ force: true }).then(() => {
-                        if (refreshFn) refreshFn();
-                    });
-                }
-            };
-
-            dashboardRealtimeSub = client.channel('admin-dashboard-live-sync')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_order' }, () => {
-                    triggerSync('dashboard:*', () => {
-                        renderDashboardKPIs();
-                        renderRevenueChart();
-                    });
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment' }, () => {
-                    triggerSync('dashboard:*', () => {
-                        renderDashboardKPIs();
-                        setupDashboardCalendar();
-                        renderChatbotAndStaffMetrics();
-                    });
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, () => {
-                    triggerSync('dashboard:*', () => {
-                        renderDashboardKPIs();
-                    });
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer' }, () => {
-                    triggerSync('dashboard:*', () => {
-                        renderDashboardKPIs();
-                    });
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_profile' }, () => {
-                    triggerSync('dashboard:*', () => {
-                        renderDashboardKPIs();
-                    });
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'product' }, () => {
-                    triggerSync('dashboard:*', () => {
-                        renderDashboardStockList();
-                    });
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => {
-                    triggerSync('dashboard:*', () => {
-                        renderDashboardStockList();
-                    });
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_conversation' }, () => {
-                    triggerSync('dashboard:*', () => {
-                        renderChatbotAndStaffMetrics();
-                    });
-                })
-                .subscribe();
+            dashboardRealtimeSub = client.channel('admin-dashboard-live-sync');
+            Object.entries(dashboardTableResources).forEach(([table, resources]) => {
+                dashboardRealtimeSub.on('postgres_changes', { event: '*', schema: 'public', table }, () => {
+                    scheduleDashboardSync(resources);
+                });
+            });
+            dashboardRealtimeSub.subscribe();
 
             window.PawpalDataStore?.recordMetric?.('channel-add', 'admin-dashboard-live-sync');
         } catch (e) {
@@ -1358,12 +1363,13 @@
         if (_isDashboardInit) {
             // Đã khởi tạo DOM và event listeners — chỉ re-render dữ liệu
             if (Date.now() - _dashLastFetchedAt >= DASH_CACHE_TTL_MS) {
-                await loadDashboardData({ force: true });
+                await loadDashboardData();
             }
             renderDashboardKPIs();
             renderDashboardStockList();
             renderRevenueChart();
             renderChatbotAndStaffMetrics();
+            setupDashboardCalendar();
             return;
         }
 
@@ -1379,44 +1385,38 @@
         bindModuleNavigation();
         setupDashboardRealtimeSync();
 
-        window.addEventListener('visibilitychange', () => {
+        document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'hidden') {
                 _dashHiddenAt = Date.now();
             }
         });
 
         window.addEventListener('focus', async () => {
+            if (document.hidden || sessionStorage.getItem('pawpal_admin_active_module') !== 'Dashboard') return;
             // Chỉ reload nếu tab đã bị ẩn tối thiểu 5 phút
             const hiddenDuration = Date.now() - _dashHiddenAt;
             if (_dashHiddenAt === 0 || hiddenDuration < DASH_FOCUS_RELOAD_AFTER_MS) return;
             _dashHiddenAt = 0;
-            await loadDashboardData({ force: true });
+            await loadDashboardData();
             try { renderDashboardKPIs(); } catch (e) {}
             try { renderDashboardStockList(); } catch (e) {}
             try { renderRevenueChart(); } catch (e) {}
             try { renderChatbotAndStaffMetrics(); } catch (e) {}
+            try { setupDashboardCalendar(); } catch (e) {}
         });
 
         // Lắng nghe sự kiện biến động dữ liệu từ DataStore (PERF-03.D05)
         window.addEventListener('pawpal:mutation', (e) => {
-            const table = e.detail?.table;
-            if (['sales_order', 'appointment', 'support_ticket', 'product', 'inventory', 'customer', 'pet_profile'].includes(table)) {
-                window.PawpalDataStore?.invalidate?.('dashboard:*');
+            const entityTables = { order: 'sales_order', pet: 'pet_profile', ticket: 'support_ticket' };
+            const table = e.detail?.table || entityTables[e.detail?.entity] || e.detail?.entity;
+            if (dashboardTableResources[table]) {
+                scheduleDashboardSync(dashboardTableResources[table]);
             }
         });
 
         // [D-11] Lắng nghe sự kiện biến động dữ liệu từ phân hệ khác để tự động xóa cache Dashboard
-        window.addEventListener('pawpal:invalidate-dashboard-cache', async () => {
-            _dashLastFetchedAt = 0;
-            window.PawpalDataStore?.invalidate?.('dashboard:*');
-            const dashEl = document.querySelector('.dashboard-module') || document.getElementById('moduleDashboard');
-            if (dashEl && dashEl.style.display !== 'none') {
-                await loadDashboardData({ force: true });
-                try { renderDashboardKPIs(); } catch (e) {}
-                try { renderDashboardStockList(); } catch (e) {}
-                try { renderRevenueChart(); } catch (e) {}
-                try { renderChatbotAndStaffMetrics(); } catch (e) {}
-            }
+        window.addEventListener('pawpal:invalidate-dashboard-cache', () => {
+            scheduleDashboardSync([...new Set(Object.values(dashboardTableResources).flat())]);
         });
     }
 
@@ -1430,6 +1430,7 @@
             renderDashboardStockList();
             renderRevenueChart();
             renderChatbotAndStaffMetrics();
+            setupDashboardCalendar();
         },
         getLastUpdatedTime: function() {
             return _dashLastFetchedAt ? new Date(_dashLastFetchedAt).toLocaleTimeString('vi-VN') : 'Chưa cập nhật';

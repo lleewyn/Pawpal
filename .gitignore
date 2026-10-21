@@ -11,3 +11,7 @@ dist
 scratch/
 *-verified.png
 artifacts/
+.vercel
+.env*
+*.private.*
+*.dump

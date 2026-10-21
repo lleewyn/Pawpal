@@ -34,7 +34,7 @@
         const today = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
         const todayTime = Date.parse(today + 'T00:00:00+07:00');
 
-        if ((!PawpalPets.state.appointments || PawpalPets.state.appointments.length === 0) && typeof PawpalPets.fetchRemindersAppointments === 'function' && !PawpalPets.state._remindersFetching) {
+        if (PawpalPets.state.remindersLoadStatus !== 'loaded' && PawpalPets.state.remindersLoadStatus !== 'error' && typeof PawpalPets.fetchRemindersAppointments === 'function' && !PawpalPets.state._remindersFetching) {
             PawpalPets.state._remindersFetching = true;
             PawpalPets.fetchRemindersAppointments().then(() => {
                 PawpalPets.state._remindersFetching = false;
@@ -42,6 +42,7 @@
                 updateRemindersKPIs();
             }).catch(() => {
                 PawpalPets.state._remindersFetching = false;
+                renderRemindersTable();
             });
         }
 
@@ -227,8 +228,8 @@
         const reminderFilterStatus = document.getElementById('reminderFilterStatus');
 
         if (!reminderTableTbody) return;
-        if (!PawpalPets.state.isLoaded || PawpalPets.state.loadError) {
-            if (PawpalPets.state.loadError) reminderTableTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;">Không thể tải nhắc lịch. Vui lòng tải lại trang.</td></tr>';
+        if (!PawpalPets.state.isLoaded || PawpalPets.state.loadError || PawpalPets.state.remindersLoadStatus === 'error') {
+            if (PawpalPets.state.loadError || PawpalPets.state.remindersLoadStatus === 'error') reminderTableTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;">Không thể tải nhắc lịch. Vui lòng tải lại trang.</td></tr>';
             else if (!reminderTableTbody.querySelector('.skeleton-row')) window.PawpalAdmin?.renderTableSkeleton?.(reminderTableTbody, {columns:6});
             return;
         }

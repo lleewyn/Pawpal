@@ -77,10 +77,10 @@
 
         const allCusts = Object.values(PawpalCustomers.state.customerDatabase || {});
         const totalCount = allCusts.length;
-        const memberCount = allCusts.filter(c => c.status === 'ACTIVE').length;
+        const memberCount = allCusts.filter(c => c.isMember).length;
         const guestCount = allCusts.filter(c => c.status === 'TEMP').length;
         const lockedCount = allCusts.filter(c => c.status === 'LOCKED').length;
-        const complaintCount = allCusts.filter(c => c.emergencyAlert || (c.complaints && c.complaints.some(tc => tc.status === 'Đang xử lý'))).length;
+        const complaintCount = allCusts.filter(c => c.complaints?.some(tc => !tc.isClosed)).length;
 
         if (totalEl) totalEl.textContent = totalCount.toLocaleString('vi-VN');
         if (memberEl) memberEl.textContent = memberCount.toLocaleString('vi-VN');
@@ -189,38 +189,7 @@
 
         const allCusts = Object.values(PawpalCustomers.state.customerDatabase || {});
 
-        const filtered = allCusts.filter(c => {
-            let matchQuery = !query;
-            if (query) {
-                const qParts = query.includes(' - ') ? query.split(' - ').map(s => s.trim()) : [query];
-                matchQuery = qParts.some(part => 
-                    PawpalCustomers.matchSearch(c.id, part) ||
-                    PawpalCustomers.matchSearch(c.name, part) ||
-                    PawpalCustomers.matchSearch(c.phone, part) ||
-                    PawpalCustomers.matchSearch(c.email, part) ||
-                    (c.pets && c.pets.some(p => PawpalCustomers.matchSearch(p.name, part) || PawpalCustomers.matchSearch(p.breed, part) || PawpalCustomers.matchSearch(p.species, part)))
-                );
-            }
-
-            const matchTier = (selectedTier === 'ALL') || (c.tier === selectedTier);
-
-            let matchCategory = true;
-            if (currentCustomerFilter === 'MEMBER') {
-                matchCategory = (c.status === 'ACTIVE');
-            } else if (currentCustomerFilter === 'TEMP') {
-                matchCategory = (c.status === 'TEMP');
-            } else if (currentCustomerFilter === 'LOCKED') {
-                matchCategory = (c.status === 'LOCKED' || c.status === 'SUSPENDED');
-            } else if (currentCustomerFilter === 'COMPLAINT') {
-                matchCategory = Boolean(c.emergencyAlert || (c.complaints && c.complaints.some(tc => tc.status !== 'Đã giải quyết')));
-            }
-
-            const matchStatus = (selectedStatus === 'ALL') || 
-                (selectedStatus === 'LOCKED' && (c.status === 'LOCKED' || c.status === 'SUSPENDED')) ||
-                (c.status === selectedStatus);
-
-            return matchQuery && matchTier && matchCategory && matchStatus;
-        });
+        const filtered = getCustomersInCurrentFilter();
 
         const totalPages = Math.ceil(filtered.length / CUSTOMER_PAGE_SIZE) || 1;
         if (currentCustomerPage > totalPages) currentCustomerPage = totalPages;
@@ -232,7 +201,7 @@
             tbody.innerHTML = `
                 <tr>
                     <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px; font-size: 13.5px;">
-                        Không tìm thấy khách hàng nào phù hợp với bộ lọc hiện tại. 
+                        Không tìm thấy khách hàng nào phù hợp với bộ lọc hiện tại.
                         <button type="button" id="btnResetCustomerFilters" style="background: none; border: none; color: #236B48; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 0 4px; font-size: 13.5px;">Xóa bộ lọc</button>
                     </td>
                 </tr>
@@ -245,7 +214,7 @@
         tbody.innerHTML = pageItems.map(c => {
             const isSuspended = (c.status === 'SUSPENDED');
             const isLocked = (c.status === 'LOCKED') || isSuspended;
-            const activeComplaint = c.complaints && c.complaints.find(tc => tc.status !== 'Đã giải quyết');
+            const activeComplaint = c.complaints && c.complaints.find(tc => !tc.isClosed);
             const hasEmergency = Boolean(c.emergencyAlert || activeComplaint);
             const alertPet = (c.pets && Array.isArray(c.pets)) ? c.pets.find(p => isRealPetAlert(p.alertNote)) : null;
             const hasPetAlert = Boolean(alertPet);
@@ -271,7 +240,7 @@
                 alertBadgeHtml = `<span class="alert-indicator text-warning">• ${esc(alertPet.name)}: ${esc(alertPet.alertNote)}</span>`;
             }
 
-            let statusBadgeHtml = '<span class="admin-badge badge-success">Thành viên</span>';
+            let statusBadgeHtml = '<span class="admin-badge badge-success">Đang hoạt động</span>';
             if (isSuspended) {
                 statusBadgeHtml = '<span class="admin-badge badge-warning">Tạm khóa</span>';
             } else if (c.status === 'LOCKED') {
@@ -282,15 +251,13 @@
 
             const subCellHtml = c.status === 'TEMP'
                 ? 'Khách vãng lai tại quầy'
-                : (c.email && c.email !== 'Chưa cập nhật' ? esc(c.email) : 'Thành viên');
+                : (c.email && c.email !== 'Chưa cập nhật' ? esc(c.email) : 'Chưa cập nhật email');
 
-            const tierPointsHtml = c.status === 'TEMP'
-                ? `<span class="admin-badge badge-neutral">Vãng lai</span><span class="points-val" style="color: var(--text-muted); opacity: 0.6;">0 điểm</span>`
-                : `<span class="admin-badge ${esc(c.tierBadgeClass || 'badge-tier-silver')}">${esc(c.tierName || 'Bạc')}</span><span class="points-val">${(c.points || 0).toLocaleString('vi-VN')} điểm</span>`;
+            const tierPointsHtml = `<span class="admin-badge ${esc(c.tierBadgeClass || 'badge-neutral')}">${esc(c.tierName || 'Chưa có hạng')}</span><span class="points-val">${(c.points || 0).toLocaleString('vi-VN')} điểm</span>`;
 
             return `
                 <tr class="${rowLockedClass} ${rowComplaintClass}" data-id="${esc(c.id)}">
-                    <td style="${firstTdBorder}"><strong>${esc(c.id)}</strong></td>
+                    <td style="${firstTdBorder}"><strong class="customer-code-text" title="${esc(c.id)}">${esc(c.id)}</strong></td>
                     <td>
                         <div class="user-name-cell">
                             <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="${esc(c.id)}">${esc(c.name)}</a>
@@ -325,7 +292,7 @@
         const activeComplaints = [];
         Object.values(PawpalCustomers.state.customerDatabase || {}).forEach(cust => {
             if (cust.complaints && cust.complaints.length > 0) {
-                cust.complaints.filter(tc => tc.status === 'Đang xử lý').forEach(tc => {
+                cust.complaints.filter(tc => !tc.isClosed).forEach(tc => {
                     activeComplaints.push({
                         id: cust.id,
                         name: cust.name,
@@ -344,10 +311,10 @@
         if (bar) bar.style.display = 'flex';
 
         container.innerHTML = activeComplaints.map(item => `
-            <div class="complaint-item-tag" data-id="${item.id}" title="Xem hồ sơ ${item.name} (${item.ticket})">
-                <span class="tag-ticket">${item.ticket}</span>
-                <span class="tag-cust">${item.name}</span>
-                <span class="tag-reason">(${item.reason})</span>
+            <div class="complaint-item-tag" data-id="${esc(item.id)}" title="Xem hồ sơ ${esc(item.name)} (${esc(item.ticket)})">
+                <span class="tag-ticket">${esc(item.ticket)}</span>
+                <span class="tag-cust">${esc(item.name)}</span>
+                <span class="tag-reason">(${esc(item.reason)})</span>
             </div>
         `).join('');
 
@@ -428,10 +395,10 @@
         if (lockItem && lockText) {
             if (cust.status === 'LOCKED') {
                 lockItem.className = 'dropdown-item text-success';
-                lockText.textContent = 'Mở khóa tài khoản';
+                lockText.textContent = 'Mở khóa hồ sơ';
             } else {
                 lockItem.className = 'dropdown-item text-danger';
-                lockText.textContent = 'Khóa tài khoản';
+                lockText.textContent = 'Khóa hồ sơ';
             }
         }
 
@@ -465,13 +432,38 @@
         const selectedStatus = document.getElementById('custFilterStatus')?.value || 'ALL';
 
         return Object.values(PawpalCustomers.state.customerDatabase || {}).filter(c => {
-            const matchesQuery = !query || [c.id, c.name, c.phone, c.email, ...(c.pets || []).flatMap(p => [p.name, p.breed, p.species])]
-                .some(value => PawpalCustomers.matchSearch(value, query));
-            const matchesTier = selectedTier === 'ALL' || c.tier === selectedTier;
-            const matchesStatus = selectedStatus === 'ALL' || c.status === selectedStatus;
-            const matchesCategory = currentCustomerFilter !== 'COMPLAINT' || Boolean(c.emergencyAlert || (c.complaints || []).some(t => t.status !== 'Đã giải quyết'));
-            return matchesQuery && matchesTier && matchesStatus && matchesCategory;
+            let matchQuery = !query;
+            if (query) {
+                const qParts = query.includes(' - ') ? query.split(' - ').map(s => s.trim()) : [query];
+                matchQuery = qParts.some(part =>
+                    PawpalCustomers.matchSearch(c.id, part) ||
+                    PawpalCustomers.matchSearch(c.name, part) ||
+                    PawpalCustomers.matchSearch(c.phone, part) ||
+                    PawpalCustomers.matchSearch(c.email, part) ||
+                    (c.pets && c.pets.some(p => PawpalCustomers.matchSearch(p.name, part) || PawpalCustomers.matchSearch(p.breed, part) || PawpalCustomers.matchSearch(p.species, part)))
+                );
+            }
+
+            const matchTier = (selectedTier === 'ALL') || (c.tier === selectedTier);
+
+            let matchCategory = true;
+            if (currentCustomerFilter === 'MEMBER') {
+                matchCategory = c.isMember;
+            } else if (currentCustomerFilter === 'TEMP') {
+                matchCategory = (c.status === 'TEMP');
+            } else if (currentCustomerFilter === 'LOCKED') {
+                matchCategory = (c.status === 'LOCKED' || c.status === 'SUSPENDED');
+            } else if (currentCustomerFilter === 'COMPLAINT') {
+                matchCategory = Boolean(c.complaints?.some(tc => !tc.isClosed));
+            }
+
+            const matchStatus = (selectedStatus === 'ALL') ||
+                (selectedStatus === 'LOCKED' && (c.status === 'LOCKED' || c.status === 'SUSPENDED')) ||
+                (c.status === selectedStatus);
+
+            return matchQuery && matchTier && matchCategory && matchStatus;
         });
+
     }
 
     function exportCustomersToCSV() {
@@ -505,8 +497,8 @@
             const defaultAddr = (c.addresses || []).find(a => a.isDefault)?.address || (c.addresses?.[0]?.address || '');
             const statusText = c.status === 'ACTIVE' ? 'Đang hoạt động' : (c.status === 'TEMP' ? 'Tài khoản tạm' : 'Bị khóa');
             const cleanPhone = (c.phone || '').trim();
-            const phoneDisplay = canViewFullPii 
-                ? cleanPhone 
+            const phoneDisplay = canViewFullPii
+                ? cleanPhone
                 : (cleanPhone.length >= 7 ? cleanPhone.slice(0, 3) + '••••' + cleanPhone.slice(-3) : '••••');
 
             return [
@@ -585,91 +577,56 @@
         if (btnCloseAdd) btnCloseAdd.addEventListener('click', closeAddModal);
         if (btnCancelAdd) btnCancelAdd.addEventListener('click', closeAddModal);
 
-        // Autocomplete Giống loài thông minh từ CSDL cho Modal Thêm khách hàng
-        const quickAddBreedInput = document.getElementById('quickAddPetBreed');
-        const quickAddBreedDropdown = document.getElementById('quickAddPetBreedDropdown');
-        const quickAddSpeciesSelect = document.getElementById('quickAddPetSpecies');
-
-        if (quickAddBreedInput && quickAddBreedDropdown) {
-            const popularBreedsMap = {
-                'DOG': ['Corgi', 'Poodle', 'Golden Retriever', 'Phốc sóc', 'Pug', 'Husky', 'Shiba Inu', 'Beagle', 'Alaska', 'Samoyed', 'Chó cỏ / Ta'],
-                'CAT': ['Mèo Anh lông ngắn (ALN)', 'Mèo Anh lông dài (ALD)', 'Mèo Ba Tư', 'Mèo Ragdoll', 'Mèo Xiêm', 'Mèo Bengal', 'Mèo Sphynx', 'Mèo Ta / Mướp'],
-                'OTHER': ['Thỏ kiểng', 'Hamster Bear', 'Bọ ú (Guinea Pig)', 'Sóc bay Úc', 'Chinchilla']
-            };
-
-            function getBreedsList() {
-                const rawSp = (quickAddSpeciesSelect?.value || 'DOG').toUpperCase();
-                const spKey = rawSp === 'CAT' ? 'CAT' : (rawSp === 'OTHER' ? 'OTHER' : 'DOG');
-                const baseList = popularBreedsMap[spKey] || popularBreedsMap['DOG'];
-
-                // Tổng hợp thêm giống loài từ các bé cưng hiện có trong CSDL
-                const dbCounts = {};
-                const allCustomers = Object.values(PawpalCustomers.state?.customerDatabase || {});
-                allCustomers.forEach(cust => {
-                    (cust.pets || []).forEach(pet => {
-                        const br = (pet.breed || '').trim();
-                        if (!br || /^\d+$/.test(br) || /^(chưa rõ|chưa cập nhật|unknown|khác|undefined|null)$/i.test(br)) return;
-                        dbCounts[br] = (dbCounts[br] || 0) + 1;
-                    });
-                });
-
-                const allBreeds = Array.from(new Set([...Object.keys(dbCounts), ...baseList]));
-                return allBreeds.map(name => ({
-                    name,
-                    count: dbCounts[name] || 0,
-                    speciesLabel: spKey === 'CAT' ? 'Giống mèo' : (spKey === 'OTHER' ? 'Thú cưng nhỏ' : 'Giống cún')
-                })).sort((a, b) => b.count - a.count);
-            }
-
-            function renderBreedDropdown(query) {
-                const q = (query || '').toLowerCase().trim();
-                const list = getBreedsList().filter(b => !q || b.name.toLowerCase().includes(q));
-
-                if (list.length === 0) {
-                    quickAddBreedDropdown.innerHTML = '<div class="autocomplete-empty">Không tìm thấy giống có sẵn. Bạn có thể tự do gõ tên giống mới!</div>';
-                } else {
-                    quickAddBreedDropdown.innerHTML = list.map(b => {
-                        const badgeText = b.count > 0 ? `${b.count} bé trong tiệm` : 'Phổ biến';
-                        return `
-                            <div class="autocomplete-item" data-value="${b.name}">
-                                <div class="autocomplete-meta">
-                                    <div class="autocomplete-item-name">${b.name}</div>
-                                    <div class="autocomplete-item-phone">${b.speciesLabel}</div>
-                                </div>
-                                <div class="autocomplete-item-badge">${badgeText}</div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-                quickAddBreedDropdown.style.display = 'block';
-            }
-
-            quickAddBreedInput.addEventListener('focus', () => renderBreedDropdown(quickAddBreedInput.value));
-            quickAddBreedInput.addEventListener('input', () => renderBreedDropdown(quickAddBreedInput.value));
-
-            quickAddBreedDropdown.addEventListener('click', (e) => {
-                const item = e.target.closest('.autocomplete-item');
-                if (item) {
-                    quickAddBreedInput.value = item.getAttribute('data-value');
-                    quickAddBreedDropdown.style.display = 'none';
-                }
-            });
-
-            if (quickAddSpeciesSelect) {
-                quickAddSpeciesSelect.addEventListener('change', () => {
-                    if (quickAddBreedDropdown.style.display === 'block') {
-                        renderBreedDropdown(quickAddBreedInput.value);
-                    }
-                });
-            }
-
-            // Đóng dropdown khi click ra ngoài
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.pet-field-autocomplete-wrapper')) {
-                    quickAddBreedDropdown.style.display = 'none';
-                }
-            });
+        // Taxonomy comes exclusively from the V1 catalog.
+        let taxonomy = { species: [], breeds: [] };
+        let taxonomyLoading = null;
+        async function loadTaxonomy() {
+            if (taxonomyLoading) return taxonomyLoading;
+            const db = window.getSupabaseClient();
+            taxonomyLoading = Promise.all([
+                db.from('pet_species').select('id, species_name').eq('is_active', true).order('species_name'),
+                db.from('pet_breed').select('id, species_id, breed_name').eq('is_active', true).order('breed_name')
+            ]).then(results => {
+                for (const result of results) if (result.error) throw result.error;
+                const clean = value => value && !/^\d+$|^(chưa rõ|chưa cập nhật|unknown|null|undefined)$/i.test(value.trim());
+                taxonomy = { species: results[0].data.filter(s => clean(s.species_name)), breeds: results[1].data.filter(b => clean(b.breed_name)) };
+            }).finally(() => { taxonomyLoading = null; });
+            return taxonomyLoading;
         }
+        const speciesInput = document.getElementById('quickAddPetSpecies');
+        const breedInput = document.getElementById('quickAddPetBreed');
+        const resetSelection = input => {
+            input.value = ''; delete input.dataset.id; input.style.display = '';
+            input.parentElement.querySelector('.quick-selected-card')?.remove();
+        };
+        function wireTaxonomy(input, dropdown, rows, nameOf, onSelect) {
+            function render() {
+                const list = rows().filter(row => PawpalCustomers.matchSearch(nameOf(row), input.value));
+                dropdown.innerHTML = list.map(row => `<div class="autocomplete-item" data-id="${esc(row.id)}"><div class="autocomplete-item-name">${esc(nameOf(row))}</div></div>`).join('') || '<div class="autocomplete-empty">Không có lựa chọn phù hợp trong danh mục.</div>';
+                dropdown.style.display = 'block';
+            }
+            input.addEventListener('focus', async () => {
+                try { await loadTaxonomy(); render(); }
+                catch { dropdown.innerHTML = '<div class="autocomplete-empty">Không thể tải danh mục. Vui lòng thử lại.</div>'; dropdown.style.display = 'block'; }
+            });
+            input.addEventListener('input', () => { delete input.dataset.id; render(); });
+            dropdown.addEventListener('click', event => {
+                const row = rows().find(r => r.id === event.target.closest('[data-id]')?.dataset.id);
+                if (!row) return;
+                input.value = nameOf(row); input.dataset.id = row.id;
+                const error = document.getElementById(input.id + 'Error');
+                if (error) error.textContent = '';
+                input.setAttribute('aria-invalid', 'false');
+                input.style.display = 'none'; dropdown.style.display = 'none';
+                const card = document.createElement('div'); card.className = 'adjust-customer-selected-card quick-selected-card';
+                card.innerHTML = `<span>${esc(nameOf(row))}</span><button type="button" class="btn-text-add-address">✕ Bỏ chọn</button>`;
+                card.querySelector('button').addEventListener('click', () => { resetSelection(input); onSelect?.(); input.focus(); });
+                input.parentElement.appendChild(card); onSelect?.();
+            });
+            document.addEventListener('click', event => { if (!input.parentElement.contains(event.target)) dropdown.style.display = 'none'; });
+        }
+        wireTaxonomy(speciesInput, document.getElementById('quickAddPetSpeciesDropdown'), () => taxonomy.species, s => s.species_name, () => resetSelection(breedInput));
+        wireTaxonomy(breedInput, document.getElementById('quickAddPetBreedDropdown'), () => taxonomy.breeds.filter(b => b.species_id === speciesInput.dataset.id), b => b.breed_name);
 
         if (quickAddPhoneInput) {
             quickAddPhoneInput.addEventListener('input', () => {
@@ -706,162 +663,59 @@
         }
 
         if (formAdd) {
-
-        const btnSubmitAdd = document.getElementById('btnSubmitAddCustomer');
-        if (btnSubmitAdd && formAdd) {
-            btnSubmitAdd.addEventListener('click', () => {
-                if (formAdd.requestSubmit) formAdd.requestSubmit();
-                else formAdd.dispatchEvent(new Event('submit', { cancelable: true }));
-            });
-        }
-
-            formAdd.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                if (dupFoundCustId) {
-                    PawpalCustomers.showToast(`Số điện thoại này đã thuộc về khách hàng ${PawpalCustomers.state.customerDatabase?.[dupFoundCustId]?.name}! Vui lòng kiểm tra lại.`, 'warning');
-                    return;
-                }
-
-                const nameInput = document.getElementById('quickAddName');
-                const name = (nameInput?.value || '').replace(/\s+/g, ' ').trim();
-                const phone = (document.getElementById('quickAddPhone')?.value || '').trim();
-                const phoneInput = document.getElementById('quickAddPhone');
-                const petNameInput = document.getElementById('quickAddPetName');
-                const rawPetName = petNameInput?.value || '';
-                const petName = rawPetName.replace(/\s+/g, ' ').trim();
-                if (rawPetName && !petName && petNameInput) {
-                    petNameInput.value = '';
-                }
-                const petSpecies = document.getElementById('quickAddPetSpecies')?.value || 'DOG';
-                const petBreed = document.getElementById('quickAddPetBreed')?.value || 'Chưa cập nhật';
-                const petWeightInput = document.getElementById('quickAddPetWeight');
-                const petWeightRaw = (petWeightInput?.value || '').trim();
-                const petWeight = petWeightRaw === '' ? '' : Number(petWeightRaw);
-                const validationErrors = [];
-                const nameError = !name ? 'Họ tên là thông tin bắt buộc.' : (name.length < 2 ? 'Họ tên phải có ít nhất 2 ký tự.' : '');
-                const phoneError = /^\d{10}$/.test(phone) ? '' : 'Số điện thoại phải gồm đúng 10 chữ số.';
-                const weightError = petWeightRaw !== '' && (!Number.isFinite(petWeight) || petWeight <= 0) ? 'Cân nặng phải là số lớn hơn 0.' : '';
-                if (nameInput) nameInput.setCustomValidity(nameError);
-                if (phoneInput) phoneInput.setCustomValidity(phoneError);
-                if (petWeightInput) petWeightInput.setCustomValidity(weightError);
-                if (nameError) validationErrors.push(nameError);
-                if (phoneError) validationErrors.push(phoneError);
-                if (weightError) validationErrors.push(weightError);
-                if (validationErrors.length) {
-                    [nameInput, phoneInput, petWeightInput].find(input => input && input.validationMessage)?.reportValidity();
-                    PawpalCustomers.showToast(validationErrors.join(' '), 'warning');
-                    return;
-                }
-                const initialAddress = document.getElementById('quickAddAddress')?.value || 'Tiếp nhận trực tiếp tại quầy Pawpal Center';
-
-                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                if (!client) {
-                    PawpalCustomers.showToast('Lỗi kết nối CSDL Supabase!', 'danger');
-                    return;
-                }
-
+            const saveButton = document.getElementById('btnSubmitAddCustomer');
+            let saving = false;
+            const fieldError = (id, message) => {
+                const input = document.getElementById(id);
+                let error = document.getElementById(id + 'Error');
+                if (!error) { error = document.createElement('div'); error.id = id + 'Error'; error.style.cssText = 'color:#DC2626;font-size:12px;margin-top:4px;'; input.parentElement.appendChild(error); }
+                error.textContent = message; input.setAttribute('aria-invalid', String(Boolean(message)));
+                input.setAttribute('aria-describedby', error.id);
+            };
+            const fields = ['quickAddName','quickAddPhone','quickAddPetName','quickAddPetSpecies','quickAddPetBreed','quickAddPetWeight','quickAddAddress','quickAddProvince'];
+            fields.forEach(id => document.getElementById(id).addEventListener('input', () => fieldError(id, '')));
+            async function saveCustomer() {
+                if (saving) return;
+                const value = id => document.getElementById(id).value.trim();
+                const name = value('quickAddName').replace(/\s+/g, ' '), phone = value('quickAddPhone');
+                const petName = value('quickAddPetName'), weightText = value('quickAddPetWeight');
+                const address = value('quickAddAddress'), province = value('quickAddProvince');
+                const errors = {};
+                if (name.length < 2 || name.length > 200) errors.quickAddName = 'Họ tên cần từ 2 đến 200 ký tự.';
+                if (!/^0[0-9]{9}$/.test(phone)) errors.quickAddPhone = 'Nhập số điện thoại gồm 10 chữ số, bắt đầu bằng 0.';
+                if (dupFoundCustId) errors.quickAddPhone = 'Số điện thoại đã thuộc về khách khác. Bạn có thể mở hồ sơ có sẵn.';
+                if (petName.length > 200) errors.quickAddPetName = 'Tên bé cưng tối đa 200 ký tự.';
+                if (!petName && (speciesInput.value || breedInput.value || weightText)) errors.quickAddPetName = 'Nhập tên bé cưng khi có thông tin thú cưng.';
+                if (petName && !speciesInput.dataset.id) errors.quickAddPetSpecies = 'Chọn loài từ danh mục.';
+                if (petName && !taxonomy.breeds.some(b => b.id === breedInput.dataset.id && b.species_id === speciesInput.dataset.id)) errors.quickAddPetBreed = 'Chọn giống thuộc loài đã chọn.';
+                if (weightText && (!Number.isFinite(Number(weightText)) || Number(weightText) <= 0 || Number(weightText) > 1000)) errors.quickAddPetWeight = 'Cân nặng phải lớn hơn 0 và không quá 1.000 kg.';
+                if (address && !province) errors.quickAddProvince = 'Nhập tỉnh hoặc thành phố của địa chỉ.';
+                if (province && !address) errors.quickAddAddress = 'Nhập địa chỉ nhận hàng hoặc để trống cả hai trường.';
+                fields.forEach(id => fieldError(id, errors[id] || ''));
+                if (Object.keys(errors).length) { document.getElementById(Object.keys(errors)[0]).focus(); return; }
+                saving = true; saveButton.disabled = true; saveButton.textContent = 'Đang lưu';
                 try {
-                    const activationToken = (window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`).replace(/-/g, '');
-                    const activationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-                    
-                    const { data: newCust, error: custErr } = await client.from('customer').insert({
-                        email: null,
-                        phone_main: phone || null,
-                        account_status: 'dang_hoat_dong',
-                        is_temporary: true,
-                        note: 'Khách tiếp nhận nhanh tại quầy.',
-                        activation_token: activationToken,
-                        activation_token_expires_at: activationExpiresAt
-                    }).select().single();
-
-                    if (custErr || !newCust) {
-                        console.error('[Customers] Lỗi tạo customer:', custErr);
-                        PawpalCustomers.showToast(`Không thể tạo hồ sơ khách hàng: ${custErr?.message || 'Lỗi CSDL'}`, 'danger');
-                        return;
-                    }
-
-                    const { error: profErr } = await client.from('customer_profile').insert({
-                        customer_id: newCust.id,
-                        full_name: name,
-                        gender: 'khac'
+                    const { error } = await window.getSupabaseClient().rpc('create_customer_quick', {
+                        p_full_name: name, p_phone: phone, p_address: address || null, p_province: province || null,
+                        p_pet_name: petName || null, p_breed_id: petName ? breedInput.dataset.id : null,
+                        p_weight: weightText ? Number(weightText) : null
                     });
-                    if (profErr) {
-                        console.error('[Customers] Lỗi tạo customer_profile, rollback customer:', profErr);
-                        await client.from('customer').delete().eq('id', newCust.id);
-                        PawpalCustomers.showToast(`Không thể tạo chi tiết khách hàng: ${profErr.message}`, 'danger');
-                        return;
+                    if (error) {
+                        if (error.message?.includes('customer_phone_exists')) { fieldError('quickAddPhone', 'Số điện thoại đã được sử dụng. Vui lòng mở hồ sơ có sẵn.'); return; }
+                        throw error;
                     }
-
-                    const { error: memErr } = await client.from('customer_membership').insert({
-                        customer_id: newCust.id,
-                        total_paw_points: 0
-                    });
-                    if (memErr) {
-                        console.error('[Customers] Lỗi tạo customer_membership, rollback customer:', memErr);
-                        await client.from('customer_profile').delete().eq('customer_id', newCust.id);
-                        await client.from('customer').delete().eq('id', newCust.id);
-                        PawpalCustomers.showToast(`Không thể khởi tạo điểm/hạng khách hàng: ${memErr.message}`, 'danger');
-                        return;
-                    }
-
-                    if (initialAddress && initialAddress.trim()) {
-                        const { error: addrErr } = await client.from('customer_address').insert({
-                            customer_id: newCust.id,
-                            receiver_name: name,
-                            receiver_phone: phone || '',
-                            street_address: initialAddress.trim(),
-                            province: 'TP. Hồ Chí Minh',
-                            is_default: true
-                        });
-                        if (addrErr) {
-                            console.warn('[Customers] Cảnh báo lưu địa chỉ khách:', addrErr);
-                        }
-                    }
-
-                    const { error: smsErr } = await client.from('customer_activation_sms').insert({
-                        customer_id: newCust.id,
-                        phone: phone,
-                        activation_url: `${window.location.origin}/pages/public/activate-account.html?token=${encodeURIComponent(activationToken)}`,
-                        status: 'pending'
-                    });
-                    if (smsErr) {
-                        console.warn('[Customers] Cảnh báo lưu outbox kích hoạt SMS:', smsErr);
-                    }
-
-                    let petCreateWarning = null;
-                    if (petName && petName.trim()) {
-                        const spec = petSpecies === 'CAT' ? 'cat' : (petSpecies === 'OTHER' ? 'other' : 'dog');
-                        const genPetCode = 'PET-' + (window.crypto?.randomUUID ? window.crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase() : Date.now().toString(36).toUpperCase());
-                        const { error: petErr } = await client.from('pet_profile').insert({
-                            customer_id: newCust.id,
-                            pet_code: genPetCode,
-                            pet_name: petName.trim(),
-                            species: spec,
-                            breed: petBreed || 'Chưa cập nhật',
-                            weight: petWeight === '' ? null : petWeight,
-                            status: 'ACTIVE'
-                        });
-                        if (petErr) {
-                            console.error('[Customers] Lỗi tạo pet kèm theo:', petErr);
-                            petCreateWarning = `Đã tạo khách hàng nhưng chưa thể thêm bé cưng: ${petErr.message || 'Lỗi CSDL'}`;
-                        }
-                    }
-
-                    await PawpalCustomers.loadCustomersModuleData({ force: true });
-                    renderCustomersTable();
-                    updateCustomerKPIs();
-                    if (petCreateWarning) {
-                        PawpalCustomers.showToast(petCreateWarning, 'warning');
-                    } else {
-                        PawpalCustomers.showToast(`Đã tạo thành công hồ sơ khách hàng ${name} vào CSDL!`, 'success');
-                    }
-                    formAdd.reset();
+                    formAdd.reset(); resetSelection(speciesInput); resetSelection(breedInput);
                     closeAddModal();
-                } catch (err) {
-                    console.error('[Customers] Lỗi tạo khách hàng:', err);
-                    PawpalCustomers.showToast('Đã xảy ra lỗi khi tạo khách hàng!', 'danger');
-                }
-            });
+                    await PawpalCustomers.loadCustomersModuleData({ force: true });
+                    PawpalCustomers.showToast('Đã lưu hồ sơ khách hàng.', 'success');
+                    if (PawpalCustomers.state.listLoadStatus === 'error') PawpalCustomers.showToast('Đã lưu khách nhưng chưa tải lại được danh sách. Vui lòng làm mới.', 'warning');
+                } catch (error) {
+                    console.error('[Customers] V1 intake failed:', error.code || 'connection');
+                    PawpalCustomers.showToast('Chưa thể lưu hồ sơ. Vui lòng kiểm tra kết nối và thử lại.', 'danger');
+                } finally { saving = false; saveButton.disabled = false; saveButton.textContent = 'Lưu khách hàng'; }
+            }
+            saveButton.addEventListener('click', saveCustomer);
+            formAdd.addEventListener('submit', event => { event.preventDefault(); saveCustomer(); });
         }
 
         // Global dropdown actions
@@ -890,25 +744,20 @@
                 }
             } else if (action === 'adjust-points') {
                 if (PawpalCustomers.subtabs.pawpoint) {
-                    PawpalCustomers.subtabs.pawpoint.openAdjustPointsModal(PawpalCustomers.state.customerDatabase[custId].phone);
+                    PawpalCustomers.subtabs.pawpoint.openAdjustPointsModal(custId);
                 }
             } else if (action === 'toggle-lock') {
                 const custObj = PawpalCustomers.state.customerDatabase[custId];
                 if (!custObj || !custObj.dbId) return;
                 const isLocking = custObj.status !== 'LOCKED';
-                // Theo CSDLdemo, customer.account_status dùng enum dang_hoat_dong/tam_khoa/da_khoa.
-                // Giữ tương thích với dữ liệu cũ dùng ACTIVE/LOCKED.
-                const usesVietnameseStatus = ['dang_hoat_dong', 'tam_khoa', 'da_khoa'].includes(String(custObj.accountStatusRaw || '').toLowerCase());
-                const newStatus = isLocking
-                    ? (usesVietnameseStatus ? 'da_khoa' : 'LOCKED')
-                    : (usesVietnameseStatus ? 'dang_hoat_dong' : 'ACTIVE');
+                const newStatus = isLocking ? 'locked' : 'active';
                 const expectedUiStatus = isLocking ? 'LOCKED' : 'ACTIVE';
                 PawpalCustomers.showCustomerConfirmModal({
-                    title: isLocking ? 'Khóa tài khoản khách hàng' : 'Mở khóa tài khoản khách hàng',
+                    title: isLocking ? 'Khóa hồ sơ khách hàng' : 'Mở khóa hồ sơ khách hàng',
                     message: isLocking
-                        ? `Bạn có chắc chắn muốn khóa tài khoản của <strong>${custObj.name}</strong>? Khách hàng sẽ không thể đăng nhập cho đến khi được mở khóa.`
-                        : `Bạn có chắc chắn muốn mở khóa tài khoản của <strong>${custObj.name}</strong>?`,
-                    acceptText: isLocking ? 'Khóa tài khoản' : 'Mở khóa tài khoản',
+                        ? `Bạn có chắc chắn muốn khóa hồ sơ của ${custObj.name}?`
+                        : `Bạn có chắc chắn muốn mở khóa hồ sơ của ${custObj.name}?`,
+                    acceptText: isLocking ? 'Khóa hồ sơ' : 'Mở khóa hồ sơ',
                     onAccept: async () => {
                         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                         if (!client) {
@@ -916,22 +765,13 @@
                             return;
                         }
                         try {
-                            const { data: lockRows, error: lockErr } = await client
-                                .from('customer')
-                                .update({ account_status: newStatus })
-                                .eq('id', custObj.dbId)
-                                .select('id, account_status');
-
-                            if (lockErr) {
-                                if (lockErr) console.error('[Customers] Lỗi cập nhật trạng thái:', lockErr);
-                                PawpalCustomers.showToast('Không thể cập nhật trạng thái tài khoản trên cơ sở dữ liệu.', 'danger');
+                            const {error:lockErr}=await client.rpc('set_customer_status',{
+                                p_customer_id:custObj.dbId,p_expected_updated_at:custObj.updatedAt,p_status:newStatus
+                            });
+                            if(lockErr){
+                                PawpalCustomers.showToast(lockErr.code==='PT409'?'Hồ sơ đã thay đổi. Vui lòng làm mới rồi thử lại.':'Không thể cập nhật trạng thái hồ sơ.','warning');
                                 return;
                             }
-                            if (!lockRows || lockRows.length !== 1 || String(lockRows[0].account_status).toLowerCase() !== String(newStatus).toLowerCase()) {
-                                PawpalCustomers.showToast('Trạng thái không được CSDL xác nhận. Kiểm tra ID bản ghi hoặc chính sách RLS.', 'danger');
-                                return;
-                            }
-
                             await PawpalCustomers.loadCustomersModuleData({ force: true });
                             const refreshedCustomer = PawpalCustomers.state.customerDatabase?.[custId];
                             if (!refreshedCustomer || refreshedCustomer.status !== expectedUiStatus) {
@@ -940,7 +780,7 @@
                             }
                             renderCustomersTable();
                             updateCustomerKPIs();
-                            PawpalCustomers.showToast(isLocking ? `Đã khóa tài khoản khách hàng ${custObj.name}.` : `Đã mở khóa tài khoản khách hàng ${custObj.name}.`, 'success');
+                            PawpalCustomers.showToast(isLocking ? `Đã khóa hồ sơ khách hàng ${custObj.name}.` : `Đã mở khóa hồ sơ khách hàng ${custObj.name}.`, 'success');
                         } catch (err) {
                             console.error('[Customers] Lỗi cập nhật trạng thái:', err);
                             PawpalCustomers.showToast('Đã xảy ra lỗi khi cập nhật trạng thái.', 'danger');
@@ -995,21 +835,17 @@
         const searchInput = document.getElementById('custSearchInput');
 
         if (searchInput) {
-            let searchDebounceTimer = null;
             searchInput.addEventListener('input', () => {
-                if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-                searchDebounceTimer = setTimeout(() => {
-                    currentCustomerPage = 1;
-                    renderCustomersTable();
-                }, 300);
+                currentCustomerPage = 1;
+                renderCustomersTable();
             });
 
             searchInput.addEventListener('change', () => {
                 const val = (searchInput.value || '').trim();
                 if (val.includes(' - ')) {
                     const [nPart, pPart] = val.split(' - ').map(s => s.trim().toLowerCase());
-                    const matched = Object.values(PawpalCustomers.state.customerDatabase || {}).find(c => 
-                        (c.phone && c.phone.toLowerCase() === pPart) || 
+                    const matched = Object.values(PawpalCustomers.state.customerDatabase || {}).find(c =>
+                        (c.phone && c.phone.toLowerCase() === pPart) ||
                         (c.name && c.name.toLowerCase() === nPart)
                     );
                     if (matched) {
@@ -1020,8 +856,6 @@
                         }
                     }
                 }
-                currentCustomerPage = 1;
-                renderCustomersTable();
             });
         }
 

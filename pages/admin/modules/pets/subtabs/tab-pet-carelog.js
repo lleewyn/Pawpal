@@ -20,7 +20,13 @@
         }
 
         // Lazy fetch care logs nếu chưa có
-        if ((!PawpalPets.state.careLogs || PawpalPets.state.careLogs.length === 0) && typeof PawpalPets.fetchCareLogsTab === 'function' && !PawpalPets.state._careLogsFetching) {
+        if (PawpalPets.state.careLogsLoadStatus === 'error') {
+            delete tbody.dataset.loadingSkeleton;
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--text-muted);">Không thể tải nhật ký chăm sóc. Vui lòng tải lại trang.</td></tr>';
+            if (pager) pager.innerHTML = '';
+            return;
+        }
+        if (PawpalPets.state.careLogsLoadStatus !== 'loaded' && typeof PawpalPets.fetchCareLogsTab === 'function' && !PawpalPets.state._careLogsFetching) {
             PawpalPets.state._careLogsFetching = true;
             if (!tbody.querySelector('.skeleton-row')) window.PawpalAdmin?.renderTableSkeleton?.(tbody, {columns:5});
             PawpalPets.fetchCareLogsTab().then(() => {
@@ -28,6 +34,7 @@
                 renderCarelogsTable();
             }).catch(() => {
                 PawpalPets.state._careLogsFetching = false;
+                renderCarelogsTable();
             });
             return;
         }

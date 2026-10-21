@@ -1,5 +1,10 @@
 .env
 .env.*
 scripts/test/
+scripts/dev/
+scripts/server/
+*.private.*
+.tmp-*
+PAWPAL_*.md
 scripts/database/
 scripts/migrate_customer_auth.js

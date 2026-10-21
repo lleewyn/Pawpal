@@ -12,6 +12,7 @@
     PawpalCustomers.subtabs = PawpalCustomers.subtabs || {};
     PawpalCustomers.state.listLoadStatus = 'idle';
     PawpalCustomers.state.hasLoadedCustomers = false;
+    PawpalCustomers.state.pawpointLoadStatus = 'idle';
 
     // 1. FORMATTERS CHUẨN HÓA TOÀN HỆ THỐNG
     PawpalCustomers.formatDateTime = window.formatDateTime || function(d) {
@@ -137,6 +138,77 @@
             .replace(/'/g, '&#39;');
     };
 
+    PawpalCustomers.setFieldError = function(id, message) {
+        const input = document.getElementById(id);
+        let error = document.getElementById(id + 'Error');
+        if (!error) {
+            error = document.createElement('div'); error.id = id + 'Error';
+            error.style.cssText = 'color:#DC2626;font-size:12px;margin-top:4px';
+            input.parentElement.appendChild(error);
+            input.addEventListener('input', () => PawpalCustomers.setFieldError(id, ''));
+        }
+        error.textContent = message;
+        input.setAttribute('aria-invalid', String(Boolean(message)));
+        input.setAttribute('aria-describedby', error.id);
+    };
+
+    PawpalCustomers.bindPetTaxonomy = function(prefix) {
+        let species = [], breeds = [];
+        const speciesInput = document.getElementById(prefix + 'Species');
+        const breedInput = document.getElementById(prefix + 'Breed');
+        const clear = input => {
+            input.value = ''; delete input.dataset.id; input.style.display = '';
+            input.parentElement.querySelector('.taxonomy-selected')?.remove();
+            document.getElementById(input.id + 'Dropdown').style.display = 'none';
+        };
+        const choose = (input, row, label) => {
+            clear(input); input.value = label; input.dataset.id = row.id; input.style.display = 'none';
+            const card = document.createElement('div'); card.className = 'adjust-customer-selected-card taxonomy-selected';
+            const text = document.createElement('span'); text.textContent = label;
+            const button = document.createElement('button'); button.type = 'button'; button.className = 'btn-text-add-address'; button.textContent = '✕ Bỏ chọn';
+            button.addEventListener('click', () => { clear(input); if (input === speciesInput) clear(breedInput); input.focus(); });
+            card.append(text, button); input.parentElement.appendChild(card);
+            PawpalCustomers.setFieldError(input.id, '');
+        };
+        async function load() {
+            const db = window.getSupabaseClient();
+            const results = await Promise.all([
+                db.from('pet_species').select('id,species_name').eq('is_active', true).order('species_name'),
+                db.from('pet_breed').select('id,species_id,breed_name').eq('is_active', true).order('breed_name')
+            ]);
+            for (const r of results) if (r.error) throw r.error;
+            const clean = name => name && !/^\d+$|^(chưa rõ|chưa cập nhật|unknown|null|undefined)$/i.test(name.trim());
+            species = results[0].data.filter(s => clean(s.species_name)); breeds = results[1].data.filter(b => clean(b.breed_name));
+        }
+        for (const input of [speciesInput, breedInput]) {
+            const dropdown = document.getElementById(input.id + 'Dropdown');
+            const rows = () => input === speciesInput ? species : breeds.filter(b => b.species_id === speciesInput.dataset.id);
+            const label = row => row.species_name || row.breed_name;
+            const render = () => {
+                dropdown.innerHTML = rows().filter(r => PawpalCustomers.matchSearch(label(r), input.value)).map(r => `<div class="autocomplete-item" data-id="${r.id}"><div class="autocomplete-item-name">${PawpalCustomers.escapeHtml(label(r))}</div></div>`).join('') || '<div class="autocomplete-empty">Không có lựa chọn phù hợp trong danh mục.</div>';
+                dropdown.style.display = 'block';
+            };
+            input.addEventListener('focus', async () => { try { await load(); render(); } catch { dropdown.innerHTML = '<div class="autocomplete-empty">Không tải được danh mục. Vui lòng thử lại.</div>'; dropdown.style.display = 'block'; } });
+            input.addEventListener('input', () => { delete input.dataset.id; if (input === speciesInput) clear(breedInput); render(); });
+            dropdown.addEventListener('click', event => {
+                const row = rows().find(r => r.id === event.target.closest('[data-id]')?.dataset.id);
+                if (row) { if (input === speciesInput) clear(breedInput); choose(input, row, label(row)); }
+            });
+            document.addEventListener('click', event => { if (!input.parentElement.contains(event.target)) dropdown.style.display = 'none'; });
+        }
+        return {
+            reset() { clear(speciesInput); clear(breedInput); },
+            async set(pet, isCurrent = () => true) {
+                await load();
+                if (!isCurrent()) return;
+                choose(speciesInput, { id: pet.speciesId }, pet.species);
+                choose(breedInput, { id: pet.breedId }, pet.breed);
+            },
+            speciesId: () => speciesInput.dataset.id,
+            breedId: () => breedInput.dataset.id
+        };
+    };
+
     // 3. HEADER BREADCRUMB & SUBTAB NAVIGATION
     const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
     const headerSubtabBtns = document.querySelectorAll('.header-subtab-btn');
@@ -215,6 +287,16 @@
         return customerLoadPromise;
     };
 
+    async function readAllRows(builder) {
+        const data=[];
+        for(let offset=0;;offset+=1000){
+            const result=await builder().range(offset,offset+999);
+            if(result.error)return result;
+            data.push(...(result.data || []));
+            if(!result.data || result.data.length<1000)return {data,error:null};
+        }
+    }
+
     async function loadCustomersModuleData({ force = false } = {}) {
         try {
             PawpalCustomers.state.listLoadStatus = 'loading';
@@ -236,21 +318,38 @@
                     profRes,
                     memRes,
                     addrRes,
-                    petsRes
+                    petsRes,
+                    phonesRes,
+                    balancesRes,
+                    weightsRes,
+                    tiersRes,
+                    ticketsRes
                 ] = await Promise.all([
-                    client.from('customer').select('id, email, phone_main, account_status, is_temporary, created_at').order('created_at', { ascending: false }),
-                    client.from('customer_profile').select('id, customer_id, full_name, gender, date_of_birth'),
-                    client.from('customer_membership').select('customer_id, total_paw_points'),
-                    client.from('customer_address').select('id, customer_id, receiver_name, receiver_phone, street_address, province, is_default'),
-                    client.from('pet_profile').select('id, customer_id, pet_code, pet_name, species, breed, weight, vaccination_history, allergy, routine, date_of_birth, avatar_url')
+                    readAllRows(() => client.from('customer').select('id, customer_code, contact_email, customer_status, note, created_at, updated_at').order('created_at', { ascending: false }).order('id')),
+                    readAllRows(() => client.from('customer_profile').select('customer_id, full_name, gender, date_of_birth').order('customer_id')),
+                    readAllRows(() => client.from('customer_membership').select('customer_id, membership_tier_id, membership_tier:membership_tier_id(tier_name)').order('customer_id')),
+                    readAllRows(() => client.from('customer_address').select('id, customer_id, receiver_name, receiver_phone, street_address, province, postal_code, is_default').order('id')),
+                    readAllRows(() => client.from('pet_profile').select('id, customer_id, pet_code, pet_name, updated_at, status, breed:breed_id(id, species_id, breed_name, species:species_id(id, species_name)), safety_note, allergy, routine, date_of_birth, avatar_url').order('id')),
+                    readAllRows(() => client.from('customer_phone').select('customer_id, phone_number').eq('is_primary', true).order('id')),
+                    readAllRows(() => client.from('customer_point_balance').select('customer_id, total_paw_points').order('customer_id')),
+                    readAllRows(() => client.from('pet_current_weight').select('pet_id, weight').order('pet_id')),
+                    readAllRows(() => client.from('membership_tier').select('id, tier_name, minimum_expenditure, discount_percent, description').eq('is_active', true).order('minimum_expenditure').order('id')),
+                    readAllRows(() => client.from('support_ticket').select('id, ticket_code, customer_id, subject, status, priority, created_at').order('id'))
                 ]);
-                if (custRes.error) throw custRes.error;
+                for (const result of [custRes, profRes, memRes, addrRes, petsRes, phonesRes, balancesRes, weightsRes, tiersRes, ticketsRes]) {
+                    if (result.error) throw result.error;
+                }
                 return {
                     custData: custRes.data || [],
                     profData: profRes.data || [],
                     memData: memRes.data || [],
                     addrData: addrRes.data || [],
-                    petsData: petsRes.data || []
+                    petsData: petsRes.data || [],
+                    phonesData: phonesRes.data || [],
+                    balancesData: balancesRes.data || [],
+                    weightsData: weightsRes.data || [],
+                    tiersData: tiersRes.data || [],
+                    ticketsData: ticketsRes.data || []
                 };
             };
 
@@ -266,6 +365,9 @@
 
             const memMap = {};
             (data.memData || []).forEach(m => { memMap[m.customer_id] = m; });
+            const phoneMap = new Map((data.phonesData || []).map(p => [p.customer_id, p.phone_number]));
+            const balanceMap = new Map((data.balancesData || []).map(p => [p.customer_id, Number(p.total_paw_points)]));
+            const weightMap = new Map((data.weightsData || []).map(p => [p.pet_id, p.weight]));
 
             const addrMap = {};
             (data.addrData || []).forEach(a => {
@@ -275,6 +377,9 @@
                 const fullAddr = [street, prov].filter(Boolean).join(', ') || 'Chưa cập nhật địa chỉ';
                 addrMap[a.customer_id].push({
                     rawId: a.id,
+                    streetAddress: a.street_address || '',
+                    province: a.province || '',
+                    postalCode: a.postal_code || '',
                     address: fullAddr,
                     receiverName: a.receiver_name || '',
                     receiverPhone: a.receiver_phone || '',
@@ -285,17 +390,23 @@
             const petsMap = {};
             (data.petsData || []).forEach((p, idx) => {
                 if (!petsMap[p.customer_id]) petsMap[p.customer_id] = [];
-                const specName = p.species === 'cat' ? 'Mèo' : (p.species === 'dog' ? 'Chó' : (p.species === 'rabbit' ? 'Thỏ' : 'Thú cưng'));
+                const specName = p.breed?.species?.species_name || 'Chưa cập nhật';
                 const petCode = p.pet_code || (p.id ? `PET-${p.id.replace(/-/g, '').slice(0, 8).toUpperCase()}` : `PET-${String(idx + 1).padStart(3, '0')}`);
                 petsMap[p.customer_id].push({
                     id: petCode,
                     dbId: p.id,
+                    updatedAt: p.updated_at,
+                    status: p.status,
+                    breedId: p.breed?.id,
+                    speciesId: p.breed?.species_id,
+                    safetyNote: p.safety_note || '',
+                    allergy: p.allergy || '',
+                    routine: p.routine || '',
                     name: p.pet_name || 'Bé cưng',
                     species: specName,
-                    breed: p.breed || 'Chưa cập nhật',
-                    weight: (p.weight !== null && p.weight !== undefined && p.weight !== '') ? String(p.weight) : 'Chưa ghi nhận',
-                    vaccine: (p.vaccination_history && p.vaccination_history.trim()) ? p.vaccination_history : 'Chưa xác minh sổ tiêm',
-                    alertNote: p.allergy && p.allergy !== 'Không' ? `Cảnh báo dị ứng: ${p.allergy}` : (p.routine || 'Bình thường')
+                    breed: p.breed?.breed_name || 'Chưa cập nhật',
+                    weight: weightMap.has(p.id) ? String(weightMap.get(p.id)) : 'Chưa ghi nhận',
+                    alertNote: [p.safety_note, p.allergy && p.allergy !== 'Không' ? `Dị ứng: ${p.allergy}` : ''].filter(Boolean).join('; ')
                 });
             });
 
@@ -303,6 +414,15 @@
             const ordersMap = {};
             const apptsMap = {};
             const complaintsMap = {};
+            for (const ticket of data.ticketsData || []) {
+                if (!ticket.customer_id) continue;
+                const status = window.PawpalEnum?.ticketStatus(ticket.status);
+                (complaintsMap[ticket.customer_id] ||= []).push({
+                    id: ticket.ticket_code, rawId: ticket.id, issue: ticket.subject,
+                    status: status?.label || ticket.status, statusClass: status?.badgeClass || 'badge-neutral',
+                    isClosed: ['resolved', 'closed', 'rejected', 'da_giai_quyet', 'da_dong', 'tu_choi'].includes(ticket.status)
+                });
+            }
 
             const freshDb = {};
 
@@ -347,28 +467,19 @@
                     }
                     const prof = profMap[c.id] || {};
                     const mem = memMap[c.id] || {};
-                    const points = mem.total_paw_points || 0;
+                    const points = balanceMap.get(c.id) || 0;
 
                     const hasMembership = !!memMap[c.id];
                     const isWalkInName = /vãng lai|vang lai/i.test(prof.full_name || c.full_name || '');
-                    const isTemp = Boolean((c.is_temporary && !hasMembership) || isWalkInName);
+                    const isTemp = !hasMembership;
 
                     let tier = 'NONE';
-                    let tierName = (points > 0 || hasMembership) ? 'Bạc' : 'Vãng lai';
-                    let tierBadge = (points > 0 || hasMembership) ? 'badge-tier-silver' : 'badge-neutral';
-                    if (!isTemp || hasMembership) {
-                        tier = 'SILVER';
-                        tierName = 'Bạc';
-                        tierBadge = 'badge-tier-silver';
-                        if (points >= 3000) { tier = 'DIAMOND'; tierName = 'Kim Cương'; tierBadge = 'badge-tier-diamond'; }
-                        else if (points >= 1000) { tier = 'GOLD'; tierName = 'Vàng'; tierBadge = 'badge-tier-gold'; }
-                        else if (points >= 300) { tier = 'SILVER'; tierName = 'Bạc'; tierBadge = 'badge-tier-silver'; }
-                    }
+                    const tierName = mem.membership_tier?.tier_name || 'Chưa có hạng';
+                    const tierCodes = { 'Đồng': 'BRONZE', 'Bạc': 'SILVER', 'Vàng': 'GOLD', 'Kim Cương': 'DIAMOND', 'Kim cương': 'DIAMOND' };
+                    tier = tierCodes[tierName] || 'NONE';
+                    const tierBadge = tier === 'NONE' || tier === 'BRONZE' ? 'badge-neutral' : `badge-tier-${tier.toLowerCase()}`;
 
                     const addrs = addrMap[c.id] || [];
-                    if (addrs.length === 0) {
-                        addrs.push({ address: 'Tiếp nhận trực tiếp tại quầy Pawpal Pet Center', isDefault: true });
-                    }
 
                     const cPets = petsMap[c.id] || [];
                     const cOrders = ordersMap[c.id] || [];
@@ -376,21 +487,21 @@
                     const cComplaints = complaintsMap[c.id] || [];
 
                     let emergency = null;
-                    const pendingComp = cComplaints.find(comp => comp.status !== 'Đã giải quyết');
+                    const pendingComp = cComplaints.find(comp => !comp.isClosed);
                     if (pendingComp) {
-                        emergency = `Ticket ${pendingComp.id} · ${pendingComp.status}: ${pendingComp.issue}`;
+                        emergency = `Phiếu ${pendingComp.id} · ${pendingComp.status}: ${pendingComp.issue}`;
                     }
 
-                    const rawAccountStatus = String(c.account_status || '').toLowerCase();
+                    const rawAccountStatus = String(c.customer_status || '').toLowerCase();
                     // GĐ-03 & F-023: Tách biệt rõ ràng 3 trạng thái tài khoản theo PawpalEnum
                     const accMeta = (window.PawpalEnum?.accountStatus)
-                        ? window.PawpalEnum.accountStatus(c.account_status)
+                        ? window.PawpalEnum.accountStatus(c.customer_status)
                         : { raw: rawAccountStatus, label: 'Đang hoạt động', isLocked: false };
                     const isSuspended = accMeta.raw === 'tam_khoa' || rawAccountStatus === 'suspended';
                     const isLocked = accMeta.isLocked;
 
                     // Xác định số điện thoại ưu tiên: c.phone_main -> số người nhận trong sổ địa chỉ -> '—'
-                    const phoneVal = c.phone_main || addrs.find(a => a.receiverPhone)?.receiverPhone || '—';
+                    const phoneVal = phoneMap.get(c.id) || '—';
 
                     // GĐ-03 & F-006: Chuẩn hóa mapping giới tính qua PawpalEnum, không gán NULL thành Khác
                     const genderVal = (window.PawpalEnum?.gender)
@@ -400,10 +511,14 @@
                     freshDb[custKey] = {
                         id: custKey,
                         dbId: c.id,
-                        accountStatusRaw: c.account_status,
+                        updatedAt: c.updated_at,
+                        fullNameRaw: prof.full_name || '',
+                        genderRaw: prof.gender || '',
+                        membershipTierId: mem.membership_tier_id || '',
+                        accountStatusRaw: c.customer_status,
                         name: prof.full_name || c.full_name || ('Khách hàng ' + (phoneVal !== '—' ? phoneVal : custKey)),
                         phone: phoneVal,
-                        email: c.email || (prof.email || 'Chưa cập nhật'),
+                        email: c.contact_email || 'Chưa cập nhật',
                         gender: genderVal,
                         dob: prof.date_of_birth ? PawpalCustomers.formatDate(prof.date_of_birth) : 'Chưa cập nhật',
                         dobRaw: prof.date_of_birth || '',
@@ -411,11 +526,11 @@
                         tierName,
                         tierBadgeClass: tierBadge,
                         points: points,
-                        isMember: !isTemp,
+                        isMember: hasMembership,
                         status: isSuspended ? 'SUSPENDED' : (isLocked ? 'LOCKED' : (isTemp ? 'TEMP' : 'ACTIVE')),
                         authStatus: isSuspended ? 'Tạm khóa' : (isLocked ? 'Đã khóa' : (isTemp ? 'Khách vãng lai' : 'Đang hoạt động')),
                         accountStatusLabel: accMeta.label,
-                        note: c.note || (isTemp ? 'Khách vãng lai tiếp nhận dịch vụ tại quầy.' : 'Khách hàng thành viên Pawpal Pet Center.'),
+                        note: c.note || '',
                         emergencyAlert: emergency,
                         addresses: addrs,
                         pets: cPets,
@@ -427,14 +542,20 @@
             }
 
             PawpalCustomers.state.customerDatabase = freshDb;
+            PawpalCustomers.state.membershipTiers = data.tiersData || [];
 
             // PERF-03.C04: Lịch sử điểm Pawpoint nạp on-demand khi mở subtab Pawpoints
             PawpalCustomers.state.pawpointHistory = [];
+            PawpalCustomers.state.pawpointLoadStatus = 'idle';
 
             PawpalCustomers.populateCustomerDatalists();
             _custLastFetchedAt = Date.now();
             PawpalCustomers.state.hasLoadedCustomers = true;
             PawpalCustomers.state.listLoadStatus = 'loaded';
+
+            if (document.getElementById('subtab-tab-pawpoint')?.classList.contains('active')) {
+                PawpalCustomers.subtabs.pawpoint?.renderPawpointHistory?.();
+            }
 
             if (PawpalCustomers.subtabs.list?.renderCustomersTable) {
                 PawpalCustomers.subtabs.list.renderCustomersTable();
@@ -445,6 +566,7 @@
             }
         } catch (err) {
             PawpalCustomers.state.listLoadStatus = 'error';
+            PawpalCustomers.state.hasLoadedCustomers = false;
             console.error('[Customers] Lỗi nạp dữ liệu từ Supabase:', err);
             PawpalCustomers.subtabs.list?.renderCustomersTable?.();
             PawpalCustomers.subtabs.list?.updateCustomerKPIs?.();
@@ -461,27 +583,25 @@
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!client) return cust;
 
+        cust._detailsLoadStatus='loading';
         try {
             const fetchCust360 = async () => {
-                const [ordersRes, apptsRes, ticketsRes] = await Promise.all([
-                    client.from('sales_order')
-                        .select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at')
-                        .eq('customer_id', cust.dbId)
-                        .order('created_at', { ascending: false })
-                        .limit(20),
-                    client.from('appointment')
-                        .select('id, appointment_code, customer_id, appointment_date, appointment_time, appointment_status, total_price, service:service_id(service_name), staff:staff_id(full_name)')
-                        .eq('customer_id', cust.dbId)
-                        .order('appointment_date', { ascending: false })
-                        .limit(20),
-                    client.from('support_ticket')
-                        .select('id, user_id, title, type, status, priority, created_at')
-                        .eq('user_id', cust.dbId)
-                        .order('created_at', { ascending: false })
-                        .limit(20)
+                const [ordersRes,apptsRes,ticketsRes,paymentsRes]=await Promise.all([
+                    readAllRows(()=>client.from('sales_order').select('id,order_code,customer_id,order_status,created_at').eq('customer_id',cust.dbId).order('created_at',{ascending:false}).order('id')),
+                    readAllRows(()=>client.from('appointment').select('id,appointment_code,customer_id,scheduled_start_at,appointment_status,items:appointment_item(name_snapshot,status),staff:staff_id(full_name)').eq('customer_id',cust.dbId).order('scheduled_start_at',{ascending:false}).order('id')),
+                    readAllRows(()=>client.from('support_ticket').select('id,ticket_code,customer_id,subject,type,status,priority,created_at').eq('customer_id',cust.dbId).order('created_at',{ascending:false}).order('id')),
+                    readAllRows(()=>client.from('payment').select('id,order_id,amount,transaction_status,refunds:refund_transaction(refunded_amount,refund_status)').eq('customer_id',cust.dbId).order('id'))
                 ]);
+                for (const result of [ordersRes, apptsRes, ticketsRes, paymentsRes]) if (result.error) throw result.error;
+                let totals = [];
+                for (let offset = 0; offset < (ordersRes.data || []).length; offset += 100) {
+                    const result = await client.from('sales_order_totals').select('order_id,total_amount').in('order_id',ordersRes.data.slice(offset,offset+100).map(o=>o.id)).order('order_id');
+                    if (result.error) throw result.error;
+                    totals.push(...(result.data || []));
+                }
                 return {
-                    orders: ordersRes.data || [],
+                    orders: (ordersRes.data || []).map(o => ({ ...o, total_amount: totals.find(t => t.order_id === o.id)?.total_amount })),
+                    payments: paymentsRes.data || [],
                     appts: apptsRes.data || [],
                     tickets: ticketsRes.data || []
                 };
@@ -498,23 +618,25 @@
             cust.orders = (payload.orders || []).map(o => {
                 const dateStr = o.created_at ? PawpalCustomers.formatDateTime(o.created_at) : '—';
                 const totalStr = o.total_amount ? Number(o.total_amount).toLocaleString('vi-VN') + ' đ' : '0 đ';
-                let st = 'Hoàn thành';
-                let stClass = 'badge-success';
+                let st = window.PawpalEnum?.orderStatus(o.order_status)?.label || 'Chưa xác định';
+                let stClass = window.PawpalEnum?.orderStatus(o.order_status)?.badgeClass || 'badge-neutral';
                 const ordStatus = (o.order_status || '').toUpperCase();
-                const payStatus = (o.payment_status || '').toLowerCase();
-                const isPaid = payStatus === 'paid' || payStatus === 'da_thanh_toan';
                 if (ordStatus === 'PENDING' || ordStatus === 'CHO_XAC_NHAN') { st = 'Chờ xác nhận'; stClass = 'badge-warning'; }
                 else if (ordStatus === 'PROCESSING' || ordStatus === 'CONFIRMED' || ordStatus === 'DA_XAC_NHAN' || ordStatus === 'DANG_DONG_GOI' || ordStatus === 'PACKING') { st = 'Đang chuẩn bị'; stClass = 'badge-info'; }
                 else if (ordStatus === 'SHIPPING' || ordStatus === 'DELIVERING' || ordStatus === 'DANG_GIAO_HANG') { st = 'Đang giao'; stClass = 'badge-info'; }
                 else if (ordStatus === 'CANCELLED' || ordStatus === 'DA_HUY') { st = 'Đã hủy'; stClass = 'badge-danger'; }
                 else if (ordStatus === 'DELIVERED' || ordStatus === 'DA_GIAO_HANG' || ordStatus === 'COMPLETED' || ordStatus === 'DA_HOAN_TAT') { st = 'Hoàn thành'; stClass = 'badge-success'; }
+                const payments=(payload.payments || []).filter(p=>p.order_id===o.id && p.transaction_status==='succeeded');
+                const paid=payments.reduce((sum,p)=>sum+Number(p.amount),0);
+                const refunded=payments.reduce((sum,p)=>sum+(p.refunds || []).filter(r=>r.refund_status==='succeeded').reduce((v,r)=>v+Number(r.refunded_amount),0),0);
+                const payment=refunded>0?(refunded>=paid?'Đã hoàn tiền':'Hoàn tiền một phần'):Number(o.total_amount)===0&&paid===0?'Không phát sinh thanh toán':paid>=Number(o.total_amount)?'Đã thanh toán':paid>0?'Thanh toán một phần':'Chưa ghi nhận thanh toán';
                 return {
                     id: o.order_code || `ORD-${o.id.slice(0, 4)}`,
                     rawId: o.id,
                     date: dateStr,
                     total: totalStr,
-                    payment: isPaid ? 'Đã thanh toán' : 'Chưa thanh toán',
-                    paymentClass: isPaid ? 'badge-success' : 'badge-warning',
+                    payment,
+                    paymentClass: refunded>0?'badge-warning':paid>=Number(o.total_amount)?'badge-success':'badge-neutral',
                     status: st,
                     statusClass: stClass
                 };
@@ -522,8 +644,7 @@
 
             // GĐ-03 & F-005: Map appts qua PawpalEnum nhận diện da_hoan_tat, da_check_in, vang_mat
             cust.bookings = (payload.appts || []).map(a => {
-                const aTime = a.appointment_time ? ` ${a.appointment_time.slice(0, 5)}` : '';
-                const aDate = a.appointment_date ? (PawpalCustomers.formatDate(a.appointment_date) + aTime) : '—';
+                const aDate = a.scheduled_start_at ? PawpalCustomers.formatDateTime(a.scheduled_start_at) : '—';
                 const apptMeta = (window.PawpalEnum?.appointmentStatus)
                     ? window.PawpalEnum.appointmentStatus(a.appointment_status)
                     : { raw: a.appointment_status, label: a.appointment_status || 'Chưa rõ', badgeClass: 'badge-neutral' };
@@ -531,8 +652,8 @@
                     id: a.appointment_code || `APT-${a.id.slice(0, 4)}`,
                     rawId: a.id,
                     date: aDate,
-                    service: a.service?.service_name || 'Dịch vụ Spa & Grooming',
-                    staff: a.staff?.full_name || 'KTV Pawpal',
+                    service: (a.items || []).filter(i => i.status !== 'cancelled').map(i => i.name_snapshot).join(', ') || 'Chưa ghi nhận',
+                    staff: a.staff?.full_name || 'Chưa phân công',
                     status: apptMeta.label,
                     statusClass: apptMeta.badgeClass
                 };
@@ -551,33 +672,43 @@
                     id: t.ticket_code || `TK-${t.id.slice(0, 4)}`,
                     rawId: t.id,
                     date: tDate,
-                    issue: t.title || t.subject || 'Phản ánh chất lượng dịch vụ',
+                    issue: t.subject || 'Chưa ghi nhận',
                     level: priorityMeta.label,
                     status: ticketMeta.label,
+                    isClosed: ['resolved', 'closed', 'rejected', 'da_giai_quyet', 'da_dong', 'tu_choi'].includes(t.status),
                     statusClass: ticketMeta.badgeClass
                 };
             });
 
             cust._detailsLoaded = true;
+            cust._detailsLoadStatus = 'loaded';
         } catch (e) {
-            console.warn('[PawpalCustomers] Lỗi nạp 360:', e);
+            cust._detailsLoadStatus = 'error';
+            console.warn('[PawpalCustomers] Lỗi nạp 360:', e.code || 'connection');
         }
         return cust;
     };
 
     // Helper lazy-fetch lịch sử điểm Pawpoint khi vào tab Pawpoints (PERF-03.C04)
-    PawpalCustomers.fetchPawpointLedger = async function({ force = false, limit = 100 } = {}) {
+    PawpalCustomers.fetchPawpointLedger = async function({ force = false, limit = Infinity } = {}) {
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!client) return [];
+        if (!client) {
+            PawpalCustomers.state.pawpointLoadStatus = 'error';
+            return [];
+        }
+        PawpalCustomers.state.pawpointLoadStatus = 'loading';
 
         const fetchLedger = async () => {
-            const { data, error } = await client
-                .from('paw_point_transaction')
-                .select('id, customer_id, points, balance_after, description, created_at')
-                .order('created_at', { ascending: false })
-                .limit(limit);
-            if (error) throw error;
-            return data || [];
+            const rows = [];
+            for (let offset = 0; ; offset += 1000) {
+                const { data, error } = await client.from('paw_point_transaction')
+                    .select('id, customer_id, points, sequence_no, description, created_at')
+                    .order('customer_id').order('sequence_no').range(offset, offset + 999);
+                if (error) throw error;
+                rows.push(...(data || []));
+                if (!data || data.length < 1000) break;
+            }
+            return rows;
         };
 
         try {
@@ -589,29 +720,34 @@
                 : await fetchLedger();
 
             const freshDb = PawpalCustomers.state.customerDatabase || {};
+            // V1 stores signed entries, so derive each historical balance in sequence order.
+            const runningBalances = new Map();
             PawpalCustomers.state.pawpointHistory = rows.map(pt => {
                 const cObj = Object.values(freshDb).find(c => c.dbId === pt.customer_id) || {};
                 const tTime = pt.created_at ? PawpalCustomers.formatDateTime(pt.created_at) : '—';
                 const rawPoints = Number(pt.points ?? pt.point_amount ?? pt.amount ?? 0) || 0;
-                const transactionType = String(pt.transaction_type || pt.type || pt.direction || '').toUpperCase();
-                const descriptionText = String(pt.description || pt.reason || '').toLowerCase();
-                const isSubtraction = rawPoints < 0 || ['SUB', 'DEBIT', 'DEDUCT', 'REDEEM', 'TRỪ'].includes(transactionType) || /trừ|đổi quà|sử dụng điểm|khấu trừ/.test(descriptionText);
+                const isSubtraction = rawPoints < 0;
                 const ptsNum = Math.abs(rawPoints);
+                const balance = (runningBalances.get(pt.customer_id) || 0) + rawPoints;
+                runningBalances.set(pt.customer_id, balance);
                 return {
                     id: `PWH-${pt.id.slice(0, 4)}`,
                     rawId: pt.id,
+                    createdAt: pt.created_at,
                     time: tTime,
-                    custId: cObj.id || 'CUST-001',
+                    custId: cObj.id || '',
                     custName: cObj.name || 'Khách hàng',
                     phone: cObj.phone || '—',
                     type: isSubtraction ? 'SUB' : 'ADD',
                     points: ptsNum,
-                    balance: pt.balance_after ?? cObj.points ?? 0,
+                    balance,
                     reason: pt.description || 'Giao dịch điểm Pawpoint'
                 };
-            });
+            }).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)) || b.rawId.localeCompare(a.rawId)).slice(0, limit);
+            PawpalCustomers.state.pawpointLoadStatus = 'loaded';
             return PawpalCustomers.state.pawpointHistory;
         } catch (err) {
+            PawpalCustomers.state.pawpointLoadStatus = 'error';
             console.warn('[PawpalCustomers] Lỗi nạp lịch sử điểm Pawpoint:', err);
             return [];
         }
@@ -680,7 +816,15 @@
                         moduleName: 'Khách hàng',
                         invalidatePattern: invalidatePattern || 'customers:*',
                         onActiveRefresh: async () => {
+                            const openId = sessionStorage.getItem('pawpal_admin_customer_id');
+                            const note = document.getElementById('drawerCustNote');
+                            const oldCustomer = PawpalCustomers.getCustomer(openId);
+                            const draft = note && oldCustomer && note.value !== (oldCustomer.note || '') ? { value: note.value, version: note.dataset.version } : null;
                             await PawpalCustomers.loadCustomersModuleData({ force: true });
+                            if (openId && document.getElementById('subtab-tab-profile')?.classList.contains('active')) {
+                                PawpalCustomers.subtabs.profile?.renderDrawerCustomerProfile(openId);
+                                if (draft && note) { note.value = draft.value; note.dataset.version = draft.version; }
+                            }
                             if (typeof refreshCallback === 'function') {
                                 refreshCallback();
                             } else if (PawpalCustomers.subtabs.list) {
@@ -698,6 +842,18 @@
             };
 
             window._custRealtimeChannel = client.channel('admin_customers_realtime')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_phone' }, () => triggerCustSync('customers:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'membership_tier' }, () => triggerCustSync('customers:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_weight_history' }, () => triggerCustSync('customers:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_breed' }, () => triggerCustSync('customers:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_species' }, () => triggerCustSync('customers:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_order' }, () => triggerCustSync('customers:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_order_detail' }, () => triggerCustSync('customers:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment' }, () => triggerCustSync('customers:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment_item' }, () => triggerCustSync('customers:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'payment' }, () => triggerCustSync('customers:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'refund_transaction' }, () => triggerCustSync('customers:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'voucher_redemption' }, () => triggerCustSync('customers:*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'customer' }, () => {
                     triggerCustSync('customers:*', () => {
                         if (PawpalCustomers.subtabs.list) {

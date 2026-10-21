@@ -116,15 +116,17 @@
 
     <!-- Supabase JS Client & Config -->
     <script src="/scripts/vendor/supabase.js"></script>
-    <script src="/scripts/api/supabase-client.js"></script>
+    <script>window.__PAWPAL_SUPABASE_CONFIG__={required:true};</script>
+    <script src="/api/admin-config"></script>
+    <script src="/scripts/api/supabase-client.js?v=20261021_bandwidth1"></script>
 
     <!-- SheetJS (XLSX) Library -->
     <script src="/scripts/xlsx.full.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'"></script>
 
     <!-- Data Store & Single-Flight Cache Trung Tâm (Giai đoạn 2) -->
-    <script src="/pages/admin/admin-data-store.js?v=20261018_r4"></script>
+    <script src="/pages/admin/admin-data-store.js?v=20261021_bandwidth1"></script>
 
     <!-- Script điều hướng hệ thống Admin -->
-    <script src="/pages/admin/admin.js?v=20261018_r4"></script>
+    <script src="/pages/admin/admin.js?v=20261021_bandwidth1"></script>
 </body>
 </html>

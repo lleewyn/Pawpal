@@ -5,11 +5,17 @@
     const PawpalCustomers = window.PawpalCustomers = window.PawpalCustomers || {};
     PawpalCustomers.subtabs = PawpalCustomers.subtabs || {};
 
+    const esc=value=>PawpalCustomers.escapeHtml(value);
     let pawpointCurrentPage = 1;
     const PAWPOINT_PAGE_SIZE = 10;
     let selectedAdjustCustomer = null;
 
     function renderPawpointHistory() {
+        const policyBody = document.getElementById('membershipTierPolicyTbody');
+        if (policyBody) {
+            const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+            policyBody.innerHTML = (PawpalCustomers.state.membershipTiers || []).map(t => `<tr><td>${esc(t.tier_name)}</td><td>${Number(t.minimum_expenditure).toLocaleString('vi-VN')} đ</td><td>${Number(t.discount_percent)}%</td><td>${esc(t.description || '—')}</td></tr>`).join('') || '<tr><td colspan="4">Chưa có chính sách hạng thẻ.</td></tr>';
+        }
         const tbody = document.getElementById('pawpointHistoryTbody');
         if (!tbody) return;
         if (!PawpalCustomers.state.hasLoadedCustomers) {
@@ -25,7 +31,11 @@
         delete tbody.dataset.loadingSkeleton;
 
         // Lazy fetch lịch sử Pawpoint nếu chưa nạp (PERF-03.C04)
-        if ((!PawpalCustomers.state.pawpointHistory || PawpalCustomers.state.pawpointHistory.length === 0) && typeof PawpalCustomers.fetchPawpointLedger === 'function' && !PawpalCustomers.state._pawpointsFetching) {
+        if (PawpalCustomers.state.pawpointLoadStatus === 'error') {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">Không thể tải lịch sử Pawpoint. Vui lòng tải lại trang.</td></tr>';
+            return;
+        }
+        if (PawpalCustomers.state.pawpointLoadStatus !== 'loaded' && typeof PawpalCustomers.fetchPawpointLedger === 'function' && !PawpalCustomers.state._pawpointsFetching) {
             PawpalCustomers.state._pawpointsFetching = true;
             if (!tbody.querySelector('.skeleton-row')) {
                 window.PawpalAdmin?.renderTableSkeleton?.(tbody, { columns: 5 });
@@ -78,15 +88,16 @@
         }
 
         tbody.innerHTML = pageItems.map(item => {
+            const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
             const sign = item.type === 'ADD' ? '+' : '-';
             const colorClass = item.type === 'ADD' ? 'text-success' : 'text-danger';
             return `
                 <tr>
-                    <td>${item.time}</td>
-                    <td><strong>${item.custName}</strong> <span style="color: var(--text-muted); font-size: 12px;">(${item.phone})</span></td>
+                    <td>${esc(item.time)}</td>
+                    <td><strong>${esc(item.custName)}</strong> <span style="color: var(--text-muted); font-size: 12px;">(${esc(item.phone)})</span></td>
                     <td><strong class="${colorClass}">${sign}${item.points} điểm</strong></td>
                     <td>${Number(item.balance).toLocaleString('vi-VN')} điểm</td>
-                    <td>${item.reason}</td>
+                    <td>${esc(item.reason)}</td>
                 </tr>
             `;
         }).join('');
@@ -198,11 +209,11 @@
             item.innerHTML = `
                 <div class="customer-autocomplete-info">
                     <div class="customer-autocomplete-meta">
-                        <div class="customer-autocomplete-name" style="font-weight: 600; color: #203A2C;">${c.name}</div>
-                        <div class="customer-autocomplete-phone" style="color: #4F7A65; font-size: 11.5px;">${c.phone || 'Chưa có SĐT'}${petNames}</div>
+                        <div class="customer-autocomplete-name" style="font-weight: 600; color: #203A2C;">${esc(c.name)}</div>
+                        <div class="customer-autocomplete-phone" style="color: #4F7A65; font-size: 11.5px;">${esc(c.phone || 'Chưa có SĐT')}${esc(petNames)}</div>
                     </div>
                 </div>
-                <div class="customer-autocomplete-badge">${c.tierName} • ${pts} điểm</div>
+                <div class="customer-autocomplete-badge">${esc(c.tierName)} • ${pts} điểm</div>
             `;
 
             item.addEventListener('mousedown', (e) => {
@@ -219,7 +230,7 @@
     function clearAdjustCustomerSelection() {
         selectedAdjustCustomer = null;
         const phoneInput = getAdjustPhoneInput();
-        if (phoneInput) phoneInput.value = '';
+        if (phoneInput) { phoneInput.value = ''; phoneInput.style.display = ''; }
         const hint = getAdjustPhoneCustomerHint();
         if (hint) {
             hint.innerHTML = '';
@@ -234,13 +245,14 @@
         const phoneInput = getAdjustPhoneInput();
         if (phoneInput) {
             phoneInput.value = `${cust.name} - ${cust.phone}`;
+            phoneInput.style.display = 'none';
         }
         const hint = getAdjustPhoneCustomerHint();
         if (hint) {
             hint.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                     <div>
-                        <span>Khách hàng: <strong>${cust.name}</strong> (${cust.tierName})</span>
+                        <span>Khách hàng: <strong>${esc(cust.name)}</strong> (${esc(cust.tierName)})</span>
                         <span style="margin-left: 12px;">Số dư hiện tại: <strong>${(cust.points || 0).toLocaleString('vi-VN')} điểm</strong></span>
                     </div>
                     <button type="button" class="btn-clear-selected-customer" style="background: none; border: none; color: #236B48; font-size: 12px; font-weight: 600; cursor: pointer; padding: 2px 6px;">✕ Bỏ chọn</button>
@@ -299,132 +311,42 @@
         if (dropdown) dropdown.style.display = 'none';
     }
 
-    async function handleAdjustPointsSubmit() {
-        const phoneInput = getAdjustPhoneInput();
-        const phoneVal = (phoneInput?.value || '').trim();
-        const type = document.getElementById('adjustType')?.value || 'ADD';
-        const pts = parseInt(document.getElementById('adjustPointsVal')?.value || '0', 10);
-        const reasonInput = getAdjustReasonInput();
-        const reason = (reasonInput?.value || '').trim();
-
-        if (pts <= 0 || isNaN(pts)) {
-            PawpalCustomers.showToast('Vui lòng nhập số điểm lớn hơn 0!', 'warning');
-            return;
-        }
-        if (!reason) {
-            PawpalCustomers.showToast('Vui lòng nhập hoặc chọn lý do điều chỉnh điểm.', 'warning');
-            return;
-        }
-
-        let matchedCust = selectedAdjustCustomer;
-        if (!matchedCust) {
-            const cleanPhone = phoneVal.replace(/[^0-9]/g, '').trim();
-            matchedCust = Object.values(PawpalCustomers.state.customerDatabase || {}).find(c => 
-                (cleanPhone.length >= 9 && c.phone && c.phone.replace(/[^0-9]/g, '').trim() === cleanPhone) ||
-                (c.name && c.name.toLowerCase() === phoneVal.toLowerCase())
-            );
-            if (!matchedCust && phoneVal.includes(' - ')) {
-                const [nPart, pPart] = phoneVal.split(' - ').map(s => s.trim().toLowerCase());
-                matchedCust = Object.values(PawpalCustomers.state.customerDatabase || {}).find(c => 
-                    (c.phone && c.phone.toLowerCase() === pPart) || 
-                    (c.name && c.name.toLowerCase() === nPart)
-                );
+    let adjustmentSaving=false;
+    function adjustError(id,message){
+        const input=document.getElementById(id);let error=document.getElementById(id+'Error');
+        if(!error){error=document.createElement('div');error.id=id+'Error';error.style.cssText='color:#DC2626;font-size:12px;margin-top:4px';input.parentElement.appendChild(error);}
+        error.textContent=message;input.setAttribute('aria-invalid',String(Boolean(message)));input.setAttribute('aria-describedby',error.id);
+    }
+    async function handleAdjustPointsSubmit(){
+        if(adjustmentSaving)return;
+        const customer=selectedAdjustCustomer;
+        const points=Number(document.getElementById('adjustPointsVal').value);
+        const reason=getAdjustReasonInput().value.trim();
+        const type=document.getElementById('adjustType').value;
+        adjustError('adjustPhone',customer?.dbId?'':'Chọn khách hàng từ danh sách gợi ý.');
+        adjustError('adjustPointsVal',Number.isSafeInteger(points)&&points>0&&points<=10000000?'':'Nhập số điểm nguyên từ 1 đến 10.000.000.');
+        adjustError('adjustReason',reason.length>=2&&reason.length<=2000?'':'Nhập lý do từ 2 đến 2.000 ký tự.');
+        if(!customer?.dbId || !Number.isSafeInteger(points) || points<=0 || points>10000000 || reason.length<2 || reason.length>2000)return;
+        const signed=type==='SUB'?-points:points;
+        const signature=JSON.stringify([customer.dbId,signed,reason]);
+        let pending;
+        try{pending=JSON.parse(sessionStorage.getItem('pawpal_customer_point_request') || 'null');}catch{}
+        if(pending?.signature!==signature)pending={signature,id:crypto.randomUUID()};
+        sessionStorage.setItem('pawpal_customer_point_request',JSON.stringify(pending));
+        const button=document.getElementById('btnSubmitAdjustPoints');adjustmentSaving=true;button.disabled=true;button.textContent='Đang lưu';
+        try{
+            const {data,error}=await window.getSupabaseClient().rpc('adjust_customer_points',{p_customer_id:customer.dbId,p_points:signed,p_reason:reason,p_request_id:pending.id});
+            if(error){
+                if(error.message?.includes('insufficient_points')){adjustError('adjustPointsVal','Số điểm trừ vượt quá số dư thực tế hiện tại.');return;}
+                throw error;
             }
-        }
-
-        if (!matchedCust) {
-            PawpalCustomers.showToast(`Không tìm thấy khách hàng với thông tin "${phoneVal}"! Vui lòng chọn từ danh sách gợi ý.`, 'warning');
-            return;
-        }
-
-        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!client) {
-            PawpalCustomers.showToast('Lỗi kết nối CSDL Supabase!', 'danger');
-            return;
-        }
-
-        try {
-            const custDbId = matchedCust.dbId;
-            if (!custDbId) {
-                PawpalCustomers.showToast('Không tìm thấy mã CSDL của khách hàng để điều chỉnh điểm.', 'danger');
-                return;
-            }
-
-            // C-04: Tra cứu số dư mới nhất trực tiếp từ CSDL để triệt tiêu race condition
-            let liveBalance = Number(matchedCust.points) || 0;
-            const { data: latestMem, error: fetchMemErr } = await client
-                .from('customer_membership')
-                .select('total_paw_points')
-                .eq('customer_id', custDbId)
-                .maybeSingle();
-            if (!fetchMemErr && latestMem && latestMem.total_paw_points !== null && latestMem.total_paw_points !== undefined) {
-                liveBalance = Number(latestMem.total_paw_points) || 0;
-            }
-
-            if (type === 'SUB' && pts > liveBalance) {
-                PawpalCustomers.showToast(`Số điểm trừ (${pts}) vượt quá số dư thực tế hiện tại (${liveBalance} điểm).`, 'warning');
-                return;
-            }
-
-            const newBalance = type === 'ADD' ? (liveBalance + pts) : (liveBalance - pts);
-            const ptsSigned = type === 'ADD' ? pts : -pts;
-
-            const { data: updatedMembership, error: memErr } = await client
-                .from('customer_membership')
-                .update({ total_paw_points: newBalance })
-                .eq('customer_id', custDbId)
-                .select('customer_id, total_paw_points')
-                .maybeSingle();
-
-            if (memErr || !updatedMembership || Number(updatedMembership.total_paw_points) !== newBalance) {
-                console.warn('[Customers] Lỗi cập nhật customer_membership, thử upsert:', memErr);
-                const { error: upsertErr } = await client
-                    .from('customer_membership')
-                    .upsert({ customer_id: custDbId, total_paw_points: newBalance });
-                if (upsertErr) throw upsertErr;
-            }
-
-            const { error: transactionError } = await client.from('paw_point_transaction').insert({
-                customer_id: custDbId,
-                reward_rule_id: '92222222-2222-2222-2222-222222222222',
-                points: ptsSigned,
-                balance_after: newBalance,
-                description: reason
-            });
-
-            if (transactionError) {
-                // C-04: Compensation Rollback - hoàn trả số dư ban đầu nếu ghi nhật ký giao dịch thất bại
-                console.error('[Pawpoint] Lỗi ghi transaction, rollback số dư về:', liveBalance, transactionError);
-                await client.from('customer_membership').update({ total_paw_points: liveBalance }).eq('customer_id', custDbId);
-                throw transactionError;
-            }
-
-            window.PawpalDataStore?.emitMutation?.('paw_point_transaction', 'INSERT', { customer_id: custDbId });
-            window.PawpalDataStore?.emitMutation?.('customer_membership', 'UPDATE', { customer_id: custDbId });
-            window.PawpalDataStore?.invalidate?.('customers:pawpoints*');
-            window.PawpalDataStore?.invalidate?.('customers:list');
-
-            await PawpalCustomers.loadCustomersModuleData({ force: true });
-            if (PawpalCustomers.subtabs.list) {
-                PawpalCustomers.subtabs.list.renderCustomersTable();
-                PawpalCustomers.subtabs.list.updateCustomerKPIs();
-            }
-            renderPawpointHistory();
-
-            const currentOpenCustId = sessionStorage.getItem('pawpal_admin_customer_id');
-            if (currentOpenCustId === matchedCust.id && PawpalCustomers.subtabs.profile) {
-                PawpalCustomers.subtabs.profile.renderDrawerCustomerProfile(matchedCust.id);
-            }
-
-            PawpalCustomers.showToast(`Đã ${type === 'ADD' ? 'cộng' : 'trừ'} ${pts.toLocaleString('vi-VN')} Pawpoint cho khách hàng ${matchedCust.name}! Số dư mới: ${newBalance.toLocaleString('vi-VN')} điểm`, 'success');
-            const formAdjust = document.getElementById('formAdjustPoints');
-            if (formAdjust) formAdjust.reset();
-            clearAdjustCustomerSelection();
-            closeAdjustModal();
-        } catch (err) {
-            console.error('[Customers] Lỗi điều chỉnh điểm:', err);
-            PawpalCustomers.showToast('Đã xảy ra lỗi khi điều chỉnh điểm!', 'danger');
-        }
+            sessionStorage.removeItem('pawpal_customer_point_request');
+            closeAdjustModal();document.getElementById('formAdjustPoints').reset();clearAdjustCustomerSelection();
+            await PawpalCustomers.loadCustomersModuleData({force:true});
+            await PawpalCustomers.fetchPawpointLedger({force:true});renderPawpointHistory();
+            PawpalCustomers.showToast(`Đã lưu điều chỉnh. Số dư sau giao dịch: ${Number(data.balance).toLocaleString('vi-VN')} điểm.`,'success');
+        }catch(error){PawpalCustomers.showToast('Chưa xác nhận được điều chỉnh. Bạn có thể bấm lưu lại cùng nội dung để kiểm tra, hệ thống không ghi trùng.','warning');}
+        finally{adjustmentSaving=false;button.disabled=false;button.textContent='Xác nhận điều chỉnh';}
     }
 
     let _hasAttachedPawpointDelegates = false;
@@ -432,6 +354,9 @@
         renderPawpointHistory();
         if (_hasAttachedPawpointDelegates) return;
         _hasAttachedPawpointDelegates = true;
+
+        document.getElementById('formAdjustPoints')?.addEventListener('submit',event=>{event.preventDefault();handleAdjustPointsSubmit();});
+        ['adjustPhone','adjustPointsVal','adjustReason'].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>adjustError(id,'')));
 
         // Xử lý autocomplete khách hàng
         document.addEventListener('focusin', (e) => {
