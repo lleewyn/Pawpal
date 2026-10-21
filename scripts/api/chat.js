@@ -23,7 +23,7 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Rate Limiter trượt trong bộ nhớ theo actor/IP/session (PR-04)
+// Rate Limiter trượt trong bộ nhớ theo actor/IP/session (P0-02, G1-03, G1-05, G1-06)
 const rateLimiterCache = new Map();
 function checkRateLimit(key, maxRequests = 30, windowMs = 60000) {
     const now = Date.now();
@@ -31,13 +31,29 @@ function checkRateLimit(key, maxRequests = 30, windowMs = 60000) {
     if (!record || now - record.startTime > windowMs) {
         record = { count: 1, startTime: now };
         rateLimiterCache.set(key, record);
-        return { allowed: true, remaining: maxRequests - 1 };
+        return { allowed: true, remaining: maxRequests - 1, retryAfter: 0 };
     }
+    const resetInMs = Math.max(0, windowMs - (now - record.startTime));
+    const retryAfter = Math.max(1, Math.ceil(resetInMs / 1000));
     if (record.count >= maxRequests) {
-        return { allowed: false, remaining: 0, resetInMs: windowMs - (now - record.startTime) };
+        return { allowed: false, remaining: 0, resetInMs, retryAfter };
     }
     record.count++;
-    return { allowed: true, remaining: maxRequests - record.count };
+    return { allowed: true, remaining: maxRequests - record.count, retryAfter: 0 };
+}
+
+// Tự động dọn dẹp rateLimiterCache sau 2 phút không hoạt động để triệt tiêu memory leak (G1-05)
+function pruneRateLimiterCache() {
+    const now = Date.now();
+    for (const [k, rec] of rateLimiterCache.entries()) {
+        if (now - rec.startTime > 120000) {
+            rateLimiterCache.delete(k);
+        }
+    }
+}
+if (typeof setInterval !== 'undefined') {
+    const pruneTimer = setInterval(pruneRateLimiterCache, 60000);
+    if (pruneTimer && pruneTimer.unref) pruneTimer.unref();
 }
 
 // Bộ đếm cuộc gọi AI đồng thời (Concurrency Limiter)
@@ -1527,16 +1543,19 @@ async function handleCopilotChat(req, res) {
         return res.status(400).json({ ok: false, error: 'Tin nhắn vượt quá giới hạn 2000 ký tự cho phép.', code: 'MESSAGE_TOO_LONG' });
     }
 
-    // PR-04: Rate Limiting theo Actor / Session (Tối đa 30 requests / phút)
+    // PR-04 / G1-06: Rate Limiting theo Actor / Session (Tối đa 30 requests / phút)
     const callerKey = staffUser?.id || req.ip || 'anonymous';
     const rateLimitCheck = checkRateLimit('copilot:' + callerKey, 30, 60000);
     if (!rateLimitCheck.allowed) {
+        const retryAfterSec = rateLimitCheck.retryAfter || Math.ceil((rateLimitCheck.resetInMs || 1000) / 1000);
+        res.setHeader('Retry-After', String(retryAfterSec));
         return res.status(429).json({
             ok: false,
             done: false,
             error: 'Rate limit exceeded: Quá số lượng yêu cầu cho phép (30 req/phút).',
             code: 'RATE_LIMIT_EXCEEDED',
-            reply: 'Bạn đang gửi yêu cầu quá nhanh. Vui lòng đợi vài giây rồi thử lại nhé!'
+            retryAfter: retryAfterSec,
+            reply: `Bạn đang gửi yêu cầu quá nhanh. Vui lòng đợi ${retryAfterSec} giây rồi thử lại nhé!`
         });
     }
 
@@ -1671,6 +1690,100 @@ async function handleCopilotChat(req, res) {
         });
     }
 
+    // 4. G2-02: Đếm / tra cứu đơn hàng chờ xử lý hoặc đơn mới hôm nay (Fast-Path deterministic_orders)
+    const isOrderCount = (lowerMsg.includes('đơn hàng') || lowerMsg.includes('đơn mới') || lowerMsg.includes('sales order') || lowerMsg.includes('chờ xử lý')) &&
+                         (lowerMsg.includes('bao nhiêu') || lowerMsg.includes('đếm') || lowerMsg.includes('hôm nay') || lowerMsg.includes('danh sách') || lowerMsg.includes('tồn đọng') || lowerMsg.includes('chờ duyệt') || lowerMsg.includes('chờ giao'));
+    if (isOrderCount) {
+        let reply = '';
+        try {
+            const { data: pendingOrders, error: orderErr } = await supabase
+                .from('sales_order')
+                .select('id, order_code, order_status, payment_status, total_amount, created_at')
+                .in('order_status', ['cho_xu_ly', 'cho_xac_nhan', 'pending'])
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            const { count: pendingCount, error: countErr } = await supabase
+                .from('sales_order')
+                .select('*', { count: 'exact', head: true })
+                .in('order_status', ['cho_xu_ly', 'cho_xac_nhan', 'pending']);
+
+            if (orderErr || countErr) {
+                reply = 'Dạ không thể lấy số liệu đơn hàng do lỗi kết nối CSDL. Anh/Chị vui lòng [Mở quản lý đơn hàng](#tab-order-list) để kiểm tra.';
+            } else {
+                const total = pendingCount || (pendingOrders ? pendingOrders.length : 0);
+                reply = `Hệ thống ghi nhận **${total} đơn hàng** đang ở trạng thái chờ xử lý.\n\n`;
+                if (total > 0 && Array.isArray(pendingOrders) && pendingOrders.length > 0) {
+                    reply += `| Mã đơn | Trạng thái đơn | Thanh toán | Tổng tiền | Thời gian tạo |\n`;
+                    reply += `|:---|:---|:---|:---|:---|\n`;
+                    pendingOrders.forEach(o => {
+                        const timeStr = o.created_at ? new Date(o.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+                        const amountStr = typeof o.total_amount === 'number' ? o.total_amount.toLocaleString('vi-VN') + ' đ' : (o.total_amount || '-');
+                        reply += `| #${o.order_code || (o.id ? String(o.id).slice(0, 8) : 'ORD')} | ${o.order_status || 'Chờ'} | ${o.payment_status || 'Chưa TT'} | ${amountStr} | ${timeStr} |\n`;
+                    });
+                    reply += `\nXem chi tiết tại [Mở quản lý đơn hàng](#tab-order-list).`;
+                } else {
+                    reply = `Hiện tại toàn bộ đơn hàng đều đã được xử lý xong! [Mở quản lý đơn hàng](#tab-order-list)`;
+                }
+            }
+        } catch (e) {
+            reply = 'Dạ không thể lấy số liệu đơn hàng: ' + e.message + '. Anh/Chị vui lòng [Mở quản lý đơn hàng](#tab-order-list) để kiểm tra.';
+        }
+
+        saveCopilotHistorySafe(staffUser, userMsg, reply, sessionId, sessionTitle);
+
+        return res.status(200).json({
+            ok: true,
+            reply: reply,
+            done: true,
+            router: 'deterministic_orders'
+        });
+    }
+
+    // 5. G2-02: Đếm / tra cứu ca chat đang chờ tiếp nhận (hàng đợi CSKH, Fast-Path deterministic_queue)
+    const isQueueCount = (lowerMsg.includes('hàng đợi') || lowerMsg.includes('chờ tiếp nhận') || lowerMsg.includes('chờ nhân viên') || lowerMsg.includes('ca chat chờ')) &&
+                         (lowerMsg.includes('bao nhiêu') || lowerMsg.includes('đếm') || lowerMsg.includes('danh sách') || lowerMsg.includes('có ai') || lowerMsg.includes('hiện tại'));
+    if (isQueueCount) {
+        let reply = '';
+        try {
+            const { count: queueCount, data: queueList, error: qErr } = await supabase
+                .from('chat_conversation')
+                .select('id, customer_id, sentiment_level, is_urgent, updated_at', { count: 'exact' })
+                .eq('status', 'waiting_agent')
+                .order('updated_at', { ascending: true })
+                .limit(5);
+
+            if (qErr) {
+                reply = 'Dạ không thể lấy số liệu hàng đợi ca chat: ' + qErr.message + '. Anh/Chị vui lòng [Mở trực chat](#tab-chatbot-live) để kiểm tra.';
+            } else {
+                const total = queueCount || (queueList ? queueList.length : 0);
+                reply = `Hàng đợi CSKH hiện có **${total} cuộc trò chuyện** đang chờ nhân viên tiếp quản.\n\n`;
+                if (total > 0 && Array.isArray(queueList) && queueList.length > 0) {
+                    reply += `| ID Hội thoại | Mức cảm xúc | Ca khẩn cấp | Chờ từ |\n`;
+                    reply += `|:---|:---|:---|:---|\n`;
+                    queueList.forEach(q => {
+                        const timeWait = q.updated_at ? new Date(q.updated_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+                        reply += `| #${String(q.id).slice(0, 8)} | Mức ${q.sentiment_level || 3}/5 | ${q.is_urgent ? 'Có' : 'Không'} | ${timeWait} |\n`;
+                    });
+                    reply += `\nXem chi tiết tại [Mở trực chat](#tab-chatbot-live).`;
+                } else {
+                    reply = `Hàng đợi đang trống, không có ca chat nào đang chờ tiếp nhận! [Mở trực chat](#tab-chatbot-live)`;
+                }
+            }
+        } catch (e) {
+            reply = 'Dạ không thể lấy số liệu hàng đợi: ' + e.message + '. Anh/Chị vui lòng [Mở trực chat](#tab-chatbot-live) để kiểm tra.';
+        }
+
+        saveCopilotHistorySafe(staffUser, userMsg, reply, sessionId, sessionTitle);
+
+        return res.status(200).json({
+            ok: true,
+            reply: reply,
+            done: true,
+            router: 'deterministic_queue'
+        });
+    }
+
     // PR-06: Cờ tính năng Copilot AI (Nếu tắt AI, vẫn cho phép Fast-path chạy 100%, nhưng ngắt gọi Gemini)
     if (!isFeatureEnabled('copilot_ai_enabled')) {
         const disabledReply = 'Chức năng Copilot AI tự do đang tạm tắt để bảo trì. Các lệnh tra cứu nhanh trực tiếp từ CSDL (lịch hẹn, ticket khiếu nại, tồn kho) vẫn hoạt động bình thường.';
@@ -1683,13 +1796,15 @@ async function handleCopilotChat(req, res) {
         });
     }
 
-    // PR-04: Concurrency Limiter (Giới hạn số tác vụ AI đồng thời)
+    // PR-04 / G1-04 / G1-06: Concurrency Limiter (Giới hạn số tác vụ AI đồng thời)
     if (activeConcurrentAiCalls >= MAX_CONCURRENT_AI_CALLS) {
+        res.setHeader('Retry-After', '5');
         return res.status(429).json({
             ok: false,
             done: false,
             error: 'AI service busy: Vượt quá số lượng tác vụ AI đồng thời.',
             code: 'RATE_LIMIT_EXCEEDED',
+            retryAfter: 5,
             reply: 'Hệ thống AI đang bận xử lý nhiều yêu cầu cùng lúc. Anh/Chị vui lòng thử lại sau vài giây nhé!'
         });
     }
@@ -1827,23 +1942,31 @@ Quy tắc trả lời:
                 const errStatus = copilotErr.status || 500;
                 console.warn(`[Copilot Backend Warning] Lỗi key Gemini (lần thử ${attempt + 1}/${maxRetries}): [${errStatus}] ${errMsg}`);
 
-                // PR-04: Lỗi 400 Client error không retry
-                if (errStatus === 400 || errMsg.includes('400') || errMsg.includes('INVALID_ARGUMENT')) {
-                    console.warn('[Copilot Backend] Lỗi 400 Bad Request, dừng ngay không retry.');
+                // G2-04: Lỗi 400 / 401 / 403 không retry dưới bất kỳ hình thức nào
+                if (errStatus === 400 || errStatus === 401 || errStatus === 403 || 
+                    errMsg.includes('400') || errMsg.includes('401') || errMsg.includes('403') || 
+                    errMsg.includes('INVALID_ARGUMENT') || errMsg.includes('PERMISSION_DENIED')) {
+                    console.warn('[Copilot Backend] Lỗi client/auth, dừng ngay không retry.');
                     break;
                 }
 
-                // PR-04: Lỗi 429 Rate Limit chỉ đổi key 1 lần duy nhất
+                // G2-04: Lỗi 429 Rate Limit tôn trọng Retry-After, không quay vòng key tức thì gây bão quota
                 if (errStatus === 429 || errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED')) {
-                    if (attempt >= 1) {
-                        console.warn('[Copilot Backend] Quota toàn hệ thống đã chạm ngưỡng 429, ngắt retry bảo vệ tài nguyên.');
-                        break;
-                    }
+                    console.warn('[Copilot Backend] Quota Gemini đã chạm ngưỡng 429, ngắt ngay để bảo vệ tài nguyên.');
+                    res.setHeader('Retry-After', '10');
+                    return res.status(429).json({
+                        ok: false,
+                        done: false,
+                        error: 'Gemini upstream quota exceeded: Hệ thống AI đang chạm giới hạn lưu lượng.',
+                        code: 'UPSTREAM_RATE_LIMIT',
+                        retryAfter: 10,
+                        reply: 'Hệ thống AI đang tạm thời vượt quá hạn mức xử lý. Vui lòng đợi 10 giây rồi thử lại hoặc sử dụng công cụ tra cứu trực tiếp.'
+                    });
                 }
 
-                if (Date.now() + 3000 > requestDeadline) {
-                    console.warn('[Copilot Backend] Không đủ thời gian deadline để retry tiếp.');
-                    break;
+                // Với lỗi tạm thời 502/503: chờ backoff nhỏ 300ms trước khi thử lại
+                if (attempt < maxRetries - 1 && Date.now() + 500 < requestDeadline) {
+                    await new Promise(r => setTimeout(r, 300));
                 }
             }
         }
@@ -2033,11 +2156,13 @@ module.exports = async function handler(req, res) {
             return sendError(400, 'MESSAGE_TOO_LONG', 'Tin nhắn vượt quá giới hạn 2000 ký tự cho phép.');
         }
 
-        // PR-04: Rate limit cho khách hàng (Tối đa 30 requests / phút)
+        // PR-04 / G1-03 / G1-06: Rate limit cho khách hàng (Tối đa 30 requests / phút)
         const clientKey = userId || sessionToken || req.ip || 'anonymous';
         const clientRateLimit = checkRateLimit('client:' + clientKey, 30, 60000);
         if (!clientRateLimit.allowed) {
-            return sendError(429, 'RATE_LIMIT_EXCEEDED', 'PawPal AI đang bận xử lý nhiều yêu cầu cùng lúc. Bạn vui lòng thử lại sau vài giây nhé! 🐾');
+            const retryAfterSec = clientRateLimit.retryAfter || Math.ceil((clientRateLimit.resetInMs || 1000) / 1000);
+            if (!res.headersSent) res.setHeader('Retry-After', String(retryAfterSec));
+            return sendError(429, 'RATE_LIMIT_EXCEEDED', `PawPal AI đang bận xử lý nhiều yêu cầu cùng lúc. Bạn vui lòng thử lại sau ${retryAfterSec} giây nhé! 🐾`);
         }
 
         // 1. NẠP MÀNG LỌC TOXIC SHIELD & SENTIMENT RULES TỪ DB
@@ -2383,6 +2508,7 @@ module.exports = async function handler(req, res) {
 
         // 7. GỌI GEMINI MODEL (ÁP DỤNG SLIDING WINDOW & CONTEXT COMPACTION NẾU > 15 TIN NHẮN)
         if (activeConcurrentAiCalls >= MAX_CONCURRENT_AI_CALLS) {
+            if (!res.headersSent) res.setHeader('Retry-After', '5');
             return sendError(429, 'RATE_LIMIT_EXCEEDED', 'PawPal AI đang bận xử lý nhiều yêu cầu cùng lúc. Bạn vui lòng thử lại sau vài giây nhé! 🐾');
         }
         activeConcurrentAiCalls++;
@@ -2438,7 +2564,23 @@ module.exports = async function handler(req, res) {
             chat = model.startChat({ history: history });
             streamResult = await chat.sendMessageStream([{ text: maskedText }]);
         } catch (err1) {
-            console.warn("[API] gemini-2.5-flash stream failed (" + err1.message + "), đang tự động chuyển sang key dự phòng tiếp theo từ CSDL...");
+            const err1Msg = err1.message || '';
+            const err1Status = err1.status || 500;
+            console.warn(`[API] gemini-2.5-flash stream khởi tạo lỗi: [${err1Status}] ${err1Msg}`);
+
+            // G2-04 / G2-05: Lỗi 400 / 401 / 403 không retry đổi key
+            if (err1Status === 400 || err1Status === 401 || err1Status === 403 || err1Msg.includes('INVALID_ARGUMENT') || err1Msg.includes('PERMISSION_DENIED')) {
+                return sendError(err1Status >= 400 && err1Status < 500 ? err1Status : 400, 'INVALID_REQUEST', 'Yêu cầu không hợp lệ hoặc bị từ chối bởi upstream AI.');
+            }
+
+            // G2-04 / G2-05: Lỗi 429 Rate Limit tôn trọng Retry-After, không đổi key tức thì gây bão quota
+            if (err1Status === 429 || err1Msg.includes('429') || err1Msg.includes('RESOURCE_EXHAUSTED')) {
+                if (!res.headersSent) res.setHeader('Retry-After', '10');
+                return sendError(429, 'UPSTREAM_RATE_LIMIT', 'Hệ thống PawPal AI đang tạm thời quá tải hạn mức. Bạn vui lòng thử lại sau 10 giây hoặc chọn gặp tư vấn viên trực tiếp nhé! 🐾');
+            }
+
+            // Với lỗi tạm thời 502/503: đợi 300ms rồi mới fallback sang key tiếp theo
+            await new Promise(r => setTimeout(r, 300));
             const nextGenAIResult = await getGenAI(true);
             const activeGenAI = nextGenAIResult?.genAI || genAI;
             const fallbackModel = activeGenAI.getGenerativeModel({ 
@@ -2827,4 +2969,12 @@ module.exports.handleGetConversationMessages = handleGetConversationMessages;
 module.exports.handleHandover = handleHandover;
 module.exports.handleBackToAi = handleBackToAi;
 module.exports.handleCsat = handleCsat;
+
+// Export helpers kiểm thử & theo dõi tải (G1)
+module.exports.checkRateLimit = checkRateLimit;
+module.exports.rateLimiterCache = rateLimiterCache;
+module.exports.pruneRateLimiterCache = pruneRateLimiterCache;
+module.exports.MAX_CONCURRENT_AI_CALLS = MAX_CONCURRENT_AI_CALLS;
+module.exports.getActiveConcurrentAiCalls = () => activeConcurrentAiCalls;
+module.exports.setActiveConcurrentAiCalls = (val) => { activeConcurrentAiCalls = val; };
 

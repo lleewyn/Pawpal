@@ -1058,8 +1058,16 @@
                     console.warn('[Staff Storage] Lỗi upload tệp:', stErr);
                 }
             }
+            // G3-08: Nếu upload storage thất bại, báo lỗi rõ ràng và giữ file để thử lại, không nhét base64/data URL nặng vào DB
             if (!imageSource) {
-                imageSource = (pendingAdminAttachment.size <= 65536) ? pendingAdminAttachment.dataUrl : `[Ảnh đính kèm: ${pendingAdminAttachment.name}]`;
+                console.error('[Staff Storage] Upload ảnh đính kèm thất bại, không lưu ảnh lỗi vào CSDL.');
+                PawpalChatbot.showToast?.('Không thể tải tệp đính kèm lên máy chủ lưu trữ. Vui lòng thử lại.', 'error');
+                isSendingLiveMsg = false;
+                if (sendMsgBtn) {
+                    sendMsgBtn.disabled = false;
+                    sendMsgBtn.style.opacity = '1';
+                }
+                return;
             }
             const imgMd = `![${pendingAdminAttachment.name}](${imageSource})`;
             fullText = text ? `${text}\n${imgMd}` : imgMd;

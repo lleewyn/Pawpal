@@ -614,7 +614,12 @@
             const headers = { 'Content-Type': 'application/json' };
             if (token) headers['Authorization'] = 'Bearer ' + token;
 
-            try {
+                // G2-07: Cắt gọn copilotHistory trước khi gửi (tối đa 10 tin nhắn gần nhất và trần byte)
+                const payloadMessages = (copilotHistory || []).slice(-10).map(m => ({
+                    role: m.role === 'assistant' ? 'assistant' : 'user',
+                    content: typeof m.content === 'string' ? m.content.slice(0, 2000) : ''
+                }));
+
                 const res = await fetch('/api/admin/copilot', {
                     method: 'POST',
                     headers: headers,
@@ -622,7 +627,7 @@
                         isCopilot: true,
                         sessionId: curSession.id,
                         sessionTitle: curSession.title,
-                        messages: copilotHistory
+                        messages: payloadMessages
                     })
                 });
 

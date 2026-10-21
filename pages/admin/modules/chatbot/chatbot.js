@@ -663,10 +663,22 @@
                 })
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_message' }, (payload) => {
                     const newMsg = payload && payload.new;
-                    if (newMsg && PawpalChatbot.state.currentConversation && newMsg.conversation_id === PawpalChatbot.state.currentConversation.id) {
-                        PawpalChatbot.subtabs.live?.handleIncomingMessage?.(newMsg);
+                    if (newMsg) {
+                        if (PawpalChatbot.state.currentConversation && newMsg.conversation_id === PawpalChatbot.state.currentConversation.id) {
+                            PawpalChatbot.subtabs.live?.handleIncomingMessage?.(newMsg);
+                        }
+                        // G3-02: Cập nhật trực tiếp tin nhắn gần nhất trong state hội thoại để tránh fetch thừa
+                        const convs = PawpalChatbot.state.liveConversations || [];
+                        const targetConv = convs.find(c => c.id === newMsg.conversation_id);
+                        if (targetConv) {
+                            targetConv.lastMessage = newMsg.content;
+                            targetConv.time = 'Vừa xong';
+                            targetConv.updated_at = newMsg.created_at || new Date().toISOString();
+                            PawpalChatbot.subtabs.live?.renderConversationsList?.();
+                        }
                     }
-                    refreshInboxDebounced(350);
+                    // G3-02: Gom sự kiện cửa sổ 1.2s trước khi làm mới danh sách hội thoại
+                    refreshInboxDebounced(1200);
                 })
                 .subscribe((status) => {
                     if (status === 'SUBSCRIBED') {

@@ -10,18 +10,15 @@ const port = 3000;
 // Cho phép parse body JSON
 app.use(express.json());
 
-const getCustomerAuth = () => {
-    delete require.cache[require.resolve('./scripts/api/customer_auth.js')];
-    return require('./scripts/api/customer_auth.js');
-};
-app.post('/api/customer/auth/guest', (req, res) => getCustomerAuth().guest(req, res));
-app.post('/api/customer/auth/lookup', (req, res) => getCustomerAuth().lookup(req, res));
-app.post('/api/customer/auth/guest-records', (req, res) => getCustomerAuth().guestRecords(req, res));
-app.post('/api/customer/auth/login', (req, res) => getCustomerAuth().login(req, res));
-app.post('/api/customer/auth/otp/request', (req, res) => getCustomerAuth().requestOtp(req, res));
-app.post('/api/customer/auth/otp/complete', (req, res) => getCustomerAuth().completeOtp(req, res));
-app.post('/api/customer/auth/me', (req, res) => getCustomerAuth().me(req, res));
-app.post('/api/customer/auth/change-password', (req, res) => getCustomerAuth().changePassword(req, res));
+const customerAuth = require('./scripts/api/customer_auth.js');
+app.post('/api/customer/auth/guest', (req, res) => customerAuth.guest(req, res));
+app.post('/api/customer/auth/lookup', (req, res) => customerAuth.lookup(req, res));
+app.post('/api/customer/auth/guest-records', (req, res) => customerAuth.guestRecords(req, res));
+app.post('/api/customer/auth/login', (req, res) => customerAuth.login(req, res));
+app.post('/api/customer/auth/otp/request', (req, res) => customerAuth.requestOtp(req, res));
+app.post('/api/customer/auth/otp/complete', (req, res) => customerAuth.completeOtp(req, res));
+app.post('/api/customer/auth/me', (req, res) => customerAuth.me(req, res));
+app.post('/api/customer/auth/change-password', (req, res) => customerAuth.changePassword(req, res));
 
 // 1. Tự động chuyển hướng từ các link cũ có đuôi .html sang Clean URLs chuẩn
 const legacyRedirectMap = {
@@ -162,13 +159,24 @@ app.use('/modules', express.static(path.join(__dirname, 'pages/admin/modules')))
 app.use(express.static(path.join(__dirname, '.'), { extensions: ['html'] }));
 
 // Route cho API Chatbot (hỗ trợ tải động script AI)
+// Chatbot API Handlers (P0-01, G1-01: Load tĩnh một lần, bảo toàn rate limiter và active concurrency counter)
+const {
+    handleChatSession,
+    handleGetConversations,
+    handleGetConversationMessages,
+    handleHandover,
+    handleBackToAi,
+    handleCsat
+} = chatApi;
+const chatActionsApi = require('./scripts/api/chat_actions.js');
+const chatEvaluationsApi = require('./scripts/api/chat_evaluations.js');
+const { getChatConfig, updateChatConfig } = require('./scripts/api/chat_config.js');
+
 app.post('/api/chat', async (req, res) => {
     try {
-        delete require.cache[require.resolve('./scripts/api/chat.js')];
-        const handler = require('./scripts/api/chat.js');
-        await handler(req, res);
+        await chatApi(req, res);
     } catch (error) {
-        console.error(error);
+        console.error('[Server] Chat Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -176,8 +184,6 @@ app.post('/api/chat', async (req, res) => {
 // Các endpoint RESTful hợp đồng mở rộng của Chatbot (Mục 6.4)
 app.post('/api/chat/session', async (req, res) => {
     try {
-        delete require.cache[require.resolve('./scripts/api/chat.js')];
-        const { handleChatSession } = require('./scripts/api/chat.js');
         await handleChatSession(req, res);
     } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
@@ -186,8 +192,6 @@ app.post('/api/chat/session', async (req, res) => {
 
 app.get('/api/chat/conversations', async (req, res) => {
     try {
-        delete require.cache[require.resolve('./scripts/api/chat.js')];
-        const { handleGetConversations } = require('./scripts/api/chat.js');
         await handleGetConversations(req, res);
     } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
@@ -196,8 +200,6 @@ app.get('/api/chat/conversations', async (req, res) => {
 
 app.get('/api/chat/conversations/:id', async (req, res) => {
     try {
-        delete require.cache[require.resolve('./scripts/api/chat.js')];
-        const { handleGetConversationMessages } = require('./scripts/api/chat.js');
         await handleGetConversationMessages(req, res);
     } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
@@ -206,8 +208,6 @@ app.get('/api/chat/conversations/:id', async (req, res) => {
 
 app.post('/api/chat/handover', async (req, res) => {
     try {
-        delete require.cache[require.resolve('./scripts/api/chat.js')];
-        const { handleHandover } = require('./scripts/api/chat.js');
         await handleHandover(req, res);
     } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
@@ -216,8 +216,6 @@ app.post('/api/chat/handover', async (req, res) => {
 
 app.post('/api/chat/back-to-ai', async (req, res) => {
     try {
-        delete require.cache[require.resolve('./scripts/api/chat.js')];
-        const { handleBackToAi } = require('./scripts/api/chat.js');
         await handleBackToAi(req, res);
     } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
@@ -226,8 +224,6 @@ app.post('/api/chat/back-to-ai', async (req, res) => {
 
 app.post('/api/chat/csat', async (req, res) => {
     try {
-        delete require.cache[require.resolve('./scripts/api/chat.js')];
-        const { handleCsat } = require('./scripts/api/chat.js');
         await handleCsat(req, res);
     } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
@@ -239,11 +235,9 @@ app.post('/api/admin/copilot', async (req, res) => {
     try {
         req.body = req.body || {};
         req.body.isCopilot = true;
-        delete require.cache[require.resolve('./scripts/api/chat.js')];
-        const handler = require('./scripts/api/chat.js');
-        await handler(req, res);
+        await chatApi(req, res);
     } catch (error) {
-        console.error(error);
+        console.error('[Server] Copilot Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -254,11 +248,9 @@ app.get('/api/admin/copilot/history', async (req, res) => {
         req.body = req.body || {};
         req.body.isCopilot = true;
         req.body.action = 'GET_COPILOT_HISTORY';
-        delete require.cache[require.resolve('./scripts/api/chat.js')];
-        const handler = require('./scripts/api/chat.js');
-        await handler(req, res);
+        await chatApi(req, res);
     } catch (error) {
-        console.error(error);
+        console.error('[Server] Copilot History GET Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -269,11 +261,9 @@ app.delete('/api/admin/copilot/history', async (req, res) => {
         req.body = req.body || {};
         req.body.isCopilot = true;
         req.body.action = 'CLEAR_COPILOT_HISTORY';
-        delete require.cache[require.resolve('./scripts/api/chat.js')];
-        const handler = require('./scripts/api/chat.js');
-        await handler(req, res);
+        await chatApi(req, res);
     } catch (error) {
-        console.error(error);
+        console.error('[Server] Copilot History DELETE Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -281,8 +271,6 @@ app.delete('/api/admin/copilot/history', async (req, res) => {
 // Route chuyên biệt cho Thao tác có xác nhận Chatbot Admin (G4)
 app.post('/api/admin/chat-actions', async (req, res) => {
     try {
-        delete require.cache[require.resolve('./scripts/api/chat_actions.js')];
-        const chatActionsApi = require('./scripts/api/chat_actions.js');
         await chatActionsApi.dispatchChatAction(req, res);
     } catch (error) {
         console.error('[Server] Chat Actions Route error:', error);
@@ -293,8 +281,6 @@ app.post('/api/admin/chat-actions', async (req, res) => {
 // Route chuyên biệt cho Bộ Runner Đánh giá Kiểm thử Toàn luồng Chatbot (G5-01)
 app.post('/api/admin/chat/evaluations', async (req, res) => {
     try {
-        delete require.cache[require.resolve('./scripts/api/chat_evaluations.js')];
-        const chatEvaluationsApi = require('./scripts/api/chat_evaluations.js');
         await chatEvaluationsApi.runEvaluations(req, res);
     } catch (error) {
         console.error('[Server] Chat Evaluations Route error:', error);
@@ -305,8 +291,6 @@ app.post('/api/admin/chat/evaluations', async (req, res) => {
 // Routes Cấu hình & Feature Toggles Chatbot (G5-05)
 app.get('/api/admin/chat/config', (req, res) => {
     try {
-        delete require.cache[require.resolve('./scripts/api/chat_config.js')];
-        const { getChatConfig } = require('./scripts/api/chat_config.js');
         res.status(200).json({ ok: true, config: getChatConfig() });
     } catch (error) {
         console.error('[Server] Chat Config GET error:', error);
@@ -316,8 +300,6 @@ app.get('/api/admin/chat/config', (req, res) => {
 
 app.post('/api/admin/chat/config', async (req, res) => {
     try {
-        delete require.cache[require.resolve('./scripts/api/chat_config.js')];
-        const { updateChatConfig } = require('./scripts/api/chat_config.js');
         const authHeader = req.headers['authorization'];
         if (!authHeader) return res.status(401).json({ error: 'Yêu cầu phiên quản trị.' });
         const updated = updateChatConfig(req.body);
