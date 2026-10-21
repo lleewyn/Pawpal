@@ -614,6 +614,7 @@
             const headers = { 'Content-Type': 'application/json' };
             if (token) headers['Authorization'] = 'Bearer ' + token;
 
+            try {
                 // G2-07: Cắt gọn copilotHistory trước khi gửi (tối đa 10 tin nhắn gần nhất và trần byte)
                 const payloadMessages = (copilotHistory || []).slice(-10).map(m => ({
                     role: m.role === 'assistant' ? 'assistant' : 'user',
