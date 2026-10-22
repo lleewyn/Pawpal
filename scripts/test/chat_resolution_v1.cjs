@@ -23,6 +23,11 @@ const {browserPage,admin,service,ok,infra}=require('./customer_completion_helper
   await page.locator('#btnConfirmResolveChat').click();
   await page.waitForFunction(()=>!document.getElementById('btnConfirmResolveChat').disabled);
   c=await get();assert.equal(c.status,'resolved');assert.equal(c.assigned_staff_id,null);assert.ok(c.resolved_by);assert.ok(c.resolved_at);assert.equal(c.resolved_reason,'resolved_complete');assert.equal(c.internal_note,'Resolution summary');
+  await page.waitForFunction(()=>PawpalChatbot.state.currentConversation?.status==='resolved');
+  assert.equal(await page.locator('#chatMessageInput').isDisabled(),true);
+  assert.equal(await page.locator('#btnSendLiveMessage').isDisabled(),true);
+  assert.equal(await page.locator('#btnToggleTakeover').isDisabled(),true);
+  await page.screenshot({path:infra+'/chat-resolution-closed-v1.private.png'});
   const audit=(await ok(service.from('audit_log').select('id').eq('entity_id',id).eq('action','CHAT_ADMIN_RESOLVE')))[0];
   request.p_request_id=audit.id;
   await ok(admin.rpc('resolve_admin_chat',request));

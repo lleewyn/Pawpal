@@ -506,8 +506,14 @@
         }
 
         const resolveHeaderBtn = document.getElementById('btnHeaderResolveChat');
+        const conversationClosed = ['resolved', 'closed', 'completed', 'blocked'].includes(currentConversation.status);
+        const messageInput = document.getElementById('chatMessageInput');
+        const sendButton = document.getElementById('btnSendLiveMessage');
+        if (messageInput) messageInput.disabled = conversationClosed;
+        if (sendButton) sendButton.disabled = conversationClosed;
         if (takeoverBtn) {
-            takeoverBtn.textContent = currentConversation.isHandover ? 'Trả lại AI' : 'Tiếp nhận';
+            takeoverBtn.disabled = conversationClosed;
+            takeoverBtn.textContent = conversationClosed ? 'Đã kết thúc' : currentConversation.isHandover ? 'Trả lại AI' : 'Tiếp nhận';
             takeoverBtn.className = 'admin-btn btn-takeover-compact ' + (currentConversation.isHandover ? 'admin-btn-secondary' : 'admin-btn-primary');
         }
 
@@ -523,6 +529,7 @@
             composerStatusEl.innerHTML = currentConversation.isHandover
                 ? 'Chế độ: <strong>Nhân viên trực tiếp (Đang mở)</strong>'
                 : 'Chế độ: <em>Bot tự động (Bấm "Tiếp nhận" để trả lời)</em>';
+            if (conversationClosed) composerStatusEl.textContent = 'Hội thoại đã kết thúc';
         }
 
         const timelineEl = document.getElementById('chatMessagesTimeline');
@@ -971,7 +978,7 @@
     async function sendLiveMsg() {
         if(isSendingLiveMsg)return;
         const conversation=PawpalChatbot.state?.currentConversation,input=document.getElementById('chatMessageInput'),button=document.getElementById('btnSendLiveMessage');
-        const text=input?.value.trim();if(!conversation || !text)return;
+        const text=input?.value.trim();if(!conversation || !text || input.disabled || button?.disabled)return;
         isSendingLiveMsg=true;
         try{if(await operateConversation('send',text,button)){
             if(PawpalChatbot.state.currentConversation?.id===conversation.id && input.value.trim()===text)input.value='';

@@ -37,4 +37,6 @@ Các bộ kiểm tra trên bản phục hồi đã đạt: thao tác hội tho�
 - GitHub báo trạng thái Vercel thành công cho commit `4f75ed2`. Trên `https://pawpalgr3.vercel.app`, API mới trả 401 cho yêu cầu quản trị chưa đăng nhập; mã khung chat mới đã được phục vụ.
 - Kiểm tra trình duyệt Production đạt: khách vãng lai gửi câu hỏi → Vercel API → bảng key Cloud → Gemini trả lời → lưu và hiển thị tin nhắn thật. Phiên khách khác bị từ chối đọc hội thoại với 403. Đã xóa hội thoại, tin nhắn và phiên khách kiểm tra sau khi thử.
 - Kiểm tra quản trị Production đạt: đăng nhập, tải phân hệ Chatbot và đọc lịch sử Trợ lý qua API có xác thực trả 200. Đã xem ảnh giao diện Production. Chưa thử lại mọi thao tác ghi quản trị trên dữ liệu Production.
+- Kiểm tra ghi Production tiếp theo đạt trên hội thoại thử riêng: khách yêu cầu nhân viên → quản trị tiếp nhận → gửi tin từ trình duyệt → khách nhận đúng tin → quản trị hoàn tất → khách đọc đúng trạng thái đã hoàn tất. Đã xóa tin nhắn, hội thoại và phiên khách thử; giữ nhật ký thao tác.
+- Đã sửa giao diện hội thoại đã kết thúc: khóa ô nhập, gửi tin và tiếp nhận; hiển thị trạng thái kết thúc. Kiểm tra hồi quy hoàn tất và thao tác hội thoại đạt trên bản phục hồi, có ảnh kiểm tra.
 - Giới hạn số yêu cầu trong API hiện nằm trong bộ nhớ mỗi tiến trình, chưa phải hạn mức dùng chung giữa mọi phiên bản máy chủ.
