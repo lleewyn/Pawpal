@@ -535,6 +535,14 @@
         const timelineEl = document.getElementById('chatMessagesTimeline');
         if (timelineEl) {
             timelineEl.innerHTML = '';
+            if (!currentConversation.messages || currentConversation.messages.length === 0) {
+                const emptyWrap = document.createElement('div');
+                emptyWrap.className = 'chat-timeline-empty-state';
+                emptyWrap.style.cssText = 'display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 280px; text-align: center; color: #4F7A65; padding: 32px 20px;';
+                emptyWrap.innerHTML = '<div style="font-weight: 600; color: #236B48; font-size: 15px; margin-bottom: 8px;">Chưa có tin nhắn trong phiên này</div><p style="margin: 0; max-width: 440px; font-size: 13px; line-height: 1.5; color: #4F7A65;">Khách hàng chưa để lại lời nhắn hoặc đây là phiên mới. Bạn có thể nhấn <strong>"Tiếp nhận"</strong> và nhập tin nhắn bên dưới để chủ động trao đổi với khách.</p>';
+                timelineEl.appendChild(emptyWrap);
+                return;
+            }
             currentConversation.messages.forEach(msg => {
                 if (msg.type && msg.type.startsWith('action-')) {
                     const cardWrap = document.createElement('div');
