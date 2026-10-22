@@ -158,6 +158,7 @@ Phân hệ khách đang thực hiện; chưa nghiệm thu toàn bộ đặt mớ
 - [x] Đọc lịch theo V1, không dùng cột đánh giá cũ; phân biệt thu một phần với thanh toán đủ. Không tự hoàn thành hoặc tiếp nhận lịch dựa vào thời gian trên trình duyệt.
 - [x] Không gộp các lịch riêng chỉ vì cùng thú cưng/dịch vụ/giờ. Trình duyệt dùng mã local với Cloud thật đã xác nhận hai lịch thử hiển thị đủ hai thẻ, đúng tổng tiền, không ghi thu tiền; đã dọn fixture và xem ảnh.
 - [x] Bộ kiểm thử đọc lịch, đăng ký Realtime và hồi quy giỏ hàng: 27/27 đạt.
+- [x] Commit `babc776` đã lên Vercel; `node scripts/test/customer_booking_cloud_read.cjs --deployed` đạt. Đây là nghiệm thu phần danh sách/đọc số tiền, không phải nghiệm thu form đặt mới hoặc đổi/hủy lịch.
 - [ ] Chuyển form đặt mới và danh mục/bảng giá sang giao dịch máy chủ, bỏ JSON/cache nghiệp vụ cũ.
 - [ ] Chuyển đổi/hủy lịch sang RPC có quyền chủ sở hữu, phiên bản và kiểm tra lịch/phòng/xe/thu tiền; nghiệm thu từng modal.
 - [ ] Hoàn thiện chi tiết ca, đánh giá dịch vụ và Realtime; kiểm tra lại toàn luồng trên Vercel.
