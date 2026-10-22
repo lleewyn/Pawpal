@@ -4,7 +4,7 @@ const { createCustomerAuth, validPassword, runtimeMode } = require('../api/custo
 const { createTestStore } = require('./auth_store_fixture');
 
 function fixture({ simulated = true, locked = false, staff = false, temporary = false, realAccount = false, mode = simulated ? 'console' : 'supabase', allowedPhones = ['0912345678'] } = {}) {
-    let time = 1000, codes = [], writes = [], credentialsUsed = [], failUpdate = false, failRead = false, ready = true, failLink = false;
+    let time = 1000, codes = [], writes = [], credentialsUsed = [], profileCalls = [], failUpdate = false, failRead = false, ready = true, failLink = false;
     const phoneData = { customer_id: 'customer-1', phone_number: '0912345678', is_primary: true };
     const customer = { id: 'customer-1', auth_user_id: 'auth-1', customer_status: locked ? 'locked' : 'active', contact_email: 'test@example.com' };
     const admin = {
@@ -40,7 +40,9 @@ function fixture({ simulated = true, locked = false, staff = false, temporary = 
         }
     };
     const store = createTestStore(() => time);
-    const createApi = () => createCustomerAuth({ admin, store, mode, allowedTestPhones: allowedPhones, randomCode: () => '123456', deliver: (phone, code) => codes.push(code), clientFactory: () => ({ auth: {
+    const createApi = () => createCustomerAuth({ admin, store, mode, allowedTestPhones: allowedPhones, randomCode: () => '123456', deliver: (phone, code) => codes.push(code), clientFactory: token => ({
+        async rpc(name, args) { profileCalls.push({name,args,token}); return failUpdate ? {error: new Error('Atomic profile rejected')} : {data: {id: 'customer-1', revision: 'db-revision', addresses: []}}; },
+        auth: {
         async signInWithPassword(credentials) { credentialsUsed.push(credentials); const { password } = credentials; if (mode === 'demo' && (!credentials.email || credentials.phone)) return { data: {}, error: new Error('Phone provider disabled') }; if (!['OldPass123!', 'NewPass123!'].includes(password)) return { data: {}, error: new Error('Wrong password') }; return { data: { user: { id: 'auth-1' }, session: { access_token: 'safe-token', refresh_token: 'refresh' } } }; },
         async signInWithOtp() { return { error: null }; },
         async verifyOtp({ token }) { return token === '123456' ? { data: { user: { id: 'auth-1' }, session: { access_token: 'safe-token' } } } : { error: new Error('Invalid OTP') }; },
@@ -54,8 +56,24 @@ function fixture({ simulated = true, locked = false, staff = false, temporary = 
     }
     const request = () => call('requestOtp', { phone: '0912345678', purpose: 'reset' });
     const complete = (id, code = '123456') => call('completeOtp', { challengeId: id, code, password: 'NewPass123!' });
-    return { call, request, complete, writes, codes, credentialsUsed, restart: () => { api = createApi(); }, advance: ms => { time += ms; }, rejectUpdate: () => { failUpdate = true; }, rejectRead: () => { failRead = true; }, missingMigration: () => { ready = false; }, rejectLink: () => { failLink = true; } };
+    return { call, request, complete, writes, codes, credentialsUsed, profileCalls, restart: () => { api = createApi(); }, advance: ms => { time += ms; }, rejectUpdate: () => { failUpdate = true; }, rejectRead: () => { failRead = true; }, missingMigration: () => { ready = false; }, rejectLink: () => { failLink = true; } };
 }
+
+test('profile API uses one atomic RPC with the verified customer token', async () => {
+    const f=fixture();
+    const result=await f.call('me',{action:'profile-save',profile:{name:'Customer',email:'',addresses:[],revision:'old'}},'valid-token');
+    assert.equal(result.code,200);
+    assert.deepEqual(f.profileCalls,[{name:'customer_profile_save',args:{p_name:'Customer',p_email:'',p_addresses:[],p_revision:'old'},token:'valid-token'}]);
+    assert.equal(f.writes.length,0);
+    f.rejectUpdate();
+    assert.equal((await f.call('me',{action:'profile-save',profile:{}},'valid-token')).code,400);
+});
+
+test('profile API refuses forged sessions before invoking any profile RPC', async () => {
+    const f=fixture();
+    assert.equal((await f.call('me',{action:'profile-snapshot'},'forged')).code,400);
+    assert.equal(f.profileCalls.length,0);
+});
 
 test('demo login and password change use internal identity when phone provider is disabled', async () => {
     const f = fixture({ mode: 'demo', realAccount: true, allowedPhones: [] });

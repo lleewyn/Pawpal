@@ -124,10 +124,10 @@
             <div class="modal-content profile-modal-content">
                 <div class="modal-header profile-modal-header">
                     <h5 class="modal-title profile-modal-title">Chỉnh sửa thông tin cá nhân</h5>
-                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal" aria-label="Đóng">&times;</button>
+                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal" data-close-modal="profileEditModal" aria-label="Đóng">&times;</button>
                 </div>
                 <div class="modal-body profile-modal-body">
-                    <form id="profileUpdateForm" class="profile-update-form" novalidate>
+                    <form id="profileUpdateForm" class="profile-update-form" novalidate onsubmit="return false;">
                         <div class="form-group mb-3">
                             <label for="profileNameInput" class="form-label-custom">Họ và tên <span class="required-star">*</span></label>
                             <input type="text" class="form-control-custom" id="profileNameInput" placeholder="Nhập tên của bạn" required aria-describedby="profileNameError">
@@ -182,7 +182,7 @@
                     </form>
                 </div>
                 <div class="modal-footer profile-modal-footer">
-                    <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal" data-close-modal="profileEditModal">Hủy</button>
                     <button id="btnSaveProfile" type="button" class="btn-modal-save">Lưu thay đổi</button>
                 </div>
             </div>

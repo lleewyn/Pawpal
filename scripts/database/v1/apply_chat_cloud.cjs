@@ -1,12 +1,13 @@
 // Reviewed chat DDL only; verification fixtures never leave the restored DB.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {infra,cloud,sql}=require('./cloud_connection.cjs');
-if(!['apply','apply-security','apply-keys','apply-settings'].includes(process.argv[2]))throw Error('Use apply after isolated API/browser verification');
-const files=process.argv[2]==='apply-settings'?['057_admin_settings.sql']:process.argv[2]==='apply-security'?['050_admin_chat_security.sql']:process.argv[2]==='apply-keys'?['056_private_ai_key_rotation.sql']:['045_admin_chat_inbox.sql','046_admin_chat_operations.sql','047_admin_chat_resolution.sql','048_admin_chat_complaint.sql','049_admin_chat_transfer.sql','050_admin_chat_security.sql','051_admin_chat_rules.sql','052_admin_chat_benchmark.sql','053_admin_chat_history.sql','054_chat_feedback.sql','055_public_chat_gateway.sql','056_private_ai_key_rotation.sql'];
+if(!['apply','apply-security','apply-keys','apply-settings','apply-portal-profile','apply-portal-pet','apply-portal-diary'].includes(process.argv[2]))throw Error('Use apply after isolated API/browser verification');
+const files=process.argv[2]==='apply-portal-diary'?['060_customer_pet_diary_access.sql']:process.argv[2]==='apply-portal-pet'?['059_customer_portal_pet.sql']:process.argv[2]==='apply-portal-profile'?['058_customer_portal_profile.sql']:process.argv[2]==='apply-settings'?['057_admin_settings.sql']:process.argv[2]==='apply-security'?['050_admin_chat_security.sql']:process.argv[2]==='apply-keys'?['056_private_ai_key_rotation.sql']:['045_admin_chat_inbox.sql','046_admin_chat_operations.sql','047_admin_chat_resolution.sql','048_admin_chat_complaint.sql','049_admin_chat_transfer.sql','050_admin_chat_security.sql','051_admin_chat_rules.sql','052_admin_chat_benchmark.sql','053_admin_chat_history.sql','054_chat_feedback.sql','055_public_chat_gateway.sql','056_private_ai_key_rotation.sql'];
 if(files.some(f=>!fs.existsSync(path.join(__dirname,f))))throw Error('Missing reviewed chat migration');
 const shapeQuery="SELECT md5(string_agg(table_name||'.'||column_name||':'||data_type||':'||is_nullable,',' ORDER BY table_name,ordinal_position)) FROM information_schema.columns WHERE table_schema='public'";
 const shape=sql(shapeQuery);
-const folder=path.join(infra,'backups',(process.argv[2]==='apply-settings'?'settings-cloud-':'chats-cloud-')+new Date().toISOString().replace(/[:.]/g,'-'));fs.mkdirSync(folder,{recursive:true});
+const release=process.argv[2]==='apply-portal-diary'?'portal-diary':process.argv[2]==='apply-portal-pet'?'portal-pet':process.argv[2]==='apply-portal-profile'?'portal-profile':process.argv[2]==='apply-settings'?'settings':'chats';
+const folder=path.join(infra,'backups',release+'-cloud-'+new Date().toISOString().replace(/[:.]/g,'-'));fs.mkdirSync(folder,{recursive:true});
 const dump=cloud('pg_dump',['--schema=public','--schema=pawpal_private','--schema=auth','--no-owner'],'',{folder,timeout:180000});
 fs.writeFileSync(path.join(folder,'before-chats.private.sql'),dump);fs.writeFileSync(path.join(folder,'before-SHA256.txt'),crypto.createHash('sha256').update(dump).digest('hex')+'\n');
 // Snapshot every public row and Auth credentials/ban state inside one transaction.
@@ -29,4 +30,4 @@ sql(transaction,{folder,timeout:180000});
 const after=sql(shapeQuery);if(shape!==after)throw Error('Physical schema changed');
 const staffCount=Number(sql('SELECT count(*) FROM public.staff'));
 fs.writeFileSync(path.join(folder,'verification.txt'),JSON.stringify({verifiedAt:new Date().toISOString(),shape:after,staffCount,allPublicRowsAndAuthCredentialsAndBansUnchanged:true,atomic:true,migrations:files},null,2));
-console.log('PASS Cloud '+(process.argv[2]==='apply-settings'?'settings':'chat')+' migrations applied atomically; all public rows/Auth credentials/ban states unchanged; '+staffCount+' source staff. Backup: '+folder);
+console.log('PASS Cloud '+release+' migrations applied atomically; all public rows/Auth credentials/ban states unchanged; '+staffCount+' source staff. Backup: '+folder);

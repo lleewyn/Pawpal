@@ -73,6 +73,16 @@ function getDefaultPetAvatar(species) {
 
 let isInitRunning = false;
 let editingPetId = null;
+let editingPetSnapshot = null;
+let newPetRequestId = null;
+let petChannel;
+let petRefreshTimer;
+export function dispose() {
+    clearTimeout(petRefreshTimer);
+    const db = window.getSupabaseClient?.() || window.SupabaseClient;
+    if (petChannel) db?.removeChannel(petChannel);
+    petChannel = null;
+}
 
 function getPetRouteParams() {
     const hashQuery = window.location.hash.includes('?')
@@ -124,8 +134,24 @@ export async function initPetProfilePage() {
         setupAvatar();
         setupVaccineCardUploader();
         setupSpeciesToggle();
+        setupBreedAutocomplete();
         setupDeleteModal();
         loadPetBottomInsights();
+        const db = window.getSupabaseClient?.() || window.SupabaseClient;
+        const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        if (db?.channel && user?.id) {
+            dispose();
+            petChannel = db.channel('own-pet-list');
+            petChannel.on('postgres_changes',{event:'*',schema:'public',table:'pet_profile',filter:`customer_id=eq.${user.id}`},()=>{
+                clearTimeout(petRefreshTimer);
+                petRefreshTimer = setTimeout(()=>{
+                    // Form đang mở giữ nguyên bản nháp và phiên bản; chỉ cập nhật danh sách.
+                    if (!document.getElementById('petListView')?.classList.contains('d-none')) {
+                        renderPetGrids().catch(()=>showToast('Không thể cập nhật danh sách bé cưng.', 'error'));
+                    }
+                },250);
+            }).subscribe();
+        }
 
         // Điền form sau khi dữ liệu thật từ Supabase đã tải xong.
         if (actionParam === 'create') {
@@ -151,6 +177,8 @@ export async function switchToPetFormScreen(petId = null) {
     if (!listView || !detailView) return;
 
     editingPetId = petId;
+    editingPetSnapshot = null;
+    newPetRequestId = petId ? null : crypto.randomUUID();
 
     if (petId) {
         const pets = await getPets();
@@ -160,6 +188,7 @@ export async function switchToPetFormScreen(petId = null) {
             return;
         }
         if (pet) {
+            editingPetSnapshot = { ...pet };
             if (petIdInput) petIdInput.value = pet.id;
             if (titleEl) titleEl.textContent = pet.name;
             if (quickBox) quickBox.classList.remove('d-none');
@@ -370,7 +399,17 @@ function resetPetForm() {
 }
 
 async function renderPetGrids() {
-    const pets = await getPets();
+    let pets;
+    try { pets = await getPets(); }
+    catch (error) {
+        for (const id of ['activePetGrid', 'archivePetGrid']) {
+            const grid = document.getElementById(id);
+            if (grid) { grid.textContent = 'Không thể tải hồ sơ bé cưng. Vui lòng thử lại.'; grid.setAttribute('role', 'alert'); }
+        }
+        document.getElementById('emptyStateActive')?.classList.add('d-none');
+        document.getElementById('emptyStateArchive')?.classList.add('d-none');
+        throw error;
+    }
     
     const activeGrid = document.getElementById('activePetGrid');
     const archiveGrid = document.getElementById('archivePetGrid');
@@ -490,12 +529,58 @@ function getSpeciesName(pet) {
     return speciesName;
 }
 
+function setupBreedAutocomplete() {
+    const input = document.getElementById('breed');
+    if (!input || input.dataset.autocompleteReady) return;
+    input.dataset.autocompleteReady = 'true';
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:relative;width:100%';
+    input.parentNode.insertBefore(wrapper, input); wrapper.appendChild(input);
+    const list = document.createElement('div');
+    list.className = 'autocomplete-dropdown'; list.hidden = true;
+    list.style.cssText = 'position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:2500;max-height:240px;overflow:auto;overscroll-behavior:contain;background:#fff;border:1px solid #ECF2EE;border-radius:9px;box-shadow:0 10px 28px rgba(35,107,72,.14)';
+    wrapper.appendChild(list);
+    let rows; let request = 0;
+    const render = async () => {
+        const version = ++request;
+        try {
+            if (!rows) {
+                const db = window.getSupabaseClient?.() || window.SupabaseClient;
+                const result = await db.from('pet_breed').select('breed_name,is_active,pet_species(species_name,is_active)').eq('is_active', true);
+                if (result.error) throw result.error;
+                rows = result.data || [];
+            }
+            if (version !== request || document.activeElement !== input) return;
+            const species = document.querySelector('input[name="species"]:checked')?.value;
+            const name = {dog:'Chó',cat:'Mèo',rabbit:'Thỏ'}[species] || document.getElementById('otherSpecies')?.value.trim() || 'Khác';
+            const options = rows.filter(r => r.pet_species?.is_active && r.pet_species.species_name.toLowerCase() === name.toLowerCase()
+                && r.breed_name?.trim() && !/^\d+$|^(unknown|null|undefined|chưa rõ|chưa cập nhật)$/i.test(r.breed_name.trim())
+                && r.breed_name.toLowerCase().includes(input.value.trim().toLowerCase()));
+            list.replaceChildren();
+            for (const row of options) {
+                const button = document.createElement('button');button.type = 'button';button.textContent = row.breed_name;
+                button.style.cssText = 'display:block;width:100%;padding:10px 12px;text-align:left;border:0;background:transparent;color:#203A2C;font-weight:600';
+                button.addEventListener('mousedown', event => event.preventDefault());
+                button.addEventListener('click', () => {input.value = row.breed_name;list.hidden = true;input.dispatchEvent(new Event('change'));});
+                list.appendChild(button);
+            }
+            if (!options.length) list.textContent = 'Không có giống phù hợp trong danh mục.';
+            list.hidden = false;
+        } catch { list.textContent = 'Không thể tải danh mục giống. Vui lòng thử lại.';list.hidden = false; }
+    };
+    input.addEventListener('input', render);input.addEventListener('focus', render);
+    input.addEventListener('blur', () => {++request;list.hidden = true;});
+    input.addEventListener('keydown', event => {if(event.key === 'Escape'){++request;list.hidden = true;}});
+    document.querySelectorAll('input[name="species"]').forEach(radio => radio.addEventListener('change', () => {input.value='';++request;list.hidden=true;}));
+}
+
 function setupForm() {
     const form = document.getElementById('petForm');
     if (!form) return;
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (form.dataset.saving === 'true') return;
 
         const petNameField = document.getElementById('petName');
         const petName = petNameField?.value.trim() || '';
@@ -533,6 +618,11 @@ function setupForm() {
             errors.push('species');
             if (speciesError) speciesError.classList.remove('d-none');
             showToast('Vui lòng chọn loài thú cưng.', 'error');
+        }
+        if (!breed) {
+            errors.push('breed');
+            showToast('Vui lòng chọn giống thú cưng trong danh mục.', 'error');
+            breedField?.focus();
         }
 
         if (species === 'other' && !otherSpecies) {
@@ -601,7 +691,7 @@ function setupForm() {
             name: petName,
             species,
             otherSpecies,
-            breed: breed || (species === 'cat' ? 'Mèo ta' : species === 'dog' ? 'Chó cỏ' : 'Khác'),
+            breed,
             gender: gender || 'male',
             weight: isNaN(weight) ? 0 : weight,
             weightNum: isNaN(weight) ? 0 : weight,
@@ -620,14 +710,20 @@ function setupForm() {
             createdAt: petId ? (await getPets()).find(p => p.id === petId)?.createdAt || new Date().toISOString() : new Date().toISOString()
         };
 
-        const allPets = await getPets();
-        const existingPet = petId ? allPets.find(p => p.id === petId) : null;
+        const existingPet = petId ? editingPetSnapshot : null;
+        if (form.dataset.saving === 'true') return;
+        form.dataset.saving = 'true';
+        const saveButton = document.getElementById('saveBtn');
+        if (saveButton) saveButton.disabled = true;
         try {
-            await savePets([{ ...existingPet, ...petData }]);
+            await savePets([{ ...existingPet, ...petData, _pendingId: newPetRequestId }]);
             showToast(petId ? 'Cập nhật hồ sơ bé cưng thành công!' : 'Thêm bé cưng thành công!');
             switchToPetListScreen();
         } catch (error) {
-            showToast('Không thể lưu hồ sơ bé cưng. Vui lòng thử lại.', 'error');
+            showToast(error.message || 'Không thể lưu hồ sơ bé cưng. Vui lòng thử lại.', 'error');
+        } finally {
+            form.dataset.saving = 'false';
+            if (saveButton) saveButton.disabled = false;
         }
     });
 }
@@ -736,7 +832,7 @@ window.deletePet = async function(id) {
     if (nameEl) nameEl.textContent = pet.name;
     
     const modal = document.getElementById('deleteConfirmModal');
-    if (modal) modal.classList.add('active');
+    if (modal) { modal.classList.add('active'); modal.tabIndex=-1; modal.focus(); }
 };
 
 window.closeDeleteModal = function() {
@@ -747,13 +843,16 @@ window.closeDeleteModal = function() {
 
 async function confirmDelete() {
     if (!petToDeleteId) return;
-
+    try {
     if (await deletePetService(petToDeleteId)) {
         showToast('Đã chuyển hồ sơ vào kho lưu trữ', 'info');
         await renderPetGrids();
     }
     
     window.closeDeleteModal();
+    } catch (error) {
+        showToast(error.message || 'Không thể lưu trữ hồ sơ. Vui lòng thử lại.', 'error');
+    }
 }
 
 function setupDeleteModal() {
@@ -764,6 +863,10 @@ function setupDeleteModal() {
     
     const modalOverlay = document.getElementById('deleteConfirmModal');
     if (modalOverlay) {
+        modalOverlay.tabIndex = -1;
+        modalOverlay.addEventListener('keydown',event=>{
+            if(event.key==='Escape') window.closeDeleteModal();
+        });
         modalOverlay.addEventListener('click', (e) => {
             if (e.target === modalOverlay) {
                 window.closeDeleteModal();
@@ -773,8 +876,13 @@ function setupDeleteModal() {
 }
 
 window.restorePet = async function(id) {
+    try {
     await restorePetService(id);
     showToast('Đã khôi phục hồ sơ bé cưng');
+    } catch (error) {
+        showToast(error.message || 'Không thể khôi phục hồ sơ.', 'error');
+        return;
+    }
     await renderPetGrids();
 };
 

@@ -3,9 +3,62 @@
 
 ---
 
-## TỔNG KẾT KẾT QUẢ KIỂM THỬ TOÀN BỘ CÁC MODULE (PASS 100%)
+## Đối soát lại ngày 22/10/2026 — đang thực hiện
 
-Toàn bộ các luồng dữ liệu của phân hệ User đã được kiểm thử và xác nhận hoạt động chuẩn xác 100% với CSDL Supabase Cloud mới:
+Các dấu hoàn thành ở phần lịch sử bên dưới chưa đủ để nghiệm thu toàn bộ cổng khách hàng. Đợt kiểm tra hiện tại phát hiện Cloud thiếu RPC hồ sơ và hàm đăng ký còn ghi `balance_after` đã bỏ ở V1.
+
+- [x] Kiểm tra xác thực, giao diện xác thực và hồi quy hồ sơ: 40 ca đạt, gồm token giả, tài khoản khóa, nhân sự, OTP dùng một lần và API hồ sơ dùng giao dịch.
+- [x] Viết migration `058_customer_portal_profile.sql`: lưu email/tên/địa chỉ trong một giao dịch, đối chiếu phiên bản, xác nhận chủ sở hữu; bỏ thưởng 50 điểm cố định khi đăng ký.
+- [x] Kiểm tra trên CSDL khôi phục riêng: đăng ký không tự cộng điểm, lưu/đọc lại, giữ địa chỉ, phiên bản cũ bị từ chối, địa chỉ người khác bị từ chối và toàn bộ ghi dở được hoàn tác. Dữ liệu kiểm thử được rollback.
+- [x] Áp dụng migration 058 lên Cloud mới sau sao lưu; đối chiếu toàn bộ hàng public và danh tính/mật khẩu/trạng thái khóa Auth không thay đổi khi triển khai. Không thêm bảng/cột; giữ 17 nhân sự nguồn.
+- [x] Trình duyệt Vercel: tài khoản mới tạo bằng Auth và RPC V1 đăng nhập bằng số điện thoại, sửa tên qua RPC và tải lại vẫn đúng. Không phát sinh điểm chào mừng. Đã dọn tài khoản/hồ sơ thử riêng.
+- [ ] Kiểm tra toàn bộ giao diện đăng ký/OTP, đổi mật khẩu và thêm/sửa/xóa địa chỉ; kiểm tra đồng thời hai phiên trình duyệt.
+- [x] Đăng ký qua giao diện Vercel, OTP giả lập, tạo Auth/hồ sơ và tải lại trang; không tự cộng điểm. Dọn dữ liệu thử sau kiểm tra.
+- [x] Đổi mật khẩu qua giao diện Vercel: Auth từ chối mật khẩu cũ, chấp nhận mật khẩu mới; chỉ thay tài khoản thử riêng đã dọn sau kiểm tra.
+- [x] Sổ địa chỉ: thêm hai địa chỉ, chọn đúng một mặc định, xóa địa chỉ phụ và đọc lại từ Cloud sau reload.
+- [x] Hai phiên: phiên thứ hai lưu trước thì phiên thứ nhất nhận 409, giữ bản nháp, không ghi đè dữ liệu mới. Đã sửa Realtime làm mất nội dung đang nhập.
+- [x] Modal hồ sơ: đóng bằng Escape; form không tự submit/reload; kiểm tra ảnh modal địa chỉ. Mã giao diện mới được phục vụ trực tiếp từ working tree trong kiểm thử trình duyệt, dữ liệu vẫn từ Cloud thật.
+- [ ] Đối soát thú cưng và nhật ký chăm sóc.
+  - Nhật ký: bỏ nạp JSON seed, bộ nhớ nhật ký cũ, dữ liệu Admin trong trình duyệt, tên nhân viên mẫu, ảnh hoạt động mẫu và phản hồi chat tự sinh. Dữ liệu Cloud rỗng là nhật ký rỗng; lỗi truy vấn không được thay bằng dữ liệu giả.
+  - Lọc lịch hẹn theo cả chủ nuôi và thú cưng. Khi ca chỉ định không có nhật ký, không tự mở ca khác.
+  - Đánh giá/trao đổi cũ chỉ lưu trình duyệt đã bỏ: nút chuyển sang Lịch hẹn/Hỗ trợ. Chưa nghiệm thu luồng đánh giá và tin nhắn thật trong các phân hệ đó.
+  - `node --test scripts/test/customer_diary_live_contract.cjs`: 3 ca đạt. Trình duyệt với Cloud thật đã xác nhận thú cưng chưa có care_log hiển thị timeline rỗng, ảnh đã xem tại `D:/Aboutme/Pawpal-infra/supabase-local/verification/portal-diary-empty.private.png`; đã dọn fixture.
+  - Còn kiểm tra nhật ký có dữ liệu thực, quyền chéo hai khách, Realtime sau Admin ghi nhật ký và các đường dẫn đánh giá/Hỗ trợ. Mã nhật ký mới chưa push/deploy.
+  - Đã sửa đọc danh sách chỉ dùng Cloud, không ghép `pawpal_pets` cũ hoặc tự ghi dữ liệu giả sang cache Admin.
+  - Đã sửa lưu trữ/khôi phục: chờ CSDL trả đúng hàng, kiểm tra chủ nuôi, lỗi phải báo lỗi; không báo thành công khi ghi bị từ chối.
+  - Trạng thái `inactive` từ Admin được nhận diện đúng là lưu trữ. Không thể dùng ID khách khác để tải danh sách.
+  - `node --test scripts/test/customer_pet_live_contract.cjs`: 6 ca đạt về đọc rỗng/lỗi, cache cũ, quyền chủ nuôi và xác nhận ghi.
+  - Trình duyệt gọi mã `petService.js` trong working tree với Cloud thật: cố ý đặt hồ sơ cũ trong cache, Cloud rỗng vẫn trả danh sách rỗng. Kiểm tra hồ sơ/địa chỉ trước đó tiếp tục đạt; fixture đã dọn.
+  - Đã viết migration `059_customer_portal_pet.sql`: RPC `save_own_pet` lưu hồ sơ/cân nặng cùng giao dịch, kiểm tra chủ nuôi từ Auth, phiên bản hồ sơ, dữ liệu tên/giống/giới tính/ngày sinh/cân nặng; cân không đổi không ghi lặp. Không sửa chủ sở hữu hay mã hồ sơ theo dữ liệu client.
+  - Form giữ bản chụp lúc mở để kiểm tra xung đột; chọn giống phải khớp chính xác loài, không tự chọn giống đầu tiên khi không tìm thấy.
+  - `node scripts/test/customer_pet_atomic_v1.cjs` đạt trên CSDL riêng: tạo/sửa, không lặp cân, thêm cân mới, từ chối phiên bản cũ/dữ liệu sai/phiên không sở hữu; rollback toàn bộ fixture. Kiểm tra hợp đồng frontend hiện 8 ca đạt.
+  - Chưa nghiệm thu toàn bộ giao diện thêm/sửa thú cưng và quyền ghi trực tiếp; chưa đánh dấu hoàn tất phân hệ.
+  - Đã áp dụng 059 lên Cloud sau sao lưu `D:/Aboutme/Pawpal-infra/supabase-local/backups/portal-pet-cloud-2026-10-22T14-57-32-990Z`; triển khai không đổi các hàng public hoặc danh tính/mật khẩu/trạng thái khóa Auth, giữ 17 nhân sự nguồn.
+  - Trình duyệt dùng mã `petService.js` local với Cloud thật: tạo thú cưng, sửa ghi chú giữ một bản cân nặng, đổi cân tăng đúng một bản lịch sử. Đây là kiểm tra dịch vụ gọi từ trình duyệt, chưa thay thế nghiệm thu thao tác toàn bộ form thêm/sửa.
+  - Đợt tiếp theo đã kiểm tra form thực: chọn loài, chọn giống qua autocomplete từ Cloud, nhập cân, lưu bé mới; mở lại theo mã hồ sơ, sửa ghi chú và đối chiếu `pet_profile.routine`, lịch sử cân vẫn đúng một hàng. Mã local được phục vụ trong trình duyệt, chưa push/deploy.
+  - Ảnh đã xem: `D:/Aboutme/Pawpal-infra/supabase-local/verification/portal-pet-form.private.png`. Lệnh: `node scripts/test/customer_portal_profile_v1.cjs --cloud-browser --pets --pets-only`. Đã dọn thú cưng, cân nặng, hồ sơ khách và tài khoản Auth thử riêng.
+  - Gợi ý giống lọc theo loài và tên danh mục, không tự đặt giống mặc định; khi đổi loài phải chọn lại giống. “Loài khác” được đối chiếu theo tên loài đã nhập, không tự ép thành “Khác”.
+- [ ] Đối soát mua hàng, chi tiết đơn, hủy/nhận hàng và đổi trả theo quy tắc Admin.
+- [ ] Đối soát đặt dịch vụ, xem lịch, đổi/hủy lịch theo quy tắc Admin.
+- [ ] Đối soát Pawpoint, voucher và khiếu nại theo quyền từng khách.
+- [ ] Kiểm tra đồng bộ với Admin, Realtime, tải lại trang và băng thông toàn bộ các luồng.
+
+Không triển khai ảnh/tệp/camera, gửi Zalo/SMS/email thật hay thanh toán thật trong đợt này. Trợ lý chỉ tra cứu, không tự tạo đơn/đặt lịch hoặc cộng điểm.
+
+### Bằng chứng đợt hồ sơ
+
+- Migration: `scripts/database/v1/058_customer_portal_profile.sql`; triển khai bằng `node scripts/database/v1/apply_chat_cloud.cjs apply-portal-profile`.
+- Kiểm tra: `node --test scripts/test/customer_auth.test.js scripts/test/customer_auth_ui.test.js scripts/test/test_customer_profile_save.cjs` và `node scripts/test/customer_portal_profile_v1.cjs --cloud-browser`.
+- Bản sao lưu riêng ngoài Git: `D:/Aboutme/Pawpal-infra/supabase-local/backups/portal-profile-cloud-2026-10-22T13-45-25-015Z`.
+- Ảnh modal đã kiểm tra: `D:/Aboutme/Pawpal-infra/supabase-local/verification/portal-profile-modal.private.png`.
+- Kiểm tra bổ sung: `scripts/test/customer_registration_cloud_v1.cjs`; ảnh sổ địa chỉ `D:/Aboutme/Pawpal-infra/supabase-local/verification/portal-address-modal.private.png`.
+- CSDL Cloud đã áp dụng. Thay đổi API `customer_auth.js` hiện nằm trong working tree; chưa push/redeploy mã máy chủ trong đợt này. Giao diện Vercel hiện có gọi trực tiếp RPC mới nên luồng sửa tên đã kiểm tra được trên production.
+- Các sửa đổi form hồ sơ (giữ bản nháp khi Realtime, Escape và chặn submit) cũng chưa push/redeploy; không coi kiểm thử mã local là bằng chứng bản Vercel đã có các sửa đổi này.
+- Địa chỉ vẫn theo thiết kế V1 dạng văn bản; phường/quận được ghép trong `street_address`, không bổ sung cột hay tự tách lại dữ liệu nguồn.
+
+## Tổng kết lịch sử trước đợt đối soát
+
+Các hạng mục dưới đây từng được ghi nhận đã chuyển đổi; cần xác nhận lại bằng kiểm thử quyền và thao tác thực tế trong đợt hiện tại:
 1. **Customer Profile & Auth:** Đọc SĐT qua bảng con `customer_phone`, email từ `customer.contact_email`, thông tin cá nhân từ `customer_profile`. Trạng thái `customer_status` được kiểm soát chặt chẽ.
 2. **Pet Profile & Weight History:** Bảng `pet_profile` join chuẩn xác `pet_breed` (`pet_species`), cân nặng đọc và ghi qua bảng con `pet_weight_history`.
 3. **Sales Orders & Details:** Đơn hàng `sales_order` đọc chi tiết qua `sales_order_detail` (snapshot sản phẩm và SKU), phí ship từ `shipping_fee_snapshot`, địa chỉ nhận hàng từ `street_address_snapshot` và `province_snapshot`, thanh toán từ bảng `payment`.

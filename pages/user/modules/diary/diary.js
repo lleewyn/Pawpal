@@ -1,86 +1,29 @@
 /**
  * modules/diary/diary.js - Module Nhật ký chăm sóc PawPal
- * Đồng bộ đa tầng: Supabase -> Admin Bookings -> Care Logs -> Seed Fallback
+ * Nhật ký chăm sóc chỉ đọc từ Supabase Cloud.
  */
 import { getPets } from '/scripts/api/petService.js?v=20261001-dedup';
 
-const TRACKER_LOGS_KEY = 'pawpal_pet_tracker_logs';
-
-let careLogsCache = null;
-let petSeedCache = null;
+let liveDiaryState = {};
 let currentPetId = null;
 let currentPetObject = null;
 let currentSessionId = null;
 let diaryHashHandler = null;
+let diaryChannel = null;
+let diaryRefreshTimer;
 
 // user.js nạp lại module mỗi lần vào trang; gỡ listener cũ để không vẽ đè nhật ký của lần trước
 export function dispose() {
     if (diaryHashHandler) window.removeEventListener('hashchange', diaryHashHandler);
     diaryHashHandler = null;
+    clearTimeout(diaryRefreshTimer);
+    const db = window.getSupabaseClient?.() || window.SupabaseClient;
+    if (diaryChannel) db?.removeChannel(diaryChannel);
+    diaryChannel = null;
 }
 
-const DEMO_STAFF_PRIMARY = 'Nguyễn Thị Mai';
-const DEMO_STAFF_RECEPTION = 'Trần Văn Nam';
-
-const TIMELINE_FALLBACK_IMAGES = {
-    cat: {
-        receive: '/assets/images/services/spa/process/chai_long_meo1.jpeg',
-        bath: '/assets/images/services/spa/process/tam_meo.jpg',
-        dry: '/assets/images/services/spa/process/say_long1.jpg',
-        trim: '/assets/images/services/spa/process/process_cat_long_cat_long_meo.jpg',
-        complete: '/assets/images/services/spa/process/process_nghi_ngoi_nghi_ngoi1.jpg',
-        default: '/assets/images/services/spa/process/tam_meo.jpg'
-    },
-    dog: {
-        receive: '/assets/images/services/spa/process/process_chai_long_chai_long.jpg',
-        bath: '/assets/images/services/spa/process/tam_cho1.jpg',
-        dry: '/assets/images/services/spa/process/say_long2.jpg',
-        trim: '/assets/images/services/spa/process/process_cat_long_cat_long.jpg',
-        complete: '/assets/images/services/spa/process/process_nghi_ngoi_nghi_ngoi.jpg',
-        default: '/assets/images/services/spa/process/spa01.webp'
-    },
-    default: {
-        receive: '/assets/images/services/spa/process/massage.jpg',
-        bath: '/assets/images/services/spa/process/process_tam_tam.jpg',
-        dry: '/assets/images/services/spa/process/process_say_say_long.jpg',
-        trim: '/assets/images/services/spa/process/cat_long1.jpg',
-        complete: '/assets/images/services/spa/process/nghi_ngoi1.jpg',
-        default: '/assets/images/services/spa/process/spa01.webp'
-    }
-};
-
-/* ==========================================================================
-   1. TIỆN ÍCH DỮ LIỆU VÀ STORAGE
-   ========================================================================== */
-
-function getTrackerLogs() {
-    try {
-        const raw = localStorage.getItem(TRACKER_LOGS_KEY);
-        return raw ? JSON.parse(raw) : {};
-    } catch {
-        return {};
-    }
-}
-
-function saveTrackerLogs(logs) {
-    try {
-        localStorage.setItem(TRACKER_LOGS_KEY, JSON.stringify(logs));
-    } catch (e) {
-        console.error('saveTrackerLogs error:', e);
-    }
-}
-
-async function fetchJsonSafely(url) {
-    try {
-        const res = await fetch(url + '?v=' + Date.now());
-        if (res.ok) {
-            return await res.json();
-        }
-    } catch (e) {
-        console.warn(`[diary] fetch ${url} failed:`, e);
-    }
-    return null;
-}
+function getTrackerLogs() { return liveDiaryState; }
+function saveTrackerLogs(logs) { liveDiaryState = logs; }
 
 function getRouteParam(paramName) {
     // 1. Kiểm tra search params (?id=...)
@@ -127,7 +70,7 @@ function showToast(msg, type = 'success') {
     }
     const toast = document.createElement('div');
     toast.className = 'toast toast-' + type;
-    toast.innerHTML = msg;
+    toast.textContent = msg;
     container.appendChild(toast);
     setTimeout(() => toast.classList.add('show'), 10);
     setTimeout(() => {
@@ -187,6 +130,22 @@ export async function initPetDiary() {
         }
     };
     window.addEventListener('hashchange', diaryHashHandler);
+    const db = window.getSupabaseClient?.() || window.SupabaseClient;
+    if (db?.channel) {
+        diaryChannel = db.channel('own-pet-diary');
+        for (const table of ['care_log','care_log_media','appointment','pet_profile','pet_weight_history']) {
+            diaryChannel.on('postgres_changes', {event:'*',schema:'public',table}, () => {
+                clearTimeout(diaryRefreshTimer);
+                diaryRefreshTimer = setTimeout(() => {
+                    if (currentPetId && window.location.hash.includes('diary')) {
+                        selectAndLoadPet(currentPetId,currentSessionId,{allowDefaultFallback:false})
+                            .catch(() => showToast('Không thể cập nhật nhật ký. Vui lòng tải lại.', 'error'));
+                    }
+                },250);
+            });
+        }
+        diaryChannel.subscribe();
+    }
 
     const petIdFromUrl = getRouteParam('id') || getRouteParam('pet') || getRouteParam('petId');
     const sessionIdFromUrl = getRouteParam('sessionId') || getRouteParam('session');
@@ -201,6 +160,10 @@ export async function initPetDiary() {
         } else {
             showEmptyPetState();
         }
+    } catch (error) {
+        showToast('Không thể tải nhật ký chăm sóc. Vui lòng thử lại.', 'error');
+        const wrapper = document.getElementById('timelineWrapper');
+        if (wrapper) { wrapper.textContent = 'Không thể tải nhật ký chăm sóc. Vui lòng thử lại.'; wrapper.setAttribute('role', 'alert'); }
     } finally {
         isInitRunning = false;
     }
@@ -479,23 +442,8 @@ async function loadPetDiary(petId, targetSessionId = null) {
     updateDiaryBreadcrumb(pet.name);
 
     // 1. Thử đồng bộ từ Supabase nếu có client
-    let logs = null;
-    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (client) {
-        logs = await syncPetDiaryFromSupabase(pet);
-    }
-    
-    // 2. Nếu chưa có, lấy từ Admin Services Bookings hoặc care-logs.json hoặc seed fallback
-    if (!logs) {
-        logs = await getOrSeedTrackerLogs(pet);
-    } else {
-        const localLogs = getTrackerLogs()[pet.id] || {};
-        logs.chatMessages = localLogs.chatMessages || {};
-        
-        const allLogs = getTrackerLogs();
-        allLogs[pet.id] = logs;
-        saveTrackerLogs(allLogs);
-    }
+    const logs = await syncPetDiaryFromSupabase(pet);
+    liveDiaryState[pet.id] = logs;
 
     const { currentSession, history = [] } = logs;
 
@@ -510,7 +458,7 @@ async function loadPetDiary(petId, targetSessionId = null) {
         activeSession = allSessions.find(s => String(s.id).toLowerCase() === String(targetSessionId).toLowerCase());
         if (!activeSession) showToast('Ca dịch vụ này chưa có nhật ký chăm sóc.', 'info');
     }
-    if (!activeSession) {
+    if (!activeSession && !targetSessionId) {
         activeSession = currentSession || (allSessions.length > 0 ? allSessions[0] : null);
     }
 
@@ -533,14 +481,14 @@ async function loadPetDiary(petId, targetSessionId = null) {
 
 async function syncPetDiaryFromSupabase(pet) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db) return null;
+    if (!db) throw new Error('Không thể kết nối nhật ký.');
 
     try {
         const petUuid = pet._supabaseId || pet.id;
         
         // 1. Tìm các lịch hẹn thuộc về bé cưng này
         let apptQuery = db.from('appointment')
-            .select('id, appointment_code, scheduled_start_at, appointment_status, appointment_item(name_snapshot)');
+            .select('id, appointment_code, scheduled_start_at, appointment_status, appointment_item(name_snapshot)').eq('customer_id',pet.userId);
         
         if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(petUuid)) {
             apptQuery = apptQuery.eq('pet_id', petUuid);
@@ -554,7 +502,8 @@ async function syncPetDiaryFromSupabase(pet) {
         }
 
         const { data: apptRows, error: apptErr } = await apptQuery;
-        if (apptErr || !apptRows || apptRows.length === 0) return null;
+        if (apptErr) throw apptErr;
+        if (!apptRows?.length) return {currentSession:null,history:[]};
 
         const apptIds = apptRows.map(a => a.id);
         const apptMap = new Map(apptRows.map(a => [a.id, a]));
@@ -575,11 +524,10 @@ async function syncPetDiaryFromSupabase(pet) {
             .order('recorded_at', { ascending: false });
 
         if (error) {
-            console.error('[PetDiary] Supabase error:', error.message);
-            return null;
+            throw error;
         }
 
-        if (!data || data.length === 0) return null;
+        if (!data?.length) return {currentSession:null,history:[]};
 
         const sessionsMap = {};
 
@@ -632,8 +580,7 @@ async function syncPetDiaryFromSupabase(pet) {
         return { currentSession, history, _source: 'supabase' };
 
     } catch (err) {
-        console.warn('[PetDiary] Supabase sync error:', err.message);
-        return null;
+        throw err;
     }
 }
 
@@ -660,294 +607,9 @@ function mapAppointmentStatus(status) {
     return map[s] || status || 'Đang thực hiện';
 }
 
-function getAdminBookings() {
-    try {
-        const raw = sessionStorage.getItem('pawpal_admin_services_bookings') || localStorage.getItem('pawpal_admin_services_bookings');
-        return raw ? JSON.parse(raw) : [];
-    } catch {
-        return [];
-    }
-}
-
-function syncAdminBookingToSession(booking, pet) {
-    if (!booking) return null;
-    const timeline = (booking.timeline || []).map((t, idx) => {
-        const timeStr = t.time || '10:00';
-        const dateStr = booking.date || new Date().toISOString().split('T')[0];
-        const isUrgent = Boolean(t.desc && (t.desc.toLowerCase().includes('dị ứng') || t.desc.toLowerCase().includes('khẩn') || t.desc.toLowerCase().includes('lưu ý')));
-        return {
-            id: `TL-${booking.id}-${idx}`,
-            status: t.title || 'Tiến trình chăm sóc',
-            description: t.desc || '',
-            timestamp: `${dateStr}T${timeStr.length === 5 ? timeStr + ':00' : timeStr}`,
-            staff: t.staff || booking.staff || DEMO_STAFF_PRIMARY,
-            image: (t.images && t.images[0]) || null,
-            urgent: isUrgent,
-            type: t.done ? (idx === (booking.timeline.length - 1) && booking.status === 'completed' ? 'completed' : 'in_progress') : 'in_progress'
-        };
-    });
-
-    let invoice = null;
-    if (booking.price || booking.total) {
-        invoice = {
-            code: `HD-${booking.id}`,
-            items: [
-                { name: booking.serviceName || 'Dịch vụ chăm sóc', price: booking.price || booking.total || 0 }
-            ],
-            total: booking.total || booking.price || 0,
-            paid: String(booking.paymentStatus || '').toLowerCase().includes('đã thanh toán')
-        };
-    }
-
-    return {
-        id: booking.id,
-        service: booking.serviceName || 'Spa và Grooming',
-        date: booking.date || new Date().toISOString().split('T')[0],
-        status: booking.status === 'completed' ? 'Hoàn thành' : (booking.status === 'cancelled' ? 'Đã hủy' : 'Đang thực hiện'),
-        timeline,
-        invoice
-    };
-}
-
 async function getOrSeedTrackerLogs(pet) {
-    const allLogs = getTrackerLogs();
-    
-    // Kiểm tra xem Admin Bookings có ca mới nhất không
-    const adminBookings = getAdminBookings();
-    const petBookings = adminBookings.filter(b => 
-        String(b.petId) === String(pet.id) || 
-        String(b.petName || '').toLowerCase() === String(pet.name || '').toLowerCase()
-    );
-
-    // Ưu tiên 1: Đọc từ data/care-logs.json
-    if (!careLogsCache) {
-        careLogsCache = await fetchJsonSafely('/data/care-logs.json');
-    }
-
-    let baseData = null;
-    if (careLogsCache && careLogsCache[pet.id]) {
-        baseData = JSON.parse(JSON.stringify(careLogsCache[pet.id]));
-    } else if (allLogs[pet.id]) {
-        baseData = allLogs[pet.id];
-    } else {
-        // Ưu tiên 2: Fallback template với token substitution
-        if (!petSeedCache) {
-            petSeedCache = await fetchJsonSafely('/data/pet-diary-seed.json');
-        }
-        baseData = seedDemoLogs(pet, petSeedCache);
-    }
-
-    if (!baseData.history) baseData.history = [];
-
-    // Gộp ca từ pet.carelogs (đồng bộ từ Admin Hồ sơ 360° & Quản lý thú cưng)
-    if (Array.isArray(pet.carelogs) && pet.carelogs.length > 0) {
-        pet.carelogs.forEach((cl, idx) => {
-            const clId = cl.careId || `CL-${pet.id}-${idx}`;
-            if (!baseData.history.some(h => h.id === clId)) {
-                const dateParts = (cl.time || '').split(' ');
-                const dateStr = dateParts[1] ? dateParts[1].split('/').reverse().join('-') : (dateParts[0] || '2026-05-18');
-                const timeStr = dateParts[0] && dateParts[0].includes(':') ? dateParts[0] : '14:30';
-                
-                const careSession = {
-                    id: clId,
-                    service: cl.service || 'Tắm sấy và Cắt tỉa tạo phom',
-                    date: dateStr,
-                    status: 'Hoàn thành',
-                    technician: cl.ktv || 'Hoàng Tuấn • Bàn 2',
-                    beforePhoto: cl.imgBefore || '/assets/images/services/spa/process/process_chai_long_chai_long.jpg',
-                    afterPhoto: cl.imgAfter || '/assets/images/services/spa/process/process_nghi_ngoi_nghi_ngoi.jpg',
-                    checklist: cl.checklist || { ear: true, nail: true, anal: true, skin: true },
-                    ownerMessage: cl.ownerMessage || 'Bé rất ngoan và hoàn thành tốt toàn bộ dịch vụ!',
-                    rating: cl.rating || 5,
-                    reviewText: cl.reviewText || '',
-                    reviewSubmitted: Boolean(cl.reviewText || cl.rating),
-                    timeline: [
-                        {
-                            id: `${clId}-4`,
-                            status: 'Hoàn thành dịch vụ và Sẵn sàng đón bé',
-                            timestamp: `${dateStr}T${timeStr}:00`,
-                            description: cl.ownerMessage || 'Bé đã hoàn tất toàn bộ quy trình chăm sóc, sạch thơm và xinh xắn.',
-                            staff: cl.ktv || 'Hoàng Tuấn • Bàn 2',
-                            type: 'completed',
-                            image: cl.imgAfter
-                        },
-                        {
-                            id: `${clId}-3`,
-                            status: 'Cắt tỉa tạo phom và Chăm sóc chi tiết',
-                            timestamp: `${dateStr}T13:45:00`,
-                            description: 'Cắt tỉa gọn gàng lông bàn chân, tạo dáng khuôn mặt tròn xinh xắn.',
-                            staff: cl.ktv || 'Hoàng Tuấn • Bàn 2',
-                            type: 'in_progress',
-                            image: cl.imgBefore
-                        },
-                        {
-                            id: `${clId}-2`,
-                            status: 'Tắm sạch và Vệ sinh 4 mục',
-                            timestamp: `${dateStr}T13:00:00`,
-                            description: 'Vệ sinh tai, cắt mài móng, vắt tuyến hôi và tắm dưỡng thảo mộc dịu nhẹ.',
-                            staff: cl.ktv || 'Hoàng Tuấn • Bàn 2',
-                            type: 'in_progress',
-                            image: '/assets/images/services/spa/process/process_tam_tam.jpg'
-                        },
-                        {
-                            id: `${clId}-1`,
-                            status: 'Tiếp nhận bé và Kiểm tra thể trạng',
-                            timestamp: `${dateStr}T12:30:00`,
-                            description: `Kiểm tra cân nặng ${pet.weight || '8.5kg'}, tiếp nhận yêu cầu từ phụ huynh.`,
-                            staff: 'Trần Văn Nam',
-                            type: 'check_in',
-                            image: '/assets/images/services/spa/process/massage.jpg'
-                        }
-                    ],
-                    invoice: {
-                        code: `HD-${clId}`,
-                        items: [
-                            { name: cl.service || 'Tắm sấy và Cắt tỉa tạo phom', price: 350000 },
-                            { name: 'Vệ sinh 4 mục chuyên sâu', price: 0 }
-                        ],
-                        total: 350000,
-                        paid: true
-                    }
-                };
-                baseData.history.unshift(careSession);
-            }
-        });
-    }
-
-    // Gộp ca từ allLogs[pet.id]?.sessions (đồng bộ từ Admin Groomer Workbench Subtab 3)
-    if (Array.isArray(allLogs[pet.id]?.sessions)) {
-        allLogs[pet.id].sessions.forEach(ss => {
-            if (!baseData.history.some(h => h.id === ss.id)) {
-                const dateStr = ss.date || new Date().toISOString().split('T')[0];
-                const ssSession = {
-                    id: ss.id,
-                    service: ss.serviceName || 'Tắm sấy toàn diện và Vệ sinh 4 mục',
-                    date: dateStr,
-                    status: 'Hoàn thành',
-                    technician: ss.technician || 'Hoàng Tuấn • Bàn 2',
-                    beforePhoto: ss.beforePhoto,
-                    afterPhoto: ss.afterPhoto,
-                    checklist: ss.checklist || { ear: true, nail: true, anal: true, skin: true },
-                    ownerMessage: ss.ownerMessage || 'Bé rất ngoan và hoàn thành tốt dịch vụ!',
-                    rating: ss.rating || 5,
-                    reviewText: ss.reviewText || '',
-                    reviewSubmitted: Boolean(ss.reviewText || ss.rating),
-                    timeline: [
-                        {
-                            id: `${ss.id}-4`,
-                            status: 'Hoàn thành dịch vụ',
-                            timestamp: `${dateStr}T${ss.time || '15:00'}:00`,
-                            description: ss.ownerMessage || 'Bé rất ngoan và hoàn thành tốt dịch vụ!',
-                            staff: ss.technician || 'Hoàng Tuấn • Bàn 2',
-                            type: 'completed',
-                            image: ss.afterPhoto
-                        },
-                        {
-                            id: `${ss.id}-3`,
-                            status: 'Tắm sấy và Tạo phom',
-                            timestamp: `${dateStr}T14:15:00`,
-                            description: 'Đã hoàn tất tắm sấy và cắt tỉa theo yêu cầu.',
-                            staff: ss.technician || 'Hoàng Tuấn • Bàn 2',
-                            type: 'in_progress',
-                            image: ss.beforePhoto
-                        }
-                    ],
-                    invoice: {
-                        code: `HD-${ss.id}`,
-                        items: [
-                            { name: ss.serviceName || 'Tắm sấy toàn diện và Vệ sinh 4 mục', price: 350000 }
-                        ],
-                        total: 350000,
-                        paid: true
-                    }
-                };
-                baseData.history.unshift(ssSession);
-            }
-        });
-    }
-
-    // Gộp ca thực tế từ Admin Services nếu có
-    if (petBookings.length > 0) {
-        const activeBooking = petBookings.find(b => b.status === 'in_progress' || b.status === 'confirmed');
-        if (activeBooking && activeBooking.timeline && activeBooking.timeline.length > 0) {
-            baseData.currentSession = syncAdminBookingToSession(activeBooking, pet);
-        }
-
-        const completedBookings = petBookings.filter(b => b.status === 'completed');
-        completedBookings.forEach(cb => {
-            const converted = syncAdminBookingToSession(cb, pet);
-            if (converted && !baseData.history.some(h => h.id === converted.id)) {
-                baseData.history.unshift(converted);
-            }
-        });
-    }
-
-    // Bảo tồn tin nhắn chat cũ
-    if (allLogs[pet.id]?.chatMessages) {
-        baseData.chatMessages = allLogs[pet.id].chatMessages;
-    } else if (!baseData.chatMessages) {
-        baseData.chatMessages = {};
-    }
-
-    allLogs[pet.id] = baseData;
-    saveTrackerLogs(allLogs);
-    return baseData;
+ const logs = await syncPetDiaryFromSupabase(pet); liveDiaryState[pet.id] = logs; return logs;
 }
-
-function replaceTokens(value, pet) {
-    if (typeof value === 'string') {
-        return value.replace(/\{petName\}/g, pet.name).replace(/\{petId\}/g, pet.id);
-    }
-    if (Array.isArray(value)) {
-        return value.map(item => replaceTokens(item, pet));
-    }
-    if (value && typeof value === 'object') {
-        const next = {};
-        Object.entries(value).forEach(([key, child]) => {
-            next[key] = replaceTokens(child, pet);
-        });
-        return next;
-    }
-    return value;
-}
-
-function seedDemoLogs(pet, seed) {
-    if (!seed) return { currentSession: null, history: [] };
-
-    const now = new Date();
-    const currentSession = seed.currentSession ? {
-        id: `SVC-${pet.id}-002`,
-        service: seed.currentSession.service,
-        date: now.toISOString().split('T')[0],
-        status: seed.currentSession.status,
-        timeline: (seed.currentSession.timeline || []).map(item => ({
-            ...replaceTokens(item, pet),
-            timestamp: new Date(now.getTime() - Number(item.offsetMinutes || 0) * 60000).toISOString()
-        })),
-        invoice: null
-    } : null;
-
-    const history = (seed.history || []).map(entry => {
-        const baseDate = new Date(now.getTime() - Number(entry.daysAgo || 0) * 86400000);
-        return {
-            id: `SVC-${pet.id}-${entry.idSuffix || '000'}`,
-            service: entry.service,
-            date: baseDate.toISOString().split('T')[0],
-            status: entry.status,
-            timeline: (entry.timeline || []).map(item => ({
-                ...replaceTokens(item, pet),
-                timestamp: new Date(baseDate.getTime() - Number(item.offsetMinutes || 0) * 60000).toISOString()
-            })),
-            invoice: entry.invoice ? replaceTokens(entry.invoice, pet) : null
-        };
-    });
-
-    return { currentSession, history, chatMessages: {} };
-}
-
-/* ==========================================================================
-   4. RENDER GIAO DIỆN HỒ SƠ VÀ DÒNG THỜI GIAN
-   ========================================================================== */
 
 function renderPetInfoCard(pet, currentSession) {
     const container = document.getElementById('petInfoCard');
@@ -1040,7 +702,7 @@ function renderServiceStepper(currentSession, pet) {
     }
 
     const steps = [
-        { num: 1, title: 'Tiếp nhận', sub: 'Khám và Check-in' },
+        { num: 1, title: 'Tiếp nhận', sub: 'Bàn giao bé cưng' },
         { num: 2, title: 'Tắm và Sấy', sub: 'Thư giãn dịu nhẹ' },
         { num: 3, title: 'Cắt tỉa và Spa', sub: 'Tạo kiểu xinh xắn' },
         { num: 4, title: 'Hoàn tất', sub: 'Sẵn sàng đón bé' }
@@ -1093,7 +755,7 @@ function buildCareLogShowcaseHtml(session) {
     const beforePhoto = session.beforePhoto || (session.photos && session.photos[0]);
     const afterPhoto = session.afterPhoto || (session.photos && session.photos[1]);
     const ownerMessage = session.ownerMessage;
-    const technician = session.technician || DEMO_STAFF_PRIMARY;
+    const technician = session.technician || 'Nhân viên chăm sóc';
     const rating = session.rating || 5;
     const reviewText = session.reviewText || '';
     const hasReview = Boolean(session.reviewSubmitted);
@@ -1185,57 +847,7 @@ function buildCareLogShowcaseHtml(session) {
     `;
 }
 
-window.submitCareLogReview = function(sessionId) {
-    const txtEl = document.getElementById('txtUserReview');
-    const reviewText = txtEl ? txtEl.value.trim() : '';
-    const ratingWidget = document.getElementById('starRatingWidget');
-    let selectedRating = 5;
-    if (ratingWidget) {
-        const activeStars = ratingWidget.querySelectorAll('.star-btn.active');
-        selectedRating = activeStars.length || 5;
-    }
-
-    // 1. Cập nhật vào trackerLogs
-    const allLogs = getTrackerLogs();
-    if (currentPetId && allLogs[currentPetId]) {
-        const petLogs = allLogs[currentPetId];
-        let target = null;
-        if (petLogs.currentSession?.id === sessionId) target = petLogs.currentSession;
-        else if (petLogs.history) target = petLogs.history.find(s => s.id === sessionId);
-
-        if (target) {
-            target.rating = selectedRating;
-            target.reviewText = reviewText;
-            target.reviewSubmitted = true;
-            saveTrackerLogs(allLogs);
-        }
-    }
-
-    // 2. Cập nhật vào petsData / pawpal_admin_pets_data nếu có
-    try {
-        const rawAdminPets = sessionStorage.getItem('pawpal_admin_pets_data') || localStorage.getItem('pawpal_admin_pets_data');
-        if (rawAdminPets) {
-            const adminPets = JSON.parse(rawAdminPets);
-            const petObj = adminPets.find(p => String(p.code || p.id).toLowerCase() === String(currentPetId).toLowerCase());
-            if (petObj && Array.isArray(petObj.carelogs)) {
-                const logItem = petObj.carelogs.find(cl => cl.careId === sessionId || sessionId.includes(cl.careId || ''));
-                if (logItem) {
-                    logItem.rating = selectedRating;
-                    logItem.reviewText = reviewText;
-                }
-                sessionStorage.setItem('pawpal_admin_pets_data', JSON.stringify(adminPets));
-                localStorage.setItem('pawpal_admin_pets_data', JSON.stringify(adminPets));
-            }
-        }
-    } catch (e) {
-        console.warn('Sync review to admin pets error:', e);
-    }
-
-    showToast('Cảm ơn bạn đã gửi đánh giá! Ý kiến của bạn giúp PawPal phục vụ bé ngày càng tốt hơn.');
-    if (currentPetId) {
-        selectAndLoadPet(currentPetId, sessionId);
-    }
-};
+window.submitCareLogReview = function() { window.location.hash = '#bookings'; };
 
 function renderTimeline(timeline, activeSession = null) {
     const wrapper = document.getElementById('timelineWrapper');
@@ -1326,7 +938,7 @@ function getStageMetadata(status, desc) {
         };
     }
     return {
-        badgeText: 'Tiếp nhận và Thăm khám',
+        badgeText: 'Tiếp nhận',
         badgeBg: '#EEF5F1',
         badgeColor: '#236B48',
         mood: 'Bé đã vào phòng chờ, tinh thần thoải mái và vui vẻ',
@@ -1360,7 +972,7 @@ function buildTimelineItemHtml(item, itemIndex, totalItems) {
                         <span class="story-timestamp">${timeStr}</span>
                     </div>
                     <div class="story-staff-tag">
-                        <span>Chăm sóc: ${escapeHtml(item.staff || DEMO_STAFF_PRIMARY)}</span>
+                        <span>Chăm sóc: ${escapeHtml(item.staff || 'Nhân viên chăm sóc')}</span>
                     </div>
                 </div>
 
@@ -1372,12 +984,6 @@ function buildTimelineItemHtml(item, itemIndex, totalItems) {
                 <!-- Tiêu đề và Lời nhắn -->
                 <h4 class="story-card-title">${escapeHtml(item.status)}</h4>
                 <p class="story-card-desc">${escapeHtml(item.description)}</p>
-
-                <!-- Thanh tâm trạng bé -->
-                <div class="story-pet-mood-pill">
-                    <span class="mood-label">Tâm trạng bé:</span>
-                    <span class="mood-text">${escapeHtml(meta.mood)}</span>
-                </div>
 
                 <!-- Ảnh chụp hoạt động thực tế (Story Photo) -->
                 ${imageUrl ? `
@@ -1395,11 +1001,7 @@ function buildTimelineItemHtml(item, itemIndex, totalItems) {
 
                 <!-- Footer tương tác người dùng -->
                 <div class="story-card-footer">
-                    <button type="button" class="btn-story-like" onclick="window.toggleStoryLike(this)">
-                        <span class="like-label">Yêu thích</span>
-                        <span class="like-count">(1)</span>
-                    </button>
-                    <button type="button" class="btn-story-message" onclick="window.focusStoryChat('${item.id}')">
+                    <button type="button" class="btn-story-message" onclick="window.location.hash='#support'">
                         <span>Nhắn dặn dò</span>
                     </button>
                 </div>
@@ -1446,6 +1048,7 @@ function resolveTimelineImageUrl(item, pet) {
     if (!rawImage) {
         rawImage = getTimelineFallbackImage(item, pet);
     }
+    if (!rawImage) return '';
 
     if (rawImage && !rawImage.startsWith('http') && !rawImage.startsWith('data:') && !rawImage.startsWith('/')) {
         rawImage = '/' + rawImage;
@@ -1453,72 +1056,13 @@ function resolveTimelineImageUrl(item, pet) {
 
     try {
         const url = new URL(rawImage, window.location.href);
-        return url.href;
+        return ['https:', 'http:'].includes(url.protocol) ? url.href : '';
     } catch {
         return rawImage;
     }
 }
 
-function getTimelineFallbackImage(item, pet) {
-    const rawSpecies = (pet?.species || 'dog').toLowerCase();
-    const speciesKey = rawSpecies === 'cat' ? 'cat' : (rawSpecies === 'dog' ? 'dog' : 'default');
-    const group = TIMELINE_FALLBACK_IMAGES[speciesKey] || TIMELINE_FALLBACK_IMAGES.default;
-
-    const status = `${item.status || ''} ${item.description || ''}`.toLowerCase();
-
-    if (status.includes('sấy')) return group.dry;
-    if (status.includes('tắm')) return group.bath;
-    if (status.includes('tiếp nhận') || status.includes('kiểm tra')) return group.receive;
-    if (status.includes('cắt') || status.includes('tỉa') || status.includes('chải') || status.includes('tạo kiểu')) {
-        return group.trim;
-    }
-    if (status.includes('hoàn thành')) return group.complete;
-
-    return group.default;
-}
-
-window.toggleStoryLike = function(btn) {
-    if (!btn) return;
-    const isLiked = btn.classList.contains('liked');
-    const countEl = btn.querySelector('.like-count');
-    let count = parseInt(countEl?.textContent || '0', 10);
-    if (isLiked) {
-        btn.classList.remove('liked');
-        if (countEl) countEl.textContent = Math.max(0, count - 1);
-    } else {
-        btn.classList.add('liked');
-        if (countEl) countEl.textContent = count + 1;
-        btn.classList.add('animate-heart');
-        setTimeout(() => btn.classList.remove('animate-heart'), 400);
-    }
-};
-
-window.focusStoryChat = function(itemId) {
-    let chatInput = document.getElementById(`chatInput-${itemId}`);
-    if (chatInput) {
-        chatInput.focus();
-        chatInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } else {
-        const card = document.querySelector(`[data-item-id="${itemId}"] .story-card-body`);
-        if (card) {
-            let existingBox = card.querySelector('.urgent-chat-box');
-            if (!existingBox) {
-                const boxHtml = buildChatBoxHtml(itemId);
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = boxHtml;
-                const footer = card.querySelector('.story-card-footer');
-                card.insertBefore(tempDiv.firstElementChild, footer);
-                loadChatMessages(itemId);
-                bindChatInputEvents(itemId);
-                const newInput = document.getElementById(`chatInput-${itemId}`);
-                if (newInput) {
-                    newInput.focus();
-                    newInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }
-        }
-    }
-};
+function getTimelineFallbackImage() { return ''; }
 
 function setupDiaryImageModal() {
     const modal = document.getElementById('diaryImageModal');
@@ -1606,47 +1150,7 @@ function bindChatInputEvents(noteId) {
     };
 }
 
-function sendChatMessage(noteId) {
-    const input = document.getElementById(`chatInput-${noteId}`);
-    if (!input || !currentPetId) return;
-
-    const text = input.value.trim();
-    if (!text) return;
-
-    const newMsg = {
-        id: Date.now(),
-        sender: 'Bạn',
-        text,
-        timestamp: new Date().toISOString(),
-        isStaff: false
-    };
-
-    const allLogs = getTrackerLogs();
-    if (!allLogs[currentPetId]) allLogs[currentPetId] = { chatMessages: {} };
-    if (!allLogs[currentPetId].chatMessages) allLogs[currentPetId].chatMessages = {};
-    if (!allLogs[currentPetId].chatMessages[noteId]) allLogs[currentPetId].chatMessages[noteId] = [];
-    allLogs[currentPetId].chatMessages[noteId].push(newMsg);
-    saveTrackerLogs(allLogs);
-
-    appendChatMessage(noteId, newMsg);
-    input.value = '';
-
-    setTimeout(() => {
-        const reply = {
-            id: Date.now(),
-            sender: DEMO_STAFF_PRIMARY,
-            text: 'Dạ PawPal đã nhận được dặn dò của bạn. Đội ngũ nhân viên đang chăm sóc bé rất cẩn thận ạ!',
-            timestamp: new Date().toISOString(),
-            isStaff: true
-        };
-        const logsNow = getTrackerLogs();
-        if (logsNow[currentPetId]?.chatMessages?.[noteId]) {
-            logsNow[currentPetId].chatMessages[noteId].push(reply);
-            saveTrackerLogs(logsNow);
-        }
-        appendChatMessage(noteId, reply);
-    }, 1800);
-}
+function sendChatMessage() { window.location.hash = '#support'; }
 
 function appendChatMessage(noteId, msg) {
     const container = document.getElementById(`chatMessages-${noteId}`);

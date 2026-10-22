@@ -1,5 +1,28 @@
 # Chuyển phân hệ Thú cưng sang Cloud V1
 
+## Bổ sung cổng khách hàng — 22/10/2026
+
+Phạm vi: hồ sơ thú cưng, cân nặng, lưu trữ/khôi phục và đọc nhật ký chăm sóc của chính chủ nuôi. Không bao gồm tải ảnh/tệp, sổ tiêm chủng, gửi tin thật hay tạo lịch qua trợ lý. Các mục Admin bên dưới là biên bản đợt trước.
+
+- [x] Thêm/sửa qua form thật với Cloud: tên, giống đúng loài, giới tính, ngày sinh, màu lông, dị ứng, lưu ý và cân nặng được lưu bởi `save_own_pet` trong cùng giao dịch. Có đối chiếu phiên bản; form giữ bản chụp lúc mở. Cân không đổi không ghi thêm lịch sử.
+- [x] Đọc danh sách chỉ từ Cloud, không phục hồi hồ sơ cache cũ; lỗi không báo thành công. Giống dùng autocomplete từ danh mục, không tự chọn giống đầu tiên.
+- [x] Lưu trữ/khôi phục qua RPC riêng `change_own_pet_status`, giữ lịch hẹn/cân nặng/nhật ký. Quyền ghi xác định chủ nuôi từ Auth, không nhận ID chủ nuôi theo yêu cầu client.
+- [x] Bổ sung RLS chỉ đọc lịch hẹn, dòng dịch vụ, nhật ký và media theo chủ nuôi. Kiểm tra trên CSDL riêng với hai khách độc lập: khách khác không đọc hoặc lưu trữ hồ sơ được; tài khoản Auth bị khóa cũng bị từ chối.
+- [x] Nhật ký rỗng và nhật ký có dữ liệu đều được kiểm tra trên Cloud thật; bỏ seed JSON, nhật ký trong browser, phản hồi chat tự sinh, tên nhân viên/ảnh mẫu và chỉ số yêu thích giả.
+- [x] Realtime: sau phía quản trị ghi nhật ký, khách thấy ghi nhận mới mà không reload. Danh sách thú cưng có kênh cập nhật riêng, form đang mở giữ nguyên bản nháp; hủy kênh khi rời phân hệ.
+- [x] Mở ca không có nhật ký không hiển thị ca khác; bản ghi không có ảnh không dựng ảnh lỗi từ URL trang hiện tại.
+- [ ] Đưa mã giao diện/API hiện nằm trong working tree lên bản triển khai Vercel và chạy lại nghiệm thu trên bản đã deploy. CSDL mới đã có migration 058–060; không coi mã local là bản production.
+
+Kiểm tra: `customer_pet_atomic_v1.cjs`, `customer_pet_live_contract.cjs`, `customer_diary_live_contract.cjs` và `customer_portal_profile_v1.cjs --cloud-browser --pets --pets-only --diary` trong `scripts/test`. Các fixture Cloud được dọn; kiểm tra SQL riêng dùng rollback. Thao tác quản trị trong bài Realtime thực hiện qua service client trên fixture riêng, không phải chứng nhận lại toàn bộ giao diện Admin.
+
+Sao lưu trước migration 060: `D:/Aboutme/Pawpal-infra/supabase-local/backups/portal-diary-cloud-2026-10-22T15-43-07-458Z`. Đã đối chiếu toàn bộ hàng public, danh tính/mật khẩu/trạng thái khóa Auth không đổi khi triển khai migration; giữ 17 hồ sơ nhân sự nguồn.
+
+Ảnh nghiệm thu riêng ngoài Git: `portal-pet-form.private.png`, `portal-diary-empty.private.png`, `portal-diary-populated.private.png` trong `D:/Aboutme/Pawpal-infra/supabase-local/verification/`.
+
+Nút trao đổi nhật ký chuyển sang Hỗ trợ; đánh giá chuyển sang Lịch hẹn, không tự ghi đánh giá hay phản hồi thành công vào bộ nhớ trình duyệt. Nghiệp vụ Hỗ trợ/Đánh giá được nghiệm thu trong phân hệ tương ứng.
+
+## Biên bản Admin trước đó
+
 Ngày: 21/10/2026. Project `cpzuvaplseielhgcnqrn`. Phạm vi đợt này là phân hệ Thú cưng của Admin; không chuyển các trang khách hoặc các phân hệ khác.
 
 Đã triển khai lên Vercel Production: `dpl_4AGaZ2pf5LLEhoJXjvQRDFHhkTKb`. Kiểm tra cuối trên bản này đạt Thú cưng và hồi quy Khách hàng. Cloud vẫn có 82 pet / 35 khách / 7 nhật ký sau kiểm tra; không có quyền thực thi 3 RPC mới cho anon. Các thay đổi mã của đợt này chưa commit/push GitHub.

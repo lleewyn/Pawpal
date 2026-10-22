@@ -266,6 +266,8 @@ async function loadProfileData(user) {
     }
 
     // Modal Edit Form inputs
+    // Realtime chỉ cập nhật phần xem; giữ bản nháp và revision lúc mở form.
+    if (document.getElementById('profileEditModal')?.classList.contains('show')) return;
     const nameInput = document.getElementById('profileNameInput');
     if (nameInput) nameInput.value = user.name || user.fullName || '';
 
@@ -568,6 +570,7 @@ function initProfileEditModal(user) {
     const btnAddConfirm = document.getElementById('btnAddAddressConfirm');
 
     if (!btnEdit || !modalEl || !btnSave) return;
+    document.getElementById('profileUpdateForm')?.addEventListener('submit', event => event.preventDefault());
     const nameInput = document.getElementById('profileNameInput');
     const nameError = document.getElementById('profileNameError');
     const setNameError = message => {
@@ -637,6 +640,12 @@ function initProfileEditModal(user) {
 
     modalEl.addEventListener('click', (e) => {
         if (e.target === modalEl) {
+            closeModal();
+        }
+    });
+    modalEl.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
             closeModal();
         }
     });
@@ -737,8 +746,8 @@ function initProfileEditModal(user) {
         const emailVal = document.getElementById('profileEmailInput')?.value.trim();
         const phoneVal = document.getElementById('profilePhoneInput')?.value.trim();
 
-        if (!nameVal || nameVal.length > 150) {
-            setNameError(!nameVal ? 'Vui lòng nhập họ và tên.' : 'Họ và tên không được vượt quá 150 ký tự.');
+        if (!nameVal || nameVal.length < 2 || nameVal.length > 150) {
+            setNameError(!nameVal || nameVal.length < 2 ? 'Vui lòng nhập họ và tên từ 2 ký tự.' : 'Họ và tên không được vượt quá 150 ký tự.');
             nameInput?.focus();
             return;
         }

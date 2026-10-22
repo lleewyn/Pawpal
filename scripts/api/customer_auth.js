@@ -321,10 +321,14 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
             if (error || !data.user) throw new Error('Phiên đăng nhập đã hết hạn.');
             const user = await identity(data.user.id);
             if (['profile-snapshot', 'profile-save'].includes(req.body?.action)) {
-                const service = require('./customer_profile_persistence').createCustomerProfileService(admin, clientFactory(token));
-                const profile = req.body.action === 'profile-save'
-                    ? await service.save(user.id, req.body.profile || {}) : await service.snapshot(user.id);
-                return res.json({ success: true, profile });
+                const client = clientFactory(token);
+                const input = req.body.profile || {};
+                const result = req.body.action === 'profile-save'
+                    ? await client.rpc('customer_profile_save', { p_name: input.name, p_email: input.email,
+                        p_addresses: input.addresses, p_revision: input.revision })
+                    : await client.rpc('customer_profile_snapshot');
+                if (result.error) throw result.error;
+                return res.json({ success: true, profile: result.data });
             }
             if (['loyalty-wallet', 'loyalty-redeem'].includes(req.body?.action)) {
                 const service = require('./customer_loyalty').createCustomerLoyaltyService(admin);
