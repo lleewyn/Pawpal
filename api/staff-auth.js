@@ -14,8 +14,13 @@ module.exports=async(req,res)=>{
  if(typeof password!=='string'||password.length<6||password.length>128)return res.status(400).json({error:'Mật khẩu phải có từ 6 đến 128 ký tự.'});
  const cloudServiceKey=process.env.PAWPAL_ADMIN_SUPABASE_SERVICE_ROLE_KEY;
  if(cloudServiceKey){
-  let role='';try{role=JSON.parse(Buffer.from(cloudServiceKey.split('.')[1],'base64url')).role;}catch{}
-  if(role!=='service_role'||!/^https:\/\/[a-z0-9]+\.supabase\.co\/?$/.test(url)||!process.env.PAWPAL_ADMIN_SUPABASE_ANON_KEY)return res.status(503).json({error:'Cấu hình Auth Cloud chưa đầy đủ.'});
+  let isServiceRole=false;
+  if(cloudServiceKey.startsWith('sb_secret_')){
+   isServiceRole=true;
+  }else{
+   try{isServiceRole=JSON.parse(Buffer.from(cloudServiceKey.split('.')[1],'base64url')).role==='service_role';}catch{}
+  }
+  if(!isServiceRole||!/^https:\/\/[a-z0-9]+\.supabase\.co\/?$/.test(url)||!process.env.PAWPAL_ADMIN_SUPABASE_ANON_KEY)return res.status(503).json({error:'Cấu hình Auth Cloud chưa đầy đủ.'});
   const handler=require('../scripts/api/staff-password-handler.cjs')({url,anonKey:process.env.PAWPAL_ADMIN_SUPABASE_ANON_KEY,serviceKey:cloudServiceKey});
   req.body={password};return handler(req,res);
  }
