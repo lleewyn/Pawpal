@@ -172,8 +172,11 @@ async function loadProducts() {
             // Prices belong to variants; use the lowest available active variant price.
             const variants = Array.isArray(item.product_variant) ? item.product_variant : [];
             const pricedVariants = variants
-                .filter(variant => (variant.status === 'dang_ban' || variant.status === 'ACTIVE') && variant.sale_price != null
-                    && Number.isFinite(Number(variant.sale_price)) && Number(variant.sale_price) >= 0)
+                .filter(variant => {
+                    const st = String(variant.status || '').toLowerCase();
+                    return (st === 'dang_ban' || st === 'active') && variant.sale_price != null
+                        && Number.isFinite(Number(variant.sale_price)) && Number(variant.sale_price) >= 0;
+                })
                 .sort((a, b) => Number(a.sale_price) - Number(b.sale_price));
             const baseVariant = pricedVariants[0] || variants[0] || null;
             const price = baseVariant && baseVariant.sale_price != null ? Number(baseVariant.sale_price) : (Number(item.sale_price) || 0);
@@ -213,6 +216,9 @@ async function loadProducts() {
                 }
             }
 
+            const itemStatus = String(item.status || '').toLowerCase();
+            const isAvailable = itemStatus === 'active' || itemStatus === 'dang_ban';
+
             return {
                 id: item.id,
                 sku: effectiveSku,
@@ -228,7 +234,7 @@ async function loadProducts() {
                 oldPrice: sale ? compareAtPrice : null,
                 image: images[0],
                 images: images,
-                inStock: (item.status === 'ACTIVE' || item.status === 'dang_ban') && stockCount > 0,
+                inStock: isAvailable && (stockCount > 0 || variants.length === 0),
                 stock: stockCount,
                 sale: sale,
                 badge: badgeStr,
@@ -514,7 +520,7 @@ async function loadServices() {
                 groomerLevel: svc.groomer_level || '',
                 image: imageList[0],
                 images: imageList,
-                status: (svc.status === 'dang_hoat_dong' || svc.status === 'ACTIVE') ? 'Đang phục vụ' : 'Ngưng phục vụ'
+                status: (svc.status === 'dang_hoat_dong' || String(svc.status || '').toLowerCase() === 'active') ? 'Đang phục vụ' : 'Ngưng phục vụ'
             };
         });
 
