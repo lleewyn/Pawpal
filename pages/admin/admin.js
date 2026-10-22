@@ -635,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261022_copilot_v3';
+    const MODULE_SCRIPT_VERSION = '20261022_copilot_v4';
 
     function resolveModulePath(path) {
         if (!path) return path;

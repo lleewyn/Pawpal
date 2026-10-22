@@ -94,6 +94,24 @@
   return html.join('');
  }
 
+ async function typewriteText(container,timelineEl,fullText){
+  if(!fullText){container.innerHTML='';return;}
+  const words=fullText.split(/(\s+)/);
+  const total=words.length;
+  const speedMs=Math.max(6,Math.min(18,Math.floor(1200/Math.max(1,total))));
+  let current='';
+  for(let i=0;i<total;i++){
+   current+=words[i];
+   if(i%2===0||i===total-1){
+    container.innerHTML=renderMarkdown(current);
+    if(timelineEl)timelineEl.scrollTop=timelineEl.scrollHeight;
+    await new Promise(r=>setTimeout(r,speedMs));
+   }
+  }
+  container.innerHTML=renderMarkdown(fullText);
+  if(timelineEl)timelineEl.scrollTop=timelineEl.scrollHeight;
+ }
+
  function init(){
   const send=document.getElementById('btnSendCopilot'),input=document.getElementById('copilotInput'),timeline=document.getElementById('copilotMessagesArea'),list=document.getElementById('copilotSessionsList');
   if(!send||send.dataset.copilotBound)return;send.dataset.copilotBound='true';
@@ -191,10 +209,48 @@
   async function submit(){
    const question=input.value.trim();if(busy||!question)return;if(question.length>2000)return app.showToast?.('Câu hỏi tối đa 2.000 ký tự.','error');
    active=active||crypto.randomUUID();const key=JSON.stringify([active,question]);if(request?.key!==key)request={key,id:crypto.randomUUID()};
-   busy=true;send.disabled=true;render();
-   try{await api('POST',{sessionId:active,requestId:request.id,question});if(input.value.trim()===question)input.value='';request=null;await load();}
-   catch(error){app.showToast?.(error.message,'error');}
-   finally{busy=false;send.disabled=false;render();}
+   busy=true;send.disabled=true;
+   input.value='';
+
+   let currSession=sessions.find(s=>s.id===active);
+   if(!currSession){
+    currSession={id:active,title:question.slice(0,80),messages:[],updated:new Date().toISOString()};
+    sessions.unshift(currSession);
+   }
+   currSession.messages.push({role:'user',content:question,created_at:new Date().toISOString()});
+   render();
+
+   const thinkingCard=document.createElement('div');
+   thinkingCard.className='copilot-msg msg-ai copilot-thinking-card';
+   thinkingCard.innerHTML=`<div class="copilot-msg-header">Trợ lý · Vừa xong</div><div class="copilot-msg-bubble" style="display:flex;align-items:center;gap:6px;padding:12px 16px;background-color:#F8FAF9;border:1px solid var(--border-neutral);border-radius:var(--admin-radius);color:#4F7A65;font-size:13.5px;"><span class="typing-dot-pulse" style="animation-delay:0s;"></span><span class="typing-dot-pulse" style="animation-delay:0.2s;"></span><span class="typing-dot-pulse" style="animation-delay:0.4s;"></span><span style="margin-left:6px;">Trợ lý đang tra cứu dữ liệu và soạn thảo câu trả lời...</span></div>`;
+   timeline.append(thinkingCard);
+   timeline.scrollTop=timeline.scrollHeight;
+
+   try{
+    const result=await api('POST',{sessionId:active,requestId:request.id,question});
+    thinkingCard.remove();
+    const replyText=result.reply||'';
+
+    const aiMsg={role:'assistant',content:replyText,created_at:new Date().toISOString()};
+    currSession.messages.push(aiMsg);
+
+    const aiCard=document.createElement('div');aiCard.className='copilot-msg msg-ai';
+    const heading=document.createElement('div');heading.className='copilot-msg-header';heading.textContent='Trợ lý · Vừa xong';
+    const contentBubble=document.createElement('div');contentBubble.className='copilot-msg-bubble';
+    aiCard.append(heading,contentBubble);
+    timeline.append(aiCard);
+
+    await typewriteText(contentBubble,timeline,replyText);
+    request=null;
+    await load();
+   }
+   catch(error){
+    thinkingCard.remove();
+    app.showToast?.(error.message,'error');
+   }
+   finally{
+    busy=false;send.disabled=false;render();
+   }
   }
 
   send.addEventListener('click',submit);input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit();}});
