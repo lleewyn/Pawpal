@@ -52,3 +52,10 @@ Cập nhật Nhân sự 22/10/2026: đã áp migration 029–038 lên Cloud mớ
 Cập nhật 22/10/2026: Admin Bán hàng đã chuyển sang V1 trên Cloud mới và triển khai Vercel. Chi tiết phạm vi, bộ kiểm thử, số liệu đối chiếu, backup và giới hạn tại [nghiệm thu Bán hàng V1](PAWPAL_BAN_HANG_V1_NGHIEM_THU.md). Không coi trang gian hàng phía khách hoặc các phân hệ chưa chuyển là đã hoàn tất theo cập nhật này.
 
 Đã đối soát SQL/REST đủ 105 bảng, mở 30 tab của 9 phân hệ Admin và 10 đường dẫn phía khách. Chi tiết, lỗi còn lại và thứ tự xử lý tại [báo cáo toàn bộ Cloud V1](PAWPAL_DOI_SOAT_TOAN_BO_CLOUD_V1.md). Database khớp local, quyền đọc đúng; nhiều phân hệ vẫn dùng truy vấn legacy và phía khách vẫn gọi Cloud cũ. Đã sửa client không mang phiên Admin của Khiếu nại và triển khai bản `dpl_CnGFdH7ukQFxQhS7HNDiRSA3d9D7`; kiểm tra Khách hàng Production sau sửa vẫn đạt. Không coi toàn bộ chức năng đã nghiệm thu.
+
+
+## Cập nhật Khiếu nại V1 ngày 22/10/2026
+
+Đã hoàn thiện ba tab Admin Khiếu nại và áp migration 039–042 lên Cloud mới. Kiểm thử ghi trên bản phục hồi; kiểm tra Cloud thật chỉ đọc xác nhận 25/25 phiếu, bộ lọc/xuất file, hồ sơ khi tải lại và Realtime, không gọi nguồn cũ. Hash toàn bộ dữ liệu public cùng danh tính/mật khẩu/trạng thái khóa Auth giữ nguyên; vẫn 17 nhân viên và 16 tài khoản khóa.
+
+Quyết định đã chốt: Khiếu nại ghi đề xuất/quyết định; hoàn tiền, đổi trả và làm lại thực hiện qua Bán hàng/Dịch vụ, rồi liên kết kết quả thực tế. Không tự cộng điểm/voucher hoặc tạo tiền. Chi tiết kiểm thử và giới hạn tại [nghiệm thu Khiếu nại V1](PAWPAL_KHIEU_NAI_V1_NGHIEM_THU.md). Chấm công, lương, thưởng và hoa hồng tiếp tục ngoài scope.

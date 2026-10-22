@@ -19,30 +19,30 @@
         cachedStaff: [],
         currentActiveTicket: null,
         currentTicketType: 'service', // 'service' hoặc 'order'
-        currentTicketId: sessionStorage.getItem('pawpal_admin_complaint_selected_id') || 'TKT-001',
+        currentTicketId: sessionStorage.getItem('pawpal_admin_complaint_selected_id') || null,
         isLoaded: false
     }, PawpalComplaints.state || {});
 
     // Helper định dạng ngày giờ chuẩn hóa toàn hệ thống (YYYY-MM-DD HH:mm, YYYY-MM-DD, HH:mm)
-    const formatDateTime = PawpalComplaints.formatDateTime = window.formatDateTime || function(d) {
+    const formatDateTime = PawpalComplaints.formatDateTime = function(d) {
         if (!d) return '—';
         const dateObj = new Date(d);
         if (isNaN(dateObj.getTime())) return String(d);
-        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+        return new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(dateObj);
     };
 
-    const formatDate = PawpalComplaints.formatDate = window.formatDate || function(d) {
+    const formatDate = PawpalComplaints.formatDate = function(d) {
         if (!d) return '—';
         const dateObj = new Date(d);
         if (isNaN(dateObj.getTime())) return String(d);
-        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+        return new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(dateObj);
     };
 
-    const formatTime = PawpalComplaints.formatTime = window.formatTime || function(d) {
+    const formatTime = PawpalComplaints.formatTime = function(d) {
         if (!d) return '—';
         const dateObj = new Date(d);
         if (isNaN(dateObj.getTime())) return String(d);
-        return `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+        return new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(dateObj);
     };
 
     function escapeHtml(str) {
@@ -114,108 +114,38 @@
         }, 3000);
     }
     PawpalComplaints.showToast = showToast;
+    PawpalComplaints.errorMessage = function(error) {
+        const messages = {
+            complaint_changed:'Phiếu đã thay đổi. Tải lại trước khi thao tác.',
+            complaint_request_conflict:'Yêu cầu đã được lưu với nội dung khác. Đóng và mở lại để tạo thao tác mới.',
+            complaint_approval_forbidden:'Chỉ tài khoản có vai trò quản trị mới được duyệt phương án.',
+            complaint_forbidden:'Bạn không có quyền thực hiện thao tác này.',
+            complaint_handler_unavailable:'Nhân viên chưa đủ điều kiện nhận xử lý. Chọn nhân viên khác.',
+            complaint_note_required:'Vui lòng nhập nội dung từ 2 ký tự.',
+            invalid_complaint_resolution:'Kiểm tra phương án, số tiền và giao dịch liên quan.',
+            complaint_refund_mismatch:'Chọn giao dịch hoàn tiền thành công, đúng khách và đúng đơn hoặc lịch hẹn.',
+            complaint_return_mismatch:'Chọn yêu cầu trả hàng đã nhận, thuộc đúng đơn hàng.',
+            complaint_replacement_order_required:'Chọn đơn đổi mới của khách đã giao thành công.',
+            complaint_booking_mismatch:'Chọn lịch làm lại đã hoàn tất, cùng bé cưng và dịch vụ của lịch gốc.',
+            complaint_approved_result_required:'Phương án cần được duyệt và có kết quả thực hiện trước khi hoàn tất.',
+            complaint_approval_pending:'Phiếu đang chờ duyệt phương án.',
+            complaint_not_open:'Phiếu đã kết thúc. Mở lại phiếu trước khi tiếp tục.',
+            complaint_owner_mismatch:'Giao dịch không thuộc khách hàng của phiếu.',
+            complaint_result_already_linked:'Giao dịch này đã được liên kết với phiếu khác.'
+        };
+        return messages[error?.message] || (error?.code==='42501'?'Bạn không có quyền thực hiện thao tác này.':'Không thể lưu thay đổi. Kiểm tra dữ liệu và tải lại để thử lại.');
+    };
 
-    function getCurrentStaffName() {
-        try {
-            const sessionStr = sessionStorage.getItem('pawpal_admin_session') || localStorage.getItem('pawpal_admin_session');
-            if (sessionStr) {
-                const sess = JSON.parse(sessionStr);
-                const candidate = sess.full_name || sess.name || sess.user?.user_metadata?.full_name || sess.user?.email;
-                if (candidate) return candidate;
-            }
-        } catch (_) {}
-        return 'Quản trị viên';
-    }
+    function getCurrentStaffName() { return PawpalComplaints.state.actor?.full_name || ''; }
     PawpalComplaints.getCurrentStaffName = getCurrentStaffName;
-
-    function getCurrentStaffId() {
-        try {
-            const sessionStr = sessionStorage.getItem('pawpal_admin_session') || localStorage.getItem('pawpal_admin_session');
-            if (sessionStr) {
-                const sess = JSON.parse(sessionStr);
-                if (sess.staff_id || sess.id) return sess.staff_id || sess.id;
-            }
-            const staffList = PawpalComplaints.state?.cachedStaff || [];
-            const staffName = getCurrentStaffName();
-            const matched = staffList.find(s => s.full_name?.toLowerCase() === staffName?.toLowerCase() || s.id === staffName);
-            if (matched?.id) return matched.id;
-            if (staffList.length > 0) return staffList[0].id;
-        } catch (_) {}
-        return null;
-    }
+    function getCurrentStaffId() { return PawpalComplaints.state.actor?.id || null; }
     PawpalComplaints.getCurrentStaffId = getCurrentStaffId;
 
     // SLA Calculation
     function calculateSla(item) {
         if (!item) return;
-        const normSt = String(item.status || '').toLowerCase();
-        if (['resolved', 'closed', 'completed', 'da_giai_quyet', 'da_dong', 'tu_choi', 'rejected'].includes(normSt)) {
-            item.slaStatus = 'DONE';
-            item.slaRemainingText = (normSt === 'resolved' || normSt === 'da_giai_quyet') ? 'Đã giải quyết' : (normSt === 'tu_choi' ? 'Từ chối' : 'Đã đóng');
-            return;
-        }
-
-        let createTime = Date.now();
-        if (item.createdAtRaw) {
-            const rawParsed = Date.parse(item.createdAtRaw);
-            if (!isNaN(rawParsed)) createTime = rawParsed;
-        } else if (item.createdAt) {
-            let parsed = Date.parse(item.createdAt);
-            if (isNaN(parsed)) {
-                const parts = item.createdAt.split(' ');
-                if (parts.length === 2) {
-                    parsed = Date.parse(`${parts[0]}T${parts[1]}:00`);
-                }
-            }
-            if (!isNaN(parsed)) {
-                createTime = parsed;
-            }
-        }
-
-        // F-010: Cấu hình giờ SLA rõ ràng theo mức độ ưu tiên: khan_cap (2h), cao (4h), trung_binh (24h), thap (48h)
-        const pLower = String(item.priority || '').toLowerCase();
-        let totalSlaHours = 24;
-        if (pLower === 'khan_cap' || pLower === 'urgent' || item.issueType === 'injury') {
-            totalSlaHours = 2;
-        } else if (pLower === 'high' || pLower === 'cao' || item.issueType === 'damaged') {
-            totalSlaHours = 4;
-        } else if (pLower === 'low' || pLower === 'thap') {
-            totalSlaHours = 48;
-        } else {
-            totalSlaHours = 24;
-        }
-        const totalSlaMs = totalSlaHours * 60 * 60 * 1000;
-        const deadline = createTime + totalSlaMs;
-        const remainingMs = deadline - Date.now();
-
-        if (remainingMs <= 0) {
-            item.slaStatus = 'OVERDUE';
-            const overdueMins = Math.floor(Math.abs(remainingMs) / 60000);
-            if (overdueMins < 60) {
-                item.slaRemainingText = `Quá hạn ${overdueMins} phút`;
-            } else {
-                const h = Math.floor(overdueMins / 60);
-                const m = overdueMins % 60;
-                item.slaRemainingText = `Quá hạn ${h}h ${m > 0 ? m + 'p' : ''}`.trim();
-            }
-        } else {
-            const remMins = Math.floor(remainingMs / 60000);
-            if (remMins <= 60) {
-                item.slaStatus = 'URGENT';
-                item.slaRemainingText = `Còn ${remMins} phút`;
-            } else {
-                item.slaStatus = 'NORMAL';
-                const h = Math.floor(remMins / 60);
-                const m = remMins % 60;
-                item.slaRemainingText = `Còn ${h}h ${m > 0 ? m + 'p' : ''}`.trim();
-            }
-        }
-
-        if (item.status === 'waiting_manager_approval') {
-            item.slaRemainingText += ' (Chờ duyệt)';
-        } else if (item.status === 'reprocessing') {
-            item.slaRemainingText += ' (Xử lý lại)';
-        }
+        item.slaStatus = ['resolved','closed'].includes(item.status) ? 'DONE' : 'UNKNOWN';
+        item.slaRemainingText = item.slaStatus === 'DONE' ? 'Đã kết thúc' : 'Chưa cấu hình hạn xử lý';
     }
     PawpalComplaints.calculateSla = calculateSla;
 
@@ -275,6 +205,7 @@
     // Cache TTL 90 giây — không fetch lại khi chuyển phân hệ
     let _complLastFetchedAt = 0;
     const COMPL_CACHE_TTL_MS = 90_000;
+    let complaintsLoadSequence = 0;
 
     // K-01: Sử dụng Supabase client authenticated chuẩn toàn hệ thống
     // Đảm bảo request mang JWT phiên admin hợp lệ và tuân thủ RLS/RBAC chuẩn
@@ -294,6 +225,7 @@
     // DATA STORE 100% TRỰC TIẾP TỪ SUPABASE LIVE DATABASE (ZERO JSON MOCK)
     // ====================================================================
     async function loadComplaintsModuleData({ force = false } = {}) {
+        const requestSequence = ++complaintsLoadSequence;
         try {
             let client = getComplaintsDbClient();
             if (!client) {
@@ -318,41 +250,43 @@
             }
 
             const fetchComplaintsData = async () => {
-                const ticketClient = client;
-                const [
-                    ticketsRes,
-                    customersRes,
-                    profilesRes,
-                    petsRes,
-                    apptsRes,
-                    ordersRes,
-                    staffRes,
-                    productsRes
-                ] = await Promise.all([
-                    Promise.resolve(ticketClient.from('support_ticket').select('*').order('priority', { ascending: true }).order('created_at', { ascending: false })).catch(err => ({ data: [], error: err })),
-                    Promise.resolve(client.from('customer').select('id, email, phone_main, account_status')).catch(err => ({ data: [], error: err })),
-                    Promise.resolve(client.from('customer_profile').select('customer_id, full_name, gender')).catch(err => ({ data: [], error: err })),
-                    Promise.resolve(client.from('pet_profile').select('id, customer_id, pet_code, pet_name, species, breed, avatar_url')).catch(err => ({ data: [], error: err })),
-                    Promise.resolve(client.from('appointment').select('id, appointment_code, customer_id, pet_id, appointment_date, appointment_status, service:service_id(service_name), staff:staff_id(full_name)').order('appointment_date', { ascending: false }).limit(400)).catch(err => ({ data: [], error: err })),
-                    Promise.resolve(client.from('sales_order').select('id, order_code, customer_id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(400)).catch(err => ({ data: [], error: err })),
-                    Promise.resolve(client.from('staff').select('id, full_name, role, account_status')).catch(err => ({ data: [], error: err })),
-                    Promise.resolve(client.from('product').select('id, product_name, status, product_variant(sku_variant, sale_price)')).catch(err => ({ data: [], error: err }))
+                const readAll = async (table, columns, key = 'id') => {
+                    const rows = [];
+                    for (let offset = 0; ; offset += 500) {
+                        const { data, error } = await client.from(table).select(columns)
+                            .order(key, { ascending: true }).range(offset, offset + 499);
+                        if (error) throw error;
+                        rows.push(...(data || []));
+                        if (!data || data.length < 500) return rows;
+                    }
+                };
+                const [tickets, customers, phones, profiles, pets, appointments, orders, staffList, products] = await Promise.all([
+                    readAll('support_ticket', '*'),
+                    readAll('customer', 'id,contact_email,customer_status'),
+                    readAll('customer_phone', 'id,customer_id,phone_number,is_primary'),
+                    readAll('customer_profile', 'customer_id,full_name,gender', 'customer_id'),
+                    readAll('pet_profile', 'id,customer_id,pet_code,pet_name,avatar_url,routine,allergy,safety_note,breed:pet_breed(breed_name,species:pet_species(species_name))'),
+                    readAll('appointment', 'id,appointment_code,customer_id,pet_id,scheduled_start_at,scheduled_end_at,appointment_status,note,staff:staff_id(full_name),items:appointment_item(id,is_primary,name_snapshot,service:service_id(service_name,category:service_category(category_code)))'),
+                    readAll('sales_order', 'id,order_code,customer_id,order_status,shipping_status,tracking_code,created_at,carrier:shipping_provider(provider_name)'),
+                    readAll('staff', 'id,full_name,job_title,employment_status,auth_user_id'),
+                    readAll('product', 'id,product_name,status,product_variant(id,sku_variant,sale_price)')
                 ]);
-                for (const result of [ticketsRes, staffRes]) { if (result.error) throw result.error; }
-                const mappedProducts = (productsRes.data || []).map(p => ({
-                    ...p,
-                    sku: p.product_variant?.[0]?.sku_variant || 'SKU-000',
-                    sale_price: p.product_variant?.[0]?.sale_price || 0
-                }));
                 return {
-                    tickets: ticketsRes.data || [],
-                    customers: customersRes.data || [],
-                    profiles: profilesRes.data || [],
-                    pets: petsRes.data || [],
-                    appointments: apptsRes.data || [],
-                    orders: ordersRes.data || [],
-                    staffList: staffRes.data || [],
-                    products: mappedProducts
+                    tickets, profiles, staffList,
+                    customers: customers.map(c => ({ ...c, email: c.contact_email,
+                        phone_main: phones.find(p => p.customer_id === c.id && p.is_primary)?.phone_number || null })),
+                    pets: pets.map(p => ({ ...p, species: p.breed?.species?.species_name,
+                        breed: p.breed?.breed_name })),
+                    appointments: appointments.map(a => {
+                        const primary = a.items?.find(i => i.is_primary) || a.items?.[0];
+                        const category = String(primary?.service?.category?.category_code || '').toLowerCase();
+                        return { ...a, appointment_date: a.scheduled_start_at,
+                            service: primary ? { service_name: primary.name_snapshot } : null,
+                            service_type: category.includes('hotel') ? 'hotel' : category.includes('taxi') ? 'taxi' : category ? 'spa' : 'contact' };
+                    }),
+                    orders: orders.map(o => ({ ...o, carrier: o.carrier?.provider_name })),
+                    products: products.map(p => ({ ...p, sku: p.product_variant?.[0]?.sku_variant || null,
+                        sale_price: p.product_variant?.[0]?.sale_price ?? null }))
                 };
             };
 
@@ -363,6 +297,10 @@
                 })
                 : await fetchComplaintsData();
 
+            if (requestSequence !== complaintsLoadSequence) return;
+            const identity = await client.auth.getUser();
+            if (identity.error) throw identity.error;
+            if (requestSequence !== complaintsLoadSequence) return;
             PawpalComplaints.state.loadError = null;
             PawpalComplaints.state.unclassifiedTickets = [];
 
@@ -382,6 +320,7 @@
             PawpalComplaints.state.cachedProfiles = profiles;
             PawpalComplaints.state.cachedPets = pets;
             PawpalComplaints.state.cachedStaff = staffList;
+            PawpalComplaints.state.actor = staffList.find(s => s.auth_user_id === identity.data.user?.id) || null;
             PawpalComplaints.state.cachedProducts = products;
 
             // Map helpers
@@ -432,10 +371,7 @@
             const serviceComplaints = [];
             const orderComplaints = [];
 
-            let localOverridesMap = {};
-            try {
-                localOverridesMap = JSON.parse(localStorage.getItem('pawpal_complaint_overrides') || '{}');
-            } catch (e) {}
+            const localOverridesMap = {};
 
             tickets.forEach((record, idx) => {
                 const t = {...record,user_id:record.customer_id || record.user_id,title:record.subject || record.title};
@@ -513,10 +449,6 @@
                 else if (sLower === 'completed' || sLower === 'resolved' || sLower === 'da_giai_quyet') normStatus = 'resolved';
                 else if (sLower === 'closed' || sLower === 'da_dong' || sLower === 'tu_choi' || sLower === 'rejected') normStatus = 'closed';
 
-                if (t.rating && Number(t.rating) < 3 && normStatus === 'resolved') {
-                    normStatus = 'reprocessing';
-                }
-
                 const officialAssignedStaff = staffList.find(staff => staff.id === t.assigned_staff_id)?.full_name;
                 const staffAssigned = officialAssignedStaff || lastCskhMsg?.agent_name || 'Chưa phân công';
                 const ov = localOverridesMap[t.id];
@@ -525,7 +457,7 @@
                 const ref = t.appointment_id || t.sales_order_id || t.order_id || ov?.refId;
                 const serviceRef = appointments.find(a=>a.id===ref || a.appointment_code===ref);
                 const orderRef = orders.find(o=>o.id===ref || o.order_code===ref);
-                const isOrder = Boolean(orderRef) || ['payment','order','product','wrong_item','damaged','quality','return_request','missing_item','don_hang','thanh_toan','san_pham','hoan_tien'].includes(tType);
+                const isOrder = t.category === 'order' || Boolean(orderRef) || ['payment','order','product','wrong_item','damaged','quality','return_request','missing_item','don_hang','thanh_toan','san_pham','hoan_tien'].includes(tType);
                 const isService = Boolean(serviceRef) || ['service','health','spa','hotel','taxi','dich_vu','grooming','kham_benh','luu_chuong','booking','contact','other','general','inquiry','cskh','tu_van'].includes(tType);
 
                 if (!isOrder) {
@@ -550,7 +482,7 @@
                     const isContactOrOther = ['contact', 'other', 'test', 'lien_he', 'khac'].includes(tType);
                     const sType = ['health', 'spa', 'hotel', 'taxi'].includes(tType) ? tType : (appt && appt.service_type ? appt.service_type : (isContactOrOther ? 'contact' : 'spa'));
                     const petDisplayBreed = pet ? `${pet.breed || pet.species || 'Thú cưng'} • ${pet.weight ? pet.weight + ' kg' : 'Chưa ghi nhận cân nặng'}` : (isContactOrOther ? 'Chưa xác định' : 'Chưa có thông tin');
-                    const petDisplayNotes = pet ? (pet.allergy && pet.allergy !== 'Không' ? `Dị ứng: ${pet.allergy}. ${pet.routine || ''}` : (pet.routine || 'Không có tiền sử dị ứng.')) : (isContactOrOther ? 'Chưa có thông tin bé cưng' : 'Chưa ghi nhận tiền sử dị ứng.');
+                    const petDisplayNotes = pet ? [pet.allergy && `Dị ứng: ${pet.allergy}`, pet.routine, pet.safety_note].filter(Boolean).join('. ') || 'Chưa ghi nhận lưu ý.' : 'Chưa có thông tin bé cưng';
 
                     const demandLabels = {
                         'hoan_tien': 'Hoàn tiền cho khách',
@@ -592,6 +524,8 @@
                     const serviceItem = {
                         id: t.ticket_code || t.id,
                         rawId: t.id,
+                        customerId: t.customer_id,
+                        updated_at: t.updated_at,
                         customerName: customerName,
                         phone: phone,
                         petName: pet ? (pet.pet_name || pet.name) : (isContactOrOther ? '—' : 'Chưa gắn hồ sơ bé cưng'),
@@ -608,12 +542,12 @@
                         assigned_staff_id: t.assigned_staff_id,
                         requested_resolution: t.requested_resolution,
                         requested_amount: Number(t.requested_amount) || 0,
-                        customerDemand: demandLabels[t.requested_resolution] || t.requested_resolution || 'Làm lại dịch vụ hoặc bồi hoàn',
+                        customerDemand: demandLabels[t.requested_resolution] || t.requested_resolution || 'Chưa ghi nhận yêu cầu',
                         first_response_at: t.first_response_at,
                         investigation_note: t.investigation_note,
                         resolution_type: t.resolution_type,
                         resolution_note: t.resolution_note,
-                        approved_amount: Number(t.approved_amount) || 0,
+                        approved_amount: t.approved_amount == null ? null : Number(t.approved_amount),
                         resolved_by: t.resolved_by,
                         resolved_at: t.resolved_at,
                         closed_at: t.closed_at,
@@ -622,9 +556,9 @@
                         createdAtRaw: t.created_at,
                         status: normStatus,
                         evidence: [],
-                        checkinHealth: appt && appt.note ? appt.note : 'Chưa có biên bản tiếp nhận sức khỏe ban đầu.',
+                        checkinHealth: 'Chưa tải biên bản tiếp nhận.',
                         checkinPhotos: [],
-                        staffLogNote: appt && appt.note ? appt.note : 'Chưa có nhật ký ca dịch vụ được ghi nhận.',
+                        staffLogNote: 'Chưa tải nhật ký ca dịch vụ.',
                         timeline: timeline
                     };
 
@@ -640,11 +574,13 @@
                         order = orderRef || null;
                     }
 
-                    let issueType = 'wrong_item';
-                    if (['wrong_item', 'damaged', 'quality', 'return_request', 'missing_item'].includes(tType)) {
+                    let issueType = 'other';
+                    if (['wrong_item', 'damaged', 'quality', 'return_request', 'missing_item', 'payment', 'delivery'].includes(t.category)) {
+                        issueType = t.category;
+                    } else if (['wrong_item', 'damaged', 'quality', 'return_request', 'missing_item'].includes(tType)) {
                         issueType = tType;
                     } else if (tType === 'payment') {
-                        issueType = 'quality';
+                        issueType = 'payment';
                     }
 
                     const demandLabels = {
@@ -685,15 +621,18 @@
                     }
 
                     const orderItem = {
+                        title: t.subject || t.title,
                         id: t.ticket_code || t.id,
                         rawId: t.id,
+                        customerId: t.customer_id,
+                        updated_at: t.updated_at,
                         customerName: customerName,
                         phone: phone,
                         orderId: order ? (order.order_code || order.id) : null,
                         productName: (order && order.productName) || t.title || 'Chưa liên kết sản phẩm',
                         productSku: (order && order.productSku) || '—',
                         issueType: issueType,
-                        customerDemand: demandLabels[t.requested_resolution] || t.requested_resolution || (issueType === 'return_request' ? 'Đổi trả size sản phẩm' : (issueType === 'damaged' ? 'Gửi bù hàng hỏng' : 'Đổi sản phẩm mới')),
+                        customerDemand: demandLabels[t.requested_resolution] || t.requested_resolution || 'Chưa ghi nhận yêu cầu',
                         priority: normPriority,
                         staffAssigned: staffAssigned,
                         assigned_staff_id: t.assigned_staff_id,
@@ -703,7 +642,7 @@
                         investigation_note: t.investigation_note,
                         resolution_type: t.resolution_type,
                         resolution_note: t.resolution_note,
-                        approved_amount: Number(t.approved_amount) || 0,
+                        approved_amount: t.approved_amount == null ? null : Number(t.approved_amount),
                         resolved_by: t.resolved_by,
                         resolved_at: t.resolved_at,
                         closed_at: t.closed_at,
@@ -724,59 +663,6 @@
                     orderComplaints.push(orderItem);
                 }
             });
-
-            // Nạp thêm các yêu cầu khiếu nại / RMA phát sinh từ phân hệ Bán hàng (Orders)
-            try {
-                const sessionRmaList = JSON.parse(sessionStorage.getItem('pawpal_admin_order_rma_tickets') || '[]');
-                sessionRmaList.forEach((rma, rmaIdx) => {
-                    if (!orderComplaints.some(t => t.id === rma.id || t.rawId === rma.id)) {
-                        const rmaItem = {
-                            id: rma.id,
-                            rawId: rma.id,
-                            customerName: rma.customerName || 'Khách hàng',
-                            phone: rma.phone || '—',
-                            orderId: rma.orderId || 'ORD-2026',
-                            productName: rma.items?.[0]?.name || 'Sản phẩm theo đơn hàng',
-                            productSku: rma.items?.[0]?.sku || `SKU-RMA-${rmaIdx + 1}`,
-                            issueType: 'return_request',
-                            customerDemand: rma.solution || 'Đổi trả size / Đổi sản phẩm mới',
-                            priority: 'medium',
-                            staffAssigned: (PawpalComplaints.getCurrentStaffName?.() || 'Quản trị viên') + ' (CSKH)',
-                            createdAt: PawpalComplaints.formatDateTime(rma.createdAt || new Date()),
-                            createdAtRaw: rma.createdAt || new Date().toISOString(),
-                            status: 'processing',
-                            content: rma.reason || 'Yêu cầu đổi trả sản phẩm phát sinh từ đơn hàng đã giao',
-                            evidence: [],
-                            warehousePhotos: [],
-                            carrier: 'Giao Hàng Nhanh (GHN)',
-                            trackingCode: `GHN${String(rma.id).replace(/[^0-9]/g, '') || '88291039'}VN`,
-                            deliveryStatus: 'Giao thành công • Đang hoàn hàng',
-                            timeline: [
-                                {
-                                    time: PawpalComplaints.formatDateTime(rma.createdAt || new Date()),
-                                    author: `${rma.customerName || 'Khách hàng'} (Khách hàng)`,
-                                    title: 'Tiếp nhận yêu cầu Đổi trả / RMA',
-                                    desc: rma.reason || 'Tạo hồ sơ xử lý RMA từ đơn hàng',
-                                    isInternal: false
-                                }
-                            ],
-                            resolution: {
-                                type: 'rma_exchange',
-                                typeName: rma.solution || 'Đổi sản phẩm mới (Tạo mã RMA)',
-                                rmaCode: rma.id,
-                                rmaStep: 2,
-                                warehouse: 'Kho Pawpal Tân Bình (123 Hoàng Văn Thụ, Q. Tân Bình, TP.HCM)',
-                                pickupMethod: 'Khách hàng tự gửi bưu điện về kho',
-                                replacementItem: rma.items?.[0]?.name || 'Sản phẩm đổi mới theo yêu cầu',
-                                note: `Đã tiếp nhận yêu cầu đổi trả cho đơn ${rma.orderId}.`,
-                                updatedAt: PawpalComplaints.formatDateTime(new Date())
-                            }
-                        };
-                        calculateSla(rmaItem);
-                        orderComplaints.unshift(rmaItem);
-                    }
-                });
-            } catch (e) {}
 
             // K-02: SSOT - Không ghi đè trạng thái từ localStorage, tôn trọng dữ liệu CSDL Supabase
             try {
@@ -809,13 +695,24 @@
             PawpalComplaints.subtabs.services?.renderServiceComplaintsTable?.();
             PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable?.();
             const currentSelectedTicketId = PawpalComplaints.state.currentTicketId || PawpalComplaints.state.currentActiveTicket?.id;
-            if (currentSelectedTicketId && PawpalComplaints.subtabs.detail?.renderTicketDetail) {
+            if (location.hash === '#tab-complaint-detail' && currentSelectedTicketId && PawpalComplaints.subtabs.detail?.renderTicketDetail) {
                 PawpalComplaints.subtabs.detail.renderTicketDetail(currentSelectedTicketId);
             }
 
             console.log(`[Complaints] Nạp thành công từ Supabase: ${serviceComplaints.length} khiếu nại dịch vụ, ${orderComplaints.length} khiếu nại đơn hàng.`);
         } catch (err) {
+            if (requestSequence !== complaintsLoadSequence) return;
+            PawpalComplaints.state.serviceComplaints = [];
+            PawpalComplaints.state.orderComplaints = [];
+            PawpalComplaints.state.currentActiveTicket = null;
+            PawpalComplaints.state.isLoaded = false;
+            _complLastFetchedAt = 0;
             PawpalComplaints.state.loadError = 'Không thể tải khiếu nại. Vui lòng tải lại trang.';
+            updateComplaintsKpis();
+            renderComplaintsAlertBar();
+            PawpalComplaints.subtabs.services?.renderServiceComplaintsTable?.();
+            PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable?.();
+            PawpalComplaints.subtabs.detail?.renderTicketDetail?.();
             console.error('[Complaints] Lỗi nạp dữ liệu từ Supabase:', err.message || String(err), err.code || '');
         }
     }
@@ -866,7 +763,7 @@
         const sNew = serviceComplaints.filter(i => i.status === 'new').length;
         const sProc = serviceComplaints.filter(i => i.status === 'processing').length;
         const sWait = serviceComplaints.filter(i => i.status === 'waiting_customer').length;
-        const sHigh = serviceComplaints.filter(i => i.priority === 'high' && i.status !== 'resolved' && i.status !== 'closed').length;
+        const sHigh = serviceComplaints.filter(i => ['high','khan_cap'].includes(i.priority) && i.status !== 'resolved' && i.status !== 'closed').length;
         const sOver = serviceComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed').length;
 
         const elSNew = document.getElementById('statServiceNew');
@@ -879,7 +776,7 @@
         if (elSProc) elSProc.textContent = sProc;
         if (elSWait) elSWait.textContent = sWait;
         if (elSHigh) elSHigh.textContent = sHigh;
-        if (elSOver) elSOver.textContent = sOver;
+        if (elSOver) elSOver.textContent = '—';
 
         const oNew = orderComplaints.filter(i => i.status === 'new').length;
         const oProc = orderComplaints.filter(i => i.status === 'processing').length;
@@ -900,7 +797,7 @@
         if (elORma) elORma.textContent = oRma;
         if (elOWait) elOWait.textContent = oWait;
         if (elORef) elORef.textContent = oRef;
-        if (elOOver) elOOver.textContent = oOver;
+        if (elOOver) elOOver.textContent = '—';
 
         // Cập nhật huy hiệu số đếm đỏ trên Subtab Header
         const servicePendingCount = sNew + sProc + sWait;
@@ -1180,6 +1077,11 @@
                         }
                     });
                 })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'refund_transaction' }, () => triggerComplaintsSync('complaints:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'return_request' }, () => triggerComplaintsSync('complaints:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment_record' }, () => triggerComplaintsSync('complaints:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'care_log' }, () => triggerComplaintsSync('complaints:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket_message_attachment' }, () => triggerComplaintsSync('complaints:*'))
                 .subscribe((status) => {
                     if (status === 'SUBSCRIBED') {
                         console.log('[Complaints Realtime] Đã kết nối kênh Realtime Channel cho Khiếu nại ✓');
@@ -1330,11 +1232,11 @@
         }
         const modal = document.getElementById('imagePreviewModalOverlay');
         if (!modal) return;
-        const defaultSample = 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&auto=format&fit=crop&q=80';
+        if (!src || !/^https:\/\//i.test(src)) return;
         const imgEl = document.getElementById('imagePreviewImg');
         const titleEl = document.getElementById('imagePreviewTitle');
         const metaEl = document.getElementById('imagePreviewMeta');
-        if (imgEl) imgEl.src = src || defaultSample;
+        if (imgEl) imgEl.src = src;
         if (titleEl && title) titleEl.textContent = title;
         if (metaEl && meta) metaEl.textContent = meta;
         modal.classList.add('active');
@@ -1350,6 +1252,8 @@
         const modal = document.getElementById('createTicketModalOverlay');
         if (!modal) return;
 
+        modal.dataset.requestId = crypto.randomUUID();
+        if (document.getElementById('inputTicketRefSearch')) document.getElementById('inputTicketRefSearch').disabled = false;
         PawpalComplaints.state.currentTicketType = type;
         PawpalComplaints.state.selectedCustomerId = null;
         PawpalComplaints.state.selectedRefTransaction = null;
@@ -1539,69 +1443,14 @@
 
         // Helper lấy danh sách khách hàng hợp nhất từ nhiều nguồn
         function getUnifiedCustomerList() {
-            if (window.PawpalCustomers?.state?.db) {
-                const list = Object.values(window.PawpalCustomers.state.db);
-                if (list.length > 0) return list.map(c => ({
-                    id: c.dbId || c.id,
-                    name: c.name || 'Khách hàng',
-                    phone: (c.phone && c.phone !== '—') ? c.phone : '0901234567',
-                    email: c.email || '',
-                    petCount: (c.pets && c.pets.length) || 1,
-                    tier: c.tierName || 'Bạc'
-                }));
-            }
-
-            const customers = PawpalComplaints.state.cachedCustomers || [];
-            const profiles = PawpalComplaints.state.cachedProfiles || [];
-            const pets = PawpalComplaints.state.cachedPets || [];
-            const appts = PawpalComplaints.state.cachedAppointments || [];
-
-            const list = [];
-            const addedIds = new Set();
-
-            profiles.forEach((p, idx) => {
-                if (!p.customer_id) return;
-                addedIds.add(p.customer_id);
-                const relatedAppt = appts.find(a => a.customer_id === p.customer_id);
-                const phone = (p.phone || relatedAppt?.phone || `090${String(1000000 + idx * 7777).slice(0, 7)}`);
-                const petCount = pets.filter(pet => pet.customer_id === p.customer_id).length || 1;
-                list.push({
-                    id: p.customer_id,
-                    name: p.full_name || 'Khách hàng',
-                    phone: phone,
-                    email: p.email || '',
-                    petCount: petCount,
-                    tier: 'Bạc'
-                });
-            });
-
-            customers.forEach((c, idx) => {
-                if (addedIds.has(c.id)) return;
-                addedIds.add(c.id);
-                const phone = c.phone_main || c.phone || `091${String(2000000 + idx * 6666).slice(0, 7)}`;
-                const petCount = pets.filter(pet => pet.customer_id === c.id).length || 1;
-                list.push({
-                    id: c.id,
-                    name: c.full_name || c.note || 'Khách hàng thân thiết',
-                    phone: phone,
-                    email: c.email || '',
-                    petCount: petCount,
-                    tier: 'Thân thiết'
-                });
-            });
-
-            if (list.length === 0) {
-                return [
-                    { id: 'c1', name: 'Nguyễn Văn A', phone: '0901234567', petCount: 2, tier: 'Kim Cương' },
-                    { id: 'c2', name: 'Lê Lệ Quyên', phone: '0912345678', petCount: 1, tier: 'Vàng' },
-                    { id: 'c3', name: 'Trần Thị Bích', phone: '0987654321', petCount: 3, tier: 'Bạc' },
-                    { id: 'c4', name: 'Phạm Minh Tuấn', phone: '0933445566', petCount: 1, tier: 'Thân thiết' }
-                ];
-            }
-            return list;
+            const state = PawpalComplaints.state;
+            return state.cachedCustomers.map(c => ({ id: c.id,
+                name: state.cachedProfiles.find(p => p.customer_id === c.id)?.full_name || c.id,
+                phone: c.phone_main || '', email: c.email || '',
+                petCount: state.cachedPets.filter(p => p.customer_id === c.id).length
+            }));
         }
 
-        // Helper render Customer Dropdown (100% Flat Text-Only)
         function renderCustomerDropdown(targetDropdown, query, isPhoneSearch = false) {
             if (!targetDropdown) return;
             const q = (query || '').toLowerCase().trim();
@@ -1627,9 +1476,9 @@
             }
 
             targetDropdown.innerHTML = matches.map(c => {
-                const name = c.name;
-                const phone = c.phone;
-                const petBadge = c.petCount > 0 ? `${c.petCount} bé cưng` : '1 bé cưng';
+                const name = escapeHtml(c.name);
+                const phone = escapeHtml(c.phone);
+                const petBadge = `${c.petCount} bé cưng`;
                 return `
                     <div class="customer-autocomplete-item" data-cust-id="${c.id}" data-cust-name="${name}" data-cust-phone="${phone}">
                         <div class="customer-autocomplete-meta">
@@ -1654,7 +1503,7 @@
         }
 
         // Chọn khách hàng & tự động liên kết (Smart Entity Relations)
-        function selectCustomer(cust) {
+        function selectCustomer(cust, { keepRef = false } = {}) {
             PawpalComplaints.state.selectedCustomerId = cust.id;
             const name = cust.name || 'Khách hàng';
             const phone = cust.phone || '';
@@ -1670,7 +1519,8 @@
 
             // Tự động nạp & hiển thị gợi ý giao dịch của chính khách hàng này
             if (searchRefInput && refDropdown) {
-                renderRefDropdown('', cust.id);
+                if (!keepRef) clearRefTransaction();
+                if (refDropdown) refDropdown.style.display = 'none';
             }
         }
 
@@ -1701,12 +1551,6 @@
 
             if (type === 'order') {
                 let orders = PawpalComplaints.state.cachedOrders || [];
-                if (orders.length === 0) {
-                    orders = [
-                        { id: 'ORD-1001', order_code: 'ORD-1001', customer_name: 'Nguyễn Văn A', total_amount: 350000, created_at: new Date().toISOString() },
-                        { id: 'ORD-1002', order_code: 'ORD-1002', customer_name: 'Lê Lệ Quyên', total_amount: 520000, created_at: new Date().toISOString() }
-                    ];
-                }
                 let filtered = orders.filter(o => {
                     if (filterCustomerId && String(o.customer_id) !== String(filterCustomerId)) return false;
                     if (!q) return true;
@@ -1722,10 +1566,10 @@
                 }
 
                 refDropdown.innerHTML = filtered.map(o => {
-                    const code = o.order_code || o.id;
+                    const code = escapeHtml(o.order_code || o.id);
                     const dateStr = o.created_at ? PawpalComplaints.formatDate(o.created_at) : '';
-                    const amtStr = o.total_amount ? Number(o.total_amount).toLocaleString('vi-VN') + ' đ' : '0 đ';
-                    const cName = o.customer_name || 'Khách hàng';
+                    const amtStr = '';
+                    const cName = escapeHtml(getUnifiedCustomerList().find(c => c.id === o.customer_id)?.name || 'Chưa có tên');
                     return `
                         <div class="customer-autocomplete-item" data-ref-id="${code}" data-cust-id="${o.customer_id || ''}" data-cust-name="${cName}">
                             <div class="customer-autocomplete-meta">
@@ -1738,12 +1582,6 @@
                 }).join('');
             } else {
                 let appts = PawpalComplaints.state.cachedAppointments || [];
-                if (appts.length === 0) {
-                    appts = [
-                        { id: 'APP-1001', appointment_code: 'APP-1001', customer_name: 'Nguyễn Văn A', service_name: 'Cắt tỉa lông toàn diện', appointment_date: '2026-10-12', status: 'completed' },
-                        { id: 'APP-1002', appointment_code: 'APP-1002', customer_name: 'Lê Lệ Quyên', service_name: 'Tắm sấy vệ sinh thảo dược', appointment_date: '2026-10-11', status: 'completed' }
-                    ];
-                }
                 let filtered = appts.filter(a => {
                     if (filterCustomerId && String(a.customer_id) !== String(filterCustomerId)) return false;
                     if (!q) return true;
@@ -1760,10 +1598,10 @@
                 }
 
                 refDropdown.innerHTML = filtered.map(a => {
-                    const code = a.appointment_code || a.id;
-                    const sName = a.service?.service_name || a.service_type || a.service_name || 'Dịch vụ spa';
+                    const code = escapeHtml(a.appointment_code || a.id);
+                    const sName = escapeHtml(a.service?.service_name || 'Chưa có tên dịch vụ');
                     const dateStr = a.appointment_date || '';
-                    const cName = a.customer_name || 'Khách hàng';
+                    const cName = escapeHtml(getUnifiedCustomerList().find(c => c.id === a.customer_id)?.name || 'Chưa có tên');
                     return `
                         <div class="customer-autocomplete-item" data-ref-id="${code}" data-cust-id="${a.customer_id || ''}" data-cust-name="${cName}">
                             <div class="customer-autocomplete-meta">
@@ -1802,10 +1640,9 @@
 
             // Nếu chưa có khách hàng, tự động điền khách hàng từ giao dịch (Smart Entity Auto-fill Reverse)
             if (!PawpalComplaints.state.selectedCustomerId && custId) {
-                const customers = PawpalComplaints.state.cachedCustomers || [];
-                const matchedCust = customers.find(c => String(c.id) === String(custId));
+                const matchedCust = getUnifiedCustomerList().find(c => String(c.id) === String(custId));
                 if (matchedCust) {
-                    selectCustomer(matchedCust);
+                    selectCustomer(matchedCust, { keepRef: true });
                 } else if (nameInput && !nameInput.value) {
                     nameInput.value = custName;
                 }
@@ -1843,6 +1680,9 @@
         // Event listeners cho các ô input
         if (phoneInput) {
             phoneInput.addEventListener('input', () => {
+                PawpalComplaints.state.selectedCustomerId = null;
+                if (custSelectedCard) custSelectedCard.style.display = 'none';
+                clearRefTransaction();
                 renderCustomerDropdown(custDropdown, phoneInput.value, true);
             });
             phoneInput.addEventListener('focus', () => {
@@ -1852,6 +1692,9 @@
 
         if (nameInput) {
             nameInput.addEventListener('input', () => {
+                PawpalComplaints.state.selectedCustomerId = null;
+                if (custSelectedCard) custSelectedCard.style.display = 'none';
+                clearRefTransaction();
                 renderCustomerDropdown(nameDropdown, nameInput.value, false);
             });
             nameInput.addEventListener('focus', () => {
@@ -1861,6 +1704,8 @@
 
         if (searchRefInput) {
             searchRefInput.addEventListener('input', () => {
+                if (selectRefId) selectRefId.value = '';
+                if (refSelectedCard) refSelectedCard.style.display = 'none';
                 renderRefDropdown(searchRefInput.value, PawpalComplaints.state.selectedCustomerId);
             });
             searchRefInput.addEventListener('focus', () => {
@@ -1892,28 +1737,6 @@
                 hideAllDropdowns();
             }
         });
-
-        // Image upload trigger
-        const btnUpload = document.getElementById('btnTriggerUploadTicketFiles');
-        const fileInput = document.getElementById('inputTicketFiles');
-        const previewsContainer = document.getElementById('createTicketPreviewsContainer');
-        if (btnUpload && fileInput) {
-            btnUpload.addEventListener('click', () => fileInput.click());
-            fileInput.addEventListener('change', () => {
-                if (!previewsContainer) return;
-                previewsContainer.innerHTML = '';
-                Array.from(fileInput.files).forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.style.cssText = 'width: 60px; height: 60px; object-fit: cover; border-radius: 9px; border: 1px solid #ECF2EE;';
-                        previewsContainer.appendChild(img);
-                    };
-                    reader.readAsDataURL(file);
-                });
-            });
-        }
 
         // Save Ticket button
         const btnSave = document.getElementById('btnSaveCreateTicket');
@@ -1977,99 +1800,37 @@
                     if (foundCust) targetCustomerId = foundCust.id;
                 }
 
-                let newId = `TKT-${String(Math.floor(1000 + Math.random() * 9000))}`;
-                const now = new Date();
-                const createdAtStr = PawpalComplaints.formatDateTime(now);
-
-                let client = getComplaintsDbClient();
-                if (!client) {
-                    PawpalComplaints.showToast('Không xác định được kết nối Supabase để tạo khiếu nại.', 'error');
+                if (!targetCustomerId) {
+                    if (errName) { errName.textContent = 'Vui lòng chọn khách hàng từ danh sách.'; errName.style.display = 'block'; }
                     return;
                 }
+                if (btnSave.disabled) return;
+                const client = getComplaintsDbClient();
+                if (!client) return;
+                const refs = type === 'order' ? PawpalComplaints.state.cachedOrders : PawpalComplaints.state.cachedAppointments;
+                const ref = !isUnverified && refs.find(r => r.id === refId || r.order_code === refId || r.appointment_code === refId);
+                if (!isUnverified && (!ref || ref.customer_id !== targetCustomerId)) {
+                    if (errRef) { errRef.textContent = 'Giao dịch không thuộc khách hàng đã chọn.'; errRef.style.display = 'block'; }
+                    return;
+                }
+                btnSave.disabled = true;
                 try {
-                    const titleWithRef = refId ? `${title} [${refId}]` : title;
-                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-                    const validCustId = targetCustomerId && isUuid.test(targetCustomerId) ? targetCustomerId : null;
-                    const generatedTicketCode = `TKT-${String(Math.floor(100000 + Math.random() * 900000))}`;
-                    const dbPriority = priority === 'urgent' || priority === 'khan_cap' ? 'khan_cap' : (priority === 'high' || priority === 'cao' ? 'cao' : (priority === 'low' || priority === 'thap' ? 'thap' : 'trung_binh'));
-                    const insertPayload = {
-                        title: titleWithRef,
-                        type: type === 'order' ? 'order' : 'service',
-                        priority: dbPriority,
-                        status: 'mo',
-                        ticket_code: generatedTicketCode,
-                        customer_id: validCustId,
-                        order_id: (type === 'order' && refId && isUuid.test(refId)) ? refId : null,
-                        appointment_id: (type !== 'order' && refId && isUuid.test(refId)) ? refId : null,
-                        user_id: targetCustomerId
-                    };
-                    const { data: insertedTickets, error: insertErr } = await client.from('support_ticket').insert([insertPayload]).select();
-                    if (insertErr) throw insertErr;
-                    if (!insertedTickets?.[0]?.id) throw new Error('CSDL không trả về mã khiếu nại mới.');
-                    newId = insertedTickets[0].id;
-                    const { error: messageErr } = await client.from('support_ticket_message').insert([{
-                        ticket_id: newId,
-                        sender_type: 'khach_hang',
-                        content: refId ? `[Tham chiếu: ${refId}]\n${content}` : content
-                    }]);
-                    if (messageErr) {
-                        console.error('[Complaints] Lỗi lưu tin nhắn đầu tiên, rollback ticket:', messageErr);
-                        try { await client.from('support_ticket').delete().eq('id', newId); } catch (rbErr) {}
-                        throw messageErr;
-                    }
-                } catch (dbErr) {
-                    console.error('[Complaints] Không thể tạo khiếu nại trên Supabase:', dbErr);
-                    PawpalComplaints.showToast(`Không thể tạo khiếu nại: ${dbErr?.message || 'Lỗi CSDL'}`, 'error');
-                    return;
-                }
+                    const { error } = await client.rpc('create_admin_complaint', {
+                        p_id: modal.dataset.requestId,
+                        p_customer_id: targetCustomerId,
+                        p_order_id: type === 'order' ? ref?.id || null : null,
+                        p_appointment_id: type === 'service' ? ref?.id || null : null,
+                        p_category: type, p_subject: title, p_content: content,
+                        p_priority: priority === 'medium' ? 'normal' : priority
+                    });
+                    if (error) throw error;
+                    modal.classList.remove('active');
+                    await loadComplaintsModuleData({ force: true });
+                    PawpalComplaints.showToast('Đã tạo khiếu nại.', 'success');
+                } catch (error) {
+                    PawpalComplaints.showToast('Không thể tạo khiếu nại: ' + error.message, 'error');
+                } finally { btnSave.disabled = false; }
 
-                const newTicket = {
-                    id: newId,
-                    rawId: newId,
-                    customerName: name,
-                    phone: phone,
-                    title: title,
-                    desc: content,
-                    priority: priority,
-                    status: 'new',
-                    createdAt: createdAtStr,
-                    createdAtRaw: now.toISOString(),
-                    refId: refId,
-                    unverified: isUnverified,
-                    staffAssigned: 'Chưa phân công',
-                    timeline: [
-                        {
-                            time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} - ${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`,
-                            author: `${name} (Khách hàng)`,
-                            title: 'Tiếp nhận khiếu nại',
-                            desc: content,
-                            isInternal: false
-                        }
-                    ]
-                };
-
-                if (type === 'order') {
-                    newTicket.orderCode = refId || 'ORD-NEW';
-                    newTicket.amount = 0;
-                    (PawpalComplaints.state.orderComplaints = PawpalComplaints.state.orderComplaints || []).unshift(newTicket);
-                    PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable?.();
-                } else {
-                    newTicket.appointmentCode = refId || 'APT-NEW';
-                    newTicket.serviceName = 'Dịch vụ spa';
-                    (PawpalComplaints.state.serviceComplaints = PawpalComplaints.state.serviceComplaints || []).unshift(newTicket);
-                    PawpalComplaints.subtabs.services?.renderServiceComplaintsTable?.();
-                }
-
-                PawpalComplaints.calculateSla?.(newTicket);
-                PawpalComplaints.saveComplaintsOverrides?.();
-                PawpalComplaints.updateComplaintsKpis?.();
-                PawpalComplaints.renderComplaintsAlertBar?.();
-
-                // Close modal
-                modal.classList.remove('active');
-                PawpalComplaints.showToast(`Đã tạo thành công khiếu nại ${newId}!`, 'success');
-
-                await loadComplaintsModuleData({ force: true });
             });
         }
 

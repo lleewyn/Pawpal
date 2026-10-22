@@ -1192,3 +1192,12 @@
 
 
 
+.complaint-v1-toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:12px 0; }
+.complaint-v1-columns { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:30px; }
+.complaint-v1-columns > div { min-width:0; overflow-wrap:anywhere; }
+.complaint-v1-columns dt { color:var(--text-muted); font-size:12px; margin-top:10px; }
+.complaint-v1-columns dd { margin:3px 0; }
+.complaint-history-entry { margin:14px 0; background:transparent; border:none; }
+.complaint-history-entry span { font-size:11.5px; color:var(--text-muted); }
+.complaint-history-entry p { margin:4px 0; white-space:pre-wrap; }
+@media(max-width:900px) { .complaint-v1-columns { grid-template-columns:minmax(0,1fr); gap:16px; } }

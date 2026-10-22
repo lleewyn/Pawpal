@@ -125,12 +125,7 @@
             if (currentOrderQuickFilter === 'REPROCESSING' && item.status !== 'reprocessing') return false;
             if (currentOrderQuickFilter === 'OVERDUE' && item.slaStatus !== 'OVERDUE') return false;
             if (currentOrderQuickFilter === 'HIGH' && item.priority !== 'high') return false;
-            if (currentOrderQuickFilter === 'MY') {
-                const myStaff = (typeof PawpalComplaints !== 'undefined' && PawpalComplaints.getCurrentStaffName) ? PawpalComplaints.getCurrentStaffName() : 'Quản trị viên';
-                const assigned = (item.staffAssigned || '').toLowerCase();
-                const myLower = myStaff.toLowerCase();
-                if (!assigned.includes(myLower) && assigned !== myLower) return false;
-            }
+            if (currentOrderQuickFilter === 'MY' && item.assigned_staff_id !== PawpalComplaints.getCurrentStaffId()) return false;
 
             return true;
         });
@@ -174,9 +169,9 @@
 
         tbody.innerHTML = pageList.map(item => {
             let priorityBadge = '';
-            if (item.priority === 'high') priorityBadge = '<span class="admin-badge badge-danger">Khẩn cấp</span>';
-            else if (item.priority === 'medium') priorityBadge = '<span class="admin-badge badge-warning">Ưu tiên cao</span>';
-            else priorityBadge = '<span class="admin-badge badge-neutral">Bình thường</span>';
+            if (item.priority === 'khan_cap') priorityBadge = '<span class="admin-badge badge-danger">Khẩn cấp</span>';
+            else if (item.priority === 'high') priorityBadge = '<span class="admin-badge badge-warning">Cao</span>';
+            else priorityBadge = `<span class="admin-badge badge-neutral">${item.priority === 'low' ? 'Thấp' : 'Trung bình'}</span>`;
 
             let statusBadge = '';
             if (item.status === 'open' || item.status === 'new') statusBadge = '<span class="admin-badge badge-warning">Chưa xử lý</span>';
@@ -184,7 +179,9 @@
             else if (item.status === 'waiting_return') statusBadge = '<span class="admin-badge badge-neutral">Chờ hàng trả</span>';
             else if (item.status === 'waiting_manager_approval') statusBadge = '<span class="admin-badge badge-warning">Chờ duyệt</span>';
             else if (item.status === 'reprocessing') statusBadge = '<span class="admin-badge badge-danger">Xử lý lại</span>';
-            else if (item.status === 'resolved' || item.status === 'closed') statusBadge = '<span class="admin-badge badge-success">Đã giải quyết</span>';
+            else if (item.status === 'closed') statusBadge = '<span class="admin-badge badge-neutral">Đã đóng</span>';
+            else if (item.status === 'waiting_customer') statusBadge = '<span class="admin-badge badge-warning">Chờ khách</span>';
+            else if (item.status === 'resolved') statusBadge = '<span class="admin-badge badge-success">Đã giải quyết</span>';
             else statusBadge = '<span class="admin-badge badge-neutral">Đang xử lý</span>';
 
             let slaClass = 'sla-normal';
@@ -204,7 +201,7 @@
             };
             const issueTypeName = issueTypeMap[item.issueType] || (item.issueType || 'Sự cố đơn hàng');
 
-            const alertBorderClass = (item.priority === 'high' || item.slaStatus === 'OVERDUE') ? 'row-alert-danger' : '';
+            const alertBorderClass = (['high','khan_cap'].includes(item.priority) || item.slaStatus === 'OVERDUE') ? 'row-alert-danger' : '';
 
             return `
                 <tr class="${alertBorderClass}" data-ticket-id="${item.id}">
@@ -296,7 +293,7 @@
         const btnExport = document.getElementById('btnExportOrderComplaints');
         if (btnExport) {
             btnExport.addEventListener('click', () => {
-                const exportList = lastFilteredOrders.length > 0 ? lastFilteredOrders : (PawpalComplaints.state?.orderComplaints || []);
+                const exportList = lastFilteredOrders;
                 const headers = ['Mã ticket', 'Thời gian', 'Khách hàng', 'Số điện thoại', 'Mã đơn hàng', 'Nội dung', 'Mức độ', 'Trạng thái', 'Người phụ trách'];
                 const rows = exportList.map(t => [
                     sanitizeCsvCell(t.id),

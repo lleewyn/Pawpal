@@ -144,12 +144,7 @@
                 } else if (item.staffAssigned !== selectedStaff) return false;
             }
 
-            if (currentServiceQuickFilter === 'MY') {
-                const myStaff = (typeof PawpalComplaints !== 'undefined' && PawpalComplaints.getCurrentStaffName) ? PawpalComplaints.getCurrentStaffName() : 'Quản trị viên';
-                const assigned = (item.staffAssigned || '').toLowerCase();
-                const myLower = myStaff.toLowerCase();
-                if (!assigned.includes(myLower) && assigned !== myLower) return false;
-            }
+            if (currentServiceQuickFilter === 'MY' && item.assigned_staff_id !== PawpalComplaints.getCurrentStaffId()) return false;
             if (currentServiceQuickFilter === 'UNASSIGNED' && item.staffAssigned !== 'Chưa phân công') return false;
             if (currentServiceQuickFilter === 'WAITING_MANAGER' && item.status !== 'waiting_manager_approval') return false;
             if (currentServiceQuickFilter === 'REPROCESSING' && item.status !== 'reprocessing') return false;
@@ -193,9 +188,9 @@
 
         tbody.innerHTML = pageList.map(item => {
             let priorityBadge = '';
-            if (item.priority === 'high') priorityBadge = '<span class="admin-badge badge-danger">Khẩn cấp</span>';
-            else if (item.priority === 'medium') priorityBadge = '<span class="admin-badge badge-warning">Ưu tiên cao</span>';
-            else priorityBadge = '<span class="admin-badge badge-neutral">Bình thường</span>';
+            if (item.priority === 'khan_cap') priorityBadge = '<span class="admin-badge badge-danger">Khẩn cấp</span>';
+            else if (item.priority === 'high') priorityBadge = '<span class="admin-badge badge-warning">Cao</span>';
+            else priorityBadge = `<span class="admin-badge badge-neutral">${item.priority === 'low' ? 'Thấp' : 'Trung bình'}</span>`;
 
             let statusBadge = '';
             if (item.status === 'open' || item.status === 'new') statusBadge = '<span class="admin-badge badge-warning">Chưa xử lý</span>';
@@ -203,7 +198,8 @@
             else if (item.status === 'waiting_customer') statusBadge = '<span class="admin-badge badge-neutral">Chờ khách</span>';
             else if (item.status === 'waiting_manager_approval') statusBadge = '<span class="admin-badge badge-warning">Chờ duyệt</span>';
             else if (item.status === 'reprocessing') statusBadge = '<span class="admin-badge badge-danger">Xử lý lại</span>';
-            else if (item.status === 'resolved' || item.status === 'closed') statusBadge = '<span class="admin-badge badge-success">Đã giải quyết</span>';
+            else if (item.status === 'closed') statusBadge = '<span class="admin-badge badge-neutral">Đã đóng</span>';
+            else if (item.status === 'resolved') statusBadge = '<span class="admin-badge badge-success">Đã giải quyết</span>';
             else statusBadge = '<span class="admin-badge badge-neutral">Đang xử lý</span>';
 
             let slaClass = 'sla-normal';
@@ -212,7 +208,7 @@
             else if (item.slaStatus === 'DONE') slaClass = 'sla-done';
             const slaBadge = `<span class="sla-badge ${slaClass}">${escapeHtml(item.slaRemainingText || 'Bình thường')}</span>`;
 
-            const alertBorderClass = (item.priority === 'high' || item.slaStatus === 'OVERDUE') ? 'row-alert-danger' : '';
+            const alertBorderClass = (['high','khan_cap'].includes(item.priority) || item.slaStatus === 'OVERDUE') ? 'row-alert-danger' : '';
 
             return `
                 <tr class="${alertBorderClass}" data-ticket-id="${item.id}">
@@ -292,7 +288,7 @@
         const orderComplaints = PawpalComplaints.state?.orderComplaints || [];
         const all = [...serviceComplaints, ...orderComplaints];
 
-        const urgentTickets = all.filter(t => t.priority === 'high' || t.slaStatus === 'OVERDUE');
+        const urgentTickets = all.filter(t => ['high','khan_cap'].includes(t.priority) || t.slaStatus === 'OVERDUE');
         if (urgentTickets.length === 0) {
             bar.style.display = 'none';
             return;
@@ -341,7 +337,7 @@
         const btnExport = document.getElementById('btnExportServiceComplaints');
         if (btnExport) {
             btnExport.addEventListener('click', () => {
-                const exportList = lastFilteredServices.length > 0 ? lastFilteredServices : (PawpalComplaints.state?.serviceComplaints || []);
+                const exportList = lastFilteredServices;
                 const headers = ['Mã ticket', 'Thời gian', 'Khách hàng', 'Số điện thoại', 'Dịch vụ', 'Nội dung', 'Mức độ', 'Trạng thái', 'Người phụ trách'];
                 const rows = exportList.map(t => [
                     sanitizeCsvCell(t.id),
