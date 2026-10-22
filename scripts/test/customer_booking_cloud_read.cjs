@@ -22,7 +22,7 @@ const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.ran
   }
   browser=await chromium.launch({channel:'chrome',headless:true});page=await browser.newPage({viewport:{width:1440,height:1050}});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  if(!process.argv.includes('--deployed'))for(const path of ['scripts/api/api.js','scripts/shared/customer-realtime.mjs','pages/user/modules/bookings/bookings.js']){
+  if(!process.argv.includes('--deployed'))for(const path of ['scripts/api/api.js','scripts/shared/customer-identity.mjs','scripts/shared/customer-realtime.mjs','scripts/shared/customer-booking.mjs','pages/user/modules/bookings/bookings.js','pages/user/modules/bookings/booking-detail.js']){
    await page.route('**/'+path+'*',route=>route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path,'utf8')}));
   }
   await page.goto('https://pawpalgr3.vercel.app/login');await page.locator('#loginPhone').fill(phone);await page.locator('#btnLoginContinue').click();
@@ -33,8 +33,37 @@ const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.ran
   const rows=await page.evaluate(async()=>window.API.getUserBookings(JSON.parse(localStorage.getItem('pawpal_current_user'))));
   assert.equal(rows.length,2);assert.ok(rows.every(b=>b.price===100&&b.paymentStatus==='pending'));
   await page.screenshot({path:infra+'/verification/customer-booking-list.private.png',fullPage:true});
+  if(process.argv.includes('--cancel')){
+   await page.locator('.btn-cancel-booking').first().click();
+   await page.locator('#quickConfirmCancelBtn').click();
+   assert.equal(await page.locator('#bookingCancelError').isVisible(),true);
+   await page.keyboard.press('Escape');await page.locator('#quickCancelBookingModal').waitFor({state:'detached'});
+   await page.locator('.btn-cancel-booking').first().click();
+   await page.locator('#bookingCancelReason').fill('Customer cancellation browser verification');
+   await page.screenshot({path:infra+'/verification/customer-booking-cancel.private.png'});
+   const [response]=await Promise.all([page.waitForResponse(r=>r.url().includes('/rpc/cancel_own_service_booking')&&r.request().method()==='POST'),page.locator('#quickConfirmCancelBtn').click()]);
+   assert.equal(response.status(),200);
+   const payload=response.request().postDataJSON();
+   await page.locator('#quickCancelBookingModal').waitFor({state:'detached'});
+   const cancelled=await ok(service.from('appointment').select('appointment_status').eq('id',payload.p_id).single());
+   assert.equal(cancelled.appointment_status,'cancelled');
+   const audit=await ok(service.from('audit_log').select('description').eq('entity_id',payload.p_id).eq('action','CUSTOMER_CANCEL_APPOINTMENT'));
+   assert.equal(audit.length,1);assert.equal(JSON.parse(audit[0].description).reason,'Customer cancellation browser verification');
+   await page.reload();await page.waitForFunction(()=>document.querySelectorAll('#bookingsList .booking-card').length===2,{timeout:30000});
+   assert.equal(await page.locator('.btn-cancel-booking').count(),1);
+   const remaining=ids.find(id=>id!==payload.p_id);
+   await page.evaluate(id=>{location.hash='booking-detail?id='+id;},remaining);
+   await page.locator('#btnCancelBooking').waitFor({state:'visible'});
+   await page.locator('#btnCancelBooking').click();
+   await page.locator('#quickCancelBookingModal').waitFor({state:'visible'});
+   await page.keyboard.press('Escape');await page.locator('#quickCancelBookingModal').waitFor({state:'detached'});
+   await page.locator('#btnCancelBooking').click();await page.locator('#bookingCancelReason').fill('Cancellation from booking detail');
+   const [detailResponse]=await Promise.all([page.waitForResponse(r=>r.url().includes('/rpc/cancel_own_service_booking')&&r.request().method()==='POST'),page.locator('#quickConfirmCancelBtn').click()]);
+   assert.equal(detailResponse.status(),200);await page.locator('#quickCancelBookingModal').waitFor({state:'detached'});
+   await page.waitForFunction(()=>document.querySelector('#headerStatusBadge')?.textContent.includes('Đã hủy'),{timeout:30000});
+  }
   assert.deepEqual(errors,[]);
-  console.log('PASS Cloud booking list retains distinct same-time appointments, owner totals and unpaid state; no collection created.');
+  console.log('PASS Cloud booking list/owner totals'+(process.argv.includes('--cancel')?', cancellation required reason/Escape, atomic confirmation/audit and durable reload':'')+'; no collection created.');
  }catch(error){
   fs.writeFileSync(infra+'/verification/customer-booking-read-error.private.txt',String(error.message).replaceAll(password,'[REDACTED]').replaceAll(phone,'[PHONE]'));
   if(page)await page.screenshot({path:infra+'/verification/customer-booking-read-failure.private.png'}).catch(()=>{});

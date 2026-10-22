@@ -25,8 +25,10 @@ test('summary errors and missing amounts are not replaced with guessed totals',a
     await assert.rejects(()=>fixture(undefined,0).getUserBookings('owner'));
 });
 test('elapsed time never completes or checks in a confirmed appointment',()=>{
-    const text=fs.readFileSync('pages/user/modules/bookings/bookings.js','utf8');
-    const fn=text.slice(text.indexOf('function resolveBookingStatus(booking)'),text.indexOf('function getBookingScheduledAt(booking)'));
-    const context={};vm.runInNewContext(fn+';globalThis.resolve=resolveBookingStatus;',context);
-    assert.equal(context.resolve({status:'confirmed',date:'2020-01-01',time:'08:00'}),'confirmed');
+    for(const file of ['bookings.js','booking-detail.js']){
+        const text=fs.readFileSync('pages/user/modules/bookings/'+file,'utf8');
+        const fn=text.slice(text.indexOf('function resolveBookingStatus(booking)'),text.indexOf('function getBookingScheduledAt(booking)'));
+        const context={};vm.runInNewContext(fn+';globalThis.resolve=resolveBookingStatus;',context);
+        assert.equal(context.resolve({status:'confirmed',date:'2020-01-01',time:'08:00'}),'confirmed');
+    }
 });

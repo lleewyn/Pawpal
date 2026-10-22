@@ -1,6 +1,6 @@
 
 import { API } from '/scripts/api/api.js';
-import { statusLabels, formatDate, formatPrice } from './bookings.js';
+import { statusLabels, formatDate, formatPrice, openBookingCancelModal } from './bookings.js';
 
 
 function mapBookingStatus(status) {
@@ -29,16 +29,6 @@ function getBookingPrice(priceMatrix, petSpecies) {
     if (!priceMatrix?.length) return 0;
     const match = priceMatrix.find(p => p.pet_species === petSpecies);
     return (match || priceMatrix[0])?.unit_price || 0;
-}
-
-async function cancelBookingOnSupabase(booking) {
-    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db || !booking?._supabaseId) throw new Error('Không xác định được lịch hẹn để hủy.');
-    const { error } = await db.from('appointment')
-        .update({ appointment_status: 'da_huy' })
-        .eq('id', booking._supabaseId);
-    if (error) throw error;
-    console.log('[BookingDetail] Cancel synced to Supabase');
 }
 
 async function rescheduleBookingOnSupabase(booking) {
@@ -124,7 +114,7 @@ async function loadBookingDetail(bookingId) {
 
     const remoteBookings = currentUser ? await API.getUserBookings(currentUser) : [];
 
-    currentBooking = (remoteBookings || []).find((b) => String(b.id || b._id || b._supabaseId) === String(bookingId) || b.code === bookingId || b.appointment_code === bookingId);
+    currentBooking = (remoteBookings || []).find(b => [b.id,b._id,b._supabaseId,b.code,b.appointment_code].some(id=>id!=null&&String(id)===String(bookingId)));
 
     if (!currentBooking) {
         showBookingLoadError('Không tìm thấy lịch hẹn này.');
@@ -158,12 +148,14 @@ async function loadBookingDetail(bookingId) {
     renderBookingDetail(currentBooking);
     await renderServiceReviewSection(currentBooking);
     checkBookingModifiability(currentBooking);
+    const cancelButton=document.getElementById('btnCancelBooking');
+    if(cancelButton)cancelButton.onclick=handleCancelBooking;
 
     if (window.setUserSubBreadcrumb && currentBooking) {
         window.setUserSubBreadcrumb('#' + (currentBooking.code || currentBooking.id), 'booking-detail');
     }
 
-    awardBookingLoyaltyPoints(currentBooking, currentUser);
+
 
     if (window.location.hash === '#service-review' || window.location.hash.includes('section=service-review')) {
         setTimeout(() => {
@@ -817,43 +809,9 @@ async function showChangeScheduleModal(user = null) {
 }
 
 function handleCancelBooking() {
-    const scheduledAt = getBookingScheduledAt(currentBooking);
-    const now = new Date();
-    const diffMinutes = scheduledAt ? (scheduledAt - now) / (1000 * 60) : 999;
-
-    if (diffMinutes < 120) {
-        showToast('Chỉ được phép tự hủy lịch hẹn trước giờ bắt đầu tối thiểu 2 tiếng. Ca hẹn sắp diễn ra, vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'danger');
-        return;
-    }
-
-    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    if (currentUser && Number(currentUser.cancelCount || 0) >= 3) {
-        showToast('Tài khoản của bạn đã vượt quá ngưỡng hủy lịch cho phép (> 3 lần). Chức năng đặt và quản lý lịch trực tuyến của bạn đã bị tạm khóa. Vui lòng gọi Hotline 1900 1234.', 'danger');
-        return;
-    }
-
-    if (currentUser && currentUser.is_temporary) {
-        showCancelConfirmModal(() => {
-            showGuestOTPModal(currentUser, () => {
-                confirmCancelBooking(() => showUpsellPasswordModal(currentUser));
-            });
-        });
-        return;
-    }
-
-    showCancelConfirmModal(() => {
-        confirmCancelBooking(null);
-    });
-}
-
-function showCancelConfirmModal(onConfirm) {
-    const cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
-    document.getElementById('modalBookingCode').textContent = currentBooking.id;
-    cancelModal.show();
-    document.getElementById('confirmCancelBtn').onclick = function () {
-        cancelModal.hide();
-        onConfirm();
-    };
+    if (!currentBooking) return;
+    const id = currentBooking.id;
+    openBookingCancelModal(currentBooking, () => loadBookingDetail(id));
 }
 
 function showGuestOTPModal(user, onSuccess) {
@@ -902,92 +860,6 @@ function showGuestOTPModal(user, onSuccess) {
             document.getElementById('otpError').classList.remove('d-none');
         }
     });
-}
-
-async function confirmCancelBooking(onDone) {
-    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-
-    try {
-        await cancelBookingOnSupabase(currentBooking);
-    } catch (err) {
-        console.error('[BookingDetail] Hủy lịch thất bại:', err);
-        showToast('Không thể hủy lịch hẹn lúc này. Vui lòng thử lại.', 'error');
-        return;
-    }
-
-    if (currentUser) {
-        currentUser.cancelCount = (Number(currentUser.cancelCount) || 0) + 1;
-        if (currentUser.cancelCount > 3) {
-            currentUser.booking_locked = true;
-        }
-        localStorage.setItem('pawpal_current_user', JSON.stringify(currentUser));
-
-        try {
-            const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
-            const uIdx = users.findIndex(u => u.id === currentUser.id || u.phone === currentUser.phone);
-            if (uIdx !== -1) {
-                users[uIdx].cancelCount = currentUser.cancelCount;
-                users[uIdx].booking_locked = currentUser.booking_locked;
-                localStorage.setItem('pawpal_users', JSON.stringify(users));
-            }
-        } catch (_) {}
-    }
-
-    try {
-        const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-        const idx = bookings.findIndex(b => String(b.id || b._id) === String(currentBooking.id || currentBooking._id));
-        if (idx !== -1) {
-            bookings[idx].cancelCount = (bookings[idx].cancelCount || 0) + 1;
-            bookings[idx].status = 'cancelled';
-            localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
-        }
-    } catch (_) {}
-
-    currentBooking.status = 'cancelled';
-
-    // Ghi thông báo xác nhận hủy lịch thật vào bảng notification cho khách hàng
-    try {
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (db && currentUser?.id) {
-            const { error: notifErr } = await db.from('notification').insert({
-                customer_id: currentUser.id,
-                notification_type: 'lich_hen_da_thay_doi',
-                title: 'Xác nhận hủy lịch hẹn',
-                content: `Lịch hẹn #${currentBooking.id || currentBooking.code} của bé ${currentBooking.petName || 'cưng'} đã được hủy thành công.`,
-                appointment_id: currentBooking.rawId || currentBooking.id || null,
-                related_entity_type: 'appointment',
-                is_read: false,
-                sent_at: new Date().toISOString()
-            });
-            if (notifErr) {
-                console.warn('[BookingDetail] Lỗi ghi thông báo hủy lịch:', notifErr.message);
-            }
-        }
-    } catch (notifErr) {
-        console.warn('[BookingDetail] Không thể ghi thông báo hủy lịch vào Supabase:', notifErr.message);
-    }
-
-    // Gửi thông báo đến Admin
-    try {
-        const adminNotifs = JSON.parse(localStorage.getItem('pawpal_admin_notifications') || '[]');
-        adminNotifs.unshift({
-            id: `admin-notif-${Date.now()}`,
-            type: 'booking_cancelled',
-            title: 'Khách hàng hủy lịch hẹn',
-            content: `Khách hàng ${currentUser?.name || currentBooking.ownerName || 'vãng lai'} (${currentUser?.phone || currentBooking.ownerPhone}) vừa hủy ca hẹn #${currentBooking.id || currentBooking.code}.`,
-            createdAt: new Date().toISOString(),
-            read: false
-        });
-        localStorage.setItem('pawpal_admin_notifications', JSON.stringify(adminNotifs));
-    } catch (_) {}
-
-    showToast('Đã hủy lịch hẹn thành công', 'success');
-
-    if (onDone) {
-        setTimeout(onDone, 800);
-    } else {
-        setTimeout(() => { window.location.hash = '#bookings'; }, 1500);
-    }
 }
 
 function showUpsellPasswordModal(user) {
@@ -1072,81 +944,8 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-function awardBookingLoyaltyPoints(booking, user) {
-    if (!booking || !user || user.is_temporary) return;
-
-    const normalizedStatus = resolveBookingStatus(booking);
-    if (normalizedStatus !== 'completed') return;
-    if (booking.pointsAwarded) return;
-
-    const price = Number(booking.price || 0);
-    if (price <= 0) return;
-
-    const pointsEarned = Math.floor(price / 10000);
-    if (pointsEarned <= 0) return;
-
-    const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
-    const idx = users.findIndex(u => u.phone === user.phone);
-    if (idx !== -1) {
-        users[idx].points = (users[idx].points || 0) + pointsEarned;
-        users[idx].spend  = (users[idx].spend  || 0) + price;
-        users[idx].lastTransactionAt = new Date().toISOString();
-
-        user.points = users[idx].points;
-        user.spend  = users[idx].spend;
-        user.lastTransactionAt = users[idx].lastTransactionAt;
-        localStorage.setItem('pawpal_current_user', JSON.stringify(user));
-        localStorage.setItem('pawpal_users', JSON.stringify(users));
-    }
-
-    booking.pointsAwarded = true;
-    booking.pointsEarned  = pointsEarned;
-    const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-    const bi = bookings.findIndex(b => b.id === booking.id);
-    if (bi !== -1) {
-        bookings[bi] = { ...bookings[bi], pointsAwarded: true, pointsEarned };
-        localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
-    }
-
-    showToast(`Bạn vừa tích được +${pointsEarned} Paw Points cho dịch vụ này!`, 'success');
-    console.log(`[Loyalty] +${pointsEarned} Paw Points cho booking ${booking.id} (${price.toLocaleString('vi-VN')}đ)`);
-}
-
-window.handleChangeSchedule = handleChangeSchedule;
-window.handleCancelBooking = handleCancelBooking;
-window.closeErrorBanner = closeErrorBanner;
-
 function resolveBookingStatus(booking) {
-    const rawStatus = booking?.status || 'upcoming';
-    if (['cancelled', 'completed', 'in-progress', 'accepted', 'pending'].includes(rawStatus)) {
-        return rawStatus;
-    }
-
-    const isHotel = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase() === 'hotel' || String(booking?.service || booking?.serviceName || '').toLowerCase().includes('hotel');
-    
-    if (isHotel && booking.dateEnd) {
-        const endDate = new Date(`${booking.dateEnd}T12:00:00`);
-        const now = Date.now();
-        if (!Number.isNaN(endDate.getTime())) {
-            if (now > endDate.getTime() + 4 * 3600000) return 'completed';
-            const startDate = new Date(`${booking.date}T12:00:00`);
-            if (now >= startDate.getTime()) return 'in-progress';
-            return 'confirmed';
-        }
-    }
-
-    const scheduledAt = getBookingScheduledAt(booking);
-    if (!scheduledAt) {
-        return rawStatus === 'confirmed' ? 'accepted' : 'confirmed';
-    }
-
-    const now = Date.now();
-    const hoursPast = (now - scheduledAt.getTime()) / (1000 * 60 * 60);
-
-    if (hoursPast >= 4) return 'completed';
-    if (hoursPast >= 1) return 'in-progress';
-    if (hoursPast >= 0) return 'accepted';
-    return 'confirmed';
+    return booking?.status || 'pending';
 }
 
 function getBookingScheduledAt(booking) {

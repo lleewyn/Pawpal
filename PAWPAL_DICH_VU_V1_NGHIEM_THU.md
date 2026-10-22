@@ -160,5 +160,8 @@ Phân hệ khách đang thực hiện; chưa nghiệm thu toàn bộ đặt mớ
 - [x] Bộ kiểm thử đọc lịch, đăng ký Realtime và hồi quy giỏ hàng: 27/27 đạt.
 - [x] Commit `babc776` đã lên Vercel; `node scripts/test/customer_booking_cloud_read.cjs --deployed` đạt. Đây là nghiệm thu phần danh sách/đọc số tiền, không phải nghiệm thu form đặt mới hoặc đổi/hủy lịch.
 - [ ] Chuyển form đặt mới và danh mục/bảng giá sang giao dịch máy chủ, bỏ JSON/cache nghiệp vụ cũ.
-- [ ] Chuyển đổi/hủy lịch sang RPC có quyền chủ sở hữu, phiên bản và kiểm tra lịch/phòng/xe/thu tiền; nghiệm thu từng modal.
+- [x] `066_customer_booking_cancel.sql`: hủy có lý do, quyền chủ lịch, phiên bản, chống gửi lặp; giữ hạn trước giờ bắt đầu 2 tiếng, chặn đã thu/đang thực hiện. Giải phóng phòng và chuyến xe qua trigger hiện có. Kiểm thử giao dịch phục hồi đạt, rollback toàn bộ fixture.
+- [x] Form hủy dùng chung từ danh sách và chi tiết đã thử trên trình duyệt với Cloud thật: thiếu lý do, Escape, xác nhận, đọc lại trạng thái và lý do trong nhật ký sau reload. Đã xem ảnh form, bỏ khóa tài khoản/lịch sử hủy và cộng điểm chỉ trong trình duyệt. Kiểm thử hồi quy 44/44 đạt; nhận diện khách kiểm tra phiên Auth và từ chối ID trình duyệt khác chủ.
+- [x] Migration hủy đã áp Cloud sau sao lưu `portal-bookings-cloud-2026-10-22T17-48-28-876Z`, không đổi dữ liệu public/Auth hoặc 17 nhân viên khi triển khai.
+- [ ] Chuyển đổi lịch sang RPC có quyền chủ sở hữu, phiên bản và kiểm tra lịch/phòng/xe/bảng giá; nghiệm thu modal đổi lịch.
 - [ ] Hoàn thiện chi tiết ca, đánh giá dịch vụ và Realtime; kiểm tra lại toàn luồng trên Vercel.

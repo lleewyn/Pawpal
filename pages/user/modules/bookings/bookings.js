@@ -1,6 +1,6 @@
 
 import { API } from '/scripts/api/api.js';
-import { updateCustomerBooking } from '/scripts/shared/customer-booking.mjs';
+import { updateCustomerBooking, cancelCustomerBooking } from '/scripts/shared/customer-booking.mjs';
 import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
 
 
@@ -495,69 +495,50 @@ function showToast(message, type = 'info') {
 }
 
 function openQuickCancelModal(booking) {
-    const scheduledAt = getBookingScheduledAt(booking);
-    const now = new Date();
-    const diffMinutes = scheduledAt ? (scheduledAt - now) / (1000 * 60) : 999;
+    openBookingCancelModal(booking, () => loadBookings(document.querySelector('.booking-filter-tab.active, .filter-tab.active')?.dataset.status || 'all'));
+}
 
-    if (diffMinutes < 120) {
-        showToast('Chỉ được phép tự hủy lịch hẹn trước giờ bắt đầu tối thiểu 2 tiếng. Ca hẹn sắp diễn ra, vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'danger');
-        return;
-    }
-
-    const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-    if (currentUser && Number(currentUser.cancelCount || 0) >= 3) {
-        showToast('Tài khoản của bạn đã vượt quá ngưỡng hủy lịch cho phép (> 3 lần). Chức năng đặt và quản lý lịch trực tuyến của bạn đã bị tạm khóa. Vui lòng gọi Hotline 1900 1234.', 'danger');
-        return;
-    }
-
-    const existing = document.getElementById('quickCancelBookingModal');
-    if (existing) existing.remove();
-
-    const petKey = String(booking.petId || '');
-    const petObj = currentPetMap.get(petKey);
-    const petName = booking.petName || petObj?.name || booking.petInfo?.petName || booking.petId || 'Bé cưng';
-    const serviceName = booking.service || booking.serviceName || booking.selectedService?.name || 'Dịch vụ PawPal';
-    const bookingId = booking.id || booking._id || '';
-
-    const modalEl = document.createElement('div');
-    modalEl.id = 'quickCancelBookingModal';
-    modalEl.className = 'modal fade';
-    modalEl.tabIndex = -1;
-    modalEl.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Hủy lịch hẹn</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Bạn có chắc muốn hủy lịch <strong>${serviceName}</strong> của <strong>${petName}</strong> không?</p>
-                    <p class="text-muted small mb-0">Lịch đã hủy sẽ không thể khôi phục.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Không</button>
-                    <button type="button" class="btn-cta" id="quickConfirmCancelBtn">Xác nhận hủy</button>
-                </div>
-            </div>
-        </div>`;
-    document.body.appendChild(modalEl);
-
-    const modal = new bootstrap.Modal(modalEl);
-    modal.show();
-
-    modalEl.querySelector('#quickConfirmCancelBtn').addEventListener('click', async (event) => {
-        const button = event.currentTarget;
-        if (button.disabled) return;
-        button.disabled = true;
-        try {
-            await changeOnSupabase(bookingId, { appointment_status: 'da_huy' });
-            modal.hide();
-            showToast('Đã hủy lịch hẹn thành công', 'success');
-            await loadBookings(document.querySelector('.filter-tab.active')?.dataset.status || 'all');
-        } catch (error) { showToast(error.message, 'error'); }
-        finally { button.disabled = false; }
-
+export function openBookingCancelModal(booking, onSaved) {
+    document.getElementById('quickCancelBookingModal')?.remove();
+    const modal = document.createElement('dialog');
+    modal.id = 'quickCancelBookingModal';
+    modal.style.cssText = 'position:fixed;inset:0;margin:auto;width:540px;max-width:92vw;padding:26px 30px;border:1px solid #ECF2EE;border-radius:9px;color:#203A2C;background:#fff;';
+    modal.innerHTML = `<form onsubmit="return false;" style="display:grid;gap:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;">
+        <h3 style="margin:0;color:#236B48;font-size:20px;">Hủy lịch hẹn</h3>
+        <button type="button" class="btn-green-outline" data-close-modal="quickCancelBookingModal">Đóng</button>
+      </div>
+      <p style="margin:0;">Hủy lịch <strong>${escapeHtml(booking.serviceName || booking.service)}</strong> của <strong>${escapeHtml(booking.petName)}</strong>?</p>
+      <div><label for="bookingCancelReason" class="form-label">Lý do hủy <span style="color:#DC2626;">*</span></label>
+        <textarea id="bookingCancelReason" class="form-control" rows="3" maxlength="2000" required style="border-radius:9px;"></textarea>
+      </div>
+      <p id="bookingCancelError" role="alert" style="margin:0;color:#DC2626;" hidden></p>
+      <div style="display:flex;justify-content:flex-end;gap:12px;">
+        <button type="button" class="btn-green-outline" data-close-modal="quickCancelBookingModal">Giữ lịch</button>
+        <button type="button" class="btn-cta" id="quickConfirmCancelBtn">Xác nhận hủy</button>
+      </div>
+    </form>`;
+    document.body.appendChild(modal);
+    modal.querySelector('form').addEventListener('submit',e=>e.preventDefault());
+    modal.querySelectorAll('[data-close-modal]').forEach(button=>button.addEventListener('click',()=>modal.close()));
+    modal.addEventListener('click',e=>{const r=modal.getBoundingClientRect();if(e.target===modal&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))modal.close();});
+    modal.addEventListener('close',()=>modal.remove(),{once:true});
+    const requestId=crypto.randomUUID();
+    modal.querySelector('#quickConfirmCancelBtn').addEventListener('click',async e=>{
+        const button=e.currentTarget;if(button.disabled)return;
+        const reason=modal.querySelector('#bookingCancelReason'),error=modal.querySelector('#bookingCancelError');
+        error.hidden=true;
+        if(!reason.value.trim()){error.textContent='Vui lòng nhập lý do hủy lịch.';error.hidden=false;reason.focus();return;}
+        button.disabled=true;
+        try{
+            const db=window.getSupabaseClient?.() || window.SupabaseClient;
+            const user=window.getCurrentUser?.() || JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            await cancelCustomerBooking(db,user,booking,reason.value,requestId);
+            modal.close();showToast('Đã hủy lịch hẹn.','success');await onSaved?.();
+        }catch(err){error.textContent=err.message;error.hidden=false;}
+        finally{button.disabled=false;}
     });
+    modal.showModal();
 }
 
 function openQuickRescheduleModal(booking) {

@@ -5,6 +5,7 @@ export async function resolveAuthenticatedCustomerId(db, requestedUser) {
 
     if (db?.auth) {
         const auth = await db.auth.getUser();
+        if (auth?.error || !auth?.data?.user?.id) throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
         if (auth?.data?.user?.id) {
             const { data, error } = await db.from('customer')
                 .select('id, contact_email, customer_status')
@@ -12,12 +13,14 @@ export async function resolveAuthenticatedCustomerId(db, requestedUser) {
                 .maybeSingle();
 
             if (!error && data?.id) {
+                if (String(data.id) !== String(requestedId)) throw new Error('Hồ sơ không thuộc phiên đăng nhập hiện tại. Vui lòng tải lại trang.');
                 const status = String(data.customer_status || '').toLowerCase();
                 if (status === 'locked' || status === 'da_khoa') {
                     throw new Error('Tài khoản đã bị tạm khóa. Vui lòng liên hệ hỗ trợ.');
                 }
                 return data.id;
             }
+            throw new Error('Không tìm thấy hồ sơ của phiên đăng nhập hiện tại.');
         }
     }
 
