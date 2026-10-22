@@ -184,7 +184,16 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
     }
    }));
    const localDate=new Date(Date.now()+7*3600000).toISOString().slice(0,10),start=localDate+'T00:00:00+07:00',end=new Date(Date.parse(start)+86400000).toISOString();
-   if(staff.permissions.includes('appointment.read')){const r=await caller.from('appointment').select('id',{count:'exact',head:true}).gte('scheduled_start_at',start).lt('scheduled_start_at',end);if(r.error)throw r.error;context.appointment_today={date:localDate,time_zone:'Asia/Ho_Chi_Minh',total:r.count};}
+   if(staff.permissions.includes('appointment.read')){
+    const r=await caller.from('appointment').select('id,appointment_code,appointment_status,scheduled_start_at').gte('scheduled_start_at',start).lt('scheduled_start_at',end).limit(50);
+    if(r.error)throw r.error;
+    const items=(r.data||[]).map(a=>({
+     code:a.appointment_code,
+     status:a.appointment_status==='pending'?'Chờ duyệt':a.appointment_status==='confirmed'?'Đang chờ phục vụ':a.appointment_status==='in_progress'?'Đang làm dịch vụ':a.appointment_status==='completed'?'Đã hoàn thành':a.appointment_status,
+     time:new Date(a.scheduled_start_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Ho_Chi_Minh'})
+    }));
+    context.appointment_today={date:localDate,time_zone:'Asia/Ho_Chi_Minh',total:items.length,appointments:items};
+   }
    if(staff.permissions.includes('support_ticket.read')){const r=await caller.from('support_ticket').select('id',{count:'exact',head:true}).not('status','in','(completed,resolved,closed,rejected)');if(r.error)throw r.error;context.open_support_tickets={total:r.count,scope:'Tất cả phiếu chưa kết thúc, không giới hạn 24 giờ'};}
    const {data:history,error:historyError}=await caller.from('admin_copilot_history').select('role,content').eq('staff_id',staff.id).eq('session_id',body.sessionId).order('created_at',{ascending:false}).order('id',{ascending:false}).limit(8);if(historyError)throw historyError;
    let timer;let reply;try{reply=await Promise.race([generateReply(question,context,history.reverse()),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('ai_timeout')),25000);})]);}finally{clearTimeout(timer);}
