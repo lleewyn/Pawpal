@@ -9,7 +9,7 @@ function fixture() {
         let patch;
         const query = {
             select() { return query; }, eq() { return query; }, is() { return query; }, order() { return query; },
-            update(value) { patch = value; return query; }, single() { return query; }, maybeSingle() { return query; },
+            update(value) { patch = value; return query; }, upsert(value) { patch = value; return query; }, single() { return query; }, maybeSingle() { return query; },
             then(resolve, reject) {
                 if (patch && table === 'customer_profile' && state.failProfile) return Promise.resolve({ error: { code: '42501' } }).then(resolve, reject);
                 const target = table === 'customer' ? state.customer : state.profile;

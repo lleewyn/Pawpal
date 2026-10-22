@@ -474,15 +474,15 @@ async function loadBookingConfig() {
             return config;
         }
 
-        const { data: staffsData, error: staffsErr } = await db.from('staff')
-            .select('*')
+        const { data: staffsData, error: staffsErr } = await db.from('staff_public_view')
+            .select('id, full_name, job_title, specialization')
             .order('id', { ascending: true });
 
-        const { data: scheduleData, error: scheduleErr } = await db.from('staff_schedule')
-            .select('staff_id, work_date, shift, schedule_status, start_time, end_time');
+        const { data: scheduleData } = await db.from('staff_schedule')
+            .select('staff_id, start_at, end_at, schedule_status');
 
         if (staffsErr) {
-            throw new Error(staffsErr.message);
+            console.warn('[booking] staff_public_view error, using empty staff list:', staffsErr.message);
         }
 
         const defaultOperatingSlots = [
@@ -494,9 +494,11 @@ async function loadBookingConfig() {
         let generatedSlots = new Set(defaultOperatingSlots);
         if (scheduleData && scheduleData.length > 0) {
             scheduleData.forEach(schedule => {
-                if (!schedule.start_time || !schedule.end_time) return;
-                let startHour = parseInt(schedule.start_time.split(':')[0], 10);
-                let endHour = parseInt(schedule.end_time.split(':')[0], 10);
+                if (!schedule.start_at || !schedule.end_at) return;
+                const startDate = new Date(schedule.start_at);
+                const endDate = new Date(schedule.end_at);
+                let startHour = isNaN(startDate.getHours()) ? 8 : startDate.getHours();
+                let endHour = isNaN(endDate.getHours()) ? 20 : endDate.getHours();
                 for (let i = startHour; i <= endHour; i++) {
                     let hourStr = i.toString().padStart(2, '0') + ':00';
                     generatedSlots.add(hourStr);
@@ -509,7 +511,7 @@ async function loadBookingConfig() {
         const staffsArray = (staffsData || []).map(s => ({
             id: s.id,
             name: s.full_name,
-            desc: s.specialization || 'Chuyên viên PawPal'
+            desc: s.specialization || s.job_title || 'Chuyên viên PawPal'
         }));
 
         staffsArray.unshift({
@@ -1481,13 +1483,20 @@ async function refreshBusySlotsForDate(date) {
             bookedSlotsCache[date] = new Set();
             return;
         }
+        const startDay = new Date(`${date}T00:00:00+07:00`).toISOString();
+        const endDay = new Date(`${date}T23:59:59+07:00`).toISOString();
         const { data, error } = await db.from('appointment')
-            .select('appointment_time')
-            .eq('appointment_date', date)
+            .select('scheduled_start_at')
+            .gte('scheduled_start_at', startDay)
+            .lte('scheduled_start_at', endDay)
             .in('appointment_status', ['cho_xac_nhan', 'da_xac_nhan', 'da_check_in', 'dang_thuc_hien']);
         if (error) throw error;
         bookedSlotsCache[date] = new Set((data || [])
-            .map(r => (r.appointment_time || '').slice(0, 5))
+            .map(r => {
+                if (!r.scheduled_start_at) return '';
+                const d = new Date(r.scheduled_start_at);
+                return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            })
             .filter(Boolean));
     } catch (e) {
         console.warn('[booking] Could not load busy slots from Supabase:', e);
@@ -2340,39 +2349,33 @@ async function persistBookingSubmit() {
             try {
                 const petName = (bookingState.petName || 'Bé cưng').trim();
                 let petQuery = db.from('pet_profile')
-                    .select('id, breed, species')
+                    .select('id, pet_name')
                     .eq('customer_id', customerId)
                     .ilike('pet_name', petName);
-
-                if (bookingState.petBreed && bookingState.petBreed !== 'Chưa rõ') {
-                    petQuery = petQuery.ilike('breed', bookingState.petBreed);
-                }
 
                 const { data: existingPets } = await petQuery.limit(1);
 
                 if (existingPets && existingPets.length > 0) {
                     finalPetId = existingPets[0].id;
                 } else {
-                    const normalizePetSpecies = (raw) => {
-                        if (!raw) return 'khac';
-                        const s = String(raw).trim().toLowerCase();
-                        if (s.includes('chó') || s.includes('cún') || s === 'dog' || s === 'cho') return 'cho';
-                        if (s.includes('mèo') || s.includes('miu') || s === 'cat' || s === 'meo') return 'meo';
-                        if (s.includes('thỏ') || s === 'rabbit' || s === 'tho') return 'tho';
-                        if (s.includes('hamster')) return 'hamster';
-                        if (s.includes('chim') || s === 'bird') return 'thu_nho';
-                        return 'khac';
-                    };
+                    let breedId = null;
+                    if (bookingState.petBreed && bookingState.petBreed !== 'Chưa rõ') {
+                        try {
+                            const { data: br } = await db.from('pet_breed').select('id').ilike('breed_name', bookingState.petBreed).limit(1);
+                            if (br && br[0]) breedId = br[0].id;
+                        } catch (brErr) {
+                            // ignore
+                        }
+                    }
 
                     const petPayload = {
                         customer_id: customerId,
                         pet_code: `PET-${Date.now()}`,
                         pet_name: petName,
-                        species: normalizePetSpecies(bookingState.petType),
-                        breed: bookingState.petBreed || '',
-                        weight: parseFloat(bookingState.petWeight) || 0,
-                        status: 'dang_hoat_dong'
+                        status: 'active'
                     };
+                    if (breedId) petPayload.breed_id = breedId;
+
                     const { data: insertedPet, error: petInsertErr } = await db.from('pet_profile').insert([petPayload]).select('id').limit(1);
                     if (petInsertErr) {
                         console.error('[Booking] Insert pet_profile error:', petInsertErr);
@@ -2380,6 +2383,14 @@ async function persistBookingSubmit() {
                     }
                     if (insertedPet && insertedPet[0]) {
                         finalPetId = insertedPet[0].id;
+                        const w = parseFloat(bookingState.petWeight);
+                        if (!isNaN(w) && w > 0) {
+                            await db.from('pet_weight_history').insert([{
+                                pet_id: finalPetId,
+                                weight: w,
+                                measured_at: new Date().toISOString()
+                            }]).catch(() => {});
+                        }
                     }
                 }
             } catch (e) {
@@ -2635,20 +2646,19 @@ async function insertBookingToSupabase(bookingRecord, currentUser) {
     const selectedStaffId = selectedStaffCard?.dataset.id;
     const staffId = selectedStaffId && selectedStaffId !== 'random' ? selectedStaffId : null;
     const appointmentCode = bookingRecord.appointment_code || `APP-${Date.now()}`;
-    const appointmentTime = bookingRecord.timeStart ? `${bookingRecord.timeStart}:00` : null;
+    const cleanTime = bookingRecord.timeStart ? (bookingRecord.timeStart.length === 5 ? bookingRecord.timeStart : bookingRecord.timeStart.slice(0, 5)) : '08:00';
+    const startIso = new Date(`${bookingRecord.date}T${cleanTime}:00+07:00`).toISOString();
+    const endIso = new Date(new Date(startIso).getTime() + 60 * 60 * 1000).toISOString();
 
     const payload = {
         appointment_code: appointmentCode,
         customer_id: customerId,
         pet_id: petId,
-        service_id: serviceId,
         staff_id: staffId,
-        appointment_date: bookingRecord.date,
-        appointment_time: appointmentTime,
+        scheduled_start_at: startIso,
+        scheduled_end_at: endIso,
         appointment_status: 'cho_xac_nhan',
-        payment_status: 'chua_thanh_toan',
         note: bookingRecord.note || null,
-        total_price: bookingRecord.price,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
     };
@@ -2659,7 +2669,22 @@ async function insertBookingToSupabase(bookingRecord, currentUser) {
             console.warn('[Booking] Supabase insert failed:', error?.message || 'no data');
             throw new Error(error?.message || 'Cơ sở dữ liệu chưa trả về lịch hẹn đã lưu.');
         }
-        return data[0];
+
+        const newApt = data[0];
+        const serviceName = selectedService?.name || selectedService?.service_name || 'Dịch vụ PawPal';
+        const price = Number(bookingRecord.price || selectedService?.price || 0);
+
+        await db.from('appointment_item').insert([{
+            appointment_id: newApt.id,
+            service_id: serviceId,
+            name_snapshot: serviceName,
+            unit_price: price,
+            quantity: 1,
+            duration_minutes: 60,
+            is_primary: true
+        }]).catch(itemErr => console.warn('[Booking] Insert appointment_item error:', itemErr));
+
+        return newApt;
     } catch (err) {
         console.warn('[Booking] Supabase insert exception:', err.message);
         throw err;

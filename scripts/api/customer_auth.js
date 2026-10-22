@@ -41,31 +41,91 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
         }
     }
     async function customer(phone) {
-        const { data, error } = await admin.from('customer').select('id, phone_main, auth_user_id, account_status, is_temporary').eq('phone_main', phone).maybeSingle();
+        const phoneRow = await admin.from('customer_phone')
+            .select('customer_id, phone_number, is_primary')
+            .eq('phone_number', phone)
+            .limit(1)
+            .maybeSingle();
+        if (phoneRow.error) throw phoneRow.error;
+        if (!phoneRow.data) return null;
+
+        const { data, error } = await admin.from('customer')
+            .select('id, auth_user_id, customer_status, contact_email')
+            .eq('id', phoneRow.data.customer_id)
+            .maybeSingle();
         if (error) throw error;
+        if (!data) return null;
+
         const staff = await admin.from('staff').select('id').eq('phone_number', phone).limit(1);
         if (staff.error) throw staff.error;
         if (staff.data?.length) throw new Error('Tài khoản nhân sự phải đăng nhập tại cổng quản trị.');
-        if (data?.account_status === 'LOCKED' || data?.account_status === 'da_khoa') throw new Error('Tài khoản đã bị khóa. Vui lòng liên hệ hỗ trợ.');
-        return data;
+        if (data.customer_status === 'LOCKED' || data.customer_status === 'da_khoa' || data.customer_status === 'locked') {
+            throw new Error('Tài khoản đã bị khóa. Vui lòng liên hệ hỗ trợ.');
+        }
+        return {
+            id: data.id,
+            phone_main: phone,
+            auth_user_id: data.auth_user_id,
+            account_status: (data.customer_status === 'active' || data.customer_status === 'ACTIVE') ? 'ACTIVE' : data.customer_status,
+            is_temporary: !data.auth_user_id
+        };
     }
     async function identity(authId) {
         const staff = await admin.from('staff').select('id').eq('auth_user_id', authId).limit(1);
         if (staff.error || staff.data?.length) throw new Error('Phiên đăng nhập không thuộc tài khoản khách hàng.');
-        const result = await admin.from('customer').select('id, phone_main, email, account_status, is_temporary, customer_profile(full_name, gender, date_of_birth), customer_membership(total_paw_points, membership_tier(tier_name))').eq('auth_user_id', authId).maybeSingle();
-        const isActive = result.data?.account_status === 'ACTIVE' || result.data?.account_status === 'dang_hoat_dong';
-        if (result.error || !result.data || !isActive || result.data.is_temporary) throw new Error('Tài khoản chưa hoạt động hoặc đã bị khóa.');
+        const result = await admin.from('customer').select(`
+            id,
+            contact_email,
+            customer_status,
+            customer_profile(full_name, gender, date_of_birth),
+            customer_phone(phone_number, is_primary),
+            customer_membership(membership_tier(tier_name))
+        `).eq('auth_user_id', authId).maybeSingle();
+        if (result.error || !result.data) throw new Error('Không tìm thấy hồ sơ khách hàng.');
         const c = result.data;
+        const isActive = c.customer_status === 'active' || c.customer_status === 'ACTIVE' || c.customer_status === 'dang_hoat_dong';
+        if (!isActive) throw new Error('Tài khoản chưa hoạt động hoặc đã bị khóa.');
+
         const profile = Array.isArray(c.customer_profile) ? c.customer_profile[0] : c.customer_profile;
+        const phones = Array.isArray(c.customer_phone) ? c.customer_phone : (c.customer_phone ? [c.customer_phone] : []);
+        const primaryPhone = phones.find(p => p.is_primary)?.phone_number || phones[0]?.phone_number || '';
         const member = Array.isArray(c.customer_membership) ? c.customer_membership[0] : c.customer_membership;
-        const [orders, appointments] = await Promise.all([
-            admin.from('sales_order').select('total_amount, order_status, payment_status').eq('customer_id', c.id),
-            admin.from('appointment').select('total_price, appointment_status, payment_status').eq('customer_id', c.id)
+        const tierName = member?.membership_tier?.tier_name || 'Đồng';
+
+        const [ordersRes, aptsRes, pointsRes] = await Promise.all([
+            admin.from('sales_order').select(`
+                id,
+                order_status,
+                shipping_fee_snapshot,
+                sales_order_detail (quantity, unit_price, discount_amount)
+            `).eq('customer_id', c.id),
+            admin.from('appointment').select(`
+                id,
+                appointment_status,
+                appointment_item (quantity, unit_price, is_primary)
+            `).eq('customer_id', c.id),
+            admin.from('paw_point_transaction').select('points').eq('customer_id', c.id)
         ]);
-        if (orders.error || appointments.error) throw new Error('Không thể tải chi tiêu xét hạng.');
+        if (ordersRes.error || aptsRes.error) throw new Error('Không thể tải chi tiêu xét hạng.');
         const { eligibleSpend, loyaltySummary } = await import('../shared/loyalty-summary.mjs');
-        const loyalty = loyaltySummary(eligibleSpend(orders.data || [], appointments.data || []));
-        return { id: c.id, auth_user_id: authId, phone: c.phone_main, email: c.email || '', name: profile?.full_name || c.phone_main, gender: profile?.gender || '', dob: profile?.date_of_birth || '', points: member?.total_paw_points || 0, tier: loyalty.tier, spend: loyalty.spend, role: 'customer', is_temporary: false, _source: 'supabase' };
+        const loyalty = loyaltySummary(eligibleSpend(ordersRes.data || [], aptsRes.data || []));
+        const currentPoints = (pointsRes.data || []).reduce((acc, row) => acc + (Number(row.points) || 0), 0);
+
+        return {
+            id: c.id,
+            auth_user_id: authId,
+            phone: primaryPhone,
+            email: c.contact_email || '',
+            name: profile?.full_name || primaryPhone,
+            gender: profile?.gender || '',
+            dob: profile?.date_of_birth || '',
+            points: currentPoints,
+            tier: loyalty.tier || tierName,
+            spend: loyalty.spend,
+            role: 'customer',
+            is_temporary: false,
+            _source: 'supabase'
+        };
     }
     const wrap = handler => async (req, res) => {
         res.setHeader('Cache-Control', 'no-store');
@@ -107,17 +167,16 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
                 .select(`
                     id,
                     appointment_code,
-                    appointment_date,
-                    appointment_time,
+                    scheduled_start_at,
+                    scheduled_end_at,
                     appointment_status,
-                    payment_status,
                     note,
-                    customer ( id, phone_main, customer_profile ( full_name ) ),
-                    service ( id, service_name, service_price_matrix ( unit_price ) ),
+                    customer ( id, customer_profile ( full_name ) ),
+                    appointment_item ( id, unit_price, quantity, discount_amount, name_snapshot ),
                     pet_profile ( id, pet_name )
                 `)
                 .eq('customer_id', c.id)
-                .order('appointment_date', { ascending: false });
+                .order('scheduled_start_at', { ascending: false });
 
             if (bookingError) console.warn('[GuestRecords] Booking lookup error:', bookingError);
 
@@ -127,14 +186,17 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
                     id,
                     order_code,
                     order_status,
-                    payment_status,
-                    total_amount,
+                    shipping_status,
+                    shipping_fee_snapshot,
+                    receiver_name_snapshot,
+                    receiver_phone_snapshot,
+                    street_address_snapshot,
+                    province_snapshot,
+                    tracking_code,
                     created_at,
                     updated_at,
                     note,
-                    customer ( phone_main ),
-                    customer_address ( receiver_name, receiver_phone, street_address, province ),
-                    sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product_variant ( id, sku_variant, product ( id, product_name, image_urls ) ) )
+                    sales_order_detail ( id, quantity, unit_price, discount_amount, product_name_snapshot, sku_snapshot )
                 `)
                 .eq('customer_id', c.id)
                 .order('created_at', { ascending: false });

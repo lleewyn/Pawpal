@@ -73,37 +73,28 @@ function createCustomerLoyaltyService(admin) {
             const cost = calculateVoucherPoints(voucher);
             if (!Number.isSafeInteger(cost) || cost <= 0) throw new Error('Mức điểm đổi ưu đãi không hợp lệ.');
 
-            const membershipResult = await admin.from('customer_membership')
-                .select('id, total_paw_points')
-                .eq('customer_id', customerId)
-                .maybeSingle();
-            if (membershipResult.error || !membershipResult.data) throw new Error('Không tìm thấy tài khoản Paw Points.');
-            const membership = membershipResult.data;
-            const oldBalance = Number(membership.total_paw_points || 0);
+            const { data: txList, error: txErr } = await admin.from('paw_point_transaction')
+                .select('points')
+                .eq('customer_id', customerId);
+            if (txErr) throw new Error('Không thể tra cứu số dư Paw Points.');
+            const oldBalance = (txList || []).reduce((sum, r) => sum + (Number(r.points) || 0), 0);
             if (oldBalance < cost) throw new Error('Số điểm hiện tại chưa đủ để đổi ưu đãi này.');
             const newBalance = oldBalance - cost;
-
-            const membershipUpdate = await admin.from('customer_membership')
-                .update({ total_paw_points: newBalance, updated_at: new Date().toISOString() })
-                .eq('id', membership.id)
-                .eq('total_paw_points', oldBalance)
-                .select('id, total_paw_points')
-                .maybeSingle();
-            if (membershipUpdate.error || !membershipUpdate.data) throw new Error('Số dư điểm vừa thay đổi. Vui lòng thử lại.');
 
             let transactionId = null;
             let customerVoucherId = null;
             try {
-                const rewardRule = await admin.from('reward_rule').select('id').eq('is_active', true).eq('trigger_event', 'PURCHASE').limit(1).maybeSingle();
-                if (rewardRule.error || !rewardRule.data?.id) throw new Error('Chưa cấu hình quy tắc ghi nhận giao dịch điểm.');
+                const rewardRule = await admin.from('reward_rule').select('id').eq('is_active', true).limit(1).maybeSingle();
+                const ruleId = rewardRule?.data?.id || null;
 
-                const transaction = await admin.from('paw_point_transaction').insert({
+                const transactionPayload = {
                     customer_id: customerId,
-                    reward_rule_id: rewardRule.data.id,
                     points: -cost,
-                    balance_after: newBalance,
                     description: `[REDEEM] Đổi ưu đãi: ${voucher.voucher_name} (${voucher.voucher_code})`
-                }).select('id').single();
+                };
+                if (ruleId) transactionPayload.reward_rule_id = ruleId;
+
+                const transaction = await admin.from('paw_point_transaction').insert(transactionPayload).select('id').single();
                 if (transaction.error || !transaction.data) throw new Error('Không thể ghi lịch sử đổi điểm.');
                 transactionId = transaction.data.id;
 
@@ -136,11 +127,6 @@ function createCustomerLoyaltyService(admin) {
             } catch (error) {
                 if (customerVoucherId) await admin.from('customer_voucher').delete().eq('id', customerVoucherId).eq('customer_id', customerId);
                 if (transactionId) await admin.from('paw_point_transaction').delete().eq('id', transactionId).eq('customer_id', customerId);
-                const restored = await admin.from('customer_membership')
-                    .update({ total_paw_points: oldBalance, updated_at: new Date().toISOString() })
-                    .eq('id', membership.id)
-                    .eq('total_paw_points', newBalance);
-                if (restored.error) throw new Error('Giao dịch chưa hoàn tất và không thể tự khôi phục số dư. Vui lòng liên hệ hỗ trợ.');
                 throw error;
             }
         });

@@ -100,16 +100,22 @@ export const API = {
             const { data, error } = await db
                 .from('appointment')
                 .select(`
-                    id, appointment_code, appointment_date, appointment_time,
-                    appointment_status, payment_status, note, change_count, total_price,
-                    service ( 
-                        service_name, service_category, estimated_duration,
-                        service_price_matrix ( unit_price )
+                    id, appointment_code, scheduled_start_at, scheduled_end_at, check_in_time, check_out_time,
+                    appointment_status, note, change_count,
+                    appointment_item (
+                        id, service_id, name_snapshot, quantity, unit_price, discount_amount, duration_minutes, is_primary,
+                        service ( service_name, category_id, estimated_duration )
                     ),
-                    pet_profile ( id, pet_code, pet_name, breed, species, avatar_url )
+                    pet_profile (
+                        id, pet_code, pet_name, avatar_url,
+                        pet_breed ( breed_name, pet_species ( species_name ) )
+                    ),
+                    payment (
+                        id, amount, transaction_status, payment_type
+                    )
                 `)
                 .eq('customer_id', customerId)
-                .order('appointment_date', { ascending: false });
+                .order('scheduled_start_at', { ascending: false });
                 
             if (error) {
                 console.error('[API] Supabase getUserBookings error:', error.message);
@@ -119,57 +125,77 @@ export const API = {
             const mapAppointmentStatus = (status) => {
                 if (!status) return 'upcoming';
                 const s = String(status).toLowerCase().trim();
-                if (['dang_giu_cho', 'tam_giu'].includes(s)) return 'pending';
-                if (['cho_xac_nhan', 'pending'].includes(s)) return 'pending';
+                if (['dang_giu_cho', 'tam_giu', 'cho_xac_nhan', 'pending'].includes(s)) return 'pending';
                 if (['da_xac_nhan', 'confirmed', 'upcoming'].includes(s)) return 'confirmed';
                 if (['da_check_in', 'accepted'].includes(s)) return 'accepted';
                 if (['dang_thuc_hien', 'in_progress', 'in-progress'].includes(s)) return 'in-progress';
                 if (['da_hoan_tat', 'completed', 'done'].includes(s)) return 'completed';
-                if (['da_huy', 'cancelled'].includes(s)) return 'cancelled';
-                if (['da_het_han', 'expired'].includes(s)) return 'cancelled';
-                if (['vang_mat', 'no_show'].includes(s)) return 'cancelled';
+                if (['da_huy', 'cancelled', 'da_het_han', 'expired', 'vang_mat', 'no_show'].includes(s)) return 'cancelled';
                 return 'upcoming';
             };
 
-            const getPriceFromMatrix = (matrix, species) => {
-                if (!matrix || !Array.isArray(matrix)) return 0;
-                if (!species) species = 'other';
-                const row = matrix.find(m => m.pet_species?.toLowerCase() === species.toLowerCase());
-                if (row) return row.unit_price;
-                return matrix[0]?.unit_price || 0;
-            };
-
             return (data || []).map(b => {
-                const srv = Array.isArray(b.service) ? b.service[0] : b.service;
-                const pet = Array.isArray(b.pet_profile) ? b.pet_profile[0] : b.pet_profile;
+                const items = Array.isArray(b.appointment_item) ? b.appointment_item : [];
+                const primaryItem = items.find(i => i.is_primary) || items[0];
+                const pet = b.pet_profile;
+                const petBreed = pet?.pet_breed?.breed_name || '';
+                const petSpecies = pet?.pet_breed?.pet_species?.species_name || '';
+
+                const calculatedTotalPrice = items.reduce((sum, itm) => {
+                    const lineTotal = (Number(itm.unit_price) || 0) * (Number(itm.quantity) || 1) - (Number(itm.discount_amount) || 0);
+                    return sum + Math.max(0, lineTotal);
+                }, 0);
+
+                const hasPaidPayment = Array.isArray(b.payment) && b.payment.some(p => p.transaction_status === 'succeeded');
+                const paymentStatus = hasPaidPayment ? 'paid' : (b.appointment_status === 'cancelled' ? 'cancelled' : 'pending');
+
+                const dateStr = b.scheduled_start_at ? b.scheduled_start_at.split('T')[0] : '';
+                let timeStr = '';
+                if (b.scheduled_start_at) {
+                    try {
+                        const d = new Date(b.scheduled_start_at);
+                        timeStr = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
+                    } catch (_) {}
+                }
 
                 return {
                     id:              b.appointment_code || b.id,
                     _supabaseId:     b.id,
                     userId:          customerId,
-                    date:            b.appointment_date,
-                    time:            b.appointment_time?.slice(0, 5) || '',
-                    timeStart:       b.appointment_time?.slice(0, 5) || '',
+                    date:            dateStr,
+                    time:            timeStr,
+                    timeStart:       timeStr,
+                    scheduledStartAt: b.scheduled_start_at,
+                    scheduledEndAt:  b.scheduled_end_at,
                     status:          mapAppointmentStatus(b.appointment_status),
                     bookingStatus:   b.appointment_status,
-                    paymentStatus:   b.payment_status,
-                    service:         srv?.service_name      || '',
-                    serviceName:     srv?.service_name      || '',
-                    serviceCategory: srv?.service_category  || '',
-                    petId:           pet?.pet_code      || pet?.id || '',
-                    petName:         pet?.pet_name      || '',
-                    petBreed:        pet?.breed         || '',
-                    petSpecies:      pet?.species       || '',
-                    petAvatar:       pet?.avatar_url    || '',
-                    changeCount:     b.change_count     || 0,
-                    note:            b.note             || '',
-                    price:           b.total_price      || getPriceFromMatrix(srv?.service_price_matrix, pet?.species) || 0,
+                    paymentStatus:   paymentStatus,
+                    service:         primaryItem?.name_snapshot || primaryItem?.service?.service_name || 'Dịch vụ PawPal',
+                    serviceName:     primaryItem?.name_snapshot || primaryItem?.service?.service_name || 'Dịch vụ PawPal',
+                    serviceCategory: primaryItem?.service?.category_id || '',
+                    items:           items.map(itm => ({
+                        id: itm.id,
+                        serviceId: itm.service_id,
+                        name: itm.name_snapshot || itm.service?.service_name || '',
+                        quantity: itm.quantity,
+                        unitPrice: itm.unit_price,
+                        discount: itm.discount_amount || 0,
+                        durationMinutes: itm.duration_minutes
+                    })),
+                    petId:           pet?.pet_code || pet?.id || '',
+                    petName:         pet?.pet_name || '',
+                    petBreed:        petBreed,
+                    petSpecies:      petSpecies,
+                    petAvatar:       pet?.avatar_url || '',
+                    changeCount:     b.change_count || 0,
+                    note:            b.note || '',
+                    price:           calculatedTotalPrice,
                     _source:         'supabase'
                 };
             });
         } catch (err) {
             console.error('[API] Supabase getUserBookings failed:', err);
-                throw err;
+            throw err;
         }
     },
 
@@ -187,14 +213,17 @@ export const API = {
             const { data, error } = await db
                 .from('sales_order')
                 .select(`
-                    id, order_code, order_status, payment_status,
-                    total_amount,
-                    created_at, updated_at, note,
+                    id, order_code, order_status, note, created_at, updated_at,
+                    shipping_fee_snapshot, receiver_name_snapshot, receiver_phone_snapshot,
+                    province_snapshot, street_address_snapshot, postal_code_snapshot,
+                    delivery_option_id, shipping_provider_id, tracking_code, shipped_at, delivered_at, shipping_status,
                     sales_order_detail (
-                        id, quantity, unit_price, discount_amount, subtotal, product_variant_id,
-                        product_variant ( id, sku_variant, sale_price, product ( id, product_name, image_urls ) )
+                        id, product_variant_id, quantity, unit_price, discount_amount,
+                        product_name_snapshot, sku_snapshot
                     ),
-                    customer_address ( receiver_name, receiver_phone, province, street_address )
+                    payment (
+                        id, payment_code, amount, transaction_status, payment_type, succeeded_at
+                    )
                 `)
                 .eq('customer_id', customerId)
                 .order('created_at', { ascending: false });
@@ -204,65 +233,73 @@ export const API = {
                 throw error;
             }
 
-            const normalizeImageUrl = (url) => {
-                if (!url) return '';
-                if (!url.startsWith('http') && !url.startsWith('/')) return '/' + url;
-                return url;
-            };
-
             const mapOrderStatus = normalizeOrderStatus;
 
             const orders = (data || []).map(o => {
                 const details = o.sales_order_detail || [];
                 const products = details.map(d => {
-                    const pv = d.product_variant || {};
-                    const pr = pv.product || d.product || {};
+                    const unitPrice = Number(d.unit_price) || 0;
+                    const qty = Number(d.quantity) || 1;
+                    const discount = Number(d.discount_amount) || 0;
+                    const lineTotal = Math.max(0, (unitPrice * qty) - discount);
+
                     return {
-                        id:       pr.id || '',
-                        variant_id: d.product_variant_id || pv.id,
-                        name:     pr.product_name || 'Sản phẩm',
-                        sku:      pv.sku_variant || pr.sku || '',
-                        image:    normalizeImageUrl(pr.image_urls?.[0]),
-                        quantity: d.quantity,
-                        price:    d.unit_price,
-                        total:    d.subtotal,
+                        id:          d.product_variant_id || d.id,
+                        variant_id:  d.product_variant_id,
+                        name:        d.product_name_snapshot || 'Sản phẩm',
+                        sku:         d.sku_snapshot || '',
+                        image:       '/assets/images/publics/feed.jpg',
+                        quantity:    qty,
+                        price:       unitPrice,
+                        discount:    discount,
+                        total:       lineTotal
                     };
                 });
-                const addr = o.customer_address;
-                const calculatedSubtotal = products.reduce((sum, p) => sum + (p.total || (p.price * p.quantity)), 0);
-                const discount = 0;
-                const shippingFee = Math.max(0, (o.total_amount || 0) - calculatedSubtotal + discount);
-                
+
+                const calculatedSubtotal = products.reduce((sum, p) => sum + p.total, 0);
+                const shippingFee = Number(o.shipping_fee_snapshot) || 0;
+                const grandTotal = calculatedSubtotal + shippingFee;
+
+                const hasPaidPayment = Array.isArray(o.payment) && o.payment.some(p => p.transaction_status === 'succeeded');
+                const paymentStatus = hasPaidPayment ? 'paid' : (o.order_status === 'cancelled' ? 'cancelled' : 'pending_payment');
+
+                const fullAddress = [o.street_address_snapshot, o.province_snapshot].filter(Boolean).join(', ');
+
                 return {
                     id:          o.order_code || o.id,
                     _supabaseId: o.id,
                     userId:      customerId,
                     status:      mapOrderStatus(o.order_status),
                     orderStatus: o.order_status,
-                    paymentStatus: (o.payment_status || '').toLowerCase(),
+                    paymentStatus: paymentStatus,
                     paymentMethod: 'cod',
                     products,
                     pricing: {
                         subtotal:    calculatedSubtotal,
                         shippingFee: shippingFee,
-                        discount:    discount,
-                        total:       o.total_amount,
+                        discount:    0,
+                        total:       grandTotal,
+                        grandTotal:  grandTotal
                     },
-                    shipping: addr ? {
-                        name:    addr.receiver_name  || '',
-                        phone:   addr.receiver_phone || '',
-                        address: [addr.street_address, addr.province].filter(Boolean).join(', '),
-                    } : {},
-                    note:      o.note || '',
-                    createdAt: o.created_at,
-                    updatedAt: o.updated_at,
-                    _source:   'supabase',
+                    shipping: {
+                        name:    o.receiver_name_snapshot || '',
+                        phone:   o.receiver_phone_snapshot || '',
+                        address: fullAddress
+                    },
+                    trackingCode:   o.tracking_code || '',
+                    shippingStatus: o.shipping_status || '',
+                    shippedAt:      o.shipped_at || null,
+                    deliveredAt:    o.delivered_at || null,
+                    note:           o.note || '',
+                    createdAt:      o.created_at,
+                    updatedAt:      o.updated_at,
+                    _source:        'supabase'
                 };
             });
             return orders;
         } catch (err) {
             console.error('[API] Supabase getUserOrders failed:', err);
-                throw err;
+            throw err;
         }
     },
 
@@ -799,13 +836,22 @@ export const API = {
             const initialPaymentStatus = isPaid ? 'da_thanh_toan' : 'chua_thanh_toan';
 
             const totalOrderAmount = Number(orderData.pricing?.grandTotal ?? orderData.pricing?.total ?? 0);
+            const shippingFee = Number(orderData.pricing?.shippingFee ?? orderData.pricing?.shipping ?? 0);
+
+            const streetAddr = (orderData.shipping?.address || '') + (orderData.shipping?.district ? ', ' + orderData.shipping.district : '');
+            const provAddr = orderData.shipping?.city || orderData.shipping?.province || '';
+
             const salesOrder = {
                 order_code: orderData.orderId,
                 customer_id: customerId,
-                shipping_address_id: shippingAddressId,
                 order_status: initialOrderStatus,
-                payment_status: initialPaymentStatus,
-                total_amount: isNaN(totalOrderAmount) ? 0 : totalOrderAmount,
+                shipping_status: 'cho_xu_ly',
+                shipping_fee_snapshot: isNaN(shippingFee) ? 0 : shippingFee,
+                receiver_name_snapshot: orderData.shipping?.name || 'Khách hàng',
+                receiver_phone_snapshot: orderData.shipping?.phone || '',
+                street_address_snapshot: streetAddr,
+                province_snapshot: provAddr,
+                note: orderData.note || orderData.shipping?.note || null
             };
 
             const { data: newOrder, error: orderError } = await db.from('sales_order').insert(salesOrder).select('id').single();
@@ -817,10 +863,9 @@ export const API = {
                 const paymentInsert = {
                     payment_code: paymentCode,
                     order_id: newOrder.id,
-                    payment_type: 'mua_hang',
-                    payment_method_config_id: paymentMethodConfigId,
+                    payment_method: paymentMethodConfigId,
                     amount: isNaN(totalOrderAmount) ? 0 : totalOrderAmount,
-                    transaction_status: isPaid ? 'thanh_cong' : 'cho_xu_ly'
+                    payment_status: initialPaymentStatus
                 };
                 const { error: payError } = await db.from('payment').insert(paymentInsert);
                 if (payError) {
@@ -834,17 +879,27 @@ export const API = {
                         const uPrice = Number(item.price || 0);
                         const qty = Number(item.qty || item.quantity || 1);
                         let vId = item.variantId || item.product_variant_id;
+                        let skuSnap = item.sku || item.sku_variant || '';
+                        let prodNameSnap = item.name || item.product_name || 'Sản phẩm';
+
                         if (!vId && item.id) {
-                            const { data: vData } = await db.from('product_variant').select('id').eq('product_id', item.id).limit(1);
-                            vId = vData?.[0]?.id || item.id;
+                            const { data: vData } = await db.from('product_variant').select('id, sku_variant, product(product_name)').eq('product_id', item.id).limit(1);
+                            if (vData && vData[0]) {
+                                vId = vData[0].id;
+                                skuSnap = skuSnap || vData[0].sku_variant || '';
+                                prodNameSnap = prodNameSnap || vData[0].product?.product_name || 'Sản phẩm';
+                            } else {
+                                vId = item.id;
+                            }
                         }
                         orderDetails.push({
                             order_id: newOrder.id,
                             product_variant_id: vId,
                             quantity: isNaN(qty) ? 1 : qty,
                             unit_price: isNaN(uPrice) ? 0 : uPrice,
-                            discount_amount: 0,
-                            subtotal: (isNaN(uPrice) ? 0 : uPrice) * (isNaN(qty) ? 1 : qty)
+                            discount_amount: Number(item.discount || 0),
+                            product_name_snapshot: prodNameSnap,
+                            sku_snapshot: skuSnap
                         });
                     }
                     const { error: itemsError } = await db.from('sales_order_detail').insert(orderDetails);
@@ -1147,14 +1202,14 @@ export const API = {
         try {
             await this.releaseExpiredHoldSlots();
             const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+            const cleanTime = time.length === 5 ? time : time.slice(0, 5);
+            const slotStart = new Date(`${date}T${cleanTime}:00+07:00`).toISOString();
 
             let query = db.from('appointment')
-                .select('id, appointment_status, created_at')
-                .eq('appointment_date', date)
-                .eq('appointment_time', time.length === 5 ? time + ':00' : time)
+                .select('id, appointment_status, created_at, scheduled_start_at')
+                .eq('scheduled_start_at', slotStart)
                 .not('appointment_status', 'in', '("da_huy","da_het_han")');
 
-            if (serviceId) query = query.eq('service_id', serviceId);
             if (staffId) query = query.eq('staff_id', staffId);
 
             const { data, error } = await query;
@@ -1185,24 +1240,35 @@ export const API = {
 
             const holdExpiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
             const appointmentCode = 'APT-' + Math.floor(100000 + Math.random() * 900000);
+            const cleanTime = time.length === 5 ? time : time.slice(0, 5);
+            const startIso = new Date(`${date}T${cleanTime}:00+07:00`).toISOString();
+            const endIso = new Date(new Date(startIso).getTime() + 60 * 60 * 1000).toISOString();
 
             const insertPayload = {
                 appointment_code: appointmentCode,
                 customer_id: customerId,
                 pet_id: petId,
-                service_id: serviceId,
                 staff_id: staffId || null,
-                appointment_date: date,
-                appointment_time: time.length === 5 ? time + ':00' : time,
+                scheduled_start_at: startIso,
+                scheduled_end_at: endIso,
                 appointment_status: 'dang_giu_cho',
-                payment_status: 'chua_thanh_toan',
-                total_price: totalPrice,
-                note: note,
-                change_count: 0
+                note: note
             };
 
             const { data, error } = await db.from('appointment').insert([insertPayload]).select('*').single();
             if (error) throw error;
+
+            if (serviceId && data?.id) {
+                await db.from('appointment_item').insert([{
+                    appointment_id: data.id,
+                    service_id: serviceId,
+                    name_snapshot: 'Dịch vụ PawPal',
+                    unit_price: totalPrice,
+                    quantity: 1,
+                    duration_minutes: 60,
+                    is_primary: true
+                }]);
+            }
 
             return { success: true, booking: data, expiresAt: holdExpiresAt };
         } catch (err) {
@@ -1216,12 +1282,10 @@ export const API = {
         if (!db) return { success: false };
         try {
             const newStatus = isDepositPaid ? 'da_xac_nhan' : 'cho_xac_nhan';
-            const payStatus = isDepositPaid ? 'da_thanh_toan_mot_phan' : 'chua_thanh_toan';
 
             const { data, error } = await db.from('appointment')
                 .update({
                     appointment_status: newStatus,
-                    payment_status: payStatus,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', appointmentId)
@@ -1713,7 +1777,7 @@ export const API = {
         if (!db) return [];
         try {
             let query = db.from('return_request')
-                .select('*, return_request_detail(*, product_variant(id, sku_variant, sale_price)), customer(id, phone_main, customer_profile(full_name))')
+                .select('*, return_request_detail(*, product_variant(id, sku_variant, sale_price)), sales_order(id, order_code, customer(id, customer_profile(full_name), customer_phone(phone_number, is_primary)))')
                 .order('created_at', { ascending: false });
 
             if (customerId) query = query.eq('customer_id', customerId);
@@ -1859,7 +1923,7 @@ export const API = {
         if (!db) return [];
         try {
             let query = db.from('support_ticket')
-                .select('*, support_ticket_message(*), customer(id, phone_main, customer_profile(full_name))')
+                .select('*, support_ticket_message(*), customer(id, contact_email, customer_profile(full_name), customer_phone(phone_number, is_primary))')
                 .order('created_at', { ascending: false });
 
             if (customerId) query = query.eq('customer_id', customerId);

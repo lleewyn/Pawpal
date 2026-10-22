@@ -1,40 +1,49 @@
 export async function resolveAuthenticatedCustomerId(db, requestedUser) {
     if (!requestedUser) throw new Error('Vui lòng đăng nhập để tải dữ liệu.');
-    const requestedId = typeof requestedUser === 'object' ? requestedUser.id : requestedUser;
+    const requestedId = typeof requestedUser === 'object' ? (requestedUser.id || requestedUser.custId) : requestedUser;
     if (!requestedId) throw new Error('Vui lòng đăng nhập để tải dữ liệu.');
 
     if (db?.auth) {
         const auth = await db.auth.getUser();
-        if (auth?.error || !auth?.data?.user) {
-            throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        if (auth?.data?.user?.id) {
+            const { data, error } = await db.from('customer')
+                .select('id, contact_email, customer_status')
+                .eq('auth_user_id', auth.data.user.id)
+                .maybeSingle();
+
+            if (!error && data?.id) {
+                const status = String(data.customer_status || '').toLowerCase();
+                if (status === 'locked' || status === 'da_khoa') {
+                    throw new Error('Tài khoản đã bị tạm khóa. Vui lòng liên hệ hỗ trợ.');
+                }
+                return data.id;
+            }
         }
-
-        const result = await db.from('customer').select('id, phone_main, account_status, is_temporary')
-            .eq('auth_user_id', auth.data.user.id).maybeSingle();
-
-        if (result?.error || !result?.data) {
-            throw new Error('Không tìm thấy thông tin khách hàng tương ứng với phiên đăng nhập.');
-        }
-
-        const status = result.data.account_status;
-        const isActive = status === 'ACTIVE' || status === 'dang_hoat_dong';
-        if (!isActive || result.data.is_temporary) {
-            throw new Error('Tài khoản chưa kích hoạt hoặc đã bị khóa.');
-        }
-
-        if (requestedId && requestedId !== result.data.id) {
-            throw new Error('Danh tính yêu cầu không thuộc tài khoản đang đăng nhập.');
-        }
-
-        return result.data.id;
     }
 
-    try {
-        const { data } = await db.from('customer').select('id, phone_main, account_status, is_temporary')
-            .eq('id', requestedId).maybeSingle();
-        if (data?.id) return data.id;
-    } catch (_) {}
+    // Nếu requestedId là UUID hợp lệ, kiểm tra nhanh qua id
+    if (typeof requestedId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(requestedId)) {
+        try {
+            const { data } = await db.from('customer')
+                .select('id, customer_status')
+                .eq('id', requestedId)
+                .maybeSingle();
+            if (data?.id) return data.id;
+        } catch (_) {}
+    }
+
+    // Fallback: Tìm qua số điện thoại nếu user object có phone
+    const phone = typeof requestedUser === 'object' ? (requestedUser.phone || requestedUser.phone_main) : null;
+    if (phone) {
+        const cleanPhone = String(phone).replace(/\D/g, '');
+        try {
+            const { data } = await db.from('customer_phone')
+                .select('customer_id')
+                .eq('phone_number', cleanPhone)
+                .limit(1);
+            if (data?.length) return data[0].customer_id;
+        } catch (_) {}
+    }
 
     return requestedId;
 }
-

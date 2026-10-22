@@ -54,13 +54,14 @@ async function resolveOrderData(orderId, fallbackOrder) {
         const { data, error } = await db
             .from('sales_order')
             .select(`
-                id, order_code, customer_id, order_status, payment_status,
-                total_amount, created_at,
+                id, order_code, customer_id, order_status, shipping_status,
+                shipping_fee_snapshot, receiver_name_snapshot, receiver_phone_snapshot,
+                street_address_snapshot, province_snapshot, created_at,
                 sales_order_detail (
-                    id, quantity, unit_price, subtotal,
-                    product_variant ( id, sku_variant, product ( id, product_name, image_urls ) )
+                    id, quantity, unit_price, discount_amount,
+                    product_name_snapshot, sku_snapshot
                 ),
-                customer_address ( receiver_name, receiver_phone, province, street_address )
+                payment ( id, payment_method, payment_status, amount )
             `)
             .or(`order_code.eq.${orderId},id.eq.${orderId}`)
             .limit(1);
@@ -68,44 +69,39 @@ async function resolveOrderData(orderId, fallbackOrder) {
         if (error || !data?.length) return localOrder;
 
         const row = data[0];
-        const shipping = row.customer_address || {};
+        const payRow = (row.payment && row.payment[0]) || {};
         return {
             orderId: row.order_code || row.id || orderId,
             id: row.order_code || row.id || orderId,
             shipping: {
-                name: shipping.receiver_name || localOrder?.shipping?.name || '',
-                phone: shipping.receiver_phone || localOrder?.shipping?.phone || '',
-                address: shipping.street_address || localOrder?.shipping?.address || '',
+                name: row.receiver_name_snapshot || localOrder?.shipping?.name || '',
+                phone: row.receiver_phone_snapshot || localOrder?.shipping?.phone || '',
+                address: row.street_address_snapshot || localOrder?.shipping?.address || '',
                 district: localOrder?.shipping?.district || '',
-                city: shipping.province || localOrder?.shipping?.city || '',
+                city: row.province_snapshot || localOrder?.shipping?.city || '',
             },
             payment: {
-                method: localOrder?.payment?.method || 'cod',
+                method: payRow.payment_method || localOrder?.payment?.method || 'cod',
                 status: String(
                     localOrder?.payment?.status === 'paid'
                         ? 'paid'
-                        : (row.payment_status || localOrder?.payment?.status || 'PENDING')
+                        : (payRow.payment_status || localOrder?.payment?.status || 'PENDING')
                 ).toLowerCase(),
             },
-            items: (row.sales_order_detail || []).map((item) => {
-                const pv = item.product_variant || {};
-                const pr = pv.product || item.product || {};
-                return {
-                    id: pr.id || '',
-                    name: pr.product_name || 'Sản phẩm',
-                    image: pr.image_urls?.[0] || '',
-                    quantity: item.quantity || 1,
-                    price: item.unit_price || 0,
-                };
-            }),
+            items: (row.sales_order_detail || []).map((item) => ({
+                id: item.id || '',
+                name: item.product_name_snapshot || 'Sản phẩm',
+                image: '',
+                quantity: item.quantity || 1,
+                price: item.unit_price || 0,
+            })),
             pricing: {
                 subtotal: localOrder?.pricing?.subtotal || 
-                          (row.sales_order_detail || []).reduce((acc, item) => acc + ((item.unit_price || 0) * (item.quantity || 1)), 0) || 
-                          row.total_amount || 0,
-                shippingFee: localOrder?.pricing?.shippingFee || 0,
+                          (row.sales_order_detail || []).reduce((acc, item) => acc + ((item.unit_price || 0) * (item.quantity || 1)), 0),
+                shippingFee: Number(row.shipping_fee_snapshot ?? localOrder?.pricing?.shippingFee ?? 0),
                 pointsDiscount: localOrder?.pricing?.pointsDiscount || 0,
                 voucherDiscount: localOrder?.pricing?.voucherDiscount || 0,
-                grandTotal: row.total_amount || localOrder?.pricing?.grandTotal || 0,
+                grandTotal: Number(payRow.amount ?? localOrder?.pricing?.grandTotal ?? 0),
             },
         };
     } catch (err) {
@@ -376,7 +372,6 @@ function updateOrderAfterVNPay(orderId, paymentStatus, orderStatus, transactionN
         if (db && orderId) {
             const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
             let updateQuery = db.from('sales_order').update({
-                payment_status: 'da_thanh_toan',
                 order_status: 'da_xac_nhan',
                 updated_at: new Date().toISOString()
             });
@@ -384,7 +379,7 @@ function updateOrderAfterVNPay(orderId, paymentStatus, orderStatus, transactionN
             updateQuery.select('id').maybeSingle().then(({ data }) => {
                 if (data?.id) {
                     db.from('payment').update({
-                        transaction_status: 'thanh_cong',
+                        payment_status: 'da_thanh_toan',
                         updated_at: new Date().toISOString()
                     }).eq('order_id', data.id).then(() => {});
                 }

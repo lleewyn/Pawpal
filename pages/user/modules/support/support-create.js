@@ -306,30 +306,34 @@ async function loadUserEntities() {
                 .select(`
                     id,
                     appointment_code,
-                    appointment_date,
-                    appointment_time,
+                    scheduled_start_at,
                     appointment_status,
-                    service:service_id ( service_name, service_category ),
-                    pet:pet_id ( pet_name, breed ),
-                    staff:staff_id ( full_name )
+                    pet:pet_id ( pet_name ),
+                    staff:staff_id ( full_name ),
+                    items:appointment_item ( name_snapshot, is_primary )
                 `)
                 .eq('customer_id', currentUser.id)
-                .order('appointment_date', { ascending: false });
+                .order('scheduled_start_at', { ascending: false });
 
             if (!error && data && data.length > 0) {
-                userBookings = data.map(b => ({
-                    id: b.appointment_code || b.id,
-                    code: b.appointment_code || b.id,
-                    service: b.service?.service_name || 'Dịch vụ PawPal',
-                    serviceName: b.service?.service_name || 'Dịch vụ PawPal',
-                    serviceType: b.service?.service_category || 'spa',
-                    petName: b.pet?.pet_name || 'Bé cưng',
-                    petBreed: b.pet?.breed || '',
-                    date: b.appointment_date,
-                    timeStart: b.appointment_time,
-                    staff: b.staff?.full_name || 'Kỹ thuật viên PawPal',
-                    status: b.appointment_status
-                }));
+                userBookings = data.map(b => {
+                    const items = b.items || [];
+                    const primary = items.find(i => i.is_primary) || items[0];
+                    const d = b.scheduled_start_at ? new Date(b.scheduled_start_at) : null;
+                    return {
+                        id: b.appointment_code || b.id,
+                        code: b.appointment_code || b.id,
+                        service: primary?.name_snapshot || 'Dịch vụ PawPal',
+                        serviceName: primary?.name_snapshot || 'Dịch vụ PawPal',
+                        serviceType: 'spa',
+                        petName: b.pet?.pet_name || 'Bé cưng',
+                        petBreed: '',
+                        date: d ? d.toLocaleDateString('vi-VN') : '',
+                        timeStart: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
+                        staff: b.staff?.full_name || 'Kỹ thuật viên PawPal',
+                        status: b.appointment_status
+                    };
+                });
             }
         }
     } catch (e) {

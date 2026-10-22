@@ -30,7 +30,7 @@
             return requireLogin();
         }
 
-        if (currentUser.status === 'da_khoa' || currentUser.account_status === 'da_khoa') {
+        if (currentUser.status === 'da_khoa' || currentUser.account_status === 'da_khoa' || currentUser.customer_status === 'locked' || currentUser.customer_status === 'da_khoa') {
             localStorage.removeItem('pawpal_current_user');
             sessionStorage.removeItem('pawpal_current_user');
             if (typeof alert === 'function') alert('Tài khoản của bạn đã bị khóa. Vui lòng liên hệ bộ phận chăm sóc khách hàng.');
@@ -101,8 +101,8 @@
         try {
             const result = await window.PawpalCustomerAuth.request('me', {}, true);
             const verifiedUser = result?.user || {};
-            const verifiedStatus = verifiedUser.account_status || verifiedUser.status;
-            if (verifiedStatus === 'da_khoa') {
+            const verifiedStatus = verifiedUser.account_status || verifiedUser.status || verifiedUser.customer_status;
+            if (verifiedStatus === 'da_khoa' || verifiedStatus === 'locked') {
                 localStorage.removeItem('pawpal_current_user');
                 sessionStorage.removeItem('pawpal_current_user');
                 alert('Tài khoản của bạn đã bị khóa. Vui lòng liên hệ bộ phận hỗ trợ khách hàng.');

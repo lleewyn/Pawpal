@@ -8,20 +8,23 @@ const addressesForCompare = addresses => addresses.map(a => ({
 
 function createCustomerProfileService(admin, writer = admin) {
     async function snapshot(customerId) {
-        const [customer, profile, addresses] = await Promise.all([
-            admin.from('customer').select('id, phone_main, email').eq('id', customerId).single(),
-            admin.from('customer_profile').select('full_name').eq('customer_id', customerId).maybeSingle(),
-            admin.from('customer_address').select('*').eq('customer_id', customerId).order('id')
+        const [customer, profile, addresses, phones] = await Promise.all([
+            admin.from('customer').select('id, contact_email').eq('id', customerId).single(),
+            admin.from('customer_profile').select('full_name, date_of_birth, gender').eq('customer_id', customerId).maybeSingle(),
+            admin.from('customer_address').select('*').eq('customer_id', customerId).order('id'),
+            admin.from('customer_phone').select('phone_number, is_primary').eq('customer_id', customerId)
         ]);
-        for (const result of [customer, profile, addresses]) if (result.error) throw result.error;
+        for (const result of [customer, profile, addresses, phones]) if (result.error) throw result.error;
         const addressStorage = addresses.data?.length && Object.hasOwn(addresses.data[0], 'district') ? 'structured' : 'legacy';
         const savedAddresses = (addresses.data || []).map(a => {
             if (addressStorage === 'structured') return a;
-            const parts = a.street_address.split(',');
+            const parts = (a.street_address || '').split(',');
             const district = parts.length > 1 ? parts.pop().trim() : '';
             return { ...a, street_address: parts.join(',').trim(), district, ward: '' };
         });
-        const result = { addressStorage, id: customerId, phone: customer.data.phone_main, email: customer.data.email || '',
+        const phoneList = Array.isArray(phones.data) ? phones.data : (phones.data ? [phones.data] : []);
+        const primaryPhone = phoneList.find(p => p.is_primary)?.phone_number || phoneList[0]?.phone_number || '';
+        const result = { addressStorage, id: customerId, phone: primaryPhone, email: customer.data?.contact_email || '',
             name: profile.data?.full_name || '', addresses: savedAddresses };
         result.revision = 'api:' + createHash('sha256').update(JSON.stringify(result)).digest('hex');
         return result;
@@ -54,14 +57,14 @@ function createCustomerProfileService(admin, writer = admin) {
         if (new Set(keys).size !== keys.length) throw new Error('Địa chỉ bị trùng trong sổ địa chỉ.');
         if (addresses.length && addresses.filter(a => a.is_default).length !== 1) throw new Error('Vui lòng chọn đúng một địa chỉ mặc định.');
         const changedAddresses = JSON.stringify(addressesForCompare(before.addresses)) !== JSON.stringify(addressesForCompare(addresses));
-        let emailUpdate = writer.from('customer').update({ email: email || null }).eq('id', customerId);
-        emailUpdate = before.email ? emailUpdate.eq('email', before.email) : emailUpdate.is('email', null);
+        let emailUpdate = writer.from('customer').update({ contact_email: email || null }).eq('id', customerId);
+        emailUpdate = before.email ? emailUpdate.eq('contact_email', before.email) : emailUpdate.is('contact_email', null);
         const emailResult = await emailUpdate.select('id').single();
         if (emailResult.error) throw new Error(emailResult.error.code === '23505' ? 'Email đã được sử dụng bởi tài khoản khác.' : 'Không thể lưu email. Vui lòng thử lại.');
-        const profileResult = await writer.from('customer_profile').update({ full_name: name }).eq('customer_id', customerId).select('full_name').single();
+        const profileResult = await writer.from('customer_profile').upsert({ customer_id: customerId, full_name: name }).select('full_name').single();
         if (profileResult.error) {
-            let rollback = writer.from('customer').update({ email: before.email || null }).eq('id', customerId);
-            rollback = email ? rollback.eq('email', email) : rollback.is('email', null);
+            let rollback = writer.from('customer').update({ contact_email: before.email || null }).eq('id', customerId);
+            rollback = email ? rollback.eq('contact_email', email) : rollback.is('contact_email', null);
             const reverted = await rollback.select('id').single();
             if (reverted.error) throw new Error('Không thể lưu tên; vui lòng tải lại để kiểm tra email trước khi thử lại.');
             throw new Error('Không thể lưu hồ sơ. Thay đổi email đã được hoàn tác.');
@@ -94,8 +97,8 @@ function createCustomerProfileService(admin, writer = admin) {
                 for (const old of before.addresses) rollbackResults.push(await admin.from('customer_address').update({
                     ...(before.addressStorage === 'legacy' ? { street_address: [old.street_address, old.district].filter(Boolean).join(', '), province: old.province || '' } : { street_address: old.street_address, district: old.district || '', province: old.province || '', ward: old.ward || '' }), is_default: old.is_default
                 }).eq('id', old.id).eq('customer_id', customerId));
-                rollbackResults.push(await writer.from('customer').update({ email: before.email || null }).eq('id', customerId));
-                rollbackResults.push(await writer.from('customer_profile').update({ full_name: before.name }).eq('customer_id', customerId));
+                rollbackResults.push(await writer.from('customer').update({ contact_email: before.email || null }).eq('id', customerId));
+                rollbackResults.push(await writer.from('customer_profile').upsert({ customer_id: customerId, full_name: before.name }));
                 if (rollbackResults.some(r => r.error)) throw new Error('Lưu địa chỉ thất bại. Vui lòng tải lại để kiểm tra thông tin trước khi thử lại.');
                 throw new Error(error.code === '23503' ? 'Địa chỉ đang được dùng cho đơn hàng. Vui lòng giữ địa chỉ đó.' : 'Không thể lưu địa chỉ. Thay đổi đã được hoàn tác.');
             }

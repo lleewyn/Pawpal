@@ -268,69 +268,57 @@ async function loadSupabaseGuestResults(phone) {
     if (!db) return { bookings: [], orders: [] };
     try {
         let orderRows = [];
-        const { data: oByCustomer, error: oError1 } = await db
-            .from('sales_order')
-            .select(`
-                id,
-                order_code,
-                order_status,
-                payment_status,
-                total_amount,
-                created_at,
-                updated_at,
-                note,
-                customer!inner ( phone_main ),
-                customer_address ( receiver_name, receiver_phone, street_address, province ),
-                sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product_variant ( id, sku_variant, product ( id, product_name, image_urls ) ) )
-            `)
-            .eq('customer.phone_main', normPhone)
-            .order('created_at', { ascending: false });
+        let bookingRows = [];
 
-        if (!oError1 && Array.isArray(oByCustomer) && oByCustomer.length > 0) {
-            orderRows = oByCustomer;
+        // Tìm customer_id liên quan đến số điện thoại
+        const { data: phones } = await db.from('customer_phone').select('customer_id').eq('phone_number', normPhone).limit(5);
+        const custIds = (phones || []).map(p => p.customer_id).filter(Boolean);
+
+        // 1. Tra cứu đơn hàng (bằng receiver_phone_snapshot hoặc customer_id)
+        let orderQuery = db.from('sales_order').select(`
+            id,
+            order_code,
+            order_status,
+            shipping_status,
+            shipping_fee_snapshot,
+            receiver_name_snapshot,
+            receiver_phone_snapshot,
+            street_address_snapshot,
+            province_snapshot,
+            created_at,
+            updated_at,
+            note,
+            sales_order_detail ( id, quantity, unit_price, discount_amount, product_name_snapshot, sku_snapshot ),
+            payment ( id, payment_method, payment_status, amount )
+        `);
+
+        if (custIds.length > 0) {
+            orderQuery = orderQuery.or(`receiver_phone_snapshot.eq.${normPhone},customer_id.in.(${custIds.join(',')})`);
         } else {
-            const { data: oByAddr, error: oError2 } = await db
-                .from('sales_order')
-                .select(`
-                    id,
-                    order_code,
-                    order_status,
-                    payment_status,
-                    total_amount,
-                    created_at,
-                    updated_at,
-                    note,
-                    customer_address!inner ( receiver_name, receiver_phone, street_address, province ),
-                    sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product_variant ( id, sku_variant, product ( id, product_name, image_urls ) ) )
-                `)
-                .eq('customer_address.receiver_phone', normPhone)
-                .order('created_at', { ascending: false });
-
-            if (oByAddr) orderRows = oByAddr;
-            if (oError2) {
-                console.warn('[ReturnGuest] Supabase order lookup failed:', oError2.message || oError2);
-            }
+            orderQuery = orderQuery.eq('receiver_phone_snapshot', normPhone);
         }
 
-        const { data: bookingRows, error: bookingError } = await db
-            .from('appointment')
-            .select(`
+        const { data: oData, error: oError } = await orderQuery.order('created_at', { ascending: false });
+        if (!oError && Array.isArray(oData)) {
+            orderRows = oData;
+        }
+
+        // 2. Tra cứu lịch hẹn (theo customer_id)
+        if (custIds.length > 0) {
+            const { data: bData, error: bError } = await db.from('appointment').select(`
                 id,
                 appointment_code,
-                appointment_date,
-                appointment_time,
+                scheduled_start_at,
+                scheduled_end_at,
                 appointment_status,
-                payment_status,
                 note,
-                customer!inner ( id, phone_main, customer_profile ( full_name ) ),
-                service ( id, service_name, service_price_matrix ( unit_price ) ),
-                pet_profile ( id, pet_name )
-            `)
-            .eq('customer.phone_main', normPhone)
-            .order('appointment_date', { ascending: false });
+                pet_profile:pet_id ( id, pet_name ),
+                appointment_item ( id, name_snapshot, unit_price, quantity, is_primary )
+            `).in('customer_id', custIds).order('scheduled_start_at', { ascending: false });
 
-        if (bookingError) {
-            console.warn('[ReturnGuest] Supabase booking lookup failed:', bookingError.message || bookingError);
+            if (!bError && Array.isArray(bData)) {
+                bookingRows = bData;
+            }
         }
 
         return {
@@ -344,53 +332,47 @@ async function loadSupabaseGuestResults(phone) {
 }
 
 function mapSupabaseOrderRow(row) {
-    const normalizeImageUrl = (url) => {
-        if (!url) return '/assets/images/shop/products/placeholder.webp';
-        if (url.startsWith('http') || url.startsWith('/')) return url;
-        if (url.startsWith('assets/')) return '/' + url;
-        return `/assets/images/shop/products/${url}`;
-    };
-    const addr = row.customer_address || {};
     const products = Array.isArray(row.sales_order_detail)
-        ? row.sales_order_detail.map((detail) => {
-            const pv = detail.product_variant || {};
-            const pr = pv.product || detail.product || {};
-            return {
-                id: pr.id || '',
-                variant_id: detail.product_variant_id || pv.id,
-                name: pr.product_name || 'Sản phẩm',
-                sku: pv.sku_variant || pr.sku || '',
-                image: normalizeImageUrl(pr.image_urls?.[0]),
-                quantity: detail.quantity,
-                price: detail.unit_price,
-                total: detail.subtotal,
-            };
-        })
+        ? row.sales_order_detail.map((detail) => ({
+            id: detail.id || '',
+            variant_id: detail.product_variant_id,
+            name: detail.product_name_snapshot || 'Sản phẩm',
+            sku: detail.sku_snapshot || '',
+            image: '/assets/images/shop/products/placeholder.webp',
+            quantity: detail.quantity,
+            price: detail.unit_price,
+            total: (Number(detail.quantity) || 1) * (Number(detail.unit_price) || 0) - (Number(detail.discount_amount) || 0),
+        }))
         : [];
+
+    const itemsSubtotal = products.reduce((acc, p) => acc + p.total, 0);
+    const shippingFee = Number(row.shipping_fee_snapshot || 0);
+    const grandTotal = itemsSubtotal + shippingFee;
+    const payRow = (Array.isArray(row.payment) ? row.payment[0] : row.payment) || {};
 
     return {
         id: row.order_code || row.id,
         _supabaseId: row.id,
         userId: null,
-        userPhone: addr.receiver_phone || '',
+        userPhone: row.receiver_phone_snapshot || '',
         status: mapOrderStatus(row.order_status),
-        paymentStatus: String(row.payment_status || '').toLowerCase(),
-        paymentMethod: 'cod',
+        paymentStatus: String(payRow.payment_status || (row.order_status === 'da_xac_nhan' ? 'da_thanh_toan' : 'chua_thanh_toan')).toLowerCase(),
+        paymentMethod: payRow.payment_method || 'cod',
         products,
         pricing: {
-            subtotal: row.subtotal || products.reduce((acc, p) => acc + p.total, 0),
-            shippingFee: row.shipping_fee || 0,
-            discount: row.discount_amount || 0,
-            total: row.total_amount || (products.reduce((acc, p) => acc + p.total, 0) + (row.shipping_fee || 0) - (row.discount_amount || 0)),
+            subtotal: itemsSubtotal,
+            shippingFee: shippingFee,
+            discount: 0,
+            total: grandTotal,
         },
         payment: {
-            method: (Array.isArray(row.payment) ? row.payment[0]?.payment_method : row.payment?.payment_method) || 'cod',
-            status: (Array.isArray(row.payment) ? row.payment[0]?.status : row.payment?.status) || 'pending'
+            method: payRow.payment_method || 'cod',
+            status: payRow.payment_status || (row.order_status === 'da_xac_nhan' ? 'da_thanh_toan' : 'pending')
         },
         delivery: {
-            name: addr.receiver_name || '',
-            phone: addr.receiver_phone || '',
-            address: [addr.street_address, addr.province].filter(Boolean).join(', '),
+            name: row.receiver_name_snapshot || '',
+            phone: row.receiver_phone_snapshot || '',
+            address: [row.street_address_snapshot, row.province_snapshot].filter(Boolean).join(', '),
         },
         note: row.note || '',
         createdAt: row.created_at,
@@ -410,18 +392,21 @@ function mapSupabaseBookingRow(row) {
         'vang_mat': 'cancelled'
     }[rawStatus] || rawStatus;
 
+    const d = row.scheduled_start_at ? new Date(row.scheduled_start_at) : null;
+    const primaryItem = (Array.isArray(row.appointment_item) ? row.appointment_item[0] : row.appointment_item) || {};
+
     return {
         id: row.appointment_code || row.id,
         _supabaseId: row.id,                  
-        serviceName: row.service?.service_name || 'Dịch vụ',
-        date: row.appointment_date,
-        time: row.appointment_time,
-        timeStart: row.appointment_time,
+        serviceName: primaryItem.name_snapshot || 'Dịch vụ PawPal',
+        date: d ? d.toLocaleDateString('vi-VN') : '',
+        time: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
+        timeStart: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
         status: normalizedBookingStatus,
-        paymentStatus: row.payment_status || 'pending',
+        paymentStatus: 'pending',
         note: row.note || '',
-        petName: row.pet_profile?.pet_name || (Array.isArray(row.customer?.customer_profile) ? row.customer.customer_profile[0]?.full_name : row.customer?.customer_profile?.full_name) || 'Bé cưng',
-        price: (Array.isArray(row.service?.service_price_matrix) && row.service.service_price_matrix.length > 0) ? row.service.service_price_matrix[0].unit_price : 0,
+        petName: row.pet_profile?.pet_name || 'Bé cưng',
+        price: primaryItem.unit_price || 0,
         branch: '',
         staff: '',
     };
@@ -1539,11 +1524,13 @@ function showChangeScheduleModal(bookingId, phone) {
             const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (db) {
                 const isUUID = typeof bookingId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingId);
+                const cleanTime = selTime.length === 5 ? selTime : selTime.slice(0, 5);
+                const startIso = new Date(`${selDate}T${cleanTime}:00+07:00`).toISOString();
+                const endIso = new Date(new Date(startIso).getTime() + 60 * 60 * 1000).toISOString();
                 let query = db.from('appointment').update({ 
-                    appointment_date: selDate,
-                    appointment_time: selTime + ':00',
+                    scheduled_start_at: startIso,
+                    scheduled_end_at: endIso,
                     appointment_status: 'cho_xac_nhan', 
-                    change_count: booking ? booking.changeCount : 1,
                     updated_at: new Date().toISOString() 
                 });
                 query = isUUID ? query.eq('id', bookingId) : query.eq('appointment_code', bookingId);
@@ -1733,11 +1720,12 @@ function showQuickSetupPasswordModal(phone) {
             const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (db) {
                 try {
-                    await db.from('customer').update({
-                        password_hash: pwd,
-                        account_status: 'ACTIVE',
-                        is_temporary: false
-                    }).eq('phone_main', phone);
+                    const { data: cPhone } = await db.from('customer_phone').select('customer_id').eq('phone_number', phone).maybeSingle();
+                    if (cPhone?.customer_id) {
+                        await db.from('customer').update({
+                            customer_status: 'active'
+                        }).eq('id', cPhone.customer_id);
+                    }
                 } catch (e) {
                     console.warn('[ReturnGuest] Supabase sync error:', e);
                 }

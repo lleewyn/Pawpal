@@ -717,8 +717,11 @@ function openQuickRescheduleModal(booking) {
         if (button.disabled) return;
         button.disabled = true;
         try {
-            await changeOnSupabase(bookingId, { appointment_date: selectedDate,
-                ...(selectedSlot ? { appointment_time: selectedSlot + ':00' } : {}), appointment_status: 'cho_xac_nhan' });
+            const startIso = `${selectedDate}T${selectedSlot || '09:00'}:00`;
+            await changeOnSupabase(bookingId, {
+                scheduled_start_at: startIso,
+                appointment_status: 'cho_xac_nhan'
+            });
             modal.hide();
             showToast('Đã đổi lịch hẹn thành công', 'success');
             await loadBookings(document.querySelector('.filter-tab.active')?.dataset.status || 'all');

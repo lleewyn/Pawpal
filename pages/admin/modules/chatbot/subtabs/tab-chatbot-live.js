@@ -21,34 +21,25 @@
     let staffTypingStopTimer = null;
 
     // PR-02: Gợi ý phản hồi mẫu chân thực, không hứa hẹn bồi hoàn ảo (CB-25)
-    const defaultSmartSuggestions = [
-        { tag: 'Đồng cảm và Xoa dịu', text: 'Dạ PawPal thành thật xin lỗi sen và bé vì sự bất tiện này! Em xin phép ưu tiên kiểm tra và xử lý ngay cho sen ạ.' },
-        { tag: 'Kiểm tra thông tin', text: 'Dạ sen cho em xin thêm thông tin chi tiết hoặc hình ảnh tình trạng của bé để em hỗ trợ kịp thời nhé ạ.' },
-        { tag: 'Chuyển chuyên viên', text: 'Dạ em đã ghi nhận thông tin và đang kết nối chuyên viên phụ trách để giải quyết trường hợp của sen ngay ạ.' }
-    ];
-
-    let cannedResponsesDatabase = [
-        { id: 'cr-01', category: 'greeting', categoryName: 'Chào hỏi và Tiếp nhận', title: 'Lời chào tiếp nhận ca hỗ trợ', content: 'Dạ PawPal xin chào sen, em là chuyên viên CSKH đã tiếp nhận ca chat này để trực tiếp hỗ trợ mình ngay ạ!' },
-        { id: 'cr-02', category: 'greeting', categoryName: 'Chào hỏi và Tiếp nhận', title: 'Xin phép kiểm tra hệ thống trong 1-2 phút', content: 'Dạ sen vui lòng đợi em trong 1-2 phút, em đang tiến hành tra cứu dữ liệu trên hệ thống và sẽ phản hồi mình ngay ạ.' },
-        { id: 'cr-03', category: 'greeting', categoryName: 'Chào hỏi và Tiếp nhận', title: 'Xác nhận thông tin bé và đơn hàng', content: 'Dạ để hỗ trợ chính xác nhất, sen cho em xin mã đơn hàng hoặc số điện thoại đăng ký tài khoản của bé nhé ạ.' }
-    ];
-
-    function formatSlaInfo(waitingSeconds, isHandover) {
-        if (isHandover) {
-            return { text: 'Đang tiếp quản', className: 'sla-done' };
+    let defaultSmartSuggestions = [];
+    let cannedResponsesDatabase = [];
+    async function loadLiveCannedResponses() {
+        let rows=[];
+        for(let offset=0;;offset+=500){
+            const {data,error}=await supabase.from('chatbot_canned_response').select('id,shortcut,title,content,category').eq('is_active',true).order('id').range(offset,offset+499);
+            if(error)throw error;rows.push(...data);if(data.length<500)break;
         }
-        const sec = waitingSeconds || 0;
-        if (sec >= 120) {
-            const m = Math.floor(sec / 60);
-            const s = sec % 60;
-            return { text: `Quá hạn: ${m}m ${s < 10 ? '0' : ''}${s}s`, className: 'sla-danger' };
-        } else if (sec >= 60) {
-            const m = Math.floor(sec / 60);
-            const s = sec % 60;
-            return { text: `Chờ ${m}m ${s < 10 ? '0' : ''}${s}s`, className: 'sla-warning' };
-        } else {
-            return { text: `Chờ ${sec}s`, className: 'sla-normal' };
-        }
+        cannedResponsesDatabase=rows;
+        defaultSmartSuggestions=rows.map(r=>({tag:r.title,text:r.content}));
+        return rows;
+    }
+
+    function formatSlaInfo(c) {
+        if(['resolved','closed','completed'].includes(c.status))return {text:'Đã hoàn tất',className:'sla-done'};
+        if(c.isHandover)return {text:'Đang tiếp nhận',className:'sla-done'};
+        if(!c.slaDeadline)return {text:'Chưa có hạn phản hồi',className:'sla-normal'};
+        const remaining=Math.ceil((new Date(c.slaDeadline)-Date.now())/1000),seconds=Math.abs(remaining);
+        return {text:(remaining<0?'Quá hạn ':'Còn ')+Math.floor(seconds/60)+' phút '+seconds%60+' giây',className:remaining<0?'sla-danger':'sla-normal'};
     }
 
     function updateSlaBadgesInDom() {
@@ -58,7 +49,7 @@
         liveConversations.forEach(c => {
             const pill = document.querySelector(`.sla-pill-${c.id}`);
             if (pill) {
-                const sla = formatSlaInfo(c.waitingSeconds, c.isHandover);
+                const sla = formatSlaInfo(c);
                 pill.textContent = sla.text;
                 pill.className = `sla-timer-pill ${sla.className} sla-pill-${c.id}`;
             }
@@ -67,29 +58,14 @@
         if (currentConversation) {
             const headerSla = document.getElementById('currentChatSlaBadge');
             if (headerSla) {
-                const sla = formatSlaInfo(currentConversation.waitingSeconds, currentConversation.isHandover);
+                const sla = formatSlaInfo(currentConversation);
                 headerSla.textContent = sla.text;
                 headerSla.className = `sla-timer-pill ${sla.className}`;
             }
         }
     }
 
-    function startSlaTicker() {
-        if (slaTickerInterval) clearInterval(slaTickerInterval);
-        slaTickerInterval = setInterval(() => {
-            let changed = false;
-            const liveConversations = PawpalChatbot.state?.liveConversations || [];
-            liveConversations.forEach(c => {
-                if (!c.isHandover) {
-                    c.waitingSeconds = (c.waitingSeconds || 0) + 1;
-                    changed = true;
-                }
-            });
-            if (changed) {
-                updateSlaBadgesInDom();
-            }
-        }, 1000);
-    }
+    function startSlaTicker(){if(slaTickerInterval)clearInterval(slaTickerInterval);slaTickerInterval=setInterval(updateSlaBadgesInDom,1000);}
 
     function formatSnippetPreview(rawText) {
         if (!rawText) return '...';
@@ -438,7 +414,7 @@
                 : '';
 
             const handoverTag = `<span class="admin-badge badge-neutral" style="font-size: 10.5px; height: 20px; padding: 0 6px;">${conv.isHandover ? 'Nhân viên' : 'Bot'}</span>`;
-            const sla = formatSlaInfo(conv.waitingSeconds, conv.isHandover);
+            const sla = formatSlaInfo(conv);
 
             const item = document.createElement('div');
             item.className = `conversation-item ${isMember ? 'is-member' : 'is-guest'} ${isActive ? 'active' : ''}`;
@@ -529,7 +505,7 @@
 
         const headerSla = document.getElementById('currentChatSlaBadge');
         if (headerSla) {
-            const sla = formatSlaInfo(currentConversation.waitingSeconds, currentConversation.isHandover);
+            const sla = formatSlaInfo(currentConversation);
             headerSla.textContent = sla.text;
             headerSla.className = `sla-timer-pill ${sla.className}`;
         }
@@ -842,7 +818,7 @@
             ? currentConversation.smartResponses
             : defaultSmartSuggestions;
 
-        box.style.display = 'flex';
+        box.style.display = list.length ? 'flex' : 'none';
         currentSuggestIndex = Math.min(currentSuggestIndex, list.length - 1);
         if (currentSuggestIndex < 0) currentSuggestIndex = 0;
         const item = list[currentSuggestIndex];
@@ -895,7 +871,7 @@
 
         if (recentOrderEl) {
             if (currentConversation.recentOrder) {
-                recentOrderEl.innerHTML = `<a href="javascript:void(0)" class="user-name-link btn-jump-order" data-id="${escapeHtml(currentConversation.recentOrder.id)}">${escapeHtml(currentConversation.recentOrder.id)}</a> (${escapeHtml(currentConversation.recentOrder.status)})`;
+                recentOrderEl.innerHTML = `<a href="javascript:void(0)" class="user-name-link chat-order-info" data-id="${escapeHtml(currentConversation.recentOrder.id)}">${escapeHtml(currentConversation.recentOrder.id)}</a> (${escapeHtml(currentConversation.recentOrder.status)})`;
             } else {
                 recentOrderEl.textContent = 'Chưa có đơn hàng';
             }
@@ -931,14 +907,6 @@
     }
 
     function attachCrossLinks() {
-        document.querySelectorAll('.btn-jump-order').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const id = btn.getAttribute('data-id');
-                sessionStorage.setItem('pawpal_admin_order_selected_id', id);
-                window.location.hash = '#tab-order-list';
-            });
-        });
-
         document.querySelectorAll('.btn-jump-booking').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
@@ -1016,142 +984,36 @@
         if (adminAttachPreview) adminAttachPreview.style.display = 'none';
     }
 
-    async function sendLiveMsg() {
-        if (isSendingLiveMsg) return; // PR-02: Chặn click liên tục gửi nhiều bản tin (CB-20)
-        const currentConversation = PawpalChatbot.state?.currentConversation;
-        if (!currentConversation) return;
-
-        const msgInput = document.getElementById('chatMessageInput');
-        const sendMsgBtn = document.getElementById('btnSendLiveMessage');
-        const text = msgInput ? msgInput.value.trim() : '';
-        if (!text && !pendingAdminAttachment) return;
-
-        if (!currentConversation.isHandover) {
-            PawpalChatbot.showToast?.('Vui lòng bấm nút "Tiếp nhận" trước khi gửi tin nhắn cho khách hàng.', 'warning');
-            return;
-        }
-
-        isSendingLiveMsg = true;
-        if (sendMsgBtn) {
-            sendMsgBtn.disabled = true;
-            sendMsgBtn.style.opacity = '0.6';
-        }
-
-        let fullText = text;
-        if (pendingAdminAttachment) {
-            let imageSource = null;
-            if (pendingAdminAttachment.file && supabase && supabase.storage) {
-                try {
-                    const ext = (pendingAdminAttachment.file.name || 'image.jpg').split('.').pop().toLowerCase();
-                    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-                    const filePath = `staff/${fileName}`;
-                    const { data: uploadData, error: uploadErr } = await supabase.storage
-                        .from('chat-attachments')
-                        .upload(filePath, pendingAdminAttachment.file, { cacheControl: '3600', upsert: false });
-                    if (!uploadErr && uploadData) {
-                        const { data: publicData } = supabase.storage
-                            .from('chat-attachments')
-                            .getPublicUrl(filePath);
-                        imageSource = publicData?.publicUrl || filePath;
-                    }
-                } catch (stErr) {
-                    console.warn('[Staff Storage] Lỗi upload tệp:', stErr);
-                }
-            }
-            // G3-08: Nếu upload storage thất bại, báo lỗi rõ ràng và giữ file để thử lại, không nhét base64/data URL nặng vào DB
-            if (!imageSource) {
-                console.error('[Staff Storage] Upload ảnh đính kèm thất bại, không lưu ảnh lỗi vào CSDL.');
-                PawpalChatbot.showToast?.('Không thể tải tệp đính kèm lên máy chủ lưu trữ. Vui lòng thử lại.', 'error');
-                isSendingLiveMsg = false;
-                if (sendMsgBtn) {
-                    sendMsgBtn.disabled = false;
-                    sendMsgBtn.style.opacity = '1';
-                }
-                return;
-            }
-            const imgMd = `![${pendingAdminAttachment.name}](${imageSource})`;
-            fullText = text ? `${text}\n${imgMd}` : imgMd;
-        }
-
-        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const localMsgId = 'msg-staff-' + Date.now();
-        currentConversation.messages.push({
-            id: localMsgId,
-            sender: 'agent',
-            agentName: 'Chuyên viên CSKH',
-            time: timeStr,
-            text: fullText
-        });
-
-        clearTimeout(staffTypingStopTimer);
-        isStaffTypingActive = false;
-        notifyAdminTyping(false);
-        const customerTypingBar = document.getElementById('customerTypingBar');
-        if (customerTypingBar) customerTypingBar.style.display = 'none';
-
-        if (msgInput) msgInput.value = '';
-        const savedAttachment = pendingAdminAttachment;
-        clearAdminAttachment();
-        renderCurrentChat();
-
+    const operationRequests = new Map();
+    async function operateConversation(action,content,button) {
+        const conversation=PawpalChatbot.state?.currentConversation;
+        if(!conversation || !supabase || button?.disabled)return false;
+        const key=JSON.stringify([conversation.id,action,content,conversation.updatedAtRaw]);
+        if(!operationRequests.has(key))operationRequests.set(key,crypto.randomUUID());
+        if(button)button.disabled=true;
         try {
-            if (supabase) {
-                const convId = await ensureRealConversation(currentConversation);
-                if (!convId) {
-                    throw new Error('Không xác định được mã phiên hội thoại trong CSDL');
-                }
-
-                const { data: insertedMsg, error: msgErr } = await supabase
-                    .from('chat_message')
-                    .insert([{
-                        conversation_id: convId,
-                        sender_type: 'staff',
-                        sender_name: 'Chuyên viên CSKH',
-                        content: fullText,
-                        raw_content: fullText,
-                        is_toxic: false
-                    }])
-                    .select('id')
-                    .single();
-
-                if (msgErr) {
-                    throw msgErr;
-                }
-
-                if (insertedMsg) {
-                    const localM = currentConversation.messages.find(m => m.id === localMsgId);
-                    if (localM) localM.id = insertedMsg.id;
-                }
-
-                await supabase
-                    .from('chat_conversation')
-                    .update({
-                        updated_at: new Date().toISOString(),
-                        status: 'agent_handling'
-                    })
-                    .eq('id', convId);
-            }
-        } catch (dbErr) {
-            console.error('[Chatbot] Lỗi lưu tin nhắn nhân viên vào Supabase:', dbErr);
-            // Khôi phục trạng thái khi gửi thất bại (G1-04: draft preservation, honest error reporting)
-            currentConversation.messages = currentConversation.messages.filter(m => m.id !== localMsgId);
-            if (msgInput) msgInput.value = text;
-            if (savedAttachment) {
-                pendingAdminAttachment = savedAttachment;
-                const adminAttachPreview = document.getElementById('adminChatAttachPreview');
-                const adminAttachPreviewImg = document.getElementById('adminChatAttachPreviewImg');
-                if (adminAttachPreviewImg) adminAttachPreviewImg.src = savedAttachment.dataUrl;
-                if (adminAttachPreview) adminAttachPreview.style.display = 'flex';
-            }
-            renderCurrentChat();
-            PawpalChatbot.showToast?.(`Gửi tin nhắn thất bại: ${dbErr?.message || 'Lỗi kết nối CSDL'}. Bản nháp đã được giữ lại.`, 'error');
-        } finally {
-            isSendingLiveMsg = false;
-            if (sendMsgBtn) {
-                sendMsgBtn.disabled = false;
-                sendMsgBtn.style.opacity = '1';
-            }
-        }
+            const {error}=await supabase.rpc('act_admin_chat',{
+                p_request_id:operationRequests.get(key),p_conversation_id:conversation.id,
+                p_expected_updated_at:conversation.updatedAtRaw,p_action:action,p_content:content
+            });
+            if(error)throw error;
+            operationRequests.delete(key);
+            conversation.messagesLoaded=false;
+            await PawpalChatbot.loadInboxSummary();
+            return true;
+        }catch(error){
+            const messages={chat_changed:'Hội thoại đã thay đổi. Làm mới trước khi thao tác.',chat_assigned_to_other:'Hội thoại đang do nhân viên khác phụ trách.',chat_take_required:'Bạn cần tiếp nhận hội thoại trước.',chat_not_open:'Hội thoại đã kết thúc.',chat_forbidden:'Bạn không có quyền thao tác.'};
+            PawpalChatbot.showToast?.(messages[error.message] || 'Không lưu được thao tác. Bản nháp được giữ lại.','error');return false;
+        }finally{if(button)button.disabled=false;}
+    }
+    async function sendLiveMsg() {
+        if(isSendingLiveMsg)return;
+        const conversation=PawpalChatbot.state?.currentConversation,input=document.getElementById('chatMessageInput'),button=document.getElementById('btnSendLiveMessage');
+        const text=input?.value.trim();if(!conversation || !text)return;
+        isSendingLiveMsg=true;
+        try{if(await operateConversation('send',text,button)){
+            if(PawpalChatbot.state.currentConversation?.id===conversation.id && input.value.trim()===text)input.value='';
+        }}finally{isSendingLiveMsg=false;}
     }
 
     let isLiveChatEventsInitialized = false;
@@ -1217,64 +1079,9 @@
         }
 
         // Tiếp nhận / Hoàn trả
-        document.getElementById('btnToggleTakeover')?.addEventListener('click', async () => {
-            const currentConversation = PawpalChatbot.state?.currentConversation;
-            if (!currentConversation) return;
-
-            currentConversation.isHandover = !currentConversation.isHandover;
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-            const sysMsgText = currentConversation.isHandover
-                ? `Hệ thống: PawPal Bot đã tạm dừng. Chuyên viên CSKH đã tiếp quản ca chat lúc ${timeStr}`
-                : `Hệ thống: Ca chat đã được hỗ trợ trực tiếp xong. Quyền điều phối tự động được hoàn trả cho PawPal Bot lúc ${timeStr}`;
-
-            currentConversation.messages.push({
-                sender: 'system',
-                time: timeStr,
-                text: sysMsgText
-            });
-
-            if (currentConversation.isHandover) {
-                currentConversation.messages.push({
-                    sender: 'agent',
-                    agentName: 'Chuyên viên CSKH',
-                    time: timeStr,
-                    text: 'Dạ PawPal xin chào sen! Em là chuyên viên CSKH đã tiếp nhận ca chat để hỗ trợ trực tiếp cho sen ngay đây ạ!'
-                });
-                currentConversation.waitingSeconds = 0;
-            }
-
-            renderConversationsList();
-            renderCurrentChat();
-
-            if (supabase) {
-                try {
-                    const convId = await ensureRealConversation(currentConversation);
-                    if (convId) {
-                        const newStatus = currentConversation.isHandover ? 'agent_handling' : 'bot_handling';
-                        await supabase
-                            .from('chat_conversation')
-                            .update({
-                                status: newStatus,
-                                updated_at: new Date().toISOString()
-                            })
-                            .eq('id', convId);
-
-                        await supabase
-                            .from('chat_message')
-                            .insert([{
-                                conversation_id: convId,
-                                sender_type: 'staff',
-                                sender_name: 'Hệ thống PawPal',
-                                content: sysMsgText,
-                                raw_content: sysMsgText,
-                                is_toxic: false
-                            }]);
-                    }
-                } catch (takeoverErr) {
-                    console.error('[Chatbot] Lỗi cập nhật tiếp quản vào Supabase:', takeoverErr);
-                }
-            }
+        document.getElementById('btnToggleTakeover')?.addEventListener('click',event => {
+            const conversation=PawpalChatbot.state?.currentConversation;if(!conversation)return;
+            return operateConversation(conversation.isHandover?'release':'take','',event.currentTarget);
         });
 
         // Gửi tin nhắn
@@ -1293,6 +1100,7 @@
 
         // Đính kèm ảnh
         const btnAdminAttach = document.getElementById('btnAdminChatAttach');
+        if (btnAdminAttach) { btnAdminAttach.disabled=true;btnAdminAttach.title='Chưa triển khai lưu tệp'; }
         const adminFileInput = document.getElementById('adminChatFileInput');
         const adminAttachPreview = document.getElementById('adminChatAttachPreview');
         const adminAttachPreviewImg = document.getElementById('adminChatAttachPreviewImg');
@@ -1345,40 +1153,9 @@
         if (saveNoteButton && saveNoteButton.dataset.noteBound !== 'true') {
             saveNoteButton.dataset.noteBound = 'true';
             saveNoteButton.addEventListener('click', async () => {
-            const currentConversation = PawpalChatbot.state?.currentConversation;
-            if (!currentConversation) return;
+                const note=document.getElementById('chatInternalNoteInput')?.value || '';
+                if(await operateConversation('note',note,saveNoteButton))PawpalChatbot.showToast?.('Đã lưu ghi chú hội thoại.','success');
 
-            const note = document.getElementById('chatInternalNoteInput')?.value || '';
-            currentConversation.internalNotes = note;
-
-            if (!supabase) {
-                PawpalChatbot.showToast?.('Không xác định được phiên chat để lưu ghi chú.', 'error');
-                return;
-            }
-            try {
-                const conversationId = await ensureRealConversation(currentConversation);
-                if (!conversationId) throw new Error('Missing conversation id');
-                const { data: savedConversation, error: conversationError } = await supabase
-                    .from('chat_conversation')
-                    .update({ internal_note: note })
-                    .eq('id', conversationId)
-                    .select('id, internal_note')
-                    .single();
-                if (conversationError) throw conversationError;
-                if (!savedConversation || savedConversation.internal_note !== note) throw new Error('Saved note could not be verified');
-                if (currentConversation.customerId && !currentConversation.isRealDb) {
-                    const { error: customerError } = await supabase
-                        .from('customer')
-                        .update({ note })
-                        .eq('id', currentConversation.customerId);
-                    if (customerError) throw customerError;
-                }
-            } catch (e) {
-                console.error('Lỗi khi lưu note vào Supabase:', e);
-                PawpalChatbot.showToast?.(`Không thể lưu ghi chú: ${e?.message || 'Lỗi CSDL hoặc quyền truy cập'}`, 'error');
-                return;
-            }
-            PawpalChatbot.showToast?.('Đã lưu ghi chú nội bộ an toàn trên Supabase Live DB!', 'success');
             });
         }
 
@@ -1426,416 +1203,135 @@
         // ====================================================================
         // MODAL 1: TẶNG ĐIỂM PAWPOINT BỒI HOÀN
         // ====================================================================
-        const btnOpenReward = document.getElementById('btnRewardPoints');
-        const btnConfirmReward = document.getElementById('btnConfirmRewardPoints');
-        const rewardCustName = document.getElementById('rewardCustomerName');
-        const inputPoints = document.getElementById('inputCustomRewardPoints');
 
-        btnOpenReward?.addEventListener('click', () => {
-            const currentConversation = getCurrentConversationSafe();
-            if (!currentConversation || !currentConversation.id) {
-                PawpalChatbot.showToast?.('Vui lòng chọn một phiên hội thoại từ danh sách trước khi thực hiện thao tác.', 'warning');
-                return;
-            }
-            if (rewardCustName) rewardCustName.value = currentConversation.customerName || '';
+        let rewardTarget;
+        const btnReward=document.getElementById('btnConfirmRewardPoints');
+        document.getElementById('btnRewardPoints')?.addEventListener('click',()=>{
+            const c=getCurrentConversationSafe();if(!c?.customerId)return PawpalChatbot.showToast?.('Cần chọn khách hàng.', 'error');
+            rewardTarget={customer:c.customerId,conversation:c.id,request:crypto.randomUUID()};
+            document.getElementById('rewardCustomerName').value=c.customerName;
+            document.getElementById('inputCustomRewardPoints').value='';
             PawpalChatbot.openModal?.('rewardPointsModalOverlay');
         });
-
-        const closeRewardModal = () => { PawpalChatbot.closeModal?.('rewardPointsModalOverlay'); };
-
-        document.querySelectorAll('.btn-preset-point').forEach(pBtn => {
-            pBtn.addEventListener('click', () => {
-                document.querySelectorAll('.btn-preset-point').forEach(b => b.classList.remove('active'));
-                pBtn.classList.add('active');
-                if (inputPoints) inputPoints.value = pBtn.getAttribute('data-point');
-            });
-        });
-
-        btnConfirmReward?.addEventListener('click', async () => {
-            const currentConversation = getCurrentConversationSafe();
-            if (!currentConversation || !currentConversation.id) {
-                PawpalChatbot.showToast?.('Vui lòng chọn một phiên hội thoại trước khi bồi hoàn điểm.', 'warning');
-                return;
-            }
-
-            const pts = parseInt(inputPoints?.value, 10) || 50;
-            const selectReason = document.getElementById('selectRewardReason');
-            const reasonText = selectReason ? selectReason.options[selectReason.selectedIndex].text : 'Tạ lỗi vì sự cố dịch vụ';
-            const staffToken = sessionStorage.getItem('pawpal_staff_token') || 'local:' + (sessionStorage.getItem('pawpal_staff_id') || 'd0000000-5555-5555-5555-555555555555');
-            const idempotencyKey = 'reward-' + currentConversation.id + '-' + Date.now();
-
-            btnConfirmReward.disabled = true;
-            btnConfirmReward.textContent = 'Đang xử lý...';
-
-            try {
-                const res = await fetch('/api/admin/chat-actions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${staffToken}`
-                    },
-                    body: JSON.stringify({
-                        action: 'CHAT_COMPENSATE_POINTS',
-                        conversation_id: currentConversation.id,
-                        customer_id: currentConversation.customerId,
-                        points: pts,
-                        reason: reasonText,
-                        idempotency_key: idempotencyKey
-                    })
-                });
-
-                const data = await res.json();
-                if (!res.ok || !data.ok) {
-                    PawpalChatbot.showToast?.(data.error || 'Không thể bồi hoàn điểm.', 'error');
-                    btnConfirmReward.disabled = false;
-                    btnConfirmReward.textContent = 'Xác nhận bồi hoàn';
-                    return;
-                }
-
-                currentConversation.pawpoints = data.balance_after;
-                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                currentConversation.messages.push({
-                    id: 'msg-reward-' + Date.now(),
-                    sender: 'agent',
-                    agentName: 'Hệ thống PawPal',
-                    type: 'action-reward',
-                    time: timeStr,
-                    rewardData: {
-                        points: data.points,
-                        customerName: currentConversation.customerName,
-                        reason: reasonText,
-                        txId: data.transaction_id
-                    },
-                    text: `Đã nạp thành công +${data.points} điểm Pawpoint bồi hoàn vào ví tài khoản trên Supabase Live DB (Số dư mới: ${data.balance_after} điểm)!`
-                });
-
-                closeRewardModal();
-                renderCurrentChat();
-                renderCustomerInfoPanel?.();
-                PawpalChatbot.showToast?.(`Đã tặng thành công +${data.points} điểm Pawpoint cho khách hàng!`, 'success');
-            } catch (err) {
-                console.error('Lỗi gọi API bồi hoàn điểm:', err);
-                PawpalChatbot.showToast?.('Lỗi kết nối máy chủ khi bồi hoàn điểm: ' + err.message, 'error');
-            } finally {
-                btnConfirmReward.disabled = false;
-                btnConfirmReward.textContent = 'Xác nhận bồi hoàn';
-            }
+        document.querySelectorAll('.btn-preset-point').forEach(b=>b.addEventListener('click',()=>{document.getElementById('inputCustomRewardPoints').value=b.dataset.point;}));
+        btnReward?.addEventListener('click',async()=>{
+            if(!rewardTarget||btnReward.disabled)return;
+            const points=Number(document.getElementById('inputCustomRewardPoints').value);
+            const select=document.getElementById('selectRewardReason');
+            const reason=select.options[select.selectedIndex].text;
+            if(!Number.isSafeInteger(points)||points<=0||points>10000000)return PawpalChatbot.showToast?.('Số điểm không hợp lệ.', 'error');
+            const key=JSON.stringify([points,reason]);if(rewardTarget.key&&rewardTarget.key!==key)rewardTarget.request=crypto.randomUUID();rewardTarget.key=key;
+            btnReward.disabled=true;
+            try{
+                const {error}=await supabase.rpc('adjust_customer_points',{p_customer_id:rewardTarget.customer,p_points:points,p_reason:reason+' | Chat '+rewardTarget.conversation,p_request_id:rewardTarget.request});if(error)throw error;
+                const c=getCurrentConversationSafe();if(c?.id===rewardTarget.conversation)c.contextLoaded=false;
+                PawpalChatbot.closeModal?.('rewardPointsModalOverlay');await PawpalChatbot.loadInboxSummary();
+                PawpalChatbot.showToast?.('Đã lưu điều chỉnh điểm.', 'success');
+            }catch(e){PawpalChatbot.showToast?.('Chưa lưu được điểm. Hãy kiểm tra quyền và thử lại.', 'error');}finally{btnReward.disabled=false;}
         });
 
         // ====================================================================
         // MODAL 2: CHUYỂN TICKET (AUTOCOMPLETE GIAO DỊCH CHUẨN AGENTS.md)
         // ====================================================================
-        const btnOpenConvert = document.getElementById('btnConvertToTicket');
-        const btnConfirmConvert = document.getElementById('btnConfirmConvertTicket');
-        const inputConvertRefId = document.getElementById('inputConvertRefId');
-        const inputConvertTitle = document.getElementById('inputConvertTicketTitle');
-        const convertTicketRefDropdown = document.getElementById('convertTicketRefDropdown');
-        const convertTicketRefSelectedCard = document.getElementById('convertTicketRefSelectedCard');
-        const selectedRefTitle = document.getElementById('selectedRefTitle');
-        const selectedRefBadge = document.getElementById('selectedRefBadge');
-        const selectedRefMeta = document.getElementById('selectedRefMeta');
-        const btnClearSelectedRef = document.getElementById('btnClearSelectedRef');
 
-        btnOpenConvert?.addEventListener('click', () => {
-            const currentConversation = getCurrentConversationSafe();
-            if (!currentConversation || !currentConversation.id) {
-                PawpalChatbot.showToast?.('Vui lòng chọn một phiên hội thoại từ danh sách trước khi thực hiện thao tác.', 'warning');
-                return;
-            }
-            const defaultRef = currentConversation.recentOrder ? currentConversation.recentOrder.id : (currentConversation.recentBooking ? currentConversation.recentBooking.id : '');
-            if (inputConvertRefId) inputConvertRefId.value = defaultRef;
-            if (inputConvertTitle) inputConvertTitle.value = '';
-            if (convertTicketRefSelectedCard) convertTicketRefSelectedCard.style.display = 'none';
-            PawpalChatbot.openModal?.('convertTicketModalOverlay');
-        });
-
-        function getSuggestedTransactions() {
-            const currentConversation = getCurrentConversationSafe();
-            const list = [];
-            if (currentConversation?.recentOrder && currentConversation.recentOrder.id) {
-                list.push({
-                    code: currentConversation.recentOrder.id,
-                    badge: 'Đơn hàng',
-                    meta: `Đơn hàng #${currentConversation.recentOrder.id} (${currentConversation.recentOrder.status || 'Đang xử lý'})`
-                });
-            }
-            if (currentConversation?.recentBooking && currentConversation.recentBooking.id) {
-                list.push({
-                    code: currentConversation.recentBooking.id,
-                    badge: 'Lịch hẹn',
-                    meta: `Lịch hẹn #${currentConversation.recentBooking.id} (${currentConversation.recentBooking.status || 'Đang thực hiện'})`
-                });
-            }
-            return list;
-        }
-
-        function renderRefDropdown(query = '') {
-            if (!convertTicketRefDropdown) return;
-            const q = (query || '').toLowerCase().trim();
-            const txs = getSuggestedTransactions().filter(t => !q || t.code.toLowerCase().includes(q) || t.meta.toLowerCase().includes(q) || t.badge.toLowerCase().includes(q));
-
-            if (txs.length === 0) {
-                convertTicketRefDropdown.innerHTML = `<div style="padding: 12px; text-align: center; color: var(--text-muted); font-size: 12.5px;">Không tìm thấy mã giao dịch phù hợp</div>`;
-                convertTicketRefDropdown.style.display = 'block';
-                return;
-            }
-
-            convertTicketRefDropdown.innerHTML = txs.map(t => `
-                <div class="customer-autocomplete-item" data-ref-code="${t.code}" data-ref-badge="${t.badge}" data-ref-meta="${t.meta.replace(/"/g, '&quot;')}" style="padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #ECF2EE; display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; flex-direction: column; gap: 2px;">
-                        <span style="font-weight: 600; color: #203A2C; font-size: 13px;">${t.code}</span>
-                        <span style="color: #4F7A65; font-size: 11.5px;">${t.meta}</span>
-                    </div>
-                    <span class="admin-badge badge-neutral" style="font-size: 11px;">${t.badge}</span>
-                </div>
-            `).join('');
-            convertTicketRefDropdown.style.display = 'block';
-
-            convertTicketRefDropdown.querySelectorAll('.customer-autocomplete-item').forEach(itemEl => {
-                itemEl.addEventListener('click', () => {
-                    const code = itemEl.getAttribute('data-ref-code');
-                    const badge = itemEl.getAttribute('data-ref-badge');
-                    const meta = itemEl.getAttribute('data-ref-meta');
-                    selectRefTransaction(code, badge, meta);
-                });
-            });
-        }
-
-        function selectRefTransaction(code, badge, meta) {
-            if (inputConvertRefId) inputConvertRefId.value = code;
-            if (selectedRefTitle) selectedRefTitle.textContent = code;
-            if (selectedRefBadge) selectedRefBadge.textContent = badge;
-            if (selectedRefMeta) selectedRefMeta.textContent = meta;
-            if (convertTicketRefSelectedCard) convertTicketRefSelectedCard.style.display = 'block';
-            if (convertTicketRefDropdown) convertTicketRefDropdown.style.display = 'none';
-        }
-
-        function clearSelectedRef() {
-            if (inputConvertRefId) inputConvertRefId.value = '';
-            if (convertTicketRefSelectedCard) convertTicketRefSelectedCard.style.display = 'none';
-        }
-
-        btnClearSelectedRef?.addEventListener('click', clearSelectedRef);
-
-        inputConvertRefId?.addEventListener('focus', () => {
-            renderRefDropdown(inputConvertRefId.value);
-        });
-
-        inputConvertRefId?.addEventListener('input', (e) => {
-            renderRefDropdown(e.target.value);
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.customer-autocomplete-wrapper')) {
-                if (convertTicketRefDropdown) convertTicketRefDropdown.style.display = 'none';
-            }
-        });
-
-        btnOpenConvert?.addEventListener('click', () => {
-            const currentConversation = getCurrentConversationSafe();
-
-            const defCode = currentConversation.recentOrder ? currentConversation.recentOrder.id : (currentConversation.recentBooking ? currentConversation.recentBooking.id : '');
-            if (defCode) {
-                const list = getSuggestedTransactions();
-                const matched = list.find(l => l.code === defCode) || { code: defCode, badge: 'Đơn hàng', meta: 'Giao dịch gần nhất của khách hàng' };
-                selectRefTransaction(matched.code, matched.badge, matched.meta);
+        const convertButton = document.getElementById('btnConfirmConvertTicket');
+        const convertTitle = document.getElementById('inputConvertTicketTitle');
+        const convertRef = document.getElementById('inputConvertRefId');
+        let convertTarget;
+        const convertDropdown = document.getElementById('convertTicketRefDropdown');
+        function showConvertReferences() {
+            convertDropdown.replaceChildren();
+            const c = getCurrentConversationSafe();
+            if (c?.id !== convertTarget?.id) return;
+            const category = document.getElementById('selectConvertTicketCategory').value;
+            const ref = category === 'order' ? c.recentOrder : c.recentBooking;
+            if (ref?.id && ref.id.toLowerCase().includes(convertRef.value.trim().toLowerCase())) {
+                const button = document.createElement('button');
+                button.type = 'button'; button.className = 'admin-btn admin-btn-secondary';
+                button.textContent = ref.id;
+                button.addEventListener('click', () => { convertRef.value = ref.id; convertDropdown.style.display = 'none'; });
+                convertDropdown.append(button);
             } else {
-                clearSelectedRef();
+                convertDropdown.textContent = 'Không có giao dịch phù hợp';
             }
-
-            if (inputConvertTitle) {
-                inputConvertTitle.value = (currentConversation.aiSummary || 'Khách hàng cần hỗ trợ xử lý vấn đề').slice(0, 60) + '...';
+            convertDropdown.style.display = 'block';
+        }
+        convertRef?.addEventListener('focus', showConvertReferences);
+        convertRef?.addEventListener('input', showConvertReferences);
+        document.getElementById('selectConvertTicketCategory')?.addEventListener('change', () => {
+            convertRef.value = ''; convertDropdown.style.display = 'none';
+        });
+        document.addEventListener('click', e => {
+            if (!e.target.closest('#convertTicketModalOverlay .customer-autocomplete-wrapper')) convertDropdown.style.display = 'none';
+        });
+        document.getElementById('btnConvertToTicket')?.addEventListener('click', () => {
+            const c = getCurrentConversationSafe();
+            if (!c?.customerId || !c.isHandover) {
+                PawpalChatbot.showToast?.('Cần khách hàng và nhân viên nhận phiên.', 'error'); return;
             }
+            convertTarget = { id:c.id, version:c.updatedAtRaw, request:crypto.randomUUID() };
+            convertTitle.value = '';convertRef.value = '';
+            document.getElementById('convertTicketRefSelectedCard').style.display = 'none';
             PawpalChatbot.openModal?.('convertTicketModalOverlay');
         });
-
-        const closeConvertModal = () => { PawpalChatbot.closeModal?.('convertTicketModalOverlay'); };
-
-        btnConfirmConvert?.addEventListener('click', async () => {
-            const currentConversation = getCurrentConversationSafe();
-            if (!currentConversation || !currentConversation.id) {
-                PawpalChatbot.showToast?.('Vui lòng chọn một phiên hội thoại trước khi lập ticket.', 'warning');
-                return;
+        document.querySelector('#convertTicketModalOverlay form')?.addEventListener('submit',e=>e.preventDefault());
+        convertButton?.addEventListener('click', async () => {
+            if (!convertTarget || convertButton.disabled) return;
+            const subject=convertTitle.value.trim(), ref=convertRef.value.trim();
+            if(subject.length<2 || subject.length>250 || (ref && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ref))) {
+                PawpalChatbot.showToast?.('Kiểm tra tiêu đề và mã giao dịch.', 'error');return;
             }
-
-            const title = inputConvertTitle?.value.trim() || 'Khiếu nại chuyển từ kênh chat trực tuyến';
-            const selectCat = document.getElementById('selectConvertTicketCategory');
-            const catVal = selectCat ? selectCat.value : 'service';
-            const catText = selectCat ? selectCat.options[selectCat.selectedIndex].text : 'Khiếu nại Dịch vụ';
-            const isServiceTicket = catVal === 'service' || catText.includes('Dịch vụ');
-
-            const selectPri = document.getElementById('selectConvertPriority');
-            const priText = selectPri ? selectPri.options[selectPri.selectedIndex].text : 'Trung bình';
-            const normPriority = priText.includes('Cao') ? 'Cao' : (priText.includes('Thấp') ? 'Bình thường' : 'Trung bình');
-            const refId = inputConvertRefId?.value.trim() || '';
-
-            const chatTranscript = currentConversation.messages.map(m => {
-                const senderLabel = m.sender === 'user'
-                    ? currentConversation.customerName
-                    : (m.sender === 'agent' ? (m.agentName || 'CSKH Trực tuyến') : 'PawPal AI Bot');
-                return `[${m.time || ''}] ${senderLabel}: ${m.text || m.content || ''}`;
-            }).join('\n');
-
-            const staffToken = sessionStorage.getItem('pawpal_staff_token') || 'local:' + (sessionStorage.getItem('pawpal_staff_id') || 'd0000000-5555-5555-5555-555555555555');
-            const idempotencyKey = 'ticket-' + currentConversation.id + '-' + Date.now();
-
-            btnConfirmConvert.disabled = true;
-            btnConfirmConvert.textContent = 'Đang lập vé...';
-
+            const args={p_id:convertTarget.request,p_conversation_id:convertTarget.id,p_expected_updated_at:convertTarget.version,p_ref_id:ref||null,
+                p_category:document.getElementById('selectConvertTicketCategory').value,p_subject:subject,
+                p_priority:document.getElementById('selectConvertPriority').value};
+            const key=JSON.stringify({...args,p_id:null});
+            if(convertTarget.payload && convertTarget.payload!==key) args.p_id=convertTarget.request=crypto.randomUUID();
+            convertTarget.payload=key;convertButton.disabled=true;
             try {
-                const res = await fetch('/api/admin/chat-actions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${staffToken}`
-                    },
-                    body: JSON.stringify({
-                        action: 'CHAT_CREATE_TICKET',
-                        conversation_id: currentConversation.id,
-                        customer_id: currentConversation.customerId,
-                        title: title,
-                        description: chatTranscript,
-                        category: isServiceTicket ? 'service' : (catVal === 'booking' ? 'booking' : 'order'),
-                        priority: normPriority,
-                        ref_id: refId,
-                        idempotency_key: idempotencyKey
-                    })
-                });
-
-                const data = await res.json();
-                if (!res.ok || !data.ok) {
-                    PawpalChatbot.showToast?.(data.error || 'Không thể tạo ticket khiếu nại.', 'error');
-                    btnConfirmConvert.disabled = false;
-                    btnConfirmConvert.textContent = 'Tạo Vé';
-                    return;
-                }
-
-                const newTicketId = data.ticket_id;
-                currentConversation.openTickets = currentConversation.openTickets || [];
-                currentConversation.openTickets.push({
-                    id: newTicketId,
-                    title: data.title,
-                    status: 'pending'
-                });
-
-                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                currentConversation.messages.push({
-                    id: 'msg-ticket-' + Date.now(),
-                    sender: 'agent',
-                    agentName: 'Hệ thống PawPal',
-                    type: 'action-ticket',
-                    time: timeStr,
-                    ticketData: {
-                        id: newTicketId,
-                        title: data.title,
-                        category: catText,
-                        priority: data.priority,
-                        refId: refId || 'N/A'
-                    },
-                    text: `Đã trích xuất biên bản hội thoại và tạo thành công vé hỗ trợ chính thức mang mã định danh ${newTicketId} trong Supabase Live DB.`
-                });
-
-                closeConvertModal();
-                renderCurrentChat();
-                renderCustomerInfoPanel?.();
-                PawpalChatbot.showToast?.(`Đã tạo vé khiếu nại ${newTicketId} thành công trên hệ thống!`, 'success');
-            } catch (err) {
-                console.error('Lỗi gọi API tạo ticket:', err);
-                PawpalChatbot.showToast?.('Lỗi kết nối máy chủ khi tạo ticket: ' + err.message, 'error');
-            } finally {
-                btnConfirmConvert.disabled = false;
-                btnConfirmConvert.textContent = 'Tạo Vé';
-            }
+                const {error}=await supabase.rpc('create_chat_complaint',args);if(error)throw error;
+                PawpalChatbot.closeModal?.('convertTicketModalOverlay');
+                const c=getCurrentConversationSafe();if(c?.id===convertTarget.id)c.contextLoaded=false;
+                await PawpalChatbot.loadInboxSummary();
+                PawpalChatbot.showToast?.('Đã tạo khiếu nại.', 'success');
+            }catch(error){PawpalChatbot.showToast?.('Chưa tạo được khiếu nại. Nội dung được giữ lại.', 'error');}
+            finally{convertButton.disabled=false;}
         });
 
         // ====================================================================
         // MODAL 3: CHUYỂN CẤP QUẢN LÝ VÀ BÁC SĨ THÚ Y
         // ====================================================================
-        const btnOpenEscalate = document.getElementById('btnEscalateManager');
-        const btnConfirmEscalate = document.getElementById('btnConfirmEscalate');
-        const escalateCustName = document.getElementById('escalateCustomerName');
-        const inputEscalateNotes = document.getElementById('inputEscalateNotes');
 
-        btnOpenEscalate?.addEventListener('click', () => {
-            const currentConversation = getCurrentConversationSafe();
-            if (escalateCustName) escalateCustName.value = currentConversation.customerName;
-            if (inputEscalateNotes) inputEscalateNotes.value = '';
-            PawpalChatbot.openModal?.('escalateManagerModalOverlay');
+        let transferTarget, handlers=[],selectedHandler;
+        const transferButton=document.getElementById('btnConfirmEscalate');
+        const handlerInput=document.getElementById('selectEscalateTarget'),handlerOptions=document.getElementById('escalateTargetOptions');
+        function renderHandlers(){
+            handlerOptions.replaceChildren();
+            handlers.filter(h=>h.full_name.toLowerCase().includes(handlerInput.value.toLowerCase())).forEach(h=>{
+                const b=document.createElement('button');b.type='button';b.className='admin-btn admin-btn-secondary';b.textContent=h.full_name;
+                b.addEventListener('click',()=>{selectedHandler=h.id;handlerInput.value=h.full_name;handlerOptions.style.display='none';});handlerOptions.append(b);
+            });
+            if(!handlerOptions.children.length)handlerOptions.textContent='Không có nhân viên khả dụng';
+            handlerOptions.style.display='block';
+        }
+        handlerInput?.addEventListener('focus',renderHandlers);handlerInput?.addEventListener('input',()=>{selectedHandler=null;renderHandlers();});
+        document.getElementById('btnEscalateManager')?.addEventListener('click',async()=>{
+            const c=getCurrentConversationSafe();if(!c?.isHandover)return PawpalChatbot.showToast?.('Cần nhận phiên trước.', 'error');
+            transferTarget={id:c.id,version:c.updatedAtRaw,request:crypto.randomUUID()};selectedHandler=null;handlers=[];handlerInput.value='';
+            document.getElementById('escalateCustomerName').value=c.customerName;document.getElementById('inputEscalateNotes').value='';
+            handlerOptions.style.display='none';PawpalChatbot.openModal?.('escalateManagerModalOverlay');
+            const {data,error}=await supabase.rpc('get_admin_chat_handlers');if(error)PawpalChatbot.showToast?.('Không tải được nhân viên.', 'error');else handlers=data||[];
         });
-
-        const closeEscalateModal = () => { PawpalChatbot.closeModal?.('escalateManagerModalOverlay'); };
-
-        btnConfirmEscalate?.addEventListener('click', async () => {
-            const currentConversation = getCurrentConversationSafe();
-            if (!currentConversation || !currentConversation.id) {
-                PawpalChatbot.showToast?.('Vui lòng chọn một phiên hội thoại trước khi chuyển ca.', 'warning');
-                return;
-            }
-
-            const targetSelect = document.getElementById('selectEscalateTarget');
-            const targetName = targetSelect ? targetSelect.options[targetSelect.selectedIndex].text : 'Quản lý Chi nhánh';
-            const reasonSelect = document.getElementById('selectEscalateReason');
-            const reasonText = reasonSelect ? reasonSelect.options[reasonSelect.selectedIndex].text : 'Khách hàng bức xúc vượt thẩm quyền';
-            const notesText = inputEscalateNotes ? inputEscalateNotes.value.trim() : '';
-            const staffToken = sessionStorage.getItem('pawpal_staff_token') || 'local:' + (sessionStorage.getItem('pawpal_staff_id') || 'd0000000-5555-5555-5555-555555555555');
-
-            btnConfirmEscalate.disabled = true;
-            btnConfirmEscalate.textContent = 'Đang chuyển ca...';
-
-            try {
-                const res = await fetch('/api/admin/chat-actions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${staffToken}`
-                    },
-                    body: JSON.stringify({
-                        action: 'CHAT_HANDOVER_MANAGER',
-                        conversation_id: currentConversation.id,
-                        reason: reasonText + (notesText ? ` (${notesText})` : ''),
-                        target_role: 'CSKH_LEAD'
-                    })
-                });
-
-                const data = await res.json();
-                if (!res.ok || !data.ok) {
-                    PawpalChatbot.showToast?.(data.error || 'Không thể chuyển ca.', 'error');
-                    btnConfirmEscalate.disabled = false;
-                    btnConfirmEscalate.textContent = 'Xác nhận chuyển ca';
-                    return;
-                }
-
-                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                currentConversation.isHandover = false; // Trả về hàng đợi chờ người mới nhận
-                currentConversation.status = 'waiting_agent';
-                currentConversation.isEscalated = true;
-                currentConversation.category = 'urgent';
-
-                currentConversation.messages.push({
-                    id: 'msg-escalate-' + Date.now(),
-                    sender: 'agent',
-                    agentName: 'Hệ thống PawPal',
-                    type: 'action-escalate',
-                    time: timeStr,
-                    escalateData: {
-                        targetName: targetName,
-                        reason: reasonText,
-                        notes: notesText
-                    },
-                    text: `Ca chat đã được chuyển cấp khẩn cho [${targetName}] lúc ${timeStr}. Đang chờ tiếp nhận chính thức.`
-                });
-
-                closeEscalateModal();
-                renderConversationsList();
-                renderCurrentChat();
-                PawpalChatbot.showToast?.(`Đã chuyển ca thành công cho ${targetName}!`, 'info');
-            } catch (err) {
-                console.error('Lỗi khi chuyển ca:', err);
-                PawpalChatbot.showToast?.('Lỗi kết nối máy chủ khi chuyển ca: ' + err.message, 'error');
-            } finally {
-                btnConfirmEscalate.disabled = false;
-                btnConfirmEscalate.textContent = 'Xác nhận chuyển ca';
-            }
+        transferButton?.addEventListener('click',async()=>{
+            if(!transferTarget||transferButton.disabled)return;
+            if(!selectedHandler)return PawpalChatbot.showToast?.('Chọn nhân viên tiếp nhận.', 'error');
+            const reason=document.getElementById('selectEscalateReason');
+            const note=reason.options[reason.selectedIndex].text+' | '+document.getElementById('inputEscalateNotes').value.trim();
+            const key=JSON.stringify([selectedHandler,note]);if(transferTarget.key&&transferTarget.key!==key)transferTarget.request=crypto.randomUUID();transferTarget.key=key;
+            transferButton.disabled=true;
+            try{
+                const {error}=await supabase.rpc('transfer_admin_chat',{p_request_id:transferTarget.request,p_conversation_id:transferTarget.id,p_expected_updated_at:transferTarget.version,p_staff_id:selectedHandler,p_note:note});if(error)throw error;
+                PawpalChatbot.closeModal?.('escalateManagerModalOverlay');await PawpalChatbot.loadInboxSummary();PawpalChatbot.showToast?.('Đã chuyển nhân viên.', 'success');
+            }catch(e){PawpalChatbot.showToast?.('Chưa chuyển được phiên. Hãy kiểm tra và thử lại.', 'error');}finally{transferButton.disabled=false;}
         });
 
         // ====================================================================
@@ -1846,21 +1342,12 @@
         const selectCannedCategory = document.getElementById('selectCannedCategory');
         const cannedResponsesList = document.getElementById('cannedResponsesList');
 
-        const defaultCannedLibraryData = [
-            { id: 'c1', shortcut: '/chao', category: 'greeting', catName: 'Chào hỏi', title: 'Chào hỏi tiếp nhận chuyên nghiệp', content: 'Dạ PawPal xin chào sen! Em là chuyên viên CSKH phụ trách hỗ trợ trực tiếp cho gia đình mình. Em có thể hỗ trợ gì cho sen và bé hôm nay ạ?' },
-            { id: 'c2', shortcut: '/giaotre', category: 'shipping', catName: 'Vận chuyển', title: 'Tạ lỗi và cập nhật giao trễ', content: 'Dạ PawPal thành thật xin lỗi vì sự chậm trễ này! Em vừa liên hệ trực tiếp với bưu tá tuyến hỏa tốc, kiện hàng của bé đang cách nhà mình khoảng 15 phút di chuyển và sẽ được giao trước 12:00 trưa nay ạ.' },
-            { id: 'c3', shortcut: '/anh', category: 'greeting', catName: 'Tiếp nhận', title: 'Yêu cầu gửi ảnh xác minh', content: 'Dạ để hỗ trợ kiểm tra và đối soát chính xác nhất cho gia đình mình, sen vui lòng chụp giúp em hình ảnh tình trạng hiện tại gửi qua khung chat này nhé ạ.' },
-            { id: 'c4', shortcut: '/tangdiem', category: 'reward', catName: 'Bồi hoàn', title: 'Tặng điểm Pawpoint tạ lỗi sự cố', content: 'Dạ để tạ lỗi vì sự bất tiện vừa rồi, PawPal xin phép gửi tặng ngay 50 điểm Pawpoint vào tài khoản thành viên của sen để sử dụng cho lần mua sắm hoặc đặt lịch hẹn tiếp theo nhé ạ!' },
-            { id: 'c5', shortcut: '/spa', category: 'service', catName: 'Spa', title: 'Tư vấn liệu trình Spa thư giãn', content: 'Dạ bé cưng nhà mình sẽ được tắm bồn sục thảo mộc làm dịu da, sấy ấm chải phồng lông và cắt tỉa form chuẩn xinh xắn bởi Kỹ thuật viên tay nghề cao của PawPal ạ.' },
-            { id: 'c6', shortcut: '/hotel', category: 'service', catName: 'Khách sạn', title: 'Cam kết tiêu chuẩn phòng Pet Hotel', content: 'Dạ phòng Pet Hotel tại PawPal luôn duy trì nhiệt độ 24-25°C, khử khuẩn tia UV hàng ngày, có camera an ninh xem trực tiếp 24/7 và nhật ký báo cáo ăn uống từng bữa cho sen ạ.' }
-        ];
-
         function renderCannedLibrary() {
             if (!cannedResponsesList) return;
             const searchVal = (inputSearchCanned?.value || '').toLowerCase().trim();
             const catVal = selectCannedCategory?.value || 'all';
 
-            const filtered = defaultCannedLibraryData.filter(item => {
+            const filtered = cannedResponsesDatabase.map(r=>({...r,catName:r.category})).filter(item => {
                 const matchSearch = !searchVal || item.title.toLowerCase().includes(searchVal) || item.content.toLowerCase().includes(searchVal) || item.shortcut.toLowerCase().includes(searchVal);
                 const matchCat = catVal === 'all' || item.category === catVal;
                 return matchSearch && matchCat;
@@ -1875,14 +1362,14 @@
                 <div class="canned-response-card" style="padding: 14px 16px; border: 1px solid #ECF2EE; border-radius: 9px; margin-bottom: 10px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <code style="background: #EEF5F1; padding: 2px 7px; border-radius: 6px; color: #236B48; font-weight: 700; font-size: 12px;">${item.shortcut}</code>
-                            <span style="font-weight: 600; color: #203A2C; font-size: 13.5px;">${item.title}</span>
+                            <code style="background: #EEF5F1; padding: 2px 7px; border-radius: 6px; color: #236B48; font-weight: 700; font-size: 12px;">${escapeHtml(item.shortcut)}</code>
+                            <span style="font-weight: 600; color: #203A2C; font-size: 13.5px;">${escapeHtml(item.title)}</span>
                         </div>
-                        <span class="admin-badge badge-neutral" style="font-size: 11px;">${item.catName}</span>
+                        <span class="admin-badge badge-neutral" style="font-size: 11px;">${escapeHtml(item.catName)}</span>
                     </div>
-                    <div style="font-size: 13px; color: #4F7A65; line-height: 1.5;">${item.content}</div>
+                    <div style="font-size: 13px; color: #4F7A65; line-height: 1.5;">${escapeHtml(item.content)}</div>
                     <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
-                        <button type="button" class="admin-btn admin-btn-secondary btn-apply-canned-response" data-content="${item.content.replace(/"/g, '&quot;')}" style="padding: 5px 14px; font-size: 12.5px;">Chèn vào chat</button>
+                        <button type="button" class="admin-btn admin-btn-secondary btn-apply-canned-response" data-content="${escapeHtml(item.content)}" style="padding: 5px 14px; font-size: 12.5px;">Chèn vào chat</button>
                     </div>
                 </div>
             `).join('');
@@ -1901,9 +1388,12 @@
             });
         }
 
-        btnOpenCannedModal?.addEventListener('click', () => {
+        btnOpenCannedModal?.addEventListener('click', async () => {
             PawpalChatbot.openModal?.('cannedResponsesModalOverlay');
-            renderCannedLibrary();
+            try {await loadLiveCannedResponses();
+                selectCannedCategory.replaceChildren(new Option('Tất cả','all'),... [...new Set(cannedResponsesDatabase.map(r=>r.category))].map(c=>new Option(c,c)));
+                renderCannedLibrary();
+            } catch(e) { cannedResponsesDatabase=[];cannedResponsesList.textContent='Không tải được câu mẫu.'; }
         });
 
         inputSearchCanned?.addEventListener('input', renderCannedLibrary);
@@ -1913,64 +1403,23 @@
         // ====================================================================
         // MODAL 5: TRA CỨU VẬN ĐƠN HỎA TỐC BƯU TÁ
         // ====================================================================
-        const btnSendTrackingCardToChat = document.getElementById('btnSendTrackingCardToChat');
 
-        // Lắng nghe sự kiện click link tra cứu đơn hàng & xem camera an ninh (Event Delegation toàn diện)
-        document.addEventListener('click', (e) => {
-            const orderLink = e.target.closest('#linkRecentOrder, .btn-jump-order');
-            if (orderLink) {
-                PawpalChatbot.openModal?.('orderTrackingModalOverlay');
-            }
-            const bookingLink = e.target.closest('#linkRecentBooking, .btn-jump-booking');
-            if (bookingLink) {
-                const cameraTimeEl = document.getElementById('cameraCurrentTime');
-                if (cameraTimeEl) cameraTimeEl.textContent = new Date().toLocaleTimeString();
-                PawpalChatbot.openModal?.('petCameraModalOverlay');
-            }
+        let trackingTarget;
+        document.addEventListener('click',async e=>{
+            if(!e.target.closest('#linkRecentOrder, .chat-order-info'))return;
+            const c=getCurrentConversationSafe();if(!c?.recentOrder?.id)return;
+            const target={conversation:c.id,customer:c.customerId,order:c.recentOrder.id};trackingTarget=target;
+            const summary=document.getElementById('trackingOrderSummary');summary.textContent='Đang tải...';
+            PawpalChatbot.openModal?.('orderTrackingModalOverlay');
+            const {data,error}=await supabase.from('sales_order').select('id,order_code,order_status').eq('id',target.order).eq('customer_id',target.customer).single();
+            if(trackingTarget!==target)return;
+            if(error){summary.textContent='Không tải được đơn hàng.';return;}
+            const labels={pending:'Chờ xử lý',confirmed:'Đã xác nhận',processing:'Đang xử lý',shipped:'Đã xuất hàng',delivered:'Đã giao',completed:'Hoàn tất',cancelled:'Đã hủy'};
+            target.text=(data.order_code||data.id)+': '+(labels[data.order_status]||'Chưa có nhãn trạng thái');summary.textContent=target.text;
         });
-
-        btnSendTrackingCardToChat?.addEventListener('click', async () => {
-            const currentConversation = getCurrentConversationSafe();
-            if (!currentConversation) {
-                PawpalChatbot.showToast?.('Vui lòng chọn một phiên hội thoại trước khi gửi thông tin.', 'warning');
-                return;
-            }
-
-            const orderId = currentConversation.recentOrder?.id || currentConversation.recentOrder?.order_code || 'đang được đồng bộ';
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const trackingMsgText = `Dạ PawPal gửi sen thông tin vận đơn ${orderId}: Đơn hàng đang được điều phối giao hỏa tốc đến địa chỉ của sen ạ!`;
-            const localMsgId = 'msg-tracking-' + Date.now();
-
-            currentConversation.messages.push({
-                id: localMsgId,
-                sender: 'agent',
-                agentName: 'Hệ thống PawPal',
-                type: 'action-card-order',
-                time: timeStr,
-                text: trackingMsgText
-            });
-
-            PawpalChatbot.closeModal?.('orderTrackingModalOverlay');
-            renderCurrentChat();
-            PawpalChatbot.showToast?.('Đã gửi thông tin lộ trình vận đơn vào chat!', 'success');
-
-            if (supabase) {
-                try {
-                    const convId = await ensureRealConversation(currentConversation);
-                    if (convId) {
-                        await supabase.from('chat_message').insert([{
-                            conversation_id: convId,
-                            sender_type: 'staff',
-                            sender_name: 'Hệ thống PawPal',
-                            content: trackingMsgText,
-                            raw_content: trackingMsgText,
-                            is_toxic: false
-                        }]);
-                    }
-                } catch (e) {
-                    console.error('[Chatbot] Lỗi lưu tracking card vào DB:', e);
-                }
-            }
+        document.getElementById('btnSendTrackingCardToChat')?.addEventListener('click',async e=>{
+            if(!trackingTarget?.text||getCurrentConversationSafe()?.id!==trackingTarget.conversation)return;
+            if(await operateConversation('send',trackingTarget.text,e.currentTarget))PawpalChatbot.closeModal?.('orderTrackingModalOverlay');
         });
 
         // ====================================================================
@@ -2030,99 +1479,44 @@
         const resolveCustomerNameInput = document.getElementById('resolveChatCustomerName');
         const selectResolveReason = document.getElementById('selectResolveReason');
         const textareaResolveNotes = document.getElementById('textareaResolveNotes');
-        const checkboxSendCsat = document.getElementById('checkboxSendCsatSurvey');
 
+
+        let resolveTarget;
         function openResolveModal() {
-            const currentConversation = getCurrentConversationSafe();
-            if (resolveCustomerNameInput) resolveCustomerNameInput.value = currentConversation.customerName;
-            if (textareaResolveNotes) textareaResolveNotes.value = '';
+            const c = getCurrentConversationSafe();
+            if (!c?.isHandover) { PawpalChatbot.showToast?.('Cần nhận hội thoại trước khi hoàn tất.', 'error'); return; }
+            resolveTarget = { id: c.id, version: c.updatedAtRaw, request: crypto.randomUUID() };
+            resolveCustomerNameInput.value = c.customerName;
+            textareaResolveNotes.value = '';
+            selectResolveReason.value = 'resolved_complete';
             PawpalChatbot.openModal?.('modalResolveChatOverlay');
         }
-
-        const closeResolveModal = () => { PawpalChatbot.closeModal?.('modalResolveChatOverlay'); };
         btnResolveAction?.addEventListener('click', openResolveModal);
         btnHeaderResolve?.addEventListener('click', openResolveModal);
-
+        document.querySelector('#modalResolveChatOverlay form')?.addEventListener('submit', e => e.preventDefault());
         btnConfirmResolve?.addEventListener('click', async () => {
-            const currentConversation = getCurrentConversationSafe();
-
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const reasonText = selectResolveReason ? selectResolveReason.options[selectResolveReason.selectedIndex].text : 'Đã giải quyết yêu cầu';
-            const notes = textareaResolveNotes ? textareaResolveNotes.value.trim() : '';
-            const shouldSendCsat = checkboxSendCsat ? checkboxSendCsat.checked : true;
-
-            currentConversation.isHandover = false;
-            currentConversation.waitingSeconds = 0;
-            currentConversation.category = 'resolved';
-
-            const endNotice = `Hệ thống: Ca hỗ trợ trực tuyến đã được chuyên viên CSKH hoàn tất lúc ${timeStr} (Kết quả: ${reasonText}).`;
-            currentConversation.messages.push({
-                id: 'msg-resolve-notice-' + Date.now(),
-                sender: 'system',
-                time: timeStr,
-                text: endNotice
-            });
-
-            closeResolveModal();
-            renderConversationsList();
-            renderCurrentChat();
-
-            if (supabase) {
-                try {
-                    const convId = await ensureRealConversation(currentConversation);
-                    if (convId) {
-                        await supabase
-                            .from('chat_conversation')
-                            .update({
-                                status: 'resolved',
-                                is_urgent: false,
-                                resolved_at: new Date().toISOString(),
-                                resolved_reason: reasonText,
-                                internal_note: (currentConversation.internalNotes ? currentConversation.internalNotes + '\n' : '') + `[Hoàn tất ca ${timeStr}]: ${notes || reasonText}`,
-                                updated_at: new Date().toISOString()
-                            })
-                            .eq('id', convId);
-
-                        await supabase
-                            .from('chat_message')
-                            .insert([{
-                                conversation_id: convId,
-                                sender_type: 'staff',
-                                sender_name: 'Hệ thống PawPal',
-                                content: endNotice,
-                                raw_content: endNotice,
-                                is_toxic: false
-                            }]);
-
-                        if (shouldSendCsat) {
-                            const csatPayload = JSON.stringify({
-                                convId: convId,
-                                staffName: currentConversation.agentName || 'Chuyên viên CSKH',
-                                timestamp: new Date().toISOString()
-                            });
-                            const csatMessageContent = `:::csat_survey ${csatPayload} :::`;
-
-                            await supabase
-                                .from('chat_message')
-                                .insert([{
-                                    conversation_id: convId,
-                                    sender_type: 'staff',
-                                    sender_name: 'PawPal CSKH',
-                                    content: csatMessageContent,
-                                    raw_content: 'PawPal rất mong nhận được đánh giá từ sen để nâng cao chất lượng dịch vụ!',
-                                    is_toxic: false
-                                }]);
-                        }
-                    }
-                } catch (resErr) {
-                    console.error('[Chatbot] Lỗi hoàn tất ca chat trên Supabase:', resErr);
-                }
-            }
-
-            PawpalChatbot.showToast?.('Đã hoàn tất ca chat và gửi biểu mẫu đánh giá CSAT cho khách hàng!', 'success');
+            if (!resolveTarget || btnConfirmResolve.disabled) return;
+            const target = resolveTarget, reason = selectResolveReason.value, notes = textareaResolveNotes.value.trim();
+            const payload = JSON.stringify([reason, notes]);
+            if (target.payload && target.payload !== payload) target.request = crypto.randomUUID();
+            target.payload = payload;
+            btnConfirmResolve.disabled = true;
+            try {
+                const { error } = await supabase.rpc('resolve_admin_chat', {
+                    p_request_id: target.request, p_conversation_id: target.id,
+                    p_expected_updated_at: target.version, p_reason: reason, p_notes: notes
+                });
+                if (error) throw error;
+                const c = PawpalChatbot.state.currentConversation;
+                if (c?.id === target.id) c.messagesLoaded = false;
+                PawpalChatbot.closeModal?.('modalResolveChatOverlay');
+                await PawpalChatbot.loadInboxSummary();
+                PawpalChatbot.showToast?.('Đã lưu kết quả hoàn tất.', 'success');
+            } catch (error) {
+                PawpalChatbot.showToast?.('Chưa thể hoàn tất. Nội dung được giữ lại; hãy kiểm tra và tải lại hội thoại.', 'error');
+            } finally { btnConfirmResolve.disabled = false; }
         });
     }
-
     Object.assign(PawpalChatbot.subtabs.live, {
         init: initLiveChatSubtab,
         renderConversationsList,
@@ -2130,7 +1524,6 @@
         renderCustomerInfoPanel,
         handleIncomingMessage
     });
-
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initLiveChatSubtab);
     } else {

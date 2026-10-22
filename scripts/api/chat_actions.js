@@ -225,46 +225,21 @@ async function handleCompensatePoints(req, res, staffUser) {
         return res.status(400).json({ error: 'Không tìm thấy khách hàng hợp lệ để bồi hoàn điểm (Khách vãng lai chưa có mã hồ sơ).' });
     }
 
-    // 4. Lấy số dư và cập nhật customer_membership
-    const { data: mem, error: memErr } = await supabase
-        .from('customer_membership')
-        .select('id, total_paw_points')
-        .eq('customer_id', targetCustomerId)
-        .maybeSingle();
+    // 4. Lấy tổng điểm hiện tại từ sổ cái paw_point_transaction
+    const { data: ptsData } = await supabase
+        .from('paw_point_transaction')
+        .select('points')
+        .eq('customer_id', targetCustomerId);
 
-    let currentPoints = 0;
-    let newBalance = 0;
-
-    if (!mem) {
-        // Tạo mới bản ghi hội viên nếu chưa có
-        newBalance = points;
-        const { error: insMemErr } = await supabase
-            .from('customer_membership')
-            .insert({
-                customer_id: targetCustomerId,
-                total_paw_points: newBalance
-            });
-        if (insMemErr) {
-            return res.status(500).json({ error: 'Không thể tạo bản ghi hội viên: ' + insMemErr.message });
-        }
-    } else {
-        currentPoints = mem.total_paw_points || 0;
-        newBalance = currentPoints + points;
-        const { error: upMemErr } = await supabase
-            .from('customer_membership')
-            .update({ total_paw_points: newBalance })
-            .eq('id', mem.id);
-        if (upMemErr) {
-            return res.status(500).json({ error: 'Không thể cập nhật số dư điểm: ' + upMemErr.message });
-        }
-    }
+    const currentPoints = (ptsData || []).reduce((acc, row) => acc + (Number(row.points) || 0), 0);
+    const newBalance = currentPoints + points;
 
     // 5. Ghi sổ cái paw_point_transaction
     const reasonText = reason || 'Tạ lỗi và bồi hoàn sự cố dịch vụ';
     const txDescription = `[CSKH Bồi hoàn D03] ${reasonText} (Xác nhận bởi: ${staffUser.full_name})`;
 
     // Lấy quy tắc thưởng hợp lệ từ CSDL
-    let rewardRuleId = '92222222-2222-2222-2222-222222222222';
+    let rewardRuleId = null;
     try {
         const { data: defaultRule } = await supabase
             .from('reward_rule')
@@ -277,16 +252,17 @@ async function handleCompensatePoints(req, res, staffUser) {
         // Fallback
     }
 
+    const insertTx = {
+        customer_id: targetCustomerId,
+        points: points,
+        description: txDescription,
+        created_at: new Date().toISOString()
+    };
+    if (rewardRuleId) insertTx.reward_rule_id = rewardRuleId;
+
     const { data: tx, error: txErr } = await supabase
         .from('paw_point_transaction')
-        .insert({
-            customer_id: targetCustomerId,
-            points: points,
-            balance_after: newBalance,
-            description: txDescription,
-            reward_rule_id: rewardRuleId,
-            created_at: new Date().toISOString()
-        })
+        .insert(insertTx)
         .select()
         .single();
 
@@ -399,18 +375,28 @@ async function handleCreateTicket(req, res, staffUser) {
     const cat = validCategories.includes(category) ? category : 'service';
     const pri = validPriorities.includes(priority) ? priority : 'Trung bình';
 
-    // 6. Ghi bản ghi support_ticket
+    // 6. Ghi bản ghi support_ticket theo schema 3NF V1
+    const ticketCode = 'TK-' + Date.now().toString(36).toUpperCase().slice(-6);
+    const isTargetCustUuid = targetCustomerId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetCustomerId);
+
+    const ticketInsert = {
+        ticket_code: ticketCode,
+        subject: cleanTitle,
+        description: cleanDesc,
+        category: cat,
+        type: cat,
+        status: 'pending',
+        priority: pri,
+        channel: 'chat',
+        created_at: new Date().toISOString()
+    };
+    if (isTargetCustUuid) {
+        ticketInsert.customer_id = targetCustomerId;
+    }
+
     const { data: ticket, error: ticketErr } = await supabase
         .from('support_ticket')
-        .insert({
-            user_id: String(userId),
-            title: cleanTitle,
-            type: cat,
-            status: 'pending',
-            priority: pri,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-        })
+        .insert(ticketInsert)
         .select()
         .single();
 
@@ -419,12 +405,12 @@ async function handleCreateTicket(req, res, staffUser) {
     }
 
     // 7. Ghi nội dung khởi đầu vào support_ticket_message
-    const initialContent = `[Chuyển từ Chat trực tuyến CSKH${ref_id ? ' • Tham chiếu: ' + ref_id : ''} • Ca chat: ${conversation_id || 'N/A'}]:\n${cleanDesc}`;
+    const initialContent = `[Chuyển từ Chat trực tuyến CSKH${ref_id ? ' • Tham chiếu: ' + ref_id : ''} • Ca chat: ${conversation_id || 'N/A'} • KTV: ${staffUser.full_name}]:\n${cleanDesc}`;
     await supabase.from('support_ticket_message').insert({
         ticket_id: ticket.id,
         sender_type: 'staff',
-        agent_name: staffUser.full_name,
         content: initialContent,
+        is_internal: false,
         created_at: new Date().toISOString()
     });
 

@@ -154,11 +154,15 @@
         if (db) {
             try {
                 const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || {};
-                if (!currentUser || !currentUser.id || currentUser.is_temporary) {
+                const customerId = currentUser.id || currentUser.custId;
+                if (!customerId || currentUser.is_temporary) {
                     tickets = [];
                     return [];
                 }
-                const query = db.from('support_ticket').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+                const query = db.from('support_ticket')
+                    .select('id, ticket_code, customer_id, subject, description, category, type, priority, status, rating, rating_comment, resolution_type, resolution_note, created_at, updated_at')
+                    .eq('customer_id', customerId)
+                    .order('created_at', { ascending: false });
                 const { data: ticketsData, error: tErr } = await query;
                 if (!tErr && ticketsData) {
                     const ticketIds = ticketsData.map(t => t.id);
@@ -166,18 +170,16 @@
                     if (ticketIds.length > 0) {
                         const { data: msgsData } = await db
                             .from('support_ticket_message')
-                            .select('*')
+                            .select('id, ticket_id, sender_type, content, is_internal, created_at')
                             .in('ticket_id', ticketIds)
                             .order('created_at', { ascending: true });
                             
                         if (msgsData) {
                             msgsData.forEach(m => {
                                 if (!msgsByTicket[m.ticket_id]) msgsByTicket[m.ticket_id] = [];
-                                // SUP-F03: Chỉ hiển thị tin nhắn trao đổi khách - CSKH, bảo mật các ghi chú điều tra nội bộ
-                                if (m.sender_type !== 'system' && m.sender_type !== 'internal_note') {
+                                if (!m.is_internal && m.sender_type !== 'system' && m.sender_type !== 'internal_note') {
                                     msgsByTicket[m.ticket_id].push({
                                         sender: m.sender_type,
-                                        agent: m.agent_name,
                                         text: m.content,
                                         time: m.created_at
                                     });
@@ -188,19 +190,20 @@
 
                     const supabaseTickets = ticketsData.map(t => ({
                         id: t.id,
-                        title: t.title,
-                        type: t.type || 'other',
-                        status: t.status || 'pending',
+                        ticketCode: t.ticket_code,
+                        title: t.subject || 'Hỗ trợ khách hàng',
+                        subject: t.subject,
+                        description: t.description,
+                        type: t.type || t.category || 'other',
+                        status: t.status || 'open',
                         priority: t.priority || 'Trung bình',
                         rating: t.rating,
                         ratingComment: t.rating_comment,
                         createdAt: t.created_at,
-                        context: t.context || {},
-                        resolution: t.resolution || null,
+                        resolution: t.resolution_note || null,
                         messages: msgsByTicket[t.id] || []
                     }));
 
-                    // Hợp nhất ticket từ Supabase và LocalStorage mà không duplicate
                     const merged = [...supabaseTickets];
                     localList.forEach(loc => {
                         if (!merged.some(m => m.id === loc.id)) {
@@ -227,41 +230,39 @@
     async function sbCreateTicket(title, type, content, files = [], context = {}) {
         const priority = detectPriority(title, content, context);
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
-        const userId = currentUser ? currentUser.id : null;
+        const customerId = currentUser ? (currentUser.id || currentUser.custId) : null;
         const now = new Date();
 
         const isUuid = (val) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
         const ticketCode = 'TK-' + Date.now().toString(36).toUpperCase().slice(-6);
 
-        // Thử tạo trước trên Supabase để lấy UUID chuẩn
         let createdId = null;
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (db) {
+        if (db && isUuid(customerId)) {
             try {
                 const insertPayload = {
-                    title,
-                    type,
-                    priority,
-                    status: 'pending',
-                    user_id: userId,
                     ticket_code: ticketCode,
-                    customer_id: isUuid(userId) ? userId : null,
-                    order_id: isUuid(context.orderId) ? context.orderId : null,
-                    appointment_id: isUuid(context.bookingId) ? context.bookingId : null,
-                    channel: 'web',
-                    category: type,
+                    customer_id: customerId,
                     subject: title,
                     description: content,
+                    category: type || 'other',
+                    type: type || 'support',
+                    priority: priority === 'Cao' ? 'high' : (priority === 'Khẩn cấp' ? 'urgent' : 'medium'),
+                    status: 'open',
+                    channel: 'web',
+                    order_id: isUuid(context.orderId) ? context.orderId : null,
+                    appointment_id: isUuid(context.bookingId) ? context.bookingId : null,
                     requested_resolution: context.customerDemand || null,
                     requested_amount: parseFloat(context.requestedAmount) || 0
                 };
-                const { data: tData, error: tErr } = await db.from('support_ticket').insert([insertPayload]).select();
-                if (!tErr && tData && tData.length > 0) {
-                    createdId = tData[0].id;
+                const { data: tData, error: tErr } = await db.from('support_ticket').insert([insertPayload]).select('id').single();
+                if (!tErr && tData?.id) {
+                    createdId = tData.id;
                     await db.from('support_ticket_message').insert([{
                         ticket_id: createdId,
-                        sender_type: 'user',
-                        content: content
+                        sender_type: 'customer',
+                        content: content,
+                        is_internal: false
                     }]);
                 }
             } catch (e) {

@@ -79,17 +79,19 @@ async function loadOrders() {
         ordersState.filteredOrders = ordersState.allOrders;
 
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (db) {
+        if (db && ordersState.allOrders.length > 0) {
             try {
-                const [returnsRes, reviewsRes] = await Promise.all([
-                    db.from('return_request').select('sales_order_id').eq('customer_id', currentUser.id),
-                    db.from('review').select('sales_order_id').eq('customer_id', currentUser.id)
-                ]);
-                if (loadVersion !== ordersLoadVersion) return;
-                if (returnsRes.data) ordersState.returns = returnsRes.data.map(r => r.sales_order_id);
-                if (reviewsRes.data) ordersState.reviews = reviewsRes.data.map(r => r.sales_order_id);
+                const orderUuids = ordersState.allOrders.map(o => o._supabaseId).filter(Boolean);
+                if (orderUuids.length > 0) {
+                    const { data: returnRows } = await db
+                        .from('return_request')
+                        .select('sales_order_id')
+                        .in('sales_order_id', orderUuids);
+                    if (loadVersion !== ordersLoadVersion) return;
+                    if (returnRows) ordersState.returns = returnRows.map(r => r.sales_order_id);
+                }
             } catch(e) {
-                console.error('Error fetching returns/reviews', e);
+                console.warn('Error fetching returns', e);
             }
         }
 

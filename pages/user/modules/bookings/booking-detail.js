@@ -44,11 +44,11 @@ async function cancelBookingOnSupabase(booking) {
 async function rescheduleBookingOnSupabase(booking) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db || !booking?._supabaseId) throw new Error('Không xác định được lịch hẹn để đổi lịch.');
-    const serviceCategory = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase();
+    const timeStr = booking.timeStart || booking.time || '09:00';
+    const startIso = booking.date ? `${booking.date}T${timeStr}:00` : new Date().toISOString();
     const { error } = await db.from('appointment')
         .update({
-            appointment_date:   booking.date,
-            appointment_time:   serviceCategory === 'hotel' ? null : (booking.timeStart || booking.time) + ':00',
+            scheduled_start_at: startIso,
             appointment_status: 'cho_xac_nhan',
             change_count:       booking.changeCount || 0,
         })

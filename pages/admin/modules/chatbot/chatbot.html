@@ -69,7 +69,7 @@
                         <button type="button" class="btn-chat-actions-dots" id="btnChatActionsDots" title="Tác vụ thêm">•••</button>
                         <div class="chat-actions-dropdown" id="chatActionsDropdown">
                             <button type="button" class="chat-action-item" id="btnRewardPoints">Tặng điểm Pawpoint</button>
-                            <button type="button" class="chat-action-item" id="btnConvertToTicket">Chuyển thành Ticket</button>
+                            <button type="button" class="chat-action-item" id="btnConvertToTicket">Tạo khiếu nại</button>
                             <button type="button" class="chat-action-item" id="btnEscalateManager">Chuyển cấp Quản lý</button>
                             <button type="button" class="chat-action-item" id="btnResolveChatAction">Hoàn tất ca chat</button>
                         </div>
@@ -110,9 +110,9 @@
                 <!-- VÙNG CÔNG CỤ SOẠN THẢO TINH GỌN (2 TẦNG CHUẨN CAO CẤP) -->
                 <div class="chat-bottom-toolbar">
                     <!-- TẦNG 1: THANH TRỢ LÝ THÔNG MINH (GỢI Ý AI + MẪU NHANH GOM 1 DÒNG) - MẶC ĐỊNH ẨN BAN ĐẦU -->
-                    <div class="smart-assistant-bar" id="smartAssistantBar" style="display: none;">
+                    <div class="smart-assistant-bar" id="smartAssistantBar">
                         <div class="ai-smart-suggestions-box" id="aiSmartSuggestionsBox">
-                            <span class="suggest-carousel-label">Gợi ý AI:</span>
+                            <span class="suggest-carousel-label">Câu mẫu</span>
                             <button type="button" class="suggest-carousel-prev" id="btnSuggestPrev" title="Gợi ý trước">‹</button>
                             <div class="suggest-carousel-main" id="suggestCarouselMain">
                                 <span class="suggest-carousel-tag" id="suggestCarouselTag">Đồng cảm</span>
@@ -121,27 +121,7 @@
                             <button type="button" class="suggest-carousel-next" id="btnSuggestNext" title="Gợi ý tiếp theo">›</button>
                             <button type="button" class="suggest-carousel-apply" id="btnApplySuggest">Áp dụng</button>
                         </div>
-                        <div class="quick-macros-wrap">
-                            <div class="quick-templates-dropdown-wrap" id="quickTemplatesDropdownWrap">
-                                <button type="button" class="btn-quick-templates-menu" id="btnToggleQuickTemplates">Mẫu nhanh ▾</button>
-                                <div class="quick-templates-dropdown-panel" id="quickTemplatesPanel">
-                                    <button type="button" class="quick-reply-pill" data-reply="Dạ PawPal xin chào sen, em là chuyên viên CSKH đã tiếp nhận ca chat này để trực tiếp hỗ trợ mình ngay ạ!">Lời chào tiếp nhận</button>
-                                    <button type="button" class="quick-reply-pill" data-reply="Dạ PawPal thành thật xin lỗi vì sự bất tiện này. Em đã kiểm tra bưu tá đang trên đường giao hàng và sẽ đến trong chiều nay ạ.">Xin lỗi giao trễ</button>
-                                    <button type="button" class="quick-reply-pill" data-reply="Dạ để hỗ trợ tốt nhất, sen vui lòng chụp giúp em hình ảnh tình trạng hiện tại gửi qua đây nhé ạ.">Yêu cầu gửi ảnh</button>
-                                    <button type="button" class="quick-reply-pill" data-reply="Dạ để tạ lỗi vì sự cố vừa rồi, PawPal xin gửi tặng mình 50 điểm Pawpoint vào tài khoản nhé ạ.">Tặng điểm tạ lỗi</button>
-                                </div>
-                            </div>
-                            <div class="quick-templates-dropdown-wrap" id="solutionCardsDropdownWrap">
-                                <button type="button" class="btn-quick-templates-menu" id="btnToggleSolutionCards">Chèn thẻ ▾</button>
-                                <div class="quick-templates-dropdown-panel" id="solutionCardsPanel">
-                                    <button type="button" class="quick-reply-pill" id="btnInsertVoucherCard">Thẻ Ưu đãi Voucher</button>
-                                    <button type="button" class="quick-reply-pill" id="btnInsertBookingCard">Thẻ Lịch hẹn Dịch vụ</button>
-                                    <button type="button" class="quick-reply-pill" id="btnInsertOrderCard">Thẻ Đơn hàng gần nhất</button>
-                                </div>
-                            </div>
-                            <button type="button" class="btn-canned-lib-link" id="btnOpenCannedModal">Thư viện câu mẫu</button>
-                            <button type="button" class="btn-assistant-close" id="btnHideAssistantBar" title="Thu gọn thanh gợi ý">✕</button>
-                        </div>
+                        <div class="quick-macros-wrap"><button type="button" class="btn-canned-lib-link" id="btnOpenCannedModal">Thư viện câu mẫu</button></div>
                     </div>
 
                     <!-- TẦNG 2: KHUNG SOẠN THẢO VÀ GỬI TIN NHẮN -->
@@ -663,8 +643,8 @@
                     <div class="form-group-item">
                         <label class="form-label-clean">Phân loại khiếu nại <span style="color: #DC2626;">*</span></label>
                         <select class="admin-select" id="selectConvertTicketCategory">
-                            <option value="order">Khiếu nại Đơn hàng và Sản phẩm</option>
-                            <option value="service">Khiếu nại Dịch vụ Spa và Khách sạn</option>
+                            <option value="order">Đơn hàng và sản phẩm</option>
+                            <option value="service">Dịch vụ</option>
                         </select>
                     </div>
                     <div class="form-group-item">
@@ -689,9 +669,9 @@
                     <div class="form-group-item">
                         <label class="form-label-clean">Mức độ ưu tiên <span style="color: #DC2626;">*</span></label>
                         <select class="admin-select" id="selectConvertPriority">
-                            <option value="high">Mức độ Cao (Khẩn cấp)</option>
-                            <option value="medium" selected>Mức độ Trung bình</option>
-                            <option value="low">Mức độ Thấp</option>
+                            <option value="high">Cao</option>
+                            <option value="normal" selected>Thông thường</option>
+                            <option value="low">Thấp</option>
                         </select>
                     </div>
                 </div>
@@ -709,7 +689,7 @@
     <div class="admin-modal-overlay" id="escalateManagerModalOverlay">
         <div class="admin-modal-card" style="width: 540px; max-width: 92vw;">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Chuyển cấp Quản lý và Bác sĩ thú y</div>
+                <div class="modal-title-clean">Chuyển nhân viên phụ trách</div>
                 <button type="button" class="modal-btn-close-text" id="btnDismissEscalateModal" data-close-modal="escalateManagerModalOverlay">Đóng</button>
             </div>
             <form novalidate onsubmit="return false;" style="display: flex; flex-direction: column; width: 100%;">
@@ -722,21 +702,20 @@
                         <label class="form-label-clean">Lý do chuyển cấp khẩn cấp <span style="color: #DC2626;">*</span></label>
                         <select class="admin-select" id="selectEscalateReason">
                             <option value="toxic">Khách hàng giận dữ, lời lẽ công kích vượt thẩm quyền nhân viên</option>
-                            <option value="injury">Thú cưng gặp sự cố sức khỏe, cần Bác sĩ thăm khám trực tiếp</option>
+                            <option value="incident">Sự cố dịch vụ cần người phụ trách</option>
                             <option value="dispute">Yêu cầu bồi thường lớn cần Trưởng ca hoặc Quản lý phê duyệt</option>
                         </select>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Bộ phận và Nhân sự tiếp nhận <span style="color: #DC2626;">*</span></label>
-                        <select class="admin-select" id="selectEscalateTarget">
-                            <option value="mgr-q1">Trần Hoàng Nam - Quản lý Chi nhánh Quận 1</option>
-                            <option value="vet-q1">Bác sĩ Thú y Trực ban - Chi nhánh Quận 1</option>
-                            <option value="cskh-lead">Lê Lệ Quyên - Trưởng nhóm CSKH</option>
-                        </select>
+                        <label class="form-label-clean">Nhân viên tiếp nhận <span style="color: #DC2626;">*</span></label>
+                        <div class="customer-autocomplete-wrapper" style="position:relative;">
+                            <input class="admin-input" id="selectEscalateTarget" autocomplete="off" placeholder="Tìm nhân viên">
+                            <div class="customer-autocomplete-popover" id="escalateTargetOptions" style="display:none;"></div>
+                        </div>
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Ghi chú tóm tắt bàn giao</label>
-                        <textarea class="admin-input" id="inputEscalateNotes" rows="2" placeholder="Ghi chú thêm cho Quản lý và Bác sĩ..."></textarea>
+                        <textarea class="admin-input" id="inputEscalateNotes" rows="2" placeholder="Nội dung cần bàn giao"></textarea>
                     </div>
                     <div style="font-size: 12.5px; color: var(--text-muted, #4F7A65); line-height: 1.5; background-color: #EEF5F1; padding: 10px 14px; border-radius: var(--admin-radius); border: none;">
                         Sau khi xác nhận, hệ thống sẽ chuyển toàn bộ quyền kiểm soát ca chat sang nhân sự được chỉ định và lưu đầy đủ biên bản lịch sử.
@@ -790,49 +769,15 @@
     <div class="admin-modal-overlay" id="orderTrackingModalOverlay">
         <div class="admin-modal-card" style="width: 540px; max-width: 92vw;">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Lộ trình vận đơn hỏa tốc</div>
+                <div class="modal-title-clean">Thông tin đơn hàng</div>
                 <button type="button" class="modal-btn-close-text" id="btnDismissTrackingModal" data-close-modal="orderTrackingModalOverlay">Đóng</button>
             </div>
             <div class="modal-body-clean" style="display: flex; flex-direction: column; gap: 16px;">
-                <div class="tracking-summary-card">
-                    <div class="tracking-code-row">
-                        <span class="tracking-code-val" id="trackingModalOrderCode">—</span>
-                        <span class="admin-badge badge-neutral" id="trackingModalStatusBadge">Chưa có thông tin</span>
-                    </div>
-                    <div class="tracking-driver-info">
-                        <div><strong>Bưu tá phụ trách:</strong> <span id="trackingModalDriverName">—</span></div>
-                        <div><strong>Số điện thoại:</strong> <span id="trackingModalDriverPhone">—</span></div>
-                        <div><strong>Thời gian dự kiến:</strong> <span id="trackingModalEta" style="color: #236B48; font-weight: 700;">—</span></div>
-                    </div>
-                </div>
-
-                <div class="tracking-timeline-box">
-                    <div class="tracking-step done">
-                        <div class="tracking-step-dot"></div>
-                        <div class="tracking-step-content">
-                            <div class="tracking-step-title">07:45 - Tiếp nhận và Đóng gói</div>
-                            <div class="tracking-step-desc">Kho trung tâm PawPal đã kiểm tra chất lượng và niêm phong kiện hàng.</div>
-                        </div>
-                    </div>
-                    <div class="tracking-step done">
-                        <div class="tracking-step-dot"></div>
-                        <div class="tracking-step-content">
-                            <div class="tracking-step-title">08:30 - Xuất kho trung chuyển Quận 1</div>
-                            <div class="tracking-step-desc">Bàn giao kiện hàng cho bưu tá phụ trách tuyến hỏa tốc.</div>
-                        </div>
-                    </div>
-                    <div class="tracking-step current">
-                        <div class="tracking-step-dot current-dot"></div>
-                        <div class="tracking-step-content">
-                            <div class="tracking-step-title">10:15 - Đang di chuyển giao tận nhà</div>
-                            <div class="tracking-step-desc">Bưu tá cách địa chỉ khách hàng 1.2 km (tuyến đường Hai Bà Trưng).</div>
-                        </div>
-                    </div>
-                </div>
+                <div id="trackingOrderSummary"></div>
             </div>
             <div class="modal-footer-clean">
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelTrackingModal" data-close-modal="orderTrackingModalOverlay">Đóng</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSendTrackingCardToChat">Gửi thẻ vận đơn vào chat</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSendTrackingCardToChat">Gửi thông tin đơn</button>
             </div>
         </div>
     </div>
@@ -1057,7 +1002,7 @@
                 <div class="modal-body-clean" style="display: flex; flex-direction: column; gap: 16px;">
                     <div class="form-group-item">
                         <label class="form-label-clean">Khách hàng</label>
-                        <input type="text" class="admin-input" id="resolveChatCustomerName" readonly style="background: #F8FAF9;">
+                        <input type="text" class="admin-input" id="resolveChatCustomerName" readonly>
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Kết quả giải quyết <span style="color: #DC2626;">*</span></label>
@@ -1070,13 +1015,13 @@
                         </select>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Ghi chú tổng kết ca (Lưu vào hồ sơ)</label>
+                        <label class="form-label-clean">Ghi chú tổng kết hội thoại</label>
                         <textarea class="admin-input" id="textareaResolveNotes" rows="3" placeholder="Tóm tắt ngắn nội dung đã hỗ trợ khách hàng..."></textarea>
                     </div>
                     <div class="form-group-item">
                         <label class="admin-checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <input type="checkbox" id="checkboxSendCsatSurvey" checked>
-                            <span style="font-size: 13px; font-weight: 500; color: var(--text-main);">Gửi biểu mẫu đánh giá mức độ hài lòng (CSAT) cho khách hàng</span>
+                            <input type="checkbox" id="checkboxSendCsatSurvey" disabled>
+                            <span style="font-size: 13px; font-weight: 500; color: var(--text-main);">Mời đánh giá mức độ hài lòng chưa được triển khai</span>
                         </label>
                     </div>
                 </div>

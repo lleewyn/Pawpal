@@ -29,8 +29,8 @@ async function resolveFailedPaymentInfo(orderId) {
         const { data, error } = await db
             .from('sales_order')
             .select(`
-                id, order_code, order_status, payment_status,
-                total_amount, created_at
+                id, order_code, order_status, shipping_fee_snapshot, created_at,
+                payment ( id, payment_status, payment_method, amount )
             `)
             .or(`order_code.eq.${orderId},id.eq.${orderId}`)
             .limit(1);
@@ -38,20 +38,21 @@ async function resolveFailedPaymentInfo(orderId) {
         if (error || !data?.length) return fallbackOrder;
 
         const row = data[0];
+        const payRow = (row.payment && row.payment[0]) || {};
         return {
             orderId: row.order_code || row.id || orderId,
             id: row.order_code || row.id || orderId,
             orderStatus: row.order_status || fallbackOrder?.orderStatus || fallbackOrder?.status || '',
             payment: {
-                method: fallbackOrder?.payment?.method || 'cod',
-                status: String(row.payment_status || fallbackOrder?.payment?.status || 'failed').toLowerCase(),
+                method: payRow.payment_method || fallbackOrder?.payment?.method || 'cod',
+                status: String(payRow.payment_status || fallbackOrder?.payment?.status || 'failed').toLowerCase(),
             },
             pricing: {
-                subtotal: row.subtotal || 0,
-                shippingFee: row.shipping_fee || 0,
+                subtotal: fallbackOrder?.pricing?.subtotal || 0,
+                shippingFee: Number(row.shipping_fee_snapshot || 0),
                 pointsDiscount: fallbackOrder?.pricing?.pointsDiscount || 0,
                 voucherDiscount: fallbackOrder?.pricing?.voucherDiscount || 0,
-                grandTotal: row.total_amount || 0,
+                grandTotal: Number(payRow.amount || fallbackOrder?.pricing?.grandTotal || 0),
             },
             items: fallbackOrder?.items || [],
             shipping: fallbackOrder?.shipping || {},

@@ -86,15 +86,26 @@ async function resolveBookingByCode(bookingCode) {
         const { data, error } = await db
             .from('appointment')
             .select(`
-                id, appointment_code, customer_id, appointment_date, appointment_time,
-                appointment_status, payment_status, note,
-                customer ( phone_main )
+                id, appointment_code, customer_id, scheduled_start_at,
+                appointment_status, note,
+                customer ( customer_phone ( phone_number, is_primary ) ),
+                appointment_item ( name_snapshot, unit_price, is_primary )
             `)
             .eq('appointment_code', bookingCode)
             .limit(1);
 
         if (error || !data?.length) return null;
-        return data[0];
+        const apt = data[0];
+        const d = apt.scheduled_start_at ? new Date(apt.scheduled_start_at) : null;
+        const phoneObj = (apt.customer?.customer_phone || []).find(p => p.is_primary) || apt.customer?.customer_phone?.[0];
+        const primaryItem = (apt.appointment_item || []).find(i => i.is_primary) || apt.appointment_item?.[0];
+        return {
+            ...apt,
+            appointment_date: d ? d.toLocaleDateString('vi-VN') : '',
+            appointment_time: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
+            service_name: primaryItem?.name_snapshot || 'Dịch vụ PawPal',
+            customer: { phone_main: phoneObj?.phone_number || '' }
+        };
     } catch (err) {
         console.warn('[booking-success] resolveBookingByCode error:', err?.message || err);
         return null;

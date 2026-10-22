@@ -430,25 +430,14 @@ async function checkCustomerVipAttention(customerId) {
     }
 
     try {
-        // CB-17: Đọc số dư authoritative từ customer_membership thay vì tải toàn bộ sổ cái paw_point_transaction
-        const [ticketsRes, membershipRes] = await Promise.all([
-            supabase.from('support_ticket').select('id', { count: 'exact', head: true }).eq('user_id', customerId),
-            supabase.from('customer_membership').select('total_paw_points, membership_tier_id').eq('customer_id', customerId).maybeSingle()
+        // Đọc số khiếu nại và điểm thưởng từ CSDL V1
+        const [ticketsRes, membershipRes, pointsRes] = await Promise.all([
+            supabase.from('support_ticket').select('id', { count: 'exact', head: true }).eq('customer_id', customerId),
+            supabase.from('customer_membership').select('membership_tier_id, membership_tier:membership_tier_id(tier_name)').eq('customer_id', customerId).maybeSingle(),
+            supabase.from('paw_point_transaction').select('points').eq('customer_id', customerId)
         ]);
         const ticketCount = ticketsRes.count || 0;
-        let totalPoints = membershipRes.data?.total_paw_points;
-
-        // Dự phòng nếu khách chưa có bản ghi customer_membership: lấy số dư mới nhất từ giao dịch gần nhất
-        if (totalPoints === undefined || totalPoints === null) {
-            const { data: latestTx } = await supabase
-                .from('paw_point_transaction')
-                .select('balance_after')
-                .eq('customer_id', customerId)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
-            totalPoints = latestTx?.balance_after || 0;
-        }
+        const totalPoints = (pointsRes.data || []).reduce((acc, row) => acc + (Number(row.points) || 0), 0);
 
         let result = { isVip: false, reason: '' };
         if (ticketCount >= 2) {
@@ -570,23 +559,79 @@ const dbTools = {
         if (!user_id) return { error: "Yêu cầu đăng nhập để xem đơn hàng" };
         const { data, error } = await supabase
             .from('sales_order')
-            .select('id, order_code, order_status, payment_status, total_amount, shipping_fee, created_at, items:sales_order_item(product_name, quantity, unit_price)')
+            .select(`
+                id,
+                order_code,
+                order_status,
+                shipping_status,
+                shipping_fee_snapshot,
+                created_at,
+                items:sales_order_detail (
+                    product_name_snapshot,
+                    sku_snapshot,
+                    quantity,
+                    unit_price,
+                    discount_amount
+                )
+            `)
             .eq('customer_id', user_id)
             .order('created_at', { ascending: false })
             .limit(10);
         if (error) return { error: error.message };
-        return data && data.length ? data : { message: "Không tìm thấy đơn hàng nào" };
+        if (!data || !data.length) return { message: "Không tìm thấy đơn hàng nào" };
+        return data.map(o => {
+            const items = o.items || [];
+            const itemsTotal = items.reduce((sum, it) => sum + ((Number(it.quantity) || 1) * (Number(it.unit_price) || 0) - (Number(it.discount_amount) || 0)), 0);
+            return {
+                id: o.id,
+                order_code: o.order_code,
+                order_status: o.order_status,
+                shipping_status: o.shipping_status || 'Chờ xử lý',
+                total_amount: itemsTotal + (Number(o.shipping_fee_snapshot) || 0),
+                created_at: o.created_at,
+                items: items.map(it => ({
+                    product_name: it.product_name_snapshot || 'Sản phẩm',
+                    sku: it.sku_snapshot || '',
+                    quantity: it.quantity,
+                    unit_price: it.unit_price
+                }))
+            };
+        });
     },
     get_user_bookings: async (user_id) => {
         if (!user_id) return { error: "Yêu cầu đăng nhập để xem lịch hẹn" };
         const { data, error } = await supabase
             .from('appointment')
-            .select('id, appointment_code, appointment_date, appointment_time, appointment_status, total_amount, service:service_id(service_name), pet_profile:pet_id(pet_name)')
+            .select(`
+                id,
+                appointment_code,
+                scheduled_start_at,
+                scheduled_end_at,
+                appointment_status,
+                pet_profile:pet_id (pet_name),
+                items:appointment_item (name_snapshot, unit_price, is_primary)
+            `)
             .eq('customer_id', user_id)
-            .order('appointment_date', { ascending: false })
+            .order('scheduled_start_at', { ascending: false })
             .limit(5);
         if (error) return { error: error.message };
-        return data && data.length ? data : { message: "Không có lịch hẹn nào sắp tới" };
+        if (!data || !data.length) return { message: "Không có lịch hẹn nào sắp tới" };
+        return data.map(a => {
+            const items = a.items || [];
+            const serviceName = items.map(i => i.name_snapshot).filter(Boolean).join(', ') || 'Dịch vụ PawPal';
+            const totalPrice = items.reduce((sum, i) => sum + (Number(i.unit_price) || 0), 0);
+            const d = a.scheduled_start_at ? new Date(a.scheduled_start_at) : null;
+            return {
+                id: a.id,
+                appointment_code: a.appointment_code,
+                appointment_date: d ? d.toLocaleDateString('vi-VN') : '',
+                appointment_time: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
+                appointment_status: a.appointment_status,
+                total_amount: totalPrice,
+                service_name: serviceName,
+                pet_name: a.pet_profile?.pet_name || 'Bé cưng'
+            };
+        });
     },
     get_services_price: async () => {
         try {
@@ -768,20 +813,25 @@ const dbTools = {
     get_loyalty_summary_own: async (user_id) => {
         if (!user_id) return { error: "Yêu cầu đăng nhập để tra cứu điểm tích lũy và hạng thành viên." };
         try {
-            const { data, error } = await supabase
-                .from('customer_membership')
-                .select('total_paw_points, tier_points, membership_tier:membership_tier_id(tier_name, discount_percent)')
-                .eq('customer_id', user_id)
-                .maybeSingle();
-            if (error) throw error;
-            if (data) {
-                return {
-                    points: data.total_paw_points || 0,
-                    tier: data.membership_tier?.tier_name || 'Đồng',
-                    discount: data.membership_tier?.discount_percent ? `${data.membership_tier.discount_percent}%` : '0%'
-                };
-            }
-            return { points: 0, tier: 'Đồng', discount: '0%' };
+            const [membershipRes, pointsRes] = await Promise.all([
+                supabase
+                    .from('customer_membership')
+                    .select('membership_tier_id, membership_tier:membership_tier_id(tier_name, discount_percent)')
+                    .eq('customer_id', user_id)
+                    .maybeSingle(),
+                supabase
+                    .from('paw_point_transaction')
+                    .select('points')
+                    .eq('customer_id', user_id)
+            ]);
+
+            const totalPoints = (pointsRes.data || []).reduce((acc, row) => acc + (Number(row.points) || 0), 0);
+            const tierData = membershipRes.data?.membership_tier;
+            return {
+                points: totalPoints,
+                tier: tierData?.tier_name || 'Đồng',
+                discount: tierData?.discount_percent ? `${tierData.discount_percent}%` : '0%'
+            };
         } catch (e) {
             return { error: "Lỗi truy vấn điểm thành viên từ Supabase" };
         }
@@ -791,15 +841,15 @@ const dbTools = {
         try {
             const { data, error } = await supabase
                 .from('support_ticket')
-                .select('id, ticket_code, title, subject, category, status, priority, created_at')
-                .or(`user_id.eq.${user_id},customer_id.eq.${user_id}`)
+                .select('id, ticket_code, subject, category, type, status, priority, created_at')
+                .eq('customer_id', user_id)
                 .order('created_at', { ascending: false })
                 .limit(5);
             if (error) throw error;
             if (data && data.length > 0) {
                 const list = data.map(t => ({
                     code: t.ticket_code || t.id.substring(0, 8),
-                    title: t.title || t.subject || 'Phiếu hỗ trợ',
+                    title: t.subject || 'Phiếu hỗ trợ',
                     category: t.category || 'Khiếu nại',
                     status: t.status || 'Đang xử lý',
                     priority: t.priority || 'Bình thường',
@@ -819,11 +869,8 @@ const dbTools = {
             const insertPayload = {
                 ticket_code: ticketCode,
                 customer_id: user_id,
-                user_id: user_id,
-                order_id: order_id || null,
                 channel: 'chat',
                 category: category || 'service_complaint',
-                title: title || 'Yêu cầu hỗ trợ qua PawPal AI',
                 subject: title || 'Yêu cầu hỗ trợ qua PawPal AI',
                 description: content || 'Khách hàng tạo yêu cầu hỗ trợ qua chatbot',
                 priority: 'normal',
@@ -1006,51 +1053,60 @@ const adminDbTools = {
                 .select(`
                     id,
                     appointment_code,
-                    appointment_date,
-                    appointment_time,
+                    scheduled_start_at,
+                    scheduled_end_at,
                     appointment_status,
-                    payment_status,
-                    total_price,
+                    note,
                     customer:customer_id (
                         id,
-                        phone_main,
-                        customer_profile (full_name)
+                        customer_profile (full_name),
+                        customer_phone (phone_number, is_primary)
                     ),
-                    pet_profile:pet_id (id, pet_name, species),
-                    service:service_id (id, service_name),
+                    pet_profile:pet_id (id, pet_name, pet_breed(breed_name, pet_species(species_name))),
+                    appointment_item (id, name_snapshot, unit_price, quantity),
                     staff:staff_id (id, full_name)
                 `, { count: 'exact' });
 
             if (targetDate && targetDate !== 'all' && targetDate !== 'tất cả') {
-                query = query.eq('appointment_date', targetDate);
+                query = query.gte('scheduled_start_at', `${targetDate}T00:00:00Z`).lte('scheduled_start_at', `${targetDate}T23:59:59Z`);
             }
             if (status && status !== 'ALL' && status !== 'tất cả') {
-                query = query.eq('appointment_status', status.toUpperCase());
+                query = query.ilike('appointment_status', `%${status}%`);
             }
 
             const { data, count, error } = await query
-                .order('appointment_time', { ascending: true })
+                .order('scheduled_start_at', { ascending: true })
                 .limit(Number(limit) || 20);
 
             if (error) throw error;
 
             const formatted = (data || []).map(a => {
                 const custName = a.customer?.customer_profile?.full_name || 'Khách vãng lai';
-                const phone = a.customer?.phone_main || '';
-                const petName = a.pet_profile?.pet_name ? `${a.pet_profile.pet_name} (${a.pet_profile.species === 'dog' ? 'Chó' : (a.pet_profile.species === 'cat' ? 'Mèo' : 'Thú cưng')})` : 'Chưa rõ';
+                const phoneObj = (a.customer?.customer_phone || []).find(p => p.is_primary) || a.customer?.customer_phone?.[0];
+                const phone = phoneObj?.phone_number || '';
+                const speciesName = a.pet_profile?.pet_breed?.pet_species?.species_name || '';
+                const breedName = a.pet_profile?.pet_breed?.breed_name || '';
+                const petName = a.pet_profile?.pet_name ? `${a.pet_profile.pet_name} (${speciesName || 'Thú cưng'}${breedName ? ' - ' + breedName : ''})` : 'Chưa rõ';
                 const staffName = a.staff?.full_name || 'Chưa phân công';
+                const items = a.appointment_item || [];
+                const serviceName = items.map(i => i.name_snapshot).filter(Boolean).join(', ') || 'Dịch vụ PawPal';
+                const totalPrice = items.reduce((sum, i) => sum + ((Number(i.unit_price) || 0) * (Number(i.quantity) || 1)), 0);
+
+                const d = a.scheduled_start_at ? new Date(a.scheduled_start_at) : null;
+                const dateStr = d ? d.toLocaleDateString('vi-VN') : '';
+                const timeStr = d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '';
+
                 return {
                     id: a.id,
                     code: a.appointment_code,
-                    date: a.appointment_date,
-                    time: a.appointment_time ? a.appointment_time.slice(0, 5) : '',
+                    date: dateStr,
+                    time: timeStr,
                     customer: `${custName} (${phone})`,
                     pet: petName,
-                    service: a.service?.service_name || 'Dịch vụ',
+                    service: serviceName,
                     staff: staffName,
                     status: a.appointment_status,
-                    payment: a.payment_status,
-                    price: a.total_price,
+                    price: totalPrice,
                     open_url: `#tab-service-detail?id=${a.id}&code=${encodeURIComponent(a.appointment_code || '')}`
                 };
             });
@@ -1078,29 +1134,27 @@ const adminDbTools = {
                     id,
                     order_code,
                     order_status,
-                    payment_status,
-                    total_amount,
+                    shipping_status,
+                    shipping_fee_snapshot,
+                    receiver_name_snapshot,
+                    receiver_phone_snapshot,
+                    street_address_snapshot,
+                    province_snapshot,
+                    tracking_code,
                     created_at,
                     customer:customer_id (
                         id,
-                        phone_main,
+                        contact_email,
+                        customer_phone (phone_number, is_primary),
                         customer_profile (full_name)
-                    ),
-                    shipping_address:shipping_address_id (
-                        receiver_name,
-                        receiver_phone,
-                        street_address,
-                        province
                     ),
                     sales_order_detail (
                         id,
                         quantity,
                         unit_price,
-                        subtotal,
-                        product_variant:product_variant_id (
-                            sku_variant,
-                            product:product_id (product_name)
-                        )
+                        discount_amount,
+                        product_name_snapshot,
+                        sku_snapshot
                     )
                 `);
 
@@ -1116,26 +1170,34 @@ const adminDbTools = {
                 return { message: `Không tìm thấy đơn hàng nào khớp với từ khóa "${clean}".` };
             }
 
-            const orders = data.map(o => ({
-                id: o.id,
-                order_code: o.order_code,
-                created_at: o.created_at,
-                order_status: o.order_status,
-                payment_status: o.payment_status,
-                total_amount: o.total_amount,
-                customer: o.customer?.customer_profile?.full_name || 'Khách vãng lai',
-                phone: o.customer?.phone_main || '',
-                recipient: `${o.shipping_address?.receiver_name || ''} - ${o.shipping_address?.receiver_phone || ''}`,
-                address: `${o.shipping_address?.street_address || ''}, ${o.shipping_address?.province || ''}`,
-                items: (o.sales_order_detail || []).map(it => ({
-                    product: it.product_variant?.product?.product_name || it.product?.product_name || 'Sản phẩm',
-                    sku: it.product_variant?.sku_variant || it.product?.sku || '',
-                    quantity: it.quantity,
-                    unit_price: it.unit_price,
-                    subtotal: it.subtotal
-                })),
-                open_url: `#tab-order-detail?id=${o.id}&code=${encodeURIComponent(o.order_code || '')}`
-            }));
+            const orders = data.map(o => {
+                const phoneObj = (o.customer?.customer_phone || []).find(p => p.is_primary) || o.customer?.customer_phone?.[0];
+                const custPhone = phoneObj?.phone_number || o.receiver_phone_snapshot || '';
+                const items = o.sales_order_detail || [];
+                const itemsTotal = items.reduce((sum, it) => sum + ((Number(it.quantity) || 1) * (Number(it.unit_price) || 0) - (Number(it.discount_amount) || 0)), 0);
+                const totalAmount = itemsTotal + (Number(o.shipping_fee_snapshot) || 0);
+
+                return {
+                    id: o.id,
+                    order_code: o.order_code,
+                    created_at: o.created_at,
+                    order_status: o.order_status,
+                    shipping_status: o.shipping_status || 'Chờ xử lý',
+                    total_amount: totalAmount,
+                    customer: o.customer?.customer_profile?.full_name || o.receiver_name_snapshot || 'Khách vãng lai',
+                    phone: custPhone,
+                    recipient: `${o.receiver_name_snapshot || ''} - ${o.receiver_phone_snapshot || ''}`,
+                    address: `${o.street_address_snapshot || ''}, ${o.province_snapshot || ''}`.replace(/^,\s*|,\s*$/g, ''),
+                    items: items.map(it => ({
+                        product: it.product_name_snapshot || 'Sản phẩm',
+                        sku: it.sku_snapshot || '',
+                        quantity: it.quantity,
+                        unit_price: it.unit_price,
+                        subtotal: (Number(it.quantity) || 1) * (Number(it.unit_price) || 0) - (Number(it.discount_amount) || 0)
+                    })),
+                    open_url: `#tab-order-detail?id=${o.id}&code=${encodeURIComponent(o.order_code || '')}`
+                };
+            });
 
             return { count: orders.length, orders };
         } catch (e) {
@@ -1222,7 +1284,22 @@ const adminDbTools = {
         try {
             let query = supabase
                 .from('support_ticket')
-                .select('id, user_id, title, type, status, priority, rating, created_at', { count: 'exact' });
+                .select(`
+                    id,
+                    ticket_code,
+                    customer_id,
+                    subject,
+                    type,
+                    status,
+                    priority,
+                    created_at,
+                    customer:customer_id (
+                        id,
+                        contact_email,
+                        customer_phone (phone_number, is_primary),
+                        customer_profile (full_name)
+                    )
+                `, { count: 'exact' });
 
             if (status && status !== 'all') {
                 query = query.eq('status', status.toLowerCase());
@@ -1245,16 +1322,22 @@ const adminDbTools = {
 
             if (error) throw error;
 
-            const formatted = (data || []).map(t => ({
-                id: t.id,
-                user_id: t.user_id,
-                title: t.title,
-                type: t.type,
-                status: t.status,
-                priority: t.priority,
-                created_at: t.created_at,
-                open_url: `#tab-complaint-detail?id=${t.id}`
-            }));
+            const formatted = (data || []).map(t => {
+                const phoneObj = (t.customer?.customer_phone || []).find(p => p.is_primary) || t.customer?.customer_phone?.[0];
+                return {
+                    id: t.id,
+                    ticket_code: t.ticket_code || '',
+                    customer_id: t.customer_id,
+                    customer_name: t.customer?.customer_profile?.full_name || 'Khách hàng',
+                    phone: phoneObj?.phone_number || '',
+                    title: t.subject || 'Khiếu nại/Yêu cầu',
+                    type: t.type,
+                    status: t.status,
+                    priority: t.priority,
+                    created_at: t.created_at,
+                    open_url: `#tab-complaint-detail?id=${t.id}`
+                };
+            });
 
             return {
                 total_open: count !== null && count !== undefined ? count : formatted.length,
@@ -1276,19 +1359,39 @@ const adminDbTools = {
                 .from('customer')
                 .select(`
                     id,
-                    phone_main,
-                    email,
-                    account_status,
+                    contact_email,
+                    customer_status,
                     created_at,
                     customer_profile (full_name, gender, date_of_birth),
-                    customer_membership (total_paw_points, membership_tier:membership_tier_id (tier_name)),
-                    pet_profile (id, pet_name, species, breed, weight)
+                    customer_phone (phone_number, is_primary),
+                    customer_membership (membership_tier:membership_tier_id (tier_name)),
+                    pet_profile (
+                        id,
+                        pet_name,
+                        pet_code,
+                        breed:breed_id (
+                            breed_name,
+                            pet_species:species_id (species_name)
+                        ),
+                        pet_weight_history (weight, measured_at)
+                    )
                 `);
 
             if (isUuid) {
                 custQuery = custQuery.eq('id', clean);
             } else if (/^\d{8,12}$/.test(clean)) {
-                custQuery = custQuery.ilike('phone_main', `%${clean}%`);
+                const { data: phones } = await supabase
+                    .from('customer_phone')
+                    .select('customer_id')
+                    .ilike('phone_number', `%${clean}%`)
+                    .limit(5);
+
+                const cIds = (phones || []).map(p => p.customer_id).filter(Boolean);
+                if (cIds.length > 0) {
+                    custQuery = custQuery.in('id', cIds);
+                } else {
+                    return { message: `Không tìm thấy thông tin khách hàng với số điện thoại "${clean}".` };
+                }
             } else {
                 const { data: profs } = await supabase
                     .from('customer_profile')
@@ -1300,7 +1403,7 @@ const adminDbTools = {
                 if (cIds.length > 0) {
                     custQuery = custQuery.in('id', cIds);
                 } else {
-                    custQuery = custQuery.ilike('phone_main', `%${clean}%`);
+                    custQuery = custQuery.ilike('contact_email', `%${clean}%`);
                 }
             }
 
@@ -1311,27 +1414,78 @@ const adminDbTools = {
             }
 
             const customers = await Promise.all(data.map(async c => {
-                const [ordersRes, aptsRes] = await Promise.all([
-                    supabase.from('sales_order').select('id, order_code, order_status, total_amount, created_at').eq('customer_id', c.id).order('created_at', { ascending: false }).limit(3),
-                    supabase.from('appointment').select('id, appointment_code, appointment_date, appointment_status, total_price, service:service_id(service_name)').eq('customer_id', c.id).order('created_at', { ascending: false }).limit(3)
+                const [pointsRes, ordersRes, aptsRes] = await Promise.all([
+                    supabase.from('paw_point_transaction').select('points').eq('customer_id', c.id),
+                    supabase.from('sales_order')
+                        .select(`
+                            id,
+                            order_code,
+                            order_status,
+                            shipping_fee_snapshot,
+                            created_at,
+                            sales_order_detail (quantity, unit_price, discount_amount)
+                        `)
+                        .eq('customer_id', c.id)
+                        .order('created_at', { ascending: false })
+                        .limit(3),
+                    supabase.from('appointment')
+                        .select(`
+                            id,
+                            appointment_code,
+                            scheduled_start_at,
+                            appointment_status,
+                            appointment_item (name_snapshot, unit_price, is_primary)
+                        `)
+                        .eq('customer_id', c.id)
+                        .order('scheduled_start_at', { ascending: false })
+                        .limit(3)
                 ]);
+
+                const totalPoints = (pointsRes.data || []).reduce((acc, row) => acc + (Number(row.points) || 0), 0);
+                const phoneObj = (c.customer_phone || []).find(p => p.is_primary) || c.customer_phone?.[0];
+                const custPhone = phoneObj?.phone_number || '';
+
+                const formattedOrders = (ordersRes.data || []).map(o => {
+                    const itemsTotal = (o.sales_order_detail || []).reduce((sum, it) => sum + ((Number(it.quantity) || 1) * (Number(it.unit_price) || 0) - (Number(it.discount_amount) || 0)), 0);
+                    return {
+                        id: o.id,
+                        order_code: o.order_code,
+                        order_status: o.order_status,
+                        total_amount: itemsTotal + (Number(o.shipping_fee_snapshot) || 0),
+                        created_at: o.created_at
+                    };
+                });
+
+                const formattedApts = (aptsRes.data || []).map(a => {
+                    const primaryItem = (a.appointment_item || []).find(it => it.is_primary) || a.appointment_item?.[0];
+                    return {
+                        code: a.appointment_code,
+                        date: a.scheduled_start_at ? new Date(a.scheduled_start_at).toLocaleDateString('vi-VN') : '',
+                        service: primaryItem?.name_snapshot || 'Dịch vụ PawPal',
+                        status: a.appointment_status
+                    };
+                });
+
+                const formattedPets = (c.pet_profile || []).map(p => {
+                    const speciesName = p.breed?.pet_species?.species_name || 'Thú cưng';
+                    const breedName = p.breed?.breed_name || '';
+                    const sortedWeights = (p.pet_weight_history || []).slice().sort((a, b) => new Date(b.measured_at || 0) - new Date(a.measured_at || 0));
+                    const latestWeight = sortedWeights[0]?.weight;
+                    const weightStr = latestWeight ? `${latestWeight}kg` : '?';
+                    return `${p.pet_name} (${speciesName}${breedName ? ' - ' + breedName : ''}, ${weightStr})`;
+                });
 
                 return {
                     id: c.id,
                     name: c.customer_profile?.full_name || 'Khách hàng',
-                    phone: c.phone_main,
-                    email: c.email || '',
+                    phone: custPhone,
+                    email: c.contact_email || '',
                     tier: c.customer_membership?.membership_tier?.tier_name || 'Đồng',
-                    points: c.customer_membership?.total_paw_points || 0,
-                    pets: (c.pet_profile || []).map(p => `${p.pet_name} (${p.species === 'dog' ? 'Chó' : 'Mèo'}, ${p.weight || '?'}kg)`),
-                    recent_orders: ordersRes.data || [],
-                    recent_appointments: (aptsRes.data || []).map(a => ({
-                        code: a.appointment_code,
-                        date: a.appointment_date,
-                        service: a.service?.service_name,
-                        status: a.appointment_status
-                    })),
-                    open_url: `#tab-profile?id=${c.id}&name=${encodeURIComponent(c.customer_profile?.full_name || '')}&phone=${encodeURIComponent(c.phone_main || '')}`
+                    points: totalPoints,
+                    pets: formattedPets,
+                    recent_orders: formattedOrders,
+                    recent_appointments: formattedApts,
+                    open_url: `#tab-profile?id=${c.id}&name=${encodeURIComponent(c.customer_profile?.full_name || '')}&phone=${encodeURIComponent(custPhone)}`
                 };
             }));
 
@@ -1698,7 +1852,15 @@ async function handleCopilotChat(req, res) {
         try {
             const { data: pendingOrders, error: orderErr } = await supabase
                 .from('sales_order')
-                .select('id, order_code, order_status, payment_status, total_amount, created_at')
+                .select(`
+                    id,
+                    order_code,
+                    order_status,
+                    shipping_status,
+                    shipping_fee_snapshot,
+                    created_at,
+                    sales_order_detail (quantity, unit_price, discount_amount)
+                `)
                 .in('order_status', ['cho_xu_ly', 'cho_xac_nhan', 'pending'])
                 .order('created_at', { ascending: false })
                 .limit(5);
@@ -1714,12 +1876,14 @@ async function handleCopilotChat(req, res) {
                 const total = pendingCount || (pendingOrders ? pendingOrders.length : 0);
                 reply = `Hệ thống ghi nhận **${total} đơn hàng** đang ở trạng thái chờ xử lý.\n\n`;
                 if (total > 0 && Array.isArray(pendingOrders) && pendingOrders.length > 0) {
-                    reply += `| Mã đơn | Trạng thái đơn | Thanh toán | Tổng tiền | Thời gian tạo |\n`;
+                    reply += `| Mã đơn | Trạng thái đơn | Vận chuyển | Tổng tiền | Thời gian tạo |\n`;
                     reply += `|:---|:---|:---|:---|:---|\n`;
                     pendingOrders.forEach(o => {
                         const timeStr = o.created_at ? new Date(o.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
-                        const amountStr = typeof o.total_amount === 'number' ? o.total_amount.toLocaleString('vi-VN') + ' đ' : (o.total_amount || '-');
-                        reply += `| #${o.order_code || (o.id ? String(o.id).slice(0, 8) : 'ORD')} | ${o.order_status || 'Chờ'} | ${o.payment_status || 'Chưa TT'} | ${amountStr} | ${timeStr} |\n`;
+                        const itemsTotal = (o.sales_order_detail || []).reduce((sum, it) => sum + ((Number(it.quantity) || 1) * (Number(it.unit_price) || 0) - (Number(it.discount_amount) || 0)), 0);
+                        const totalAmount = itemsTotal + (Number(o.shipping_fee_snapshot) || 0);
+                        const amountStr = totalAmount.toLocaleString('vi-VN') + ' đ';
+                        reply += `| #${o.order_code || (o.id ? String(o.id).slice(0, 8) : 'ORD')} | ${o.order_status || 'Chờ'} | ${o.shipping_status || 'Chờ giao'} | ${amountStr} | ${timeStr} |\n`;
                     });
                     reply += `\nXem chi tiết tại [Mở quản lý đơn hàng](#tab-order-list).`;
                 } else {

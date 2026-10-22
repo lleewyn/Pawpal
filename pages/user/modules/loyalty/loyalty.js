@@ -364,40 +364,58 @@ export async function initLoyalty() {
 
 async function syncLoyaltyFromSupabase(user) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db || !user?.phone) return user;
+    if (!db || (!user?.id && !user?.phone)) return user;
 
     try {
-        const { data, error } = await db
-            .from('customer')
-            .select(`
-                id,
-                phone_main,
-                email,
-                is_temporary,
-                customer_profile ( full_name ),
-                customer_membership ( total_paw_points, membership_tier ( tier_name, discount_percent ) )
-            `)
-            .eq('phone_main', user.phone)
-            .limit(1)
-            .maybeSingle();
+        let customerId = user.id;
+        const cleanPhone = user.phone ? String(user.phone).replace(/\D/g, '') : null;
 
-        if (error || !data) return user;
+        // Nếu user.id chưa phải UUID, tra cứu qua customer_phone
+        if (!customerId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId)) {
+            if (cleanPhone) {
+                const { data: pRows } = await db.from('customer_phone')
+                    .select('customer_id')
+                    .eq('phone_number', cleanPhone)
+                    .limit(1);
+                if (pRows?.length) customerId = pRows[0].customer_id;
+            }
+        }
+
+        if (!customerId) return user;
+
+        const [custRes, pointsRes] = await Promise.all([
+            db.from('customer')
+                .select(`
+                    id, contact_email, customer_status,
+                    customer_profile ( full_name ),
+                    customer_membership ( membership_tier ( tier_name, discount_percent ) )
+                `)
+                .eq('id', customerId)
+                .maybeSingle(),
+            db.from('paw_point_transaction')
+                .select('points')
+                .eq('customer_id', customerId)
+        ]);
+
+        const data = custRes.data;
+        if (!data) return user;
 
         const profile = (Array.isArray(data.customer_profile) ? data.customer_profile[0] : data.customer_profile) || {};
         const membership = (Array.isArray(data.customer_membership) ? data.customer_membership[0] : data.customer_membership) || {};
         const tier = (Array.isArray(membership.membership_tier) ? membership.membership_tier[0] : membership.membership_tier) || {};
-        const accountMembership = await loadCustomerMembership(db, data.id);
-        const tierName = accountMembership?.tier || tier.tier_name || user.tier || user.membershipTier || 'Đang cập nhật';
-        const isTemp = data.is_temporary !== undefined ? Boolean(data.is_temporary) : Boolean(user.is_temporary);
+        const accountMembership = await loadCustomerMembership(db, data.id).catch(() => null);
+        const tierName = accountMembership?.tier || tier.tier_name || user.tier || user.membershipTier || 'Đồng';
+
+        const totalCalculatedPoints = (pointsRes.data || []).reduce((sum, r) => sum + (Number(r.points) || 0), 0);
 
         const updatedUser = {
             ...user,
             id: data.id || user.id,
             name: profile.full_name || user.name || 'Khách hàng',
-            email: data.email || user.email || '',
-            phone: data.phone_main || user.phone,
-            is_temporary: isTemp,
-            points: accountMembership?.points ?? membership.total_paw_points ?? user.points ?? 0,
+            email: data.contact_email || user.email || '',
+            phone: user.phone || '',
+            is_temporary: false,
+            points: accountMembership?.points ?? totalCalculatedPoints,
             spend: accountMembership?.spend ?? null,
             tier: tierName,
             membershipTier: tierName,

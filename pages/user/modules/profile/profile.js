@@ -116,22 +116,37 @@ async function syncUserProfileFromSupabase(user, cache = true) {
 
         let custRecord = null;
         if (customerId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId)) {
-            const { data } = await client.from('customer').select('*').eq('id', customerId).maybeSingle();
+            const { data } = await client.from('customer')
+                .select('id, customer_code, customer_status, contact_email')
+                .eq('id', customerId)
+                .maybeSingle();
             custRecord = data;
         }
 
         if (!custRecord && phone) {
             const cleanPhone = phone.replace(/[^0-9]/g, '');
-            const { data } = await client.from('customer').select('*').eq('phone_main', cleanPhone).maybeSingle();
-            custRecord = data;
+            const phoneRow = await client.from('customer_phone')
+                .select('customer_id')
+                .eq('phone_number', cleanPhone)
+                .limit(1)
+                .maybeSingle();
+            if (phoneRow.data?.customer_id) {
+                const { data } = await client.from('customer')
+                    .select('id, customer_code, customer_status, contact_email')
+                    .eq('id', phoneRow.data.customer_id)
+                    .maybeSingle();
+                custRecord = data;
+            }
         }
 
         if (custRecord) {
             customerId = custRecord.id;
-            const [profRes, memRes, addrRes] = await Promise.all([
-                client.from('customer_profile').select('*').eq('customer_id', customerId).maybeSingle(),
-                client.from('customer_membership').select('*, membership_tier(tier_name)').eq('customer_id', customerId).maybeSingle(),
-                client.from('customer_address').select('*').eq('customer_id', customerId).order('is_default', { ascending: false })
+            const [profRes, memRes, addrRes, phoneRes, pointRes] = await Promise.all([
+                client.from('customer_profile').select('full_name, date_of_birth, gender').eq('customer_id', customerId).maybeSingle(),
+                client.from('customer_membership').select('membership_tier(tier_name, discount_percent)').eq('customer_id', customerId).maybeSingle(),
+                client.from('customer_address').select('id, receiver_name, receiver_phone, street_address, province, is_default').eq('customer_id', customerId).order('is_default', { ascending: false }),
+                client.from('customer_phone').select('phone_number, is_primary').eq('customer_id', customerId),
+                client.from('paw_point_transaction').select('points').eq('customer_id', customerId)
             ]);
             if (profRes.error || memRes.error || addrRes.error) throw new Error('Không thể tải hồ sơ mới nhất.');
 
@@ -139,36 +154,40 @@ async function syncUserProfileFromSupabase(user, cache = true) {
             const membership = memRes.data || {};
             const dbAddresses = (addrRes.data || []).map(a => ({
                 id: a.id,
-                street: [a.street_address, a.ward, a.district, a.province].filter(Boolean).join(', ') || a.street_address || '',
+                street: a.street_address || '',
                 rawStreet: a.street_address || '',
-                ward: a.ward || '',
-                district: a.district || '',
+                ward: '',
+                district: '',
                 province: a.province || '',
                 isDefault: Boolean(a.is_default),
                 receiverName: a.receiver_name || '',
                 receiverPhone: a.receiver_phone || ''
             }));
 
+            const phones = phoneRes.data || [];
+            const primaryPhone = phones.find(p => p.is_primary)?.phone_number || phones[0]?.phone_number || phone || '';
+            const currentPoints = (pointRes.data || []).reduce((acc, row) => acc + (Number(row.points) || 0), 0);
+
             const tierRecord = Array.isArray(membership.membership_tier)
                 ? membership.membership_tier[0] : membership.membership_tier;
-            const accountMembership = await loadCustomerMembership(client, customerId);
-            const membershipTier = accountMembership?.tier || tierRecord?.tier_name || user.tier || user.membershipTier || 'Đang cập nhật';
+            const membershipTier = tierRecord?.tier_name || user.tier || user.membershipTier || 'Đồng';
 
-            const rawStatus = custRecord.account_status || 'dang_hoat_dong';
-            const isAccountLockedState = ['tam_khoa', 'da_khoa', 'LOCKED'].includes(rawStatus);
+            const rawStatus = custRecord.customer_status || 'active';
+            const isAccountLockedState = ['tam_khoa', 'da_khoa', 'locked', 'LOCKED'].includes(rawStatus);
 
             const updatedUser = {
                 ...user,
                 id: customerId,
                 name: profile.full_name || user.name || 'Khách hàng',
                 fullName: profile.full_name || user.name || 'Khách hàng',
-                phone: custRecord.phone_main || user.phone || '',
-                email: normalizeProfileEmail(custRecord.email) || normalizeProfileEmail(user.email),
+                phone: primaryPhone,
+                email: normalizeProfileEmail(custRecord.contact_email) || normalizeProfileEmail(user.email),
                 status: rawStatus,
                 account_status: rawStatus,
+                customer_status: rawStatus,
                 isLocked: isAccountLockedState,
-                points: Number(membership.total_paw_points ?? 0),
-                pawPoints: Number(membership.total_paw_points ?? 0),
+                points: currentPoints,
+                pawPoints: currentPoints,
                 membershipTier,
                 tier: membershipTier,
                 addresses: dbAddresses
@@ -330,27 +349,33 @@ async function loadUpcomingBooking(user) {
     try {
         const client = getSupabaseClient();
         if (client && user.id) {
+            const nowIso = new Date().toISOString();
             const { data, error } = await client.from('appointment')
-                .select('id, appointment_code, appointment_date, appointment_time, appointment_status, service:service_id(service_name), pet_profile:pet_id(pet_name)')
+                .select(`
+                    id,
+                    appointment_code,
+                    scheduled_start_at,
+                    appointment_status,
+                    pet_profile:pet_id (pet_name),
+                    items:appointment_item (name_snapshot, is_primary)
+                `)
                 .eq('customer_id', user.id)
                 .in('appointment_status', ['cho_xac_nhan', 'da_xac_nhan', 'dang_thuc_hien'])
-                .gte('appointment_date', new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()))
-                .order('appointment_date', { ascending: true })
-                .order('appointment_time', { ascending: true })
-                .order('id', { ascending: true });
+                .gte('scheduled_start_at', nowIso)
+                .order('scheduled_start_at', { ascending: true })
+                .limit(5);
 
             if (error) throw error;
-            upcomingBookings = (data || []).filter(b => {
-                const startsAt = new Date(`${b.appointment_date}T${b.appointment_time || '23:59:59'}+07:00`);
-                return startsAt >= new Date();
-            }).map(b => {
-                const srv = Array.isArray(b.service) ? b.service[0] : b.service;
+            upcomingBookings = (data || []).map(b => {
                 const pet = Array.isArray(b.pet_profile) ? b.pet_profile[0] : b.pet_profile;
+                const items = b.items || [];
+                const primaryItem = items.find(i => i.is_primary) || items[0];
+                const d = b.scheduled_start_at ? new Date(b.scheduled_start_at) : null;
                 return {
                     id: b.appointment_code || b.id,
-                    date: b.appointment_date,
-                    time: b.appointment_time ? b.appointment_time.slice(0, 5) : '',
-                    serviceName: srv?.service_name || 'Dịch vụ chăm sóc',
+                    date: d ? d.toLocaleDateString('vi-VN') : '',
+                    time: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
+                    serviceName: primaryItem?.name_snapshot || 'Dịch vụ chăm sóc',
                     petName: pet?.pet_name || 'Bé cưng'
                 };
             });
@@ -419,19 +444,29 @@ async function loadRecentOrders(user) {
         const client = getSupabaseClient();
         if (client && user.id) {
             const { data, error } = await client.from('sales_order')
-                .select('*')
+                .select(`
+                    id,
+                    order_code,
+                    order_status,
+                    shipping_fee_snapshot,
+                    created_at,
+                    sales_order_detail (quantity, unit_price, discount_amount)
+                `)
                 .eq('customer_id', user.id)
                 .order('created_at', { ascending: false })
                 .limit(3);
 
             if (error) throw error;
             if (data && data.length > 0) {
-                orders = data.map(o => ({
-                    code: o.order_code || o.id,
-                    total: Number(o.total_amount || 0),
-                    status: (o.order_status || 'cho_xac_nhan').toLowerCase(),
-                    createdAt: o.created_at
-                }));
+                orders = data.map(o => {
+                    const itemsTotal = (o.sales_order_detail || []).reduce((sum, it) => sum + ((Number(it.quantity) || 1) * (Number(it.unit_price) || 0) - (Number(it.discount_amount) || 0)), 0);
+                    return {
+                        code: o.order_code || o.id,
+                        total: itemsTotal + Number(o.shipping_fee_snapshot || 0),
+                        status: (o.order_status || 'cho_xac_nhan').toLowerCase(),
+                        createdAt: o.created_at
+                    };
+                });
             }
         }
     } catch (e) {

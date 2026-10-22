@@ -538,18 +538,40 @@ async function syncPetDiaryFromSupabase(pet) {
     try {
         const petUuid = pet._supabaseId || pet.id;
         
+        // 1. Tìm các lịch hẹn thuộc về bé cưng này
+        let apptQuery = db.from('appointment')
+            .select('id, appointment_code, scheduled_start_at, appointment_status, appointment_item(name_snapshot)');
+        
+        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(petUuid)) {
+            apptQuery = apptQuery.eq('pet_id', petUuid);
+        } else {
+            const { data: petRec } = await db.from('pet_profile').select('id').eq('pet_code', petUuid).limit(1);
+            if (petRec?.length) {
+                apptQuery = apptQuery.eq('pet_id', petRec[0].id);
+            } else {
+                return null;
+            }
+        }
+
+        const { data: apptRows, error: apptErr } = await apptQuery;
+        if (apptErr || !apptRows || apptRows.length === 0) return null;
+
+        const apptIds = apptRows.map(a => a.id);
+        const apptMap = new Map(apptRows.map(a => [a.id, a]));
+
+        // 2. Tải nhật ký chăm sóc theo danh sách appointment_id
         const { data, error } = await db.from('care_log')
             .select(`
                 id,
                 appointment_id,
                 description,
-                health_status,
+                observed_condition,
                 recorded_at,
+                action_name_snapshot,
                 care_action ( action_name ),
-                appointment ( appointment_code, appointment_date, appointment_status, service (service_name) ),
-                care_log_media ( media_url, staff ( full_name ) )
+                care_log_media ( media_url )
             `)
-            .eq('pet_id', petUuid)
+            .in('appointment_id', apptIds)
             .order('recorded_at', { ascending: false });
 
         if (error) {
@@ -563,28 +585,32 @@ async function syncPetDiaryFromSupabase(pet) {
 
         for (const log of data) {
             const aptId = log.appointment_id || 'no-appointment';
+            const apt = apptMap.get(aptId);
+            const serviceName = apt?.appointment_item?.[0]?.name_snapshot || 'Chăm sóc tại tiệm';
+            const aptDate = apt?.scheduled_start_at ? apt.scheduled_start_at.split('T')[0] : log.recorded_at.split('T')[0];
+
             if (!sessionsMap[aptId]) {
                 sessionsMap[aptId] = {
-                    id: log.appointment?.appointment_code || aptId,
-                    service: log.appointment?.service?.service_name || 'Dịch vụ',
-                    date: log.appointment?.appointment_date || log.recorded_at.split('T')[0],
-                    status: mapAppointmentStatus(log.appointment?.appointment_status),
+                    id: apt?.appointment_code || aptId,
+                    service: serviceName,
+                    date: aptDate,
+                    status: mapAppointmentStatus(apt?.appointment_status),
                     timeline: [],
                     invoice: null
                 };
             }
 
             const mediaUrl = log.care_log_media?.[0]?.media_url || null;
-            const staffName = log.care_log_media?.[0]?.staff?.full_name || 'Nhân viên PawPal';
+            const staffName = 'Kỹ thuật viên PawPal';
 
             sessionsMap[aptId].timeline.push({
                 id: log.id,
-                status: log.care_action?.action_name || 'Cập nhật',
-                description: log.description,
+                status: log.action_name_snapshot || log.care_action?.action_name || 'Cập nhật',
+                description: log.description || log.observed_condition || '',
                 timestamp: log.recorded_at,
                 staff: staffName,
                 image: mediaUrl,
-                urgent: log.health_status !== 'Tốt' && log.health_status !== 'Bình thường'
+                urgent: log.observed_condition && !['Tốt', 'Bình thường', 'Ổn định'].includes(log.observed_condition)
             });
         }
 

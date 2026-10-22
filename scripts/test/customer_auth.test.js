@@ -5,10 +5,23 @@ const { createTestStore } = require('./auth_store_fixture');
 
 function fixture({ simulated = true, locked = false, staff = false, temporary = false, realAccount = false, mode = simulated ? 'console' : 'supabase', allowedPhones = ['0912345678'] } = {}) {
     let time = 1000, codes = [], writes = [], credentialsUsed = [], failUpdate = false, failRead = false, ready = true, failLink = false;
-    const customer = { id: 'customer-1', phone_main: '0912345678', auth_user_id: 'auth-1', account_status: locked ? 'LOCKED' : 'ACTIVE', is_temporary: temporary, customer_profile: { full_name: 'Khách kiểm thử' } };
+    const phoneData = { customer_id: 'customer-1', phone_number: '0912345678', is_primary: true };
+    const customer = { id: 'customer-1', auth_user_id: 'auth-1', customer_status: locked ? 'locked' : 'active', contact_email: 'test@example.com' };
     const admin = {
         from(table) {
-            const query = { select() { return this; }, eq() { return this; }, limit() { return this; }, async maybeSingle() { return { data: customer, error: failRead ? new Error('DB rejected') : null }; }, then(resolve) { return Promise.resolve({ data: staff && table === 'staff' ? [{ id: 'staff-1' }] : [], error: failRead ? new Error('DB rejected') : null }).then(resolve); } };
+            const query = {
+                select() { return this; }, eq() { return this; }, limit() { return this; },
+                async maybeSingle() {
+                    if (failRead) return { data: null, error: new Error('DB rejected') };
+                    if (table === 'customer_phone') return { data: phoneData, error: null };
+                    if (table === 'customer') return { data: customer, error: null };
+                    if (table === 'customer_profile') return { data: { full_name: 'Khách kiểm thử' }, error: null };
+                    return { data: customer, error: null };
+                },
+                then(resolve) {
+                    return Promise.resolve({ data: staff && table === 'staff' ? [{ id: 'staff-1' }] : [], error: failRead ? new Error('DB rejected') : null }).then(resolve);
+                }
+            };
             return query;
         },
         async rpc(name) {

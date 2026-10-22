@@ -1520,34 +1520,55 @@ function _resetLookup() {
 
 async function _getLookupData(phone) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db) return { orders: [], bookings: [] };
+    if (!db || !phone) return { orders: [], bookings: [] };
 
     let customerId = null;
-    const { data: cData } = await db.from('customer').select('id').eq('phone_main', phone).maybeSingle();
-    if (cData) customerId = cData.id;
+    const cleanPhone = String(phone).replace(/\D/g, '');
+    const { data: pData } = await db.from('customer_phone').select('customer_id').eq('phone_number', cleanPhone).limit(1);
+    if (pData?.length) customerId = pData[0].customer_id;
 
     let orders = [];
     let bookings = [];
 
     if (customerId) {
-        const { data: oData } = await db.from('sales_order').select('id, order_code, order_status, created_at, total_amount').eq('customer_id', customerId).order('created_at', { ascending: false });
+        const { data: oData } = await db.from('sales_order')
+            .select('id, order_code, order_status, created_at, shipping_fee_snapshot, sales_order_detail(quantity, unit_price, discount_amount)')
+            .eq('customer_id', customerId)
+            .order('created_at', { ascending: false })
+            .limit(10);
+
         if (oData) {
-            orders = oData.map(o => ({
-                id: o.order_code,
-                meta: `${new Intl.NumberFormat('vi-VN').format(o.total_amount)}đ · ${new Date(o.created_at).toLocaleDateString('vi-VN')}`,
-                status: o.order_status,
-                statusClass: o.order_status === 'COMPLETED' ? 'lookup-status-done' : 'lookup-status-pending'
-            }));
+            orders = oData.map(o => {
+                const details = o.sales_order_detail || [];
+                const subtotal = details.reduce((sum, d) => sum + Math.max(0, (Number(d.unit_price) || 0) * (Number(d.quantity) || 1) - (Number(d.discount_amount) || 0)), 0);
+                const total = subtotal + (Number(o.shipping_fee_snapshot) || 0);
+                return {
+                    id: o.order_code,
+                    meta: `${new Intl.NumberFormat('vi-VN').format(total)}đ · ${new Date(o.created_at).toLocaleDateString('vi-VN')}`,
+                    status: o.order_status,
+                    statusClass: (o.order_status === 'delivered' || o.order_status === 'completed') ? 'lookup-status-done' : 'lookup-status-pending'
+                };
+            });
         }
 
-        const { data: aData } = await db.from('appointment').select('id, appointment_code, appointment_status, appointment_date, appointment_time, service (service_name)').eq('customer_id', customerId).order('appointment_date', { ascending: false });
+        const { data: aData } = await db.from('appointment')
+            .select('id, appointment_code, appointment_status, scheduled_start_at, appointment_item(name_snapshot)')
+            .eq('customer_id', customerId)
+            .order('scheduled_start_at', { ascending: false })
+            .limit(10);
+
         if (aData) {
-            bookings = aData.map(a => ({
-                id: a.appointment_code,
-                meta: `${a.service?.[0]?.service_name || 'Dịch vụ'} · ${new Date(a.appointment_date).toLocaleDateString('vi-VN')} · ${a.appointment_time || ''}`,
-                status: a.appointment_status,
-                statusClass: (a.appointment_status === 'COMPLETED' || a.appointment_status === 'CONFIRMED') ? 'lookup-status-done' : 'lookup-status-pending'
-            }));
+            bookings = aData.map(a => {
+                const serviceName = a.appointment_item?.[0]?.name_snapshot || 'Dịch vụ PawPal';
+                const dateStr = a.scheduled_start_at ? new Date(a.scheduled_start_at).toLocaleDateString('vi-VN') : '';
+                const timeStr = a.scheduled_start_at ? new Date(a.scheduled_start_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '';
+                return {
+                    id: a.appointment_code,
+                    meta: `${serviceName} · ${dateStr} ${timeStr}`.trim(),
+                    status: a.appointment_status,
+                    statusClass: (a.appointment_status === 'completed' || a.appointment_status === 'confirmed' || a.appointment_status === 'da_hoan_tat') ? 'lookup-status-done' : 'lookup-status-pending'
+                };
+            });
         }
     }
     return { orders, bookings };

@@ -1,7 +1,7 @@
 
 (function () {
-    const FALLBACK_URL = 'https://ralnsebcwdqelikykxic.supabase.co';
-    const FALLBACK_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbG5zZWJjd2RxZWxpa3lreGljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MjU4ODIsImV4cCI6MjA5ODUwMTg4Mn0.mWT7MhkNCA_ICJr2-ggapFrE4Tknpg_ycDTjjRdQDT4';
+    const FALLBACK_URL = 'https://cpzuvaplseielhgcnqrn.supabase.co';
+    const FALLBACK_ANON_KEY = 'sb_publishable_dLV-5AkVgshhkaymnwTelg_fTFzyuwR';
 
     function readConfig() {
         const explicit = window['__PAWPAL_SUPABASE_CONFIG__'] || window['__SUPABASE_CONFIG__'] || {};

@@ -411,7 +411,7 @@ async function loadServices() {
         const { data: pricesData, error: pricesError } = await supabase
             .from('service_price_matrix')
             .select('*')
-            .eq('status', 'dang_hoat_dong')
+            .in('status', ['active', 'dang_hoat_dong', 'ACTIVE'])
             .is('effective_to', null);
 
         if (pricesError) throw pricesError;
@@ -454,7 +454,39 @@ async function loadServices() {
                 }
             }
 
-            let imageList = [cleanImagePath(svc.thumbnail_url)];
+            const spaCodeMap = {
+                'SPA01': 'assets/images/services/spa/process/spa01.webp',
+                'SPA02': 'assets/images/services/spa/process/spa01.webp',
+                'SPA03': 'assets/images/services/spa/process/spa03.webp',
+                'SPA04': 'assets/images/services/spa/process/spa04.webp',
+                'SPA05': 'assets/images/services/spa/process/spa05.webp',
+                'SPA06': 'assets/images/services/spa/process/spa06.webp',
+                'SPA07': 'assets/images/services/spa/process/spa07.webp',
+                'SPA08': 'assets/images/services/spa/process/spa08.webp',
+                'SPA09': 'assets/images/services/spa/process/spa09.webp',
+                'SPA10': 'assets/images/services/spa/process/spa10.webp',
+                'SPA11': 'assets/images/services/spa/process/spa11.webp',
+                'SPA12': 'assets/images/services/spa/process/spa10.webp',
+                'SPA13': 'assets/images/services/spa/process/spa13.webp',
+                'SPA14': 'assets/images/services/spa/process/spa14.webp'
+            };
+            const hotelCodeMap = {
+                'HTL01': 'assets/images/services/htl01.webp',
+                'HTL02': 'assets/images/services/htl02.jpg',
+                'HTL03': 'assets/images/services/htl03.jpg',
+                'HTL04': 'assets/images/services/htl04.jfif',
+                'HTL05': 'assets/images/services/htl05.webp',
+                'HTL06': 'assets/images/services/htl06.jpg',
+                'HTL07': 'assets/images/services/htl07.jfif',
+                'HTL08': 'assets/images/services/htl08.jfif'
+            };
+            let defaultSvcImg = rootPath + 'assets/images/services/spa.png';
+            if (spaCodeMap[code]) defaultSvcImg = rootPath + spaCodeMap[code];
+            else if (hotelCodeMap[code]) defaultSvcImg = rootPath + hotelCodeMap[code];
+            else if (code.startsWith('TAX') || code.startsWith('TXI') || category === 'taxi') defaultSvcImg = rootPath + 'assets/images/services/txi01.webp';
+            else if (category === 'hotel') defaultSvcImg = rootPath + 'assets/images/services/hotel.png';
+
+            let imageList = svc.thumbnail_url ? [cleanImagePath(svc.thumbnail_url)] : [defaultSvcImg];
             if (svc.images && Array.isArray(svc.images) && svc.images.length > 0) {
                 imageList = svc.images.map(img => cleanImagePath(img));
             }
@@ -693,7 +725,7 @@ async function loadBlogs(forceRefresh = false) {
         const db = window.getSupabaseClient?.() || window.SupabaseClient;
         if (!db) throw new Error('Supabase client is not initialized');
 
-        const { data, error } = await db.from('blog_post').select('*, blog_category(category_name)').eq('status', 'PUBLISHED').order('publish_at', { ascending: false });
+        const { data, error } = await db.from('blog_post').select('*, blog_category(category_name)').in('status', ['published', 'PUBLISHED', 'dang_hien_thi']).order('publish_at', { ascending: false });
         if (error) throw error;
 
         const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
