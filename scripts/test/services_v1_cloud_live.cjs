@@ -2,12 +2,13 @@
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 const infra='D:/Aboutme/Pawpal-infra/supabase-local',credentials=fs.readFileSync(infra+'/PAWPAL-ADMIN.private.txt','utf8');
-(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});let page;const errors=[],legacy=[],writes=[];try{
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});let page;const errors=[],legacy=[],writes=[],diagnostics=[];try{
  page=await browser.newPage({viewport:{width:1440,height:1050}});
+ page.on('console',message=>{if(message.type()==='error'&&message.text().includes('[PawpalServices]'))for(const arg of message.args().slice(1))arg.evaluate(value=>({message:value?.message,code:value?.code,details:value?.details,stack:value?.stack})).then(value=>diagnostics.push(value)).catch(()=>{});});
  page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.url().includes('/rest/v1/')&&r.status()>=400)errors.push(new URL(r.url()).pathname+':'+r.status());});
  page.on('request',r=>{const u=new URL(r.url());if((u.hostname.endsWith('.supabase.co')&&u.hostname!=='cpzuvaplseielhgcnqrn.supabase.co')||u.hostname.endsWith('.trycloudflare.com')||u.pathname.startsWith('/data/'))legacy.push(u.hostname+u.pathname);});
  await page.route('**/rest/v1/**',async route=>{const pathname=new URL(route.request().url()).pathname;const readOnlyContext=['/rest/v1/rpc/get_staff_login_context','/rest/v1/rpc/get_admin_service_cashier'].includes(pathname);if(!['GET','HEAD'].includes(route.request().method())&&!readOnlyContext){writes.push(pathname);return route.abort();}return route.continue();});
- await page.goto('https://pawpalgr3.vercel.app/admin/login');await page.locator('#inputAdminEmail').fill(credentials.match(/^Email: (.+)$/m)[1].trim());await page.locator('#inputAdminPassword').fill(credentials.match(/^Password: (.+)$/m)[1].trim());await page.locator('#btnSubmitAdminLogin').click();await page.waitForURL('**/admin#tab-list');
+ await page.goto((process.env.TEST_BASE_URL||'https://pawpalgr3.vercel.app')+'/admin/login');await page.locator('#inputAdminEmail').fill(credentials.match(/^Email: (.+)$/m)[1].trim());await page.locator('#inputAdminPassword').fill(credentials.match(/^Password: (.+)$/m)[1].trim());await page.locator('#btnSubmitAdminLogin').click();await page.waitForURL('**/admin#tab-list');
  await page.evaluate(()=>location.hash='tab-service-bookings');await page.waitForFunction(()=>window.PawpalServices?.state.isLoaded||window.PawpalServices?.state.loadError);
  const summary=await page.evaluate(async()=>{
   const m=PawpalServices,db=getSupabaseClient();await Promise.all([m.loadCatalogData({force:true}),m.loadReviewsData({force:true})]);
@@ -19,7 +20,7 @@ const infra='D:/Aboutme/Pawpal-infra/supabase-local',credentials=fs.readFileSync
   if(booking){await m.fetchBookingCareLogs(booking.dbId);m.openBookingDetail(booking.id);}
   return {bookings:m.state.bookingsData.length,sourceBookings:appointments.data.length,services:m.state.servicesData.length,sourceServices:services.data.length,reviews:m.state.reviewsData.length,sourceReviews:reviews.data.length,mismatch,loadError:m.state.loadError,aux:m.state.auxiliaryErrors};
  });
- assert.equal(summary.bookings,summary.sourceBookings);assert.equal(summary.services,summary.sourceServices);assert.equal(summary.reviews,summary.sourceReviews);assert.equal(summary.mismatch,0);assert.equal(summary.loadError,null);assert.ok(!Object.values(summary.aux||{}).some(Boolean));
+ assert.equal(summary.loadError,null,JSON.stringify(diagnostics));assert.equal(summary.bookings,summary.sourceBookings);assert.equal(summary.services,summary.sourceServices);assert.equal(summary.reviews,summary.sourceReviews);assert.equal(summary.mismatch,0);assert.ok(!Object.values(summary.aux||{}).some(Boolean));
  await page.locator('#btnNotifyCustomerPickup').click();
  assert.equal(await page.locator('#btnSendNotifyPickup').textContent(),'Lưu thông báo');
  assert.equal(await page.locator('input[name="pickupChannel"]').count(),0);
