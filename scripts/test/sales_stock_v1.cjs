@@ -32,4 +32,3 @@ const uuid=()=>crypto.randomUUID();
  assert.ok((await anonymous.rpc('adjust_admin_sales_stock',{...request,p_request_id:uuid()})).error);
  console.log('PASS stock ledger/idempotency/conflict/reservations/atomic rollback/concurrency/anonymous denial on restored database');
 })().catch(e=>{console.error(e.message);process.exitCode=1;});
-
