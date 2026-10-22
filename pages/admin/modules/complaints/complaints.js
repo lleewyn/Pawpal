@@ -480,7 +480,7 @@
                     }
 
                     const isContactOrOther = ['contact', 'other', 'test', 'lien_he', 'khac'].includes(tType);
-                    const sType = ['health', 'spa', 'hotel', 'taxi'].includes(tType) ? tType : (appt && appt.service_type ? appt.service_type : (isContactOrOther ? 'contact' : 'spa'));
+                    const sType = ['spa', 'hotel', 'taxi'].includes(tType) ? tType : (appt && appt.service_type ? appt.service_type : 'contact');
                     const petDisplayBreed = pet ? `${pet.breed || pet.species || 'Thú cưng'} • ${pet.weight ? pet.weight + ' kg' : 'Chưa ghi nhận cân nặng'}` : (isContactOrOther ? 'Chưa xác định' : 'Chưa có thông tin');
                     const petDisplayNotes = pet ? [pet.allergy && `Dị ứng: ${pet.allergy}`, pet.routine, pet.safety_note].filter(Boolean).join('. ') || 'Chưa ghi nhận lưu ý.' : 'Chưa có thông tin bé cưng';
 
@@ -533,7 +533,7 @@
                         petNotes: petDisplayNotes,
                         bookingId: appt ? (appt.appointment_code || appt.id) : (isContactOrOther ? '—' : null),
                         serviceType: sType,
-                        serviceName: appt && appt.service ? appt.service.service_name : (isContactOrOther ? 'Hỗ trợ và phản ánh chung' : (t.title || 'Dịch vụ chăm sóc thú cưng')),
+                        serviceName: appt && appt.service ? appt.service.service_name : 'Chưa liên kết dịch vụ',
                         staffExecuted: appt && appt.staff ? `${appt.staff.full_name}` : (isContactOrOther ? 'Bộ phận CSKH' : 'Chưa phân công'),
                         title: t.title || 'Khiếu nại ca dịch vụ',
                         content: userMsg ? userMsg.content : (t.description || t.title || 'Khách phản ánh về dịch vụ'),

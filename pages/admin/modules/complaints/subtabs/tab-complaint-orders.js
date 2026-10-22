@@ -191,6 +191,7 @@
             const slaBadge = `<span class="sla-badge ${slaClass}">${escapeHtml(item.slaRemainingText || 'Bình thường')}</span>`;
 
             const issueTypeMap = {
+                'other': 'Khác',
                 'wrong_item': 'Sai sản phẩm',
                 'missing_item': 'Thiếu hàng',
                 'damaged': 'Hư hỏng bể vỡ',
