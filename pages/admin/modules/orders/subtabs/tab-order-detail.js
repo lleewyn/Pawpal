@@ -1,6 +1,7 @@
 // tab-order-detail.js - Subtab Hồ sơ đơn hàng 360° của Phân hệ Bán hàng Pawpal-er
 (function() {
     'use strict';
+    const escapeText=value=>window.PawpalOrdersModule.escapeHtml(value??'');
 
     const PawpalOrders = window.PawpalOrders;
     if (!PawpalOrders) {
@@ -66,7 +67,7 @@
 
         // Nút thao tác một chạm theo trạng thái
         if (actionBtnsEl) {
-            let btnsHtml = '';
+            let btnsHtml = `<button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.confirmPayment('${order.id}')">Thu và hoàn tiền</button>`;
             if (order.status === 'pending') {
                 btnsHtml += `
                     <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.openCancelModal('${order.id}')" style="color: #DC2626;">Hủy đơn</button>
@@ -111,44 +112,22 @@
         }
 
         // Khối hồ sơ Đổi trả và Bồi hoàn RMA (nếu có)
-        const rmaBannerContainer = document.getElementById('detailOrderRmaBannerContainer');
-        if (rmaBannerContainer) {
-            if (order.rmaInfo) {
-                const rma = order.rmaInfo;
-                rmaBannerContainer.innerHTML = `
-                    <div class="order-rma-detail-card">
-                        <div class="rma-card-left">
-                            <div class="rma-card-title">
-                                <span>HỒ SƠ ĐỔI TRẢ VÀ HOÀN TIỀN (RMA)</span>
-                                <span class="admin-badge badge-cancelled">${rma.id}</span>
-                            </div>
-                            <div class="rma-card-sub">
-                                Hình thức: <strong>${rma.solutionTypeName}</strong> | Lý do: <strong>${rma.reasonText}</strong> | Kiểm định kho: <strong>${rma.restockText}</strong> | Bồi hoàn: <strong style="color: #236B48;">${rma.refundText}</strong>
-                            </div>
-                        </div>
-                        <button type="button" class="btn-rma-link-complaint" onclick="PawpalOrdersModule.openComplaintModule('${rma.id}')">Xem hồ sơ tại phân hệ Khiếu nại -></button>
-                    </div>
-                `;
-            } else {
-                rmaBannerContainer.innerHTML = '';
-            }
-        }
+        PawpalOrders.renderSalesReturns?.(order);
 
-        // Danh sách sản phẩm
         const itemsTbody = document.getElementById('detailOrderItemsBody');
         if (itemsTbody) {
             itemsTbody.innerHTML = (order.products || []).map(p => `
                 <tr>
                     <td>
                         <div class="prod-item-row">
-                            <img src="${p.image}" alt="${p.name}" class="prod-thumb" onerror="this.src='/assets/images/shop/products/tp-hat-01.png'">
+                            <img src="${escapeText(p.image)}" alt="${escapeText(p.name)}" class="prod-thumb" onerror="this.style.display='none'">
                             <div class="prod-info-cell">
-                                <span class="prod-title">${p.name}</span>
-                                <span class="prod-sku-tag">Quy cách: ${p.spec || 'Tiêu chuẩn'}</span>
+                                <span class="prod-title">${escapeText(p.name)}</span>
+                                <span class="prod-sku-tag">Quy cách: ${escapeText(p.spec || '—')}</span>
                             </div>
                         </div>
                     </td>
-                    <td style="font-family: monospace; color: var(--text-muted);">${p.sku}</td>
+                    <td style="font-family: monospace; color: var(--text-muted);">${escapeText(p.sku)}</td>
                     <td>${formatVND(p.price)}</td>
                     <td style="text-align: center; font-weight: 600;">${p.quantity}</td>
                     <td style="text-align: right; font-weight: 700; color: var(--text-heading);">${formatVND(p.total || (p.price * p.quantity))}</td>
@@ -197,10 +176,16 @@
             if (order.paymentMethod === 'vnpay') txt = 'Cổng thanh toán VNPay QR';
             else if (order.paymentMethod === 'momo') txt = 'Ví điện tử MoMo';
             else if (order.paymentMethod === 'bank_transfer') txt = 'Chuyển khoản trực tiếp ngân hàng Vietcombank';
-            payMethodEl.textContent = txt;
+            payMethodEl.textContent = order.paymentMethodName;
         }
         if (payBadgeEl) {
-            if (order.paymentStatus === 'paid') {
+            if (order.total===0) {
+                payBadgeEl.className = 'admin-badge badge-neutral';
+                payBadgeEl.textContent = 'Không phải thu';
+            } else if (order.paymentStatus==='partial') {
+                payBadgeEl.className = 'admin-badge badge-warning';
+                payBadgeEl.textContent = 'Đã thu một phần';
+            } else if (order.paymentStatus === 'paid') {
                 payBadgeEl.className = 'admin-badge badge-paid';
                 payBadgeEl.textContent = 'Đã thanh toán';
             } else if (order.paymentStatus === 'refund_pending' || order.paymentStatus === 'pending_refund') {
@@ -228,9 +213,9 @@
         if (timelineListEl) {
             timelineListEl.innerHTML = (order.timeline || []).map(t => `
                 <div class="timeline-step-item ${t.done ? '' : 'future'}">
-                    <span class="timeline-step-title">${t.title}</span>
-                    <span class="timeline-step-time">${t.time}</span>
-                    <span class="timeline-step-desc">${t.desc}</span>
+                    <span class="timeline-step-title">${escapeText(t.title)}</span>
+                    <span class="timeline-step-time">${escapeText(t.time)}</span>
+                    <span class="timeline-step-desc">${escapeText(t.desc)}</span>
                 </div>
             `).join('');
         }
@@ -255,279 +240,23 @@
         });
 
         // Xác nhận tạo phiếu RMA
-        document.getElementById('btnSubmitRmaTicket')?.addEventListener('click', async () => {
-            const ordersList = state.orders || [];
-            const order = ordersList.find(o => o.id === state.selectedOrderId);
-            if (!order) return;
-
-            // 1. Kiểm tra trạng thái đơn hàng đủ điều kiện RMA
-            if (order.status === 'cancelled') {
-                showToast(`Đơn hàng ${order.id} đã bị hủy, không thể tạo yêu cầu đổi trả (RMA)!`, 'warning');
-                PawpalOrdersModule.closeModal('modalReturnRefund');
-                return;
-            }
-            if (order.status !== 'delivered' && order.status !== 'completed' && order.status !== 'returned') {
-                showToast(`Chỉ đơn hàng đã giao thành công (Đã giao / Hoàn tất) mới có thể xử lý đổi trả (RMA)!`, 'warning');
-                PawpalOrdersModule.closeModal('modalReturnRefund');
-                return;
-            }
-
-            // 2. Kiểm tra sản phẩm được tích chọn
-            const checkedBoxes = document.querySelectorAll('.rma-item-select-checkbox:checked');
-            if (checkedBoxes.length === 0) {
-                showToast('Vui lòng tích chọn ít nhất một sản phẩm cần đổi trả hoặc bồi hoàn.', 'warning');
-                return;
-            }
-
-            // 3. Chặn sản phẩm ngoài đơn gốc & ràng buộc số lượng
-            const validOrderSkus = new Set((order.products || []).map(p => p.sku));
-            for (const cb of checkedBoxes) {
-                const sku = cb.getAttribute('data-sku');
-                const row = cb.closest('tr');
-                const qtyInput = row?.querySelector('.rma-item-qty-input');
-                const qty = parseInt(qtyInput?.value || '1', 10);
-
-                if (!validOrderSkus.has(sku)) {
-                    showToast(`Sản phẩm với mã SKU "${sku}" không thuộc đơn hàng gốc ${order.id}! Thao tác bị từ chối.`, 'danger');
-                    return;
-                }
-
-                const prodInOrder = order.products.find(p => p.sku === sku);
-                if (!prodInOrder) {
-                    showToast(`Sản phẩm với mã SKU "${sku}" không tồn tại trong đơn hàng gốc ${order.id}!`, 'danger');
-                    return;
-                }
-
-                if (isNaN(qty) || qty < 1) {
-                    showToast(`Số lượng đổi trả của sản phẩm "${prodInOrder.name}" không hợp lệ.`, 'warning');
-                    return;
-                }
-
-                if (qty > prodInOrder.quantity) {
-                    showToast(`Số lượng đổi trả của sản phẩm "${prodInOrder.name}" (${qty}) vượt quá số lượng đã mua (${prodInOrder.quantity})!`, 'warning');
-                    return;
-                }
-            }
-
-            const solSelect = document.getElementById('rmaSolutionType');
-            const solType = solSelect?.value || 'exchange';
-            const solTypeName = solSelect?.options[solSelect.selectedIndex]?.text.split(' (')[0] || 'Đổi hàng mới';
-
-            const reasonSelect = document.getElementById('rmaReasonSelect');
-            const reasonVal = reasonSelect?.value || 'damaged';
-            const reasonText = reasonSelect?.options[reasonSelect.selectedIndex]?.text || 'Hàng móp vỡ';
-
-            const restockRadio = document.querySelector('input[name="rmaRestockAction"]:checked');
-            const restockVal = restockRadio ? restockRadio.value : 'restock';
-
-            const refundMethod = document.getElementById('rmaRefundMethod')?.value || 'bank_transfer';
-            const refundAmountVal = parseInt(document.getElementById('rmaRefundAmountInput')?.value || '0', 10);
-            const internalNote = document.getElementById('rmaInternalNote')?.value.trim() || '';
-
-            // O-26: Kiểm tra quyền Quản trị / Quản lý trước khi tạo RMA và can thiệp tiền/kho
-            let userRole = (sessionStorage.getItem('pawpal_admin_system_role') || '').toUpperCase();
-            if (!userRole) {
-                try {
-                    const rawUser = sessionStorage.getItem('pawpal_admin_user') || localStorage.getItem('pawpal_admin_user');
-                    if (rawUser) {
-                        const parsed = typeof rawUser === 'string' ? JSON.parse(rawUser) : rawUser;
-                        userRole = (parsed?.system_role || parsed?.role || '').toUpperCase();
-                    }
-                } catch (e) {}
-            }
-            if (!userRole) userRole = 'STAFF';
-            if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
-                showToast('Chỉ Quản trị viên hoặc Quản lý chi nhánh mới có quyền lập phiếu RMA và xử lý hoàn tiền.', 'danger');
-                return;
-            }
-
-            const rmaCode = 'RMA-' + new Date().getFullYear() + '-' + (Math.floor(100 + Math.random() * 900));
-            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!client) {
-                showToast('Chưa kết nối cơ sở dữ liệu Supabase!', 'danger');
-                return;
-            }
-
-            const returnedItems = [];
-            for (const cb of checkedBoxes) {
-                const sku = cb.getAttribute('data-sku');
-                const row = cb.closest('tr');
-                const qtyInput = row?.querySelector('.rma-item-qty-input');
-                const qty = parseInt(qtyInput?.value || '1', 10);
-
-                const prodInOrder = order.products.find(p => p.sku === sku);
-                if (prodInOrder) {
-                    returnedItems.push({
-                        sku: sku,
-                        name: prodInOrder.name,
-                        quantity: qty,
-                        price: prodInOrder.price
-                    });
-                }
-            }
-
-            // Ghi nhận RMA vào Supabase trước khi cập nhật kho hoặc đổi trạng thái hiển thị
+        document.getElementById('btnSubmitRmaTicket')?.addEventListener('click', async event => {
+            const order=state.rmaOrderSnapshot;if(!order)return;
+            const lines=[...document.querySelectorAll('.rma-item-select-checkbox:checked')].map(cb=>({line_id:cb.dataset.lineId,quantity:Number(cb.closest('tr').querySelector('.rma-item-qty-input').value)}));
+            const received=document.getElementById('rmaReceivedConfirmed').checked;
+            const saleable=document.querySelector('[name="rmaRestockAction"]:checked')?.value==='restock';
+            if(received&&document.querySelector('[name="rmaRestockAction"]:checked')?.value==='pending'){showToast('Vui lòng chọn kết quả kiểm định hàng đã nhận.','warning');return;}
+            if(saleable&&!received){showToast('X\u00e1c nh\u1eadn \u0111\u00e3 nh\u1eadn v\u00e0 ki\u1ec3m \u0111\u1ecbnh h\u00e0ng tr\u01b0\u1edbc khi nh\u1eadp kho.','warning');return;}
+            const reason=document.getElementById('rmaReasonSelect').selectedOptions[0].textContent;
+            event.currentTarget.disabled=true;
             try {
-                let dbOrderId = order.rawId;
-                if (!dbOrderId) {
-                    const { data: ordRow, error: findOrdErr } = await client.from('sales_order').select('id').eq('order_code', order.id).limit(1);
-                    if (findOrdErr) throw findOrdErr;
-                    if (ordRow && ordRow[0]) dbOrderId = ordRow[0].id;
-                }
-
-                if (!dbOrderId) throw new Error('Không tìm thấy bản ghi đơn hàng tương ứng trên cơ sở dữ liệu.');
-
-                const { data: rmaRow, error: rmaErr } = await client.from('return_request').insert({
-                    sales_order_id: dbOrderId,
-                    customer_id: (order.userId && order.userId.length > 20) ? order.userId : null,
-                    reason: reasonText,
-                    return_type: solType === 'refund' ? 'tra_san_pham' : 'doi_san_pham',
-                    description: internalNote || `Phiếu ${rmaCode}: ${solTypeName}`,
-                    request_status: 'da_duyet'
-                }).select().single();
-                if (rmaErr) throw rmaErr;
-
-                if (rmaRow && rmaRow.id) {
-                    const rmaDetails = [];
-                    for (const retItem of returnedItems) {
-                        const prodDb = (state.products || []).find(p => p.sku === retItem.sku);
-                        const variantId = prodDb?.variant_id || prodDb?.default_variant_id || (prodDb?.variants && prodDb.variants[0]?.id) || null;
-                        if (variantId) {
-                            rmaDetails.push({
-                                return_request_id: rmaRow.id,
-                                product_variant_id: variantId,
-                                quantity: retItem.quantity,
-                                unit_price: retItem.price
-                            });
-                        }
-                    }
-                    if (rmaDetails.length > 0) {
-                        const { error: detErr } = await client.from('return_request_detail').insert(rmaDetails);
-                        if (detErr) throw new Error('Lỗi lưu chi tiết phiếu RMA: ' + (detErr.message || 'Lỗi CSDL'));
-                    }
-                }
-
-                // Cập nhật trạng thái đơn hàng sang đã trả hàng sau khi RMA và chi tiết đã tạo thành công
-                const updateOrderPayload = { order_status: 'da_tra_hang' };
-                const { error: ordUpErr } = await client.from('sales_order').update(updateOrderPayload).eq('id', dbOrderId);
-                if (ordUpErr) throw ordUpErr;
-
-                // O-11: Chỉ sau khi tạo phiếu RMA thành công và kiểm định đạt chuẩn mới nhập lại kho khả dụng
-                if (restockVal === 'restock') {
-                    for (const retItem of returnedItems) {
-                        const stockItem = (state.products || []).find(p => p.sku === retItem.sku);
-                        const variantId = stockItem?.variant_id || stockItem?.default_variant_id || (stockItem?.variants && stockItem.variants[0]?.id) || null;
-                        if (variantId) {
-                            try {
-                                const { data: invRow } = await client.from('inventory').select('id, quantity_in_stock').eq('product_variant_id', variantId).limit(1);
-                                if (invRow && invRow[0]) {
-                                    const newQty = (invRow[0].quantity_in_stock || 0) + retItem.quantity;
-                                    await client.from('inventory').update({
-                                        quantity_in_stock: newQty,
-                                        last_updated_at: new Date().toISOString()
-                                    }).eq('id', invRow[0].id);
-                                    if (stockItem) {
-                                        stockItem.stock = newQty;
-                                        if (stockItem.stock > 0 && stockItem.status === 'Hết hàng') {
-                                            stockItem.status = 'Còn hàng';
-                                        }
-                                    }
-                                }
-                            } catch (errRmaInv) {
-                                console.warn('[RMA] Lỗi nhập lại kho khi duyệt RMA:', errRmaInv);
-                            }
-                        }
-                    }
-                }
-
-                // Cập nhật trạng thái đơn hàng sau khi CSDL thành công
-                order.status = 'returned';
-                if (solType === 'refund') {
-                    order.paymentStatus = 'refund_pending';
-                }
-                order.alertType = 'danger';
-                order.alertMessage = `Phiếu RMA: ${rmaCode}`;
-            } catch (errRmaDb) {
-                console.error('[RMA] Lỗi khi xử lý phiếu RMA trên Supabase:', errRmaDb);
-                showToast(`Không thể tạo phiếu RMA: ${errRmaDb?.message || 'Lỗi CSDL'}`, 'danger');
-                return;
-            }
-            order.rmaInfo = {
-                id: rmaCode,
-                solutionType: solType,
-                solutionTypeName: solTypeName,
-                reason: reasonVal,
-                reasonText: reasonText,
-                restockAction: restockVal,
-                restockText: restockVal === 'restock' ? 'Đã nhập lại kho khả dụng (Restock)' : 'Chuyển vào kho Hủy (Write-off)',
-                refundMethod: refundMethod,
-                refundAmount: refundAmountVal,
-                refundText: solType === 'refund' ? formatVND(refundAmountVal) : 'Không phát sinh bồi hoàn tiền mặt',
-                items: returnedItems,
-                note: internalNote,
-                createdAt: new Date().toISOString()
-            };
-
-            // Ghi nhận vào Lịch trình (Timeline)
-            order.timeline.push({
-                title: 'Tiếp nhận Đổi trả và Hoàn tiền (RMA)',
-                time: formatTime(new Date()) + ' - Hôm nay',
-                desc: `Phê duyệt ${rmaCode}. Hình thức: ${solTypeName}. Lý do: ${reasonText}`,
-                done: true
-            });
-
-            if (restockVal === 'restock') {
-                order.timeline.push({
-                    title: 'Kiểm định kho hàng đạt chuẩn',
-                    time: formatTime(new Date()) + ' - Hôm nay',
-                    desc: 'Sản phẩm còn nguyên seal hộp. Đã tự động nhập lại kho khả dụng',
-                    done: true
-                });
-            } else {
-                order.timeline.push({
-                    title: 'Chuyển kho hàng lỗi và phế phẩm',
-                    time: formatTime(new Date()) + ' - Hôm nay',
-                    desc: 'Hàng hư hại do vận chuyển. Đã đưa vào kho hủy và ghi nhận chi phí rủi ro',
-                    done: true
-                });
-            }
-
-            if (solType === 'refund' && refundAmountVal > 0) {
-                order.timeline.push({
-                    title: 'Hoàn tất bồi hoàn tiền cho khách',
-                    time: formatTime(new Date()) + ' - Hôm nay',
-                    desc: `Đã xác nhận hoàn tiền ${formatVND(refundAmountVal)} qua ${refundMethod === 'bank_transfer' ? 'chuyển khoản ngân hàng' : 'điểm thưởng Pawpoint'}`,
-                    done: true
-                });
-            }
-
-            // Liên thông tự động sang phân hệ Khiếu nại
-            try {
-                const storedTickets = JSON.parse(sessionStorage.getItem('pawpal_admin_order_rma_tickets') || '[]');
-                storedTickets.unshift({
-                    id: rmaCode,
-                    orderId: order.id,
-                    customerName: order.customerName,
-                    phone: order.phone,
-                    reason: reasonText,
-                    solution: solTypeName,
-                    refundAmount: refundAmountVal,
-                    refundMethod: refundMethod,
-                    status: 'RESOLVED',
-                    items: returnedItems,
-                    createdAt: new Date().toISOString()
-                });
-                sessionStorage.setItem('pawpal_admin_order_rma_tickets', JSON.stringify(storedTickets));
-            } catch (e) {}
-
-            persistOrdersData();
-            PawpalOrdersModule.closeModal('modalReturnRefund');
-            showToast(`Đã tạo hồ sơ xử lý ${rmaCode} và cập nhật đơn hàng thành công!`, 'success');
-
-            renderOrderDetail(order.id);
-            if (typeof PawpalOrders.renderOrdersTable === 'function') {
-                PawpalOrders.renderOrdersTable();
-            }
+                const {error}=await window.getSupabaseClient().rpc('save_admin_sales_return',{p_request_id:state.rmaRequestId,p_return_id:state.rmaReturnId,p_order_id:order.rawId,p_expected_updated_at:order.updatedAt,p_action:'create',p_details:{lines,reason,type:document.getElementById('rmaSolutionType').value,note:document.getElementById('rmaInternalNote').value.trim(),received,inspected:received,saleable}});
+                if(error)throw error;
+                document.getElementById('modalReturnRefund').classList.remove('active');
+                await PawpalOrders.fetchOrdersData({force:true});await PawpalOrders.fetchProductsData({force:true});
+                showToast('\u0110\u00e3 l\u01b0u y\u00eau c\u1ea7u \u0111\u1ed5i tr\u1ea3. Ho\u00e0n ti\u1ec1n \u0111\u01b0\u1ee3c ghi ri\u00eang t\u1ea1i thu ng\u00e2n.');
+            }catch(error){showToast(error.message,'danger');}
+            finally{document.getElementById('btnSubmitRmaTicket').disabled=false;}
         });
     }
 
@@ -537,4 +266,52 @@
 
     // Khởi tạo sự kiện
     initDetailEvents();
+})();
+
+;
+
+(function(){
+ 'use strict';
+ const m=window.PawpalOrders,el=id=>document.getElementById(id);
+ const modal=document.createElement('div');modal.id='modalSalesReturnReceipt';modal.className='admin-modal-overlay';
+ modal.innerHTML='<div class="admin-modal-card" style="width:600px;max-width:94vw;padding:26px 30px"><div class="modal-header-clean"><div class="modal-title-clean">Xử lý hàng trả</div><button type="button" data-close-modal="modalSalesReturnReceipt" class="modal-btn-close-text">Đóng</button></div><form id="formSalesReturnReceipt" onsubmit="return false;" class="modal-body-clean"><p id="salesReturnReceiptMeta" style="margin:0;color:#4F7A65;overflow-wrap:anywhere"></p><label class="form-label-clean" for="salesReturnReceiptAction">Thao tác</label><select id="salesReturnReceiptAction" class="admin-select"><option value="receive">Xác nhận nhận hàng</option><option value="reject">Từ chối yêu cầu</option></select><div id="salesReturnReceiptInspection"><label class="form-label-clean" for="salesReturnSaleable">Kết quả kiểm định <span style="color:#DC2626">*</span></label><select id="salesReturnSaleable" class="admin-select"><option value="">Chọn kết quả</option><option value="true">Đủ điều kiện bán, nhập lại kho</option><option value="false">Không đủ điều kiện bán</option></select><label style="display:flex;gap:8px;margin-top:16px"><input type="checkbox" id="salesReturnReceived">Tôi đã nhận đủ số lượng và kiểm định hàng của yêu cầu này</label></div><label class="form-label-clean" for="salesReturnReceiptReason">Lý do hoặc ghi chú <span style="color:#DC2626">*</span></label><textarea id="salesReturnReceiptReason" class="admin-input" rows="2" maxlength="2000" style="height:auto"></textarea><p id="salesReturnReceiptError" role="alert" style="color:#DC2626;background:transparent;border:none;margin:0"></p><div class="modal-footer-clean"><button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalSalesReturnReceipt">Hủy</button><button type="button" class="admin-btn admin-btn-primary" id="btnSaveSalesReturnReceipt">Lưu xử lý</button></div></form></div>';
+ document.getElementById('modalReturnRefund').parentElement.append(modal);
+ let selected=null,request=null,busy=false;
+ const status={pending:'Chờ xử lý',approved:'Đã duyệt, chờ nhận hàng',received:'Đã nhận và kiểm định',rejected:'Đã từ chối',cancelled:'Đã hủy'};
+ m.renderSalesReturns=order=>{
+  const root=el('detailOrderRmaBannerContainer');root.replaceChildren();
+  for(const r of order.returnRequests||[]){
+   const section=document.createElement('div');section.style.cssText='padding:10px 0;overflow-wrap:anywhere';
+   const title=document.createElement('strong');title.textContent='Yêu cầu đổi trả · '+(status[r.request_status]||'Cần đối soát');
+   const reason=document.createElement('p');reason.style.cssText='color:#4F7A65;margin:4px 0';reason.textContent=r.reason;
+   const outcome=document.createElement('p');outcome.style.cssText='color:#4F7A65;margin:4px 0';outcome.textContent=({received_saleable:'Đã nhập lại kho sau kiểm định',received_unsaleable:'Đã nhận hàng, không nhập vào tồn có thể bán'})[r.resolution_type]||r.resolution_type||'';
+   const lines=document.createElement('div');lines.style.cssText='color:#4F7A65;font-size:12px';lines.textContent=r.lines.map(d=>(d.line?.product_name_snapshot||d.line?.sku_snapshot||'Dòng bán')+' × '+d.quantity).join('; ');
+   section.append(title,reason,lines,outcome);
+   if(['pending','approved'].includes(r.request_status)){
+    const button=document.createElement('button');button.type='button';button.className='admin-btn admin-btn-secondary';button.textContent='Xử lý hàng trả';button.onclick=()=>m.openSalesReturnReceipt(order.rawId,r.id);section.append(button);
+   }
+   root.append(section);
+  }
+ };
+ m.openSalesReturnReceipt=(orderId,returnId)=>{
+  if(busy)return;
+  const order=m.state.orders.find(o=>o.rawId===orderId),r=order?.returnRequests.find(r=>r.id===returnId);if(!r)return;
+  selected={orderId,r:structuredClone(r)};request=crypto.randomUUID();el('formSalesReturnReceipt').reset();
+  el('salesReturnReceiptMeta').textContent=order.id+' · '+r.reason;el('salesReturnReceiptError').textContent='';el('salesReturnReceiptInspection').style.display='block';
+  modal.classList.add('active');
+ };
+ el('formSalesReturnReceipt').addEventListener('submit',e=>e.preventDefault());
+ el('salesReturnReceiptAction').onchange=()=>{el('salesReturnReceiptInspection').style.display=el('salesReturnReceiptAction').value==='receive'?'block':'none';};
+ el('btnSaveSalesReturnReceipt').onclick=async()=>{
+  if(busy||!selected)return;
+  const action=el('salesReturnReceiptAction').value,reason=el('salesReturnReceiptReason').value.trim(),received=el('salesReturnReceived').checked;
+  if(reason.length<2||(action==='receive'&&(!received||!el('salesReturnSaleable').value))){el('salesReturnReceiptError').textContent='Nhập lý do; khi nhận hàng cần chọn kết quả kiểm định và xác nhận đã nhận đủ.';return;}
+  busy=true;el('btnSaveSalesReturnReceipt').disabled=true;
+  try{
+   const {error}=await window.getSupabaseClient().rpc('save_admin_sales_return',{p_request_id:request,p_return_id:selected.r.id,p_order_id:selected.orderId,p_expected_updated_at:selected.r.updated_at,p_action:action,p_details:{reason,received:action==='receive',inspected:action==='receive',saleable:el('salesReturnSaleable').value==='true'}});
+   if(error)throw error;
+   modal.classList.remove('active');await m.fetchOrdersData({force:true});await m.fetchProductsData({force:true});m.helpers.showToast('Đã lưu xử lý hàng trả.');
+  }catch(error){el('salesReturnReceiptError').textContent=error.code==='PT409'?'Yêu cầu đã thay đổi. Đóng và mở lại để đối chiếu.':'Không thể lưu xử lý. Kiểm tra trạng thái và quyền thao tác.';}
+  finally{busy=false;el('btnSaveSalesReturnReceipt').disabled=false;}
+ };
 })();

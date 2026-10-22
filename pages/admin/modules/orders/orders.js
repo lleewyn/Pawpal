@@ -1,3 +1,64 @@
+(function(){
+ 'use strict';
+ const one=v=>Array.isArray(v)?v[0]:v;
+ const number=v=>v==null?null:Number(v);
+ async function rows(make){const all=[];for(let offset=0;;offset+=500){const {data,error}=await make().range(offset,offset+499);if(error)throw error;all.push(...data);if(data.length<500)return all;}}
+ const db=()=>window.getSupabaseClient();
+ const profile=c=>one(c?.customer_profile)||{};
+ const phone=c=>(c?.customer_phone||[]).find(p=>p.is_primary)?.phone_number||'';
+ const spec=value=>value&&typeof value==='object'?Object.entries(value).map(([k,v])=>k+': '+String(v)).join('; '):String(value||'');
+ const images=list=>[...(list||[])].sort((a,b)=>Number(b.is_thumbnail)-Number(a.is_thumbnail)||a.display_order-b.display_order).map(x=>x.image_url);
+ const net=p=>Number(p.amount)-(p.refunds||[]).filter(r=>r.refund_status==='succeeded').reduce((n,r)=>n+Number(r.refunded_amount),0);
+ async function products(){
+  const [categories,source,reviews,reservations]=await Promise.all([
+   rows(()=>db().from('product_category').select('id,category_name,description').order('id')),
+   rows(()=>db().from('product').select('*,category:category_id(id,category_name),media:product_media(*),variants:product_variant(*,inventory(quantity_in_stock,minimum_stock,last_updated_at),size:size_id(id,size_name),color:color_id(id,color_name,hex_code),flavor:flavor_id(id,flavor_name),media:product_variant_media(*))').order('id')),
+   rows(()=>db().from('review').select('id,rating,sales_order_detail_id,line:sales_order_detail_id(product_variant:product_variant_id(product_id))').not('sales_order_detail_id','is',null).order('id')),
+   rows(()=>db().from('stock_reservation').select('id,product_variant_id,quantity,expires_at').eq('status','active').gt('expires_at',new Date().toISOString()).order('id'))
+  ]);
+  return {categories,products:source.map(p=>{
+   const variants=[...p.variants].sort((a,b)=>a.id.localeCompare(b.id)),active=variants.filter(v=>v.status==='active'),prices=active.map(v=>Number(v.sale_price));
+   const mapped=variants.map(v=>{const inv=one(v.inventory);return {image:images(v.media)[0]||'',images:images(v.media),id:v.id,sku:v.sku_variant,attr1:v.flavor?.flavor_name||v.size?.size_name||v.color?.color_name||'',attr2:v.flavor?v.size?.size_name||v.color?.color_name||'':v.size?v.color?.color_name||'':'',name:[v.flavor?.flavor_name,v.size?.size_name,v.color?.color_name].filter(Boolean).join(' · ')||v.sku_variant,costPrice:Number(v.cost_price),price:Number(v.sale_price),originalPrice:number(v.compare_at_price),stock:inv?Number(inv.quantity_in_stock):null,minStock:inv?Number(inv.minimum_stock):null,status:v.status,raw:v};});
+   const stock=mapped.length&&mapped.every(v=>v.stock!==null)?mapped.reduce((n,v)=>n+v.stock,0):null;
+   const minima=mapped.map(v=>v.minStock).filter(v=>v!==null),minStock=minima.length?minima.reduce((n,v)=>n+v,0):null;
+   const ratings=reviews.filter(r=>one(one(r.line)?.product_variant)?.product_id===p.id&&r.rating>=1&&r.rating<=5),media=images(p.media),defaultVariant=mapped[0];
+   return {reserved:reservations.filter(r=>variants.some(v=>v.id===r.product_variant_id)).reduce((n,r)=>n+Number(r.quantity),0),id:p.id,updatedAt:p.updated_at,raw:p,variant_id:defaultVariant?.id||null,default_variant_id:defaultVariant?.id||null,sku:defaultVariant?.sku||'',name:p.product_name,category:p.category?.category_name||'Chưa phân loại',brand:p.brand_name||'',petType:p.target_pet||'',description:p.description||'',ingredients:p.ingredients||'',benefits:p.benefits||'',usage:p.usage_instructions||'',features:p.specs?.features||'',feedingGuide:p.specs?.feeding_guide||'',expiry:p.specs?.expiry||'',storage:p.specs?.storage||'',origin:p.origin||'',unit:p.unit,spec:p.specs?.quy_cach||spec(p.specs),badge:p.badge||'',costPrice:mapped.length?Math.min(...mapped.map(v=>v.costPrice)):null,rating:ratings.length?ratings.reduce((n,r)=>n+Number(r.rating),0)/ratings.length:null,reviewCount:ratings.length,price:prices.length?Math.min(...prices):null,originalPrice:defaultVariant?.originalPrice??defaultVariant?.price??null,memberPrice:prices.length?Math.min(...prices):null,stock,minStock,images:media.join(', '),image:media[0]||'',status:p.status!=='active'?'Tạm ngưng':stock===0?'Hết hàng':stock!==null&&minStock!==null&&stock<=minStock?'Sắp hết':'Còn hàng',hasVariants:mapped.length>1,attr1Name:variants.some(v=>v.flavor)?'Hương vị':variants.some(v=>v.size)?'Kích thước':'Màu sắc',attr2Name:variants.some(v=>v.flavor&&v.size)?'Kích thước':'Màu sắc',variants:mapped};
+  })};
+ }
+ async function orders(){
+  const [source,totals,returns,redemptions]=await Promise.all([
+   rows(()=>db().from('sales_order').select('*,customer:customer_id(id,customer_profile(full_name),customer_phone(phone_number,is_primary)),provider:shipping_provider_id(provider_name),lines:sales_order_detail(*,variant:product_variant_id(id,sku_variant,product_id,product:product_id(specs),media:product_variant_media(*))),payments:payment(*,method:payment_method_config_id(name,short_name),refunds:refund_transaction(*))').order('created_at',{ascending:false}).order('id')),
+   rows(()=>db().from('sales_order_totals').select('*').order('order_id')),
+   rows(()=>db().from('return_request').select('*,lines:return_request_detail(*,line:sales_order_detail_id(product_name_snapshot,sku_snapshot,unit_price,discount_amount,quantity,product_variant_id))').order('created_at',{ascending:false}).order('id')),
+   rows(()=>db().from('voucher_redemption').select('order_id,discount_amount_snapshot,status').not('order_id','is',null).order('id'))
+  ]);
+  const totalMap=new Map(totals.map(t=>[t.order_id,Number(t.total_amount)]));
+  return source.map(o=>{
+   const amount=totalMap.get(o.id);if(amount===undefined)throw Error('Thiếu tổng đơn hàng V1.');
+   const payments=o.payments.filter(p=>p.transaction_status==='succeeded'),gross=payments.reduce((n,p)=>n+Number(p.amount),0),collected=payments.reduce((n,p)=>n+net(p),0),refunds=gross-collected;
+   const status=({draft:'pending',pending:'pending',packing:'confirmed',confirmed:'confirmed',shipped:'shipping',shipping:'shipping',delivered:'completed',completed:'completed',cancelled:'cancelled',returned:'returned'})[o.order_status]||o.order_status;
+   const requests=returns.filter(r=>r.sales_order_id===o.id),r=requests[0],returnsTotal=payments.reduce((n,p)=>n+(p.refunds||[]).filter(v=>v.refund_status==='succeeded').reduce((s,v)=>s+Number(v.refunded_amount),0),0);
+   const paymentStatus=collected>=amount&&amount>0?'paid':collected>0?'partial':gross>0&&refunds>=gross?'refunded':'unpaid';
+   const method=payments[0]?.method?.name||'',paymentMethod=/tiền mặt/i.test(method)?'cash':/chuyển khoản|VietQR/i.test(method)?'bank_transfer':/MoMo/i.test(method)?'momo':/VNPay/i.test(method)?'vnpay':'unknown';
+   const items=o.lines.map(d=>({id:d.id,variant_id:d.product_variant_id,sku:d.sku_snapshot,name:d.product_name_snapshot,spec:spec(d.variant?.product?.specs),price:Number(d.unit_price),quantity:Number(d.quantity),discount:Number(d.discount_amount),total:Number(d.unit_price)*Number(d.quantity)-Number(d.discount_amount),image:images(d.variant?.media)[0]||''}));
+   const rmaInfo=r?{id:r.id,requestId:r.id,solutionType:r.return_type,solutionTypeName:({refund:'Hoàn tiền',return:'Trả hàng',exchange:'Đổi hàng'})[r.return_type]||'Cần đối soát',reason:r.reason,reasonText:r.reason,restockAction:'',restockText:'Xem sổ kho để đối chiếu',refundMethod:'',refundAmount:returnsTotal,refundText:returnsTotal>0?'Đã ghi nhận hoàn tiền':'Chưa ghi nhận hoàn tiền',items:r.lines.map(v=>({sku:v.line?.sku_snapshot||'',name:v.line?.product_name_snapshot||'',quantity:v.quantity,price:v.line?.unit_price??null,variant_id:v.line?.product_variant_id,sales_order_detail_id:v.sales_order_detail_id})),note:r.description||'',createdAt:r.created_at,status:r.request_status}:null;
+   const hasOpenReturn=requests.some(v=>['pending','approved'].includes(v.request_status));
+   const overdue=status==='pending'&&Date.now()-Date.parse(o.created_at)>1800000;
+   return {id:o.order_code,rawId:o.id,rawStatus:o.order_status,updatedAt:o.updated_at,userId:o.customer_id,customerName:profile(o.customer).full_name||o.receiver_name_snapshot||'Chưa có tên khách',phone:phone(o.customer)||o.receiver_phone_snapshot||'',receiverName:o.receiver_name_snapshot||'',receiverPhone:o.receiver_phone_snapshot||'',address:[o.street_address_snapshot,o.province_snapshot,o.postal_code_snapshot].filter(Boolean).join(', ')||'Chưa ghi nhận địa chỉ giao hàng',status,paymentStatus,paymentMethod,paymentMethodName:method||'Chưa ghi nhận',collected,refunded:refunds,remaining:Math.max(amount-collected,0),payments:o.payments,carrier:o.provider?.provider_name||'Chưa phân công',trackingNumber:o.tracking_code||'—',createdAt:o.created_at,subtotal:o.lines.reduce((n,d)=>n+Number(d.unit_price)*Number(d.quantity),0),shippingFee:Number(o.shipping_fee_snapshot),discount:o.lines.reduce((n,d)=>n+Number(d.discount_amount),0)+redemptions.filter(v=>v.order_id===o.id&&v.status==='applied').reduce((n,v)=>n+Number(v.discount_amount_snapshot),0),pawPointsUsed:null,total:amount,customerNote:o.note||'',internalNote:'',alertType:hasOpenReturn||overdue?'danger':null,alertMessage:hasOpenReturn?'Có yêu cầu đổi trả':overdue?'Chờ xác nhận quá 30 phút':null,rmaInfo,returnRequests:requests,delivery:null,products:items,timeline:[{title:'Tạo đơn hàng',time:o.created_at,desc:'Đơn được ghi nhận trong hệ thống',done:true},...(o.shipped_at?[{title:'Bàn giao vận chuyển',time:o.shipped_at,desc:o.provider?.provider_name||'Chưa ghi nhận đơn vị vận chuyển',done:true}]:[]),...(o.delivered_at?[{title:'Giao hàng',time:o.delivered_at,desc:'Đã ghi nhận thời điểm giao hàng',done:true}]:[])]};
+  });
+ }
+ async function customers(){const [list,balances]=await Promise.all([rows(()=>db().from('customer').select('id,customer_profile(full_name),customer_phone(phone_number,is_primary),customer_address(*),customer_membership(membership_tier(tier_name,discount_percent,is_active)),pet_profile(id,pet_name)').order('id')),rows(()=>db().from('customer_point_balance').select('*').order('customer_id'))]);return list.map(c=>({id:c.id,rawName:profile(c).full_name||null,name:profile(c).full_name||'Chưa có tên khách',phone:phone(c),rank:one(one(c.customer_membership)?.membership_tier)?.tier_name||'Chưa có hạng',defaultAddress:c.customer_address.find(a=>a.is_default)||null,discountPercent:one(one(c.customer_membership)?.membership_tier)?.discount_percent??null,points:Number(balances.find(b=>b.customer_id===c.id)?.total_paw_points||0),address:[c.customer_address.find(a=>a.is_default)?.street_address,c.customer_address.find(a=>a.is_default)?.province].filter(Boolean).join(', '),pets:c.pet_profile||[]}));}
+ async function stockLogs(){
+  const list=await rows(()=>db().from('inventory_transaction').select('id,product_variant_id,quantity,transaction_type,note,created_at,recorded_at,idempotency_key,variant:product_variant_id(sku_variant,product:product_id(product_name)),staff:staff_id(full_name)').order('created_at').order('id'));
+  // The ledger is authoritative; never derive historical balances from today's stock.
+  const balance=new Map();
+  return list.map(t=>{const before=balance.get(t.product_variant_id)||0,after=before+Number(t.quantity);balance.set(t.product_variant_id,after);return {id:t.id,sku:t.variant?.sku_variant||'',name:t.variant?.product?.product_name||'',date:t.recorded_at||t.created_at,type:t.quantity>0?'IN':'OUT',typeLabel:t.transaction_type,change:(t.quantity>0?'+':'')+t.quantity,beforeStock:before,afterStock:after,reason:t.note||'',refCode:t.idempotency_key,staff:t.staff?.full_name||'Chưa ghi nhận'};}).reverse();
+ }
+ window.PawpalOrderV1={rows,products,orders,customers,stockLogs,one,net};
+})();
+
+;
+
 // orders.js - Core Orchestrator cho Phân hệ Quản lý Bán hàng Pawpal-er
 (function() {
     'use strict';
@@ -68,94 +129,17 @@
 
     function persistSharedVouchersData(vouchers) {
         if (window.PawpalOrders?.state) window.PawpalOrders.state.vouchers = vouchers || [];
-        try {
-            sessionStorage.setItem('pawpal_settings_vouchers', JSON.stringify(vouchers || []));
-        } catch (e) {}
+
     }
 
     let currentProductsList = [];
-    try {
-        const savedProducts = sessionStorage.getItem('pawpal_admin_products_data');
-        currentProductsList = savedProducts ? JSON.parse(savedProducts) : [];
-        if (!Array.isArray(currentProductsList)) currentProductsList = [];
-    } catch (e) {
-        currentProductsList = [];
-    }
-
-    function persistProductsData() {
-        try {
-            sessionStorage.setItem('pawpal_admin_products_data', JSON.stringify(currentProductsList));
-        } catch (e) {}
-    }
+    function persistProductsData() { /* Business state is reloaded from Supabase. */ }
 
     let currentStockLogsList = [];
-    try {
-        const savedLogs = sessionStorage.getItem('pawpal_admin_stock_logs');
-        currentStockLogsList = savedLogs ? JSON.parse(savedLogs) : [];
-        if (!Array.isArray(currentStockLogsList)) currentStockLogsList = [];
-    } catch (e) {
-        currentStockLogsList = [];
-    }
-
-    function persistStockLogsData() {
-        try {
-            sessionStorage.setItem('pawpal_admin_stock_logs', JSON.stringify(currentStockLogsList));
-        } catch (e) {}
-    }
-
-    function addStockLog(entry) {
-        const newLog = {
-            id: 'LOG-' + String(currentStockLogsList.length + 1).padStart(3, '0'),
-            date: formatDateTime(new Date()),
-            staff: 'Quản trị viên',
-            ...entry
-        };
-        currentStockLogsList.unshift(newLog);
-        persistStockLogsData();
-
-        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (client && entry.sku) {
-            try {
-                const transType = entry.type === 'IMPORT' ? 'IMPORT' : (entry.type === 'EXPORT' ? 'EXPORT' : 'ADJUSTMENT');
-                client.from('inventory_transaction').insert({
-                    transaction_type: transType,
-                    quantity: Math.abs(parseInt(entry.change) || 0),
-                    stock_before: Number(entry.beforeStock) || 0,
-                    stock_after: Number(entry.afterStock) || 0,
-                    note: [entry.sku, entry.typeLabel, entry.reason].filter(Boolean).join(' - '),
-                    staff_id: 'd0000000-5555-5555-5555-555555555555',
-                    created_at: new Date().toISOString()
-                }).then(({ error }) => {
-                    if (error) console.warn('[Inventory Transaction] Lỗi ghi inventory_transaction:', error.message);
-                });
-
-                client.from('audit_log').insert({
-                    staff_id: 'd0000000-5555-5555-5555-555555555555',
-                    action: 'UPDATE',
-                    entity_name: 'inventory',
-                    description: `Điều chỉnh tồn kho SKU ${entry.sku}: ${entry.beforeStock} -> ${entry.afterStock} (${entry.reason || entry.typeLabel || 'Điều chỉnh kho'})`,
-                    created_at: new Date().toISOString()
-                }).then(({ error }) => {
-                    if (error) console.warn('[Audit Log] Lỗi ghi audit_log inventory:', error.message);
-                });
-            } catch (errLog) {}
-        }
-    }
+    function persistStockLogsData() { /* Business state is reloaded from Supabase. */ }
 
     let currentOrdersList = [];
-    try {
-        const savedOrders = sessionStorage.getItem('pawpal_admin_orders_data');
-        currentOrdersList = savedOrders ? JSON.parse(savedOrders) : [];
-        if (!Array.isArray(currentOrdersList)) currentOrdersList = [];
-    } catch (e) {
-        currentOrdersList = [];
-    }
-
-    function persistOrdersData() {
-        try {
-            sessionStorage.setItem('pawpal_admin_orders_data', JSON.stringify(currentOrdersList));
-        } catch (e) {}
-    }
+    function persistOrdersData() { /* Business state is reloaded from Supabase. */ }
 
     // Toast thông báo chuẩn hệ thống
     function showToast(msg, type = 'success') {
@@ -219,190 +203,6 @@
     }
 
     // Tạo HTML phiếu đóng gói và bảng kê vận chuyển
-    function generatePackingSlipHtml(order) {
-        const carrierName = order.carrier || 'Chưa bàn giao';
-        const trackingCode = order.trackingNumber || ('PAW' + order.id.replace(/[^0-9]/g, ''));
-        const dateFormatted = formatDateTime(order.createdAt);
-        const customerAddr = order.address || 'Số 123 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh';
-
-        const itemsRows = (order.products || []).map((p, idx) => `
-            <tr>
-                <td style="width: 36px; text-align: center; color: var(--text-muted);">${idx + 1}</td>
-                <td style="width: 120px; font-family: monospace; font-weight: 600;">${p.sku}</td>
-                <td>
-                    <div style="font-weight: 500; line-height: 1.45; font-size: 13px;">${p.name}</div>
-                    ${p.spec ? `<div class="sub-meta-text" style="margin-top: 3px;">${p.spec}</div>` : ''}
-                </td>
-                <td style="width: 50px; text-align: center; font-weight: 700; font-size: 13.5px; color: #236B48;">${p.quantity}</td>
-                <td style="width: 110px; text-align: right;">${formatVND(p.price)}</td>
-                <td style="width: 125px; text-align: right; font-weight: 600;">${formatVND(p.total || (p.price * p.quantity))}</td>
-            </tr>
-        `).join('');
-
-        return `
-            <div class="packing-slip-sheet">
-                <div class="slip-header-block">
-                    <div>
-                        <div class="slip-brand-title">PawPal Pet Care</div>
-                        <div class="slip-brand-sub">Hệ thống chăm sóc thú cưng toàn diện | Hotline: 1900-PAWPAL</div>
-                        <div class="slip-brand-sub">Kho vận: 45 Lê Duẩn, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh</div>
-                    </div>
-                    <div class="slip-tracking-box">
-                        <div class="slip-barcode-text">*${order.id}*</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">Mã vận đơn <strong style="font-family: monospace; color: var(--text-main);">${trackingCode}</strong></div>
-                        <div style="font-size: 11.5px; color: #236B48; font-weight: 600;">${carrierName}</div>
-                    </div>
-                </div>
-
-                <div class="slip-info-grid">
-                    <div class="slip-info-col">
-                        <span class="slip-info-label">Người nhận hàng</span>
-                        <span class="slip-info-val strong">${order.customerName} - ${order.phone}</span>
-                        <span class="slip-info-val">${customerAddr}</span>
-                    </div>
-                    <div class="slip-info-col">
-                        <span class="slip-info-label">Thông tin đơn hàng</span>
-                        <span class="slip-info-val">Mã đơn <strong style="color: #236B48;">${order.id}</strong> | Ngày đặt ${dateFormatted}</span>
-                        <span class="slip-info-val">Ghi chú: ${order.customerNote || 'Giao giờ hành chính, cho kiểm tra hàng'}</span>
-                    </div>
-                </div>
-
-                <div>
-                    <div style="font-weight: 600; font-size: 12.5px; margin-bottom: 8px; color: var(--text-heading);">Danh sách hàng cần đóng gói</div>
-                    <table class="slip-items-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 36px; text-align: center;">STT</th>
-                                <th style="width: 120px;">Mã SKU</th>
-                                <th>Tên sản phẩm</th>
-                                <th style="width: 50px; text-align: center;">SL</th>
-                                <th style="width: 110px; text-align: right;">Đơn giá</th>
-                                <th style="width: 125px; text-align: right;">Thành tiền</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${itemsRows}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="slip-total-row">
-                    <span style="font-size: 13.5px;">Tổng cộng tiền hàng</span>
-                    <span class="slip-total-amount">${formatVND(order.total)}</span>
-                </div>
-
-                <div class="slip-sign-row">
-                    <div class="slip-sign-col">
-                        <span class="slip-sign-title">Người lập phiếu</span>
-                        <span class="slip-sign-note">(Ký, ghi rõ họ tên)</span>
-                    </div>
-                    <div class="slip-sign-col">
-                        <span class="slip-sign-title">Nhân viên đóng gói</span>
-                        <span class="slip-sign-note">(Ký, ghi rõ họ tên)</span>
-                    </div>
-                    <div class="slip-sign-col">
-                        <span class="slip-sign-title">Bưu tá tiếp nhận</span>
-                        <span class="slip-sign-note">(Ký, ghi rõ họ tên)</span>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    function generateManifestHtml(ordersList, carrierName) {
-        const manifestCode = 'MNF-2026-' + (Math.floor(1000 + Math.random() * 9000));
-        const nowFormatted = formatDateTime(new Date());
-        let totalItemsCount = 0;
-        let totalCodSum = 0;
-
-        const rows = ordersList.map((o, idx) => {
-            const isCod = (o.paymentMethod === 'cod' && o.paymentStatus !== 'paid');
-            const codAmt = isCod ? (o.total || 0) : 0;
-            const itemsCount = (o.products || []).reduce((sum, p) => sum + (p.quantity || 1), 0);
-            totalItemsCount += itemsCount;
-            totalCodSum += codAmt;
-
-            const tracking = o.trackingNumber || ('JT' + o.id.replace(/[^0-9]/g, ''));
-
-            return `
-                <tr>
-                    <td style="text-align: center; color: var(--text-muted);">${idx + 1}</td>
-                    <td style="font-weight: 600; color: #236B48;">${o.id}</td>
-                    <td style="font-family: monospace; font-weight: 600;">${tracking}</td>
-                    <td>
-                        <div style="font-weight: 500;">${o.customerName}</div>
-                        <div class="sub-meta-text">${o.phone}</div>
-                    </td>
-                    <td style="font-size: 12px; line-height: 1.4;">${o.address}</td>
-                    <td style="text-align: center; font-weight: 600;">${itemsCount}</td>
-                    <td style="text-align: right; font-weight: 600; color: ${isCod ? '#B45309' : 'var(--text-muted)'};">
-                        ${isCod ? formatVND(codAmt) : '0 đ'}
-                    </td>
-                    <td style="font-size: 11.5px; color: var(--text-muted);">${o.customerNote || 'Cho xem hàng'}</td>
-                </tr>
-            `;
-        }).join('');
-
-        return `
-            <div class="manifest-sheet">
-                <div class="slip-header-block" style="border-bottom: 2px solid var(--text-heading); padding-bottom: 16px; margin-bottom: 16px;">
-                    <div>
-                        <div class="slip-brand-title">Bảng kê bàn giao hàng hóa vận chuyển</div>
-                        <div class="slip-brand-sub">Đơn vị gửi Công ty TNHH PawPal Việt Nam</div>
-                        <div class="slip-brand-sub">Kho xuất hàng 45 Lê Duẩn, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh</div>
-                    </div>
-                    <div class="slip-tracking-box">
-                        <div style="font-weight: 700; font-size: 14px; color: #236B48;">${manifestCode}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">Thời gian in ${nowFormatted}</div>
-                        <div style="font-size: 12px; font-weight: 600; margin-top: 2px;">Đơn vị vận chuyển ${carrierName}</div>
-                    </div>
-                </div>
-
-                <table class="manifest-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 36px; text-align: center;">STT</th>
-                            <th style="width: 105px;">Mã đơn</th>
-                            <th style="width: 130px;">Mã vận đơn</th>
-                            <th style="width: 140px;">Người nhận</th>
-                            <th>Địa chỉ giao hàng</th>
-                            <th style="width: 50px; text-align: center;">Kiện</th>
-                            <th style="width: 110px; text-align: right;">Tiền thu COD</th>
-                            <th style="width: 120px;">Ghi chú</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows}
-                    </tbody>
-                </table>
-
-                <div class="slip-total-row" style="margin-top: 16px; border-top: 1px solid var(--border-neutral); padding-top: 12px;">
-                    <div>
-                        <span>Tổng số đơn <strong style="color: #236B48;">${ordersList.length}</strong> đơn hàng | Tổng số kiện <strong>${totalItemsCount}</strong> kiện</span>
-                    </div>
-                    <div>
-                        <span>Tổng tiền thu hộ COD <strong style="color: #B45309; font-size: 15px;">${formatVND(totalCodSum)}</strong></span>
-                    </div>
-                </div>
-
-                <div class="slip-sign-row" style="margin-top: 36px;">
-                    <div class="slip-sign-col">
-                        <span class="slip-sign-title">Đại diện PawPal</span>
-                        <span class="slip-sign-note">(Ký, ghi rõ họ tên)</span>
-                    </div>
-                    <div class="slip-sign-col">
-                        <span class="slip-sign-title">Thủ kho xuất hàng</span>
-                        <span class="slip-sign-note">(Ký, ghi rõ họ tên)</span>
-                    </div>
-                    <div class="slip-sign-col">
-                        <span class="slip-sign-title">Bưu tá tiếp nhận - ${carrierName}</span>
-                        <span class="slip-sign-note">(Ký, ghi rõ họ tên)</span>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
     function getOrderSlaInfo(order) {
         if (!order || !order.createdAt) {
             return { level: 'normal', badgeClass: '', label: '--', isSlaOverdue: false };
@@ -490,14 +290,13 @@
             matchSearch,
             showToast,
             showOrderConfirmModal,
-            generatePackingSlipHtml,
-            generateManifestHtml,
+
+
             getOrderSlaInfo,
             getSharedVouchersList,
             persistSharedVouchersData,
             persistProductsData,
             persistStockLogsData,
-            addStockLog,
             persistOrdersData,
             syncOrdersAndProductsFromSupabase
         },
@@ -538,217 +337,33 @@
     };
 
     // Đồng bộ Supabase Live Database qua PawpalDataStore
-    async function fetchProductsData({ force = false } = {}) {
-        const fetcher = async () => {
-            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
-
-            const [catRes, prodRes] = await Promise.all([
-                client.from('product_category').select('id, category_name, description').order('category_name'),
-                client.from('product').select(`
-                    id, product_name, unit,
-                    brand_name, target_pet, description, min_price, slug,
-                    status, specs, badge, origin, ingredients, benefits, usage_instructions,
-                    rating, review_count, image_urls,
-                    category_id,
-                    product_category (id, category_name),
-                    product_variant (
-                        id, sku_variant, cost_price, sale_price, compare_at_price, status,
-                        inventory (quantity_in_stock, minimum_stock),
-                        variant_size (id, size_name),
-                        variant_color (id, color_name),
-                        variant_flavor (id, flavor_name)
-                    )
-                `)
-            ]);
-
-            if (prodRes.error) throw prodRes.error;
-            return {
-                categories: catRes.data || [],
-                products: prodRes.data || []
-            };
-        };
-
+    async function fetchProductsData() {
         try {
-            let res;
-            if (window.PawpalDataStore) {
-                res = await window.PawpalDataStore.fetch('orders:products', fetcher, {
-                    ttlMs: window.PawpalDataStore.TTL_TIERS.CATALOG,
-                    force
-                });
-            } else {
-                res = await fetcher();
-            }
-
-            const prodData = res.products || [];
-            currentProductsList = prodData.map(p => {
-                const catObj = p.product_category || {};
-                const variants = Array.isArray(p.product_variant) ? p.product_variant : [];
-                const primaryVar = variants.length > 0 ? variants[0] : null;
-
-                // Tồn kho tổng hợp từ inventory của các biến thể
-                let totalStock = 0;
-                let minStock = null;
-                let hasAnyInv = false;
-                variants.forEach(v => {
-                    const vInv = Array.isArray(v.inventory) ? v.inventory[0] : (v.inventory || {});
-                    if (vInv && vInv.quantity_in_stock !== undefined && vInv.quantity_in_stock !== null) {
-                        totalStock += Number(vInv.quantity_in_stock);
-                        hasAnyInv = true;
-                    }
-                    if (vInv && vInv.minimum_stock !== undefined && vInv.minimum_stock !== null) {
-                        const mVal = Number(vInv.minimum_stock);
-                        minStock = minStock === null ? mVal : Math.min(minStock, mVal);
-                    }
-                });
-
-                const imgs = Array.isArray(p.image_urls) ? p.image_urls : (typeof p.image_urls === 'string' && p.image_urls ? p.image_urls.split(',').map(s => s.trim()) : []);
-                const stockVal = hasAnyInv ? totalStock : null;
-                const minStockVal = minStock;
-
-                const effectiveSku = (primaryVar && primaryVar.sku_variant) ? primaryVar.sku_variant : 'SKU-000';
-                const effectiveCostPrice = (primaryVar && primaryVar.cost_price !== undefined) ? Number(primaryVar.cost_price) : 0;
-                const effectiveSalePrice = (primaryVar && primaryVar.sale_price !== undefined) ? Number(primaryVar.sale_price) : 0;
-
-                // Xác định tên thuộc tính 1 và thuộc tính 2 cho sản phẩm nếu có nhiều biến thể
-                const hasFlavor = variants.some(v => v.variant_flavor?.flavor_name);
-                const hasSize = variants.some(v => v.variant_size?.size_name);
-                const hasColor = variants.some(v => v.variant_color?.color_name);
-
-                let detectedAttr1Name = 'Hương vị';
-                let detectedAttr2Name = 'Quy cách';
-
-                if (hasFlavor) {
-                    detectedAttr1Name = 'Hương vị';
-                    if (hasSize) detectedAttr2Name = 'Kích thước';
-                    else if (hasColor) detectedAttr2Name = 'Màu sắc';
-                } else if (hasSize) {
-                    detectedAttr1Name = 'Kích thước';
-                    if (hasColor) detectedAttr2Name = 'Màu sắc';
-                } else if (hasColor) {
-                    detectedAttr1Name = 'Màu sắc';
-                }
-
-                const mappedVariants = variants.map(v => {
-                    let a1 = '';
-                    let a2 = '';
-                    if (hasFlavor) {
-                        a1 = v.variant_flavor?.flavor_name || '';
-                        a2 = v.variant_size?.size_name || v.variant_color?.color_name || '';
-                    } else if (hasSize) {
-                        a1 = v.variant_size?.size_name || '';
-                        a2 = v.variant_color?.color_name || '';
-                    } else if (hasColor) {
-                        a1 = v.variant_color?.color_name || '';
-                    } else {
-                        a1 = v.sku_variant || '';
-                    }
-
-                    const vInv = Array.isArray(v.inventory) ? v.inventory[0] : (v.inventory || {});
-                    const vStock = (vInv && vInv.quantity_in_stock !== undefined && vInv.quantity_in_stock !== null)
-                        ? Number(vInv.quantity_in_stock)
-                        : (stockVal !== null ? Math.round(stockVal / (variants.length || 1)) : 20);
-
-                    return {
-                        id: v.id,
-                        sku: v.sku_variant,
-                        attr1: a1,
-                        attr2: a2,
-                        name: a2 ? `${a1} - ${a2}` : a1,
-                        costPrice: Number(v.cost_price) || 0,
-                        price: Number(v.sale_price) || 0,
-                        originalPrice: v.compare_at_price ? Number(v.compare_at_price) : (Number(v.sale_price) || 0),
-                        stock: vStock,
-                        status: v.status
-                    };
-                });
-
-                const detectedBrand = (function(name) {
-                    if (!name) return 'PawPal';
-                    const lower = name.toLowerCase();
-                    const brandMap = [
-                        { key: 'royal canin', brand: 'Royal Canin' },
-                        { key: 'petkit', brand: 'Petkit' },
-                        { key: "king's pet", brand: "King's Pet" },
-                        { key: 'kings pet', brand: "King's Pet" },
-                        { key: 'ciao churu', brand: 'Ciao Churu' },
-                        { key: 'churu', brand: 'Ciao Churu' },
-                        { key: 'ciao', brand: 'Ciao Churu' },
-                        { key: 'whiskas', brand: 'Whiskas' },
-                        { key: 'orijen', brand: 'Orijen' },
-                        { key: 'pidan', brand: 'Pidan' },
-                        { key: 'me-o', brand: 'Me-O' },
-                        { key: "cat's best", brand: "Cat's Best" },
-                        { key: 'kit cat', brand: 'Kit Cat' },
-                        { key: 'furrytail', brand: 'Furrytail' },
-                        { key: 'gimcat', brand: 'GimCat' },
-                        { key: 'purina', brand: 'Purina' },
-                        { key: 'pro plan', brand: 'Pro Plan' },
-                        { key: 'nutrience', brand: 'Nutrience' },
-                        { key: 'taste of the wild', brand: 'Taste of the Wild' },
-                        { key: 'monge', brand: 'Monge' }
-                    ];
-                    for (const item of brandMap) {
-                        if (lower.includes(item.key)) return item.brand;
-                    }
-                    return 'PawPal';
-                })(p.product_name);
-
-                return {
-                    id: p.id,
-                    variant_id: variants[0]?.id || null,
-                    default_variant_id: variants[0]?.id || null,
-                    sku: effectiveSku,
-                    name: p.product_name || 'Sản phẩm PawPal',
-                    category: catObj.category_name || 'Chưa phân loại',
-                    brand: p.brand_name || detectedBrand,
-                    petType: p.target_pet || 'Chó và Mèo',
-                    description: p.description || p.specs || '',
-                    origin: p.origin || 'Việt Nam',
-                    unit: p.unit || 'Túi',
-                    spec: p.specs || 'Tiêu chuẩn',
-                    badge: p.badge || (stockVal === 0 ? 'Hết hàng' : (p.status === 'INACTIVE' ? 'Tạm ngưng' : '')),
-                    costPrice: effectiveCostPrice,
-                    rating: p.rating,
-                    reviewCount: p.review_count || 0,
-                    price: effectiveSalePrice,
-                    originalPrice: effectiveSalePrice || effectiveCostPrice || 0,
-                    memberPrice: effectiveSalePrice,
-                    stock: stockVal,
-                    minStock: minStockVal,
-                    images: imgs.length > 0 ? imgs.join(', ') : '/assets/images/shop/products/tp-hat-01.png',
-                    image: imgs[0] || '/assets/images/shop/products/tp-hat-01.png',
-                    status: p.status === 'INACTIVE' ? 'Tạm ngưng' : (stockVal === 0 ? 'Hết hàng' : (stockVal !== null && minStockVal !== null && stockVal <= minStockVal ? 'Sắp hết' : 'Còn hàng')),
-                    hasVariants: variants.length > 1,
-                    attr1Name: detectedAttr1Name,
-                    attr2Name: detectedAttr2Name,
-                    variants: mappedVariants
-                };
-            });
-
-            window.PawpalOrders.state.products = currentProductsList;
-            persistProductsData();
-
-            window.PawpalOrders.updateCategoryFilterDropdown(res.categories || []);
-            window.PawpalOrders.state.productsLoaded = true;
-            window.PawpalOrders.state.productsError = false;
-            window.PawpalOrders.renderProductsTable();
-            return currentProductsList;
+            const [result, logs] = await Promise.all([window.PawpalOrderV1.products(), window.PawpalOrderV1.stockLogs()]);
+            currentStockLogsList = logs;
+            window.PawpalOrders.state.stockLogs = logs;
+            currentProductsList = result.products;
+            window.PawpalOrders.state.categories = result.categories;
+            Object.assign(window.PawpalOrders.state, {products: currentProductsList, productsLoaded: true, productsError: false});
+            window.PawpalOrders.updateCategoryFilterDropdown(result.categories);
         } catch (err) {
-            console.warn('[Orders Core] Lỗi nạp sản phẩm:', err);
-            window.PawpalOrders.state.productsError = true;
-            window.PawpalOrders.renderProductsTable();
-            return [];
+            currentProductsList = [];
+            Object.assign(window.PawpalOrders.state, {products: [], productsError: true});
+            console.warn('[Orders V1] Products:', err);
         }
+        window.PawpalOrders.renderProductsTable();
+        return currentProductsList;
     }
 
     async function fetchVouchersData({ force = false } = {}) {
         const fetcher = async () => {
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
-            const { data, error } = await client.from('voucher').select('*').order('created_at', { ascending: false });
-            if (error) throw error;
-            return data || [];
+            const [data, usage] = await Promise.all([
+                window.PawpalOrderV1.rows(() => client.from('voucher').select('*').order('id')),
+                window.PawpalOrderV1.rows(() => client.from('voucher_redemption').select('id,voucher_id,status').eq('status','applied').order('id'))
+            ]);
+            return data.map(v => ({...v, used:usage.filter(r => r.voucher_id===v.id).length}));
         };
 
         try {
@@ -780,7 +395,7 @@
                     name: v.voucher_name || v.description,
                     title: v.voucher_name || v.description,
                     type: isPct ? 'percent' : 'fixed',
-                    target: 'Shop',
+                    target: v.applicable_for,
                     value: safeDiscount,
                     discount: discountVal,
                     minOrder: Math.max(0, Number(v.minimum_order_amount) || 0),
@@ -790,8 +405,9 @@
                     validDate: expFormatted,
                     expiry: expFormatted,
                     limit: (v.max_usage !== null && v.max_usage !== undefined) ? Number(v.max_usage) : null,
-                    used: v.usage_count || 0,
-                    status: v.end_date && Date.parse(v.end_date) < Date.now() ? 'expired' : (v.is_active ? 'active' : 'paused')
+                    used: v.used,
+                    id: v.id, updatedAt: v.updated_at, raw:v,
+                    status: v.end_date && v.end_date < new Date().toLocaleDateString('en-CA', {timeZone:'Asia/Ho_Chi_Minh'}) ? 'expired' : (v.is_active ? 'active' : 'paused')
                 };
             });
             window.PawpalOrders.state.vouchersLoaded = true;
@@ -807,255 +423,19 @@
         }
     }
 
-    async function fetchOrdersData({ force = false } = {}) {
-        const fetcher = async () => {
-            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
-
-            const [orderRes, rmaRes] = await Promise.all([
-                client.from('sales_order').select(`
-                    id, order_code, order_status, payment_status, total_amount, note, created_at, tracking_code, shipping_provider_id, shipped_at,
-                    customer (
-                        id, phone_main,
-                        customer_profile (full_name)
-                    ),
-                    shipping_address:customer_address!shipping_address_id (
-                        receiver_name, receiver_phone, province, street_address
-                    ),
-                    sales_order_detail (
-                        id, quantity, unit_price, discount_amount, subtotal, product_variant_id,
-                        product_variant (id, sku_variant, sale_price, product (id, product_name, image_urls, specs))
-                    ),
-                    payment (payment_method_config_id, amount, transaction_status)
-                `).order('created_at', { ascending: false }),
-                client.from('return_request').select('id, sales_order_id, reason, return_type, description, request_status, created_at, return_request_detail (*, product_variant (id, sku_variant, sale_price, product (id, product_name)))').order('created_at', { ascending: false })
-            ]);
-
-            if (orderRes.error) throw orderRes.error;
-            return {
-                orders: orderRes.data || [],
-                rma: rmaRes.data || []
-            };
-        };
-
+    async function fetchOrdersData() {
         try {
-            let res;
-            if (window.PawpalDataStore) {
-                res = await window.PawpalDataStore.fetch('orders:list', fetcher, {
-                    ttlMs: window.PawpalDataStore.TTL_TIERS.OPERATIONAL,
-                    force
-                });
-            } else {
-                res = await fetcher();
-            }
-
-            const rmaMapByOrderId = {};
-            (res.rma || []).forEach(r => {
-                const reqStatus = String(r.request_status || '').toLowerCase();
-                const isResolved = reqStatus === 'da_hoan_tat' || reqStatus === 'completed' || reqStatus === 'resolved';
-                const items = (r.return_request_detail || []).map(d => ({
-                    sku: d.product_variant?.sku_variant || d.product?.product_variant?.[0]?.sku_variant || 'SKU',
-                    name: d.product_variant?.product?.product_name || d.product?.product_name || 'Sản phẩm',
-                    quantity: d.quantity || 1,
-                    price: d.unit_price || 0
-                }));
-
-                const retType = String(r.return_type || '').toLowerCase();
-                let solutionType = 'exchange';
-                let solutionTypeName = 'Đổi hàng mới';
-                if (retType.includes('hoan_tien') || retType === 'refund') {
-                    solutionType = 'refund';
-                    solutionTypeName = 'Hoàn tiền';
-                } else if (retType.includes('tra_san_pham') || retType === 'return') {
-                    solutionType = 'return';
-                    solutionTypeName = 'Trả hàng';
-                } else {
-                    solutionType = 'exchange';
-                    solutionTypeName = 'Đổi hàng mới';
-                }
-
-                rmaMapByOrderId[r.sales_order_id] = {
-                    id: r.id.slice(0, 12).toUpperCase(),
-                    solutionType: solutionType,
-                    solutionTypeName: solutionTypeName,
-                    reason: r.reason,
-                    reasonText: r.reason,
-                    restockAction: 'restock',
-                    restockText: 'Đã nhập lại kho khả dụng',
-                    refundMethod: 'bank_transfer',
-                    refundAmount: 0,
-                    refundText: isResolved ? 'Đã xử lý' : 'Đang xử lý',
-                    items: items,
-                    note: r.description,
-                    createdAt: r.created_at
-                };
-            });
-
-            const orderData = res.orders || [];
-            currentOrdersList = orderData.map(o => {
-                const cust = o.customer || {};
-                const custProfile = Array.isArray(cust.customer_profile) ? cust.customer_profile[0] : (cust.customer_profile || {});
-                const shipAddr = o.shipping_address || {};
-                const custName = custProfile.full_name || shipAddr.receiver_name || 'Khách hàng PawPal';
-                const phone = cust.phone_main || shipAddr.receiver_phone || '';
-                let formattedAddr = 'Tại cửa hàng PawPal';
-                if (shipAddr.street_address || shipAddr.province) {
-                    formattedAddr = [shipAddr.street_address, shipAddr.province].filter(Boolean).join(', ');
-                }
-
-                const rawStatus = (o.order_status || 'PENDING').toLowerCase();
-                let mappedStatus = rawStatus;
-                if (['cho_xac_nhan', 'pending'].includes(rawStatus)) mappedStatus = 'pending';
-                else if (['dang_dong_goi', 'packing', 'da_xac_nhan', 'confirmed', 'dang_chuan_bi'].includes(rawStatus)) mappedStatus = 'confirmed';
-                else if (['dang_giao_hang', 'shipping'].includes(rawStatus)) mappedStatus = 'shipping';
-                else if (['da_giao_hang', 'delivered', 'completed', 'da_giao', 'hoan_tat'].includes(rawStatus)) mappedStatus = 'completed';
-                else if (['da_huy', 'cancelled'].includes(rawStatus)) mappedStatus = 'cancelled';
-                else if (['da_tra_hang', 'returned', 'doi_tra'].includes(rawStatus)) mappedStatus = 'returned';
-
-                const rawPaymentStatus = (o.payment_status || 'UNPAID').toLowerCase();
-                let mappedPaymentStatus = rawPaymentStatus;
-                if (['da_thanh_toan', 'paid', 'completed'].includes(rawPaymentStatus)) mappedPaymentStatus = 'paid';
-                else if (['chua_thanh_toan', 'unpaid', 'pending'].includes(rawPaymentStatus)) mappedPaymentStatus = 'unpaid';
-                else if (['da_hoan_tien', 'refunded'].includes(rawPaymentStatus)) mappedPaymentStatus = 'refunded';
-                else if (['cho_hoan_tien', 'pending_refund', 'refund_pending'].includes(rawPaymentStatus)) mappedPaymentStatus = 'refund_pending';
-                else if (['cod_pending'].includes(rawPaymentStatus)) mappedPaymentStatus = 'cod_pending';
-
-                let payMethod = 'cod';
-                const payObj = Array.isArray(o.payment) ? o.payment[0] : (o.payment || {});
-                const pmId = String(payObj?.payment_method_config_id || payObj?.payment_method_id || '').toLowerCase();
-                if (pmId) {
-                    if (pmId.includes('bank') || pmId.includes('transfer')) payMethod = 'bank_transfer';
-                    else if (pmId.includes('momo')) payMethod = 'momo';
-                    else if (pmId.includes('vnpay')) payMethod = 'vnpay';
-                    else if (pmId.includes('card')) payMethod = 'pos_card';
-                    else if (pmId.includes('cash') || pmId.includes('tien_mat')) payMethod = 'cash';
-                } else if (o.note && (o.note.includes('Tiền mặt') || o.note.toLowerCase().includes('cash'))) {
-                    payMethod = 'cash';
-                } else if (o.note && (o.note.includes('Chuyển khoản') || o.note.toLowerCase().includes('transfer') || o.note.toLowerCase().includes('bank'))) {
-                    payMethod = 'bank_transfer';
-                }
-
-                let calculatedDiscount = 0;
-                let calculatedSubtotal = 0;
-                const prods = (o.sales_order_detail || []).map(d => {
-                    const pv = d.product_variant || {};
-                    const pr = pv.product || d.product || {};
-                    const pImgs = Array.isArray(pr.image_urls) ? pr.image_urls : (typeof pr.image_urls === 'string' && pr.image_urls ? pr.image_urls.split(',').map(s => s.trim()) : []);
-                    const qty = Number(d.quantity) || 1;
-                    const uPrice = Number(d.unit_price) || 0;
-                    const sub = Number(d.subtotal) || (uPrice * qty);
-                    const disc = Number(d.discount_amount) || 0;
-                    calculatedDiscount += disc;
-                    calculatedSubtotal += sub;
-
-                    return {
-                        variant_id: d.product_variant_id || pv.id,
-                        sku: pv.sku_variant || pr.product_variant?.[0]?.sku_variant || 'SKU-000',
-                        name: pr.product_name || 'Sản phẩm PawPal',
-                        spec: pr.specs || 'Tiêu chuẩn',
-                        price: uPrice,
-                        quantity: qty,
-                        total: sub,
-                        image: pImgs[0] || '/assets/images/shop/products/tp-hat-01.png'
-                    };
-                });
-
-                const rmaInfo = rmaMapByOrderId[o.id] || null;
-                const elapsedMinutes = Math.floor((Date.now() - new Date(o.created_at).getTime()) / 60000);
-                let alertType = null;
-                let alertMessage = null;
-
-                if (rmaInfo || mappedStatus === 'returned' || rawStatus === 'returned' || rawStatus === 'da_tra_hang') {
-                    alertType = 'danger';
-                    alertMessage = 'Đổi trả / RMA';
-                } else if ((mappedStatus === 'pending' || rawStatus === 'pending' || rawStatus === 'cho_xac_nhan') && elapsedMinutes > 30) {
-                    alertType = 'danger';
-                    alertMessage = 'Quá hạn SLA (>30p)';
-                } else if ((mappedStatus === 'completed' || mappedStatus === 'shipping' || rawStatus === 'delivered' || rawStatus === 'da_giao_hang') && mappedPaymentStatus === 'cod_pending') {
-                    alertType = 'warning';
-                    alertMessage = 'Chờ đối soát COD';
-                }
-
-                const carrierMatch = o.note ? o.note.match(/Hãng:\s*([^\n;]+)/i)?.[1] : null;
-                const trackingMatch = o.note ? o.note.match(/Vận đơn:\s*([^\n;]+)/i)?.[1] : null;
-                const resolvedCarrier = o.shipping_provider_id || o.carrier || carrierMatch || (['shipping', 'delivered', 'completed', 'dang_giao_hang', 'da_giao_hang'].includes(mappedStatus) ? 'Bưu cục đối tác' : 'Chưa phân công');
-                const resolvedTracking = o.tracking_code || o.tracking_number || trackingMatch || '--';
-
-                const timeline = [
-                    { title: 'Tạo đơn hàng thành công', time: formatTime(o.created_at) + ' - ' + formatDate(o.created_at), desc: 'Đơn hàng được ghi nhận vào hệ thống PawPal', done: true }
-                ];
-
-                if (['confirmed', 'shipping', 'delivered', 'completed'].includes(mappedStatus)) {
-                    timeline.push({ title: 'Đã xác nhận đơn hàng', time: 'Chưa ghi nhận thời gian', desc: 'Nhân viên đã duyệt đơn và xuất kho đóng gói', done: true });
-                }
-                if (['shipping', 'delivered', 'completed'].includes(mappedStatus)) {
-                    timeline.push({ title: 'Đã bàn giao vận chuyển', time: 'Chưa ghi nhận thời gian', desc: `Đã bàn giao cho ${resolvedCarrier}. Mã vận đơn: ${resolvedTracking}`, done: true });
-                }
-                if (['delivered', 'completed'].includes(mappedStatus)) {
-                    timeline.push({ title: 'Đã giao hàng thành công', time: 'Chưa ghi nhận thời gian', desc: 'Khách hàng đã nhận đủ sản phẩm', done: true });
-                }
-                if (mappedStatus === 'completed') {
-                    timeline.push({ title: 'Hoàn tất đơn hàng', time: 'Chưa ghi nhận thời gian', desc: 'Đơn hàng đã hoàn thành và cộng điểm Pawpoint', done: true });
-                }
-                if (mappedStatus === 'cancelled') {
-                    timeline.push({ title: 'Đã hủy đơn hàng', time: 'Chưa ghi nhận thời gian', desc: 'Đơn hàng bị hủy bởi quản trị viên hoặc khách yêu cầu', done: true });
-                }
-
-                const orderTotal = Number(o.total_amount) || 0;
-                const finalSubtotal = calculatedSubtotal || orderTotal;
-                const shippingFee = Math.max(0, orderTotal + calculatedDiscount - finalSubtotal);
-
-                return {
-                    id: o.order_code || `ORD-${o.id.slice(0, 8).toUpperCase()}`,
-                    rawId: o.id,
-                    userId: cust.id || 'GUEST',
-                    customerName: custName,
-                    phone: phone,
-                    address: formattedAddr,
-                    status: mappedStatus,
-                    paymentStatus: mappedPaymentStatus,
-                    paymentMethod: payMethod,
-                    carrier: resolvedCarrier,
-                    trackingNumber: resolvedTracking,
-                    createdAt: o.created_at,
-                    subtotal: finalSubtotal,
-                    shippingFee: shippingFee,
-                    discount: calculatedDiscount,
-                    pawPointsUsed: 0,
-                    total: orderTotal,
-                    customerNote: o.note || '',
-                    internalNote: '',
-                    alertType: alertType,
-                    alertMessage: alertMessage,
-                    rmaInfo: rmaInfo,
-                    delivery: null,
-                    products: prods,
-                    timeline: timeline
-                };
-            });
-
-            window.PawpalOrders.state.orders = currentOrdersList;
-            persistOrdersData();
-
-            window.PawpalOrders.state.ordersLoaded = true;
-            window.PawpalOrders.state.ordersError = false;
-
-            window.PawpalOrders.renderOrdersTable();
-            if (window.PawpalOrders.state.selectedOrderId) {
-                window.PawpalOrders.renderOrderDetail(window.PawpalOrders.state.selectedOrderId);
-            }
-
-            if (window.PawpalOrders.controllers.list?.loadPosCustomerDirectory) {
-                window.PawpalOrders.controllers.list.loadPosCustomerDirectory();
-            }
-
-            return currentOrdersList;
+            currentOrdersList = await window.PawpalOrderV1.orders();
+            Object.assign(window.PawpalOrders.state, {orders: currentOrdersList, ordersLoaded: true, ordersError: false});
         } catch (err) {
-            console.warn('[Orders Core] Lỗi nạp đơn hàng:', err);
-            window.PawpalOrders.state.ordersError = true;
-            window.PawpalOrders.renderOrdersTable();
-            return [];
+            currentOrdersList = [];
+            Object.assign(window.PawpalOrders.state, {orders: [], ordersError: true});
+            console.warn('[Orders V1] Orders:', err);
         }
+        window.PawpalOrders.renderOrdersTable();
+        if (window.PawpalOrders.state.selectedOrderId) window.PawpalOrders.renderOrderDetail(window.PawpalOrders.state.selectedOrderId);
+        await window.PawpalOrders.controllers.list?.loadPosCustomerDirectory?.();
+        return currentOrdersList;
     }
 
     window.PawpalOrders.fetchProductsData = fetchProductsData;
@@ -1142,7 +522,7 @@
                     window.PawpalOrders.renderOrdersTable();
                 }
             } else if (targetSubtab === 'tab-order-products') {
-                const needsFresh = !window.PawpalOrders.state.productsLoaded || state.products.some(p => p.hasVariants && !p.variants[0]?.attr1);
+                const needsFresh = !window.PawpalOrders.state.productsLoaded;
                 if (needsFresh) {
                     fetchProductsData({ force: true }).then(() => window.PawpalOrders.renderProductsTable());
                 } else {
@@ -1237,12 +617,11 @@
                 }
             };
 
-            _ordersRealtimeChannel = client.channel('admin-orders-live-sync')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_order' }, () => triggerOrderSync('orders:list*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'product' }, () => triggerOrderSync('orders:products*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => triggerOrderSync('orders:products*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'voucher' }, () => triggerOrderSync('orders:vouchers*'))
-                .subscribe();
+            _ordersRealtimeChannel = client.channel('admin-orders-live-sync');
+            for (const table of ['sales_order','sales_order_detail','product','product_variant','product_media','product_variant_media','product_category','inventory','inventory_transaction','stock_reservation','voucher','voucher_redemption','payment','refund_transaction','return_request','return_request_detail','review','review_response','customer_profile','customer_phone','customer_address','customer_membership','membership_tier','variant_color','variant_size','variant_flavor','shipping_provider','delivery_option_config']) {
+                _ordersRealtimeChannel.on('postgres_changes', {event:'*',schema:'public',table}, () => triggerOrderSync('orders:*'));
+            }
+            _ordersRealtimeChannel.subscribe();
 
             window.PawpalDataStore?.recordMetric?.('channel-add', 'admin-orders-live-sync');
 

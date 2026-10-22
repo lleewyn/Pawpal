@@ -9,47 +9,17 @@
     }
 
     const { helpers, state } = PawpalOrders;
-    const { formatVND, formatDateTime, showToast, matchSearch, addStockLog, persistProductsData, syncOrdersAndProductsFromSupabase } = helpers;
+    const { formatVND, formatDateTime, showToast, matchSearch, persistProductsData, syncOrdersAndProductsFromSupabase } = helpers;
 
     const PRODUCTS_PER_PAGE = 10;
     let productsCurrentPage = parseInt(sessionStorage.getItem('pawpal_admin_products_page') || '1', 10);
     if (isNaN(productsCurrentPage) || productsCurrentPage < 1) productsCurrentPage = 1;
 
     let globalDbCategories = [];
+    let attr1TagValues = [];
+    let attr2TagValues = [];
 
     // Nhận diện thương hiệu từ tên sản phẩm hoặc thông tin cấu hình
-    function extractBrandFromName(name) {
-        if (!name) return 'PawPal';
-        const lower = name.toLowerCase();
-        const brandMap = [
-            { key: 'royal canin', brand: 'Royal Canin' },
-            { key: 'petkit', brand: 'Petkit' },
-            { key: "king's pet", brand: "King's Pet" },
-            { key: 'kings pet', brand: "King's Pet" },
-            { key: 'ciao churu', brand: 'Ciao Churu' },
-            { key: 'churu', brand: 'Ciao Churu' },
-            { key: 'ciao', brand: 'Ciao Churu' },
-            { key: 'whiskas', brand: 'Whiskas' },
-            { key: 'orijen', brand: 'Orijen' },
-            { key: 'pidan', brand: 'Pidan' },
-            { key: 'me-o', brand: 'Me-O' },
-            { key: "cat's best", brand: "Cat's Best" },
-            { key: 'kit cat', brand: 'Kit Cat' },
-            { key: 'furrytail', brand: 'Furrytail' },
-            { key: 'gimcat', brand: 'GimCat' },
-            { key: 'purina', brand: 'Purina' },
-            { key: 'pro plan', brand: 'Pro Plan' },
-            { key: 'nutrience', brand: 'Nutrience' },
-            { key: 'taste of the wild', brand: 'Taste of the Wild' },
-            { key: 'monge', brand: 'Monge' }
-        ];
-        for (const item of brandMap) {
-            if (lower.includes(item.key)) return item.brand;
-        }
-        return 'PawPal';
-    }
-
-    // Cập nhật bộ lọc danh mục sản phẩm từ CSDL Supabase
     function updateCategoryFilterDropdown(dbCategories = []) {
         if (Array.isArray(dbCategories) && dbCategories.length > 0) {
             globalDbCategories = dbCategories;
@@ -59,6 +29,32 @@
 
         const currentVal = select.value || 'ALL';
         const distinctCats = [...new Set(globalDbCategories.map(c => c.category_name).filter(Boolean))];
+        const categoryInput = document.getElementById('newProdCategory');
+        if (categoryInput && !categoryInput.dataset.v1Autocomplete) {
+            categoryInput.dataset.v1Autocomplete = 'true';
+            const parent = categoryInput.parentElement;
+            parent.style.position = 'relative';
+            const dropdown = document.createElement('div');
+            dropdown.className = 'customer-autocomplete-popover';
+            dropdown.style.cssText = 'display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #ECF2EE;border-radius:9px;max-height:240px;overflow:auto;overscroll-behavior:contain;z-index:2500';
+            const render = () => {
+                dropdown.replaceChildren();
+                for (const c of globalDbCategories.filter(c => matchSearch(c.category_name, categoryInput.value))) {
+                    const button = document.createElement('button');
+                    button.type = 'button'; button.className = 'admin-btn';
+                    button.style.cssText = 'display:block;background:transparent;width:100%;text-align:left';
+                    button.textContent = c.category_name;
+                    button.onclick = () => { categoryInput.value = c.category_name; dropdown.style.display = 'none'; };
+                    dropdown.append(button);
+                }
+                dropdown.style.display = 'block';
+            };
+            parent.append(dropdown);
+            categoryInput.addEventListener('input', render);
+            categoryInput.addEventListener('focus', render);
+            categoryInput.addEventListener('keydown', e => { if (e.key === 'Escape') dropdown.style.display = 'none'; });
+            categoryInput.addEventListener('blur', () => setTimeout(() => dropdown.style.display = 'none', 150));
+        }
 
         select.innerHTML = '<option value="ALL">Tất cả danh mục</option>' + distinctCats.map(name => `
             <option value="${name}">${name}</option>
@@ -88,7 +84,7 @@
 
         const productsList = state.products || [];
         if (!state.productsLoaded) return;
-        const metrics = {statTotalProducts:productsList.length,statInStockProducts:productsList.filter(p=>p.stock>0).length,statLowStockProducts:productsList.filter(p=>p.stock>0 && p.stock<=p.minStock).length,statOutStockProducts:productsList.filter(p=>p.stock===0).length,statTotalStockValue:formatVND(productsList.reduce((sum,p)=>sum+(Number(p.stock)||0)*(Number(p.costPrice)||0),0))};
+        const metrics = {statTotalProducts:productsList.length,statInStockProducts:productsList.filter(p=>p.stock>0).length,statLowStockProducts:productsList.filter(p=>p.stock>0 && p.stock<=p.minStock).length,statOutStockProducts:productsList.filter(p=>p.stock===0).length,statTotalStockValue:productsList.some(p=>p.variants.some(v=>v.stock===null))?'Chưa đủ dữ liệu':formatVND(productsList.reduce((sum,p)=>sum+p.variants.reduce((n,v)=>n+v.stock*v.costPrice,0),0))};
         Object.entries(metrics).forEach(([id,value])=>{const el=document.getElementById(id);if(el)el.textContent=value;});
         delete tbody.dataset.loadingSkeleton;
 
@@ -104,7 +100,7 @@
             if (searchVal) {
                 const matchSku = matchSearch(p.sku, searchVal);
                 const matchName = matchSearch(p.name, searchVal);
-                const matchBrand = matchSearch(p.brand || extractBrandFromName(p.name), searchVal);
+                const matchBrand = matchSearch(p.brand || '', searchVal);
                 if (!matchSku && !matchName && !matchBrand) return false;
             }
             return true;
@@ -132,31 +128,14 @@
         }
 
         // Bảng tra cứu số lượng tạm giữ theo SKU và theo Tên từ các đơn hàng đang xử lý
-        const reservedMap = {};
-        const reservedByName = {};
-        (state.orders || []).forEach(order => {
-            const st = (order.status || '').toLowerCase();
-            // Đơn đang ở trạng thái chờ duyệt, đã xác nhận, đang đóng gói, đang xử lý -> Tạm giữ trong kho
-            if (['pending', 'confirmed', 'packing', 'processing'].includes(st)) {
-                (order.products || []).forEach(item => {
-                    const qty = Number(item.quantity) || 1;
-                    if (item.sku && item.sku !== 'SKU-000') {
-                        reservedMap[item.sku] = (reservedMap[item.sku] || 0) + qty;
-                    }
-                    if (item.name) {
-                        const nameKey = item.name.toLowerCase().trim();
-                        reservedByName[nameKey] = (reservedByName[nameKey] || 0) + qty;
-                    }
-                });
-            }
-        });
-
         tbody.innerHTML = pagedProducts.map(p => {
             let stockBadge = '';
             let rowAlertClass = '';
             if (p.status === 'Tạm ngưng') {
                 stockBadge = '<span class="admin-badge badge-neutral">Tạm ngưng</span>';
                 rowAlertClass = 'row-locked';
+            } else if (p.stock === null) {
+                stockBadge = '<span class="admin-badge badge-warning">Chưa đủ dữ liệu tồn</span>';
             } else if (p.stock === 0) {
                 stockBadge = '<span class="admin-badge badge-cancelled">Hết hàng</span>';
                 rowAlertClass = 'row-alert-danger';
@@ -167,27 +146,27 @@
                 stockBadge = '<span class="admin-badge badge-paid">Còn hàng</span>';
             }
 
-            const alertDot = (p.stock <= p.minStock && p.status !== 'Tạm ngưng')
+            const alertDot = (p.stock!==null && p.stock <= p.minStock && p.status !== 'Tạm ngưng')
                 ? `<span class="alert-indicator text-${p.stock === 0 ? 'danger' : 'warning'}">• ${p.stock === 0 ? 'Hết hàng' : 'Cần nhập hàng'}</span>`
                 : '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>';
 
             const esc = window.PawpalOrdersModule?.escapeHtml || (s => String(s || ''));
             const imgSrc = p.image || (Array.isArray(p.images) ? p.images[0] : (typeof p.images === 'string' ? p.images.split(',')[0].trim() : '/assets/images/shop/products/tp-hat-01.png'));
 
-            const itemBrand = (p.brand && p.brand !== 'Chưa rõ' && p.brand !== '—') ? p.brand : extractBrandFromName(p.name);
-            const totalStock = Number(p.stock) || 0;
-            const reserved = reservedMap[p.sku] || reservedByName[(p.name || '').toLowerCase().trim()] || 0;
-            const available = Math.max(0, totalStock - reserved);
+            const itemBrand = (p.brand && p.brand !== 'Chưa rõ' && p.brand !== '—') ? p.brand : '\u2014';
+            const totalStock = p.stock;
+            const reserved = p.reserved;
+            const available = totalStock===null?'—':Math.max(0,totalStock-reserved);
 
             return `
                 <tr class="${rowAlertClass}">
                     <td style="font-family: monospace; font-weight: 600; color: #236B48;">${esc(p.sku)}</td>
                     <td>
                         <div class="prod-item-row">
-                            <img src="${esc(imgSrc)}" alt="${esc(p.name)}" class="prod-thumb" onerror="this.src='/assets/images/shop/products/tp-hat-01.png'">
+                            ${imgSrc?`<img src="${esc(imgSrc)}" alt="${esc(p.name)}" class="prod-thumb" onerror="this.style.display='none'">`:""}
                             <div class="prod-info-cell">
                                 <a href="javascript:void(0)" class="prod-title btn-open-edit-prod" data-sku="${esc(p.sku)}">${esc(p.name)}</a>
-                                <span class="prod-sku-tag">Quy cách: ${esc(p.spec || 'Tiêu chuẩn')}</span>
+                                <span class="prod-sku-tag">Quy cách: ${esc(p.spec || '—')}</span>
                             </div>
                         </div>
                     </td>
@@ -199,8 +178,8 @@
                     </td>
                     <td style="text-align: center;">${Number(p.reviewCount)>0 ? Number(p.rating).toFixed(1) : "—"}</td>
                     <td style="text-align: center;">
-                        <div style="font-weight: 700; font-size: 13.5px;">${p.stock} <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">${esc(p.unit || 'món')}</span></div>
-                        <div class="sub-meta-text">Ngưỡng: ${p.minStock}</div>
+                        <div style="font-weight: 700; font-size: 13.5px;">${p.stock===null?"—":p.stock} <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">${esc(p.unit || 'món')}</span></div>
+                        <div class="sub-meta-text">Ngưỡng: ${p.minStock===null?"—":p.minStock}</div>
                     </td>
                     <td style="text-align: center;"><span style="font-weight: 600; color: ${reserved > 0 ? '#C05621' : 'var(--text-muted)'};">${reserved}</span></td>
                     <td style="text-align: center;"><span style="font-weight: 700; color: ${available > 0 ? '#236B48' : '#8F2424'};">${available}</span></td>
@@ -286,59 +265,24 @@
     }
 
     // Bảng kê mặt hàng trong phiếu nhập GRN
-    function renderGrnItemsTable() {
-        const tbody = document.getElementById('grnItemsTableBody');
-        const totalQtyEl = document.getElementById('grnTotalQtyDisp');
-        const totalAmtEl = document.getElementById('grnTotalAmountDisp');
-        if (!tbody) return;
-
-        const items = state.activeGrnItems || [];
-        const totalQty = items.reduce((sum, i) => sum + i.qty, 0);
-        const totalAmt = items.reduce((sum, i) => sum + i.total, 0);
-
-        if (totalQtyEl) totalQtyEl.textContent = `${totalQty} món`;
-        if (totalAmtEl) totalAmtEl.textContent = formatVND(totalAmt);
-
-        if (items.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 18px 12px;">
-                        Chưa có mặt hàng nào. Vui lòng chọn sản phẩm ở trên và bấm "Thêm dòng".
-                    </td>
-                </tr>
-            `;
-            return;
+    function renderGrnItemsTable(){
+        const tbody=document.getElementById('grnItemsTableBody'),items=state.activeGrnItems||[];tbody.replaceChildren();
+        document.getElementById('grnTotalQtyDisp').textContent=items.reduce((n,i)=>n+Number(i.qty||0),0);
+        document.getElementById('grnTotalAmountDisp').textContent=formatVND(items.reduce((n,i)=>n+Number(i.qty||0)*Number(i.price||0),0));
+        state.grnPage=Math.min(state.grnPage||1,Math.max(1,Math.ceil(items.length/10)));
+        if(!items.length){const row=tbody.insertRow(),cell=row.insertCell();cell.colSpan=6;cell.textContent='Ch\u01b0a c\u00f3 m\u1eb7t h\u00e0ng. Ch\u1ecdn bi\u1ebfn th\u1ec3 v\u00e0 b\u1ea5m Th\u00eam d\u00f2ng.';}
+        for(const item of items.slice((state.grnPage-1)*10,state.grnPage*10)){
+            const row=tbody.insertRow();row.insertCell().textContent=item.sku;row.insertCell().textContent=item.name;
+            const quantity=document.createElement('input');quantity.type='number';quantity.className='admin-input';quantity.min=1;quantity.step=1;quantity.value=item.qty;
+            const price=document.createElement('input');price.type='number';price.className='admin-input';price.min=0;price.step='any';price.value=item.price;
+            const total=document.createElement('td');total.textContent=formatVND(Number(item.qty||0)*Number(item.price||0));
+            const sync=()=>{item.qty=quantity.value===''?null:Number(quantity.value);item.price=price.value===''?null:Number(price.value);item.total=Number(item.qty||0)*Number(item.price||0);total.textContent=formatVND(item.total);document.getElementById('grnTotalQtyDisp').textContent=items.reduce((n,i)=>n+Number(i.qty||0),0);document.getElementById('grnTotalAmountDisp').textContent=formatVND(items.reduce((n,i)=>n+Number(i.qty||0)*Number(i.price||0),0));};
+            quantity.oninput=sync;price.oninput=sync;row.insertCell().append(quantity);row.insertCell().append(price);row.append(total);
+            const remove=document.createElement('button');remove.type='button';remove.className='admin-btn';remove.textContent='X\u00f3a';remove.onclick=()=>{state.activeGrnItems=items.filter(i=>i!==item);renderGrnItemsTable();};row.insertCell().append(remove);
         }
-
-        tbody.innerHTML = items.map((item, idx) => `
-            <tr>
-                <td style="font-family: monospace; font-weight: 600; color: #236B48; white-space: nowrap;">${item.sku}</td>
-                <td style="font-weight: 500;">${item.name}</td>
-                <td style="text-align: center; white-space: nowrap;">
-                    <input type="number" class="admin-input" value="${item.qty}" min="1" style="width: 75px; height: 28px; text-align: center; padding: 2px;" onchange="PawpalOrdersModule.updateGrnItemQty(${idx}, this.value)">
-                </td>
-                <td style="text-align: right; white-space: nowrap;">
-                    <input type="number" class="admin-input" value="${item.price}" min="0" step="5000" style="width: 110px; height: 28px; text-align: right; padding: 2px 6px;" onchange="PawpalOrdersModule.updateGrnItemPrice(${idx}, this.value)">
-                </td>
-                <td style="text-align: right; font-weight: 600; color: #236B48; white-space: nowrap;">${formatVND(item.total)}</td>
-                <td style="text-align: center; white-space: nowrap;">
-                    <button type="button" class="btn-remove-pos-item" onclick="PawpalOrdersModule.removeGrnItem(${idx})">Xóa</button>
-                </td>
-            </tr>
-        `).join('');
+        let pager=document.getElementById('salesReceiptPager');if(!pager){pager=document.createElement('div');pager.id='salesReceiptPager';pager.style.cssText='display:flex;justify-content:center;gap:12px;margin-top:6px';tbody.closest('.table-responsive-wrapper').after(pager);}pager.replaceChildren();
+        for(const [label,page] of [['<',state.grnPage-1],[String(state.grnPage),state.grnPage],['>',state.grnPage+1]]){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.textContent=label;button.style.cssText='background:transparent;border:none;padding:2px 8px;color:#236B48';if(label!=='<'&&label!=='>')button.style.cssText='background:#236B48;border:none;padding:2px 8px;color:#fff';button.disabled=page<1||page>Math.max(1,Math.ceil(items.length/10));button.onclick=()=>{state.grnPage=page;renderGrnItemsTable();};pager.append(button);}
     }
-
-    // Đăng ký controller với Core
-    PawpalOrders.controllers.products = {
-        renderProductsTable,
-        renderProductsPagination,
-        updateCategoryFilterDropdown,
-        renderGrnItemsTable
-    };
-
-    // Quản lý biến thể sản phẩm (Variant Tags & Matrix)
-    let attr1TagValues = [];
-    let attr2TagValues = [];
 
     function renderAttributeTags(group) {
         const listContainer = document.getElementById(group === 1 ? 'attr1TagsList' : 'attr2TagsList');
@@ -490,7 +434,8 @@
                     price: v.price,
                     originalPrice: v.originalPrice,
                     stock: v.stock,
-                    image: v.image
+                    image: v.images?.join(', ') || v.image,
+                    colorHex: v.raw?.color?.hex_code || ''
                 };
             });
         } else {
@@ -505,7 +450,8 @@
                     price: r.querySelector('.variant-price-input')?.value || '',
                     originalPrice: r.querySelector('.variant-orig-input')?.value || '',
                     stock: r.querySelector('.variant-stock-input')?.value || '',
-                    image: r.querySelector('.variant-img-input')?.value || ''
+                    image: r.querySelector('.variant-img-input')?.value || '',
+                    colorHex: r.querySelector('.variant-color-hex')?.value || ''
                 };
             });
         }
@@ -539,11 +485,16 @@
         const fallbackCost = document.getElementById('newProdCostPrice')?.value || '';
         const fallbackPrice = document.getElementById('newProdPrice')?.value || '';
         const fallbackOrig = document.getElementById('newProdOriginalPrice')?.value || '';
-        const fallbackStock = document.getElementById('newProdInitialStock')?.value || 10;
-        const fallbackImg = document.getElementById('newProdImages')?.value?.split(',')[0]?.trim() || 'assets/images/shop/products/tp-hat-01.png';
+        const fallbackStock = '';
+        const fallbackImg = document.getElementById('newProdImages')?.value?.split(',')[0]?.trim() || '';
 
-        tbody.innerHTML = combinations.map((c, idx) => {
-            const key = c.v2 ? `${c.v1}|${c.v2}` : c.v1;
+        // Opening an existing product must retain its actual tuples rather than
+        // silently create the missing Cartesian combinations.
+        const visibleCombinations = prefillVariants?.length
+            ? prefillVariants.map(v=>({v1:v.attr1||'',v2:v.attr2||''})) : combinations;
+        const escapeValue=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        tbody.innerHTML = visibleCombinations.map((c, idx) => {
+            const key = c.v2 ? `${escapeValue(c.v1)}|${escapeValue(c.v2)}` : c.v1;
             const saved = existingDataMap[key] || {};
             const autoSku = saved.sku || `${baseSku}-${String(idx + 1).padStart(2, '0')}`;
             const autoCost = saved.costPrice !== undefined ? saved.costPrice : fallbackCost;
@@ -553,26 +504,26 @@
             const autoImg = saved.image || fallbackImg;
 
             return `
-                <tr class="variant-row-item" data-attr-1="${c.v1}" data-attr-2="${c.v2}">
-                    <td style="font-weight: 600; color: #236B48;">${c.v1 || '--'}</td>
-                    ${attr2Vals.length > 0 ? `<td style="font-weight: 500;">${c.v2}</td>` : ''}
+                <tr class="variant-row-item" data-attr-1="${escapeValue(c.v1)}" data-attr-2="${escapeValue(c.v2)}">
+                    <td style="font-weight: 600; color: #236B48;">${escapeValue(c.v1 || '--')}${(attr1Name==='M\u00e0u s\u1eafc'||attr2Name==='M\u00e0u s\u1eafc')?'<input class="admin-input variant-color-hex" placeholder="#RRGGBB" value="'+escapeValue(saved.colorHex||'')+'">':''}</td>
+                    ${attr2Vals.length > 0 ? `<td style="font-weight: 500;">${escapeValue(c.v2)}</td>` : ''}
                     <td>
-                        <input type="text" class="admin-input variant-sku-input" value="${autoSku}" placeholder="Mã SKU *" style="height: 28px; font-size: 11.5px; padding: 0 6px; font-family: monospace;">
+                        <input type="text" class="admin-input variant-sku-input" value="${escapeValue(autoSku)}" placeholder="Mã SKU *" style="height: 28px; font-size: 11.5px; padding: 0 6px; font-family: monospace;">
                     </td>
                     <td>
-                        <input type="number" class="admin-input variant-cost-input" value="${autoCost}" placeholder="Vốn (đ) *" min="0" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
+                        <input type="number" class="admin-input variant-cost-input" value="${escapeValue(autoCost)}" placeholder="Vốn (đ) *" min="0" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
                     </td>
                     <td>
-                        <input type="number" class="admin-input variant-price-input" value="${autoPrice}" placeholder="Bán (đ) *" min="1" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
+                        <input type="number" class="admin-input variant-price-input" value="${escapeValue(autoPrice)}" placeholder="Bán (đ) *" min="1" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
                     </td>
                     <td>
-                        <input type="number" class="admin-input variant-orig-input" value="${autoOrig}" placeholder="Gốc (đ)" min="0" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
+                        <input type="number" class="admin-input variant-orig-input" value="${escapeValue(autoOrig)}" placeholder="Gốc (đ)" min="0" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
                     </td>
                     <td>
-                        <input type="number" class="admin-input variant-stock-input" value="${autoStock}" placeholder="Tồn *" min="0" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
+                        <input type="number" class="admin-input variant-stock-input" value="${escapeValue(autoStock)}" placeholder="Tồn *" min="0" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
                     </td>
                     <td>
-                        <input type="text" class="admin-input variant-img-input" value="${autoImg}" placeholder="Đường dẫn ảnh" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
+                        <input type="text" class="admin-input variant-img-input" value="${escapeValue(autoImg)}" placeholder="Đường dẫn ảnh" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
                     </td>
                     <td style="text-align: center;">
                         <button type="button" class="tag-item-remove" style="color: #DC2626; cursor: pointer; font-size: 14px; background: none; border: none;" title="Xóa dòng" onclick="this.closest('tr').remove()">&times;</button>
@@ -599,13 +550,17 @@
             return;
         }
 
-        container.innerHTML = urls.map((url, idx) => `
-            <div style="position: relative; width: 68px; height: 68px; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral); overflow: hidden; background: #FFF;">
-                <img src="${url.startsWith('/') ? url : '/' + url}" alt="Preview ${idx + 1}" onerror="this.src='/assets/images/shop/products/tp-hat-01.png'" style="width: 100%; height: 100%; object-fit: cover;">
-                <button type="button" onclick="PawpalOrdersModule.removeProductImageAtIndex(${idx})" style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.55); color: #FFF; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;">&times;</button>
-                ${idx === 0 ? '<span style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(35, 107, 72, 0.85); color: #FFF; font-size: 9px; text-align: center; padding: 1px 0;">Đại diện</span>' : ''}
-            </div>
-        `).join('');
+        container.replaceChildren();
+        urls.forEach((url, idx) => {
+            const figure = document.createElement('div');
+            figure.style.cssText='width:90px;display:flex;flex-direction:column;gap:4px';
+            const image = document.createElement('img');
+            image.alt='\u1ea2nh '+(idx+1);image.style.cssText='width:68px;height:68px;object-fit:cover;border-radius:9px';
+            if (/^(https?:\/\/|\/?assets\/)/i.test(url)) image.src=url.startsWith('assets/')?'/'+url:url;
+            image.onerror=()=>{image.removeAttribute('src');image.alt='Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c \u1ea3nh';};
+            const remove=document.createElement('button');remove.type='button';remove.className='admin-btn';remove.textContent='X\u00f3a';remove.onclick=()=>window.PawpalOrdersModule.removeProductImageAtIndex(idx);
+            figure.append(image,remove);container.append(figure);
+        });
     }
 
     // Khởi tạo các sự kiện giao diện cho Subtab Products
@@ -665,516 +620,77 @@
         });
 
         // Xác nhận thêm / cập nhật sản phẩm mới
-        document.getElementById('btnSubmitAddProduct')?.addEventListener('click', async () => {
-            const editSku = document.getElementById('editProductOriginalSku')?.value.trim();
-            const sku = document.getElementById('newProdSku')?.value.trim();
-            const name = document.getElementById('newProdName')?.value.trim();
-            const cat = document.getElementById('newProdCategory')?.value || 'Thức ăn khô';
-            const brand = document.getElementById('newProdBrand')?.value.trim() || 'PawPal';
-            const petType = document.getElementById('newProdPetType')?.value || 'Chó và Mèo';
-            const origin = document.getElementById('newProdOrigin')?.value.trim() || 'Việt Nam';
-            const status = document.getElementById('newProdStatus')?.value || 'Còn hàng';
-            const badge = document.getElementById('newProdBadge')?.value || '';
-            const features = document.getElementById('newProdFeatures')?.value.trim() || '';
-            const description = document.getElementById('newProdDescription')?.value.trim() || '';
-            const ingredients = document.getElementById('newProdIngredients')?.value.trim() || '';
-            const benefits = document.getElementById('newProdBenefits')?.value.trim() || '';
-            const usage = document.getElementById('newProdUsage')?.value.trim() || '';
-            const feedingGuide = document.getElementById('newProdFeedingGuide')?.value.trim() || '';
-            const expiry = document.getElementById('newProdExpiry')?.value.trim() || '';
-            const storage = document.getElementById('newProdStorage')?.value.trim() || '';
-
-            if (!sku || !name) {
-                showToast('Vui lòng nhập đầy đủ mã SKU và tên sản phẩm.', 'warning');
-                return;
-            }
-
-            const isMultiple = document.getElementById('chkEnableVariants')?.checked || false;
-            let unit = 'Túi';
-            let spec = '';
-            let costPrice = 0;
-            let price = 0;
-            let originalPrice = 0;
-            let memberPrice = 0;
-            let stock = 0;
-            let minStock = 5;
-            let images = 'assets/images/shop/products/tp-hat-01.png';
+        document.getElementById('btnSubmitAddProduct')?.addEventListener('click', async event => {
+            const value = id => document.getElementById(id)?.value.trim() ?? '';
+            const numeric = id => value(id)==='' ? null : Number(value(id));
+            const previous = state.productEditSnapshot;
             const variants = [];
-
-            if (isMultiple) {
-                const variantRows = document.querySelectorAll('#productVariantsTableBody tr.variant-row-item');
-                if (variantRows.length === 0) {
-                    showToast('Vui lòng tạo ít nhất 1 phân loại biến thể cho sản phẩm.', 'warning');
-                    return;
+            const attrKey = label => ({'H\u01b0\u01a1ng v\u1ecb':'flavor_name','K\u00edch th\u01b0\u1edbc':'size_name','M\u00e0u s\u1eafc':'color_name'})[label];
+            if (document.getElementById('chkEnableVariants').checked) {
+                const key1=attrKey(value('attr1Name')),key2=attrKey(value('attr2Name'));
+                if (!key1 || (attr2TagValues.length && (!key2 || key1===key2))) { showToast('Ch\u1ecdn nh\u00f3m thu\u1ed9c t\u00ednh: H\u01b0\u01a1ng v\u1ecb, K\u00edch th\u01b0\u1edbc ho\u1eb7c M\u00e0u s\u1eafc.', 'warning'); return; }
+                for (const row of document.querySelectorAll('#productVariantsTableBody .variant-row-item')) {
+                    const read = cls => row.querySelector(cls)?.value.trim() ?? '';
+                    const sku=read('.variant-sku-input');
+                    const old=previous?.variants.find(v => v.sku===sku || (v.attr1===row.getAttribute('data-attr-1') && v.attr2===row.getAttribute('data-attr-2')));
+                    const v={id:old?.id||crypto.randomUUID(),sku,cost_price:read('.variant-cost-input')===''?null:Number(read('.variant-cost-input')),sale_price:read('.variant-price-input')===''?null:Number(read('.variant-price-input')),compare_at_price:read('.variant-orig-input')||null,stock:read('.variant-stock-input')===''?null:Number(read('.variant-stock-input')),minimum_stock:numeric('newProdMinStock'),status:old?.status||'active',color_id:old?.raw.color_id||null,size_id:old?.raw.size_id||null,flavor_id:old?.raw.flavor_id||null};
+                    v.color_hex=read('.variant-color-hex');
+                    v.images=read('.variant-img-input').split(',').map(v=>v.trim()).filter(Boolean);
+                    v[key1]=row.getAttribute('data-attr-1');
+                    if (attr2TagValues.length) v[key2]=row.getAttribute('data-attr-2');
+                    variants.push(v);
                 }
-
-                const skuSet = new Set();
-                for (let idx = 0; idx < variantRows.length; idx++) {
-                    const row = variantRows[idx];
-                    const v1 = row.getAttribute('data-attr-1') || '';
-                    const v2 = row.getAttribute('data-attr-2') || '';
-                    const vName = v2 ? `${v1} - ${v2}` : (v1 || `Phân loại ${idx + 1}`);
-
-                    const skuInput = row.querySelector('.variant-sku-input');
-                    const costInput = row.querySelector('.variant-cost-input');
-                    const priceInput = row.querySelector('.variant-price-input');
-                    const origInput = row.querySelector('.variant-orig-input');
-                    const stockInput = row.querySelector('.variant-stock-input');
-                    const imgInput = row.querySelector('.variant-img-input');
-
-                    const vSku = skuInput?.value.trim();
-                    const rawCost = costInput?.value.trim();
-                    const rawPrice = priceInput?.value.trim();
-                    const rawOrig = origInput?.value.trim();
-                    const rawStock = stockInput?.value.trim();
-
-                    if (!vSku) {
-                        skuInput?.focus();
-                        showToast(`Vui lòng nhập Mã SKU bắt buộc cho phân loại "${vName}".`, 'warning');
-                        return;
-                    }
-                    if (skuSet.has(vSku.toLowerCase())) {
-                        skuInput?.focus();
-                        showToast(`Mã SKU "${vSku}" ở phân loại "${vName}" bị trùng lặp. Vui lòng đặt mã SKU riêng biệt.`, 'warning');
-                        return;
-                    }
-                    skuSet.add(vSku.toLowerCase());
-
-                    if (rawCost === '' || isNaN(Number(rawCost)) || Number(rawCost) < 0) {
-                        costInput?.focus();
-                        showToast(`Vui lòng nhập Giá vốn bắt buộc (>= 0) cho phân loại "${vName}".`, 'warning');
-                        return;
-                    }
-                    if (rawPrice === '' || isNaN(Number(rawPrice)) || Number(rawPrice) <= 0) {
-                        priceInput?.focus();
-                        showToast(`Vui lòng nhập Giá bán bắt buộc (> 0) cho phân loại "${vName}".`, 'warning');
-                        return;
-                    }
-                    if (rawStock === '' || isNaN(Number(rawStock)) || Number(rawStock) < 0) {
-                        stockInput?.focus();
-                        showToast(`Vui lòng nhập Số lượng tồn kho bắt buộc (>= 0) cho phân loại "${vName}".`, 'warning');
-                        return;
-                    }
-
-                    const vCost = parseInt(rawCost, 10);
-                    const vPrice = parseInt(rawPrice, 10);
-                    const vOrig = rawOrig !== '' ? parseInt(rawOrig, 10) : 0;
-                    const vStock = parseInt(rawStock, 10);
-                    const vMemberPrice = Math.round(vPrice * 0.925 / 1000) * 1000;
-                    const vImg = imgInput?.value.trim() || 'assets/images/shop/products/tp-hat-01.png';
-
-                    variants.push({
-                        attr1: v1,
-                        attr2: v2,
-                        name: vName,
-                        sku: vSku,
-                        costPrice: vCost,
-                        price: vPrice,
-                        originalPrice: vOrig,
-                        memberPrice: vMemberPrice,
-                        stock: vStock,
-                        image: vImg
-                    });
-                }
-
-                unit = document.getElementById('newProdUnit')?.value || 'Món';
-                spec = variants.map(v => v.name).join(', ');
-                const validCosts = variants.map(v => v.costPrice).filter(cp => cp > 0);
-                costPrice = validCosts.length > 0 ? Math.min(...validCosts) : 0;
-                price = Math.min(...variants.map(v => v.price));
-                originalPrice = Math.max(...variants.map(v => v.originalPrice)) || 0;
-                memberPrice = Math.min(...variants.map(v => v.memberPrice));
-                stock = variants.reduce((sum, v) => sum + v.stock, 0);
-                minStock = 5;
-                const vImgs = variants.map(v => v.image).filter(Boolean);
-                images = vImgs.length > 0 ? vImgs.join(', ') : 'assets/images/shop/products/tp-hat-01.png';
             } else {
-                unit = document.getElementById('newProdUnit')?.value || 'Túi';
-                spec = document.getElementById('newProdSpec')?.value.trim() || '';
-                costPrice = parseInt(document.getElementById('newProdCostPrice')?.value || '0', 10);
-                price = parseInt(document.getElementById('newProdPrice')?.value || '0', 10);
-                originalPrice = parseInt(document.getElementById('newProdOriginalPrice')?.value || '0', 10);
-                memberPrice = Math.round(price * 0.925 / 1000) * 1000;
-                stock = parseInt(document.getElementById('newProdInitialStock')?.value || '0', 10);
-                minStock = parseInt(document.getElementById('newProdMinStock')?.value || '5', 10);
-                images = document.getElementById('newProdImages')?.value.trim() || 'assets/images/shop/products/tp-hat-01.png';
-
-                if (price <= 0) {
-                    showToast('Vui lòng nhập giá bán thực tế hợp lệ (lớn hơn 0).', 'warning');
-                    return;
-                }
+                const old=previous?.variants[0];
+                variants.push({id:old?.id||state.singleVariantId,sku:value('newProdSku'),cost_price:numeric('newProdCostPrice'),sale_price:numeric('newProdPrice'),compare_at_price:value('newProdOriginalPrice')||null,stock:numeric('newProdInitialStock'),minimum_stock:numeric('newProdMinStock'),status:old?.status||'active',color_id:old?.raw.color_id||null,size_id:old?.raw.size_id||null,flavor_id:old?.raw.flavor_id||null});
             }
-
-            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            const productsList = state.products || [];
-
-            if (editSku) {
-                const prodIndex = productsList.findIndex(p => p.sku.toLowerCase() === editSku.toLowerCase());
-                if (prodIndex === -1) {
-                    showToast('Không tìm thấy sản phẩm cần cập nhật.', 'error');
-                    return;
-                }
-
-                if (sku.toLowerCase() !== editSku.toLowerCase() && productsList.some(p => p.sku.toLowerCase() === sku.toLowerCase())) {
-                    showToast(`Mã SKU "${sku}" đã tồn tại cho một sản phẩm khác. Vui lòng chọn mã khác.`, 'warning');
-                    return;
-                }
-
-                const existingProd = productsList[prodIndex];
-                const oldStock = existingProd.stock || 0;
-
-                const updatedProdObj = {
-                    ...existingProd,
-                    sku: sku,
-                    name: name,
-                    category: cat,
-                    brand: brand,
-                    petType: petType,
-                    origin: origin,
-                    status: status,
-                    unit: unit,
-                    spec: spec,
-                    badge: badge,
-                    features: features,
-                    costPrice: costPrice,
-                    price: price,
-                    originalPrice: originalPrice,
-                    memberPrice: memberPrice,
-                    stock: stock,
-                    minStock: minStock,
-                    images: images,
-                    image: images.split(',')[0].trim(),
-                    description: description,
-                    ingredients: ingredients,
-                    benefits: benefits,
-                    usage: usage,
-                    feedingGuide: feedingGuide,
-                    expiry: expiry,
-                    storage: storage,
-                    rating: existingProd.rating || 5.0,
-                    reviewCount: existingProd.reviewCount || 0,
-                    hasVariants: isMultiple,
-                    variants: isMultiple ? variants : []
-                };
-
-                if (client && existingProd.id) {
-                    try {
-                        const { error: pErr } = await client.from('product').update({
-                            product_name: name,
-                            brand_name: brand,
-                            target_pet: petType,
-                            description: description || spec,
-                            unit: unit,
-                            image_urls: images.split(',').map(s => s.trim()).filter(Boolean),
-                            status: status === 'Còn hàng' || status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
-                            origin: origin,
-                            ingredients: ingredients,
-                            benefits: benefits,
-                            usage_instructions: usage,
-                            specs: spec,
-                            badge: badge || null
-                        }).eq('id', existingProd.id);
-                        if (pErr) throw pErr;
-
-                        // Đồng bộ biến thể trong bảng product_variant
-                        try {
-                            if (isMultiple && variants.length > 0) {
-                                await client.from('product_variant').delete().eq('product_id', existingProd.id);
-                                const varInserts = variants.map(v => ({
-                                    product_id: existingProd.id,
-                                    sku_variant: v.sku,
-                                    cost_price: v.costPrice,
-                                    sale_price: v.price,
-                                    compare_at_price: v.originalPrice || null,
-                                    status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
-                                }));
-                                await client.from('product_variant').insert(varInserts);
-                            } else {
-                                const { data: existingVars } = await client.from('product_variant').select('id').eq('product_id', existingProd.id).limit(1);
-                                if (existingVars && existingVars.length > 0) {
-                                    await client.from('product_variant').update({
-                                        sku_variant: sku,
-                                        cost_price: costPrice,
-                                        sale_price: price,
-                                        compare_at_price: originalPrice || null,
-                                        status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
-                                    }).eq('id', existingVars[0].id);
-                                } else {
-                                    await client.from('product_variant').insert({
-                                        product_id: existingProd.id,
-                                        sku_variant: sku,
-                                        cost_price: costPrice,
-                                        sale_price: price,
-                                        compare_at_price: originalPrice || null,
-                                        status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
-                                    });
-                                }
-                            }
-                        } catch (varSyncErr) {
-                            console.warn('Lỗi đồng bộ product_variant:', varSyncErr);
-                        }
-
-                        if (stock !== oldStock) {
-                            const targetVarId = existingProd.variant_id || existingProd.default_variant_id || existingProd.variants?.[0]?.id;
-                            if (targetVarId) {
-                                const { error: invErr } = await client.from('inventory').update({
-                                    quantity_in_stock: stock,
-                                    minimum_stock: minStock,
-                                    last_updated_at: new Date().toISOString()
-                                }).eq('product_variant_id', targetVarId);
-                                if (invErr) throw invErr;
-                            }
-                        }
-                    } catch (errUpProd) {
-                        console.error('Lỗi khi cập nhật sản phẩm lên Supabase:', errUpProd);
-                        showToast(`Không thể cập nhật sản phẩm: ${errUpProd?.message || 'Lỗi CSDL'}`, 'danger');
-                        return;
-                    }
-                }
-
-                // CSDL cập nhật thành công mới cập nhật bộ nhớ cục bộ
-                productsList[prodIndex] = updatedProdObj;
-
-                if (stock !== oldStock) {
-                    const diff = stock - oldStock;
-                    addStockLog({
-                        sku: sku,
-                        name: name,
-                        type: diff > 0 ? 'IN' : 'OUT',
-                        typeLabel: diff > 0 ? 'Điều chỉnh tăng tồn kho trực tiếp' : 'Điều chỉnh giảm tồn kho trực tiếp',
-                        change: diff > 0 ? `+${diff}` : `${diff}`,
-                        beforeStock: oldStock,
-                        afterStock: stock,
-                        refCode: 'ADJ-' + sku,
-                        staff: 'Quản trị viên'
-                    });
-                }
-
-                persistProductsData();
-                document.getElementById('modalAddProduct')?.classList.remove('active');
-                renderProductsTable();
-                showToast(`Đã cập nhật thành công thông tin sản phẩm "${name}" (SKU: ${sku})!`, 'success');
-            } else {
-                if (productsList.some(p => p.sku.toLowerCase() === sku.toLowerCase())) {
-                    showToast(`Mã SKU "${sku}" đã tồn tại trong kho. Vui lòng nhập mã khác.`, 'warning');
-                    return;
-                }
-
-                let createdProdDbId = null;
-                if (client) {
-                    try {
-                        const { data: cats } = await client.from('product_category').select('id, category_name').ilike('category_name', `%${cat}%`).limit(1);
-                        const categoryId = cats && cats[0] ? cats[0].id : null;
-
-                        const { data: newP, error: pErr } = await client.from('product').insert({
-                            product_name: name,
-                            brand_name: brand,
-                            target_pet: petType,
-                            description: description || spec,
-                            category_id: categoryId,
-                            unit: unit,
-                            image_urls: images.split(',').map(s => s.trim()).filter(Boolean),
-                            status: status === 'Còn hàng' || status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
-                            origin: origin,
-                            ingredients: ingredients,
-                            benefits: benefits,
-                            usage_instructions: usage,
-                            specs: spec,
-                            badge: badge || 'new',
-                            rating: 5.0,
-                            review_count: 0
-                        }).select().single();
-
-                        if (pErr) throw pErr;
-                        if (newP && newP.id) {
-                            createdProdDbId = newP.id;
-
-                            // Đồng bộ biến thể trong bảng product_variant
-                            let createdVarId = null;
-                            try {
-                                if (isMultiple && variants.length > 0) {
-                                    const varInserts = variants.map(v => ({
-                                        product_id: newP.id,
-                                        sku_variant: v.sku,
-                                        cost_price: v.costPrice,
-                                        sale_price: v.price,
-                                        compare_at_price: v.originalPrice || null,
-                                        status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
-                                    }));
-                                    const { data: insertedVars } = await client.from('product_variant').insert(varInserts).select();
-                                    if (insertedVars && insertedVars.length > 0) {
-                                        createdVarId = insertedVars[0].id;
-                                    }
-                                } else {
-                                    const { data: insertedVar } = await client.from('product_variant').insert({
-                                        product_id: newP.id,
-                                        sku_variant: sku,
-                                        cost_price: costPrice,
-                                        sale_price: price,
-                                        compare_at_price: originalPrice || null,
-                                        status: status === 'Còn hàng' || status === 'ACTIVE' ? 'dang_ban' : 'tam_ngung'
-                                    }).select().single();
-                                    if (insertedVar) {
-                                        createdVarId = insertedVar.id;
-                                    }
-                                }
-                            } catch (varInsErr) {
-                                console.warn('Lỗi tạo product_variant:', varInsErr);
-                            }
-
-                            const { error: invErr } = await client.from('inventory').insert({
-                                product_variant_id: createdVarId,
-                                quantity_in_stock: stock,
-                                minimum_stock: minStock
-                            });
-                            if (invErr) {
-                                // Rollback: xóa product vừa tạo nếu insert inventory thất bại
-                                console.error('Lỗi khi khởi tạo inventory, đang rollback product:', invErr);
-                                await client.from('product').delete().eq('id', newP.id);
-                                throw invErr;
-                            }
-                        }
-                    } catch (errAddProdDb) {
-                        console.error('Lỗi khi thêm sản phẩm mới vào Supabase:', errAddProdDb);
-                        showToast('Không thể tạo sản phẩm: ' + (errAddProdDb.message || ''), 'danger');
-                        return;
-                    }
-                }
-
-                const newProdObj = {
-                    id: createdProdDbId,
-                    sku: sku,
-                    name: name,
-                    category: cat,
-                    brand: brand,
-                    petType: petType,
-                    origin: origin,
-                    status: status,
-                    unit: unit,
-                    spec: spec,
-                    badge: badge,
-                    features: features,
-                    costPrice: costPrice,
-                    price: price,
-                    originalPrice: originalPrice,
-                    memberPrice: memberPrice,
-                    stock: stock,
-                    minStock: minStock,
-                    images: images,
-                    image: images.split(',')[0].trim(),
-                    description: description,
-                    ingredients: ingredients,
-                    benefits: benefits,
-                    usage: usage,
-                    feedingGuide: feedingGuide,
-                    expiry: expiry,
-                    storage: storage,
-                    rating: 5.0,
-                    reviewCount: 0,
-                    hasVariants: isMultiple,
-                    variants: isMultiple ? variants : []
-                };
-
-                productsList.unshift(newProdObj);
-                persistProductsData();
-
-                if (stock > 0) {
-                    addStockLog({
-                        sku: sku,
-                        name: name,
-                        type: 'IN',
-                        typeLabel: 'Nhập kho ban đầu khi tạo sản phẩm',
-                        change: `+${stock}`,
-                        beforeStock: 0,
-                        afterStock: stock,
-                        refCode: 'INIT-' + sku,
-                        staff: 'Quản trị viên'
-                    });
-                }
-
-                await syncOrdersAndProductsFromSupabase({ force: true });
-                document.getElementById('modalAddProduct')?.classList.remove('active');
-                renderProductsTable();
-                showToast(`Đã thêm thành công sản phẩm mới "${name}" (SKU: ${sku}) đầy đủ thông số!`, 'success');
+            const category=globalDbCategories.find(c=>c.category_name===value('newProdCategory'));
+            const specs={...(previous?.raw.specs && typeof previous.raw.specs==='object'?previous.raw.specs:{})};
+            for (const [key,id] of [['quy_cach','newProdSpec'],['features','newProdFeatures'],['feeding_guide','newProdFeedingGuide'],['expiry','newProdExpiry'],['storage','newProdStorage']]) {
+                if (value(id)) specs[key]=value(id); else delete specs[key];
             }
+            const details={category_id:category?.id||null,product_name:value('newProdName'),unit:value('newProdUnit'),slug:previous?.raw.slug||('product-'+state.productSaveId),brand_name:value('newProdBrand'),target_pet:value('newProdPetType'),origin:value('newProdOrigin'),status:value('newProdStatus')==='T\u1ea1m ng\u01b0ng'?'inactive':'active',description:value('newProdDescription'),ingredients:value('newProdIngredients'),benefits:value('newProdBenefits'),usage_instructions:value('newProdUsage'),badge:value('newProdBadge'),specs,images:value('newProdImages').split(',').map(v=>v.trim()).filter(Boolean)};
+            event.currentTarget.disabled=true;
+            try {
+                const {error}=await window.getSupabaseClient().rpc('save_admin_sales_product',{p_request_id:state.productSaveRequest,p_product_id:state.productSaveId,p_expected_updated_at:previous?.updatedAt||null,p_details:details,p_variants:variants});
+                if (error) throw error;
+                document.getElementById('modalAddProduct').classList.remove('active');
+                await window.PawpalOrders.fetchProductsData({force:true});
+                showToast('\u0110\u00e3 l\u01b0u s\u1ea3n ph\u1ea9m.');
+            } catch(err) { showToast(err.message,'danger'); }
+            finally { document.getElementById('btnSubmitAddProduct').disabled=false; }
         });
 
         // Xác nhận lưu điều chỉnh tồn kho
         document.getElementById('formAdjustStock')?.addEventListener('submit', (e) => e.preventDefault());
-        document.getElementById('btnSubmitAdjustStock')?.addEventListener('click', async () => {
-            const sku = state.activeAdjustProductSku;
-            const prod = (state.products || []).find(p => p.sku === sku);
-            if (!prod) return;
-
-            const opType = document.getElementById('adjustOperationType')?.value || 'ADD';
-            const qty = parseInt(document.getElementById('adjustQuantityInput')?.value || '0', 10);
-            const newPrice = document.getElementById('adjustPriceInput')?.value;
-            const newStatus = document.getElementById('adjustStatusSelect')?.value || 'Đang bán';
-            const reason = document.getElementById('adjustReasonSelect')?.value;
-
-            const beforeStock = prod.stock;
-            if (opType === 'ADD') {
-                prod.stock += qty;
-            } else if (opType === 'SUB') {
-                prod.stock = Math.max(0, prod.stock - qty);
-            } else if (opType === 'SET') {
-                prod.stock = Math.max(0, qty);
-            }
-            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!client) {
-                showToast('Chưa kết nối cơ sở dữ liệu Supabase!', 'danger');
-                return;
-            }
-
+        document.getElementById('btnSubmitAdjustStock')?.addEventListener('click', async (event) => {
+            const product = state.products.find(p => p.sku === state.activeAdjustProductSku);
+            const variant = product?.variants.find(v => v.id === state.adjustVariantId);
+            if (!variant) { showToast('Vui lòng chọn biến thể cần điều chỉnh.', 'warning'); return; }
+            if (document.getElementById('adjustQuantityInput').value === '') { showToast('Vui lòng nhập số lượng.', 'warning'); return; }
+            const button = event.currentTarget;
+            button.disabled = true;
             try {
-                if (prod.id) {
-                    const targetVarId = prod.variant_id || prod.default_variant_id || (prod.variants && prod.variants[0]?.id);
-                    if (targetVarId) {
-                        const { error: invErr } = await client.from('inventory').update({
-                            quantity_in_stock: afterStock,
-                            last_updated_at: new Date().toISOString()
-                        }).eq('product_variant_id', targetVarId);
-                        if (invErr) throw invErr;
+                const result = await window.getSupabaseClient().rpc('adjust_admin_sales_stock', {
+                    p_request_id: state.adjustRequestId,
+                    p_variant_id: variant.id,
+                    p_details: {
+                        operation: document.getElementById('adjustOperationType').value,
+                        quantity: Number(document.getElementById('adjustQuantityInput').value),
+                        expected_stock: variant.stock,
+                        expected_updated_at: product.updatedAt,
+                        expected_variant_updated_at: variant.raw.updated_at,
+                        price: document.getElementById('adjustPriceInput').value || null,
+                        status: document.getElementById('adjustStatusSelect').value,
+                        reason: document.getElementById('adjustReasonSelect').value
                     }
-
-                    if (newPrice && parseInt(newPrice, 10) > 0) {
-                        await client.from('product_variant').update({ sale_price: parseInt(newPrice, 10) }).eq('product_id', prod.id);
-                    }
-                    if (newStatus) {
-                        const { error: prodErr } = await client.from('product').update({
-                            status: (newStatus === 'Còn hàng' || newStatus === 'Đang bán') ? 'ACTIVE' : 'INACTIVE'
-                        }).eq('id', prod.id);
-                        if (prodErr) throw prodErr;
-                    }
-                }
-
-                prod.stock = afterStock;
-                if (newPrice && parseInt(newPrice, 10) > 0) {
-                    prod.price = parseInt(newPrice, 10);
-                }
-                prod.status = newStatus;
-                persistProductsData();
-
-                const changeStr = (opType === 'ADD' ? `+${qty}` : opType === 'SUB' ? `-${qty}` : `=${qty}`);
-                addStockLog({
-                    sku: prod.sku,
-                    name: prod.name,
-                    type: 'ADJUST',
-                    typeLabel: reason,
-                    change: changeStr,
-                    beforeStock: beforeStock,
-                    afterStock: afterStock,
-                    refCode: 'ADJ-' + Date.now().toString().slice(-4),
-                    staff: 'Quản trị viên'
                 });
-
-                document.getElementById('modalAdjustStock')?.classList.remove('active');
-                renderProductsTable();
-                showToast(`Đã cập nhật tồn kho cho sản phẩm ${sku}! Số lượng tồn mới: ${prod.stock} (Lý do: ${reason}).`, 'success');
-            } catch (errAdjDb) {
-                console.error('Lỗi khi cập nhật điều chỉnh tồn kho lên Supabase:', errAdjDb);
-                showToast(`Điều chỉnh tồn kho thất bại: ${errAdjDb?.message || 'Lỗi CSDL'}`, 'danger');
-            }
+                if (result.error) throw result.error;
+                document.getElementById('modalAdjustStock').classList.remove('active');
+                await window.PawpalOrders.fetchProductsData({force:true});
+                showToast('Đã ghi sổ kho.');
+            } catch (err) { showToast(err.message, 'danger'); }
+            finally { button.disabled = false; }
         });
 
         // Nút mở modal nhập hàng NCC
@@ -1183,174 +699,44 @@
         });
 
         // Nút thêm dòng sản phẩm vào phiếu nhập
-        document.getElementById('btnGrnAddItem')?.addEventListener('click', () => {
-            const picker = document.getElementById('grnProductPicker');
-            if (!picker || !picker.value) return;
-            const sku = picker.value;
-            const prod = (state.products || []).find(p => p.sku === sku);
-            if (!prod) return;
-
-            state.activeGrnItems = state.activeGrnItems || [];
-            const existing = state.activeGrnItems.find(i => i.sku === sku);
-            if (existing) {
-                existing.qty += 10;
-                existing.total = existing.qty * existing.price;
-            } else {
-                const costPrice = Math.round((prod.price || 50000) * 0.65);
-                state.activeGrnItems.push({
-                    sku: prod.sku,
-                    name: prod.name,
-                    qty: 10,
-                    price: costPrice,
-                    total: 10 * costPrice
-                });
-            }
+        document.getElementById('btnGrnAddItem')?.addEventListener('click',()=>{
+            const id=document.getElementById('grnProductPicker').value,v=inventoryVariants().find(v=>v.id===id);if(!v)return;
+            const old=state.activeGrnItems.find(i=>i.variantId===id);
+            if(old){old.qty+=1;old.total=old.qty*old.price;}
+            else state.activeGrnItems.push({...v,variantId:v.id,qty:1,price:v.costPrice,total:v.costPrice});
             renderGrnItemsTable();
         });
 
         // Xác nhận nhập kho và cộng dồn tồn
-        document.getElementById('btnSubmitGoodsReceipt')?.addEventListener('click', async () => {
-            const items = state.activeGrnItems || [];
-            if (items.length === 0) {
-                showToast('Vui lòng thêm ít nhất một mặt hàng vào phiếu nhập kho.', 'warning');
-                return;
-            }
-
-            const receiptCode = document.getElementById('grnReceiptCode')?.value || ('GRN-' + Date.now().toString().slice(-4));
-            const supplier = document.getElementById('grnSupplierSelect')?.value || 'Nhà cung cấp';
-            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-
-            for (const item of items) {
-                const prod = (state.products || []).find(p => p.sku === item.sku);
-                if (prod) {
-                    const before = prod.stock;
-                    prod.stock += item.qty;
-                    if (prod.status === 'Tạm ngưng' && prod.stock > 0) {
-                        prod.status = 'Còn hàng';
-                    }
-                    addStockLog({
-                        sku: prod.sku,
-                        name: prod.name,
-                        type: 'IN',
-                        typeLabel: `Nhập kho từ ${supplier}`,
-                        change: `+${item.qty}`,
-                        beforeStock: before,
-                        afterStock: prod.stock,
-                        refCode: receiptCode,
-                        staff: 'Quản trị viên'
-                    });
-
-                    if (client && prod.id) {
-                        try {
-                            const targetVarId = prod.variant_id || prod.default_variant_id || (prod.variants && prod.variants[0]?.id);
-                            if (targetVarId) {
-                                await client.from('inventory').update({
-                                    quantity_in_stock: prod.stock,
-                                    last_updated_at: new Date().toISOString()
-                                }).eq('product_variant_id', targetVarId);
-                            }
-                        } catch (errGrnDb) {
-                            console.warn('Lỗi khi cập nhật nhập kho lên Supabase:', errGrnDb);
-                        }
-                    }
-                }
-            }
-
-            persistProductsData();
-            document.getElementById('modalGoodsReceipt')?.classList.remove('active');
-            renderProductsTable();
-            showToast(`Đã hoàn tất nhập kho phiếu ${receiptCode} (${items.length} mặt hàng) từ ${supplier}!`, 'success');
-            state.activeGrnItems = [];
+        document.getElementById('btnSubmitGoodsReceipt')?.addEventListener('click',async event=>{
+            const items=state.activeGrnItems||[];
+            const supplier=document.getElementById('grnSupplierSelect').value;
+            if(!supplier||!items.length||!document.getElementById('grnReceivedConfirmed').checked){showToast('Ch\u1ecdn nh\u00e0 cung c\u1ea5p, m\u1eb7t h\u00e0ng v\u00e0 x\u00e1c nh\u1eadn \u0111\u00e3 nh\u1eadn h\u00e0ng.','warning');return;}
+            event.currentTarget.disabled=true;
+            try{
+                const {error}=await window.getSupabaseClient().rpc('post_admin_sales_inventory_batch',{p_request_id:state.grnRequestId,p_mode:'receipt',p_details:{supplier_id:supplier,invoice:document.getElementById('grnInvoiceNo').value.trim(),reason:document.getElementById('grnNoteInput').value.trim(),confirmed:true},p_lines:items.map(i=>({variant_id:i.variantId,quantity:i.qty,price:i.price}))});if(error)throw error;
+                document.getElementById('modalGoodsReceipt').classList.remove('active');await PawpalOrders.fetchProductsData({force:true});showToast('\u0110\u00e3 ghi phi\u1ebfu nh\u1eadp v\u00e0 s\u1ed5 kho.');
+            }catch(error){showToast(error.code==='PT409'?'Y\u00eau c\u1ea7u ho\u1eb7c h\u00f3a \u0111\u01a1n nh\u00e0 cung c\u1ea5p \u0111\u00e3 \u0111\u01b0\u1ee3c ghi.':'Ki\u1ec3m tra nh\u00e0 cung c\u1ea5p, s\u1ed1 l\u01b0\u1ee3ng, gi\u00e1 nh\u1eadp v\u00e0 l\u00fd do.','warning');}
+            finally{document.getElementById('btnSubmitGoodsReceipt').disabled=false;}
         });
 
-        // Nút mở modal kiểm kê kho
-        document.getElementById('btnOpenStocktakeModal')?.addEventListener('click', () => {
-            PawpalOrdersModule.openStocktakeModal();
+        document.getElementById('btnSubmitStocktake')?.addEventListener('click',async event=>{
+            const lines=[...state.stocktakeCounts.entries()].map(([id,count])=>{const v=state.stocktakeSnapshot.find(v=>v.id===id);return {variant_id:id,quantity:Number(count.quantity),expected_stock:v.stock,expected_last_updated_at:v.lastUpdatedAt,reason:count.reason};});
+            if(!lines.length||!document.getElementById('stkConfirmed').checked){showToast('Nh\u1eadp s\u1ed1 \u0111\u1ebfm th\u1ef1c t\u1ebf v\u00e0 x\u00e1c nh\u1eadn \u0111\u00e3 ki\u1ec3m k\u00ea.','warning');return;}
+            event.currentTarget.disabled=true;
+            try{const {error}=await window.getSupabaseClient().rpc('post_admin_sales_inventory_batch',{p_request_id:state.stocktakeRequestId,p_mode:'stocktake',p_details:{reason:document.getElementById('stkReasonSelect').value,confirmed:true},p_lines:lines});if(error)throw error;
+                document.getElementById('modalStocktake').classList.remove('active');await PawpalOrders.fetchProductsData({force:true});showToast('\u0110\u00e3 ghi k\u1ebft qu\u1ea3 ki\u1ec3m k\u00ea.');
+            }catch(error){showToast(error.code==='PT409'?'T\u1ed3n kho \u0111\u00e3 bi\u1ebfn \u0111\u1ed9ng. M\u1edf l\u1ea1i \u0111\u1ec3 ki\u1ec3m k\u00ea v\u00e0 \u0111\u1ed1i chi\u1ebfu.':'Kh\u00f4ng th\u1ec3 ghi ki\u1ec3m k\u00ea; ki\u1ec3m tra s\u1ed1 \u0111\u1ebfm v\u00e0 ph\u1ea7n t\u1ed3n \u0111\u00e3 gi\u1eef.','warning');}
+            finally{document.getElementById('btnSubmitStocktake').disabled=false;}
         });
 
-        // Xác nhận cân đối kiểm kê
-        document.getElementById('btnSubmitStocktake')?.addEventListener('click', async () => {
-            const auditCode = document.getElementById('stkAuditCode')?.value || ('STK-' + Date.now().toString().slice(-4));
-            const reason = document.getElementById('stkReasonSelect')?.value || 'Kiểm kê định kỳ';
-            const rows = document.querySelectorAll('.stk-row-item');
-            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-
-            let updatedCount = 0;
-            for (const row of rows) {
-                const sku = row.getAttribute('data-sku');
-                const countInput = row.querySelector('.stk-count-input');
-                const diffReasonSelect = row.querySelector('.stk-row-reason-select');
-                if (!sku || !countInput) continue;
-
-                const actualCount = parseInt(countInput.value || '0', 10);
-                const prod = (state.products || []).find(p => p.sku === sku);
-                if (prod && prod.stock !== actualCount) {
-                    const before = prod.stock;
-                    const diff = actualCount - before;
-
-                    if (client && prod.id) {
-                        try {
-                            const targetVarId = prod.variant_id || prod.default_variant_id || (prod.variants && prod.variants[0]?.id);
-                            if (targetVarId) {
-                                const { error: invErr } = await client.from('inventory').update({
-                                    quantity_in_stock: actualCount,
-                                    last_updated_at: new Date().toISOString()
-                                }).eq('product_variant_id', targetVarId);
-                                if (invErr) throw invErr;
-                            }
-                        } catch (errStkDb) {
-                            console.error('[Stocktake] Lỗi khi cân đối kiểm kê sản phẩm ' + prod.sku + ':', errStkDb);
-                            continue;
-                        }
-                    }
-
-                    prod.stock = actualCount;
-                    updatedCount++;
-
-                    addStockLog({
-                        sku: prod.sku,
-                        name: prod.name,
-                        type: 'STK',
-                        typeLabel: `${reason} (${diffReasonSelect?.value || 'Cân đối kiểm kê'})`,
-                        change: diff > 0 ? `+${diff}` : `${diff}`,
-                        beforeStock: before,
-                        afterStock: prod.stock,
-                        refCode: auditCode,
-                        staff: 'Quản trị viên'
-                    });
-                }
-            }
-
-            persistProductsData();
-            document.getElementById('modalStocktake')?.classList.remove('active');
-            renderProductsTable();
-            showToast(`Đã hoàn tất phiên kiểm kê ${auditCode}! Đã cân đối tồn cho ${updatedCount} mặt hàng.`, 'success');
-        });
-
-        // Xác nhận đổi trạng thái kinh doanh trong modal
-        document.getElementById('btnConfirmToggleProductStatus')?.addEventListener('click', async () => {
-            if (!state.activeStockActionSku) return;
-            const prod = (state.products || []).find(p => p.sku === state.activeStockActionSku);
-            if (prod) {
-                const isCurrentlySuspended = prod.status === 'Tạm ngưng';
-                prod.status = isCurrentlySuspended ? 'Còn hàng' : 'Tạm ngưng';
-                persistProductsData();
-
-                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                if (client && prod.id) {
-                    try {
-                        await client.from('product').update({
-                            status: isCurrentlySuspended ? 'ACTIVE' : 'INACTIVE'
-                        }).eq('id', prod.id);
-                    } catch (errTogDb) {
-                        console.warn('Lỗi khi đổi trạng thái kinh doanh sản phẩm trên Supabase:', errTogDb);
-                    }
-                }
-
-                renderProductsTable();
-                document.getElementById('modalConfirmToggleProductStatus')?.classList.remove('active');
-                showToast(`Đã chuyển trạng thái sản phẩm ${prod.sku} sang "${prod.status}".`, 'success');
-            }
+        document.getElementById('btnConfirmToggleProductStatus')?.addEventListener('click',async event=>{
+            const p=state.toggleProductSnapshot,v=p?.variants[0];if(!v)return;
+            event.currentTarget.disabled=true;
+            try{const {error}=await window.getSupabaseClient().rpc('adjust_admin_sales_stock',{p_request_id:state.toggleProductRequest,p_variant_id:v.id,p_details:{operation:'SET',quantity:v.stock,expected_stock:v.stock,expected_updated_at:p.updatedAt,expected_variant_updated_at:v.raw.updated_at,price:null,status:p.raw.status==='active'?'inactive':'active',reason:'\u0110\u1ed5i tr\u1ea1ng th\u00e1i kinh doanh s\u1ea3n ph\u1ea9m'}});if(error)throw error;
+                document.getElementById('modalConfirmToggleProductStatus').classList.remove('active');await PawpalOrders.fetchProductsData({force:true});showToast('\u0110\u00e3 l\u01b0u tr\u1ea1ng th\u00e1i kinh doanh.');
+            }catch(error){showToast(error.code==='PT409'?'S\u1ea3n ph\u1ea9m ho\u1eb7c s\u1ed5 kho \u0111\u00e3 thay \u0111\u1ed5i. M\u1edf l\u1ea1i \u0111\u1ec3 \u0111\u1ed1i chi\u1ebfu.':'Kh\u00f4ng th\u1ec3 \u0111\u1ed5i tr\u1ea1ng th\u00e1i s\u1ea3n ph\u1ea9m.','warning');}
+            finally{document.getElementById('btnConfirmToggleProductStatus').disabled=false;}
         });
 
         // Hỗ trợ kiểm thử tự động cho modal9, modal10 & modal13
@@ -1429,6 +815,8 @@
     };
 
     window.PawpalOrdersModule.openAddProductModal = function() {
+        document.querySelector('#modalAddProduct .admin-modal-card').scrollTop=0;
+        state.productEditSnapshot=null;state.productSaveId=crypto.randomUUID();state.productSaveRequest=crypto.randomUUID();state.singleVariantId=crypto.randomUUID();
         const titleEl = document.getElementById('productModalTitle');
         const submitBtn = document.getElementById('btnSubmitAddProduct');
         const editSkuInput = document.getElementById('editProductOriginalSku');
@@ -1444,26 +832,28 @@
             'newProdSku', 'newProdName', 'newProdBrand', 'newProdSpec', 'newProdBadge',
             'newProdFeatures', 'newProdCostPrice', 'newProdPrice', 'newProdOriginalPrice',
             'newProdDescription', 'newProdIngredients', 'newProdBenefits', 'newProdUsage',
-            'newProdFeedingGuide', 'newProdExpiry', 'newProdStorage'
+            'newProdFeedingGuide', 'newProdExpiry', 'newProdStorage',
+            'newProdCategory','newProdUnit','newProdPetType','newProdOrigin'
         ];
         inputs.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
         });
+        document.getElementById('newProdStatus').selectedIndex=0;
 
         const stockIn = document.getElementById('newProdInitialStock');
-        if (stockIn) stockIn.value = 10;
+        if (stockIn) stockIn.value = '';
         const minStockIn = document.getElementById('newProdMinStock');
-        if (minStockIn) minStockIn.value = 5;
+        if (minStockIn) minStockIn.value = 0;
         const imgIn = document.getElementById('newProdImages');
-        if (imgIn) imgIn.value = 'assets/images/shop/products/tp-hat-01.png';
+        if (imgIn) imgIn.value = '';
 
         attr1TagValues = [];
         attr2TagValues = [];
         const attr1N = document.getElementById('attr1Name');
         const attr2N = document.getElementById('attr2Name');
-        if (attr1N) attr1N.value = 'Phân loại';
-        if (attr2N) attr2N.value = 'Quy cách';
+        if (attr1N) attr1N.value = 'Hương vị';
+        if (attr2N) attr2N.value = 'Kích thước';
         renderAttributeTags(1);
         renderAttributeTags(2);
         const tbody = document.getElementById('productVariantsTableBody');
@@ -1485,6 +875,7 @@
     window.PawpalOrdersModule.openEditProductModal = function(sku) {
         const prod = (state.products || []).find(p => p.sku === sku);
         if (!prod) return;
+        state.productEditSnapshot=structuredClone(prod);state.productSaveId=prod.id;state.productSaveRequest=crypto.randomUUID();state.singleVariantId=prod.variants[0]?.id||crypto.randomUUID();
 
         const titleEl = document.getElementById('productModalTitle');
         const submitBtn = document.getElementById('btnSubmitAddProduct');
@@ -1501,20 +892,20 @@
         document.getElementById('newProdSku').value = prod.sku || '';
         document.getElementById('newProdName').value = prod.name || '';
         document.getElementById('newProdCategory').value = prod.category || 'Thức ăn khô';
-        document.getElementById('newProdBrand').value = prod.brand || 'PawPal';
+        document.getElementById('newProdBrand').value = prod.brand || '';
         document.getElementById('newProdPetType').value = prod.petType || 'Chó và Mèo';
-        document.getElementById('newProdOrigin').value = prod.origin || 'Việt Nam';
+        document.getElementById('newProdOrigin').value = prod.origin || '';
         document.getElementById('newProdStatus').value = prod.status || 'Còn hàng';
-        document.getElementById('newProdUnit').value = prod.unit || 'Túi';
+        document.getElementById('newProdUnit').value = prod.unit || '';
         document.getElementById('newProdSpec').value = prod.spec || '';
         document.getElementById('newProdBadge').value = prod.badge || '';
         document.getElementById('newProdFeatures').value = prod.features || '';
-        document.getElementById('newProdCostPrice').value = prod.costPrice || '';
-        document.getElementById('newProdPrice').value = prod.price || '';
+        document.getElementById('newProdCostPrice').value = prod.costPrice ?? '';
+        document.getElementById('newProdPrice').value = prod.price ?? '';
         document.getElementById('newProdOriginalPrice').value = prod.originalPrice || '';
         document.getElementById('newProdInitialStock').value = prod.stock || 0;
-        document.getElementById('newProdMinStock').value = prod.minStock || 5;
-        document.getElementById('newProdImages').value = prod.images ? (Array.isArray(prod.images) ? prod.images.join(', ') : prod.images) : (prod.image || 'assets/images/shop/products/tp-hat-01.png');
+        document.getElementById('newProdMinStock').value = prod.minStock ?? 0;
+        document.getElementById('newProdImages').value = prod.images ? (Array.isArray(prod.images) ? prod.images.join(', ') : prod.images) : (prod.image || '');
         document.getElementById('newProdDescription').value = prod.description || '';
         document.getElementById('newProdIngredients').value = prod.ingredients || '';
         document.getElementById('newProdBenefits').value = prod.benefits || '';
@@ -1579,6 +970,7 @@
         state.activeStockActionSku = sku;
         const prod = (state.products || []).find(p => p.sku === sku);
         if (!prod) return;
+        state.toggleProductSnapshot=structuredClone(prod);state.toggleProductRequest=crypto.randomUUID();document.querySelector('#modalConfirmToggleProductStatus .rma-order-summary-box').style.cssText='background:transparent;border:none;padding:0;margin-bottom:16px;';
 
         const isCurrentlySuspended = prod.status === 'Tạm ngưng';
         const subEl = document.getElementById('toggleStatusProdSubtitle');
@@ -1608,63 +1000,50 @@
         document.getElementById('modalConfirmToggleProductStatus')?.classList.add('active');
     };
 
-    window.PawpalOrdersModule.openStockLogsModal = function(sku) {
-        state.activeStockActionSku = sku;
-        const prod = (state.products || []).find(p => p.sku === sku);
-        if (!prod) return;
-
-        const subEl = document.getElementById('stockLogsSubtitle');
-        const totalEl = document.getElementById('stockLogsCurrentTotal');
-        const minEl = document.getElementById('stockLogsMinStock');
-        const statusEl = document.getElementById('stockLogsStatusText');
-        const tbody = document.getElementById('stockLogsTableBody');
-
-        if (subEl) subEl.textContent = `Mã SKU ${prod.sku} • ${prod.name}`;
-        if (totalEl) totalEl.textContent = `${prod.stock} món`;
-        if (minEl) minEl.textContent = `${prod.minStock} món`;
-        if (statusEl) {
-            if (prod.stock === 0) {
-                statusEl.textContent = 'Đã hết hàng';
-                statusEl.className = 'info-value text-danger';
-            } else if (prod.stock <= prod.minStock) {
-                statusEl.textContent = 'Sắp hết hàng';
-                statusEl.className = 'info-value text-warning';
-            } else {
-                statusEl.textContent = 'An toàn';
-                statusEl.className = 'info-value text-success';
-            }
-        }
-
-        const logs = (state.stockLogs || []).filter(l => l.sku === sku);
-        if (tbody) {
-            if (logs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Chưa có lịch sử biến động nào cho sản phẩm này.</td></tr>';
-            } else {
-                tbody.innerHTML = logs.map(l => {
-                    let badgeType = 'badge-paid';
-                    if (l.type === 'OUT') badgeType = 'badge-cancelled';
-                    else if (l.type === 'ADJUST') badgeType = 'badge-warning';
-                    return `
-                        <tr>
-                            <td>${l.date || '--'}</td>
-                            <td style="font-family: monospace;">${l.refCode || '--'}</td>
-                            <td><span class="admin-badge ${badgeType}">${l.typeLabel || l.type}</span></td>
-                            <td style="font-weight: 700; color: ${l.change?.startsWith('+') ? '#236B48' : '#DC2626'};">${l.change}</td>
-                            <td>${l.beforeStock}</td>
-                            <td style="font-weight: 600;">${l.afterStock}</td>
-                            <td>${l.staff || 'Hệ thống'}</td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-        }
-
-        document.getElementById('modalStockLogs')?.classList.add('active');
-    };
-
     window.PawpalOrdersModule.openAdjustStockModal = function(sku) {
         const prod = (state.products || []).find(p => p.sku === sku);
         if (!prod) return;
+
+        state.adjustRequestId = crypto.randomUUID();
+        state.adjustVariantId = null;
+        document.querySelector('#modalAdjustStock .rma-order-summary-box').style.cssText = 'background:transparent;border:none;padding:0;margin-bottom:16px;';
+        let wrapper = document.getElementById('adjustVariantWrapper');
+        if (!wrapper) {
+            wrapper = document.createElement('div');
+            wrapper.id = 'adjustVariantWrapper';
+            wrapper.className = 'customer-autocomplete-wrapper';
+            wrapper.style.cssText = 'position:relative;width:100%;margin-bottom:16px;';
+            wrapper.innerHTML = '<label class="form-label-clean" for="adjustVariantSearch">Biến thể <span style="color:#DC2626">*</span></label><input class="admin-input" id="adjustVariantSearch" autocomplete="off"><div class="customer-autocomplete-popover" id="adjustVariantOptions" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;max-height:240px;overflow:auto;overscroll-behavior:contain;z-index:2500;border-radius:9px;background:#fff;border:1px solid #ECF2EE;box-shadow:0 10px 28px rgba(35,107,72,.14)"></div>';
+            document.querySelector('#modalAdjustStock .form-row-2col').before(wrapper);
+        }
+        const input = document.getElementById('adjustVariantSearch');
+        const options = document.getElementById('adjustVariantOptions');
+        const selectVariant = v => {
+            state.adjustVariantId = v.id;
+            input.value = v.name + ' · ' + v.sku;
+            options.style.display = 'none';
+            document.getElementById('adjustSkuCode').textContent = v.sku;
+            document.getElementById('adjustCurrentStock').textContent = v.stock === null ? 'Chưa có sổ kho' : String(v.stock);
+            document.getElementById('adjustPriceInput').value = '';
+        };
+        const renderOptions = () => {
+            state.adjustVariantId = null;
+            options.replaceChildren();
+            for (const v of prod.variants.filter(v => matchSearch(v.name + ' ' + v.sku, input.value))) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'admin-btn';
+                button.style.cssText = 'display:block;width:100%;text-align:left;background:transparent;color:#203A2C';
+                button.textContent = v.name + ' · ' + v.sku;
+                button.onclick = () => selectVariant(v);
+                options.append(button);
+            }
+            options.style.display = 'block';
+        };
+        input.value = '';
+        input.oninput = renderOptions;
+        input.onfocus = () => { input.value = ''; renderOptions(); };
+        input.onkeydown = event => { if (event.key === 'Escape') options.style.display = 'none'; };
 
         state.activeAdjustProductSku = sku;
         const skuEl = document.getElementById('adjustSkuCode');
@@ -1676,40 +1055,28 @@
         if (skuEl) skuEl.textContent = prod.sku;
         if (nameEl) nameEl.textContent = prod.name;
         if (stockEl) stockEl.textContent = `${prod.stock} món`;
-        if (priceInput) priceInput.value = prod.price || '';
-        if (statusSelect) statusSelect.value = prod.status || 'Đang bán';
+        if (priceInput) priceInput.value = '';
+        if (statusSelect) statusSelect.value = prod.raw.status === 'active' ? 'active' : 'inactive';
+        document.getElementById('adjustQuantityInput').value = '';
+        document.getElementById('adjustOperationType').value = 'ADD';
+        if (prod.variants.length === 1) selectVariant(prod.variants[0]);
 
         document.getElementById('modalAdjustStock')?.classList.add('active');
     };
 
-    window.PawpalOrdersModule.openGoodsReceiptModal = function(prefillSku) {
-        const codeInput = document.getElementById('grnReceiptCode');
-        if (codeInput) codeInput.value = 'GRN-2026-' + (Math.floor(100 + Math.random() * 900));
-
-        const picker = document.getElementById('grnProductPicker');
-        if (picker) {
-            picker.innerHTML = (state.products || []).map(p => `
-                <option value="${p.sku}" ${p.sku === prefillSku ? 'selected' : ''}>${p.sku} - ${p.name} (Tồn hiện tại: ${p.stock})</option>
-            `).join('');
-        }
-
-        state.activeGrnItems = [];
-        if (prefillSku) {
-            const prod = (state.products || []).find(p => p.sku === prefillSku);
-            if (prod) {
-                const costPrice = Math.round((prod.price || 50000) * 0.65);
-                state.activeGrnItems.push({
-                    sku: prod.sku,
-                    name: prod.name,
-                    qty: 10,
-                    price: costPrice,
-                    total: 10 * costPrice
-                });
-            }
-        }
-
-        renderGrnItemsTable();
-        document.getElementById('modalGoodsReceipt')?.classList.add('active');
+    function inventoryVariants(){return state.products.flatMap(p=>p.variants.map(v=>({...v,name:p.name+(p.variants.length>1?' - '+v.name:''),lastUpdatedAt:window.PawpalOrderV1.one(v.raw.inventory)?.last_updated_at||null})));}
+    window.PawpalOrdersModule.openGoodsReceiptModal = async function(prefillSku){
+        state.grnRequestId=crypto.randomUUID();state.activeGrnItems=[];document.getElementById('formGoodsReceipt').reset();
+        document.getElementById('grnReceiptCode').value='PO-'+state.grnRequestId;
+        const supplier=document.getElementById('grnSupplierSelect'),picker=document.getElementById('grnProductPicker');
+        supplier.replaceChildren(new Option('Ch\u1ecdn nh\u00e0 cung c\u1ea5p',''));
+        picker.replaceChildren(new Option('Ch\u1ecdn bi\u1ebfn th\u1ec3',''),...inventoryVariants().map(v=>new Option(v.sku+' - '+v.name,v.id)));
+        const target=inventoryVariants().find(v=>v.sku===prefillSku);if(target)picker.value=target.id;
+        renderGrnItemsTable();document.getElementById('modalGoodsReceipt').classList.add('active');
+        try{const suppliers=await window.PawpalOrderV1.rows(()=>window.getSupabaseClient().from('supplier').select('id,supplier_name').eq('status','active').order('id'));
+            supplier.replaceChildren(new Option('Ch\u1ecdn nh\u00e0 cung c\u1ea5p',''),...suppliers.map(v=>new Option(v.supplier_name,v.id)));
+        }catch(error){showToast('Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c nh\u00e0 cung c\u1ea5p.','warning');}
+        PawpalOrders.enhanceEntitySelects?.();
     };
 
     window.PawpalOrdersModule.updateGrnItemQty = function(idx, val) {
@@ -1738,46 +1105,32 @@
         }
     };
 
-    window.PawpalOrdersModule.openStocktakeModal = function() {
-        const auditEl = document.getElementById('stkAuditCode');
-        if (auditEl) auditEl.value = 'STK-2026-' + (Math.floor(100 + Math.random() * 900));
-
-        const tbody = document.getElementById('stkItemsTableBody');
-        const diffSummary = document.getElementById('stkTotalDiff');
-        const productsList = state.products || [];
-
-        if (tbody) {
-            tbody.innerHTML = productsList.map(p => `
-                <tr class="stk-row-item" data-sku="${p.sku}">
-                    <td style="font-family: monospace; font-weight: 600; color: #236B48;">${p.sku}</td>
-                    <td>
-                        <div style="font-weight: 500;">${p.name}</div>
-                        <div class="sub-meta-text">Quy cách: ${p.spec || 'Tiêu chuẩn'}</div>
-                    </td>
-                    <td style="text-align: center; font-weight: 600;" class="stk-system-val">${p.stock}</td>
-                    <td style="text-align: center;">
-                        <input type="number" class="admin-input stk-count-input" value="${p.stock}" min="0" style="width: 70px; height: 28px; text-align: center; font-weight: 700; padding: 2px;" oninput="PawpalOrdersModule.calcStocktakeDiff(this, ${p.stock})">
-                    </td>
-                    <td style="text-align: center; font-weight: 700;" class="stk-diff-disp text-success">Khớp (0)</td>
-                    <td>
-                        <select class="admin-select stk-row-reason-select" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
-                            <option value="Khớp số liệu">Khớp số liệu</option>
-                            <option value="Hao hụt tự nhiên">Hao hụt tự nhiên</option>
-                            <option value="Xuất nhầm mẫu mã">Xuất nhầm mẫu mã</option>
-                            <option value="Hàng vỡ hỏng bao bì">Hàng vỡ hỏng bao bì</option>
-                            <option value="Chưa nhập phiếu bổ sung">Chưa nhập phiếu bổ sung</option>
-                        </select>
-                    </td>
-                </tr>
-            `).join('');
+    function renderStocktakePage(){
+        const tbody=document.getElementById('stocktakeTableBody');tbody.replaceChildren();
+        const filtered=state.stocktakeSnapshot.filter(v=>matchSearch(v.sku+' '+v.name,state.stocktakeFilter||''));
+        const list=filtered.slice((state.stocktakePage-1)*10,state.stocktakePage*10);
+        for(const v of list){
+            const row=document.createElement('tr');row.className='stk-row-item';row.dataset.variantId=v.id;
+            const sku=document.createElement('td');sku.textContent=v.sku;
+            const name=document.createElement('td');name.textContent=v.name;
+            const expected=document.createElement('td');expected.textContent=v.stock===null?'\u2014':v.stock;
+            const countCell=document.createElement('td'),input=document.createElement('input');input.type='number';input.min=0;input.step=1;input.className='admin-input stk-count-input';input.style.width='80px';input.value=state.stocktakeCounts.get(v.id)?.quantity??'';
+            const diff=document.createElement('td');diff.className='stk-diff-disp';
+            const reasonCell=document.createElement('td'),reason=document.createElement('input');reason.className='admin-input stk-row-reason-select';reason.placeholder='L\u00fd do ch\u00eanh l\u1ec7ch';reason.value=state.stocktakeCounts.get(v.id)?.reason||'';
+            const sync=()=>{if(input.value==='')state.stocktakeCounts.delete(v.id);else state.stocktakeCounts.set(v.id,{quantity:input.value,reason:reason.value.trim()});diff.textContent=input.value===''?'\u2014':String(Number(input.value)-Number(v.stock));document.getElementById('stkTotalDiff').textContent=state.stocktakeCounts.size+' bi\u1ebfn th\u1ec3 \u0111\u00e3 \u0111\u1ebfm';};
+            input.oninput=sync;reason.oninput=sync;countCell.append(input);reasonCell.append(reason);row.append(sku,name,expected,countCell,diff,reasonCell);tbody.append(row);
+            diff.textContent=input.value===''?'\u2014':String(Number(input.value)-Number(v.stock));
         }
-
-        if (diffSummary) {
-            diffSummary.textContent = '0 mặt hàng lệch';
-            diffSummary.className = 'text-success';
-        }
-
-        document.getElementById('modalStocktake')?.classList.add('active');
+        let pager=document.getElementById('salesStocktakePager');if(!pager){pager=document.createElement('div');pager.id='salesStocktakePager';pager.style.cssText='display:flex;justify-content:center;gap:12px;margin-top:6px';tbody.closest('.table-responsive-wrapper').after(pager);}pager.replaceChildren();
+        for(const [label,page] of [['<',state.stocktakePage-1],[String(state.stocktakePage),state.stocktakePage],['>',state.stocktakePage+1]]){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.textContent=label;button.style.cssText='background:transparent;border:none;padding:2px 8px;color:#236B48';if(label!=='<'&&label!=='>')button.style.cssText='background:#236B48;border:none;padding:2px 8px;color:#fff';button.disabled=page<1||page>Math.max(1,Math.ceil(filtered.length/10));button.onclick=()=>{state.stocktakePage=page;renderStocktakePage();};pager.append(button);}
+    }
+    window.PawpalOrdersModule.openStocktakeModal = function(){
+        document.getElementById('formStocktake').reset();state.stocktakeRequestId=crypto.randomUUID();state.stocktakeCounts=new Map();state.stocktakeSnapshot=structuredClone(inventoryVariants());state.stocktakePage=1;
+        state.stocktakeFilter='';
+        let search=document.getElementById('salesStocktakeSearch');
+        if(!search){search=document.createElement('input');search.id='salesStocktakeSearch';search.className='admin-input';search.placeholder='Tìm SKU hoặc tên sản phẩm';search.setAttribute('aria-label','Tìm SKU hoặc tên sản phẩm');document.getElementById('stocktakeTableBody').closest('.table-responsive-wrapper').before(search);search.oninput=()=>{state.stocktakeFilter=search.value;state.stocktakePage=1;renderStocktakePage();};}
+        search.value='';
+        document.getElementById('stkAuditCode').value='STK-'+state.stocktakeRequestId;document.getElementById('stkTotalDiff').textContent='0 bi\u1ebfn th\u1ec3 \u0111\u00e3 \u0111\u1ebfm';renderStocktakePage();document.getElementById('modalStocktake').classList.add('active');
     };
 
     window.PawpalOrdersModule.calcStocktakeDiff = function(inputEl, systemStock) {
@@ -1826,206 +1179,8 @@
     };
 
     // Quản lý đánh giá sản phẩm (Reviews)
-    let activeReviewsSku = null;
-    let activeReviewsFilter = 'ALL';
-
-    window.PawpalOrdersModule.openProductReviewsModal = async function(sku) {
-        activeReviewsSku = sku;
-        activeReviewsFilter = 'ALL';
-        const prod = (state.products || []).find(p => p.sku === sku);
-        if (!prod) return;
-
-        const titleEl = document.getElementById('productReviewsModalTitle');
-        if (titleEl) titleEl.textContent = `Đánh giá sản phẩm • ${prod.name}`;
-
-        const bigScoreEl = document.getElementById('prodReviewsScoreBig');
-        const descEl = document.getElementById('prodReviewsScoreDesc');
-        const totalCountEl = document.getElementById('prodReviewsCountTotal');
-
-        const count = prod.reviewCount || 0;
-        const score = (prod.rating && count > 0) ? Number(prod.rating).toFixed(1) : null;
-
-        if (bigScoreEl) bigScoreEl.textContent = score ? `${score} ★` : '—';
-        if (descEl) {
-            if (!score || count === 0) {
-                descEl.textContent = 'Chưa có đánh giá';
-            } else {
-                const numScore = parseFloat(score);
-                descEl.textContent = numScore >= 4.8 ? 'Cực kỳ hài lòng' : numScore >= 4.0 ? 'Rất hài lòng' : numScore >= 3.0 ? 'Hài lòng' : 'Cần cải thiện';
-            }
-        }
-        if (totalCountEl) totalCountEl.textContent = `(${count} nhận xét)`;
-
-        await PawpalOrdersModule.renderProductReviewsModalContent(sku);
-        document.getElementById('modalProductReviews')?.classList.add('active');
-    };
-
-    window.PawpalOrdersModule.renderProductReviewsModalContent = async function(sku) {
-        const prod = (state.products || []).find(p => p.sku === sku);
-        if (!prod) return;
-
-        const prodImgPath = prod.image ? (prod.image.startsWith('/') ? prod.image : '/' + prod.image) : '/assets/images/shop/products/tp-hat-01.png';
-        const storageKey = `pawpal_prod_reviews_${sku}`;
-        let reviews = [];
-        try {
-            const saved = sessionStorage.getItem(storageKey);
-            if (saved) reviews = JSON.parse(saved);
-        } catch (e) {}
-
-        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (client && prod.id && (!reviews || reviews.length === 0)) {
-            try {
-                const { data: dbReviews, error: revErr } = await client
-                    .from('review')
-                    .select('*, customer:customer_id(full_name, phone_number)')
-                    .eq('product_id', prod.id)
-                    .order('created_at', { ascending: false });
-                if (!revErr && Array.isArray(dbReviews) && dbReviews.length > 0) {
-                    reviews = dbReviews.map(r => ({
-                        id: r.id,
-                        customerName: r.customer?.full_name || 'Khách hàng',
-                        avatar: (r.customer?.full_name || 'K').charAt(0).toUpperCase(),
-                        date: r.created_at ? formatDateTime(new Date(r.created_at)).split(' ')[0] : '',
-                        rating: r.rating || 5,
-                        variant: r.variant_name || 'Tiêu chuẩn',
-                        comment: r.comment || r.content || '',
-                        images: r.images || [],
-                        reply: r.shop_reply || ''
-                    }));
-                    try {
-                        sessionStorage.setItem(storageKey, JSON.stringify(reviews));
-                    } catch (e) {}
-                }
-            } catch (errFetchRev) {
-                console.warn('Lỗi tải đánh giá từ Supabase:', errFetchRev);
-            }
-        }
-
-        const filterRow = document.getElementById('prodReviewsStarFilterRow');
-        if (filterRow) {
-            const count5 = reviews.filter(r => r.rating === 5).length;
-            const count4 = reviews.filter(r => r.rating === 4).length;
-            const countMedia = reviews.filter(r => r.images && r.images.length > 0).length;
-
-            const getChipStyle = (isActive) => isActive 
-                ? 'background-color: #DCEEE2; color: #165335; font-weight: 600; border-radius: var(--admin-radius); border: none; height: 26px; padding: 0 10px; font-size: 12px; cursor: pointer;'
-                : 'background-color: #EEF5F1; color: #4F7A65; font-weight: 500; border-radius: var(--admin-radius); border: none; height: 26px; padding: 0 10px; font-size: 12px; cursor: pointer;';
-
-            filterRow.innerHTML = `
-                <button type="button" style="${getChipStyle(activeReviewsFilter === 'ALL')}" onclick="PawpalOrdersModule.setProductReviewsFilter('ALL')">Tất cả (${reviews.length})</button>
-                <button type="button" style="${getChipStyle(activeReviewsFilter === '5')}" onclick="PawpalOrdersModule.setProductReviewsFilter('5')">5 ★ (${count5})</button>
-                <button type="button" style="${getChipStyle(activeReviewsFilter === '4')}" onclick="PawpalOrdersModule.setProductReviewsFilter('4')">4 ★ (${count4})</button>
-                <button type="button" style="${getChipStyle(activeReviewsFilter === 'MEDIA')}" onclick="PawpalOrdersModule.setProductReviewsFilter('MEDIA')">Có ảnh (${countMedia})</button>
-            `;
-        }
-
-        let displayReviews = reviews;
-        if (activeReviewsFilter === '5') displayReviews = reviews.filter(r => r.rating === 5);
-        else if (activeReviewsFilter === '4') displayReviews = reviews.filter(r => r.rating === 4);
-        else if (activeReviewsFilter === 'MEDIA') displayReviews = reviews.filter(r => r.images && r.images.length > 0);
-
-        const container = document.getElementById('productReviewsListContainer');
-        if (!container) return;
-
-        if (displayReviews.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 36px 20px; color: var(--text-muted); font-size: 13px;">Chưa có nhận xét hoặc đánh giá nào cho sản phẩm này.</div>';
-            return;
-        }
-
-        container.innerHTML = displayReviews.map((r, idx) => {
-            const isLast = idx === displayReviews.length - 1;
-            const starsHtml = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
-            const imagesHtml = (r.images && r.images.length > 0) ? `
-                <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-                    ${r.images.map(img => {
-                        const src = img.startsWith('/') ? img : '/' + img;
-                        return `<img src="${src}" alt="Ảnh feedback" onerror="this.src='/assets/images/shop/products/tp-hat-01.png'" style="width: 54px; height: 54px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral); cursor: pointer;" onclick="window.open('${src}', '_blank')">`;
-                    }).join('')}
-                </div>
-            ` : '';
-
-            const replyHtml = r.reply ? `
-                <div style="margin-top: 8px; font-size: 12.5px; line-height: 1.5; color: var(--text-main);">
-                    <span style="font-weight: 600; color: #236B48;">Phản hồi từ PawPal</span> • ${r.reply}
-                </div>
-            ` : `
-                <div style="margin-top: 8px;" id="replyBoxWrapper_${r.id}">
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <input type="text" class="admin-input" id="replyInput_${r.id}" placeholder="Nhập nội dung phản hồi cho khách hàng..." style="height: 30px; font-size: 12px;">
-                        <button type="button" class="admin-btn admin-btn-primary" style="height: 30px; font-size: 12px; padding: 0 12px; white-space: nowrap;" onclick="PawpalOrdersModule.submitProductReviewReply('${sku}', '${r.id}')">Gửi phản hồi</button>
-                    </div>
-                </div>
-            `;
-
-            return `
-                <div style="padding: 14px 0; ${isLast ? '' : 'border-bottom: 1px solid var(--border-neutral);'} background: transparent;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <div style="width: 32px; height: 32px; border-radius: 50%; background: #EEF5F1; color: #236B48; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 12.5px; flex-shrink: 0;">
-                                ${r.avatar || r.customerName.charAt(0)}
-                            </div>
-                            <div>
-                                <div style="font-weight: 600; font-size: 13.5px; color: var(--text-main);">${r.customerName}</div>
-                                <div style="font-size: 11.5px; color: var(--text-muted);">${r.date} • Phân loại <span style="font-weight: 500; color: var(--text-main);">${r.variant}</span></div>
-                            </div>
-                        </div>
-                        <div style="font-weight: 700; color: #B45309; font-size: 12.5px;">${starsHtml}</div>
-                    </div>
-                    <div style="font-size: 13px; color: var(--text-main); line-height: 1.55; margin-top: 6px;">${r.comment}</div>
-                    ${imagesHtml}
-                    ${replyHtml}
-                </div>
-            `;
-        }).join('');
-    };
-
-    window.PawpalOrdersModule.setProductReviewsFilter = function(filter) {
-        activeReviewsFilter = filter;
-        if (activeReviewsSku) {
-            PawpalOrdersModule.renderProductReviewsModalContent(activeReviewsSku);
-        }
-    };
-
-    window.PawpalOrdersModule.submitProductReviewReply = async function(sku, reviewId) {
-        const inputEl = document.getElementById(`replyInput_${reviewId}`);
-        const replyText = inputEl?.value.trim();
-        if (!replyText) {
-            showToast('Vui lòng nhập nội dung phản hồi cho khách hàng.', 'warning');
-            return;
-        }
-
-        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (client && reviewId && reviewId.length > 20) {
-            try {
-                const { error: revErr } = await client.from('review').update({ shop_reply: replyText }).eq('id', reviewId);
-                if (revErr) {
-                    showToast('Không thể lưu phản hồi: ' + (revErr.message || 'Lỗi CSDL'), 'danger');
-                    return;
-                }
-            } catch (errRev) {
-                console.error('Lỗi khi lưu phản hồi đánh giá lên Supabase:', errRev);
-                showToast('Không thể kết nối CSDL để gửi phản hồi.', 'danger');
-                return;
-            }
-        }
-
-        const storageKey = `pawpal_prod_reviews_${sku}`;
-        try {
-            let reviews = JSON.parse(sessionStorage.getItem(storageKey) || '[]');
-            const target = reviews.find(r => r.id === reviewId);
-            if (target) {
-                target.reply = replyText;
-                sessionStorage.setItem(storageKey, JSON.stringify(reviews));
-            }
-        } catch (e) {
-            console.error(e);
-        }
-        showToast('Đã đăng phản hồi của cửa hàng thành công!', 'success');
-        PawpalOrdersModule.renderProductReviewsModalContent(sku);
-    };
-
     window.PawpalOrdersModule.viewProductOnStorefront = function() {
-        const sku = activeReviewsSku;
+        const sku = state.activeReviewsSku;
         if (!sku) return;
         const prod = (state.products || []).find(p => p.sku === sku);
         const prodId = prod ? (prod.id || prod.sku) : sku;
@@ -2051,6 +1206,80 @@
         }
     };
 
+    PawpalOrders.controllers.products = {renderProductsTable,renderProductsPagination,updateCategoryFilterDropdown,renderGrnItemsTable};
+    updateCategoryFilterDropdown(state.categories||[]);
     // Khởi tạo sự kiện
     initProductsEvents();
+})();
+
+;
+
+(function(){
+ 'use strict';
+ const m=window.PawpalOrders,api=window.PawpalOrdersModule,el=id=>document.getElementById(id);
+ let loaded=[],filter='ALL',page=1,session=0;
+ const latest=r=>[...(r.responses||[])].sort((a,b)=>b.updated_at.localeCompare(a.updated_at)||a.id.localeCompare(b.id))[0];
+ function render(){
+  const filters=el('prodReviewsStarFilterRow');filters.replaceChildren();
+  for(const [key,label] of [['ALL','Tất cả'],['5','5 điểm'],['4','4 điểm'],['MEDIA','Có ảnh']]){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.textContent=label;button.style.cssText=filter===key?'background:#DCEEE2;color:#165335;border:none':'background:transparent;color:#4F7A65;border:none';button.onclick=()=>{filter=key;page=1;render();};filters.append(button);}
+  const list=loaded.filter(r=>filter==='ALL'||(filter==='MEDIA'?r.media.length>0:r.rating===Number(filter)));
+  const root=el('productReviewsListContainer');root.replaceChildren();
+  if(!list.length)root.textContent='Chưa có đánh giá phù hợp.';
+  for(const r of list.slice((page-1)*10,page*10)){
+   const block=document.createElement('div');block.style.cssText='padding:12px 0;display:flex;flex-direction:column;gap:8px';
+   const name=window.PawpalOrderV1.one(r.line?.order?.customer?.customer_profile)?.full_name||'Chưa có tên khách';
+   const title=document.createElement('strong');title.textContent=name+' · '+r.rating+'/5';
+   const meta=document.createElement('div');meta.style.cssText='color:#4F7A65;font-size:12px';meta.textContent=new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Bangkok',dateStyle:'short'}).format(new Date(r.created_at))+' · '+r.line.sku_snapshot;
+   const content=document.createElement('p');content.style.margin=0;content.textContent=r.review_content||'';block.append(title,meta,content);
+   for(const media of r.media){if(!/^(https?:\/\/|\/?assets\/)/i.test(media.image_url))continue;const image=document.createElement('img');image.src=media.image_url.startsWith('assets/')?'/'+media.image_url:media.image_url;image.alt='Ảnh đánh giá';image.style.cssText='width:80px;height:80px;object-fit:cover;border-radius:9px';block.append(image);}
+   const response=latest(r);if(response){const author=document.createElement('div');author.style.cssText='font-size:12px;color:#4F7A65';author.textContent='Phản hồi · '+(response.staff?.full_name||'Chưa ghi nhận người phản hồi');block.append(author);}
+   const input=document.createElement('textarea');input.className='admin-input';input.rows=2;input.maxLength=5000;input.style.height='auto';input.value=response?.response_content||'';input.setAttribute('aria-label','Phản hồi đánh giá');
+   const save=document.createElement('button');save.type='button';save.className='admin-btn admin-btn-primary';save.textContent='Lưu phản hồi';save.style.alignSelf='flex-start';
+   const error=document.createElement('p');error.style.cssText='color:#DC2626;background:transparent;border:none;margin:0';error.setAttribute('role','alert');
+   save.onclick=async()=>{if(!input.value.trim()){error.textContent='Nhập nội dung phản hồi.';return;}save.disabled=true;try{const {error:failure}=await window.getSupabaseClient().rpc('reply_admin_sales_review',{p_review_id:r.id,p_response_id:response?.id||null,p_expected_updated_at:response?.updated_at||null,p_text:input.value.trim()});if(failure)throw failure;await api.renderProductReviewsModalContent(m.state.activeReviewsSku);m.helpers.showToast('Đã lưu phản hồi đánh giá.');}catch(failure){error.textContent=failure.code==='PT409'?'Phản hồi đã thay đổi. Mở lại đánh giá để đối chiếu.':'Không thể lưu phản hồi. Kiểm tra quyền và nội dung.';}finally{save.disabled=false;}};
+   block.append(input,save,error);root.append(block);
+  }
+  if(list.length>10){const pager=document.createElement('div');pager.style.cssText='display:flex;justify-content:center;gap:12px';for(const [label,next] of [['<',page-1],[String(page),page],['>',page+1]]){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.style.cssText='background:transparent;border:none';button.textContent=label;button.disabled=next<1||next>Math.ceil(list.length/10);button.onclick=()=>{page=next;render();};pager.append(button);}root.append(pager);}
+ }
+ api.renderProductReviewsModalContent=async sku=>{
+  const product=m.state.products.find(p=>p.sku===sku);if(!product)return;
+  const current=++session;el('productReviewsListContainer').textContent='Đang tải đánh giá…';
+  try{
+   const data=await window.PawpalOrderV1.rows(()=>window.getSupabaseClient().from('review').select('id,rating,review_content,review_status,created_at,line:sales_order_detail_id!inner(sku_snapshot,product_variant:product_variant_id!inner(product_id),order:order_id(customer:customer_id(customer_profile(full_name)))),responses:review_response(id,response_content,updated_at,staff:staff_id(full_name)),media:review_media(image_url)').eq('line.product_variant.product_id',product.id).order('created_at',{ascending:false}).order('id'));
+   if(current!==session)return;loaded=data;render();
+   el('prodReviewsScoreBig').textContent=data.length?(data.reduce((n,r)=>n+r.rating,0)/data.length).toFixed(1)+'/5':'—';el('prodReviewsScoreDesc').textContent=data.length?'Điểm đánh giá':'Chưa có đánh giá';el('prodReviewsCountTotal').textContent=data.length+' nhận xét';
+  }catch(error){if(current===session)el('productReviewsListContainer').textContent='Không thể tải đánh giá. Đóng và mở lại để thử lại.';}
+ };
+ api.openProductReviewsModal=async sku=>{const p=m.state.products.find(p=>p.sku===sku);if(!p)return;m.state.activeReviewsSku=sku;filter='ALL';page=1;el('productReviewsModalTitle').textContent='Đánh giá sản phẩm · '+p.name;el('prodReviewsScoreBig').textContent='—';el('prodReviewsCountTotal').textContent='';el('modalProductReviews').classList.add('active');await api.renderProductReviewsModalContent(sku);};
+})();
+
+;
+
+(function(){
+ 'use strict';
+ const m=window.PawpalOrders,el=id=>document.getElementById(id);
+ window.PawpalOrdersModule.openStockLogsModal=sku=>{
+  const product=m.state.products.find(p=>p.sku===sku);if(!product)return;
+  const skus=new Set(product.variants.map(v=>v.sku));
+  const logs=m.state.stockLogs.filter(v=>skus.has(v.sku));let page=1;
+  el('stockLogsSubtitle').textContent=product.name;
+  el('stockLogsCurrentTotal').textContent=String(product.stock);
+  el('stockLogsMinStock').textContent=String(product.minStock);
+  el('stockLogsStatusText').textContent=product.stock===0?'Hết hàng':product.stock<=product.minStock?'Sắp hết hàng':'—';
+  const tbody=el('stockLogsTableBody');
+  const headers=tbody.closest('table').querySelector('thead tr');headers.replaceChildren();
+  for(const text of ['Thời gian','SKU và nguồn','Biến động','Số lượng','Trước','Sau','Người ghi và lý do']){const th=document.createElement('th');th.textContent=text;headers.append(th);}
+  let pager=el('salesStockHistoryPager');if(!pager){pager=document.createElement('div');pager.id='salesStockHistoryPager';pager.style.cssText='display:flex;justify-content:center;gap:8px;background:transparent;margin-top:6px';tbody.closest('.table-responsive-wrapper').after(pager);}
+  function render(){tbody.replaceChildren();pager.replaceChildren();
+   if(!logs.length){const cell=tbody.insertRow().insertCell();cell.colSpan=7;cell.textContent='Chưa có lịch sử biến động.';return;}
+   for(const log of logs.slice((page-1)*10,page*10)){
+    const row=tbody.insertRow();
+    const label=({opening:'Tồn đầu',migration_opening:'Chuyển hệ thống',sales_issue:'Xuất bán',purchase_receipt:'Nhập hàng',stocktake:'Kiểm kê',return_receipt:'Nhận hàng trả',adjustment:'Điều chỉnh'})[log.typeLabel]||'Biến động khác';
+    for(const value of [m.helpers.formatDateTime(log.date),log.sku+' · '+(log.refCode||'—'),label,log.change,log.beforeStock,log.afterStock,log.staff+' · '+(log.reason||'—')]){const cell=row.insertCell();cell.textContent=String(value);cell.style.overflowWrap='anywhere';}
+   }
+   const pages=Math.ceil(logs.length/10);
+   for(const [text,target] of [['<',page-1],...Array.from({length:pages},(_,i)=>[String(i+1),i+1]),['>',page+1]]){const button=document.createElement('button');button.type='button';button.textContent=text;button.className='admin-btn';button.style.cssText='border:none;background:transparent';if(target===page&&text!=='<'&&text!=='>')button.style.cssText='border:none;background:#236B48;color:white';button.disabled=target<1||target>pages;button.onclick=()=>{page=target;render();};pager.append(button);}
+  }
+  render();el('modalStockLogs').classList.add('active');
+ };
 })();

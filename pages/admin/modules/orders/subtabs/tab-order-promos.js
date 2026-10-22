@@ -117,182 +117,32 @@
 
         // Mở modal tạo mã khuyến mãi
         document.getElementById('btnOpenCreateVoucherModal')?.addEventListener('click', () => {
+            document.getElementById('formCreateVoucher').reset();state.voucherCreateId=crypto.randomUUID();state.voucherCreateRequest=crypto.randomUUID();
+            document.getElementById('newVoucherStart').value=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
             document.getElementById('modalCreateVoucher')?.classList.add('active');
         });
 
         // Xác nhận tạo mã khuyến mãi dùng chung
-        document.getElementById('btnSubmitCreateVoucher')?.addEventListener('click', async () => {
-            const code = document.getElementById('newVoucherCode')?.value.trim().toUpperCase();
-            const title = document.getElementById('newVoucherTitle')?.value.trim();
-            const discount = document.getElementById('newVoucherDiscount')?.value.trim();
-            const minOrder = document.getElementById('newVoucherMinOrder')?.value.trim() || '0 đ';
-            const points = document.getElementById('newVoucherPoints')?.value.trim() || 'Miễn phí';
-            const expiry = document.getElementById('newVoucherExpiry')?.value.trim();
-            const maxUses = document.getElementById('newVoucherMaxUses')?.value;
-
-            if (!code || !title || !discount || !expiry || !maxUses) {
-                showToast('Vui lòng nhập đầy đủ mã, tên, mức giảm, ngày hết hạn và số lượt.', 'warning');
-                return;
-            }
-            if (!/^[A-Z0-9]+$/.test(code)) {
-                showToast('Mã voucher chỉ được gồm chữ in hoa không dấu và chữ số, không khoảng trắng hoặc ký tự đặc biệt.', 'warning');
-                return;
-            }
-            if (title.length > 100) {
-                showToast('Tên chương trình không được vượt quá 100 ký tự.', 'warning');
-                return;
-            }
-
-            const vouchersList = getSharedVouchersList();
-            if (vouchersList.some(v => (v.code || '').toUpperCase() === code)) {
-                showToast(`Mã khuyến mãi "${code}" đã tồn tại trên hệ thống. Vui lòng chọn mã khác.`, 'warning');
-                return;
-            }
-
-            const isPct = discount.includes('%');
-            const numericDiscount = Number(discount.replace(/[%\s,đ₫]/gi, ''));
-            const numVal = Number.isFinite(numericDiscount) ? numericDiscount : NaN;
-            const numMinOrder = Number(minOrder.replace(/[,\sđ₫]/gi, ''));
-            const pointsNum = points.includes('Miễn phí') ? 0 : Number(points.replace(/[^\d]/g, ''));
-            const maxUsesNum = Number(maxUses);
-            const expiryMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(expiry);
-            const expiryDate = expiryMatch ? new Date(`${expiryMatch[3]}-${expiryMatch[2]}-${expiryMatch[1]}T23:59:59`) : null;
-
-            if (!Number.isFinite(numVal) || numVal <= 0 || (isPct && numVal > 100) || (!isPct && discount.includes('-'))) {
-                showToast('Mức giảm giá không hợp lệ.', 'warning');
-                return;
-            }
-            if (!Number.isFinite(numMinOrder) || numMinOrder < 0) {
-                showToast('Đơn hàng tối thiểu không hợp lệ.', 'warning');
-                return;
-            }
-            if (!Number.isFinite(pointsNum) || pointsNum < 0 || !Number.isFinite(maxUsesNum) || maxUsesNum <= 0) {
-                showToast('Điểm PawPoint và số lượt phải là số hợp lệ.', 'warning');
-                return;
-            }
-            if (!expiryDate || Number.isNaN(expiryDate.getTime()) || expiryDate.getDate() !== Number(expiryMatch[1]) || expiryDate.getMonth() + 1 !== Number(expiryMatch[2]) || expiryDate < new Date()) {
-                showToast('Ngày hết hạn không hợp lệ hoặc đã qua.', 'warning');
-                return;
-            }
-
-            // Ghi nhận vào Supabase
-            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!client) {
-                showToast('Không thể kết nối cơ sở dữ liệu.', 'danger');
-                return;
-            }
-
+        document.getElementById('btnSubmitCreateVoucher')?.addEventListener('click', async event => {
+            const value=id=>document.getElementById(id).value.trim();
+            const details={code:value('newVoucherCode').toUpperCase(),name:value('newVoucherTitle'),type:value('newVoucherType'),discount_value:value('newVoucherDiscount'),minimum_order_amount:value('newVoucherMinOrder'),required_points:value('newVoucherPoints'),start_date:value('newVoucherStart'),end_date:value('newVoucherExpiry'),max_usage:value('newVoucherMaxUses')||null,applicable_for:value('newVoucherScope'),is_active:true,description:value('newVoucherTitle')};
+            event.currentTarget.disabled=true;
             try {
-                let formattedEndDate = '2026-12-31T23:59:59Z';
-                if (expiry && expiry.includes('/')) {
-                    const parts = expiry.split('/');
-                    if (parts.length === 3) {
-                        formattedEndDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}T23:59:59Z`;
-                    }
-                }
-
-                const { error: voucherInsertError } = await client.from('voucher').insert({
-                    voucher_code: code,
-                    voucher_name: title,
-                    discount_value: numVal,
-                    minimum_order_amount: numMinOrder,
-                    required_points: pointsNum,
-                    start_date: new Date().toISOString(),
-                    end_date: formattedEndDate,
-                    is_active: true,
-                    type: isPct ? 'percentage' : 'fixed',
-                    usage_count: 0,
-                    max_usage: maxUsesNum,
-                    applicable_for: ['all'],
-                    description: title
-                });
-                if (voucherInsertError) throw voucherInsertError;
-            } catch (errVouDb) {
-                console.error('Lỗi khi thêm voucher vào Supabase:', errVouDb);
-                showToast('Không thể tạo mã khuyến mãi: ' + (errVouDb.message || ''), 'danger');
-                return;
-            }
-
-            vouchersList.unshift({
-                code: code,
-                name: title,
-                title: title,
-                type: isPct ? 'percent' : 'fixed',
-                target: 'Shop',
-                value: numVal,
-                discount: discount,
-                minOrder: numMinOrder,
-                points: pointsNum,
-                validDate: expiry,
-                expiry: expiry,
-                limit: maxUsesNum,
-                used: 0,
-                status: 'active'
-            });
-
-            persistSharedVouchersData(vouchersList);
-            document.getElementById('modalCreateVoucher')?.classList.remove('active');
-            renderVouchersTable();
-            showToast(`Đã phát hành thành công mã khuyến mãi "${code}" trên toàn hệ thống!`, 'success');
+                const {error}=await window.getSupabaseClient().rpc('save_admin_sales_voucher',{p_request_id:state.voucherCreateRequest,p_voucher_id:state.voucherCreateId,p_expected_updated_at:null,p_details:details});
+                if(error)throw error;
+                document.getElementById('modalCreateVoucher').classList.remove('active');await PawpalOrders.fetchVouchersData({force:true});showToast('\u0110\u00e3 l\u01b0u m\u00e3 khuy\u1ebfn m\u00e3i.');
+            }catch(error){showToast(error.code==='23505'?'M\u00e3 khuy\u1ebfn m\u00e3i \u0111\u00e3 t\u1ed3n t\u1ea1i.':'Ki\u1ec3m tra m\u1ee9c gi\u1ea3m, ng\u00e0y hi\u1ec7u l\u1ef1c v\u00e0 c\u00e1c tr\u01b0\u1eddng b\u1eaft bu\u1ed9c.','warning');}
+            finally{document.getElementById('btnSubmitCreateVoucher').disabled=false;}
         });
 
-        // Cập nhật voucher từ modal tác vụ
-        document.getElementById('btnSubmitUpdateVoucher')?.addEventListener('click', async () => {
-            const code = state.activeActionVoucherCode;
-            const vouchersList = getSharedVouchersList();
-            const voucher = vouchersList.find(v => v.code === code);
-            if (!voucher) return;
-
-            const newStatus = document.getElementById('voucherTargetStatus')?.value;
-            const newExpiry = document.getElementById('voucherTargetExpiry')?.value.trim();
-
-            const nextStatus = newStatus ? ((newStatus === 'Đang chạy' || newStatus === 'active') ? 'active' : (newStatus === 'Tạm ngưng' || newStatus === 'paused') ? 'paused' : 'expired') : voucher.status;
-            if (newExpiry) {
-                const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(newExpiry);
-                const d = m ? new Date(`${m[3]}-${m[2]}-${m[1]}T23:59:59`) : null;
-                if (!d || Number.isNaN(d.getTime()) || d.getDate() !== Number(m[1]) || d.getMonth() + 1 !== Number(m[2]) || d < new Date()) {
-                    showToast('Ngày gia hạn không hợp lệ.', 'warning');
-                    return;
-                }
-            }
-
-            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!client) {
-                showToast('Không thể kết nối cơ sở dữ liệu.', 'danger');
-                return;
-            }
-
-            try {
-                let formattedEndDate = undefined;
-                if (newExpiry && newExpiry.includes('/')) {
-                    const parts = newExpiry.split('/');
-                    if (parts.length === 3) {
-                        formattedEndDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}T23:59:59Z`;
-                    }
-                }
-
-                const isAct = (nextStatus === 'active');
-                const updatePayload = { is_active: isAct };
-                if (formattedEndDate) updatePayload.end_date = formattedEndDate;
-
-                const { error } = await client.from('voucher').update(updatePayload).eq('voucher_code', voucher.dbCode || code);
-                if (error) throw error;
-            } catch (errUpVouDb) {
-                console.error('Lỗi khi cập nhật voucher trên Supabase:', errUpVouDb);
-                showToast('Không thể cập nhật Voucher: ' + (errUpVouDb.message || ''), 'danger');
-                return;
-            }
-
-            voucher.status = nextStatus;
-            if (newExpiry) {
-                voucher.validDate = newExpiry;
-                voucher.expiry = newExpiry;
-            }
-
-            persistSharedVouchersData(vouchersList);
-            document.getElementById('modalVoucherAction')?.classList.remove('active');
-            renderVouchersTable();
-            showToast(`Đã lưu thay đổi cho mã khuyến mãi "${code}" thành công!`, 'success');
+        document.getElementById('btnSubmitUpdateVoucher')?.addEventListener('click',async event=>{
+            const voucher=state.voucherEditSnapshot;if(!voucher)return;
+            const raw=voucher.raw,details={code:raw.voucher_code,name:raw.voucher_name,type:raw.type,discount_value:raw.discount_value,minimum_order_amount:raw.minimum_order_amount,required_points:raw.required_points,start_date:raw.start_date,end_date:document.getElementById('voucherTargetExpiry').value,max_usage:raw.max_usage,applicable_for:raw.applicable_for,is_active:document.getElementById('voucherTargetStatus').value==='active',description:raw.description};
+            event.currentTarget.disabled=true;
+            try{const {error}=await window.getSupabaseClient().rpc('save_admin_sales_voucher',{p_request_id:state.voucherEditRequest,p_voucher_id:voucher.id,p_expected_updated_at:voucher.updatedAt,p_details:details});if(error)throw error;
+                document.getElementById('modalVoucherAction').classList.remove('active');await PawpalOrders.fetchVouchersData({force:true});showToast('\u0110\u00e3 l\u01b0u m\u00e3 khuy\u1ebfn m\u00e3i.');
+            }catch(error){showToast(error.code==='PT409'?'M\u00e3 \u0111\u00e3 thay \u0111\u1ed5i. \u0110\u00f3ng v\u00e0 m\u1edf l\u1ea1i \u0111\u1ec3 \u0111\u1ed1i chi\u1ebfu.':'Kh\u00f4ng th\u1ec3 l\u01b0u. Ki\u1ec3m tra ng\u00e0y hi\u1ec7u l\u1ef1c v\u00e0 quy\u1ec1n thao t\u00e1c.','warning');}
+            finally{document.getElementById('btnSubmitUpdateVoucher').disabled=false;}
         });
 
         // Hỗ trợ kiểm thử tự động cho modal11 & modal12
@@ -319,6 +169,8 @@
         const voucher = vouchersList.find(v => v.code === code);
         if (!voucher) return;
 
+        state.voucherEditSnapshot=structuredClone(voucher);state.voucherEditRequest=crypto.randomUUID();
+        document.querySelector('#modalVoucherAction .rma-order-summary-box').style.cssText='background:transparent;border:none;padding:0;margin-bottom:16px;';
         state.activeActionVoucherCode = code;
         const codeEl = document.getElementById('voucherTargetCode');
         const titleEl = document.getElementById('voucherTargetTitle');
@@ -328,9 +180,9 @@
 
         if (codeEl) codeEl.textContent = voucher.code;
         if (titleEl) titleEl.textContent = voucher.name || voucher.title;
-        if (usedEl) usedEl.textContent = `${voucher.used || 0} / ${voucher.limit || 100}`;
-        if (statusSelect) statusSelect.value = (voucher.status === 'active' || voucher.status === 'Đang chạy') ? 'Đang chạy' : (voucher.status === 'paused' || voucher.status === 'Tạm ngưng') ? 'Tạm ngưng' : 'Hết hạn';
-        if (expiryInput) expiryInput.value = voucher.validDate || voucher.expiry || '';
+        if (usedEl) usedEl.textContent = `${voucher.used || 0} / ${voucher.limit ?? '\u2014'}`;
+        if (statusSelect) statusSelect.value = voucher.raw.is_active?'active':'paused';
+        if (expiryInput) expiryInput.value = voucher.raw.end_date;
 
         document.getElementById('modalVoucherAction')?.classList.add('active');
     };

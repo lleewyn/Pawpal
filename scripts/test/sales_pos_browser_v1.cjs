@@ -1,0 +1,22 @@
+const assert=require('node:assert/strict'),crypto=require('node:crypto');
+const {service,admin,ok,browserPage,customer,infra}=require('./customer_completion_helpers.cjs');const uuid=()=>crypto.randomUUID();
+(async()=>{const {browser,page}=await browserPage();try{
+ const c=await customer('POS browser verification '+uuid().slice(0,8)),cat=(await ok(service.from('product_category').select('id').limit(1).single())).id,p=uuid(),v=uuid(),sku='POS-'+v;
+ await ok(service.from('product').insert({id:p,category_id:cat,product_name:'POS browser verification',slug:'test-'+p,unit:'unit'}));await ok(service.from('product_variant').insert({id:v,product_id:p,sku_variant:sku,cost_price:10,sale_price:1000}));await ok(service.from('inventory_transaction').insert({product_variant_id:v,transaction_type:'opening',quantity:10,idempotency_key:'test-'+v}));
+ const errors=[];page.on('pageerror',e=>errors.push(e.stack));page.on('response',r=>{if(r.url().includes('/rest/v1/')&&r.status()>=400)errors.push(new URL(r.url()).pathname+':'+r.status());});
+ await page.locator('[data-title="Bán hàng"]').click();await page.waitForFunction(()=>window.PawpalOrders?.state.productsLoaded);await page.evaluate(()=>window.PawpalOrders.switchSubtab('tab-order-list'));await page.locator('#btnOpenCreateOrderModal').click();
+ await page.locator('#createOrderPhone').fill(c.phone);await page.locator('#createOrderCustomerDropdown button').first().click();
+ await page.locator('#createOrderProductSearchInput').fill(sku);await page.locator('#createOrderProductDropdown button').first().click();await page.locator('#createOrderQty').fill('2');await page.locator('#btnPosAddToCart').click();
+ await page.waitForFunction(()=>!document.getElementById('btnSubmitCreateOrder').disabled);assert.match(await page.locator('#posLiveTotal').textContent(),/2[.,]000/);
+ await page.locator('#createOrderDiscountMode').selectOption('points');await page.locator('#createOrderPointsInput').fill('10');await page.waitForFunction(()=>document.getElementById('posPricingNotice').textContent.includes('Chưa cấu hình'));assert.match(await page.locator('#posLiveTotal').textContent(),/2[.,]000/);
+ await page.locator('#createOrderDiscountMode').selectOption('none');await page.waitForFunction(()=>!document.getElementById('btnSubmitCreateOrder').disabled);
+ await page.screenshot({path:infra+'/sales-pos-modal.private.png',fullPage:true});const created=page.waitForResponse(r=>r.url().includes('/rpc/create_admin_sales_order'));await page.locator('#btnSubmitCreateOrder').click();const response=await created;assert.equal(response.status(),200,await response.text());const id=await response.json();
+ await page.waitForFunction(id=>window.PawpalOrders.state.orders.some(o=>o.rawId===id),id);assert.equal((await ok(service.from('sales_order').select('order_status').eq('id',id).single())).order_status,'pending');assert.equal((await ok(service.from('payment').select('id').eq('order_id',id))).length,0);assert.equal((await ok(service.from('inventory').select('quantity_in_stock').eq('product_variant_id',v).single())).quantity_in_stock,10);assert.equal((await ok(service.from('stock_reservation').select('quantity').eq('order_id',id).single())).quantity,2);
+ await page.locator('#btnOpenCreateOrderModal').click();
+ const quickPhone='09'+String(crypto.randomInt(0,100000000)).padStart(8,'0');
+ await page.locator('#createOrderPhone').fill(quickPhone);await page.locator('#createOrderName').fill('Quick POS verification');
+ const quickCreated=page.waitForResponse(r=>r.url().includes('/rpc/create_customer_quick'));await page.locator('#btnPosQuickCustomer').click();assert.equal((await quickCreated).status(),200);
+ await page.waitForFunction(()=>document.getElementById('createOrderName').readOnly);
+ assert.equal(await page.locator('#createOrderPhone').inputValue(),quickPhone);
+ assert.deepEqual(errors,[]);console.log('PASS POS browser live customer/variant/quote/missing configuration/no automatic receipt/reservation/quick customer selection');
+ }finally{await browser.close();}})().catch(e=>{console.error(e.message);process.exitCode=1;});

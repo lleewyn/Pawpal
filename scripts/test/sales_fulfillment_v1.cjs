@@ -1,0 +1,52 @@
+const assert=require('node:assert/strict'),crypto=require('node:crypto'),fs=require('node:fs');
+const {service,admin,ok}=require('./customer_completion_helpers.cjs');const uuid=()=>crypto.randomUUID();
+(async()=>{
+ const s=fs.readFileSync('D:/Aboutme/Pawpal-infra/supabase-local/PAWPAL-ADMIN.private.txt','utf8');await ok(admin.auth.signInWithPassword({email:s.match(/^Email: (.+)$/m)[1],password:s.match(/^Password: (.+)$/m)[1]}));
+ const customer=(await ok(service.from('customer').select('id').limit(1).single())).id;
+ const cat=(await ok(service.from('product_category').select('id').limit(1).single())).id,p=uuid(),v=uuid();
+ await ok(service.from('product').insert({id:p,category_id:cat,product_name:'Fulfillment verification',slug:'test-'+p,unit:'unit'}));
+ await ok(service.from('product_variant').insert({id:v,product_id:p,sku_variant:'TEST-'+v,cost_price:10,sale_price:20}));
+ await ok(service.from('inventory_transaction').insert({product_variant_id:v,transaction_type:'opening',quantity:10,idempotency_key:'test-'+v}));
+ async function order(qty){const id=uuid();await ok(service.from('sales_order').insert({id,order_code:'TEST-'+id,customer_id:customer,order_status:'pending',receiver_name_snapshot:'Verification',receiver_phone_snapshot:'0900000000',street_address_snapshot:'Verification address',province_snapshot:'Verification province'}));await ok(service.from('sales_order_detail').insert({order_id:id,product_variant_id:v,quantity:qty,unit_price:20,product_name_snapshot:'Verification',sku_snapshot:'TEST-'+v}));return id;}
+ const action=async(id,name,details={})=>({p_request_id:uuid(),p_order_id:id,p_action:name,p_details:details,p_expected_updated_at:(await ok(service.from('sales_order').select('updated_at').eq('id',id).single())).updated_at});
+ const a=await order(7),b=await order(7);
+ const race=await Promise.all([admin.rpc('update_admin_sales_order',await action(a,'confirm')),admin.rpc('update_admin_sales_order',await action(b,'confirm'))]);
+ assert.equal(race.filter(r=>!r.error).length,1);assert.equal(race.find(r=>r.error).error.code,'23514');
+ const winner=race[0].error?b:a;
+ assert.equal((await ok(service.from('inventory').select('quantity_in_stock').eq('product_variant_id',v).single())).quantity_in_stock,10);
+ const cancel=await action(winner,'cancel',{reason:'Verification cancellation'});await ok(admin.rpc('update_admin_sales_order',cancel));await ok(admin.rpc('update_admin_sales_order',cancel));
+ assert.equal((await ok(service.from('stock_reservation').select('id').eq('order_id',winner).eq('status','active'))).length,0);
+ const c=await order(4);await ok(admin.rpc('update_admin_sales_order',await action(c,'confirm')));
+ const complete=await action(c,'complete');await Promise.all([ok(admin.rpc('update_admin_sales_order',complete)),ok(admin.rpc('update_admin_sales_order',complete))]);
+ assert.equal((await ok(service.from('inventory').select('quantity_in_stock').eq('product_variant_id',v).single())).quantity_in_stock,6);
+ assert.equal((await ok(service.from('payment').select('id').eq('order_id',c))).length,0);
+ assert.equal((await admin.rpc('update_admin_sales_order',await action(c,'cancel',{reason:'Not allowed'}))).error.code,'22023');
+ const d=await order(2);await ok(admin.rpc('update_admin_sales_order',await action(d,'confirm')));
+ assert.equal((await admin.rpc('update_admin_sales_order',await action(d,'ship',{}))).error.code,'22023');
+ const provider=(await ok(service.from('shipping_provider').select('id').eq('status','active').limit(1).single())).id;
+ await ok(admin.rpc('update_admin_sales_order',await action(d,'ship',{provider_id:provider,tracking_code:'VERIFICATION'})));
+ await ok(admin.rpc('update_admin_sales_order',await action(d,'complete')));
+ assert.equal((await ok(service.from('inventory').select('quantity_in_stock').eq('product_variant_id',v).single())).quantity_in_stock,4);
+ const batchOrders=[await order(1),await order(1)];
+ for(const id of batchOrders)await ok(admin.rpc('update_admin_sales_order',await action(id,'confirm')));
+ const batch={p_request_id:uuid(),p_provider_id:provider,p_note:'Verification handover',p_orders:await Promise.all(batchOrders.map(async id=>({order_id:id,expected_updated_at:(await action(id,'ship')).p_expected_updated_at,tracking_code:'TRACK-'+id})))};
+ const invalid=structuredClone(batch);invalid.p_request_id=uuid();invalid.p_orders[1].tracking_code='';
+ assert.ok((await admin.rpc('dispatch_admin_sales_batch',invalid)).error);
+ for(const id of batchOrders)assert.equal((await ok(service.from('sales_order').select('order_status').eq('id',id).single())).order_status,'confirmed');
+ assert.equal((await ok(service.from('inventory').select('quantity_in_stock').eq('product_variant_id',v).single())).quantity_in_stock,4);
+ await ok(admin.rpc('dispatch_admin_sales_batch',batch));await ok(admin.rpc('dispatch_admin_sales_batch',batch));
+ assert.equal((await ok(service.from('inventory').select('quantity_in_stock').eq('product_variant_id',v).single())).quantity_in_stock,2);
+ for(const id of batchOrders)await ok(admin.rpc('update_admin_sales_order',await action(id,'complete')));
+ assert.equal((await ok(service.from('inventory').select('quantity_in_stock').eq('product_variant_id',v).single())).quantity_in_stock,2);
+ const baseline=await ok(service.from('audit_log').select('entity_id').eq('action','SALES_LEGACY_SHIPPED').limit(20));
+ for(const row of baseline){
+  const source=await ok(service.from('sales_order').select('id,order_status').eq('id',row.entity_id).single());
+  if(!['shipped','shipping'].includes(source.order_status))continue;
+  const before=await ok(service.from('inventory').select('product_variant_id,quantity_in_stock').order('product_variant_id'));
+  await ok(admin.rpc('update_admin_sales_order',await action(source.id,'complete')));
+  assert.deepEqual(await ok(service.from('inventory').select('product_variant_id,quantity_in_stock').order('product_variant_id')),before);
+  assert.equal((await ok(service.from('stock_reservation').select('id').eq('order_id',source.id).eq('status','active'))).length,0);
+  break;
+ }
+ console.log('PASS fulfillment reserve/cancel/issue-once/delivery/no-auto-payment/concurrent-stock on restored database');
+})().catch(e=>{console.error(e.message);process.exitCode=1;});
