@@ -18,6 +18,9 @@ const {browserPage,admin,service,ok,infra}=require('./customer_completion_helper
   await act('propose',{note:'Propose confirmed refund',option:'refund',amount:100});
   assert.equal((await ok(service.from('support_ticket').select('status').eq('id',id).single())).status,'waiting_manager_approval');
   await act('approve',{note:'Approve refund proposal'});
+  const decision=await ok(service.from('support_ticket').select('requested_amount,approved_amount').eq('id',id).single());
+  assert.equal(decision.requested_amount,null,'Do not replace the customer request with the staff proposal');
+  assert.equal(Number(decision.approved_amount),100);
   assert.equal((await ok(service.from('refund_transaction').select('id'))).length,before,'Approval cannot create money');
   assert.equal((await admin.rpc('act_admin_complaint',{p_request_id:randomUUID(),p_ticket_id:id,p_expected_updated_at:await version(),p_action:'complete',p_details:{note:'Unexecuted refund',evidence_id:randomUUID()}})).error.code,'22023');
   context=await ok(admin.rpc('get_admin_service_cashier',{p_appointment_id:source.id}));

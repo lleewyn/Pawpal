@@ -55,11 +55,16 @@ BEGIN
   OR (option_value='refund' AND ticket.appointment_id IS NULL AND ticket.order_id IS NULL) THEN RAISE EXCEPTION 'invalid_complaint_resolution' USING ERRCODE='22023'; END IF;
   next_status:=CASE WHEN p_action='propose' THEN 'waiting_manager_approval' ELSE 'resolved' END;
   UPDATE public.support_ticket SET resolution_type=option_value,resolution_note=note_value,approved_amount=CASE WHEN p_action='resolve' THEN 0 ELSE NULL END,
-   requested_amount=amount_value,resolved_by=CASE WHEN p_action='resolve' THEN actor ELSE NULL END,resolved_at=CASE WHEN p_action='resolve' THEN clock_timestamp() ELSE NULL END WHERE id=ticket.id;
+   resolved_by=CASE WHEN p_action='resolve' THEN actor ELSE NULL END,resolved_at=CASE WHEN p_action='resolve' THEN clock_timestamp() ELSE NULL END WHERE id=ticket.id;
  ELSIF p_action IN ('approve','reject_proposal') THEN
   IF ticket.status<>'waiting_manager_approval' THEN RAISE EXCEPTION 'complaint_not_awaiting_approval' USING ERRCODE='PT409'; END IF;
+  IF p_action='approve' THEN
+   SELECT description::jsonb INTO proposal FROM public.audit_log WHERE action='COMPLAINT_ACTION' AND entity_id=ticket.id AND description::jsonb->>'action'='propose' ORDER BY created_at DESC,id DESC LIMIT 1;
+   IF proposal IS NULL OR proposal->'details'->>'option' IS DISTINCT FROM ticket.resolution_type THEN RAISE EXCEPTION 'complaint_proposal_required' USING ERRCODE='22023'; END IF;
+   amount_value:=(proposal->'details'->>'amount')::numeric;
+  END IF;
   next_status:='processing';
-  UPDATE public.support_ticket SET approved_amount=CASE WHEN p_action='approve' THEN coalesce(requested_amount,0) ELSE NULL END,
+  UPDATE public.support_ticket SET approved_amount=CASE WHEN p_action='approve' THEN amount_value ELSE NULL END,
    resolved_by=CASE WHEN p_action='approve' THEN actor ELSE NULL END,
    resolution_type=CASE WHEN p_action='approve' THEN resolution_type ELSE NULL END,
    resolution_note=CASE WHEN p_action='approve' THEN resolution_note ELSE NULL END WHERE id=ticket.id;

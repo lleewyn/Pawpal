@@ -10,6 +10,7 @@ Ngày 22/10/2026. Đã áp migration 039–042 lên Cloud mới, hoàn thiện g
 - Phân công bằng tìm kiếm nhân viên có quyền xử lý, còn hoạt động và có tài khoản sử dụng được. Máy chủ xác minh điều kiện nhận việc.
 - Lưu nội dung trao đổi hoặc ghi chú nội bộ; ghi nhận yêu cầu bổ sung và chuyển sang chờ khách phản hồi. Nội dung tiếp nhận ban đầu được giữ nguyên.
 - Giải thích/từ chối có lý do; đề xuất phương án, quản trị duyệt hoặc từ chối để sửa lại; liên kết kết quả thực hiện, đóng và mở lại có lịch sử.
+- Màn hình duyệt hiển thị số tiền đề xuất; số tiền khách yêu cầu ban đầu được giữ riêng, không bị ghi đè bởi đề xuất của nhân viên.
 - Đọc biên bản tiếp nhận, nhật ký dịch vụ và tệp đính kèm đã có; mở giao dịch gốc để thao tác tại Bán hàng/Dịch vụ.
 - Lọc, xuất CSV theo đúng kết quả đang lọc, tối đa 10 dòng/trang, giữ hồ sơ khi tải lại và giao diện một cột trên màn hình hẹp.
 - Realtime cho phiếu, tin nhắn, tệp, hoàn tiền, trả hàng, biên bản và nhật ký. Chặn kết quả tải cũ ghi đè lượt tải mới.
@@ -55,7 +56,7 @@ Các kiểm thử ghi chỉ chạy trên database phục hồi tách biệt. Fix
 
 Project: cpzuvaplseielhgcnqrn. Migration 039–042 áp nguyên tử; hash toàn bộ dữ liệu public và danh tính/mật khẩu/trạng thái khóa Auth giữ nguyên. Vẫn 105 bảng, 906 cột, 160 khóa ngoại; 17 nhân viên nguồn, 16 tài khoản giữ khóa.
 
-Backup đã xác minh: D:/Aboutme/Pawpal-infra/supabase-local/backups/complaints-cloud-2026-10-22T07-27-35-172Z. Không đưa dữ liệu fixture lên Cloud.
+Backup đã xác minh: D:/Aboutme/Pawpal-infra/supabase-local/backups/complaints-cloud-2026-10-22T07-36-27-111Z. Không đưa dữ liệu fixture lên Cloud.
 
 ## Giới hạn đã làm rõ
 

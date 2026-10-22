@@ -13,6 +13,7 @@
  const statusNames = {new:'Chờ tiếp nhận',processing:'Đang xử lý',waiting_customer:'Chờ khách phản hồi',waiting_manager_approval:'Chờ duyệt phương án',reprocessing:'Đang xử lý lại',resolved:'Đã giải quyết',closed:'Đã đóng',waiting_return:'Chờ nhận hàng',refunding:'Đang hoàn tiền'};
  const optionNames = {explain:'Giải thích và phản hồi',reject:'Từ chối khiếu nại',refund:'Hoàn tiền',rma_refund:'Trả hàng và hoàn tiền',rma_exchange:'Đổi sản phẩm',redo_service:'Làm lại dịch vụ',change_staff:'Đổi kỹ thuật viên'};
  let renderVersion = 0;
+ async function readAll(build){const rows=[];for(let offset=0;;offset+=500){const {data,error}=await build().range(offset,offset+499);if(error)throw error;rows.push(...data);if(data.length<500)return rows;}}
  function captureModal(id) {
   const t=current(), modal=$(id); if (!t || !modal) return null;
   Object.assign(modal.dataset,{requestId:crypto.randomUUID(),ticketId:t.rawId,version:t.updated_at});
@@ -53,6 +54,7 @@
   text('viewTicketRefInfo',t.bookingId || t.orderId || 'Chưa liên kết giao dịch');
   show('btnOpenComplaintSource',Boolean(t.bookingId || t.orderId));
   text('viewTicketStaffAssigned',t.staffAssigned);text('viewTicketPetNotes',t.petNotes || '—');
+  text('viewTicketDemand',(t.customerDemand || 'Chưa ghi nhận yêu cầu')+(Number(t.requested_amount)>0?' · '+Number(t.requested_amount).toLocaleString('vi-VN')+' đ':''));
   text('viewResolutionNote',t.resolution_note || 'Chưa có phương án');
   text('viewResolutionBadge',optionNames[t.resolution_type] || t.resolution_type || '—');
   text('viewRefundAmount',t.approved_amount == null ? 'Chưa duyệt' : Number(t.approved_amount).toLocaleString('vi-VN')+' đ');
@@ -70,7 +72,7 @@
    }
    if(version!==renderVersion)return;
    $('viewTicketTimeline').innerHTML=messages.map(m=>{
-    const author=mod.state.cachedStaff.find(s=>s.auth_user_id===m.sender_account_id)?.full_name || (['staff','cskh','nhan_vien'].includes(m.sender_type)?'Nhân viên':'Khách hàng');
+    const author=mod.state.cachedStaff.find(s=>s.auth_user_id===m.sender_account_id)?.full_name || (['staff','cskh','nhan_vien'].includes(m.sender_type)?'Nhân viên':m.sender_type==='system'?'Hệ thống':['user','customer','khach_hang'].includes(m.sender_type)?t.customerName:'Người gửi');
     return `<article class="complaint-history-entry"><strong>${escapeHtml(author)}</strong> <span>${escapeHtml(mod.formatDateTime(m.created_at))} · ${m.is_internal?'Nội bộ':'Trao đổi'}</span><p>${escapeHtml(m.content)}</p></article>`;
    }).join('') || 'Chưa có lịch sử trao đổi.';
    const attachments=[];
@@ -80,8 +82,11 @@
    }
    if(version!==renderVersion)return;
    $('complaintAttachments').innerHTML=attachments.filter(a=>{try{return new URL(a.file_url).protocol==='https:';}catch{return false;}}).map(a=>`<p><a href="${escapeHtml(a.file_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(a.file_name || 'Tệp đính kèm')}</a></p>`).join('') || 'Chưa có tệp đính kèm.';
-   const audit=await client().from('audit_log').select('description,created_at').eq('entity_id',t.rawId).eq('action','COMPLAINT_ACTION').order('created_at',{ascending:false}).limit(100);
+   const audit={data:await readAll(()=>client().from('audit_log').select('id,description,created_at').eq('entity_id',t.rawId).eq('action','COMPLAINT_ACTION').order('created_at',{ascending:false}).order('id',{ascending:false}))};
    if(version!==renderVersion)return;
+   const events=(audit.data || []).flatMap(a=>{try{return [JSON.parse(a.description)];}catch{return [];}});
+   const proposal=events.find(e=>e.action==='propose');
+   text('viewProposedAmount',proposal?Number(proposal.details.amount || 0).toLocaleString('vi-VN')+' đ':'Chưa có đề xuất có thể duyệt');
    text('complaintLinkedResults',audit.error?'Không tải được kết quả liên kết.':audit.data.flatMap(a=>{try{const d=JSON.parse(a.description);return d.action==='complete'?[`${mod.formatDateTime(a.created_at)} · ${d.details.evidence_id}${d.details.replacement_order_id?' · Đơn đổi mới: '+d.details.replacement_order_id:''}${d.details.return_request_id?' · Hàng trả: '+d.details.return_request_id:''}`]:[];}catch{return [];}}).join('\n') || 'Chưa liên kết kết quả thực hiện.');
    await renderEvidence(t,version);
   } catch(error) {if(version===renderVersion)text('viewTicketTimeline','Không tải được lịch sử: '+error.message);}
@@ -90,12 +95,12 @@
   const appt=mod.state.cachedAppointments.find(a=>a.appointment_code===t.bookingId || a.id===t.bookingId);
   if(!appt){text('viewTicketCheckinHealth','Chưa liên kết lịch hẹn.');text('viewTicketStaffLogNote','—');return;}
   const [records,logs]=await Promise.all([
-   client().from('appointment_record').select('record_type,condition_note,safety_note_snapshot,allergy_note_snapshot,recorded_at,customer_confirmation_status').eq('appointment_id',appt.id).order('recorded_at',{ascending:false}).limit(20),
-   client().from('care_log').select('description,observed_condition,recorded_at').eq('appointment_id',appt.id).order('recorded_at',{ascending:false}).limit(20)
+   readAll(()=>client().from('appointment_record').select('id,record_type,condition_note,safety_note_snapshot,allergy_note_snapshot,recorded_at,customer_confirmation_status').eq('appointment_id',appt.id).order('recorded_at',{ascending:false}).order('id')),
+   readAll(()=>client().from('care_log').select('id,description,observed_condition,recorded_at').eq('appointment_id',appt.id).order('recorded_at',{ascending:false}).order('id'))
   ]);
   if(version!==renderVersion)return;
-  text('viewTicketCheckinHealth',records.error?'Không tải được biên bản.':records.data.map(r=>`${mod.formatDateTime(r.recorded_at)} · ${r.record_type}: ${r.condition_note} · ${r.customer_confirmation_status}`).join('\n') || 'Chưa có biên bản.');
-  text('viewTicketStaffLogNote',logs.error?'Không tải được nhật ký.':logs.data.map(r=>`${mod.formatDateTime(r.recorded_at)}: ${r.description}${r.observed_condition?' · '+r.observed_condition:''}`).join('\n') || 'Chưa có nhật ký.');
+  text('viewTicketCheckinHealth',records.map(r=>`${mod.formatDateTime(r.recorded_at)} · ${r.record_type==='checkin' || r.record_type==='check_in'?'Tiếp nhận':r.record_type==='handover'?'Bàn giao':'Biên bản'}: ${r.condition_note} · ${r.customer_confirmation_status==='confirmed'?'Khách đã xác nhận':'Chưa xác nhận'}`).join('\n') || 'Chưa có biên bản.');
+  text('viewTicketStaffLogNote',logs.map(r=>`${mod.formatDateTime(r.recorded_at)}: ${r.description || ''}${r.observed_condition?' · '+r.observed_condition:''}`).join('\n') || 'Chưa có nhật ký.');
  }
  async function openAssignHandlerModal() {
   const modal=captureModal('assignHandlerModalOverlay');if(!modal)return;
