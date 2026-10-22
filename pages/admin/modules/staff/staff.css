@@ -2018,7 +2018,7 @@
 .staff-calendar-meta,.staff-calendar-note { color:#4F7A65; font-size:11.5px; line-height:1.5; overflow-wrap:anywhere; }
 .staff-calendar-total { color:#4F7A65; font-size:12px; margin:12px 0 2px; }
 .staff-calendar-shift { padding:14px 0; min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
-.staff-calendar-shift + .staff-calendar-shift { border-top:1px solid #ECF2EE; }
+.staff-calendar-shift + .staff-calendar-shift { padding-top:20px; }
 .staff-calendar-time { color:#203A2C; font-size:16px; font-weight:600; font-variant-numeric:tabular-nums; }
 .staff-calendar-state { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
 .staff-calendar-note { margin:0; }
