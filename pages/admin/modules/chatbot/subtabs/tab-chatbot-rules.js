@@ -26,7 +26,31 @@
     let policyPage = 1;
     let matrixPage = 1;
     const RULES_PAGE_SIZE = 10;
+    const ruleRequests = new Map();
+    const editorSnapshots = new Map();
+    async function writeRule(table,id,values,remove=false) {
+        const data={chatbot_knowledge_faq:rulesFaqData,chatbot_profanity_filter:rulesProfanityData,chatbot_canned_response:rulesCannedData}[table];
+        const modal={chatbot_knowledge_faq:'modalFaqEditorOverlay',chatbot_profanity_filter:'modalProfanityEditorOverlay',chatbot_canned_response:'modalCannedEditorOverlay'}[table];
+        const snapshot=editorSnapshots.get(table);
+        const original=id ? (snapshot?.id===id&&document.getElementById(modal)?.classList.contains('active')?snapshot.record:data.find(row=>row.id===id)) : null;
+        if(id&&!original)return {error:new Error('Dữ liệu đã thay đổi. Hãy tải lại.')};
+        const key=JSON.stringify([table,id,values,remove]);
+        if(!ruleRequests.has(key))ruleRequests.set(key,crypto.randomUUID());
+        const result=await supabase.rpc('save_admin_chat_rule',{p_table:table,p_id:id||ruleRequests.get(key),p_expected:original||null,p_values:values,p_delete:remove});
+        if(!result.error){ruleRequests.delete(key);await loadAllRulesDataFromSupabase();}
+        return result;
+    }
+    const ruleDb={from:table=>({
+        select:(...args)=>supabase.from(table).select(...args),
+        update:values=>({eq:(_key,id)=>writeRule(table,id,values)}),
+        insert:rows=>writeRule(table,null,rows[0]),
+        delete:()=>({eq:(_key,id)=>writeRule(table,id,{},true)})
+    })};
     let rulesHubInitialized = false;
+    const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    async function fetchRules(table,sort,ascending=true){
+        const rows=[];for(let offset=0;;offset+=500){const result=await supabase.from(table).select('*').order(sort,{ascending}).order('id').range(offset,offset+499);if(result.error)return result;rows.push(...result.data);if(result.data.length<500)break;}return {data:rows,error:null};
+    }
 
     const ruleLoads = {};
     const ruleTableIds = ['faqTableBody','profanityTableBody','cannedTableBody','compPolicyTableBody','handoverRuleTableBody','matrixTableBody'];
@@ -51,12 +75,12 @@
             });
             renderActiveRulesView();
             const [faqRes, profRes, cannedRes, compRes, handRes, matRes] = await Promise.all([
-                supabase.from('chatbot_knowledge_faq').select('*').order('priority', { ascending: true }).order('created_at', { ascending: false }),
-                supabase.from('chatbot_profanity_filter').select('*').order('created_at', { ascending: false }),
-                supabase.from('chatbot_canned_response').select('*').order('usage_count', { ascending: false }).order('created_at', { ascending: false }),
-                supabase.from('chatbot_compensation_policy').select('*').order('max_points', { ascending: false }),
-                supabase.from('chatbot_handover_rule').select('*').order('sla_seconds', { ascending: true }),
-                supabase.from('chatbot_scenario_matrix').select('*').order('created_at', { ascending: true })
+                fetchRules('chatbot_knowledge_faq','priority'),
+                fetchRules('chatbot_profanity_filter','created_at',false),
+                fetchRules('chatbot_canned_response','usage_count',false),
+                fetchRules('chatbot_compensation_policy','max_points',false),
+                fetchRules('chatbot_handover_rule','sla_seconds'),
+                fetchRules('chatbot_scenario_matrix','created_at')
             ]);
 
             [faqRes,profRes,cannedRes,compRes,handRes,matRes].forEach((result,index)=>{ruleLoads[ruleTableIds[index]]=result.error ? 'error' : 'ready';});
@@ -97,7 +121,7 @@
             const currentVal = faqCatSelect.value;
             const cats = Array.from(new Set(rulesFaqData.map(f => f.category))).filter(Boolean);
             faqCatSelect.innerHTML = '<option value="all">Tất cả danh mục</option>' +
-                cats.map(c => `<option value="${c}" ${c === currentVal ? 'selected' : ''}>${c}</option>`).join('');
+                cats.map(c => `<option value="${escapeHtml(c)}" ${c === currentVal ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
         }
 
         const cannedCatSelect = document.getElementById('selectCannedCategoryFilter');
@@ -105,7 +129,7 @@
             const currentVal = cannedCatSelect.value;
             const cats = Array.from(new Set(rulesCannedData.map(c => c.category))).filter(Boolean);
             cannedCatSelect.innerHTML = '<option value="all">Tất cả chủ đề</option>' +
-                cats.map(c => `<option value="${c}" ${c === currentVal ? 'selected' : ''}>${c}</option>`).join('');
+                cats.map(c => `<option value="${escapeHtml(c)}" ${c === currentVal ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
         }
     }
 
@@ -184,7 +208,7 @@
 
         tbody.innerHTML = pageItems.map(item => {
             const kwHtml = Array.isArray(item.keywords) && item.keywords.length > 0
-                ? `<div class="rules-keywords-wrap">${item.keywords.slice(0, 3).map(k => `<span class="rules-keyword-pill">${k}</span>`).join('')}${item.keywords.length > 3 ? `<span class="rules-keyword-pill">+${item.keywords.length - 3}</span>` : ''}</div>`
+                ? `<div class="rules-keywords-wrap">${item.keywords.slice(0, 3).map(k => `<span class="rules-keyword-pill">${escapeHtml(k)}</span>`).join('')}${item.keywords.length > 3 ? `<span class="rules-keyword-pill">+${item.keywords.length - 3}</span>` : ''}</div>`
                 : '<span style="color: var(--text-muted); opacity: 0.4;">—</span>';
 
             const statusBadge = item.is_active
@@ -193,14 +217,14 @@
 
             return `
                 <tr class="${item.is_active ? '' : 'row-inactive'}">
-                    <td><span style="font-weight: 600; color: #236B48;">${item.category || 'Chung'}</span></td>
-                    <td><div style="font-weight: 600; color: var(--text-main); line-height: 1.4;">${item.question}</div></td>
-                    <td><div style="max-width: 380px; font-size: 12.5px; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="${(item.answer || '').replace(/"/g, '&quot;')}">${item.answer || ''}</div></td>
+                    <td><span style="font-weight: 600; color: #236B48;">${escapeHtml(item.category || 'Chung')}</span></td>
+                    <td><div style="font-weight: 600; color: var(--text-main); line-height: 1.4;">${escapeHtml(item.question)}</div></td>
+                    <td><div style="max-width: 380px; font-size: 12.5px; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="${(item.answer || '').replace(/"/g, '&quot;')}">${escapeHtml(item.answer || '')}</div></td>
                     <td>${kwHtml}</td>
                     <td style="text-align: center;"><span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">#${item.priority || 1}</span></td>
                     <td style="text-align: center;">${statusBadge}</td>
                     <td style="text-align: center;">
-                        <button type="button" class="rules-action-menu-btn" data-faq-id="${item.id}" title="Thao tác">•••</button>
+                        <button type="button" class="rules-action-menu-btn" data-faq-id="${escapeHtml(item.id)}" title="Thao tác">•••</button>
                     </td>
                 </tr>
             `;
@@ -231,9 +255,8 @@
                 label: item.is_active ? 'Tạm tắt kích hoạt' : 'Kích hoạt câu hỏi',
                 action: async () => {
                     if (!supabase) return;
-                    const { error } = await supabase
-                        .from('chatbot_knowledge_faq')
-                        .update({ is_active: !item.is_active, updated_at: new Date().toISOString() })
+                    const { error } = await ruleDb.from('chatbot_knowledge_faq')
+                        .update({ is_active: !item.is_active })
                         .eq('id', item.id);
                     if (error) {
                         PawpalChatbot.showToast?.('Lỗi cập nhật trạng thái FAQ: ' + error.message, 'danger');
@@ -250,12 +273,12 @@
                 action: () => {
                     PawpalChatbot.showChatbotConfirmModal?.({
                         title: 'Xóa câu hỏi tri thức FAQ',
-                        message: `Bạn có chắc chắn muốn xóa câu hỏi "${item.question}" khỏi kho tri thức không?`,
+                        message: `Bạn có chắc chắn muốn xóa câu hỏi "${escapeHtml(item.question)}" khỏi kho tri thức không?`,
                         confirmText: 'Xóa',
                         isDanger: true,
                         onConfirm: async () => {
                             if (!supabase) return;
-                            const { error } = await supabase.from('chatbot_knowledge_faq').delete().eq('id', item.id);
+                            const { error } = await ruleDb.from('chatbot_knowledge_faq').delete().eq('id', item.id);
                             if (error) {
                                 PawpalChatbot.showToast?.('Lỗi xóa câu hỏi: ' + error.message, 'danger');
                             } else {
@@ -272,6 +295,7 @@
     }
 
     function openFaqEditorModal(item = null) {
+        editorSnapshots.set('chatbot_knowledge_faq',{id:item?.id,record:item?structuredClone(item):null});
         const overlay = document.getElementById('modalFaqEditorOverlay');
         const titleEl = document.getElementById('modalFaqEditorTitle');
         const editId = document.getElementById('inputFaqEditId');
@@ -364,13 +388,13 @@
 
             return `
                 <tr class="${item.is_active ? '' : 'row-inactive'}">
-                    <td><span style="font-weight: 700; color: #DC2626;">${item.keyword}</span></td>
+                    <td><span style="font-weight: 700; color: #DC2626;">${escapeHtml(item.keyword)}</span></td>
                     <td style="text-align: center;">${sevBadges[item.severity] || sevBadges.medium}</td>
                     <td><span style="font-size: 13px; color: var(--text-main); font-weight: 500;">${actLabels[item.action] || item.action}</span></td>
-                    <td><code style="background: #EEF5F1; padding: 2px 8px; border-radius: var(--admin-radius); color: #236B48; font-weight: 600;">${item.replacement_text || '***'}</code></td>
+                    <td><code style="background: #EEF5F1; padding: 2px 8px; border-radius: var(--admin-radius); color: #236B48; font-weight: 600;">${escapeHtml(item.replacement_text || '***')}</code></td>
                     <td style="text-align: center;">${statusBadge}</td>
                     <td style="text-align: center;">
-                        <button type="button" class="rules-action-menu-btn" data-prof-id="${item.id}" title="Thao tác">•••</button>
+                        <button type="button" class="rules-action-menu-btn" data-prof-id="${escapeHtml(item.id)}" title="Thao tác">•••</button>
                     </td>
                 </tr>
             `;
@@ -401,8 +425,7 @@
                 label: item.is_active ? 'Tạm tắt màng lọc' : 'Kích hoạt màng lọc',
                 action: async () => {
                     if (!supabase) return;
-                    const { error } = await supabase
-                        .from('chatbot_profanity_filter')
+                    const { error } = await ruleDb.from('chatbot_profanity_filter')
                         .update({ is_active: !item.is_active })
                         .eq('id', item.id);
                     if (error) {
@@ -420,12 +443,12 @@
                 action: () => {
                     PawpalChatbot.showChatbotConfirmModal?.({
                         title: 'Xóa từ ngữ Toxic Shield',
-                        message: `Bạn có chắc chắn muốn xóa từ "${item.keyword}" khỏi danh sách lọc không?`,
+                        message: `Bạn có chắc chắn muốn xóa từ "${escapeHtml(item.keyword)}" khỏi danh sách lọc không?`,
                         confirmText: 'Xóa',
                         isDanger: true,
                         onConfirm: async () => {
                             if (!supabase) return;
-                            const { error } = await supabase.from('chatbot_profanity_filter').delete().eq('id', item.id);
+                            const { error } = await ruleDb.from('chatbot_profanity_filter').delete().eq('id', item.id);
                             if (error) {
                                 PawpalChatbot.showToast?.('Lỗi xóa từ cấm: ' + error.message, 'danger');
                             } else {
@@ -442,6 +465,7 @@
     }
 
     function openProfanityEditorModal(item = null) {
+        editorSnapshots.set('chatbot_profanity_filter',{id:item?.id,record:item?structuredClone(item):null});
         const overlay = document.getElementById('modalProfanityEditorOverlay');
         const titleEl = document.getElementById('modalProfanityEditorTitle');
         const editId = document.getElementById('inputProfanityEditId');
@@ -519,14 +543,14 @@
 
             return `
                 <tr class="${item.is_active ? '' : 'row-inactive'}">
-                    <td><code style="background: #EEF5F1; padding: 3px 8px; border-radius: var(--admin-radius); color: #236B48; font-weight: 700;">${item.shortcut || '—'}</code></td>
-                    <td><div style="font-weight: 600; color: var(--text-main); line-height: 1.4;">${item.title}</div></td>
-                    <td><div style="max-width: 400px; font-size: 12.5px; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="${(item.content || '').replace(/"/g, '&quot;')}">${item.content || ''}</div></td>
-                    <td><span class="admin-badge badge-neutral">${item.category || 'Chung'}</span></td>
+                    <td><code style="background: #EEF5F1; padding: 3px 8px; border-radius: var(--admin-radius); color: #236B48; font-weight: 700;">${escapeHtml(item.shortcut || '—')}</code></td>
+                    <td><div style="font-weight: 600; color: var(--text-main); line-height: 1.4;">${escapeHtml(item.title)}</div></td>
+                    <td><div style="max-width: 400px; font-size: 12.5px; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="${(item.content || '').replace(/"/g, '&quot;')}">${escapeHtml(item.content || '')}</div></td>
+                    <td><span class="admin-badge badge-neutral">${escapeHtml(item.category || 'Chung')}</span></td>
                     <td style="text-align: center;"><span style="font-weight: 600; color: var(--text-main);">${item.usage_count || 0}</span></td>
                     <td style="text-align: center;">${statusBadge}</td>
                     <td style="text-align: center;">
-                        <button type="button" class="rules-action-menu-btn" data-canned-id="${item.id}" title="Thao tác">•••</button>
+                        <button type="button" class="rules-action-menu-btn" data-canned-id="${escapeHtml(item.id)}" title="Thao tác">•••</button>
                     </td>
                 </tr>
             `;
@@ -557,8 +581,7 @@
                 label: item.is_active ? 'Tạm tắt mẫu câu' : 'Kích hoạt mẫu câu',
                 action: async () => {
                     if (!supabase) return;
-                    const { error } = await supabase
-                        .from('chatbot_canned_response')
+                    const { error } = await ruleDb.from('chatbot_canned_response')
                         .update({ is_active: !item.is_active })
                         .eq('id', item.id);
                     if (error) {
@@ -576,12 +599,12 @@
                 action: () => {
                     PawpalChatbot.showChatbotConfirmModal?.({
                         title: 'Xóa mẫu câu phản hồi',
-                        message: `Bạn có chắc chắn muốn xóa mẫu câu "${item.title}" không?`,
+                        message: `Bạn có chắc chắn muốn xóa mẫu câu "${escapeHtml(item.title)}" không?`,
                         confirmText: 'Xóa',
                         isDanger: true,
                         onConfirm: async () => {
                             if (!supabase) return;
-                            const { error } = await supabase.from('chatbot_canned_response').delete().eq('id', item.id);
+                            const { error } = await ruleDb.from('chatbot_canned_response').delete().eq('id', item.id);
                             if (error) {
                                 PawpalChatbot.showToast?.('Lỗi xóa mẫu câu: ' + error.message, 'danger');
                             } else {
@@ -598,6 +621,7 @@
     }
 
     function openCannedEditorModal(item = null) {
+        editorSnapshots.set('chatbot_canned_response',{id:item?.id,record:item?structuredClone(item):null});
         const overlay = document.getElementById('modalCannedEditorOverlay');
         const titleEl = document.getElementById('modalCannedEditorTitle');
         const editId = document.getElementById('inputCannedEditId');
@@ -668,13 +692,13 @@
 
             tbody.innerHTML = pageItems.map(item => `
                 <tr>
-                    <td><div style="font-weight: 600; color: var(--text-main); line-height: 1.4;">${item.issue_type}</div></td>
+                    <td><div style="font-weight: 600; color: var(--text-main); line-height: 1.4;">${escapeHtml(item.issue_type)}</div></td>
                     <td style="text-align: center;"><span style="font-weight: 700; color: #236B48; background: #EEF5F1; padding: 2px 8px; border-radius: var(--admin-radius);">${item.max_points ? item.max_points + ' điểm' : '—'}</span></td>
                     <td style="text-align: right;"><span style="font-weight: 600; color: var(--text-main);">${item.max_discount_vnd ? item.max_discount_vnd.toLocaleString('vi-VN') + ' đ' : '—'}</span></td>
                     <td style="text-align: center;">
                         <span class="admin-badge ${item.approval_required ? 'badge-warning' : 'badge-neutral'}">${item.approval_required ? 'Cần Quản lý duyệt' : 'Nhân viên tự duyệt'}</span>
                     </td>
-                    <td><div style="max-width: 420px; font-size: 12px; color: var(--text-muted); line-height: 1.4; white-space: pre-line;">${item.description || ''}</div></td>
+                    <td><div style="max-width: 420px; font-size: 12px; color: var(--text-muted); line-height: 1.4; white-space: pre-line;">${escapeHtml(item.description || '')}</div></td>
                     <td style="text-align: center;">
                         <span class="admin-badge ${item.is_active ? 'badge-active' : 'badge-neutral'}">${item.is_active ? 'Hiệu lực' : 'Tắt'}</span>
                     </td>
@@ -696,7 +720,7 @@
             const filtered = rulesHandoverRuleData.filter(item => {
                 return !searchVal ||
                     (item.condition_name && item.condition_name.toLowerCase().includes(searchVal)) ||
-                    (item.threshold_value && item.threshold_value.toLowerCase().includes(searchVal)) ||
+                    (item.threshold_value && String(item.threshold_value).toLowerCase().includes(searchVal)) ||
                     (item.auto_assign_role && item.auto_assign_role.toLowerCase().includes(searchVal));
             });
 
@@ -713,10 +737,10 @@
 
             tbody.innerHTML = pageItems.map(item => `
                 <tr>
-                    <td><div style="font-weight: 600; color: #236B48; line-height: 1.4;">${item.condition_name}</div></td>
-                    <td><span class="admin-badge badge-neutral">${item.trigger_type || 'Tự động'}</span></td>
-                    <td><div style="max-width: 380px; font-size: 12px; color: var(--text-muted); line-height: 1.4;">${item.threshold_value || ''}</div></td>
-                    <td><span style="font-weight: 600; color: var(--text-main);">${item.auto_assign_role || 'Nhân viên CSKH'}</span></td>
+                    <td><div style="font-weight: 600; color: #236B48; line-height: 1.4;">${escapeHtml(item.condition_name)}</div></td>
+                    <td><span class="admin-badge badge-neutral">${escapeHtml(item.trigger_type || 'Tự động')}</span></td>
+                    <td><div style="max-width: 380px; font-size: 12px; color: var(--text-muted); line-height: 1.4;">${escapeHtml(item.threshold_value || '')}</div></td>
+                    <td><span style="font-weight: 600; color: var(--text-main);">${escapeHtml(item.auto_assign_role || 'Nhân viên CSKH')}</span></td>
                     <td style="text-align: center;"><span style="font-weight: 700; color: #DC2626;">${item.sla_seconds ? item.sla_seconds + ' giây' : '—'}</span></td>
                     <td style="text-align: center;">
                         <span class="admin-badge ${item.is_active ? 'badge-active' : 'badge-neutral'}">${item.is_active ? 'Hiệu lực' : 'Tắt'}</span>
@@ -779,9 +803,9 @@
 
             return `
                 <tr>
-                    <td><div style="font-weight: 600; color: #236B48; line-height: 1.4;">${item.scenario_name}</div></td>
-                    <td><div style="font-size: 12.5px; color: var(--text-main); line-height: 1.4;">${sampleSnippet}</div></td>
-                    <td style="text-align: center;"><span style="font-size: 12px; font-weight: 600; color: var(--text-main);">${sentimentLabels[item.expected_sentiment] || `Cấp ${item.expected_sentiment}`}</span></td>
+                    <td><div style="font-weight: 600; color: #236B48; line-height: 1.4;">${escapeHtml(item.scenario_name)}</div></td>
+                    <td><div style="font-size: 12.5px; color: var(--text-main); line-height: 1.4;">${escapeHtml(sampleSnippet)}</div></td>
+                    <td style="text-align: center;"><span style="font-size: 12px; font-weight: 600; color: var(--text-main);">${sentimentLabels[item.expected_sentiment] || `Cấp ${escapeHtml(item.expected_sentiment)}`}</span></td>
                     <td style="text-align: center;">
                         <span class="admin-badge ${item.expected_handover ? 'badge-neutral' : ''}">${item.expected_handover ? 'Bàn giao' : 'Tự động'}</span>
                     </td>
@@ -796,71 +820,15 @@
         });
     }
 
-    async function runBenchmarkFromUI() {
-        PawpalChatbot.showToast?.('Đang kết nối API Runner kiểm thử toàn luồng (G5-01)...', 'info');
-        const runBtn = document.getElementById('btnRunBenchmarkUI');
-        if (runBtn) {
-            runBtn.disabled = true;
-            runBtn.textContent = 'Đang kiểm thử...';
-        }
-
-        try {
-            let staffToken = sessionStorage.getItem('pawpal_staff_token');
-            if (!staffToken) {
-                const staffId = sessionStorage.getItem('pawpal_staff_id');
-                if (staffId) {
-                    staffToken = 'local:' + staffId;
-                } else if (window.supabase) {
-                    const session = (await window.supabase.auth.getSession())?.data?.session;
-                    if (session?.access_token) {
-                        staffToken = session.access_token;
-                    }
-                }
-                if (!staffToken) {
-                    staffToken = 'local:d0000000-5555-5555-5555-555555555555';
-                }
-            }
-
-            const res = await fetch('/api/admin/chat/evaluations', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${staffToken}`
-                }
-            });
-
-            const data = await res.json();
-
-            if (!res.ok || !data.ok) {
-                throw new Error(data.error || 'Runner kiểm thử báo lỗi từ server.');
-            }
-
-            // Tải lại dữ liệu ma trận từ database để đồng bộ trạng thái mới nhất
-            if (typeof loadAllRulesDataFromSupabase === 'function') {
-                await loadAllRulesDataFromSupabase();
-            } else if (typeof renderMatrixTable === 'function') {
-                renderMatrixTable();
-            }
-
-            const summary = data.summary || {};
-            const passRate = summary.pass_rate ?? 100;
-            const total = summary.total_scenarios ?? rulesMatrixData.length;
-            const passed = summary.passed_scenarios ?? total;
-            const duration = summary.total_duration_ms ?? 0;
-
-            PawpalChatbot.showToast?.(
-                `Kiểm thử toàn luồng hoàn tất! Đạt ${passed}/${total} kịch bản (${passRate}%) trong ${duration}ms.`,
-                passRate >= 90 ? 'success' : 'warning'
-            );
-        } catch (e) {
-            console.error('Lỗi khi chạy runner kiểm thử từ UI:', e);
-            PawpalChatbot.showToast?.('Lỗi khi chạy kiểm thử Benchmark: ' + e.message, 'danger');
-        } finally {
-            if (runBtn) {
-                runBtn.disabled = false;
-                runBtn.textContent = 'Chạy benchmark kiểm thử';
-            }
-        }
+    async function runBenchmarkFromUI(){
+        const button=document.getElementById('btnRunBenchmarkUI');if(button.disabled)return;button.disabled=true;
+        try{
+            const session=(await supabase.auth.getSession()).data.session;if(!session)throw Error('Phiên đăng nhập đã hết hạn.');
+            const response=await fetch('/api/admin-chat',{method:'POST',headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify({action:'benchmark'})});
+            const data=await response.json();if(!response.ok||!data.ok)throw Error(data.error||'Không chạy được kiểm tra.');
+            await loadAllRulesDataFromSupabase();const s=data.summary;
+            PawpalChatbot.showToast?.('Quy tắc: '+s.passed+' đạt, '+s.failed+' chưa đạt, '+s.pending+' chưa đo công cụ.','info');
+        }catch(error){PawpalChatbot.showToast?.(error.message,'error');}finally{button.disabled=false;}
     }
 
     function openGenericRulesActionMenu(targetBtn, items) {
@@ -927,7 +895,12 @@
         if (!rulesHubInitialized) {
             setupRulesHubEventListeners();
             rulesHubInitialized = true;
+            let timer;let channel=supabase?.channel('admin-chat-rules-v1');
+            for(const table of ['chatbot_knowledge_faq','chatbot_profanity_filter','chatbot_canned_response','chatbot_compensation_policy','chatbot_handover_rule','chatbot_scenario_matrix'])channel=channel?.on('postgres_changes',{event:'*',schema:'public',table},()=>{clearTimeout(timer);timer=setTimeout(loadAllRulesDataFromSupabase,350);});
+            channel?.subscribe();window.addEventListener('beforeunload',()=>{clearTimeout(timer);if(channel)supabase.removeChannel(channel);},{once:true});
         }
+        const savedView=sessionStorage.getItem('pawpal_chat_rules_view');
+        if(['faq','profanity','canned','policy','matrix','guidelines'].includes(savedView))document.querySelectorAll('.rules-hub-tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.rulesView===savedView));
         const activeRulesBtn = document.querySelector('.rules-hub-tab-btn.active');
         if (activeRulesBtn) {
             currentRulesView = activeRulesBtn.getAttribute('data-rules-view') || currentRulesView;
@@ -950,6 +923,7 @@
                 btn.classList.add('active');
 
                 currentRulesView = view;
+                sessionStorage.setItem('pawpal_chat_rules_view',view);
                 document.querySelectorAll('.rules-view-panel').forEach(p => {
                     p.style.display = 'none';
                     p.classList.remove('active');
@@ -1064,8 +1038,8 @@
 
         // Modal 8: Save FAQ
         const faqModal = document.getElementById('modalFaqEditorOverlay');
-        document.getElementById('btnCloseFaqEditorModal')?.addEventListener('click', () => faqModal.style.display = 'none');
-        document.getElementById('btnCancelFaqEditor')?.addEventListener('click', () => faqModal.style.display = 'none');
+        document.getElementById('btnCloseFaqEditorModal')?.addEventListener('click', () => PawpalChatbot.closeModal?.('modalFaqEditorOverlay'));
+        document.getElementById('btnCancelFaqEditor')?.addEventListener('click', () => PawpalChatbot.closeModal?.('modalFaqEditorOverlay'));
         document.getElementById('btnSaveFaqRecord')?.addEventListener('click', async () => {
             const id = document.getElementById('inputFaqEditId')?.value.trim();
             const category = document.getElementById('inputFaqCategory')?.value.trim() || 'Thông tin dịch vụ';
@@ -1086,23 +1060,20 @@
 
             try {
                 if (id) {
-                    const { error } = await supabase
-                        .from('chatbot_knowledge_faq')
+                    const { error } = await ruleDb.from('chatbot_knowledge_faq')
                         .update({
                             category,
                             question,
                             answer,
                             keywords,
                             priority,
-                            is_active,
-                            updated_at: new Date().toISOString()
+                            is_active
                         })
                         .eq('id', id);
                     if (error) throw error;
                     PawpalChatbot.showToast?.('Đã cập nhật câu hỏi FAQ thành công!', 'success');
                 } else {
-                    const { error } = await supabase
-                        .from('chatbot_knowledge_faq')
+                    const { error } = await ruleDb.from('chatbot_knowledge_faq')
                         .insert([{
                             category,
                             question,
@@ -1115,7 +1086,7 @@
                     PawpalChatbot.showToast?.('Đã thêm câu hỏi FAQ mới vào kho tri thức!', 'success');
                 }
 
-                if (faqModal) faqModal.style.display = 'none';
+                if (faqModal) PawpalChatbot.closeModal?.('modalFaqEditorOverlay');
                 await loadAllRulesDataFromSupabase();
             } catch (err) {
                 PawpalChatbot.showToast?.('Lỗi lưu câu hỏi FAQ: ' + err.message, 'danger');
@@ -1126,8 +1097,8 @@
 
         // Modal 9: Save Profanity
         const profModal = document.getElementById('modalProfanityEditorOverlay');
-        document.getElementById('btnCloseProfanityEditorModal')?.addEventListener('click', () => profModal.style.display = 'none');
-        document.getElementById('btnCancelProfanityEditor')?.addEventListener('click', () => profModal.style.display = 'none');
+        document.getElementById('btnCloseProfanityEditorModal')?.addEventListener('click', () => PawpalChatbot.closeModal?.('modalProfanityEditorOverlay'));
+        document.getElementById('btnCancelProfanityEditor')?.addEventListener('click', () => PawpalChatbot.closeModal?.('modalProfanityEditorOverlay'));
         document.getElementById('btnSaveProfanityRecord')?.addEventListener('click', async () => {
             const id = document.getElementById('inputProfanityEditId')?.value.trim();
             const keyword = document.getElementById('inputProfanityKeywordText')?.value.trim().toLowerCase();
@@ -1146,8 +1117,7 @@
 
             try {
                 if (id) {
-                    const { error } = await supabase
-                        .from('chatbot_profanity_filter')
+                    const { error } = await ruleDb.from('chatbot_profanity_filter')
                         .update({
                             keyword,
                             severity,
@@ -1159,8 +1129,7 @@
                     if (error) throw error;
                     PawpalChatbot.showToast?.('Đã cập nhật từ cấm Toxic Shield thành công!', 'success');
                 } else {
-                    const { error } = await supabase
-                        .from('chatbot_profanity_filter')
+                    const { error } = await ruleDb.from('chatbot_profanity_filter')
                         .insert([{
                             keyword,
                             severity,
@@ -1172,7 +1141,7 @@
                     PawpalChatbot.showToast?.('Đã thêm từ ngữ mới vào màng lọc Toxic Shield!', 'success');
                 }
 
-                if (profModal) profModal.style.display = 'none';
+                if (profModal) PawpalChatbot.closeModal?.('modalProfanityEditorOverlay');
                 await loadAllRulesDataFromSupabase();
             } catch (err) {
                 PawpalChatbot.showToast?.('Lỗi lưu từ cấm: ' + err.message, 'danger');
@@ -1183,8 +1152,8 @@
 
         // Modal 10: Save Canned
         const canModal = document.getElementById('modalCannedEditorOverlay');
-        document.getElementById('btnCloseCannedEditorModal')?.addEventListener('click', () => canModal.style.display = 'none');
-        document.getElementById('btnCancelCannedEditor')?.addEventListener('click', () => canModal.style.display = 'none');
+        document.getElementById('btnCloseCannedEditorModal')?.addEventListener('click', () => PawpalChatbot.closeModal?.('modalCannedEditorOverlay'));
+        document.getElementById('btnCancelCannedEditor')?.addEventListener('click', () => PawpalChatbot.closeModal?.('modalCannedEditorOverlay'));
         document.getElementById('btnSaveCannedRecord')?.addEventListener('click', async () => {
             const id = document.getElementById('inputCannedEditId')?.value.trim();
             const shortcut = document.getElementById('inputCannedShortcutText')?.value.trim();
@@ -1203,8 +1172,7 @@
 
             try {
                 if (id) {
-                    const { error } = await supabase
-                        .from('chatbot_canned_response')
+                    const { error } = await ruleDb.from('chatbot_canned_response')
                         .update({
                             shortcut,
                             title,
@@ -1216,21 +1184,20 @@
                     if (error) throw error;
                     PawpalChatbot.showToast?.('Đã cập nhật mẫu câu phản hồi!', 'success');
                 } else {
-                    const { error } = await supabase
-                        .from('chatbot_canned_response')
+                    const { error } = await ruleDb.from('chatbot_canned_response')
                         .insert([{
                             shortcut,
                             title,
                             category,
                             content,
                             is_active,
-                            usage_count: 0
+
                         }]);
                     if (error) throw error;
                     PawpalChatbot.showToast?.('Đã thêm mẫu câu phản hồi mới!', 'success');
                 }
 
-                if (canModal) canModal.style.display = 'none';
+                if (canModal) PawpalChatbot.closeModal?.('modalCannedEditorOverlay');
                 await loadAllRulesDataFromSupabase();
             } catch (err) {
                 PawpalChatbot.showToast?.('Lỗi lưu mẫu câu: ' + err.message, 'danger');

@@ -259,9 +259,8 @@
 
         try {
             // 1. Chỉ lấy các cột cần thiết từ chat_conversation (không join chat_message(*) toàn bộ)
-            const {data:dbConvs,error:convErr}=await supabase.rpc('get_admin_chat_inbox',{p_limit:Math.min(100,limit),p_offset:options.offset || 0});
-
-            if (convErr) throw convErr;
+            const dbConvs=[];
+            for(let offset=0;;offset+=100){const {data,error}=await supabase.rpc('get_admin_chat_inbox',{p_limit:100,p_offset:offset});if(error)throw error;dbConvs.push(...data);if(data.length<100)break;}
             PawpalChatbot.state.liveLoadError = null;
 
             if (!dbConvs || dbConvs.length === 0) {
@@ -339,7 +338,7 @@
                         id: latestMsg.id,
                         sender: ['customer','guest'].includes(latestMsg.sender_type) ? 'user' : (latestMsg.sender_type === 'staff' ? 'agent' : (latestMsg.sender_type === 'system' ? 'system' : 'bot')),
                         agentName: (latestMsg.sender_type === 'system' ? 'Hệ thống' : latestMsg.sender_type === 'staff' ? 'Chuyên viên CSKH' : 'PawPal Bot'),
-                        time: new Date(latestMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        time: new Date(latestMsg.created_at).toLocaleTimeString('vi-VN', {timeZone:'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit' }),
                         text: latestMsg.content || '',
                         isToxic: !!latestMsg.is_toxic,
                         activeMaskLevel: latestMsg.is_toxic ? 'words' : 'raw'
@@ -358,7 +357,7 @@
                     tier: existingConv?.tier || (rc.customer_id ? 'Thành viên' : 'Vãng lai'),
                     pawpoints: existingConv?.pawpoints || 0,
                     unreadCount: isUrgent ? 1 : 0,
-                    updatedAt: new Date(rc.updated_at || rc.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    updatedAt: new Date(rc.updated_at || rc.created_at).toLocaleTimeString('vi-VN', {timeZone:'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit' }),
                     sentimentLevel: sLevel,
                     sentimentText: sText,
                     sentimentTrend: rc.sentiment_trend || 'stable',
@@ -367,7 +366,7 @@
                     isUrgent: isUrgent,
                     waitingSeconds: isHandover ? 0 : Math.min(elapsedSec, 999),
                     category: cat,
-                    aiSummary: rc.ai_summary || (sLevel >= 4 ? 'Khách hàng có phản ánh cần ưu tiên xử lý.' : 'Hội thoại chăm sóc khách hàng tự động.'),
+                    aiSummary: rc.ai_summary || 'Chưa có tóm tắt.',
                     internalNotes: rc.internal_note || '',
                     recentOrder: existingConv?.recentOrder || null,
                     recentBooking: existingConv?.recentBooking || null,
@@ -415,18 +414,7 @@
         if (!supabase || !convId) return [];
         const limit = options.limit || 30;
         try {
-            let q = supabase
-                .from('chat_message')
-                .select('id, conversation_id, sender_type, sender_account_id, content, created_at, is_toxic')
-                .eq('conversation_id', convId)
-                .order('created_at', { ascending: false }).order('id', {ascending:false})
-                .limit(limit);
-
-            if (options.beforeCreatedAt) {
-                q = q.lt('created_at', options.beforeCreatedAt);
-            }
-
-            const { data: msgs, error } = await q;
+            const {data:msgs,error}=await supabase.rpc('get_admin_chat_messages',{p_conversation:convId,p_before_at:options.beforeCreatedAt||null,p_before_id:options.beforeId||null});
             if (error) throw error;
 
             const sorted = (msgs || []).slice().reverse();
@@ -434,8 +422,8 @@
                 id: m.id,
                 createdAtRaw: m.created_at,
                 sender: ['customer','guest'].includes(m.sender_type) ? 'user' : (m.sender_type === 'staff' ? 'agent' : (m.sender_type === 'system' ? 'system' : 'bot')),
-                agentName: (m.sender_type === 'system' ? 'Hệ thống' : m.sender_type === 'staff' ? 'Chuyên viên CSKH' : 'PawPal Bot'),
-                time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                agentName: (m.sender_type === 'system' ? 'Hệ thống' : m.sender_type === 'staff' ? (m.staff_name || 'Nhân viên') : 'PawPal Bot'),
+                time: new Date(m.created_at).toLocaleTimeString('vi-VN', {timeZone:'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit' }),
                 text: m.content || '',
                 isToxic: !!m.is_toxic,
                 activeMaskLevel: m.is_toxic ? 'words' : 'raw'
@@ -530,6 +518,7 @@
         if (!conv.messagesLoaded) {
             tasks.push(loadConversationMessages(conv.id, { limit: 30 }).then(msgs => {
                 conv.messages = msgs;
+                conv.hasMoreMessages=msgs.length===30;
                 conv.messagesLoaded = true;
             }));
         }
@@ -636,26 +625,8 @@
 
             chatbotRealtimeChannel = supabase.channel('admin-chatbot-global-sync')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_conversation' }, () => {
+                    if(PawpalChatbot.state.currentConversation)PawpalChatbot.state.currentConversation.messagesLoaded=false;
                     refreshInboxDebounced(350);
-                })
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_message' }, (payload) => {
-                    const newMsg = payload && payload.new;
-                    if (newMsg) {
-                        if (PawpalChatbot.state.currentConversation && newMsg.conversation_id === PawpalChatbot.state.currentConversation.id) {
-                            PawpalChatbot.subtabs.live?.handleIncomingMessage?.(newMsg);
-                        }
-                        // G3-02: Cập nhật trực tiếp tin nhắn gần nhất trong state hội thoại để tránh fetch thừa
-                        const convs = PawpalChatbot.state.liveConversations || [];
-                        const targetConv = convs.find(c => c.id === newMsg.conversation_id);
-                        if (targetConv) {
-                            targetConv.lastMessage = newMsg.content;
-                            targetConv.time = 'Vừa xong';
-                            targetConv.updated_at = newMsg.created_at || new Date().toISOString();
-                            PawpalChatbot.subtabs.live?.renderConversationsList?.();
-                        }
-                    }
-                    // G3-02: Gom sự kiện cửa sổ 1.2s trước khi làm mới danh sách hội thoại
-                    refreshInboxDebounced(1200);
                 })
                 .subscribe((status) => {
                     if (status === 'SUBSCRIBED') {

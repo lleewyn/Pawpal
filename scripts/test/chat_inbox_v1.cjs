@@ -16,7 +16,7 @@ const {randomUUID}=require('node:crypto');
   const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.url().includes('/rest/v1/')&&r.status()>=400)errors.push(new URL(r.url()).pathname+':'+r.status());});
   await page.locator('[data-title="Chatbot"]').click();await page.waitForFunction(()=>window.PawpalChatbot?.state.liveLoaded);
   const actual=await page.evaluate(()=>PawpalChatbot.state.liveConversations.map(c=>c.id));
-  assert.deepEqual(actual,inbox.slice(0,50).map(c=>c.id));
+  assert.deepEqual(actual,inbox.map(c=>c.id));
   await page.waitForTimeout(700);assert.deepEqual(errors,[]);
   await page.screenshot({path:infra+'/chat-inbox-v1.private.png'});
   console.log(`PASS ${inbox.length} inbox previews match actual latest messages; no raw content; bounds and non-staff rejected; browser source identities and REST/JS clean.`);

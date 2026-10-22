@@ -176,123 +176,14 @@ const chatActionsApi = require('./scripts/api/chat_actions.js');
 const chatEvaluationsApi = require('./scripts/api/chat_evaluations.js');
 const { getChatConfig, updateChatConfig } = require('./scripts/api/chat_config.js');
 
-app.post('/api/chat', async (req, res) => {
-    try {
-        await chatApi(req, res);
-    } catch (error) {
-        console.error('[Server] Chat Error:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+app.all('/api/admin-chat', require('./api/admin-chat.js'));
+app.post('/api/chat', require('./api/chat.js'));
+const retiredChatRoute=(_req,res)=>res.status(410).json({ok:false,error:'Luồng chat đã cập nhật. Vui lòng tải lại trang.'});
+for(const route of ['/api/chat/session','/api/chat/conversations','/api/chat/conversations/:id','/api/chat/handover','/api/chat/back-to-ai','/api/chat/csat','/api/admin/chat-actions'])app.all(route,retiredChatRoute);
+app.all('/api/admin/copilot',require('./api/admin-chat.js'));
+app.all('/api/admin/copilot/history',require('./api/admin-chat.js'));
+app.post('/api/admin/chat/evaluations',(req,res)=>{req.body={action:'benchmark'};return require('./api/admin-chat.js')(req,res);});
 
-// Các endpoint RESTful hợp đồng mở rộng của Chatbot (Mục 6.4)
-app.post('/api/chat/session', async (req, res) => {
-    try {
-        await handleChatSession(req, res);
-    } catch (e) {
-        res.status(500).json({ ok: false, error: e.message });
-    }
-});
-
-app.get('/api/chat/conversations', async (req, res) => {
-    try {
-        await handleGetConversations(req, res);
-    } catch (e) {
-        res.status(500).json({ ok: false, error: e.message });
-    }
-});
-
-app.get('/api/chat/conversations/:id', async (req, res) => {
-    try {
-        await handleGetConversationMessages(req, res);
-    } catch (e) {
-        res.status(500).json({ ok: false, error: e.message });
-    }
-});
-
-app.post('/api/chat/handover', async (req, res) => {
-    try {
-        await handleHandover(req, res);
-    } catch (e) {
-        res.status(500).json({ ok: false, error: e.message });
-    }
-});
-
-app.post('/api/chat/back-to-ai', async (req, res) => {
-    try {
-        await handleBackToAi(req, res);
-    } catch (e) {
-        res.status(500).json({ ok: false, error: e.message });
-    }
-});
-
-app.post('/api/chat/csat', async (req, res) => {
-    try {
-        await handleCsat(req, res);
-    } catch (e) {
-        res.status(500).json({ ok: false, error: e.message });
-    }
-});
-
-// Route chuyên biệt cho PawPal AI Copilot Quản trị viên (G3-01)
-app.post('/api/admin/copilot', async (req, res) => {
-    try {
-        req.body = req.body || {};
-        req.body.isCopilot = true;
-        await chatApi(req, res);
-    } catch (error) {
-        console.error('[Server] Copilot Error:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-// Lấy lịch sử trò chuyện Copilot của nhân sự
-app.get('/api/admin/copilot/history', async (req, res) => {
-    try {
-        req.body = req.body || {};
-        req.body.isCopilot = true;
-        req.body.action = 'GET_COPILOT_HISTORY';
-        await chatApi(req, res);
-    } catch (error) {
-        console.error('[Server] Copilot History GET Error:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-// Xóa lịch sử trò chuyện Copilot của nhân sự
-app.delete('/api/admin/copilot/history', async (req, res) => {
-    try {
-        req.body = req.body || {};
-        req.body.isCopilot = true;
-        req.body.action = 'CLEAR_COPILOT_HISTORY';
-        await chatApi(req, res);
-    } catch (error) {
-        console.error('[Server] Copilot History DELETE Error:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-// Route chuyên biệt cho Thao tác có xác nhận Chatbot Admin (G4)
-app.post('/api/admin/chat-actions', async (req, res) => {
-    try {
-        await chatActionsApi.dispatchChatAction(req, res);
-    } catch (error) {
-        console.error('[Server] Chat Actions Route error:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-// Route chuyên biệt cho Bộ Runner Đánh giá Kiểm thử Toàn luồng Chatbot (G5-01)
-app.post('/api/admin/chat/evaluations', async (req, res) => {
-    try {
-        await chatEvaluationsApi.runEvaluations(req, res);
-    } catch (error) {
-        console.error('[Server] Chat Evaluations Route error:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-// Routes Cấu hình & Feature Toggles Chatbot (G5-05)
 app.get('/api/admin/chat/config', (req, res) => {
     try {
         res.status(200).json({ ok: true, config: getChatConfig() });

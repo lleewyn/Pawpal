@@ -1,0 +1,25 @@
+const {execFileSync}=require('node:child_process');
+const sql=`BEGIN;
+DO $$ DECLARE actor public.staff; target public.staff; conversation uuid:=gen_random_uuid(); request uuid:=gen_random_uuid(); version timestamptz; customer uuid; points_request uuid:=gen_random_uuid(); before_points bigint; BEGIN
+ SELECT s.* INTO actor FROM public.staff s JOIN public.staff_role r ON r.staff_id=s.id JOIN auth.users u ON u.id=s.auth_user_id WHERE r.role_code='ADMIN' AND s.employment_status='active' AND NOT s.must_change_password AND (u.banned_until IS NULL OR u.banned_until<=now()) LIMIT 1;
+ SELECT * INTO target FROM public.staff WHERE id<>actor.id AND auth_user_id IS NOT NULL LIMIT 1;
+ IF actor.id IS NULL OR target.id IS NULL THEN RAISE EXCEPTION 'Missing isolated staff fixtures'; END IF;
+ UPDATE public.staff SET employment_status='active',must_change_password=false WHERE id=target.id;
+ UPDATE auth.users SET banned_until=NULL WHERE id=target.auth_user_id;
+ INSERT INTO public.staff_permission(staff_id,permission_code) VALUES(target.id,'chat_conversation.write') ON CONFLICT DO NOTHING;
+ SELECT id INTO customer FROM public.customer LIMIT 1;
+ INSERT INTO public.chat_conversation(id,customer_id,status,sentiment_level,sentiment_trend,channel,assigned_staff_id) VALUES(conversation,customer,'agent_handling',2,'stable','web',actor.id) RETURNING updated_at INTO version;
+ PERFORM set_config('request.jwt.claim.sub',actor.auth_user_id::text,true);PERFORM set_config('request.jwt.claim.role','authenticated',true);
+ PERFORM public.transfer_admin_chat(request,conversation,version,target.id,'Verified transaction handover');
+ IF (SELECT assigned_staff_id FROM public.chat_conversation WHERE id=conversation)<>target.id THEN RAISE EXCEPTION 'Transfer did not persist'; END IF;
+ PERFORM public.transfer_admin_chat(request,conversation,version,target.id,'Verified transaction handover');
+ IF (SELECT count(*) FROM public.audit_log WHERE id=request)<>1 THEN RAISE EXCEPTION 'Duplicate transfer audit'; END IF;
+ BEGIN PERFORM public.transfer_admin_chat(request,conversation,version,target.id,'Changed payload'); RAISE EXCEPTION 'Conflict accepted'; EXCEPTION WHEN SQLSTATE 'PT409' THEN NULL; END;
+ SELECT coalesce(sum(points),0) INTO before_points FROM public.paw_point_transaction WHERE customer_id=customer;
+ PERFORM public.adjust_customer_points(customer,5,'Verified manual adjustment',points_request);
+ PERFORM public.adjust_customer_points(customer,5,'Verified manual adjustment',points_request);
+ IF (SELECT coalesce(sum(points),0) FROM public.paw_point_transaction WHERE customer_id=customer)<>before_points+5 THEN RAISE EXCEPTION 'Point replay changed balance'; END IF;
+END $$;
+ROLLBACK;`;
+execFileSync('docker',['exec','-i','supabase-db','psql','-U','supabase_admin','-d','pawpal_customers_3daa55e18acd','-v','ON_ERROR_STOP=1'],{input:sql,stdio:['pipe','pipe','pipe']});
+console.log('PASS positive handover and manual point replay; all staff/Auth/ledger changes rolled back.');

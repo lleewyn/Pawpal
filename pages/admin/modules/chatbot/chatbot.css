@@ -2,6 +2,16 @@
    MODULE CHATBOT VÀ TRỰC CHAT CSKH - TUÂN THỦ 100% AGENTS.MD
    ==================================================================== */
 
+.inbox-col-shell { display:flex; flex-direction:column; min-height:0; min-width:0; }
+.inbox-col-shell .inbox-conversations-col { flex:1; min-height:0; }
+.chatbot-module-wrapper .customer-autocomplete-popover {
+ position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:2500;
+ max-height:240px; overflow:auto; overscroll-behavior:contain; padding:8px;
+ border:1px solid var(--border-neutral); border-radius:9px; background:#fff;
+ box-shadow:0 10px 28px rgba(35,107,72,.14);
+}
+.chatbot-module-wrapper .customer-autocomplete-popover button { display:block; width:100%; text-align:left; border:0; }
+
 .chatbot-module-wrapper {
     display: flex;
     flex-direction: column;
@@ -2970,3 +2980,32 @@
 
 
 
+
+/* V1: keep message content readable beside the inbox and customer context. */
+.chatbot-module-wrapper .live-support-container { grid-template-columns:260px minmax(0,1fr) 270px; position:relative; }
+.chatbot-module-wrapper .inbox-chat-col { min-width:0; background:var(--surface-white); border:1px solid var(--border-neutral); }
+.chatbot-module-wrapper .chat-header-single-row { flex-wrap:wrap; border:0; gap:8px; }
+.chatbot-module-wrapper .chat-target-name { flex:1 1 160px; min-width:0; white-space:normal; }
+.chatbot-module-wrapper #currentChatSentimentBadge { white-space:nowrap; flex-shrink:0; }
+.chatbot-module-wrapper .chat-timeline-messages { background:transparent; border:0; min-width:0; }
+.chatbot-module-wrapper .conversation-item { border:1px solid var(--border-neutral) !important; background:transparent !important; }
+.chatbot-module-wrapper .conversation-item.active { border-color:#C3DEC7 !important; background:#EEF5F1 !important; }
+.chatbot-module-wrapper .chat-bottom-toolbar { min-width:0; }
+.chatbot-module-wrapper .composer-actions-row { flex-wrap:wrap; }
+.chatbot-module-wrapper button { white-space:normal; }
+.chatbot-module-wrapper .copilot-header { flex-wrap:wrap; }
+.chatbot-module-wrapper .copilot-sessions-list { display:flex; flex-direction:column; gap:8px; }
+.chatbot-module-wrapper .canned-response-card { background:transparent !important; border:0 !important; }
+.chatbot-module-wrapper .rules-pagination-wrap { display:flex; justify-content:center; background:transparent; border:0; gap:6px; padding:2px 0; }
+.chatbot-module-wrapper #btnChatContext { display:none; }
+@media(max-width:1280px){
+ .chatbot-module-wrapper .live-support-container { grid-template-columns:230px minmax(0,1fr); }
+ .chatbot-module-wrapper .inbox-customer-info-col { display:none !important; }
+ .chatbot-module-wrapper #btnChatContext { display:inline-flex; }
+ .chatbot-module-wrapper .context-open #chatCustomerInfoData { display:block !important; position:absolute; right:0; top:48px; bottom:0; width:min(330px,90%); z-index:30; overflow:auto; background:rgba(255,255,255,.97); }
+}
+@media(max-width:800px){
+ .chatbot-module-wrapper .live-support-container { grid-template-columns:180px minmax(0,1fr); gap:8px; }
+ .chatbot-module-wrapper .inbox-conversations-col { padding:8px; }
+ .chatbot-module-wrapper .copilot-layout-container { grid-template-columns:180px minmax(0,1fr); }
+}

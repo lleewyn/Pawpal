@@ -17,6 +17,7 @@
     let subscribedConversationId = null;
     let customerTypingHideTimer = null;
     let isSendingLiveMsg = false;
+    let inboxPage = Number(sessionStorage.getItem('pawpal_chat_inbox_page')) || 1;
     let isStaffTypingActive = false;
     let staffTypingStopTimer = null;
 
@@ -111,19 +112,8 @@
     async function requestUnlockRawMessage(targetMsg) {
         if (!targetMsg || !targetMsg.id) return;
         try {
-            const token = sessionStorage.getItem('pawpal_staff_token') || 'local:' + (sessionStorage.getItem('pawpal_staff_id') || 'd0000000-5555-5555-5555-555555555555');
-            const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    action: 'CHAT_GET_RAW_CONTENT',
-                    messageId: targetMsg.id
-                })
-            });
-            const data = await res.json();
+            const {data:raw,error}=await supabase.rpc('read_admin_chat_raw',{p_message_id:targetMsg.id});
+            const data={raw_content:raw,error:error?.message};const res={ok:!error};data.ok=!error;
             if (res.ok && data.ok) {
                 targetMsg.unlockedRawContent = data.raw_content;
                 targetMsg.activeMaskLevel = 'raw';
@@ -384,7 +374,13 @@
         }
 
         container.innerHTML = '';
-        filtered.forEach(conv => {
+        const pages=Math.max(1,Math.ceil(filtered.length/10));inboxPage=Math.min(inboxPage,pages);
+        const pager=document.getElementById('chatInboxPager');pager?.replaceChildren();
+        for(const [text,disabled,delta] of [['<',inboxPage===1,-1],[String(inboxPage),true,0],['>',inboxPage===pages,1]]){
+            const b=document.createElement('button');b.type='button';b.className='admin-btn admin-btn-secondary';b.textContent=text;b.disabled=disabled;
+            b.onclick=()=>{inboxPage+=delta;sessionStorage.setItem('pawpal_chat_inbox_page',inboxPage);renderConversationsList();};pager?.append(b);
+        }
+        filtered.slice((inboxPage-1)*10,inboxPage*10).forEach(conv => {
             const isActive = currentConversation && currentConversation.id === conv.id;
             const lastMsg = (conv.messages && conv.messages.length > 0) ? conv.messages[conv.messages.length - 1] : null;
             const snippet = lastMsg ? (lastMsg.isToxic ? '[Nội dung đã được che mờ]' : formatSnippetPreview(lastMsg.text)) : '...';
@@ -489,7 +485,6 @@
                 if (level >= 5) return '• Giận dữ';
                 if (level === 4) return '• Bực bội';
                 if (level === 3) return '• Cần lưu ý';
-                if (level === 2) return '• Thắc mắc';
                 return '';
             })();
             if (shortSentiment) {
@@ -802,6 +797,18 @@
                 timelineEl.querySelectorAll('.toxic-dots-wrap.open').forEach(w => w.classList.remove('open'));
             }, { once: false, capture: false });
 
+            if(currentConversation.hasMoreMessages){
+                const more=document.createElement('button');more.type='button';more.className='admin-btn admin-btn-secondary';more.textContent='Tin nhắn trước';
+                more.addEventListener('click',async()=>{
+                    const first=currentConversation.messages[0];if(!first?.createdAtRaw)return;more.disabled=true;
+                    try{
+                        const older=await PawpalChatbot.loadConversationMessages(currentConversation.id,{beforeCreatedAt:first.createdAtRaw,beforeId:first.id});
+                        const height=timelineEl.scrollHeight;
+                        currentConversation.messages=[...older,...currentConversation.messages];currentConversation.hasMoreMessages=older.length===30;
+                        if(PawpalChatbot.state.currentConversation?.id===currentConversation.id){renderCurrentChat();timelineEl.scrollTop=timelineEl.scrollHeight-height;}
+                    }catch(e){PawpalChatbot.showToast?.('Không tải được lịch sử. Hãy thử lại.','error');more.disabled=false;}
+                });timelineEl.prepend(more);
+            }
             timelineEl.scrollTop = timelineEl.scrollHeight;
         }
 
@@ -871,7 +878,7 @@
 
         if (recentOrderEl) {
             if (currentConversation.recentOrder) {
-                recentOrderEl.innerHTML = `<a href="javascript:void(0)" class="user-name-link chat-order-info" data-id="${escapeHtml(currentConversation.recentOrder.id)}">${escapeHtml(currentConversation.recentOrder.id)}</a> (${escapeHtml(currentConversation.recentOrder.status)})`;
+                recentOrderEl.innerHTML = `<a href="javascript:void(0)" class="user-name-link chat-order-info" data-id="${escapeHtml(currentConversation.recentOrder.id)}">${escapeHtml(currentConversation.recentOrder.code || currentConversation.recentOrder.id)}</a>`;
             } else {
                 recentOrderEl.textContent = 'Chưa có đơn hàng';
             }
@@ -879,7 +886,7 @@
 
         if (recentBookingEl) {
             if (currentConversation.recentBooking) {
-                recentBookingEl.innerHTML = `<a href="javascript:void(0)" class="user-name-link btn-jump-booking" data-id="${escapeHtml(currentConversation.recentBooking.id)}">${escapeHtml(currentConversation.recentBooking.id)}</a> (${escapeHtml(currentConversation.recentBooking.status)})`;
+                recentBookingEl.innerHTML = `<a href="javascript:void(0)" class="user-name-link btn-jump-booking" data-id="${escapeHtml(currentConversation.recentBooking.id)}">${escapeHtml(currentConversation.recentBooking.code || currentConversation.recentBooking.id)}</a> (${escapeHtml(currentConversation.recentBooking.status)})`;
             } else {
                 recentBookingEl.textContent = 'Chưa có lịch hẹn';
             }
@@ -929,51 +936,6 @@
                 window.location.hash = '#tab-customers';
             });
         });
-    }
-
-    async function ensureRealConversation(conv) {
-        if (!conv || !supabase) return conv ? conv.id : null;
-        if (conv.isRealDb && conv.id) return conv.id;
-
-        try {
-            if (conv.customerId) {
-                const { data: existing } = await supabase
-                    .from('chat_conversation')
-                    .select('id')
-                    .eq('customer_id', conv.customerId)
-                    .order('updated_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
-
-                if (existing && existing.id) {
-                    conv.id = existing.id;
-                    conv.isRealDb = true;
-                    return existing.id;
-                }
-
-                const { data: created, error: crErr } = await supabase
-                    .from('chat_conversation')
-                    .insert([{
-                        customer_id: conv.customerId,
-                        status: conv.isHandover ? 'agent_handling' : 'bot_handling',
-                        sentiment_level: conv.sentimentLevel || 2,
-                        is_urgent: conv.isUrgent || false,
-                        ai_summary: conv.aiSummary || 'Phiên tiếp nhận hỗ trợ khách hàng',
-                        channel: 'web'
-                    }])
-                    .select('id')
-                    .single();
-
-                if (!crErr && created) {
-                    conv.id = created.id;
-                    conv.isRealDb = true;
-                    return created.id;
-                }
-            }
-        } catch (err) {
-            console.warn('[Chatbot] Lỗi ensureRealConversation:', err.message);
-        }
-        return conv.id;
     }
 
     function clearAdminAttachment() {
@@ -1037,6 +999,7 @@
     }
 
     function setupLiveChatEventListeners() {
+        document.getElementById('btnChatContext')?.addEventListener('click',()=>document.querySelector('.live-support-container')?.classList.toggle('context-open'));
         // Tab lọc
         document.querySelectorAll('.inbox-tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1248,7 +1211,7 @@
             if (ref?.id && ref.id.toLowerCase().includes(convertRef.value.trim().toLowerCase())) {
                 const button = document.createElement('button');
                 button.type = 'button'; button.className = 'admin-btn admin-btn-secondary';
-                button.textContent = ref.id;
+                button.textContent = ref.code || ref.id;
                 button.addEventListener('click', () => { convertRef.value = ref.id; convertDropdown.style.display = 'none'; });
                 convertDropdown.append(button);
             } else {
@@ -1414,7 +1377,7 @@
             const {data,error}=await supabase.from('sales_order').select('id,order_code,order_status').eq('id',target.order).eq('customer_id',target.customer).single();
             if(trackingTarget!==target)return;
             if(error){summary.textContent='Không tải được đơn hàng.';return;}
-            const labels={pending:'Chờ xử lý',confirmed:'Đã xác nhận',processing:'Đang xử lý',shipped:'Đã xuất hàng',delivered:'Đã giao',completed:'Hoàn tất',cancelled:'Đã hủy'};
+            const labels={shipping:'\u0110ang giao',returned:'\u0110\u00e3 tr\u1ea3 h\u00e0ng',pending:'Chờ xử lý',confirmed:'Đã xác nhận',processing:'Đang xử lý',shipped:'Đã xuất hàng',delivered:'Đã giao',completed:'Hoàn tất',cancelled:'Đã hủy'};
             target.text=(data.order_code||data.id)+': '+(labels[data.order_status]||'Chưa có nhãn trạng thái');summary.textContent=target.text;
         });
         document.getElementById('btnSendTrackingCardToChat')?.addEventListener('click',async e=>{
@@ -1425,51 +1388,6 @@
         // ====================================================================
         // MODAL 6: CAMERA AN NINH PHÒNG THÚ CƯNG
         // ====================================================================
-        const btnSendCameraSnapshotToChat = document.getElementById('btnSendCameraSnapshotToChat');
-
-        btnSendCameraSnapshotToChat?.addEventListener('click', async () => {
-            const currentConversation = getCurrentConversationSafe();
-            if (!currentConversation) {
-                PawpalChatbot.showToast?.('Vui lòng chọn một phiên hội thoại trước khi gửi thông tin.', 'warning');
-                return;
-            }
-
-            const petName = currentConversation.petName || currentConversation.petInfo?.name || (currentConversation.pets?.[0]?.name) || 'thú cưng';
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const cameraMsgText = `[Snapshot Camera Live lúc ${timeStr}]: Bé ${petName} đang sinh hoạt ngoan ngoãn trong phòng lưu trú. Nhiệt độ phòng 24.5°C, độ ẩm 55% đạt chuẩn an toàn 5 sao!`;
-            const localMsgId = 'msg-camera-' + Date.now();
-
-            currentConversation.messages.push({
-                id: localMsgId,
-                sender: 'agent',
-                agentName: 'Camera An Ninh',
-                time: timeStr,
-                text: cameraMsgText
-            });
-
-            PawpalChatbot.closeModal?.('petCameraModalOverlay');
-            renderCurrentChat();
-            PawpalChatbot.showToast?.('Đã gửi ảnh chụp camera an ninh vào chat!', 'success');
-
-            if (supabase) {
-                try {
-                    const convId = await ensureRealConversation(currentConversation);
-                    if (convId) {
-                        await supabase.from('chat_message').insert([{
-                            conversation_id: convId,
-                            sender_type: 'staff',
-                            sender_name: 'Camera An Ninh',
-                            content: cameraMsgText,
-                            raw_content: cameraMsgText,
-                            is_toxic: false
-                        }]);
-                    }
-                } catch (e) {
-                    console.error('[Chatbot] Lỗi lưu camera snapshot vào DB:', e);
-                }
-            }
-        });
-
         // ====================================================================
         // MODAL 11: HOÀN TẤT CA CHAT VÀ GỬI ĐÁNH GIÁ CSAT
         // ====================================================================
@@ -1497,14 +1415,15 @@
         btnConfirmResolve?.addEventListener('click', async () => {
             if (!resolveTarget || btnConfirmResolve.disabled) return;
             const target = resolveTarget, reason = selectResolveReason.value, notes = textareaResolveNotes.value.trim();
-            const payload = JSON.stringify([reason, notes]);
+            const survey=document.getElementById('checkboxSendCsatSurvey').checked;
+            const payload = JSON.stringify([reason, notes, survey]);
             if (target.payload && target.payload !== payload) target.request = crypto.randomUUID();
             target.payload = payload;
             btnConfirmResolve.disabled = true;
             try {
                 const { error } = await supabase.rpc('resolve_admin_chat', {
                     p_request_id: target.request, p_conversation_id: target.id,
-                    p_expected_updated_at: target.version, p_reason: reason, p_notes: notes
+                    p_expected_updated_at: target.version, p_reason: reason, p_notes: notes, p_send_survey:survey
                 });
                 if (error) throw error;
                 const c = PawpalChatbot.state.currentConversation;

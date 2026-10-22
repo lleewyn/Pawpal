@@ -1,6 +1,6 @@
 BEGIN;
 CREATE OR REPLACE FUNCTION public.create_chat_complaint(p_id uuid,p_conversation_id uuid,p_expected_updated_at timestamptz,p_ref_id uuid,p_category text,p_subject text,p_priority text)
-RETURNS uuid LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog,public AS $$
+RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$
 DECLARE c public.chat_conversation; actor uuid; result uuid;
 BEGIN
  IF auth.uid() IS NULL OR NOT pawpal_private.has_permission('chat_conversation.read') OR NOT pawpal_private.has_permission('chat_conversation.write') THEN RAISE EXCEPTION 'chat_forbidden' USING ERRCODE='42501'; END IF;
