@@ -56,7 +56,7 @@
 
                 <div class="filter-row-bottom">
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Chức vụ:</label>
+                        <label class="filter-label">Chức vụ</label>
                         <select class="admin-select" id="staffFilterPosition">
                             <option value="ALL">Tất cả</option>
                             <option value="Admin">Quản trị viên</option>
@@ -369,7 +369,7 @@
             </div>
         </div>
 
-        <div class="admin-card staff-master-card">
+        <div class="admin-card staff-master-card staff-schedule-panel">
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
                     <div class="date-navigator">
@@ -393,11 +393,10 @@
 
                 <div class="filter-row-bottom">
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Chức vụ:</label>
+                        <label class="filter-label">Chức vụ</label>
                         <select class="admin-select" id="scheduleFilterPosition">
                             <option value="ALL">Tất cả</option>
                             <option value="Admin">Quản trị viên</option>
-                            <option value="Veterinarian">Bác sĩ thú y</option>
                             <option value="Receptionist">Lễ tân</option>
                             <option value="Groomer">Groomer</option>
                             <option value="Caregiver">Bảo mẫu Pet Hotel</option>
@@ -423,48 +422,8 @@
                 </div>
             </div>
 
-            <!-- CHẾ ĐỘ XEM THEO NGÀY (DAY VIEW) -->
-            <div class="table-responsive-wrapper" id="scheduleDayViewWrapper">
-                <table class="admin-table schedule-table" id="scheduleDayTable">
-                    <thead>
-                        <tr>
-                            <th style="width: 95px;">Mã NV</th>
-                            <th style="width: 200px;">Họ tên và Chức vụ</th>
-                            <th style="text-align: center;">Ca sáng (08:00 - 12:00)</th>
-                            <th style="text-align: center;">Ca chiều (13:00 - 17:00)</th>
-                            <th style="text-align: center;">Ca tối (17:30 - 21:30)</th>
-                            <th style="text-align: center;">Ca khuya (22:00 - 06:00)</th>
-                            <th style="text-align: center; width: 130px;">Tổng giờ/ngày</th>
-                        </tr>
-                    </thead>
-                    <tbody id="scheduleTableBody">
-                        <!-- Render by JS -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- CHẾ ĐỘ XEM THEO TUẦN (WEEK VIEW) -->
-            <div class="table-responsive-wrapper" id="scheduleWeekViewWrapper" style="display: none;">
-                <table class="admin-table schedule-week-table" id="scheduleWeekTable">
-                    <thead>
-                        <tr id="scheduleWeekHeaderRow">
-                            <th style="width: 100px;">Mã NV</th>
-                            <th style="width: 180px;">Họ tên</th>
-                            <th style="text-align: center;">Thứ 2</th>
-                            <th style="text-align: center;">Thứ 3</th>
-                            <th style="text-align: center;">Thứ 4</th>
-                            <th style="text-align: center;">Thứ 5</th>
-                            <th style="text-align: center;">Thứ 6</th>
-                            <th style="text-align: center;">Thứ 7</th>
-                            <th style="text-align: center;">Chủ Nhật</th>
-                            <th style="text-align: center; width: 120px;">Tổng giờ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="scheduleWeekTableBody">
-                        <!-- Render by JS -->
-                    </tbody>
-                </table>
-            </div>
+            <div id="scheduleDayViewWrapper"><div id="scheduleTableBody" class="staff-calendar-people"></div></div>
+            <div id="scheduleWeekViewWrapper" class="staff-calendar-week" hidden></div>
         </div>
     </section>
 

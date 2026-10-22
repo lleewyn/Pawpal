@@ -1,5 +1,19 @@
 # Nhân sự V1 — nghiệm thu triển khai
 
+## Bổ sung lịch dạng card ngày 22/10/2026
+
+Người dùng chỉ ra lịch vẫn là bảng và chưa đúng giao diện mong muốn. Không coi việc hoàn tất các luồng dữ liệu là đã được người dùng duyệt giao diện toàn phân hệ.
+
+- [x] Theo ngày: card từng nhân viên, các ca thực tế nằm bên trong, tổng giờ trong ngày chỉ cộng ca còn hiệu lực và đi làm; ca qua đêm được tính phần giao với ngày đang xem.
+- [x] Theo tuần: lưới bảy ngày từ thứ Hai, card từng ca, có giờ và nút xem/sửa. Ca qua đêm xuất hiện ở cả hai ngày liên quan với mốc ngày rõ ràng.
+- [x] Loại bỏ bảng lịch cũ và cuộn ngang của bảng. Card/lưới co theo màn hình; tối đa 10 nhân viên mỗi trang, bộ lọc và điều hướng ngày/tuần dùng dữ liệu thật.
+- [x] Phân biệt ca inactive là “Không hiệu lực”, cancelled là “Đã hủy”; không hiển thị các ca này thành “Đi làm” hoặc cộng tổng giờ.
+- [x] Kiểm thử trình duyệt `staff_calendar_cards_v1.cjs`: nguồn Cloud thật, card theo ngày, đủ bảy ngày, mở sửa từ card, màn hình 1440/920/390px không tràn lưới, không ghi nghiệp vụ trên Cloud. Đã xem ảnh ngày/tuần/màn hình hẹp ngoài repository.
+- [x] Kiểm thử lưu/sửa/hủy ca trên CSDL phục hồi qua `staff_schedule_browser_v1.cjs` vẫn đạt.
+- [ ] Người dùng xem và duyệt giao diện card mới; chưa tự đóng mục này thay người dùng.
+
+Ảnh riêng: `staff-calendar-day.private.png`, `staff-calendar-week.private.png`, `staff-calendar-week-narrow.private.png` trong thư mục infra. Đây là thay đổi trình bày, không có migration hoặc thay đổi dữ liệu Cloud.
+
 Cập nhật 22/10/2026. Đã áp Cloud mới, push GitHub và triển khai Vercel. Phần ghi được kiểm thử trên CSDL phục hồi riêng; kiểm tra Production chỉ đọc, không tạo nhân viên, đổi mật khẩu hoặc ghi nghiệp vụ thử trên Cloud.
 
 ## Bản triển khai
