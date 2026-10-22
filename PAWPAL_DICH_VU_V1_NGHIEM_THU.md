@@ -163,5 +163,7 @@ Phân hệ khách đang thực hiện; chưa nghiệm thu toàn bộ đặt mớ
 - [x] `066_customer_booking_cancel.sql`: hủy có lý do, quyền chủ lịch, phiên bản, chống gửi lặp; giữ hạn trước giờ bắt đầu 2 tiếng, chặn đã thu/đang thực hiện. Giải phóng phòng và chuyến xe qua trigger hiện có. Kiểm thử giao dịch phục hồi đạt, rollback toàn bộ fixture.
 - [x] Form hủy dùng chung từ danh sách và chi tiết đã thử trên trình duyệt với Cloud thật: thiếu lý do, Escape, xác nhận, đọc lại trạng thái và lý do trong nhật ký sau reload. Đã xem ảnh form, bỏ khóa tài khoản/lịch sử hủy và cộng điểm chỉ trong trình duyệt. Kiểm thử hồi quy 44/44 đạt; nhận diện khách kiểm tra phiên Auth và từ chối ID trình duyệt khác chủ.
 - [x] Migration hủy đã áp Cloud sau sao lưu `portal-bookings-cloud-2026-10-22T17-48-28-876Z`, không đổi dữ liệu public/Auth hoặc 17 nhân viên khi triển khai.
+- [x] Commit `76efecd` đã lên Vercel; `customer_booking_cloud_read.cjs --cancel --deployed` đạt cả hủy từ danh sách và chi tiết, trạng thái/lý do lưu bền, không tạo khoản thu. Đã dọn hồ sơ/lịch/Auth thử riêng.
+- [x] Hồi quy mua hàng trên Vercel sau thay đổi nhận diện khách: `customer_sales_cloud_v1.cjs --deployed` đạt. Đã sửa thêm bộ hẹn giờ dọn form đổi trả sau chuyển trang (`396c9b8`); không còn lỗi JavaScript chưa xử lý trong luồng kiểm tra.
 - [ ] Chuyển đổi lịch sang RPC có quyền chủ sở hữu, phiên bản và kiểm tra lịch/phòng/xe/bảng giá; nghiệm thu modal đổi lịch.
 - [ ] Hoàn thiện chi tiết ca, đánh giá dịch vụ và Realtime; kiểm tra lại toàn luồng trên Vercel.
