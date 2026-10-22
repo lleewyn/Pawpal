@@ -2,7 +2,7 @@
     <!-- KHU VỰC 1: 5 THẺ THỐNG KÊ KPI NHANH (CHUẨN HỆ THỐNG PAWPAL-ER) -->
     <section class="dashboard-kpi-grid" aria-label="Chỉ số trong ngày">
         <div class="admin-card kpi-card dashboard-kpi-card dashboard-kpi-link" data-dashboard-module="Bán hàng">
-            <span class="kpi-label">Doanh thu hôm nay</span>
+            <span class="kpi-label">Thực thu ròng hôm nay</span>
             <span class="kpi-val text-heading" id="dashboardRevenue"><span class="skeleton-kpi" style="width: 120px;"></span></span>
         </div>
         <div class="admin-card kpi-card dashboard-kpi-card dashboard-kpi-link" data-dashboard-module="Dịch vụ">
@@ -125,35 +125,35 @@
         <article class="admin-card dashboard-widget dashboard-revenue-widget">
             <div class="dashboard-widget-header">
                 <div>
-                    <h2 class="dashboard-widget-title">Doanh thu 7 ngày</h2>
+                    <h2 class="dashboard-widget-title">Thực thu ròng theo tuần</h2>
                 </div>
                 <div class="dashboard-chart-legend"><span><i class="legend-current"></i>Tuần này</span><span><i class="legend-previous"></i>Tuần trước</span></div>
             </div>
-            <div class="dashboard-revenue-chart" id="dashboardRevenueChart" role="img" aria-label="Biểu đồ doanh thu theo ngày"></div>
+            <div class="dashboard-revenue-chart" id="dashboardRevenueChart" role="img" aria-label="Biểu đồ thực thu ròng theo ngày"></div>
         </article>
         <article class="admin-card dashboard-widget dashboard-chatbot-widget">
             <div class="dashboard-widget-header">
                 <div>
-                    <h2 class="dashboard-widget-title">Hiệu suất Chatbot AI</h2>
+                    <h2 class="dashboard-widget-title">Phân bố hội thoại</h2>
                 </div>
                 <button type="button" class="dashboard-text-link" data-dashboard-module="Chatbot">Xem hội thoại</button>
             </div>
             <div class="dashboard-chatbot-chart-wrap">
-                <div class="dashboard-donut-chart" id="dashboardChatbotDonut" role="img" aria-label="Tỷ lệ AI tự xử lý">
+                <div class="dashboard-donut-chart" id="dashboardChatbotDonut" role="img" aria-label="Tỷ lệ Chưa chuyển nhân viên">
                     <svg viewBox="0 0 120 120" aria-hidden="true">
                         <circle class="dashboard-donut-track" cx="60" cy="60" r="48" fill="none" stroke="#AEC8B9" stroke-width="12"></circle>
                         <circle class="dashboard-donut-value" id="dashboardDonutCircle" cx="60" cy="60" r="48" fill="none" stroke="#236B48" stroke-width="12" stroke-dasharray="0 301.59" stroke-linecap="round"></circle>
                     </svg>
-                    <span id="dashboardChatbotPercentWrap"><strong>0%</strong><small>AI tự xử lý</small></span>
+                    <span id="dashboardChatbotPercentWrap"><strong>0%</strong><small>Chưa chuyển nhân viên</small></span>
                 </div>
                 <div class="dashboard-chatbot-legend">
-                    <div><i class="legend-ai"></i><span>AI tự xử lý<small id="dashboardAiSessionsCount">0 phiên</small></span></div>
+                    <div><i class="legend-ai"></i><span>Chưa chuyển nhân viên<small id="dashboardAiSessionsCount">0 phiên</small></span></div>
                     <div><i class="legend-handover"></i><span>Chuyển nhân viên<small id="dashboardHandoverSessionsCount">0 phiên</small></span></div>
                     <strong class="dashboard-chat-total" id="dashboardTotalChatSessions">0 phiên trò chuyện</strong>
                 </div>
             </div>
             <div class="dashboard-staff-utilization">
-                <div><span>Tỷ lệ lấp đầy nhân sự</span><strong id="dashboardStaffUtilPercent">0%</strong></div>
+                <div><span>Nhân sự có lịch hôm nay</span><strong id="dashboardStaffUtilPercent">0%</strong></div>
                 <div class="dashboard-progress-track"><span id="dashboardStaffUtilBar" style="width: 0%;"></span></div>
             </div>
         </article>

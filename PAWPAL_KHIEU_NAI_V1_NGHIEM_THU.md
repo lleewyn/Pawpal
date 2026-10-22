@@ -61,7 +61,7 @@ Backup đã xác minh: D:/Aboutme/Pawpal-infra/supabase-local/backups/complaints
 ## Giới hạn đã làm rõ
 
 - Chưa cấu hình hạn xử lý trong dữ liệu V1: hiển thị chưa cấu hình, không tự đặt thời hạn 2/4/24/48 giờ hoặc đếm quá hạn giả.
-- Zalo/SMS/email là ghi nhận liên hệ bên ngoài; chưa tự gửi thông báo qua các nhà cung cấp này.
+- Theo xác nhận của người dùng, Zalo/SMS/email chỉ cần giả lập: lưu kênh, nội dung và lịch sử vào CSDL, không gửi thật. Đây là phạm vi đã chốt, không phải hạng mục còn thiếu để nghiệm thu Khiếu nại.
 - Chưa phát triển nơi lưu file: không có nút tải ảnh giả. Tệp đã tồn tại có thể mở qua liên kết HTTPS.
 - Chưa tự cấp điểm/voucher hay áp một chính sách bồi thường tiền mặc định.
 - Lương, thưởng, hoa hồng và chấm công thực tế tiếp tục nằm ngoài scope.

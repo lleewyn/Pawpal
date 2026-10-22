@@ -29,54 +29,21 @@
         })[m]);
     }
 
-    function getTodayDateString() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-
-    // DATE giữ nguyên ngày nghiệp vụ; TIMESTAMP đổi sang ngày theo múi giờ trình duyệt.
-    // Không cắt chuỗi UTC vì đơn sau nửa đêm giờ địa phương có thể thuộc ngày trước ở UTC.
     function toDateKey(value) {
         if (!value) return '';
-        if (value instanceof Date) {
-            const year = value.getFullYear();
-            const month = String(value.getMonth() + 1).padStart(2, '0');
-            const day = String(value.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-        const raw = String(value);
-        const isoDate = raw.match(/^(\d{4}-\d{2}-\d{2})$/);
-        if (isoDate) return isoDate[1];
-        const parsed = new Date(raw);
-        if (Number.isNaN(parsed.getTime())) return '';
-        const year = parsed.getFullYear();
-        const month = String(parsed.getMonth() + 1).padStart(2, '0');
-        const day = String(parsed.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return String(value);
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
     }
-
-    function dashboardRole() {
-        try {
-            const actor = JSON.parse(sessionStorage.getItem('pawpal_admin_user') || localStorage.getItem('pawpal_admin_user') || 'null');
-            if (actor?.system_role) return String(actor.system_role).toUpperCase();
-        } catch (_) {}
-        return (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'STAFF').toUpperCase();
-    }
-
-    function orderCountsAsRevenue(order) {
-        const status = String(order.order_status || '').toUpperCase();
-        const payment = String(order.payment_status || '').toUpperCase();
-        if (['CANCELLED', 'DA_HUY', 'REFUNDED', 'DA_HOAN_TIEN'].includes(status) || ['REFUNDED', 'DA_HOAN_TIEN'].includes(payment)) return false;
-        return ['PAID', 'DA_THANH_TOAN'].includes(payment) ||
-            (['COMPLETED', 'DELIVERED', 'DA_GIAO', 'DA_GIAO_HANG'].includes(status) && !['UNPAID', 'CHUA_THANH_TOAN', 'COD_PENDING'].includes(payment));
-    }
-
-    function appointmentCountsAsRevenue(appointment) {
-        return ['COMPLETED', 'DA_HOAN_THANH', 'DA_HOAN_TAT'].includes(String(appointment.appointment_status || appointment.status || '').toUpperCase()) &&
-            ['PAID', 'DA_THANH_TOAN'].includes(String(appointment.payment_status || '').toUpperCase());
+    function getTodayDateString() { return toDateKey(new Date()); }
+    function shiftDay(day,offset) { const d=new Date(day+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+offset);return d.toISOString().slice(0,10); }
+    function financialPeriod() { const today=getTodayDateString(),d=new Date(today+'T00:00:00Z');return {from:shiftDay(today,-((d.getUTCDay()+6)%7)-7),to:today}; }
+    let cashflow = null, cashflowError = null;
+    async function loadCashflow(client,force) {
+        const period=financialPeriod();
+        const fetcher=async()=>{const result=await client.rpc('get_admin_dashboard_cashflow',{p_from:period.from,p_to:period.to});if(result.error)throw result.error;return result.data;};
+        try {cashflow=window.PawpalDataStore?.fetch ? await window.PawpalDataStore.fetch('dashboard:cashflow:'+period.from+':'+period.to,fetcher,{ttlMs:DASH_CACHE_TTL_MS,force,backgroundRevalidate:false}) : await fetcher();cashflowError=null;}
+        catch(error){cashflow=null;cashflowError=error.code==='42501'?'forbidden':'error';}
     }
 
     // ====================================================================
@@ -150,21 +117,15 @@
                         ? store.fetch(dashboardKey(resource, params), fetcher, { ttlMs, force, backgroundRevalidate: false })
                         : fetcher();
                 };
-                const fetchProducts = async () => {
-                    const result = await client.from('product').select('id, product_name, status, product_variant(id, sku_variant, inventory(quantity_in_stock, minimum_stock))');
-                    // Chỉ dùng truy vấn tương thích khi thiếu quan hệ; danh sách rỗng là hợp lệ.
-                    if (!result.error || !['PGRST200', 'PGRST201'].includes(result.error.code)) return result;
-                    const [products, inventory] = await Promise.all([
-                        client.from('product').select('id, product_name, status, product_variant(id, sku_variant)'),
-                        client.from('inventory').select('product_variant_id, quantity_in_stock, minimum_stock')
-                    ]);
-                    if (products.error || inventory.error) return { error: products.error || inventory.error };
-                    const inventoryByVariant = new Map((inventory.data || []).map(inv => [inv.product_variant_id, inv]));
-                    return { data: (products.data || []).map(product => ({
-                        ...product,
-                        inventory: inventoryByVariant.get(product.product_variant?.[0]?.id) || null
-                    })) };
+                const readAll = async (table,columns,key='id') => {
+                    const data=[];
+                    for(let offset=0;;offset+=500){
+                        const result=await client.from(table).select(columns).order(key).range(offset,offset+499);
+                        if(result.error)throw result.error;data.push(...result.data);
+                        if(result.data.length<500)return {data};
+                    }
                 };
+                const fetchProducts = () => readAll('product','id,product_name,status,product_variant(id,sku_variant,status,inventory(quantity_in_stock,minimum_stock))');
                 const fetchDashboardPayload = async () => {
                     const [
                         ordersRes,
@@ -177,15 +138,15 @@
                         servicesRes,
                         chatsRes
                     ] = await Promise.all([
-                        read('orders', () => client.from('sales_order').select('id, order_status, payment_status, total_amount, created_at').order('created_at', { ascending: false }).limit(2000)),
-                        read('appointments', () => client.from('appointment').select('id, appointment_code, customer_id, pet_id, staff_id, service_id, appointment_date, appointment_time, appointment_status, payment_status, total_price, note').order('appointment_date', { ascending: false }).limit(2000)),
-                        read('tickets', () => client.from('support_ticket').select('id, status, title, priority, created_at').order('created_at', { ascending: false }).limit(1000)),
+                        read('orders', () => readAll('sales_order','id,order_status,created_at')),
+                        read('appointments', () => readAll('appointment','id,appointment_code,customer_id,pet_id,staff_id,scheduled_start_at,scheduled_end_at,appointment_status,note,items:appointment_item(id,service_id,name_snapshot,is_primary,staff_id,status)')),
+                        read('tickets', () => readAll('support_ticket','id,status,subject,priority,created_at')),
                         read('products', fetchProducts),
                         read('customer-count', () => client.from('customer').select('id', { count: 'exact', head: true }), store?.TTL.LIST || 120_000),
                         read('pet-count', () => client.from('pet_profile').select('id', { count: 'exact', head: true }), store?.TTL.LIST || 120_000),
-                        read('staff', () => client.from('staff').select('id, full_name, role, account_status'), store?.TTL.LIST || 120_000),
-                        read('services', () => client.from('service').select('id, service_name'), store?.TTL.CATALOG || 300_000),
-                        read('chats', () => client.from('chat_conversation').select('id, status').order('created_at', { ascending: false }).limit(200))
+                        read('staff', () => readAll('staff','id,full_name,job_title,employment_status'), store?.TTL.LIST || 120_000),
+                        read('services', () => readAll('service','id,service_name'), store?.TTL.CATALOG || 300_000),
+                        read('chats', () => readAll('chat_conversation','id,status,assigned_staff_id'))
                     ]);
 
                     // Chỉ lấy tên chủ nuôi và bé có trong lịch, không tải cả hai bảng hồ sơ.
@@ -207,8 +168,8 @@
 
                     return {
                         orders: ordersRes.data || [],
-                        appts: apptsRes.data || [],
-                        tickets: ticketsRes.data || [],
+                        appts: (apptsRes.data || []).map(a=>({...a,service_id:(a.items.find(i=>i.is_primary)||a.items[0])?.service_id,service_name:(a.items.find(i=>i.is_primary)||a.items[0])?.name_snapshot,appointment_date:toDateKey(a.scheduled_start_at),appointment_time:new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(a.scheduled_start_at))})),
+                        tickets: (ticketsRes.data || []).map(t=>({...t,title:t.subject})),
                         products: productsRes.data || [],
                         custCount: custCountRes.count,
                         petCount: petCountRes.count,
@@ -220,7 +181,7 @@
                     };
                 };
 
-                const data = await fetchDashboardPayload();
+                const [data] = await Promise.all([fetchDashboardPayload(),loadCashflow(client,force)]);
 
                 _dashLastFetchedAt = loadVersion === _dashInvalidationVersion ? Date.now() : 0;
                 liveSalesOrders = data.orders || [];
@@ -228,15 +189,10 @@
                 liveTickets = data.tickets || [];
                 liveProducts = data.products || [];
 
-                liveProducts = liveProducts.map(p => {
-                    const firstVar = p.product_variant?.[0];
-                    const inv = p.inventory || (firstVar && Array.isArray(firstVar.inventory) ? firstVar.inventory[0] : firstVar?.inventory) || null;
-                    return {
-                        ...p,
-                        sku: p.sku || firstVar?.sku_variant || 'SKU-000',
-                        inventory: inv
-                    };
-                });
+                liveProducts = liveProducts.flatMap(p => (p.product_variant || []).map(v => ({
+                    id:p.id,product_name:p.product_name,status:v.status,sku:v.sku_variant,
+                    inventory:Array.isArray(v.inventory)?v.inventory[0]:v.inventory
+                })));
 
                 liveStaffList = data.staff || [];
                 liveChatConversations = data.chats || [];
@@ -268,6 +224,8 @@
                 });
                 _dashLoadError = null;
             } catch (err) {
+                liveSalesOrders=[];liveAppointments=[];liveTickets=[];liveProducts=[];liveStaffList=[];liveChatConversations=[];
+                liveProfilesMap.clear();livePetsMap.clear();cashflow=null;
                 console.error('[Dashboard] Lỗi nạp dữ liệu từ Supabase:', err);
                 _dashLoadError = err.message || 'Lỗi kết nối cơ sở dữ liệu';
             } finally {
@@ -284,25 +242,6 @@
     function renderDashboardKPIs() {
         const todayStr = getTodayDateString();
 
-        // 1. Doanh thu hôm nay (chỉ tính đơn bán hàng và ca dịch vụ đã thanh toán thành công, loại trừ đơn hủy/hoàn tiền)
-        const todayOrders = liveSalesOrders.filter(o => {
-            const dateStr = toDateKey(o.created_at);
-            return dateStr === todayStr;
-        });
-
-        const todayOrderRevenue = todayOrders
-            .filter(orderCountsAsRevenue)
-            .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
-
-        const todayServiceRevenue = liveAppointments
-            .filter(a => {
-                const isToday = toDateKey(a.appointment_date) === todayStr;
-                return isToday && appointmentCountsAsRevenue(a);
-            })
-            .reduce((sum, a) => sum + (parseFloat(a.total_price || a.price || 0) || 0), 0);
-
-        const todayCompletedRevenue = todayOrderRevenue + todayServiceRevenue;
-
         // 2. Lịch hẹn hôm nay (chỉ đếm ca chưa bị hủy)
         const todayBookingsCount = liveAppointments.filter(a => {
             const isToday = toDateKey(a.appointment_date) === todayStr;
@@ -313,27 +252,22 @@
         // 3. Đơn hàng mới cần duyệt (Chờ xác nhận / Đang xử lý)
         const pendingOrders = liveSalesOrders.filter(o => {
             const s = (o.order_status || '').toUpperCase();
-            return s === 'PENDING' || s === 'CHO_XAC_NHAN' || s === 'DANG_XU_LY';
+            return ['PENDING','CONFIRMED','PROCESSING','CHO_XAC_NHAN','DANG_XU_LY'].includes(s);
         });
 
         // 4. Khiếu nại chờ xử lý (hỗ trợ cả cột status và ticket_status từ Supabase support_ticket)
         const pendingTickets = liveTickets.filter(t => {
             const s = (t.status || t.ticket_status || '').toUpperCase();
-            return s === 'OPEN' || s === 'IN_PROGRESS' || s === 'PENDING' || s === 'NEW' || s === 'PROCESSING' || s === 'MO' || s === 'DANG_XU_LY' || s === 'CHO_XU_LY' || s === 'CHO_KHACH_HANG';
+            return !['RESOLVED','COMPLETED','CLOSED','REJECTED','DA_DONG','DA_GIAI_QUYET'].includes(s);
         });
 
         // Render DOM 5 thẻ KPI (100% số liệu thực)
         // E2E-12D: Chốt chặn kiểm tra quyền hạn tài chính
-        const userRole = dashboardRole();
-        const canViewFinancials = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'ACCOUNTANT';
-
         const elRevenue = document.getElementById('dashboardRevenue');
-        if (elRevenue) {
-            if (_dashLoadError) {
-                elRevenue.textContent = '— (Lỗi kết nối)';
-            } else {
-                elRevenue.textContent = canViewFinancials ? `${labelCurrency(todayCompletedRevenue)} VNĐ` : '••• (Giới hạn quyền)';
-            }
+        if(elRevenue){
+            const today=cashflow?.days.find(d=>d.day===todayStr);
+            elRevenue.textContent=_dashLoadError || cashflowError || !today ? '—' : labelCurrency(today.net)+' đ';
+            elRevenue.title=cashflowError==='forbidden'?'Không có quyền xem tài chính':cashflowError?'Không tải được số liệu tài chính':'Thu thành công trừ hoàn thành công theo ngày giao dịch';
         }
 
         const elBookings = document.getElementById('dashboardBookings');
@@ -428,6 +362,7 @@
     function renderDashboardStockList() {
         const container = document.getElementById('dashboardStockList');
         if (!container) return;
+        if (_dashLoadError) { container.textContent='Không tải được tồn kho. Vui lòng làm mới.'; return; }
 
         if (liveProducts.length === 0) {
             container.innerHTML = '<div style="padding: 12px; font-size: 13px; color: var(--text-muted);">Kho hàng ổn định, chưa có sản phẩm.</div>';
@@ -458,7 +393,7 @@
                 const rawMinStock = inv?.minimum_stock !== undefined 
                     ? inv.minimum_stock 
                     : (inv?.safety_stock_level !== undefined ? inv.safety_stock_level : 5);
-                const minStock = Math.max(1, parseInt(rawMinStock, 10) || 5);
+                const minStock = Math.max(0, Number(rawMinStock) || 0);
 
                 return {
                     id: prod.id,
@@ -467,7 +402,7 @@
                     stock: stock,
                     minStock: minStock,
                     isEmpty: stock === 0,
-                    isLow: stock > 0 && stock <= minStock
+                    isLow: minStock > 0 && stock > 0 && stock <= minStock
                 };
             })
             .filter(Boolean);
@@ -526,124 +461,27 @@
     // 3. RENDER BIỂU ĐỒ DOANH THU 7 NGÀY THỰC TẾ TỪ SALES_ORDER
     // -------------------------------------------------------------
     function renderRevenueChart() {
-        const chart = document.getElementById('dashboardRevenueChart');
-        if (!chart) return;
-
-        const userRole = dashboardRole();
-        const canViewFinancials = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'ACCOUNTANT';
-        if (!canViewFinancials) {
-            chart.innerHTML = '<div style="padding: 48px; text-align: center; color: var(--text-muted); font-size: 13.5px;">Biểu đồ doanh thu tài chính chỉ dành riêng cho Quản lý / Kế toán.</div>';
-            return;
-        }
-
-        // Tính ngày bắt đầu tuần hiện tại (Thứ 2)
-        const now = new Date();
-        const currentDayOfWeek = (now.getDay() + 6) % 7; // 0 = Thứ 2, 6 = Chủ Nhật
-        const mondayCurrent = new Date(now);
-        mondayCurrent.setDate(now.getDate() - currentDayOfWeek);
-        mondayCurrent.setHours(0, 0, 0, 0);
-
-        const mondayPrevious = new Date(mondayCurrent);
-        mondayPrevious.setDate(mondayCurrent.getDate() - 7);
-
-        function formatISODate(d) {
-            const y = d.getFullYear();
-            const m = String(d.getMonth() + 1).padStart(2, '0');
-            const dt = String(d.getDate()).padStart(2, '0');
-            return `${y}-${m}-${dt}`;
-        }
-
-        const currentWeekDays = Array.from({ length: 7 }, (_, i) => {
-            const d = new Date(mondayCurrent);
-            d.setDate(mondayCurrent.getDate() + i);
-            return formatISODate(d);
-        });
-
-        const previousWeekDays = Array.from({ length: 7 }, (_, i) => {
-            const d = new Date(mondayPrevious);
-            d.setDate(mondayPrevious.getDate() + i);
-            return formatISODate(d);
-        });
-
-        // Tính doanh thu theo ngày từ các đơn hàng đã thanh toán và lịch dịch vụ hoàn tất đã thanh toán
-        const completedOrders = liveSalesOrders.filter(orderCountsAsRevenue);
-        const completedAppts = liveAppointments.filter(appointmentCountsAsRevenue);
-
-        const currentWeek = currentWeekDays.map(dateStr => {
-            const orderSum = completedOrders
-                .filter(o => toDateKey(o.created_at) === dateStr)
-                .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
-            const apptSum = completedAppts
-                .filter(a => toDateKey(a.appointment_date || a.created_at) === dateStr)
-                .reduce((sum, a) => sum + (parseFloat(a.total_price || a.price || 0) || 0), 0);
-            return (orderSum + apptSum) / 100000; // Đơn vị: 100k
-        });
-
-        const previousWeek = previousWeekDays.map(dateStr => {
-            const orderSum = completedOrders
-                .filter(o => toDateKey(o.created_at) === dateStr)
-                .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
-            const apptSum = completedAppts
-                .filter(a => toDateKey(a.appointment_date || a.created_at) === dateStr)
-                .reduce((sum, a) => sum + (parseFloat(a.total_price || a.price || 0) || 0), 0);
-            return (orderSum + apptSum) / 100000;
-        });
-
-        const maxVal = Math.max(...currentWeek, ...previousWeek, 40);
-        const topTick = Math.ceil(maxVal / 20) * 20;
-
-        const labels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-        const yTicks = [
-            { val: topTick, label: `${Math.round(topTick / 10)} tr` },
-            { val: topTick * 0.75, label: `${Math.round(topTick * 0.75 / 10)} tr` },
-            { val: topTick * 0.5, label: `${Math.round(topTick * 0.5 / 10)} tr` },
-            { val: topTick * 0.25, label: `${Math.round(topTick * 0.25 / 10)} tr` },
-            { val: 0, label: '0' }
-        ];
-
-        const chartLeft = 45;
-        const chartRight = 620;
-        const chartTop = 20;
-        const chartBottom = 160;
-        const chartHeight = chartBottom - chartTop;
-        const chartWidth = chartRight - chartLeft;
-
-        const x = (index) => chartLeft + (index / (labels.length - 1)) * chartWidth;
-        const y = (val) => chartBottom - (val / (topTick || 1)) * chartHeight;
-
-        const gridLines = yTicks.map((tick) => {
-            const lineY = y(tick.val);
-            return `<g class="chart-grid-row"><text x="${chartLeft - 10}" y="${lineY + 4}" text-anchor="end" class="chart-y-label">${tick.label}</text><line x1="${chartLeft}" y1="${lineY}" x2="${chartRight}" y2="${lineY}" stroke="#ECF2EE" stroke-width="1" /></g>`;
+        const chart=document.getElementById('dashboardRevenueChart');if(!chart)return;
+        if(_dashLoadError || !cashflow){chart.textContent=cashflowError==='forbidden'?'Bạn không có quyền xem số liệu tài chính.':'Không tải được số liệu tài chính.';return;}
+        const today=getTodayDateString(),weekday=(new Date(today+'T00:00:00Z').getUTCDay()+6)%7,monday=shiftDay(today,-weekday);
+        const lookup=new Map(cashflow.days.map(d=>[d.day,Number(d.net)]));
+        const series=[0,-7].map(offset=>Array.from({length:7},(_,i)=>{const day=shiftDay(monday,i+offset);return {day,value:day>today?null:lookup.get(day)??0};}));
+        const values=series.flat().filter(d=>d.value!==null).map(d=>d.value),low=Math.min(0,...values),high=Math.max(0,...values);
+        const span=high-low || 1,top=high===low?1:high+span*0.1,bottom=low===high?0:low-span*0.1;
+        const x=i=>65+i*88,y=v=>160-(v-bottom)/(top-bottom)*140;
+        const ticks=Array.from({length:5},(_,i)=>bottom+(top-bottom)*i/4);
+        const grid=ticks.map(v=>`<text x="57" y="${y(v)+4}" text-anchor="end" fill="#4F7A65" font-size="10">${Number(v).toLocaleString('vi-VN',{notation:'compact',maximumFractionDigits:1})}</text><line x1="65" y1="${y(v)}" x2="593" y2="${y(v)}" stroke="#ECF2EE"/>`).join('');
+        const paths=series.map((rows,k)=>{
+            const valid=rows.map((d,i)=>({...d,i})).filter(d=>d.value!==null);
+            return `<polyline points="${valid.map(d=>x(d.i)+','+y(d.value)).join(' ')}" fill="none" stroke="${k?'#AEC8B9':'#236B48'}" stroke-width="2" ${k?'stroke-dasharray="5 4"':''}/>`+valid.map(d=>`<circle cx="${x(d.i)}" cy="${y(d.value)}" r="3" fill="${k?'#AEC8B9':'#236B48'}"><title>${d.day}: ${labelCurrency(d.value)} đ</title></circle>`).join('');
         }).join('');
-
-        const dayLabels = labels.map((label, index) =>
-            `<text x="${x(index).toFixed(1)}" y="${chartBottom + 20}" text-anchor="middle" class="chart-x-label">${label}</text>`
-        ).join('');
-
-        const currentPoints = currentWeek.map((val, idx) => `${x(idx).toFixed(1)},${y(val).toFixed(1)}`).join(' ');
-        const previousPoints = previousWeek.map((val, idx) => `${x(idx).toFixed(1)},${y(val).toFixed(1)}`).join(' ');
-        const areaPolygon = `${x(0).toFixed(1)},${chartBottom} ${currentPoints} ${x(currentWeek.length - 1).toFixed(1)},${chartBottom}`;
-
-        const currentDots = currentWeek.map((value, index) =>
-            `<circle cx="${x(index).toFixed(1)}" cy="${y(value).toFixed(1)}" r="4" fill="#236B48" stroke="#FFFFFF" stroke-width="2"><title>Thứ ${labels[index]}: ${labelCurrency(value * 100000)} VNĐ</title></circle>`
-        ).join('');
-
-        chart.innerHTML = `
-            <svg viewBox="0 0 640 195" preserveAspectRatio="none" aria-hidden="true">
-                ${gridLines}
-                <polygon points="${areaPolygon}" fill="rgba(35, 107, 72, 0.06)" />
-                <polyline points="${previousPoints}" fill="none" stroke="#AEC8B9" stroke-width="2" stroke-dasharray="5 5" stroke-linecap="round" stroke-linejoin="round" />
-                <polyline points="${currentPoints}" fill="none" stroke="#236B48" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-                ${currentDots}
-                ${dayLabels}
-            </svg>`;
+        chart.innerHTML=`<svg viewBox="0 0 640 195" role="img" aria-label="Thực thu ròng tuần này và tuần trước">${grid}<line x1="65" y1="${y(0)}" x2="593" y2="${y(0)}" stroke="#AEC8B9"/>${paths}${['T2','T3','T4','T5','T6','T7','CN'].map((label,i)=>`<text x="${x(i)}" y="185" text-anchor="middle" fill="#4F7A65" font-size="11">${label}</text>`).join('')}</svg>`;
+        if(cashflow.undated_receipts || cashflow.undated_refunds){const note=document.createElement('p');note.style.color='#DC2626';note.textContent=`Có ${cashflow.undated_receipts} khoản thu và ${cashflow.undated_refunds} khoản hoàn thành công thiếu ngày giao dịch, chưa được tính theo ngày.`;chart.appendChild(note);}
     }
 
-    // -------------------------------------------------------------
-    // 4. RENDER LỊCH HẸN VÀ AGENDA THỰC TẾ (THÁNG / TUẦN / NGÀY)
-    // -------------------------------------------------------------
     let refreshDashboardCalendar = null;
     function setupDashboardCalendar() {
+        const calendarKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         if (refreshDashboardCalendar) {
             refreshDashboardCalendar();
             return;
@@ -657,7 +495,7 @@
         if (!monthLabel || !daysGrid || !agendaTitle || !bookingList) return;
         const monthWeekdayMarkup = weekdays?.innerHTML || '';
 
-        const today = new Date();
+        const today = new Date(getTodayDateString()+'T00:00:00');
         today.setHours(0, 0, 0, 0);
         let shownMonth = new Date(today.getFullYear(), today.getMonth(), 1);
         let selectedDate = new Date(today);
@@ -670,10 +508,10 @@
                 const pet = livePetsMap.get(a.pet_id);
                 const custName = profile ? `${profile.full_name}${profile.phone ? ' (' + profile.phone + ')' : ''}` : 'Khách hàng';
                 const petName = pet ? pet.pet_name : 'Bé cưng';
-                const srvName = liveServicesMap.get(a.service_id) || 'Chăm sóc thú cưng';
+                const srvName = a.service_name || liveServicesMap.get(a.service_id) || 'Chưa gắn dịch vụ';
                 const staffName = liveStaffMap.get(a.staff_id) || 'Kỹ thuật viên';
 
-                let timeStr = '09:00';
+                let timeStr = '—';
                 if (a.appointment_time) {
                     timeStr = a.appointment_time.substring(0, 5);
                 } else if (a.created_at) {
@@ -721,14 +559,14 @@
         }
 
         function bookingsOnDate(date) {
-            const dateKey = toDateKey(date);
+            const dateKey = calendarKey(date);
             const allBookings = getMappedBookings();
             return allBookings.filter(b => b.date === dateKey);
         }
 
         function renderAgenda(date) {
             const dayBookings = bookingsOnDate(date);
-            const isToday = toDateKey(date) === toDateKey(today);
+            const isToday = calendarKey(date) === calendarKey(today);
             const dateFormatted = new Intl.DateTimeFormat('vi-VN', {
                 weekday: 'long', day: 'numeric', month: 'long'
             }).format(date);
@@ -812,15 +650,15 @@
                     weekdays.hidden = false;
                     weekdays.classList.add('is-week-heading');
                     weekdays.innerHTML = calendarDates.map((date) => {
-                        const key = toDateKey(date);
-                        const isToday = key === toDateKey(today);
+                        const key = calendarKey(date);
+                        const isToday = key === calendarKey(today);
                         const weekday = new Intl.DateTimeFormat('vi-VN', { weekday: 'short' }).format(date);
-                        return `<button type="button" class="dashboard-week-heading-btn ${key === toDateKey(selectedDate) ? 'is-selected' : ''} ${isToday ? 'is-today' : ''}" data-calendar-date="${key}" aria-pressed="${key === toDateKey(selectedDate)}" title="${isToday ? 'Hôm nay' : weekday}"><span>${isToday ? 'Hôm nay' : weekday}</span><strong>${date.getDate()}</strong></button>`;
+                        return `<button type="button" class="dashboard-week-heading-btn ${key === calendarKey(selectedDate) ? 'is-selected' : ''} ${isToday ? 'is-today' : ''}" data-calendar-date="${key}" aria-pressed="${key === calendarKey(selectedDate)}" title="${isToday ? 'Hôm nay' : weekday}"><span>${isToday ? 'Hôm nay' : weekday}</span><strong>${date.getDate()}</strong></button>`;
                     }).join('');
                 }
             } else {
                 calendarDates.push(new Date(selectedDate));
-                const isToday = toDateKey(selectedDate) === toDateKey(today);
+                const isToday = calendarKey(selectedDate) === calendarKey(today);
                 const dayFormatted = new Intl.DateTimeFormat('vi-VN', {
                     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
                 }).format(selectedDate);
@@ -835,13 +673,13 @@
 
             if (calendarView === 'week') {
                 daysGrid.innerHTML = calendarDates.map((date) => {
-                    const key = toDateKey(date);
+                    const key = calendarKey(date);
                     const dayBookings = bookingsOnDate(date);
-                    const selected = key === toDateKey(selectedDate);
+                    const selected = key === calendarKey(selectedDate);
                     const events = dayBookings.length
                         ? dayBookings.map((booking) => `<span class="dashboard-week-event"><time>${booking.time}</time>${booking.pet}</span>`).join('')
                         : '<span class="dashboard-week-empty">Không có lịch</span>';
-                    return `<button type="button" class="dashboard-calendar-day dashboard-week-day ${selected ? 'is-selected' : ''} ${key === toDateKey(today) ? 'is-today' : ''}" data-calendar-date="${key}" aria-label="${new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' }).format(date)}" aria-pressed="${selected}"><span class="dashboard-week-events">${events}</span></button>`;
+                    return `<button type="button" class="dashboard-calendar-day dashboard-week-day ${selected ? 'is-selected' : ''} ${key === calendarKey(today) ? 'is-today' : ''}" data-calendar-date="${key}" aria-label="${new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' }).format(date)}" aria-pressed="${selected}"><span class="dashboard-week-events">${events}</span></button>`;
                 }).join('');
             } else if (calendarView === 'day') {
                 const dayBookings = bookingsOnDate(selectedDate);
@@ -941,18 +779,18 @@
             } else {
                 daysGrid.innerHTML = calendarDates.map((date) => {
                     if (!date) return '<span class="dashboard-calendar-blank" aria-hidden="true"></span>';
-                    const key = toDateKey(date);
-                    const isToday = key === toDateKey(today);
+                    const key = calendarKey(date);
+                    const isToday = key === calendarKey(today);
                     const hasAppointments = bookedDateKeys.has(key);
                     const classes = [
                         'dashboard-calendar-day',
                         hasAppointments ? 'has-appointments' : '',
                         isToday ? 'is-today' : '',
-                        key === toDateKey(selectedDate) ? 'is-selected' : ''
+                        key === calendarKey(selectedDate) ? 'is-selected' : ''
                     ].filter(Boolean).join(' ');
                     const label = new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' }).format(date);
                     const todayText = isToday ? ', Hôm nay' : '';
-                    return `<button type="button" class="${classes}" data-calendar-date="${key}" aria-label="${label}${todayText}${hasAppointments ? ', có lịch hẹn' : ''}" aria-pressed="${key === toDateKey(selectedDate)}" title="${label}${todayText}"><span class="dashboard-calendar-day-number">${date.getDate()}</span>${hasAppointments ? '<span class="dashboard-calendar-event-dot"></span>' : ''}</button>`;
+                    return `<button type="button" class="${classes}" data-calendar-date="${key}" aria-label="${label}${todayText}${hasAppointments ? ', có lịch hẹn' : ''}" aria-pressed="${key === calendarKey(selectedDate)}" title="${label}${todayText}"><span class="dashboard-calendar-day-number">${date.getDate()}</span>${hasAppointments ? '<span class="dashboard-calendar-event-dot"></span>' : ''}</button>`;
                 }).join('');
             }
 
@@ -1007,7 +845,7 @@
         });
 
         function goToToday() {
-            const now = new Date();
+            const now = new Date(getTodayDateString()+'T00:00:00');
             now.setHours(0, 0, 0, 0);
             selectedDate = new Date(now);
             shownMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -1039,7 +877,7 @@
         const totalSessions = liveChatConversations.length;
         const handoverSessions = liveChatConversations.filter(c => {
             const s = (c.status || '').toUpperCase();
-            return s === 'ESCALATED' || s === 'HANDOVER' || s === 'AGENT_HANDOVER' || s === 'AGENT_HANDLING' || s === 'HUMAN_AGENT';
+            return Boolean(c.assigned_staff_id) || ['ESCALATED','HANDOVER','AGENT_HANDOVER','AGENT_HANDLING','HUMAN_AGENT'].includes(s);
         }).length;
         const aiSessions = Math.max(0, totalSessions - handoverSessions);
         // D-05: 0 phiên hiển thị '—' thay vì 100%
@@ -1054,7 +892,7 @@
         const elPercentWrap = document.getElementById('dashboardChatbotPercentWrap');
         if (elPercentWrap) {
             elPercentWrap.innerHTML = totalSessions > 0 
-                ? `<strong>${aiPercent}%</strong><small>AI tự xử lý</small>`
+                ? `<strong>${aiPercent}%</strong><small>Chưa chuyển nhân viên</small>`
                 : `<strong>—</strong><small>Chưa có phiên</small>`;
         }
 
@@ -1070,19 +908,20 @@
         // 2. Chỉ số Lấp đầy nhân sự (Tỷ lệ nhân viên đang có ca phụ trách hôm nay)
         // D-06: Sử dụng đúng trường account_status hoặc status để lọc nhân sự hoạt động
         const activeStaffList = liveStaffList.filter(s => {
-            const st = (s.account_status || s.status || '').toUpperCase();
-            return st === 'ACTIVE' || st === 'HOAT_DONG' || (st !== 'INACTIVE' && st !== 'RESIGNED' && st !== 'NGHI_VIEC' && st !== 'LOCKED');
+            const st = (s.employment_status || '').toUpperCase();
+            return st === 'ACTIVE';
         });
-        const totalActiveStaff = activeStaffList.length || liveStaffList.length;
+        const totalActiveStaff = activeStaffList.length;
 
         const assignedStaffToday = new Set(
             liveAppointments
                 .filter(a => {
                     const isToday = toDateKey(a.appointment_date) === todayStr;
                     const s = (a.appointment_status || '').toUpperCase();
-                    return isToday && a.staff_id && s !== 'CANCELLED' && s !== 'DA_HUY';
+                    return isToday && s !== 'CANCELLED' && s !== 'DA_HUY';
                 })
-                .map(a => a.staff_id)
+                .flatMap(a => [a.staff_id,...(a.items || []).filter(i=>i.status!=='cancelled').map(i=>i.staff_id)])
+                .filter(id => activeStaffList.some(s=>s.id===id))
         );
 
         const utilPercent = totalActiveStaff > 0 
@@ -1090,10 +929,14 @@
             : 0;
 
         const elStaffPercent = document.getElementById('dashboardStaffUtilPercent');
-        if (elStaffPercent) elStaffPercent.textContent = `${utilPercent}%`;
+        if (elStaffPercent) elStaffPercent.textContent = totalActiveStaff > 0 ? `${utilPercent}%` : '—';
 
         const elStaffBar = document.getElementById('dashboardStaffUtilBar');
         if (elStaffBar) elStaffBar.style.width = `${utilPercent}%`;
+        if (_dashLoadError) {
+            ['dashboardAiSessionsCount','dashboardHandoverSessionsCount','dashboardTotalChatSessions','dashboardStaffUtilPercent'].forEach(id=>{const element=document.getElementById(id);if(element)element.textContent='—';});
+            if(elPercentWrap)elPercentWrap.textContent='Không tải được dữ liệu.';
+        }
     }
 
     // -------------------------------------------------------------
@@ -1294,6 +1137,9 @@
     const dashboardTableResources = {
         sales_order: ['orders'],
         appointment: ['appointments'],
+        appointment_item: ['appointments'],
+        payment: ['cashflow'],
+        refund_transaction: ['cashflow'],
         support_ticket: ['tickets'],
         customer: ['customer-count', 'profiles'],
         customer_profile: ['profiles'],
