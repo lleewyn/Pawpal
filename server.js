@@ -223,7 +223,7 @@ app.post('/api/admin/staff/toggle-account-status', staffAuthApi.toggleAccountSta
 
 // Routes cho Phân hệ Quản trị Banners & Khuyến mãi
 const adminSettingsApi = require('./scripts/api/admin_settings.js');
-app.post('/api/admin/banners', adminSettingsApi.handleBannerAction);
+app.post('/api/admin/banners', (req,res)=>res.status(410).json({error:'Hãy tải lại trang và dùng luồng cấu hình mới.'}));
 
 app.listen(port, () => {
     console.log(`===========================================`);

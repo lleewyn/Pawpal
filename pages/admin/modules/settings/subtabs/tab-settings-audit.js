@@ -42,7 +42,7 @@
         const isSafeModeLocked = PawpalSettings.state?.isSafeModeLocked;
 
         const totalLogs = auditLogsList.length;
-        const syncedLogs = auditLogsList.filter(l => l.status === 'Đã đồng bộ SSOT').length;
+        const syncedLogs = auditLogsList.filter(l => ['SETTINGS_WRITE','SETTINGS_KNOWLEDGE'].includes(l.action)).length;
         const lastMod = auditLogsList[0]?.targetModules || 'Chưa có';
 
         const totalEl = document.getElementById('statTotalAuditLogs');
@@ -111,7 +111,7 @@
                     </div>
                 </td>
                 <td><span class="admin-badge badge-neutral">${esc(log.targetModules)}</span></td>
-                <td><span style="color: var(--text-main); font-weight: 500;">${esc(log.actionText)}</span></td>
+                <td><span style="color: var(--text-main); font-weight: 500;">${esc(log.actionText)}</span>${log.details?`<details><summary style="cursor:pointer;list-style:none;color:#236B48;">Xem thay đổi</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere;max-width:480px;">${esc(log.details)}</pre></details>`:''}</td>
                 <td><span class="admin-badge ${badgeClass}">${esc(statusStr)}</span></td>
             `;
             tbody.appendChild(tr);

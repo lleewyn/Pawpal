@@ -19,6 +19,7 @@
 
     function renderSystemConfigCards() {
         const root = document.getElementById('subtab-tab-system-config');
+        if(PawpalSettings.state.loadError){root?.querySelectorAll('.info-value, [id^="disp"]').forEach(el=>el.textContent='Không tải được cấu hình');return;}
         if (!PawpalSettings.state.isLoaded || !PawpalSettings.state.hasSystemConfig) {
             root?.querySelectorAll('.info-value, [id^="disp"]').forEach(el => {
                 if (!PawpalSettings.state.isLoaded) el.innerHTML = '<span class="skeleton-text" style="width:120px;"></span>';
@@ -90,9 +91,9 @@
             const partnerBadge = document.getElementById('dispShippingPartnerBadge');
 
             // CFG-29: Dùng ?? thay cho || để giữ đúng giá trị 0 hoặc false
-            if (freeShipEl) freeShipEl.textContent = `Đơn từ ${(cfg.shippingPolicy.freeShippingThreshold ?? 0).toLocaleString('vi-VN')} đ`;
-            if (stdFeesEl) stdFeesEl.textContent = `${(cfg.shippingPolicy.innerCityFee ?? 0).toLocaleString('vi-VN')} đ / ${(cfg.shippingPolicy.outerCityFee ?? 0).toLocaleString('vi-VN')} đ`;
-            if (expFeeEl) expFeeEl.textContent = `${(cfg.shippingPolicy.expressFee ?? 0).toLocaleString('vi-VN')} đ (Grab / Aha)`;
+            if (freeShipEl) freeShipEl.textContent = 'Theo hình thức giao hàng được chọn';
+            if (stdFeesEl) stdFeesEl.textContent = (PawpalSettings.state.deliveryOptions||[]).map(o=>o.name+': '+Number(o.fee).toLocaleString('vi-VN')+' đ'+(o.available?'':' · Tạm tắt')).join('; ')||'—';
+            if (expFeeEl) expFeeEl.textContent = 'Chưa tích hợp giao vận thật';
             if (apiStatusEl) apiStatusEl.textContent = `${(cfg.shippingPolicy.partnerName || 'Chưa cấu hình').split(' ')[0]} (Shop ID: ${cfg.shippingPolicy.shopId || 'Trống'})`;
             if (partnerBadge) partnerBadge.textContent = cfg.shippingPolicy.partnerName || 'Chưa cấu hình';
         }
@@ -104,8 +105,8 @@
             const capEl = document.getElementById('dispSlotCapacity');
             const cancelEl = document.getElementById('dispCancelPolicy');
 
-            if (opHoursEl) opHoursEl.textContent = `${cfg.operatingHours.weekday?.open || '08:00'} - ${cfg.operatingHours.weekday?.close || '20:00'} (T7/CN: ${cfg.operatingHours.weekend?.close || '21:00'})`;
-            if (hotelEl) hotelEl.textContent = `Nhận sau ${cfg.hotelRules.checkInTime || '14:00'} • Trả trước ${cfg.hotelRules.checkOutTime || '12:00'}`;
+            if (opHoursEl) opHoursEl.textContent = cfg.operatingHours.weekday?.open&&cfg.operatingHours.weekday?.close?`${cfg.operatingHours.weekday.open} - ${cfg.operatingHours.weekday.close}`:'—';
+            if (hotelEl) hotelEl.textContent = cfg.hotelRules.checkInTime&&cfg.hotelRules.checkOutTime?`Nhận sau ${cfg.hotelRules.checkInTime} • Trả trước ${cfg.hotelRules.checkOutTime}`:'—';
             if (capEl) capEl.textContent = `Tối đa ${cfg.bookingPolicy.slotCapacityMax ?? 0} bé / Khung giờ`;
             if (cancelEl) cancelEl.textContent = `Trước ${cfg.bookingPolicy.freeCancelHours ?? 0} giờ • Phí trễ ${(cfg.bookingPolicy.lateCancelFee ?? 0).toLocaleString('vi-VN')} đ`;
         }
@@ -114,7 +115,7 @@
         const ghnBadge = document.getElementById('pingGhnBadge');
         const momoBadge = document.getElementById('pingMomoBadge');
         const vnpayBadge = document.getElementById('pingVnpayBadge');
-        const isGhnOk = Boolean(cfg.shippingPolicy?.shopId && cfg.shippingPolicy?.apiKey);
+        const isGhnOk = false;
         const isMomoOk = Boolean(cfg.paymentMethods?.momo?.enabled);
         const isVnpayOk = Boolean(cfg.paymentMethods?.vnpay?.enabled);
 
@@ -240,19 +241,19 @@
             const toggleMomo = document.getElementById('toggleMomoEnabled');
             const toggleVnpay = document.getElementById('toggleVnpayEnabled');
 
-            if (toggleCod) toggleCod.checked = Boolean(pm.cod?.enabled !== false);
-            if (toggleBank) toggleBank.checked = Boolean(pm.bank?.enabled !== false);
-            if (toggleMomo) toggleMomo.checked = Boolean(pm.momo?.enabled !== false);
-            if (toggleVnpay) toggleVnpay.checked = Boolean(pm.vnpay?.enabled !== false);
+            if (toggleCod) toggleCod.checked = Boolean(pm.cod?.enabled);
+            if (toggleBank) toggleBank.checked = Boolean(pm.bank?.enabled);
+            if (toggleMomo) toggleMomo.checked = Boolean(pm.momo?.enabled);
+            if (toggleVnpay) toggleVnpay.checked = Boolean(pm.vnpay?.enabled);
 
             const bankSelect = document.getElementById('inputPaymentBank');
             const accNoInput = document.getElementById('inputPaymentAccNo');
             const accHolderInput = document.getElementById('inputPaymentAccHolder');
             const syntaxInput = document.getElementById('inputPaymentSyntax');
 
-            if (bankSelect && pm.bank?.bankName) bankSelect.value = pm.bank.bankName;
+            if (bankSelect) bankSelect.value = pm.bank?.bankName || '';
             if (accNoInput) accNoInput.value = pm.bank?.accountNumber || '';
-            if (accHolderInput) accHolderInput.value = pm.bank?.accountHolder || 'CONG TY CP PAWPAL VIET NAM';
+            if (accHolderInput) accHolderInput.value = pm.bank?.accountHolder || '';
             if (syntaxInput) syntaxInput.value = pm.bank?.syntax || '';
 
             PawpalSettings.openModal?.('paymentConfigModalOverlay');
@@ -273,15 +274,15 @@
             const momoEn = document.getElementById('toggleMomoEnabled')?.checked || false;
             const vnpayEn = document.getElementById('toggleVnpayEnabled')?.checked || false;
 
-            const bankName = document.getElementById('inputPaymentBank')?.value || 'vietcombank';
+            const bankName = document.getElementById('inputPaymentBank')?.value || '';
             const accNo = document.getElementById('inputPaymentAccNo')?.value.trim() || '';
-            const accHolder = document.getElementById('inputPaymentAccHolder')?.value.trim() || 'CONG TY CP PAWPAL VIET NAM';
+            const accHolder = document.getElementById('inputPaymentAccHolder')?.value.trim() || '';
             const syntax = document.getElementById('inputPaymentSyntax')?.value.trim() || '';
-            if (!accNo || !/^[\d\s-]+$/.test(accNo)) {
+            if (bankEn && (!bankName || !accHolder || !accNo || !/^[\d\s-]+$/.test(accNo))) {
                 showToast('Số tài khoản QR phải là số và không được để trống.', 'warning');
                 return;
             }
-            if (!syntax) {
+            if (bankEn && !syntax) {
                 showToast('Cú pháp chuyển khoản không được để trống.', 'warning');
                 return;
             }
@@ -328,95 +329,33 @@
         });
 
         // Modal 3: Đơn vị Giao hàng và Biểu phí Vận chuyển
-        document.getElementById('btnConfigureShipping')?.addEventListener('click', () => {
-            const sp = PawpalSettings.state?.systemConfig?.shippingPolicy || {};
-            const freeThresholdInput = document.getElementById('inputFreeShippingThreshold');
-            const innerFeeInput = document.getElementById('inputInnerCityFee');
-            const outerFeeInput = document.getElementById('inputOuterCityFee');
-            const expressFeeInput = document.getElementById('inputExpressFee');
-            const providerSelect = document.getElementById('inputShippingProvider');
-            const shopIdInput = document.getElementById('inputShippingShopId');
-            const apiKeyInput = document.getElementById('inputShippingApiKey');
-
-            if (freeThresholdInput) freeThresholdInput.value = sp.freeShippingThreshold || 300000;
-            if (innerFeeInput) innerFeeInput.value = sp.innerCityFee || 25000;
-            if (outerFeeInput) outerFeeInput.value = sp.outerCityFee || 35000;
-            if (expressFeeInput) expressFeeInput.value = sp.expressFee || 45000;
-            if (providerSelect && sp.primaryPartner) providerSelect.value = sp.primaryPartner;
-            if (shopIdInput) shopIdInput.value = sp.shopId || 'PAWPAL_Q1_STORE';
-            if (apiKeyInput) apiKeyInput.value = sp.apiKey || 'ghn_prod_secret_token_12345';
-
-            PawpalSettings.openModal?.('shippingConfigModalOverlay');
+        document.getElementById('btnConfigureShipping')?.addEventListener('click',()=>{
+            const policy=PawpalSettings.state.systemConfig.shippingPolicy||{},container=document.getElementById('shippingDeliveryOptions');container.replaceChildren();
+            const options=PawpalSettings.state.deliveryOptions||[];
+            if(!options.length)container.textContent='Chưa có hình thức giao hàng.';
+            for(const option of options){
+                const row=document.createElement('div');row.className='shipping-option-row';row.dataset.id=option.id;row.style.cssText='display:grid;grid-template-columns:minmax(0,1fr) 130px 80px;gap:16px;align-items:center;margin-bottom:16px';
+                const name=document.createElement('label');name.textContent=option.name;name.htmlFor='shipping-fee-'+option.id;
+                const fee=document.createElement('input');fee.type='number';fee.className='admin-input shipping-option-fee';fee.id=name.htmlFor;fee.min='0';fee.step='0.01';fee.value=option.fee;fee.setAttribute('aria-label','Phí '+option.name);
+                const label=document.createElement('label'),available=document.createElement('input');available.type='checkbox';available.className='shipping-option-available';available.checked=option.available;label.append(available,document.createTextNode(' Bật'));
+                row.append(name,fee,label);container.append(row);
+            }
+            document.getElementById('inputShippingProvider').value=policy.primaryPartner||'';document.getElementById('inputShippingShopId').value=policy.shopId||'';document.getElementById('inputShippingApiKey').value='';
+            PawpalSettings.openModal('shippingConfigModalOverlay');
         });
-
-        const closeShippingModalHandler = () => { PawpalSettings.closeModal?.('shippingConfigModalOverlay'); };
-        document.getElementById('btnCancelShippingModal')?.addEventListener('click', closeShippingModalHandler);
-        document.getElementById('btnDismissShippingModal')?.addEventListener('click', closeShippingModalHandler);
-
-        document.getElementById('btnSaveShippingConfig')?.addEventListener('click', () => {
-            if (PawpalSettings.state?.isSafeModeLocked) {
-                showToast('Khóa an toàn cấu hình đang BẬT! Vui lòng bấm "Mở khóa để sửa" trước khi lưu cấu hình vận chuyển.', 'warning');
-                return;
-            }
-
-            const freeThreshold = parseInt(document.getElementById('inputFreeShippingThreshold')?.value || '300000', 10);
-            const innerFee = parseInt(document.getElementById('inputInnerCityFee')?.value || '25000', 10);
-            const outerFee = parseInt(document.getElementById('inputOuterCityFee')?.value || '35000', 10);
-            const expressFee = parseInt(document.getElementById('inputExpressFee')?.value || '45000', 10);
-            const provider = document.getElementById('inputShippingProvider')?.value || 'ghn';
-            const shopId = document.getElementById('inputShippingShopId')?.value.trim() || '';
-            const apiKey = document.getElementById('inputShippingApiKey')?.value.trim() || '';
-            if (!shopId || !apiKey) {
-                showToast('Shop ID và API Token là bắt buộc với đối tác vận chuyển.', 'warning');
-                return;
-            }
-            if ([freeThreshold, innerFee, outerFee, expressFee].some(value => !Number.isFinite(value) || value < 0)) {
-                showToast('Các mức phí vận chuyển không được là số âm.', 'warning');
-                return;
-            }
-
-            const partnerNameMap = {
-                ghn: 'Giao Hàng Nhanh (GHN Express)',
-                ghtk: 'Giao Hàng Tiết Kiệm (GHTK)',
-                grab: 'GrabExpress Siêu Tốc'
-            };
-
-            PawpalSettings.openImpactConfirmationModal?.({
-                title: 'Cấu hình Đơn vị Vận chuyển và Biểu phí',
-                desc: 'Cập nhật mức Miễn phí ship và biểu phí giao vận toàn hệ thống.',
-                affectedModules: [
-                    { name: 'User Portal Shop và Checkout', note: `Áp dụng Miễn phí ship đơn từ ${freeThreshold.toLocaleString('vi-VN')} VNĐ, Phí nội thành ${innerFee.toLocaleString('vi-VN')} VNĐ` },
-                    { name: 'Phân hệ Bán hàng (Admin POS)', note: `Đồng bộ đối tác 3PL ${partnerNameMap[provider] || 'GHN'}` }
-                ],
-                onConfirm: async () => {
-                    try {
-                        const cfg = structuredClone(PawpalSettings.state?.systemConfig);
-                        if (!cfg) throw new Error('Chưa khởi tạo cấu hình hệ thống.');
-                        cfg.shippingPolicy = {
-                            freeShippingThreshold: freeThreshold,
-                            innerCityFee: innerFee,
-                            outerCityFee: outerFee,
-                            expressFee: expressFee,
-                            primaryPartner: provider,
-                            partnerName: partnerNameMap[provider] || 'GHN Express',
-                            shopId: shopId,
-                            isConfigured: Boolean(apiKey || shopId),
-                            apiKey: apiKey ? '••••••••' : ''
-                        };
-                        await PawpalSettings.persistSystemConfig?.(cfg);
-                        PawpalSettings.closeModal?.('shippingConfigModalOverlay');
-
-                        await logSystemAudit('UPDATE', 'shipping', `Cập nhật biểu phí giao hàng: Freeship từ ${freeThreshold.toLocaleString('vi-VN')} VNĐ, Đối tác ${partnerNameMap[provider] || 'GHN'}`);
-                        await PawpalSettings.loadSettingsModuleData?.();
-                        renderSystemConfigCards();
-                        PawpalSettings.subtabs.audit?.renderAuditLogs?.();
-                        showToast('Đã lưu cấu hình vận chuyển và đồng bộ sang User Portal và Bán hàng thành công!', 'success');
-                    } catch (e) {
-                        console.error('[Settings] Lưu cấu hình vận chuyển thất bại:', e);
-                        showToast(`Không thể lưu cấu hình vận chuyển: ${e?.message || 'Lỗi cơ sở dữ liệu'}`, 'danger');
-                    }
-                }
-            });
+        document.getElementById('btnCancelShippingModal')?.addEventListener('click',()=>PawpalSettings.closeModal('shippingConfigModalOverlay'));
+        document.getElementById('btnDismissShippingModal')?.addEventListener('click',()=>PawpalSettings.closeModal('shippingConfigModalOverlay'));
+        document.getElementById('btnSaveShippingConfig')?.addEventListener('click',()=>{
+            if(PawpalSettings.state.isSafeModeLocked){showToast('Vui lòng mở khóa cấu hình trước khi lưu.','warning');return;}
+            const options=Array.from(document.querySelectorAll('.shipping-option-row')).map(row=>({id:row.dataset.id,fee:Number(row.querySelector('.shipping-option-fee').value||NaN),available:row.querySelector('.shipping-option-available').checked}));
+            if(options.some(o=>!Number.isFinite(o.fee)||o.fee<0||o.fee>1000000000)){showToast('Biểu phí không hợp lệ.','warning');return;}
+            const provider=document.getElementById('inputShippingProvider').value,shopId=document.getElementById('inputShippingShopId').value.trim();
+            PawpalSettings.openImpactConfirmationModal({title:'Biểu phí giao hàng',affectedModules:[{name:'Bán hàng',note:'Áp dụng khi chọn hình thức giao hàng cho đơn mới.'}],onConfirm:async()=>{
+                try{
+                    const cfg=structuredClone(PawpalSettings.state.systemConfig);cfg.shippingPolicy={...cfg.shippingPolicy,primaryPartner:provider,partnerName:{ghn:'Giao Hàng Nhanh',ghtk:'Giao Hàng Tiết Kiệm',grab:'GrabExpress'}[provider]||'',shopId,isConfigured:false};
+                    await PawpalSettings.saveShipping(options,cfg);PawpalSettings.closeModal('shippingConfigModalOverlay');await PawpalSettings.loadSettingsModuleData({force:true});renderSystemConfigCards();showToast('Đã lưu biểu phí giao hàng.','success');
+                }catch(error){showToast(error.message,'danger');}
+            }});
         });
 
         // Modal 4: Chính sách Đặt lịch, Giờ mở cửa và Pet Hotel
@@ -430,27 +369,27 @@
             const weOpenInput = document.getElementById('inputWeekendOpen');
             const weCloseInput = document.getElementById('inputWeekendClose');
 
-            if (wkOpenInput) wkOpenInput.value = oh.weekday?.open || '08:00';
-            if (wkCloseInput) wkCloseInput.value = oh.weekday?.close || '20:00';
-            if (weOpenInput) weOpenInput.value = oh.weekend?.open || '08:00';
-            if (weCloseInput) weCloseInput.value = oh.weekend?.close || '21:00';
+            if (wkOpenInput) wkOpenInput.value = oh.weekday?.open || '';
+            if (wkCloseInput) wkCloseInput.value = oh.weekday?.close || '';
+            if (weOpenInput) weOpenInput.value = oh.weekend?.open || '';
+            if (weCloseInput) weCloseInput.value = oh.weekend?.close || '';
 
             const checkInInput = document.getElementById('inputHotelCheckIn');
             const checkOutInput = document.getElementById('inputHotelCheckOut');
             const hotelLateFeeInput = document.getElementById('inputHotelLateFee');
 
-            if (checkInInput) checkInInput.value = hr.checkInTime || '14:00';
-            if (checkOutInput) checkOutInput.value = hr.checkOutTime || '12:00';
-            if (hotelLateFeeInput) hotelLateFeeInput.value = hr.lateCheckOutFeePerHalfDay || 100000;
+            if (checkInInput) checkInInput.value = hr.checkInTime || '';
+            if (checkOutInput) checkOutInput.value = hr.checkOutTime || '';
+            if (hotelLateFeeInput) hotelLateFeeInput.value = hr.lateCheckOutFeePerHalfDay ?? '';
 
             const slotCapInput = document.getElementById('inputSlotCapacity');
             const freeCancelInput = document.getElementById('inputFreeCancelHours');
             const lateCancelFeeInput = document.getElementById('inputLateCancelFee');
             const allowPickStaffSelect = document.getElementById('inputAllowPickStaff');
 
-            if (slotCapInput) slotCapInput.value = bp.slotCapacityMax || 4;
-            if (freeCancelInput) freeCancelInput.value = bp.freeCancelHours || 4;
-            if (lateCancelFeeInput) lateCancelFeeInput.value = bp.lateCancelFee || 50000;
+            if (slotCapInput) slotCapInput.value = bp.slotCapacityMax ?? '';
+            if (freeCancelInput) freeCancelInput.value = bp.freeCancelHours ?? '';
+            if (lateCancelFeeInput) lateCancelFeeInput.value = bp.lateCancelFee ?? '';
             if (allowPickStaffSelect) allowPickStaffSelect.value = bp.allowPickStaff ? 'yes' : 'no';
 
             PawpalSettings.openModal?.('bookingPolicyModalOverlay');
@@ -466,24 +405,25 @@
                 return;
             }
 
-            const wkOpen = document.getElementById('inputWeekdayOpen')?.value || '08:00';
-            const wkClose = document.getElementById('inputWeekdayClose')?.value || '20:00';
-            const weOpen = document.getElementById('inputWeekendOpen')?.value || '08:00';
-            const weClose = document.getElementById('inputWeekendClose')?.value || '21:00';
+            const wkOpen = document.getElementById('inputWeekdayOpen')?.value || '';
+            const wkClose = document.getElementById('inputWeekdayClose')?.value || '';
+            const weOpen = document.getElementById('inputWeekendOpen')?.value || '';
+            const weClose = document.getElementById('inputWeekendClose')?.value || '';
 
-            const checkIn = document.getElementById('inputHotelCheckIn')?.value || '14:00';
-            const checkOut = document.getElementById('inputHotelCheckOut')?.value || '12:00';
-            const hotelLateFee = parseInt(document.getElementById('inputHotelLateFee')?.value || '100000', 10);
+            const checkIn = document.getElementById('inputHotelCheckIn')?.value || '';
+            const checkOut = document.getElementById('inputHotelCheckOut')?.value || '';
+            const hotelLateFee = parseInt(document.getElementById('inputHotelLateFee')?.value || 'NaN', 10);
 
-            const slotCapacity = parseInt(document.getElementById('inputSlotCapacity')?.value || '4', 10);
-            const freeHours = parseInt(document.getElementById('inputFreeCancelHours')?.value || '4', 10);
-            const lateFee = parseInt(document.getElementById('inputLateCancelFee')?.value || '50000', 10);
+            const slotCapacity = parseInt(document.getElementById('inputSlotCapacity')?.value || 'NaN', 10);
+            const freeHours = parseInt(document.getElementById('inputFreeCancelHours')?.value || 'NaN', 10);
+            const lateFee = parseInt(document.getElementById('inputLateCancelFee')?.value || 'NaN', 10);
             const allowPickStaff = document.getElementById('inputAllowPickStaff')?.value === 'yes';
 
             const toMinutes = (value) => {
                 const [hour, minute] = String(value).split(':').map(Number);
                 return hour * 60 + minute;
             };
+            if (![wkOpen,wkClose,weOpen,weClose,checkIn,checkOut].every(value=>/^([01]\d|2[0-3]):[0-5]\d$/.test(value))) { showToast('Vui l\u00f2ng nh\u1eadp \u0111\u1ee7 gi\u1edd h\u1ee3p l\u1ec7.', 'warning'); return; }
             if (toMinutes(wkOpen) >= toMinutes(wkClose) || toMinutes(weOpen) >= toMinutes(weClose)) {
                 showToast('Giờ mở cửa phải sớm hơn giờ đóng cửa.', 'warning');
                 return;
@@ -518,15 +458,15 @@
                             checkInTime: checkIn,
                             checkOutTime: checkOut,
                             lateCheckOutFeePerHalfDay: hotelLateFee,
-                            includedMealsPerDay: cfg.hotelRules?.includedMealsPerDay ?? 3,
-                            cameraAccessEnabled: cfg.hotelRules?.cameraAccessEnabled ?? true
+                            includedMealsPerDay: cfg.hotelRules?.includedMealsPerDay ?? null,
+                            cameraAccessEnabled: false
                         };
                         cfg.bookingPolicy = {
                             freeCancelHours: freeHours,
                             lateCancelFee: lateFee,
                             allowPickStaff: allowPickStaff,
                             slotCapacityMax: slotCapacity,
-                            timeSlots: cfg.bookingPolicy?.timeSlots || ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00']
+                            timeSlots: cfg.bookingPolicy?.timeSlots || []
                         };
                         await PawpalSettings.persistSystemConfig?.(cfg);
                         PawpalSettings.closeModal?.('bookingPolicyModalOverlay');
@@ -548,7 +488,7 @@
         // Live Healthcheck đối tác (CFG-26: Thông báo kiểm tra cấu hình đối tác trung thực)
         document.getElementById('btnConfigurePartners')?.addEventListener('click', () => {
             const cfg = PawpalSettings.state?.systemConfig || {};
-            const isGhnOk = Boolean(cfg.shippingPolicy?.shopId && (cfg.shippingPolicy?.apiKey || cfg.shippingPolicy?.isConfigured));
+            const isGhnOk = false;
             const isMomoOk = Boolean(cfg.paymentMethods?.momo?.enabled);
             const isVnpayOk = Boolean(cfg.paymentMethods?.vnpay?.enabled);
 

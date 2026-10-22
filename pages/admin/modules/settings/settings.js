@@ -61,6 +61,47 @@
         return window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     }
     PawpalSettings.getSupabaseClient = getSupabaseClient;
+    const records = new Map(), requests = new Map();
+    PawpalSettings.getRecord=(table,id)=>structuredClone(records.get(table+':'+id)||null);
+    let editingRecords = null, editingModal = null, settingsNeedFresh = false;
+    function rememberRows(table, rows) {
+        for (const row of rows) records.set(table+':'+row.id, structuredClone(row));
+        return rows;
+    }
+    async function readAll(table, columns='*', order='id') {
+        const rows=[];
+        for(let offset=0;;offset+=500){
+            const {data,error}=await getSupabaseClient().from(table).select(columns).order(order).order('id').range(offset,offset+499);
+            if(error)throw error;rows.push(...data);if(data.length<500)break;
+        }
+        return rows;
+    }
+    PawpalSettings.saveRecord = async(table,id,values={},remove=false)=>{
+        values=structuredClone(values);delete values.updated_at;
+        const key=JSON.stringify([table,id,values,remove]);
+        if(!requests.has(key))requests.set(key,{request:crypto.randomUUID(),id:id||crypto.randomUUID()});
+        const pending=requests.get(key),recordKey=table+':'+pending.id;
+        const expected=(editingRecords||records).get(recordKey)||null;
+        const {data,error}=await getSupabaseClient().rpc('save_admin_setting_record',{p_request:pending.request,p_table:table,p_id:pending.id,p_expected:expected,p_values:values,p_delete:remove});
+        if(error){
+            const messages={PT409:'Dữ liệu đã thay đổi. Hãy tải lại trước khi lưu.',42501:'Bạn chưa có quyền thực hiện thao tác này.',23503:'Dữ liệu đang được sử dụng. Hãy tạm ẩn hoặc ngừng áp dụng.',23505:'Mã hoặc đường dẫn đã tồn tại.',22023:'Thông tin chưa hợp lệ. Hãy kiểm tra lại các trường.'};
+            error.message=messages[error.code]||'Chưa lưu được dữ liệu. Hãy kiểm tra kết nối và thử lại.';throw error;
+        }
+        settingsNeedFresh=true;
+        window.PawpalDataStore?.invalidate('settings:*');
+        if(table==='voucher')window.PawpalDataStore?.invalidate('orders:vouchers*');
+        requests.delete(key);if(remove)records.delete(recordKey);else if(!data.replayed){records.set(recordKey,data);editingRecords?.set(recordKey,data);}
+        return data;
+    };
+    PawpalSettings.saveShipping=async(options,newConfig)=>{
+        const cfg=structuredClone(newConfig);if(cfg.shippingPolicy)delete cfg.shippingPolicy.apiKey;
+        const existing=Array.from(records.values()).find(r=>r.setting_key==='system_config');
+        const key=JSON.stringify(['shipping',options,cfg]);if(!requests.has(key))requests.set(key,{request:crypto.randomUUID(),id:existing?.id||crypto.randomUUID()});
+        const pending=requests.get(key),snapshot=editingRecords||records;
+        const {data,error}=await getSupabaseClient().rpc('save_admin_shipping_settings',{p_request:pending.request,p_options:options.map(o=>({id:o.id,expected:snapshot.get('delivery_option_config:'+o.id)||null,values:{fee:o.fee,available:o.available}})),p_config_id:pending.id,p_expected_config:snapshot.get('pawpal_setting:'+pending.id)||null,p_config:cfg});
+        if(error)throw Error(error.code==='PT409'?'Biểu phí đã thay đổi. Hãy tải lại trước khi lưu.':'Chưa lưu được biểu phí. Hãy kiểm tra quyền và dữ liệu.');
+        requests.delete(key);records.set('pawpal_setting:'+pending.id,data);PawpalSettings.state.systemConfig=cfg;settingsNeedFresh=true;window.PawpalDataStore?.invalidate('settings:*');
+    };
 
     // Helper: Toast Notification chuẩn AGENTS.md
     function showToast(message, type = 'info') {
@@ -198,7 +239,7 @@
             return;
         }
 
-        descEl.innerHTML = `Bạn đang chuẩn bị thay đổi <strong>${title}</strong>. Theo quy tắc Nguồn Dữ Liệu Duy Nhất (SSOT), cấu hình này sẽ tự động đồng bộ ngay lập tức sang các phân hệ sau:`;
+        descEl.textContent = 'Xác nhận lưu '+title.toLowerCase()+'. Các tích hợp bên ngoài chưa được kích hoạt bởi thao tác này.';
         boxEl.innerHTML = '';
 
         affectedModules.forEach(mod => {
@@ -206,10 +247,10 @@
             row.className = 'impact-module-item';
             row.innerHTML = `
                 <div>
-                    <div class="impact-module-name">${mod.name}</div>
-                    <div class="impact-module-note">${mod.note}</div>
+                    <div class="impact-module-name">${escapeHtml(mod.name)}</div>
+                    <div class="impact-module-note">${escapeHtml(mod.note)}</div>
                 </div>
-                <span class="admin-badge badge-active">Sẵn sàng đồng bộ</span>
+                <span class="admin-badge badge-neutral">Lưu cấu hình</span>
             `;
             boxEl.appendChild(row);
         });
@@ -222,6 +263,8 @@
 
     // Helper: Điều khiển Modal toàn cục chuẩn AGENTS.md (Hỗ trợ 4 hình thức đóng tức thì)
     function openModal(modalId) {
+        editingModal=modalId;
+        editingRecords = new Map(Array.from(records,([key,value])=>[key,structuredClone(value)]));
         const modal = document.getElementById(modalId);
         if (!modal) return;
         modal.classList.add('active');
@@ -234,6 +277,7 @@
     PawpalSettings.openModal = openModal;
 
     function closeModal(modalId) {
+        if(editingModal===modalId){editingModal=null;editingRecords=null;}
         const modal = document.getElementById(modalId);
         if (!modal) return;
         modal.classList.remove('active');
@@ -253,8 +297,7 @@
 
         // 2. Click vùng nền tối backdrop bên ngoài modal-card
         if (e.target.classList.contains('admin-modal-overlay')) {
-            e.target.classList.remove('active');
-            e.target.style.display = 'none';
+            closeModal(e.target.id);
         }
     });
 
@@ -263,8 +306,7 @@
         if (e.key === 'Escape') {
             document.querySelectorAll('.admin-modal-overlay').forEach(m => {
                 if (m.classList.contains('active') || (m.style.display && m.style.display !== 'none')) {
-                    m.classList.remove('active');
-                    m.style.display = 'none';
+                    closeModal(m.id);
                 }
             });
         }
@@ -283,6 +325,8 @@
 
     // Helper: Ghi nhật ký cấu hình vào bảng audit_log Supabase
     async function logSystemAudit(action, entityName, description) {
+        // These writes are audited inside save_admin_setting_record in the same transaction.
+        if (['banner','voucher','blog_post','pawpal_setting','store_profile','payment','shipping','booking_policy','pawpoints_policy','pawpoints','notification'].includes(entityName)) return;
         try {
             const client = getSupabaseClient();
             if (!client) return;
@@ -314,66 +358,7 @@
     // -------------------------------------------------------------
     // QUẢN LÝ TRẠNG THÁI TOÀN CỤC (GLOBAL STATE)
     // -------------------------------------------------------------
-    const DEFAULT_SYSTEM_CONFIG = {
-        storeInfo: {
-            brandName: '',
-            companyName: '',
-            hotline: '',
-            emergencyPhone: '',
-            email: '',
-            address: '',
-            taxId: '',
-            zaloUrl: '',
-            facebookUrl: ''
-        },
-        paymentMethods: {
-            cod: { enabled: true, name: 'Thanh toán khi nhận hàng (COD)', fee: 0 },
-            bank: {
-                enabled: false,
-                name: 'Chuyển khoản QR Banking',
-                bankName: '',
-                accountNumber: '',
-                accountHolder: '',
-                syntax: 'PAWPAL [Mã đơn]'
-            },
-            momo: { enabled: false, name: 'Ví điện tử MoMo', merchantId: '' },
-            vnpay: { enabled: false, name: 'Cổng thanh toán VNPay', tmnCode: '' }
-        },
-        shippingPolicy: {
-            freeShippingThreshold: 300000,
-            innerCityFee: 25000,
-            outerCityFee: 35000,
-            expressFee: 45000,
-            primaryPartner: 'ghn',
-            partnerName: 'Giao Hàng Nhanh (GHN Express)',
-            shopId: '',
-            apiKey: ''
-        },
-        operatingHours: {
-            weekday: { open: '08:00', close: '20:00' },
-            weekend: { open: '08:00', close: '21:00' },
-            holidayNotice: ''
-        },
-        hotelRules: {
-            checkInTime: '14:00',
-            checkOutTime: '12:00',
-            lateCheckOutFeePerHalfDay: 100000,
-            includedMealsPerDay: 3,
-            cameraAccessEnabled: true
-        },
-        bookingPolicy: {
-            freeCancelHours: 4,
-            lateCancelFee: 50000,
-            allowPickStaff: true,
-            slotCapacityMax: 4,
-            timeSlots: ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00']
-        },
-        pawpointsPolicy: {
-            pointValueVnd: 100,
-            registerBonus: 50
-        },
-        websiteNotices: []
-    };
+    const DEFAULT_SYSTEM_CONFIG = {storeInfo:{},paymentMethods:{},shippingPolicy:{},operatingHours:{weekday:{},weekend:{}},hotelRules:{},bookingPolicy:{},pawpointsPolicy:{},websiteNotices:[]};
 
     PawpalSettings.state = {
         bannersList: [],
@@ -391,7 +376,7 @@
     // [CFG-35] Chuẩn hóa Canonical Policy Service & Cross-Module SLA Accessor
     window.PawpalPolicy = {
         getBookingCutoffHours() {
-            return PawpalSettings.state?.systemConfig?.bookingPolicy?.freeCancelHours ?? 4;
+            return PawpalSettings.state?.systemConfig?.bookingPolicy?.freeCancelHours ?? null;
         },
         getTicketSlaHours(priority = 'NORMAL') {
             const p = String(priority).toUpperCase();
@@ -403,7 +388,7 @@
             return 8;
         },
         getPointConversionRate() {
-            return PawpalSettings.state?.systemConfig?.pawpointsPolicy?.pointValueVnd ?? 100;
+            return PawpalSettings.state?.systemConfig?.pawpointsPolicy?.pointValueVnd ?? null;
         }
     };
     PawpalSettings.getCanonicalPolicy = (key) => {
@@ -426,18 +411,18 @@
         }
 
         try {
-            const { error } = await client.from('pawpal_setting').upsert([{
+            const safeConfig=structuredClone(newCfg);
+            if(safeConfig.shippingPolicy)delete safeConfig.shippingPolicy.apiKey;
+            const existing=Array.from(records.values()).find(row=>row.setting_key==='system_config');
+            await PawpalSettings.saveRecord('pawpal_setting',existing?.id||null,{
                 setting_key: 'system_config',
-                setting_value: JSON.stringify(newCfg),
+                setting_value: JSON.stringify(safeConfig),
                 setting_type: 'json',
-                description: 'Cấu hình vận hành hệ thống Pawpal',
-                updated_at: new Date().toISOString()
-            }], { onConflict: 'setting_key' });
-
-            if (error) throw error;
+                description: 'Cấu hình vận hành hệ thống Pawpal'
+            });
 
             // Chỉ cập nhật state và localStorage sau khi CSDL đã commit thành công
-            PawpalSettings.state.systemConfig = JSON.parse(JSON.stringify(newCfg));
+            PawpalSettings.state.systemConfig = safeConfig;
             PawpalSettings.state.hasSystemConfig = true;
             localStorage.removeItem('pawpal_admin_system_config');
 
@@ -493,15 +478,16 @@
         const fetcher = async () => {
             const client = getSupabaseClient();
             if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
-            const [bannersRes, vouchersRes] = await Promise.all([
-                client.from('banner').select('*').order('created_at', { ascending: false }),
-                client.from('voucher').select('*').order('created_at', { ascending: false })
+            const [bannersRes, vouchersRes, redemptionsRes] = await Promise.all([
+                readAll('banner').then(data=>({data})),
+                readAll('voucher').then(data=>({data})),
+                readAll('voucher_redemption','id,voucher_id,status').then(data=>({data}))
             ]);
             if (bannersRes.error) throw bannersRes.error;
             if (vouchersRes.error) throw vouchersRes.error;
             return {
                 banners: bannersRes.data || [],
-                vouchers: vouchersRes.data || []
+                vouchers: vouchersRes.data || [], redemptions: redemptionsRes.data || []
             };
         };
 
@@ -510,20 +496,20 @@
             if (window.PawpalDataStore) {
                 res = await window.PawpalDataStore.fetch('settings:promos', fetcher, {
                     ttlMs: window.PawpalDataStore.TTL_TIERS.CATALOG,
-                    force
+                    force, backgroundRevalidate:false
                 });
             } else {
                 res = await fetcher();
             }
 
-            const banners = res.banners || [];
-            const vouchers = res.vouchers || [];
+            const banners = rememberRows('banner',res.banners || []);
+            const vouchers = rememberRows('voucher',res.vouchers || []);
             const notifs = res.notifs || [];
 
             PawpalSettings.state.bannersList = banners.map(b => {
                 let sDate = b.start_date ? b.start_date.substring(0, 10) : '';
                 let eDate = b.end_date ? b.end_date.substring(0, 10) : '';
-                const isActive = b.status === 'dang_hien_thi' || b.status === 'ACTIVE' || b.is_active === true;
+                const isActive = ['dang_hien_thi','ACTIVE','active'].includes(b.status);
                 return {
                     id: b.id,
                     title: b.title || 'Banner ưu đãi PawPal',
@@ -557,8 +543,8 @@
                 if (v.is_active === false) status = 'paused';
                 const hasLimit = (v.max_usage !== null && v.max_usage !== undefined) || (v.total_usage_limit !== null && v.total_usage_limit !== undefined);
                 const maxUse = hasLimit ? Number(v.max_usage ?? v.total_usage_limit) : null;
-                const curUse = Number(v.usage_count || v.current_usage_count || 0);
-                if ((v.end_date && Date.parse(v.end_date) < Date.now()) || (maxUse !== null && maxUse > 0 && curUse >= maxUse)) {
+                const curUse = (res.redemptions||[]).filter(r=>r.voucher_id===v.id&&r.status==='applied').length;
+                if ((v.end_date && Date.parse(v.end_date) < Date.now()) || (maxUse !== null && curUse >= maxUse)) {
                     status = 'expired';
                 }
 
@@ -566,7 +552,7 @@
                     id: v.id,
                     code: code,
                     name: name,
-                    type: isPercent ? 'percent' : 'fixed',
+                    type: isPercent ? 'percent' : v.type==='shipping'?'shipping':'fixed',
                     target: target,
                     value: val,
                     minOrder: Number(v.minimum_order_amount || v.min_order_value || 0),
@@ -601,14 +587,15 @@
         const fetcher = async () => {
             const client = getSupabaseClient();
             if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
-            const [blogsRes, categoriesRes] = await Promise.all([
-                client.from('blog_post').select('id, title, category_id, view_count, status, updated_at, created_at, summary').order('created_at', { ascending: false }),
-                client.from('blog_category').select('id, category_name, description').order('display_order')
+            const [blogsRes, categoriesRes, knowledgeRes] = await Promise.all([
+                readAll('blog_post').then(data=>({data})),
+                client.from('blog_category').select('id, category_name, description').order('display_order'),
+                readAll('chatbot_knowledge_faq','id,category,answer,keywords,is_active').then(data=>({data}))
             ]);
-            if (blogsRes.error) throw blogsRes.error;
+            for(const r of [blogsRes,categoriesRes,knowledgeRes])if(r.error)throw r.error;
             return {
                 blogs: blogsRes.data || [],
-                categories: categoriesRes.data || []
+                categories: categoriesRes.data || [],knowledge:knowledgeRes.data || []
             };
         };
 
@@ -617,13 +604,13 @@
             if (window.PawpalDataStore) {
                 res = await window.PawpalDataStore.fetch('settings:content', fetcher, {
                     ttlMs: window.PawpalDataStore.TTL_TIERS.CATALOG,
-                    force
+                    force, backgroundRevalidate:false
                 });
             } else {
                 res = await fetcher();
             }
 
-            const blogs = res.blogs || [];
+            const blogs = rememberRows('blog_post',res.blogs || []);
             const categoriesData = res.categories || [];
             PawpalSettings.state.blogCategoriesList = categoriesData.filter(c => c && c.category_name && c.category_name.trim());
 
@@ -642,22 +629,22 @@
 
                 const dateObj = a.updated_at ? new Date(a.updated_at) : (a.created_at ? new Date(a.created_at) : new Date());
                 const dateStr = formatDate(dateObj);
-                const isRag = status === 'published' && (ragSyncedIds.includes(a.id) || Boolean(a.rag_synced ?? a.ragSynced ?? false));
-                const defaultKeywords = ['Chăm sóc', 'Sức khỏe', 'Dinh dưỡng'];
+                const knowledge=(res.knowledge||[]).find(k=>k.id===a.id&&k.category==='blog:'+a.id);
+                const isRag = status === 'published' && Boolean(knowledge?.is_active);
 
                 return {
                     id: a.id,
-                    title: a.title || 'Cẩm nang chăm sóc thú cưng',
-                    author: 'Ban Biên Tập PawPal',
+                    title: a.title || '—',
+                    author: a.author_id || '—',
                     category: categoryName,
                     categoryId: a.category_id,
                     views: a.view_count || 0,
                     status: status,
                     updatedAt: dateStr,
-                    summary: a.summary || 'Hướng dẫn chăm sóc và dinh dưỡng an toàn cho thú cưng.',
+                    summary: a.summary || '',
                     ragSynced: isRag,
-                    ragKeywords: (Array.isArray(a.rag_keywords) && a.rag_keywords.length) ? a.rag_keywords : defaultKeywords,
-                    ragSummary: a.rag_summary || a.summary || a.title || 'Bài viết cẩm nang cung cấp kiến thức nuôi dạy và chăm sóc Boss khoa học.'
+                    ragKeywords: knowledge?.keywords || [],
+                    ragSummary: knowledge?.answer || ''
                 };
             });
 
@@ -676,16 +663,17 @@
         const fetcher = async () => {
             const client = getSupabaseClient();
             if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
-            const [appSettingsRes, servicesRes, productsRes] = await Promise.all([
-                client.from('pawpal_setting').select('*'),
+            const [appSettingsRes, servicesRes, productsRes, deliveryRes] = await Promise.all([
+                readAll('pawpal_setting').then(data=>({data})),
                 client.from('service').select('id, service_code, service_name, estimated_duration').order('service_name'),
-                client.from('product').select('id, product_name, product_variant(sku_variant, sale_price)').order('product_name').limit(50)
+                client.from('product').select('id, product_name, product_variant(sku_variant, sale_price)').order('product_name').limit(50),
+                readAll('delivery_option_config').then(data=>({data}))
             ]);
-            for (const result of [appSettingsRes, servicesRes, productsRes]) {
+            for (const result of [appSettingsRes, servicesRes, productsRes, deliveryRes]) {
                 if (result.error) throw result.error;
             }
             return {
-                appSettings: appSettingsRes.data || [],
+                appSettings: appSettingsRes.data || [],deliveryOptions:deliveryRes.data || [],
                 services: servicesRes.data || [],
                 products: (productsRes.data || []).map(p => ({
                     ...p,
@@ -700,16 +688,17 @@
             if (window.PawpalDataStore) {
                 res = await window.PawpalDataStore.fetch('settings:system', fetcher, {
                     ttlMs: window.PawpalDataStore.TTL_TIERS.STATIC_CONFIG,
-                    force
+                    force, backgroundRevalidate:false
                 });
             } else {
                 res = await fetcher();
             }
 
             PawpalSettings.state.servicesList = res.services || [];
+            PawpalSettings.state.deliveryOptions=rememberRows('delivery_option_config',res.deliveryOptions||[]);
             PawpalSettings.state.productsList = res.products || [];
 
-            const appSettingsData = res.appSettings || [];
+            const appSettingsData = rememberRows('pawpal_setting',res.appSettings || []);
             PawpalSettings.state.hasSystemConfig = false;
             PawpalSettings.state.systemConfig = structuredClone(DEFAULT_SYSTEM_CONFIG);
             if (appSettingsData.length > 0) {
@@ -732,6 +721,8 @@
                 });
             }
 
+            PawpalSettings.state.notificationsList=structuredClone(PawpalSettings.state.systemConfig.websiteNotices||[]);
+            PawpalSettings.subtabs.banners?.renderNotifications?.();
             PawpalSettings.subtabs.system?.renderSystemConfigCards?.();
             updateSafeModeUI();
             return res;
@@ -745,13 +736,7 @@
         const fetcher = async () => {
             const client = getSupabaseClient();
             if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
-            const { data, error } = await client
-                .from('audit_log')
-                .select('id, staff_id, action, entity_name, description, created_at, staff:staff_id(full_name)')
-                .order('created_at', { ascending: false })
-                .limit(50);
-            if (error) throw error;
-            return data || [];
+return (await readAll('audit_log','id,staff_id,action,entity_name,description,created_at,staff:staff_id(full_name)','created_at')).reverse();
         };
 
         try {
@@ -759,7 +744,7 @@
             if (window.PawpalDataStore) {
                 audits = await window.PawpalDataStore.fetch('settings:audit', fetcher, {
                     ttlMs: window.PawpalDataStore.TTL_TIERS.OPERATIONAL,
-                    force
+                    force, backgroundRevalidate:false
                 });
             } else {
                 audits = await fetcher();
@@ -792,8 +777,10 @@
                         id: l.id,
                         time: timeStr,
                         actor: actorName,
+                        action:l.action,
                         targetModules: targetModMap[l.entity_name] || 'Hệ thống',
-                        actionText: l.description || l.action || 'Thao tác cấu hình hệ thống',
+                        actionText: l.action==='SETTINGS_WRITE'?'Lưu thay đổi cấu hình':l.action==='SETTINGS_KNOWLEDGE'?'Đồng bộ tri thức từ bài viết':l.description || l.action || 'Thao tác cấu hình hệ thống',
+                        details:['SETTINGS_WRITE','SETTINGS_KNOWLEDGE'].includes(l.action)?l.description:'',
                         status: auditStatus
                     };
                 });
@@ -818,6 +805,8 @@
     let loadSettingsPromise = null;
 
     async function loadSettingsModuleData(options = {}) {
+        options={...options,force:Boolean(options.force||settingsNeedFresh)};
+        settingsNeedFresh=false;
         if (loadSettingsPromise && !options.force) {
             return loadSettingsPromise;
         }
@@ -825,12 +814,13 @@
         loadSettingsPromise = (async () => {
             try {
                 PawpalSettings.state.loadError = null;
-                await Promise.allSettled([
+                const results=await Promise.allSettled([
                     fetchPromosData(options),
                     fetchContentData(options),
                     fetchSystemConfigData(options),
                     fetchAuditData(options)
                 ]);
+                if(results.some(r=>r.status==='rejected'||r.value===null))PawpalSettings.state.loadError='Không tải được đầy đủ dữ liệu cấu hình. Hãy kiểm tra quyền và kết nối rồi tải lại.';
                 PawpalSettings.state.isLoaded = true;
             } catch (err) {
                 PawpalSettings.state.loadError = 'Không thể tải cấu hình. Vui lòng tải lại trang.';
@@ -893,7 +883,9 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'notification' }, () => debouncedLoadSettings('notification'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'audit_log' }, () => debouncedLoadSettings('audit_log'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'pawpal_setting' }, () => debouncedLoadSettings('pawpal_setting'))
-                .subscribe();
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'delivery_option_config' }, () => debouncedLoadSettings('pawpal_setting'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'payment_method_config' }, () => debouncedLoadSettings('pawpal_setting'))
+                .subscribe(status=>{PawpalSettings.state.isRealtimeHealthy=status==='SUBSCRIBED';});
 
             window.PawpalDataStore?.recordMetric?.('channel-add', 'admin-settings-global-sync');
 

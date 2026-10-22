@@ -1035,10 +1035,27 @@
     // -------------------------------------------------------------
     // TÍCH HỢP DẢI THÔNG BÁO TOP-BAR TỪ PHÂN HỆ CẤU HÌNH ADMIN (GIAI ĐOẠN 2)
     // -------------------------------------------------------------
-    function renderDynamicTopBarNotice() {
+    let noticeLoading=false,noticeAttempts=0;
+    async function renderDynamicTopBarNotice() {
+        if(noticeLoading)return;
+        noticeLoading=true;
         try {
-            const notices = JSON.parse(localStorage.getItem('pawpal_settings_notices') || '[]');
-            const activeTopNotice = notices.find(n => n.status === 'active' && (n.type === 'Top-bar' || n.type === 'topbar'));
+            const client=window.getSupabaseClient?.();
+            if(!client){if(noticeAttempts++<10)setTimeout(renderDynamicTopBarNotice,500);return;}
+            noticeAttempts=0;
+            const {data:notices,error}=await client.rpc('get_public_site_notices');
+            if(error)throw error;
+            const activePopup=notices.find(n=>String(n.type).toLowerCase()==='popup');
+            if(activePopup&&!sessionStorage.getItem('pawpal_notice_dismissed_'+activePopup.id)&&!document.getElementById('pawpal-site-popup')){
+                const overlay=document.createElement('div');overlay.id='pawpal-site-popup';overlay.style.cssText='position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.3);display:grid;place-items:center;padding:20px';
+                const card=document.createElement('div');card.style.cssText='background:white;border-radius:9px;padding:26px 30px;max-width:540px;width:100%;color:#203A2C';card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label','Thông báo');
+                const text=document.createElement('p');text.textContent=activePopup.content;
+                const close=document.createElement('button');close.type='button';close.textContent='Đóng';
+                const dismiss=()=>{sessionStorage.setItem('pawpal_notice_dismissed_'+activePopup.id,'1');overlay.remove();document.removeEventListener('keydown',key);};
+                const key=event=>{if(event.key==='Escape')dismiss();};close.onclick=dismiss;overlay.onclick=event=>{if(event.target===overlay)dismiss();};document.addEventListener('keydown',key);
+                card.append(text,close);overlay.append(card);document.body.append(overlay);close.focus();
+            }
+            const activeTopNotice = notices.find(n => String(n.type).toLowerCase().replace('-','')==='topbar');
             
             // Tìm hoặc tạo container Topbar
             let topBarEl = document.getElementById('pawpal-public-topbar-notice');
@@ -1090,6 +1107,8 @@
             });
         } catch (e) {
             console.warn('Lỗi hiển thị topbar notice:', e);
+        } finally {
+            noticeLoading=false;
         }
     }
 

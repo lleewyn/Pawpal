@@ -49,8 +49,8 @@
         const activeBanners = bannersList.filter(b => b.status === 'active').length;
 
         const expiringBanners = bannersList.filter(isBannerExpiring);
-        const exhaustedVouchers = vouchersList.filter(v => v.used >= v.limit);
-        const lowStockVouchers = vouchersList.filter(v => v.status === 'active' && v.limit - v.used <= 10 && v.used < v.limit);
+        const exhaustedVouchers = vouchersList.filter(v => v.limit!==null && v.used >= v.limit);
+        const lowStockVouchers = vouchersList.filter(v => v.status === 'active' && v.limit!==null && v.limit - v.used <= 10 && v.used < v.limit);
         const totalAlerts = expiringBanners.length + exhaustedVouchers.length + lowStockVouchers.length;
 
         const statTotalVouchersEl = document.getElementById('statTotalVouchers');
@@ -64,8 +64,13 @@
         if (statActiveBannersEl) statActiveBannersEl.textContent = activeBanners;
         if (statZeroMissAlertsEl) statZeroMissAlertsEl.textContent = totalAlerts;
 
-        const pointVal = PawpalSettings.state?.systemConfig?.pawpointsPolicy?.pointValueVnd || 100;
-        if (kpiPointRateEl) kpiPointRateEl.textContent = `1đ = ${Number(pointVal).toLocaleString('vi-VN')}đ`;
+        const pointVal = PawpalSettings.state?.systemConfig?.pawpointsPolicy?.pointValueVnd;
+        const policy=PawpalSettings.state?.systemConfig?.pawpointsPolicy||{};
+        for(const [id,key]of Object.entries({dispRegisterPoints:'registerBonus',dispFirstOrderPoints:'firstOrderPoints',dispFirstBookingPoints:'firstBookingPoints',dispBirthdayPoints:'birthdayPoints'})){
+            const el=document.getElementById(id);if(el)el.textContent=policy[key]==null?'—':Number(policy[key]).toLocaleString('vi-VN')+' điểm';
+        }
+        const pointDisplay=document.getElementById('dispPointValue');if(pointDisplay)pointDisplay.textContent=pointVal==null?'—':'1 điểm = '+Number(pointVal).toLocaleString('vi-VN')+' đ';
+        if (kpiPointRateEl) kpiPointRateEl.textContent = pointVal==null?'—':`1đ = ${Number(pointVal).toLocaleString('vi-VN')}đ`;
     }
 
     function renderZeroMissAlerts() {
@@ -73,8 +78,8 @@
         const vouchersList = PawpalSettings.state?.vouchersList || [];
 
         const expiringBanners = bannersList.filter(isBannerExpiring);
-        const exhaustedVouchers = vouchersList.filter(v => v.used >= v.limit);
-        const lowStockVouchers = vouchersList.filter(v => v.status === 'active' && v.limit - v.used <= 10 && v.used < v.limit);
+        const exhaustedVouchers = vouchersList.filter(v => v.limit!==null && v.used >= v.limit);
+        const lowStockVouchers = vouchersList.filter(v => v.status === 'active' && v.limit!==null && v.limit - v.used <= 10 && v.used < v.limit);
 
         const totalIssues = expiringBanners.length + exhaustedVouchers.length + lowStockVouchers.length;
 
@@ -121,54 +126,13 @@
         }));
     }
 
-    async function mutateBanner(action, payload) {
-        const client = getSupabaseClient();
-        try {
-            if (client) {
-                if (action === 'insert') {
-                    const { data, error } = await client.from('banner').insert(payload).select('id');
-                    if (!error) return { data };
-                    console.warn('[Settings] Client Supabase insert banner failed, falling back to admin API:', error?.message);
-                } else if (action === 'update') {
-                    const { data, error } = await client.from('banner').update(payload.data).eq('id', payload.id).select('id');
-                    if (!error && data?.length) return { data };
-                    console.warn('[Settings] Client Supabase update banner failed, falling back to admin API:', error?.message);
-                } else if (action === 'delete') {
-                    const { data, error } = await client.from('banner').delete().eq('id', payload.id).select('id');
-                    if (!error && data?.length) return { data };
-                    console.warn('[Settings] Client Supabase delete banner failed, falling back to admin API:', error?.message);
-                }
-            }
-        } catch (clientErr) {
-            console.warn('[Settings] Client exception on banner mutation:', clientErr);
-        }
-
-        // Server API Fallback with Service Role Key
-        // CFG-12: Chặn leo thang đặc quyền - yêu cầu vai trò ADMIN hoặc MANAGER trước khi gọi fallback
-        const currentRole = (sessionStorage.getItem('pawpal_admin_system_role') || '').toUpperCase();
-        if (currentRole !== 'ADMIN' && currentRole !== 'MANAGER') {
-            throw new Error('Từ chối thao tác: Bạn không có quyền Quản trị viên để thay đổi Banner.');
-        }
-
-        const headers = { 'Content-Type': 'application/json' };
-        try {
-            const client = getSupabaseClient();
-            const session = (await client?.auth.getSession())?.data?.session;
-            if (session?.access_token) {
-                headers['Authorization'] = `Bearer ${session.access_token}`;
-            }
-        } catch (e) {}
-
-        const res = await fetch('/api/admin/banners', {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({ action, payload })
-        });
-        const result = await res.json().catch(() => ({}));
-        if (!res.ok || !result.success) {
-            throw new Error(result.message || 'Không thể thao tác Banner trên hệ thống.');
-        }
-        return result;
+    async function mutateBanner(action,payload){
+        const row=Array.isArray(payload)?payload[0]:payload;
+        const values=action==='insert'?row:row.data||{};
+        if(values.status==='dang_hien_thi')values.status='active';
+        if(values.status==='tam_an')values.status='inactive';
+        const data=await PawpalSettings.saveRecord('banner',action==='insert'?null:row.id,values,action==='delete');
+        return {data:[data]};
     }
 
     function renderBanners() {
@@ -195,9 +159,9 @@
                 : '';
 
             const esc = PawpalSettings.escapeHtml || (s => s);
-            const isImgUrl = b.image && /^(https?:\/\/|\/)[^\s]+$/i.test(b.image);
+            const isImgUrl = b.imageUrl && /^(https?:\/\/|\/)[^\s]+$/i.test(b.imageUrl);
             const previewHtml = isImgUrl
-                ? `<img src="${esc(b.image)}" alt="Banner" style="width:100%; height:100%; object-fit:cover; border-radius:6px;" onerror="this.onerror=null; this.parentElement.innerHTML='${esc(b.imageText)}';"/>`
+                ? `<img src="${esc(b.imageUrl)}" alt="Banner" style="width:100%; height:100%; object-fit:cover; border-radius:9px;"/>`
                 : `${esc(b.imageText)}`;
 
             card.innerHTML = `
@@ -218,6 +182,7 @@
                     </div>
                 </div>
             `;
+            card.querySelector('img')?.addEventListener('error',()=>{card.querySelector('.banner-preview-img').textContent=b.imageText;},{once:true});
             container.appendChild(card);
         });
 
@@ -392,9 +357,9 @@
             const discountDisp = v.type === 'percent' ? `${v.value}%` : `${v.value.toLocaleString('vi-VN')} VNĐ`;
 
             let rowAlertClass = '';
-            let quotaDisplay = `${v.used}/${v.limit}`;
+            let quotaDisplay = v.limit===null?`${v.used} / Không giới hạn`:`${v.used}/${v.limit}`;
 
-            if (v.used >= v.limit) {
+            if (v.limit!==null && v.used >= v.limit) {
                 rowAlertClass = 'row-alert-danger';
                 quotaDisplay = `<strong>${v.used}/${v.limit}</strong><span style="display:block; font-size:11.5px; color:#DC2626; font-weight:600;">Hết sạch lượt</span>`;
             } else if (v.status === 'active' && (v.limit - v.used <= 10)) {
@@ -451,7 +416,7 @@
     }
 
     function renderNotifications() {
-        const container = document.getElementById('notificationListContainer');
+        const container = document.getElementById('notificationsListContainer');
         if (!container) return;
 
         const notificationsList = PawpalSettings.state?.notificationsList || [];
@@ -483,6 +448,7 @@
                 <div class="notice-status-row">
                     ${statusBadge}
                     <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn-notice-action btn-edit-notice" data-id="${esc(n.id)}">Sửa</button>
                         <button type="button" class="btn-notice-action btn-toggle-notice" data-id="${esc(n.id)}">${n.isActive ? 'Tắt' : 'Bật'}</button>
                         <button type="button" class="btn-notice-action btn-delete-notice" data-id="${esc(n.id)}">Xóa</button>
                     </div>
@@ -511,6 +477,14 @@
             }
         }
 
+        container.querySelectorAll('.btn-edit-notice').forEach(button=>button.addEventListener('click',()=>{
+            const n=notificationsList.find(n=>String(n.id)===button.dataset.id);if(!n)return;
+            editingNoticeId=n.id;draftNoticeId=n.id;
+            document.getElementById('inputNoticeContent').value=n.content;
+            document.getElementById('inputNoticeType').value=n.type==='POPUP'?'popup':'topbar';
+            document.getElementById('inputNoticeStatus').value=n.isActive?'active':'inactive';
+            PawpalSettings.openModal('notificationModalOverlay');
+        }));
         // Bật/tắt thông báo (CFG-21: Rollback state khi lỗi)
         container.querySelectorAll('.btn-toggle-notice').forEach(btn => {
             btn.addEventListener('click', async () => {
@@ -726,6 +700,11 @@
                 </div>
             `).join('');
 
+            const below=Math.min(window.innerHeight,input.closest('.admin-modal-card')?.getBoundingClientRect().bottom||window.innerHeight)-input.getBoundingClientRect().bottom-100;
+            dropdown.style.top=below<160?'auto':'calc(100% + 4px)';
+            dropdown.style.bottom=below<160?'calc(100% + 4px)':'auto';
+            dropdown.style.maxHeight='240px';
+            dropdown.style.overflowY='auto';
             dropdown.style.display = 'block';
 
             dropdown.querySelectorAll('.settings-autocomplete-item').forEach(itemEl => {
@@ -742,6 +721,8 @@
 
         input.addEventListener('focus', () => renderDropdown(input.value));
         input.addEventListener('input', () => renderDropdown(input.value));
+        input.addEventListener('blur',()=>setTimeout(()=>{dropdown.style.display='none';},100));
+        input.addEventListener('keydown',event=>{if(event.key==='Escape'){dropdown.style.display='none';event.stopPropagation();}});
 
         document.addEventListener('click', (e) => {
             if (!input.contains(e.target) && !dropdown.contains(e.target)) {
@@ -788,6 +769,9 @@
     }
 
     let isInitialized = false;
+    let draftNoticeId=null;
+    let editingNoticeId=null;
+    let editingVoucherId=null;
 
     function initBannersSubtab() {
         if (isInitialized) {
@@ -882,6 +866,8 @@
 
         // Modal Voucher events
         const openVoucherHandler = () => {
+            editingVoucherId=null;
+            document.getElementById('btnSaveVoucher').textContent='Tạo voucher';
             PawpalSettings.openModal?.('voucherModalOverlay');
             updateVoucherLivePreview();
         };
@@ -889,6 +875,15 @@
         document.getElementById('btnOpenVoucherModalHeader')?.addEventListener('click', openVoucherHandler);
         document.getElementById('btnCancelVoucherModal')?.addEventListener('click', () => PawpalSettings.closeModal?.('voucherModalOverlay'));
         document.getElementById('btnDismissVoucherModal')?.addEventListener('click', () => PawpalSettings.closeModal?.('voucherModalOverlay'));
+        document.getElementById('btnActionEditVoucher')?.addEventListener('click',()=>{
+            const v=PawpalSettings.state.vouchersList.find(v=>v.code===PawpalSettings.state.currentActiveVoucherCode);
+            const row=v&&PawpalSettings.getRecord('voucher',v.id);if(!row)return;
+            editingVoucherId=row.id;
+            const target={all:'System',shop:'Shop',care:'Spa',services:'Services',hotel:'Hotel',taxi:'Taxi'}[row.applicable_for]||'System';
+            const fields={inputVoucherCode:row.voucher_code,inputVoucherName:row.voucher_name,inputVoucherType:row.type==='percentage'?'percent':row.type,inputVoucherValue:row.discount_value,inputVoucherMinOrder:row.minimum_order_amount,inputVoucherLimit:row.max_usage??'',inputVoucherTarget:target,inputVoucherStart:row.start_date,inputVoucherEnd:row.end_date};
+            for(const [id,value]of Object.entries(fields))document.getElementById(id).value=value;
+            document.getElementById('btnSaveVoucher').textContent='Lưu voucher';closeVoucherActionMenu();PawpalSettings.openModal('voucherModalOverlay');updateVoucherLivePreview();
+        });
 
         // Tự động sinh mã voucher
         document.getElementById('btnAutoGenerateVoucherCode')?.addEventListener('click', () => {
@@ -920,7 +915,9 @@
             const type = document.getElementById('inputVoucherType')?.value || 'fixed';
             const target = document.getElementById('inputVoucherTarget')?.value || 'System';
             const minOrder = parseFloat(document.getElementById('inputVoucherMinOrder')?.value) || 0;
-            const limit = parseInt(document.getElementById('inputVoucherLimit')?.value, 10) || 100;
+            const limitText = document.getElementById('inputVoucherLimit')?.value;
+            const limit = limitText==='' ? null : Number(limitText);
+            if ((limit!==null&&(!Number.isSafeInteger(limit)||limit<0)) || (type==='percent'&&val>100) || minOrder<0) { showToast('Giá trị giảm hoặc giới hạn lượt không hợp lệ.', 'warning');return; }
             const startDate = document.getElementById('inputVoucherStart')?.value || '';
             const endDate = document.getElementById('inputVoucherEnd')?.value || '';
 
@@ -942,23 +939,22 @@
             try {
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
-                const appFor = target.toLowerCase() === 'system' ? ['all'] : [target.toLowerCase()];
-                const { error } = await client.from('voucher').insert([{
+                const appFor = target.toLowerCase() === 'system' ? 'all' : target.toLowerCase()==='spa' ? 'care' : target.toLowerCase();
+                const existing=editingVoucherId?PawpalSettings.getRecord('voucher',editingVoucherId):null;
+                await PawpalSettings.saveRecord('voucher',editingVoucherId,{
                     voucher_code: code,
                     voucher_name: name,
                     description: `Voucher ${name} - Giảm ${type === 'percent' ? val + '%' : val.toLocaleString('vi-VN') + 'đ'}`,
                     discount_value: val,
-                    type: type === 'percent' ? 'percentage' : 'fixed',
+                    type: type === 'percent' ? 'percentage' : type,
                     minimum_order_amount: minOrder,
                     max_usage: limit,
-                    usage_count: 0,
-                    required_points: 0,
-                    is_active: true,
+                    required_points: existing?.required_points??0,
+                    is_active: existing?.is_active??true,
                     applicable_for: appFor,
-                    start_date: `${startDate}T00:00:00+00:00`,
-                    end_date: `${endDate}T23:59:59+00:00`
-                }]);
-                if (error) throw error;
+                    start_date: startDate,
+                    end_date: endDate
+                });
                 await logSystemAudit('INSERT', 'voucher', `Phát hành Voucher mới: ${code} (${name})`);
                 PawpalSettings.closeModal?.('voucherModalOverlay');
                 ['inputVoucherCode', 'inputVoucherName', 'inputVoucherValue', 'inputVoucherMinOrder', 'inputVoucherStart', 'inputVoucherEnd'].forEach(id => {
@@ -987,13 +983,12 @@
             try {
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
-                const { data, error } = await client.from('voucher').update({
+                const saved = await PawpalSettings.saveRecord('voucher',voucher.id,{
                     max_usage: newLimit,
                     is_active: true,
                     updated_at: new Date().toISOString()
-                }).eq('voucher_code', currentCode).select('id');
-                if (error) throw error;
-                if (!data || data.length === 0) throw new Error('Không tìm thấy voucher hoặc không có quyền thao tác.');
+                });
+                if (!saved) throw new Error('Không tìm thấy voucher hoặc không có quyền thao tác.');
                 await logSystemAudit('UPDATE', 'voucher', `Gia hạn quota Voucher ${currentCode} thêm 50 lượt (Tổng: ${newLimit})`);
                 closeVoucherActionMenu();
                 await PawpalSettings.loadSettingsModuleData?.();
@@ -1017,12 +1012,11 @@
             try {
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
-                const { data, error } = await client.from('voucher').update({
+                const saved = await PawpalSettings.saveRecord('voucher',voucher.id,{
                     is_active: newActive,
                     updated_at: new Date().toISOString()
-                }).eq('voucher_code', currentCode).select('id');
-                if (error) throw error;
-                if (!data || data.length === 0) throw new Error('Không tìm thấy voucher hoặc không có quyền thao tác.');
+                });
+                if (!saved) throw new Error('Không tìm thấy voucher hoặc không có quyền thao tác.');
                 await logSystemAudit('UPDATE', 'voucher', `Đổi trạng thái Voucher ${currentCode} thành ${newActive ? 'Hoạt động' : 'Tạm dừng'}`);
                 closeVoucherActionMenu();
                 await PawpalSettings.loadSettingsModuleData?.();
@@ -1047,7 +1041,8 @@
                     try {
                         const client = getSupabaseClient();
                         if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
-                        const { data, error } = await client.from('voucher').delete().eq('voucher_code', currentCode).select('id');
+                        const voucher=PawpalSettings.state.vouchersList.find(v=>v.code===currentCode);
+                        const data=[await PawpalSettings.saveRecord('voucher',voucher.id,{},true)],error=null;
                         if (error) throw error;
                         if (!data || data.length === 0) throw new Error('Không tìm thấy voucher hoặc không có quyền thao tác.');
                         await logSystemAudit('DELETE', 'voucher', `Xóa Voucher ${currentCode}`);
@@ -1066,6 +1061,9 @@
 
         // PawPoints Modal
         const openPawpointsHandler = () => {
+            const policy=PawpalSettings.state.systemConfig.pawpointsPolicy||{};
+            for(const [id,key]of Object.entries({inputCfgPointValue:'pointValueVnd',inputCfgRegisterPoints:'registerBonus',inputCfgFirstOrderPoints:'firstOrderPoints',inputCfgFirstBookingPoints:'firstBookingPoints',inputCfgBirthdayPoints:'birthdayPoints'})){document.getElementById(id).value=policy[key]??'';}
+
             PawpalSettings.openModal?.('pawpointsModalOverlay');
         };
         document.getElementById('btnOpenPawpointsModal')?.addEventListener('click', openPawpointsHandler);
@@ -1079,8 +1077,8 @@
                 showToast('Khóa an toàn cấu hình đang BẬT! Vui lòng vào tab "Cấu hình Hệ thống" và bấm "Mở khóa để sửa" trước khi lưu thay đổi điểm thưởng PawPoints.', 'warning');
                 return;
             }
-            const pointVal = document.getElementById('inputCfgPointValue')?.value || '100';
-            const regPts = document.getElementById('inputCfgRegisterPoints')?.value || '50';
+            const pointVal = document.getElementById('inputCfgPointValue')?.value || 'NaN';
+            const regPts = document.getElementById('inputCfgRegisterPoints')?.value || '0';
 
             // CFG-25: Kiểm tra số nguyên dương an toàn trước khi mở modal
             const parsedVal = parseInt(pointVal, 10);
@@ -1102,34 +1100,24 @@
                     { name: 'Phân hệ Bán hàng', note: 'Áp dụng tỷ lệ trừ tiền trực tiếp vào hóa đơn POS và Web Checkout' }
                 ],
                 onConfirm: async () => {
-                    const dispPv = document.getElementById('dispPointValue');
-                    if (dispPv) dispPv.textContent = `1 điểm = ${parsedVal.toLocaleString('vi-VN')} VNĐ`;
-                    const kpiEl = document.getElementById('kpiPointRate');
-                    if (kpiEl) kpiEl.textContent = `1đ = ${parsedVal.toLocaleString('vi-VN')}đ`;
-                    const dispReg = document.getElementById('dispRegisterPoints');
-                    if (dispReg) dispReg.textContent = `+${parsedReg} điểm`;
-                    PawpalSettings.closeModal?.('pawpointsModalOverlay');
-
-                    if (PawpalSettings.state?.systemConfig) {
-                        PawpalSettings.state.systemConfig.pawpointsPolicy = {
-                            pointValueVnd: parsedVal,
-                            registerBonus: parsedReg
-                        };
-                        await PawpalSettings.persistSystemConfig?.(PawpalSettings.state.systemConfig);
-                        // CFG-24: Đánh dấu version chính sách để các phân hệ Bán hàng & Khách hàng làm mới cache
-                        localStorage.setItem('pawpal_pawpoints_policy_version', Date.now().toString());
-                    }
-
-                    await logSystemAudit('UPDATE', 'pawpoints', `Cập nhật PawPoints: 1 điểm = ${parsedVal.toLocaleString('vi-VN')} VNĐ, Thưởng đăng ký +${parsedReg} điểm`);
-                    await PawpalSettings.loadSettingsModuleData?.();
-                    PawpalSettings.subtabs.audit?.renderAuditLogs?.();
-                    showToast('Đã lưu chính sách PawPoints vào cấu hình hệ thống!', 'success');
+                    try {
+                        const cfg=structuredClone(PawpalSettings.state.systemConfig);
+                        const extra={firstOrderPoints:Number(document.getElementById('inputCfgFirstOrderPoints').value||0),firstBookingPoints:Number(document.getElementById('inputCfgFirstBookingPoints').value||0),birthdayPoints:Number(document.getElementById('inputCfgBirthdayPoints').value||0)};
+                        if(Object.values(extra).some(n=>!Number.isSafeInteger(n)||n<0||n>100000))throw Error('Mức thưởng không hợp lệ');
+                        cfg.pawpointsPolicy={pointValueVnd:parsedVal,registerBonus:parsedReg,...extra};
+                        await PawpalSettings.persistSystemConfig(cfg);
+                        PawpalSettings.closeModal('pawpointsModalOverlay');
+                        await PawpalSettings.loadSettingsModuleData();renderZeroMissAlerts();
+                        showToast('Đã lưu chính sách. Không tự cộng điểm cho khách.', 'success');
+                    } catch(error){showToast('Chưa lưu được chính sách: '+error.message,'danger');}
                 }
             });
         });
 
         // Notifications Modal
         const openNoticeHandler = () => {
+            editingNoticeId=null;
+            draftNoticeId=crypto.randomUUID();document.getElementById('inputNoticeContent').value='';
             PawpalSettings.openModal?.('notificationModalOverlay');
         };
         document.getElementById('btnOpenNotificationModal')?.addEventListener('click', openNoticeHandler);
@@ -1150,7 +1138,8 @@
 
             try {
                 const newNotice = {
-                    id: 'notice-' + Date.now(),
+                    ...(editingNoticeId?PawpalSettings.state.notificationsList.find(n=>n.id===editingNoticeId):{}),
+                    id: draftNoticeId || (draftNoticeId=crypto.randomUUID()),
                     content: content,
                     type: nType,
                     date: new Date().toLocaleDateString('vi-VN'),
@@ -1158,7 +1147,7 @@
                 };
 
                 const currentList = Array.isArray(PawpalSettings.state?.notificationsList) ? [...PawpalSettings.state.notificationsList] : [];
-                currentList.unshift(newNotice);
+                if(editingNoticeId){const index=currentList.findIndex(n=>n.id===editingNoticeId);if(index<0)throw Error('Thông báo đã thay đổi');currentList[index]=newNotice;}else currentList.unshift(newNotice);
 
                 if (PawpalSettings.state?.systemConfig) {
                     const clonedCfg = JSON.parse(JSON.stringify(PawpalSettings.state.systemConfig));
@@ -1172,6 +1161,7 @@
                 if (contentInput) contentInput.value = '';
 
                 PawpalSettings.closeModal?.('notificationModalOverlay');
+                await PawpalSettings.loadSettingsModuleData({force:true});
                 renderNotifications();
                 showToast('Đã lưu cấu hình thông báo website thành công!', 'success');
             } catch (e) {
