@@ -175,10 +175,11 @@ function setupDrawerListeners() {
         document.removeEventListener('keydown', handleEscape);
         overlay.classList.remove('is-open');
         drawer.classList.remove('is-open');
-        document.getElementById('rma-drawer-container')?.close();
+        const container=document.getElementById('rma-drawer-container');
+        container?.close();
         if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
         setTimeout(() => {
-            document.getElementById('rma-drawer-container').innerHTML = '';
+            if(container?.isConnected && !container.open && container.contains(drawer))container.replaceChildren();
         }, 400); // khớp transition CSS
     };
 
