@@ -788,6 +788,7 @@
             btn.addEventListener('click', () => {
                 const targetTabId = btn.getAttribute('data-settingstab');
                 if (!targetTabId) return;
+                sessionStorage.setItem('pawpal_settings_marketing_tab',targetTabId);
 
                 document.querySelectorAll('.settings-subtabs-bar .settings-tab-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
@@ -1174,6 +1175,8 @@
         initBannerUrlAutocomplete();
 
         // Render ban đầu
+        const savedTab=sessionStorage.getItem('pawpal_settings_marketing_tab');
+        if(['mkt-vouchers','mkt-banners','mkt-pawpoints','mkt-notices'].includes(savedTab))document.querySelector('[data-settingstab="'+savedTab+'"]').click();
         renderBanners();
         renderVouchers();
         renderNotifications();

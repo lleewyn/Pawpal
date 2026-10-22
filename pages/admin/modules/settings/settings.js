@@ -736,7 +736,7 @@
         const fetcher = async () => {
             const client = getSupabaseClient();
             if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
-return (await readAll('audit_log','id,staff_id,action,entity_name,description,created_at,staff:staff_id(full_name)','created_at')).reverse();
+            return (await readAll('audit_log','id,staff_id,action,entity_name,created_at,staff:staff_id(full_name)','created_at')).reverse();
         };
 
         try {
@@ -779,8 +779,8 @@ return (await readAll('audit_log','id,staff_id,action,entity_name,description,cr
                         actor: actorName,
                         action:l.action,
                         targetModules: targetModMap[l.entity_name] || 'Hệ thống',
-                        actionText: l.action==='SETTINGS_WRITE'?'Lưu thay đổi cấu hình':l.action==='SETTINGS_KNOWLEDGE'?'Đồng bộ tri thức từ bài viết':l.description || l.action || 'Thao tác cấu hình hệ thống',
-                        details:['SETTINGS_WRITE','SETTINGS_KNOWLEDGE'].includes(l.action)?l.description:'',
+                        actionText: l.action==='SETTINGS_WRITE'?'Lưu thay đổi cấu hình':l.action==='SETTINGS_KNOWLEDGE'?'Đồng bộ tri thức từ bài viết':({CREATE:'Tạo dữ liệu',INSERT:'Tạo dữ liệu',UPDATE:'Cập nhật dữ liệu',DELETE:'Xóa dữ liệu',LOGIN:'Đăng nhập',LOGOUT:'Đăng xuất',EXPORT:'Xuất dữ liệu'})[l.action]||'Đã ghi nhận thao tác',
+                        details:true,
                         status: auditStatus
                     };
                 });

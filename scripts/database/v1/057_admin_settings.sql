@@ -92,7 +92,7 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.save_admin_setting_record(uuid,text,uuid,jsonb,jsonb,boolean) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.save_admin_setting_record(uuid,text,uuid,jsonb,jsonb,boolean) TO authenticated;
-REVOKE INSERT,UPDATE,DELETE ON public.banner,public.blog_post,public.voucher,public.pawpal_setting,public.delivery_option_config FROM authenticated,anon;
+REVOKE INSERT,UPDATE,DELETE ON public.banner,public.blog_post,public.voucher,public.pawpal_setting,public.delivery_option_config,public.payment_method_config FROM authenticated,anon;
 CREATE OR REPLACE FUNCTION public.save_admin_shipping_settings(p_request uuid,p_options jsonb,p_config_id uuid,p_expected_config jsonb,p_config jsonb)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$
 DECLARE item jsonb; result jsonb;

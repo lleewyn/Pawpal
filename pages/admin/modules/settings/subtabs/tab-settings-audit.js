@@ -111,10 +111,19 @@
                     </div>
                 </td>
                 <td><span class="admin-badge badge-neutral">${esc(log.targetModules)}</span></td>
-                <td><span style="color: var(--text-main); font-weight: 500;">${esc(log.actionText)}</span>${log.details?`<details><summary style="cursor:pointer;list-style:none;color:#236B48;">Xem thay đổi</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere;max-width:480px;">${esc(log.details)}</pre></details>`:''}</td>
+                <td><span style="color: var(--text-main); font-weight: 500;">${esc(log.actionText)}</span><details><summary style="cursor:pointer;list-style:none;color:#236B48;">Xem thay đổi</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere;max-width:480px;">Đang tải…</pre></details></td>
                 <td><span class="admin-badge ${badgeClass}">${esc(statusStr)}</span></td>
             `;
             tbody.appendChild(tr);
+            const details=tr.querySelector('details');let loaded=false,loading=false;
+            details.addEventListener('toggle',async()=>{
+                if(!details.open||loaded||loading)return;loading=true;
+                try{
+                    const {data,error}=await PawpalSettings.getSupabaseClient().from('audit_log').select('description').eq('id',log.id).single();if(error)throw error;
+                    details.querySelector('pre').textContent=data.description||'Không có nội dung bổ sung.';loaded=true;
+                }catch{details.querySelector('pre').textContent='Chưa tải được nội dung. Đóng và mở lại để thử.';}
+                finally{loading=false;}
+            });
         });
     }
 
