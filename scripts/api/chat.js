@@ -638,7 +638,7 @@ const dbTools = {
             const { data, error } = await supabase
                 .from('service_price_matrix')
                 .select('id, service_id, weight_from, weight_to, unit_price, status, service:service_id(service_name)')
-                .eq('status', 'dang_hoat_dong')
+                .in('status', ['active', 'dang_hoat_dong', 'ACTIVE'])
                 .limit(30);
             if (error) throw error;
             if (data && data.length > 0) {
