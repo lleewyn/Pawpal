@@ -20,7 +20,7 @@
 
     function updateStaffKpis() {
         if (!PawpalStaff.state.isLoaded) return;
-        const staffList = PawpalStaff.state?.mockStaff || [];
+        const staffList = PawpalStaff.state?.staff || [];
         const total = staffList.length;
         const active = staffList.filter(s => s.status === 'ACTIVE').length;
         const leave = staffList.filter(s => s.status === 'LEAVE').length;
@@ -41,7 +41,7 @@
     }
 
     function getFilteredStaffList() {
-        const staffList = PawpalStaff.state?.mockStaff || [];
+        const staffList = PawpalStaff.state?.staff || [];
         const searchInput = document.getElementById('staffSearchInput');
         const roleFilter = document.getElementById('staffFilterPosition') || document.getElementById('staffFilterRole');
         const shiftFilter = document.getElementById('staffFilterShift');
@@ -154,7 +154,7 @@
         updateStaffKpis();
         const tbody = document.getElementById('staffListTableBody');
         if (!tbody) return;
-        const staffList = PawpalStaff.state?.mockStaff || [];
+        const staffList = PawpalStaff.state?.staff || [];
         tbody.innerHTML = '';
 
         if (staffList.length === 0) {
@@ -311,6 +311,7 @@
 
             // Xử lý các action trong dropdown
             dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                if(item.getAttribute('data-action')==='delete')item.textContent='Ngừng việc';
                 item.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -329,31 +330,9 @@
                     } else if (action === 'assess') {
                         if (PawpalStaff.switchSubtab) PawpalStaff.switchSubtab('tab-staff-assessment');
                     } else if (action === 'delete') {
-                        const staffList = PawpalStaff.state?.mockStaff || [];
-                        const staff = staffList.find(s => s.id === staffId || s.rawId === staffId);
-                        PawpalStaff.showStaffConfirmModal({
-                            title: 'Xác nhận xóa nhân viên',
-                            message: `Bạn có chắc chắn muốn xóa nhân viên ${staff?.name || ''} (${staffId}) khỏi hệ thống không?`,
-                            confirmText: 'Xác nhận xóa',
-                            isDanger: true,
-                            onConfirm: async () => {
-                                try {
-                                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                                    if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu Supabase.');
-                                    if (!staff?.rawId) throw new Error('Không tìm thấy ID nhân viên hợp lệ.');
-                                    const { error: delErr } = await client.from('staff').delete().eq('id', staff.rawId);
-                                    if (delErr) throw delErr;
-
-                                    PawpalStaff.state.mockStaff = (PawpalStaff.state?.mockStaff || []).filter(s => s.id !== staffId && s.rawId !== staffId);
-                                    renderStaffList();
-                                    renderStaffAlertBar();
-                                    PawpalStaff.showToast('Đã xóa nhân viên khỏi hệ thống thành công.', 'success');
-                                } catch (delErr) {
-                                    console.error('Lỗi xóa nhân viên:', delErr);
-                                    PawpalStaff.showToast(`Không thể xóa nhân viên: ${delErr?.message || 'Có dữ liệu ràng buộc hoặc lỗi quyền truy cập'}`, 'danger');
-                                }
-                            }
-                        });
+                        openStaffModal(staffId);
+                        document.getElementById('staffEmploymentStatus').value='resigned';
+                        document.getElementById('staffChangeReason').focus();
                     }
                 });
             });
@@ -361,21 +340,15 @@
     }
 
     function attachProfileLinkEvents() {
-        document.querySelectorAll('.btn-view-profile').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const staffId = link.getAttribute('data-id');
-                if (staffId && PawpalStaff.openStaffProfile) {
-                    PawpalStaff.openStaffProfile(staffId);
-                }
-            });
+        document.querySelectorAll('.btn-view-profile').forEach(link=>{
+            link.onclick=e=>{e.preventDefault();const id=link.getAttribute('data-id');if(id)PawpalStaff.openStaffProfile?.(id);};
         });
     }
 
     function renderStaffAlertBar() {
         const bar = document.getElementById('staffAlertBar') || document.getElementById('staffAlertStrip');
         if (!bar) return;
-        const staffList = PawpalStaff.state?.mockStaff || [];
+        const staffList = PawpalStaff.state?.staff || [];
 
         const retrainList = staffList.filter(s => s.skillResult === 'RETRAIN' || s.skillResult === 'FAIL' || s.serviceLocked);
         if (retrainList.length === 0) {
@@ -422,7 +395,7 @@
     function openStaffModal(staffId = null) {
         const modal = document.getElementById('staffModalOverlay');
         if (!modal) return;
-        const staffList = PawpalStaff.state?.mockStaff || [];
+        const staffList = PawpalStaff.state?.staff || [];
         const staff = staffId ? staffList.find(s => s.id === staffId || s.rawId === staffId) : null;
 
         const titleEl = document.getElementById('staffModalTitle');
@@ -450,8 +423,8 @@
             if (phoneInput) phoneInput.value = staff.phone || '';
             if (emailInput) emailInput.value = (staff.email && staff.email !== 'Chưa cập nhật') ? staff.email : '';
             if (addrInput) addrInput.value = (staff.address && staff.address !== 'Chưa cập nhật') ? staff.address : '';
-            if (dobInput) dobInput.value = parseToInputDate(staff.dob) || '1998-01-01';
-            if (joinDateInput) joinDateInput.value = parseToInputDate(staff.join_date) || '2024-01-01';
+            if (dobInput) dobInput.value = parseToInputDate(staff.dob) || '';
+            if (joinDateInput) joinDateInput.value = parseToInputDate(staff.join_date) || '';
             if (posSelect) posSelect.value = staff.position || 'Kỹ thuật viên grooming';
             if (shiftSelect) shiftSelect.value = staff.shift || 'MORNING';
             if (specInput) specInput.value = staff.note || '';
@@ -490,7 +463,7 @@
             if (phoneInput) phoneInput.value = '';
             if (emailInput) emailInput.value = '';
             if (addrInput) addrInput.value = '';
-            if (dobInput) dobInput.value = '1998-01-01';
+            if (dobInput) dobInput.value = '';
             if (joinDateInput) {
                 const today = new Date().toISOString().split('T')[0];
                 joinDateInput.value = today;
@@ -506,122 +479,148 @@
             if (accountPassInput) accountPassInput.value = '';
         }
 
+        PawpalStaff.state.profileEditSnapshot=staff?structuredClone(staff.raw):null;PawpalStaff.state.profileSaveRequest=crypto.randomUUID();
+        document.getElementById('staffProfileError').textContent='';
+        const accountTitle=document.getElementById('staffEnableAccountToggle').closest('.account-toggle-row')?.previousElementSibling;if(accountTitle)accountTitle.style.display=staff?'none':'';
+        document.querySelectorAll('#staffModalOverlay .detail-section-title').forEach(title=>{if(title.textContent.includes('Tài khoản đăng nhập')||title.dataset.accountHeading){title.dataset.accountHeading='true';title.textContent=staff?'Trạng thái công việc':'Tài khoản đăng nhập hệ thống';}});
+        const permissionGrid=document.getElementById('staffPermissionsGrid');permissionGrid.style.display='none';permissionGrid.previousElementSibling.style.display='none';
+        document.getElementById('staffEmploymentStatus').value=staff?staff.raw.employment_status.toLowerCase():'active';
+        document.getElementById('staffServiceLocked').checked=staff?.raw.service_locked||false;
+        document.getElementById('staffChangeReason').value='';
+        if(staff){nameInput.value=staff.raw.full_name;phoneInput.value=staff.raw.phone_number||'';emailInput.value=staff.raw.email||'';addrInput.value=staff.raw.address||'';dobInput.value=staff.raw.dob||'';joinDateInput.value=staff.raw.hire_date||'';posSelect.value=staff.raw.job_title;accountSection.style.display='none';enableAccountToggle.closest('label').style.display='none';}
+        else{dobInput.value='';joinDateInput.value='';posSelect.value='';enableAccountToggle.closest('label').style.display='';}
+        if(!staff)PawpalStaff.state.profileNewId=crypto.randomUUID();
+        configureStaffAccess(staff);
         modal.classList.add('active');
     }
 
-    async function openReassignModal(staffId) {
-        const modal = document.getElementById('reassignModalOverlay');
-        if (!modal) return;
-
-        const staffList = PawpalStaff.state?.mockStaff || [];
-        const currentStaff = staffList.find(s => s.id === staffId || s.rawId === staffId) || staffList[0];
-        if (!currentStaff) return;
-        
-        modal.setAttribute('data-target-staff-id', currentStaff.id);
-        modal.setAttribute('data-target-staff-raw-id', currentStaff.rawId || '');
-
-        const warningText = document.getElementById('reassignModalWarningText');
-        if (warningText) {
-            warningText.innerHTML = `Nhân viên <strong>${escapeHtml(currentStaff.name)} (${escapeHtml(currentStaff.id)})</strong> đang có các ca hẹn dịch vụ trong ngày. Vui lòng phân công lại nhân sự để tránh gián đoạn dịch vụ.`;
+    let handoverSnapshot=null,handoverPage=1;
+    function renderHandoverRows(){
+        const state=handoverSnapshot,body=document.getElementById('reassignBookingsTableBody');body.querySelectorAll('select').forEach(select=>select._entityPopover?.remove());body.replaceChildren();
+        if(!state.tasks.length){const td=body.insertRow().insertCell();td.colSpan=5;td.textContent='Không có công việc chưa hoàn tất. Có thể xác nhận khóa nhận việc.';}
+        for(const task of state.tasks.slice((handoverPage-1)*10,handoverPage*10)){
+            const row=body.insertRow(),profile=Array.isArray(task.customer?.customer_profile)?task.customer.customer_profile[0]:task.customer?.customer_profile;
+            for(const text of [task.appointment_code,[profile?.full_name,task.pet?.pet_name].filter(Boolean).join(' · ')||'—',task.items.map(i=>i.name_snapshot).join(', '),new Date(task.scheduled_start_at).toLocaleString('vi-VN',{timeZone:'Asia/Bangkok'})])row.insertCell().textContent=text;
+            const select=document.createElement('select');select.className='admin-select reassign-select-row';select.dataset.bookingRawId=task.id;select.append(new Option('Chọn nhân viên',''),...state.replacements.map(s=>new Option(s.name+' · '+s.position,s.rawId)));select.value=state.choices.get(task.id)||'';select.onchange=()=>state.choices.set(task.id,select.value);row.insertCell().append(select);PawpalStaff.enhanceEntitySelect(select);
         }
+        let pager=document.getElementById('staffHandoverPager');if(!pager){pager=document.createElement('div');pager.id='staffHandoverPager';pager.style.cssText='display:flex;justify-content:center;gap:8px;margin-top:6px';body.closest('.table-responsive-wrapper').after(pager);}
+        pager.replaceChildren();const pages=Math.ceil(state.tasks.length/10)||1;for(const [text,target] of [['<',handoverPage-1],[String(handoverPage),handoverPage],['>',handoverPage+1]]){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.style.cssText=target===handoverPage&&text!=='<'&&text!=='>'?'border:none;background:#236B48;color:white':'border:none;background:transparent';button.textContent=text;button.disabled=target<1||target>pages;button.onclick=()=>{handoverPage=target;renderHandoverRows();};pager.append(button);}
+    }
+    async function openReassignModal(staffId){
+        const staff=PawpalStaff.state.staff.find(s=>s.id===staffId||s.rawId===staffId);if(!staff)return;
+        const modal=document.getElementById('reassignModalOverlay'),button=document.getElementById('btnConfirmReassign');
+        handoverSnapshot={staff:structuredClone(staff.raw),request:crypto.randomUUID(),tasks:[],choices:new Map(),ready:false,replacements:PawpalStaff.state.staff.filter(s=>s.rawId!==staff.rawId&&s.status==='ACTIVE'&&!s.serviceLocked)};handoverPage=1;
+        document.getElementById('reassignModalForm').reset();document.getElementById('staffHandoverError').textContent='';document.getElementById('reassignModalWarningText').textContent='Bàn giao công việc chưa hoàn tất của '+staff.name+' trước khi khóa nhận dịch vụ.';button.disabled=true;modal.classList.add('active');
+        const select=document.getElementById('reassignSelectAllStaff');select.replaceChildren(new Option('Chọn nhân viên',''),...handoverSnapshot.replacements.map(s=>new Option(s.name+' · '+s.position,s.rawId)));if(select._entityInput)select._entityInput.value='';else PawpalStaff.enhanceEntitySelect(select);
+        select.onchange=()=>{for(const task of handoverSnapshot.tasks)handoverSnapshot.choices.set(task.id,select.value);renderHandoverRows();};
+        const current=handoverSnapshot;
+        try{
+            const tasks=await PawpalStaff.readRows(()=>window.getSupabaseClient().from('appointment').select('id,appointment_code,staff_id,updated_at,scheduled_start_at,scheduled_end_at,customer:customer_id(customer_profile(full_name)),pet:pet_id(pet_name),items:appointment_item(id,staff_id,status,name_snapshot),trips:taxi_trip(id,driver_staff_id,status)').not('appointment_status','in','(completed,cancelled,no_show)').order('scheduled_start_at').order('id'));
+            if(handoverSnapshot!==current)return;
+            current.tasks=tasks.filter(a=>a.staff_id===staff.rawId||a.items.some(i=>i.staff_id===staff.rawId&&!['completed','cancelled'].includes(i.status))||(Array.isArray(a.trips)?a.trips:a.trips?[a.trips]:[]).some(t=>t.driver_staff_id===staff.rawId&&!['completed','cancelled'].includes(t.status)));current.ready=true;renderHandoverRows();
+        }catch(error){document.getElementById('staffHandoverError').textContent='Không tải được công việc. Đóng và mở lại để kiểm tra.';}
+        finally{button.disabled=!current.ready;}
+    }
+    async function saveHandover(){
+        const state=handoverSnapshot,button=document.getElementById('btnConfirmReassign');if(!state?.ready||button.disabled)return;button.disabled=true;
+        try{
+            const {error}=await window.getSupabaseClient().rpc('handover_admin_staff_work',{p_request_id:state.request,p_staff_id:state.staff.id,p_expected_updated_at:state.staff.updated_at,p_reason:document.getElementById('staffHandoverReason').value.trim(),p_handover:state.tasks.map(a=>({appointment_id:a.id,expected_updated_at:a.updated_at,replacement_staff_id:state.choices.get(a.id)||null}))});if(error)throw error;
+            await PawpalStaff.loadStaffModuleData({force:true});renderStaffList();renderStaffAlertBar();document.getElementById('reassignModalOverlay').classList.remove('active');PawpalStaff.showToast('Đã bàn giao và khóa nhận dịch vụ.','success');
+        }catch(error){const messages={staff_handover_incomplete:'Còn công việc chưa được bàn giao. Đóng và mở lại để kiểm tra.',staff_work_changed:'Công việc đã thay đổi. Đóng và mở lại để đối chiếu.',staff_profile_changed:'Hồ sơ nhân viên đã thay đổi. Mở lại để kiểm tra.',staff_not_eligible:'Chọn nhân viên đang làm việc, không bị khóa nhận việc cho từng ca.',staff_level_required:'Nhân viên thay thế chưa đủ cấp độ chuyên môn.',staff_not_available:'Nhân viên thay thế có lịch nghỉ trong khoảng này.',staff_schedule_conflict:'Nhân viên thay thế đang có công việc trùng giờ.',invalid_staff_handover:'Nhập lý do và chọn đủ nhân viên thay thế.'};document.getElementById('staffHandoverError').textContent=messages[error.message]||'Không thể bàn giao. Toàn bộ đợt được giữ nguyên; kiểm tra dữ liệu và quyền thực hiện.';}
+        finally{button.disabled=false;}
+    }
 
-        // N-14: Danh sách KTV khả dụng khác để thay thế:
-        // Phải là nhân sự ACTIVE, không nghỉ phép (LEAVE), không bị khóa dịch vụ (serviceLocked) và có chuyên môn phù hợp
-        const availableReplacements = staffList.filter(s => 
-            (s.id !== currentStaff.id && s.rawId !== currentStaff.rawId) &&
-            s.status === 'ACTIVE' && 
-            !s.serviceLocked &&
-            (s.role === 'Grooming' || s.role === 'Bác sĩ thú y' || s.role === 'Kỹ thuật viên' || (s.position && s.position.includes('Kỹ thuật viên')))
-        );
-
-        // Nạp options vào dropdown chuyển nhanh tất cả
-        const selectAllStaff = document.getElementById('reassignSelectAllStaff');
-        if (selectAllStaff) {
-            selectAllStaff.innerHTML = '<option value="">-- Chọn nhân sự thay thế cho tất cả ca --</option>' + 
-                availableReplacements.map(s => `<option value="${escapeHtml(s.rawId || s.id)}">${escapeHtml(s.name)} (${escapeHtml(s.position)})</option>`).join('');
+    let accessDraft=null;const authRetries=new Map();
+    const profileFields=['full_name','phone_number','job_title','specialization','hire_date','email','address','dob','service_locked','staff_level_id','employment_status'];
+    async function callStaffAccount(path,body){
+        const {data}=await window.getSupabaseClient().auth.getSession();if(!data.session?.access_token)throw Error('Vui lòng đăng nhập lại.');
+        const response=await fetch('/api/admin/staff/'+path,{method:'POST',headers:{Authorization:'Bearer '+data.session.access_token,'Content-Type':'application/json'},body:JSON.stringify(body)});
+        let result;try{result=await response.json();}catch{throw Error('Không thể đọc kết quả quản lý tài khoản.');}
+        if(!response.ok||!result.success)throw Error((result.message||'Không thể hoàn tất yêu cầu.')+' Mã yêu cầu '+body.requestId);return result;
+    }
+    async function reloadStaffAccount(){
+        const original=PawpalStaff.state.profileEditSnapshot;if(!original)return;
+        await PawpalStaff.loadStaffModuleData({force:true});const current=PawpalStaff.state.staff.find(s=>s.rawId===original.id);if(!current)return;
+        if(profileFields.some(k=>current.raw[k]!==original[k])){document.getElementById('staffProfileError').textContent='Hồ sơ có thay đổi mới. Đóng và mở lại trước khi sửa thông tin cá nhân.';document.getElementById('btnSaveStaff').disabled=true;}
+        else PawpalStaff.state.profileEditSnapshot={...original,updated_at:current.raw.updated_at,must_change_password:current.raw.must_change_password,login_email:current.raw.login_email};
+        accessDraft.staff=current;updateAccountStatus(current);renderStaffList();renderStaffAlertBar();
+    }
+    function updateAccountStatus(staff){
+        const locked=staff?.accountStatus==='da_khoa';document.getElementById('staffAccountStatusBadge').textContent=locked?'Đang khóa đăng nhập':'Auth đang mở';
+        document.getElementById('staffAccountStatusBadge').className='admin-badge '+(locked?'badge-danger':'badge-success');
+        document.getElementById('btnStaffToggleLockAccount').textContent=locked?'Mở khóa đăng nhập':'Khóa đăng nhập';
+        document.getElementById('staffMustChangePasswordCheckbox').checked=staff?.raw.must_change_password??true;
+        document.getElementById('staffAccountEmail').value=staff?.raw.login_email||'';
+    }
+    function permissionTitle(code){
+        const [table,action]=code.split('.'),names={customer:'khách hàng',customer_profile:'hồ sơ khách',customer_phone:'điện thoại khách',customer_address:'địa chỉ khách',pet_profile:'thú cưng',pet_weight_log:'cân nặng',appointment:'lịch dịch vụ',appointment_item:'dịch vụ trong lịch',appointment_record:'biên bản dịch vụ',care_log:'nhật ký chăm sóc',service:'danh mục dịch vụ',sales_order:'đơn bán hàng',sales_order_detail:'dòng đơn hàng',product:'sản phẩm',product_variant:'biến thể',inventory:'tồn kho',inventory_transaction:'sổ kho',payment:'khoản thu',refund_transaction:'khoản hoàn',staff:'nhân sự',staff_role:'vai trò nhân viên',staff_permission:'quyền riêng',staff_schedule:'lịch làm việc',staff_shift_request:'yêu cầu nghỉ và đổi ca',staff_assessment:'đánh giá nhân viên',access_role:'danh mục vai trò',role_permission:'quyền của vai trò',permission:'danh mục quyền',review:'đánh giá khách',review_response:'phản hồi đánh giá',support_ticket:'phiếu phản ánh',audit_log:'nhật ký quản trị'};
+        return (action==='write'?'Thay đổi ':'Xem ')+(names[table]||'dữ liệu '+table);
+    }
+    function renderAccessChoices(){
+        const draft=accessDraft;if(!draft?.ready)return;
+        const roles=document.getElementById('staffAccountRoles');roles.replaceChildren();
+        const inherited=new Set(draft.rolePermissions.filter(r=>draft.roles.has(r.role_code)).map(r=>r.permission_code));
+        for(const role of draft.catalogRoles){const label=document.createElement('label');label.className='perm-checkbox';const input=document.createElement('input');input.type='checkbox';input.value=role.code;input.checked=draft.roles.has(role.code);input.onchange=()=>{if(input.checked)draft.roles.add(role.code);else draft.roles.delete(role.code);renderAccessChoices();};label.append(input,document.createTextNode(role.code==='ADMIN'?'Quản trị viên':role.role_name));roles.append(label);}
+        const grid=document.getElementById('staffPermissionsGrid');grid.replaceChildren();
+        const query=document.getElementById('staffPermissionSearch').value;
+        const list=draft.catalogPermissions.filter(p=>PawpalStaff.matchSearch(permissionTitle(p.code)+' '+p.code,query));
+        for(const permission of list.slice(0,draft.visible)){
+            const label=document.createElement('label');label.className='perm-checkbox';label.style.cssText='display:flex;align-items:flex-start;gap:8px;margin:8px 0';const input=document.createElement('input');input.type='checkbox';input.value=permission.code;input.checked=inherited.has(permission.code)||draft.permissions.has(permission.code);input.disabled=inherited.has(permission.code);input.onchange=()=>{if(input.checked)draft.permissions.add(permission.code);else draft.permissions.delete(permission.code);};
+            const text=document.createElement('span');text.textContent=permissionTitle(permission.code)+(inherited.has(permission.code)?' · Thừa hưởng':'');const code=document.createElement('small');code.textContent=permission.code;code.style.cssText='display:block;color:#4F7A65';text.append(code);label.append(input,text);grid.append(label);
         }
-
-        const tbody = document.getElementById('reassignBookingsTableBody');
-        if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:18px;color:var(--text-muted);">Đang tải danh sách ca hẹn thực tế từ CSDL...</td></tr>';
-        }
-
-        modal.classList.add('active');
-
-        // N-12: Query danh sách ca hẹn thật từ CSDL Supabase theo staff_id
-        const client = PawpalStaff.getSupabaseClient ? PawpalStaff.getSupabaseClient() : window.SupabaseClient;
-        let realBookings = [];
-        if (client && currentStaff.rawId) {
-            try {
-                const todayStr = new Date().toISOString().slice(0, 10);
-                const { data: appts, error: apptErr } = await client
-                    .from('appointment')
-                    .select('id, appointment_code, appointment_date, appointment_time, appointment_status, service:service_id(service_name), pet:pet_id(pet_name)')
-                    .eq('staff_id', currentStaff.rawId)
-                    .gte('appointment_date', todayStr)
-                    .in('appointment_status', ['da_xac_nhan', 'cho_xac_nhan', 'dang_thuc_hien'])
-                    .order('appointment_date', { ascending: true })
-                    .limit(20);
-
-                if (!apptErr && Array.isArray(appts)) {
-                    realBookings = appts.map(a => ({
-                        id: a.appointment_code || a.id,
-                        rawId: a.id,
-                        customerName: 'Khách hàng',
-                        petName: a.pet?.pet_name || 'Bé cưng',
-                        service: a.service?.service_name || 'Dịch vụ chăm sóc',
-                        time: `${a.appointment_date} ${a.appointment_time || ''}`
-                    }));
-                }
-            } catch (e) {
-                console.error('Lỗi khi tải lịch hẹn của KTV cần khóa:', e);
-            }
-        }
-
-        if (tbody) {
-            if (realBookings.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">
-                            Nhân viên hiện không có ca hẹn dịch vụ nào cần điều phối lại trong CSDL.
-                        </td>
-                    </tr>
-                `;
-            } else {
-                tbody.innerHTML = realBookings.map(b => `
-                    <tr>
-                        <td style="font-weight: 600; color: var(--text-heading);">${escapeHtml(b.id)}</td>
-                        <td>
-                            <div style="font-weight: 600; color: var(--text-main);">${escapeHtml(b.petName)}</div>
-                            <div style="font-size: 11.5px; color: var(--text-muted);">${escapeHtml(b.customerName)}</div>
-                        </td>
-                        <td><span class="admin-badge badge-primary">${escapeHtml(b.service)}</span></td>
-                        <td style="font-weight: 500;">${escapeHtml(b.time)}</td>
-                        <td>
-                            <select class="admin-select reassign-select-row" data-booking-raw-id="${escapeHtml(b.rawId)}" style="height: 32px; padding: 2px 8px; font-size: 12px;">
-                                <option value="">-- Chọn KTV --</option>
-                                ${availableReplacements.map(s => `<option value="${escapeHtml(s.rawId || s.id)}">${escapeHtml(s.name)}</option>`).join('')}
-                            </select>
-                        </td>
-                    </tr>
-                `).join('');
-            }
-        }
-
-        // Khi thay đổi dropdown chuyển nhanh tất cả -> áp dụng cho tất cả hàng
-        if (selectAllStaff) {
-            selectAllStaff.onchange = () => {
-                const selectedVal = selectAllStaff.value;
-                if (selectedVal) {
-                    modal.querySelectorAll('.reassign-select-row').forEach(sel => {
-                        sel.value = selectedVal;
-                    });
-                }
-            };
-        }
+        const more=document.getElementById('staffPermissionMore');more.hidden=list.length<=draft.visible;more.style.display=more.hidden?'none':'';more.onclick=()=>{draft.visible+=20;renderAccessChoices();};
+    }
+    async function configureStaffAccess(staff){
+        const token=PawpalStaff.state.profileSaveRequest;accessDraft={token,staff,roles:new Set(staff?.roles.map(r=>r.code)||[]),permissions:new Set(staff?.permissions||[]),visible:20,ready:false};
+        const section=document.getElementById('staffAccountConfigSection');section.style.display='block';
+        document.getElementById('staffAccountPassword').type='password';document.getElementById('btnShowStaffPassword').textContent='Hiện mật khẩu';
+        document.getElementById('staffAccessDetails').open=false;
+        const login=document.getElementById('staffAccountEmail');login.readOnly=!!staff;if(staff)login.value=staff.raw.login_email||'';
+        const allow=document.getElementById('staffEnableAccountToggle');allow.disabled=!!staff;allow.closest('label').style.display='';allow.checked=staff?staff.accountStatus!=='da_khoa':false;
+        document.getElementById('staffAccountStatusRow').style.display=staff?'flex':'none';document.getElementById('staffMustChangePasswordCheckbox').disabled=true;
+        document.getElementById('staffAccountPassword').value='';document.getElementById('staffAccountError').textContent='';document.getElementById('staffAccessReason').value='';document.getElementById('staffPermissionSearch').value='';document.getElementById('staffPermissionsGrid').style.display='block';document.getElementById('staffPermissionsGrid').previousElementSibling.style.display='';document.getElementById('btnSaveStaffAccess').style.display=staff?'':'none';
+        document.getElementById('staffAccessReasonGroup').style.display=staff?'':'none';if(staff)updateAccountStatus(staff);
+        try{
+            const [catalogRoles,catalogPermissions,rolePermissions]=await Promise.all([PawpalStaff.readRows(()=>window.getSupabaseClient().from('access_role').select('code,role_name').order('code')),PawpalStaff.readRows(()=>window.getSupabaseClient().from('permission').select('code,description').order('code')),PawpalStaff.readRows(()=>window.getSupabaseClient().from('role_permission').select('role_code,permission_code').order('role_code').order('permission_code'))]);
+            if(accessDraft.token!==token)return;Object.assign(accessDraft,{catalogRoles,catalogPermissions,rolePermissions,ready:true});renderAccessChoices();
+        }catch{document.getElementById('staffAccountError').textContent='Không tải được danh mục quyền. Đóng và mở lại trước khi quản lý tài khoản.';}
+    }
+    PawpalStaff.createStaffAccount=async profile=>{
+        if(!accessDraft?.ready)throw Error('Chưa tải được danh mục quyền.');
+        const result=await callStaffAccount('provision-account',{requestId:PawpalStaff.state.profileSaveRequest,staffId:PawpalStaff.state.profileNewId,profile,email:document.getElementById('staffAccountEmail').value.trim(),password:document.getElementById('staffAccountPassword').value,enableLogin:document.getElementById('staffEnableAccountToggle').checked,roles:[...accessDraft.roles],permissions:[...accessDraft.permissions]});return result.staffId;
+    };
+    function initStaffAccountActions(){
+        document.getElementById('btnShowStaffPassword').onclick=e=>{const input=document.getElementById('staffAccountPassword');input.type=input.type==='password'?'text':'password';e.currentTarget.textContent=input.type==='password'?'Hiện mật khẩu':'Ẩn mật khẩu';};
+        document.getElementById('staffPermissionSearch').oninput=()=>{if(accessDraft){accessDraft.visible=20;renderAccessChoices();}};
+        const control=async(button,path,action)=>{
+            const staff=accessDraft?.staff;if(!staff||button.disabled)return;button.disabled=true;
+            try{
+                const password=action==='reset'?document.getElementById('staffAccountPassword').value:null,key=staff.rawId+':'+action+':'+(password||'');
+                if(!authRetries.has(key))authRetries.set(key,{requestId:crypto.randomUUID(),staffId:staff.rawId,expectedUpdatedAt:staff.raw.updated_at,action,...(password!==null?{password}:{})});
+                await callStaffAccount(path,authRetries.get(key));authRetries.delete(key);await reloadStaffAccount();document.getElementById('staffAccountPassword').value='';document.getElementById('staffAccountError').textContent='';PawpalStaff.showToast('Đã xác nhận thay đổi tài khoản.','success');
+            }catch(error){document.getElementById('staffAccountError').textContent=error.message;}
+            finally{button.disabled=false;}
+        };
+        document.getElementById('btnStaffResetPasswordModal').onclick=event=>{
+            const button=event.currentTarget;PawpalStaff.showStaffConfirmModal({title:'Đặt lại mật khẩu',message:'Đặt mật khẩu tạm đang nhập cho nhân viên này và yêu cầu đổi khi đăng nhập?',confirmText:'Xác nhận đặt lại',onConfirm:()=>control(button,'reset-password','reset')});
+        };
+        document.getElementById('btnStaffToggleLockAccount').onclick=event=>{
+            const button=event.currentTarget,action=accessDraft?.staff?.accountStatus==='da_khoa'?'unlock':'lock';PawpalStaff.showStaffConfirmModal({title:action==='lock'?'Khóa đăng nhập':'Mở khóa đăng nhập',message:'Xác nhận thay đổi quyền đăng nhập của nhân viên đang xem?',confirmText:'Xác nhận',onConfirm:()=>control(button,'toggle-account-status',action)});
+        };
+        document.getElementById('btnSaveStaffAccess').onclick=()=>{
+            if(!accessDraft?.ready||!accessDraft.staff)return;
+            const draft={staff:structuredClone(accessDraft.staff.raw),roles:[...accessDraft.roles].sort(),permissions:[...accessDraft.permissions].sort(),reason:document.getElementById('staffAccessReason').value.trim()};
+            PawpalStaff.showStaffConfirmModal({title:'Lưu quyền truy cập',message:'Xác nhận thay đổi vai trò và quyền riêng của nhân viên đang xem?',confirmText:'Lưu quyền truy cập',onConfirm:async()=>{
+                const button=document.getElementById('btnSaveStaffAccess');if(button.disabled)return;button.disabled=true;
+                try{const key=JSON.stringify(draft);accessDraft.requests||=new Map();if(!accessDraft.requests.has(key))accessDraft.requests.set(key,crypto.randomUUID());const {error}=await window.getSupabaseClient().rpc('set_admin_staff_access',{p_request_id:accessDraft.requests.get(key),p_staff_id:draft.staff.id,p_expected_updated_at:draft.staff.updated_at,p_roles:draft.roles,p_permissions:draft.permissions,p_reason:draft.reason});if(error)throw error;await reloadStaffAccount();document.getElementById('staffAccountError').textContent='';PawpalStaff.showToast('Đã lưu quyền truy cập.','success');}
+                catch(error){document.getElementById('staffAccountError').textContent=error.message==='staff_last_admin_required'?'Cần giữ ít nhất một Admin đang hoạt động.':'Không thể lưu quyền. Kiểm tra lý do, quyền quản trị và phiên bản hồ sơ.';}
+                finally{button.disabled=false;}
+            }});
+        };
     }
 
     function initStaffListSubtab() {
+        initStaffAccountActions();
         const searchInput = document.getElementById('staffSearchInput');
         const clearSearchBtn = document.getElementById('btnClearStaffSearch');
         let staffSearchTimer = null;
@@ -748,7 +747,7 @@
         const btnExportStaff = document.getElementById('btnExportStaff') || document.getElementById('btnExportStaffReport');
         if (btnExportStaff) {
             btnExportStaff.addEventListener('click', () => {
-                const staffList = PawpalStaff.state?.mockStaff || [];
+                const staffList = PawpalStaff.state?.staff || [];
                 const headers = ['Mã NV', 'Họ tên', 'Vị trí', 'Số điện thoại', 'Email', 'Ca làm việc', 'Năng lực tay nghề', 'Trạng thái'];
                 const rows = staffList.map(s => [
                     `"${s.id || ''}"`,
@@ -778,33 +777,6 @@
         }
 
         // Toggle cấu hình tài khoản
-        const enableAccountToggle = document.getElementById('staffEnableAccountToggle');
-        const accountSection = document.getElementById('staffAccountConfigSection');
-        if (enableAccountToggle && accountSection) {
-            enableAccountToggle.addEventListener('change', () => {
-                accountSection.style.display = enableAccountToggle.checked ? 'block' : 'none';
-            });
-        }
-
-        // Tự động đồng bộ hai chiều giữa Email công việc và Email đăng nhập
-        const workEmailInput = document.getElementById('staffInputEmail');
-        const loginEmailInput = document.getElementById('staffAccountEmail');
-        if (workEmailInput && loginEmailInput) {
-            workEmailInput.addEventListener('input', () => {
-                if (!loginEmailInput.value || loginEmailInput.dataset.autoSynced !== 'false') {
-                    loginEmailInput.value = workEmailInput.value;
-                    loginEmailInput.dataset.autoSynced = 'true';
-                }
-            });
-            loginEmailInput.addEventListener('input', () => {
-                loginEmailInput.dataset.autoSynced = 'false';
-                if (!workEmailInput.value) {
-                    workEmailInput.value = loginEmailInput.value;
-                }
-            });
-        }
-
-        // Tạo mật khẩu ngẫu nhiên
         const btnGenPass = document.getElementById('btnGenerateRandomStaffPass');
         const staffPassInput = document.getElementById('staffAccountPassword');
         if (btnGenPass && staffPassInput) {
@@ -821,287 +793,24 @@
         }
 
         // Submit form nhân sự
-        const btnSaveStaff = document.getElementById('btnSaveStaff');
-        if (btnSaveStaff) {
-            btnSaveStaff.addEventListener('click', async () => {
-                const modal = document.getElementById('staffModalOverlay');
-                const editingId = modal?.getAttribute('data-editing-id');
-                const name = document.getElementById('staffInputName')?.value.trim();
-                const phone = document.getElementById('staffInputPhone')?.value.trim();
-                const emailInputVal = document.getElementById('staffInputEmail')?.value.trim();
-                const accountEmailVal = document.getElementById('staffAccountEmail')?.value.trim();
-                const email = emailInputVal || accountEmailVal;
-                const address = document.getElementById('staffInputAddress')?.value.trim();
-                const dob = document.getElementById('staffInputDob')?.value;
-                const joinDate = document.getElementById('staffInputJoinDate')?.value;
-                const position = document.getElementById('staffInputPosition')?.value;
-                const shift = document.getElementById('staffInputShift')?.value;
-                const specialization = document.getElementById('staffInputSpecialization')?.value.trim();
+        const btnSaveStaff=document.getElementById('btnSaveStaff');
+        btnSaveStaff.addEventListener('click',async()=>{
+            if(btnSaveStaff.disabled)return;btnSaveStaff.disabled=true;
+            const value=id=>document.getElementById(id)?.value.trim()||'',snapshot=PawpalStaff.state.profileEditSnapshot;
+            try{
+                const details={full_name:value('staffInputName'),phone_number:value('staffInputPhone'),email:value('staffInputEmail'),address:value('staffInputAddress'),dob:value('staffInputDob')||null,hire_date:value('staffInputJoinDate')||null,job_title:value('staffInputPosition'),specialization:value('staffInputSpecialization'),employment_status:value('staffEmploymentStatus'),service_locked:document.getElementById('staffServiceLocked').checked,staff_level_id:snapshot?.staff_level_id||null,reason:value('staffChangeReason')};
+                if(!snapshot){await PawpalStaff.createStaffAccount?.(details);if(!PawpalStaff.createStaffAccount)throw Error('staff_creation_not_ready');}
+                else{const {error}=await window.getSupabaseClient().rpc('save_admin_staff_profile',{p_request_id:PawpalStaff.state.profileSaveRequest,p_staff_id:snapshot.id,p_expected_updated_at:snapshot.updated_at,p_details:details});if(error)throw error;}
+                await PawpalStaff.loadStaffModuleData({force:true});renderStaffList();renderStaffAlertBar();
+                document.getElementById('staffAccountPassword').value='';
+                document.getElementById('staffModalOverlay').classList.remove('active');PawpalStaff.showToast('Đã lưu hồ sơ nhân viên.','success');
+            }catch(error){const messages={staff_profile_changed:'Hồ sơ đã thay đổi. Đóng và mở lại để kiểm tra.',staff_handover_required:'Cần bàn giao công việc chưa xong trước khi ngừng việc hoặc khóa phân công.',staff_last_admin_required:'Phải giữ ít nhất một Admin đang hoạt động.',staff_change_reason_required:'Nhập lý do đổi trạng thái.',staff_creation_not_ready:'Phần cấp tài khoản V1 đang được hoàn thiện.'};document.getElementById('staffProfileError').textContent=messages[error.message]||'Không thể lưu hồ sơ. Kiểm tra thông tin và quyền thực hiện.';}
+            finally{btnSaveStaff.disabled=false;}
+        });
 
-                if (!name || !phone || !email || !shift) {
-                    PawpalStaff.showToast('Vui lòng điền đầy đủ các thông tin bắt buộc!', 'warning');
-                    return;
-                }
+        document.getElementById('btnConfirmReassign').onclick=saveHandover;
+        document.getElementById('reassignModalForm').addEventListener('submit',e=>e.preventDefault());
 
-                try {
-                    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                    const enableAccount = document.getElementById('staffEnableAccountToggle')?.checked;
-                    const accountEmail = accountEmailVal || email;
-                    const accountPassword = document.getElementById('staffAccountPassword')?.value.trim();
-                    const systemRole = document.getElementById('staffAccountSystemRole')?.value || 'STAFF';
-                    const mustChangePass = document.getElementById('staffMustChangePasswordCheckbox')?.checked ?? true;
-
-                    // Thu thập danh sách quyền chi tiết được tích chọn
-                    const permissions = [];
-                    document.querySelectorAll('#staffPermissionsGrid input[type="checkbox"]:checked').forEach(cb => {
-                        permissions.push(cb.value);
-                    });
-
-                    let targetStaffId = null;
-
-                    if (!client) {
-                        throw new Error('Chưa kết nối được cơ sở dữ liệu Supabase. Vui lòng kiểm tra lại phiên làm việc.');
-                    }
-
-                    const dbRole = PawpalStaff.mapPositionToDbRole ? PawpalStaff.mapPositionToDbRole(position) : 'cham_soc_thu_cung';
-
-                    if (editingId) {
-                        const staffList = PawpalStaff.state?.mockStaff || [];
-                        const staff = staffList.find(s => s.id === editingId);
-                        if (staff && staff.rawId) {
-                            targetStaffId = staff.rawId;
-                            const { error: updateErr } = await client.from('staff').update({
-                                full_name: name,
-                                phone_number: phone,
-                                email: email,
-                                address: address,
-                                dob: dob || null,
-                                hire_date: joinDate || null,
-                                shift: shift,
-                                role: dbRole,
-                                specialization: specialization || position
-                            }).eq('id', staff.rawId);
-                            if (updateErr) throw updateErr;
-                        } else {
-                            throw new Error('Không tìm thấy mã định danh hồ sơ nhân sự cần cập nhật.');
-                        }
-                    } else {
-                        const { data: newStaffData, error: insertErr } = await client.from('staff').insert({
-                            full_name: name,
-                            phone_number: phone,
-                            email: email,
-                            address: address,
-                            dob: dob || null,
-                            hire_date: joinDate || null,
-                            shift: shift,
-                            status: 'ACTIVE',
-                            role: dbRole,
-                            specialization: specialization || position
-                        }).select('id').single();
-
-                        if (insertErr) throw insertErr;
-                        if (newStaffData) targetStaffId = newStaffData.id;
-                    }
-
-                    // Nếu có bật tùy chọn cấp tài khoản đăng nhập
-                    if (enableAccount && targetStaffId) {
-                        if (!accountEmail) {
-                            PawpalStaff.showToast('Vui lòng nhập Email công vụ để cấp tài khoản!', 'warning');
-                        } else if (!editingId && (!accountPassword || accountPassword.length < 6)) {
-                            PawpalStaff.showToast('Mật khẩu khởi tạo phải có ít nhất 6 ký tự!', 'warning');
-                        } else {
-                            // Lấy token Bearer từ phiên đăng nhập Supabase của Admin
-                            let adminBearerToken = null;
-                            try {
-                                if (client && client.auth) {
-                                    const sess = await client.auth.getSession();
-                                    adminBearerToken = sess?.data?.session?.access_token;
-                                }
-                            } catch (tokErr) {
-                                console.warn('[PawpalStaff] Lấy admin token thất bại:', tokErr);
-                            }
-
-                            const reqHeaders = { 'Content-Type': 'application/json' };
-                            if (adminBearerToken) {
-                                reqHeaders['Authorization'] = `Bearer ${adminBearerToken}`;
-                            }
-
-                            const payload = {
-                                staffId: targetStaffId,
-                                email: accountEmail,
-                                systemRole: systemRole,
-                                permissions: permissions,
-                                mustChangePassword: mustChangePass
-                            };
-                            if (accountPassword) {
-                                payload.password = accountPassword;
-                            }
-
-                            try {
-                                const resp = await fetch('/api/admin/staff/provision-account', {
-                                    method: 'POST',
-                                    headers: reqHeaders,
-                                    body: JSON.stringify(payload)
-                                });
-                                const result = await resp.json().catch(() => ({}));
-                                if (!resp.ok || !result.success) {
-                                    console.warn('[PawpalStaff] Lỗi đồng bộ tài khoản Auth:', result.message);
-                                    PawpalStaff.showToast('Lưu thông tin nhân viên thành công nhưng đồng bộ tài khoản Auth thất bại: ' + (result.message || 'Lỗi phân quyền'), 'warning');
-                                }
-                            } catch (fetchErr) {
-                                console.warn('[PawpalStaff] Không thể kết nối endpoint provision-account:', fetchErr);
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.error('[PawpalStaff] Error saving staff:', e);
-                    PawpalStaff.showToast('Không thể lưu hồ sơ nhân sự: ' + (e.message || 'Lỗi cơ sở dữ liệu'), 'error');
-                    return; // Chặn đứng, không đóng modal và không tạo trạng thái thành công ảo
-                }
-
-                // Cập nhật mock state đồng bộ
-                if (editingId) {
-                    const staff = (PawpalStaff.state?.mockStaff || []).find(s => s.id === editingId);
-                    if (staff) {
-                        staff.name = name;
-                        staff.phone = phone;
-                        staff.email = email;
-                        staff.address = address;
-                        staff.position = position;
-                        staff.shift = shift;
-                        staff.note = specialization;
-                    }
-                } else {
-                    const newId = `EMP-${String((PawpalStaff.state?.mockStaff || []).length + 1).padStart(3, '0')}`;
-                    PawpalStaff.state?.mockStaff?.unshift({
-                        id: newId,
-                        name: name,
-                        phone: phone,
-                        email: email,
-                        address: address,
-                        position: position,
-                        shift: shift,
-                        status: 'ACTIVE',
-                        skillScore: 90,
-                        skillResult: 'PASS',
-                        skillExam: 'Đạt (90đ)',
-                        note: specialization,
-                        join_date: PawpalStaff.formatDateVN(joinDate)
-                    });
-                }
-
-                await PawpalStaff.loadStaffModuleData({ force: true });
-                renderStaffList();
-                renderStaffAlertBar();
-
-                // Nếu đang đứng ở Subtab Hồ sơ nhân viên thì re-render luôn tab Hồ sơ
-                const activeSubtab = sessionStorage.getItem('pawpal_admin_staff_active_subtab');
-                if (activeSubtab === 'tab-staff-profile' && PawpalStaff.subtabs.profile?.renderStaffProfile) {
-                    const currentId = editingId || PawpalStaff.state?.selectedStaffId;
-                    PawpalStaff.subtabs.profile.renderStaffProfile(currentId);
-                }
-
-                PawpalStaff.showToast(editingId ? 'Đã cập nhật hồ sơ nhân sự!' : 'Đã thêm nhân viên mới thành công!');
-                if (modal) modal.classList.remove('active');
-            });
-        }
-
-        // Xử lý xác nhận điều phối lại ca hẹn (Modal 6)
-        const btnConfirmReassign = document.getElementById('btnConfirmReassign');
-        if (btnConfirmReassign) {
-            btnConfirmReassign.addEventListener('click', async () => {
-                const modal = document.getElementById('reassignModalOverlay');
-                const staffId = modal?.getAttribute('data-target-staff-id');
-                const staffRawId = modal?.getAttribute('data-target-staff-raw-id');
-                const staffList = PawpalStaff.state?.mockStaff || [];
-                const staff = staffList.find(s => s.id === staffId || s.rawId === staffRawId);
-                
-                const client = PawpalStaff.getSupabaseClient ? PawpalStaff.getSupabaseClient() : window.SupabaseClient;
-                if (client && staffRawId) {
-                    btnConfirmReassign.disabled = true;
-                    btnConfirmReassign.textContent = 'Đang xử lý...';
-                    try {
-                        // 1. Tạm khóa nhận dịch vụ cho nhân viên trong CSDL
-                        const { error: lockErr } = await client
-                            .from('staff')
-                            .update({ service_locked: true, status: 'pause' })
-                            .eq('id', staffRawId);
-                        if (lockErr) throw lockErr;
-
-                        // 2. Chuyển giao các ca hẹn đã chọn sang KTV mới
-                        const reassignRows = modal.querySelectorAll('.reassign-select-row');
-                        for (const row of reassignRows) {
-                            const bookingRawId = row.getAttribute('data-booking-raw-id');
-                            const newStaffRawId = row.value;
-                            if (bookingRawId && newStaffRawId) {
-                                const { error: reassignErr } = await client
-                                    .from('appointment')
-                                    .update({ staff_id: newStaffRawId })
-                                    .eq('id', bookingRawId);
-                                if (reassignErr) {
-                                    console.error('Lỗi khi điều phối ca hẹn:', bookingRawId, reassignErr);
-                                }
-                            }
-                        }
-                    } catch (err) {
-                        console.error('Lỗi khi khóa KTV và điều phối ca hẹn:', err);
-                        PawpalStaff.showToast(`Lỗi CSDL khi điều phối: ${err.message || 'Không thể cập nhật'}`, 'danger');
-                        btnConfirmReassign.disabled = false;
-                        btnConfirmReassign.textContent = 'Xác nhận và Chuyển ca';
-                        return;
-                    } finally {
-                        btnConfirmReassign.disabled = false;
-                        btnConfirmReassign.textContent = 'Xác nhận và Chuyển ca';
-                    }
-                }
-
-                if (staff) {
-                    staff.serviceLocked = true;
-                    staff.status = 'PAUSE';
-                }
-                PawpalStaff.showToast('Đã điều phối lại toàn bộ ca hẹn và tạm khóa KTV an toàn!', 'success');
-                if (modal) modal.classList.remove('active');
-                renderStaffList();
-                renderStaffAlertBar();
-            });
-        }
-
-        const btnDismissReassign = document.getElementById('btnDismissReassignModal');
-        if (btnDismissReassign) {
-            btnDismissReassign.addEventListener('click', async () => {
-                const modal = document.getElementById('reassignModalOverlay');
-                const staffId = modal?.getAttribute('data-target-staff-id');
-                const staffRawId = modal?.getAttribute('data-target-staff-raw-id');
-                const staffList = PawpalStaff.state?.mockStaff || [];
-                const staff = staffList.find(s => s.id === staffId || s.rawId === staffRawId);
-
-                const client = PawpalStaff.getSupabaseClient ? PawpalStaff.getSupabaseClient() : window.SupabaseClient;
-                if (client && staffRawId) {
-                    try {
-                        const { error: lockErr } = await client
-                            .from('staff')
-                            .update({ service_locked: true, status: 'pause' })
-                            .eq('id', staffRawId);
-                        if (lockErr) throw lockErr;
-                    } catch (err) {
-                        console.error('Lỗi khi tạm khóa KTV:', err);
-                        PawpalStaff.showToast(`Lỗi CSDL khi khóa KTV: ${err.message || 'Không thể cập nhật'}`, 'danger');
-                        return;
-                    }
-                }
-
-                if (staff) {
-                    staff.serviceLocked = true;
-                    staff.status = 'PAUSE';
-                }
-                PawpalStaff.showToast('Đã tạm khóa KTV! Ca hẹn chuyển vào hàng chờ điều phối.', 'info');
-                if (modal) modal.classList.remove('active');
-                renderStaffList();
-                renderStaffAlertBar();
-            });
-        }
-
-        // Đóng modal qua data-close-modal, click backdrop, và phím Escape
         document.querySelectorAll('[data-close-modal="staffModalOverlay"]').forEach(btn => {
             btn.addEventListener('click', () => {
                 const modal = document.getElementById('staffModalOverlay');

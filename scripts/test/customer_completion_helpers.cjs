@@ -12,10 +12,11 @@ const rewrite=url=>'http://localhost:8011'+new URL(url).pathname.replace(/^\/res
 const options={auth:{persistSession:false,autoRefreshToken:false},global:{fetch:(url,init)=>fetch(String(url).includes('/rest/v1/')?rewrite(String(url)):url,init)}};
 const service=createClient(env.SUPABASE_PUBLIC_URL,env.SERVICE_ROLE_KEY,options),admin=createClient(env.SUPABASE_PUBLIC_URL,env.ANON_KEY,options);
 async function ok(r){const v=await r;if(v.error)throw Error(v.error.message);return v.data;}
-async function browserPage({restored=true}={}){
+async function browserPage({restored=true,authRestored=false}={}){
  await ok(admin.auth.signInWithPassword(account));
  const browser=await chromium.launch({channel:'chrome',headless:true});
  const page=await browser.newPage({viewport:{width:1440,height:1050},acceptDownloads:true});
+ if(authRestored){if(state.authPort!==8021)throw Error('Isolated Auth is required');await page.route('**/auth/v1/**',async route=>{const u=new URL(route.request().url());const response=await route.fetch({url:'http://localhost:8021'+u.pathname.slice(8)+u.search});await route.fulfill({response});});}
  if(restored)await page.route('**/rest/v1/**',async route=>{try{const response=await route.fetch({url:rewrite(route.request().url())});await route.fulfill({response});}catch{if(!page.isClosed())await route.abort().catch(()=>{});}});
  await page.goto('http://localhost:3001/admin/login');await page.locator('#inputAdminEmail').fill(account.email);await page.locator('#inputAdminPassword').fill(account.password);await page.locator('#btnSubmitAdminLogin').click();
  await page.waitForFunction(()=>window.PawpalCustomers?.state.listLoadStatus==='loaded');

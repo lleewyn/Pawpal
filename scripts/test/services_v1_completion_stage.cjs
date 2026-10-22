@@ -7,7 +7,8 @@ const {service,admin,ok,browserPage,customer,infra}=require('./customer_completi
   await ok(admin.rpc('save_admin_service_catalog',{p_id:svc,p_expected_updated_at:null,p_details:{service_code:'COMP-'+uuid(),service_name:serviceName,category_code:'grooming_spa',duration_minutes:30,status:'active',commission_rate:0,species_ids:[breed.species_id],steps:[]},p_prices:[{weight_from:0,weight_to:null,unit_price:10000}]}));
   const actor=await ok(service.from('staff').select('id,full_name').eq('email','admin.local@pawpal.test').single());
   const prev=await ok(service.from('appointment').select('scheduled_end_at').eq('staff_id',actor.id).order('scheduled_end_at',{ascending:false}).limit(1));
-  const latest=Math.max(Date.now(),Date.parse(prev[0]?.scheduled_end_at||'2000-01-01')),day=new Date(latest+2*86400000).toISOString().slice(0,10);
+  const previousShifts=await ok(service.from('staff_schedule').select('end_at').eq('staff_id',actor.id).order('end_at',{ascending:false}).limit(1));
+  const latest=Math.max(Date.now(),Date.parse(prev[0]?.scheduled_end_at||'2000-01-01'),Date.parse(previousShifts[0]?.end_at||'2000-01-01')),day=new Date(latest+2*86400000).toISOString().slice(0,10);
   const start=day+'T09:00:00+07:00';await ok(service.from('staff_schedule').insert({staff_id:actor.id,start_at:day+'T08:00:00+07:00',end_at:day+'T12:00:00+07:00',availability_status:'available',schedule_status:'active'}));
   await ok(admin.rpc('create_admin_service_booking',{p_id:appointment,p_details:{customer_id:c.id,pet_id:pet,service_id:svc,staff_id:actor.id,scheduled_start_at:start}}));
   await ok(service.from('staff_schedule').insert({staff_id:actor.id,start_at:day+'T13:00:00+07:00',end_at:day+'T14:00:00+07:00',availability_status:'unavailable',schedule_status:'active',reason:'Confirmed leave'}));

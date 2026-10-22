@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict'),crypto=require('node:crypto');const {browserPage,service,admin,ok,infra}=require('./customer_completion_helpers.cjs');
+(async()=>{const {browser,page}=await browserPage();try{
+ const person=await ok(service.from('staff').select('id').eq('service_locked',false).limit(1).single()),pet=await ok(service.from('pet_profile').select('id,customer_id').limit(1).single()),id=crypto.randomUUID();
+ const before=await ok(service.from('appointment').insert({id,appointment_code:'INCIDENT-'+id,customer_id:pet.customer_id,pet_id:pet.id,staff_id:person.id,scheduled_start_at:'2096-01-01T09:00:00+07:00',scheduled_end_at:'2096-01-01T10:00:00+07:00',appointment_status:'confirmed'}).select('*').single());
+ const request={p_request_id:crypto.randomUUID(),p_appointment_id:id,p_expected_updated_at:before.updated_at,p_staff_id:person.id,p_details:{type:'TIMING_DELAY',severity:'INTERNAL',requested_extension_minutes:15,note:'Verification incident'}};
+ await ok(admin.rpc('record_admin_staff_incident',request));await ok(admin.rpc('record_admin_staff_incident',request));assert.deepEqual(await ok(service.from('appointment').select('*').eq('id',id).single()),before);
+ assert.ok((await admin.rpc('record_admin_staff_incident',{...request,p_request_id:crypto.randomUUID(),p_staff_id:crypto.randomUUID()})).error);
+ assert.ok((await admin.from('audit_log').insert({staff_id:person.id,action:'STAFF_INCIDENT_RECORD',entity_name:'appointment_incident',entity_id:crypto.randomUUID(),description:'Forged'})).error);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.locator('[data-title="Nhân sự"]').click();await page.waitForFunction(()=>window.PawpalStaff?.subtabs.schedule&&PawpalStaff.state.isLoaded);
+ await page.evaluate(({person,id})=>PawpalStaff.subtabs.schedule.openIncidentReportModal(person,id),{person:person.id,id});assert.equal(await page.locator('#incidentInputBooking').inputValue(),id);await page.locator('#incidentInputNote').fill('Browser verified incident');await page.screenshot({path:infra+'/staff-incident-modal.private.png',fullPage:true});
+ const pending=page.waitForResponse(r=>r.url().includes('/rpc/record_admin_staff_incident'));await page.locator('#btnSaveIncidentReport').click();const response=await pending;assert.equal(response.status(),200,await response.text());await page.waitForFunction(()=>!document.getElementById('incidentReportModalOverlay').classList.contains('active'));assert.deepEqual(errors,[]);
+ assert.deepEqual(await ok(service.from('appointment').select('*').eq('id',id).single()),before);
+ console.log('PASS incident caller attribution, assigned-work validation, audit forgery denied, idempotency and browser save without silently moving appointment or charging');
+}finally{await browser.close();}})().catch(e=>{console.error(e.stack);process.exitCode=1;});

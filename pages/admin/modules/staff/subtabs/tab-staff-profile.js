@@ -25,7 +25,7 @@
 
     function renderStaffProfile(staffId) {
         if (!PawpalStaff.state.isLoaded) return;
-        const staffList = PawpalStaff.state.mockStaff || [];
+        const staffList = PawpalStaff.state.staff || [];
         const staff = staffId ? staffList.find(s => s.id === staffId || s.rawId === staffId) : null;
         const root = document.getElementById('subtab-tab-staff-profile');
         if (!root) return;
@@ -80,8 +80,8 @@
                 const canView = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'HR' || userRole === 'ACCOUNTANT';
                 return canView ? (staff?.commission ? `${Number(staff.commission).toLocaleString('vi-VN')} đ` : 'Chưa có dữ liệu') : '••• (Bảo mật)';
             })(),
-            viewStaffRequestedBonus: staff?.requestedBonus ? `+${Number(staff.requestedBonus).toLocaleString('vi-VN')} đ` : '0 đ',
-            viewStaffSafetyBonus: staff?.safetyBonus ? `+${Number(staff.safetyBonus).toLocaleString('vi-VN')} đ` : '0 đ',
+            viewStaffRequestedBonus: staff?.requestedBonus!=null ? `${Number(staff.requestedBonus).toLocaleString('vi-VN')} đ` : 'Chưa có dữ liệu',
+            viewStaffSafetyBonus: staff?.safetyBonus!=null ? `${Number(staff.safetyBonus).toLocaleString('vi-VN')} đ` : 'Chưa có dữ liệu',
             viewStaffTotalIncome: (() => {
                 const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'ADMIN').toUpperCase();
                 const canView = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'HR' || userRole === 'ACCOUNTANT';
@@ -89,8 +89,8 @@
             })(),
             viewStaffCsatScore: staff?.rating ? `${staff.rating}/5.0` : 'Chưa có đánh giá',
             viewStaffCsatReviews: staff?.reviewCount ? `Từ ${staff.reviewCount} lượt đánh giá` : 'Chưa có đánh giá',
-            viewStaffRequestedCount: staff?.requestedCount ? `${staff.requestedCount} lượt` : '0 lượt',
-            viewStaffZeroComplaintRate: staff?.zeroComplaintRate || '100%'
+            viewStaffRequestedCount: staff?.requestedCount!=null ? `${staff.requestedCount} lượt` : 'Chưa có dữ liệu',
+            viewStaffZeroComplaintRate: staff?.zeroComplaintRate || 'Chưa có dữ liệu'
         };
 
         const accBadgeEl = document.getElementById('viewStaffAccountStatus');
@@ -143,7 +143,7 @@
             });
         }
 
-        const initialStaffId = sessionStorage.getItem('pawpal_admin_staff_selected_id') || 'EMP-001';
+        const initialStaffId = sessionStorage.getItem('pawpal_admin_staff_selected_id');
         renderStaffProfile(initialStaffId);
     }
 

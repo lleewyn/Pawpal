@@ -1,0 +1,21 @@
+const assert=require('node:assert/strict');
+const {browserPage,service,ok,infra}=require('./customer_completion_helpers.cjs');
+(async()=>{const {browser,page}=await browserPage();try{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.locator('[data-title="Nhân sự"]').click();await page.waitForFunction(()=>window.PawpalStaff?.state.isLoaded);
+ await page.evaluate(()=>{PawpalStaff.switchSubtab('tab-staff-schedule');PawpalStaff.subtabs.schedule.openShiftModal();});
+ await page.locator('#shiftStaffSearch').focus();await page.locator('#shiftStaffOptions button').first().click();
+ const day='2094-'+String(1+Math.floor(Math.random()*12)).padStart(2,'0')+'-'+String(1+Math.floor(Math.random()*28)).padStart(2,'0');
+ await page.locator('#shiftInputStart').fill(day+'T09:17');await page.locator('#shiftInputEnd').fill(day+'T11:43');await page.locator('#shiftReason').fill('Browser schedule verification');
+ await page.screenshot({path:infra+'/staff-custom-shift-modal.private.png',fullPage:true});
+ const saved=page.waitForResponse(r=>r.url().includes('/rpc/save_admin_staff_schedule'));await page.locator('#btnSaveShift').click();const response=await saved;assert.equal(response.status(),200,await response.text());const id=await response.json();
+ await page.waitForFunction(()=>!document.getElementById('shiftModalOverlay').classList.contains('active'));
+ const row=await ok(service.from('staff_schedule').select('*').eq('id',id).single());assert.equal(Date.parse(row.end_at)-Date.parse(row.start_at),146*60000);
+ assert.match(await page.locator('#scheduleTableBody').textContent(),/09:17/);assert.match(await page.locator('#scheduleTableBody').textContent(),/11:43/);
+ await page.evaluate(id=>PawpalStaff.subtabs.schedule.openShiftModal(null,null,null,PawpalStaff.state.schedules.find(s=>s.id===id)),id);
+ await page.locator('#shiftStatus').selectOption('cancelled');await page.locator('#shiftReason').fill('Browser cancellation verification');
+ const cancelled=page.waitForResponse(r=>r.url().includes('/rpc/save_admin_staff_schedule'));await page.locator('#btnSaveShift').click();assert.equal((await cancelled).status(),200);
+ await page.waitForFunction(()=>!document.getElementById('shiftModalOverlay').classList.contains('active'));
+ assert.equal((await ok(service.from('staff_schedule').select('schedule_status').eq('id',id).single())).schedule_status,'cancelled');assert.deepEqual(errors,[]);
+ console.log('PASS custom shift browser real staff autocomplete, arbitrary times, exact duration, day listing, edit and audited cancellation');
+}finally{await browser.close();}})().catch(e=>{console.error(e.stack);process.exitCode=1;});

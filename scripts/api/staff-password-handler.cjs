@@ -2,7 +2,7 @@
 // Shared by local preview and Vercel; no service key enters browser code.
 const { createClient } = require('@supabase/supabase-js');
 module.exports = function createStaffPasswordHandler(config) {
-    const options = { auth: { persistSession: false, autoRefreshToken: false } };
+    const options = { auth: { persistSession: false, autoRefreshToken: false }, ...(config.fetch?{global:{fetch:config.fetch}}:{}) };
     const service = createClient(config.url, config.serviceKey, options);
     return async (req, res) => {
         res.setHeader('Cache-Control', 'no-store');
@@ -14,7 +14,7 @@ module.exports = function createStaffPasswordHandler(config) {
         }
         try {
             const caller = createClient(config.url, config.anonKey, {
-                ...options, global: { headers: { Authorization: 'Bearer ' + bearer } }
+                ...options, global: { ...(options.global||{}), headers: { Authorization: 'Bearer ' + bearer } }
             });
             const identity = await caller.auth.getUser(bearer);
             if (identity.error || !identity.data?.user) return res.status(401).json({ error: 'Phiên đăng nhập không hợp lệ.' });

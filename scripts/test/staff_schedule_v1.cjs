@@ -1,0 +1,25 @@
+const assert=require('node:assert/strict'),crypto=require('node:crypto'),fs=require('node:fs');
+const {service,admin,ok}=require('./customer_completion_helpers.cjs');const uuid=()=>crypto.randomUUID();
+(async()=>{
+ const credentials=fs.readFileSync('D:/Aboutme/Pawpal-infra/supabase-local/PAWPAL-ADMIN.private.txt','utf8');
+ await ok(admin.auth.signInWithPassword({email:credentials.match(/^Email: (.+)$/m)[1].trim(),password:credentials.match(/^Password: (.+)$/m)[1].trim()}));
+ const staff=(await ok(service.from('staff').select('id').limit(1).single())).id,id=uuid();
+ const starts=Date.UTC(2090,0,1+crypto.randomInt(0,1500),15,17);
+ const request={p_request_id:uuid(),p_schedule_id:id,p_expected_updated_at:null,p_details:{staff_id:staff,start_at:new Date(starts).toISOString(),end_at:new Date(starts+326*60000).toISOString(),availability_status:'available',schedule_status:'active',reason:'Verification custom hours'}};
+ await ok(admin.rpc('save_admin_staff_schedule',request));await ok(admin.rpc('save_admin_staff_schedule',request));
+ const row=await ok(service.from('staff_schedule').select('*').eq('id',id).single());
+ assert.equal(Date.parse(row.end_at)-Date.parse(row.start_at),(5*60+26)*60000);
+ assert.equal((await admin.rpc('save_admin_staff_schedule',{...request,p_request_id:uuid(),p_schedule_id:uuid()})).error.code,'23P01');
+ const adjacent={...request,p_request_id:uuid(),p_schedule_id:uuid(),p_details:{...request.p_details,start_at:request.p_details.end_at,end_at:new Date(starts+354*60000).toISOString()}};
+ await ok(admin.rpc('save_admin_staff_schedule',adjacent));
+ const cancel={...request,p_request_id:uuid(),p_expected_updated_at:row.updated_at,p_details:{...request.p_details,schedule_status:'cancelled',reason:'Verification cancellation'}};
+ await ok(admin.rpc('save_admin_staff_schedule',cancel));await ok(admin.rpc('save_admin_staff_schedule',cancel));
+ assert.equal((await admin.rpc('save_admin_staff_schedule',{...cancel,p_request_id:uuid()})).error.code,'PT409');
+ assert.equal((await ok(service.from('staff_schedule').select('schedule_status').eq('id',id).single())).schedule_status,'cancelled');
+ const booking=(await ok(service.from('appointment').select('id,staff_id,scheduled_start_at,scheduled_end_at').not('staff_id','is',null).not('appointment_status','in','(completed,cancelled,no_show)').limit(1)))[0];
+ assert.ok(booking,'Restored source must include a service assignment for absence protection');
+ const absence={...request,p_request_id:uuid(),p_schedule_id:uuid(),p_details:{staff_id:booking.staff_id,start_at:booking.scheduled_start_at,end_at:booking.scheduled_end_at,availability_status:'leave',schedule_status:'active',reason:'Verification leave conflict'}};
+ assert.equal((await admin.rpc('save_admin_staff_schedule',absence)).error.message,'staff_has_service_booking');
+ assert.equal((await ok(service.from('staff_schedule').select('id').eq('id',absence.p_schedule_id))).length,0);
+ console.log('PASS custom arbitrary-hour/overnight schedules, adjacent boundaries, overlap exclusion, audit idempotency, stale edits, cancellation and booked-service absence protection');
+})().catch(e=>{console.error(e.stack);process.exitCode=1;});

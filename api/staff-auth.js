@@ -1,6 +1,8 @@
 // Cloud uses server-only credentials; the local demo keeps the existing gateway bridge.
 module.exports=async(req,res)=>{
  res.setHeader('Cache-Control','no-store');
+ const actions={'provision-account':'provisionAccount','reset-password':'resetPassword','toggle-account-status':'toggleAccountStatus'};
+ if(req.query?.action){if(typeof req.query.action!=='string'||!Object.hasOwn(actions,req.query.action))return res.status(404).json({error:'Không tìm thấy thao tác.'});return require('../scripts/api/staff_auth.js')[actions[req.query.action]](req,res);}
  if(req.method!=='POST'){res.setHeader('Allow','POST');return res.status(405).json({error:'Phương thức không được hỗ trợ.'});}
  const url=process.env.PAWPAL_ADMIN_SUPABASE_URL || '';
  if(!/^https:\/\/[^/]+\/?$/.test(url))return res.status(503).json({error:'Chưa cấu hình kết nối Supabase cho admin.'});

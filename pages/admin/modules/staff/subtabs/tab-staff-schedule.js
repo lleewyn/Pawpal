@@ -17,175 +17,66 @@
         return date.toISOString().slice(0, 10);
     }
 
-    function getFilteredStaffList(scope = 'DAY') {
-        const roleFilter = document.getElementById('scheduleFilterPosition')?.value || 'ALL';
-        const shiftFilter = document.getElementById('scheduleFilterShift')?.value || 'ALL';
-        const roster = PawpalStaff.state?.mockRoster || {};
-        const matchesShift = (staff) => {
-            if (shiftFilter === 'ALL') return true;
-            if (scope === 'WEEK') {
-                const monday = new Date(`${currentScheduleDate}T00:00:00Z`);
-                monday.setUTCDate(monday.getUTCDate() - (monday.getUTCDay() + 6) % 7);
-                return Array.from({ length: 7 }, (_, index) => {
-                    const date = new Date(monday);
-                    date.setUTCDate(date.getUTCDate() + index);
-                    return roster[date.toISOString().slice(0, 10)]?.[staff.id]?.includes(shiftFilter);
-                }).some(Boolean);
-            }
-            return roster[currentScheduleDate]?.[staff.id]?.includes(shiftFilter);
-        };
-        return (PawpalStaff.state?.mockStaff || []).filter(staff =>
-            (roleFilter === 'ALL' || staff.role === roleFilter) && matchesShift(staff)
-        );
-    }
-
-    function renderScheduleTable() {
-        if (!PawpalStaff.state.isLoaded) return;
-        const picker = document.getElementById('scheduleDatePicker');
-        if (picker && !picker.value) picker.value = currentScheduleDate;
-        ['Morning','Afternoon','Evening','Night'].forEach((label,i)=>{
-            const shift=['MORNING','AFTERNOON','EVENING','NIGHT'][i];
-            const count=Object.values(PawpalStaff.state.mockRoster?.[currentScheduleDate] || {}).filter(shifts=>shifts.includes(shift)).length;
-            const el=document.getElementById('quota'+label+'Count');if(el)el.textContent=`${count} nhân sự`;
-            const badge=document.getElementById('quota'+label+'Badge');
-            if(badge) {
-                if (PawpalStaff.state.scheduleError) {
-                    badge.textContent = 'Lỗi tải CSDL';
-                    badge.className = 'quota-status-pill pill-danger';
-                } else {
-                    badge.textContent = count >= 2 ? 'Đạt định biên' : (count > 0 ? 'Cần thêm 1 KTV' : 'Chưa phân ca');
-                    badge.className = 'quota-status-pill ' + (count >= 2 ? 'pill-ok' : (count > 0 ? 'pill-warning' : 'pill-danger'));
-                }
-            }
-        });
-        const active=document.getElementById('liveWorkstationsActiveCount');if(active)active.textContent='Chưa có dữ liệu bàn dịch vụ';
-        const dayWrapper = document.getElementById('scheduleDayViewWrapper');
-        const weekWrapper = document.getElementById('scheduleWeekViewWrapper');
-        if (dayWrapper) dayWrapper.style.display = currentScheduleView === 'DAY' ? '' : 'none';
-        if (weekWrapper) weekWrapper.style.display = currentScheduleView === 'WEEK' ? '' : 'none';
-        if (currentScheduleView === 'DAY') {
-            renderScheduleDayTable();
-        } else {
-            renderScheduleWeekTable();
+    let schedulePage=1,editingSchedule=null,scheduleRequest=null,selectedShiftStaff=null;
+    const el=id=>document.getElementById(id);
+    const localTime=value=>{
+        const date=new Date(value),shifted=new Date(date.getTime()+7*3600000);
+        return shifted.toISOString().slice(0,16);
+    };
+    function scheduleError(error){return ({staff_schedule_changed:'Ca đã thay đổi. Đóng và mở lại để kiểm tra.',staff_schedule_forbidden:'Bạn chưa có quyền phân ca.',staff_has_service_booking:'Nhân viên đang có lịch dịch vụ trong khoảng này. Cần xử lý lịch dịch vụ trước khi ghi nghỉ.',invalid_staff_schedule:'Chọn nhân viên, nhập đủ giờ bắt đầu/kết thúc và lý do nếu nghỉ hoặc hủy.',staff_request_conflict:'Yêu cầu đã được ghi với nội dung khác. Mở lại ca để đối chiếu.'})[error?.message]||(error?.code==='23P01'?'Khoảng thời gian bị trùng với ca đang có.':'Không thể lưu ca. Kiểm tra thông tin và thử lại.');}
+    function renderScheduleTable(){
+        if(!PawpalStaff.state.isLoaded)return;
+        el('shiftQuotaStrip').style.display='none';
+        const picker=el('scheduleDatePicker');if(picker&&!picker.value)picker.value=currentScheduleDate;
+        el('scheduleDayViewWrapper').style.display='';el('scheduleWeekViewWrapper').style.display='none';
+        const table=el('scheduleDayTable'),headers=table.querySelector('thead tr');headers.replaceChildren();
+        for(const text of ['Nhân viên','Bắt đầu','Kết thúc','Thời lượng','Khả dụng','Trạng thái','Thao tác']){const th=document.createElement('th');th.textContent=text;headers.append(th);}
+        let start=currentScheduleDate;if(currentScheduleView==='WEEK'){const d=new Date(start+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);start=d.toISOString().slice(0,10);}
+        const end=dayOffset(start,currentScheduleView==='WEEK'?7:1),from=Date.parse(start+'T00:00:00+07:00'),to=Date.parse(end+'T00:00:00+07:00');
+        const role=el('scheduleFilterPosition')?.value||'ALL';
+        const availability=el('scheduleFilterShift')?.value||'ALL';
+        const rows=PawpalStaff.state.schedules.filter(s=>Date.parse(s.start_at)<to&&Date.parse(s.end_at)>from).filter(s=>role==='ALL'||PawpalStaff.state.staff.find(v=>v.rawId===s.staff_id)?.role===role).filter(s=>availability==='ALL'||s.availability_status===availability);
+        schedulePage=Math.max(1,Math.min(schedulePage,Math.ceil(rows.length/10)||1));
+        const body=el('scheduleTableBody');body.replaceChildren();
+        if(!rows.length){const td=body.insertRow().insertCell();td.colSpan=7;td.textContent='Chưa có ca trong khoảng đang xem.';}
+        for(const schedule of rows.slice((schedulePage-1)*10,schedulePage*10)){
+            const staff=PawpalStaff.state.staff.find(s=>s.rawId===schedule.staff_id),row=body.insertRow();
+            const availability=({available:'Đi làm',leave:'Nghỉ phép',absent:'Vắng mặt',unavailable:'Không khả dụng'})[schedule.availability_status]||schedule.availability_status;
+            for(const text of [staff?.name||'—',localTime(schedule.start_at).replace('T',' '),localTime(schedule.end_at).replace('T',' '),((Date.parse(schedule.end_at)-Date.parse(schedule.start_at))/3600000).toFixed(2)+' giờ',availability,schedule.schedule_status==='active'?'Có hiệu lực':'Đã hủy'])row.insertCell().textContent=text;
+            const action=row.insertCell(),button=document.createElement('button');button.type='button';button.className='admin-btn';button.textContent='Xem và sửa';button.onclick=()=>openShiftModal(null,null,null,schedule);action.append(button);
         }
-        renderLiveWorkstations();
-        renderLeaveRequestsList();
+        let pager=el('staffSchedulePager');if(!pager){pager=document.createElement('div');pager.id='staffSchedulePager';pager.style.cssText='display:flex;justify-content:center;gap:8px;background:transparent;margin-top:6px';table.closest('.admin-card')?.after(pager);if(!pager.isConnected)el('scheduleDayViewWrapper').after(pager);}
+        pager.replaceChildren();const pages=Math.ceil(rows.length/10)||1;
+        for(const [text,target] of [['<',schedulePage-1],[String(schedulePage),schedulePage],['>',schedulePage+1]]){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.textContent=text;button.style.cssText='border:none;background:transparent';if(target===schedulePage&&text!=='<'&&text!=='>')button.style.cssText='border:none;background:#236B48;color:white';button.disabled=target<1||target>pages;button.onclick=()=>{schedulePage=target;renderScheduleTable();};pager.append(button);}
+        renderLiveWorkstations();renderLeaveRequestsList();
+    }
+    function openShiftModal(dateStr,unused,preselectedStaffId=null,schedule=null){
+        const form=el('shiftModalForm');form.reset();editingSchedule=schedule?structuredClone(schedule):null;scheduleRequest=crypto.randomUUID();selectedShiftStaff=schedule?.staff_id||preselectedStaffId||null;
+        const staff=PawpalStaff.state.staff.find(s=>s.rawId===selectedShiftStaff||s.id===selectedShiftStaff);selectedShiftStaff=staff?.rawId||null;
+        el('shiftStaffSearch').value=staff?.name||'';el('shiftInputStart').value=schedule?localTime(schedule.start_at):'';el('shiftInputEnd').value=schedule?localTime(schedule.end_at):'';
+        el('shiftAvailability').value=schedule?.availability_status||'available';el('shiftStatus').value=schedule?.schedule_status||'active';el('shiftReason').value=schedule?.reason||'';el('shiftAlertBanner').textContent='';el('shiftAlertBanner').style.display='none';
+        el('shiftStatus').disabled=!schedule;el('shiftModalOverlay').classList.add('active');
+        const input=el('shiftStaffSearch'),popover=el('shiftStaffOptions');
+        const render=()=>{popover.replaceChildren();for(const s of PawpalStaff.state.staff.filter(s=>PawpalStaff.matchSearch(s.name+' '+s.position,input.value))){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.style.cssText='display:block;width:100%;text-align:left;background:transparent;border:none';button.textContent=s.name+' · '+s.position;button.onclick=()=>{selectedShiftStaff=s.rawId;input.value=s.name;popover.style.display='none';};popover.append(button);}popover.style.display=popover.childElementCount?'block':'none';};
+        input.onfocus=render;input.oninput=()=>{selectedShiftStaff=null;render();};input.onblur=()=>setTimeout(()=>popover.style.display='none',120);input.onkeydown=e=>{if(e.key==='Escape')popover.style.display='none';};popover.style.display='none';
+    }
+    async function saveCustomShift(){
+        const button=el('btnSaveShift');if(button.disabled)return;button.disabled=true;
+        try{
+            const start=el('shiftInputStart').value,end=el('shiftInputEnd').value;
+            if(!selectedShiftStaff||!start||!end)throw Error('invalid_staff_schedule');
+            const details={staff_id:selectedShiftStaff,start_at:new Date(start+':00+07:00').toISOString(),end_at:new Date(end+':00+07:00').toISOString(),availability_status:el('shiftAvailability').value,schedule_status:el('shiftStatus').value,reason:el('shiftReason').value.trim()};
+            const {error}=await window.getSupabaseClient().rpc('save_admin_staff_schedule',{p_request_id:scheduleRequest,p_schedule_id:editingSchedule?.id||scheduleRequest,p_expected_updated_at:editingSchedule?.updated_at||null,p_details:details});if(error)throw error;
+            await PawpalStaff.loadStaffModuleData({force:true});currentScheduleDate=start.slice(0,10);el('scheduleDatePicker').value=currentScheduleDate;renderScheduleTable();el('shiftModalOverlay').classList.remove('active');PawpalStaff.showToast('Đã lưu ca làm việc.','success');
+        }catch(error){el('shiftAlertBanner').textContent=scheduleError(error);el('shiftAlertBanner').style.display='block';}
+        finally{button.disabled=false;}
     }
 
-    function renderScheduleDayTable() {
-        const tbody = document.getElementById('scheduleTableBody') || document.getElementById('scheduleDayTableBody');
-        if (!tbody) return;
-        const staffList = getFilteredStaffList('DAY');
-        const roster = PawpalStaff.state?.mockRoster || {};
-
-        if (staffList.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" style="text-align: center; padding: 28px 16px; color: var(--text-muted); font-size: 13.5px;">
-                        Không có nhân sự phù hợp với bộ lọc hiện tại.
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        tbody.innerHTML = staffList.map(staff => {
-            const dayRoster = (roster[currentScheduleDate] && roster[currentScheduleDate][staff.id]) || [];
-            const isMorning = dayRoster.includes('MORNING');
-            const isAfternoon = dayRoster.includes('AFTERNOON');
-            const isEvening = dayRoster.includes('EVENING');
-            const isNight = dayRoster.includes('NIGHT');
-            const isLeave = dayRoster.includes('LEAVE') || staff.status === 'LEAVE';
-
-            let totalHours = 0;
-            if (isLeave) {
-                totalHours = 0;
-            } else {
-                if (isMorning) totalHours += 4;
-                if (isAfternoon) totalHours += 4;
-                if (isEvening) totalHours += 4;
-                if (isNight) totalHours += 8;
-            }
-
-            const renderShiftCell = (active, shiftName) => {
-                if (isLeave) return '<span style="color: var(--text-muted);">—</span>';
-                if (active) {
-                    return `<span class="shift-cell-pill pill-active" style="background: #EEF5F1; color: #236B48; font-weight: 600; padding: 3px 8px; border-radius: 6px; font-size: 12px; display: inline-block;">Có ca</span>`;
-                }
-                return '<span style="color: #AEC8B9;">—</span>';
-            };
-
-            const esc = (s) => PawpalStaff.escapeHtml ? PawpalStaff.escapeHtml(s) : String(s || '');
-            const safeId = esc(staff.id);
-            const safeName = esc(staff.name);
-            const safePosition = esc(staff.position);
-
-            return `
-                <tr>
-                    <td style="font-weight: 600;">${safeId}</td>
-                    <td>
-                        <div style="font-weight: 600; color: var(--text-heading); cursor: pointer;" class="btn-view-profile" data-id="${safeId}">${safeName}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted);">${safePosition}</div>
-                    </td>
-                    <td style="text-align: center;">${renderShiftCell(isMorning, 'MORNING')}</td>
-                    <td style="text-align: center;">${renderShiftCell(isAfternoon, 'AFTERNOON')}</td>
-                    <td style="text-align: center;">${renderShiftCell(isEvening, 'EVENING')}</td>
-                    <td style="text-align: center;">${renderShiftCell(isNight, 'NIGHT')}</td>
-                    <td style="text-align: center;">
-                        <span style="font-weight: 600; color: ${totalHours > 8 ? '#DC2626' : 'var(--text-heading)'};">${totalHours.toFixed(1)}h</span>
-                        <button type="button" class="btn-edit-shift" data-staff-id="${safeId}" style="margin-left: 6px; background: none; border: none; color: #236B48; text-decoration: underline; font-size: 11.5px; cursor: pointer;">Đổi</button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-
-        tbody.querySelectorAll('.btn-edit-shift').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const sId = btn.getAttribute('data-staff-id');
-                openShiftModal(currentScheduleDate, 'MORNING', sId);
-            });
-        });
-
-        tbody.querySelectorAll('.btn-view-profile').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const sId = btn.getAttribute('data-id');
-                if (sId && PawpalStaff.openStaffProfile) {
-                    PawpalStaff.openStaffProfile(sId);
-                }
-            });
-        });
-    }
-
-    function renderScheduleWeekTable() {
-        const tbody = document.getElementById('scheduleWeekTableBody');
-        if (!tbody) return;
-        const staffList = getFilteredStaffList('WEEK');
-
-        const monday=new Date(currentScheduleDate+'T00:00:00Z');
-        monday.setUTCDate(monday.getUTCDate()-(monday.getUTCDay()+6)%7);
-        const dates=Array.from({length:7},(_,i)=>{const day=new Date(monday);day.setUTCDate(day.getUTCDate()+i);return day.toISOString().slice(0,10);});
-        const labels=['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','Chủ nhật'];
-        const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-        const header=document.getElementById('scheduleWeekHeaderRow');
-        if(header) header.innerHTML='<th>Mã NV</th><th>Họ tên</th>'+dates.map((date,i)=>`<th>${labels[i]}<br>${date.slice(8,10)}/${date.slice(5,7)}</th>`).join('')+'<th>Tổng giờ</th>';
-        const shifts={MORNING:'Sáng',AFTERNOON:'Chiều',EVENING:'Tối',NIGHT:'Khuya'};
-        tbody.innerHTML=staffList.map(staff=>{
-            let hours=0;
-            const cells=dates.map(date=>{
-                const list=PawpalStaff.state.mockRoster?.[date]?.[staff.id]||[];
-                list.forEach(shift => {
-                    hours += (shift === 'NIGHT' ? 8 : 4);
-                });
-                return `<td>${list.map(shift=>shifts[shift]||escape(shift)).join(', ')||'—'}</td>`;
-            }).join('');
-            return `<tr><td>${escape(staff.id)}</td><td>${escape(staff.name)}</td>${cells}<td>${hours.toFixed(1)}h</td></tr>`;
-        }).join('');
-    }
 
     function renderLiveWorkstations() {
         const container = document.getElementById('liveWorkstationsGrid') || document.getElementById('liveWorkstationsContainer');
         if (!container) return;
-        const workstations = PawpalStaff.state?.mockWorkstations || [];
+        const workstations = PawpalStaff.state?.workstations || [];
 
         if (workstations.length === 0) {
             if (!PawpalStaff.state?.isLoaded) {
@@ -230,91 +121,21 @@
         if(error||!data?.user) throw new Error('Phiên xác thực Supabase của quản trị chưa có hoặc đã hết hạn. Vui lòng đăng nhập lại tại /admin/login.');
         return client;
     }
-    async function reviewRequest(id,approve) {
-        const client=await requireStaffAuth();
-        try {
-            const {data,error}=await client.rpc('pawpal_review_staff_shift_request',{p_request_id:id,p_approve:approve}).single();
-            if(error) throw error;
-            const isApproved = data?.status === 'APPROVED' || data?.status === 'da_duyet';
-            const isRejected = data?.status === 'REJECTED' || data?.status === 'tu_choi';
-            if(!data?.id || (approve ? !isApproved : !isRejected)) throw new Error('Không xác minh được kết quả duyệt đơn.');
-        } catch (rpcErr) {
-            console.warn('[PawpalStaff] RPC pawpal_review_staff_shift_request lỗi, chuyển fallback:', rpcErr);
-            const {data:req, error:reqErr} = await client.from('staff_shift_request').select('*').eq('id', id).single();
-            if (reqErr || !req) throw rpcErr;
-            const newStatus = approve ? 'da_duyet' : 'tu_choi';
-            const {data:user} = await client.auth.getUser();
-            const {error:updateErr} = await client.from('staff_shift_request').update({
-                status: newStatus,
-                reviewed_by: user?.user?.id || null,
-                reviewed_at: new Date().toISOString()
-            }).eq('id', id);
-            if (updateErr) throw updateErr;
-
-            if (approve && req.request_type === 'SWAP') {
-                const dbShiftMap = { MORNING: 'ca_sang', AFTERNOON: 'ca_chieu', EVENING: 'ca_toi' };
-                const shiftFrom = dbShiftMap[req.shift] || req.shift;
-                const shiftTo = dbShiftMap[req.target_shift] || req.target_shift;
-                const {data:schFrom} = await client.from('staff_schedule').select('id').eq('staff_id', req.staff_id).eq('work_date', req.start_date).in('shift', [req.shift, shiftFrom]).limit(1).single();
-                const {data:schTo} = await client.from('staff_schedule').select('id').eq('staff_id', req.target_staff_id).eq('work_date', req.target_date).in('shift', [req.target_shift, shiftTo]).limit(1).single();
-                if (schFrom && schTo) {
-                    await client.from('staff_schedule').update({ staff_id: req.target_staff_id }).eq('id', schFrom.id);
-                    await client.from('staff_schedule').update({ staff_id: req.staff_id }).eq('id', schTo.id);
-                }
-            } else if (approve && req.request_type === 'LEAVE') {
-                const dbShiftMap = { MORNING: 'ca_sang', AFTERNOON: 'ca_chieu', EVENING: 'ca_toi' };
-                const shiftScope = dbShiftMap[req.shift] || req.shift;
-                let q = client.from('staff_schedule').update({ schedule_status: 'nghi' }).eq('staff_id', req.staff_id).gte('work_date', req.start_date).lte('work_date', req.end_date);
-                if (req.shift !== 'ALL') {
-                    q = q.in('shift', [req.shift, shiftScope]);
-                }
-                await q;
-            }
-        }
-        await PawpalStaff.loadStaffModuleData({force:true});
-        renderScheduleTable();renderLeaveRequestsList(currentTrayFilter);
+    async function reviewRequest(id,approve){
+        const client=await requireStaffAuth();const {error}=await client.rpc('review_admin_staff_shift_request',{p_request_id:id,p_approve:approve});if(error)throw error;
+        await PawpalStaff.loadStaffModuleData({force:true});renderScheduleTable();renderLeaveRequestsList(currentTrayFilter);
     }
-    async function saveShiftRequest(approveImmediately,button) {
-        if(button.disabled) return;
-        button.disabled=true;
-        let savedId=null;
-        try {
-            const modal=document.getElementById('leaveSwapModalOverlay');
-            const mode=modal.dataset.mode||'LEAVE';
-            const staffList=PawpalStaff.state.mockStaff||[];
-            const find=id=>staffList.find(staff=>staff.id===id)?.rawId;
-            const value=id=>document.getElementById(id)?.value?.trim()||'';
-            let payload;
-            if(mode==='LEAVE') {
-                payload={request_type:'LEAVE',staff_id:find(value('leaveInputStaff')),replacement_staff_id:find(value('leaveInputReplacement'))||null,leave_type:value('leaveInputType'),start_date:value('leaveInputStartDate'),end_date:value('leaveInputEndDate'),shift:value('leaveInputScope'),reason:value('leaveInputReason')};
-            } else {
-                payload={request_type:'SWAP',staff_id:find(value('swapInputStaffFrom')),target_staff_id:find(value('swapInputStaffTo')),start_date:value('swapInputDateFrom'),end_date:value('swapInputDateFrom'),shift:value('swapInputShiftFrom'),target_date:value('swapInputDateTo'),target_shift:value('swapInputShiftTo'),reason:value('swapInputReason')};
-                if(payload.staff_id===payload.target_staff_id) throw new Error('Hai nhân viên đổi ca phải khác nhau.');
-                if(!payload.target_staff_id||!payload.target_date||!['MORNING','AFTERNOON','EVENING'].includes(payload.target_shift)) throw new Error('Vui lòng chọn nhân viên, ngày và ca đổi hợp lệ.');
-            }
-            if(!payload.staff_id||!payload.start_date||!payload.end_date||!['ALL','MORNING','AFTERNOON','EVENING'].includes(payload.shift)) throw new Error('Vui lòng chọn nhân viên, ngày và ca hợp lệ; ca khuya chưa được hỗ trợ.');
-            const days=(Date.parse(payload.end_date)-Date.parse(payload.start_date))/86400000;
-            if(!Number.isFinite(days)||days<0||days>31) throw new Error('Khoảng ngày không hợp lệ hoặc vượt 32 ngày.');
-            if(payload.reason.length<3) throw new Error('Vui lòng nhập lý do ít nhất 3 ký tự.');
-            if(payload.replacement_staff_id===payload.staff_id) throw new Error('Người trực thay phải khác nhân viên xin nghỉ.');
-            const client=await requireStaffAuth();
-            const {data,error}=await client.from('staff_shift_request').insert(payload).select('id,status').single();
-            if(error) throw error;
-            const isSavedPending = data?.status === 'PENDING' || data?.status === 'cho_duyet';
-            if(!data?.id || !isSavedPending) throw new Error('Không xác minh được đơn đã lưu.');
-            savedId=data.id;
-            modal.classList.remove('active');
-            if(approveImmediately) await reviewRequest(savedId,true);
-            else {await PawpalStaff.loadStaffModuleData({force:true});renderLeaveRequestsList();}
-            PawpalStaff.showToast(approveImmediately?'Đã duyệt đơn và lưu lịch làm việc.':'Đã lưu đơn chờ duyệt vào CSDL.','success');
-        } catch(err) {
-            if(savedId) {
-                await PawpalStaff.loadStaffModuleData({force:true});
-                renderScheduleTable();
-                renderLeaveRequestsList(currentTrayFilter);
-            }
-            PawpalStaff.showToast((savedId?'Đơn đã lưu chờ duyệt nhưng chưa áp dụng lịch. ':'Không lưu được đơn. ')+err.message,'danger');
-        } finally {button.disabled=false;}
+    async function saveShiftRequest(approveImmediately,button){
+        if(button.disabled)return;button.disabled=true;const modal=document.getElementById('leaveSwapModalOverlay'),errorEl=document.getElementById('staffShiftRequestError');errorEl.textContent='';
+        try{
+            const rows=PawpalStaff.state.schedules,source=rows.find(r=>r.id===document.getElementById('requestSourceSchedule').value),target=rows.find(r=>r.id===document.getElementById('requestTargetSchedule').value),kind=document.getElementById('requestKind').value;
+            if(!source||(kind==='SWAP'&&!target))throw Error('Chọn ca làm việc thực tế cần xử lý.');
+            const details={request_type:kind,schedule_id:source.id,expected_updated_at:source.updated_at,reason:document.getElementById('requestReason').value.trim(),...(kind==='SWAP'?{target_schedule_id:target.id,target_expected_updated_at:target.updated_at}:{leave_type:document.getElementById('requestLeaveType').value})};
+            if(details.reason.length<3)throw Error('Nhập lý do ít nhất 3 ký tự.');
+            const {error}=await (await requireStaffAuth()).rpc('save_admin_staff_shift_request',{p_request_id:modal.dataset.requestId,p_details:details,p_approve:approveImmediately});if(error)throw error;
+            await PawpalStaff.loadStaffModuleData({force:true});renderScheduleTable();renderLeaveRequestsList(currentTrayFilter);modal.classList.remove('active');PawpalStaff.showToast(approveImmediately?'Đã duyệt đơn và áp dụng ca làm việc.':'Đã lưu đơn chờ duyệt.','success');
+        }catch(error){errorEl.textContent=({staff_schedule_changed:'Ca đã thay đổi. Đóng và mở lại để chọn ca mới.',staff_has_service_booking:'Cần chuyển giao lịch dịch vụ trước khi nghỉ hoặc đổi ca.',staff_not_available:'Nhân viên chưa đủ điều kiện nhận ca.',staff_request_conflict:'Yêu cầu đã được xử lý với nội dung khác. Đóng và mở lại.'})[error.message]||error.message;}
+        finally{button.disabled=false;}
     }
 
     let currentTrayFilter = 'ALL';
@@ -325,9 +146,9 @@
         const countPendingEl = document.getElementById('countFilterReqPending');
         const trayPendingCountEl = document.getElementById('trayPendingCount');
 
-        PawpalStaff.state.mockLeaveSwapRequests ||= [];
-        const requests = PawpalStaff.state.mockLeaveSwapRequests;
-        const pendingCount = requests.filter(r => r.status === 'PENDING' || r.status === 'cho_duyet').length;
+        PawpalStaff.state.shiftRequests ||= [];
+        const requests = PawpalStaff.state.shiftRequests;
+        const pendingCount = requests.filter(r => r.status?.toLowerCase() === 'pending' || r.status === 'cho_duyet').length;
 
         if (countPendingEl) countPendingEl.textContent = pendingCount;
         if (trayPendingCountEl) trayPendingCountEl.textContent = pendingCount;
@@ -340,11 +161,11 @@
         let filtered = requests;
         if (filterStatus !== 'ALL') {
             if (filterStatus === 'PENDING') {
-                filtered = requests.filter(r => r.status === 'PENDING' || r.status === 'cho_duyet');
+                filtered = requests.filter(r => r.status?.toLowerCase() === 'pending' || r.status === 'cho_duyet');
             } else if (filterStatus === 'APPROVED') {
-                filtered = requests.filter(r => r.status === 'APPROVED' || r.status === 'da_duyet');
+                filtered = requests.filter(r => r.status?.toLowerCase() === 'approved' || r.status === 'da_duyet');
             } else if (filterStatus === 'REJECTED') {
-                filtered = requests.filter(r => r.status === 'REJECTED' || r.status === 'tu_choi');
+                filtered = requests.filter(r => r.status?.toLowerCase() === 'rejected' || r.status === 'tu_choi');
             } else {
                 filtered = requests.filter(r => r.status === filterStatus);
             }
@@ -356,9 +177,9 @@
         }
 
         container.innerHTML = filtered.map(req => {
-            const isPending = req.status === 'PENDING' || req.status === 'cho_duyet';
-            const isApproved = req.status === 'APPROVED' || req.status === 'da_duyet';
-            const isRejected = req.status === 'REJECTED' || req.status === 'tu_choi';
+            const isPending = req.status?.toLowerCase() === 'pending' || req.status === 'cho_duyet';
+            const isApproved = req.status?.toLowerCase() === 'approved' || req.status === 'da_duyet';
+            const isRejected = req.status?.toLowerCase() === 'rejected' || req.status === 'tu_choi';
             const badgeClass = isApproved ? 'badge-success' : (isRejected ? 'badge-danger' : 'badge-warning');
             const badgeText = isApproved ? 'Đã duyệt' : (isRejected ? 'Từ chối' : 'Chờ duyệt');
 
@@ -406,286 +227,43 @@
         modal.classList.add('active');
     }
 
-    async function openIncidentReportModal(staffId = null, bookingId = null) {
-        const modal = document.getElementById('incidentReportModalOverlay');
-        if (!modal) return;
-
-        const staffList = PawpalStaff.state?.mockStaff || [];
-        const staffSelect = document.getElementById('incidentInputStaff');
-        const bookingSelect = document.getElementById('incidentInputBooking');
-
-        if (staffSelect) staffSelect.innerHTML = staffList.map(s => `<option value="${s.rawId}" ${s.id === staffId ? 'selected' : ''}>${s.name} (${s.position})</option>`).join('');
-
-        if (bookingSelect) {
-            bookingSelect.disabled = true;
-            bookingSelect.innerHTML = '<option value="">Đang tải ca dịch vụ…</option>';
-            try {
-                const client = await requireStaffAuth();
-                const { data: appointments, error } = await client
-                    .from('appointment')
-                    .select('id,appointment_code,pet_id,service_id,appointment_time,appointment_status')
-                    .eq('appointment_date', currentScheduleDate)
-                    .in('appointment_status', ['da_xac_nhan', 'da_check_in', 'dang_thuc_hien'])
-                    .order('appointment_time', { ascending: true });
-                if (error) throw error;
-                const petIds = [...new Set((appointments || []).map(item => item.pet_id).filter(Boolean))];
-                const serviceIds = [...new Set((appointments || []).map(item => item.service_id).filter(Boolean))];
-                const [petsResult, servicesResult] = await Promise.all([
-                    petIds.length ? client.from('pet_profile').select('id,pet_name').in('id', petIds) : Promise.resolve({ data: [], error: null }),
-                    serviceIds.length ? client.from('service').select('id,service_name').in('id', serviceIds) : Promise.resolve({ data: [], error: null })
-                ]);
-                if (petsResult.error || servicesResult.error) throw (petsResult.error || servicesResult.error);
-                const pets = new Map((petsResult.data || []).map(item => [item.id, item.pet_name]));
-                const services = new Map((servicesResult.data || []).map(item => [item.id, item.service_name]));
-                const options = (appointments || []).map(item => ({
-                    id: item.id,
-                    label: `${item.appointment_code} · ${pets.get(item.pet_id) || 'Bé chưa có tên'} · ${services.get(item.service_id) || 'Dịch vụ'} · ${(item.appointment_time || '').slice(0, 5)}`
-                }));
-                bookingSelect.innerHTML = options.length
-                    ? options.map(item => `<option value="${item.id}" ${item.id === bookingId ? 'selected' : ''}>${item.label}</option>`).join('')
-                    : '<option value="">Không có ca dịch vụ đang xử lý trong ngày</option>';
-                bookingSelect.disabled = options.length === 0;
-            } catch (error) {
-                bookingSelect.innerHTML = '<option value="">Không tải được ca dịch vụ</option>';
-                PawpalStaff.showToast('Không thể tải ca dịch vụ: ' + error.message, 'danger');
-            }
-        }
-
-        const noteInput = document.getElementById('incidentInputNote');
-        if (noteInput) noteInput.value = '';
-
-        modal.classList.add('active');
+    let incidentAppointments=[];
+    async function openIncidentReportModal(staffId=null,bookingId=null){
+        const modal=document.getElementById('incidentReportModalOverlay');modal.dataset.requestId=crypto.randomUUID();document.getElementById('incidentInputNote').value='';document.getElementById('staffIncidentError').textContent='';document.getElementById('incidentInputExtend').value='0';
+        const people=document.getElementById('incidentInputStaff'),bookings=document.getElementById('incidentInputBooking');people.replaceChildren(new Option('Chọn nhân viên',''),...PawpalStaff.state.staff.map(s=>new Option(s.name,s.rawId)));if(staffId)people.value=staffId;PawpalStaff.enhanceEntitySelect(people);
+        bookings.replaceChildren(new Option('Đang tải lịch dịch vụ',''));modal.classList.add('active');
+        try{
+            incidentAppointments=await PawpalStaff.readRows(()=>window.getSupabaseClient().from('appointment').select('id,appointment_code,staff_id,updated_at,scheduled_start_at,items:appointment_item(staff_id,status),trips:taxi_trip(driver_staff_id,status)').not('appointment_status','in','(completed,cancelled,no_show)').order('scheduled_start_at').order('id'));
+            const render=()=>{const selected=bookings.value;bookings.replaceChildren(new Option('Chọn lịch dịch vụ',''),...incidentAppointments.filter(a=>a.staff_id===people.value||(a.items||[]).some(i=>i.staff_id===people.value&&!['completed','cancelled'].includes(i.status))||(Array.isArray(a.trips)?a.trips:a.trips?[a.trips]:[]).some(t=>t.driver_staff_id===people.value&&!['completed','cancelled'].includes(t.status))).map(a=>new Option(a.appointment_code+' · '+new Date(a.scheduled_start_at).toLocaleString('vi-VN',{timeZone:'Asia/Bangkok'}),a.id)));bookings.value=selected||bookingId||'';PawpalStaff.enhanceEntitySelect(bookings);};people.onchange=render;render();
+        }catch(error){document.getElementById('staffIncidentError').textContent='Không tải được lịch dịch vụ. Đóng và thử lại.';}
+    }
+    async function saveIncidentReport(button){
+        if(button.disabled)return;button.disabled=true;const errorEl=document.getElementById('staffIncidentError');errorEl.textContent='';
+        try{
+            const apt=incidentAppointments.find(a=>a.id===document.getElementById('incidentInputBooking').value),staffId=document.getElementById('incidentInputStaff').value;
+            const details={type:document.getElementById('incidentInputType').value,severity:document.getElementById('incidentInputSeverity').value,requested_extension_minutes:Number(document.getElementById('incidentInputExtend').value),note:document.getElementById('incidentInputNote').value.trim()};
+            if(!apt||!staffId||details.note.length<3)throw Error('Chọn nhân viên, lịch được giao và mô tả sự cố ít nhất 3 ký tự.');
+            const {error}=await window.getSupabaseClient().rpc('record_admin_staff_incident',{p_request_id:document.getElementById('incidentReportModalOverlay').dataset.requestId,p_appointment_id:apt.id,p_expected_updated_at:apt.updated_at,p_staff_id:staffId,p_details:details});if(error)throw error;
+            document.getElementById('incidentReportModalOverlay').classList.remove('active');PawpalStaff.showToast('Đã lưu biên bản sự cố và thời gian đề nghị.','success');
+        }catch(error){errorEl.textContent=error.message==='staff_work_changed'?'Lịch dịch vụ đã thay đổi. Đóng và mở lại để kiểm tra.':error.message;}
+        finally{button.disabled=false;}
     }
 
-    async function saveIncidentReport(button) {
-        if (button.disabled) return;
-        const staffId = document.getElementById('incidentInputStaff')?.value;
-        const appointmentId = document.getElementById('incidentInputBooking')?.value;
-        const type = document.getElementById('incidentInputType')?.value;
-        const extendMinutes = Number(document.getElementById('incidentInputExtend')?.value || 0);
-        const severity = document.getElementById('incidentInputSeverity')?.value;
-        const note = document.getElementById('incidentInputNote')?.value.trim() || '';
-        if (!staffId || !appointmentId || !type || !severity) {
-            PawpalStaff.showToast('Hãy chọn nhân sự và ca dịch vụ đang xử lý trước khi lưu biên bản.', 'danger');
-            return;
+    function openLeaveSwapModal(mode='LEAVE'){
+        const modal=document.getElementById('leaveSwapModalOverlay');if(!modal)return;
+        modal.dataset.requestId=crypto.randomUUID();document.getElementById('staffShiftRequestError').textContent='';document.getElementById('requestReason').value='';
+        const kind=document.getElementById('requestKind');kind.value=mode;
+        const options=PawpalStaff.state.schedules.filter(s=>s.schedule_status==='active'&&s.availability_status==='available').map(s=>{
+            const name=PawpalStaff.state.staff.find(p=>p.rawId===s.staff_id)?.name||'—';return {id:s.id,label:name+' · '+new Date(s.start_at).toLocaleString('vi-VN',{timeZone:'Asia/Bangkok'})+' – '+new Date(s.end_at).toLocaleString('vi-VN',{timeZone:'Asia/Bangkok'})};
+        });
+        for(const id of ['requestSourceSchedule','requestTargetSchedule']){
+            const select=document.getElementById(id);select.replaceChildren(new Option('Chọn ca làm việc',''),...options.map(o=>new Option(o.label,o.id)));PawpalStaff.enhanceEntitySelect(select);
         }
-        if (note.length < 3) {
-            PawpalStaff.showToast('Hãy ghi rõ mô tả sự cố ít nhất 3 ký tự.', 'danger');
-            return;
-        }
-        button.disabled = true;
-        try {
-            const client = await requireStaffAuth();
-            const description = [
-                '[Pawpal incident v1]',
-                `appointment_id=${appointmentId}`,
-                `incident_type=${type}`,
-                `severity=${severity}`,
-                `extend_minutes=${extendMinutes}`,
-                `note=${encodeURIComponent(note)}`
-            ].join('\t');
-            const { data, error } = await client.from('audit_log').insert({
-                staff_id: staffId,
-                action: 'OTHER',
-                entity_name: 'appointment_incident',
-                description
-            }).select('id,staff_id,entity_name,description').single();
-            if (error) throw error;
-            if (!data?.id || data.staff_id !== staffId || data.entity_name !== 'appointment_incident') {
-                throw new Error('Không xác minh được biên bản vừa ghi.');
-            }
-
-            if (appointmentId && extendMinutes > 0) {
-                try {
-                    const { data: apt } = await client.from('appointment').select('note').eq('id', appointmentId).maybeSingle();
-                    if (apt) {
-                        const newNote = (apt.note ? apt.note + ' | ' : '') + `[Sự cố ${type}: Gia hạn +${extendMinutes} phút]`;
-                        await client.from('appointment').update({
-                            note: newNote
-                        }).eq('id', appointmentId);
-                    }
-                } catch (aptErr) {
-                    console.warn('[Incident Report] Không thể gia hạn trực tiếp vào appointment:', aptErr);
-                }
-            }
-
-            document.getElementById('incidentReportModalOverlay')?.classList.remove('active');
-            PawpalStaff.showToast('Đã lưu biên bản sự cố vào CSDL. Thời gian gia hạn được ghi nhận để điều phối ca.', 'success');
-        } catch (error) {
-            PawpalStaff.showToast('Không lưu được biên bản sự cố: ' + error.message, 'danger');
-        } finally {
-            button.disabled = false;
-        }
-    }
-
-    function openShiftModal(dateStr, shiftKey = 'MORNING', preselectedStaffId = null) {
-        const modal = document.getElementById('shiftModalOverlay');
-        if (!modal) return;
-
-        const dateInput = document.getElementById('shiftInputDate');
-        const shiftSelect = document.getElementById('shiftInputShift');
-        const availableContainer = document.getElementById('shiftAvailableStaff');
-        const assignedContainer = document.getElementById('shiftAssignedStaff');
-        const alertBanner = document.getElementById('shiftAlertBanner');
-
-        const activeDate = dateStr || currentScheduleDate;
-        if (dateInput) dateInput.value = activeDate;
-        if (shiftSelect) shiftSelect.value = shiftKey || 'MORNING';
-        if (alertBanner) alertBanner.style.display = 'none';
-
-        const staffList = PawpalStaff.state?.mockStaff || [];
-        const roster = PawpalStaff.state?.mockRoster || {};
-        let currentAssignedIds = new Set();
-        const nightOption = shiftSelect?.querySelector('option[value="NIGHT"]');
-        if(nightOption) nightOption.disabled=true;
-        function resetAssigned() {
-            const date=dateInput.value, shift=shiftSelect.value;
-            currentAssignedIds=new Set(staffList.filter(staff=>(roster[date]?.[staff.id]||[]).includes(shift)).map(staff=>staff.id));
-        }
-        resetAssigned();
-        if(preselectedStaffId) currentAssignedIds.add(preselectedStaffId);
-
-        function renderModalStaffLists() {
-            if (availableContainer) {
-                const available = staffList.filter(s => !currentAssignedIds.has(s.id));
-                if (available.length === 0) {
-                    availableContainer.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 12px;">Tất cả nhân sự đã được phân ca.</div>';
-                } else {
-                    availableContainer.innerHTML = available.map(s => `
-                        <div class="shift-staff-item">
-                            <div class="shift-staff-item-info">
-                                <span class="shift-staff-name">${s.name}</span>
-                                <span class="shift-staff-pos">${s.position}</span>
-                            </div>
-                            <button type="button" class="btn-shift-action btn-add-to-shift" data-id="${s.id}">Thêm</button>
-                        </div>
-                    `).join('');
-                }
-            }
-
-            if (assignedContainer) {
-                const assigned = staffList.filter(s => currentAssignedIds.has(s.id));
-                if (assigned.length === 0) {
-                    assignedContainer.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 12px;">Chưa có nhân sự trong ca trực.</div>';
-                } else {
-                    assignedContainer.innerHTML = assigned.map(s => `
-                        <div class="shift-staff-item">
-                            <div class="shift-staff-item-info">
-                                <span class="shift-staff-name">${s.name}</span>
-                                <span class="shift-staff-pos">${s.position}</span>
-                            </div>
-                            <button type="button" class="btn-shift-action btn-remove-from-shift" data-id="${s.id}" style="border-color: #F7DCDC; color: #DC2626;">Bỏ</button>
-                        </div>
-                    `).join('');
-                }
-            }
-
-            availableContainer?.querySelectorAll('.btn-add-to-shift').forEach(b => {
-                b.addEventListener('click', () => {
-                    const id = b.getAttribute('data-id');
-                    currentAssignedIds.add(id);
-                    renderModalStaffLists();
-                });
-            });
-
-            assignedContainer?.querySelectorAll('.btn-remove-from-shift').forEach(b => {
-                b.addEventListener('click', () => {
-                    const id = b.getAttribute('data-id');
-                    currentAssignedIds.delete(id);
-                    renderModalStaffLists();
-                });
-            });
-        }
-
-        renderModalStaffLists();
-
-        if (shiftSelect) {
-            shiftSelect.onchange = () => { resetAssigned(); renderModalStaffLists(); };
-        }
-
-        if(dateInput) dateInput.onchange=()=>{resetAssigned();renderModalStaffLists();};
-        modal.classList.add('active');
-    }
-
-    function openLeaveSwapModal(mode = 'LEAVE') {
-        const modal = document.getElementById('leaveSwapModalOverlay');
-        if (!modal) return;
-
-        const staffList = PawpalStaff.state?.mockStaff || [];
-
-        // Nạp danh sách nhân sự
-        const leaveStaffSelect = document.getElementById('leaveInputStaff');
-        const leaveReplaceSelect = document.getElementById('leaveInputReplacement');
-        const swapFromSelect = document.getElementById('swapInputStaffFrom');
-        const swapToSelect = document.getElementById('swapInputStaffTo');
-
-        const staffOptions = staffList.map(s => `<option value="${s.id}">${s.name} (${s.position})</option>`).join('');
-
-        if (leaveStaffSelect) leaveStaffSelect.innerHTML = staffOptions;
-        if (leaveReplaceSelect) leaveReplaceSelect.innerHTML = '<option value="">-- Chưa có người thay --</option>' + staffOptions;
-        if (swapFromSelect) swapFromSelect.innerHTML = staffOptions;
-        if (swapToSelect) swapToSelect.innerHTML = staffOptions;
-
-        // Set ngày mặc định
-        const todayStr = currentScheduleDate || new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-        const nextDay = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-
-        const leaveStart = document.getElementById('leaveInputStartDate');
-        const leaveEnd = document.getElementById('leaveInputEndDate');
-        const swapFromDate = document.getElementById('swapInputDateFrom');
-        const swapToDate = document.getElementById('swapInputDateTo');
-
-        if (leaveStart) leaveStart.value = todayStr;
-        if (leaveEnd) leaveEnd.value = todayStr;
-        if (swapFromDate) swapFromDate.value = todayStr;
-        if (swapToDate) swapToDate.value = nextDay;
-
-        // Switch tab
-        const tabLeaveBtn = document.getElementById('btnTabModeLeave');
-        const tabSwapBtn = document.getElementById('btnTabModeSwap');
-        const secLeave = document.getElementById('formSectionLeave');
-        const secSwap = document.getElementById('formSectionSwap');
-
-        function setTabMode(m) {
-            if (m === 'LEAVE') {
-                if (tabLeaveBtn) {
-                    tabLeaveBtn.style.color = '#236B48';
-                    tabLeaveBtn.style.fontWeight = '700';
-                    tabLeaveBtn.style.borderBottom = '2px solid #236B48';
-                }
-                if (tabSwapBtn) {
-                    tabSwapBtn.style.color = '#4F7A65';
-                    tabSwapBtn.style.fontWeight = '500';
-                    tabSwapBtn.style.borderBottom = 'none';
-                }
-                if (secLeave) secLeave.style.display = 'block';
-                if (secSwap) secSwap.style.display = 'none';
-                modal.setAttribute('data-mode', 'LEAVE');
-            } else {
-                if (tabSwapBtn) {
-                    tabSwapBtn.style.color = '#236B48';
-                    tabSwapBtn.style.fontWeight = '700';
-                    tabSwapBtn.style.borderBottom = '2px solid #236B48';
-                }
-                if (tabLeaveBtn) {
-                    tabLeaveBtn.style.color = '#4F7A65';
-                    tabLeaveBtn.style.fontWeight = '500';
-                    tabLeaveBtn.style.borderBottom = 'none';
-                }
-                if (secSwap) secSwap.style.display = 'block';
-                if (secLeave) secLeave.style.display = 'none';
-                modal.setAttribute('data-mode', 'SWAP');
-            }
-        }
-
-        if (tabLeaveBtn) tabLeaveBtn.onclick = () => setTabMode('LEAVE');
-        if (tabSwapBtn) tabSwapBtn.onclick = () => setTabMode('SWAP');
-
-        setTabMode(mode);
-        modal.classList.add('active');
+        const toggle=()=>{document.getElementById('requestTargetGroup').style.display=kind.value==='SWAP'?'':'none';document.getElementById('requestLeaveGroup').style.display=kind.value==='LEAVE'?'':'none';};kind.onchange=toggle;toggle();modal.classList.add('active');
     }
 
     function initScheduleSubtab() {
+        for(const id of ['leaveSwapModalForm','incidentReportModalForm'])document.getElementById(id)?.addEventListener('submit',event=>event.preventDefault());
         // Toggle view DAY / WEEK
         const btnDay = document.getElementById('btnScheduleViewDay');
         const btnWeek = document.getElementById('btnScheduleViewWeek');
@@ -729,73 +307,9 @@
         }
 
         // Nút Lưu phân ca
-        const btnSaveShift = document.getElementById('btnSaveShift');
-        if (btnSaveShift) {
-            btnSaveShift.addEventListener('click', async () => {
-                const modal = document.getElementById('shiftModalOverlay');
-                const dateInput = document.getElementById('shiftInputDate');
-                const shiftSelect = document.getElementById('shiftInputShift');
-                const d = dateInput?.value || currentScheduleDate;
-                const sh = shiftSelect?.value || 'MORNING';
+        document.getElementById('btnSaveShift').onclick=saveCustomShift;
+        document.getElementById('shiftModalForm').addEventListener('submit',e=>e.preventDefault());
 
-                if(btnSaveShift.disabled) return;
-                btnSaveShift.disabled=true;
-                try {
-                    const times={MORNING:['08:00','12:00'],AFTERNOON:['13:00','17:00'],EVENING:['17:30','21:30']};
-                    if(!d || !times[sh]) throw new Error('Ca khuya chưa được CSDL hỗ trợ; vui lòng chọn ca sáng, chiều hoặc tối.');
-                    const client=window.getSupabaseClient();
-                    const assignedIds=Array.from(modal.querySelectorAll('#shiftAssignedStaff .btn-remove-from-shift')).map(b=>b.dataset.id);
-                    const staffList=PawpalStaff.state.mockStaff||[];
-                    const selected=assignedIds.map(id=>staffList.find(staff=>staff.id===id));
-                    if(selected.some(staff=>!staff?.rawId)) throw new Error('Không xác định được nhân viên đã chọn.');
-                    const {data:rows,error}=await client.from('staff_schedule').select('*').eq('work_date',d);
-                    if(error) throw error;
-                    const dbShiftMap = { MORNING: 'ca_sang', AFTERNOON: 'ca_chieu', EVENING: 'ca_toi' };
-                    const dbShift = dbShiftMap[sh] || sh;
-                    const expected=(PawpalStaff.state.schedules||[]).filter(row=>row.work_date===d && (row.shift===sh || row.shift===dbShift));
-                    const current=rows.filter(row=>(row.shift===sh || row.shift===dbShift));
-                    const signature=list=>list.map(row=>[row.id,row.updated_at,row.schedule_status].join('|')).sort().join(';');
-                    if(signature(expected)!==signature(current)) throw new Error('Lịch đã thay đổi ở phiên khác; tải lại trước khi phân ca.');
-                    for(const staff of selected) {
-                        const other=rows.filter(row=>row.staff_id===staff.rawId && row.shift!==sh && row.shift!==dbShift && row.schedule_status!=='OFF' && row.schedule_status!=='nghi');
-                        const hours=other.reduce((sum,row)=>{const start=Date.parse('2000-01-01T'+row.start_time),end=Date.parse('2000-01-01T'+row.end_time);return sum+(end-start)/3600000;},0);
-                        if(hours+4>8) throw new Error(staff.name+' vượt giới hạn 8 giờ trong ngày.');
-                    }
-                    const selectedUuids=new Set(selected.map(staff=>staff.rawId));
-                    for(const row of current) {
-                        const wants=selectedUuids.has(row.staff_id);
-                        if(!wants && ['WORKING','COMPLETED','dang_lam_viec','da_hoan_thanh'].includes(row.schedule_status)) throw new Error('Không thể bỏ ca đã bắt đầu hoặc đã hoàn thành.');
-                        if(current.filter(r=>r.staff_id===row.staff_id).length>1) throw new Error('Có lịch trùng nhân viên trong ca; cần rà soát trước khi lưu.');
-                    }
-                    for(const row of current) {
-                        const isOff = row.schedule_status === 'OFF' || row.schedule_status === 'nghi';
-                        const newStatus = selectedUuids.has(row.staff_id) ? (isOff ? 'da_len_lich' : row.schedule_status) : 'nghi';
-                        if(newStatus===row.schedule_status) continue;
-                        const {data,error}=await client.from('staff_schedule').update({schedule_status:newStatus}).eq('id',row.id).eq('schedule_status',row.schedule_status).select('id,schedule_status').single();
-                        if(error) throw error;
-                        if(!data?.id || data.schedule_status!==newStatus) throw new Error('Không xác minh được lịch đã cập nhật.');
-                    }
-                    const additions=selected.filter(staff=>!current.some(row=>row.staff_id===staff.rawId)).map(staff=>({staff_id:staff.rawId,work_date:d,shift:dbShift,start_time:times[sh][0],end_time:times[sh][1],schedule_status:'da_len_lich'}));
-                    if(additions.length) {
-                        const {data,error}=await client.from('staff_schedule').insert(additions).select('id,staff_id');
-                        if(error) throw error;
-                        if(data.length!==additions.length) throw new Error('Không xác minh được đủ lịch phân ca đã thêm.');
-                    }
-                    await PawpalStaff.loadStaffModuleData({force:true});
-                    if(PawpalStaff.state.scheduleError) throw new Error('Đã ghi nhưng chưa tải lại được lịch; vui lòng F5 để đối chiếu.');
-                    currentScheduleDate=d;
-                    const picker=document.getElementById('scheduleDatePicker');if(picker)picker.value=d;
-                    renderScheduleTable();
-                    PawpalStaff.showToast('Đã lưu phân ca vào CSDL.','success');
-                } catch(err) {
-                    await PawpalStaff.loadStaffModuleData({force:true});renderScheduleTable();
-                    PawpalStaff.showToast('Không thể hoàn tất phân ca: '+err.message+' Kiểm tra lịch hiện tại trước khi thử lại.','danger');return;
-                } finally {btnSaveShift.disabled=false;}
-                if (modal) modal.classList.remove('active');
-            });
-        }
-
-        // Nút mở modal đơn xin nghỉ phép / đổi ca
         const btnOpenLeaveSwap = document.getElementById('btnOpenLeaveSwapModal');
         if (btnOpenLeaveSwap) {
             btnOpenLeaveSwap.addEventListener('click', () => openLeaveSwapModal('LEAVE'));

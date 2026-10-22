@@ -70,7 +70,7 @@
         const tbody = document.getElementById('assessmentListTableBody') || document.getElementById('assessmentTableBody');
         updateAssessmentKPIs();
         if (!tbody) return;
-        const assessments = PawpalStaff.state?.mockAssessments || [];
+        const assessments = PawpalStaff.state?.assessments || [];
         const searchInput = document.getElementById('assessmentSearchInput');
         const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
         const toUnaccent = PawpalStaff.toUnaccent || (str => str);
@@ -122,7 +122,7 @@
             const safeName = esc(item.name);
             const safePosition = esc(item.position);
             const safeType = esc(item.type);
-            const safeEvaluator = esc(item.evaluator || 'Hội đồng chuyên môn');
+            const safeEvaluator = esc(item.evaluator || '—');
             const safeNote = esc(item.note || '—');
 
             return `
@@ -157,14 +157,14 @@
 
     function updateAssessmentKPIs() {
         if (!PawpalStaff.state.isLoaded) return;
-        const assessments = PawpalStaff.state?.mockAssessments || [];
-        const staffList = PawpalStaff.state?.mockStaff || [];
+        const assessments = PawpalStaff.state?.assessments || [];
+        const staffList = PawpalStaff.state?.staff || [];
         const totalStaff = staffList.length;
         const total = assessments.length;
         const pass = assessments.filter(a => a.result === 'PASS').length;
         const retrain = assessments.filter(a => a.result === 'RETRAIN').length;
         const fail = assessments.filter(a => a.result === 'FAIL').length;
-        const notAssessed = Math.max(0, totalStaff - total);
+        const notAssessed = Math.max(0, totalStaff - new Set(assessments.map(a=>a.staff_id)).size);
 
         const statTotal = document.getElementById('statAssessed') || document.getElementById('statAssessmentTotal');
         const statPassEl = document.getElementById('statPass') || document.getElementById('statAssessmentPass');
@@ -188,38 +188,29 @@
         const resultSelect = document.getElementById('assessInputResult');
         const noteInput = document.getElementById('assessInputNote');
 
-        const staffList = PawpalStaff.state?.mockStaff || [];
+        const staffList = PawpalStaff.state?.staff || [];
 
         if (staffSelect) {
-            staffSelect.innerHTML = staffList.map(s => `
-                <option value="${s.id}" ${s.id === targetStaffId ? 'selected' : ''}>${s.name} (${s.position})</option>
-            `).join('');
+            staffSelect.replaceChildren(new Option('Chọn nhân viên',''),...staffList.map(s=>new Option(s.name+' · '+s.position,s.id)));
+            if(targetStaffId)staffSelect.value=targetStaffId;
         }
 
         if (dateInput) {
             dateInput.value = new Date().toISOString().split('T')[0];
         }
 
-        if (scoreInput) {
-            scoreInput.value = '';
-            scoreInput.placeholder = '0 - 100';
-            scoreInput.oninput = () => {
-                const val = Number(scoreInput.value);
-                if (resultSelect && !isNaN(val) && scoreInput.value !== '') {
-                    if (val >= 80) resultSelect.value = 'PASS';
-                    else if (val >= 60) resultSelect.value = 'RETRAIN';
-                    else resultSelect.value = 'FAIL';
-                }
-            };
-        }
-
-        if (resultSelect) resultSelect.value = 'PASS';
+        if(scoreInput){scoreInput.value='';scoreInput.oninput=null;scoreInput.step='0.01';}
+        if(resultSelect){if(!resultSelect.querySelector('option[value=""]'))resultSelect.insertAdjacentHTML('afterbegin','<option value="">Chọn kết quả</option>');resultSelect.value='';}
+        modal.dataset.requestId=crypto.randomUUID();
+        const error=document.getElementById('staffAssessmentError');if(error)error.textContent='';
+        PawpalStaff.enhanceEntitySelect(staffSelect);
         if (noteInput) noteInput.value = '';
 
         modal.classList.add('active');
     }
 
     function initAssessmentSubtab() {
+        document.getElementById('assessmentModalForm')?.addEventListener('submit',event=>event.preventDefault());
         const searchInput = document.getElementById('assessmentSearchInput');
         const clearBtn = document.getElementById('btnClearAssessmentSearch');
         let assessSearchTimer = null;
@@ -265,114 +256,18 @@
             btnOpenAdd.addEventListener('click', () => openAssessmentModal());
         }
 
-        async function handleSaveAssessment(isNotify = false) {
-            const modal = document.getElementById('assessmentModalOverlay');
-            const staffId = document.getElementById('assessInputStaff')?.value;
-            const dateVal = document.getElementById('assessInputDate')?.value;
-            const typeVal = document.getElementById('assessInputType')?.value;
-            const scoreVal = document.getElementById('assessInputScore')?.value;
-            const resultVal = document.getElementById('assessInputResult')?.value;
-            const noteVal = document.getElementById('assessInputNote')?.value.trim();
-
-            if (!staffId || !dateVal || scoreVal === '') {
-                PawpalStaff.showToast('Vui lòng nhập đầy đủ thông tin đánh giá!', 'warning');
-                return;
-            }
-
-            const scoreNum = Number(scoreVal);
-            if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > 100) {
-                PawpalStaff.showToast('Điểm đánh giá phải là số từ 0 đến 100!', 'warning');
-                return;
-            }
-
-            // Đồng bộ kết quả đánh giá theo chính sách điểm chuẩn
-            let finalResult = resultVal;
-            if (scoreNum >= 80) finalResult = 'PASS';
-            else if (scoreNum >= 60) finalResult = 'RETRAIN';
-            else finalResult = 'FAIL';
-
-            const staffList = PawpalStaff.state?.mockStaff || [];
-            const staffObj = staffList.find(s => s.id === staffId || s.rawId === staffId);
-            if (!staffObj) {
-                PawpalStaff.showToast('Không tìm thấy nhân sự được chọn!', 'danger');
-                return;
-            }
-
-            // Lưu trực tiếp điểm tay nghề vào Supabase và kiểm tra lỗi fail-closed
-            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (client && staffObj.rawId) {
-                try {
-                    const { error: upErr } = await client.from('staff').update({
-                        skill_score: scoreNum,
-                        service_locked: finalResult !== 'PASS'
-                    }).eq('id', staffObj.rawId);
-
-                    if (upErr) throw upErr;
-
-                    try {
-                        await client.from('staff_assessment').insert({
-                            staff_id: staffObj.rawId,
-                            assessment_type: typeVal,
-                            score: scoreNum,
-                            result: finalResult,
-                            notes: noteVal,
-                            assessment_date: dateVal
-                        });
-                    } catch (_ignoreInsert) {
-                        // Bảng assessment riêng có thể chưa cấu hình
-                    }
-
-                    // Ghi nhận đánh giá chuyên môn vào audit_log chuẩn CSDL
-                    if (isNotify) {
-                        try {
-                            await client.from('audit_log').insert({
-                                staff_id: staffObj.rawId,
-                                action: 'UPDATE',
-                                entity_name: 'staff_assessment',
-                                description: `Đánh giá chuyên môn: Điểm ${scoreNum}/100 - Xếp loại: ${finalResult === 'PASS' ? 'Đạt' : (finalResult === 'RETRAIN' ? 'Cần đào tạo lại' : 'Không đạt')}. ${noteVal ? 'Ghi chú: ' + noteVal : ''}`,
-                                created_at: new Date().toISOString()
-                            });
-                        } catch (auditErr) {
-                            console.warn('[PawpalStaff] Lỗi ghi nhật ký đánh giá vào audit_log:', auditErr);
-                        }
-                    }
-                } catch (e) {
-                    console.error('[PawpalStaff] Lỗi lưu skill_score vào staff:', e);
-                    PawpalStaff.showToast(`Không thể lưu kết quả đánh giá: ${e.message || 'Lỗi CSDL'}`, 'danger');
-                    return;
-                }
-            }
-
-            // CSDL cập nhật thành công mới thay đổi state
-            staffObj.skillScore = scoreNum;
-            staffObj.skillResult = finalResult;
-            staffObj.skillExam = finalResult === 'PASS' ? `Đạt (${scoreNum}đ)` : `Cần đào tạo (${scoreNum}đ)`;
-            staffObj.serviceLocked = finalResult !== 'PASS';
-
-            // Thêm bản ghi đánh giá mới
-            PawpalStaff.state.mockAssessments = PawpalStaff.state.mockAssessments || [];
-            const newId = `ASM-${String(PawpalStaff.state.mockAssessments.length + 1).padStart(3, '0')}`;
-            PawpalStaff.state.mockAssessments.unshift({
-                id: newId,
-                date: PawpalStaff.formatDateVN(dateVal),
-                staff_id: staffId,
-                name: staffObj ? staffObj.name : 'Nhân sự',
-                position: staffObj ? staffObj.position : 'Kỹ thuật viên',
-                type: typeVal === 'Grooming' ? 'Grooming' : (typeVal === 'Spa' ? 'Spa' : 'Chăm sóc'),
-                score: scoreNum,
-                result: finalResult,
-                evaluator: 'Quản trị viên',
-                note: noteVal || (finalResult === 'PASS' ? 'Thao tác chuẩn xác' : 'Cần đào tạo lại chuyên sâu')
-            });
-
-            currentAssessmentPage = 1;
-            renderAssessmentList();
-            updateAssessmentKPIs();
-            if (PawpalStaff.subtabs.list?.renderStaffList) PawpalStaff.subtabs.list.renderStaffList();
-            if (PawpalStaff.subtabs.list?.renderStaffAlertBar) PawpalStaff.subtabs.list.renderStaffAlertBar();
-
-            PawpalStaff.showToast(isNotify ? 'Đã lưu kết quả và gửi thông báo đến nhân sự!' : 'Đã ghi nhận kết quả đánh giá tay nghề!', 'success');
-            if (modal) modal.classList.remove('active');
+        async function handleSaveAssessment() {
+            const modal=document.getElementById('assessmentModalOverlay'),button=document.getElementById('btnSaveAssessment'),errorEl=document.getElementById('staffAssessmentError');
+            if(button.disabled)return;button.disabled=true;errorEl.textContent='';
+            try{
+                const value=id=>document.getElementById(id).value.trim(),staff=PawpalStaff.state.staff.find(s=>s.id===value('assessInputStaff'));
+                const score=value('assessInputScore'),details={assessment_date:value('assessInputDate'),assessment_type:value('assessInputType'),score:Number(score),result:value('assessInputResult'),note:value('assessInputNote')};
+                if(!staff||!details.assessment_date||!details.assessment_type||score===''||!Number.isFinite(details.score)||details.score<0||details.score>100||!['PASS','RETRAIN','FAIL'].includes(details.result))throw Error('Vui lòng chọn nhân viên, ngày, loại đánh giá, điểm từ 0 đến 100 và kết quả.');
+                const {error}=await window.getSupabaseClient().rpc('save_admin_staff_assessment',{p_request_id:modal.dataset.requestId,p_staff_id:staff.rawId,p_details:details});if(error)throw error;
+                await PawpalStaff.loadStaffModuleData({force:true});currentAssessmentPage=1;renderAssessmentList();PawpalStaff.subtabs.list?.renderStaffList();
+                modal.classList.remove('active');PawpalStaff.showToast('Đã lưu kết quả đánh giá.','success');
+            }catch(error){errorEl.textContent=error.message==='invalid_staff_assessment'?'Kiểm tra ngày, điểm và kết quả đánh giá.':error.message;}
+            finally{button.disabled=false;}
         }
 
         const btnSaveAssess = document.getElementById('btnSaveAssessment');

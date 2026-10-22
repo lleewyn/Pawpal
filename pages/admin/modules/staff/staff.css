@@ -1988,3 +1988,22 @@
 
 
 .field-error{margin-top:4px;color:#B42318;font-size:12px;} .admin-input.is-invalid,.admin-select.is-invalid{border-color:#DC2626 !important;}
+#staffModalOverlay .admin-modal-card { max-height:90vh; overflow:hidden; }
+#staffModalForm { max-height:84vh; min-height:0; }
+#staffModalForm .modal-body-clean { overflow:auto; min-height:0; overscroll-behavior:contain; }
+#staffModalForm .modal-header-clean, #staffModalForm .modal-footer-clean { flex-shrink:0; }
+#reassignModalOverlay .admin-modal-card { width:1000px !important; max-width:96vw !important; max-height:90vh; }
+#reassignModalForm { max-height:84vh; min-height:0; }
+#reassignModalForm .modal-body-clean { overflow:auto; min-height:0; overscroll-behavior:contain; }
+#reassignModalForm .modal-header-clean, #reassignModalForm .modal-footer-clean { flex-shrink:0; }
+#reassignBookingsTableBody td { white-space:normal !important; overflow-wrap:anywhere; }
+#reassignBookingsTableBody td:last-child { min-width:220px; }
+#reassignModalOverlay .admin-table { min-width:0 !important; width:100%; table-layout:fixed; }
+#reassignModalOverlay th:nth-child(1) { width:14% !important; }
+#reassignModalOverlay th:nth-child(2) { width:18% !important; }
+#reassignModalOverlay th:nth-child(3) { width:20% !important; }
+#reassignModalOverlay th:nth-child(4) { width:18% !important; }
+#reassignModalOverlay th:nth-child(5) { width:30% !important; }
+#staffAccountStatusRow { background:transparent !important; border:none; padding:0 !important; }
+#staffAccessDetails summary { list-style:none; cursor:pointer; color:#236B48; font-weight:600; padding:8px 0; }
+#staffAccessDetails summary::-webkit-details-marker { display:none; }

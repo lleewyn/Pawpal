@@ -21,6 +21,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/admin/staff/:action",
+      "destination": "/api/staff-auth?action=:action"
+    },
+    {
       "source": "/api/admin/auth/complete-password-change",
       "destination": "/api/staff-auth"
     },
