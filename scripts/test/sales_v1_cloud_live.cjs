@@ -4,7 +4,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
 const infra='D:/Aboutme/Pawpal-infra/supabase-local',credentials=fs.readFileSync(infra+'/PAWPAL-ADMIN.private.txt','utf8');
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});const page=await browser.newPage({viewport:{width:1440,height:1050}}),errors=[],legacy=[],writes=[];
 try{
- page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.url().includes('/rest/v1/')&&r.status()>=400)errors.push(new URL(r.url()).pathname+':'+r.status());});
+ page.on('pageerror',e=>errors.push(e.stack||e.message));page.on('response',r=>{if(r.url().includes('/rest/v1/')&&r.status()>=400)errors.push(new URL(r.url()).pathname+':'+r.status());});
  page.on('request',r=>{const u=new URL(r.url());if((u.hostname.endsWith('.supabase.co')&&u.hostname!=='cpzuvaplseielhgcnqrn.supabase.co')||u.hostname.endsWith('.trycloudflare.com')||u.pathname.startsWith('/data/'))legacy.push(u.hostname+u.pathname);});
  await page.route('**/rest/v1/**',route=>{const r=route.request(),allowed=['get_staff_login_context','get_admin_sales_cashier'];if(!['GET','HEAD'].includes(r.method())&&!allowed.some(v=>new URL(r.url()).pathname==='/rest/v1/rpc/'+v)){writes.push(new URL(r.url()).pathname);return route.abort();}return route.continue();});
  await page.goto((process.env.TEST_BASE_URL||'https://pawpalgr3.vercel.app')+'/admin/login');await page.locator('#inputAdminEmail').fill(credentials.match(/^Email: (.+)$/m)[1].trim());await page.locator('#inputAdminPassword').fill(credentials.match(/^Password: (.+)$/m)[1].trim());await page.locator('#btnSubmitAdminLogin').click();await page.waitForURL('**/admin#tab-list');

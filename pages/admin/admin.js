@@ -804,7 +804,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Nạp module tương ứng — dùng DOM cache để chuyển tab tức thì 0ms (Zero-Wait)
     let moduleLoadRevision = 0;
-    async function loadModule(moduleName) {
+    let moduleActivation = Promise.resolve();
+    let requestedModuleSequence = 0;
+    function loadModule(moduleName) {
+        const requested = ++requestedModuleSequence;
+        // Keep a module's DOM attached until its scripts finish initializing.
+        // Rapid navigation otherwise detaches forms while later scripts bind them.
+        // Once the active load finishes, only the latest queued navigation runs.
+        const activation = moduleActivation.catch(() => {}).then(() => {
+            if (requested !== requestedModuleSequence) return;
+            return loadModuleNow(moduleName);
+        });
+        moduleActivation = activation;
+        return activation;
+    }
+    async function loadModuleNow(moduleName) {
         const loadRevision = ++moduleLoadRevision;
         if (!contentArea) return;
         const thisLoadId = ++_activeModuleLoadId;
