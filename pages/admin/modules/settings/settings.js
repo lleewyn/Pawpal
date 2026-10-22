@@ -287,22 +287,10 @@
             const client = getSupabaseClient();
             if (!client) return;
 
-            let staffId = null;
-            try {
-                const { data: authData } = await client.auth.getUser();
-                if (authData?.user?.id) staffId = authData.user.id;
-            } catch (e) {}
-
-            if (!staffId) {
-                try {
-                    const adminUser = JSON.parse(localStorage.getItem('pawpal_admin_user') || sessionStorage.getItem('pawpal_admin_user') || '{}');
-                    if (adminUser?.id) staffId = adminUser.id;
-                } catch (e) {}
-            }
-
-            if (!staffId) {
-                staffId = 'd0000000-5555-5555-5555-555555555555';
-            }
+            const { data: context, error: contextError } = await client.rpc('get_staff_login_context');
+            if (contextError) throw contextError;
+            const staffId = context?.staff?.id;
+            if (!staffId) throw new Error('Không xác nhận được nhân viên ghi nhật ký.');
 
             const validActions = ['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'IMPORT', 'EXPORT', 'READ'];
             let normalizedAction = String(action || 'OTHER').toUpperCase().trim();
@@ -328,8 +316,8 @@
     // -------------------------------------------------------------
     const DEFAULT_SYSTEM_CONFIG = {
         storeInfo: {
-            brandName: 'PawPal Pet Center',
-            companyName: 'Pawpal Pet Center',
+            brandName: '',
+            companyName: '',
             hotline: '',
             emergencyPhone: '',
             email: '',
@@ -394,7 +382,7 @@
         notificationsList: [],
         auditLogsList: [],
         hasSystemConfig: false,
-        systemConfig: JSON.parse(localStorage.getItem('pawpal_admin_system_config') || 'null') || DEFAULT_SYSTEM_CONFIG,
+        systemConfig: structuredClone(DEFAULT_SYSTEM_CONFIG),
         isSafeModeLocked: true,
         currentActiveVoucherCode: null,
         currentActiveArticleId: null
@@ -451,7 +439,7 @@
             // Chỉ cập nhật state và localStorage sau khi CSDL đã commit thành công
             PawpalSettings.state.systemConfig = JSON.parse(JSON.stringify(newCfg));
             PawpalSettings.state.hasSystemConfig = true;
-            localStorage.setItem('pawpal_admin_system_config', JSON.stringify(newCfg));
+            localStorage.removeItem('pawpal_admin_system_config');
 
             if (Array.isArray(newCfg.websiteNotices)) {
                 const publicNotices = newCfg.websiteNotices.map(n => ({
@@ -693,6 +681,9 @@
                 client.from('service').select('id, service_code, service_name, estimated_duration').order('service_name'),
                 client.from('product').select('id, product_name, product_variant(sku_variant, sale_price)').order('product_name').limit(50)
             ]);
+            for (const result of [appSettingsRes, servicesRes, productsRes]) {
+                if (result.error) throw result.error;
+            }
             return {
                 appSettings: appSettingsRes.data || [],
                 services: servicesRes.data || [],
@@ -720,6 +711,7 @@
 
             const appSettingsData = res.appSettings || [];
             PawpalSettings.state.hasSystemConfig = false;
+            PawpalSettings.state.systemConfig = structuredClone(DEFAULT_SYSTEM_CONFIG);
             if (appSettingsData.length > 0) {
                 appSettingsData.forEach(row => {
                     if (row.setting_key === 'system_config' && row.setting_value) {

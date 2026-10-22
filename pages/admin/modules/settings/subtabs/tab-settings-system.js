@@ -36,11 +36,11 @@
             const emailEl = document.getElementById('dispStoreEmail');
             const addrEl = document.getElementById('dispStoreAddress');
             const taxEl = document.getElementById('dispStoreTaxId');
-            if (brandEl) brandEl.textContent = cfg.storeInfo.brandName || 'PawPal Pet Center';
-            if (hotlineEl) hotlineEl.textContent = cfg.storeInfo.hotline || '1900 888 999';
-            if (emailEl) emailEl.textContent = cfg.storeInfo.email || 'cskh@pawpal.vn';
-            if (addrEl) addrEl.textContent = cfg.storeInfo.address || '120 Nguyễn Thị Minh Khai, P.6, Q.3, TP.HCM';
-            if (taxEl) taxEl.textContent = cfg.storeInfo.taxId || '0316889988';
+            if (brandEl) brandEl.textContent = cfg.storeInfo.brandName || '';
+            if (hotlineEl) hotlineEl.textContent = cfg.storeInfo.hotline || '';
+            if (emailEl) emailEl.textContent = cfg.storeInfo.email || '';
+            if (addrEl) addrEl.textContent = cfg.storeInfo.address || '';
+            if (taxEl) taxEl.textContent = cfg.storeInfo.taxId || '';
         }
 
         // Card 2: Payment Gateways
@@ -153,14 +153,14 @@
             const fbInput = document.getElementById('inputStoreFacebook');
 
             if (brandInput) brandInput.value = si.brandName || '';
-            if (companyInput) companyInput.value = si.companyName || 'CÔNG TY CỔ PHẦN PAWPAL VIỆT NAM';
+            if (companyInput) companyInput.value = si.companyName || '';
             if (hotlineInput) hotlineInput.value = si.hotline || '';
-            if (emergInput) emergInput.value = si.emergencyPhone || '0901 234 567';
+            if (emergInput) emergInput.value = si.emergencyPhone || '';
             if (emailInput) emailInput.value = si.email || '';
-            if (taxInput) taxInput.value = si.taxId || '0316889988';
+            if (taxInput) taxInput.value = si.taxId || '';
             if (addrInput) addrInput.value = si.address || '';
-            if (zaloInput) zaloInput.value = si.zaloUrl || 'https://zalo.me/0901234567';
-            if (fbInput) fbInput.value = si.facebookUrl || 'https://facebook.com/pawpalvietnam';
+            if (zaloInput) zaloInput.value = si.zaloUrl || '';
+            if (fbInput) fbInput.value = si.facebookUrl || '';
 
             PawpalSettings.openModal?.('storeProfileModalOverlay');
         });
@@ -176,14 +176,14 @@
             }
 
             const brand = document.getElementById('inputStoreBrandName')?.value.trim() || '';
-            const company = document.getElementById('inputStoreCompanyName')?.value.trim() || 'CÔNG TY CỔ PHẦN PAWPAL VIỆT NAM';
+            const company = document.getElementById('inputStoreCompanyName')?.value.trim() || '';
             const hotline = document.getElementById('inputStoreHotline')?.value.trim() || '';
-            const emerg = document.getElementById('inputStoreEmergency')?.value.trim() || '0901 234 567';
+            const emerg = document.getElementById('inputStoreEmergency')?.value.trim() || '';
             const email = document.getElementById('inputStoreEmail')?.value.trim() || '';
-            const taxId = document.getElementById('inputStoreTaxId')?.value.trim() || '0316889988';
+            const taxId = document.getElementById('inputStoreTaxId')?.value.trim() || '';
             const address = document.getElementById('inputStoreAddress')?.value.trim() || '';
-            const zalo = document.getElementById('inputStoreZalo')?.value.trim() || 'https://zalo.me/0901234567';
-            const fb = document.getElementById('inputStoreFacebook')?.value.trim() || 'https://facebook.com/pawpalvietnam';
+            const zalo = document.getElementById('inputStoreZalo')?.value.trim() || '';
+            const fb = document.getElementById('inputStoreFacebook')?.value.trim() || '';
 
             const requiredErrors = [];
             if (!brand) requiredErrors.push('Tên thương hiệu là bắt buộc.');
@@ -196,7 +196,7 @@
             }
 
             PawpalSettings.openImpactConfirmationModal?.({
-                title: 'Thông tin Cửa hàng và Chi nhánh',
+                title: 'Thông tin cửa hàng',
                 desc: 'Cập nhật Hotline, Địa chỉ, Email và Thông tin Pháp lý của PawPal.',
                 affectedModules: [
                     { name: 'User Portal và Website Footer', note: `Đồng bộ Hotline ${hotline}, Email ${email} và Địa chỉ ${address}` },
@@ -204,7 +204,7 @@
                 ],
                 onConfirm: async () => {
                     try {
-                        const cfg = PawpalSettings.state?.systemConfig;
+                        const cfg = structuredClone(PawpalSettings.state?.systemConfig);
                         if (!cfg) throw new Error('Chưa khởi tạo cấu hình hệ thống.');
                         cfg.storeInfo = {
                             brandName: brand,
@@ -294,7 +294,7 @@
                 ],
                 onConfirm: async () => {
                     try {
-                        const cfg = PawpalSettings.state?.systemConfig;
+                        const cfg = structuredClone(PawpalSettings.state?.systemConfig);
                         if (!cfg) throw new Error('Chưa khởi tạo cấu hình hệ thống.');
                         // CFG-28: Bảo lưu cấu hình đối tác và các trường mở rộng hiện có, không hardcode override
                         cfg.paymentMethods = {
@@ -390,7 +390,7 @@
                 ],
                 onConfirm: async () => {
                     try {
-                        const cfg = PawpalSettings.state?.systemConfig;
+                        const cfg = structuredClone(PawpalSettings.state?.systemConfig);
                         if (!cfg) throw new Error('Chưa khởi tạo cấu hình hệ thống.');
                         cfg.shippingPolicy = {
                             freeShippingThreshold: freeThreshold,
@@ -506,7 +506,7 @@
                 ],
                 onConfirm: async () => {
                     try {
-                        const cfg = PawpalSettings.state?.systemConfig;
+                        const cfg = structuredClone(PawpalSettings.state?.systemConfig);
                         if (!cfg) throw new Error('Chưa khởi tạo cấu hình hệ thống.');
                         // CFG-28: Bảo lưu holidayNotice và quy tắc hotel/booking hiện có, không ghi đè cứng
                         cfg.operatingHours = {

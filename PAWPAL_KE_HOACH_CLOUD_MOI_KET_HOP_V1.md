@@ -47,6 +47,10 @@ Phạm vi đã xác nhận độc lập máy cá nhân là **Admin V1 và phần
 
 ## Kết quả rà soát toàn hệ thống sau chuyển
 
+Cập nhật sau Chatbot ngày 22/10/2026: chatbot đã triển khai Cloud/Vercel và nghiệm thu trong phạm vi Trực chat, Trợ lý chỉ tra cứu và Quy định. Chi tiết mức kiểm tra Production, giao dịch hoàn tác và bản phục hồi tại [nghiệm thu Chatbot](PAWPAL_CHATBOT_V1_NGHIEM_THU.md). Không cần ảnh/tệp, camera, gửi Zalo/SMS/email thật hoặc AI tự tạo đơn/đặt lịch trong phạm vi này.
+
+Đang tiếp tục phân hệ Cấu hình. Bốn tab đạt kiểm tra tải chỉ đọc; modal thông tin cửa hàng đã sửa dữ liệu mẫu, trạng thái khi lưu lỗi và ánh xạ nhân viên ghi nhật ký. Chưa nghiệm thu toàn phân hệ; xem [tình trạng Cấu hình](PAWPAL_CAU_HINH_V1_NGHIEM_THU.md). Các báo cáo rà soát ban đầu bên dưới là mốc lịch sử, không thay thế biên bản nghiệm thu cập nhật từng phân hệ.
+
 Cập nhật Nhân sự 22/10/2026: đã áp migration 029–038 lên Cloud mới, push mã và triển khai Vercel. Đối soát giữ nguyên toàn bộ dữ liệu public, danh tính/mật khẩu/trạng thái khóa Auth; vẫn 17 nhân sự, 16 tài khoản khóa. Đủ 105 bảng/906 cột/160 FK và publication 8 bảng Nhân sự/phân quyền. Kiểm tra Production Nhân sự, Khách hàng, Thú cưng, Dịch vụ và Bán hàng cuối đạt. Đã sửa lỗi chuyển phân hệ khi script còn tải, có kiểm thử cố tình trì hoãn script để tái hiện. Chi tiết phạm vi và giới hạn tại [nghiệm thu Nhân sự V1](PAWPAL_NHAN_SU_V1_NGHIEM_THU.md). Không coi các phân hệ hoặc trang phía khách chưa chuyển là đã hoàn tất.
 
 Cập nhật 22/10/2026: Admin Bán hàng đã chuyển sang V1 trên Cloud mới và triển khai Vercel. Chi tiết phạm vi, bộ kiểm thử, số liệu đối chiếu, backup và giới hạn tại [nghiệm thu Bán hàng V1](PAWPAL_BAN_HANG_V1_NGHIEM_THU.md). Không coi trang gian hàng phía khách hoặc các phân hệ chưa chuyển là đã hoàn tất theo cập nhật này.
