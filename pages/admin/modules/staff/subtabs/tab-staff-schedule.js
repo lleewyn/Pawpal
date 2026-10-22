@@ -8,8 +8,6 @@
     let currentScheduleView = 'DAY';
     let currentScheduleDate = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 
-    const supportedShifts = new Set(['MORNING', 'AFTERNOON', 'EVENING']);
-    const shiftLabels = { MORNING: 'Ca sáng', AFTERNOON: 'Ca chiều', EVENING: 'Ca tối', NIGHT: 'Ca khuya' };
 
     function dayOffset(dateString, amount) {
         const date = new Date(`${dateString}T00:00:00Z`);
@@ -26,7 +24,6 @@
     function scheduleError(error){return ({staff_schedule_changed:'Ca đã thay đổi. Đóng và mở lại để kiểm tra.',staff_schedule_forbidden:'Bạn chưa có quyền phân ca.',staff_has_service_booking:'Nhân viên đang có lịch dịch vụ trong khoảng này. Cần xử lý lịch dịch vụ trước khi ghi nghỉ.',invalid_staff_schedule:'Chọn nhân viên, nhập đủ giờ bắt đầu/kết thúc và lý do nếu nghỉ hoặc hủy.',staff_request_conflict:'Yêu cầu đã được ghi với nội dung khác. Mở lại ca để đối chiếu.'})[error?.message]||(error?.code==='23P01'?'Khoảng thời gian bị trùng với ca đang có.':'Không thể lưu ca. Kiểm tra thông tin và thử lại.');}
     function renderScheduleTable(){
         if(!PawpalStaff.state.isLoaded)return;
-        el('shiftQuotaStrip').style.display='none';
         const picker=el('scheduleDatePicker');if(picker&&!picker.value)picker.value=currentScheduleDate;
         el('scheduleDayViewWrapper').hidden=currentScheduleView!=='DAY';el('scheduleWeekViewWrapper').hidden=currentScheduleView!=='WEEK';
         let start=currentScheduleDate;if(currentScheduleView==='WEEK'){const d=new Date(start+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);start=d.toISOString().slice(0,10);}
