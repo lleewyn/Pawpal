@@ -1,16 +1,10 @@
 
 import { API } from '/scripts/api/api.js';
-import { updateCustomerBooking, cancelCustomerBooking } from '/scripts/shared/customer-booking.mjs';
+import { cancelCustomerBooking, quoteCustomerBookingMove, moveCustomerBooking } from '/scripts/shared/customer-booking.mjs';
 import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
 
 
 
-async function changeOnSupabase(bookingId, changes) {
-    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    const booking = allBookings.find(b => String(b.id) === String(bookingId) || String(b._id) === String(bookingId));
-    return updateCustomerBooking(db, user, booking, changes);
-}
 
 export const statusLabels = {
     dang_giu_cho: 'Đang giữ chỗ',
@@ -542,105 +536,70 @@ export function openBookingCancelModal(booking, onSaved) {
 }
 
 function openQuickRescheduleModal(booking) {
-    const scheduledAt = getBookingScheduledAt(booking);
-    const now = new Date();
-    const diffMinutes = scheduledAt ? (scheduledAt - now) / (1000 * 60) : 999;
-
-    if (diffMinutes < 120) {
-        showToast('Đã quá thời gian tự thay đổi lịch tự động (< 2 tiếng). Ca hẹn sắp diễn ra, vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'danger');
-        return;
-    }
-
-    const changeCount = Number(booking.changeCount || 0);
-    if (changeCount >= 2) {
-        showToast('Bạn đã sử dụng hết 2 lần thay đổi lịch hẹn trực tuyến. Vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'warning');
-        return;
-    }
-
-    const existing = document.getElementById('quickRescheduleBookingModal');
-    if (existing) existing.remove();
-
-    const petKey = String(booking.petId || '');
-    const petObj = currentPetMap.get(petKey);
-    const petName = booking.petName || petObj?.name || booking.petInfo?.petName || booking.petId || 'Bé cưng';
-    const serviceName = booking.service || booking.serviceName || booking.selectedService?.name || 'Dịch vụ PawPal';
-    const bookingId = booking.id || booking._id || '';
-
-    const configSlots = (window.PawPalBookingConfig?.slots) || ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
-    const slotOptions = configSlots.map((slot) => `<button type="button" class="quick-slot-btn" data-slot="${slot}">${slot}</button>`).join('');
-    const minDate = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-
-    const modalEl = document.createElement('div');
-    modalEl.id = 'quickRescheduleBookingModal';
-    modalEl.className = 'modal fade';
-    modalEl.tabIndex = -1;
-    const isHotelBooking = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase() === 'hotel'
-        || String(booking?.service || booking?.serviceName || '').toLowerCase().includes('hotel');
-    modalEl.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">${isHotelBooking ? 'Đổi ngày lưu trú' : 'Đổi lịch hẹn'}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-muted small mb-3">${isHotelBooking ? 'Pet Hotel chỉ cần đổi ngày, không cần chọn giờ hay nhân viên.' : `Chọn ngày và giờ mới cho lịch <strong>${serviceName}</strong> của <strong>${petName}</strong>.`}</p>
-                    <label class="form-label fw-semibold">Chọn ngày</label>
-                    <input type="date" id="quickRescheduleDate" class="form-control mb-3" min="${minDate}">
-                    ${isHotelBooking ? '' : `
-                    <label class="form-label fw-semibold">Chọn giờ</label>
-                    <div class="d-flex flex-wrap gap-2 mb-3" id="quickRescheduleSlots">${slotOptions}</div>
-                    `}
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Hủy</button>
-                    <button type="button" class="btn-cta" id="quickConfirmRescheduleBtn" disabled>Xác nhận đổi lịch</button>
-                </div>
-            </div>
-        </div>`;
-    document.body.appendChild(modalEl);
-
-    const modal = new bootstrap.Modal(modalEl);
-    modal.show();
-
-    let selectedDate = '';
-    let selectedSlot = isHotelBooking ? '' : '';
-    const refreshState = () => {
-        if (!isHotelBooking) {
-            modalEl.querySelectorAll('.quick-slot-btn').forEach((btn) => btn.classList.remove('active'));
-            modalEl.querySelectorAll('.quick-slot-btn').forEach((btn) => {
-                if (btn.dataset.slot === selectedSlot) btn.classList.add('active');
-            });
-        }
-        modalEl.querySelector('#quickConfirmRescheduleBtn').disabled = isHotelBooking ? !selectedDate : !(selectedDate && selectedSlot);
-    };
-
-    modalEl.querySelector('#quickRescheduleDate').addEventListener('change', (e) => {
-        selectedDate = e.target.value;
-        refreshState();
-    });
-    if (!isHotelBooking) {
-        modalEl.querySelectorAll('.quick-slot-btn').forEach((btn) => {
-            btn.addEventListener('click', () => { selectedSlot = btn.dataset.slot; refreshState(); });
-        });
-    }
-
-    modalEl.querySelector('#quickConfirmRescheduleBtn').addEventListener('click', async (event) => {
-        const button = event.currentTarget;
-        if (button.disabled) return;
-        button.disabled = true;
-        try {
-            const startIso = `${selectedDate}T${selectedSlot || '09:00'}:00`;
-            await changeOnSupabase(bookingId, {
-                scheduled_start_at: startIso,
-                appointment_status: 'cho_xac_nhan'
-            });
-            modal.hide();
-            showToast('Đã đổi lịch hẹn thành công', 'success');
-            await loadBookings(document.querySelector('.filter-tab.active')?.dataset.status || 'all');
-        } catch (error) { showToast(error.message, 'error'); }
-        finally { button.disabled = false; }
-
-    });
+    openBookingMoveModal(booking, () => loadBookings(document.querySelector('.booking-filter-tab.active, .filter-tab.active')?.dataset.status || 'all'));
 }
 
+export function openBookingMoveModal(booking,onSaved) {
+    document.getElementById('quickRescheduleBookingModal')?.remove();
+    const modal=document.createElement('dialog');modal.id='quickRescheduleBookingModal';
+    modal.style.cssText='position:fixed;inset:0;margin:auto;width:600px;max-width:94vw;max-height:92vh;overflow:auto;padding:26px 30px;border:1px solid #ECF2EE;border-radius:9px;color:#203A2C;background:#fff;overscroll-behavior:contain;';
+    modal.innerHTML=`<form onsubmit="return false;" style="display:grid;gap:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;">
+        <h3 style="margin:0;color:#236B48;font-size:20px;">Đổi lịch hẹn</h3>
+        <button type="button" class="btn-green-outline" data-close-modal="quickRescheduleBookingModal">Đóng</button>
+      </div>
+      <p style="margin:0;"><strong>${escapeHtml(booking.serviceName || booking.service)}</strong> của <strong>${escapeHtml(booking.petName)}</strong></p>
+      <div><label for="bookingMoveStart" class="form-label">Thời gian bắt đầu mới <span style="color:#DC2626;">*</span></label>
+        <input type="datetime-local" id="bookingMoveStart" class="form-control" required style="border-radius:9px;">
+      </div>
+      <div><label for="bookingMoveReason" class="form-label">Lý do đổi lịch <span style="color:#DC2626;">*</span></label>
+        <textarea id="bookingMoveReason" class="form-control" rows="2" maxlength="2000" required style="border-radius:9px;"></textarea>
+      </div>
+      <button type="button" class="btn-green-outline" id="bookingMoveQuote">Xem giá và lịch mới</button>
+      <div id="bookingMovePreview" role="status" hidden>
+        <p id="bookingMoveEnd" style="margin:0;"></p><p id="bookingMoveTotal" style="margin:0;font-weight:600;color:#236B48;"></p>
+        <p style="margin:0;">Sau khi đổi, lịch sẽ chờ cửa hàng xác nhận lại.</p>
+      </div>
+      <p id="bookingMoveError" role="alert" hidden style="margin:0;color:#DC2626;"></p>
+      <div style="display:flex;justify-content:flex-end;gap:12px;">
+        <button type="button" class="btn-green-outline" data-close-modal="quickRescheduleBookingModal">Giữ lịch</button>
+        <button type="button" class="btn-cta" id="quickConfirmRescheduleBtn" disabled>Xác nhận đổi lịch</button>
+      </div>
+    </form>`;
+    document.body.appendChild(modal);
+    const start=modal.querySelector('#bookingMoveStart'),reason=modal.querySelector('#bookingMoveReason'),error=modal.querySelector('#bookingMoveError');
+    const preview=modal.querySelector('#bookingMovePreview'),quoteButton=modal.querySelector('#bookingMoveQuote'),save=modal.querySelector('#quickConfirmRescheduleBtn');
+    const user=window.getCurrentUser?.() || JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    const db=window.getSupabaseClient?.() || window.SupabaseClient;
+    const requestId=crypto.randomUUID();let quote=null,version=0;
+    const invalidate=()=>{++version;quote=null;save.disabled=true;preview.hidden=true;error.hidden=true;};
+    start.addEventListener('input',invalidate);
+    reason.addEventListener('input',()=>{error.hidden=true;});
+    modal.querySelector('form').addEventListener('submit',e=>e.preventDefault());
+    modal.querySelectorAll('[data-close-modal]').forEach(button=>button.addEventListener('click',()=>modal.close()));
+    modal.addEventListener('click',e=>{const r=modal.getBoundingClientRect();if(e.target===modal&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))modal.close();});
+    modal.addEventListener('close',()=>{++version;modal.remove();},{once:true});
+    quoteButton.addEventListener('click',async()=>{
+        const parsed=new Date(start.value);if(!start.value || Number.isNaN(parsed.getTime())){error.textContent='Vui lòng chọn thời gian mới.';error.hidden=false;start.focus();return;}
+        invalidate();const current=version;quoteButton.disabled=true;
+        try{
+            const result=await quoteCustomerBookingMove(db,user,booking,parsed.toISOString());
+            if(!modal.isConnected || current!==version)return;
+            quote=result;preview.hidden=false;
+            modal.querySelector('#bookingMoveEnd').textContent='Kết thúc dự kiến: '+new Date(result.end_at).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+            modal.querySelector('#bookingMoveTotal').textContent='Tổng tiền mới: '+formatPrice(Number(result.total));save.disabled=false;
+        }catch(err){if(modal.isConnected&&current===version){error.textContent=err.message;error.hidden=false;}}
+        finally{quoteButton.disabled=false;}
+    });
+    save.addEventListener('click',async()=>{
+        if(save.disabled || !quote)return;
+        error.hidden=true;if(!reason.value.trim()){error.textContent='Vui lòng nhập lý do đổi lịch.';error.hidden=false;reason.focus();return;}
+        save.disabled=true;quoteButton.disabled=true;start.disabled=true;reason.disabled=true;
+        try{
+            await moveCustomerBooking(db,user,booking,quote,reason.value,requestId);
+            modal.close();showToast('Đã đổi lịch. Lịch đang chờ cửa hàng xác nhận lại.','success');await onSaved?.();
+        }catch(err){if(modal.isConnected){invalidate();error.textContent=err.message;error.hidden=false;}}
+        finally{quoteButton.disabled=false;start.disabled=false;reason.disabled=false;}
+    });
+    modal.showModal();
+}
