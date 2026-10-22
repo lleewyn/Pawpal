@@ -38,8 +38,8 @@ Các dấu hoàn thành ở phần lịch sử bên dưới chưa đủ để ng
   - Đợt tiếp theo đã kiểm tra form thực: chọn loài, chọn giống qua autocomplete từ Cloud, nhập cân, lưu bé mới; mở lại theo mã hồ sơ, sửa ghi chú và đối chiếu `pet_profile.routine`, lịch sử cân vẫn đúng một hàng. Mã local được phục vụ trong trình duyệt, chưa push/deploy.
   - Ảnh đã xem: `D:/Aboutme/Pawpal-infra/supabase-local/verification/portal-pet-form.private.png`. Lệnh: `node scripts/test/customer_portal_profile_v1.cjs --cloud-browser --pets --pets-only`. Đã dọn thú cưng, cân nặng, hồ sơ khách và tài khoản Auth thử riêng.
   - Gợi ý giống lọc theo loài và tên danh mục, không tự đặt giống mặc định; khi đổi loài phải chọn lại giống. “Loài khác” được đối chiếu theo tên loài đã nhập, không tự ép thành “Khác”.
-- [ ] Đối soát mua hàng, chi tiết đơn, hủy/nhận hàng và đổi trả theo quy tắc Admin.
-  - Đợt 23/10: giỏ hàng/giá/tồn theo SKU, tạo đơn chờ thu, hủy, đổi trả, đánh giá chờ duyệt và công khai sau duyệt đã qua giao dịch CSDL và trình duyệt. Địa chỉ checkout lưu Cloud, một mặc định, có kiểm tra phiên bản. URL thanh toán cũ không tự ghi đã thanh toán. Chi tiết nghiệm thu tại `PAWPAL_BAN_HANG_V1_NGHIEM_THU.md`; chưa triển khai mã giao diện đợt này lên Vercel và chưa chốt kiểm tra Realtime toàn phân hệ.
+- [x] Đối soát mua hàng, chi tiết đơn, hủy/nhận hàng và đổi trả theo quy tắc Admin.
+  - Đợt 23/10: hoàn tất giỏ hàng/giá/tồn theo SKU, tạo đơn chờ thu, hủy, nhận hàng, đổi trả, đánh giá chờ duyệt và công khai sau duyệt. Địa chỉ checkout lưu Cloud, một mặc định, có kiểm tra phiên bản. URL thanh toán cũ không tự ghi đã thanh toán. Commit `eb0df4b` đã lên Vercel; kiểm thử `customer_sales_cloud_v1.cjs --deployed` đạt cả Realtime, không có lỗi JavaScript chưa xử lý; 82/82 kiểm thử hồi quy đạt. Nhận hàng và ràng buộc giao dịch được kiểm tra trên bản phục hồi; Cloud không xuất kho hoặc ghi thu thành công khi thử. Chi tiết tại `PAWPAL_BAN_HANG_V1_NGHIEM_THU.md`.
 - [ ] Đối soát đặt dịch vụ, xem lịch, đổi/hủy lịch theo quy tắc Admin.
 - [ ] Đối soát Pawpoint, voucher và khiếu nại theo quyền từng khách.
 - [ ] Kiểm tra đồng bộ với Admin, Realtime, tải lại trang và băng thông toàn bộ các luồng.

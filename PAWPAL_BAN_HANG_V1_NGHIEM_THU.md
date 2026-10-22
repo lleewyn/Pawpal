@@ -1,8 +1,8 @@
 # Bán hàng V1 — triển khai và nghiệm thu
 
-## Cổng khách hàng — đang hoàn thiện
+## Cổng khách hàng — hoàn tất phạm vi đã chốt
 
-Phần này tách biệt với các mục nghiệm thu Admin bên dưới. Chưa nghiệm thu toàn bộ phân hệ mua hàng của khách.
+Đã nghiệm thu phân hệ mua hàng và đơn hàng của khách ngày 23/10/2026. Phần này tách biệt với các mục nghiệm thu Admin bên dưới.
 
 - [x] Danh mục và phân loại bán lấy từ Cloud mới; giá và tồn khả dụng theo từng SKU, không tạo phân loại hoặc phụ phí giả.
 - [x] Giỏ hàng lưu nguyên tử qua `own_customer_cart`; máy chủ lấy lại giá và kiểm tra tồn, không tin giá gửi từ trình duyệt.
@@ -21,7 +21,7 @@ Phần này tách biệt với các mục nghiệm thu Admin bên dưới. Chưa
 - [x] Ưu đãi: bỏ voucher cá nhân trong bộ nhớ cũ, bỏ suy đoán trần giảm từ mô tả và nhóm hàng. Áp voucher cần quote máy chủ; số dư điểm lấy từ quote, lựa chọn điểm tách theo tài khoản và không cộng dồn với voucher. Bản phục hồi đã thử giảm theo cấu hình và chặn voucher cần quyền sở hữu khi khách chưa đổi.
 - [x] Dọn mã đặt đơn/khách tạm, QR, bộ đếm tự hủy, điểm và lịch sử đơn chỉ ghi trình duyệt ở checkout. Yêu cầu hóa đơn được lưu đủ thông tin vào ghi chú đơn để nhân viên xử lý, không báo tự phát hành; đã thử lưu và đọc lại ghi chú thực tế.
 - [x] Hoàn thiện chi tiết đơn, đổi trả và đánh giá. Trình duyệt với Cloud thật đã kiểm tra Realtime cho trạng thái đơn, khoản thu, đổi trả và duyệt đánh giá; giữ bản nháp khi cập nhật. Đã sửa phản hồi đổi trả đến sau khi đóng trang; kiểm tra không còn lỗi JavaScript chưa xử lý. Bộ kiểm thử hồi quy đạt 82/82; giao dịch giỏ hàng và thú cưng trên bản phục hồi đều đạt.
-- [ ] Triển khai mã giao diện mới lên Vercel và kiểm tra lại bản đã triển khai.
+- [x] Commit `eb0df4b` đã lên Vercel. Đối chiếu mã phục vụ thực tế khớp nguồn; `node scripts/test/customer_sales_cloud_v1.cjs --deployed` đạt toàn bộ luồng, gồm Realtime và không có lỗi JavaScript chưa xử lý. Đã dọn dữ liệu thử; không xuất kho vật lý hoặc ghi khoản thu thành công trên Cloud.
 
 Đặt đơn và nhận hàng không tự xác nhận đã thu tiền, không tự cộng điểm hoặc nâng hạng. Yêu cầu đổi trả không tự nhập kho hoặc hoàn tiền.
 
