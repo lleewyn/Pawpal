@@ -149,3 +149,15 @@ Kiểm thử ghi chỉ chạy trên database phục hồi riêng:
 Giới hạn đã chốt: chưa phát triển ảnh/file, gửi tin bên ngoài hoặc cổng khách xem nhật ký; không tự áp voucher/điểm/xét hạng. Dữ liệu nguồn thiếu loài hỗ trợ, lưu trú/chuyến xe cần nhập thông tin thật; không tự tạo dữ liệu bù. Phạm vi này hoàn thiện phần Admin Dịch vụ, không bao gồm chuyển toàn bộ Nhân sự/Khiếu nại/Bán hàng hoặc cổng khách sang V1.
 
 **Kết quả Production cuối:** `dpl_HV6p1kN6SwGvT2NL1ixJ4TnR9A7o` tại `https://pawpalgr3.vercel.app`. Kiểm tra chỉ đọc đạt 71 lịch hẹn khớp trạng thái/tổng tiền/số điện thoại, 22 dịch vụ, 3 đánh giá, nhật ký, thu ngân, lịch trực, phiếu phản ánh, thông báo nội bộ, bốn subtab, Realtime và tải lại. Bộ lọc cảnh báo đã đồng bộ với KPI 1–3 sao và được đối chiếu với nguồn thật. Không có lỗi REST/JavaScript, yêu cầu Cloud cũ/tunnel/JSON hoặc ghi nghiệp vụ tự phát trong lượt kiểm tra. Khách hàng đạt 35 hồ sơ/7.964 điểm; Thú cưng đạt 82 bé/7 nhật ký trong đợt triển khai. Các bài kiểm tra cấu hình/Auth, băng thông và `git diff --check` đạt. Tất cả thao tác thử ghi giữ trong bản phục hồi riêng đã dọn; không ghi khoản thu/phiếu thử lên Cloud thật. Mã đã deploy từ thư mục làm việc và **chưa commit/push** các thay đổi đang có.
+# Cổng khách hàng — đợt đối soát 23/10/2026
+
+Phân hệ khách đang thực hiện; chưa nghiệm thu toàn bộ đặt mới, đổi/hủy lịch và đánh giá. Các mục Admin bên dưới là phạm vi riêng.
+
+- [x] Migration `065_customer_booking_summary.sql`: chỉ trả tổng tiền chuẩn, thực thu sau hoàn thành công và các dòng đã đánh giá của chính khách đang đăng nhập; từ chối phiên không phải khách. Đã thử trên CSDL phục hồi và rollback.
+- [x] Đã áp Cloud mới sau sao lưu `portal-bookings-cloud-2026-10-22T17-39-10-301Z`; đối soát dữ liệu public, Auth và 17 nhân viên không đổi.
+- [x] Đọc lịch theo V1, không dùng cột đánh giá cũ; phân biệt thu một phần với thanh toán đủ. Không tự hoàn thành hoặc tiếp nhận lịch dựa vào thời gian trên trình duyệt.
+- [x] Không gộp các lịch riêng chỉ vì cùng thú cưng/dịch vụ/giờ. Trình duyệt dùng mã local với Cloud thật đã xác nhận hai lịch thử hiển thị đủ hai thẻ, đúng tổng tiền, không ghi thu tiền; đã dọn fixture và xem ảnh.
+- [x] Bộ kiểm thử đọc lịch, đăng ký Realtime và hồi quy giỏ hàng: 27/27 đạt.
+- [ ] Chuyển form đặt mới và danh mục/bảng giá sang giao dịch máy chủ, bỏ JSON/cache nghiệp vụ cũ.
+- [ ] Chuyển đổi/hủy lịch sang RPC có quyền chủ sở hữu, phiên bản và kiểm tra lịch/phòng/xe/thu tiền; nghiệm thu từng modal.
+- [ ] Hoàn thiện chi tiết ca, đánh giá dịch vụ và Realtime; kiểm tra lại toàn luồng trên Vercel.

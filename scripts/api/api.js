@@ -111,7 +111,7 @@ export const API = {
                 .from('appointment')
                 .select(`
                     id, appointment_code, scheduled_start_at, scheduled_end_at, check_in_time, check_out_time,
-                    appointment_status, note, change_count,
+                    appointment_status, note, change_count, updated_at,
                     appointment_item (
                         id, service_id, name_snapshot, quantity, unit_price, discount_amount, duration_minutes, is_primary,
                         service ( service_name, category_id, estimated_duration )
@@ -132,13 +132,17 @@ export const API = {
                 throw error;
             }
 
+            const summaryResult = await db.rpc('own_service_booking_summary');
+            if (summaryResult.error) throw summaryResult.error;
+            const summaries = new Map((summaryResult.data || []).map(row => [row.id, row]));
+
             const mapAppointmentStatus = (status) => {
                 if (!status) return 'upcoming';
                 const s = String(status).toLowerCase().trim();
                 if (['dang_giu_cho', 'tam_giu', 'cho_xac_nhan', 'pending'].includes(s)) return 'pending';
                 if (['da_xac_nhan', 'confirmed', 'upcoming'].includes(s)) return 'confirmed';
-                if (['da_check_in', 'accepted'].includes(s)) return 'accepted';
-                if (['dang_thuc_hien', 'in_progress', 'in-progress'].includes(s)) return 'in-progress';
+                if (['da_check_in', 'accepted', 'checked_in'].includes(s)) return 'accepted';
+                if (['dang_thuc_hien', 'in_progress', 'in-progress', 'ready_for_pickup'].includes(s)) return 'in-progress';
                 if (['da_hoan_tat', 'completed', 'done'].includes(s)) return 'completed';
                 if (['da_huy', 'cancelled', 'da_het_han', 'expired', 'vang_mat', 'no_show'].includes(s)) return 'cancelled';
                 return 'upcoming';
@@ -151,15 +155,17 @@ export const API = {
                 const petBreed = pet?.pet_breed?.breed_name || '';
                 const petSpecies = pet?.pet_breed?.pet_species?.species_name || '';
 
-                const calculatedTotalPrice = items.reduce((sum, itm) => {
-                    const lineTotal = (Number(itm.unit_price) || 0) * (Number(itm.quantity) || 1) - (Number(itm.discount_amount) || 0);
-                    return sum + Math.max(0, lineTotal);
-                }, 0);
+                const summary = summaries.get(b.id);
+                if (!summary || !Number.isFinite(Number(summary.total)) || !Number.isFinite(Number(summary.net_paid))) {
+                    throw new Error('Không thể đối soát số tiền lịch hẹn. Vui lòng tải lại.');
+                }
+                const total = Number(summary.total), netPaid = Number(summary.net_paid);
+                const paymentStatus = total > 0 && netPaid >= total ? 'paid' : netPaid > 0 ? 'partial' :
+                    (b.appointment_status === 'cancelled' ? 'cancelled' : 'pending');
 
-                const hasPaidPayment = Array.isArray(b.payment) && b.payment.some(p => p.transaction_status === 'succeeded');
-                const paymentStatus = hasPaidPayment ? 'paid' : (b.appointment_status === 'cancelled' ? 'cancelled' : 'pending');
-
-                const dateStr = b.scheduled_start_at ? b.scheduled_start_at.split('T')[0] : '';
+                const localStart = b.scheduled_start_at ? new Date(b.scheduled_start_at) : null;
+                const dateStr = localStart && !Number.isNaN(localStart.getTime()) ?
+                    `${localStart.getFullYear()}-${String(localStart.getMonth()+1).padStart(2,'0')}-${String(localStart.getDate()).padStart(2,'0')}` : '';
                 let timeStr = '';
                 if (b.scheduled_start_at) {
                     try {
@@ -177,6 +183,9 @@ export const API = {
                     timeStart:       timeStr,
                     scheduledStartAt: b.scheduled_start_at,
                     scheduledEndAt:  b.scheduled_end_at,
+                    updatedAt:       b.updated_at,
+                    netPaid,
+                    reviewedItemIds: summary.reviewed_item_ids || [],
                     status:          mapAppointmentStatus(b.appointment_status),
                     bookingStatus:   b.appointment_status,
                     paymentStatus:   paymentStatus,
@@ -199,7 +208,7 @@ export const API = {
                     petAvatar:       pet?.avatar_url || '',
                     changeCount:     b.change_count || 0,
                     note:            b.note || '',
-                    price:           calculatedTotalPrice,
+                    price:           total,
                     _source:         'supabase'
                 };
             });

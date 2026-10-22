@@ -78,10 +78,10 @@ function getBookingPetAvatar(petObj, booking) {
     return DEFAULT_PET_AVATARS.cat;
 }
 
-let reviewedAppointmentIds = new Set();
+
 
 function hasServiceReview(booking) {
-    return reviewedAppointmentIds.has(String(booking._supabaseId || booking.id || ''));
+    return booking.items?.length > 0 && booking.items.every(item => (booking.reviewedItemIds || []).includes(item.id));
 }
 
 function escapeHtml(text) {
@@ -112,7 +112,7 @@ export async function init() {
         await loadBookings('all');
         const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        stopBookingsRealtime = watchCustomerTables(client, user?.id, ['appointment'], () => {
+        stopBookingsRealtime = watchCustomerTables(client, user?.id, ['appointment', 'appointment_item', 'payment', 'review'], () => {
             const active = document.querySelector('.booking-filter-tab.active, .filter-tab.active');
             loadBookings(active?.dataset.status || 'all');
         });
@@ -157,21 +157,6 @@ async function loadBookings(status) {
             if (pet.pet_name) currentPetMap.set(String(pet.pet_name).trim().toLowerCase(), pet);
         });
 
-        reviewedAppointmentIds = new Set();
-        try {
-            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (db && currentUser?.id) {
-                const { data: reviews, error: reviewErr } = await db.from('review')
-                    .select('appointment_id')
-                    .eq('customer_id', currentUser.id)
-                    .eq('review_type', 'dich_vu');
-                if (reviewErr) throw reviewErr;
-                reviewedAppointmentIds = new Set((reviews || []).map((r) => String(r.appointment_id)).filter(Boolean));
-            }
-        } catch (reviewErr) {
-            console.warn('[Bookings] Could not load service review status from Supabase:', reviewErr.message);
-        }
-
         renderBookings(status);
     } catch (error) {
         if (loadVersion !== bookingsLoadVersion) return;
@@ -193,30 +178,6 @@ function renderBookings(status) {
     if (!bookingsList || !emptyState) return;
 
     let filteredBookings = [...allBookings];
-    
-    const uniqueMap = new Map();
-    for (const b of filteredBookings) {
-        const petKey = String(b.petId || b.petName || b.pet_profile?.pet_name || 'pet');
-        const srvKey = String(b.service || b.serviceName || b.service?.service_name || 'srv');
-        const dateKey = String(b.date || b.schedule?.date || '');
-        const timeKey = String(b.timeStart || b.time || b.schedule?.slot || '');
-        const key = `${petKey}-${srvKey}-${dateKey}-${timeKey}`.toLowerCase();
-        
-        if (!uniqueMap.has(key)) {
-            uniqueMap.set(key, b);
-        } else {
-            const existing = uniqueMap.get(key);
-            const existingHasPrice = Number(existing.price) > 0;
-            const newHasPrice = Number(b.price) > 0;
-            
-            if (!existingHasPrice && newHasPrice) {
-                uniqueMap.set(key, b); // Ghi đè bằng bản ghi có giá
-            } else if (b._source === 'supabase' && existing._source !== 'supabase') {
-                uniqueMap.set(key, b); // Ưu tiên supabase
-            }
-        }
-    }
-    filteredBookings = Array.from(uniqueMap.values());
     
     const counts = { all: filteredBookings.length, pending: 0, confirmed: 0, 'in-progress': 0, completed: 0, cancelled: 0 };
     filteredBookings.forEach(booking => {
@@ -477,36 +438,7 @@ function calculateNights(startDate, endDate) {
 }
 
 function resolveBookingStatus(booking) {
-    const rawStatus = booking?.status || 'upcoming';
-    if (['cancelled', 'completed', 'in-progress', 'accepted', 'pending'].includes(rawStatus)) {
-        return rawStatus;
-    }
-
-    const isHotel = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase() === 'hotel' || String(booking?.service || booking?.serviceName || '').toLowerCase().includes('hotel');
-    
-    if (isHotel && booking.dateEnd) {
-        const endDate = new Date(`${booking.dateEnd}T12:00:00`);
-        const now = Date.now();
-        if (!Number.isNaN(endDate.getTime())) {
-            if (now > endDate.getTime() + 4 * 3600000) return 'completed';
-            const startDate = new Date(`${booking.date}T12:00:00`);
-            if (now >= startDate.getTime()) return 'in-progress';
-            return 'confirmed';
-        }
-    }
-
-    const scheduledAt = getBookingScheduledAt(booking);
-    if (!scheduledAt) {
-        return rawStatus === 'confirmed' ? 'accepted' : 'confirmed';
-    }
-
-    const now = Date.now();
-    const hoursPast = (now - scheduledAt.getTime()) / (1000 * 60 * 60);
-
-    if (hoursPast >= 4) return 'completed';
-    if (hoursPast >= 1) return 'in-progress';
-    if (hoursPast >= 0) return 'accepted';
-    return 'confirmed';
+    return booking?.status || 'pending';
 }
 
 function getBookingScheduledAt(booking) {
