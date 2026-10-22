@@ -1,6 +1,6 @@
 # Chatbot V1 — tình trạng triển khai
 
-Cập nhật ngày 22/10/2026. Chưa nghiệm thu Production. Phần mã mới và các luồng dưới đây đã được kiểm tra trên CSDL phục hồi; không coi kết quả này là bằng chứng đã triển khai lên Vercel.
+Cập nhật ngày 22/10/2026. Đã triển khai mã chatbot tại commit `4f75ed2` lên Vercel và kiểm tra kết nối Production. Các kiểm tra ghi nghiệp vụ chi tiết dưới đây chủ yếu chạy trên CSDL phục hồi; không coi kiểm tra kết nối là nghiệm thu toàn bộ luồng trên Production.
 
 ## Phạm vi đã thực hiện
 
@@ -34,5 +34,7 @@ Các bộ kiểm tra trên bản phục hồi đã đạt: thao tác hội tho�
 - Bản sao lưu trước migration 056: `D:/Aboutme/Pawpal-infra/supabase-local/backups/chats-cloud-2026-10-22T11-20-24-868Z`.
 - Đã áp đầy đủ phiên bản cuối của migrations 045–056 trên Cloud mới; đối chiếu dữ liệu public và thông tin Auth không thay đổi. Bản sao lưu: `D:/Aboutme/Pawpal-infra/supabase-local/backups/chats-cloud-2026-10-22T11-25-41-794Z`.
 - Người dùng đã nhập 18 Gemini key trực tiếp vào bảng riêng trên Cloud. Kiểm tra có 18 key đang bật; gọi Gemini qua cơ chế cấp lượt từ CSDL thành công, không in giá trị key hoặc đưa dữ liệu nghiệp vụ vào yêu cầu thử.
-- Cần triển khai mã lên Vercel rồi thử luồng Production trước khi đánh dấu hoàn tất.
+- GitHub báo trạng thái Vercel thành công cho commit `4f75ed2`. Trên `https://pawpalgr3.vercel.app`, API mới trả 401 cho yêu cầu quản trị chưa đăng nhập; mã khung chat mới đã được phục vụ.
+- Kiểm tra trình duyệt Production đạt: khách vãng lai gửi câu hỏi → Vercel API → bảng key Cloud → Gemini trả lời → lưu và hiển thị tin nhắn thật. Phiên khách khác bị từ chối đọc hội thoại với 403. Đã xóa hội thoại, tin nhắn và phiên khách kiểm tra sau khi thử.
+- Kiểm tra quản trị Production đạt: đăng nhập, tải phân hệ Chatbot và đọc lịch sử Trợ lý qua API có xác thực trả 200. Đã xem ảnh giao diện Production. Chưa thử lại mọi thao tác ghi quản trị trên dữ liệu Production.
 - Giới hạn số yêu cầu trong API hiện nằm trong bộ nhớ mỗi tiến trình, chưa phải hạn mức dùng chung giữa mọi phiên bản máy chủ.
