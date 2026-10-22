@@ -149,149 +149,8 @@ async function initCartPage() {
     }
 
     function getProductAttributeGroups(product) {
-        if (!product) return [];
-
-        const basePrice = Number(product.price) || 0;
-        const cat = String(product.category || product.categoryName || '').toLowerCase();
-        const name = String(product.name || '').toLowerCase();
-
-        // 1. Thức ăn khô / Hạt (Whiskas, Royal Canin, Pedigree...)
-        if (cat.includes('dry') || cat.includes('kho') || name.includes('hạt') || name.includes('hat') || name.includes('whiskas') || name.includes('royal')) {
-            return [
-                {
-                    name: 'Kích cỡ / Quy cách',
-                    key: 'size',
-                    options: [
-                        { label: 'Gói 400g (Dùng thử)', priceDelta: -Math.round(basePrice * 0.45 / 1000) * 1000 },
-                        { label: 'Gói 1.5kg (Tiêu chuẩn)', priceDelta: 0 },
-                        { label: 'Bao 3.0kg (Tiết kiệm)', priceDelta: Math.round(basePrice * 0.85 / 1000) * 1000 }
-                    ]
-                },
-                {
-                    name: 'Hương vị',
-                    key: 'flavor',
-                    options: [
-                        { label: 'Vị Cá biển thơm ngon', priceDelta: 0 },
-                        { label: 'Vị Cá hồi và Rau củ', priceDelta: 5000 },
-                        { label: 'Vị Thịt gà và Bò', priceDelta: 0 }
-                    ]
-                }
-            ];
-        }
-
-        // 2. Thức ăn ướt / Pate / Súp thưởng / Churu
-        if (cat.includes('wet') || cat.includes('uot') || name.includes('pate') || name.includes('súp') || name.includes('sup') || name.includes('churu')) {
-            return [
-                {
-                    name: 'Hương vị',
-                    key: 'flavor',
-                    options: [
-                        { label: 'Vị Cá hồi Na Uy', priceDelta: 0 },
-                        { label: 'Vị Gà xé sốt nước dùng', priceDelta: 0 },
-                        { label: 'Vị Bò tươi sốt Gravy', priceDelta: 5000 }
-                    ]
-                },
-                {
-                    name: 'Quy cách đóng gói',
-                    key: 'pack',
-                    options: [
-                        { label: 'Lon đơn 85g', priceDelta: 0 },
-                        { label: 'Lốc 3 lon (Tiết kiệm)', priceDelta: Math.round(basePrice * 1.8 / 1000) * 1000 },
-                        { label: 'Hộp 6 lon (Đại tiệc)', priceDelta: Math.round(basePrice * 4.5 / 1000) * 1000 }
-                    ]
-                }
-            ];
-        }
-
-        // 3. Xương gặm / Bánh thưởng
-        if (cat.includes('bone') || cat.includes('gam') || cat.includes('snack') || name.includes('xương') || name.includes('bánh')) {
-            return [
-                {
-                    name: 'Quy cách',
-                    key: 'pack',
-                    options: [
-                        { label: 'Gói 1 chiếc (Dùng thử)', priceDelta: 0 },
-                        { label: 'Gói 3 chiếc (Chuẩn)', priceDelta: Math.round(basePrice * 1.7 / 1000) * 1000 },
-                        { label: 'Túi 5 chiếc (Tiết kiệm)', priceDelta: Math.round(basePrice * 3.2 / 1000) * 1000 }
-                    ]
-                },
-                {
-                    name: 'Mùi vị',
-                    key: 'flavor',
-                    options: [
-                        { label: 'Vị Bò sữa thơm lừng', priceDelta: 0 },
-                        { label: 'Vị Bạc hà sạch răng', priceDelta: 3000 }
-                    ]
-                }
-            ];
-        }
-
-        // 4. Sức khỏe / Chăm sóc / Vệ sinh
-        if (cat.includes('health') || cat.includes('groom') || cat.includes('hygiene') || cat.includes('ve sinh') || name.includes('dầu') || name.includes('gel') || name.includes('cát')) {
-            return [
-                {
-                    name: 'Dung tích / Trọng lượng',
-                    key: 'vol',
-                    options: [
-                        { label: 'Chai 250ml (Tiêu chuẩn)', priceDelta: 0 },
-                        { label: 'Chai 500ml (Tiết kiệm)', priceDelta: Math.round(basePrice * 0.75 / 1000) * 1000 }
-                    ]
-                },
-                {
-                    name: 'Mùi hương / Công dụng',
-                    key: 'scent',
-                    options: [
-                        { label: 'Hương Hoa cúc dịu nhẹ', priceDelta: 0 },
-                        { label: 'Hương Trà xanh khử mùi', priceDelta: 5000 },
-                        { label: 'Dưỡng lông mềm mượt', priceDelta: 10000 }
-                    ]
-                }
-            ];
-        }
-
-        // 5. Quần áo / Phụ kiện / Vòng cổ
-        if (cat.includes('toy') || cat.includes('clothe') || cat.includes('accessories') || name.includes('vòng') || name.includes('áo') || name.includes('đồ chơi') || name.includes('dây')) {
-            return [
-                {
-                    name: 'Kích cỡ (Size)',
-                    key: 'size',
-                    options: [
-                        { label: 'Size S (Thú cưng < 4kg)', priceDelta: 0 },
-                        { label: 'Size M (Thú cưng 4 - 8kg)', priceDelta: 15000 },
-                        { label: 'Size L (Thú cưng > 8kg)', priceDelta: 30000 }
-                    ]
-                },
-                {
-                    name: 'Màu sắc',
-                    key: 'color',
-                    options: [
-                        { label: 'Xanh Forest Green', priceDelta: 0 },
-                        { label: 'Vàng Kem Pastel', priceDelta: 0 },
-                        { label: 'Cam Đất Ấm Áp', priceDelta: 0 }
-                    ]
-                }
-            ];
-        }
-
-        // Mặc định
-        return [
-            {
-                name: 'Quy cách',
-                key: 'spec',
-                options: [
-                    { label: 'Bản Tiêu Chuẩn', priceDelta: 0 },
-                    { label: 'Bản Nâng Cấp Pro', priceDelta: Math.round(basePrice * 0.3 / 1000) * 1000 }
-                ]
-            },
-            {
-                name: 'Tùy chọn',
-                key: 'option',
-                options: [
-                    { label: 'Mặc định', priceDelta: 0 },
-                    { label: 'Bản Đặc Biệt', priceDelta: 5000 }
-                ]
-            }
-        ];
+        const options=(product?.variants||[]).filter(v=>Number(v.stock)>0).map(v=>({label:v.name||v.sku,priceDelta:Number(v.price)-Number(product.price),variantId:v.id}));
+        return options.length?[{name:'Phân loại',options}]:[];
     }
 
     function getProductVariants(product) {
@@ -352,7 +211,7 @@ async function initCartPage() {
             const localCart = await restoreCartFromBackup(fetchedCart || []);
             if (!stillOwnsCart()) return;
             cart = localCart.map(item => normalizeCartItem({
-                ...products.find(product => isSameCartItemId(product.id, item.id)), ...item,
+                ...products.find(product => isSameCartItemId(product.id, item.product_id || item.id)), ...item,
             }));
             
             cart.forEach(item => {
@@ -518,7 +377,7 @@ async function initCartPage() {
         let checkedSubtotal = 0;
         cart.forEach(item => {
             if (selectedIds.has(normalizeId(item.id))) {
-                const prod = products.find(p => isSameCartItemId(p.id, item.id));
+                const prod = products.find(p => isSameCartItemId(p.id, item.product_id || item.id));
                 const unitPrice = Number(item.price) || Number(prod?.price) || 0;
                 checkedSubtotal += unitPrice * getItemQuantity(item);
             }
@@ -553,7 +412,7 @@ async function initCartPage() {
         }
 
         const cartItemsData = cart.map(item => {
-            const product = products.find(p => isSameCartItemId(p.id, item.id));
+            const product = products.find(p => isSameCartItemId(p.id, item.product_id || item.id));
             const baseObj = product ? { ...product, ...item } : { ...item };
             const attrGroups = getProductAttributeGroups(product || item);
             const variants = getProductVariants(product || item);
@@ -750,9 +609,9 @@ async function initCartPage() {
                     activeChips.forEach(chip => {
                         totalDelta += Number(chip.dataset.delta) || 0;
                     });
-                    const currentProd = products.find(p => isSameCartItemId(p.id, item.id));
+                    const currentProd = products.find(p => isSameCartItemId(p.id, item.product_id || item.id));
                     const basePrice = Number(currentProd?.price) || Number(item.price) || 0;
-                    const calculatedPrice = Math.max(10000, basePrice + totalDelta);
+                    const calculatedPrice = Math.max(0, basePrice + totalDelta);
                     if (previewPriceEl) {
                         previewPriceEl.textContent = formatPrice(calculatedPrice);
                     }
@@ -821,7 +680,7 @@ async function initCartPage() {
             if (!selectedIds.has(normalizeId(item.id))) {
                 return sum;
             }
-            const prod = products.find(p => isSameCartItemId(p.id, item.id));
+            const prod = products.find(p => isSameCartItemId(p.id, item.product_id || item.id));
             const unitPrice = Number(item.price) || Number(prod?.price) || 0;
             return sum + unitPrice * getItemQuantity(item);
         }, 0);
@@ -833,7 +692,7 @@ async function initCartPage() {
 
         cart.forEach(item => {
             if (selectedIds.has(normalizeId(item.id))) {
-                const prod = products.find(p => isSameCartItemId(p.id, item.id));
+                const prod = products.find(p => isSameCartItemId(p.id, item.product_id || item.id));
                 const unitPrice = Number(item.price) || Number(prod?.price) || 0;
                 subtotal += unitPrice * getItemQuantity(item);
                 selectedCount += getItemQuantity(item);
@@ -898,7 +757,7 @@ async function initCartPage() {
 
         const item = cart.find(i => isSameCartItemId(i.id, productId));
         if (item) {
-            const product = products.find(p => isSameCartItemId(p.id, productId));
+            const product = products.find(p => isSameCartItemId(p.id, item?.product_id || productId));
             const maxQty = Number(product?.stock);
             if (!Number.isSafeInteger(maxQty) || maxQty < 0) {
                 showCartNotice('Không thể kiểm tra tồn kho. Vui lòng tải lại trang.');
@@ -921,11 +780,14 @@ async function initCartPage() {
         const item = cart.find(i => isSameCartItemId(i.id, productId));
         if (!item) return;
 
-        const prod = products.find(p => isSameCartItemId(p.id, productId));
+        const prod = products.find(p => isSameCartItemId(p.id, item?.product_id || productId));
         const variants = getProductVariants(prod || item);
         const matched = variants.find(v => v.name === newVariantName);
 
         if (matched) {
+            item.id = matched.id;
+            item.variantId = matched.id;
+            item.product_variant_id = matched.id;
             item.selectedVariant = matched.name;
             item.price = matched.price;
             saveCart();
@@ -976,7 +838,7 @@ async function initCartPage() {
                     : await window.API.saveUserCart(cartOwner, snapshot);
             if (!result?.success) throw new Error('Cart save failed');
             if (stillOwnsCart() && revision === saveRevision) {
-                cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]').map(item => normalizeCartItem({ ...products.find(product => isSameCartItemId(product.id, item.id)), ...item }));
+                cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]').map(item => normalizeCartItem({ ...products.find(product => isSameCartItemId(product.id, item.product_id || item.id)), ...item }));
                 renderCart();
             }
             return true;
@@ -1129,7 +991,7 @@ async function initCartPage() {
 
         if (voucher.applicableFor && !voucher.applicableFor.includes('all')) {
             const cartCategories = cart.map(item => {
-                const prod = products.find(p => isSameCartItemId(p.id, item.id));
+                const prod = products.find(p => isSameCartItemId(p.id, item.product_id || item.id));
                 return normalizeProductVoucherCategory(prod, item);
             }).filter(Boolean);
             const allowedCategories = expandVoucherCategories(voucher.applicableFor);
@@ -1210,7 +1072,7 @@ async function initCartPage() {
                 cartRoot.cartUpdatedHandler = event => {
                     if (!stillOwnsCart() || savingCount || event.detail?.ownerId !== cartOwner || !Array.isArray(event.detail.items)) return;
                     const previousIds = new Set(cart.map(item => normalizeId(item.id)));
-                    cart = event.detail.items.map(item => normalizeCartItem({ ...products.find(product => isSameCartItemId(product.id, item.id)), ...item }));
+                    cart = event.detail.items.map(item => normalizeCartItem({ ...products.find(product => isSameCartItemId(product.id, item.product_id || item.id)), ...item }));
                     const currentIds = new Set(cart.map(item => normalizeId(item.id)));
                     selectedIds = new Set([...selectedIds].filter(id => currentIds.has(id)));
                     cart.forEach(item => { if (!previousIds.has(normalizeId(item.id))) selectedIds.add(normalizeId(item.id)); });

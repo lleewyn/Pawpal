@@ -10,7 +10,22 @@ function fixture(initial = [{ id: 'row-1', cart_id: 'cart-1', product_id: 'SP01'
     cache.set('pawpal_current_user', JSON.stringify({ id: 'customer-1' }));
     cache.set('pawpal_cart_owner', 'customer-1');
     let writes = 0;
-    const db = { from(table) {
+    const db = { async rpc(name, args = {}) {
+        if(name==='customer_shop_catalog')return {data:[...new Set([...initial.map(r=>r.product_id),'SP01','SP02'])].map(id=>({id,product_variant:[{id:'v-'+id,available_quantity:stock}]})),error:null};
+        assert.equal(name, 'own_customer_cart');
+        if (fail === 'read') return {error:new Error('Read failed')};
+        if (args.p_lines) {
+            if (fail === 'inventory') return {error:new Error('Không thể kiểm tra tồn kho')};
+            for (const line of args.p_lines) {
+                if (line.quantity > stock) return {error:new Error(`Chỉ còn ${stock} sản phẩm trong kho`)};
+                const exists=rows.some(r=>'v-'+r.product_id===line.variant_id);
+                if (fail === (exists?'update':'insert')) return {error:new Error('Write failed')};
+            }
+            writes++;
+            rows=args.p_lines.map(line=>({id:'row-'+nextId++,cart_id:'cart-1',product_id:line.variant_id.slice(2),quantity:line.quantity,unit_price:100}));
+        }
+        return {data:rows.map(r=>({...r,product_variant_id:'v-'+r.product_id,product_variant:{id:'v-'+r.product_id,sale_price:100,product:{id:r.product_id,product_name:r.product_id}}})),error:null};
+    }, from(table) {
         let action = 'read', values, filters = [];
         const query = {
             select() { return this; }, eq(key, value) { filters.push(row => row[key] === value); return this; },
@@ -22,6 +37,10 @@ function fixture(initial = [{ id: 'row-1', cart_id: 'cart-1', product_id: 'SP01'
             async maybeSingle() { return { data: table === 'cart' ? { id: 'cart-1' } : null, error: fail === 'read' ? new Error('Read failed') : null }; },
             then(resolve, reject) {
                 return Promise.resolve().then(() => {
+                    if (table === 'product_variant') {
+                        const variants=[...new Set([...initial.map(r=>r.product_id),'SP01','SP02'])].map(id=>({id:'v-'+id,product_id:id}));
+                        return {data:variants.filter(row=>filters.every(filter=>filter(row))),error:null};
+                    }
                     if (table === 'inventory') return { data: initial.map(item => ({product_id:item.product_id,quantity_in_stock:stock})), error: fail === 'inventory' ? new Error('Inventory failed') : null };
                     if (fail === action) return { data: null, error: new Error(`${action} failed`) };
                     let data = rows.filter(row => filters.every(filter => filter(row)));

@@ -39,6 +39,7 @@ Các dấu hoàn thành ở phần lịch sử bên dưới chưa đủ để ng
   - Ảnh đã xem: `D:/Aboutme/Pawpal-infra/supabase-local/verification/portal-pet-form.private.png`. Lệnh: `node scripts/test/customer_portal_profile_v1.cjs --cloud-browser --pets --pets-only`. Đã dọn thú cưng, cân nặng, hồ sơ khách và tài khoản Auth thử riêng.
   - Gợi ý giống lọc theo loài và tên danh mục, không tự đặt giống mặc định; khi đổi loài phải chọn lại giống. “Loài khác” được đối chiếu theo tên loài đã nhập, không tự ép thành “Khác”.
 - [ ] Đối soát mua hàng, chi tiết đơn, hủy/nhận hàng và đổi trả theo quy tắc Admin.
+  - Đợt 23/10: giỏ hàng/giá/tồn theo SKU, tạo đơn chờ thu, hủy, đổi trả, đánh giá chờ duyệt và công khai sau duyệt đã qua giao dịch CSDL và trình duyệt. Địa chỉ checkout lưu Cloud, một mặc định, có kiểm tra phiên bản. URL thanh toán cũ không tự ghi đã thanh toán. Chi tiết nghiệm thu tại `PAWPAL_BAN_HANG_V1_NGHIEM_THU.md`; chưa triển khai mã giao diện đợt này lên Vercel và chưa chốt kiểm tra Realtime toàn phân hệ.
 - [ ] Đối soát đặt dịch vụ, xem lịch, đổi/hủy lịch theo quy tắc Admin.
 - [ ] Đối soát Pawpoint, voucher và khiếu nại theo quyền từng khách.
 - [ ] Kiểm tra đồng bộ với Admin, Realtime, tải lại trang và băng thông toàn bộ các luồng.

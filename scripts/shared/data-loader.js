@@ -157,7 +157,7 @@ async function loadProducts() {
         }
 
         console.log('Loading products from Supabase...');
-        const { data: rawProducts, error } = await db.from('product').select('*, product_category!inner(category_name), product_variant(*, inventory(quantity_in_stock))');
+        const { data: rawProducts, error } = await db.rpc('customer_shop_catalog');
         
         if (error) {
             throw error;
@@ -187,23 +187,13 @@ async function loadProducts() {
             const effectiveSku = baseVariant?.sku_variant || item.sku || '';
             let images = [];
             if (Array.isArray(item.image_urls)) {
-                images = item.image_urls.map(url => rootPath + url);
+                images = item.image_urls.map(url => /^https?:\/\//i.test(url) || url.startsWith('/') ? url : rootPath + url);
             }
             if (images.length === 0) images = [rootPath + 'assets/images/shop/products/placeholder.webp'];
 
             let badgeStr = item.badge ? String(item.badge).toLowerCase() : null;
             
-            let stockCount = 0;
-            for (const v of variants) {
-                if (v.inventory) {
-                    if (Array.isArray(v.inventory)) {
-                        stockCount += v.inventory.reduce((sum, inv) => sum + Number(inv.quantity_in_stock || 0), 0);
-                    } else {
-                        stockCount += Number(v.inventory.quantity_in_stock || 0);
-                    }
-                }
-            }
-
+            const stockCount = pricedVariants.reduce((sum,variant)=>sum+Number(variant.available_quantity||0),0);
             // Guess brand from product_name
             let detectedBrand = 'PawPal';
             if (item.product_name) {
@@ -221,10 +211,11 @@ async function loadProducts() {
 
             return {
                 id: item.id,
+                variantId: baseVariant?.id || null,
                 sku: effectiveSku,
                 name: item.product_name,
-                brand: item.brand_name || detectedBrand,
-                brand_name: item.brand_name || detectedBrand,
+                brand: item.brand_name || '',
+                brand_name: item.brand_name || '',
                 target_pet: item.target_pet || 'Chó và Mèo',
                 targetPet: item.target_pet || 'Chó và Mèo',
                 category: item.category_id,
@@ -239,7 +230,7 @@ async function loadProducts() {
                 sale: sale,
                 badge: badgeStr,
                 trending: badgeStr === 'hot' || badgeStr === 'best',
-                rating: Number(item.rating) || 4.5,
+                rating: Number(item.rating) || 0,
                 reviewCount: Number(item.review_count) || 0,
                 origin: item.origin || 'Chưa rõ',
                 ingredients: item.ingredients || '',
@@ -250,8 +241,9 @@ async function loadProducts() {
                 variants: variants.map(v => ({
                     id: v.id,
                     sku: v.sku_variant,
+                    name: v.sku_variant,
                     price: Number(v.sale_price) || 0,
-                    costPrice: Number(v.cost_price) || 0,
+                    stock: Number(v.available_quantity) || 0,
                     comparePrice: v.compare_at_price ? Number(v.compare_at_price) : null
                 }))
             };
@@ -610,17 +602,7 @@ async function getProductReviews(productId) {
     if (!db) return [];
 
     try {
-        const { data, error } = await db
-            .from('review')
-            .select(`
-                *,
-                customer:customer_id (
-                    customer_profile (full_name)
-                )
-            `)
-            .eq('product_id', productId)
-            .eq('review_status', 'da_duyet')
-            .order('created_at', { ascending: false });
+        const { data, error } = await db.rpc('customer_product_reviews',{p_product:productId});
 
         if (error) throw error;
         
@@ -629,17 +611,16 @@ async function getProductReviews(productId) {
             rating: r.rating,
             content: r.review_content,
             createdAt: r.created_at,
-            customerName: Array.isArray(r.customer?.customer_profile)
-                ? (r.customer.customer_profile[0]?.full_name || 'Khách hàng')
-                : (r.customer?.customer_profile?.full_name || 'Khách hàng'),
-            hasMedia: r.image_urls && r.image_urls.length > 0,
-            media: r.image_urls || [],
+            customerName: 'Khách đã mua hàng',
+            variantName: r.variant_name || '',
+            hasMedia: false,
+            media: [],
             hasReply: !!r.shop_reply,
             shopReply: r.shop_reply || ''
         }));
     } catch (err) {
         console.error('Error fetching product reviews:', err);
-        return [];
+        throw err;
     }
 }
 

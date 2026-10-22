@@ -452,7 +452,16 @@
     inset: 0;
     z-index: 20000;
     pointer-events: none;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
 }
+#rma-drawer-container::backdrop { background: transparent; }
 
 #rma-drawer-container .rma-drawer,
 #rma-drawer-container .rma-drawer-overlay {

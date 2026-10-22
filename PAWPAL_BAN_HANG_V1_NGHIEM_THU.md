@@ -1,5 +1,30 @@
 # Bán hàng V1 — triển khai và nghiệm thu
 
+## Cổng khách hàng — đang hoàn thiện
+
+Phần này tách biệt với các mục nghiệm thu Admin bên dưới. Chưa nghiệm thu toàn bộ phân hệ mua hàng của khách.
+
+- [x] Danh mục và phân loại bán lấy từ Cloud mới; giá và tồn khả dụng theo từng SKU, không tạo phân loại hoặc phụ phí giả.
+- [x] Giỏ hàng lưu nguyên tử qua `own_customer_cart`; máy chủ lấy lại giá và kiểm tra tồn, không tin giá gửi từ trình duyệt.
+- [x] Migration `061` và `062` đã áp lên Cloud mới. Lần cập nhật nhật ký giữ nguyên dữ liệu public, thông tin Auth và 17 nhân viên; có bản sao lưu riêng trước khi áp.
+- [x] Kiểm thử độc lập giỏ hàng đạt 26 trường hợp; giao dịch thử trên bản phục hồi kiểm tra giá, rollback, tạo đơn lặp, thanh toán chờ xác nhận và hủy giải phóng tồn. Đã bổ sung claim vai trò Auth để kiểm thử cả trigger nhật ký.
+- [x] Kiểm thử trình duyệt với mã giao diện đang phát triển: giỏ hàng → đặt đơn → khoản thu ở trạng thái chờ nhân viên xác nhận → hủy đơn và giải phóng giữ tồn. Dữ liệu thử được dọn sau kiểm tra; không xuất kho hoặc ghi khoản thu thành công. Kiểm thử quyền cũng chặn xem/hủy đơn của khách khác và tự xác nhận khoản thu.
+- [x] Máy chủ tiếp nhận yêu cầu đổi trả qua `request_own_sales_return`: đúng chủ đơn, đúng dòng bán, số lượng không vượt phần đã mua và gửi lặp không tạo thêm phiếu. Khách không được truyền xác nhận nhận hàng/nhập kho; phiếu mới chỉ ở trạng thái chờ duyệt. Đã kiểm thử giao dịch trên bản phục hồi và gửi từ form với đơn thử riêng trên Cloud, sau đó dọn dữ liệu thử.
+- [x] Form đổi trả được kiểm tra trực quan trên trình duyệt, đóng bằng Escape và nút Đóng không bị thanh đầu trang che. Trang theo dõi đọc tên/giá từ dòng đơn gốc, hiển thị chờ duyệt; đã nhận hàng trả không đồng nghĩa đã hoàn tiền. Đã bỏ hàm tự trừ điểm cũ khỏi trang theo dõi.
+- [x] Sửa bộ lắng nghe cập nhật cho bảng con không có `customer_id`; quyền đọc vẫn do RLS theo đơn gốc kiểm soát. Bộ kiểm thử giỏ hàng/quyền truy cập và đăng ký kênh hiện đạt 27 trường hợp.
+- [x] Trang chi tiết đơn đọc Cloud mới, tổng tiền phía máy chủ và phương thức theo cấu hình thực tế. Bỏ tự hoàn tất sau 3 ngày, tự cộng điểm, kho và QR/thanh toán giả của trang cũ. Hộp hủy yêu cầu lý do, giữ phiên bản đơn, đã thử Escape và hủy thành công từ trình duyệt.
+- [x] Xác nhận nhận hàng qua RPC chỉ cho đơn đã bàn giao; kiểm thử trên bản phục hồi xác nhận gửi lặp không xuất kho lần hai, không tự ghi thu tiền hoặc thưởng điểm.
+- [x] `063_customer_sales_reviews.sql`: gửi đánh giá nguyên tử, đúng chủ và dòng đã nhận, mức 1–5, nội dung bắt buộc, chống gửi lặp và trạng thái chờ duyệt. Form đã thử lỗi thiếu dữ liệu, gửi thực tế và tải lại còn nội dung; không ảnh/tệp và không thưởng điểm.
+- [x] Kiểm thử đánh giá công khai ở trang sản phẩm: chỉ đánh giá đã duyệt, đúng SKU, nội dung được mã hóa khi hiển thị, không đọc hồ sơ khách. Đã thử ẩn khi chờ duyệt, công bố sau duyệt và hiển thị thực tế trên trình duyệt. Bỏ ảnh sản phẩm tự gắn vào đánh giá trống và nút đếm hữu ích giả.
+- [x] Rà soát ngày 23/10/2026: bỏ mô phỏng VNPay, tự xác nhận thanh toán qua tham số URL và cập nhật trạng thái trực tiếp từ API cũ. Trang callback/mô phỏng cũ chỉ mở đơn từ Cloud. Trình duyệt đã thử URL giả `vnp_ResponseCode=00` và số tiền tùy ý; đơn vẫn chờ xác nhận, khoản thu vẫn pending.
+- [x] `064_customer_checkout_address.sql` đã áp Cloud mới sau sao lưu, đối soát không đổi dữ liệu nguồn/Auth/17 nhân viên. Thêm/sửa người nhận và địa chỉ qua RPC, chặn phiên bản cũ và địa chỉ khách khác; đặt mặc định/xóa giữ đúng một mặc định. Trình duyệt đã thêm hai địa chỉ, tải lại, đổi mặc định, xóa mặc định và đóng form bằng Escape; đã xem ảnh form/sổ địa chỉ.
+- [x] Ưu đãi: bỏ voucher cá nhân trong bộ nhớ cũ, bỏ suy đoán trần giảm từ mô tả và nhóm hàng. Áp voucher cần quote máy chủ; số dư điểm lấy từ quote, lựa chọn điểm tách theo tài khoản và không cộng dồn với voucher. Bản phục hồi đã thử giảm theo cấu hình và chặn voucher cần quyền sở hữu khi khách chưa đổi.
+- [x] Dọn mã đặt đơn/khách tạm, QR, bộ đếm tự hủy, điểm và lịch sử đơn chỉ ghi trình duyệt ở checkout. Yêu cầu hóa đơn được lưu đủ thông tin vào ghi chú đơn để nhân viên xử lý, không báo tự phát hành; đã thử lưu và đọc lại ghi chú thực tế.
+- [x] Hoàn thiện chi tiết đơn, đổi trả và đánh giá. Trình duyệt với Cloud thật đã kiểm tra Realtime cho trạng thái đơn, khoản thu, đổi trả và duyệt đánh giá; giữ bản nháp khi cập nhật. Đã sửa phản hồi đổi trả đến sau khi đóng trang; kiểm tra không còn lỗi JavaScript chưa xử lý. Bộ kiểm thử hồi quy đạt 82/82; giao dịch giỏ hàng và thú cưng trên bản phục hồi đều đạt.
+- [ ] Triển khai mã giao diện mới lên Vercel và kiểm tra lại bản đã triển khai.
+
+Đặt đơn và nhận hàng không tự xác nhận đã thu tiền, không tự cộng điểm hoặc nâng hạng. Yêu cầu đổi trả không tự nhập kho hoặc hoàn tiền.
+
 Ngày cập nhật: 22/10/2026. Đã chuyển các luồng Admin Bán hàng sang V1, áp migration trên Cloud mới và triển khai Vercel. Nghiệm thu ghi dữ liệu thực hiện trên bản phục hồi riêng; Production được kiểm tra đọc, không tạo đơn hoặc thanh toán thử.
 
 ## Quy tắc đã chốt

@@ -403,11 +403,12 @@
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="invoice-checkbox">
                             <label class="form-check-label" for="invoice-checkbox">
-                                <strong>Xuất hóa đơn VAT (tùy chọn)</strong>
+                                <strong>Gửi yêu cầu hóa đơn cho cửa hàng</strong>
                             </label>
                         </div>
 
                         <div id="invoice-form" class="d-none">
+                            <p>Cửa hàng tiếp nhận thông tin và xác nhận riêng; website chưa tự phát hành hóa đơn.</p>
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label for="companyName" class="form-label">Tên công ty <span
@@ -432,8 +433,7 @@
                                     <input type="email" class="form-control" id="invoiceEmail" name="invoiceEmail">
                                 </div>
                                 <div class="col-12">
-                                    <p class="small text-info mb-0">Hóa đơn VAT sẽ được gửi trong vòng 3 ngày làm
-                                        việc</p>
+                                    <p class="small text-info mb-0">Thông tin này được gửi cùng ghi chú đơn hàng để nhân viên xử lý.</p>
                                 </div>
                             </div>
                         </div>
@@ -601,7 +601,7 @@
                     <button type="button" class="btn-close-address-modal" id="btn-close-address-edit-x">&times;</button>
                 </div>
                 <div class="address-modal-body">
-                    <form id="modal-address-form">
+                    <form id="modal-address-form" onsubmit="return false;">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="modalFullName" class="form-label">Họ và tên <span class="required">*</span></label>
@@ -635,7 +635,7 @@
                                 </select>
                             </div>
                             <div class="col-12">
-                                <label for="modalNote" class="form-label">Ghi chú giao hàng (tùy chọn)</label>
+                                <label for="modalNote" class="form-label">Ghi chú cho đơn hàng này</label>
                                 <textarea class="form-control" id="modalNote" rows="2" placeholder="Ví dụ: Giao giờ hành chính"></textarea>
                             </div>
                             <div class="col-12">

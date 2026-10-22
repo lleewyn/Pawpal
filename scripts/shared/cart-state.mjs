@@ -15,11 +15,11 @@ export function normalizeCartItems(items) {
         const raw = item.quantity ?? item.qty ?? 1;
         const quantity = Number(raw);
         if (!Number.isSafeInteger(quantity) || quantity < 1) throw new Error('Số lượng sản phẩm phải là số nguyên lớn hơn 0.');
-        const id = String(rawId);
+        const id = String(item.variantId || item.product_variant_id || rawId);
         const previous = grouped.get(id);
         const total = (previous?.quantity || 0) + quantity;
         if (!Number.isSafeInteger(total)) throw new Error('Số lượng sản phẩm không hợp lệ.');
-        grouped.set(id, { ...previous, ...item, id, product_id: item.product_id || id, quantity: total, qty: total });
+        grouped.set(id, { ...previous, ...item, id, product_id: item.product_id || String(rawId), quantity: total, qty: total });
     }
     return [...grouped.values()];
 }

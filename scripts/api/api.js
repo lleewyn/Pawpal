@@ -16,6 +16,16 @@ function assertCartOwner(userId) {
     if (!userId || user?.id !== userId) throw new Error('Tài khoản đã thay đổi. Vui lòng tải lại giỏ hàng.');
 }
 
+function matchesCartItem(item, id) {
+    return [item.id,item.variantId,item.product_variant_id,item.product_id].some(value=>value!=null && String(value)===String(id));
+}
+function findCartItem(items,id) {
+    const exact=items.find(item=>String(item.id)===String(id) || String(item.variantId)===String(id));
+    if(exact)return exact;
+    const matches=items.filter(item=>matchesCartItem(item,id));
+    if(matches.length>1)throw new Error('Vui lòng chọn đúng phân loại sản phẩm.');
+    return matches[0];
+}
 const resolveCustomerId = resolveAuthenticatedCustomerId;
 
 export const API = {
@@ -222,7 +232,7 @@ export const API = {
                         product_name_snapshot, sku_snapshot
                     ),
                     payment (
-                        id, payment_code, amount, transaction_status, payment_type, succeeded_at
+                        id, payment_code, amount, transaction_status, payment_type, succeeded_at, payment_method_config_id
                     )
                 `)
                 .eq('customer_id', customerId)
@@ -235,6 +245,12 @@ export const API = {
 
             const mapOrderStatus = normalizeOrderStatus;
 
+            const totalsResult=await db.rpc('own_sales_order_totals');
+            if(totalsResult.error)throw totalsResult.error;
+            const totalsById=new Map((totalsResult.data||[]).map(row=>[row.id,row]));
+            const methodResponse=await db.rpc('customer_shop_options');
+            if(methodResponse.error)throw methodResponse.error;
+            const paymentMethods=new Map((methodResponse.data?.payment_methods||[]).map(m=>[m.id,m]));
             const orders = (data || []).map(o => {
                 const details = o.sales_order_detail || [];
                 const products = details.map(d => {
@@ -245,6 +261,8 @@ export const API = {
 
                     return {
                         id:          d.product_variant_id || d.id,
+                        lineId:      d.id,
+                        variantId:   d.product_variant_id,
                         variant_id:  d.product_variant_id,
                         name:        d.product_name_snapshot || 'Sản phẩm',
                         sku:         d.sku_snapshot || '',
@@ -258,10 +276,12 @@ export const API = {
 
                 const calculatedSubtotal = products.reduce((sum, p) => sum + p.total, 0);
                 const shippingFee = Number(o.shipping_fee_snapshot) || 0;
-                const grandTotal = calculatedSubtotal + shippingFee;
+                const authoritative=totalsById.get(o.id);
+                if(!authoritative)throw new Error('Không thể xác nhận tổng tiền đơn hàng.');
+                const grandTotal = Number(authoritative.total);
 
-                const hasPaidPayment = Array.isArray(o.payment) && o.payment.some(p => p.transaction_status === 'succeeded');
-                const paymentStatus = hasPaidPayment ? 'paid' : (o.order_status === 'cancelled' ? 'cancelled' : 'pending_payment');
+                const paid=Number(authoritative.paid)||0;
+                const paymentStatus = paid>=grandTotal ? 'paid' : paid>0 ? 'partial' : (o.order_status === 'cancelled' ? 'cancelled' : 'pending_payment');
 
                 const fullAddress = [o.street_address_snapshot, o.province_snapshot].filter(Boolean).join(', ');
 
@@ -272,12 +292,14 @@ export const API = {
                     status:      mapOrderStatus(o.order_status),
                     orderStatus: o.order_status,
                     paymentStatus: paymentStatus,
-                    paymentMethod: 'cod',
+                    paymentMethod: paymentMethods.get(o.payment?.find(p=>p.payment_type==='collection')?.payment_method_config_id)?.short_name?.toLowerCase() || '',
+                    paymentMethodName: paymentMethods.get(o.payment?.find(p=>p.payment_type==='collection')?.payment_method_config_id)?.name || 'Chưa xác định',
+                    netPaid: paid,
                     products,
                     pricing: {
                         subtotal:    calculatedSubtotal,
                         shippingFee: shippingFee,
-                        discount:    0,
+                        discount:    Math.max(0,calculatedSubtotal+shippingFee-grandTotal),
                         total:       grandTotal,
                         grandTotal:  grandTotal
                     },
@@ -310,15 +332,17 @@ export const API = {
             const customerId = await resolveCustomerId(db, userOrId);
             if (!customerId) return [];
 
-            const { data, error } = await db.from('review').select('*').eq('customer_id', customerId);
+            const { data, error } = await db.from('review')
+                .select('*,line:sales_order_detail!inner(order_id,order:sales_order!inner(customer_id,order_code))')
+                .eq('line.order.customer_id', customerId);
             if (error) { 
                 console.error('[API] Supabase getUserReviews error:', error.message); 
-                return []; 
+                throw error;
             }
-            return data || [];
+            return (data||[]).map(r=>({...r,sales_order_id:r.line.order_id,sales_order_code:r.line.order.order_code}));
         } catch (err) {
             console.error('[API] Supabase getUserReviews failed:', err);
-            return [];
+            throw err;
         }
     },
 
@@ -333,8 +357,8 @@ export const API = {
                 .select(`
                     id, 
                     voucher_status, 
-                    used_at,
-                    voucher ( id, voucher_code, discount_value, type, minimum_order_amount, start_date, end_date, description )
+                    expired_at,
+                    voucher ( id, voucher_code, discount_value, type, minimum_order_amount, start_date, end_date, description, required_points, is_active, applicable_for, max_usage )
                 `)
                 .eq('customer_id', customerId);
             if (error) { 
@@ -361,10 +385,10 @@ export const API = {
                     usageCount: Number(v.usage_count || 0),
                     maxUsage: v.max_usage,
                     applicableFor: v.applicable_for || ['all'],
-                    active: !row.voucher_status || row.voucher_status.toUpperCase() !== 'USED',
+                    active: row.voucher_status==='available'&&v.is_active===true&&(!row.expired_at||new Date(row.expired_at)>new Date()),
                     description: v.description,
                     isUsed: row.voucher_status === 'USED' || row.voucher_status === 'used',
-                    usedAt: row.used_at
+                    usedAt: null
                 };
             });
         } catch (err) {
@@ -388,13 +412,7 @@ export const API = {
         if (!db) throw new Error('Chưa kết nối được giỏ hàng.');
 
         try {
-            const { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', userId).maybeSingle();
-            if (cartError) throw cartError;
-            if (!cartData) return publishCart([], userId);
-
-            const { data: items, error: itemsError } = await db.from('cart_item')
-                .select('id, product_variant_id, quantity, unit_price, subtotal, product_variant(id, product_id, sku_variant, sale_price, product(id, product_name, brand_name, image_urls))')
-                .eq('cart_id', cartData.id);
+            const { data: items, error: itemsError } = await db.rpc('own_customer_cart');
             if (itemsError) throw itemsError;
             let cached = [];
             try { if (localStorage.getItem('pawpal_cart_owner') === String(userId)) cached = JSON.parse(localStorage.getItem('pawpal_cart') || '[]'); } catch {}
@@ -411,7 +429,7 @@ export const API = {
                     sku: item.product_variant?.sku_variant || cachedItem?.sku || '',
                     quantity: Number(item.quantity),
                     qty: Number(item.quantity),
-                    price: Number(item.unit_price) || Number(item.product_variant?.sale_price) || 0,
+                    price: Number(item.product_variant?.sale_price ?? item.unit_price ?? 0),
                     subtotal: Number(item.subtotal) || ((Number(item.unit_price) || 0) * Number(item.quantity))
                 };
             }), userId);
@@ -441,44 +459,25 @@ export const API = {
     },
 
     async validateCartStock(cartItems) {
-        const items = normalizeCartItems(cartItems);
-        if (!items.length) return { valid: true };
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) throw new Error('Không thể kiểm tra tồn kho. Vui lòng thử lại.');
-        const rawIds = items.map(item => item.variantId || item.product_variant_id || item.id).filter(Boolean);
-        if (!rawIds.length) return { valid: true };
-        const idList = rawIds.map(id => `"${id}"`).join(',');
-        const { data: variants } = await db.from('product_variant').select('id, product_id').or(`id.in.(${idList}),product_id.in.(${idList})`);
-        const variantIdMap = new Map();
-        for (const v of variants || []) {
-            variantIdMap.set(String(v.id), v.id);
-            variantIdMap.set(String(v.product_id), v.id);
+        const items=normalizeCartItems(cartItems);if(!items.length)return {valid:true};
+        const db=window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if(!db)throw new Error('Không thể kiểm tra tồn kho.');
+        const {data,error}=await db.rpc('customer_shop_catalog');if(error)throw error;
+        const variants=(data||[]).flatMap(p=>(p.product_variant||[]).map(v=>({...v,product_id:p.id})));
+        for(const item of items){
+            const id=item.variantId||item.product_variant_id||item.id;
+            const variant=variants.find(v=>String(v.id)===String(id));
+            if(!variant)throw new Error('Phân loại sản phẩm không còn được bán.');
+            if(item.quantity>Number(variant.available_quantity))throw new Error('Sản phẩm không đủ tồn kho khả dụng.');
         }
-        const vIds = [...new Set(items.map(i => variantIdMap.get(String(i.variantId || i.product_variant_id || i.id))).filter(Boolean))];
-        if (vIds.length) {
-            const { data: invData, error } = await db.from('inventory').select('product_variant_id, quantity_in_stock').in('product_variant_id', vIds);
-            if (error) throw new Error('Không thể kiểm tra tồn kho. Vui lòng thử lại.');
-            const stockByVariant = new Map();
-            for (const row of invData || []) {
-                const count = Number(row.quantity_in_stock);
-                if (Number.isSafeInteger(count) && count >= 0) {
-                    stockByVariant.set(String(row.product_variant_id), (stockByVariant.get(String(row.product_variant_id)) || 0) + count);
-                }
-            }
-            for (const item of items) {
-                const resolvedVId = variantIdMap.get(String(item.variantId || item.product_variant_id || item.id));
-                const remaining = resolvedVId ? (stockByVariant.get(String(resolvedVId)) ?? 999) : 999;
-                if (item.quantity > remaining) throw new Error(`Chỉ còn ${remaining} sản phẩm trong kho`);
-            }
-        }
-        return { valid: true };
+        return {valid:true};
     },
 
     async prepareCartCheckout(userId, selectedItems) {
         const requested = normalizeCartItems(selectedItems);
         return queueCartWrite(async () => {
             const current = await this.getUserCart(userId, { waitForWrites: false });
-            const selected = current.filter(item => requested.some(entry => entry.id === String(item.id)));
+            const selected = current.filter(item => requested.some(entry => matchesCartItem(item,entry.id)));
             if (!selected.length || selected.length !== requested.length) throw new Error('Giỏ hàng đã thay đổi. Vui lòng chọn lại sản phẩm.');
             await this.validateCartStock(selected);
             return selected;
@@ -498,15 +497,16 @@ export const API = {
                 // A prior request may have committed before its response was lost.
                 merged = normalizeCartItems([...current]);
                 for (const target of previous.target) {
-                    const item = merged.find(entry => entry.id === target.id);
+                    const item = findCartItem(merged,target.id);
                     if (item) { item.quantity = Math.max(item.quantity, target.quantity); item.qty = item.quantity; }
                     else merged.push(target);
                 }
             } else {
                 const additions = mode === 'included'
-                    ? backup.filter(item => !current.some(entry => String(entry.id) === item.id))
+                    ? backup.filter(item => !findCartItem(current,item.id))
                     : backup;
-                merged = normalizeCartItems([...current, ...additions]);
+                const resolved=additions.map(item=>{const old=findCartItem(current,item.id);return old?{...item,id:old.id,variantId:old.variantId,product_id:old.product_id}:item;});
+                merged = normalizeCartItems([...current, ...resolved]);
             }
             const journal = { token, payload, target: merged, status: 'prepared' };
             localStorage.setItem(key, JSON.stringify(journal));
@@ -523,7 +523,7 @@ export const API = {
         return queueCartWrite(async () => {
             const current = await this.getUserCart(userId, { waitForWrites: false });
             const remaining = current.map(item => {
-                const quantity = item.quantity - (purchased.find(entry => entry.id === String(item.id))?.quantity || 0);
+                const quantity = item.quantity - (purchased.find(entry => matchesCartItem(item,entry.id))?.quantity || 0);
                 return { ...item, quantity, qty: quantity };
             }).filter(item => item.quantity > 0);
             await this.persistUserCart(userId, remaining, { checkStock: false });
@@ -531,52 +531,25 @@ export const API = {
         });
     },
 
-    async persistUserCart(userId, items, { checkStock = true } = {}) {
-        if (!userId) { publishCart(items); return { success: true }; }
+    async persistUserCart(userId, items) {
         assertCartOwner(userId);
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) throw new Error('Cart database unavailable');
-        if (checkStock) await this.validateCartStock(items);
-        const cart = await this.getOrCreateCart(userId);
-        if (!cart) throw new Error('Cart unavailable');
-        const { data: existing, error: readError } = await db.from('cart_item')
-            .select('id, product_variant_id, quantity').eq('cart_id', cart.id);
-        if (readError) throw readError;
-
-        const rawIds = items.map(item => item.variantId || item.product_variant_id || item.id).filter(Boolean);
-        let variantMap = new Map();
-        if (rawIds.length) {
-            const idList = rawIds.map(id => `"${id}"`).join(',');
-            const { data: vRows } = await db.from('product_variant').select('id, product_id').or(`id.in.(${idList}),product_id.in.(${idList})`);
-            for (const v of vRows || []) {
-                variantMap.set(String(v.id), v.id);
-                variantMap.set(String(v.product_id), v.id);
-            }
-        }
-
-        const keep = new Set();
+        if (!db) throw new Error('Chưa kết nối được giỏ hàng.');
+        const lines=[];
         for (const item of items) {
-            const resolvedVId = variantMap.get(String(item.variantId || item.product_variant_id || item.id)) || item.variantId || item.product_variant_id || item.id;
-            const price = Number(item.price) || 0;
-            const values = { quantity: item.quantity, unit_price: price, subtotal: price * item.quantity, product_variant_id: resolvedVId };
-            const current = (existing || []).find(row => String(row.product_variant_id) === String(resolvedVId));
-            const query = current
-                ? db.from('cart_item').update({ quantity: values.quantity, unit_price: values.unit_price, subtotal: values.subtotal }).eq('cart_id', cart.id).eq('id', current.id)
-                : db.from('cart_item').insert({ ...values, cart_id: cart.id });
-            const { data, error } = await query.select('id');
-            if (error) throw error;
-            if (!data?.length) throw new Error('Cart write was not applied');
-            keep.add(data[0].id);
+            let id=item.variantId || item.product_variant_id;
+            if (!id) {
+                const {data,error}=await db.from('product_variant').select('id').eq('product_id',item.id);
+                if(error)throw error;
+                if(data?.length!==1)throw new Error('Vui lòng chọn đúng phân loại sản phẩm.');
+                id=data[0].id;
+            }
+            lines.push({variant_id:id,quantity:item.quantity});
         }
-        const removals = (existing || []).filter(row => !keep.has(row.id)).map(row => row.id);
-        if (removals.length) {
-            const { data, error } = await db.from('cart_item').delete()
-                .eq('cart_id', cart.id).in('id', removals).select('id');
-            if (error) throw error;
-            if (data?.length !== removals.length) throw new Error('Cart deletion was not applied');
-        }
-        publishCart(items, userId);
-        return { success: true };
+        const {error}=await db.rpc('own_customer_cart',{p_lines:lines});
+        if(error)throw error;
+        await this.getUserCart(userId,{waitForWrites:false});
+        return {success:true};
     },
 
     async addToCart(userId, productId, quantity = 1, details = {}) {
@@ -584,7 +557,7 @@ export const API = {
         if (!Number.isSafeInteger(Number(quantity)) || Number(quantity) < 1) throw new Error('Invalid quantity');
         return queueCartWrite(async () => {
             const items = await this.getUserCart(userId, { waitForWrites: false });
-            const existing = items.find(item => String(item.id) === String(productId));
+            const existing = findCartItem(items,details.variantId || details.product_variant_id || productId);
             if (existing) {
                 const nextQuantity = existing.quantity + Number(quantity);
                 Object.assign(existing, details, { id: String(productId), quantity: nextQuantity, qty: nextQuantity });
@@ -598,7 +571,7 @@ export const API = {
         if (!Number.isSafeInteger(delta) || !delta) throw new Error('Số lượng không hợp lệ.');
         return queueCartWrite(async () => {
             const items = await this.getUserCart(userId, { waitForWrites: false });
-            const item = items.find(entry => String(entry.id) === String(productId));
+            const item = findCartItem(items,productId);
             if (!item) throw new Error('Sản phẩm đã được xóa khỏi giỏ hàng.');
             item.quantity += delta;
             item.qty = item.quantity;
@@ -609,43 +582,21 @@ export const API = {
     async removeCartProduct(userId, productId) {
         return queueCartWrite(async () => {
             const items = await this.getUserCart(userId, { waitForWrites: false });
-            return this.persistUserCart(userId, items.filter(item => String(item.id) !== String(productId)), { checkStock: false });
+            const target=findCartItem(items,productId);
+            return this.persistUserCart(userId, items.filter(item=>item!==target), {checkStock:false});
         });
     },
 
-    async updateCartItemQuantity(userId, variantOrProductId, quantity) {
-        if (!userId) return { success: false, error: 'User not logged in' };
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        const cart = await this.getOrCreateCart(userId);
-        if (!cart) return { success: false };
-
-        if (quantity <= 0) return this.removeFromCart(userId, variantOrProductId);
-
-        const { error } = await db.from('cart_item')
-            .update({ quantity })
-            .eq('cart_id', cart.id).or(`product_variant_id.eq.${variantOrProductId},id.eq.${variantOrProductId}`);
-        return { success: !error, error };
+    async updateCartItemQuantity(userId, id, quantity) {
+        if(Number(quantity)<=0)return this.removeCartProduct(userId,id);
+        return queueCartWrite(async()=>{
+            const items=await this.getUserCart(userId,{waitForWrites:false});const item=findCartItem(items,id);
+            if(!item)throw new Error('Sản phẩm không còn trong giỏ.');
+            item.quantity=Number(quantity);item.qty=item.quantity;return this.persistUserCart(userId,normalizeCartItems(items));
+        });
     },
-
-    async removeFromCart(userId, variantOrProductId) {
-        if (!userId) return { success: false, error: 'User not logged in' };
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        const cart = await this.getOrCreateCart(userId);
-        if (!cart) return { success: false };
-
-        const { error } = await db.from('cart_item').delete().eq('cart_id', cart.id).or(`product_variant_id.eq.${variantOrProductId},id.eq.${variantOrProductId}`);
-        return { success: !error, error };
-    },
-
-    async clearCart(userId) {
-        if (!userId) return { success: false };
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        const cart = await this.getOrCreateCart(userId);
-        if (!cart) return { success: false };
-
-        const { error } = await db.from('cart_item').delete().eq('cart_id', cart.id);
-        return { success: !error, error };
-    },
+    async removeFromCart(userId,id) { return this.removeCartProduct(userId,id); },
+    async clearCart(userId) { return queueCartWrite(()=>this.persistUserCart(userId,[])); },
 
     async getUserWishlist(userId, { strict = false } = {}) {
         if (!userId) return { productIds: [], serviceIds: [] };
@@ -776,276 +727,38 @@ export const API = {
         return { success: true, data: users[idx] };
     },
 
+    async prepareOwnOrder(orderData) {
+        const db=window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if(!db)throw new Error('Chưa kết nối CSDL.');
+        if(orderData.voucherCode && Number(orderData.pointsUsed)>0)throw new Error('Vui lòng chọn dùng mã ưu đãi hoặc đổi điểm cho đơn này.');
+        const details={delivery:true,delivery_option_id:orderData.shipping.deliveryMethod,
+            receiver_name:orderData.shipping.name,receiver_phone:orderData.shipping.phone,
+            province:orderData.shipping.city,street_address:[orderData.shipping.address,orderData.shipping.district].filter(Boolean).join(', '),
+            note:orderData.shipping.note||'',discount_mode:orderData.voucherCode?'voucher':Number(orderData.pointsUsed)>0?'points':'none',
+            voucher_code:orderData.voucherCode||'',points:Number(orderData.pointsUsed)||0};
+        const lines=orderData.items.map(item=>({variant_id:item.variantId||item.product_variant_id,quantity:Number(item.quantity??item.qty)}));
+        if(lines.some(l=>!l.variant_id))throw new Error('Vui lòng chọn đúng phân loại sản phẩm.');
+        const {data,error}=await db.rpc('quote_own_sales_order',{p_details:details,p_lines:lines});if(error)throw error;
+        return {quote:data,details,lines};
+    },
     async submitOrder(orderData) {
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) {
-            return { success: false, error: 'No Supabase connection' };
-        }
-
         try {
-            let customerId = orderData.userId;
-            const isUuidLike = typeof customerId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId);
-            
-            if (!customerId || !isUuidLike) {
-                const phone = orderData.shipping?.phone || '';
-                if (phone) {
-                    const response = await fetch('/api/customer/auth/guest', {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ phone, name: orderData.shipping?.name || 'Khách vãng lai' })
-                    });
-                    const result = await response.json();
-                    if (!response.ok || !result.success) throw new Error(result.message || 'Không thể tạo hồ sơ nhận hàng.');
-                    customerId = result.customerId;
-                } else {
-                    customerId = null;
-                }
-            }
-
-            let shippingAddressId = 'f0000000-0000-0000-2222-000000000001'; // Fallback
-            if (orderData.shipping && customerId) {
-                const { data: addrData, error: addrError } = await db.from('customer_address').insert({
-                    customer_id: customerId,
-                    receiver_name: orderData.shipping.name || 'Khách hàng',
-                    receiver_phone: orderData.shipping.phone || '',
-                    province: orderData.shipping.city || '',
-                    street_address: (orderData.shipping.address || '') + (orderData.shipping.district ? ', ' + orderData.shipping.district : ''),
-                    is_default: false
-                }).select('id').single();
-                
-                if (addrError) {
-                    console.warn('Could not insert address (maybe guest without customer_id?), using fallback', addrError);
-                } else if (addrData && addrData.id) {
-                    shippingAddressId = addrData.id;
-                }
-            }
-
-            const mapPaymentMethodConfigId = (method) => {
-                const m = String(method || 'cod').toLowerCase().trim();
-                if (m === 'cod') return 'cod';
-                if (m === 'momo') return 'momo';
-                if (m === 'vnpay') return 'vnpay';
-                if (m === 'vietqr' || m === 'qr') return 'vietqr';
-                if (m === 'bank' || m === 'bank_transfer' || m === 'banking') return 'bank';
-                return 'cod';
-            };
-
-            const paymentMethodConfigId = mapPaymentMethodConfigId(orderData.payment?.method);
-            const isPaid = orderData.payment?.status === 'paid' || orderData.payment?.status === 'PAID';
-            
-            const initialOrderStatus = isPaid ? 'da_xac_nhan' : 'cho_xac_nhan';
-            const initialPaymentStatus = isPaid ? 'da_thanh_toan' : 'chua_thanh_toan';
-
-            const totalOrderAmount = Number(orderData.pricing?.grandTotal ?? orderData.pricing?.total ?? 0);
-            const shippingFee = Number(orderData.pricing?.shippingFee ?? orderData.pricing?.shipping ?? 0);
-
-            const streetAddr = (orderData.shipping?.address || '') + (orderData.shipping?.district ? ', ' + orderData.shipping.district : '');
-            const provAddr = orderData.shipping?.city || orderData.shipping?.province || '';
-
-            const salesOrder = {
-                order_code: orderData.orderId,
-                customer_id: customerId,
-                order_status: initialOrderStatus,
-                shipping_status: 'cho_xu_ly',
-                shipping_fee_snapshot: isNaN(shippingFee) ? 0 : shippingFee,
-                receiver_name_snapshot: orderData.shipping?.name || 'Khách hàng',
-                receiver_phone_snapshot: orderData.shipping?.phone || '',
-                street_address_snapshot: streetAddr,
-                province_snapshot: provAddr,
-                note: orderData.note || orderData.shipping?.note || null
-            };
-
-            const { data: newOrder, error: orderError } = await db.from('sales_order').insert(salesOrder).select('id').single();
-            if (orderError) throw orderError;
-
-            // Bọc quá trình tạo payment và order_detail trong cơ chế rollback dọn dẹp nếu có lỗi
-            try {
-                const paymentCode = 'PAY-' + Date.now();
-                const paymentInsert = {
-                    payment_code: paymentCode,
-                    order_id: newOrder.id,
-                    payment_method: paymentMethodConfigId,
-                    amount: isNaN(totalOrderAmount) ? 0 : totalOrderAmount,
-                    payment_status: initialPaymentStatus
-                };
-                const { error: payError } = await db.from('payment').insert(paymentInsert);
-                if (payError) {
-                    console.error('[API] Failed to insert payment:', payError);
-                    throw payError;
-                }
-
-                if (orderData.items && orderData.items.length > 0) {
-                    const orderDetails = [];
-                    for (const item of orderData.items) {
-                        const uPrice = Number(item.price || 0);
-                        const qty = Number(item.qty || item.quantity || 1);
-                        let vId = item.variantId || item.product_variant_id;
-                        let skuSnap = item.sku || item.sku_variant || '';
-                        let prodNameSnap = item.name || item.product_name || 'Sản phẩm';
-
-                        if (!vId && item.id) {
-                            const { data: vData } = await db.from('product_variant').select('id, sku_variant, product(product_name)').eq('product_id', item.id).limit(1);
-                            if (vData && vData[0]) {
-                                vId = vData[0].id;
-                                skuSnap = skuSnap || vData[0].sku_variant || '';
-                                prodNameSnap = prodNameSnap || vData[0].product?.product_name || 'Sản phẩm';
-                            } else {
-                                vId = item.id;
-                            }
-                        }
-                        orderDetails.push({
-                            order_id: newOrder.id,
-                            product_variant_id: vId,
-                            quantity: isNaN(qty) ? 1 : qty,
-                            unit_price: isNaN(uPrice) ? 0 : uPrice,
-                            discount_amount: Number(item.discount || 0),
-                            product_name_snapshot: prodNameSnap,
-                            sku_snapshot: skuSnap
-                        });
-                    }
-                    const { error: itemsError } = await db.from('sales_order_detail').insert(orderDetails);
-                    if (itemsError) throw itemsError;
-                }
-            } catch (subErr) {
-                // Rollback: Xóa bản ghi sales_order nếu tạo payment hoặc detail thất bại để tránh đơn mồ côi
-                console.error('[API] Rollback sales_order do lỗi tạo chi tiết/thanh toán:', subErr);
-                await db.from('sales_order').delete().eq('id', newOrder.id);
-                throw subErr;
-            }
-
-            if (orderData.appliedVoucher?.code || orderData.voucherCode) {
-                const vCode = orderData.appliedVoucher?.code || orderData.voucherCode;
-                try {
-                    const { data: vRow } = await db.from('voucher').select('id, usage_count').ilike('voucher_code', vCode).maybeSingle();
-                    if (vRow) {
-                        await db.from('voucher').update({ usage_count: (vRow.usage_count || 0) + 1 }).eq('id', vRow.id);
-                    }
-                } catch (vErr) {
-                    console.warn('[API] Could not increment voucher usage_count:', vErr);
-                }
-            }
-
-            if (customerId) {
-                try {
-                    await this.createSystemNotification({
-                        customerId,
-                        type: 'don_hang_moi',
-                        title: 'Đặt hàng thành công',
-                        content: `Đơn hàng #${orderData.orderId} của bạn đã được ghi nhận và đang chờ xử lý.`,
-                        orderId: newOrder.id
-                    });
-                } catch (notifErr) {
-                    console.warn('[API] SubmitOrder notification warning:', notifErr);
-                }
-            }
-
-            return { success: true, orderId: newOrder.id };
-        } catch (err) {
-            console.error('Submit order error:', err);
-            return { success: false, error: err };
-        }
+            const db=window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            const prepared=orderData._prepared;
+            if(!prepared?.quote?.version)throw new Error('Vui lòng kiểm tra lại báo giá trước khi đặt hàng.');
+            const {data,error}=await db.rpc('create_own_sales_order',{p_id:orderData.requestId,p_expected_quote:prepared.quote.version,
+                p_details:prepared.details,p_lines:prepared.lines,p_payment_method:orderData.payment.configId});
+            if(error)throw error;
+            return {success:true,orderId:data};
+        } catch(error){return {success:false,error};}
     },
 
-    async updateOrderPaymentStatus(orderId, paymentStatus) {
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db || !orderId) {
-            return { success: false, error: 'No Supabase connection' };
-        }
-
-        try {
-            const rawStatus = String(paymentStatus || '').toLowerCase().trim();
-            const normalizedStatus = {
-                'paid': 'da_thanh_toan',
-                'da_thanh_toan': 'da_thanh_toan',
-                'failed': 'thanh_toan_that_bai',
-                'thanh_toan_that_bai': 'thanh_toan_that_bai',
-                'pending': 'chua_thanh_toan',
-                'chua_thanh_toan': 'chua_thanh_toan',
-                'unpaid': 'chua_thanh_toan',
-                'refunded': 'da_hoan_tien',
-                'da_hoan_tien': 'da_hoan_tien'
-            }[rawStatus] || 'chua_thanh_toan';
-
-            const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
-
-            let query = db.from('sales_order').update({
-                payment_status: normalizedStatus,
-                updated_at: new Date().toISOString()
-            });
-
-            query = isUUID
-                ? query.eq('id', orderId)
-                : query.eq('order_code', orderId);
-
-            const { data, error } = await query.select('id, order_code, payment_status').maybeSingle();
-            if (error) throw error;
-
-            if (data && data.id) {
-                const transStatus = normalizedStatus === 'da_thanh_toan' ? 'thanh_cong' : (normalizedStatus === 'thanh_toan_that_bai' ? 'that_bai' : (normalizedStatus === 'da_hoan_tien' ? 'da_hoan_tien' : 'cho_xu_ly'));
-                await db.from('payment').update({
-                    transaction_status: transStatus,
-                    updated_at: new Date().toISOString()
-                }).eq('order_id', data.id);
-            }
-
-            return { success: true, data };
-        } catch (err) {
-            console.error('[API] updateOrderPaymentStatus failed:', err);
-            return { success: false, error: err };
-        }
+    async updateOrderPaymentStatus() {
+        throw new Error('Thanh toán cần nhân viên xác nhận; khách hàng không tự đánh dấu đã trả tiền.');
     },
 
-    async updateOrderStatus(orderId, orderStatus) {
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db || !orderId) {
-            return { success: false, error: 'No Supabase connection' };
-        }
-
-        try {
-            const rawStatus = String(orderStatus || '').toLowerCase().trim();
-            const normalizedStatus = {
-                'placed': 'cho_xac_nhan',
-                'cho_xac_nhan': 'cho_xac_nhan',
-                'pending': 'cho_xac_nhan',
-                'confirmed': 'da_xac_nhan',
-                'da_xac_nhan': 'da_xac_nhan',
-                'preparing': 'dang_dong_goi',
-                'packing': 'dang_dong_goi',
-                'dang_dong_goi': 'dang_dong_goi',
-                'dang_chuan_bi': 'dang_dong_goi',
-                'shipping': 'dang_giao_hang',
-                'dang_giao': 'dang_giao_hang',
-                'dang_giao_hang': 'dang_giao_hang',
-                'delivered': 'da_giao_hang',
-                'da_giao': 'da_giao_hang',
-                'da_giao_hang': 'da_giao_hang',
-                'completed': 'da_giao_hang',
-                'da_hoan_tat': 'da_giao_hang',
-                'cancelled': 'da_huy',
-                'canceled': 'da_huy',
-                'da_huy': 'da_huy',
-                'returned': 'da_tra_hang',
-                'da_tra_hang': 'da_tra_hang'
-            }[rawStatus] || 'cho_xac_nhan';
-
-            const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
-
-            let query = db.from('sales_order').update({
-                order_status: normalizedStatus,
-                updated_at: new Date().toISOString()
-            });
-
-            query = isUUID
-                ? query.eq('id', orderId)
-                : query.eq('order_code', orderId);
-
-            const { data, error } = await query.select('id, order_code, order_status').maybeSingle();
-            if (error) throw error;
-
-            return { success: true, data };
-        } catch (err) {
-            console.error('[API] updateOrderStatus failed:', err);
-            return { success: false, error: err };
-        }
+    async updateOrderStatus() {
+        return {success:false,error:new Error('Vui lòng dùng thao tác hủy hoặc nhận hàng có kiểm tra phiên bản đơn.')};
     },
 
     async getVouchers() {
@@ -1062,16 +775,7 @@ export const API = {
             if (error) throw error;
             
             const mappedVouchers = (data || []).map(v => {
-                let maxDiscount = v.max_discount;
-                if (maxDiscount == null && v.description) {
-                    const match = v.description.match(/tối đa\s+([\d.,]+)(k|đ)/i);
-                    if (match) {
-                        let val = parseFloat(match[1].replace(/[.,]/g, ''));
-                        if (match[2].toLowerCase() === 'k') val *= 1000;
-                        maxDiscount = val;
-                    }
-                }
-                
+                const maxDiscount = null;
                 return {
                     id: v.id,
                     code: v.voucher_code,
@@ -1088,18 +792,11 @@ export const API = {
                     applicableFor: v.applicable_for || ['all'],
                     description: v.description,
                     is_active: v.is_active,
-                    active: (() => {
-                        if (v.is_active !== true) return false;
-                        const now = Date.now();
-                        const from = v.start_date ? new Date(v.start_date).getTime() : -Infinity;
-                        const until = v.end_date ? new Date(v.end_date).getTime() : Infinity;
-                        const quotaOk = v.max_usage == null || Number(v.usage_count || 0) < Number(v.max_usage);
-                        return now >= from && now <= until && quotaOk;
-                    })(),
+                    active: v.is_active === true,
+
                 };
             });
             
-            console.log('[API] Đã tải danh sách voucher từ Supabase:', mappedVouchers);
             return mappedVouchers;
         } catch (err) {
             console.error('[API] Error fetching vouchers from Supabase:', err);
@@ -1108,80 +805,18 @@ export const API = {
     },
 
     async getDeliveryOptions() {
-        try {
-            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!db) {
-                console.error('[API] Supabase Client not initialized');
-                return [];
-            }
-            
-            const { data, error } = await db.from('delivery_option_config')
-                .select('*')
-                .eq('available', true)
-                .order('fee', { ascending: true });
-                
-            if (error) throw error;
-            
-            return (data || []).map(d => ({
-                id: d.id,
-                name: d.name,
-                description: d.description,
-                fee: Number(d.fee),
-                estimatedDays: d.estimated_days,
-                icon: d.icon,
-                available: d.available
-            }));
-        } catch (err) {
-            console.error('[API] getDeliveryOptions failed:', err);
-            const res = await fetch('/data/delivery-options.json');
-            return await res.json().catch(() => []);
-        }
+        const db=window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if(!db)throw new Error('Chưa kết nối cấu hình giao hàng.');
+        const {data,error}=await db.rpc('customer_shop_options');if(error)throw error;
+        return (data.delivery_options||[]).map(d=>({...d,fee:Number(d.fee),estimatedDays:d.estimated_days}));
     },
-
     async getPaymentMethods() {
-        try {
-            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!db) {
-                console.warn('[API] Supabase Client not initialized, falling back to mock payment methods');
-                const res = await fetch('/data/payment-methods.json');
-                return await res.json();
-            }
-            
-            const { data, error } = await db.from('payment_method_config')
-                .select('*')
-                .eq('available', true)
-                .order('id', { ascending: true });
-                
-            if (error) {
-                if (error.code === '42P01') {
-                    const res = await fetch('/data/payment-methods.json');
-                    return await res.json();
-                }
-                throw error;
-            }
-            
-            return (data || []).map(p => ({
-                id: p.id,
-                name: p.name,
-                shortName: p.short_name,
-                description: p.description,
-                icon: p.icon,
-                fee: Number(p.fee),
-                available: p.available,
-                requiresInfo: p.requires_info,
-                redirectUrl: p.redirect_url,
-                bankInfo: p.bank_info
-            }));
-        } catch (err) {
-            console.error('[API] getPaymentMethods failed:', err);
-            const res = await fetch('/data/payment-methods.json');
-            return await res.json().catch(() => []);
-        }
+        const db=window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if(!db)throw new Error('Chưa kết nối cấu hình thanh toán.');
+        const {data,error}=await db.rpc('customer_shop_options');if(error)throw error;
+        return (data.payment_methods||[]).map(m=>({...m,configId:m.id,shortName:m.short_name,bankInfo:m.bank_info}));
     },
 
-    /* ==========================================================================
-       GIAI ĐOẠN 2: CƠ CHẾ GIỮ CHỖ 15 PHÚT (SLOT HOLD)
-       ========================================================================== */
     async releaseExpiredHoldSlots() {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db) return;

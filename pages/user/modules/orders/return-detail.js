@@ -1,4 +1,7 @@
 import { API } from '/scripts/api/api.js';
+import {watchCustomerTables} from '/scripts/shared/customer-realtime.mjs';
+const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let returnLoadVersion=0;
 
 async function loadReturnRequestFromSupabase(orderId) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -13,22 +16,9 @@ async function loadReturnRequestFromSupabase(orderId) {
             resolvedOrderId = lookup.data.id;
         }
         const { data, error } = await db.from('return_request')
-            .select('*, return_request_detail(*)')
+            .select('*, return_request_detail(*, sales_order_detail(product_name_snapshot,sku_snapshot,unit_price))')
             .eq('sales_order_id', resolvedOrderId)
             .order('created_at', { ascending: false }).limit(1).maybeSingle();
-        if (data?.return_request_detail?.length) {
-            for (const detail of data.return_request_detail) {
-                if (detail.product_variant_id) {
-                    const result = await db.from('product_variant').select('*, product(*)').eq('id', detail.product_variant_id).maybeSingle();
-                    if (result.error) throw result.error;
-                    detail.product = result.data?.product;
-                } else if (detail.product_id) {
-                    const result = await db.from('product').select('*').eq('id', detail.product_id).maybeSingle();
-                    if (result.error) throw result.error;
-                    detail.product = result.data;
-                }
-            }
-        }
 
         if (error) {
             console.warn('[ReturnDetail] Supabase lookup error:', error.message || error);
@@ -47,7 +37,7 @@ function normalizeReturnRequestRow(row) {
 
     const products = Array.isArray(row.return_request_detail)
         ? row.return_request_detail.map((item) => {
-            const product = item.product || {};
+            const product = item.sales_order_detail || {};
             let imageUrls = product.image_urls;
             if (typeof imageUrls === 'string') {
                 try {
@@ -61,12 +51,12 @@ function normalizeReturnRequestRow(row) {
                 : '/assets/images/shop/products/placeholder.webp';
 
             return {
-                id: item.product_id || product.id || '',
-                name: product.product_name || item.product_name || 'Sản phẩm',
+                id: item.sales_order_detail_id,
+                name: product.product_name_snapshot || 'Sản phẩm không có tên',
                 image,
                 quantity: Number(item.quantity) || 1,
-                price: Number(item.unit_price) || 0,
-                total: (Number(item.quantity) || 1) * (Number(item.unit_price) || 0),
+                price: Number(product.unit_price) || 0,
+                total: Number(item.quantity) * (Number(product.unit_price) || 0),
             };
         })
         : [];
@@ -75,7 +65,7 @@ function normalizeReturnRequestRow(row) {
         orderId: row.sales_order_id || '',
         rmaId: row.id || '',
         createdAt: row.created_at || new Date().toISOString(),
-        status: ({PENDING:'reviewing',RESOLVED:'completed',APPROVED:'approved',REJECTED:'rejected',cho_xu_ly:'reviewing',dang_xu_ly:'reviewing',da_duyet:'approved',da_hoan_tat:'completed',da_tu_choi:'rejected',da_huy:'cancelled'})[row.request_status] || String(row.request_status || 'placed').toLowerCase(),
+        status: ({pending:'reviewing',received:'received',approved:'approved',rejected:'rejected',cancelled:'cancelled'})[row.request_status] || String(row.request_status || 'placed').toLowerCase(),
         reason: row.reason || 'change_mind',
         type: ['hoan_tien', 'refund'].includes(String(row.return_type).toLowerCase()) ? 'refund' : 'exchange',
         description: row.description || '',
@@ -86,7 +76,11 @@ function normalizeReturnRequestRow(row) {
 }
 
 async function initReturnDetail() {
+    const version=++returnLoadVersion;
+    const root=document.querySelector('.return-detail-module-container');
+    if(!root)return;
     await API.initData();
+    if(version!==returnLoadVersion||!root.isConnected)return;
 
     const urlParams = new URLSearchParams(window.location.search);
     let orderId = urlParams.get('orderId') || urlParams.get('id');
@@ -109,21 +103,14 @@ async function initReturnDetail() {
         }
     }
 
+    if(version!==returnLoadVersion||!root.isConnected)return;
     if (!rmaData) {
         showReturnLoadError('Không tìm thấy yêu cầu đổi trả cho đơn hàng này.');
         return;
     }
 
-    if (!Array.isArray(rmaData.products) || rmaData.products.length === 0 || rmaData.products.every((p) => !p || !p.name)) {
-        rmaData.products = [{
-            id: 'PROD-UNKNOWN',
-            name: 'Sản phẩm',
-            image: '/assets/images/shop/products/placeholder.webp',
-            quantity: 1,
-            price: 0,
-            total: 0
-        }];
-    }
+    if(version!==returnLoadVersion||!root.isConnected)return;
+
 
     document.getElementById('rma-id-title').textContent = `Yêu cầu đổi trả #${rmaData.rmaId}`;
 
@@ -137,9 +124,8 @@ async function initReturnDetail() {
     const prodContainer = document.getElementById('rma-products-list');
     prodContainer.innerHTML = (rmaData.products || []).map((product) => `
         <div class="rma-product-item border-0 p-0">
-            <img src="${product.image}" alt="${product.name}" class="rma-product-thumb">
             <div class="rma-product-info">
-                <h5 class="rma-product-name">${product.name}</h5>
+                <h5 class="rma-product-name">${escapeHtml(product.name)}</h5>
                 <p class="rma-product-meta">Số lượng: ${product.quantity} • Đơn giá: ${new Intl.NumberFormat('vi-VN').format(product.price)}đ</p>
             </div>
         </div>
@@ -167,9 +153,7 @@ async function initReturnDetail() {
     const refundAccountEl = document.getElementById('rma-refund-account-display');
     if (refundWrapper && refundAccountEl && rmaData.type === 'refund') {
         refundWrapper.classList.remove('d-none');
-        refundAccountEl.textContent = rmaData.refundAccount
-            ? rmaData.refundAccount
-            : 'Nhân viên CSKH sẽ liên hệ trong vòng 24 giờ.';
+        refundAccountEl.textContent = 'Yêu cầu hoàn tiền cần nhân viên xem xét và xác nhận giao dịch riêng.';
     }
 
     const shippingBox = document.getElementById('rma-shipping-box');
@@ -187,9 +171,10 @@ async function initReturnDetail() {
         { key: 'placed',          title: 'Gửi yêu cầu',        desc: 'Đã tiếp nhận yêu cầu đổi trả' },
         { key: 'reviewing',       title: 'Đang kiểm duyệt',    desc: 'Đội ngũ hỗ trợ đang xem xét thông tin' },
         { key: 'approved',        title: 'Đã chấp nhận',        desc: 'Yêu cầu được duyệt. Vui lòng gửi hàng về shop' },
-        { key: 'shipping_return', title: 'Đang gửi hàng trả',  desc: 'Đang chờ kho nhận sản phẩm' },
-        { key: 'completed',       title: 'Hoàn tất',            desc: 'Giao dịch đổi trả đã được giải quyết' }
+        { key: 'received', title: 'Đã nhận hàng trả', desc: 'Nhân viên đã xác nhận nhận hàng; trạng thái này không xác nhận đã hoàn tiền.' }
     ];
+    if(['rejected','cancelled'].includes(rmaData.status))timelineSteps.splice(1,timelineSteps.length-1,
+        {key:rmaData.status,title:getStatusLabel(rmaData.status),desc:'Yêu cầu không được tiếp tục xử lý.'});
 
     const statusOrder = timelineSteps.map(s => s.key);
     let activeIdx = statusOrder.indexOf(rmaData.status);
@@ -221,6 +206,8 @@ function showReturnLoadError(message) {
 }
 
 let isInitRunning = false;
+let stopRealtime;
+export function dispose(){++returnLoadVersion;stopRealtime?.();stopRealtime=null;isInitRunning=false;}
 
 export async function init() {
     if (isInitRunning) return;
@@ -228,9 +215,14 @@ export async function init() {
     const loadingContainer = document.querySelector('.return-detail-module-container');
     try {
         await initReturnDetail();
+        if(!loadingContainer?.isConnected)return;
+        dispose();
+        const user=JSON.parse(localStorage.getItem('pawpal_current_user')||'null');
+        const client=window.getSupabaseClient?.()||window.SupabaseClient;
+        stopRealtime=watchCustomerTables(client,user?.id,['return_request','return_request_detail'],()=>initReturnDetail().catch(()=>{if(loadingContainer.isConnected)showReturnLoadError('Không thể cập nhật yêu cầu đổi trả. Vui lòng tải lại trang.');}));
     } catch (error) {
         console.error('[ReturnDetail] Không thể tải yêu cầu:', error);
-        showReturnLoadError('Không thể tải yêu cầu đổi trả. Vui lòng tải lại trang.');
+        if(loadingContainer?.isConnected)showReturnLoadError('Không thể tải yêu cầu đổi trả. Vui lòng tải lại trang.');
     } finally {
         requestAnimationFrame(() => requestAnimationFrame(() => {
             loadingContainer?.classList.remove('return-detail-loading');
@@ -244,32 +236,6 @@ export async function init() {
 export const initReturnDetailExport = init;
 window.initReturnDetail = init;
 
-function deductPointsForRefund(rmaData) {
-    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    if (!currentUser) return;
-
-    const returnTotalValue = (rmaData.products || []).reduce((sum, p) =>
-        sum + (p.total || ((p.price || 0) * (p.quantity || 1))), 0);
-    let pointsToDeduct = Math.floor(returnTotalValue / 10000);
-
-    const reviewed = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
-    const reviewsForOrder = reviewed.filter(r => r.orderId === rmaData.orderId);
-    reviewsForOrder.forEach(r => {
-        pointsToDeduct += r.hasMedia ? 5 : 1;
-    });
-
-    currentUser.points = Math.max(0, (currentUser.points || 0) - pointsToDeduct);
-    localStorage.setItem('pawpal_current_user', JSON.stringify(currentUser));
-
-    const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
-    const uIdx = users.findIndex(u => u.phone === currentUser.phone);
-    if (uIdx !== -1) {
-        users[uIdx].points = currentUser.points;
-        localStorage.setItem('pawpal_users', JSON.stringify(users));
-    }
-    console.log(`[RMA] Đã trừ ${pointsToDeduct} điểm. Số dư mới: ${currentUser.points}`);
-}
-
 function getStatusLabel(status) {
     const statusMap = {
         placed:          'Đã gửi yêu cầu',
@@ -277,6 +243,8 @@ function getStatusLabel(status) {
         approved:        'Đã chấp nhận',
         shipping_return: 'Đang gửi hàng trả',
         completed:       'Hoàn tất',
+        received:        'Đã nhận hàng trả',
+        cancelled:       'Đã hủy',
         rejected:        'Từ chối'
     };
     return statusMap[status] || status;

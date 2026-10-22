@@ -1,6 +1,8 @@
 import { API } from '/scripts/api/api.js';
 
 let currentRmaOrder = null;
+let returnRequestId = null;
+const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 async function openRMADrawer(orderId) {
     try {
@@ -32,24 +34,38 @@ async function openRMADrawer(orderId) {
         currentRmaOrder = orders.find(order => [order.id, order._supabaseId]
             .some(id => id != null && String(id) === String(orderId)));
         if (!currentRmaOrder) throw new Error('Không tìm thấy đơn hàng để đổi trả.');
+        if (!['completed','delivered','returned'].includes(currentRmaOrder.status)) throw new Error('Chỉ có thể yêu cầu đổi trả sau khi nhận hàng.');
+        const db=window.getSupabaseClient?.()||window.SupabaseClient;
+        if(!db)throw new Error('Không thể kết nối dữ liệu.');
+        const prior=await db.from('return_request').select('request_status,return_request_detail(sales_order_detail_id,quantity)').eq('sales_order_id',currentRmaOrder._supabaseId);
+        if(prior.error)throw prior.error;
+        const requested=new Map();
+        for(const request of prior.data||[])if(!['cancelled','rejected'].includes(request.request_status))for(const line of request.return_request_detail||[])requested.set(line.sales_order_detail_id,(requested.get(line.sales_order_detail_id)||0)+Number(line.quantity));
+        currentRmaOrder.products=currentRmaOrder.products.map(p=>({...p,returnableQuantity:Number(p.quantity)-(requested.get(p.lineId)||0)})).filter(p=>p.returnableQuantity>0);
+        if(!currentRmaOrder.products.length)throw new Error('Các sản phẩm đã có yêu cầu đổi trả đủ số lượng.');
+        returnRequestId=crypto.randomUUID();
     } catch (error) {
         console.error('[ReturnHandler] Unable to load order:', error);
         alert(error.message || 'Không thể tải đơn hàng. Vui lòng thử lại.');
         return;
     }
 
-    const container = document.getElementById('rma-drawer-container') || createRmaDrawerContainer();
+    let container = document.getElementById('rma-drawer-container') || createRmaDrawerContainer();
+    if (!(container instanceof HTMLDialogElement)) {
+        const dialog=document.createElement('dialog');dialog.id=container.id;
+        container.replaceWith(dialog);container=dialog;
+    }
 
     container.innerHTML = `
         <div class="rma-drawer-overlay" id="rma-overlay"></div>
         <div class="rma-drawer" id="rma-drawer" role="dialog" aria-modal="true" aria-labelledby="rma-drawer-title" tabindex="-1">
             <div class="rma-drawer-header">
-                <h3 id="rma-drawer-title">Yêu cầu Đổi trả</h3>
-                <button class="rma-drawer-close" id="rma-close-btn">Đóng [×]</button>
+                <h3 id="rma-drawer-title">Yêu cầu đổi trả</h3>
+                <button type="button" class="rma-drawer-close" id="rma-close-btn">Đóng</button>
             </div>
             <div class="rma-drawer-body">
                 <div class="rma-form-group">
-                    <span class="rma-form-label">Đơn hàng: ${currentRmaOrder.id}</span>
+                    <span class="rma-form-label">Đơn hàng ${escapeHtml(currentRmaOrder.id)}</span>
                     <p style="font-size: 0.85rem; color: var(--color-text-light); margin: 0;">Chọn những sản phẩm bạn muốn thực hiện đổi hoặc trả:</p>
                 </div>
 
@@ -57,11 +73,12 @@ async function openRMADrawer(orderId) {
                 <div class="rma-form-group" style="gap: 8px;">
                     ${currentRmaOrder.products.map(product => `
                         <div class="rma-product-item">
-                            <input type="checkbox" class="rma-product-checkbox" data-product-id="${product.id}" checked>
-                            <img src="${product.image}" alt="${product.name}" class="rma-product-thumb">
+                            <input type="checkbox" class="rma-product-checkbox" data-line-id="${product.lineId}" checked>
                             <div class="rma-product-info">
-                                <h5 class="rma-product-name">${product.name}</h5>
+                                <h5 class="rma-product-name">${escapeHtml(product.name)}</h5>
                                 <p class="rma-product-meta">Số lượng: ${product.quantity} • Đơn giá: ${new Intl.NumberFormat('vi-VN').format(product.price)}đ</p>
+                                <label>Số lượng đổi trả <input class="rma-quantity form-control" type="number" min="1" max="${product.returnableQuantity}" value="1" data-line-id="${product.lineId}"></label>
+                                <p>Còn có thể yêu cầu ${product.returnableQuantity} sản phẩm</p>
                             </div>
                         </div>
                     `).join('')}
@@ -85,7 +102,7 @@ async function openRMADrawer(orderId) {
                 </div>
 
                 <!-- Thông tin hoàn tiền COD (hiện khi chọn hoàn tiền) -->
-                <div class="rma-form-group" id="rma-refund-account-group" style="display:none;">
+                <div class="rma-form-group" id="rma-refund-account-group" style="display:none;" hidden>
                     <span class="rma-form-label">Số tài khoản ngân hàng / Ví MoMo <span style="font-size:0.78rem;color:var(--color-text-light)">(tuỳ chọn)</span></span>
                     <input type="text" id="rma-refund-account" placeholder="VD: 0901234567 (MoMo) hoặc số TK ngân hàng"
                         style="border:1px solid var(--color-border);border-radius:var(--card-border-radius);padding:10px;width:100%;font-family:var(--font-primary);">
@@ -110,20 +127,20 @@ async function openRMADrawer(orderId) {
                 </div>
 
                 <!-- File Upload Minh chứng -->
-                <div class="rma-form-group">
-                    <span class="rma-form-label">Ảnh hoặc Video minh chứng</span>
+                <div class="rma-form-group" hidden>
+                    <span class="rma-form-label">Ảnh hoặc video minh chứng</span>
                     <div class="rma-upload-zone" id="rma-upload-trigger">
                         <span class="rma-upload-text">Nhấp vào đây để tải lên hình ảnh hoặc video thực tế</span>
                         <span class="rma-upload-text" style="display: block; font-size: 0.75rem; opacity: 0.7; margin-top: 4px;">Kích thước tệp tối đa: 5MB</span>
                         <input type="file" id="rma-file-input" class="rma-upload-input" accept="image/*,video/*">
                     </div>
                     <div class="rma-upload-preview" id="rma-preview-container"></div>
-                    <span id="rma-upload-warning" class="rma-alert-error" style="display: none; margin-top: 8px;"></span>
                 </div>
+                <span id="rma-upload-warning" role="alert" class="rma-alert-error" style="display:none;color:#DC2626"></span>
 
                 <!-- Submit Area -->
                 <div class="rma-form-group" style="margin-top: 10px;">
-                    <button class="rma-btn-submit" id="rma-submit-btn">Gửi yêu cầu đổi trả</button>
+                    <button type="button" class="rma-btn-submit" id="rma-submit-btn">Gửi yêu cầu đổi trả</button>
                     <p style="font-size: 0.75rem; text-align: center; color: var(--color-text-light); margin: 6px 0 0 0;">Yêu cầu cần được kiểm duyệt theo chính sách đổi trả trước khi thực hiện</p>
                 </div>
             </div>
@@ -139,6 +156,7 @@ async function openRMADrawer(orderId) {
     }, 50);
 
     setupDrawerListeners();
+    if(!container.open)container.showModal();
 }
 
 window.openRMADrawer = openRMADrawer;
@@ -153,9 +171,11 @@ function setupDrawerListeners() {
     const submitBtn = document.getElementById('rma-submit-btn');
 
     const closeDrawer = () => {
+        if (submitBtn.disabled) return;
         document.removeEventListener('keydown', handleEscape);
         overlay.classList.remove('is-open');
         drawer.classList.remove('is-open');
+        document.getElementById('rma-drawer-container')?.close();
         if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
         setTimeout(() => {
             document.getElementById('rma-drawer-container').innerHTML = '';
@@ -166,6 +186,7 @@ function setupDrawerListeners() {
         if (event.key === 'Escape') closeDrawer();
     };
     document.addEventListener('keydown', handleEscape);
+    document.getElementById('rma-drawer-container').oncancel=event=>{event.preventDefault();closeDrawer();};
 
     overlay.addEventListener('click', closeDrawer);
     closeBtn.addEventListener('click', closeDrawer);
@@ -230,6 +251,7 @@ function setupDrawerListeners() {
     });
 
     submitBtn.addEventListener('click', async () => {
+        if (submitBtn.disabled) return;
         const checkedItems = document.querySelectorAll('.rma-product-checkbox:checked');
         const reason = document.getElementById('rma-reason').value;
         const file = fileInput.files[0];
@@ -240,11 +262,6 @@ function setupDrawerListeners() {
             return;
         }
 
-        if ((reason === 'broken' || reason === 'wrong_item') && !file) {
-            warningEl.textContent = 'Lý do này bắt buộc phải tải lên hình ảnh hoặc video thực tế của sản phẩm làm minh chứng.';
-            warningEl.style.display = 'block';
-            return;
-        }
 
         const returnType = document.querySelector('input[name="return_type"]:checked').value;
         const returnData = {
@@ -259,8 +276,9 @@ function setupDrawerListeners() {
                 ? (document.getElementById('rma-refund-account')?.value?.trim() || '')
                 : '',
             products: Array.from(checkedItems).map(cb => {
-                const prodId = cb.getAttribute('data-product-id');
-                return currentRmaOrder.products.find(p => String(p.id) === String(prodId));
+                const lineId = cb.getAttribute('data-line-id');
+                const product=currentRmaOrder.products.find(p => String(p.lineId) === String(lineId));
+                return {...product,returnQuantity:Number(document.querySelector(`.rma-quantity[data-line-id="${lineId}"]`).value)};
             })
         };
 
@@ -274,30 +292,26 @@ function setupDrawerListeners() {
 
         try {
             if (!db || !customerId) throw new Error('Vui lòng đăng nhập và thử lại.');
-            const orderLookup = await db.from('sales_order').select('id').eq('order_code', currentRmaOrder.id).eq('customer_id', customerId).maybeSingle();
-            if (orderLookup.error) throw orderLookup.error;
-            const orderUuid = currentRmaOrder._supabaseId || orderLookup.data?.id;
+            const orderUuid = currentRmaOrder._supabaseId;
             if (!orderUuid) throw new Error('Không tìm thấy đơn hàng.');
-            const lineResult = await db.from('sales_order_detail').select('*').eq('order_id', orderUuid);
-            if (lineResult.error) throw lineResult.error;
             const details = returnData.products.map(product => {
-                const line = lineResult.data.find(item => item.product_variant_id === product.variantId || item.product_variant_id === product.id || item.product_id === product.id);
-                if (!line) throw new Error('Không tìm thấy sản phẩm trong đơn hàng.');
-                return { product_variant_id: line.product_variant_id, quantity: product.quantity, unit_price: product.price };
+                if (!product.lineId||!Number.isInteger(product.returnQuantity)||product.returnQuantity<1||product.returnQuantity>product.returnableQuantity) throw new Error('Số lượng đổi trả không hợp lệ.');
+                return { line_id: product.lineId, quantity: product.returnQuantity };
             });
-            const { data: request, error } = await db.from('return_request').insert({
-                sales_order_id: orderUuid, customer_id: customerId, reason,
-                return_type: returnType.toLowerCase() === 'exchange' ? 'doi_san_pham' : 'tra_san_pham',
-                request_status: 'cho_xu_ly', description: returnData.description
-            }).select('id').single();
+            const { error } = await db.rpc('request_own_sales_return',{
+                p_request:returnRequestId,p_order:orderUuid,p_expected:currentRmaOrder.updatedAt,
+                p_details:{reason,type:returnType,note:returnData.description,lines:details}
+            });
             if (error) throw error;
-            const detailResult = await db.from('return_request_detail').insert(details.map(detail => ({ ...detail, return_request_id: request.id })));
-            if (detailResult.error) throw detailResult.error;
         } catch (error) {
             console.error('[ReturnHandler] Không thể gửi yêu cầu:', error);
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
-            warningEl.textContent = 'Không thể gửi yêu cầu đổi trả. Vui lòng thử lại sau.';
+            warningEl.textContent = error.code==='PT409'?'Đơn hàng đã thay đổi. Vui lòng đóng và mở lại yêu cầu.':
+                error.code==='23514'?'Số lượng yêu cầu vượt số lượng còn có thể đổi trả. Vui lòng đóng và mở lại yêu cầu.':
+                error.code==='42501'?'Bạn không có quyền gửi yêu cầu cho đơn hàng này.':
+                error.code==='22023'?'Thông tin đổi trả không hợp lệ. Vui lòng kiểm tra sản phẩm và số lượng.':
+                error.message||'Không thể gửi yêu cầu đổi trả. Vui lòng thử lại sau.';
             warningEl.style.display = 'block';
             return;
         }
@@ -319,14 +333,15 @@ function setupDrawerListeners() {
             }, 200);
         } else {
             setTimeout(() => {
-                window.location.hash = `#return-detail?orderId=${encodeURIComponent(currentRmaOrder.id)}`;
+                window.location.hash = '#orders';
+                window.dispatchEvent(new CustomEvent('sales_orders_updated'));
             }, 100);
         }
     });
 }
 
 function createRmaDrawerContainer() {
-        const container = document.createElement('div');
+        const container = document.createElement('dialog');
         container.id = 'rma-drawer-container';
         document.body.appendChild(container);
         return container;
