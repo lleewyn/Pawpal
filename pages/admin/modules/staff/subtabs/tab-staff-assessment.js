@@ -157,7 +157,8 @@
 
     function updateAssessmentKPIs() {
         if (!PawpalStaff.state.isLoaded) return;
-        const assessments = PawpalStaff.state?.assessments || [];
+        const month=new Date(Date.now()+7*3600000).toISOString().slice(0,7);
+        const assessments = (PawpalStaff.state?.assessments || []).filter(item=>item.raw?.assessment_date?.startsWith(month));
         const staffList = PawpalStaff.state?.staff || [];
         const totalStaff = staffList.length;
         const total = assessments.length;

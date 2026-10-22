@@ -1,5 +1,14 @@
 # Nhân sự V1 — nghiệm thu triển khai
 
+## Rà soát tiếp hồ sơ và danh sách ngày 22/10/2026
+
+- Hồ sơ hiển thị ca còn hiệu lực gần nhất từ `staff_schedule`, tổng giờ được phân trong tháng có cắt phần giao với biên tháng, và số ca thực tế. Không gọi lịch phân công là giờ chấm công, không tự đặt khung giờ “trực đêm”.
+- Hiển thị lịch sử `staff_assessment` thật với người đánh giá, kết quả và ghi chú, tối đa 10 bản ghi/trang; cập nhật khi dữ liệu Nhân sự được tải lại. Hai nút phân ca/đánh giá từ hồ sơ chọn sẵn đúng nhân viên.
+- Danh sách bỏ bộ lọc ca sáng/chiều cố định, thay bằng có/chưa có lịch làm việc. Cột ca và file xuất hiển thị ngày/giờ thật; file xuất thoát dấu nháy và vô hiệu công thức trong dữ liệu văn bản.
+- Các chỉ số đánh giá chỉ đếm bản ghi trong tháng hiện tại; phân biệt lượt đánh giá và nhân viên chưa đánh giá trong tháng.
+- Bỏ nhãn thưởng cố định “+20k/lượt” và thưởng an toàn “100%” chưa có chính sách được chốt. Các mục thu nhập/chấm công chưa có dữ liệu vẫn ghi rõ chưa có dữ liệu, không tự tính tiền hoặc dựng tỷ lệ.
+- Đã kiểm tra `staff_profile_history_v1.cjs`, `staff_profile_browser_v1.cjs`, `staff_directory_v1.cjs` và `staff_assessment_v1.cjs` trên CSDL phục hồi; đã xem ảnh hồ sơ thực tế ngoài repository. Không có migration hoặc thay đổi dữ liệu Cloud trong đợt này.
+
 ## Bổ sung lịch dạng card ngày 22/10/2026
 
 Người dùng chỉ ra lịch vẫn là bảng và chưa đúng giao diện mong muốn. Không coi việc hoàn tất các luồng dữ liệu là đã được người dùng duyệt giao diện toàn phân hệ.

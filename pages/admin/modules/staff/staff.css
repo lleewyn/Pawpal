@@ -2031,6 +2031,13 @@
 .staff-calendar-week .staff-calendar-time { font-size:13px; }
 .staff-calendar-empty { margin:0; padding:16px 0; color:#4F7A65; font-size:12px; }
 .staff-calendar-pager { display:flex; justify-content:center; gap:8px; margin-top:-6px; padding:2px 0; background:transparent; border:none; }
+.staff-profile-assessment { padding:10px 0; background:transparent; border:none; }
+.staff-profile-history-title { color:#236B48; font-size:13px; font-weight:600; }
+.staff-profile-history-score { margin-top:4px; color:#203A2C; font-size:13px; }
+.staff-profile-history-meta { margin:4px 0 0; color:#4F7A65; font-size:12px; overflow-wrap:anywhere; }
+#subtab-tab-staff-profile .metric-box,#subtab-tab-staff-profile .csat-metric-card,#subtab-tab-staff-profile .commission-breakdown-card { background:transparent; border:none; box-shadow:none; }
+#subtab-tab-staff-profile .staff-profile-quick-bar { border-bottom:none; }
+#subtab-tab-staff-profile .commission-total-divider { display:none; }
 #scheduleDayViewWrapper[hidden],#scheduleWeekViewWrapper[hidden],#staffSchedulePager[hidden] { display:none !important; }
 @media(max-width:1200px) { .staff-calendar-week { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 @media(max-width:600px) { .staff-calendar-week,.staff-calendar-people { grid-template-columns:minmax(0,1fr); } }

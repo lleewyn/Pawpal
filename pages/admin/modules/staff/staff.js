@@ -254,6 +254,9 @@
     }
     const client=()=>window.getSupabaseClient();
     PawpalStaff.readRows=readRows;
+    PawpalStaff.getStaffWorkingSchedules=id=>(PawpalStaff.state.schedules||[]).filter(s=>s.staff_id===id&&s.schedule_status==='active'&&s.availability_status==='available').sort((a,b)=>Date.parse(a.start_at)-Date.parse(b.start_at));
+    PawpalStaff.getNearestStaffSchedule=id=>{const rows=PawpalStaff.getStaffWorkingSchedules(id);return rows.find(s=>Date.parse(s.end_at)>Date.now())||rows[rows.length-1]||null;};
+    PawpalStaff.formatStaffSchedule=schedule=>schedule?new Date(schedule.start_at).toLocaleString('vi-VN',{timeZone:'Asia/Bangkok',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'})+' – '+new Date(schedule.end_at).toLocaleString('vi-VN',{timeZone:'Asia/Bangkok',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'Chưa có lịch';
     PawpalStaff.enhanceEntitySelect=function(select){
         if(select._entityInput)return;
         const wrapper=document.createElement('div');wrapper.style.cssText='position:relative;width:100%';select.before(wrapper);

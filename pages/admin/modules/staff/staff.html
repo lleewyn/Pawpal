@@ -49,7 +49,7 @@
                         <button type="button" class="btn-clear-search" id="btnClearStaffSearch" title="Xóa nội dung tìm kiếm" aria-label="Xóa nội dung tìm kiếm" style="display: none;">✕</button>
                     </div>
                     <div class="filter-actions-right">
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnExportStaff">Xuất Excel</button>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnExportStaff">Xuất file</button>
                         <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddStaffModal">Thêm nhân viên</button>
                     </div>
                 </div>
@@ -60,7 +60,6 @@
                         <select class="admin-select" id="staffFilterPosition">
                             <option value="ALL">Tất cả</option>
                             <option value="Admin">Quản trị viên</option>
-                            <option value="MEDICAL_CAREGIVER">Bác sĩ/Bảo mẫu</option>
                             <option value="Receptionist">Lễ tân</option>
                             <option value="Groomer">Groomer</option>
                             <option value="Caregiver">Bảo mẫu Pet Hotel</option>
@@ -81,14 +80,11 @@
                     </div>
 
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Ca làm việc:</label>
+                        <label class="filter-label">Lịch làm việc</label>
                         <select class="admin-select" id="staffFilterShift">
                             <option value="ALL">Tất cả</option>
-                            <option value="MORNING">Ca sáng</option>
-                            <option value="AFTERNOON">Ca chiều</option>
-                            <option value="EVENING">Ca tối</option>
-                            <option value="NIGHT">Ca khuya</option>
-                            <option value="FULL_TIME">Toàn thời gian</option>
+                            <option value="ASSIGNED">Có lịch làm việc</option>
+                            <option value="UNASSIGNED">Chưa có lịch</option>
                         </select>
                     </div>
 
@@ -106,7 +102,7 @@
                             <th style="width: 180px; max-width: 220px;">Họ tên</th>
                             <th style="width: 140px;">Chức vụ</th>
                             <th style="width: 120px;">Số điện thoại</th>
-                            <th style="width: 120px;">Ca hiện tại</th>
+                            <th style="width: 180px;">Ca làm việc gần nhất</th>
                             <th style="width: 150px;">Tay nghề</th>
                             <th style="width: 130px;">Trạng thái</th>
                             <th style="text-align: center; width: 60px;">Thao tác</th>
@@ -160,79 +156,79 @@
             <div class="staff-profile-sections-grid">
                 <div class="staff-profile-left-col">
                     <div class="drawer-info-block">
-                        <div class="drawer-section-title">Thông tin cá nhân và Liên hệ</div>
+                        <div class="drawer-section-title">Thông tin cá nhân và liên hệ</div>
                         <div class="info-grid-2col">
                             <div class="info-pair">
-                                <span class="info-label">Họ và tên:</span>
+                                <span class="info-label">Họ và tên</span>
                                 <span class="info-value" id="viewStaffFullName">—</span>
                             </div>
                             <div class="info-pair">
-                                <span class="info-label">Mã nhân viên:</span>
+                                <span class="info-label">Mã nhân viên</span>
                                 <span class="info-value" id="viewStaffId">—</span>
                             </div>
                             <div class="info-pair">
-                                <span class="info-label">Số điện thoại:</span>
+                                <span class="info-label">Số điện thoại</span>
                                 <span class="info-value" id="viewStaffPhone">—</span>
                             </div>
                             <div class="info-pair">
-                                <span class="info-label">Email công việc:</span>
+                                <span class="info-label">Email công việc</span>
                                 <span class="info-value" id="viewStaffEmail">—</span>
                             </div>
                             <div class="info-pair">
-                                <span class="info-label">Ngày sinh:</span>
+                                <span class="info-label">Ngày sinh</span>
                                 <span class="info-value" id="viewStaffDob">—</span>
                             </div>
                             <div class="info-pair">
-                                <span class="info-label">Ngày bắt đầu làm:</span>
+                                <span class="info-label">Ngày bắt đầu làm</span>
                                 <span class="info-value" id="viewStaffJoinDate">—</span>
                             </div>
                         </div>
                         <div class="info-pair" style="margin-top: 14px;">
-                            <span class="info-label">Địa chỉ liên hệ:</span>
+                            <span class="info-label">Địa chỉ liên hệ</span>
                             <span class="info-value" id="viewStaffAddress">—</span>
                         </div>
                     </div>
 
                     <div class="drawer-info-block" style="margin-top: 24px;">
-                        <div class="drawer-section-title">Thông tin công việc và Ca trực</div>
+                        <div class="drawer-section-title">Thông tin công việc và ca trực</div>
                         <div class="info-grid-2col">
                             <div class="info-pair">
-                                <span class="info-label">Chức danh / Chức vụ:</span>
+                                <span class="info-label">Chức danh / Chức vụ</span>
                                 <span class="info-value" id="viewStaffJobTitle">—</span>
                             </div>
                             <div class="info-pair">
-                                <span class="info-label">Vai trò hệ thống:</span>
+                                <span class="info-label">Vai trò hệ thống</span>
                                 <span class="info-value" id="viewStaffRole">—</span>
                             </div>
                             <div class="info-pair">
-                                <span class="info-label">Ca làm việc gần nhất:</span>
+                                <span class="info-label">Ca làm việc gần nhất</span>
                                 <span class="info-value" id="viewStaffCurrentShift">—</span>
                             </div>
                             <div class="info-pair">
-                                <span class="info-label">Trạng thái công tác:</span>
+                                <span class="info-label">Trạng thái công tác</span>
                                 <span class="info-value text-success" id="viewStaffWorkStatus">—</span>
                             </div>
                             <div class="info-pair">
-                                <span class="info-label">Tài khoản Pawpal-er:</span>
+                                <span class="info-label">Tài khoản Pawpal-er</span>
                                 <span class="admin-badge" id="viewStaffAccountStatus">—</span>
                             </div>
                             <div class="info-pair">
-                                <span class="info-label">Đăng nhập gần nhất:</span>
+                                <span class="info-label">Đăng nhập gần nhất</span>
                                 <span class="info-value" id="viewStaffLastLogin">—</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="drawer-info-block" style="margin-top: 24px;">
-                        <div class="drawer-section-title">Công ca và Năng suất tháng hiện tại</div>
+                        <div class="drawer-section-title">Lịch làm việc tháng hiện tại</div>
                         <div class="timesheet-metrics-grid">
                             <div class="metric-box">
                                 <span class="metric-val" id="viewStaffMonthlyHours">—</span>
-                                <span class="metric-label">Tổng giờ công</span>
+                                <span class="metric-label">Tổng giờ được phân</span>
                             </div>
                             <div class="metric-box">
                                 <span class="metric-val" id="viewStaffNightShifts">—</span>
-                                <span class="metric-label">Trực đêm 24/7</span>
+                                <span class="metric-label">Ca có hiệu lực</span>
                             </div>
                             <div class="metric-box">
                                 <span class="metric-val" id="viewStaffCompletedServices">—</span>
@@ -246,27 +242,27 @@
                     </div>
 
                     <div class="drawer-info-block" style="margin-top: 24px;">
-                        <div class="drawer-section-title">Bảng tính hoa hồng và Thu nhập ước tính tháng này</div>
+                        <div class="drawer-section-title">Bảng tính hoa hồng và thu nhập ước tính tháng này</div>
                         <div class="commission-breakdown-card">
                             <div class="commission-row">
-                                <span class="commission-label">Lương cơ bản (Theo định biên ca):</span>
+                                <span class="commission-label">Lương cơ bản</span>
                                 <span class="commission-val" id="viewStaffBaseSalary">—</span>
                             </div>
                             <div class="commission-row">
-                                <span class="commission-label">Hoa hồng dịch vụ (Doanh số ca thực hiện):</span>
+                                <span class="commission-label">Hoa hồng dịch vụ</span>
                                 <span class="commission-val text-success" id="viewStaffServiceCommission">—</span>
                             </div>
                             <div class="commission-row">
-                                <span class="commission-label">Thưởng khách chỉ định KTV ruột (+20k/lượt):</span>
+                                <span class="commission-label">Thưởng khách chỉ định</span>
                                 <span class="commission-val text-indigo" id="viewStaffRequestedBonus">—</span>
                             </div>
                             <div class="commission-row">
-                                <span class="commission-label">Thưởng an toàn 100% không khiếu nại:</span>
+                                <span class="commission-label">Thưởng an toàn</span>
                                 <span class="commission-val text-primary" id="viewStaffSafetyBonus">—</span>
                             </div>
                             <div class="commission-total-divider"></div>
                             <div class="commission-row total-row">
-                                <span class="commission-total-label">Tổng thu nhập ước tính tháng này:</span>
+                                <span class="commission-total-label">Tổng thu nhập ước tính tháng này</span>
                                 <span class="commission-total-val" id="viewStaffTotalIncome">—</span>
                             </div>
                         </div>
@@ -275,7 +271,7 @@
 
                 <div class="staff-profile-right-col">
                     <div class="drawer-info-block">
-                        <div class="drawer-section-title">Đánh giá và Phản hồi từ Khách hàng</div>
+                        <div class="drawer-section-title">Đánh giá và phản hồi từ khách hàng</div>
                         <div class="csat-summary-grid">
                             <div class="csat-metric-card">
                                 <span class="csat-metric-val" id="viewStaffCsatScore">—</span>
@@ -389,19 +385,19 @@
     <section class="subtab-content" id="subtab-tab-staff-assessment">
         <div class="staff-kpi-grid assessment-kpi-grid">
             <div class="admin-card kpi-card">
-                <span class="kpi-label">Đã đánh giá tháng này</span>
+                <span class="kpi-label">Lượt đánh giá tháng này</span>
                 <span class="kpi-val" id="statAssessed"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
-                <span class="kpi-label">Đạt yêu cầu</span>
+                <span class="kpi-label">Lượt đạt yêu cầu</span>
                 <span class="kpi-val text-success" id="statPass"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
-                <span class="kpi-label">Cần đào tạo lại</span>
+                <span class="kpi-label">Lượt cần đào tạo lại</span>
                 <span class="kpi-val text-warning" id="statRetrain"><span class="skeleton-kpi"></span></span>
             </div>
             <div class="admin-card kpi-card">
-                <span class="kpi-label">Chưa đánh giá</span>
+                <span class="kpi-label">Nhân viên chưa đánh giá tháng này</span>
                 <span class="kpi-val text-danger" id="statNotAssessed"><span class="skeleton-kpi"></span></span>
             </div>
         </div>

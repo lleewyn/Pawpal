@@ -23,6 +23,7 @@
         }
     }
 
+    let assessmentPage=1,assessmentStaffId=null;
     function renderStaffProfile(staffId) {
         if (!PawpalStaff.state.isLoaded) return;
         const staffList = PawpalStaff.state.staff || [];
@@ -31,6 +32,7 @@
         if (!root) return;
 
         if (!staff) {
+            const badge=root.querySelector('#viewStaffSafetyBadge');if(badge)badge.style.display='none';
             root.querySelectorAll('[id^="viewStaff"]').forEach(el => {
                 if (el.id === 'viewStaffName' || el.id === 'viewStaffFullName') {
                     el.textContent = staffId ? 'Không tìm thấy hồ sơ nhân sự' : 'Chưa chọn nhân sự';
@@ -48,27 +50,34 @@
         const accBadgeClass = hasAcc ? (isAccActive ? 'badge-success' : (isAccPaused ? 'badge-warning' : 'badge-danger')) : 'badge-neutral';
 
         const lastLoginFormatted = staff?.lastLoginAt ? PawpalStaff.formatDateVN(staff.lastLoginAt) : 'Chưa đăng nhập';
+        const now=Date.now(),localNow=new Date(now+7*3600000),year=localNow.getUTCFullYear(),month=localNow.getUTCMonth();
+        const monthStart=Date.UTC(year,month,1)-7*3600000,monthEnd=Date.UTC(year,month+1,1)-7*3600000;
+        const schedules=PawpalStaff.getStaffWorkingSchedules(staff.rawId);
+        const nearest=schedules.find(s=>Date.parse(s.end_at)>now)||schedules[schedules.length-1];
+        const monthSchedules=schedules.filter(s=>Date.parse(s.start_at)<monthEnd&&Date.parse(s.end_at)>monthStart);
+        const monthlyHours=monthSchedules.reduce((sum,s)=>sum+Math.max(0,Math.min(monthEnd,Date.parse(s.end_at))-Math.max(monthStart,Date.parse(s.start_at))),0)/3600000;
+        const formatTime=value=>new Date(value).toLocaleString('vi-VN',{timeZone:'Asia/Bangkok',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 
         const values = {
             viewStaffName: staff?.name || 'Chưa có nhân viên',
             viewStaffFullName: staff?.name,
             viewStaffCode: staff?.id,
             viewStaffId: staff?.id,
-            viewStaffPosition: staff?.position,
-            viewStaffJobTitle: staff?.position,
+            viewStaffPosition: staff?.position==='cham_soc_thu_cung'?'Chăm sóc thú cưng':staff?.position,
+            viewStaffJobTitle: staff?.position==='cham_soc_thu_cung'?'Chăm sóc thú cưng':staff?.position,
             viewStaffPhone: staff?.phone,
             viewStaffEmail: staff?.email,
             viewStaffDob: staff?.dob,
             viewStaffJoinDate: staff?.join_date,
             viewStaffAddress: staff?.address,
-            viewStaffRole: staff?.role,
+            viewStaffRole: staff.roles?.map(role=>role.code==='ADMIN'?'Quản trị viên':role.name||role.code).join(', ')||'Chưa phân vai trò',
             viewStaffStatusBadge: status,
             viewStaffWorkStatus: status,
-            viewStaffCurrentShift: {MORNING:'Ca sáng',AFTERNOON:'Ca chiều',EVENING:'Ca tối',NIGHT:'Ca khuya'}[staff?.shift] || 'Chưa phân ca',
+            viewStaffCurrentShift: nearest?formatTime(nearest.start_at)+' – '+formatTime(nearest.end_at):'Chưa có ca làm việc còn hiệu lực',
             viewStaffLastLogin: lastLoginFormatted,
-            viewStaffMonthlyHours: staff?.monthlyHours ? `${staff.monthlyHours} giờ` : 'Chưa có dữ liệu',
-            viewStaffNightShifts: staff?.nightShifts ? `${staff.nightShifts} ca` : '0 ca',
-            viewStaffCompletedServices: staff?.completedServices ? `${staff.completedServices} ca` : 'Chưa có ca',
+            viewStaffMonthlyHours: new Intl.NumberFormat('vi-VN',{maximumFractionDigits:2}).format(monthlyHours)+' giờ',
+            viewStaffNightShifts: monthSchedules.length+' ca',
+            viewStaffCompletedServices: staff?.completedServices!=null ? `${staff.completedServices} ca` : 'Chưa có dữ liệu',
             viewStaffPunctuality: staff?.punctuality ? `${staff.punctuality}%` : 'Chưa có dữ liệu',
             viewStaffBaseSalary: (() => {
                 const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'ADMIN').toUpperCase();
@@ -104,6 +113,22 @@
             if (el.id === 'viewStaffCustomerReviewsList' || el.id === 'viewStaffAssessmentHistory') el.textContent = 'Chưa có dữ liệu được ghi nhận.';
             else if (el.id !== 'viewStaffSafetyBadge') el.textContent = values[el.id] || '—';
         });
+        const safety=root.querySelector('#viewStaffSafetyBadge');if(safety){safety.style.display=staff.serviceLocked?'':'none';safety.textContent='Đang khóa phân công';}
+        if(assessmentStaffId!==staff.id){assessmentStaffId=staff.id;assessmentPage=1;}
+        const history=root.querySelector('#viewStaffAssessmentHistory'),assessments=(PawpalStaff.state.assessments||[]).filter(a=>a.staff_id===staff.id||a.raw?.staff_id===staff.rawId);
+        if(history){
+            history.replaceChildren();const pages=Math.max(1,Math.ceil(assessments.length/10));assessmentPage=Math.min(assessmentPage,pages);
+            const text=(tag,content,css)=>{const node=document.createElement(tag);node.textContent=content;node.className=css||'';return node;};
+            if(!assessments.length)history.append(text('p','Chưa có lịch sử đánh giá.','staff-profile-history-meta'));
+            for(const item of assessments.slice((assessmentPage-1)*10,assessmentPage*10)){
+                const row=document.createElement('article');row.className='staff-profile-assessment';row.dataset.assessmentId=item.id;
+                const title=text('div',item.date+' · '+item.type,'staff-profile-history-title');
+                const result=({PASS:'Đạt tiêu chuẩn',RETRAIN:'Cần đào tạo lại',FAIL:'Không đạt'})[item.result]||item.result;
+                row.append(title,text('div',item.score+'/100 · '+result,'staff-profile-history-score'),text('div','Người đánh giá: '+(item.evaluator||'—'),'staff-profile-history-meta'));
+                if(item.note)row.append(text('p',item.note,'staff-profile-history-meta'));history.append(row);
+            }
+            if(pages>1){const pager=document.createElement('div');pager.className='staff-calendar-pager';for(const [label,page] of [['<',assessmentPage-1],[String(assessmentPage),assessmentPage],['>',assessmentPage+1]]){const button=text('button',label,'admin-btn admin-btn-secondary');button.type='button';button.disabled=page<1||page>pages;button.onclick=()=>{assessmentPage=page;renderStaffProfile(staff.id);};pager.append(button);}history.append(pager);}
+        }
         if (staff) { PawpalStaff.state.selectedStaffId = staff.id; PawpalStaff.updateBreadcrumb?.(staff.name); }
     }
 
@@ -142,6 +167,13 @@
                 }
             });
         }
+        document.getElementById('btnProfileAssignShift')?.addEventListener('click',()=>{
+            const staff=PawpalStaff.state.staff.find(s=>s.id===PawpalStaff.state.selectedStaffId);
+            if(staff)PawpalStaff.subtabs.schedule?.openShiftModal(null,null,staff.rawId);
+        });
+        document.getElementById('btnProfileAddAssessment')?.addEventListener('click',()=>{
+            if(PawpalStaff.state.selectedStaffId)PawpalStaff.subtabs.assessment?.openAssessmentModal(PawpalStaff.state.selectedStaffId);
+        });
 
         const initialStaffId = sessionStorage.getItem('pawpal_admin_staff_selected_id');
         renderStaffProfile(initialStaffId);
@@ -152,6 +184,12 @@
         openStaffProfile,
         renderStaffProfile
     };
+
+    window.addEventListener('pawpal:staff-data-loaded',()=>{
+        const root=document.getElementById('subtab-tab-staff-profile');if(!root?.classList.contains('active'))return;
+        if(PawpalStaff.state.loadError){root.querySelectorAll('[id^="viewStaff"]').forEach(node=>node.textContent='—');const name=root.querySelector('#viewStaffName');if(name)name.textContent='Không thể tải hồ sơ nhân sự';const badge=root.querySelector('#viewStaffSafetyBadge');if(badge)badge.style.display='none';return;}
+        renderStaffProfile(PawpalStaff.state.selectedStaffId);
+    });
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initStaffProfileSubtab);

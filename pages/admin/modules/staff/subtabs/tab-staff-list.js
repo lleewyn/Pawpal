@@ -77,7 +77,8 @@
                 if (!matchRole) return false;
             }
 
-            if (shift !== 'ALL' && s.shift !== shift) return false;
+            const hasSchedule=PawpalStaff.getStaffWorkingSchedules(s.rawId).length>0;
+            if ((shift==='ASSIGNED'&&!hasSchedule)||(shift==='UNASSIGNED'&&hasSchedule)) return false;
             if (status !== 'ALL' && s.status !== status) return false;
 
             if (isRetrainOnly) {
@@ -201,7 +202,7 @@
             else if (staff.status === 'PAUSE') statusBadge = '<span class="admin-badge badge-neutral">Tạm nghỉ</span>';
             else statusBadge = '<span class="admin-badge badge-danger">Nghỉ việc</span>';
 
-            let shiftText = staff.shift === 'MORNING' ? 'Ca sáng' : staff.shift === 'AFTERNOON' ? 'Ca chiều' : staff.shift === 'EVENING' ? 'Ca tối' : staff.shift === 'NIGHT' ? 'Ca khuya' : 'Chưa phân ca';
+            const shiftText=escapeHtml(PawpalStaff.formatStaffSchedule(PawpalStaff.getNearestStaffSchedule(staff.rawId)));
 
             let skillText = '';
             if (!staff.skillResult) { skillText = '<span>Chưa đánh giá</span>'; } else if (staff.skillResult === 'PASS') {
@@ -230,8 +231,8 @@
             tr.innerHTML = `
                 <td>${staff.id}</td>
                 <td><a href="javascript:void(0)" class="user-link-text btn-view-profile" data-id="${staff.id}" title="${escapeHtml(staff.name)}">${escapeHtml(staff.name)}</a></td>
-                <td>${staff.position}</td>
-                <td>${staff.phone}</td>
+                <td>${escapeHtml(staff.position==='cham_soc_thu_cung'?'Chăm sóc thú cưng':staff.position)}</td>
+                <td>${escapeHtml(staff.phone)}</td>
                 <td>${shiftText}</td>
                 <td>
                     <div style="display: flex; flex-direction: column; align-items: flex-start;">
@@ -748,17 +749,12 @@
         if (btnExportStaff) {
             btnExportStaff.addEventListener('click', () => {
                 const staffList = PawpalStaff.state?.staff || [];
+                const csvCell=value=>{let text=String(value??'');if(/^\s*[=+\-@]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"';};
                 const headers = ['Mã NV', 'Họ tên', 'Vị trí', 'Số điện thoại', 'Email', 'Ca làm việc', 'Năng lực tay nghề', 'Trạng thái'];
                 const rows = staffList.map(s => [
-                    `"${s.id || ''}"`,
-                    `"${s.name || ''}"`,
-                    `"${s.position || ''}"`,
-                    `"${s.phone || ''}"`,
-                    `"${s.email || ''}"`,
-                    `"${s.shift || ''}"`,
-                    `"${s.skillExam || ''}"`,
-                    `"${s.status || ''}"`
-                ]);
+                    s.id,s.name,s.position,s.phone,s.email,
+                    PawpalStaff.formatStaffSchedule(PawpalStaff.getNearestStaffSchedule(s.rawId)),s.skillExam,s.status
+                ].map(csvCell));
 
                 const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
