@@ -18,12 +18,12 @@ Các dấu hoàn thành ở phần lịch sử bên dưới chưa đủ để ng
 - [x] Sổ địa chỉ: thêm hai địa chỉ, chọn đúng một mặc định, xóa địa chỉ phụ và đọc lại từ Cloud sau reload.
 - [x] Hai phiên: phiên thứ hai lưu trước thì phiên thứ nhất nhận 409, giữ bản nháp, không ghi đè dữ liệu mới. Đã sửa Realtime làm mất nội dung đang nhập.
 - [x] Modal hồ sơ: đóng bằng Escape; form không tự submit/reload; kiểm tra ảnh modal địa chỉ. Mã giao diện mới được phục vụ trực tiếp từ working tree trong kiểm thử trình duyệt, dữ liệu vẫn từ Cloud thật.
-- [ ] Đối soát thú cưng và nhật ký chăm sóc.
+- [x] Đối soát thú cưng và nhật ký chăm sóc trong phạm vi hồ sơ/cân nặng/lưu trữ/nhật ký đọc theo chủ nuôi; kết quả chốt tại `PAWPAL_THU_CUNG_V1_NGHIEM_THU.md`.
   - Nhật ký: bỏ nạp JSON seed, bộ nhớ nhật ký cũ, dữ liệu Admin trong trình duyệt, tên nhân viên mẫu, ảnh hoạt động mẫu và phản hồi chat tự sinh. Dữ liệu Cloud rỗng là nhật ký rỗng; lỗi truy vấn không được thay bằng dữ liệu giả.
   - Lọc lịch hẹn theo cả chủ nuôi và thú cưng. Khi ca chỉ định không có nhật ký, không tự mở ca khác.
   - Đánh giá/trao đổi cũ chỉ lưu trình duyệt đã bỏ: nút chuyển sang Lịch hẹn/Hỗ trợ. Chưa nghiệm thu luồng đánh giá và tin nhắn thật trong các phân hệ đó.
   - `node --test scripts/test/customer_diary_live_contract.cjs`: 3 ca đạt. Trình duyệt với Cloud thật đã xác nhận thú cưng chưa có care_log hiển thị timeline rỗng, ảnh đã xem tại `D:/Aboutme/Pawpal-infra/supabase-local/verification/portal-diary-empty.private.png`; đã dọn fixture.
-  - Còn kiểm tra nhật ký có dữ liệu thực, quyền chéo hai khách, Realtime sau Admin ghi nhật ký và các đường dẫn đánh giá/Hỗ trợ. Mã nhật ký mới chưa push/deploy.
+  - Đợt cuối đã kiểm tra nhật ký có dữ liệu, hai khách độc lập trên CSDL riêng, Realtime sau ghi từ phía quản trị và lưu trữ/khôi phục giữ lịch sử. Các đường dẫn đánh giá/Hỗ trợ chỉ điều hướng; nghiệp vụ thuộc phân hệ riêng. Commit `9fc1d90` đã lên Vercel, kiểm tra `--deployed` đạt; các ghi chú “chưa push” phía dưới là trạng thái lịch sử trước lần triển khai này.
   - Đã sửa đọc danh sách chỉ dùng Cloud, không ghép `pawpal_pets` cũ hoặc tự ghi dữ liệu giả sang cache Admin.
   - Đã sửa lưu trữ/khôi phục: chờ CSDL trả đúng hàng, kiểm tra chủ nuôi, lỗi phải báo lỗi; không báo thành công khi ghi bị từ chối.
   - Trạng thái `inactive` từ Admin được nhận diện đúng là lưu trữ. Không thể dùng ID khách khác để tải danh sách.
@@ -32,7 +32,7 @@ Các dấu hoàn thành ở phần lịch sử bên dưới chưa đủ để ng
   - Đã viết migration `059_customer_portal_pet.sql`: RPC `save_own_pet` lưu hồ sơ/cân nặng cùng giao dịch, kiểm tra chủ nuôi từ Auth, phiên bản hồ sơ, dữ liệu tên/giống/giới tính/ngày sinh/cân nặng; cân không đổi không ghi lặp. Không sửa chủ sở hữu hay mã hồ sơ theo dữ liệu client.
   - Form giữ bản chụp lúc mở để kiểm tra xung đột; chọn giống phải khớp chính xác loài, không tự chọn giống đầu tiên khi không tìm thấy.
   - `node scripts/test/customer_pet_atomic_v1.cjs` đạt trên CSDL riêng: tạo/sửa, không lặp cân, thêm cân mới, từ chối phiên bản cũ/dữ liệu sai/phiên không sở hữu; rollback toàn bộ fixture. Kiểm tra hợp đồng frontend hiện 8 ca đạt.
-  - Chưa nghiệm thu toàn bộ giao diện thêm/sửa thú cưng và quyền ghi trực tiếp; chưa đánh dấu hoàn tất phân hệ.
+  - Đã kiểm tra form thêm/sửa và quyền chủ nuôi. Ghi hồ sơ/cân nặng/lưu trữ dùng RPC; quyền ghi trực tiếp dành cho nhân viên vẫn giữ theo cơ chế Admin.
   - Đã áp dụng 059 lên Cloud sau sao lưu `D:/Aboutme/Pawpal-infra/supabase-local/backups/portal-pet-cloud-2026-10-22T14-57-32-990Z`; triển khai không đổi các hàng public hoặc danh tính/mật khẩu/trạng thái khóa Auth, giữ 17 nhân sự nguồn.
   - Trình duyệt dùng mã `petService.js` local với Cloud thật: tạo thú cưng, sửa ghi chú giữ một bản cân nặng, đổi cân tăng đúng một bản lịch sử. Đây là kiểm tra dịch vụ gọi từ trình duyệt, chưa thay thế nghiệm thu thao tác toàn bộ form thêm/sửa.
   - Đợt tiếp theo đã kiểm tra form thực: chọn loài, chọn giống qua autocomplete từ Cloud, nhập cân, lưu bé mới; mở lại theo mã hồ sơ, sửa ghi chú và đối chiếu `pet_profile.routine`, lịch sử cân vẫn đúng một hàng. Mã local được phục vụ trong trình duyệt, chưa push/deploy.

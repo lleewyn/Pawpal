@@ -4,6 +4,8 @@
 
 Phạm vi: hồ sơ thú cưng, cân nặng, lưu trữ/khôi phục và đọc nhật ký chăm sóc của chính chủ nuôi. Không bao gồm tải ảnh/tệp, sổ tiêm chủng, gửi tin thật hay tạo lịch qua trợ lý. Các mục Admin bên dưới là biên bản đợt trước.
 
+**Kết quả chốt:** đạt các luồng trong phạm vi trên. Mã đã push ở commit `9fc1d90`, Vercel `https://pawpalgr3.vercel.app` đã phục vụ mã mới và kiểm tra lại đạt bằng cờ `--deployed` (không thay mã local trong trình duyệt). 52 kiểm tra hồi quy đạt; SQL kiểm tra hai khách và tài khoản khóa chạy trên CSDL khôi phục riêng. Đã dọn fixture Cloud sau bài kiểm tra cuối.
+
 - [x] Thêm/sửa qua form thật với Cloud: tên, giống đúng loài, giới tính, ngày sinh, màu lông, dị ứng, lưu ý và cân nặng được lưu bởi `save_own_pet` trong cùng giao dịch. Có đối chiếu phiên bản; form giữ bản chụp lúc mở. Cân không đổi không ghi thêm lịch sử.
 - [x] Đọc danh sách chỉ từ Cloud, không phục hồi hồ sơ cache cũ; lỗi không báo thành công. Giống dùng autocomplete từ danh mục, không tự chọn giống đầu tiên.
 - [x] Lưu trữ/khôi phục qua RPC riêng `change_own_pet_status`, giữ lịch hẹn/cân nặng/nhật ký. Quyền ghi xác định chủ nuôi từ Auth, không nhận ID chủ nuôi theo yêu cầu client.
@@ -11,7 +13,7 @@ Phạm vi: hồ sơ thú cưng, cân nặng, lưu trữ/khôi phục và đọc 
 - [x] Nhật ký rỗng và nhật ký có dữ liệu đều được kiểm tra trên Cloud thật; bỏ seed JSON, nhật ký trong browser, phản hồi chat tự sinh, tên nhân viên/ảnh mẫu và chỉ số yêu thích giả.
 - [x] Realtime: sau phía quản trị ghi nhật ký, khách thấy ghi nhận mới mà không reload. Danh sách thú cưng có kênh cập nhật riêng, form đang mở giữ nguyên bản nháp; hủy kênh khi rời phân hệ.
 - [x] Mở ca không có nhật ký không hiển thị ca khác; bản ghi không có ảnh không dựng ảnh lỗi từ URL trang hiện tại.
-- [ ] Đưa mã giao diện/API hiện nằm trong working tree lên bản triển khai Vercel và chạy lại nghiệm thu trên bản đã deploy. CSDL mới đã có migration 058–060; không coi mã local là bản production.
+- [x] Đã push/deploy và kiểm tra lại trên Vercel: `node scripts/test/customer_portal_profile_v1.cjs --cloud-browser --pets --pets-only --diary --deployed`. Bao gồm form thêm/sửa, autocomplete giống, nhật ký rỗng/có dữ liệu, Realtime, ca không tồn tại không hiển thị ca khác, bản ghi không ảnh không dựng ảnh lỗi, modal lưu trữ/Escape, khôi phục từ tab lưu trữ và giữ hai bản nhật ký.
 
 Kiểm tra: `customer_pet_atomic_v1.cjs`, `customer_pet_live_contract.cjs`, `customer_diary_live_contract.cjs` và `customer_portal_profile_v1.cjs --cloud-browser --pets --pets-only --diary` trong `scripts/test`. Các fixture Cloud được dọn; kiểm tra SQL riêng dùng rollback. Thao tác quản trị trong bài Realtime thực hiện qua service client trên fixture riêng, không phải chứng nhận lại toàn bộ giao diện Admin.
 
