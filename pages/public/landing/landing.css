@@ -1639,7 +1639,7 @@ html.landing-v218{scroll-padding-top:86px}
 .landing-v218 .catalog-item:first-child>img{height:443px!important}
 .landing-v218 .pet-personality-inner{gap:45px!important}}
 @media (prefers-reduced-motion:reduce){.landing-v218 *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}/* Production integration: scoped to the homepage, preserving shared Auth/navigation. */
-body.landing-v218{font-family:'DM Sans',Arial,sans-serif;overflow-x:clip}
+body.landing-v218{font-family:'DM Sans',Arial,sans-serif;overflow-x:clip;--home-heading-font:'Lora',Georgia,serif}
 .landing-v218 #site-footer,.landing-v218>.footer-cta-banner,.landing-v218>.main-footer{display:none!important}
 .landing-v218 .home-skip{position:absolute;top:-80px;left:16px;z-index:10001;background:#fff;padding:12px;color:#264b3d}
 .landing-v218 .home-skip:focus{top:10px}
@@ -1672,3 +1672,7 @@ body.landing-v218{font-family:'DM Sans',Arial,sans-serif;overflow-x:clip}
 @media(prefers-reduced-motion:reduce){html.landing-v218{scroll-behavior:auto}.landing-v218 *{animation:none!important;transition:none!important}}
 
 .landing-v218 .home-save-service{border:0;background:none;color:#315a43;font-size:12px;padding:8px 0;margin-top:4px;text-decoration:underline;text-underline-offset:4px}.landing-v218 .home-save-service[aria-pressed=true]{font-weight:700}.landing-v218 .home-wishlist-notice{color:#315a43;font-size:13px;margin:12px 0 0;min-height:20px}.landing-v218 .home-save-service:disabled{opacity:.5;cursor:wait}
+
+/* A single Vietnamese-capable heading family, as on the original homepage. */
+body.landing-v218 #homePage :is(h1,h2,h3,h4,h5,h6),body.landing-v218 #homePage .campaign-text,body.landing-v218 #homePage .v4-footer-identity>strong,body.landing-v218 #homePage .v4-shop-copy>strong,body.landing-v218 #homePage .v28-team-editorial strong{font-family:var(--home-heading-font)!important}
+body.landing-v218 #homePage .v210-rate,body.landing-v218 #homePage blockquote,body.landing-v218 #homePage .v4-step-content>span{font-family:var(--home-heading-font)!important}
