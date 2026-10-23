@@ -995,7 +995,7 @@ body.landing-v218{font-family:'Inter',system-ui,sans-serif;color:var(--v26-ink);
 .landing-v218 .v28-tier-row strong{font-size:16px}}
 .landing-v218 .v4-voices{background:#e9dfc9!important;padding:76px 0 86px!important;color:#284a39}
 .landing-v218 .v4-voices .v29-reviews-wrap{max-width:1150px!important;margin:0 auto}
-.landing-v218 .v29-chapter{display:flex;justify-content:space-between;align-items:center;gap:20px;padding-bottom:12px;border-bottom:1px solid #a7b09b;color:#566b58;font:600 11px/1.5 system-ui,sans-serif;letter-spacing:.08em}
+.landing-v218 .v29-chapter{display:flex;justify-content:space-between;align-items:center;gap:20px;padding-bottom:12px;border-bottom:1px solid #a7b09b;color:#566b58;font:600 11px/1.5 Inter,system-ui,sans-serif;letter-spacing:.08em}
 .landing-v218 .v29-reviews-heading{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,0.52fr);gap:7%;align-items:end;padding:39px 0 36px}
 .landing-v218 .v29-reviews-heading h2{margin:0!important;font:600 clamp(40px,5vw,70px)/1.04 Inter,system-ui,sans-serif!important;letter-spacing:-.05em!important;color:#274838}
 .landing-v218 .v29-reviews-heading p{font:400 15px/1.7 Inter,system-ui,sans-serif!important;color:#485a4c!important;max-width:330px;margin:0!important}
