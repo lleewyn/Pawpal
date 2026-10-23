@@ -48,120 +48,53 @@
         return trimmed;
     }
 
-    function getSharedNotifications() {
-        try {
-            const currentUser = getCurrentUser();
-            if (currentUser && currentUser.id) {
-                const userNotis = JSON.parse(localStorage.getItem(`pawpal_notifications_${currentUser.id}`) || 'null');
-                if (Array.isArray(userNotis)) return userNotis;
-            }
-            const notis = JSON.parse(localStorage.getItem('pawpal_notifications') || '[]');
-            if (Array.isArray(notis) && notis.length > 0) return notis;
-        } catch (e) {}
-        return [];
+    const noticeState={owner:null,rows:[],cutoff:null,loaded:false,pending:null,channel:null,error:null};
+    function getSharedNotifications(){return noticeState.rows;}
+    function renderNotifications(){return '<p>Đang tải thông báo.</p>';}
+    function noticeLink(row){
+        if(row.sales_order_id)return '/user#order-detail?id='+encodeURIComponent(row.sales_order_id);
+        if(row.appointment_id)return '/user#booking-detail?id='+encodeURIComponent(row.appointment_id);
+        if(row.support_ticket_id)return '/user#support?id='+encodeURIComponent(row.support_ticket_id);
+        return '/user';
     }
-
-    function getRelativeTimeString(dateStr) {
-        if (!dateStr) return '';
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return dateStr;
-        const diffMs = Date.now() - date.getTime();
-        const diffMin = Math.floor(diffMs / 60000);
-        if (diffMin < 1) return 'Vừa xong';
-        if (diffMin < 60) return `${diffMin} phút trước`;
-        const diffHour = Math.floor(diffMin / 60);
-        if (diffHour < 24) return `${diffHour} giờ trước`;
-        const diffDay = Math.floor(diffHour / 24);
-        if (diffDay < 7) return `${diffDay} ngày trước`;
-        
-        const d = String(date.getDate()).padStart(2, '0');
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const y = date.getFullYear();
-        return `${d}/${m}/${y}`;
+    function noticeError(message){const target=document.getElementById('noticeCloudError') || document.getElementById('headerNotificationList');if(target){if(target.id==='noticeCloudError'){target.textContent=message;return;}const text=document.createElement('p');text.setAttribute('role','alert');text.style.color='#DC2626';text.textContent=message;target.prepend(text);}}
+    function paintNotices(){
+        const unread=noticeState.rows.filter(n=>!n.read_at).length,badge=document.getElementById('notificationBadge');
+        if(badge){badge.textContent=unread>9?'9+':String(unread);badge.style.display=unread?'flex':'none';}
+        const list=document.getElementById('headerNotificationList');
+        if(list){list.innerHTML=noticeState.error?'<p role="alert">Không thể tải thông báo. Vui lòng mở lại để thử.</p>':noticeState.rows.slice(0,10).map(n=>`<button type="button" style="width:100%;text-align:left;background:transparent;border:0;padding:12px;display:grid;gap:4px;border-radius:9px" class="notification-item-dropdown ${n.read_at?'':'unread'}" data-id="${escapeHtml(n.id)}"><span class="item-content"><span class="item-title">${escapeHtml(n.title)}</span><span class="item-text">${escapeHtml(n.content)}</span><span class="item-time">${escapeHtml(new Date(n.sent_at).toLocaleString('vi-VN'))}</span></span></button>`).join('') || '<p>Chưa có thông báo.</p>';
+            list.querySelectorAll('[data-id]').forEach(button=>button.onclick=()=>openAllNotificationsModal(noticeState.rows.find(n=>n.id===button.dataset.id)));
+        }
+        document.dispatchEvent(new CustomEvent('header_notifications_rendered'));
     }
-
-    function renderNotifications() {
-        const notis = getSharedNotifications();
-        if (!notis || !notis.length) {
-            return `
-                <div style="padding: 24px; text-align: center; color: #4F7A65; font-size: 13.5px;">
-                    Bạn không có thông báo mới nào.
-                </div>
-            `;
-        }
-        const sorted = [...notis].sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
-        return sorted.map(n => {
-            const safeLink = sanitizeHref(n.link || n.url || '#');
-            const safeTitle = escapeHtml(n.title || 'Thông báo');
-            const safeContent = escapeHtml(n.content || n.message || '');
-            const isRead = Boolean(n.read || n.isRead);
-            return `
-                <a href="${safeLink}" class="notification-item-dropdown ${isRead ? '' : 'unread'}" data-id="${escapeHtml(n.id)}">
-                    ${!isRead ? '<span class="unread-dot"></span>' : ''}
-                    <span class="item-content">
-                        <span class="item-title">${safeTitle}</span>
-                        <span class="item-text">${safeContent}</span>
-                        <span class="item-time">${getRelativeTimeString(n.time || n.sent_at)}</span>
-                    </span>
-                </a>
-            `;
-        }).join('');
+    async function refreshNotices(){
+        const user=getCurrentUser(),client=window.getSupabaseClient?.() || window.SupabaseClient;
+        if(noticeState.owner!==user?.id){document.querySelector('#notificationsCloudModal [data-close-modal]')?.click();noticeState.owner=user?.id || null;noticeState.rows=[];noticeState.loaded=false;noticeState.error=null;noticeState.pending=null;if(noticeState.channel)client?.removeChannel(noticeState.channel);noticeState.channel=null;paintNotices();}
+        if(!user?.id || !client)return;
+        if(noticeState.pending)return noticeState.pending;
+        const owner=user.id;
+        const work=(async()=>{try{
+            const result=await client.rpc('own_notifications_snapshot');if(getCurrentUser()?.id!==owner)return;
+            if(result.error || result.data?.customer_id!==owner)throw Error('Không thể tải thông báo.');
+            noticeState.rows=result.data.rows || [];noticeState.cutoff=result.data.snapshot_at;noticeState.error=null;
+            if(!noticeState.channel)noticeState.channel=client.channel('notices-'+crypto.randomUUID()).on('postgres_changes',{event:'*',schema:'public',table:'notification',filter:'customer_id=eq.'+owner},()=>{refreshNotices().then(()=>renderNoticeModal());}).subscribe();
+        }catch(error){if(getCurrentUser()?.id===owner){noticeState.rows=[];noticeState.error=error.message;}}
+        finally{if(getCurrentUser()?.id===owner){noticeState.loaded=true;paintNotices();renderNoticeModal();}}})();
+        noticeState.pending=work;try{await work;}finally{if(noticeState.pending===work)noticeState.pending=null;}
     }
+    async function markNoticeRead(id){
+        const client=window.getSupabaseClient?.() || window.SupabaseClient,owner=noticeState.owner;
+        if(!owner || getCurrentUser()?.id!==owner)throw Error('Vui lòng đăng nhập lại.');
+        const result=await client.rpc('mark_own_notifications_read',{p_id:id,p_before:id?null:noticeState.cutoff,p_expected_owner:owner});
+        if(result.error)throw Error('Chưa đánh dấu được thông báo. Vui lòng thử lại.');
+        await refreshNotices();renderNoticeModal();
+    }
+    window.updateNotificationBadge=()=>{paintNotices();if(!noticeState.loaded || noticeState.owner!==getCurrentUser()?.id)refreshNotices();};
+    document.addEventListener('notifications_updated',()=>{refreshNotices().then(()=>renderNoticeModal());});
+    document.addEventListener('auth_state_changed',()=>{noticeState.loaded=false;refreshNotices();});
+    window.addEventListener('pagehide',()=>{if(noticeState.channel)(window.getSupabaseClient?.() || window.SupabaseClient)?.removeChannel(noticeState.channel);});
 
-    window.updateNotificationBadge = function() {
-        const notis = getSharedNotifications();
-        const unreadCount = notis.filter(n => !n.read && !n.isRead).length;
-        const badge = document.getElementById('notificationBadge');
-        if (badge) {
-            if (unreadCount > 0) {
-                badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
-                badge.style.display = 'flex';
-            } else {
-                badge.style.display = 'none';
-                badge.textContent = '0';
-            }
-        }
-        const list = document.getElementById('headerNotificationList');
-        if (list) {
-            list.innerHTML = renderNotifications();
-            // Gắn sự kiện click cho từng item
-            list.querySelectorAll('.notification-item-dropdown').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    const notiId = item.getAttribute('data-id');
-                    const allNotis = getSharedNotifications();
-                    const targetNoti = allNotis.find(x => String(x.id) === String(notiId));
-                    if (targetNoti) {
-                        targetNoti.read = true;
-                        targetNoti.isRead = true;
-                        const currentUser = getCurrentUser();
-                        if (currentUser && currentUser.id) {
-                            localStorage.setItem(`pawpal_notifications_${currentUser.id}`, JSON.stringify(allNotis));
-                        }
-                        localStorage.setItem('pawpal_notifications', JSON.stringify(allNotis));
-                        window.updateNotificationBadge();
-
-                        // Cập nhật bền vững lên Supabase
-                        const client = window.getSupabaseClient?.() || window.SupabaseClient;
-                        if (client && notiId && !String(notiId).startsWith('seed-') && !String(notiId).startsWith('local-')) {
-                            client.from('notification')
-                                .update({ is_read: true, read_at: new Date().toISOString() })
-                                .eq('id', notiId)
-                                .then()
-                                .catch(() => {});
-                        }
-                    }
-                });
-            });
-        }
-    };
-
-    document.addEventListener('notifications_updated', () => {
-        if (typeof window.updateNotificationBadge === 'function') {
-            window.updateNotificationBadge();
-        }
-    });
-
-    let cartBadgeRevision = 0;
+    let cartBadgeRevision=0;
     window.updateCartBadge = async function() {
         const revision = ++cartBadgeRevision;
         const currentUser = (typeof window.getCurrentUser === 'function')
@@ -276,49 +209,8 @@
         setMobileGroupVisibility(tempOnlyItems, isTemp);
     }
 
-    async function resolveUserDisplayName(user) {
-        if (!user) return user;
-        const currentName = String(user.name || '').trim();
-        const currentPhone = String(user.phone || '').trim();
-        const looksLikePhone = /^\d{8,15}$/.test(currentName.replace(/\s+/g, '')) || (currentPhone && currentName === currentPhone);
-        const looksLikeEmail = currentName.includes('@');
-        if (currentName && !looksLikePhone && !looksLikeEmail) return user;
-
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db || !user.id) return user;
-
-        try {
-            const { data, error } = await db
-                .from('customer')
-                .select(`
-                    phone_main,
-                    email,
-                    customer_profile ( full_name )
-                `)
-                .eq('id', user.id)
-                .limit(1);
-
-            if (error || !data || !data.length) return user;
-
-            const row = data[0];
-            const profile = Array.isArray(row.customer_profile) ? (row.customer_profile[0] || {}) : (row.customer_profile || {});
-            const resolvedName = String(profile.full_name || '').trim()
-                || (currentName && !currentName.includes('@') ? currentName : '')
-                || String(row.phone_main || user.phone || '').trim()
-                || 'Khách hàng';
-            const updatedUser = {
-                ...user,
-                name: resolvedName,
-                phone: row.phone_main || user.phone || '',
-                email: row.email || user.email || '',
-            };
-
-            localStorage.setItem('pawpal_current_user', JSON.stringify(updatedUser));
-            return updatedUser;
-        } catch (err) {
-            console.warn('[header-auth] Cannot resolve user display name:', err);
-            return user;
-        }
+    async function resolveUserDisplayName(user){
+        try{const client=window.getSupabaseClient?.() || window.SupabaseClient;if(!client)return user;const result=await client.rpc('customer_profile_snapshot');if(result.error || result.data?.id!==user.id)return user;const updatedUser={...user,name:result.data.name,phone:result.data.phone,email:result.data.email};const current=getCurrentUser();if(current?.id!==user.id)return current;localStorage.setItem('pawpal_current_user',JSON.stringify(updatedUser));return updatedUser;}catch{return user;}
     }
 
     function updateHeaderAuth() {
@@ -532,45 +424,8 @@
                 if (dropdown) dropdown.classList.remove('show');
             });
 
-            const btnMarkAll = notiDropdown.querySelector('#btnMarkAllRead');
-            if (btnMarkAll && btnMarkAll.dataset.bound !== 'true') {
-                btnMarkAll.dataset.bound = 'true';
-                btnMarkAll.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const currentUser = getCurrentUser();
-                    try {
-                        const notis = getSharedNotifications();
-                        if (Array.isArray(notis)) {
-                            notis.forEach(n => { n.read = true; n.isRead = true; });
-                            if (currentUser && currentUser.id) {
-                                localStorage.setItem(`pawpal_notifications_${currentUser.id}`, JSON.stringify(notis));
-                            }
-                            localStorage.setItem('pawpal_notifications', JSON.stringify(notis));
-                            document.dispatchEvent(new CustomEvent('notifications_updated'));
-                        }
-                    } catch(err) {}
-
-                    // Cập nhật bền vững lên Supabase
-                    const client = window.getSupabaseClient?.() || window.SupabaseClient;
-                    if (client && currentUser?.id) {
-                        client.from('notification')
-                            .update({ is_read: true, read_at: new Date().toISOString() })
-                            .eq('customer_id', currentUser.id)
-                            .eq('is_read', false)
-                            .then()
-                            .catch(() => {});
-                    }
-
-                    const list = document.getElementById('headerNotificationList');
-                    if (list) list.innerHTML = renderNotifications();
-                    const badge = document.getElementById('notificationBadge');
-                    if (badge) {
-                        badge.style.display = 'none';
-                        badge.textContent = '0';
-                    }
-                });
-            }
+            const btnMarkAll=notiDropdown.querySelector('#btnMarkAllRead');
+            if(btnMarkAll && btnMarkAll.dataset.bound!=='true'){btnMarkAll.dataset.bound='true';btnMarkAll.onclick=async event=>{event.preventDefault();event.stopPropagation();btnMarkAll.disabled=true;try{await markNoticeRead(null);}catch(error){noticeError(error.message);}finally{btnMarkAll.disabled=false;}};}
             const btnSeeAll = notiDropdown.querySelector('#btnSeeAllNotis');
             if (btnSeeAll && btnSeeAll.dataset.bound !== 'true') {
                 btnSeeAll.dataset.bound = 'true';
@@ -643,375 +498,29 @@
     // -------------------------------------------------------------
     // POPUP MODAL TRUNG TÂM THÔNG BÁO (MODAL THEO CHUẨN AGENTS.MD)
     // -------------------------------------------------------------
-    function formatNotiTime(timeStr) {
-        if (!timeStr) return '';
-        const date = new Date(timeStr);
-        if (isNaN(date.getTime())) return timeStr;
-        const diffMs = Date.now() - date.getTime();
-        const diffMin = Math.floor(diffMs / 60000);
-        if (diffMin < 1) return 'Vừa xong';
-        if (diffMin < 60) return `${diffMin} phút trước`;
-        const diffHour = Math.floor(diffMin / 60);
-        if (diffHour < 24) return `${diffHour} giờ trước`;
-        const diffDay = Math.floor(diffHour / 24);
-        if (diffDay < 7) return `${diffDay} ngày trước`;
-        const hours = String(date.getHours()).padStart(2, '0');
-        const mins = String(date.getMinutes()).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const y = date.getFullYear();
-        return `${hours}:${mins} • ${d}/${m}/${y}`;
+    let selectedNotice=null,noticeFilter='all';
+    function renderNoticeModal(){
+        const modal=document.getElementById('notificationsCloudModal');if(!modal)return;
+        if(noticeState.error){modal.querySelector('#noticeCloudError').textContent='Không thể tải thông báo. Vui lòng mở lại để thử.';modal.querySelector('#noticeCloudRows').replaceChildren();modal.querySelector('#noticeCloudDetail').replaceChildren();return;}
+        const rows=noticeState.rows.filter(n=>noticeFilter!=='unread'||!n.read_at);
+        modal.querySelector('#noticeCloudRows').innerHTML=rows.map(n=>`<button type="button" style="width:100%;text-align:left;background:transparent;border:0;padding:12px;display:grid;gap:4px;border-radius:9px" class="notification-item-dropdown ${n.read_at?'':'unread'}" data-notice="${escapeHtml(n.id)}"><strong>${escapeHtml(n.title)}</strong><span>${escapeHtml(new Date(n.sent_at).toLocaleString('vi-VN'))}</span></button>`).join('') || '<p>Chưa có thông báo phù hợp.</p>';
+        modal.querySelectorAll('[data-notice]').forEach(button=>button.onclick=async()=>{selectedNotice=button.dataset.notice;try{await markNoticeRead(selectedNotice);}catch(error){noticeError(error.message);}renderNoticeModal();});
+        const row=noticeState.rows.find(n=>n.id===selectedNotice),detail=modal.querySelector('#noticeCloudDetail');
+        detail.innerHTML=row?`<h4>${escapeHtml(row.title)}</h4><p style="white-space:pre-wrap">${escapeHtml(row.content)}</p><a href="${noticeLink(row)}">Mở nội dung liên quan</a>`:'<p>Chọn thông báo để xem nội dung.</p>';
     }
-
-    function getNotiCategoryName(noti) {
-        const type = String(noti.type || noti.notification_type || '').toLowerCase();
-        const title = String(noti.title || '').toLowerCase();
-        if (type.includes('lich_hen') || type.includes('service') || type === 'booking' || title.includes('dịch vụ') || title.includes('spa') || title.includes('lịch') || title.includes('khám')) return 'Dịch vụ';
-        if (type.includes('don_hang') || type.includes('order') || title.includes('đơn hàng') || title.includes('giao')) return 'Đơn hàng';
-        if (type.includes('ho_tro') || type.includes('support') || title.includes('hỗ trợ') || title.includes('khiếu nại')) return 'Hỗ trợ';
-        if (type.includes('hoan_tien') || type.includes('refund') || title.includes('hoàn tiền')) return 'Hoàn tiền';
-        if (type.includes('uu_dai') || type.includes('promo') || title.includes('khuyến mãi') || title.includes('giảm giá') || title.includes('voucher') || title.includes('pawpoint')) return 'Ưu đãi';
-        return 'Thông báo';
+    async function openAllNotificationsModal(initialNoti=null){
+        document.getElementById('notificationsCloudModal')?.querySelector('[data-close-modal]')?.click();
+        const modal=document.createElement('div');modal.id='notificationsCloudModal';modal.style.cssText='position:fixed;inset:0;background:rgba(20,40,30,.4);display:flex;align-items:center;justify-content:center;z-index:10000;padding:16px;';
+        modal.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="noticeCloudTitle" style="background:white;border-radius:9px;width:760px;max-width:95vw;max-height:90vh;overflow:auto;padding:26px 30px"><div style="display:flex;justify-content:space-between"><h3 id="noticeCloudTitle">Thông báo</h3><button type="button" data-close-modal="notificationsCloudModal">Đóng</button></div><p id="noticeCloudError" role="alert" style="color:#DC2626"></p><div style="display:flex;gap:12px;flex-wrap:wrap"><button type="button" data-notice-filter="all">Tất cả</button><button type="button" data-notice-filter="unread">Chưa đọc</button><button type="button" id="noticeCloudMarkAll">Đọc tất cả</button></div><div id="noticeCloudRows"></div><div id="noticeCloudDetail"></div><button type="button" data-close-modal="notificationsCloudModal">Để sau</button></section>';
+        const previous=document.activeElement,overflow=document.body.style.overflow,close=()=>{modal.remove();document.body.style.overflow=overflow;document.removeEventListener('keydown',key);if(previous?.isConnected)previous.focus();},key=event=>{if(event.key==='Escape')close();};
+        modal.onclick=event=>{if(event.target===modal || event.target.closest('[data-close-modal]'))close();};document.addEventListener('keydown',key);document.body.append(modal);document.body.style.overflow='hidden';modal.querySelectorAll('button').forEach(button=>{button.classList.add('btn','btn-sm','btn-outline-success');button.style.borderRadius='9px';});modal.querySelector('button').focus();
+        selectedNotice=initialNoti?.id || null;noticeFilter='all';
+        modal.querySelectorAll('[data-notice-filter]').forEach(button=>button.onclick=()=>{noticeFilter=button.dataset.noticeFilter;renderNoticeModal();});
+        modal.querySelector('#noticeCloudMarkAll').onclick=async event=>{const button=event.target;button.disabled=true;try{await markNoticeRead(null);}catch(error){noticeError(error.message);}finally{button.disabled=false;}};
+        await refreshNotices();if(!modal.isConnected)return;renderNoticeModal();
+        if(selectedNotice)try{await markNoticeRead(selectedNotice);}catch(error){noticeError(error.message);}
     }
-
-    function openAllNotificationsModal(initialNoti = null) {
-        let overlay = document.getElementById('pawpalAllNotiModalOverlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'pawpalAllNotiModalOverlay';
-            overlay.className = 'pawpal-noti-modal-overlay';
-            overlay.innerHTML = `
-                <div class="pawpal-noti-modal-card pawpal-noti-modal-2col" role="dialog" aria-modal="true">
-                    <div class="pawpal-noti-modal-header" id="notiModalHeader">
-                        <div>
-                            <h3 class="pawpal-noti-modal-title" id="notiModalMainTitle">Trung tâm thông báo</h3>
-                        </div>
-                        <div class="d-flex align-items-center gap-3">
-                            <button type="button" class="btn-modal-mark-all" id="btnModalMarkAllRead">Đọc tất cả</button>
-                            <button type="button" class="btn-close-noti-modal" id="btnCloseNotiModal">&times;</button>
-                        </div>
-                    </div>
-                    
-                    <div class="pawpal-noti-modal-split-body">
-                        <!-- Cột Trái: Tabs Lọc & Danh Sách Thông Báo -->
-                        <div class="pawpal-noti-left-col">
-                            <div class="pawpal-noti-modal-tabs" id="notiModalTabs">
-                                <button type="button" class="noti-tab-btn active" data-tab="all">Tất cả</button>
-                                <span class="noti-tab-divider">|</span>
-                                <button type="button" class="noti-tab-btn" data-tab="unread">Chưa đọc</button>
-                                <span class="noti-tab-divider">|</span>
-                                <button type="button" class="noti-tab-btn" data-tab="service">Dịch vụ</button>
-                                <span class="noti-tab-divider">|</span>
-                                <button type="button" class="noti-tab-btn" data-tab="order">Đơn hàng</button>
-                            </div>
-                            <div class="pawpal-noti-items-scroll" id="notiModalListBody">
-                                <!-- Danh sách thông báo -->
-                            </div>
-                        </div>
-
-                        <!-- Cột Phải: Khung Chi Tiết Thông Báo -->
-                        <div class="pawpal-noti-right-col" id="notiModalDetailPane">
-                            <!-- Chi tiết thông báo đang chọn -->
-                        </div>
-                    </div>
-
-                    <div class="pawpal-noti-modal-footer" id="notiModalFooter">
-                        <button type="button" class="btn-modal-close-action" id="btnFooterCloseNotiModal">Đóng</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(overlay);
-
-            // Gắn sự kiện đóng
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) closeNotiModal();
-            });
-            overlay.querySelector('#btnCloseNotiModal').addEventListener('click', closeNotiModal);
-            overlay.querySelector('#btnFooterCloseNotiModal').addEventListener('click', closeNotiModal);
-
-            // Đánh dấu đã đọc tất cả
-            overlay.querySelector('#btnModalMarkAllRead').addEventListener('click', () => {
-                const currentUser = getCurrentUser();
-                try {
-                    const notis = getSharedNotifications();
-                    if (Array.isArray(notis)) {
-                        notis.forEach(n => { n.read = true; n.isRead = true; });
-                        if (currentUser && currentUser.id) {
-                            localStorage.setItem(`pawpal_notifications_${currentUser.id}`, JSON.stringify(notis));
-                        }
-                        localStorage.setItem('pawpal_notifications', JSON.stringify(notis));
-                        document.dispatchEvent(new CustomEvent('notifications_updated'));
-                    }
-                } catch(e) {}
-
-                // Cập nhật bền vững lên Supabase
-                const client = window.getSupabaseClient?.() || window.SupabaseClient;
-                if (client && currentUser?.id) {
-                    client.from('notification')
-                        .update({ is_read: true, read_at: new Date().toISOString() })
-                        .eq('customer_id', currentUser.id)
-                        .eq('is_read', false)
-                        .then()
-                        .catch(() => {});
-                }
-
-                const badge = document.getElementById('notificationBadge');
-                if (badge) {
-                    badge.style.display = 'none';
-                    badge.textContent = '0';
-                }
-                const headerList = document.getElementById('headerNotificationList');
-                if (headerList) headerList.innerHTML = renderNotifications();
-                renderModalNotiList('all');
-            });
-
-            // Tabs chuyển đổi
-            overlay.querySelectorAll('.noti-tab-btn').forEach(tabBtn => {
-                tabBtn.addEventListener('click', () => {
-                    overlay.querySelectorAll('.noti-tab-btn').forEach(b => b.classList.remove('active'));
-                    tabBtn.classList.add('active');
-                    renderModalNotiList(tabBtn.dataset.tab);
-                });
-            });
-
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && overlay.classList.contains('show')) {
-                    closeNotiModal();
-                }
-            });
-        }
-
-        function closeNotiModal() {
-            overlay.classList.remove('show');
-            document.body.style.overflow = '';
-        }
-
-        let currentSelectedNotiId = null;
-
-        function renderDetailPane(noti) {
-            const detailPane = overlay.querySelector('#notiModalDetailPane');
-            if (!detailPane) return;
-
-            if (!noti) {
-                detailPane.innerHTML = `
-                    <div class="pawpal-noti-detail-empty">
-                        <p class="pawpal-noti-detail-empty-title">Chi tiết thông báo</p>
-                        <p class="pawpal-noti-detail-empty-desc">Chọn một thông báo từ danh sách bên trái để xem nội dung đầy đủ.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            // Đánh dấu đã đọc
-            noti.isRead = true;
-            noti.read = true;
-            try {
-                const notis = getSharedNotifications();
-                if (Array.isArray(notis)) {
-                    const found = notis.find(x => String(x.id) === String(noti.id));
-                    if (found) {
-                        found.read = true;
-                        found.isRead = true;
-                    }
-                    const currentUser = getCurrentUser();
-                    if (currentUser && currentUser.id) {
-                        localStorage.setItem(`pawpal_notifications_${currentUser.id}`, JSON.stringify(notis));
-                    }
-                    localStorage.setItem('pawpal_notifications', JSON.stringify(notis));
-                    document.dispatchEvent(new CustomEvent('notifications_updated'));
-                }
-            } catch(e) {}
-
-            // Cập nhật bền vững lên Supabase
-            const client = window.getSupabaseClient?.() || window.SupabaseClient;
-            if (client && noti.id && !String(noti.id).startsWith('seed-') && !String(noti.id).startsWith('local-')) {
-                client.from('notification')
-                    .update({ is_read: true, read_at: new Date().toISOString() })
-                    .eq('id', noti.id)
-                    .then()
-                    .catch(() => {});
-            }
-
-            // Cập nhật giao diện thẻ bên trái
-            const activeCard = overlay.querySelector(`.pawpal-noti-modal-item[data-id="${noti.id}"]`);
-            if (activeCard) {
-                activeCard.classList.remove('unread');
-                activeCard.classList.add('selected');
-                const dot = activeCard.querySelector('.pawpal-noti-unread-dot');
-                if (dot) dot.remove();
-            }
-
-            const category = getNotiCategoryName(noti);
-            const formattedTime = formatNotiTime(noti.time);
-            
-            // Xử lý link đích nếu có
-            let actionText = '';
-            let rawUrl = noti.url || noti.link || '#';
-            if (category === 'Dịch vụ') {
-                actionText = 'Xem lịch hẹn của bé';
-                if (!rawUrl || rawUrl === '#') {
-                    rawUrl = noti.appointment_id
-                        ? `/pages/user/#booking-detail?id=${encodeURIComponent(noti.appointment_id)}`
-                        : '/pages/user/#bookings';
-                }
-            } else if (category === 'Đơn hàng') {
-                actionText = 'Xem đơn hàng của bé';
-                if (!rawUrl || rawUrl === '#') {
-                    rawUrl = noti.sales_order_id
-                        ? `/pages/user/#order-detail?id=${encodeURIComponent(noti.sales_order_id)}`
-                        : '/pages/user/#orders';
-                }
-            } else if (category === 'Ưu đãi') {
-                actionText = 'Xem ưu đãi Paw Points';
-                if (!rawUrl || rawUrl === '#') rawUrl = '/pages/user/#loyalty';
-            } else if (category === 'Hỗ trợ') {
-                actionText = 'Xem phiếu hỗ trợ';
-                if (!rawUrl || rawUrl === '#') {
-                    rawUrl = noti.support_ticket_id
-                        ? `/pages/user/#support?id=${encodeURIComponent(noti.support_ticket_id)}`
-                        : '/pages/user/#support';
-                }
-            } else if (category === 'Hoàn tiền') {
-                actionText = 'Xem đơn hàng hoàn tiền';
-                if (!rawUrl || rawUrl === '#') {
-                    rawUrl = noti.sales_order_id
-                        ? `/pages/user/#order-detail?id=${encodeURIComponent(noti.sales_order_id)}`
-                        : '/pages/user/#orders';
-                }
-            } else if (rawUrl && rawUrl !== '#' && rawUrl !== '') {
-                actionText = 'Đến trang liên kết';
-            }
-            const safeTargetUrl = sanitizeHref(rawUrl);
-
-            detailPane.innerHTML = `
-                <div class="pawpal-noti-detail-pane-content">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="pawpal-noti-category-badge">${escapeHtml(category)}</span>
-                        <span class="pawpal-noti-detail-time">${escapeHtml(formattedTime)}</span>
-                    </div>
-                    <h4 class="pawpal-noti-detail-title">${escapeHtml(noti.title)}</h4>
-                    <div class="pawpal-noti-detail-content">
-                        ${escapeHtml(noti.content || 'Không có nội dung chi tiết cho thông báo này.')}
-                    </div>
-                    ${actionText ? `
-                        <div class="pawpal-noti-detail-action mt-4">
-                            <a href="${safeTargetUrl}" class="btn-noti-action-cta" id="btnNotiDetailCTA">${escapeHtml(actionText)}</a>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-
-            detailPane.querySelector('#btnNotiDetailCTA')?.addEventListener('click', (e) => {
-                const href = e.currentTarget.getAttribute('href');
-                if (href && href !== '#' && href !== '') {
-                    closeNotiModal();
-                    if (window.location.pathname.includes('/pages/user/') && href.includes('#')) {
-                        const targetHash = href.substring(href.indexOf('#'));
-                        window.location.hash = targetHash;
-                        if (typeof window.handleHashRouting === 'function') {
-                            window.handleHashRouting();
-                        }
-                    }
-                }
-            });
-        }
-
-        function renderModalNotiList(filterType = 'all', targetNotiId = null) {
-            const listContainer = overlay.querySelector('#notiModalListBody');
-
-            let items = [];
-            try {
-                const stored = getSharedNotifications();
-                if (Array.isArray(stored) && stored.length > 0) {
-                    items = stored.map(s => ({
-                        id: s.id,
-                        title: s.title,
-                        content: s.content || s.message,
-                        time: s.time,
-                        isRead: Boolean(s.read || s.isRead),
-                        type: s.type || s.notification_type || 'info',
-                        url: s.link || s.url || '#',
-                        sales_order_id: s.sales_order_id,
-                        appointment_id: s.appointment_id,
-                        support_ticket_id: s.support_ticket_id,
-                        refund_transaction_id: s.refund_transaction_id
-                    }));
-                }
-            } catch(e) {}
-
-            let filtered = items;
-            if (filterType === 'unread') {
-                filtered = items.filter(n => !n.isRead);
-            } else if (filterType === 'service') {
-                filtered = items.filter(n => getNotiCategoryName(n) === 'Dịch vụ');
-            } else if (filterType === 'order') {
-                filtered = items.filter(n => getNotiCategoryName(n) === 'Đơn hàng');
-            }
-
-            if (!filtered.length) {
-                listContainer.innerHTML = `
-                    <div class="pawpal-noti-empty">
-                        Không có thông báo nào trong mục này.
-                    </div>
-                `;
-                renderDetailPane(null);
-                return;
-            }
-
-            // Chọn thông báo mục tiêu hoặc thông báo đầu tiên
-            let selectedItem = null;
-            if (targetNotiId) {
-                selectedItem = filtered.find(x => String(x.id) === String(targetNotiId));
-            }
-            if (!selectedItem && filtered.length > 0) {
-                selectedItem = filtered[0];
-            }
-            currentSelectedNotiId = selectedItem ? selectedItem.id : null;
-
-            listContainer.innerHTML = filtered.map(n => {
-                const category = getNotiCategoryName(n);
-                const displayTime = formatNotiTime(n.time);
-                const isSelected = selectedItem && String(selectedItem.id) === String(n.id);
-                return `
-                    <div class="pawpal-noti-modal-item ${n.isRead ? '' : 'unread'} ${isSelected ? 'selected' : ''}" data-id="${escapeHtml(n.id)}">
-                        ${!n.isRead ? '<span class="pawpal-noti-unread-dot"></span>' : ''}
-                        <div class="pawpal-noti-modal-item-content">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="pawpal-noti-category-badge">${escapeHtml(category)}</span>
-                                <span class="pawpal-noti-modal-item-time">${escapeHtml(displayTime)}</span>
-                            </div>
-                            <div class="pawpal-noti-modal-item-title">${escapeHtml(n.title)}</div>
-                            <div class="pawpal-noti-modal-item-text">${escapeHtml(n.content || '')}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            // Gắn sự kiện click cho từng item
-            listContainer.querySelectorAll('.pawpal-noti-modal-item').forEach(itemEl => {
-                itemEl.addEventListener('click', () => {
-                    const id = itemEl.dataset.id;
-                    const notiObj = items.find(x => String(x.id) === String(id));
-                    if (notiObj) {
-                        listContainer.querySelectorAll('.pawpal-noti-modal-item').forEach(el => el.classList.remove('selected'));
-                        itemEl.classList.add('selected');
-                        currentSelectedNotiId = id;
-                        renderDetailPane(notiObj);
-                    }
-                });
-            });
-
-            // Hiển thị chi tiết của item được chọn vào cột phải
-            renderDetailPane(selectedItem);
-        }
-
-        const initialId = initialNoti ? initialNoti.id : null;
-        renderModalNotiList('all', initialId);
-        overlay.classList.add('show');
-        document.body.style.overflow = 'hidden';
-    }
-
-    window.openAllNotificationsModal = openAllNotificationsModal;
+    window.openAllNotificationsModal=openAllNotificationsModal;
 
     function setupMobileAccountToggle() {
         const accountGroup = document.querySelector('.mobile-account-group');
@@ -1361,7 +870,7 @@
     });
     window.addEventListener('pawpal_settings_updated', renderDynamicTopBarNotice);
     window.addEventListener('storage', (e) => {
-        if (e.key === 'pawpal_notifications' || e.key === null) {
+        if (e.key === 'pawpal_notifications' || e.key === 'pawpal_current_user' || e.key === null) {
             window.updateNotificationBadge();
         }
         if (e.key === 'pawpal_settings_notices') {

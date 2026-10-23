@@ -90,26 +90,14 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
         const phones = Array.isArray(c.customer_phone) ? c.customer_phone : (c.customer_phone ? [c.customer_phone] : []);
         const primaryPhone = phones.find(p => p.is_primary)?.phone_number || phones[0]?.phone_number || '';
         const member = Array.isArray(c.customer_membership) ? c.customer_membership[0] : c.customer_membership;
-        const tierName = member?.membership_tier?.tier_name || 'Đồng';
+        const tierName = member?.membership_tier?.tier_name || null;
 
-        const [ordersRes, aptsRes, pointsRes] = await Promise.all([
-            admin.from('sales_order').select(`
-                id,
-                order_status,
-                shipping_fee_snapshot,
-                sales_order_detail (quantity, unit_price, discount_amount)
-            `).eq('customer_id', c.id),
-            admin.from('appointment').select(`
-                id,
-                appointment_status,
-                appointment_item (quantity, unit_price, is_primary)
-            `).eq('customer_id', c.id),
-            admin.from('paw_point_transaction').select('points').eq('customer_id', c.id)
+        const [pointsRes,spendRes]=await Promise.all([
+            admin.from('customer_point_balance').select('total_paw_points').eq('customer_id',c.id).maybeSingle(),
+            admin.from('customer_eligible_spend').select('eligible_spend').eq('customer_id',c.id).maybeSingle()
         ]);
-        if (ordersRes.error || aptsRes.error) throw new Error('Không thể tải chi tiêu xét hạng.');
-        const { eligibleSpend, loyaltySummary } = await import('../shared/loyalty-summary.mjs');
-        const loyalty = loyaltySummary(eligibleSpend(ordersRes.data || [], aptsRes.data || []));
-        const currentPoints = (pointsRes.data || []).reduce((acc, row) => acc + (Number(row.points) || 0), 0);
+        if(pointsRes.error || spendRes.error || !pointsRes.data || !spendRes.data)throw Error('Không thể tải số dư điểm hoặc chi tiêu. Vui lòng thử lại.');
+        const currentPoints=Number(pointsRes.data.total_paw_points || 0);
 
         return {
             id: c.id,
@@ -120,8 +108,8 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
             gender: profile?.gender || '',
             dob: profile?.date_of_birth || '',
             points: currentPoints,
-            tier: loyalty.tier || tierName,
-            spend: loyalty.spend,
+            tier: tierName,
+            spend: Number(spendRes.data.eligible_spend || 0),
             role: 'customer',
             is_temporary: false,
             _source: 'supabase'

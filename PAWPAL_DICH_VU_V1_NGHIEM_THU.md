@@ -229,6 +229,15 @@ Dùng các loài cụ thể hiện có trong danh mục; không dùng “Khác�
 - Đã áp migration sau sao lưu ngoài Git `portal-loyalty-cloud-2026-10-23T06-47-25-210Z`, đối chiếu toàn bộ dữ liệu public và danh tính/mật khẩu/trạng thái khóa Auth giữ nguyên, vẫn 17 nhân viên. Không thêm bảng/cột. Không truy vấn Logs Cloud.
 - Nghiệm thu Vercel: commit `48559158` đã được phục vụ; `customer_loyalty_cloud.cjs --deployed` đạt đọc dữ liệu thật, loại dữ liệu local nhiễu, chi tiết và bốn cách đóng, rời trang, API lỗi không cấp/trừ, điều kiện thay đổi bị từ chối và phục hồi sau reload, đổi 100 → 60 điểm, gửi lại cùng yêu cầu qua RPC và API tương thích không trừ lặp, ví tồn tại sau reload. Hai yêu cầu đồng thời đổi 40 điểm khi còn 60 chỉ một thành công, số dư còn 20 và cập nhật qua Realtime. Đã dọn tài khoản, voucher và ledger thử có kiểm tra định danh fixture; giữ các sự kiện audit theo quy tắc bất biến. Không chỉnh số dư/hạng hoặc dữ liệu nguồn của khách đang có.
 
+### Chi tiết sản phẩm, hạng thành viên và thông báo (23/10/2026)
+
+- Migration `076_customer_public_details_notifications.sql` đã áp lên Cloud mới sau sao lưu `public-details-cloud-2026-10-23T07-35-03-098Z` ngoài Git. Đối chiếu public/Auth giữ nguyên; không thêm bảng/cột.
+- Chi tiết sản phẩm đọc số sao và số đánh giá đã duyệt thật, lọc và phân trang 10 đánh giá. Nút đánh giá dẫn về đơn đã nhận; bỏ báo thành công giả, số liệu mẫu và cam kết giao/đổi trả không có cấu hình. Vận chuyển đọc danh mục đang khả dụng; nội dung từ CSDL được escape. Sửa phạm vi hàm cho nút yêu thích ở sản phẩm liên quan.
+- API tài khoản đọc hạng đã gán, số dư điểm và chi tiêu từ view V1; không tự suy hạng theo ngưỡng cứng.
+- Header đọc thông báo bằng RPC xác định chủ qua Auth, không dùng danh sách hoặc trạng thái đọc local. Chỉ cập nhật đã đọc sau máy chủ xác nhận; đọc tất cả theo mốc snapshot để không nuốt thông báo mới. Từ chối sai chủ; Realtime tải lại danh sách. Phạm vi này sửa đọc/đánh dấu, không bổ sung tự sinh thông báo cho mọi nghiệp vụ.
+- Đạt 41 kiểm thử Auth/header, kiểm thử RPC trên CSDL phục hồi và trình duyệt dùng mã local với Cloud thật: đánh giá chưa duyệt bị ẩn, nội dung không chạy HTML, hạng đã gán không phụ thuộc chi tiêu, lỗi ghi không đổi trạng thái, riêng tư hai tài khoản, bốn cách đóng cửa sổ và Realtime. Đã xem ảnh từng màn hình và dọn dữ liệu/tài khoản thử. Không truy vấn Logs Cloud.
+- Kiểm tra Production sẽ được ghi sau khi Vercel phục vụ bản sửa.
+
 ### Yêu thích phía khách (23/10/2026)
 
 - `075_customer_wishlist.sql` đọc và lưu đúng `wishlist_product`/`wishlist_service`, bỏ bảng legacy `wishlist_item`. Chủ danh sách lấy từ Auth; thao tác ghi đối chiếu thêm chủ đang hiển thị để chặn đổi tài khoản giữa chừng. Lưu/xóa dùng trạng thái mong muốn, gửi lại không đảo ngược trạng thái hoặc tạo trùng. Không thêm bảng/cột.

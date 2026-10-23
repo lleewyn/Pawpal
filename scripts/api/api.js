@@ -1633,85 +1633,19 @@ export const API = {
     /* ==========================================================================
        GIAI ĐOẠN 4: THÔNG BÁO HỆ THỐNG & TRUY VẾT NHẬT KÝ (NOTIFICATION & AUDIT_LOG)
        ========================================================================== */
-    async getUserNotifications(customerId, limit = 20) {
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db || !customerId) return [];
-        try {
-            const { data, error } = await db.from('notification')
-                .select('*')
-                .eq('customer_id', customerId)
-                .order('sent_at', { ascending: false })
-                .limit(limit);
-
-            if (error) throw error;
-            return data || [];
-        } catch (e) {
-            return [];
-        }
+    async getUserNotifications(customerId,limit=20){
+        const db=window.getSupabaseClient?.() || window.SupabaseClient,owner=await resolveCustomerId(db,customerId);
+        const result=await db.rpc('own_notifications_snapshot');if(result.error || result.data?.customer_id!==owner)throw Error('Không thể tải thông báo.');return result.data.rows.slice(0,Math.max(1,Math.min(500,limit)));
     },
-
-    async markNotificationAsRead(notificationId) {
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db || !notificationId) return { success: false };
-        try {
-            const { data, error } = await db.from('notification')
-                .update({ is_read: true, read_at: new Date().toISOString() })
-                .eq('id', notificationId)
-                .select()
-                .single();
-
-            if (error) throw error;
-            return { success: true, data };
-        } catch (e) {
-            return { success: false, error: e.message };
-        }
+    async markNotificationAsRead(id){
+        const db=window.getSupabaseClient?.() || window.SupabaseClient,result=await db.rpc('mark_own_notifications_read',{p_id:id});
+        if(result.error)throw Error('Chưa đánh dấu được thông báo.');document.dispatchEvent(new CustomEvent('notifications_updated'));return {success:true};
     },
-
-    async markAllNotificationsAsRead(customerId) {
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db || !customerId) return { success: false };
-        try {
-            const { data, error } = await db.from('notification')
-                .update({ is_read: true, read_at: new Date().toISOString() })
-                .eq('customer_id', customerId)
-                .eq('is_read', false);
-
-            if (error) throw error;
-            return { success: true, data };
-        } catch (e) {
-            return { success: false, error: e.message };
-        }
+    async markAllNotificationsAsRead(customerId){
+        const db=window.getSupabaseClient?.() || window.SupabaseClient,owner=await resolveCustomerId(db,customerId),snapshot=await db.rpc('own_notifications_snapshot');if(snapshot.error || snapshot.data?.customer_id!==owner)throw Error('Không thể tải thông báo.');
+        const result=await db.rpc('mark_own_notifications_read',{p_id:null,p_before:snapshot.data.snapshot_at,p_expected_owner:owner});if(result.error)throw Error('Chưa đánh dấu được thông báo.');document.dispatchEvent(new CustomEvent('notifications_updated'));return {success:true};
     },
-
-    async createSystemNotification({ customerId, type = 'don_hang_moi', title, content, orderId = null, appointmentId = null, ticketId = null, refundId = null }) {
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db || !customerId || !title || !content) return { success: false };
-        try {
-            const { data, error } = await db.from('notification').insert([{
-                customer_id: customerId,
-                notification_type: type,
-                title,
-                content,
-                sales_order_id: orderId,
-                appointment_id: appointmentId,
-                support_ticket_id: ticketId,
-                refund_transaction_id: refundId,
-                is_read: false,
-                sent_at: new Date().toISOString()
-            }]).select().single();
-
-            if (error) throw error;
-            try {
-                if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
-                    window.dispatchEvent(new CustomEvent('notifications_updated', { detail: { action: 'created', notification: data } }));
-                }
-            } catch (_) {}
-            return { success: true, data };
-        } catch (e) {
-            console.warn('[API] createSystemNotification warning:', e);
-            return { success: false };
-        }
-    },
+    async createSystemNotification(){return {success:false,error:'Thông báo được tạo qua nghiệp vụ trên máy chủ.'};},
 
     async recordAuditLog({ staffId, action, entityName, entityId, description = '' }) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
