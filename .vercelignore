@@ -8,4 +8,5 @@ scripts/server/
 PAWPAL_*.md
 scripts/database/
 docs/
+PAWPAL_PUBLIC_HTML_V218_VA_7_TRANG/
 scripts/migrate_customer_auth.js

@@ -1,527 +1,113 @@
-
-document.addEventListener('DOMContentLoaded', function() {
-
-        window._pageLoadStart = Date.now();
-        var _loaderThreshold = 300; // ms
-        var _loaderTimeout = setTimeout(function () {
-            var loader = document.getElementById('cute-loader');
-            if (loader) loader.style.display = 'flex';
-        }, _loaderThreshold);
-    
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-
-        (function () {
-            function hideLoader() {
-                clearTimeout(window._loaderTimeout);
-                var loader = document.getElementById('cute-loader');
-                if (!loader) return;
-                if (loader.style.display === 'none') return;
-                loader.style.opacity = '0';
-                loader.style.transition = 'opacity 0.3s ease';
-                setTimeout(function () { loader.style.display = 'none'; }, 300);
+/* V2.18 presentation uses published Cloud data; no mock prices or identities. */
+(() => {
+    'use strict';
+    if (window.pawpalHomeV218Ready) return;
+    window.pawpalHomeV218Ready = true;
+    function init() {
+        const root = document.querySelector('body.landing-v218 main');
+        if (!root) return;
+        const grid = root.querySelector('#home-services');
+        if (!grid || grid.dataset.homeReady) return;
+        grid.dataset.homeReady = 'true';
+        const $ = selector => root.querySelector(selector);
+        const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const money = n => Number(n).toLocaleString('vi-VN') + 'đ';
+        let services = [], category = 'all';
+        function renderServices() {
+            const rows = services.filter(s => category === 'all' || s.category === category).slice(0, 5);
+            grid.innerHTML = rows.length ? rows.map(s => `<article class="catalog-item" data-service-id="${esc(s.id)}">
+                <a class="catalog-photo-link" href="/pages/services/service-detail/service-detail.html?id=${encodeURIComponent(s.serviceId)}"><img src="${esc(s.image)}" alt="${esc(s.name)}" loading="lazy" width="640" height="480"></a>
+                <div class="catalog-body"><div class="catalog-topline"><span class="catalog-id">${esc(s.serviceId)}</span><span class="catalog-rating">${s.reviewCount > 0 ? `★ ${s.rating.toFixed(1)} (${s.reviewCount})` : 'Chưa có đánh giá'}</span></div>
+                <h3><a href="/pages/services/service-detail/service-detail.html?id=${encodeURIComponent(s.serviceId)}">${esc(s.name)}</a></h3>
+                <p class="catalog-desc">${esc(s.description)}</p><p class="catalog-duration">${esc([s.petType,s.duration].filter(Boolean).join(' · '))}</p>
+                <div class="catalog-purchase"><span class="catalog-price">${s.hasPrice ? 'Từ '+money(s.price) : 'Xem giá khi đặt lịch'}</span><a class="catalog-book" href="/booking?service=${encodeURIComponent(s.serviceId)}">Đặt lịch</a></div></div></article>`).join('') : '<p class="home-state">Chưa có dịch vụ trong nhóm này.</p>';
+        }
+        root.querySelectorAll('[data-category]').forEach(button => button.addEventListener('click', () => {
+            category = button.dataset.category;
+            root.querySelectorAll('[data-category]').forEach(b => {b.classList.toggle('active', b === button); b.setAttribute('aria-pressed', String(b === button));});
+            renderServices();
+        }));
+        async function loadServices() {
+            grid.textContent = 'Đang tải dịch vụ…';
+            try {
+                services = (await window.DataLoader.loadServices()).sort((a,b) => ({spa:0,hotel:1,taxi:2}[a.category] ?? 3)-({spa:0,hotel:1,taxi:2}[b.category] ?? 3) || a.serviceId.localeCompare(b.serviceId));
+                if (!grid.isConnected) return;
+                renderServices(); await loadReviews();
+            } catch (_) {
+                if (!grid.isConnected) return;
+                grid.innerHTML = '<p class="home-state">Chưa tải được dịch vụ. <button type="button" id="home-retry">Thử lại</button></p>';
+                $('#home-retry').addEventListener('click', loadServices, {once:true});
+                $('#v4-quote').textContent = 'Chưa tải được đánh giá dịch vụ.';
             }
-            if (document.readyState === 'complete') {
-                hideLoader();
-            } else {
-                window.addEventListener('load', hideLoader);
+        }
+        async function loadReviews() {
+            const service = services.find(s => s.reviewCount > 0);
+            let reviews = [], index = 0;
+            const buttons = root.querySelectorAll('[data-v4-review]');
+            buttons.forEach(b => b.disabled = true);
+            if (service) {
+                try { reviews = (await window.DataLoader.getServiceReviews(service.id)).filter(r => r.text.trim()); }
+                catch (_) { if (grid.isConnected) $('#v4-quote').textContent = 'Chưa tải được đánh giá dịch vụ.'; return; }
             }
-        })();
-    
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-
-        (function () {
-            function updateHeroAvailability() {
-                const el = document.getElementById('heroAvailability');
-                if (!el) return;
-
-                const spaSlots = Math.floor(Math.random() * 5) + 1;
-                const hotelRooms = Math.floor(Math.random() * 4) + 1;
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-
-                el.innerHTML = `Hôm nay còn trống: <strong style="color:#ffffff; font-weight:700;">${spaSlots} slot Spa</strong> | <strong style="color:#ffffff; font-weight:700;">${hotelRooms} phòng Hotel</strong> <span style="opacity:0.6">(Cập nhật ${timeStr})</span>`;
+            if (!grid.isConnected) return;
+            function show() {
+                const row = reviews[index];
+                $('#v4-quote').textContent = row ? row.text : 'Chưa có đánh giá dịch vụ được công bố.';
+                $('#v4-by').textContent = row ? `${row.name} · ${row.rating}/5 · ${service.name}` : '';
+                $('#v4-review-index').textContent = row ? `${index+1} / ${reviews.length}` : '—';
+                buttons.forEach(b => b.disabled = reviews.length < 2);
             }
-
-            function updateCtaUrgency() {
-                const el = document.getElementById('ctaUrgency');
-                if (!el) return;
-
-                const totalSlots = Math.floor(Math.random() * 8) + 3; 
-                el.innerHTML = `<span class="urgency-dot"></span><span>Hôm nay còn <strong>${totalSlots} slot</strong> trống — Đặt ngay!</span>`;
-            }
-
-            updateHeroAvailability();
-            updateCtaUrgency();
-            setInterval(updateHeroAvailability, 300000); 
-            setInterval(updateCtaUrgency, 180000); 
-
-            (function initSvcSwap() {
-                const featured   = document.getElementById('svcFeatured');
-                const miniItems  = document.querySelectorAll('.svc-mini-item');
-                if (!featured || !miniItems.length) return;
-
-                function swapFeatured(el) {
-                    const d = el.dataset;
-                    if (!d.id || d.id === featured.dataset.id) return;
-
-                    featured.style.transition = 'opacity 0.2s ease';
-                    featured.style.opacity = '0';
-
-                    setTimeout(function () {
-                        document.getElementById('svcFeaturedImgEl').src = d.img;
-                        document.getElementById('svcFeaturedImgEl').alt = d.title;
-                        document.getElementById('svcFeaturedTitle').innerHTML = d.title;
-                        document.getElementById('svcFeaturedDesc').textContent = d.desc;
-                        document.getElementById('svcFeaturedPrice').textContent = d.price;
-                        document.getElementById('svcFeaturedCta').textContent = d.cta;
-
-                        var badge = document.getElementById('svcFeaturedBadge');
-                        if (d.badge) {
-                            badge.textContent = d.badge;
-                            badge.style.display = '';
-                        } else {
-                            badge.style.display = 'none';
-                        }
-
-                        featured.href = d.href || '#';
-                        featured.dataset.id = d.id;
-
-                        miniItems.forEach(function(m) {
-                            m.classList.remove('svc-active');
-                            m.style.display = '';
-                        });
-                        el.classList.add('svc-active');
-
-                        featured.style.opacity = '1';
-                    }, 200);
+            buttons.forEach(b => b.addEventListener('click', () => {index=(index+(b.dataset.v4Review==='next'?1:-1)+reviews.length)%reviews.length;show();}));show();
+        }
+        async function loadTiers() {
+            const host = $('#home-tiers');
+            try {
+                const {data,error} = await window.getSupabaseClient().from('membership_tier').select('id,tier_name,discount_percent,description,is_active').eq('is_active',true).order('minimum_expenditure').limit(12);
+                if (error) throw error;
+                if (!grid.isConnected) return;
+                host.innerHTML = data.length ? data.map((tier,i) => `<article class="v210-pass-tier"><span class="v210-pass-index">${String(i+1).padStart(2,'0')} / PAWPASS</span><h3>${esc(tier.tier_name)}</h3><div class="v210-rate">${esc(Number(tier.discount_percent)||0)}<span>%</span></div><div class="v210-tier-line"><span>Mức giảm theo hạng</span></div><p>${esc(tier.description || 'Áp dụng theo điều kiện giao dịch.')}</p></article>`).join('') : '<p>Chưa có hạng thành viên được công bố.</p>';
+            } catch (_) { host.textContent = 'Chưa tải được quyền lợi thành viên. Bạn có thể xem lại trong tài khoản.'; }
+        }
+        async function loadBanners() {
+            const slides = [{src:$('#campaignImg').getAttribute('src'),name:'Pet Taxi — Đồng hành cùng bé',link:'/booking?service=TXI01'}];
+            let current = 0;
+            try {
+                const {data,error} = await window.getSupabaseClient().from('banner').select('id,title,image_url,link,start_date,end_date,status').eq('status','dang_hien_thi').order('display_order').limit(8);
+                if (error) throw error;
+                const now = Date.now();
+                for (const b of data || []) {
+                    let url,link;
+                    try {url=new URL(b.image_url, location.origin);link=new URL(b.link || '/services',location.origin);}catch(_){continue;}
+                    if (!['https:','http:'].includes(url.protocol) || /(^|\.)example\.(com|org|net)$/.test(url.hostname) || link.origin !== location.origin) continue;
+                    if ((b.start_date && Date.parse(b.start_date)>now) || (b.end_date && Date.parse(b.end_date)<now)) continue;
+                    const ok = await new Promise(resolve => {const image=new Image();const timer=setTimeout(()=>resolve(false),4000);image.onload=()=>{clearTimeout(timer);resolve(true);};image.onerror=()=>{clearTimeout(timer);resolve(false);};image.src=url.href;});
+                    if (ok) slides.push({src:url.href,name:b.title||'PawPal',link:link.pathname+link.search});
                 }
-
-                miniItems.forEach(function(item) {
-                    item.style.cursor = 'pointer';
-                    item.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        swapFeatured(item);
-                    });
-                });
-            })();
-
-        })();
-    
-});
-
-        document.addEventListener('DOMContentLoaded', async function () {
-            const carousel = document.getElementById('heroCarousel');
-            if (!carousel) return;
-
-            // Nạp banners động từ Supabase qua DataLoader
-            let attempts = 0;
-            while (!window.DataLoader && attempts < 20) {
-                await new Promise(r => setTimeout(r, 100));
-                attempts++;
+            } catch (_) { /* Approved brand artwork remains available if the catalogue is unavailable. */ }
+            if (!grid.isConnected) return;
+            const prev=$('#prevSlide'), next=$('#nextSlide');
+            function show() {
+                const row=slides[current];$('#campaignImg').src=row.src;$('#campaignImg').alt=row.name;
+                $('#slideName').textContent=row.name;$('#slideNum').textContent=String(current+1).padStart(2,'0');
+                $('#slidePager').textContent=`${String(current+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}`;
+                $('.book-inline').href=row.link;
+                $('.book-inline').textContent=row.link.startsWith('/booking')?'Đặt lịch ngay ↗':'Khám phá dịch vụ ↗';
             }
-
-            if (window.DataLoader && typeof window.DataLoader.loadBanners === 'function') {
-                try {
-                    const banners = await window.DataLoader.loadBanners();
-                    if (banners && banners.length > 0) {
-                        const inner = carousel.querySelector('.carousel-inner');
-                        const indicators = carousel.querySelector('.carousel-indicators');
-
-                        if (inner) {
-                            inner.innerHTML = banners.map((b, idx) => `
-                                <div class="carousel-item ${idx === 0 ? 'active' : ''}">
-                                    <a href="${b.link || '/pages/services/services.html'}">
-                                        <img src="${b.image}" class="d-block w-100 ui-element-5 h-auto object-fit-cover"
-                                            alt="${b.title || 'PawPal'}" loading="${idx === 0 ? 'eager' : 'lazy'}">
-                                    </a>
-                                </div>
-                            `).join('');
-                        }
-
-                        if (indicators) {
-                            indicators.innerHTML = banners.map((_, idx) => `
-                                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="${idx}"
-                                    class="${idx === 0 ? 'active' : ''}" ${idx === 0 ? 'aria-current="true"' : ''}
-                                    aria-label="Slide ${idx + 1}"></button>
-                            `).join('');
-                        }
-
-                        // Reinitialize bootstrap carousel if available
-                        if (typeof bootstrap !== 'undefined' && bootstrap.Carousel) {
-                            const inst = bootstrap.Carousel.getInstance(carousel);
-                            if (inst) inst.dispose();
-                            new bootstrap.Carousel(carousel, {
-                                interval: 4500,
-                                ride: 'carousel'
-                            });
-                        }
-                    }
-                } catch (e) {
-                    console.warn('[Landing] Không thể tải banner động từ DB, giữ banner mặc định:', e);
-                }
-            }
-        });
-    
-
-
-(async function() {
-    const grid = document.getElementById('productGrid');
-    if (!grid) return;
-
-    grid.dataset.landingProductsOwner = 'true';
-
-    const cartKey = 'pawpal_cart';
-    const cartPage = '/pages/shop/cart/cart.html';
-    const getCart = () => JSON.parse(localStorage.getItem(cartKey) || '[]');
-    const saveCart = async (cart) => {
-        const currentUser = getCurrentWishlistUser();
-        if (window.API && typeof window.API.saveUserCart === 'function') {
-            const result = await window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
-            if (!result?.success) throw new Error('Không thể lưu giỏ hàng');
-        } else {
-            throw new Error('Không thể kết nối giỏ hàng');
+            [prev,next].forEach(b=>{b.hidden=slides.length<2;b.disabled=slides.length<2;});
+            prev.addEventListener('click',()=>{current=(current-1+slides.length)%slides.length;show();});
+            next.addEventListener('click',()=>{current=(current+1)%slides.length;show();});show();
         }
-    };
-    const getQty = (item) => {
-        const qty = Number(item?.quantity ?? item?.qty ?? 1);
-        return Number.isFinite(qty) && qty > 0 ? qty : 1;
-    };
-    const showCartToast = (message, type = 'success') => {
-        if (typeof window.showGlobalToast === 'function') {
-            window.showGlobalToast(type, message);
-            return;
-        }
-        if (typeof window.showToast === 'function') {
-            window.showToast(message, type);
-            return;
-        }
-        const toast = document.createElement('div');
-        toast.textContent = message;
-        toast.className = 'cart-toast';
-        document.body.appendChild(toast);
-        requestAnimationFrame(() => {
-            toast.style.transform = 'translateY(0)';
-        });
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(8px)';
-            setTimeout(() => toast.remove(), 350);
-        }, 2200);
-    };
-    const upsertCartItem = (cart, id, product, quantity = 1) => {
-        const existing = cart.find(item => String(item.id) === String(id));
-        if (existing) {
-            existing.quantity = getQty(existing) + quantity;
-            existing.qty = existing.quantity;
-            Object.assign(existing, product);
-        } else {
-            cart.push({
-                ...product,
-                id,
-                quantity,
-                qty: quantity
-            });
-        }
-        return cart;
-    };
-    const getCurrentWishlistUser = () => {
-        try {
-            return JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-        } catch (error) {
-            return null;
-        }
-    };
-    let attempts = 0;
-    while (!window.DataLoader && attempts < 20) {
-        await new Promise(r => setTimeout(r, 100));
-        attempts++;
+        const entries = [...root.querySelectorAll('.pj-entry')];
+        const photo = $('#pj-active-photo'), original = photo.src;
+        const art = [...root.querySelectorAll('.v4-step img')].map(i => i.src);
+        entries.forEach((entry,i) => entry.addEventListener('click', () => {
+            entries.forEach(e => {e.classList.toggle('is-current', e===entry);e.setAttribute('aria-pressed',String(e===entry));});
+            photo.src = i===0 ? original : art[i-1];photo.alt=entry.querySelector('strong').textContent+' — minh họa';
+            $('#pj-photo-caption').textContent = `${String(i+1).padStart(2,'0')} / 03 · ${entry.querySelector('.pj-time').textContent} — ${entry.querySelector('strong').textContent}`;
+        }));
+        loadServices();loadTiers();loadBanners();
     }
-    let products;
-    try {
-        if (!window.DataLoader) throw new Error('DataLoader unavailable');
-        products = await window.DataLoader.loadProducts();
-        if (!products?.length) {
-            grid.innerHTML = '<p class="text-muted">Chưa có sản phẩm.</p>';
-            return;
-        }
-    } catch (error) {
-        grid.innerHTML = '<p class="text-muted" role="status">Không thể tải sản phẩm. Vui lòng tải lại trang.</p>';
-        return;
-    } finally {
-        grid.setAttribute('aria-busy', 'false');
-    }
-
-    const featured = products
-        .filter(p => p.stock > 0)
-        .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-        .slice(0, 10);
-
-    const detailBase = '/pages/shop/product-detail/product-detail.html';
-
-    const renderProducts = (items) => {
-        grid.innerHTML = items.map(p => {
-            const hasDiscount = p.originalPrice && p.originalPrice > p.price;
-            const oldPrice = hasDiscount
-                ? `<span class="price-old">${Number(p.originalPrice).toLocaleString('vi-VN')}đ</span>`
-                : '';
-            const stars = '★'.repeat(Math.round(p.rating || 5));
-            const sold = p.soldCount ? `(${Number(p.soldCount).toLocaleString('vi-VN')} đã bán)` : '';
-
-            return `
-            <div class="product-card" data-product-id="${p.id}">
-                <button class="product-wishlist-btn" data-product-id="${p.id}" aria-label="Thêm vào yêu thích">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                    </svg>
-                </button>
-                <a href="${detailBase}?id=${p.id}" class="product-card-link" style="text-decoration:none;color:inherit">
-                    <div class="product-image-box">
-                        <img src="${p.image || '/assets/images/shop/products/placeholder.webp'}"
-                            alt="${p.name}" loading="lazy"
-                            onerror="this.src='/assets/images/shop/products/placeholder.webp'">
-                    </div>
-                    <div class="product-info">
-                        <h3>${p.name}</h3>
-                        <div class="product-meta">
-                            <span class="rating-stars" style="color:#f59e0b">${stars}</span>
-                            <span class="rating-score">${p.rating || '5.0'}</span>
-                            <span class="sold-count">${sold}</span>
-                        </div>
-                        <div class="product-info-footer">
-                            <div class="product-price">
-                                <span class="price-current">${Number(p.price).toLocaleString('vi-VN')}đ</span>
-                                ${oldPrice}
-                            </div>
-                        </div>
-                    </div>
-                </a>
-                <div class="product-card-actions">
-                    <button class="add-to-cart-btn" data-product-id="${p.id}"
-                        aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
-                    <button class="buy-now-btn" data-product-id="${p.id}"
-                        aria-label="Mua ngay">Mua ngay</button>
-                </div>
-            </div>`;
-        }).join('');
-        window.setupLandingProductWishlist?.(grid);
-    };
-
-    renderProducts(featured);
-
-    grid.addEventListener('click', async (event) => {
-        const addBtn = event.target.closest('.add-to-cart-btn');
-        const buyBtn = event.target.closest('.buy-now-btn');
-        if (!addBtn && !buyBtn) return;
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        const btn = addBtn || buyBtn;
-        const id = btn.dataset.productId;
-        const product = products.find(item => String(item.id) === String(id));
-        if (!product) return;
-
-        if (buyBtn) {
-            window.openLandingBuyNowModal(product, buyBtn);
-            return;
-        }
-
-        const cart = getCart();
-        upsertCartItem(cart, id, product, 1);
-        try {
-            const user = getCurrentWishlistUser();
-            if (user?.id && !user.is_temporary) {
-                const result = await window.API.addToCart(user.id, id, 1, product);
-                if (!result?.success) throw new Error('Không thể thêm sản phẩm vào giỏ hàng');
-            } else {
-                await saveCart(cart);
-            }
-            showCartToast(`Đã thêm ${product.name} vào giỏ hàng`);
-            if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
-        } catch (error) {
-            showCartToast(error.message || 'Không thể thêm sản phẩm vào giỏ hàng', 'warning');
-        }
-    });
-
-    document.querySelectorAll('.shop-tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.shop-tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const tab = btn.dataset.tab;
-            let filtered;
-            
-            if (tab === 'hangmoi') {
-                filtered = [...products].sort((a,b) => String(b.id).localeCompare(String(a.id))).slice(0, 10);
-            } else if (tab === 'banchay') {
-                filtered = [...products].sort((a,b) => (b.soldCount || 0) - (a.soldCount || 0)).slice(0, 10);
-            } else if (tab === 'khuyenmai') {
-                filtered = products.filter(p => p.originalPrice > p.price).slice(0, 10);
-                if (!filtered.length) filtered = featured;
-            } else {
-                filtered = featured;
-            }
-            
-            document.querySelectorAll('.shop-sub-filter-btn').forEach(b => b.classList.remove('active'));
-            renderProducts(filtered);
-        });
-    });
-
-    document.querySelectorAll('.shop-sub-filter-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            document.querySelectorAll('.shop-sub-filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const tag = btn.dataset.tag;
-
-            let filtered;
-            if (tag === 'all') {
-                filtered = featured;
-            } else {
-                const catMap = { 
-                    thucan: ['food','thucăn','thức ăn', 'thực phẩm'], 
-                    phukien: ['accessory','phụkiện','đồdùng', 'đồ dùng'], 
-                    vesinh: ['hygiene','vệsinh','chămsóc', 'vệ sinh'] 
-                };
-                const keys = catMap[tag] || [tag];
-                filtered = products
-                    .filter(p => p.stock > 0 && keys.some(k =>
-                        (p.categoryName || p.category || '').toLowerCase().includes(k) ||
-                        (p.tags || '').toLowerCase().includes(k)
-                    ))
-                    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-                    .slice(0, 10);
-                if (!filtered.length) filtered = featured.slice(0, 10);
-            }
-
-            renderProducts(filtered);
-        });
-    });
+    document.addEventListener('DOMContentLoaded',init);
+    document.addEventListener('page_navigated',init);
+    if (document.readyState !== 'loading') init();
 })();
-
-(async function() {
-    const svcGrid = document.getElementById('svcLandingGrid');
-    const svcTabBar = document.getElementById('svcTabBar');
-    if (!svcGrid) return;
-
-    let services = [];
-    try {
-        let attempts = 0;
-        while (!window.DataLoader && attempts++ < 20) await new Promise(resolve => setTimeout(resolve, 100));
-        if (!window.DataLoader) throw new Error('DataLoader unavailable');
-        services = await window.DataLoader.loadServices();
-    } catch(e) {
-        console.error('Failed to load services', e);
-        svcGrid.innerHTML = '<p class="text-muted" role="status">Không thể tải dịch vụ. Vui lòng tải lại trang.</p>';
-        return;
-    } finally {
-        svcGrid.setAttribute('aria-busy', 'false');
-    }
-    if (!services?.length) {
-        svcGrid.innerHTML = '<p class="text-muted">Chưa có dịch vụ.</p>';
-        return;
-    }
-
-    const renderServices = (items) => {
-        svcGrid.innerHTML = items.map(s => {
-            const formattedPrice = Number(s.price).toLocaleString('vi-VN');
-            const memberPrice = Math.round(Number(s.price) * 0.95).toLocaleString('vi-VN');
-            const sanitizedName = s.name.replace(/&/g, 'và');
-            const sanitizedDesc = s.description.replace(/&/g, 'và');
-
-            return `
-            <div class="svc-landing-card">
-                <button class="svc-landing-wishlist-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                    </svg>
-                </button>
-                <div class="svc-landing-img-box">
-                    <img src="${s.image || '/assets/images/services/placeholder.webp'}" alt="${sanitizedName}" loading="lazy" onerror="this.src='/assets/images/services/placeholder.webp'">
-                </div>
-                <div class="svc-landing-body">
-                    <div class="svc-landing-header">
-                        <span class="svc-landing-id">${s.serviceId || 'SVC'}</span>
-                        <span class="svc-landing-rating">${Number(s.rating || 5.0).toFixed(1)} <span>(${s.reviewCount || 0})</span></span>
-                    </div>
-                    <h3 class="svc-landing-title">${sanitizedName}</h3>
-                    <p class="svc-landing-desc">${sanitizedDesc}</p>
-                    
-                    <div class="svc-landing-meta">
-                        ${s.petType || 'Tất cả'} &nbsp;&nbsp; ${s.weightClass || ''} &nbsp;&nbsp; ${s.duration || ''}
-                    </div>
-                    
-                    <div class="svc-landing-price-row">
-                        <div class="svc-landing-price">Từ ${formattedPrice}đ</div>
-                        <button class="svc-landing-book-btn" onclick="window.location.href='/pages/services/booking/booking.html?service=${s.serviceId || s.id}'">Đặt lịch</button>
-                    </div>
-                    <div class="svc-landing-member-price">
-                        TV Bạc: ${memberPrice}đ
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
-    };
-
-    const getMixedServices = () => {
-        const spa = services.filter(s => s.category === 'spa').slice(0, 5);
-        const hotel = services.filter(s => s.category === 'hotel').slice(0, 4);
-        const taxi = services.filter(s => s.category === 'taxi').slice(0, 2);
-        return [...spa, ...hotel, ...taxi];
-    };
-
-    renderServices(getMixedServices());
-
-    if (svcTabBar) {
-        const tabs = svcTabBar.querySelectorAll('.shop-tab-btn');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                const cat = tab.dataset.category;
-                
-                let filtered = services;
-                if (cat === 'all') {
-                    filtered = getMixedServices();
-                } else if (cat === 'spa') {
-                    filtered = services.filter(s => s.category === 'spa');
-                } else if (cat === 'hotel') {
-                    filtered = services.filter(s => s.category === 'hotel');
-                } else if (cat === 'taxi') {
-                    filtered = services.filter(s => s.category === 'taxi');
-                }
-                
-                renderServices(filtered.slice(0, 10));
-            });
-        });
-    }
-})();
-
-document.addEventListener('DOMContentLoaded', () => {
-    try {
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
-        if (currentUser) {
-            const ctaNote = document.querySelector('.cta-note');
-            const btnPointsStart = document.querySelector('.btn-points-start');
-            
-            if (ctaNote) {
-                ctaNote.textContent = 'Khám phá quyền lợi hạng thẻ PawPass của bạn';
-            }
-            
-            if (btnPointsStart) {
-                btnPointsStart.href = '/pages/user/#loyalty';
-                const textSpan = btnPointsStart.querySelector('span:first-child');
-                const badgeSpan = btnPointsStart.querySelector('.points-badge');
-                
-                if (textSpan) textSpan.textContent = 'Xem Điểm Thưởng';
-                if (badgeSpan) {
-                    badgeSpan.textContent = `${currentUser.points || 0} pts`;
-                }
-            }
-        }
-    } catch (e) {
-        console.error('Error updating membership CTA', e);
-    }
-});

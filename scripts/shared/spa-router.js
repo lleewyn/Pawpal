@@ -153,7 +153,7 @@
             }
 
             // Đồng bộ thẻ body class
-            if (doc.body && doc.body.className) {
+            if (doc.body) {
                 document.body.className = doc.body.className;
             }
 

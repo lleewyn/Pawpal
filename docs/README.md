@@ -9,6 +9,7 @@
 | Cấu trúc Cloud đang triển khai | [Danh sách bảng và thuộc tính](database/PAWPAL_CSDL_CLOUD_MOI_HIEN_TAI_DANG_BANG.md) |
 | Đặc tả CSDL | [Đặc tả vật lý](database/PAWPAL_DATABASE_V1_DAC_TA_VAT_LY.md) |
 | Nghiệp vụ | [Hướng dẫn luồng nghiệp vụ](business/HUONG_DAN_LUONG_NGHIEP_VU_PAWPAL.md) |
+| Trang chủ V2.18 | [Phạm vi và kết quả kiểm tra](acceptance/PAWPAL_TRANG_CHU_V218_NGHIEM_THU.md) |
 
 ## Thư mục
 
