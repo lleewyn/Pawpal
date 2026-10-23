@@ -173,6 +173,8 @@ Giới hạn đã chốt: chưa phát triển ảnh/file, gửi tin bên ngoài 
 - [x] Người dùng cho phép chuẩn bị dữ liệu loài theo từng dịch vụ. `069_service_species_seed.sql` đã điền 38 liên kết cho 22 gói, không gán chung mọi loài; đã sao lưu bảng mục tiêu, giữ nguyên liên kết cũ và đối soát mọi bảng public khác/Auth không đổi. Các chỉnh sửa tiếp theo thực hiện theo từng gói trong Admin.
 - [x] Commit `66ea0ab` đã lên Vercel. `customer_booking_create_cloud.cjs --deployed` đạt spa/khách sạn/xe khứ hồi, lọc gói theo loài thật, trường điều kiện, phần thêm bắt buộc, báo giá máy chủ và chống tạo trùng sau tải lại. Hồi quy `customer_booking_cloud_read.cjs --cancel --deployed` và `--move --deployed` đều đạt; không tạo khoản thu/điểm và đã dọn dữ liệu thử riêng.
 - [ ] Hoàn thiện chi tiết ca, đánh giá dịch vụ và Realtime; kiểm tra lại toàn luồng trên Vercel.
+- [x] `070_customer_service_reviews.sql`: gửi theo từng dòng dịch vụ hoàn thành của chính khách, chờ duyệt; batch nguyên tử, gửi lại cùng mã không trùng, nội dung khác bị chặn. RPC đọc kèm phản hồi cửa hàng, không đọc cột đánh giá Cloud cũ hoặc ghi thành công giả vào localStorage. Đã thử rollback CSDL phục hồi và áp Cloud sau sao lưu `portal-bookings-cloud-2026-10-23T00-17-58-755Z`; public/Auth/17 nhân viên không đổi khi triển khai.
+- [x] Chi tiết hiển thị các dòng/phần thêm, khoảng thời gian đầy đủ và thực thu sau hoàn; thông báo hủy khớp quy tắc 2 tiếng. Đăng ký Realtime chi tiết cho lịch/dòng/thu tiền/đánh giá, dọn khi rời trang và giữ nội dung nhận xét đang soạn. Kiểm tra trình duyệt mã local với Cloud thật đạt form, kiểm tra bắt buộc, lưu bền sau reload và nhận thay đổi duyệt/ghi chú trực tiếp; đã dọn dữ liệu thử.
 
 ### Cấu hình loài phục vụ khởi tạo
 

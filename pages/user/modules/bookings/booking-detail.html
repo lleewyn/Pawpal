@@ -62,6 +62,7 @@
                     </div>
                 </div>
 
+                <section class="booking-detail-card mb-4"><h4 class="card-section-title">Các dịch vụ trong lịch hẹn</h4><div id="bookingServiceLines"></div></section>
                 <!-- Thao tác một chạm (Action Buttons) -->
                 <div class="booking-action-bar mb-4 d-flex gap-2 flex-wrap">
                     <button type="button" class="btn-detail-action btn-action-schedule" id="btnChangeSchedule" onclick="handleChangeSchedule()">
@@ -126,10 +127,7 @@
                             <span class="spec-label">Tổng chi phí</span>
                             <span class="spec-value price-highlight" id="priceInfo">0đ</span>
                         </div>
-                        <div class="booking-spec-row">
-                            <span class="spec-label">Thanh toán</span>
-                            <span class="spec-value">Tại quầy / Sau dịch vụ</span>
-                        </div>
+                        <div class="booking-spec-row"><span class="spec-label">Đã thanh toán sau hoàn</span><span class="spec-value" id="netPaidInfo">—</span></div>
                     </div>
                 </div>
 
@@ -139,7 +137,7 @@
                         <h4 class="card-section-title">Lưu ý dịch vụ</h4>
                     </div>
                     <ul class="policy-list mb-0">
-                        <li>Hủy miễn phí trước 24 giờ diễn ra ca hẹn.</li>
+                        <li>Tự hủy lịch trước tối thiểu 2 tiếng khi lịch chưa có khoản thu cần đối soát.</li>
                         <li>Thay đổi thời gian hẹn trước tối thiểu 2 tiếng.</li>
                         <li>Trường hợp khẩn cấp, vui lòng gọi Hotline <strong>0987 654 321</strong>.</li>
                     </ul>

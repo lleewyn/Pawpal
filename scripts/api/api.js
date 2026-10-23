@@ -113,7 +113,7 @@ export const API = {
                     id, appointment_code, scheduled_start_at, scheduled_end_at, check_in_time, check_out_time,
                     appointment_status, note, change_count, updated_at,
                     appointment_item (
-                        id, service_id, name_snapshot, quantity, unit_price, discount_amount, duration_minutes, is_primary,
+                        id, service_id, name_snapshot, quantity, unit_price, discount_amount, duration_minutes, is_primary, status,
                         service ( service_name, category_id, estimated_duration )
                     ),
                     pet_profile (
@@ -194,6 +194,7 @@ export const API = {
                     serviceCategory: primaryItem?.service?.category_id || '',
                     items:           items.map(itm => ({
                         id: itm.id,
+                        status: itm.status,
                         serviceId: itm.service_id,
                         name: itm.name_snapshot || itm.service?.service_name || '',
                         quantity: itm.quantity,
