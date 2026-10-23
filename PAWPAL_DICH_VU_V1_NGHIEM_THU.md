@@ -231,6 +231,8 @@ Dùng các loài cụ thể hiện có trong danh mục; không dùng “Khác�
 
 ### Chi tiết sản phẩm, hạng thành viên và thông báo (23/10/2026)
 
+- Rà tiếp header: bỏ dải khuyến mãi tĩnh `PAWFIRST10` khỏi template; chỉ dùng `get_public_site_notices`. Khi phản hồi rỗng, sai định dạng hoặc lỗi, gỡ dải cũ để không tiếp tục quảng cáo nội dung không xác minh được. Không chỉnh dữ liệu khuyến mãi trên Cloud.
+
 - Migration `076_customer_public_details_notifications.sql` đã áp lên Cloud mới sau sao lưu `public-details-cloud-2026-10-23T07-35-03-098Z` ngoài Git. Đối chiếu public/Auth giữ nguyên; không thêm bảng/cột.
 - Chi tiết sản phẩm đọc số sao và số đánh giá đã duyệt thật, lọc và phân trang 10 đánh giá. Nút đánh giá dẫn về đơn đã nhận; bỏ báo thành công giả, số liệu mẫu và cam kết giao/đổi trả không có cấu hình. Vận chuyển đọc danh mục đang khả dụng; nội dung từ CSDL được escape. Sửa phạm vi hàm cho nút yêu thích ở sản phẩm liên quan.
 - API tài khoản đọc hạng đã gán, số dư điểm và chi tiêu từ view V1; không tự suy hạng theo ngưỡng cứng.

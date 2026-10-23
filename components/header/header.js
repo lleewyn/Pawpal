@@ -554,6 +554,7 @@
             noticeAttempts=0;
             const {data:notices,error}=await client.rpc('get_public_site_notices');
             if(error)throw error;
+            if(!Array.isArray(notices))throw new Error('Invalid public notice response');
             const activePopup=notices.find(n=>String(n.type).toLowerCase()==='popup');
             if(activePopup&&!sessionStorage.getItem('pawpal_notice_dismissed_'+activePopup.id)&&!document.getElementById('pawpal-site-popup')){
                 const overlay=document.createElement('div');overlay.id='pawpal-site-popup';overlay.style.cssText='position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.3);display:grid;place-items:center;padding:20px';
@@ -615,6 +616,7 @@
                 topBarEl.style.display = 'none';
             });
         } catch (e) {
+            document.getElementById('pawpal-public-topbar-notice')?.remove();
             console.warn('Lỗi hiển thị topbar notice:', e);
         } finally {
             noticeLoading=false;

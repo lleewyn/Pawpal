@@ -17,7 +17,7 @@ const ok=async p=>{const r=await p;if(r.error)throw Error(r.error.message);retur
  const second=crypto.randomUUID();notices.push(second);await ok(service.from('notification').insert({id:second,customer_id:fixtures[0].cid,notification_type:'verification',title:'Second notice',content:'Second verified content'}));
  browser=await chromium.launch({channel:'chrome',headless:true});page=await browser.newPage({viewport:{width:1440,height:1050}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
  if(!process.argv.includes('--deployed')){
-  for(const path of ['components/header/header.js','scripts/api/api.js','pages/shop/product-detail/product-detail.html','pages/shop/product-detail/product-detail.js'])await page.route('**/'+path+'*',r=>r.fulfill({contentType:path.endsWith('.html')?'text/html':'application/javascript',body:fs.readFileSync(path,'utf8')}));
+  for(const path of ['components/header/header.html','components/header/header.js','scripts/api/api.js','pages/shop/product-detail/product-detail.html','pages/shop/product-detail/product-detail.js'])await page.route('**/'+path+'*',r=>r.fulfill({contentType:path.endsWith('.html')?'text/html':'application/javascript',body:fs.readFileSync(path,'utf8')}));
   const handler=require('../api/customer_auth').createCustomerAuth({admin:service,clientFactory,mode:'demo'});
   await page.route('**/api/customer/auth/me',async route=>{const request=route.request();let status=200,body;await handler.me({headers:request.headers(),body:request.postDataJSON()||{}},{setHeader(){},status(code){status=code;return this;},json(value){body=value;}});await route.fulfill({status,contentType:'application/json',body:JSON.stringify(body)});});
  }
@@ -26,6 +26,11 @@ const ok=async p=>{const r=await p;if(r.error)throw Error(r.error.message);retur
  step='product';await page.goto('https://pawpalgr3.vercel.app/pages/shop/product-detail/product-detail.html?id='+product.id);await page.locator('#productReviewSummary').waitFor();await page.waitForFunction(()=>document.querySelector('.product-reviews-section')?.getAttribute('aria-busy')==='false');assert.equal((await page.locator('#reviewsContainer').textContent()).includes('UNPUBLISHED-VERIFY'),false);
  await ok(service.from('review').update({review_status:'published',review_content:'Published verification <b>plain</b>'}).eq('id',review));await page.reload();await page.waitForFunction(()=>document.querySelector('#reviewsContainer')?.textContent.includes('Published verification <b>plain</b>'));assert.equal(await page.locator('#reviewsContainer b').count(),0);
  const real=(await ok(clientFactory().rpc('customer_shop_catalog'))).find(p=>p.id===product.id);assert.ok((await page.locator('#productReviewSummary').textContent()).includes(String(real.review_count)));assert.equal(await page.locator('.pd-trust-perks').count(),0);assert.equal(await page.locator('a[href="/user#orders"]').count()>0,true);
+ assert.equal(await page.locator('.notification-bar').count(),0);
+ const siteNotices=await ok(clientFactory().rpc('get_public_site_notices'));
+ const topNotice=siteNotices.find(n=>String(n.type).toLowerCase().replace('-','')==='topbar');
+ if(topNotice)await page.waitForFunction(content=>document.getElementById('pawpal-public-topbar-notice')?.textContent.includes(content),topNotice.content);
+ else assert.equal(await page.locator('#pawpal-public-topbar-notice').count(),0);
  await page.screenshot({path:infra+'/verification/customer-public-product.private.png'});
  if(!process.argv.includes('--product-only')){
   step='notifications';await page.waitForFunction(()=>document.querySelector('#notificationBadge')?.textContent==='2');await page.locator('#headerNotificationBtn').click();
