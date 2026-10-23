@@ -232,6 +232,7 @@ Dùng các loài cụ thể hiện có trong danh mục; không dùng “Khác�
 ### Chi tiết sản phẩm, hạng thành viên và thông báo (23/10/2026)
 
 - Rà tiếp header: bỏ dải khuyến mãi tĩnh `PAWFIRST10` khỏi template; chỉ dùng `get_public_site_notices`. Khi phản hồi rỗng, sai định dạng hoặc lỗi, gỡ dải cũ để không tiếp tục quảng cáo nội dung không xác minh được. Không chỉnh dữ liệu khuyến mãi trên Cloud.
+- Bản `1028706d` đã lên Vercel: gỡ cùng khối mẫu khỏi 18 trang có header nhúng. 13 kiểm thử header đạt, gồm phản hồi cấu hình/rỗng/lỗi/sai định dạng và kiểm tra không còn mã mẫu trong các template. `customer_public_details_cloud.cjs --deployed --product-only` đạt; đã xem ảnh, đối chiếu thông báo với RPC Cloud thật và dọn dữ liệu thử. Kiểm tra HTML Production của Trang chủ, User, Cửa hàng, Dịch vụ và Đăng nhập không còn mã mẫu. Không truy vấn Logs Cloud.
 
 - Migration `076_customer_public_details_notifications.sql` đã áp lên Cloud mới sau sao lưu `public-details-cloud-2026-10-23T07-35-03-098Z` ngoài Git. Đối chiếu public/Auth giữ nguyên; không thêm bảng/cột.
 - Chi tiết sản phẩm đọc số sao và số đánh giá đã duyệt thật, lọc và phân trang 10 đánh giá. Nút đánh giá dẫn về đơn đã nhận; bỏ báo thành công giả, số liệu mẫu và cam kết giao/đổi trả không có cấu hình. Vận chuyển đọc danh mục đang khả dụng; nội dung từ CSDL được escape. Sửa phạm vi hàm cho nút yêu thích ở sản phẩm liên quan.
