@@ -202,3 +202,9 @@ Nghiệm thu triển khai chi tiết phòng/chuyến/nhân viên: commit `bfa9a9
 | TXI01 | Chó, mèo, thỏ, chuột hamster |
 
 Dùng các loài cụ thể hiện có trong danh mục; không dùng “Khác” thay cho bọ ú hoặc loài chưa định danh. Tên/mô tả gói là căn cứ phân loại ban đầu; cấu hình nằm trong CSDL, không hardcode danh sách này trong form.
+
+### Rà soát Hỗ trợ và phạm vi User còn lại (23/10/2026)
+
+- Đã bỏ FAQ chính sách mẫu và hàm chat cũ không có nơi gọi khỏi `support-handler.js`. Không dựng thêm trang FAQ; khung chat hiện dùng `components/fab/fab.js` gọi `/api/admin-chat`, đã có nghiệm thu riêng tại tài liệu Chatbot.
+- Bộ lọc “Đang giải quyết” bao gồm xử lý, chờ khách bổ sung, chờ duyệt và xử lý lại. Kiểm tra trình duyệt Cloud thật đạt cả ba trạng thái từng bị bỏ sót, cùng toàn bộ luồng phản ánh trước đó.
+- Rà mã xác nhận các route User `settings`, `loyalty`, `wishlist` vẫn hoạt động và cần nghiệm thu riêng. Đã xác nhận cụ thể: Cài đặt xuất dữ liệu có nhánh dự phòng từ `pawpal_pets`/`pawpal_bookings`/`pawpal_orders`; Ưu đãi có hồ sơ và số điểm mẫu khi không đọc được phiên, cùng nhánh đồng bộ khách từ local Admin. Yêu thích có danh sách lưu trên trình duyệt, cần kiểm tra hành vi đăng nhập/đổi tài khoản. Không coi các phần này là hoàn tất Cloud, cũng không sửa gộp sang chúng trong đợt Hỗ trợ.

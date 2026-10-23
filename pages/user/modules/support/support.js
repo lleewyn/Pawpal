@@ -119,7 +119,7 @@ export function initSupportTickets() {
         function updateCounts(tickets) {
             const allCount = tickets.length;
             const pendingCount = tickets.filter(t => !t.status || t.status === 'pending').length;
-            const processingCount = tickets.filter(t => t.status === 'processing').length;
+            const processingCount = tickets.filter(t => ['processing','waiting_customer','waiting_manager_approval','reprocessing'].includes(t.status)).length;
             const completedCount = tickets.filter(t => t.status === 'completed' || t.status === 'resolved' || t.status === 'closed').length;
 
             if (countAll) countAll.textContent = `(${allCount})`;
@@ -218,7 +218,7 @@ export function initSupportTickets() {
             if (currentFilter === 'pending') {
                 tickets = allTickets.filter(t => !t.status || t.status === 'pending');
             } else if (currentFilter === 'processing') {
-                tickets = allTickets.filter(t => t.status === 'processing');
+                tickets = allTickets.filter(t => ['processing','waiting_customer','waiting_manager_approval','reprocessing'].includes(t.status));
             } else if (currentFilter === 'completed') {
                 tickets = allTickets.filter(t => t.status === 'completed' || t.status === 'resolved' || t.status === 'closed');
             }

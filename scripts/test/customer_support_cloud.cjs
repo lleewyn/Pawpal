@@ -36,6 +36,13 @@ const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.ran
   await ok(service.from('support_ticket_message').insert({ticket_id:ticket,sender_type:'staff',sender_account_id:staff.auth_user_id,content:'PRIVATE-STAFF-NOTE',is_internal:true}));
   await ok(service.from('support_ticket_message').insert({ticket_id:ticket,sender_type:'staff',sender_account_id:staff.auth_user_id,content:'Public shop response',is_internal:false}));
   await page.waitForFunction(()=>document.querySelector('#ticketTimelineMessages')?.textContent.includes('Public shop response'),{timeout:20000});assert.equal((await page.locator('#ticketTimelineMessages').textContent()).includes('PRIVATE-STAFF-NOTE'),false);
+  for(const status of ['waiting_customer','waiting_manager_approval','reprocessing']){
+   await ok(service.from('support_ticket').update({status}).eq('id',ticket));
+   await page.waitForFunction(()=>document.querySelector('#countProcessing')?.textContent==='(1)');
+   await page.keyboard.press('Escape');await page.locator('.support-filter-tab[data-status="processing"]').click();await page.locator(`.btn-view-ticket[data-id="${ticket}"]`).waitFor();
+   await page.locator(`.btn-view-ticket[data-id="${ticket}"]`).click();
+  }
+  await page.keyboard.press('Escape');await page.locator('.support-filter-tab[data-status="all"]').click();await page.locator(`.btn-view-ticket[data-id="${ticket}"]`).click();
   await ok(service.from('support_ticket').update({status:'resolved',resolution_note:'Shop resolution for verification',investigation_note:'PRIVATE-INVESTIGATION'}).eq('id',ticket));
   await page.locator('#ratingFeedbackArea').waitFor({state:'visible'});await page.waitForFunction(()=>document.querySelector('#detailTicketStatusBadge')?.textContent.includes('Đã giải quyết'),{timeout:20000});
   assert.equal((await page.locator('#ticketDetailModalOverlay').textContent()).includes('PRIVATE-INVESTIGATION'),false);
