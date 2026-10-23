@@ -21,7 +21,7 @@ Người dùng chỉ ra lịch vẫn là bảng và chưa đúng giao diện mon
 - [x] Phân biệt ca inactive là “Không hiệu lực”, cancelled là “Đã hủy”; không hiển thị các ca này thành “Đi làm” hoặc cộng tổng giờ.
 - [x] Kiểm thử trình duyệt `staff_calendar_cards_v1.cjs`: nguồn Cloud thật, card theo ngày, đủ bảy ngày, mở sửa từ card, màn hình 1440/920/390px không tràn lưới, không ghi nghiệp vụ trên Cloud. Đã xem ảnh ngày/tuần/màn hình hẹp ngoài repository.
 - [x] Kiểm thử lưu/sửa/hủy ca trên CSDL phục hồi qua `staff_schedule_browser_v1.cjs` vẫn đạt.
-- [ ] Người dùng xem và duyệt giao diện card mới; chưa tự đóng mục này thay người dùng.
+- [x] Ngày 23/10/2026, người dùng xác nhận giao diện lịch Nhân sự hiện tại ổn và dễ nhìn. Đã duyệt giao diện hiện tại; giữ cách trình bày này.
 
 Ảnh riêng: `staff-calendar-day.private.png`, `staff-calendar-week.private.png`, `staff-calendar-week-narrow.private.png` trong thư mục infra. Đây là thay đổi trình bày, không có migration hoặc thay đổi dữ liệu Cloud.
 
