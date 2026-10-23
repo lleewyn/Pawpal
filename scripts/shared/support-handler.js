@@ -114,350 +114,72 @@
         return { error: false };
     }
 
-    const LOCAL_TICKETS_KEY = 'pawpal_support_tickets';
-    let cachedTickets = []; 
-
-    function getLocalTickets() {
-        try {
-            return JSON.parse(localStorage.getItem(LOCAL_TICKETS_KEY)) || [];
-        } catch (e) {
-            return [];
-        }
+    let cachedTickets = [];
+    let ticketsChannel = null;
+    function stopRealtime() { if(ticketsChannel){client()?.removeChannel(ticketsChannel);ticketsChannel=null;} }
+    window.addEventListener('hashchange',()=>{
+        if (!location.hash.startsWith('#support') && ticketsChannel) { client()?.removeChannel(ticketsChannel); ticketsChannel=null; }
+    });
+    const requestIds = new Map();
+    const client = () => window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    async function rpc(name,args) {
+        const db = client();
+        const auth = await db?.auth?.getUser();
+        if (!auth?.data?.user || auth.error) throw Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        const result = await db.rpc(name,args);
+        if (result.error) throw Error(result.error.code === 'PT409' ? 'Yêu cầu đã được lưu với thông tin khác. Vui lòng tải lại để đối soát.' : 'Không thể lưu dữ liệu hỗ trợ. Vui lòng thử lại.');
+        return result.data;
     }
-
-    function saveLocalTickets(tickets) {
-        localStorage.setItem(LOCAL_TICKETS_KEY, JSON.stringify(tickets));
-    }
-
-    async function authenticatedCustomerRequest(body) {
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db?.auth?.getSession) throw new Error('Không tìm thấy phiên đăng nhập.');
-        const { data, error } = await db.auth.getSession();
-        if (error || !data?.session?.access_token) throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-        const response = await fetch('/api/customer/auth/me', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${data.session.access_token}`
-            },
-            body: JSON.stringify(body)
-        });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok || !result.success) throw new Error(result.message || 'Không thể gửi phản hồi. Vui lòng thử lại.');
-        return result;
-    }
-
     async function loadTickets() {
-        let localList = getLocalTickets();
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        
-        if (db) {
-            try {
-                const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || {};
-                const customerId = currentUser.id || currentUser.custId;
-                if (!customerId || currentUser.is_temporary) {
-                    tickets = [];
-                    return [];
-                }
-                const query = db.from('support_ticket')
-                    .select('id, ticket_code, customer_id, subject, description, category, type, priority, status, rating, rating_comment, resolution_type, resolution_note, created_at, updated_at')
-                    .eq('customer_id', customerId)
-                    .order('created_at', { ascending: false });
-                const { data: ticketsData, error: tErr } = await query;
-                if (!tErr && ticketsData) {
-                    const ticketIds = ticketsData.map(t => t.id);
-                    let msgsByTicket = {};
-                    if (ticketIds.length > 0) {
-                        const { data: msgsData } = await db
-                            .from('support_ticket_message')
-                            .select('id, ticket_id, sender_type, content, is_internal, created_at')
-                            .in('ticket_id', ticketIds)
-                            .order('created_at', { ascending: true });
-                            
-                        if (msgsData) {
-                            msgsData.forEach(m => {
-                                if (!msgsByTicket[m.ticket_id]) msgsByTicket[m.ticket_id] = [];
-                                if (!m.is_internal && m.sender_type !== 'system' && m.sender_type !== 'internal_note') {
-                                    msgsByTicket[m.ticket_id].push({
-                                        sender: m.sender_type,
-                                        text: m.content,
-                                        time: m.created_at
-                                    });
-                                }
-                            });
-                        }
-                    }
-
-                    const supabaseTickets = ticketsData.map(t => ({
-                        id: t.id,
-                        ticketCode: t.ticket_code,
-                        title: t.subject || 'Hỗ trợ khách hàng',
-                        subject: t.subject,
-                        description: t.description,
-                        type: t.type || t.category || 'other',
-                        status: t.status || 'open',
-                        priority: t.priority || 'Trung bình',
-                        rating: t.rating,
-                        ratingComment: t.rating_comment,
-                        createdAt: t.created_at,
-                        resolution: t.resolution_note || null,
-                        messages: msgsByTicket[t.id] || []
-                    }));
-
-                    const merged = [...supabaseTickets];
-                    localList.forEach(loc => {
-                        if (!merged.some(m => m.id === loc.id)) {
-                            merged.push(loc);
-                        }
-                    });
-                    localList = merged;
-                    saveLocalTickets(localList);
-                }
-            } catch (err) {
-                console.warn('[Support] Kết nối Supabase tickets:', err);
-            }
-        }
-
-        cachedTickets = localList;
-        document.dispatchEvent(new CustomEvent('tickets_updated'));
-        return cachedTickets;
-    }
-
-    function sbGetTickets() {
-        return cachedTickets;
-    }
-
-    async function sbCreateTicket(title, type, content, files = [], context = {}) {
-        const priority = detectPriority(title, content, context);
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
-        const customerId = currentUser ? (currentUser.id || currentUser.custId) : null;
-        const now = new Date();
-
-        const isUuid = (val) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
-        const ticketCode = 'TK-' + Date.now().toString(36).toUpperCase().slice(-6);
-
-        let createdId = null;
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (db && isUuid(customerId)) {
-            try {
-                const insertPayload = {
-                    ticket_code: ticketCode,
-                    customer_id: customerId,
-                    subject: title,
-                    description: content,
-                    category: type || 'other',
-                    type: type || 'support',
-                    priority: priority === 'Cao' ? 'high' : (priority === 'Khẩn cấp' ? 'urgent' : 'medium'),
-                    status: 'open',
-                    channel: 'web',
-                    order_id: isUuid(context.orderId) ? context.orderId : null,
-                    appointment_id: isUuid(context.bookingId) ? context.bookingId : null,
-                    requested_resolution: context.customerDemand || null,
-                    requested_amount: parseFloat(context.requestedAmount) || 0
-                };
-                const { data: tData, error: tErr } = await db.from('support_ticket').insert([insertPayload]).select('id').single();
-                if (!tErr && tData?.id) {
-                    createdId = tData.id;
-                    await db.from('support_ticket_message').insert([{
-                        ticket_id: createdId,
-                        sender_type: 'customer',
-                        content: content,
-                        is_internal: false
-                    }]);
-                }
-            } catch (e) {
-                console.warn('[Support] Lưu Supabase không thành công, dùng fallback local:', e);
-            }
-        }
-
-        const finalTicketId = createdId || ticketCode || ('TK-2026-' + Math.floor(100 + Math.random() * 900));
-
-        const localTicket = {
-            id: finalTicketId,
-            rawId: createdId || finalTicketId,
-            title: title,
-            type: type,
-            priority: priority,
-            status: 'pending',
-            rating: null,
-            ratingComment: '',
-            files: files || [],
-            context: context || {},
-            messages: [
-                {
-                    sender: 'user',
-                    text: content,
-                    time: now.toISOString()
-                }
-            ]
-        };
-
-        const localList = getLocalTickets();
-        localList.unshift(localTicket);
-        saveLocalTickets(localList);
-
-        // Đồng bộ Ticket khiếu nại sang Phân hệ Khách hàng Admin (pawpal_admin_customers_data)
         try {
-            const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()}`;
-            const cleanPhone = (currentUser?.phone || '').replace(/[^0-9]/g, '');
-            const syncCustomerComplaint = (storage) => {
-                const raw = storage.getItem('pawpal_admin_customers_data');
-                if (raw) {
-                    const data = JSON.parse(raw);
-                    let matched = null;
-                    if (cleanPhone) {
-                        matched = Object.values(data).find(c => c.phone && c.phone.replace(/[^0-9]/g, '') === cleanPhone);
-                    }
-                    if (!matched && currentUser?.name) {
-                        matched = Object.values(data).find(c => c.name && c.name.toLowerCase() === currentUser.name.toLowerCase());
-                    }
-                    if (!matched) {
-                        matched = data['CUST-001'];
-                    }
-
-                    if (matched) {
-                        if (!matched.complaints) matched.complaints = [];
-                        matched.complaints.unshift({
-                            id: localTicket.id,
-                            date: dateStr,
-                            issue: title,
-                            level: priority === 'Cao' ? 'Khẩn cấp' : 'Trung bình',
-                            status: 'Đang xử lý',
-                            statusClass: 'badge-danger'
-                        });
-                        matched.emergencyAlert = title;
-                        matched.has_complaint = true;
-                        matched.complaint_note = content;
-                        storage.setItem('pawpal_admin_customers_data', JSON.stringify(data));
-                    }
-                }
-            };
-            syncCustomerComplaint(sessionStorage);
-            syncCustomerComplaint(localStorage);
-        } catch (err) {
-            console.warn('[Support] Sync ticket to customer DB error:', err);
-        }
-
-        await loadTickets();
-        return localTicket;
+            const rows = await rpc('own_support_tickets');
+            cachedTickets = (rows || []).map(t => ({
+                id:t.id,rawId:t.id,ticketCode:t.ticket_code,title:t.subject,description:t.description,
+                type:t.category,status:t.status,priority:['high','urgent'].includes(t.priority)?'Cao':'Trung bình',
+                rating:t.rating,ratingComment:t.rating_comment,createdAt:t.created_at,
+                resolution:t.resolution_note ? {note:t.resolution_note} : null,
+                context:{bookingId:t.appointment_id,orderId:t.order_id,serviceName:t.service_name,petName:t.pet_name},
+                messages:t.messages || []
+            }));
+            if (!ticketsChannel && location.hash.startsWith('#support')) {
+                ticketsChannel=client().channel('customer-support-'+crypto.randomUUID()).on('postgres_changes',{event:'*',schema:'public',table:'support_ticket_message'},()=>{
+                    loadTickets().catch(()=>{ document.dispatchEvent(new CustomEvent('support_load_error')); });
+                }).subscribe();
+            }
+            document.dispatchEvent(new CustomEvent('tickets_updated'));
+            return cachedTickets;
+        } catch(error) { cachedTickets=[]; throw error; }
     }
-
-    async function sbSendTicketReply(ticketId, text) {
-        const now = new Date();
-        const localList = getLocalTickets();
-        const ticket = localList.find(t => t.id === ticketId || t.rawId === ticketId);
-        const targetDbId = ticket?.rawId || ticketId;
-
-        const result = await authenticatedCustomerRequest({
-            action: 'support-reply',
-            ticketId: targetDbId,
-            content: text
+    function sbGetTickets() { return cachedTickets; }
+    async function sbCreateTicket(title,type,content,files=[],context={}) {
+        if (files.length) throw Error('Ảnh và tệp chưa được hỗ trợ. Vui lòng gửi nội dung văn bản.');
+        const key=JSON.stringify([title,type,content,context.bookingId,context.orderId,context.customerDemand]);
+        if (!requestIds.has(key)) requestIds.set(key,context.requestId || crypto.randomUUID());
+        const id=requestIds.get(key);
+        const saved=await rpc('create_own_support_ticket',{
+            p_id:id,p_category:type,p_subject:title,p_content:content,
+            p_appointment:type==='service'?context.bookingId:null,p_order:type==='order'?context.orderId:null,
+            p_resolution:context.customerDemand || null
         });
-
-        if (ticket) {
-            if (!ticket.messages) ticket.messages = [];
-            ticket.messages.push({
-                sender: 'user',
-                text: text,
-                time: now.toISOString()
-            });
-            ticket.status = 'processing';
-            saveLocalTickets(localList);
-
-            // Đồng bộ tin nhắn khách gửi sang Bảng Khiếu nại Admin
-            try {
-                const nowHeader = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} - ${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
-                const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || {};
-                const senderName = currentUser.name || 'Khách hàng';
-
-                const syncToAdminCollection = (storageKey) => {
-                    const arr = JSON.parse(localStorage.getItem(storageKey)) || [];
-                    const idx = arr.findIndex(item => item.id === targetDbId || item.id === ticketId || (ticket?.context?.bookingId && item.bookingId === ticket.context.bookingId) || (ticket?.context?.orderId && item.orderId === ticket.context.orderId));
-                    if (idx >= 0) {
-                        if (!arr[idx].timeline) arr[idx].timeline = [];
-                        arr[idx].timeline.unshift({
-                            time: nowHeader,
-                            author: `${senderName} (Khách hàng)`,
-                            title: 'Phản hồi từ Khách hàng',
-                            desc: text,
-                            isInternal: false
-                        });
-                        if (arr[idx].status === 'waiting_customer') {
-                            arr[idx].status = 'processing';
-                        }
-                        localStorage.setItem(storageKey, JSON.stringify(arr));
-                    }
-                };
-
-                syncToAdminCollection('pawpal_service_complaints');
-                syncToAdminCollection('pawpal_order_complaints');
-            } catch (e) {
-                console.warn('[Support] Sync user reply to admin complaints error:', e);
-            }
-        }
-
-        await loadTickets();
-        document.dispatchEvent(new CustomEvent('tickets_updated'));
-        return result.message;
+        if (saved!==id) throw Error('Chưa xác nhận được kết quả lưu. Vui lòng thử lại.');
+        // The acknowledgement is authoritative even if a subsequent list refresh fails.
+        return {id,rawId:id};
     }
-
-    async function sbCloseAndRateTicket(ticketId, rating, comment = '') {
-        const localList = getLocalTickets();
-        const ticket = localList.find(t => t.id === ticketId);
-        if (ticket) {
-            ticket.status = 'completed';
-            ticket.rating = rating;
-            ticket.ratingComment = comment;
-            saveLocalTickets(localList);
-
-            // Đồng bộ đánh giá của khách hàng sang Bảng Khiếu nại Admin
-            try {
-                const now = new Date();
-                const nowHeader = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} - ${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
-                const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || {};
-                const senderName = currentUser.name || 'Khách hàng';
-
-                const syncRatingToAdmin = (storageKey) => {
-                    const arr = JSON.parse(localStorage.getItem(storageKey)) || [];
-                    const idx = arr.findIndex(item => item.id === ticketId || (ticket?.context?.bookingId && item.bookingId === ticket.context.bookingId) || (ticket?.context?.orderId && item.orderId === ticket.context.orderId));
-                    if (idx >= 0) {
-                        if (!arr[idx].timeline) arr[idx].timeline = [];
-                        arr[idx].timeline.unshift({
-                            time: nowHeader,
-                            author: `${senderName} (Khách hàng)`,
-                            title: `Khách hàng đánh giá CSKH: ${rating} sao`,
-                            desc: comment ? `"${comment}"` : 'Khách hàng đã chấp thuận phương án bồi hoàn và hoàn tất phản ánh.',
-                            isInternal: false
-                        });
-                        arr[idx].customerRating = rating;
-                        arr[idx].customerRatingComment = comment;
-                        arr[idx].status = rating < 3 ? 'reprocessing' : 'resolved';
-                        localStorage.setItem(storageKey, JSON.stringify(arr));
-                    }
-                };
-                syncRatingToAdmin('pawpal_service_complaints');
-                syncRatingToAdmin('pawpal_order_complaints');
-            } catch (e) {
-                console.warn('[Support] Sync rating to admin complaints error:', e);
-            }
-        }
-
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (db) {
-            try {
-                await db.from('support_ticket').update({
-                    status: 'completed',
-                    rating: rating,
-                    rating_comment: comment,
-                    updated_at: new Date().toISOString()
-                }).eq('id', ticketId);
-            } catch (e) {}
-        }
-
-        await loadTickets();
+    async function sbSendTicketReply(ticketId,text) {
+        const key=JSON.stringify(['reply',ticketId,text]);
+        if (!requestIds.has(key)) requestIds.set(key,crypto.randomUUID());
+        const id=requestIds.get(key),saved=await rpc('reply_own_support_ticket',{p_id:id,p_ticket:ticketId,p_content:text});
+        if (saved!==id) throw Error('Chưa xác nhận được phản hồi. Vui lòng thử lại.');
+        await loadTickets(); return saved;
+    }
+    async function sbCloseAndRateTicket(ticketId,rating,comment='') {
+        const saved=await rpc('rate_own_support_ticket',{p_ticket:ticketId,p_rating:rating,p_comment:comment});
+        if (saved!==ticketId) throw Error('Chưa xác nhận được đánh giá. Vui lòng thử lại.');
+        await loadTickets(); return saved;
     }
 
     window.PawPalSupport = {
+        stopRealtime,
         faq: faqData,
         getTickets: sbGetTickets,
         loadTickets: loadTickets,

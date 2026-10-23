@@ -2,6 +2,8 @@
  * modules/support/support.js - Module logic cho Trung tâm hỗ trợ PawPal (độc lập 100%)
  */
 import '/scripts/shared/support-handler.js';
+let disposeSupportView=()=>{};
+export function dispose(){disposeSupportView();disposeSupportView=()=>{};}
 
 function ensureSupportReady(callback) {
     if (window.PawPalSupport) {
@@ -23,6 +25,7 @@ export async function copyVoucherWithFeedback(button, code, resetDelay = 2000) {
 }
 
 export function initSupportTickets() {
+    dispose();
     ensureSupportReady(async () => {
         let activeTicketId = null;
         let activeRealtimeChannel = null;
@@ -137,6 +140,8 @@ export function initSupportTickets() {
 
         // Định dạng mã phiếu hỗ trợ không bị cắt cụt dấu gạch ngang
         function getDisplayTicketId(id) {
+            const ticket=window.PawPalSupport.getTickets().find(t=>t.id===id || t.rawId===id);
+            if(ticket?.ticketCode)return ticket.ticketCode;
             if (!id) return '';
             if (id.startsWith('TK-')) return id;
             if (id.length <= 10) return id;
@@ -296,6 +301,8 @@ export function initSupportTickets() {
             }
         }
 
+        disposeSupportView=()=>{closeTicketModal();detailModalOverlay?.remove();window.PawPalSupport?.stopRealtime?.();document.removeEventListener('tickets_updated',onTicketsUpdated);document.removeEventListener('keydown',onSupportEscape);};
+
         function renderTimelineMessages(ticket) {
             if (!ticketTimelineMessages) return;
             ticketTimelineMessages.innerHTML = '';
@@ -359,13 +366,13 @@ export function initSupportTickets() {
                     }, async (payload) => {
                         const newMsg = payload.new;
                         if (!newMsg) return;
-                        if (newMsg.sender_type === 'system' || newMsg.sender_type === 'internal_note') return;
+                        if (newMsg.is_internal || newMsg.sender_type === 'internal_note') return;
 
                         await window.PawPalSupport.loadTickets();
                         const updatedTickets = window.PawPalSupport.getTickets();
                         const current = updatedTickets.find(t => t.id === ticketId || t.rawId === ticketId);
                         if (current && activeTicketId === ticketId) {
-                            renderTimelineMessages(current);
+                            if(newMsg.sender_type==='system')showTicketDetail(ticketId);else renderTimelineMessages(current);
                         }
                         renderTable();
                     })
@@ -611,8 +618,8 @@ export function initSupportTickets() {
             if (isCompleted) {
                 replyEditorArea.classList.add('d-none');
                 ratingFeedbackArea.classList.remove('d-none');
-                if (btnCancelRating) btnCancelRating.classList.add('d-none');
-                if (btnCancelRatingAction) btnCancelRatingAction.classList.add('d-none');
+                if (btnCancelRating) btnCancelRating.classList.toggle('d-none',Boolean(ticket.rating));
+                if (btnCancelRatingAction) btnCancelRatingAction.classList.toggle('d-none',Boolean(ticket.rating));
 
                 if (ticket.rating) {
                     updateStarDisplay(ticket.rating, true);
@@ -635,7 +642,7 @@ export function initSupportTickets() {
                     }
                     if (btnSubmitRating) {
                         btnSubmitRating.disabled = false;
-                        btnSubmitRating.textContent = 'Chấp nhận giải pháp và Đánh giá';
+                        btnSubmitRating.textContent = 'Gửi đánh giá';
                         btnSubmitRating.style.opacity = '1';
                     }
                 }
@@ -674,71 +681,28 @@ export function initSupportTickets() {
             });
         }
 
-        document.addEventListener('keydown', (e) => {
+        function onSupportEscape(e) {
             if (e.key === 'Escape' && detailModalOverlay && !detailModalOverlay.classList.contains('d-none')) {
                 closeTicketModal();
             }
-        });
-
-        let attachedReplyPhotos = [];
-        const replyFileInput = document.getElementById('replyFileInput');
-        const btnTriggerReplyFile = document.getElementById('btnTriggerReplyFile');
-        const replyFilePreviews = document.getElementById('replyFilePreviews');
-
-        function renderReplyPreviews() {
-            if (!replyFilePreviews) return;
-            replyFilePreviews.innerHTML = attachedReplyPhotos.map((src, i) => `
-                <div style="position: relative; width: 56px; height: 56px; border-radius: 6px; overflow: hidden; border: 1px solid #ECF2EE;">
-                    <img src="${src}" style="width: 100%; height: 100%; object-fit: cover;">
-                    <button type="button" data-index="${i}" class="btn-remove-preview-photo" style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;">&times;</button>
-                </div>
-            `).join('');
-            replyFilePreviews.querySelectorAll('.btn-remove-preview-photo').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const idx = parseInt(btn.getAttribute('data-index'), 10);
-                    attachedReplyPhotos.splice(idx, 1);
-                    renderReplyPreviews();
-                });
-            });
         }
-
-        if (btnTriggerReplyFile && replyFileInput) {
-            btnTriggerReplyFile.addEventListener('click', () => {
-                replyFileInput.click();
-            });
-            replyFileInput.addEventListener('change', (e) => {
-                const files = Array.from(e.target.files || []);
-                files.forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        attachedReplyPhotos.push(event.target.result);
-                        renderReplyPreviews();
-                    };
-                    reader.readAsDataURL(file);
-                });
-            });
-        }
+        document.addEventListener('keydown',onSupportEscape);
 
         if (btnSendReply) {
             btnSendReply.addEventListener('click', async () => {
                 const textarea = document.getElementById('replyTextarea');
                 if (!textarea) return;
                 const text = textarea.value.trim();
-                if (!text && attachedReplyPhotos.length === 0) return;
+                if (!text) return;
 
                 btnSendReply.disabled = true;
                 btnSendReply.textContent = 'Đang gửi...';
 
-                let finalContent = text || 'Gửi ảnh bằng chứng bổ sung';
-                if (attachedReplyPhotos.length > 0) {
-                    finalContent += ` [Khách đã đính kèm ${attachedReplyPhotos.length} ảnh bằng chứng xác minh]`;
-                }
+                const finalContent = text;
 
                 try {
                     await window.PawPalSupport.sendTicketReply(activeTicketId, finalContent);
                     textarea.value = '';
-                    attachedReplyPhotos = [];
-                    renderReplyPreviews();
                     showTicketDetail(activeTicketId);
                     renderTable();
                 } catch (error) {
@@ -770,8 +734,7 @@ export function initSupportTickets() {
         // Hủy đánh giá / Quay lại khung gửi phản hồi
         const cancelRatingHandler = (e) => {
             if (e) { e.preventDefault(); e.stopPropagation(); }
-            if (ratingFeedbackArea) ratingFeedbackArea.classList.add('d-none');
-            if (replyEditorArea) replyEditorArea.classList.remove('d-none');
+            closeTicketModal();
         };
         const btnCancelRating = document.getElementById('btnCancelRating');
         const btnCancelRatingAction = document.getElementById('btnCancelRatingAction');
@@ -808,80 +771,25 @@ export function initSupportTickets() {
                 btnSubmitRating.disabled = true;
                 btnSubmitRating.textContent = 'Đang lưu...';
 
-                await window.PawPalSupport.closeAndRateTicket(activeTicketId, currentSelectedRating, comment);
-                alert('PawPal chân thành cảm ơn phản hồi của bạn! Ý kiến của bạn giúp chúng tôi ngày một hoàn thiện hơn.');
-                
-                renderTable();
-                showTicketDetail(activeTicketId);
+                try {
+                    await window.PawPalSupport.closeAndRateTicket(activeTicketId, currentSelectedRating, comment);
+                    renderTable();showTicketDetail(activeTicketId);
+                } catch(error) { alert(error.message || 'Không thể lưu đánh giá. Vui lòng thử lại.'); }
+                finally {const saved=window.PawPalSupport.getTickets().find(t=>t.id===activeTicketId);btnSubmitRating.disabled=Boolean(saved?.rating);btnSubmitRating.textContent=saved?.rating?'Đã đánh giá':'Gửi đánh giá';}
             });
         }
 
         // Cập nhật bảng dữ liệu khi có thay đổi (triệt tiêu vòng lặp gọi lại loadTickets)
-        document.addEventListener('tickets_updated', () => {
-            renderTable();
-        });
+        function onTicketsUpdated(){renderTable();}
+        document.addEventListener('tickets_updated',onTicketsUpdated);
 
         // Lắng nghe sự kiện lưu trữ giữa các Tab (Admin và User)
-        window.addEventListener('storage', async (e) => {
-            if (e.key === 'pawpal_support_tickets' || e.key === 'pawpal_service_complaints' || e.key === 'pawpal_order_complaints') {
-                await window.PawPalSupport.loadTickets();
-                renderTable();
-                if (activeTicketId && detailModalOverlay && !detailModalOverlay.classList.contains('d-none')) {
-                    showTicketDetail(activeTicketId);
-                }
-            }
-        });
-
-        if (createTicketForm) {
-            createTicketForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const title = document.getElementById('ticketTitle').value.trim();
-                const type = document.getElementById('ticketType').value;
-                const content = document.getElementById('ticketContent').value.trim();
-                
-                if (!title || !type || !content) {
-                    alert('Vui lòng điền đầy đủ các trường bắt buộc.');
-                    return;
-                }
-
-                let files = [];
-                if (fileInput && fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
-                    if (file.size > 5 * 1024 * 1024) {
-                        alert('Dung lượng tệp vượt quá 5MB. Vui lòng gởi minh chứng qua link Zalo hỗ trợ nhé!');
-                        return;
-                    }
-                    files.push(file.name);
-                }
-
-                const btn = createTicketForm.querySelector('button[type="submit"]');
-                if (btn) {
-                    btn.disabled = true;
-                    btn.innerHTML = 'Đang gửi...';
-                }
-
-                await window.PawPalSupport.createTicket(title, type, content, files);
-                
-                if (btn) {
-                    btn.innerHTML = 'Gửi thành công!';
-                }
-                
-                alert('Phiếu hỗ trợ đã được tạo thành công! Bạn sẽ được chuyển về trang quản lý.');
-
-                const modalEl = document.getElementById('createTicketModal');
-                if (modalEl) {
-                    const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                    modalInstance.hide();
-                }
-
-                createTicketForm.reset();
-                window.location.hash = '#support';
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
-            });
-        }
-
         renderSkeletonRows();
-        await window.PawPalSupport.loadTickets();
+        try { await window.PawPalSupport.loadTickets(); }
+        catch(error) {
+            ticketsTableBody.replaceChildren();const row=document.createElement('tr'),cell=document.createElement('td');cell.colSpan=5;cell.textContent='Không thể tải phiếu hỗ trợ. Vui lòng tải lại trang.';row.appendChild(cell);ticketsTableBody.appendChild(row);ticketsTableArea?.classList.remove('support-table-loading');ticketsTableArea?.setAttribute('aria-busy','false');return;
+        }
+        if(!ticketsTableBody?.isConnected)return;
         renderTable();
 
         // Kiểm tra xem có yêu cầu mở trực tiếp mã ticket từ URL / Hash không (?id=...)
