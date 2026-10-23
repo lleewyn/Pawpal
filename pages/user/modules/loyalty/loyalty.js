@@ -11,14 +11,14 @@ export function dispose(){cleanup();cleanup=()=>{};}
 async function rpc(name,args){
  const auth=await db()?.auth?.getUser();if(auth?.error || !auth?.data?.user)throw Error('Vui lòng đăng nhập lại.');
  const r=await withDeadline(()=>db().rpc(name,args),20000,'Kết nối chậm. Vui lòng kiểm tra kết quả trước khi gửi lại.');
- if(r.error)throw Error(r.error.code==='PT409'?'Ưu đãi hoặc yêu cầu đã thay đổi. Vui lòng tải lại để đối soát.':r.error.message || 'Không thể xử lý yêu cầu.');return r.data;
+ if(r.error){const error=Error(r.error.code==='PT409'?'Ưu đãi hoặc yêu cầu đã thay đổi. Vui lòng tải lại để đối soát.':r.error.message || 'Không thể xử lý yêu cầu.');error.code=r.error.code;throw error;}return r.data;
 }
 function dialog(title,html){
  document.querySelector('#loyalty-dialog [data-close-modal]')?.click();
  const overlay=document.createElement('div');overlay.id='loyalty-dialog';overlay.className='modal loyalty-modal-wrapper show';overlay.style.display='flex';
  overlay.innerHTML=`<div class="modal-dialog modal-dialog-centered loyalty-modal-dialog"><div class="modal-content loyalty-modal-content" role="dialog" aria-modal="true" aria-labelledby="loyaltyDialogTitle"><div class="modal-header loyalty-modal-header"><h5 id="loyaltyDialogTitle" class="modal-title loyalty-modal-title">${esc(title)}</h5><button type="button" class="btn-modal-close" data-close-modal="loyalty-dialog">Đóng</button></div><div class="modal-body loyalty-modal-body">${html}</div><div class="modal-footer loyalty-modal-footer"><button type="button" class="btn-modal-cancel" data-close-modal="loyalty-dialog">Để sau</button></div></div></div>`;
  const previous=document.activeElement;document.body.append(overlay);document.body.classList.add('modal-open');
- const close=()=>{overlay.remove();document.body.classList.remove('modal-open');document.removeEventListener('keydown',key);if(previous?.isConnected)previous.focus();};
+ const close=()=>{overlay.remove();if(!document.getElementById('loyalty-dialog'))document.body.classList.remove('modal-open');document.removeEventListener('keydown',key);if(previous?.isConnected)previous.focus();};
  const key=e=>{if(e.key==='Escape')close();};document.addEventListener('keydown',key);
  overlay.onclick=e=>{if(e.target===overlay || e.target.closest('[data-close-modal]'))close();};overlay.querySelector('button').focus();return {overlay,close};
 }
@@ -68,7 +68,7 @@ export async function initLoyalty(){
     if(saved!==request.id)throw Error('Chưa xác nhận được kết quả. Vui lòng thử lại cùng yêu cầu.');
     sessionStorage.removeItem(key);close();if(!active)return;
     const banner=document.getElementById('loyalty-warning-banner');banner.textContent='Đã đổi ưu đãi và ghi nhận điểm trên hệ thống.';banner.classList.remove('d-none');banner.setAttribute('role','status');await refresh();
-   }catch(e){if(overlay.isConnected)error.textContent=e.message;}
+   }catch(e){if(e.code==='PT409')sessionStorage.removeItem(key);if(overlay.isConnected)error.textContent=e.message;}
    finally{button.disabled=false;button.textContent='Xác nhận đổi';}
   };
  }
