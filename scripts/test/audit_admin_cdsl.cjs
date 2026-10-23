@@ -64,6 +64,6 @@ lines.push('','## Truy vấn đã kiểm kê','','| File:dòng | Bảng | Các t
 for(const q of queries)lines.push(`| ${q.file}:${q.line} | ${q.table} | ${q.ops.join(', ')} |`);
 lines.push('','## Điểm cần lần ngược thủ công','','| File:dòng | Lý do |','|---|---|');
 for(const q of manual)lines.push(`| ${q.file}:${q.line} | ${clean(q.why)} |`);
-fs.writeFileSync(path.join(root,'pages/admin/PAWPAL_KIEM_KE_TRUY_VAN_CDSL.md'),lines.join('\n')+'\n');
+fs.writeFileSync(path.join(root,'docs/testing/generated/PAWPAL_KIEM_KE_TRUY_VAN_CDSL.md'),lines.join('\n')+'\n');
 console.log(`${scanFiles.length} files; ${schema.size} tables/views; ${queries.length} literal chains; ${issues.length} candidates; ${manual.length} manual points.`);
 for(const x of issues)console.log(`${x.file}:${x.line} ${x.table}.${x.column} [${x.op}]`);

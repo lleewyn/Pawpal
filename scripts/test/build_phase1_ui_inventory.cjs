@@ -239,7 +239,7 @@ for(const module of [...new Set(rows.map(r=>r.module))]){
 }
 lines.push('', '## Control được sinh trong JavaScript', '', 'Đây là các vị trí tag input/select/textarea có id/name/class trong chuỗi mã nguồn; chưa chứng minh mọi nhánh đã được render. ID nội suy biểu diễn một họ control, không phải một thực thể cố định. Mỗi vị trí lặp giữ nguyên để kiểm tra đúng màn hình/ngữ cảnh.', '',`Tổng vị trí: ${jsControls.length}; chưa có ánh xạ khai báo: ${jsControls.filter(r=>r.target==='Cần lần ngược ngữ cảnh sinh form').length}.`, '', '| Phân hệ / nguồn | Control | Loại | Đích dữ liệu | Quy tắc |', '|---|---|---|---|---|');
 for(const r of jsControls)lines.push(`| ${r.module} / ${r.file}:${r.line} | ${r.id.replaceAll('|','/')} | ${r.type} | ${r.target} | ${r.rule} |`);
-fs.writeFileSync(path.join(root,'pages/admin/PAWPAL_GD1_MA_TRAN_TRUONG_UI.md'),lines.join('\n')+'\n');
+fs.writeFileSync(path.join(root,'docs/testing/generated/PAWPAL_GD1_MA_TRAN_TRUONG_UI.md'),lines.join('\n')+'\n');
 console.log(`${rows.length} template controls; ${rows.filter(r=>r.target==='Chưa chốt ánh xạ').length} explicit pending bindings; not a CRUD pass.`);
 console.log(`${jsControls.length} JS control positions; ${jsControls.filter(r=>r.target==='Cần lần ngược ngữ cảnh sinh form').length} need contextual mapping.`);
 for(const r of jsControls.filter(r=>r.target==='Cần lần ngược ngữ cảnh sinh form'))console.log(r.module+': '+r.id+' '+r.file+':'+r.line);

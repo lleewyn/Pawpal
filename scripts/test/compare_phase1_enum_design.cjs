@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'../..');
 const fields=new Map();let table;
-for(const line of fs.readFileSync(path.join(root,'pages/admin/PAWPAL_GD1_TU_DIEN_DU_LIEU.md'),'utf8').split('\n')){
+for(const line of fs.readFileSync(path.join(root,'docs/testing/generated/PAWPAL_GD1_TU_DIEN_DU_LIEU.md'),'utf8').split('\n')){
  if(line.startsWith('### '))table=line.slice(4).trim();
  if(!table||!line.startsWith('| '))continue;
  const p=line.split('|').map(x=>x.trim());if(p.length!==9||p[1]==='Cột'||!p[1])continue;
@@ -35,6 +35,6 @@ lines.push('', '## Cách xử lý','',
  '- Text/varchar có thể được CHECK hoặc function kiểm soát. Không tự gửi giá trị mới từ enum.md khi chưa kiểm tra catalog và consumer hiện tại.',
  '- Boolean available có thể cần ánh xạ UI, không đổi kiểu database thành chuỗi vì tài liệu có available_status.',
  '- Các default text ngoài bộ giá trị thiết kế là đầu mối cần đối chiếu; chưa kết luận dữ liệu bản ghi hiện có đều lệch.');
-fs.writeFileSync(path.join(root,'pages/admin/PAWPAL_GD1_DOI_CHIEU_ENUM_THIET_KE.md'),lines.join('\n')+'\n');
+fs.writeFileSync(path.join(root,'docs/testing/generated/PAWPAL_GD1_DOI_CHIEU_ENUM_THIET_KE.md'),lines.join('\n')+'\n');
 console.log(`${concepts} concepts, ${rows.length} column bindings; ${rows.filter(r=>r.status.startsWith('Khớp')).length} enum matches; ${rows.filter(r=>r.status.startsWith('Lệch')).length} enum mismatches.`);
 for(const r of rows.filter(r=>r.status.startsWith('Lệch')||r.status.includes('default ngoài')))console.log(r.name+': '+r.status);

@@ -2,7 +2,7 @@
 ## (ĐẢM BẢO 100% TÍNH TOÀN VẸN KHÓA CHÍNH VÀ KHÓA NGOẠI THEO CSDLDEMO)
 
 > **Tài liệu chuẩn CSDL:** [CSDLdemo](../../docs/archive/database/CSDLdemo)
-> **Tài liệu tham chiếu:** [PAWPAL_ADMIN_AUDIT_LOI_8_PHAN_HE.md](file:///d:/Aboutme/MyProject/Pawpal/pages/admin/PAWPAL_ADMIN_AUDIT_LOI_8_PHAN_HE.md)
+> **Tài liệu tham chiếu:** [PAWPAL_ADMIN_AUDIT_LOI_8_PHAN_HE.md](../../docs/acceptance/PAWPAL_DICH_VU_V1_NGHIEM_THU.md)
 > **Tệp thực thi SQL:** [20261017_admin_audit_backend_enhancements.sql](file:///d:/Aboutme/MyProject/Pawpal/scripts/database/20261017_admin_audit_backend_enhancements.sql)
 > **Ngày cập nhật:** 17/10/2026  
 

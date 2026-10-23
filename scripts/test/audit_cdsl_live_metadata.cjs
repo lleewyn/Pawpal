@@ -35,7 +35,7 @@ async function main(){
  const rpc=new Set();for(const f of [...walk(path.join(root,'pages/admin')),...walk(path.join(root,'scripts/api')),...walk(path.join(root,'scripts/shared'))])for(const m of fs.readFileSync(f,'utf8').matchAll(/\.rpc\(\s*['"](\w+)['"]/g))rpc.add(m[1]);
  for(const name of [...rpc].sort())lines.push(`| ${name} | ${body.paths?.['/rpc/'+name]?'Có':'Không thấy'} |`);
  lines.push('', '## Giới hạn kết luận', '', '- “Không công bố” chưa chứng minh không tồn tại trong PostgreSQL.', '- Cột có mặt chưa chứng minh nullable/default/enum/FK/policy đúng nghiệp vụ.', '- Đối tượng ngoài thiết kế cần phân loại kỹ thuật hoặc yêu cầu mở rộng; không tự xóa.');
- fs.writeFileSync(path.join(root,'pages/admin/PAWPAL_DOI_CHIEU_METADATA_LIVE_CDSL.md'),lines.join('\n')+'\n');
+ fs.writeFileSync(path.join(root,'docs/testing/generated/PAWPAL_DOI_CHIEU_METADATA_LIVE_CDSL.md'),lines.join('\n')+'\n');
  console.log(`HTTP ${r.status}; ${expected.size} expected; ${Object.keys(defs).length} definitions; ${missing} not exposed; ${drift} tables with column differences.`);
  // Only names of mismatches, no business data or credentials.
  for(const [t,cols]of expected){const live=Object.keys(defs[t]?.properties||{}),a=cols.filter(c=>!live.includes(c));if(a.length)console.log(t+': missing '+a.join(', '));}

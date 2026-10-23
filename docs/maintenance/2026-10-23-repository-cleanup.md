@@ -1,5 +1,13 @@
 # Dọn mã không còn dùng — 23/10/2026
 
+## Dọn Markdown trong pages
+
+- Xóa 25 kế hoạch/checklist/báo cáo cũ đã được thay thế bởi nghiệm thu Cloud V1. Các file này không được API, giao diện hoặc công cụ đọc làm đầu vào; vẫn khôi phục được từ Git trước đợt dọn.
+- Giữ 5 tài liệu còn hữu ích: thiết kế Admin, cache/rollback, kiểm thử chatbot thủ công, ma trận UI được sinh từ mã và cảnh báo về giới hạn test runner. Chuyển chúng sang `docs/design`, `docs/architecture` và `docs/testing`.
+- Đặt ghi chú rõ phạm vi/thời điểm trên các tài liệu giữ lại. Không coi kế hoạch hoặc bản kiểm kê cũ là kết quả nghiệm thu mới.
+- Công cụ sinh kiểm kê được đổi nơi đọc/ghi sang `docs/testing/generated`, để không tạo lại Markdown trong `pages/`. Cập nhật liên kết tài liệu sang bản thay thế hiện hành.
+- Không thay đổi mã chạy giao diện, dữ liệu Supabase, Docker hoặc thư mục HTML chưa theo dõi của người dùng.
+
 ## Gom tài liệu sau khi dọn mã
 
 - Chuyển 35 tài liệu/nguồn tham khảo từ thư mục gốc vào `docs/acceptance`, `docs/database`, `docs/testing`, `docs/business` và `docs/archive`. Ở gốc chỉ giữ hai file Markdown `README.md` và `AGENTS.md`.

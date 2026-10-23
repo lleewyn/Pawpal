@@ -1,5 +1,7 @@
 # Ma trận trường UI giai đoạn 1
 
+> Bản kiểm kê sinh từ mã ở giai đoạn 1, giữ để tra cứu control và chạy lại công cụ khi cần. Không dùng bản chụp này thay cho schema Cloud hiện tại hoặc kết quả nghiệm thu V1.
+
 Nguồn: control có id/name trong 9 template Admin và phụ lục control nhận diện trong chuỗi JavaScript. Dashboard không có control nhập/chọn trong template; hợp đồng số liệu nằm trong hồ sơ quyết định. Không ghi giá trị input hoặc mật khẩu. Nhãn lấy label gần nhất chỉ để định vị; control trong layout phức tạp có thể cần đối chiếu lại label.
 
 Ánh xạ là đích hợp đồng cho lần sửa sắp tới, không khẳng định handler hiện đã ghi đúng. “Chưa chốt” và mã Q phải được làm rõ trước khi sửa modal tương ứng. Phụ lục JS kiểm kê tag tĩnh có id/name/class; không bảo đảm nhận diện control được ghép chuỗi hoặc tạo hoàn toàn bằng DOM API. Có phân loại không đồng nghĩa hợp đồng đã được duyệt.

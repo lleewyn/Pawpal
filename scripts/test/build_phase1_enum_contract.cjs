@@ -1,7 +1,7 @@
 // Generates documentation only. Does not execute migration SQL or change application behavior.
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'../..');
-const dictionary=fs.readFileSync(path.join(root,'pages/admin/PAWPAL_GD1_TU_DIEN_DU_LIEU.md'),'utf8');
+const dictionary=fs.readFileSync(path.join(root,'docs/testing/generated/PAWPAL_GD1_TU_DIEN_DU_LIEU.md'),'utf8');
 const sql=fs.readFileSync(path.join(root,'scripts/database/20261019_migrate_enums_to_vietnamese.sql'),'utf8');
 const enums=new Map();let table;
 for(const line of dictionary.split('\n')){
@@ -35,6 +35,6 @@ for(const [name,e]of enums){
 }
 lines.push('',`Đã đối chiếu ${aliases} alias từ migration với enum metadata; số đích không khớp: ${bad}.`, '',
  'Các giá trị như PAID/ACTIVE chỉ có nghĩa khi biết bảng/cột. UI hiển thị tiếng Việt tự nhiên; không gửi nguyên nhãn hiển thị hoặc dùng uppercase() như một cách đổi enum.');
-fs.writeFileSync(path.join(root,'pages/admin/PAWPAL_GD1_HOP_DONG_ENUM.md'),lines.join('\n')+'\n');
+fs.writeFileSync(path.join(root,'docs/testing/generated/PAWPAL_GD1_HOP_DONG_ENUM.md'),lines.join('\n')+'\n');
 console.log(`${enums.size} enum types; ${aliases} source aliases; ${bad} alias targets inconsistent with metadata.`);
 if(bad)process.exitCode=1;

@@ -82,7 +82,7 @@ async function main() {
     }
   }
   lines.push('', 'Chỉ kiểm kê chữ ký metadata; chưa gọi hoặc kiểm tra thân hàm, chính sách nâng quyền và transaction.');
-  fs.writeFileSync(path.join(root,'pages/admin/PAWPAL_GD1_TU_DIEN_DU_LIEU.md'), lines.join('\n')+'\n');
+  fs.writeFileSync(path.join(root,'docs/testing/generated/PAWPAL_GD1_TU_DIEN_DU_LIEU.md'), lines.join('\n')+'\n');
   console.log(`Metadata HTTP ${response.status}; ${design.size} design entities; ${count} design attributes; frontend fallback/backend origin match=${Boolean(matches)}; ${relationNotes} key/relationship descriptions.`);
 }
 main().catch(e => { console.error('Phase 1 metadata unavailable: ' + (e.cause?.code || e.name) + '; ' + (e.message.startsWith('Metadata HTTP') ? e.message : 'details suppressed')); process.exitCode=1; });

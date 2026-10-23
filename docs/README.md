@@ -12,6 +12,14 @@
 
 ## Thư mục
 
+Các tài liệu phát triển còn dùng đã được đưa ra khỏi `pages/`:
+
+- [Quy chuẩn thiết kế Admin](design/ADMIN_DESIGN_SYSTEM.md)
+- [Kiến trúc cache và rollback](architecture/PAWPAL_ADMIN_PERF_ARCHITECTURE_AND_ROLLBACK_GUIDE.md)
+- [Kịch bản chatbot thủ công](testing/PAWPAL_AI_CHECKLIST_KICH_BAN_KIEM_THU_CHATBOT.md)
+- [Lưu ý về test runner cũ](testing/PAWPAL_QA_AUDIT_5_TEST_RUNNER_HUONG_DAN_SUA.md)
+- [Ma trận control UI được sinh từ mã](testing/generated/PAWPAL_GD1_MA_TRAN_TRUONG_UI.md)
+
 - [acceptance](acceptance/): nghiệm thu từng phân hệ và kết quả kiểm tra đã thực hiện.
 - [database](database/): thiết kế, đặc tả và bản mô tả schema hiện tại.
 - [testing](testing/): kế hoạch, checklist và tiến độ kiểm thử; các bản ghi cũ không thay thế kết quả nghiệm thu mới nhất.

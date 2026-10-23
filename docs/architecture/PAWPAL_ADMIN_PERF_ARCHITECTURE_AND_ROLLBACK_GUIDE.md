@@ -1,4 +1,6 @@
 # HƯỚNG DẪN KIẾN TRÚC HIỆU NĂNG, QUY CHUẨN CACHE VÀ KỊCH BẢN ROLLBACK ADMIN PAWPAL
+
+> Giữ để tham khảo cơ chế cache, cách ly phiên và rollback. Các con số mục tiêu trong tài liệu không thay thế phép đo trên bản triển khai hiện tại; xem [nghiệm thu tổng hợp](../acceptance/PAWPAL_DICH_VU_V1_NGHIEM_THU.md). Không truy vấn Logs Cloud khi kiểm tra.
 > Tài liệu kỹ thuật chi tiết theo tiêu chuẩn **PERF-08.08** phục vụ đội ngũ phát triển, vận hành và bảo trì hệ thống PawPal Admin.
 
 ---
@@ -70,7 +72,7 @@ Khi phát sinh thao tác ghi (Mutation) hoặc sự kiện Supabase Realtime, Da
 
 ### 4.1 Rollback Database (Supabase SQL)
 Nếu phát hiện index gây overhead ghi trên bảng lớn hoặc hàm RPC KPI cần điều chỉnh:
-- Thực thi kịch bản rollback đã được chuẩn bị sẵn tại [20261017_admin_perf_indexes_and_optimizations.sql](file:///d:/Aboutme/MyProject/Pawpal/scripts/database/20261017_admin_perf_indexes_and_optimizations.sql):
+- Thực thi kịch bản rollback đã được chuẩn bị sẵn tại [20261017_admin_perf_indexes_and_optimizations.sql](../../scripts/database/20261017_admin_perf_indexes_and_optimizations.sql):
 
 ```sql
 -- ROLLBACK SẠCH SẼ TOÀN BỘ INDEXES VÀ RPC KPI
@@ -90,7 +92,7 @@ DROP INDEX IF EXISTS idx_audit_log_created_module;
 
 ### 4.2 Rollback Frontend
 Nếu cần đưa frontend về trạng thái nạp tuần tự truyền thống:
-1. Mở [admin-data-store.js](file:///d:/Aboutme/MyProject/Pawpal/pages/admin/admin-data-store.js), chuyển cờ `FEATURE_FLAGS.CACHE_ENABLED = false` để DataStore luôn gọi trực tiếp `fetcherFn()` mà không lưu cache.
+1. Mở [admin-data-store.js](../../pages/admin/admin-data-store.js), chuyển cờ `FEATURE_FLAGS.CACHE_ENABLED = false` để DataStore luôn gọi trực tiếp `fetcherFn()` mà không lưu cache.
 2. Nút **Làm mới** (`#btnHeaderRefresh`) và chỉ báo trạng thái `#headerSyncStatus` trên Header cho phép người dùng chủ động ép nạp lại dữ liệu bất kỳ lúc nào mà không cần F5.
 
 ---

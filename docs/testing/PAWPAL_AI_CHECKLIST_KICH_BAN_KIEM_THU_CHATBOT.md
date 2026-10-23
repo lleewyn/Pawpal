@@ -1,5 +1,7 @@
 # PAWPAL AI — CHECKLIST KIỂM THỬ KỊCH BẢN CHATBOT (MANUAL QA)
 
+> Giữ làm bộ câu hỏi kiểm thử thủ công. Chỉ chọn các ca thuộc [phạm vi Chatbot đã chốt](../acceptance/PAWPAL_CHATBOT_V1_NGHIEM_THU.md); không tự mở lại chức năng đã hoãn hoặc coi ô chưa đánh dấu là lỗi đã xác nhận. Không truy vấn Logs Cloud.
+
 **Ngày soạn:** 21/10/2026  
 **Phạm vi:** Chatbot khách PawPal AI (FAB/widget + API chat + cơ sở dữ liệu) và luồng chuyển nhân viên trong Admin.  
 **Nguồn tham chiếu:** `Pawpal-main.zip` (`components/fab`, `scripts/api/chat.js`, `pages/admin/modules/chatbot`, `docs/chatbot/test-plan.md`) và bộ kế hoạch `PAWPAL_CHATBOT_USER_V2_CHIEN_LUOC_KICH_BAN_CODE_E2E.md`.  

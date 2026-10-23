@@ -1,4 +1,6 @@
 # BỘ QUY CHUẨN THIẾT KẾ TOÀN DIỆN - PAWPAL ADMIN (PAWPAL-ER)
+
+> Tài liệu tham chiếu thiết kế. Quy tắc hiện hành và các yêu cầu được người dùng chốt sau đó trong [AGENTS.md](../../AGENTS.md) được ưu tiên nếu có khác biệt.
 > File lưu trữ tiêu chuẩn chính thức của dự án Quản trị Pawpal. Cập nhật ngày 27/09/2026.
 
 ---

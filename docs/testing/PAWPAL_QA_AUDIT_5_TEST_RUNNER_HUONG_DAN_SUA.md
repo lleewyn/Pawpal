@@ -1,5 +1,7 @@
 # PAWPAL ADMIN — KIỂM TOÁN 5 BỘ TEST RUNNER & KẾ HOẠCH SỬA
 
+> Giữ vì mô tả rủi ro và giới hạn của các test runner cũ. Đây là đánh giá tại thời điểm ghi, không phải kết quả nghiệm thu bản Cloud hiện tại; xem [kết quả mới nhất](../acceptance/PAWPAL_DICH_VU_V1_NGHIEM_THU.md).
+
 **Ngày:** 18/10/2026  
 **Mục đích:** Thẩm định kết quả được báo cáo `57/57 PASS` và mức độ hỗ trợ kết luận `615/615 PASS` của checklist nghiệm thu PawPal Admin.  
 **Đầu vào:** Năm file JS người dùng gửi ngày 18/10/2026 (không phải toàn bộ repository, schema, RLS, log test hoặc môi trường đang chạy).  
