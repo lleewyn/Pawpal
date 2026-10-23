@@ -1640,7 +1640,7 @@ html.landing-v218{scroll-padding-top:86px}
 .landing-v218 .pet-personality-inner{gap:45px!important}}
 @media (prefers-reduced-motion:reduce){.landing-v218 *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}/* Production integration: scoped to the homepage, preserving shared Auth/navigation. */
 body.landing-v218{font-family:'Inter',system-ui,sans-serif;overflow-x:clip;--home-heading-font:'Lora',Inter,system-ui,sans-serif}
-.landing-v218 #site-footer,.landing-v218>.footer-cta-banner,.landing-v218>.main-footer{display:none!important}
+.landing-v218>.footer-cta-banner{display:none!important}
 .landing-v218 .home-skip{position:absolute;top:-80px;left:16px;z-index:10001;background:#fff;padding:12px;color:#264b3d}
 .landing-v218 .home-skip:focus{top:10px}
 .landing-v218 .main-header{background:#fff;box-shadow:none;padding:0;border-bottom:1px solid #e4e9e1}
@@ -1679,3 +1679,7 @@ body.landing-v218 #homePage .v210-rate,body.landing-v218 #homePage blockquote,bo
 
 /* Shared navigation uses the same body family on this page. */
 body.landing-v218 .main-header,body.landing-v218 .main-header :is(a,button,input,select,textarea,span,div){font-family:Inter,system-ui,sans-serif!important}
+
+/* Restore the original shared footer with its map; retain the two font families. */
+body.landing-v218 .main-footer{font-family:Inter,system-ui,sans-serif}
+body.landing-v218 .main-footer :is(h2,h3,h4){font-family:Lora,Inter,serif}

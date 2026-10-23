@@ -33,3 +33,5 @@ Bản giao diện `c98dec75` và tích hợp yêu thích `d26e3a08` đã lên `h
 - 9 kiểm thử API/yêu thích hiện có đạt. Khách vãng lai trên trang chủ được nhắc đăng nhập khi bấm lưu.
 
 Không truy vấn Cloud Logs trong toàn bộ đợt thực hiện.
+
+Theo lựa chọn tiếp theo của người dùng: tiêu đề dùng Lora, nội dung dùng Inter; khôi phục footer dùng chung có bản đồ thay footer từ handoff. Giữ khối đặt lịch cuối trang và ẩn lời mời đặt lịch trùng của footer cũ. Đã kiểm tra footer/bản đồ hiển thị và màn hình 390px không tràn ngang.

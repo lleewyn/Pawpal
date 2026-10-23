@@ -31,7 +31,9 @@ const base=process.argv.includes('--deployed')?'https://pawpalgr3.vercel.app':'h
   await page.locator('[data-entry="2"]').click();assert.equal(await page.locator('[data-entry="2"]').getAttribute('aria-pressed'),'true');
   assert.ok((await page.locator('#pj-photo-caption').textContent()).includes('Chuẩn bị bàn giao'));
   await page.locator('.v4-faq-item summary').first().click();assert.equal(await page.locator('.v4-faq-item').first().getAttribute('open'),'');
-  assert.equal(await page.locator('.main-footer').isVisible(),false);
+  assert.equal(await page.locator('.main-footer').isVisible(),true);
+  assert.equal(await page.locator('.footer-map-section iframe').count(),1);
+  assert.equal(await page.locator('.v4-footer').count(),0);
   assert.equal(await page.locator('#prevSlide').isVisible(),false); // Existing Cloud records have placeholder images.
   for(const width of [320,390,768,1024,1440,1920]){
    await page.setViewportSize({width,height:1000});
