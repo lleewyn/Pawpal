@@ -11,6 +11,7 @@ Cập nhật ngày 23/10/2026. Áp dụng bố cục từ `PAWPAL_PUBLIC_V218_HA
 - Banner Cloud chỉ bổ sung khi còn hiệu lực và ảnh tải được. Bỏ qua URL mẫu `example.com`; chỉ một banner hợp lệ thì ẩn nút chuyển, không hiển thị số lượng giả.
 - Nhật ký bé Lu ghi rõ minh họa. Không đọc nhật ký khách khi chưa đăng nhập. Bỏ nội dung khám sức khỏe và tên nhân viên chưa xác nhận.
 - Giữ Header, Auth, điều hướng, giỏ hàng và trợ lý dùng chung. Danh mục cửa hàng dẫn sang bộ lọc cửa hàng thật; không đưa mảng dữ liệu của prototype vào ứng dụng.
+- Nút lưu dịch vụ yêu thích dùng API xác định chủ qua Auth. Đọc lại trạng thái trước khi ghi, chờ máy chủ xác nhận mới đổi nút; khách chưa đăng nhập được nhắc đăng nhập. Không nhập dữ liệu trình duyệt vào danh sách thành viên.
 - CSS giới hạn trong trang chủ. Khi điều hướng SPA sang trang có body class rỗng, xóa class trang trước; trở lại trang chủ khởi tạo lại đúng một lần.
 - Không thay đổi schema, dữ liệu Cloud, cấu hình Admin hay Supabase cũ. Không truy vấn Cloud Logs.
 

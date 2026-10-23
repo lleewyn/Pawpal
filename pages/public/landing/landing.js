@@ -13,6 +13,42 @@
         const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         const money = n => Number(n).toLocaleString('vi-VN') + 'đ';
         let services = [], category = 'all';
+        let savedServices = new Set(), wishlistEpoch = 0;
+        const notice = document.createElement('p');
+        notice.className='home-wishlist-notice';notice.setAttribute('role','status');grid.after(notice);
+        const currentUser = () => {try{return JSON.parse(localStorage.getItem('pawpal_current_user'))||null;}catch(_){return null;}};
+        const syncSavedButtons = () => grid.querySelectorAll('[data-save-service]').forEach(button=>{
+            const saved=savedServices.has(button.dataset.saveService);button.setAttribute('aria-pressed',String(saved));button.textContent=saved?'Đã lưu':'Lưu yêu thích';
+        });
+        async function refreshSaved() {
+            const epoch=++wishlistEpoch;
+            const user=currentUser();savedServices=new Set();syncSavedButtons();
+            if (!user?.id) return;
+            try {
+                const {API}=await import('/scripts/api/api.js');const result=await API.getUserWishlist(user.id);
+                if (!grid.isConnected || currentUser()?.id!==user.id || epoch!==wishlistEpoch) return;
+                savedServices=new Set((result.serviceIds||[]).map(String));syncSavedButtons();
+            }catch(_){/* Never replace a member's remote list with browser data. */}
+        }
+        window.pawpalHomeRefreshWishlist=()=>{if(grid.isConnected)refreshSaved();};
+        grid.addEventListener('click',async event=>{
+            const button=event.target.closest('[data-save-service]');if(!button||button.disabled)return;
+            const user=currentUser();
+            if(!user?.id){notice.textContent='Vui lòng đăng nhập để lưu dịch vụ yêu thích.';return;}
+            ++wishlistEpoch;button.disabled=true;notice.textContent='';
+            try {
+                const {API}=await import('/scripts/api/api.js');
+                const snapshot=await API.getUserWishlist(user.id),id=button.dataset.saveService;
+                if(currentUser()?.id!==user.id)throw Error('Tài khoản đã thay đổi. Vui lòng thử lại.');
+                const saved=!(snapshot.serviceIds||[]).map(String).includes(id);
+                const result=await API.setWishlistItem(user.id,id,true,saved);
+                if(!result.success)throw Error('Chưa lưu được yêu thích.');
+                if(!grid.isConnected||currentUser()?.id!==user.id)return;
+                if(saved)savedServices.add(id);else savedServices.delete(id);
+                syncSavedButtons();notice.textContent=saved?'Đã lưu dịch vụ yêu thích.':'Đã bỏ dịch vụ khỏi yêu thích.';
+            }catch(_){if(grid.isConnected)notice.textContent='Chưa cập nhật được yêu thích. Vui lòng thử lại.';}
+            finally{button.disabled=false;}
+        });
         function renderServices() {
             const rows = services.filter(s => category === 'all' || s.category === category).slice(0, 5);
             grid.innerHTML = rows.length ? rows.map(s => `<article class="catalog-item" data-service-id="${esc(s.id)}">
@@ -20,7 +56,8 @@
                 <div class="catalog-body"><div class="catalog-topline"><span class="catalog-id">${esc(s.serviceId)}</span><span class="catalog-rating">${s.reviewCount > 0 ? `★ ${s.rating.toFixed(1)} (${s.reviewCount})` : 'Chưa có đánh giá'}</span></div>
                 <h3><a href="/pages/services/service-detail/service-detail.html?id=${encodeURIComponent(s.serviceId)}">${esc(s.name)}</a></h3>
                 <p class="catalog-desc">${esc(s.description)}</p><p class="catalog-duration">${esc([s.petType,s.duration].filter(Boolean).join(' · '))}</p>
-                <div class="catalog-purchase"><span class="catalog-price">${s.hasPrice ? 'Từ '+money(s.price) : 'Xem giá khi đặt lịch'}</span><a class="catalog-book" href="/booking?service=${encodeURIComponent(s.serviceId)}">Đặt lịch</a></div></div></article>`).join('') : '<p class="home-state">Chưa có dịch vụ trong nhóm này.</p>';
+                <div class="catalog-purchase"><span class="catalog-price">${s.hasPrice ? 'Từ '+money(s.price) : 'Xem giá khi đặt lịch'}</span><a class="catalog-book" href="/booking?service=${encodeURIComponent(s.serviceId)}">Đặt lịch</a></div><button class="home-save-service" type="button" data-save-service="${esc(s.id)}" aria-pressed="false">Lưu yêu thích</button></div></article>`).join('') : '<p class="home-state">Chưa có dịch vụ trong nhóm này.</p>';
+            syncSavedButtons();
         }
         root.querySelectorAll('[data-category]').forEach(button => button.addEventListener('click', () => {
             category = button.dataset.category;
@@ -32,7 +69,7 @@
             try {
                 services = (await window.DataLoader.loadServices()).sort((a,b) => ({spa:0,hotel:1,taxi:2}[a.category] ?? 3)-({spa:0,hotel:1,taxi:2}[b.category] ?? 3) || a.serviceId.localeCompare(b.serviceId));
                 if (!grid.isConnected) return;
-                renderServices(); await loadReviews();
+                renderServices();refreshSaved();await loadReviews();
             } catch (_) {
                 if (!grid.isConnected) return;
                 grid.innerHTML = '<p class="home-state">Chưa tải được dịch vụ. <button type="button" id="home-retry">Thử lại</button></p>';
@@ -109,5 +146,6 @@
     }
     document.addEventListener('DOMContentLoaded',init);
     document.addEventListener('page_navigated',init);
+    document.addEventListener('auth_state_changed',()=>window.pawpalHomeRefreshWishlist?.());
     if (document.readyState !== 'loading') init();
 })();
