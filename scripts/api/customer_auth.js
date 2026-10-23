@@ -331,7 +331,7 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
                 return res.json({ success: true, profile: result.data });
             }
             if (['loyalty-wallet', 'loyalty-redeem'].includes(req.body?.action)) {
-                const service = require('./customer_loyalty').createCustomerLoyaltyService(admin);
+                const service = require('./customer_loyalty').createCustomerLoyaltyService(clientFactory(token));
                 if (req.body.action === 'loyalty-wallet') {
                     return res.json({ success: true, vouchers: await service.wallet(user.id) });
                 }

@@ -1171,6 +1171,17 @@
 .loyalty-loaded { animation: loyaltyContentReveal 180ms ease-out; }
 @keyframes loyaltySkeletonPulse { 50% { opacity: .45; } }
 @keyframes loyaltyContentReveal { from { opacity: .65; } to { opacity: 1; } }
+.loyalty-module-container .my-vouchers-wrapper { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+.loyalty-module-container .my-voucher-ticket-card { width: 100%; display: grid; grid-template-columns: 90px minmax(0, 1fr) 110px; }
+.loyalty-module-container .my-ticket-body { min-width: 0; overflow-wrap: anywhere; }
+.loyalty-module-container .my-ticket-body p { margin: 6px 0; }
+.loyalty-module-container .ticket-body { min-width: 0; padding: 16px; overflow-wrap: anywhere; }
+.loyalty-module-container #loyalty-history { margin-top: 24px; overflow-x: auto; }
+.loyalty-module-container #current-points-display { display: block; font-size: 24px; margin: 12px 0; }
+@media (max-width: 600px) {
+ .loyalty-module-container .my-voucher-ticket-card { grid-template-columns: 65px minmax(0, 1fr); }
+ .loyalty-module-container .my-ticket-action { grid-column: 2; padding: 12px; }
+}
 @media (prefers-reduced-motion: reduce) {
     .loyalty-module-container .pawpal-skeleton, .loyalty-loaded { animation: none !important; }
 }
