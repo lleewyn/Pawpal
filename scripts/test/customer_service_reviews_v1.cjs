@@ -1,6 +1,6 @@
 const fs=require('node:fs'),{spawnSync}=require('node:child_process');
 const {state}=require('./customer_completion_helpers.cjs');
-const ddl=fs.readFileSync('scripts/database/v1/070_customer_service_reviews.sql','utf8').replace(/^BEGIN;|^COMMIT;|^NOTIFY.*$/gm,'');
+const ddl=['070_customer_service_reviews.sql','072_public_service_directory.sql'].map(f=>fs.readFileSync('scripts/database/v1/'+f,'utf8').replace(/^BEGIN;|^COMMIT;|^NOTIFY.*$/gm,'')).join('\n');
 const q=`BEGIN;${ddl}
 DO $$ DECLARE uid uuid:=gen_random_uuid(); outsider uuid:=gen_random_uuid(); cid uuid; pet uuid; svc uuid;
  aid uuid:=gen_random_uuid(); l1 uuid:=gen_random_uuid(); l2 uuid:=gen_random_uuid(); r1 uuid:=gen_random_uuid(); r2 uuid:=gen_random_uuid(); payload jsonb; rejected boolean;
@@ -22,6 +22,15 @@ BEGIN
  IF jsonb_array_length(public.own_service_reviews(aid))<>2 OR EXISTS(SELECT 1 FROM public.review WHERE id IN(r1,r2) AND review_status<>'pending') THEN RAISE EXCEPTION 'Replay or moderation failed';END IF;
  rejected:=false;BEGIN PERFORM public.submit_own_service_reviews(aid,jsonb_set(payload,'{0,rating}','3'));EXCEPTION WHEN SQLSTATE 'PT409' THEN rejected:=true;END;
  IF NOT rejected THEN RAISE EXCEPTION 'Conflicting review accepted';END IF;
+ PERFORM set_config('role','supabase_admin',true);
+ PERFORM set_config('role','anon',true);
+ IF EXISTS(SELECT 1 FROM jsonb_array_elements(public.public_service_reviews(svc)) r WHERE r->>'id'=r1::text OR r->>'id'=r2::text) THEN RAISE EXCEPTION 'Unpublished review exposed';END IF;
+ IF NOT EXISTS(SELECT 1 FROM jsonb_array_elements(public.public_service_directory()) s WHERE s->>'id'=svc::text) THEN RAISE EXCEPTION 'Active directory missing';END IF;
+ PERFORM set_config('role','supabase_admin',true);
+ PERFORM set_config('request.jwt.claim.sub',uid::text,true);
+ UPDATE public.review SET review_status='published' WHERE id=r1;
+ PERFORM set_config('role','anon',true);
+ IF NOT EXISTS(SELECT 1 FROM jsonb_array_elements(public.public_service_reviews(svc)) r WHERE r->>'id'=r1::text) THEN RAISE EXCEPTION 'Published review missing';END IF;
  PERFORM set_config('role','supabase_admin',true);
  UPDATE public.appointment SET appointment_status='pending' WHERE id=aid;
  PERFORM set_config('role','authenticated',true);

@@ -230,6 +230,10 @@ function renderServicesSkeletons(count = 6) {
     `).join('');
 }
 
+function escapeServiceHTML(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+}
+
 async function initServicesPage() {
     console.log('=== SERVICES PAGE LOADING ===');
     renderServicesSkeletons(6);
@@ -252,15 +256,6 @@ async function initServicesPage() {
             allServices = await window.DataLoader.loadServices();
         }
         
-        if (!allServices || allServices.length === 0) {
-            try {
-                const res = await fetch('/data/services.json?v=' + Date.now());
-                if (res.ok) allServices = await res.json();
-            } catch(e) {
-                console.warn('Fallback fetch /data/services.json error:', e);
-            }
-        }
-
         if (allServices && allServices.length > 0) {
             console.log(` Loaded ${allServices.length} services`);
 
@@ -290,8 +285,8 @@ async function initServicesPage() {
             applyFilters();
             updateServicesFilterCount();
         } else {
-            console.error('No services loaded');
-            showErrorMessage();
+            filteredServices = [];
+            renderServices();
         }
     } catch (error) {
         console.error('Error loading services:', error);
@@ -370,6 +365,7 @@ window.applyFilters = function () {
         } else if (priceBucketFilter === 'over-300') {
             matchesPrice = service.price > 300000;
         }
+        if (priceBucketFilter !== 'all' && !service.hasPrice) matchesPrice = false;
 
         let matchesRating = true;
         if (!ratingAllChecked && selectedRatings.length > 0) {
@@ -429,11 +425,8 @@ function renderServices() {
         const formattedPrice = service.price.toLocaleString('vi-VN');
         const priceUnit = service.priceDisplay.includes('đêm') ? ' / đêm' : '';
 
-        const memberPrice = Math.round(service.price * 0.95);
-        const formattedMemberPrice = memberPrice.toLocaleString('vi-VN');
-
-        const sanitizedDesc = service.description.replace(/&/g, 'và');
-        const sanitizedName = service.name.replace(/&/g, 'và');
+        const sanitizedDesc = escapeServiceHTML(service.description);
+        const sanitizedName = escapeServiceHTML(service.name);
 
         return `
             <div class="service-card" data-id="${service.serviceId}">
@@ -452,7 +445,7 @@ function renderServices() {
                             <span class="service-card-id">${service.serviceId}</span>
                             <div class="service-card-rating">
                                 <span>⭐</span>
-                                <span>${service.rating.toFixed(1)} (${service.reviewCount})</span>
+                                <span>${service.reviewCount ? `${service.rating.toFixed(1)} (${service.reviewCount})` : "Chưa có đánh giá"}</span>
                             </div>
                         </div>
                         <h3 class="service-card-title">${sanitizedName}</h3>
@@ -473,14 +466,7 @@ function renderServices() {
 
                         <div class="service-card-price-row">
                             <span class="price-label">Giá niêm yết:</span>
-                            <span class="service-card-price">Từ ${formattedPrice} VNĐ<span class="service-card-price-unit">${priceUnit}</span></span>
-                        </div>
-                        <div class="service-card-member-price-row">
-                            <span class="member-price-label">Thành viên:</span>
-                            <span class="service-card-member-price">
-                                <span>Từ ${formattedMemberPrice} VNĐ<span class="service-card-price-unit">${priceUnit}</span></span>
-                                <span class="member-badge">PawPass Bạc (-5%)</span>
-                            </span>
+                            <span class="service-card-price">${service.hasPrice ? `Từ ${formattedPrice} VNĐ${priceUnit}` : 'Báo giá khi đặt lịch'}</span>
                         </div>
                     </div>
                 </a>

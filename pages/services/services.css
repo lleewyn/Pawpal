@@ -829,8 +829,8 @@
 
 .service-card-price-row .service-card-price {
     font-size: 14px !important;
-    text-decoration: line-through;
-    color: var(--color-text-light) !important;
+    text-decoration: none;
+    color: var(--color-primary) !important;
     font-weight: 500 !important;
 }
 

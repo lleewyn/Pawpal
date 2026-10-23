@@ -6,6 +6,9 @@
  */
 
 let serviceData = null;
+function escapeServiceHTML(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+}
 let selectedPetType = 'Chó và Mèo';
 let selectedWeight = 'Dưới 5kg';
 let selectedGroomer = 'junior';
@@ -159,10 +162,10 @@ function populateServiceInfo() {
     const titleEl = document.getElementById('detailServiceTitle');
     if (titleEl) titleEl.textContent = sanitizedName;
 
-    const score = (serviceData.rating || 4.8).toFixed(1);
-    const count = serviceData.reviewCount || 115;
+    const score = Number(serviceData.rating || 0).toFixed(1);
+    const count = serviceData.reviewCount || 0;
     const ratingTextEl = document.getElementById('detailRatingText');
-    if (ratingTextEl) ratingTextEl.textContent = `(${score} - ${count} đánh giá)`;
+    if (ratingTextEl) ratingTextEl.textContent = count ? `(${score} - ${count} đánh giá)` : 'Chưa có đánh giá';
 
     // Rating Stars in Summary Header
     const starsContainer = document.getElementById('detailHeaderStars');
@@ -337,7 +340,7 @@ function setupConfigurator() {
     if (!weightOptions) return;
 
     const pricesObj = serviceData.prices || {};
-    const availableWeights = Object.keys(pricesObj).filter(w => pricesObj[w] > 0);
+    const availableWeights = Object.keys(pricesObj).filter(w => pricesObj[w] >= 0);
 
     if (availableWeights.length > 0) {
         weightOptions.innerHTML = availableWeights.map((w, idx) => `
@@ -345,8 +348,9 @@ function setupConfigurator() {
         `).join('');
         selectedWeight = availableWeights[0];
     } else {
-        weightOptions.innerHTML = `<button class="config-pill-btn active" data-val="Tiêu chuẩn">Tiêu chuẩn</button>`;
-        selectedWeight = 'Tiêu chuẩn';
+        weightOptions.replaceChildren();
+        document.getElementById('weightClassGroup').hidden = true;
+        selectedWeight = '';
     }
 
     weightOptions.querySelectorAll('.config-pill-btn').forEach(btn => {
@@ -364,28 +368,17 @@ function recalculatePrice() {
 
     let finalPrice = serviceData.prices && serviceData.prices[selectedWeight] ? serviceData.prices[selectedWeight] : (serviceData.price || 0);
 
-    const silverPrice = Math.round(finalPrice * 0.95);
-    const goldPrice = Math.round(finalPrice * 0.90);
-    const diamondPrice = Math.round(finalPrice * 0.85);
-
-    animatePriceChange('detailBasePrice', finalPrice);
-    animatePriceChange('priceTierSilver', silverPrice);
-    animatePriceChange('priceTierGold', goldPrice);
-    animatePriceChange('priceTierDiamond', diamondPrice);
-    animatePriceChange('stickyPriceVal', finalPrice);
+    for (const id of ['detailBasePrice','stickyPriceVal']) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = serviceData.hasPrice ? Number(finalPrice).toLocaleString('vi-VN') + ' VNĐ' : 'Báo giá khi đặt lịch';
+    }
 
     const stickySub = document.getElementById('stickyServiceSub');
     if (stickySub) {
         stickySub.textContent = `Gói: ${selectedWeight} • ${selectedPetType}`;
     }
 
-    const bookingParams = new URLSearchParams({
-        service: serviceData.serviceId || '',
-        petType: selectedPetType || 'Tất cả',
-        weight: selectedWeight || 'Tiêu chuẩn',
-        groomer: selectedGroomer || 'junior',
-        price: finalPrice
-    });
+    const bookingParams = new URLSearchParams({service:serviceData.dbId});
 
     const bookingUrl = `../booking/booking.html?${bookingParams.toString()}`;
     const stickyBookAction = document.getElementById('btnStickyBookAction');
@@ -407,12 +400,7 @@ function setupTimelineAndBenefits() {
     // Key Benefits
     const benefitsContainer = document.getElementById('benefitsGridContainer');
     if (benefitsContainer) {
-        let benefits = [
-            'Nuôi dưỡng chuyên sâu làn da và bộ lông thú cưng',
-            'Khử mùi hôi cơ thể triệt để, giữ hương thơm mát dài lâu',
-            'Cắt móng và vệ sinh an toàn tuyệt đối ngừa cào xước',
-            'Sử dụng 100% dòng sản phẩm hữu cơ nhập khẩu an toàn'
-        ];
+        let benefits = [];
 
         if (serviceData.benefits) {
             const rawBenefits = serviceData.benefits.split(/[;.\n]/).map(b => b.trim()).filter(b => b.length > 0);
@@ -431,16 +419,7 @@ function setupTimelineAndBenefits() {
     const timeline = document.getElementById('checklistTimeline');
     if (!timeline) return;
 
-    let checklist = [
-        { step: 'Kiểm tra sơ bộ', desc: 'Tiếp nhận bé, phân tích tình trạng da lông và tư vấn' },
-        { step: 'Cắt và mài móng', desc: 'Vệ sinh móng chân sạch sẽ, bo tròn góc sắc ngừa cào xước' },
-        { step: 'Vệ sinh tai mắt', desc: 'Nhỏ dung dịch chuyên dụng làm sạch sâu kẽ tai và tuyến nước mắt' },
-        { step: 'Tắm sạch lần 1', desc: 'Tắm sạch sâu loại bỏ toàn bộ bụi bẩn bám dính trên da lông' },
-        { step: 'Tắm dưỡng lần 2', desc: 'Sử dụng dầu tắm cao cấp nuôi dưỡng và làm mềm mượt lớp lông' },
-        { step: 'Vắt tuyến hôi', desc: 'Triệt tiêu ổ vi khuẩn và khử mùi hôi đặc trưng hậu môn' },
-        { step: 'Sấy khô tạo phồng', desc: 'Sấy bằng luồng khí ấm chuyên dụng kết hợp chải tơi lông' },
-        { step: 'Chải lông hoàn thiện', desc: 'Xịt dưỡng chất thơm thiên nhiên bảo vệ lông da hoàn chỉnh' }
-    ];
+    let checklist = [];
 
     if (serviceData.checklist) {
         const rawSteps = serviceData.checklist.split(/[;\n]/).map(s => s.trim()).filter(s => s.length > 0);
@@ -497,14 +476,7 @@ function setupAmenities() {
     const tabBtn = document.getElementById('tabBtnAmenities');
     if (!amenitiesGrid) return;
 
-    let amenities = [
-        'Phòng điều hòa mát lạnh 24/7 duy trì 24 - 26°C',
-        'Camera IP giám sát trực tiếp cho phụ huynh theo dõi từ xa',
-        'Máy sấy êm ái giảm tiếng ồn chuyên dụng chống hoảng sợ',
-        'Khử trùng tia cực tím UV và khử khuẩn bề mặt mỗi ngày',
-        'Bác sĩ thú y túc trực hỗ trợ khẩn cấp 24/7',
-        'Khu vực vui chơi tương tác vận động giải tỏa căng thẳng'
-    ];
+    let amenities = [];
 
     if (serviceData.amenities) {
         const customAmenities = serviceData.amenities.split(/[;.\n,]/).map(a => a.trim()).filter(a => a.length > 0);
@@ -588,56 +560,10 @@ async function setupReviews() {
         }
     }
 
-    if (rawReviews.length === 0 && Array.isArray(serviceData.reviews) && serviceData.reviews.length > 0) {
-        rawReviews = serviceData.reviews;
-    }
-
-
-
-    // Determine available variant options for this service
-    let availableVariants = [];
-    if (serviceData.prices && typeof serviceData.prices === 'object' && Object.keys(serviceData.prices).length > 0) {
-        availableVariants = Object.keys(serviceData.prices);
-    }
-    if (availableVariants.length === 0) {
-        availableVariants = ['Dưới 5kg', '5 - 10kg', '10 - 20kg', 'Trên 20kg'];
-    }
-
-    reviewsList = rawReviews.map((r, idx) => {
-        const rawRating = Number(r.rating) || 5;
-        const normRating = rawRating > 5 ? Math.round(rawRating / 2) : Math.min(5, Math.max(1, Math.round(rawRating)));
-        
-        let assignedVariant = r.variant || r.weight;
-        if (!assignedVariant || assignedVariant === 'Tiêu chuẩn') {
-            assignedVariant = availableVariants[idx % availableVariants.length];
-        }
-
-        return {
-            customerName: r.customerName || r.name || 'Khách hàng PawPal',
-            tier: r.tier || 'member',
-            tierName: r.tierName || (r.tier === 'gold' ? 'Hội viên Vàng' : r.tier === 'silver' ? 'Hội viên Bạc' : 'Thành viên'),
-            rating: normRating,
-            createdAt: r.createdAt || r.date || '2026-06-01',
-            variant: assignedVariant,
-            content: r.content || r.text || 'Dịch vụ rất tốt và chu đáo.',
-            media: Array.isArray(r.media) ? r.media : (Array.isArray(r.images) ? r.images : []),
-            hasMedia: Boolean((r.media && r.media.length > 0) || (r.images && r.images.length > 0)),
-            shopReply: r.shopReply || r.sellerReply || null
-        };
-    });
-
-    // Sample realistic feedback images for review demonstration if DB has no media
-    reviewsList.forEach((r, idx) => {
-        if ((!r.media || r.media.length === 0) && (idx === 0 || idx === 1)) {
-            if (serviceData.images && serviceData.images.length > 1) {
-                r.media = [serviceData.images[1]];
-                r.hasMedia = true;
-            } else if (serviceData.image) {
-                r.media = [serviceData.image];
-                r.hasMedia = true;
-            }
-        }
-    });
+    reviewsList = rawReviews.map(r => ({
+        customerName:r.name, tier:'', tierName:'', rating:Number(r.rating), createdAt:r.date,
+        variant:'', content:r.text, media:[], hasMedia:false, shopReply:r.sellerReply || null
+    }));
 
     // Calculate rating statistics
     const totalCount = reviewsList.length;
@@ -652,7 +578,7 @@ async function setupReviews() {
         if (r.hasMedia && r.media && r.media.length > 0) mediaCount++;
     });
 
-    const avgScore = totalCount > 0 ? (sumRating / totalCount).toFixed(1) : (serviceData.rating || 5.0).toFixed(1);
+    const avgScore = totalCount > 0 ? (sumRating / totalCount).toFixed(1) : '0.0';
 
     // Update Average Score & Summary UI
     const avgScoreEl = document.getElementById('averageScore');
@@ -798,16 +724,10 @@ function renderReviewsPage() {
 
     let html = '';
     pageItems.forEach((r) => {
-        let dateStr = r.createdAt || '2026-06-01';
-        if (dateStr.includes('-')) {
-            const parts = dateStr.split('-');
-            if (parts.length === 3) {
-                dateStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
-            }
-        }
+        const dateStr = r.createdAt ? new Date(r.createdAt).toLocaleDateString('vi-VN') : '';
         const initial = r.customerName ? r.customerName.charAt(0).toUpperCase() : 'K';
         const normRating = r.rating;
-        const variantText = r.variant || 'Dưới 5kg';
+        const variantText = r.variant || '';
         
         let starsHtml = '';
         for (let i = 1; i <= 5; i++) {
@@ -827,15 +747,14 @@ function renderReviewsPage() {
                                 </div>
                                 <span class="review-verified-badge">Đã trải nghiệm dịch vụ tại PawPal</span>
                             </div>
-                            <button class="review-helpful-btn" onclick="toggleReviewHelpful(this)">Hữu ích (0)</button>
                         </div>
                         <div class="review-meta-info">
                             <span class="review-date">${dateStr}</span>
                             <span class="review-meta-dot">•</span>
-                            <span class="review-variant-tag">Phân loại: ${variantText}</span>
+                            ${variantText ? `<span class="review-variant-tag">Phân loại: ${escapeServiceHTML(variantText)}</span>` : ''}
                         </div>
                         <div class="review-content">
-                            <p class="review-text">${r.content}</p>
+                            <p class="review-text">${escapeServiceHTML(r.content)}</p>
                             ${r.hasMedia && r.media && r.media.length > 0 ? `
                             <div class="review-media-list">
                                 ${r.media.map(img => `<img src="${img}" alt="Ảnh đánh giá" class="review-media-thumb" onclick="openReviewImageLightbox('${img}')" title="Bấm để xem ảnh phóng to">`).join('')}
@@ -844,7 +763,7 @@ function renderReviewsPage() {
                             ${r.shopReply ? `
                             <div class="seller-reply">
                                 <div class="reply-header">Phản hồi từ PawPal Care:</div>
-                                <div class="reply-content">${r.shopReply}</div>
+                                <div class="reply-content">${escapeServiceHTML(r.shopReply)}</div>
                             </div>
                             ` : ''}
                         </div>
@@ -1075,11 +994,8 @@ async function setupRelatedServices() {
         const formattedPrice = (service.price || 0).toLocaleString('vi-VN');
         const priceUnit = (service.priceDisplay || '').includes('đêm') ? ' / đêm' : '';
 
-        const memberPrice = Math.round((service.price || 0) * 0.95);
-        const formattedMemberPrice = memberPrice.toLocaleString('vi-VN');
-
-        const sanitizedDesc = (service.description || '').replace(/&/g, 'và');
-        const sanitizedName = (service.name || '').replace(/&/g, 'và');
+        const sanitizedDesc = escapeServiceHTML(service.description);
+        const sanitizedName = escapeServiceHTML(service.name);
 
         return `
             <div class="service-card" data-id="${service.serviceId}">
@@ -1093,7 +1009,7 @@ async function setupRelatedServices() {
                             <span class="service-card-id">${service.serviceId}</span>
                             <div class="service-card-rating">
                                 <span>⭐</span>
-                                <span>${(service.rating || 5).toFixed(1)} (${service.reviewCount || 0})</span>
+                                <span>${Number(service.rating || 0).toFixed(1)} (${service.reviewCount || 0})</span>
                             </div>
                         </div>
                         <h3 class="service-card-title">${sanitizedName}</h3>
@@ -1114,14 +1030,7 @@ async function setupRelatedServices() {
 
                         <div class="service-card-price-row">
                             <span class="price-label">Giá niêm yết:</span>
-                            <span class="service-card-price">${formattedPrice} VNĐ<span class="service-card-price-unit">${priceUnit}</span></span>
-                        </div>
-                        <div class="service-card-member-price-row">
-                            <span class="member-price-label">Thành viên:</span>
-                            <span class="service-card-member-price">
-                                <span>${formattedMemberPrice} VNĐ<span class="service-card-price-unit">${priceUnit}</span></span>
-                                <span class="member-badge">PawPass Bạc (-5%)</span>
-                            </span>
+                            <span class="service-card-price">${service.hasPrice ? `${formattedPrice} VNĐ${priceUnit}` : 'Báo giá khi đặt lịch'}</span>
                         </div>
                     </div>
                 </a>

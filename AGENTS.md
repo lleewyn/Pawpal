@@ -242,3 +242,10 @@
 * **Quy Trình Nghiệm Thu Từng Modal Một (One Modal At A Time)**:
   - Bắt buộc thực hiện tuần tự: Phân tích từng modal -> Thống nhất các trường dữ liệu -> Áp dụng đúng toàn bộ quy tắc thiết kế & nghiệp vụ -> Kiểm tra trực quan bằng hình ảnh/browser -> Báo cáo người dùng nghiệm thu xong mới chuyển sang modal kế tiếp.
 
+---
+
+## 9. HẠN CHẾ CHI PHÍ SUPABASE CLOUD
+
+* **Không truy vấn hệ thống Logs của Supabase Cloud**: Không dùng Logs Explorer, Logs Query API, CLI/MCP hoặc công cụ khác để tìm, quét, xuất hay thăm dò log; không bật làm mới log tự động. Người dùng dùng gói Free và không thể nâng cấp. Chỉ thay đổi quy tắc này khi người dùng cho phép rõ ràng.
+* Kiểm tra bằng truy vấn dữ liệu nghiệp vụ/phần định nghĩa CSDL có phạm vi cụ thể, phản hồi API và trình duyệt. Nếu một công việc bắt buộc cần Logs thì báo giới hạn này; không tự mở Logs. Quy tắc này không cấm đọc kết quả lỗi cục bộ của lệnh hoặc bài kiểm thử.
+

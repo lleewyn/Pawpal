@@ -323,228 +323,38 @@ async function loadComponent(placeholderId, componentPath) {
     }
 }
 
-function transformServiceData(rawData) {
-    return rawData.map((item, index) => {
-        const rawCategory = item['Phân loại'] || '';
-        let category = 'other';
-        if (rawCategory.includes('Spa và Grooming') || rawCategory.includes('Spa & Grooming')) {
-            category = 'spa';
-        } else if (rawCategory.includes('Pet Hotel')) {
-            category = 'hotel';
-        } else if (rawCategory.includes('Pet Taxi')) {
-            category = 'taxi';
+async function loadServices() {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db) throw new Error('Chưa kết nối được dữ liệu dịch vụ.');
+    const {data, error} = await db.rpc('public_service_directory');
+    if (error) throw error;
+    return (data || []).map(svc => {
+        const category = ({grooming_spa:'spa',pet_hotel:'hotel',pet_taxi:'taxi'})[svc.category_code] || '';
+        const prices = {};
+        for (const p of (category === 'spa' ? svc.prices || [] : [])) {
+            const label = p.weight_to == null ? `Từ ${Number(p.weight_from)} kg` : `${Number(p.weight_from)} – ${Number(p.weight_to)} kg`;
+            prices[label] = Number(p.unit_price);
         }
-
-        const priceSub5 = parseInt(item['Giá <5kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
-        const price5to10 = parseInt(item['Giá 5-10kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
-        const price10to20 = parseInt(item['Giá 10-20kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
-        const priceOver20 = parseInt(item['Giá >20kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
-
-        const prices = {
-            '< 5kg': priceSub5,
-            '5 - 10kg': price5to10,
-            '10 - 20kg': price10to20,
-            '> 20kg': priceOver20
+        const amounts = Object.values(prices).filter(value => Number.isFinite(value) && value >= 0);
+        // Existing presentation assets; service identities, availability and prices remain database-owned.
+        const artwork = {
+            SPA01:'spa/process/spa01.webp',SPA02:'spa/process/spa01.webp',SPA03:'spa/process/spa03.webp',
+            SPA04:'spa/process/spa04.webp',SPA05:'spa/process/spa05.webp',SPA06:'spa/process/spa06.webp',
+            SPA07:'spa/process/spa07.webp',SPA08:'spa/process/spa08.webp',SPA09:'spa/process/spa09.webp',
+            SPA11:'spa/process/spa11.webp',SPA12:'spa/process/spa10.webp',SPA13:'spa/process/spa13.webp',SPA14:'spa/process/spa14.webp',
+            HTL01:'htl01.webp',HTL02:'htl02.jpg',HTL03:'htl03.jpg',HTL04:'htl04.jfif',HTL05:'htl05.webp',HTL06:'htl06.jpg',HTL07:'htl07.jfif',HTL08:'htl08.jfif',TXI01:'txi01.webp'
         };
-
-        const validPrices = Object.values(prices).filter(p => p > 0);
-        const basePrice = validPrices.length > 0 ? Math.min(...validPrices) : 0;
-
-        const rating = parseFloat(item['Đánh giá (Rating)'] || '4.8');
-        const reviewCount = parseInt(item['Lượt đánh giá (Review Count)'] || '0', 10);
-
-        const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
-        const cleanImagePath = (rawPath) => {
-            const trimmed = rawPath.trim();
-            return trimmed.replace(/^\/*/, '');
-        };
-        const serviceImages = item['Hình ảnh'] ? item['Hình ảnh'].split(',').map(s => rootPath + cleanImagePath(s)) : [rootPath + 'assets/images/services/spa.png'];
-
+        const image = '/assets/images/services/' + (artwork[svc.service_code] || (category === 'taxi' ? 'txi01.webp' : category === 'hotel' ? 'hotel.png' : 'spa.png'));
         return {
-            id: index + 1,
-            dbId: null,
-            serviceId: item['Mã dịch vụ (Service ID)'] || `SVC-${index + 1}`,
-            name: item['Tên dịch vụ'] || 'Dịch vụ',
-            category: category,
-            rawCategory: rawCategory,
-            petType: item['Loại thú cưng'] || 'Tất cả',
-            weightClass: validPrices.length > 0 ? 'Tùy chọn cân nặng' : 'Tất cả',
-            price: basePrice,
-            prices: prices,
-            priceDisplay: category === 'hotel' ? 'đêm' : '',
-            memberPrice: item['Giá ưu đãi thành viên (VNĐ)'] || '',
-            duration: item['Thời gian thực hiện (Duration)'] || '',
-            rating: rating,
-            reviewCount: reviewCount,
-            description: item['Mô tả chi tiết (Description)'] || '',
-            benefits: item['Lợi ích chính (Key Benefits)'] || '',
-            checklist: item['Quy trình thực hiện (Checklist)'] || '',
-            amenities: item['Tiện ích / Cơ sở vật chất (Amenities)'] || '',
-            groomerLevel: item['Cấp độ nhân viên thực hiện (Groomer Level)'] || '',
-            image: serviceImages[0],
-            images: serviceImages,
-            status: item['Trạng thái kinh doanh'] || 'Đang phục vụ'
+            id:svc.id,dbId:svc.id,serviceId:svc.service_code,name:svc.service_name,description:svc.description || '',
+            category,rawCategory:svc.category_code,petType:(svc.species || []).join(', ') || 'Chưa cấu hình loài',
+            weightClass:amounts.length ? 'Theo cân nặng' : 'Theo thông tin đặt lịch',
+            price:amounts.length ? Math.min(...amounts) : 0,hasPrice:amounts.length > 0,prices,priceDisplay:'',memberPrice:'',
+            duration:svc.estimated_duration ? `${svc.estimated_duration} phút` : '',
+            rating:Number(svc.rating),reviewCount:Number(svc.review_count),
+            benefits:'',checklist:(svc.care_actions || []).join(';'),amenities:'',groomerLevel:'',image,images:[image],status:'Đang phục vụ'
         };
     });
-}
-
-async function loadServices() {
-    if (dataCache.services) {
-        console.log(' Using cached services data');
-        return dataCache.services;
-    }
-    
-    try {
-        const supabase = window.SupabaseClient;
-        if (!supabase) throw new Error("Supabase client not found");
-
-        console.log('Loading services from Supabase...');
-        const { data: servicesData, error: servicesError } = await supabase
-            .from('service')
-            .select('*')
-            .order('service_code');
-
-        if (servicesError) throw servicesError;
-
-        const { data: pricesData, error: pricesError } = await supabase
-            .from('service_price_matrix')
-            .select('*')
-            .in('status', ['active', 'dang_hoat_dong', 'ACTIVE'])
-            .is('effective_to', null);
-
-        if (pricesError) throw pricesError;
-
-        const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
-        const cleanImagePath = (rawPath) => {
-            if (!rawPath) return '';
-            const trimmed = rawPath.trim();
-            return rootPath + trimmed.replace(/^\/*/, '');
-        };
-
-        const services = servicesData.map((svc, index) => {
-            let category = 'spa';
-            if (svc.service_category === 'PET_HOTEL' || svc.service_category === 'khach_san_thu_cung') category = 'hotel';
-            else if (svc.service_category === 'PET_TAXI' || svc.service_category === 'dua_don_tan_noi') category = 'taxi';
-
-            const name = String(svc.service_name || '').toLowerCase();
-            const code = String(svc.service_code || '').toUpperCase();
-            if (code.startsWith('HTL') || name.includes('phòng') || name.includes('lưu trú') || name.includes('daycare')) category = 'hotel';
-            if (code.startsWith('TAX') || name.includes('taxi')) category = 'taxi';
-
-            const svcPrices = pricesData.filter(p => p.service_id === svc.id);
-            const prices = {};
-            let basePrice = 0;
-            
-            if (svcPrices.length > 0) {
-                svcPrices.forEach(p => {
-                    let label = '';
-                    if (p.weight_to < 5) label = '< 5kg';
-                    else if (p.weight_from >= 5 && p.weight_to <= 10) label = '5 - 10kg';
-                    else if (p.weight_from >= 10 && p.weight_to <= 20) label = '10 - 20kg';
-                    else if (p.weight_from >= 20) label = '> 20kg';
-                    else label = 'Khác';
-                    
-                    if (label) prices[label] = p.unit_price;
-                });
-                const validPrices = Object.values(prices).filter(p => p > 0);
-                if (validPrices.length > 0) {
-                    basePrice = Math.min(...validPrices);
-                }
-            }
-
-            const spaCodeMap = {
-                'SPA01': 'assets/images/services/spa/process/spa01.webp',
-                'SPA02': 'assets/images/services/spa/process/spa01.webp',
-                'SPA03': 'assets/images/services/spa/process/spa03.webp',
-                'SPA04': 'assets/images/services/spa/process/spa04.webp',
-                'SPA05': 'assets/images/services/spa/process/spa05.webp',
-                'SPA06': 'assets/images/services/spa/process/spa06.webp',
-                'SPA07': 'assets/images/services/spa/process/spa07.webp',
-                'SPA08': 'assets/images/services/spa/process/spa08.webp',
-                'SPA09': 'assets/images/services/spa/process/spa09.webp',
-                'SPA10': 'assets/images/services/spa/process/spa10.webp',
-                'SPA11': 'assets/images/services/spa/process/spa11.webp',
-                'SPA12': 'assets/images/services/spa/process/spa10.webp',
-                'SPA13': 'assets/images/services/spa/process/spa13.webp',
-                'SPA14': 'assets/images/services/spa/process/spa14.webp'
-            };
-            const hotelCodeMap = {
-                'HTL01': 'assets/images/services/htl01.webp',
-                'HTL02': 'assets/images/services/htl02.jpg',
-                'HTL03': 'assets/images/services/htl03.jpg',
-                'HTL04': 'assets/images/services/htl04.jfif',
-                'HTL05': 'assets/images/services/htl05.webp',
-                'HTL06': 'assets/images/services/htl06.jpg',
-                'HTL07': 'assets/images/services/htl07.jfif',
-                'HTL08': 'assets/images/services/htl08.jfif'
-            };
-            let defaultSvcImg = rootPath + 'assets/images/services/spa.png';
-            if (spaCodeMap[code]) defaultSvcImg = rootPath + spaCodeMap[code];
-            else if (hotelCodeMap[code]) defaultSvcImg = rootPath + hotelCodeMap[code];
-            else if (code.startsWith('TAX') || code.startsWith('TXI') || category === 'taxi') defaultSvcImg = rootPath + 'assets/images/services/txi01.webp';
-            else if (category === 'hotel') defaultSvcImg = rootPath + 'assets/images/services/hotel.png';
-
-            let imageList = svc.thumbnail_url ? [cleanImagePath(svc.thumbnail_url)] : [defaultSvcImg];
-            if (svc.images && Array.isArray(svc.images) && svc.images.length > 0) {
-                imageList = svc.images.map(img => cleanImagePath(img));
-            }
-
-            return {
-                id: index + 1,
-                dbId: svc.id,
-                serviceId: svc.service_code,
-                name: svc.service_name,
-                category: category,
-                rawCategory: svc.service_category,
-                petType: svc.pet_type || 'Tất cả',
-                weightClass: basePrice > 0 ? 'Tùy chọn cân nặng' : 'Tất cả',
-                price: basePrice,
-                prices: prices,
-                priceDisplay: category === 'hotel' ? 'đêm' : '',
-                memberPrice: '', // We don't have this in DB yet
-                duration: svc.estimated_duration ? `${svc.estimated_duration} phút` : '',
-                rating: parseFloat(svc.rating || 4.8),
-                reviewCount: parseInt(svc.review_count || 0),
-                description: svc.description || '',
-                benefits: svc.benefits || '',
-                checklist: svc.checklist || '',
-                amenities: svc.amenities || '',
-                groomerLevel: svc.groomer_level || '',
-                image: imageList[0],
-                images: imageList,
-                status: (svc.status === 'dang_hoat_dong' || String(svc.status || '').toLowerCase() === 'active') ? 'Đang phục vụ' : 'Ngưng phục vụ'
-            };
-        });
-
-        if (services.length > 0) {
-            console.log(` Transformed ${services.length} services from DB`);
-            dataCache.services = services;
-            return services;
-        }
-        throw new Error("Supabase returned empty services list");
-    } catch (error) {
-        console.warn(' Error loading services from DB, falling back to CSV:', error);
-        try {
-            let csvText = '';
-            try {
-                const res = await fetch('/data/dichvu.csv');
-                if (res.ok) csvText = await res.text();
-            } catch (e) {
-                const res = await fetch('../../data/dichvu.csv');
-                if (res.ok) csvText = await res.text();
-            }
-            if (csvText) {
-                const rawData = parseCSV(csvText);
-                const csvServices = transformServiceData(rawData);
-                console.log(` Loaded ${csvServices.length} services from CSV fallback`);
-                dataCache.services = csvServices;
-                return csvServices;
-            }
-        } catch (csvErr) {
-            console.error(' Failed to load services from CSV fallback:', csvErr);
-        }
-        return [];
-    }
 }
 
 async function getServiceById(serviceId) {
@@ -574,14 +384,6 @@ async function getServiceById(serviceId) {
     // 4. Match by dbId or numeric id
     if (!service) {
         service = services.find(s => String(s.dbId) === rawQuery || String(s.id) === rawQuery);
-    }
-
-    // 5. Match by partial code
-    if (!service) {
-        service = services.find(s => {
-            const sCode = String(s.serviceId || '').toLowerCase();
-            return sCode.includes(rawQuery.toLowerCase()) || rawQuery.toLowerCase().includes(sCode);
-        });
     }
 
     if (!service) {
@@ -625,66 +427,14 @@ async function getProductReviews(productId) {
 }
 
 async function getServiceReviews(serviceId) {
-    const supabase = window.SupabaseClient;
-    if (!supabase) return [];
-    try {
-        const { data, error } = await supabase
-            .from('review')
-            .select(`
-                id,
-                rating,
-                review_content,
-                image_urls,
-                created_at,
-                customer (
-                    customer_profile (
-                        full_name
-                    )
-                ),
-                review_response (
-                    response_content
-                )
-            `)
-            .eq('review_type', 'dich_vu')
-            .eq('service_id', serviceId)
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        
-        const getTierName = (tierStr) => {
-            if (!tierStr) return 'Thành viên';
-            const t = tierStr.toLowerCase();
-            switch(t) {
-                case 'diamond': return 'Hội viên Kim Cương';
-                case 'gold': return 'Hội viên Vàng';
-                case 'silver': return 'Hội viên Bạc';
-                default: return 'Thành viên';
-            }
-        };
-
-        return data.map(r => {
-            const rawTier = r.customer?.membership_tier?.name ? r.customer.membership_tier.name.toLowerCase() : 'member';
-            const sellerReply = (r.review_response && r.review_response.length > 0) ? r.review_response[0].response_content : null;
-            
-            return {
-                id: r.id,
-                name: Array.isArray(r.customer?.customer_profile)
-                    ? (r.customer.customer_profile[0]?.full_name || 'Khách hàng')
-                    : (r.customer?.customer_profile?.full_name || 'Khách hàng'),
-                tier: rawTier,
-                tierName: getTierName(rawTier),
-                rating: r.rating,
-                date: r.created_at ? new Date(r.created_at).toLocaleDateString('vi-VN') : '',
-                text: r.review_content,
-                images: r.image_urls || [],
-                sellerReply: sellerReply,
-                helpfulCount: Math.floor(Math.random() * 10) + 1
-            };
-        });
-    } catch (error) {
-        console.error('Error fetching service reviews:', error);
-        return [];
-    }
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db) throw new Error('Chưa kết nối được đánh giá dịch vụ.');
+    const {data, error} = await db.rpc('public_service_reviews', {p_service:serviceId});
+    if (error) throw error;
+    return (data || []).map(r => ({
+        id:r.id,name:'Khách đã sử dụng dịch vụ',rating:Number(r.rating),date:r.created_at,
+        text:r.review_content || '',images:[],sellerReply:r.shop_reply || '',helpfulCount:0
+    }));
 }
 
 async function loadBlogCategories() {
