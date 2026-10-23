@@ -1858,3 +1858,22 @@ html.booking-pre-step-4 #bookingStepper .step[data-step="4"] .step-circle {
 .booking-loading { min-height: 760px; }
 @media(max-width: 991px) { .booking-skeleton-grid { grid-template-columns: 1fr; } }
 @media(prefers-reduced-motion: reduce) { .booking-main > .booking-layout, .booking-skeleton { transition: none; } .booking-skeleton .pawpal-skeleton { animation: none !important; } }
+.booking-live-form .booking-form { display: grid; gap: 16px; }
+.booking-live-form .booking-entity-wrapper { position: relative; }
+.booking-live-form .booking-entity-options {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    max-height: 240px; overflow-y: auto; overscroll-behavior: contain; z-index: 2500;
+    background: #fff; border: 1px solid #ECF2EE; border-radius: 9px;
+    box-shadow: 0 10px 28px rgba(35, 107, 72, 0.14);
+}
+.booking-live-form .booking-entity-options[hidden] { display: none !important; }
+.booking-live-form .booking-entity-option {
+    display: block; width: 100%; border: none; background: transparent;
+    text-align: left; padding: 12px 14px; color: #203A2C; font: inherit;
+    cursor: pointer; transform: none !important;
+}
+.booking-live-form .booking-entity-option:hover,
+.booking-live-form .booking-entity-option:focus { background: #EEF5F1; }
+.booking-live-form .booking-form .field-note { color: #4F7A65; font-size: 13px; }
+.booking-live-form input[aria-invalid="true"] { border-color: #DC2626; }
+.booking-live-form .field-error { color: #DC2626; }

@@ -159,7 +159,8 @@ Phân hệ khách đang thực hiện; chưa nghiệm thu toàn bộ đặt mớ
 - [x] Không gộp các lịch riêng chỉ vì cùng thú cưng/dịch vụ/giờ. Trình duyệt dùng mã local với Cloud thật đã xác nhận hai lịch thử hiển thị đủ hai thẻ, đúng tổng tiền, không ghi thu tiền; đã dọn fixture và xem ảnh.
 - [x] Bộ kiểm thử đọc lịch, đăng ký Realtime và hồi quy giỏ hàng: 27/27 đạt.
 - [x] Commit `babc776` đã lên Vercel; `node scripts/test/customer_booking_cloud_read.cjs --deployed` đạt. Đây là nghiệm thu phần danh sách/đọc số tiền, không phải nghiệm thu form đặt mới hoặc đổi/hủy lịch.
-- [ ] Chuyển form đặt mới và danh mục/bảng giá sang giao dịch máy chủ, bỏ JSON/cache nghiệp vụ cũ.
+- [x] `068_customer_booking_create.sql` đã áp Cloud sau sao lưu `portal-bookings-cloud-2026-10-22T18-19-05-136Z`; catalog/phòng/phần thêm và hồ sơ bé đọc qua RPC, báo giá rồi tạo lịch cùng các dòng trong một giao dịch. Bỏ giảm 5% cố định, khách tạm/cache lịch, giờ/nhân viên mẫu và JSON/CSV dự phòng. Chưa thu tiền hoặc cộng điểm khi gửi lịch; journal chỉ lưu UUID yêu cầu để chống tạo trùng sau tải lại.
+- [x] Kiểm thử phục hồi đạt spa/khách sạn/xe khứ hồi, phần thêm bắt buộc, giá thật thay giá client, rollback khi quote cũ, chống gửi lặp và quyền chủ bé. Trình duyệt mã local + Cloud thật đã tạo cả ba nhóm qua form bốn bước, xem ảnh, dọn fixture; kiểm tra không có yêu cầu `/data/` hoặc khoản thu/điểm thử.
 - [x] `066_customer_booking_cancel.sql`: hủy có lý do, quyền chủ lịch, phiên bản, chống gửi lặp; giữ hạn trước giờ bắt đầu 2 tiếng, chặn đã thu/đang thực hiện. Giải phóng phòng và chuyến xe qua trigger hiện có. Kiểm thử giao dịch phục hồi đạt, rollback toàn bộ fixture.
 - [x] Form hủy dùng chung từ danh sách và chi tiết đã thử trên trình duyệt với Cloud thật: thiếu lý do, Escape, xác nhận, đọc lại trạng thái và lý do trong nhật ký sau reload. Đã xem ảnh form, bỏ khóa tài khoản/lịch sử hủy và cộng điểm chỉ trong trình duyệt. Kiểm thử hồi quy 44/44 đạt; nhận diện khách kiểm tra phiên Auth và từ chối ID trình duyệt khác chủ.
 - [x] Migration hủy đã áp Cloud sau sao lưu `portal-bookings-cloud-2026-10-22T17-48-28-876Z`, không đổi dữ liệu public/Auth hoặc 17 nhân viên khi triển khai.
@@ -169,5 +170,18 @@ Phân hệ khách đang thực hiện; chưa nghiệm thu toàn bộ đặt mớ
 - [x] Áp Cloud sau sao lưu `portal-bookings-cloud-2026-10-22T18-04-55-775Z`; không đổi dữ liệu public/Auth/17 nhân viên khi triển khai. Kiểm thử phục hồi đạt cho spa/khách sạn/xe khứ hồi, giá thay đổi giữa xem và lưu, xung đột tài nguyên, giới hạn lần đổi, quyền chủ lịch và hủy lịch hồi quy.
 - [x] Form đổi dùng chung danh sách/chi tiết đã thử với Cloud thật: thiếu thời gian/lý do, xem giá trước xác nhận, Escape, lưu bền và gửi lại cùng mã chỉ ghi một lần. Đã xem ảnh; fixture dịch vụ/loài/giá/khách/lịch/Auth thử riêng được dọn. Kiểm thử mã đọc/đổi/hủy/hồ sơ/Realtime đạt 21/21.
 - [x] Commit `a6e371b` đã lên Vercel. `customer_booking_cloud_read.cjs --move --deployed` và `--cancel --deployed` đều đạt cho hai điểm vào danh sách/chi tiết; không tạo khoản thu, đã dọn fixture. Đổi lịch thử trên dịch vụ kiểm thử riêng có cấu hình loài/giá đầy đủ, không suy đoán cấu hình cho các gói nguồn.
-- [ ] Chốt cấu hình loài hỗ trợ cho 22 gói hiện có: Cloud có 0 dòng `service_supported_species`; nguồn cũ không cung cấp nên đợt nhập trước chủ động không suy đoán. Đã hỏi người dùng; chưa tự áp chó/mèo hoặc loài khác. Chưa nghiệm thu đặt/đổi các gói thực tế khi cấu hình này còn thiếu.
+- [x] Người dùng cho phép chuẩn bị dữ liệu loài theo từng dịch vụ. `069_service_species_seed.sql` đã điền 38 liên kết cho 22 gói, không gán chung mọi loài; đã sao lưu bảng mục tiêu, giữ nguyên liên kết cũ và đối soát mọi bảng public khác/Auth không đổi. Các chỉnh sửa tiếp theo thực hiện theo từng gói trong Admin.
 - [ ] Hoàn thiện chi tiết ca, đánh giá dịch vụ và Realtime; kiểm tra lại toàn luồng trên Vercel.
+
+### Cấu hình loài phục vụ khởi tạo
+
+| Dịch vụ | Loài hỗ trợ |
+| --- | --- |
+| SPA01, SPA02, SPA04, SPA05, SPA06, SPA12; HTL01, HTL02, HTL03, HTL05, HTL07 | Chó, mèo |
+| SPA03, SPA07, SPA08, SPA11; HTL06 | Chó |
+| SPA09; HTL04 | Mèo |
+| SPA13 | Thỏ |
+| SPA14; HTL08 | Thỏ, chuột hamster |
+| TXI01 | Chó, mèo, thỏ, chuột hamster |
+
+Dùng các loài cụ thể hiện có trong danh mục; không dùng “Khác” thay cho bọ ú hoặc loài chưa định danh. Tên/mô tả gói là căn cứ phân loại ban đầu; cấu hình nằm trong CSDL, không hardcode danh sách này trong form.
