@@ -25,4 +25,5 @@ Chỉ dọn file/mã trong dự án Pawpal. Không xóa project, tổ chức, t�
 - Kiểm thử băng thông offline: cấu hình trình duyệt cũ không đổi backend, gộp request trùng, cách ly phiên, chặn tải lặp khi hết quota, cache/Realtime và phục hồi lỗi. Fixture Dashboard được cập nhật cho phân trang, các dòng lịch V1 và RPC thực thu hiện tại; không thay logic ứng dụng để làm test qua.
 - Kiểm thử cấu hình Admin không công bố khóa đặc quyền: đạt.
 - Công cụ SQL Cloud mới chạy `SELECT 1` bằng CLI dùng một lần: đạt. Không truy vấn hệ thống Logs Cloud.
-- Kết quả kiểm tra trình duyệt sau triển khai được ghi bổ sung khi hoàn tất.
+- Commit `b6b7fd92` đã lên Vercel. `node scripts/test/public_services_cloud.cjs --deployed --retired-config` đạt: cố tình lưu cấu hình backend lỗi trong trình duyệt, ứng dụng vẫn đọc Cloud mới, danh mục/chi tiết/loài/đánh giá thật hiển thị đúng; không gọi backend đã loại bỏ và không đọc file dữ liệu dự phòng khi RPC lỗi. Không tạo dữ liệu thử.
+- 14 kiểm thử cấu hình/header/tìm kiếm và bộ kiểm thử băng thông offline đạt. Kiểm tra lại đủ 25 mã băm bản lưu trữ; các container Supabase local vẫn đang chạy như trước. Chỉ còn thư mục HTML chưa theo dõi của người dùng ngoài commit.
