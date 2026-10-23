@@ -175,6 +175,7 @@ Giới hạn đã chốt: chưa phát triển ảnh/file, gửi tin bên ngoài 
 - [ ] Hoàn thiện chi tiết ca, đánh giá dịch vụ và Realtime; kiểm tra lại toàn luồng trên Vercel.
 - [x] `070_customer_service_reviews.sql`: gửi theo từng dòng dịch vụ hoàn thành của chính khách, chờ duyệt; batch nguyên tử, gửi lại cùng mã không trùng, nội dung khác bị chặn. RPC đọc kèm phản hồi cửa hàng, không đọc cột đánh giá Cloud cũ hoặc ghi thành công giả vào localStorage. Đã thử rollback CSDL phục hồi và áp Cloud sau sao lưu `portal-bookings-cloud-2026-10-23T00-17-58-755Z`; public/Auth/17 nhân viên không đổi khi triển khai.
 - [x] Chi tiết hiển thị các dòng/phần thêm, khoảng thời gian đầy đủ và thực thu sau hoàn; thông báo hủy khớp quy tắc 2 tiếng. Đăng ký Realtime chi tiết cho lịch/dòng/thu tiền/đánh giá, dọn khi rời trang và giữ nội dung nhận xét đang soạn. Kiểm tra trình duyệt mã local với Cloud thật đạt form, kiểm tra bắt buộc, lưu bền sau reload và nhận thay đổi duyệt/ghi chú trực tiếp; đã dọn dữ liệu thử.
+- [x] `0a1cbc9a` và `0a196ba7` đã lên Vercel. `customer_service_reviews_cloud.cjs --deployed` đạt: hai dòng dịch vụ, lỗi bắt buộc, trạng thái chờ duyệt, tải lại không hiện form gửi trùng, nhận cập nhật duyệt/ghi chú qua Realtime và không mất nhận xét đang soạn. Đã xem ảnh form/kết quả cuối, dọn fixture/Auth; `customer_booking_cloud_read.cjs --cancel --deployed` hồi quy đạt. Phần chi tiết chuyên biệt phòng/chuyến/nhân viên và đối soát toàn phân hệ vẫn cần kiểm tra tiếp.
 
 ### Cấu hình loài phục vụ khởi tạo
 
