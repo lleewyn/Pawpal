@@ -1,5 +1,21 @@
 # Dịch vụ V1 — tiến độ và nghiệm thu
 
+## Trạng thái tổng hợp mới nhất — 23/10/2026
+
+Phần này tổng hợp kết quả hiện tại; các đoạn ghi “chưa chuyển”, “chưa push” hoặc số cột ở những đợt cũ bên dưới là lịch sử tại thời điểm ghi, không phải trạng thái triển khai mới nhất. Nguồn chạy Production là Cloud mới; Docker được giữ làm môi trường phát triển/dự phòng. Quy tắc không truy vấn Logs Cloud vẫn có hiệu lực.
+
+| Phạm vi | Kết quả đã kiểm tra |
+| --- | --- |
+| Admin | Các phân hệ có tài liệu nghiệm thu riêng: Khách hàng, Thú cưng, Dịch vụ, Bán hàng, Nhân sự, Khiếu nại, Dashboard, Chatbot và Cấu hình. Không thay việc người dùng duyệt giao diện bằng kết quả test. |
+| User | Hồ sơ, thú cưng, nhật ký, giỏ hàng/đơn/đổi trả/đánh giá, lịch dịch vụ, Hỗ trợ, Cài đặt, Paw Points, Yêu thích và thông báo có kết quả Cloud/Vercel trong từng mục bên dưới. |
+| Bán hàng liên thông | `node scripts/test/customer_sales_cloud_v1.cjs --deployed --integrated` đạt: khách tạo đơn từ checkout; phiên Admin riêng đọc đúng đơn/tổng tiền và bấm Xác nhận đơn; khách nhận trạng thái qua Realtime. Kiểm tra tiếp hủy, yêu cầu trả, đánh giá và chỉ công bố sau duyệt đạt. |
+| Dịch vụ liên thông | `node scripts/test/customer_booking_create_cloud.cjs --deployed --integrated` đạt luồng ba nhóm spa/khách sạn/xe khứ hồi. Với lịch spa vừa tạo, phiên Admin riêng gọi handler xác nhận của giao diện, khách nhận trạng thái và đọc lại đúng sau reload. Không coi việc này là đã thử toàn bộ vòng đời tiếp nhận/hoàn tất ca trên Cloud. |
+| Giới hạn lượt liên thông | Dùng tài khoản và giao dịch thử riêng, không xuất kho vật lý, ghi thu/hoàn tiền thành công hoặc cấp điểm. Các bước đổi trạng thái để mở form trả hàng/đánh giá vẫn là thiết lập fixture được ghi rõ trong script, không giả thành thao tác Admin đã thử. Dữ liệu thử đã dọn; giữ nhật ký audit bất biến. |
+| Còn chờ người dùng | Duyệt giao diện card lịch Nhân sự: xem `PAWPAL_NHAN_SU_V1_NGHIEM_THU.md`. Chưa đánh dấu thay người dùng. |
+| Để sau theo phạm vi đã chốt | Chấm công thực tế/lương/thưởng/hoa hồng; ảnh/tệp/camera; gửi Zalo/SMS/email thật; tự cộng điểm/xét hạng. Không coi các mục này là lỗi còn thiếu của đợt nghiệm thu. |
+
+Trong lượt liên thông phát hiện hotline mẫu ở chi tiết lịch: đã thay bằng đường dẫn tới mục Hỗ trợ đang hoạt động, không tự đặt số điện thoại của cửa hàng. Bản sửa và kiểm thử ở commit `798695b6` đã lên Vercel. Lượt `customer_booking_create_cloud.cjs --deployed --integrated` cuối đạt cả ba nhóm; đã xem ảnh giao diện sau tải, xác nhận trạng thái/giá/người phụ trách và liên kết Hỗ trợ mới. Lượt Bán hàng đạt thêm đối chiếu tổng các dòng, tổng đơn trên Admin và nút thao tác đổi sau xác nhận. Các lệnh đều kết thúc mã 0 sau dọn fixture. Không phát hiện lỗi JavaScript chưa xử lý trong hai luồng này; không truy vấn Logs Cloud.
+
 Cập nhật ngày 22/10/2026. Nguồn triển khai là Cloud mới `cpzuvaplseielhgcnqrn`; cấu trúc vẫn theo tài liệu 3NF V1 gồm 105 bảng, 906 cột và 160 khóa ngoại.
 
 ## 1. Phạm vi đã chuyển trong đợt này

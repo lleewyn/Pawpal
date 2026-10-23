@@ -1,5 +1,7 @@
 # Chuyển dữ liệu Cloud cũ sang Cloud mới theo V1
 
+> Cập nhật 23/10/2026: xem phần “Trạng thái tổng hợp mới nhất” trong [nghiệm thu và kiểm tra liên thông](PAWPAL_DICH_VU_V1_NGHIEM_THU.md). Các ghi chú chưa chuyển/chưa push của những đợt trước bên dưới là lịch sử. Mục duyệt giao diện card Nhân sự vẫn chờ người dùng; các phần đã hoãn không tự đưa lại vào phạm vi. Không truy vấn Logs Cloud.
+
 ## Quyết định đã chốt
 
 - Project đích: `cpzuvaplseielhgcnqrn`, URL `https://cpzuvaplseielhgcnqrn.supabase.co`, do người dùng cung cấp.
