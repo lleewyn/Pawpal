@@ -75,6 +75,18 @@ const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.ran
    assert.equal((await ok(service.from('payment').select('id').eq('appointment_id',args.p_id))).length,0);
    const replay=await page.evaluate(async args=>{const r=await getSupabaseClient().rpc('create_own_service_booking',args);return {data:r.data,error:r.error?.message};},args);assert.equal(replay.data,args.p_id);assert.equal(replay.error,undefined);
    if(svc.category==='grooming_spa')assert.equal(Number(quote.total),750);
+   if(svc.category==='grooming_spa'&&process.argv.includes('--integrated')){
+    const account=fs.readFileSync(infra+'/PAWPAL-ADMIN.private.txt','utf8');
+    const adminPage=await browser.newPage({viewport:{width:1440,height:1050}});adminPage.on('pageerror',e=>errors.push(e.message));
+    await adminPage.goto('https://pawpalgr3.vercel.app/admin/login');await adminPage.locator('#inputAdminEmail').fill(account.match(/^Email: (.+)$/m)[1].trim());await adminPage.locator('#inputAdminPassword').fill(account.match(/^Password: (.+)$/m)[1].trim());await adminPage.locator('#btnSubmitAdminLogin').click();await adminPage.waitForURL('**/admin#tab-list');
+    await adminPage.evaluate(()=>location.hash='tab-service-bookings');await adminPage.waitForFunction(id=>window.PawpalServices?.state.isLoaded&&PawpalServices.state.bookingsData.some(b=>b.dbId===id),args.p_id);
+    const confirmed=await adminPage.evaluate(async id=>{const b=PawpalServices.state.bookingsData.find(b=>b.dbId===id);return PawpalServices.subtabs.bookings.updateBookingStatus(b.id,'confirmed');},args.p_id);assert.equal(confirmed,true);
+    assert.equal((await ok(service.from('appointment').select('appointment_status').eq('id',args.p_id).single())).appointment_status,'confirmed');
+    await page.waitForFunction(()=>document.querySelector('#bookingStatus')?.textContent.includes('Đã xác nhận')||document.querySelector('#bookingStatusBadge')?.textContent.includes('Đã xác nhận')||document.body.textContent.includes('Đã xác nhận'));
+    await page.reload();await page.waitForFunction(code=>document.querySelector('#bookingCode')?.textContent===code,saved.appointment_code);assert.ok((await page.locator('body').textContent()).includes('Đã xác nhận'));
+    await page.waitForFunction(()=>document.querySelector('.booking-detail-module-container')?.getAttribute('aria-busy')==='false');
+    await page.screenshot({path:infra+'/verification/integrated-service-customer.private.png'});await adminPage.close();
+   }
    if(svc.category==='pet_hotel')assert.equal(Number(quote.total),650);
    if(svc.category==='pet_taxi')assert.equal(Number(quote.total),500050);
    if(svc.category==='grooming_spa')assert.equal(await page.locator('#bookingLogisticsSection').isVisible(),false);

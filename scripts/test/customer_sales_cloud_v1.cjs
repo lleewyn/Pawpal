@@ -106,7 +106,22 @@ const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.ran
   assert.ok((await page.locator('#payment-status').textContent()).includes('Chưa thanh toán'));
   assert.ok((await page.locator('#products-list').textContent()).includes(product.product_name));
   await page.waitForFunction(()=>window.getSupabaseClient().getChannels().some(c=>c.topic.includes('customer-view-')&&c.state==='joined'));
-  await ok(service.from('sales_order').update({order_status:'confirmed'}).eq('id',order.id));
+  if(process.argv.includes('--integrated')){
+   const account=fs.readFileSync(infra+'/PAWPAL-ADMIN.private.txt','utf8');
+   const adminPage=await browser.newPage({viewport:{width:1440,height:1050}});adminPage.on('pageerror',e=>pageErrors.push(e.message));
+   await adminPage.goto('https://pawpalgr3.vercel.app/admin/login');
+   await adminPage.locator('#inputAdminEmail').fill(account.match(/^Email: (.+)$/m)[1].trim());await adminPage.locator('#inputAdminPassword').fill(account.match(/^Password: (.+)$/m)[1].trim());await adminPage.locator('#btnSubmitAdminLogin').click();await adminPage.waitForURL('**/admin#tab-list');
+   await adminPage.locator('[data-title="Bán hàng"]').click();await adminPage.waitForFunction(id=>window.PawpalOrders?.state.ordersLoaded&&PawpalOrders.state.orders.some(o=>o.rawId===id),order.id);
+   await adminPage.evaluate(code=>{PawpalOrders.state.selectedOrderId=code;location.hash='tab-order-detail';},order.order_code);
+   const confirm=adminPage.getByRole('button',{name:'Xác nhận đơn',exact:true});await confirm.waitFor();
+   const shown=await adminPage.evaluate(id=>{const o=PawpalOrders.state.orders.find(o=>o.rawId===id);return {total:o.total,lineTotal:o.products.reduce((n,p)=>n+p.total,0),text:document.getElementById('detailSummaryTotal').textContent,formatted:PawpalOrders.helpers.formatVND(o.total)};},order.id);
+   assert.equal(shown.lineTotal,Number(variant.sale_price));assert.equal(shown.text,shown.formatted);
+   const [confirmed]=await Promise.all([adminPage.waitForResponse(r=>r.url().includes('/rpc/update_admin_sales_order')&&r.request().method()==='POST'),confirm.click()]);assert.equal(confirmed.status(),200);
+   assert.equal((await ok(service.from('sales_order').select('order_status').eq('id',order.id).single())).order_status,'confirmed');
+   await adminPage.waitForFunction(id=>PawpalOrders.state.orders.find(o=>o.rawId===id)?.rawStatus==='confirmed',order.id);
+   await confirm.waitFor({state:'detached'});
+   await adminPage.screenshot({path:infra+'/verification/integrated-sales-admin.private.png'});await adminPage.close();
+  }else await ok(service.from('sales_order').update({order_status:'confirmed'}).eq('id',order.id));
   await page.locator('#order-status-badge').filter({hasText:'Chờ lấy hàng'}).waitFor({timeout:25000});
   const paymentRefresh=page.waitForResponse(r=>r.url().includes('/rpc/own_sales_order_totals')&&r.request().method()==='POST');
   await ok(service.from('payment').update({transaction_status:'failed'}).eq('order_id',order.id));

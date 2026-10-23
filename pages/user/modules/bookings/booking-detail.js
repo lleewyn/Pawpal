@@ -381,7 +381,7 @@ function checkBookingModifiability(booking) {
         if (diffMinutes < 120) {
             btnChange.disabled = true;
             btnChange.classList.add('disabled');
-            btnChange.setAttribute('title', 'Đã quá thời gian tự thay đổi lịch tự động (< 2 tiếng). Vui lòng gọi Hotline để được hỗ trợ.');
+            btnChange.setAttribute('title', 'Đã quá thời gian tự thay đổi lịch. Vui lòng gửi yêu cầu tại mục Hỗ trợ.');
         } else {
             btnChange.disabled = false;
             btnChange.classList.remove('disabled');
@@ -404,7 +404,7 @@ function checkBookingModifiability(booking) {
         if (diffMinutes < 120) {
             btnCancel.disabled = true;
             btnCancel.classList.add('disabled');
-            btnCancel.setAttribute('title', 'Đã quá thời gian tự hủy lịch tự động (< 2 tiếng). Vui lòng gọi Hotline để được hỗ trợ.');
+            btnCancel.setAttribute('title', 'Đã quá thời gian tự hủy lịch. Vui lòng gửi yêu cầu tại mục Hỗ trợ.');
         } else {
             btnCancel.disabled = false;
             btnCancel.classList.remove('disabled');
