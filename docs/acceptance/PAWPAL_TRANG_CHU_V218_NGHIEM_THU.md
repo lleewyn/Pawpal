@@ -22,3 +22,14 @@ Chạy `node scripts/test/homepage_v218_cloud.cjs` với máy chủ local cổng
 Đã đạt kiểm tra local: đối chiếu mã dịch vụ, giá và số hạng với Cloud; bốn bộ lọc; nhật ký minh họa; mở câu hỏi; menu điện thoại; không tràn ở 320, 390, 768, 1024, 1440 và 1920px; ảnh tải được; chuyển Cửa hàng và quay lại; không đọc lặp khi phát sự kiện khởi tạo; khi API lỗi hiển thị lỗi và thử lại được. Không tạo dữ liệu kiểm thử.
 
 Ảnh kiểm tra lưu ngoài repo trong thư mục xác minh riêng. Thư mục handoff gốc không sửa và không đóng gói lên Vercel. Chưa chuyển giao diện bảy trang còn lại trong handoff.
+
+## Nghiệm thu Vercel
+
+Bản giao diện `c98dec75` và tích hợp yêu thích `d26e3a08` đã lên `https://pawpalgr3.vercel.app`.
+
+- `homepage_v218_cloud.cjs --deployed` đạt toàn bộ kiểm tra trang chủ nêu trên.
+- `public_services_cloud.cjs --deployed` đạt danh mục, chi tiết, loài hỗ trợ, đánh giá công bố và trạng thái lỗi; xác nhận trang dịch vụ vẫn hoạt động.
+- `customer_wishlist_cloud.cjs --deployed` đạt thêm phần trang chủ: nhận trạng thái đã lưu của thành viên, lỗi ghi không đổi nút, bỏ lưu và lưu lại sau reload. Các bước danh sách, chuyển tài khoản, từ chối sai chủ và Realtime vẫn đạt. Hai tài khoản và các mục yêu thích thử đã được dọn trong `finally`; danh mục nguồn chỉ đọc.
+- 9 kiểm thử API/yêu thích hiện có đạt. Khách vãng lai trên trang chủ được nhắc đăng nhập khi bấm lưu.
+
+Không truy vấn Cloud Logs trong toàn bộ đợt thực hiện.
