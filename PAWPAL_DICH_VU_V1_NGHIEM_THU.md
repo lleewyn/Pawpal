@@ -151,7 +151,7 @@ Giới hạn đã chốt: chưa phát triển ảnh/file, gửi tin bên ngoài 
 **Kết quả Production cuối:** `dpl_HV6p1kN6SwGvT2NL1ixJ4TnR9A7o` tại `https://pawpalgr3.vercel.app`. Kiểm tra chỉ đọc đạt 71 lịch hẹn khớp trạng thái/tổng tiền/số điện thoại, 22 dịch vụ, 3 đánh giá, nhật ký, thu ngân, lịch trực, phiếu phản ánh, thông báo nội bộ, bốn subtab, Realtime và tải lại. Bộ lọc cảnh báo đã đồng bộ với KPI 1–3 sao và được đối chiếu với nguồn thật. Không có lỗi REST/JavaScript, yêu cầu Cloud cũ/tunnel/JSON hoặc ghi nghiệp vụ tự phát trong lượt kiểm tra. Khách hàng đạt 35 hồ sơ/7.964 điểm; Thú cưng đạt 82 bé/7 nhật ký trong đợt triển khai. Các bài kiểm tra cấu hình/Auth, băng thông và `git diff --check` đạt. Tất cả thao tác thử ghi giữ trong bản phục hồi riêng đã dọn; không ghi khoản thu/phiếu thử lên Cloud thật. Mã đã deploy từ thư mục làm việc và **chưa commit/push** các thay đổi đang có.
 # Cổng khách hàng — đợt đối soát 23/10/2026
 
-Phân hệ khách đang thực hiện; chưa nghiệm thu toàn bộ đặt mới, đổi/hủy lịch và đánh giá. Các mục Admin bên dưới là phạm vi riêng.
+Đã kiểm tra đặt mới, đổi và hủy lịch trên Vercel. Phân hệ khách còn phần chi tiết ca, đánh giá và Realtime cần hoàn thiện; chưa nghiệm thu toàn bộ phân hệ.
 
 - [x] Migration `065_customer_booking_summary.sql`: chỉ trả tổng tiền chuẩn, thực thu sau hoàn thành công và các dòng đã đánh giá của chính khách đang đăng nhập; từ chối phiên không phải khách. Đã thử trên CSDL phục hồi và rollback.
 - [x] Đã áp Cloud mới sau sao lưu `portal-bookings-cloud-2026-10-22T17-39-10-301Z`; đối soát dữ liệu public, Auth và 17 nhân viên không đổi.
@@ -171,6 +171,7 @@ Phân hệ khách đang thực hiện; chưa nghiệm thu toàn bộ đặt mớ
 - [x] Form đổi dùng chung danh sách/chi tiết đã thử với Cloud thật: thiếu thời gian/lý do, xem giá trước xác nhận, Escape, lưu bền và gửi lại cùng mã chỉ ghi một lần. Đã xem ảnh; fixture dịch vụ/loài/giá/khách/lịch/Auth thử riêng được dọn. Kiểm thử mã đọc/đổi/hủy/hồ sơ/Realtime đạt 21/21.
 - [x] Commit `a6e371b` đã lên Vercel. `customer_booking_cloud_read.cjs --move --deployed` và `--cancel --deployed` đều đạt cho hai điểm vào danh sách/chi tiết; không tạo khoản thu, đã dọn fixture. Đổi lịch thử trên dịch vụ kiểm thử riêng có cấu hình loài/giá đầy đủ, không suy đoán cấu hình cho các gói nguồn.
 - [x] Người dùng cho phép chuẩn bị dữ liệu loài theo từng dịch vụ. `069_service_species_seed.sql` đã điền 38 liên kết cho 22 gói, không gán chung mọi loài; đã sao lưu bảng mục tiêu, giữ nguyên liên kết cũ và đối soát mọi bảng public khác/Auth không đổi. Các chỉnh sửa tiếp theo thực hiện theo từng gói trong Admin.
+- [x] Commit `66ea0ab` đã lên Vercel. `customer_booking_create_cloud.cjs --deployed` đạt spa/khách sạn/xe khứ hồi, lọc gói theo loài thật, trường điều kiện, phần thêm bắt buộc, báo giá máy chủ và chống tạo trùng sau tải lại. Hồi quy `customer_booking_cloud_read.cjs --cancel --deployed` và `--move --deployed` đều đạt; không tạo khoản thu/điểm và đã dọn dữ liệu thử riêng.
 - [ ] Hoàn thiện chi tiết ca, đánh giá dịch vụ và Realtime; kiểm tra lại toàn luồng trên Vercel.
 
 ### Cấu hình loài phục vụ khởi tạo
