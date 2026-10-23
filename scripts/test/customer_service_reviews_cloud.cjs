@@ -19,6 +19,9 @@ const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.ran
   await page.locator('#btnSubmitServiceReview').waitFor();assert.equal(await page.locator('[data-service-rating]').count(),2);
   await page.locator('#btnSubmitServiceReview').click();await page.waitForFunction(()=>document.querySelector('#serviceReviewError')?.textContent.length>0);
   for(const id of lines){await page.locator(`[data-service-rating="${id}"]`).selectOption('5');await page.locator(`[data-service-content="${id}"]`).fill('Verified customer service review');}
+  await ok(service.from('appointment').update({note:'Realtime while drafting'}).eq('id',aid));
+  await page.waitForFunction(()=>document.querySelector('#noteInfo')?.textContent==='Realtime while drafting',{timeout:20000});
+  for(const id of lines)assert.equal(await page.locator(`[data-service-content="${id}"]`).inputValue(),'Verified customer service review');
   await page.screenshot({path:infra+'/verification/service-reviews-form.private.png'});
   const response=page.waitForResponse(r=>r.url().includes('/rpc/submit_own_service_reviews'));await page.locator('#btnSubmitServiceReview').click();assert.equal((await response).status(),200);
   await page.waitForFunction(()=>document.querySelector('#serviceReviewStatus')?.textContent==='Đã đánh giá');
@@ -28,6 +31,7 @@ const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.ran
   await page.waitForFunction(()=>document.querySelector('.service-review-body')?.textContent.includes('Đã công bố'),{timeout:20000});
   await ok(service.from('appointment').update({note:'Realtime service verification'}).eq('id',aid));
   await page.waitForFunction(()=>document.querySelector('#noteInfo')?.textContent==='Realtime service verification',{timeout:20000});
+  await page.waitForFunction(()=>document.querySelector('.service-review-body')?.textContent.includes('Đã công bố'),{timeout:20000});
   await page.locator('#serviceReviewSection').scrollIntoViewIfNeeded();await page.screenshot({path:infra+'/verification/service-reviews-saved.private.png'});assert.deepEqual(errors,[]);
   console.log('PASS Cloud service review form: completed lines, required input, pending moderation, durable reload and no local-only success.');
  }catch(error){fs.writeFileSync(infra+'/verification/service-reviews-error.private.txt',String(error.message).replaceAll(password,'[REDACTED]').replaceAll(phone,'[PHONE]'));if(page)await page.screenshot({path:infra+'/verification/service-reviews-failure.private.png'}).catch(()=>{});throw Error('Service review verification failed; private evidence saved.');}

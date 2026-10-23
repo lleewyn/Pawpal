@@ -268,7 +268,7 @@ async function renderServiceReviewSection(booking) {
     section.classList.toggle('d-none', resolveBookingStatus(booking) !== 'completed');
     if (resolveBookingStatus(booking) !== 'completed') return;
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    section.querySelector('.service-review-body').textContent = 'Đang tải đánh giá…';
+    if (!section.querySelector('#serviceReviewForm')) section.querySelector('.service-review-body').textContent = 'Đang tải đánh giá…';
     const {data: reviews, error} = await db.rpc('own_service_reviews', {p_booking: booking._supabaseId});
     if (!section.isConnected) return;
     if (error) {
