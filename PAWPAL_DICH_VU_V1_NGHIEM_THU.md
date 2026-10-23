@@ -206,5 +206,5 @@ Dùng các loài cụ thể hiện có trong danh mục; không dùng “Khác�
 ### Rà soát Hỗ trợ và phạm vi User còn lại (23/10/2026)
 
 - Đã bỏ FAQ chính sách mẫu và hàm chat cũ không có nơi gọi khỏi `support-handler.js`. Không dựng thêm trang FAQ; khung chat hiện dùng `components/fab/fab.js` gọi `/api/admin-chat`, đã có nghiệm thu riêng tại tài liệu Chatbot.
-- Bộ lọc “Đang giải quyết” bao gồm xử lý, chờ khách bổ sung, chờ duyệt và xử lý lại. Kiểm tra trình duyệt Cloud thật đạt cả ba trạng thái từng bị bỏ sót, cùng toàn bộ luồng phản ánh trước đó.
+- Bộ lọc “Đang giải quyết” bao gồm xử lý, chờ khách bổ sung, chờ duyệt và xử lý lại. Kiểm tra trình duyệt Cloud thật đạt cả ba trạng thái từng bị bỏ sót, cùng toàn bộ luồng phản ánh trước đó. Commit `9aa7a812` đã lên Vercel; `customer_support_cloud.cjs --deployed` đạt, dữ liệu thử đã dọn và không truy vấn Logs Cloud.
 - Rà mã xác nhận các route User `settings`, `loyalty`, `wishlist` vẫn hoạt động và cần nghiệm thu riêng. Đã xác nhận cụ thể: Cài đặt xuất dữ liệu có nhánh dự phòng từ `pawpal_pets`/`pawpal_bookings`/`pawpal_orders`; Ưu đãi có hồ sơ và số điểm mẫu khi không đọc được phiên, cùng nhánh đồng bộ khách từ local Admin. Yêu thích có danh sách lưu trên trình duyệt, cần kiểm tra hành vi đăng nhập/đổi tài khoản. Không coi các phần này là hoàn tất Cloud, cũng không sửa gộp sang chúng trong đợt Hỗ trợ.
