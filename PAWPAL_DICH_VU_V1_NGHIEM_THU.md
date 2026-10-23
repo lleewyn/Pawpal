@@ -236,7 +236,7 @@ Dùng các loài cụ thể hiện có trong danh mục; không dùng “Khác�
 - API tài khoản đọc hạng đã gán, số dư điểm và chi tiêu từ view V1; không tự suy hạng theo ngưỡng cứng.
 - Header đọc thông báo bằng RPC xác định chủ qua Auth, không dùng danh sách hoặc trạng thái đọc local. Chỉ cập nhật đã đọc sau máy chủ xác nhận; đọc tất cả theo mốc snapshot để không nuốt thông báo mới. Từ chối sai chủ; Realtime tải lại danh sách. Phạm vi này sửa đọc/đánh dấu, không bổ sung tự sinh thông báo cho mọi nghiệp vụ.
 - Đạt 41 kiểm thử Auth/header, kiểm thử RPC trên CSDL phục hồi và trình duyệt dùng mã local với Cloud thật: đánh giá chưa duyệt bị ẩn, nội dung không chạy HTML, hạng đã gán không phụ thuộc chi tiêu, lỗi ghi không đổi trạng thái, riêng tư hai tài khoản, bốn cách đóng cửa sổ và Realtime. Đã xem ảnh từng màn hình và dọn dữ liệu/tài khoản thử. Không truy vấn Logs Cloud.
-- Kiểm tra Production sẽ được ghi sau khi Vercel phục vụ bản sửa.
+- Nghiệm thu Production: commit `30dbd7af` đã lên Vercel. `customer_public_details_cloud.cjs --deployed` đạt hạng thực tế, đánh giá công khai, quyền thông báo, lỗi ghi, bốn cách đóng và Realtime. Kiểm tra hồi quy `customer_wishlist_cloud.cjs --deployed`, `customer_settings_cloud.cjs --deployed`, `customer_loyalty_cloud.cjs --deployed` đều đạt; gồm yêu thích, đổi mật khẩu, xuất dữ liệu, đổi điểm không trừ lặp và ví/số dư sau reload. Các lệnh kết thúc thành công sau dọn dữ liệu thử; giữ sự kiện audit bất biến. Không truy vấn Logs Cloud.
 
 ### Yêu thích phía khách (23/10/2026)
 
