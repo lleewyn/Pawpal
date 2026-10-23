@@ -41,7 +41,9 @@ const base=process.argv.includes('--deployed')?'https://pawpalgr3.vercel.app':'h
   assert.equal(await page.locator('.main-footer').isVisible(),true);
   assert.equal(await page.locator('.footer-map-section iframe').count(),1);
   assert.equal(await page.locator('.v4-footer').count(),0);
-  assert.equal(await page.locator('#prevSlide').isVisible(),false); // Existing Cloud records have placeholder images.
+  assert.equal(await page.locator('#prevSlide').isVisible(),true);
+  assert.equal(await page.locator('#nextSlide').isVisible(),true);
+  assert.equal(await page.locator('#prevSlide').isDisabled(),true); // One valid banner; placeholder Cloud images are skipped.
   for(const width of [320,390,768,1024,1440,1920]){
    await page.setViewportSize({width,height:1000});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`overflow at ${width}`);

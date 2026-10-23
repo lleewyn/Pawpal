@@ -18,7 +18,9 @@
         notice.className='home-wishlist-notice';notice.setAttribute('role','status');grid.after(notice);
         const currentUser = () => {try{return JSON.parse(localStorage.getItem('pawpal_current_user'))||null;}catch(_){return null;}};
         const syncSavedButtons = () => grid.querySelectorAll('[data-save-service]').forEach(button=>{
-            const saved=savedServices.has(button.dataset.saveService);button.setAttribute('aria-pressed',String(saved));button.textContent=saved?'Đã lưu':'Lưu yêu thích';
+            const saved=savedServices.has(button.dataset.saveService);
+            const label=saved?'Bỏ lưu dịch vụ yêu thích':'Lưu dịch vụ yêu thích';
+            button.setAttribute('aria-pressed',String(saved));button.setAttribute('aria-label',label);button.title=label;
         });
         async function refreshSaved() {
             const epoch=++wishlistEpoch;
@@ -52,11 +54,12 @@
         function renderServices() {
             const rows = services.filter(s => category === 'all' || s.category === category).slice(0, 5);
             grid.innerHTML = rows.length ? rows.map(s => `<article class="catalog-item" data-service-id="${esc(s.id)}">
+                <button class="home-save-service" type="button" data-save-service="${esc(s.id)}" aria-pressed="false" aria-label="Lưu dịch vụ yêu thích"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg></button>
                 <a class="catalog-photo-link" href="/pages/services/service-detail/service-detail.html?id=${encodeURIComponent(s.serviceId)}"><img src="${esc(s.image)}" alt="${esc(s.name)}" loading="lazy" width="640" height="480"></a>
                 <div class="catalog-body"><div class="catalog-topline"><span class="catalog-id">${esc(s.serviceId)}</span><span class="catalog-rating">${s.reviewCount > 0 ? `★ ${s.rating.toFixed(1)} (${s.reviewCount})` : 'Chưa có đánh giá'}</span></div>
                 <h3><a href="/pages/services/service-detail/service-detail.html?id=${encodeURIComponent(s.serviceId)}">${esc(s.name)}</a></h3>
                 <p class="catalog-desc">${esc(s.description)}</p><p class="catalog-duration">${esc([s.petType,s.duration].filter(Boolean).join(' · '))}</p>
-                <div class="catalog-purchase"><span class="catalog-price">${s.hasPrice ? 'Từ '+money(s.price) : 'Xem giá khi đặt lịch'}</span><a class="catalog-book" href="/booking?service=${encodeURIComponent(s.serviceId)}">Đặt lịch</a></div><button class="home-save-service" type="button" data-save-service="${esc(s.id)}" aria-pressed="false">Lưu yêu thích</button></div></article>`).join('') : '<p class="home-state">Chưa có dịch vụ trong nhóm này.</p>';
+                <div class="catalog-purchase"><span class="catalog-price">${s.hasPrice ? 'Từ '+money(s.price) : 'Xem giá khi đặt lịch'}</span><a class="catalog-book" href="/booking?service=${encodeURIComponent(s.serviceId)}">Đặt lịch</a></div></div></article>`).join('') : '<p class="home-state">Chưa có dịch vụ trong nhóm này.</p>';
             syncSavedButtons();
         }
         root.querySelectorAll('[data-category]').forEach(button => button.addEventListener('click', () => {
@@ -109,6 +112,10 @@
             } catch (_) { host.textContent = 'Chưa tải được quyền lợi thành viên. Bạn có thể xem lại trong tài khoản.'; }
         }
         async function loadBanners() {
+            if (!$('#campaignImg')) {
+                $('#slideName').textContent='';$('#slideNum').textContent='';$('#slidePager').textContent='';
+                return;
+            }
             const slides = [{src:$('#campaignImg').getAttribute('src'),name:'Pet Taxi — Đồng hành cùng bé',link:'/booking?service=TXI01'}];
             let current = 0;
             try {
@@ -133,7 +140,7 @@
                 $('.book-inline').href=row.link;
                 $('.book-inline').textContent=row.link.startsWith('/booking')?'Đặt lịch ngay ↗':'Khám phá dịch vụ ↗';
             }
-            [prev,next].forEach(b=>{b.hidden=slides.length<2;b.disabled=slides.length<2;});
+            [prev,next].forEach(b=>{b.hidden=false;b.disabled=slides.length<2;});
             prev.addEventListener('click',()=>{current=(current-1+slides.length)%slides.length;show();});
             next.addEventListener('click',()=>{current=(current+1)%slides.length;show();});show();
         }

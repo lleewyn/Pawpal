@@ -249,3 +249,14 @@
 * **Không truy vấn hệ thống Logs của Supabase Cloud**: Không dùng Logs Explorer, Logs Query API, CLI/MCP hoặc công cụ khác để tìm, quét, xuất hay thăm dò log; không bật làm mới log tự động. Người dùng dùng gói Free và không thể nâng cấp. Chỉ thay đổi quy tắc này khi người dùng cho phép rõ ràng.
 * Kiểm tra bằng truy vấn dữ liệu nghiệp vụ/phần định nghĩa CSDL có phạm vi cụ thể, phản hồi API và trình duyệt. Nếu một công việc bắt buộc cần Logs thì báo giới hạn này; không tự mở Logs. Quy tắc này không cấm đọc kết quả lỗi cục bộ của lệnh hoặc bài kiểm thử.
 
+
+## 10. Git push
+
+- Chỉ chạy git push khi người dùng yêu cầu rõ ràng. Sau khi sửa và kiểm tra, giữ thay đổi ở local nếu chưa được yêu cầu push.
+
+## 11. Banner trang chủ
+
+- Banner chính ở section đầu trang chủ dùng kích thước chuẩn **1720 × 540px** (ngang × cao), tỉ lệ **86:27**.
+- Ảnh banner mới cần thiết kế theo kích thước này. Khung nội dung section rộng tối đa 1800px, chừa khoảng đệm ngang 40px mỗi bên trên màn hình lớn.
+- Khi màn hình nhỏ hơn, banner co theo chiều rộng khả dụng, không gây tràn ngang và không kéo méo ảnh. Chiều cao hiển thị trên màn hình lớn tối đa 540px.
+

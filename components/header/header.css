@@ -1009,3 +1009,56 @@
     color: var(--color-text-dark);
     transition: var(--transition-smooth);
 }
+
+/* Shared public header: the approved compact editorial design. */
+body:not(.admin-body) .main-header{background:#fff;box-shadow:none;padding:0;border-bottom:1px solid #e4e9e1}
+body:not(.admin-body) .main-header .navbar{max-width:none;min-height:78px;height:auto;padding:0!important;gap:0}
+body:not(.admin-body) .header-container{max-width:1440px;width:100%;margin:auto;padding:12px 30px;gap:20px}
+body:not(.admin-body) .main-header .nav-link,body:not(.admin-body) .main-header .dropdown-item{font-size:13px}
+body:not(.admin-body) .main-header .search-bar{max-width:155px}
+@media (max-width:1249px){body:not(.admin-body) .header-container{padding:10px 20px}
+body:not(.admin-body) .main-header .navbar-collapse{background:white}
+body:not(.admin-body) .main-header .nav-menu{z-index:10000}}
+@media (max-width:600px){body:not(.admin-body) .header-container{padding:10px 14px}}
+body:not(.admin-body) .main-header,body:not(.admin-body) .main-header :is(a,button,input,select,textarea,span,div){font-family:Inter,system-ui,sans-serif!important}
+body:not(.admin-body) .main-header{background:#fff;border-bottom:1px solid #e0e6dd;box-shadow:none}
+body:not(.admin-body) .main-header .header-container{max-width:1800px;padding:14px 40px;min-height:88px;gap:24px}
+body:not(.admin-body) .main-header .navbar-brand img{height:58px;max-height:none;width:auto}
+body:not(.admin-body) .main-header .btn-header-cta{background:#214939;color:#fff;border:1px solid #214939;border-radius:7px;padding:12px 20px;font-weight:600;box-shadow:none}
+body:not(.admin-body) .main-header .btn-signup{border:1px solid #cbd7cc;color:#214939;background:transparent;border-radius:7px;padding:11px 16px;box-shadow:none}
+body:not(.admin-body) .main-header .login-btn{color:#214939;font-weight:500}
+body:not(.admin-body) .main-header .lookup-btn{background:transparent;border:0;border-radius:0;color:#405d4d;box-shadow:none;padding:10px 0;font-size:12px}
+body:not(.admin-body) .main-header .header-divider{display:none}
+body:not(.admin-body) .main-header .auth-actions{gap:16px}
+@media (min-width:1250px){body:not(.admin-body) .main-header .header-container{display:grid;grid-template-columns:140px minmax(0,1fr) auto}
+body:not(.admin-body) .main-header .header-left .search-bar{display:none}
+body:not(.admin-body) .main-header .nav-menu .navbar-nav{flex-wrap:nowrap;gap:22px;width:auto}
+body:not(.admin-body) .main-header .nav-link{white-space:nowrap;color:#315341;padding:12px 0;font-size:13px;font-weight:500}
+body:not(.admin-body) .main-header .nav-link.active{color:#214939;font-weight:700}
+body:not(.admin-body) .main-header .nav-link:after{border-color:#c29a45}
+body:not(.admin-body) .main-header .header-actions{gap:20px}}
+@media (min-width:1250px) and (max-width:1450px){body:not(.admin-body) .main-header .header-container{grid-template-columns:105px minmax(0,1fr) auto;padding:12px 24px;gap:18px}
+body:not(.admin-body) .main-header .nav-menu .navbar-nav{gap:15px}
+body:not(.admin-body) .main-header .header-actions{gap:12px}
+body:not(.admin-body) .main-header .auth-actions{gap:12px}
+body:not(.admin-body) .main-header .btn-header-cta{padding:11px 14px}}
+@media (max-width:1249px){body:not(.admin-body) .main-header .header-container{min-height:76px;padding:10px 22px}
+body:not(.admin-body) .main-header .navbar-brand img{height:52px}
+body:not(.admin-body) .main-header .nav-menu.show{background:#214939!important}}
+@media (max-width:600px){body:not(.admin-body) .main-header .header-container{padding:10px 18px}}
+body:not(.admin-body) .main-header a.btn-header-cta,body:not(.admin-body) .main-header a.btn-header-cta:hover{color:#fff!important;background:#214939!important}
+@media (min-width:1250px){body:not(.admin-body) .main-header .lookup-btn span{display:inline!important}
+body:not(.admin-body) .main-header .lookup-btn{width:auto;gap:7px}}
+body:not(.admin-body) .main-header .header-container{min-height:74px;padding-top:8px;padding-bottom:8px}
+body:not(.admin-body) .main-header .navbar-brand img{height:50px}
+@media (max-width:1249px){body:not(.admin-body) .main-header .header-container{min-height:68px;padding-top:7px;padding-bottom:7px}
+body:not(.admin-body) .main-header .navbar-brand img{height:46px}}
+body:not(.admin-body) .main-header .header-container{min-height:66px;padding-top:4px;padding-bottom:4px}
+body:not(.admin-body) .main-header .navbar-brand img{height:44px}
+body:not(.admin-body) .main-header .navbar{min-height:68px}
+body:not(.admin-body) .main-header .btn-header-cta{padding:9px 15px}
+body:not(.admin-body) .main-header .btn-signup{padding:8px 12px}
+@media (min-width:1250px){body:not(.admin-body) .main-header .header-actions{gap:12px}
+body:not(.admin-body) .main-header .auth-actions{gap:12px}}
+body:not(.admin-body) .main-header a.btn-signup{background:#e8aa2f;border-color:#e8aa2f;color:#214939}
+body:not(.admin-body) .main-header a.btn-signup:hover{background:#dca025;border-color:#dca025;color:#214939}
