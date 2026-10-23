@@ -107,7 +107,7 @@
   1. Tìm đến thẻ sản phẩm bất kỳ tại mục "Sản phẩm bán chạy".
   2. Bấm nút `Mua ngay`.
 - **Kết quả mong đợi**:
-  - [x] Modal mở lên chính giữa màn hình với hiệu ứng mờ kính đục, bo góc 9px chuẩn [AGENTS.md](file:///d:/Aboutme/MyProject/Pawpal/AGENTS.md).
+  - [x] Modal mở lên chính giữa màn hình với hiệu ứng mờ kính đục, bo góc 9px chuẩn [AGENTS.md](../../AGENTS.md).
   - [x] Nạp chính xác: Ảnh sản phẩm, tên sản phẩm, nhãn hiệu, giá bán theo biến thể rẻ nhất, các tùy chọn phân loại (size, mùi vị, trọng lượng...).
   - [x] Nút tăng giảm số lượng hoạt động: Click `+` tăng 1, click `-` giảm 1 (chặn không cho giảm xuống < 1).
 

@@ -4,7 +4,7 @@ const https = require('https');
 require('dotenv').config();
 
 // 1. Parse CDSLfinal.md
-const mdPath = path.resolve(__dirname, '../../CDSLfinal.md');
+const mdPath = path.resolve(__dirname, '../../docs/archive/database/CDSLfinal.md');
 const mdContent = fs.readFileSync(mdPath, 'utf8');
 
 const mdTables = {};

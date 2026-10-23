@@ -2,11 +2,11 @@
 
 Ngày chọn phương án: 21/10/2026. Đây là kế hoạch đang áp dụng, thay phương án chuyển sang PostgreSQL thuần.
 
-**Cập nhật giao diện V1:** đã hoàn tất và kiểm tra phân hệ Khách hàng của admin local, gồm các luồng ghi, điểm, thú cưng trong hồ sơ và Realtime. Xem [nghiệm thu Khách hàng V1](PAWPAL_KHACH_HANG_V1_NGHIEM_THU.md). Công việc chuyển các phân hệ khác và triển khai server online/Vercel vẫn còn; không coi đây là nghiệm thu toàn bộ website. Các mốc “mã Admin chưa chuyển” bên dưới là lịch sử trước cập nhật này.
+**Cập nhật giao diện V1:** đã hoàn tất và kiểm tra phân hệ Khách hàng của admin local, gồm các luồng ghi, điểm, thú cưng trong hồ sơ và Realtime. Xem [nghiệm thu Khách hàng V1](../../acceptance/PAWPAL_KHACH_HANG_V1_NGHIEM_THU.md). Công việc chuyển các phân hệ khác và triển khai server online/Vercel vẫn còn; không coi đây là nghiệm thu toàn bộ website. Các mốc “mã Admin chưa chuyển” bên dưới là lịch sử trước cập nhật này.
 
 **Cập nhật dữ liệu nghiệp vụ:** đã nhập phần hợp lệ từ bản xuất Cloud; giữ 35 khách, 82 thú cưng, thêm 16 nhân viên mới với Auth bị khóa và bút toán mở đầu điểm/kho có ghi nguồn. Chưa chuyển được tất cả lịch sử vì các tổng/quan hệ nguồn không khớp V1. Chi tiết và danh sách nhóm bị giữ lại nằm trong [báo cáo nhập nghiệp vụ](PAWPAL_NHAP_DU_LIEU_NGHIEP_VU_V1.md). Công việc chuyển mã các màn hình V1 vẫn đang chờ, không lấy dữ liệu đã nhập làm bằng chứng UI đã nghiệm thu.
 
-**Mốc mới nhất — đã tạo V1 trên local:** ngày 21/10/2026, public đã chuyển từ baseline 21 bảng sang đúng 105 bảng/906 cột/160 FK của V1; RLS bật 105 bảng. Backup baseline và V1 đều đã thử restore, REST nhận đủ 105 bảng. Xem [kết quả triển khai](PAWPAL_DATABASE_V1_TRIEN_KHAI.md). Bước tiếp theo là chuyển mã ứng dụng sang V1; bản Admin cũ chưa được nghiệm thu với schema mới. Các mục ghi “21 bảng” hoặc “chưa triển khai V1” bên dưới là lịch sử trước mốc này.
+**Mốc mới nhất — đã tạo V1 trên local:** ngày 21/10/2026, public đã chuyển từ baseline 21 bảng sang đúng 105 bảng/906 cột/160 FK của V1; RLS bật 105 bảng. Backup baseline và V1 đều đã thử restore, REST nhận đủ 105 bảng. Xem [kết quả triển khai](../../database/PAWPAL_DATABASE_V1_TRIEN_KHAI.md). Bước tiếp theo là chuyển mã ứng dụng sang V1; bản Admin cũ chưa được nghiệm thu với schema mới. Các mục ghi “21 bảng” hoặc “chưa triển khai V1” bên dưới là lịch sử trước mốc này.
 
 **Điều chỉnh sau đối chiếu schema ngày 21/10/2026:** bản local hiện có 21 bảng tương thích mã cũ, chưa triển khai V1. V1 có 105 thực thể; 20 bảng local trùng tên, 1 bảng ngoài V1 (`customer_activation_sms`), 85 bảng V1 chưa có. Xem [báo cáo sai khác và kế hoạch chuyển schema](PAWPAL_DOI_CHIEU_DATABASE_SELF_HOST_VOI_3NF_V1.md). Từ mốc này dừng mở rộng schema tương thích; công việc schema tiếp theo theo V1, kèm sửa mã và kiểm thử. Các mốc hoàn thành bên dưới là kết quả kiểm tra baseline, không phải nghiệm thu 3NF V1.
 
@@ -15,7 +15,7 @@ Ngày chọn phương án: 21/10/2026. Đây là kế hoạch đang áp dụng, 
 Tiếp tục phát triển Pawpal trên một bộ Supabase do mình vận hành, giữ phần lớn cách tích hợp Supabase SDK, Auth, RLS, RPC, Storage và Realtime hiện tại. PostgreSQL vẫn là cơ sở dữ liệu bên trong; không xây lại toàn bộ dịch vụ nền.
 
 1. Dựng bộ self-host riêng và chứng minh một luồng hiện có chạy được.
-2. Đối chiếu bản nền với [thiết kế 3NF V1](PAWPAL_THIET_KE_DATABASE_3NF_V1.md), chốt đặc tả vật lý và chuyển từng nhóm schema cùng mã gọi theo [kế hoạch chuyển đổi](PAWPAL_DOI_CHIEU_DATABASE_SELF_HOST_VOI_3NF_V1.md).
+2. Đối chiếu bản nền với [thiết kế 3NF V1](../../database/PAWPAL_THIET_KE_DATABASE_3NF_V1.md), chốt đặc tả vật lý và chuyển từng nhóm schema cùng mã gọi theo [kế hoạch chuyển đổi](PAWPAL_DOI_CHIEU_DATABASE_SELF_HOST_VOI_3NF_V1.md).
 3. Kiểm tra toàn bộ chức năng trên V1 trước khi chuyển cấu hình nguồn của bản chạy chính.
 
 Việc đổi nơi chạy và việc đổi schema là hai đợt độc lập. Không áp dụng ngay toàn bộ tên trường/bảng mới trong V1 vào code đang dùng schema cũ.

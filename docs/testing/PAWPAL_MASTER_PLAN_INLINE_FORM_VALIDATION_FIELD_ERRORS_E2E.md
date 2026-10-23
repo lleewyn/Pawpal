@@ -312,13 +312,13 @@ Không tự áp trần cân nặng, giới hạn ký tự, giá tiền, ngày đ
 ## 7. Lộ trình theo 18 giai đoạn — có điều kiện nghiệm thu rõ ràng
 ### GĐ-00 — Audit & baseline toàn bộ form
 **Ưu tiên:** P0 · **Mục tiêu nghiệm thu:** Kiểm kê field thật, xác nhận branch/commit, Supabase thực tế; không chỉnh code ngay.
-**Cập nhật 20/10/2026:** ĐANG THỰC HIỆN — chưa đạt gate GĐ-00, chưa sửa mã chức năng. Các mục dưới đây mới hoàn thành một phần nên giữ checkbox chưa tích. [Báo cáo và bằng chứng](docs/audits/gd00-20261020/README.md).
+**Cập nhật 20/10/2026:** ĐANG THỰC HIỆN — chưa đạt gate GĐ-00, chưa sửa mã chức năng. Các mục dưới đây mới hoàn thành một phần nên giữ checkbox chưa tích. [Báo cáo và bằng chứng](../audits/gd00-20261020/README.md).
 
 - [ ] **VAL-00-01:** Đóng băng mã commit đang test; chụp backup và gắn phiên bản ZIP.
   - **Đã làm:** ghi branch `main`, HEAD đầu đợt `9a2d45224d6ac489170e4afdc2b9a749810e2d4c`; lưu trạng thái, tracked diff có sẵn và hash nguồn trong thư mục audit.
   - **Còn lại:** xác minh ZIP/backup đầy đủ; chốt lại baseline vì HEAD đổi trong đợt audit thành `b078d165fc131e7048eab4449e4d1a1dc2068031` do hoạt động ngoài audit. Chưa đóng băng phiên bản xuyên suốt.
 - [ ] **VAL-00-02:** Liệt kê từng trang, từng modal/drawer, wizard và form do JS render; so với phụ lục kiểm kê tự động bên dưới.
-  - **Đã làm:** kiểm kê 47 file HTML, 83 form và 798 control tĩnh, khớp số đếm phụ lục; xuất [forms.csv](docs/audits/gd00-20261020/forms.csv) và [fields.csv](docs/audits/gd00-20261020/fields.csv). Script kiểm kê chạy exit `0`.
+  - **Đã làm:** kiểm kê 47 file HTML, 83 form và 798 control tĩnh, khớp số đếm phụ lục; xuất [forms.csv](../audits/gd00-20261020/forms.csv) và [fields.csv](../audits/gd00-20261020/fields.csv). Script kiểm kê chạy exit `0`.
   - **Còn lại:** rà 1.731 dòng tín hiệu JavaScript và mở các form động/modal/drawer/wizard; số tín hiệu không phải số form hay coverage E2E.
 - [ ] **VAL-00-03:** Phân loại field là input, select, radio, checkbox, tệp, ngày/giờ, autocomplete, read-only hoặc filter.
   - **Đã làm:** ghi type, id/name, required, readonly/disabled, ARIA, pattern và min/max/maxlength; phân loại sơ bộ hidden, readonly, search/filter và editable trong fields.csv.
@@ -333,7 +333,7 @@ Không tự áp trần cân nặng, giới hạn ký tự, giá tiền, ngày đ
   - **Đã làm:** xác minh file tồn tại local, được profile.js và customer_profile_persistence.js import; nghi vấn thiếu file trong ZIP không được coi là lỗi local hiện tại.
   - **Còn lại — NOT RUN:** xác minh artifact deployment và GitHub tương ứng.
 - [ ] **VAL-00-07:** Lấy baseline screenshot của form lỗi ở desktop/mobile; lưu Console/Network, thời gian xử lý và hành vi focus.
-  - **Đã chạy:** Admin → Khách hàng → Thêm khách → để trống → Lưu: popup native tiếng Anh `Please fill out this field.`, focus `quickAddName`; **FAIL so với UX mục tiêu**. Đóng modal bằng nút Đóng thành công. [Ảnh desktop baseline](docs/audits/gd00-20261020/customer-empty-baseline.png).
+  - **Đã chạy:** Admin → Khách hàng → Thêm khách → để trống → Lưu: popup native tiếng Anh `Please fill out this field.`, focus `quickAddName`; **FAIL so với UX mục tiêu**. Đóng modal bằng nút Đóng thành công. [Ảnh desktop baseline](../audits/gd00-20261020/customer-empty-baseline.png).
   - **Còn lại — NOT RUN:** mobile, Console/Network, thời gian, positive/save/F5/DB và các form khác. Đây chỉ là phần required của FM-037; chưa hoàn thành FM-037/E2E-ADMIN-01, chưa xác nhận số request ghi bằng Network.
 - [ ] **VAL-00-08:** Kiểm tra file AGENTS.md/SPA mount conventions/Admin modal actions, không phá rule thiết kế.
   - **Đã làm:** đọc toàn bộ AGENTS.md và global modal handler; ghi nhận quy tắc Admin text-only ngoài sidebar, không viền trái summary, kiểm từng modal theo mục 8. Đã quan sát mở/đóng modal Thêm khách.
@@ -1792,7 +1792,7 @@ _Không có field định danh tĩnh đủ rõ; cần kiểm tra UI runtime._
 
 - Trạng thái: ĐANG THỰC HIỆN, chưa đạt gate GĐ-00; chưa sửa mã chức năng.
 - Baseline: main / 9a2d45224d6ac489170e4afdc2b9a749810e2d4c, có thay đổi sẵn trong working tree.
-- Báo cáo và backlog: [docs/audits/gd00-20261020/README.md](docs/audits/gd00-20261020/README.md).
+- Báo cáo và backlog: [docs/audits/gd00-20261020/README.md](../audits/gd00-20261020/README.md).
 - Kiểm kê tĩnh: 47 HTML, 83 form, 798 control; script chạy exit 0. Không xem số đếm là E2E PASS.
 - Local đã có scripts/shared/address-validation.mjs; deployment chưa xác minh.
 - FM-037 baseline required: FAIL so với UX mục tiêu — popup native tiếng Anh, focus tên; chưa chạy positive/save/F5/DB. Có ảnh trong thư mục audit.
@@ -1803,7 +1803,7 @@ _Không có field định danh tĩnh đủ rõ; cần kiểm tra UI runtime._
 - HEAD đầu đợt: `9a2d45224d6ac489170e4afdc2b9a749810e2d4c` trên `main`; 5 file chức năng có thay đổi sẵn, đã lưu tracked diff và trạng thái ban đầu trong thư mục audit.
 - HEAD cuối đợt: `b078d165fc131e7048eab4449e4d1a1dc2068031`; có hoạt động bên ngoài đợt audit. Audit không chạy commit/reset. Cần đối chiếu phiên bản mới trước khi sửa và nghiệm thu; chưa coi baseline đã đóng băng xuyên suốt.
 - Lệnh kiểm kê: `node docs/audits/gd00-20261020/inventory.cjs`, Node v24.15.0, exit code `0`.
-- Đầu ra: [danh sách trường](docs/audits/gd00-20261020/fields.csv), [danh sách form](docs/audits/gd00-20261020/forms.csv), [tín hiệu render/validation/lifecycle](docs/audits/gd00-20261020/dynamic-signals.csv), [hash nguồn](docs/audits/gd00-20261020/source-hashes.csv).
+- Đầu ra: [danh sách trường](../audits/gd00-20261020/fields.csv), [danh sách form](../audits/gd00-20261020/forms.csv), [tín hiệu render/validation/lifecycle](../audits/gd00-20261020/dynamic-signals.csv), [hash nguồn](../audits/gd00-20261020/source-hashes.csv).
 - 1.731 dòng tín hiệu JavaScript là ứng viên rà soát, không phải số form động hay số lỗi. Phân loại trường/filter hiện mới là sơ bộ.
 
 ### Phát hiện ban đầu
@@ -1818,7 +1818,7 @@ _Không có field định danh tĩnh đủ rõ; cần kiểm tra UI runtime._
 | GD00-06 | P1 | **Đã xác minh local**: `scripts/shared/address-validation.mjs` tồn tại và được client/backend import; deployment/GitHub chưa xác minh. | VAL-00-06, VAL-09-08 |
 | GD00-07 | P1 | **Đã đọc mã một phần**: có global close/cancel/backdrop/Escape; chưa kiểm lifecycle và listener toàn bộ modal/SPA. | VAL-00-08, RUNTIME-04 |
 
-Ảnh baseline: [customer-empty-baseline.png](docs/audits/gd00-20261020/customer-empty-baseline.png). Chỉ phần required của FM-037 đã chạy; chưa hoàn thành toàn bộ FM-037 hoặc E2E-ADMIN-01. Chưa có Network capture để xác nhận số request ghi.
+Ảnh baseline: [customer-empty-baseline.png](../audits/gd00-20261020/customer-empty-baseline.png). Chỉ phần required của FM-037 đã chạy; chưa hoàn thành toàn bộ FM-037 hoặc E2E-ADMIN-01. Chưa có Network capture để xác nhận số request ghi.
 
 ### Tiến độ GĐ-00
 
@@ -1847,7 +1847,7 @@ Không đánh dấu hoàn thành checkbox hoặc E2E PASS từ kết quả scrip
 
 - **ĐANG THỰC HIỆN; gate CHƯA ĐẠT; chưa chuyển GĐ-01.** Phiên này tiếp tục audit, không sửa mã chức năng.
 - Baseline mới: `main` / `37c274561460ff5351dafd175636cfc79697f6b0`, working tree sạch trước khi thêm audit. Đã lưu archive nguồn tracked có chọn phạm vi và kiểm CRC/SHA-256; không phải ZIP gốc/full workspace/DB backup.
-- Báo cáo mới: [docs/audits/gd00-20261021/README.md](docs/audits/gd00-20261021/README.md). Giữ nguyên lịch sử và ảnh đợt 20/10.
+- Báo cáo mới: [docs/audits/gd00-20261021/README.md](../audits/gd00-20261021/README.md). Giữ nguyên lịch sử và ảnh đợt 20/10.
 - Kiểm kê lại: **47 HTML, 83 form mở, 798 control tĩnh**, 1.732 dòng tín hiệu JS và 56 literal control/form trong JS cần rà runtime. Không xem các số này là coverage hoặc E2E PASS.
 - Parser ghép 82 cặp form; đã truy nguyên source `login.html` thiếu thẻ đóng của `forgotNewPasswordForm`. Chưa xác minh DOM runtime.
 - Đã phân loại rule 7 field của modal Thêm khách; bổ sung backlog về custom validity còn lưu sau sửa, nguy cơ submit trùng/ghi nhiều bảng từng phần, khác biệt policy phone và conditional weight. Đây là bằng chứng source, runtime NOT RUN.

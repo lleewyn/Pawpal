@@ -2,11 +2,11 @@
 
 Ngày: 21/10/2026. Phạm vi: xác định mô hình logic trước khi viết migration PostgreSQL.
 
-**Phương án nền tảng đã chọn: Supabase self-host.** PostgreSQL vẫn là lõi dữ liệu, nhưng Auth, API dữ liệu, Storage và Realtime dùng các dịch vụ Supabase có sẵn. Kế hoạch đang áp dụng: [triển khai Supabase self-host](PAWPAL_KE_HOACH_SUPABASE_SELF_HOST.md). Schema local đã chuyển theo V1; công việc tiếp theo là chuyển mã gọi tương ứng, không thêm lại cấu trúc baseline ngoài thiết kế.
+**Phương án nền tảng đã chọn: Supabase self-host.** PostgreSQL vẫn là lõi dữ liệu, nhưng Auth, API dữ liệu, Storage và Realtime dùng các dịch vụ Supabase có sẵn. Kế hoạch đang áp dụng: [triển khai Supabase self-host](../archive/migration/PAWPAL_KE_HOACH_SUPABASE_SELF_HOST.md). Schema local đã chuyển theo V1; công việc tiếp theo là chuyển mã gọi tương ứng, không thêm lại cấu trúc baseline ngoài thiết kế.
 
 **Trạng thái sau triển khai ngày 21/10/2026:** Supabase self-host local đã có đúng **105 bảng, 906 cột và 160 khóa ngoại** theo từ điển V1; 105 bảng đều bật RLS. Đã đối chiếu tên, kiểu, NULL, PK và kiểm tra REST, ràng buộc, thao tác đồng thời, backup/restore. Xem [kết quả triển khai và giới hạn nghiệm thu](PAWPAL_DATABASE_V1_TRIEN_KHAI.md) cùng [đặc tả vật lý](PAWPAL_DATABASE_V1_DAC_TA_VAT_LY.md). Mã ứng dụng cũ chưa chuyển xong; việc có schema không đồng nghĩa toàn bộ chức năng đã chạy trên V1.
 
-Tài liệu này chốt phương án thiết kế từ bản 77 bảng người dùng gửi, [CDSLfinal.md](CDSLfinal.md), [sổ tay nghiệp vụ](HUONG_DAN_LUONG_NGHIEP_VU_PAWPAL.md) và các migration hiện có. Cấu trúc V1 đã được triển khai trên local theo đặc tả vật lý liên kết ở trên; đây không phải chứng nhận tự động toàn bộ bảng đạt 3NF hoặc toàn bộ nghiệp vụ đã hoàn thành.
+Tài liệu này chốt phương án thiết kế từ bản 77 bảng người dùng gửi, [CDSLfinal.md](../archive/database/CDSLfinal.md), [sổ tay nghiệp vụ](../business/HUONG_DAN_LUONG_NGHIEP_VU_PAWPAL.md) và các migration hiện có. Cấu trúc V1 đã được triển khai trên local theo đặc tả vật lý liên kết ở trên; đây không phải chứng nhận tự động toàn bộ bảng đạt 3NF hoặc toàn bộ nghiệp vụ đã hoàn thành.
 
 ## 1. Quyết định tổng thể
 

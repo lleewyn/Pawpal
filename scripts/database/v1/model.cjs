@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const root = path.resolve(__dirname, '../../..');
-const source = fs.readFileSync(path.join(root, 'PAWPAL_THIET_KE_DATABASE_3NF_V1.md'), 'utf8');
+const source = fs.readFileSync(path.join(root, 'docs/database/PAWPAL_THIET_KE_DATABASE_3NF_V1.md'), 'utf8');
 const tables = [];
 let table;
 for (const line of source.split(/\r?\n/)) {

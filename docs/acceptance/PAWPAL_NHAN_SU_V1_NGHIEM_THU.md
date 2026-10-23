@@ -1,6 +1,6 @@
 # Nhân sự V1 — nghiệm thu triển khai
 
-Theo quyết định của người dùng, **chấm công thực tế, lương, thưởng, hoa hồng và bảng lương nằm ngoài scope hiện tại**, xem xét sau khi hoàn tất các phần đang làm. Không coi chúng là việc còn thiếu để đóng nghiệm thu Nhân sự trong scope đã chốt. Giữ [tài liệu đề xuất](PAWPAL_DE_XUAT_CHAM_CONG_LUONG_THUONG.md) để tham khảo; không triển khai các bảng hoặc quy tắc đề xuất vào Cloud khi chưa có yêu cầu tiếp.
+Theo quyết định của người dùng, **chấm công thực tế, lương, thưởng, hoa hồng và bảng lương nằm ngoài scope hiện tại**, xem xét sau khi hoàn tất các phần đang làm. Không coi chúng là việc còn thiếu để đóng nghiệm thu Nhân sự trong scope đã chốt. Giữ [tài liệu đề xuất](../archive/proposals/PAWPAL_DE_XUAT_CHAM_CONG_LUONG_THUONG.md) để tham khảo; không triển khai các bảng hoặc quy tắc đề xuất vào Cloud khi chưa có yêu cầu tiếp.
 
 ## Rà soát tiếp hồ sơ và danh sách ngày 22/10/2026
 

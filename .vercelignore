@@ -7,4 +7,5 @@ scripts/server/
 .tmp-*
 PAWPAL_*.md
 scripts/database/
+docs/
 scripts/migrate_customer_auth.js

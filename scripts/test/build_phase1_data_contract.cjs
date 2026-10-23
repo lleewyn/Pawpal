@@ -4,7 +4,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 require('dotenv').config({ quiet: true });
 const root = path.resolve(__dirname, '../..');
-const source = fs.readFileSync(path.join(root, 'CDSLfinal.md'), 'utf8');
+const source = fs.readFileSync(path.join(root, 'docs/archive/database/CDSLfinal.md'), 'utf8');
 const design = new Map(); let current;
 for (const line of source.split(/\r?\n/)) {
   const p = line.split('\t').map(x => x.trim());

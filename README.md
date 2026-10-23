@@ -1,292 +1,61 @@
-# 🐾 PawPal - Premium Pet Care Platform
+# PawPal
 
-> Backend hiện tại: Supabase Cloud mới `cpzuvaplseielhgcnqrn`. Web local (`npm run dev`) và Vercel dùng Cloud; không cần chạy Supabase local hoặc tunnel. Công cụ SQL Cloud dùng container PostgreSQL CLI dùng một lần, không khởi động database local. Tài liệu trạng thái mới nhất: [nghiệm thu](PAWPAL_DICH_VU_V1_NGHIEM_THU.md). Các kế hoạch self-host cũ chỉ giữ làm lịch sử.
+Website quản lý dịch vụ chăm sóc thú cưng và bán sản phẩm, gồm cổng khách hàng và hệ thống quản trị Pawpal-er.
 
-[![Tech Stack](https://img.shields.io/badge/tech--stack-HTML%20%7C%20CSS%20%7C%20JS%20%7C%20Node.js%20%7C%20Supabase-blue.svg)](#)
-[![Live Demo](https://img.shields.io/badge/Live_Demo-View_Website-success.svg)](https://pawpalgr3.vercel.app/)
+**Website:** [pawpalgr3.vercel.app](https://pawpalgr3.vercel.app/) · **Tài liệu:** [docs/README.md](docs/README.md)
 
-🌍 **Trải nghiệm trực tiếp dự án tại:** [https://pawpalgr3.vercel.app/](https://pawpalgr3.vercel.app/)
+## Chạy dự án
 
-**PawPal** là một nền tảng chăm sóc thú cưng cao cấp, kết hợp giữa cửa hàng mua sắm tiện lợi và dịch vụ chăm sóc thú cưng hiện đại. PawPal tập trung vào trải nghiệm người dùng tối ưu, giao diện sang trọng, và các tính năng minh bạch giúp chủ nuôi an tâm tuyệt đối khi gửi gắm thú cưng.
+Yêu cầu Node.js và npm.
 
----
-
-## 🌟 Tính Năng Nổi Bật
-
-- **Cửa hàng cho thú cưng:** Mua sắm thức ăn, phụ kiện với giỏ hàng và danh sách yêu thích được đồng bộ thời gian thực qua cơ sở dữ liệu.
-- **Đặt lịch dịch vụ:** Đặt lịch Spa, Khách sạn thú cưng, Khám sức khỏe dễ dàng.
--**Hồ sơ thú cưng:** Quản lý chi tiết thú cưng, theo dõi dịch vụ thông qua nhật ký chăm sóc.
-- **Khách hàng thân thiết:** Tích điểm, đổi voucher, và các hạng thành viên (PawPass).
-- **Bảo mật & Đồng bộ:** Xác thực người dùng, đồng bộ dữ liệu giỏ hàng, wishlist và đơn hàng trực tiếp lên Supabase.
-- **Quản trị hệ thống:** Đang phát triển
-
----
-
-## 🔑 Tài khoản kiểm thử 
-
-Để thuận tiện cho việc trải nghiệm đầy đủ các tính năng (như xem lịch sử đơn hàng, nhật ký chăm sóc, đặt lịch hẹn), bạn có thể sử dụng các thông tin sau (dữ liệu được đồng bộ trực tiếp từ Supabase):
-
-**1. Tài khoản Thành viên (Member)**
-- **Số điện thoại:** `0901234567`
-- **Mật khẩu:** `Password123`
-- *Lưu ý:* Tài khoản này đã có sẵn dữ liệu về các Đơn hàng và Lịch hẹn dịch vụ.
-
-**2. Khách vãng lai (Guest)**
-- **Số điện thoại tra cứu:** `0999888777`
-- *Lưu ý:* Dùng số điện thoại này tại trang **Tra cứu đơn hàng/lịch hẹn** dành cho khách vãng lai (không cần đăng nhập) để xem các đơn hàng đã đặt.
-
----
-
-## 🚀 Công Nghệ Sử Dụng
-
-- **Frontend:** HTML5, CSS3, Vanilla JavaScript, Bootstrap 5.3
-- **Backend/Database:** Node.js (Express), Supabase (PostgreSQL), JWT Authentication
-- **Kiến trúc:** Client-Server, tích hợp Supabase SDK.
-
----
-
-## 🛠️ Hướng Dẫn Cài Đặt & Chạy Dự Án
-
-### 1. Yêu cầu hệ thống
-- Máy tính đã cài đặt [Node.js](https://nodejs.org/) (phiên bản v18 trở lên).
-- Cài đặt Git.
-- Môi trường cơ sở dữ liệu Supabase.
-
-### 2. Cài đặt và thiết lập
-Mở terminal và thực thi các lệnh sau:
-
-```bash
-# 1. Clone repository về máy
-git clone https://github.com/lleewyn/Pawpal.git
-
-# 2. Di chuyển vào thư mục dự án
-cd Pawpal
-
-# 3. Cài đặt các thư viện phụ thuộc
+```sh
 npm install
-
-# 4. Cấu hình biến môi trường
-# Tạo file .env ở thư mục gốc và cung cấp các thông số kết nối Supabase
-# SUPABASE_URL=...
-# SUPABASE_KEY=...
-```
-
-### 3. Chạy dự án
-Dự án có đi kèm với một Express Server (`server.js`) đóng vai trò vừa phục vụ file tĩnh vừa có thể mở rộng làm API trung gian.
-
-```bash
-# Khởi chạy server development
 npm run dev
 ```
 
-Truy cập hệ thống tại: `http://localhost:3000`
+Mở [localhost:3000](http://localhost:3000). Trước khi chạy, tạo `.env` với cấu hình Cloud do người quản lý dự án cung cấp:
 
----
+- Khách hàng và API: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+- Quản trị: `PAWPAL_ADMIN_SUPABASE_URL`, `PAWPAL_ADMIN_SUPABASE_ANON_KEY`, `PAWPAL_ADMIN_SUPABASE_SERVICE_ROLE_KEY`.
 
-## 📁 Cấu Trúc Thư Mục Chính
+Các URL phải trỏ tới project hiện tại `cpzuvaplseielhgcnqrn`. Giữ khóa đặc quyền ở phía máy chủ, không đưa `.env` hoặc thông tin đăng nhập vào Git.
+
+Web local và Vercel dùng Supabase Cloud; không cần bật Supabase local hoặc tunnel để sử dụng web. Công cụ SQL Cloud có thể dùng Docker để chạy PostgreSQL CLI dùng một lần, tách biệt với database local.
+
+## Chức năng
+
+- Khách hàng: hồ sơ, thú cưng, nhật ký chăm sóc, đặt lịch spa/khách sạn/xe, mua hàng, đổi trả, đánh giá, Paw Points, yêu thích và hỗ trợ.
+- Quản trị: Dashboard, Khách hàng, Thú cưng, Dịch vụ, Bán hàng, Nhân sự, Khiếu nại, Chatbot và Cấu hình.
+- Dữ liệu nghiệp vụ đọc/ghi qua Supabase Cloud và đồng bộ Realtime theo các luồng đã nghiệm thu.
+
+Phạm vi, kết quả kiểm thử và các phần đã hoãn được ghi tại [nghiệm thu tổng hợp](docs/acceptance/PAWPAL_DICH_VU_V1_NGHIEM_THU.md).
+
+## Cấu trúc chính
 
 ```text
-Pawpal/
-|-- api/
-|   `-- chat.js              # Endpoint backend xử lý Chatbot AI 
-|
-|-- components/              # Các UI Component độc lập tái sử dụng
-|   |-- fab/                 # Nút Floating Action Button 
-|   |   |-- fab.css          # Style CSS của nút FAB
-|   |   |-- fab.html         # Khung giao diện HTML của nút
-|   |   `-- fab.js           # Logic hiển thị và bắt sự kiện click
-|   |-- footer/              # Chân trang (Footer)
-|   |   |-- footer.css       # Định dạng chân trang
-|   |   |-- footer.html      # Nội dung các cột link, logo chân trang
-|   |   `-- footer.js        # Script xử lý ở chân trang
-|   |-- header/              # Thanh điều hướng chính (Header)
-|   |   |-- header.css       # Style cho thanh menu, thanh tìm kiếm
-|   |   |-- header.html      # HTML của thanh navbar, logo, biểu tượng giỏ hàng
-|   |   `-- header.js        # Logic mở dropdown, kiểm tra đăng nhập trên header
-|   `-- user-sidebar/        # Thanh điều hướng dọc của khách hàng (Sidebar)
-|       |-- user-sidebar.css # Style Sidebar
-|       |-- user-sidebar.html# HTML các menu (Tổng quan, Đơn hàng, Thú cưng...)
-|       `-- user-sidebar.js  # Script tô màu (active) menu đang được chọn
-|
-|-- data/                    # Thư mục chứa dữ liệu tĩnh Mock/Seed (JSON, CSV)
-|   `-- (pets.json, dichvu.csv, sanpham.csv, orders.json,...)
-|
-|-- pages/                   # Giao diện chính của ứng dụng
-|   |-- admin/               # Phân hệ dành cho Quản trị viên
-|   |-- public/              # Các trang công khai (Không cần đăng nhập)
-|   |   |-- about/           # Trang Giới thiệu về Pawpal
-|   |   |   |-- about.css
-|   |   |   `-- about.html
-|   |   |-- blog/            # Trang danh sách bài viết/Cẩm nang
-|   |   |   |-- blog.css
-|   |   |   |-- blog.html
-|   |   |   `-- blog.js
-|   |   |-- blog-detail/     # Xem chi tiết 1 bài viết Blog
-|   |   |   |-- blog-detail.css
-|   |   |   |-- blog-detail.html
-|   |   |   `-- blog-detail.js
-|   |   |-- contact/         # Trang Liên hệ & Bản đồ
-|   |   |   |-- contact.css
-|   |   |   |-- contact.html
-|   |   |   `-- contact.js
-|   |   |-- landing/         # Trang chủ chính (Landing Page)
-|   |   |   |-- landing.css
-|   |   |   |-- landing.html
-|   |   |   `-- landing.js
-|   |   |-- login/           # Trang Đăng nhập & Đăng ký
-|   |   |   |-- login.css
-|   |   |   |-- login.html
-|   |   |   `-- login.js
-|   |   `-- return-guest/    # Trang tra cứu đơn đổi trả dành cho khách vãng lai
-|   |       |-- return-guest.css
-|   |       |-- return-guest.html
-|   |       `-- return-guest.js
-|   |-- services/            # Phân hệ Dịch vụ và Đặt lịch (Spa, Hotel)
-|   |   |-- services.css     # Style cho danh mục dịch vụ
-|   |   |-- services.html    # Trang hiển thị danh sách các gói dịch vụ
-|   |   |-- services.js      # Fetch data và render dịch vụ
-|   |   |-- booking/         # Luồng điền thông tin đặt lịch
-|   |   |   |-- booking.css
-|   |   |   |-- booking.html
-|   |   |   `-- booking.js
-|   |   |-- booking-success/ # Trang thông báo sau khi đặt lịch thành công
-|   |   |   |-- booking-success.css
-|   |   |   |-- booking-success.html
-|   |   |   `-- booking-success.js
-|   |   `-- service-detail/  # Trang thông tin chi tiết 1 dịch vụ
-|   |       |-- service-detail.css
-|   |       |-- service-detail.html
-|   |       `-- service-detail.js
-|   |-- shop/                # Phân hệ Cửa hàng (Mua sắm sản phẩm)
-|   |   |-- payment-result.css # Style hiển thị kết quả giao dịch chung
-|   |   |-- shop.css         # Style trang danh sách sản phẩm
-|   |   |-- shop.html        # Trang cửa hàng tổng hợp (Shop)
-|   |   |-- shop.js          # Logic lọc, tìm kiếm, fetch sản phẩm
-|   |   |-- cart/            # Trang quản lý Giỏ hàng
-|   |   |   |-- cart.css
-|   |   |   |-- cart.html
-|   |   |   `-- cart.js
-|   |   |-- checkout/        # Trang thanh toán đơn hàng (Checkout)
-|   |   |   |-- checkout.css
-|   |   |   |-- checkout.html
-|   |   |   |-- checkout.js
-|   |   |   `-- payment-qr.css # Style cho modal QR Code thanh toán
-|   |   |-- payment-failed/  # Trang thông báo Thanh toán thất bại
-|   |   |   |-- payment-failed.css
-|   |   |   |-- payment-failed.html
-|   |   |   `-- payment-failed.js
-|   |   |-- payment-success/ # Trang thông báo Thanh toán thành công
-|   |   |   |-- payment-success.css
-|   |   |   |-- payment-success.html
-|   |   |   `-- payment-success.js
-|   |   `-- product-detail/  # Xem chi tiết 1 sản phẩm cụ thể
-|   |       |-- product-detail.css
-|   |       |-- product-detail.html
-|   |       |-- product-detail.js
-|   `-- user/                # Phân hệ Quản lý tài khoản 
-|       |-- dashboard-init.js # Khởi tạo dữ liệu cho luồng user dashboard
-|       |-- return-handler.js # Module xử lý đổi trả hàng hóa
-|       |-- review-handler.js # Module xử lý đánh giá sản phẩm/dịch vụ
-|       |-- support.css       # Style cho tính năng Gửi yêu cầu hỗ trợ 
-|       |-- booking-detail/  # Chi tiết một đơn đặt lịch chăm sóc
-|       |   |-- booking-detail.css
-|       |   |-- booking-detail.html
-|       |   `-- booking-detail.js
-|       |-- bookings/        # Danh sách lịch sử các lần đặt lịch
-|       |   |-- bookings.css
-|       |   |-- bookings.html
-|       |   `-- bookings.js
-|       |-- dashboard/       # Trang Tổng quan tài khoản (Dashboard chính)
-|       |   |-- dashboard.css
-|       |   |-- dashboard.html
-|       |   `-- dashboard.js
-|       |-- loyalty/         # Hệ thống hạng thành viên & Đổi điểm (Paw Points)
-|       |   |-- loyalty.css
-|       |   |-- loyalty.html
-|       |   `-- loyalty.js
-|       |-- order-detail/    # Xem chi tiết lịch trình 1 đơn hàng đã mua
-|       |   |-- order-detail.css
-|       |   |-- order-detail.html
-|       |   |-- order-detail.js
-|       |   `-- return-form.css # Form điền lý do khi nhấn nút Trả hàng
-|       |-- orders/          # Danh sách lịch sử mua hàng
-|       |   |-- orders.css
-|       |   |-- orders.html
-|       |   `-- orders.js
-|       |-- pet-diary/       # Sổ Nhật ký sức khỏe/chăm sóc thú cưng
-|       |   |-- pet-diary-init.js
-|       |   |-- pet-diary.css
-|       |   |-- pet-diary.html
-|       |   `-- pet-diary.js
-|       |-- pet-profile/     # Quản lý danh sách Thú cưng cá nhân
-|       |   |-- pet-add.css  # Form Thêm mới Thú cưng
-|       |   |-- pet-add.js
-|       |   |-- pet-form.css # CSS form cập nhật thông tin thú cưng
-|       |   |-- pet-profile-init.js
-|       |   |-- pet-profile-page.js
-|       |   |-- pet-profile.css
-|       |   |-- pet-profile.html
-|       |   `-- pet-profile.js
-|       |-- return-detail/   # Xem tiến trình xử lý một yêu cầu Trả hàng
-|       |   |-- return-detail.css
-|       |   |-- return-detail.html
-|       |   `-- return-detail.js
-|       |-- settings/        # Cài đặt tài khoản (Đổi mật khẩu, Sửa Profile)
-|       |   |-- settings.css
-|       |   |-- settings.html
-|       |   `-- settings.js
-|       |-- support-create/  # Tạo mới một Yêu cầu Hỗ trợ (Ticket)
-|       |   `-- support-create.html
-|       |-- support-tickets/ # Lịch sử các Ticket đã gửi cho admin
-|       |   |-- support-tickets.css
-|       |   |-- support-tickets.html
-|       |   `-- support-tickets.js
-|       `-- wishlist/        # Trang chứa Sản phẩm/Dịch vụ Yêu thích
-|           |-- wishlist.css
-|           |-- wishlist.html
-|           `-- wishlist.js
-|
-|-- scripts/                 # Core Logic JavaScript của toàn bộ dự án
-|   |-- api/                 # Thư mục xử lý Database và Backend APIs
-|   |   |-- api-global.js    # Khai báo biến toàn cục liên quan đến API
-|   |   |-- api.js           # Lớp Data Access thực thi truy vấn tới Supabase
-|   |   |-- chat.js          # Giao tiếp LLM trả lời khách hàng
-|   |   |-- index.js         # Export file
-|   |   |-- petService.js    # Module API tách biệt chuyên xử lý cho Pet
-|   |   `-- supabase-client.js # Khởi tạo & nạp key kết nối Supabase
-|   |-- rag/                 # RAG/AI Data Logic
-|   |   |-- embed_data.js    # Script node js chuyển text thành Vector AI
-|   |   |-- fix_vector_dimensions.sql # Script DB sửa lỗi độ dài Vector
-|   |   `-- setup_vector_db.sql # Script DB tạo bảng Vector Match
-|   `-- shared/              # Script và Thư viện Dùng chung 
-|       |-- auth.js          # Hệ thống Quản lý Đăng nhập & Phiên (Session)
-|       |-- components.js    # Xử lý Load Header/Footer/Sidebar tĩnh bằng JS
-|       |-- data-loader.js   # Module nạp dữ liệu từ File JSON (nếu không dùng DB)
-|       |-- main.js          # Core Script chạy đầu tiên khi mở web
-|       |-- notifications-handler.js # Xử lý Hiển thị thông báo 
-|       `-- support-handler.js # Module tiện ích dùng cho CSKH
-|
-|-- styles/                  # Định dạng giao diện CSS
-|   `-- style.css            # Tập tin CSS duy nhất, kết hợp style toàn trang
-|
-|-- assets/                  # Tài nguyên tĩnh
-|   `-- images/              # Kho Hình ảnh minh họa, Logo, Icon, Banner
-|
-|-- Docs/                    # Chứa tài liệu System Design, Đặc tả kỹ thuật
-|-- index.html               # Entry point ( redirect ngay sang Landing page)
-|-- server.js                # Code Node.js Express server chạy local backend
-`-- package.json             # File cấu hình NPM (scripts npm run dev, cài đặt lib)
+api/                  API triển khai trên Vercel
+assets/               Ảnh, biểu tượng và tài nguyên tĩnh
+components/           Header, footer và thành phần dùng chung
+docs/                 Tài liệu, nghiệm thu và mục lưu trữ
+pages/admin/          Giao diện quản trị
+pages/user/           Cổng khách hàng
+pages/public/         Các trang công khai
+pages/services/       Danh mục, chi tiết và đặt dịch vụ
+pages/shop/           Cửa hàng, giỏ hàng và thanh toán
+scripts/api/          API và kết nối dữ liệu
+scripts/database/     Migrations và công cụ CSDL
+scripts/shared/       Mã dùng chung
+scripts/test/         Kiểm thử offline và tích hợp
+server.js             Máy chủ phát triển local
 ```
 
----
+## Tài liệu thường dùng
 
-## 🎨 Ngôn Ngữ Thiết Kế
+- [Mục lục tài liệu](docs/README.md)
+- [Thiết kế CSDL 3NF V1](docs/database/PAWPAL_THIET_KE_DATABASE_3NF_V1.md)
+- [Bảng CSDL trên Cloud hiện tại](docs/database/PAWPAL_CSDL_CLOUD_MOI_HIEN_TAI_DANG_BANG.md)
+- [Nghiệm thu và kiểm tra liên thông](docs/acceptance/PAWPAL_DICH_VU_V1_NGHIEM_THU.md)
 
-PawPal sử dụng ngôn ngữ thiết kế **Hybrid (Brand & Product-centric)**:
-- **Màu sắc chủ đạo:** Xanh lục bảo (Forest Green - `#1a4332`), Vàng nhấn (Gold/Yellow - `#f39c12`), Kem nhạt (Warm Cream - `#FAF9F6`).
-- **Typography:** `Playfair Display` (tiêu đề sang trọng) và `Plus Jakarta Sans` (nội dung hiện đại).
-- **Trải nghiệm:** Glassmorphism (hiệu ứng kính mờ), bo góc mềm mại, micro-animations tương tác mượt mà.
+Tài liệu Cloud cũ/self-host và kế hoạch đã hoàn tất nằm trong `docs/archive/`. Việc sắp xếp tài liệu không xóa project hay dữ liệu Supabase nào.
 
----
-
-*Bản quyền © 2026 PawPal Team.*
+Bản quyền © 2026 PawPal Team.

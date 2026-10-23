@@ -2,7 +2,7 @@
 
 > Cập nhật 23/10/2026: ứng dụng chạy với Cloud mới. Bộ tương thích self-host `001–004`, `deploy_local.cjs`, preview/tunnel và các test `self_host_*` đã đưa ra kho lưu trữ ngoài repo. Các lệnh liên quan ở phần lịch sử bên dưới không còn là hướng dẫn chạy hiện tại. Giữ migrations V1 và công cụ phục hồi còn được test dùng; `cloud_connection.cjs` chạy PostgreSQL CLI dùng một lần, không cần database Supabase local. Không xóa hoặc thay đổi database Cloud/local trong đợt dọn repo.
 
-Bộ này tạo đúng danh sách **105 bảng / 906 cột** tại mục 15 của [thiết kế V1](../../../PAWPAL_THIET_KE_DATABASE_3NF_V1.md). Khác với bộ `self-host/001–004` tương thích mã cũ. Các bảng Auth và Storage do Supabase quản lý được giữ nguyên, không tính vào 105 bảng.
+Bộ này tạo đúng danh sách **105 bảng / 906 cột** tại mục 15 của [thiết kế V1](../../../docs/database/PAWPAL_THIET_KE_DATABASE_3NF_V1.md). Khác với bộ `self-host/001–004` tương thích mã cũ. Các bảng Auth và Storage do Supabase quản lý được giữ nguyên, không tính vào 105 bảng.
 
 ## Thành phần
 
@@ -15,12 +15,12 @@ Bộ này tạo đúng danh sách **105 bảng / 906 cột** tại mục 15 củ
 
 - `014_admin_service_records.sql`: giao dịch biên bản tiếp nhận/bàn giao, nhật ký chăm sóc và phụ phí/dịch vụ đi cùng; có phiên bản, kiểm tra quyền, đồng ý của khách, duyệt và nhật ký kiểm toán. Không thêm bảng/cột, không tạo thanh toán hoặc điểm giả. Kiểm tra ghi: `scripts/test/service_records_v1_stage.cjs` trên bản phục hồi riêng.
 
-- `013_admin_service_bookings.sql`: giao dịch V1 cho tạo lịch chăm sóc/xe một chiều, xác nhận/hủy/đổi nhân viên, danh mục và phản hồi đánh giá. Giữ nguyên 105 bảng/906 cột; đã thử ghi trên bản phục hồi trước khi áp dụng local và Cloud mới. Xem [tiến độ Dịch vụ V1](../../../PAWPAL_DICH_VU_V1_NGHIEM_THU.md) để phân biệt phần đã đạt với biên bản, chi phí và lưu trú còn cần chuyển.
+- `013_admin_service_bookings.sql`: giao dịch V1 cho tạo lịch chăm sóc/xe một chiều, xác nhận/hủy/đổi nhân viên, danh mục và phản hồi đánh giá. Giữ nguyên 105 bảng/906 cột; đã thử ghi trên bản phục hồi trước khi áp dụng local và Cloud mới. Xem [tiến độ Dịch vụ V1](../../../docs/acceptance/PAWPAL_DICH_VU_V1_NGHIEM_THU.md) để phân biệt phần đã đạt với biên bản, chi phí và lưu trú còn cần chuyển.
 
-- `012_admin_pet_profile.sql`: RPC của phân hệ Thú cưng (`save_admin_pet`, `record_admin_pet_weight`, `record_pet_contact`), giữ RLS và ghi hồ sơ/cân/audit trong transaction. Đã thử trên bản phục hồi trước khi áp dụng local và Cloud mới. Xem [nghiệm thu Thú cưng](../../../PAWPAL_THU_CUNG_V1_NGHIEM_THU.md). Không chạy lại bootstrap schema cho thay đổi này.
+- `012_admin_pet_profile.sql`: RPC của phân hệ Thú cưng (`save_admin_pet`, `record_admin_pet_weight`, `record_pet_contact`), giữ RLS và ghi hồ sơ/cân/audit trong transaction. Đã thử trên bản phục hồi trước khi áp dụng local và Cloud mới. Xem [nghiệm thu Thú cưng](../../../docs/acceptance/PAWPAL_THU_CUNG_V1_NGHIEM_THU.md). Không chạy lại bootstrap schema cho thay đổi này.
 
 - `model.cjs`: đọc từ điển V1, chỉ định kiểu/NULL/default; dừng nếu danh sách không còn 105 bảng/906 cột hoặc có thuộc tính chưa định kiểu.
-- `generate.cjs`: sinh `001_schema.sql` cùng [từ điển vật lý](../../../PAWPAL_DATABASE_V1_DAC_TA_VAT_LY.md); không tự chạy migration.
+- `generate.cjs`: sinh `001_schema.sql` cùng [từ điển vật lý](../../../docs/database/PAWPAL_DATABASE_V1_DAC_TA_VAT_LY.md); không tự chạy migration.
 - `001_schema.sql`: bảng/cột/comment, 160 FK, PK/UQ/CHECK, unique tổ hợp/partial và exclusion cho khoảng giá/đặt phòng/lịch ca; RLS bật toàn bộ bảng.
 - `002_rules.sql`, `003_integrity.sql`: quy tắc liên bảng, quyền theo vai trò, các view giá trị suy ra, sổ điểm/kho, kiểm tra tiền và trigger audit.
 - `004_staff_login_context.sql`: RPC chỉ đọc hồ sơ và quyền của Auth user đang gọi để đăng nhập Admin; không nhận Auth ID từ trình duyệt. Đã áp dụng sau khi triển khai V1. Không thêm cột/bảng legacy.
@@ -31,7 +31,7 @@ Bộ này tạo đúng danh sách **105 bảng / 906 cột** tại mục 15 củ
 - `verify_api_local.cjs`: kiểm tra 105 bảng qua REST bằng limit=0; không lấy bản ghi nghiệp vụ và không in key.
 - `export_cloud_reference_data.sql`: chạy trên SQL Editor của Cloud cũ để lấy 33 nhóm danh mục/cấu hình với các cột cho phép; chỉ tạo hàm tạm pg_temp và đọc dữ liệu. Tự báo bảng/cột chưa có, không đọc Auth, khách/đơn hoặc secret. Chưa phải SQL import; kết quả phải ánh xạ lại sang V1 trước khi nạp.
 - `export_cloud_business_data.sql`: xuất các bảng nghiệp vụ public để chuyển tiếp khách, thú cưng, đơn/lịch, điểm, nhân sự và dữ liệu khác. Có phân trang và metadata kiểu/khóa; lọc các bảng/cột xác thực và dòng setting chứa cấu hình bí mật. Không phải full backup, không xuất dữ liệu Auth hoặc nội dung file Storage. Cần ánh xạ và đối soát trước khi nhập vào V1, không chạy chép đè các danh mục đã nhập.
-- `import_cloud_catalogs.cjs`: đọc hai bản xuất được cung cấp, đối chiếu 100 dòng giá đầu với bản đủ 102 dòng, chuẩn hóa và tạm giữ dữ liệu sai. Backup local, thử import có đầy đủ constraint trong database riêng; chỉ `--apply` mới ghi local trong transaction. Từ chối các bảng đích đã có dữ liệu, không upsert/xóa ghi đè. SQL nhập/bản nguồn nằm ngoài webroot; kết quả tại [báo cáo nhập](../../../PAWPAL_NHAP_DANH_MUC_CLOUD_VAO_V1.md).
+- `import_cloud_catalogs.cjs`: đọc hai bản xuất được cung cấp, đối chiếu 100 dòng giá đầu với bản đủ 102 dòng, chuẩn hóa và tạm giữ dữ liệu sai. Backup local, thử import có đầy đủ constraint trong database riêng; chỉ `--apply` mới ghi local trong transaction. Từ chối các bảng đích đã có dữ liệu, không upsert/xóa ghi đè. SQL nhập/bản nguồn nằm ngoài webroot; kết quả tại [báo cáo nhập](../../../docs/archive/migration/PAWPAL_NHAP_DANH_MUC_CLOUD_VAO_V1.md).
 - `business_export.cjs`, `import_cloud_business.cjs`: đọc bản xuất 80 bảng, kiểm tra phân trang và số dòng; giải mã lớp escape Markdown một lần rồi parse JSON nghiêm ngặt. Lưu nguồn/backup/SQL/từ chối bên ngoài webroot. Thử từng đơn vị nhập trên bản restore riêng với đầy đủ constraint; chỉ áp dụng các đơn vị hợp lệ trong một transaction khi có `--apply`, không tắt trigger. Tạo Auth nhân viên mới bị ban theo lựa chọn người dùng; không copy quyền Cloud. Số dư điểm/kho dùng bút toán mở đầu đã được người dùng chốt; lịch sử cũ không cộng trùng. Không phải bộ nhập mặc định dùng cho dữ liệu khác chưa được rà soát; xem báo cáo nghiệp vụ để biết các nhóm chưa chuyển.
 - `deploy_local.cjs`: chỉ nhận container Compose local đã biết, public phải đúng 21 bảng baseline; tạo full dump ngoài webroot, kiểm tra restore rồi dựng V1 trên database riêng. Với `--apply`, thay public trong một transaction sau khi các kiểm tra qua; không chỉnh cấu trúc Auth/Storage.
 
@@ -62,7 +62,7 @@ Backup cùng log kết quả nằm dưới `D:\Aboutme\Pawpal-infra\supabase-loc
 
 ## Giới hạn nghiệm thu
 
-Phân hệ Khách hàng admin local đã hoàn tất các luồng hiện có theo [bảng nghiệm thu](../../../PAWPAL_KHACH_HANG_V1_NGHIEM_THU.md), gồm migration 008–011 (trạng thái/ghi chú, điểm, thêm/sửa/gỡ/khôi phục thú cưng). Công cụ `customer_completion_local.cjs prepare` tạo backup và database/API phục hồi riêng để thử ledger; `apply <tên migration>` thử trên bản phục hồi rồi áp dụng local; `finish` kiểm tra định nghĩa RPC, backup sau triển khai và dọn môi trường thử. Không chạy bài `_stage` vào database thật hoặc tắt trigger ledger để dọn dữ liệu thử. Các đoạn mô tả chỉ mới có form thêm/sửa bên dưới là mốc nghiệm thu trước đợt hoàn tất.
+Phân hệ Khách hàng admin local đã hoàn tất các luồng hiện có theo [bảng nghiệm thu](../../../docs/acceptance/PAWPAL_KHACH_HANG_V1_NGHIEM_THU.md), gồm migration 008–011 (trạng thái/ghi chú, điểm, thêm/sửa/gỡ/khôi phục thú cưng). Công cụ `customer_completion_local.cjs prepare` tạo backup và database/API phục hồi riêng để thử ledger; `apply <tên migration>` thử trên bản phục hồi rồi áp dụng local; `finish` kiểm tra định nghĩa RPC, backup sau triển khai và dọn môi trường thử. Không chạy bài `_stage` vào database thật hoặc tắt trigger ledger để dọn dữ liệu thử. Các đoạn mô tả chỉ mới có form thêm/sửa bên dưới là mốc nghiệm thu trước đợt hoàn tất.
 
 Migration `007_update_customer_profile.sql` đã áp dụng cho riêng modal Sửa hồ sơ khách. `node scripts/database/v1/apply_customer_profile_local.cjs` từ thư mục gốc tạo backup, phục hồi database riêng, kiểm tra rollback khi audit lỗi rồi áp dụng migration. RPC giữ quyền invoker/RLS, không thay đổi điểm khi đổi hạng; phiên bản customer cũ trả HTTP 409. Kiểm tra Chrome/API: `node scripts/test/self_host_v1_customer_edit_live.cjs`. Khách/Auth thử được dọn; audit bất biến của thao tác thử được giữ.
 

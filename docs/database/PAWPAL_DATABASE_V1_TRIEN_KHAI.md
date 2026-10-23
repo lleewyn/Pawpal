@@ -2,7 +2,7 @@
 
 Ngày: 21/10/2026. Môi trường: Supabase self-host trên máy hiện tại, database `postgres`, schema `public`. Thiết kế nguồn: [3NF V1](PAWPAL_THIET_KE_DATABASE_3NF_V1.md).
 
-**Trạng thái mới nhất — đã hoàn tất phân hệ Khách hàng trên admin local:** danh sách/lọc/CSV, thêm/sửa khách, địa chỉ, khóa/mở khóa, ghi chú, cộng/trừ và lịch sử điểm, thêm/sửa/gỡ/khôi phục thú cưng, hồ sơ đơn/lịch/phiếu và Realtime đã kiểm tra. Migration 008–011 đã áp dụng, không thêm bảng/cột. Đã thử quyền caller, chống lặp, sửa đồng thời, trừ điểm đồng thời và rollback khi audit lỗi. Xem [bảng nghiệm thu và giới hạn phạm vi](PAWPAL_KHACH_HANG_V1_NGHIEM_THU.md). Các đoạn “khóa khách/điều chỉnh điểm chưa chuyển” phía dưới là mốc trước đợt hoàn tất này. Các phân hệ Dịch vụ, Bán hàng, Khiếu nại và Thú cưng độc lập vẫn cần nghiệm thu riêng.
+**Trạng thái mới nhất — đã hoàn tất phân hệ Khách hàng trên admin local:** danh sách/lọc/CSV, thêm/sửa khách, địa chỉ, khóa/mở khóa, ghi chú, cộng/trừ và lịch sử điểm, thêm/sửa/gỡ/khôi phục thú cưng, hồ sơ đơn/lịch/phiếu và Realtime đã kiểm tra. Migration 008–011 đã áp dụng, không thêm bảng/cột. Đã thử quyền caller, chống lặp, sửa đồng thời, trừ điểm đồng thời và rollback khi audit lỗi. Xem [bảng nghiệm thu và giới hạn phạm vi](../acceptance/PAWPAL_KHACH_HANG_V1_NGHIEM_THU.md). Các đoạn “khóa khách/điều chỉnh điểm chưa chuyển” phía dưới là mốc trước đợt hoàn tất này. Các phân hệ Dịch vụ, Bán hàng, Khiếu nại và Thú cưng độc lập vẫn cần nghiệm thu riêng.
 
 **Cập nhật form Sửa hồ sơ khách hàng:** đã áp dụng `007_update_customer_profile.sql` trên local; giữ nguyên 105 bảng/906 cột. RPC SECURITY INVOKER lưu hồ sơ, điện thoại chính, email liên hệ, hạng, sổ địa chỉ và audit trong một giao dịch, giữ RLS/quyền hiện có. Đổi hạng không tạo hay tăng điểm; email liên hệ không đổi email Auth. Giữ ID địa chỉ, người nhận và mã bưu chính; tỉnh/thành là trường riêng. Hồ sơ chưa có giới tính/ngày sinh/địa chỉ không bị tự điền dữ liệu. Khi đổi số điện thoại chính, trạng thái xác minh cũ bị xóa. Lần sửa dùng phiên bản `customer.updated_at` đã mở form; phiên bản cũ nhận HTTP 409 và form báo cần làm mới. Không bảo đảm phát hiện sửa riêng bảng con từ công cụ ngoài mà không cập nhật phiên bản customer.
 
@@ -12,7 +12,7 @@ Kiểm thử: `node scripts/test/self_host_v1_customer_edit_live.cjs` đã qua C
 
 **Cập nhật giao diện đọc Khách hàng:** preview `http://localhost:3001/admin/login` đã đọc V1 cho danh sách, điện thoại chính, địa chỉ, thú cưng và cân nặng, hạng thành viên, chính sách hạng, số dư và lịch sử điểm. Hạng lấy từ quan hệ membership; điểm lấy từ sổ giao dịch, không suy ra hạng theo điểm. Hồ sơ đọc đơn/lịch/ticket dùng cột V1; thanh toán đơn hiển thị “Chưa đối soát” trong khi chưa triển khai đối soát giao dịch. Đã kiểm tra bằng Chrome với Admin thật: 35 khách, 22 membership, 4 hạng, 14 bút toán và tổng 7.964 điểm; 10 dòng/trang, không gọi Cloud và không có REST lỗi trong luồng đọc. Kiểm tra: `node scripts/test/self_host_v1_customers_read_live.cjs`. Chưa nghiệm thu CRUD toàn phân hệ.
 
-**Cập nhật sau nhập nghiệp vụ:** đã chuyển phần hợp lệ từ bản xuất Cloud 80 bảng/2.167 dòng: 35 khách, 76 địa chỉ, 82 thú cưng, 16 nhân viên thêm mới bị khóa Auth, 71 lịch và 23 đơn cùng các dữ liệu phụ thuộc. Giữ số dư điểm 7.964 và tồn 4.382 bằng bút toán chuyển hệ thống theo lựa chọn người dùng. Admin local cũ giữ nguyên. Không phải tất cả dòng nguồn đã nhập: các lỗi tổng tiền, ngày sinh tương lai hoặc thiếu quan hệ được lưu riêng; xem [báo cáo chuyển dữ liệu nghiệp vụ](PAWPAL_NHAP_DU_LIEU_NGHIEP_VU_V1.md). Các đoạn mô tả database rỗng bên dưới là mốc nghiệm thu schema trước nhập dữ liệu.
+**Cập nhật sau nhập nghiệp vụ:** đã chuyển phần hợp lệ từ bản xuất Cloud 80 bảng/2.167 dòng: 35 khách, 76 địa chỉ, 82 thú cưng, 16 nhân viên thêm mới bị khóa Auth, 71 lịch và 23 đơn cùng các dữ liệu phụ thuộc. Giữ số dư điểm 7.964 và tồn 4.382 bằng bút toán chuyển hệ thống theo lựa chọn người dùng. Admin local cũ giữ nguyên. Không phải tất cả dòng nguồn đã nhập: các lỗi tổng tiền, ngày sinh tương lai hoặc thiếu quan hệ được lưu riêng; xem [báo cáo chuyển dữ liệu nghiệp vụ](../archive/migration/PAWPAL_NHAP_DU_LIEU_NGHIEP_VU_V1.md). Các đoạn mô tả database rỗng bên dưới là mốc nghiệm thu schema trước nhập dữ liệu.
 
 ## Kết quả thực tế
 
@@ -35,10 +35,10 @@ Sau triển khai, không có khách, thú cưng hoặc đơn hàng thử nghiệ
 
 ## SQL và đặc tả
 
-- [Bộ migration V1 và cách kiểm tra](scripts/database/v1/README.md).
+- [Bộ migration V1 và cách kiểm tra](../../scripts/database/v1/README.md).
 - [Đặc tả kiểu dữ liệu, NULL/default và khóa cho 906 cột](PAWPAL_DATABASE_V1_DAC_TA_VAT_LY.md).
 - [Báo cáo metadata đang chạy](scripts/database/self-host/schema-audit.generated.md): toàn bộ bảng/cột, FK, CHECK, index, RLS, Realtime, view và trigger thực tế.
-- [Báo cáo sai khác trước khi chuyển](PAWPAL_DOI_CHIEU_DATABASE_SELF_HOST_VOI_3NF_V1.md): lưu lịch sử vì sao phải thay baseline.
+- [Báo cáo sai khác trước khi chuyển](../archive/migration/PAWPAL_DOI_CHIEU_DATABASE_SELF_HOST_VOI_3NF_V1.md): lưu lịch sử vì sao phải thay baseline.
 
 ## Kiểm tra đã qua
 
@@ -62,7 +62,7 @@ Các bản sao hiện ở cùng máy, chưa phải lịch backup tự động ho
 
 Studio local đã sửa lỗi BasicAuth hỏi mật khẩu lặp giữa các URL. File hạ tầng `volumes/api/envoy/lds.template.yaml` thêm Lua response filter cố định challenge thành `Basic realm="Pawpal Supabase Studio"`; Envoy 1.39.1 không có trường realm trong BasicAuth proto nên không thêm trường cấu hình không hỗ trợ. Chỉ sửa tên vùng xác thực, không bỏ BasicAuth, không đổi password và không mở cổng. Đã kiểm tra bằng browser không dùng httpCredentials: chỉ nhập một lần, bảng customer tải đủ 35 records và manifest/version/profile đều qua; anonymous vẫn 401. Test hồi quy: `scripts/test/self_host_studio_auth_live.cjs`. Cấu hình cũ được sao lưu ngoài webroot dưới `backups/studio-basic-realm-*`.
 
-**Cập nhật dữ liệu danh mục:** đã nhập 283 dòng chuẩn hóa từ bản xuất Cloud, gồm 4 hạng, 22 dịch vụ, 37 sản phẩm, 41 biến thể và 69 dòng giá của các dịch vụ được giữ. Những dòng QA, không đúng phạm vi hoặc không hợp lệ chưa nhập và được ghi rõ trong [báo cáo nhập](PAWPAL_NHAP_DANH_MUC_CLOUD_VAO_V1.md). Đã kiểm tra Admin thật đọc qua REST/RLS và join nhóm dịch vụ; không thêm khách, đơn, tồn kho hoặc số dư giả.
+**Cập nhật dữ liệu danh mục:** đã nhập 283 dòng chuẩn hóa từ bản xuất Cloud, gồm 4 hạng, 22 dịch vụ, 37 sản phẩm, 41 biến thể và 69 dòng giá của các dịch vụ được giữ. Những dòng QA, không đúng phạm vi hoặc không hợp lệ chưa nhập và được ghi rõ trong [báo cáo nhập](../archive/migration/PAWPAL_NHAP_DANH_MUC_CLOUD_VAO_V1.md). Đã kiểm tra Admin thật đọc qua REST/RLS và join nhóm dịch vụ; không thêm khách, đơn, tồn kho hoặc số dư giả.
 
 **Đã tạo database theo từ điển V1; chưa chuyển xong ứng dụng sang V1.** Đăng nhập Admin trên cổng 3001 đã chuyển sang `get_staff_login_context()`, lấy trạng thái việc làm và quyền từ quan hệ V1, không đọc account_status/system_role cũ hoặc ghi last_login_at. Đã kiểm tra trình duyệt: Admin thật đăng nhập vào khung Admin, sai mật khẩu, lỗi RPC, tài khoản khách, staff ngừng hoạt động/chưa được cấp quyền và luồng bắt đổi mật khẩu qua endpoint máy chủ. Không dùng quyền mặc định ADMIN khi thiếu dữ liệu.
 

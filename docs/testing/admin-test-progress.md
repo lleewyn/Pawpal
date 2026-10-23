@@ -661,7 +661,7 @@ Sau mỗi lượt kiểm thử hoặc sửa lỗi, bắt buộc cập nhật nga
   3. *Bọc khối `try...catch` và chuẩn hóa thông báo lỗi*: Bổ sung `try...catch` cho tất cả các thao tác lưu cấu hình (Cửa hàng, Thanh toán, Vận chuyển, Đặt lịch) và chuẩn hóa kiểu toast lỗi sang `'danger'` (khắc phục việc dùng `'error'` không có trong bảng màu thông báo).
   4. *Khắc phục đóng modal tác động đa phân hệ*: Trong `settings.js`, chuẩn hóa nút `btnConfirmAndSyncImpact` để `await` callback bất đồng bộ và gọi hàm đóng modal chuẩn `closeModal('impactConfirmModalOverlay')` thay vì ẩn `style.display` thủ công.
   5. *Đồng bộ trạng thái đối tác thẻ 5*: Cập nhật thẻ kết nối đối tác API phản ánh chính xác trạng thái thực tế từ `systemConfig` (GHN: Đã cấu hình / Chưa cấu hình; MoMo, VNPay: Đang kích hoạt / Tạm tắt).
-  6. *Tuân thủ nghiêm ngặt quy tắc [AGENTS.md](file:///d:/Aboutme/MyProject/Pawpal/AGENTS.md)*: Triệt tiêu toàn bộ dấu hai chấm `:` ở cuối nhãn trường thông tin (`.info-label`, `.filter-label`), chuẩn hóa viết hoa Sentence Case thuần Tiếng Việt, loại bỏ ngoặc đơn thừa ("Mã số thuế VAT", "Phí nội thành và ngoại tỉnh", "Giao hỏa tốc 2 giờ", "Công suất tối đa mỗi ca", "Hủy miễn phí và phí trễ").
+  6. *Tuân thủ nghiêm ngặt quy tắc [AGENTS.md](../../AGENTS.md)*: Triệt tiêu toàn bộ dấu hai chấm `:` ở cuối nhãn trường thông tin (`.info-label`, `.filter-label`), chuẩn hóa viết hoa Sentence Case thuần Tiếng Việt, loại bỏ ngoặc đơn thừa ("Mã số thuế VAT", "Phí nội thành và ngoại tỉnh", "Giao hỏa tốc 2 giờ", "Công suất tối đa mỗi ca", "Hủy miễn phí và phí trễ").
 - **Kiểm thử tự động trên CSDL Supabase thật (`pawpal_setting`):**
   - Đọc thành công bản ghi `system_config` hiện hữu từ Supabase.
   - Cập nhật (upsert) trường cấu hình với khóa `system_config` thành công.
@@ -781,8 +781,8 @@ Sau mỗi lượt kiểm thử hoặc sửa lỗi, bắt buộc cập nhật nga
 
 - **Rà soát & Sửa lỗi logic điều hướng, chống rò rỉ bộ lắng nghe sự kiện (Listener Stacking):**
   1. *Khắc phục nhân bản Event Listener*:
-     - Tách biệt logic khởi tạo DOM event listener thành `setupLiveChatEventListeners()` có cờ bảo vệ `isLiveChatEventsInitialized` trong [tab-chatbot-live.js](file:///d:/Aboutme/MyProject/Pawpal/pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js). Ngăn chặn tình trạng nhân bản hàng loạt bộ lắng nghe sự kiện khi chuyển đổi qua lại giữa 3 subtab (*Trực chat*, *Trợ lý AI*, *Quy định*).
-     - Duy trì biến bảo vệ `copilotBound` trong [tab-chatbot-copilot.js](file:///d:/Aboutme/MyProject/Pawpal/pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js) và `rulesHubInitialized` trong [tab-chatbot-rules.js](file:///d:/Aboutme/MyProject/Pawpal/pages/admin/modules/chatbot/subtabs/tab-chatbot-rules.js).
+     - Tách biệt logic khởi tạo DOM event listener thành `setupLiveChatEventListeners()` có cờ bảo vệ `isLiveChatEventsInitialized` trong [tab-chatbot-live.js](../../pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js). Ngăn chặn tình trạng nhân bản hàng loạt bộ lắng nghe sự kiện khi chuyển đổi qua lại giữa 3 subtab (*Trực chat*, *Trợ lý AI*, *Quy định*).
+     - Duy trì biến bảo vệ `copilotBound` trong [tab-chatbot-copilot.js](../../pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js) và `rulesHubInitialized` trong [tab-chatbot-rules.js](../../pages/admin/modules/chatbot/subtabs/tab-chatbot-rules.js).
   2. *Sửa lỗi schema và ràng buộc toàn vẹn CSDL*:
      - **Ràng buộc kênh liên lạc (`chat_conversation_channel_check`)**: CSDL Supabase chỉ chấp nhận giá trị kênh hợp lệ `'web'`, thay vì `'web_chat'`.
      - **Ràng buộc trạng thái phiên hội thoại (`chat_conversation_status_check`)**: Xác nhận các trạng thái hợp lệ gồm `'bot_handling'`, `'waiting_agent'`, `'agent_handling'`, `'resolved'`, `'closed'`.

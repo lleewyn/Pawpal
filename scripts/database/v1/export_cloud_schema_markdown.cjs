@@ -38,7 +38,7 @@ data.tables.forEach((t,i)=>{
 add('');add('## 3. View public');add('');add('| STT | View | Loại |');add('| :---: | --- | --- |');
 data.views.forEach((v,i)=>add(`| ${i+1} | \`${v.name}\` | ${v.kind==='m'?'Materialized view':'View'} |`));
 add('');add('## 4. Cách cập nhật');add('');add('Chạy `node scripts/database/v1/export_cloud_schema_markdown.cjs`. Lệnh chỉ đọc metadata Cloud; ghi lại file Markdown này trong workspace. Không sửa thiết kế logic gốc và không thay đổi CSDL.');add('');
-const destination='PAWPAL_CSDL_CLOUD_MOI_HIEN_TAI_DANG_BANG.md';
+const destination='docs/database/PAWPAL_CSDL_CLOUD_MOI_HIEN_TAI_DANG_BANG.md';
 fs.writeFileSync(destination,lines.join('\n'),'utf8');
 if((lines.join('\n').match(/^### \d+\./gm)||[]).length!==data.tables.length)throw Error('Incomplete dictionary');
 console.log(`Created ${destination}: ${data.tables.length} tables, ${total} columns, ${data.views.length} views; metadata only.`);

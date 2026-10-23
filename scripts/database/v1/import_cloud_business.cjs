@@ -274,7 +274,7 @@ END $$;\nBEGIN;\n`;
    '## Lý do chưa chuyển (chỉ tổng hợp, không công khai bản ghi cá nhân)','',
    ...[...new Set([...dispositions.filter(d=>d.state==='held').map(d=>d.table+': '+d.reason),...outcome.filter(o=>!o.ok).map(o=>units[o.index].table+': PostgreSQL '+o.code)])].map(s=>'- '+escape(s)), '',
    'Cảnh báo chuyển đổi chi tiết, bản nguồn và dòng bị từ chối nằm trong thư mục private nêu trên. Phần chưa chuyển vẫn phải xử lý tiếp theo quan hệ V1; backup này nằm cùng máy, chưa thay bản sao ngoài máy. Các màn hình nghiệp vụ cũ vẫn cần chuyển mã và nghiệm thu riêng.', ''];
-  fs.writeFileSync(path.join(root,'PAWPAL_NHAP_DU_LIEU_NGHIEP_VU_V1.md'),report.join('\n'),'utf8');
+  fs.writeFileSync(path.join(root,'docs/archive/migration/PAWPAL_NHAP_DU_LIEU_NGHIEP_VU_V1.md'),report.join('\n'),'utf8');
   fs.writeFileSync(path.join(folder,'dispositions.private.txt'),JSON.stringify({dispositions,warnings,outcome,units:units.map(({statements,...rest})=>rest)},null,2));
   console.log((applied?'APPLIED':'DRY RUN')+' migration; report PAWPAL_NHAP_DU_LIEU_NGHIEP_VU_V1.md');
  }finally{

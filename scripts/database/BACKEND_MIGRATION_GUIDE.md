@@ -1,16 +1,16 @@
 # HƯỚNG DẪN TRIỂN KHAI MIGRATION SUPABASE CHO 8 PHÂN HỆ ADMIN PAWPAL-ER
 ## (ĐẢM BẢO 100% TÍNH TOÀN VẸN KHÓA CHÍNH VÀ KHÓA NGOẠI THEO CSDLDEMO)
 
-> **Tài liệu chuẩn CSDL:** [CSDLdemo](file:///d:/Aboutme/MyProject/Pawpal/CSDLdemo)  
-> **Tài liệu tham chiếu:** [PAWPAL_ADMIN_AUDIT_LOI_8_PHAN_HE.md](file:///d:/Aboutme/MyProject/Pawpal/pages/admin/PAWPAL_ADMIN_AUDIT_LOI_8_PHAN_HE.md)  
-> **Tệp thực thi SQL:** [20261017_admin_audit_backend_enhancements.sql](file:///d:/Aboutme/MyProject/Pawpal/scripts/database/20261017_admin_audit_backend_enhancements.sql)  
+> **Tài liệu chuẩn CSDL:** [CSDLdemo](../../docs/archive/database/CSDLdemo)
+> **Tài liệu tham chiếu:** [PAWPAL_ADMIN_AUDIT_LOI_8_PHAN_HE.md](file:///d:/Aboutme/MyProject/Pawpal/pages/admin/PAWPAL_ADMIN_AUDIT_LOI_8_PHAN_HE.md)
+> **Tệp thực thi SQL:** [20261017_admin_audit_backend_enhancements.sql](file:///d:/Aboutme/MyProject/Pawpal/scripts/database/20261017_admin_audit_backend_enhancements.sql)
 > **Ngày cập nhật:** 17/10/2026  
 
 ---
 
 ## 1. BẢNG ĐỐI CHIẾU KHÓA CHÍNH (PK) VÀ KHÓA NGOẠI (FK) CHUẨN XÁC
 
-Toàn bộ các bảng và hàm RPC trong tệp SQL đã được đối chiếu nghiêm ngặt với 62 thực thể trong [CSDLdemo](file:///d:/Aboutme/MyProject/Pawpal/CSDLdemo):
+Toàn bộ các bảng và hàm RPC trong tệp SQL đã được đối chiếu nghiêm ngặt với 62 thực thể trong [CSDLdemo](../../docs/archive/database/CSDLdemo):
 
 | Bảng dữ liệu | Khóa chính (PK) | Khóa ngoại (FK) | Bảng được tham chiếu | Hành động khi xóa (ON DELETE) |
 |---|---|---|---|---|

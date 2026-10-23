@@ -592,7 +592,7 @@ sequenceDiagram
     * Khi nhân viên nghỉ việc, chuyển công tác hoặc có dấu hiệu vi phạm an toàn, Quản lý bấm "Khóa tài khoản" ➔ chuyển `account_status: 'LOCKED'`.
     * Hệ thống vô hiệu hóa ngay tức thì phiên đăng nhập của nhân viên đó. Mở khóa sẽ hoàn trả trạng thái `ACTIVE`.
   - **Bảo mật Service Role tuyệt đối (Zero-Key Leakage)**:
-    * Toàn bộ thao tác tạo tài khoản (`auth.admin.createUser`), cập nhật mật khẩu (`auth.admin.updateUserById`) được xử lý an toàn tại Backend Express API ([scripts/api/staff_auth.js](file:///d:/Aboutme/MyProject/Pawpal/scripts/api/staff_auth.js)) thông qua `SUPABASE_SERVICE_ROLE_KEY`. Phía Client Admin tuyệt đối không nắm giữ hay để lộ Service Key.
+    * Toàn bộ thao tác tạo tài khoản (`auth.admin.createUser`), cập nhật mật khẩu (`auth.admin.updateUserById`) được xử lý an toàn tại Backend Express API ([scripts/api/staff_auth.js](../../scripts/api/staff_auth.js)) thông qua `SUPABASE_SERVICE_ROLE_KEY`. Phía Client Admin tuyệt đối không nắm giữ hay để lộ Service Key.
 
 ---
 
@@ -875,21 +875,21 @@ Các tài khoản này **BỊ CHẶN tại trang tra cứu `/return-guest`** (kh
 
 ### 2. Các nội dung vừa được cập nhật trong mã nguồn
 
-1. **Chuẩn hóa API tra cứu định danh [scripts/api/customer_auth.js](file:///d:/Aboutme/MyProject/Pawpal/scripts/api/customer_auth.js):**
+1. **Chuẩn hóa API tra cứu định danh [scripts/api/customer_auth.js](../../scripts/api/customer_auth.js):**
    - Bổ sung trường `isMember` và tính toán chính xác `isTemporary`: Một tài khoản chỉ được coi là thành viên khi `is_temporary = false` **VÀ** đã tồn tại `auth_user_id`.
    - Nếu tài khoản chưa có thông tin xác thực, API trả về `isTemporary: true`, cho phép thực hiện luồng kích hoạt tạo mật khẩu.
 
-2. **Khóa chặn Thành viên tại trang tra cứu [pages/public/return-guest/return-guest.js](file:///d:/Aboutme/MyProject/Pawpal/pages/public/return-guest/return-guest.js):**
+2. **Khóa chặn Thành viên tại trang tra cứu [pages/public/return-guest/return-guest.js](../../pages/public/return-guest/return-guest.js):**
    - Loại bỏ hoàn toàn việc đọc `localStorage` cũ gây sai lệch.
    - Khi bấm **Tìm kiếm**: Hệ thống gọi API kiểm tra trạng thái trên CSDL. Nếu là Thành viên chính thức (`isMember: true`), hệ thống **chặn ngay lập tức** và hiển thị hộp cảnh báo:
      > *"Số điện thoại đã được đăng ký Thành viên. Số điện thoại [SĐT] thuộc tài khoản thành viên chính thức Pawpal. Trang tra cứu này chỉ phục vụ cho khách vãng lai. Vui lòng đăng nhập để xem đầy đủ hồ sơ, lịch hẹn và hưởng trọn quyền lợi tích điểm."* kèm nút **[Đăng nhập ngay]**.
    - Nếu là Khách vãng lai: Tiến hành gửi OTP và hiển thị danh sách đơn hàng/lịch hẹn.
 
-3. **Thêm Banner khuyến khích tạo mật khẩu (Không ép buộc) [pages/public/return-guest/return-guest.html](file:///d:/Aboutme/MyProject/Pawpal/pages/public/return-guest/return-guest.html):**
+3. **Thêm Banner khuyến khích tạo mật khẩu (Không ép buộc) [pages/public/return-guest/return-guest.html](../../pages/public/return-guest/return-guest.html):**
    - Ngay phía trên bảng kết quả tra cứu của khách vãng lai, hiển thị banner tinh tế:
      > *"Bạn đang tra cứu dưới tư cách Khách vãng lai. Thiết lập mật khẩu để tự động liên kết đơn hàng, tích lũy điểm PawPoints và nhận ngay 50 điểm chào mừng."* kèm nút **[Thiết lập mật khẩu]**.
 
-4. **Tự động chuyển tiếp SĐT sang trang Đăng nhập [pages/public/login/login.js](file:///d:/Aboutme/MyProject/Pawpal/pages/public/login/login.js):**
+4. **Tự động chuyển tiếp SĐT sang trang Đăng nhập [pages/public/login/login.js](../../pages/public/login/login.js):**
    - Khi khách vãng lai bấm nút chuyển từ trang tra cứu sang `/login?phone=...`, ô SĐT được tự động điền sẵn.
    - Khách bấm **Tiếp tục** -> Hệ thống nhận diện đây là khách vãng lai -> Hiển thị màn hình thiết lập mật khẩu qua mã OTP -> Sau khi nhập OTP và mật khẩu mới, toàn bộ dữ liệu đơn cũ được giữ nguyên, tài khoản đổi thành Thành viên chính thức và nhận 50 điểm PawPoint chào mừng.
 

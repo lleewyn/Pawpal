@@ -1,8 +1,8 @@
 # Schema tương thích cho mốc self-host đầu tiên
 
-**Tài liệu này là lịch sử baseline.** Database local hiện đã chuyển sang 105 bảng V1. Xem [báo cáo triển khai V1](PAWPAL_DATABASE_V1_TRIEN_KHAI.md); các kiểm thử baseline dưới đây không phải kiểm thử mã giao diện trên V1.
+**Tài liệu này là lịch sử baseline.** Database local hiện đã chuyển sang 105 bảng V1. Xem [báo cáo triển khai V1](../database/PAWPAL_DATABASE_V1_TRIEN_KHAI.md); các kiểm thử baseline dưới đây không phải kiểm thử mã giao diện trên V1.
 
-**Mốc này chỉ mô tả baseline tương thích, không phải schema V1.** Đã đối chiếu database local: 21 bảng hiện có, 20 bảng trùng tên V1, 1 bảng ngoài V1 và 85 bảng V1 chưa dựng. Xem [báo cáo sai khác và kế hoạch chuyển đổi](PAWPAL_DOI_CHIEU_DATABASE_SELF_HOST_VOI_3NF_V1.md). Các kiểm thử bên dưới không chứng nhận đã triển khai 3NF V1; công việc schema tiếp theo theo V1.
+**Mốc này chỉ mô tả baseline tương thích, không phải schema V1.** Đã đối chiếu database local: 21 bảng hiện có, 20 bảng trùng tên V1, 1 bảng ngoài V1 và 85 bảng V1 chưa dựng. Xem [báo cáo sai khác và kế hoạch chuyển đổi](../archive/migration/PAWPAL_DOI_CHIEU_DATABASE_SELF_HOST_VOI_3NF_V1.md). Các kiểm thử bên dưới không chứng nhận đã triển khai 3NF V1; công việc schema tiếp theo theo V1.
 
 Ngày rà soát: 21/10/2026. Phạm vi: đăng nhập Admin → tạo khách → thêm thú cưng → mở hồ sơ → reload. Đây là danh mục phụ thuộc từ mã, chưa phải SQL đã nghiệm thu hoặc bản xác nhận schema Cloud.
 
@@ -51,4 +51,4 @@ Chưa hoàn thành các điều kiện trên. Danh mục này chỉ bao phủ m�
 
 Mốc đầu đã dựng bằng `scripts/database/self-host/001_local_core.sql`, gồm 17 bảng và các hàm/policy cần cho kiểm tra ban đầu. Đã tạo Admin local; 26 kiểm tra API/RLS/Realtime đạt. Trình duyệt đã kiểm tra đăng nhập, tạo khách kèm thú cưng, reload và xem danh sách thú cưng mà không gọi Cloud. Dữ liệu tồn tại sau restart database.
 
-Các ghi chú “chưa hoàn thành” ở trên mô tả thời điểm lập danh mục. Hiện bộ dựng nền cho mốc đầu đã chạy được; schema toàn ứng dụng, đầy đủ thao tác hồ sơ, restore và triển khai online vẫn chưa hoàn tất. Xem trạng thái chi tiết ở [kế hoạch self-host](PAWPAL_KE_HOACH_SUPABASE_SELF_HOST.md).
+Các ghi chú “chưa hoàn thành” ở trên mô tả thời điểm lập danh mục. Hiện bộ dựng nền cho mốc đầu đã chạy được; schema toàn ứng dụng, đầy đủ thao tác hồ sơ, restore và triển khai online vẫn chưa hoàn tất. Xem trạng thái chi tiết ở [kế hoạch self-host](../archive/migration/PAWPAL_KE_HOACH_SUPABASE_SELF_HOST.md).

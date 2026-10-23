@@ -1,6 +1,6 @@
 # Chuyển dữ liệu Cloud cũ sang Cloud mới theo V1
 
-> Cập nhật 23/10/2026: xem phần “Trạng thái tổng hợp mới nhất” trong [nghiệm thu và kiểm tra liên thông](PAWPAL_DICH_VU_V1_NGHIEM_THU.md). Các ghi chú chưa chuyển/chưa push của những đợt trước bên dưới là lịch sử. Người dùng đã duyệt giao diện lịch Nhân sự hiện tại; các phần đã hoãn không tự đưa lại vào phạm vi. Không truy vấn Logs Cloud.
+> Cập nhật 23/10/2026: xem phần “Trạng thái tổng hợp mới nhất” trong [nghiệm thu và kiểm tra liên thông](../../acceptance/PAWPAL_DICH_VU_V1_NGHIEM_THU.md). Các ghi chú chưa chuyển/chưa push của những đợt trước bên dưới là lịch sử. Người dùng đã duyệt giao diện lịch Nhân sự hiện tại; các phần đã hoãn không tự đưa lại vào phạm vi. Không truy vấn Logs Cloud.
 
 ## Quyết định đã chốt
 
@@ -49,13 +49,13 @@ Phạm vi đã xác nhận độc lập máy cá nhân là **Admin V1 và phần
 
 ## Kết quả rà soát toàn hệ thống sau chuyển
 
-Cập nhật sau Chatbot ngày 22/10/2026: chatbot đã triển khai Cloud/Vercel và nghiệm thu trong phạm vi Trực chat, Trợ lý chỉ tra cứu và Quy định. Chi tiết mức kiểm tra Production, giao dịch hoàn tác và bản phục hồi tại [nghiệm thu Chatbot](PAWPAL_CHATBOT_V1_NGHIEM_THU.md). Không cần ảnh/tệp, camera, gửi Zalo/SMS/email thật hoặc AI tự tạo đơn/đặt lịch trong phạm vi này.
+Cập nhật sau Chatbot ngày 22/10/2026: chatbot đã triển khai Cloud/Vercel và nghiệm thu trong phạm vi Trực chat, Trợ lý chỉ tra cứu và Quy định. Chi tiết mức kiểm tra Production, giao dịch hoàn tác và bản phục hồi tại [nghiệm thu Chatbot](../../acceptance/PAWPAL_CHATBOT_V1_NGHIEM_THU.md). Không cần ảnh/tệp, camera, gửi Zalo/SMS/email thật hoặc AI tự tạo đơn/đặt lịch trong phạm vi này.
 
-Đã hoàn thiện Cấu hình V1, áp migration 057 trên Cloud mới và kiểm tra Production sau triển khai: lưu nguyên tử/phân quyền/xung đột, banner/voucher, bài viết/tri thức thật, thiết lập, biểu phí từng hình thức giao hàng, thông báo công khai và nhật ký. Chi tiết môi trường kiểm tra và giới hạn tại [nghiệm thu Cấu hình](PAWPAL_CAU_HINH_V1_NGHIEM_THU.md). Các báo cáo rà soát ban đầu bên dưới là mốc lịch sử, không thay thế biên bản nghiệm thu cập nhật từng phân hệ.
+Đã hoàn thiện Cấu hình V1, áp migration 057 trên Cloud mới và kiểm tra Production sau triển khai: lưu nguyên tử/phân quyền/xung đột, banner/voucher, bài viết/tri thức thật, thiết lập, biểu phí từng hình thức giao hàng, thông báo công khai và nhật ký. Chi tiết môi trường kiểm tra và giới hạn tại [nghiệm thu Cấu hình](../../acceptance/PAWPAL_CAU_HINH_V1_NGHIEM_THU.md). Các báo cáo rà soát ban đầu bên dưới là mốc lịch sử, không thay thế biên bản nghiệm thu cập nhật từng phân hệ.
 
-Cập nhật Nhân sự 22/10/2026: đã áp migration 029–038 lên Cloud mới, push mã và triển khai Vercel. Đối soát giữ nguyên toàn bộ dữ liệu public, danh tính/mật khẩu/trạng thái khóa Auth; vẫn 17 nhân sự, 16 tài khoản khóa. Đủ 105 bảng/906 cột/160 FK và publication 8 bảng Nhân sự/phân quyền. Kiểm tra Production Nhân sự, Khách hàng, Thú cưng, Dịch vụ và Bán hàng cuối đạt. Đã sửa lỗi chuyển phân hệ khi script còn tải, có kiểm thử cố tình trì hoãn script để tái hiện. Chi tiết phạm vi và giới hạn tại [nghiệm thu Nhân sự V1](PAWPAL_NHAN_SU_V1_NGHIEM_THU.md). Không coi các phân hệ hoặc trang phía khách chưa chuyển là đã hoàn tất.
+Cập nhật Nhân sự 22/10/2026: đã áp migration 029–038 lên Cloud mới, push mã và triển khai Vercel. Đối soát giữ nguyên toàn bộ dữ liệu public, danh tính/mật khẩu/trạng thái khóa Auth; vẫn 17 nhân sự, 16 tài khoản khóa. Đủ 105 bảng/906 cột/160 FK và publication 8 bảng Nhân sự/phân quyền. Kiểm tra Production Nhân sự, Khách hàng, Thú cưng, Dịch vụ và Bán hàng cuối đạt. Đã sửa lỗi chuyển phân hệ khi script còn tải, có kiểm thử cố tình trì hoãn script để tái hiện. Chi tiết phạm vi và giới hạn tại [nghiệm thu Nhân sự V1](../../acceptance/PAWPAL_NHAN_SU_V1_NGHIEM_THU.md). Không coi các phân hệ hoặc trang phía khách chưa chuyển là đã hoàn tất.
 
-Cập nhật 22/10/2026: Admin Bán hàng đã chuyển sang V1 trên Cloud mới và triển khai Vercel. Chi tiết phạm vi, bộ kiểm thử, số liệu đối chiếu, backup và giới hạn tại [nghiệm thu Bán hàng V1](PAWPAL_BAN_HANG_V1_NGHIEM_THU.md). Không coi trang gian hàng phía khách hoặc các phân hệ chưa chuyển là đã hoàn tất theo cập nhật này.
+Cập nhật 22/10/2026: Admin Bán hàng đã chuyển sang V1 trên Cloud mới và triển khai Vercel. Chi tiết phạm vi, bộ kiểm thử, số liệu đối chiếu, backup và giới hạn tại [nghiệm thu Bán hàng V1](../../acceptance/PAWPAL_BAN_HANG_V1_NGHIEM_THU.md). Không coi trang gian hàng phía khách hoặc các phân hệ chưa chuyển là đã hoàn tất theo cập nhật này.
 
 Đã đối soát SQL/REST đủ 105 bảng, mở 30 tab của 9 phân hệ Admin và 10 đường dẫn phía khách. Chi tiết, lỗi còn lại và thứ tự xử lý tại [báo cáo toàn bộ Cloud V1](PAWPAL_DOI_SOAT_TOAN_BO_CLOUD_V1.md). Database khớp local, quyền đọc đúng; nhiều phân hệ vẫn dùng truy vấn legacy và phía khách vẫn gọi Cloud cũ. Đã sửa client không mang phiên Admin của Khiếu nại và triển khai bản `dpl_CnGFdH7ukQFxQhS7HNDiRSA3d9D7`; kiểm tra Khách hàng Production sau sửa vẫn đạt. Không coi toàn bộ chức năng đã nghiệm thu.
 
@@ -64,4 +64,4 @@ Cập nhật 22/10/2026: Admin Bán hàng đã chuyển sang V1 trên Cloud mớ
 
 Đã hoàn thiện ba tab Admin Khiếu nại và áp migration 039–042 lên Cloud mới. Kiểm thử ghi trên bản phục hồi; kiểm tra Cloud thật chỉ đọc xác nhận 25/25 phiếu, bộ lọc/xuất file, hồ sơ khi tải lại và Realtime, không gọi nguồn cũ. Hash toàn bộ dữ liệu public cùng danh tính/mật khẩu/trạng thái khóa Auth giữ nguyên; vẫn 17 nhân viên và 16 tài khoản khóa.
 
-Quyết định đã chốt: Khiếu nại ghi đề xuất/quyết định; hoàn tiền, đổi trả và làm lại thực hiện qua Bán hàng/Dịch vụ, rồi liên kết kết quả thực tế. Không tự cộng điểm/voucher hoặc tạo tiền. Chi tiết kiểm thử và giới hạn tại [nghiệm thu Khiếu nại V1](PAWPAL_KHIEU_NAI_V1_NGHIEM_THU.md). Chấm công, lương, thưởng và hoa hồng tiếp tục ngoài scope.
+Quyết định đã chốt: Khiếu nại ghi đề xuất/quyết định; hoàn tiền, đổi trả và làm lại thực hiện qua Bán hàng/Dịch vụ, rồi liên kết kết quả thực tế. Không tự cộng điểm/voucher hoặc tạo tiền. Chi tiết kiểm thử và giới hạn tại [nghiệm thu Khiếu nại V1](../../acceptance/PAWPAL_KHIEU_NAI_V1_NGHIEM_THU.md). Chấm công, lương, thưởng và hoa hồng tiếp tục ngoài scope.

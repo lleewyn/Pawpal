@@ -191,6 +191,6 @@ try{
  'Các bản ghi trên vẫn còn trong bản nguồn, chưa bị xóa trên Cloud và chưa được tạo trong local. Không tự coi chúng là dữ liệu đã di chuyển thành công.', '',
  '## Ánh xạ/hiệu chỉnh có ghi nhận','',...changes.map(s=>'- '+s),'',
  'Đã thử import vào bản sao V1 rồi đối chiếu từng bảng, khóa ngoại, unique, CHECK và exclusion giá. Việc có danh mục trong database không nghiệm thu các màn hình nghiệp vụ còn dùng schema cũ. Ảnh/file, bank_info và các cột không có trong bản xuất chưa được chuyển.', ''];
- fs.writeFileSync(path.join(root,'PAWPAL_NHAP_DANH_MUC_CLOUD_VAO_V1.md'),report.join('\n'),'utf8');
+ fs.writeFileSync(path.join(root,'docs/archive/migration/PAWPAL_NHAP_DANH_MUC_CLOUD_VAO_V1.md'),report.join('\n'),'utf8');
  console.log(`${applied?'APPLIED':'DRY RUN'}: ${[...mapped.values()].reduce((s,r)=>s+r.length,0)} V1 catalog rows; ${held.length} source rows held outside import. Report: PAWPAL_NHAP_DANH_MUC_CLOUD_VAO_V1.md`);
 }finally{if(created&&/^pawpal_catalogcheck_[a-f0-9]{16}$/.test(stage))docker(['exec','supabase-db','dropdb','-U','supabase_admin','--force',stage]);}

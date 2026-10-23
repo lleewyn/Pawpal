@@ -1,6 +1,6 @@
 # NHẬT KÝ THAY ĐỔI — PAWPAL USER CHATBOT V2 (CHANGELOG_CHATBOT_USER.md)
 
-Tài liệu nhật ký append-only ghi nhận toàn bộ các giai đoạn triển khai, vá lỗi bảo mật, đăng ký endpoint và kiểm thử tự động cho hệ thống Chatbot Khách hàng PawPal V2 theo tài liệu [pages/PAWPAL_CHATBOT_USER_V2_CHIEN_LUOC_KICH_BAN_CODE_E2E.md](pages/PAWPAL_CHATBOT_USER_V2_CHIEN_LUOC_KICH_BAN_CODE_E2E.md).
+Tài liệu nhật ký append-only ghi nhận toàn bộ các giai đoạn triển khai, vá lỗi bảo mật, đăng ký endpoint và kiểm thử tự động cho hệ thống Chatbot Khách hàng PawPal V2 theo tài liệu [pages/PAWPAL_CHATBOT_USER_V2_CHIEN_LUOC_KICH_BAN_CODE_E2E.md](../../../pages/PAWPAL_CHATBOT_USER_V2_CHIEN_LUOC_KICH_BAN_CODE_E2E.md).
 
 ---
 

@@ -4,7 +4,7 @@ const path = require('node:path');
 require('dotenv').config({ quiet: true });
 const root = path.resolve(__dirname, '../..');
 const expected = new Map(); let current;
-for(const line of fs.readFileSync(path.join(root,'CDSLfinal.md'),'utf8').split(/\r?\n/)) {
+for(const line of fs.readFileSync(path.join(root,'docs/archive/database/CDSLfinal.md'),'utf8').split(/\r?\n/)) {
  const p=line.split('\t').map(x=>x.trim());
  if(/^\d+$/.test(p[0])) {current=p[1];expected.set(current,[]);}
  if(current&&p[3])expected.get(current).push(p[3]);

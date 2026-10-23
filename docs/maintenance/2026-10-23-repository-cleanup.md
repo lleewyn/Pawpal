@@ -1,5 +1,14 @@
 # Dọn mã không còn dùng — 23/10/2026
 
+## Gom tài liệu sau khi dọn mã
+
+- Chuyển 35 tài liệu/nguồn tham khảo từ thư mục gốc vào `docs/acceptance`, `docs/database`, `docs/testing`, `docs/business` và `docs/archive`. Ở gốc chỉ giữ hai file Markdown `README.md` và `AGENTS.md`.
+- README được rút gọn thành hướng dẫn chạy và đường dẫn tới [mục lục tài liệu](../README.md). Bỏ hướng dẫn JSON dự phòng, tài khoản mẫu và mô tả chức năng đã cũ khỏi README hiện hành.
+- Kế hoạch Cloud cũ/self-host, báo cáo nhập dữ liệu, thiết kế cũ và đề xuất đã hoãn giữ trong mục lưu trữ; không dùng làm hướng dẫn vận hành hiện tại.
+- Cập nhật 88 liên kết tài liệu và 11 đường dẫn trong công cụ đọc/sinh báo cáo. Mô hình thiết kế sau chuyển vẫn khớp mã băm trước chuyển: 105 bảng/906 thuộc tính trong thiết kế V1; không ghi hoặc đổi schema Cloud.
+- Loại `docs/` khỏi gói triển khai Vercel; tài liệu vẫn có trên GitHub. Các API đang triển khai không đọc thư mục này.
+- Giữ nguyên thư mục HTML chưa theo dõi của người dùng. Không thao tác Supabase Cloud hoặc Docker trong đợt gom tài liệu.
+
 ## Phạm vi đã chốt
 
 Chỉ dọn file/mã trong dự án Pawpal. Không xóa project, tổ chức, tài khoản hoặc dữ liệu Supabase Cloud cũ/mới. Không xóa hay dừng container/database/volume Supabase local. Quyết định này thay thế yêu cầu xóa Cloud cũ trước đó.

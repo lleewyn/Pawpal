@@ -94,5 +94,5 @@ sql.push(`ALTER TABLE public.service_price_matrix ADD CONSTRAINT service_price_n
 for(const t of tables)sql.push(`ALTER TABLE public.${q(t.name)} ENABLE ROW LEVEL SECURITY;`, `REVOKE ALL ON public.${q(t.name)} FROM PUBLIC,anon,authenticated;`, `GRANT ALL ON public.${q(t.name)} TO service_role;`);
 sql.push('-- Application access policies and rules follow in 002_rules.sql.');
 fs.writeFileSync(path.join(__dirname,'001_schema.sql'),sql.join('\n')+'\n','utf8');
-fs.writeFileSync(path.join(root,'PAWPAL_DATABASE_V1_DAC_TA_VAT_LY.md'),doc.join('\n'),'utf8');
+fs.writeFileSync(path.join(root,'docs/database/PAWPAL_DATABASE_V1_DAC_TA_VAT_LY.md'),doc.join('\n'),'utf8');
 console.log('Generated 105 tables, 906 columns and physical dictionary. Fingerprint '+hash);

@@ -89,7 +89,7 @@ const report=['# Đối chiếu dữ liệu danh mục Cloud với V1','',
  '4. Phân loại bản ghi QA/rác, dịch vụ không đúng phạm vi và các tên/nhóm mâu thuẫn; ghi lại cách xử lý thay vì tự đoán hoặc lặng lẽ bỏ.',
  '5. Tạo SQL import theo thứ tự FK, thử trên database riêng với constraint V1 (gồm khoảng giá chồng lấn); chỉ sau khi dữ liệu đủ và ánh xạ rõ mới áp dụng vào local.', '',
  'Báo cáo này không xác nhận đã nhập dữ liệu. Không dùng file JSON/array giả trên giao diện làm cách bù các danh mục đang thiếu.', ''];
-fs.writeFileSync(path.join(root,'PAWPAL_DU_LIEU_CLOUD_DOI_CHIEU_V1.md'),report.join('\n'),'utf8');
+fs.writeFileSync(path.join(root,'docs/archive/migration/PAWPAL_DU_LIEU_CLOUD_DOI_CHIEU_V1.md'),report.join('\n'),'utf8');
 console.log(`Parsed ${datasets.length} datasets / ${datasets.reduce((n,d)=>n+d.exported,0)} rows. Missing price rows: 2. Field/FK findings: ${issues.length}.`);
 console.log('Report: PAWPAL_DU_LIEU_CLOUD_DOI_CHIEU_V1.md');
 console.log('No business data imported. Source archived outside webroot.');

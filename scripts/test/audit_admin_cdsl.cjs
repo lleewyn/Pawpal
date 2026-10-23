@@ -4,7 +4,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
 const schema = new Map();
 let table;
-for (const line of fs.readFileSync(path.join(root, 'CDSLfinal.md'), 'utf8').split(/\r?\n/)) {
+for (const line of fs.readFileSync(path.join(root, 'docs/archive/database/CDSLfinal.md'), 'utf8').split(/\r?\n/)) {
   const p = line.split('\t').map(x => x.trim());
   if (/^\d+$/.test(p[0])) { table = p[1]; schema.set(table, new Set()); }
   if (table && p[3]) schema.get(table).add(p[3]);

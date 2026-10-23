@@ -1,8 +1,8 @@
 # Đối chiếu database self-host với thiết kế 3NF V1
 
-**Tài liệu lịch sử trước chuyển đổi.** Sau lần đối chiếu dưới đây, đã thay public bằng V1 đúng 105 bảng/906 cột. Xem [trạng thái triển khai hiện tại](PAWPAL_DATABASE_V1_TRIEN_KHAI.md). Báo cáo metadata tự sinh được làm mới theo database hiện tại nên không còn là ảnh chụp baseline; bản cũ được lưu trong thư mục backup trước V1 ngoài webroot.
+**Tài liệu lịch sử trước chuyển đổi.** Sau lần đối chiếu dưới đây, đã thay public bằng V1 đúng 105 bảng/906 cột. Xem [trạng thái triển khai hiện tại](../../database/PAWPAL_DATABASE_V1_TRIEN_KHAI.md). Báo cáo metadata tự sinh được làm mới theo database hiện tại nên không còn là ảnh chụp baseline; bản cũ được lưu trong thư mục backup trước V1 ngoài webroot.
 
-Ngày kiểm tra: 21/10/2026. Thiết kế đích: [3NF V1](PAWPAL_THIET_KE_DATABASE_3NF_V1.md). Database kiểm tra: `postgres`, schema `public`, container local `supabase-db`.
+Ngày kiểm tra: 21/10/2026. Thiết kế đích: [3NF V1](../../database/PAWPAL_THIET_KE_DATABASE_3NF_V1.md). Database kiểm tra: `postgres`, schema `public`, container local `supabase-db`.
 
 ## 1. Kết luận và điều chỉnh hướng triển khai
 

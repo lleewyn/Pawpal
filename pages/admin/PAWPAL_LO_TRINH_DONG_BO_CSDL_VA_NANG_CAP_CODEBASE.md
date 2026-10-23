@@ -1,7 +1,7 @@
 # LỘ TRÌNH VÀ CHECKLIST ĐỒNG BỘ CSDL VÀ NÂNG CẤP HỆ THỐNG PAWPAL
 > **Tài liệu chuẩn hóa kiến trúc CSDL & Codebase**  
 > **Phiên bản:** 1.0 — Ngày tạo: 19/10/2026  
-> **Căn cứ thiết kế:** [`CDSLfinal.md`](file:///d:/Aboutme/MyProject/Pawpal/CDSLfinal.md) (62 thực thể) và Schema thực tế Supabase (81 bảng/view)  
+> **Căn cứ thiết kế:** [`CDSLfinal.md`](../../docs/archive/database/CDSLfinal.md) (62 thực thể) và Schema thực tế Supabase (81 bảng/view)
 > **File migration:** [`scripts/database/20261019_sync_schema_with_cdsl.sql`](file:///d:/Aboutme/MyProject/Pawpal/scripts/database/20261019_sync_schema_with_cdsl.sql)
 
 ---
@@ -9,7 +9,7 @@
 ## 1. TỔNG QUAN VÀ MỤC TIÊU CHIẾN LƯỢC
 
 ### 1.1. Bối cảnh
-Quá trình đối soát tự động giữa tài liệu thiết kế gốc [`CDSLfinal.md`](file:///d:/Aboutme/MyProject/Pawpal/CDSLfinal.md) và CSDL Supabase thực tế cho thấy:
+Quá trình đối soát tự động giữa tài liệu thiết kế gốc [`CDSLfinal.md`](../../docs/archive/database/CDSLfinal.md) và CSDL Supabase thực tế cho thấy:
 1. **Thiếu cột CSDL:** 19 bảng cốt lõi trên Supabase đang thiếu các cột nghiệp vụ trọng yếu (ví dụ: `brand_name`, `target_pet` trong bảng `product`; `tracking_code`, `shipping_provider_id` trong `sales_order`; `product_variant_id` trong các bảng giao dịch...).
 2. **Hệ quả ở tầng Codebase:** Do CSDL thiếu cột, trong quá trình phát triển trước đây, codebase đã phải sử dụng các giải pháp "chắp vá" (workarounds):
    - Nhồi mã vận đơn vào chuỗi ghi chú: `note = "Hãng: GHTK; Vận đơn: JT123456"` và dùng biểu thức chính quy (Regex) để bóc tách ngược lại.
@@ -278,7 +278,7 @@ graph TD
   - **Bước 3 (Kiểm thử):** Đã cập nhật và chạy bộ test suite xác nhận toàn bộ truy vấn liên kết đa tầng hoạt động chính xác.
   - **Bước 4 (Migration CSDL & Tài liệu):**
     - Đã tạo file migration: [`scripts/database/20261019_drop_product_id_from_detail_tables.sql`](file:///d:/Aboutme/MyProject/Pawpal/scripts/database/20261019_drop_product_id_from_detail_tables.sql).
-    - Đã xóa sạch 6 dòng định nghĩa `product_id` thừa trong [`CDSLfinal.md`](file:///d:/Aboutme/MyProject/Pawpal/CDSLfinal.md).
+    - Đã xóa sạch 6 dòng định nghĩa `product_id` thừa trong [`CDSLfinal.md`](../../docs/archive/database/CDSLfinal.md).
 
 ---
 
@@ -298,5 +298,5 @@ graph TD
 Hệ thống PawPal đã hoàn thành xuất sắc toàn bộ quá trình đồng bộ hóa kiến trúc CSDL và nâng cấp Codebase:
 1. **CSDL Supabase:** 81/81 bảng đã đầy đủ 100% cột nghiệp vụ theo thiết kế. Không còn bảng nào bị thiếu cột.
 2. **Codebase Admin & User & Shop:** Đã chuyển đổi sang đọc/ghi trực tiếp các cột chuẩn (`brand_name`, `target_pet`, `tracking_code`, `shipping_provider_id`, `customer_id`, `ticket_code`, `payment_method_config_id`), triệt tiêu các đoạn regex bóc tách chuỗi rườm rà.
-3. **Tài liệu [`CDSLfinal.md`](file:///d:/Aboutme/MyProject/Pawpal/CDSLfinal.md):** Đã bổ sung đầy đủ 19 bảng mới (STT 63 đến STT 81), đồng bộ tuyệt đối với Supabase.
+3. **Tài liệu [`CDSLfinal.md`](../../docs/archive/database/CDSLfinal.md):** Đã bổ sung đầy đủ 19 bảng mới (STT 63 đến STT 81), đồng bộ tuyệt đối với Supabase.
 4. **Kiểm thử E2E:** Toàn bộ test suite về Vòng đời Bán hàng (`test_sales_lifecycle.js`) và Vòng đời Khiếu nại (`test_complaints_lifecycle.js`) đều đạt PASS 100%.
