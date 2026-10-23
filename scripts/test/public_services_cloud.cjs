@@ -7,8 +7,13 @@ const db=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABAS
  const cat=catalog.find(s=>s.service_code==='SPA09'),dog=catalog.find(s=>s.service_code==='SPA03');assert.ok(cat&&dog);
  const reviews=await db.rpc('public_service_reviews',{p_service:cat.id});if(reviews.error)throw Error(reviews.error.message);
  browser=await chromium.launch({channel:'chrome',headless:true});page=await browser.newPage({viewport:{width:1440,height:1050}});const errors=[],files=[];
+ const retiredRequests=[];
+ if(process.argv.includes('--retired-config')){
+  await page.addInitScript(()=>{localStorage.setItem('pawpal_supabase_url','http://127.0.0.1:1');localStorage.setItem('pawpal_supabase_anon_key','obsolete-test-key');});
+  page.on('request',r=>{if(new URL(r.url()).hostname==='127.0.0.1')retiredRequests.push(r.url());});
+ }
  page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(new URL(r.url()).pathname.startsWith('/data/'))files.push(r.url());});
- if(!process.argv.includes('--deployed'))for(const path of ['scripts/shared/data-loader.js','pages/services/services.js','pages/services/services.css','pages/services/service-detail/service-detail.js','pages/services/service-detail/service-detail.html'])await page.route('**/'+path+'*',r=>r.fulfill({contentType:path.endsWith('.html')?'text/html':path.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path,'utf8')}));
+ if(!process.argv.includes('--deployed'))for(const path of ['scripts/api/supabase-client.js','scripts/shared/data-loader.js','pages/services/services.js','pages/services/services.css','pages/services/service-detail/service-detail.js','pages/services/service-detail/service-detail.html'])await page.route('**/'+path+'*',r=>r.fulfill({contentType:path.endsWith('.html')?'text/html':path.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path,'utf8')}));
  await page.goto('https://pawpalgr3.vercel.app/services');await page.waitForFunction(()=>document.querySelectorAll('.service-card').length>0);
  // Pagination shows at most the configured page; all identities come from the live directory.
  const codes=await page.locator('.service-card').evaluateAll(cards=>cards.map(c=>c.dataset.id));assert.ok(codes.every(code=>catalog.some(s=>s.service_code===code)));
@@ -29,6 +34,7 @@ const db=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABAS
  await page.route('**/rest/v1/rpc/public_service_directory',r=>r.abort());await page.goto('https://pawpalgr3.vercel.app/services');
  await page.waitForFunction(()=>document.querySelector('#servicesGrid')?.textContent.includes('Không thể tải dữ liệu dịch vụ'));
  assert.deepEqual(files,[]);assert.deepEqual(errors,[]);
+ assert.deepEqual(retiredRequests,[]);
  console.log('PASS anonymous live service catalog/detail, configured species, published review counts, no invented member discounts or data-file fallback. No fixtures created.');
  }catch(e){fs.writeFileSync(infra+'/verification/public-services-error.private.txt',e.message);if(page)await page.screenshot({path:infra+'/verification/public-services-failure.private.png'}).catch(()=>{});throw Error('Public service verification failed; private evidence saved.');}finally{if(browser)await browser.close();}
 })().catch(e=>{console.error(e.message);process.exitCode=1;});

@@ -10,6 +10,8 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
 function browserContext() {
     const values = new Map([
         ['pawpal_admin_active_module', 'Dashboard'],
+        ['pawpal_supabase_url', 'http://localhost:8000'],
+        ['pawpal_supabase_anon_key', 'obsolete-browser-key'],
         ['pawpal_admin_user', JSON.stringify({ id: 'test-actor' })]
     ]);
     const storage = { getItem: k => values.get(k) ?? null, setItem: (k, v) => values.set(k, v) };
@@ -41,6 +43,7 @@ async function testFetch() {
     ctx.window.fetch = async () => { calls++; await tick(); return reply(); };
     ctx.window.supabase = { createClient(url, optionsKey, options) { fetchOptions = options; return {}; } };
     load(ctx, 'scripts/api/supabase-client.js');
+    assert.equal(ctx.window.SupabaseClientConfig.url, 'https://cpzuvaplseielhgcnqrn.supabase.co', 'Obsolete browser configuration must not select the retired local/Cloud backend');
     const fetch = fetchOptions.global.fetch;
     const url = `${ctx.window.SupabaseClientConfig.url}/rest/v1/customer?select=id`;
     const auth = { headers: { Authorization: 'Bearer actor-a' } };
@@ -83,13 +86,14 @@ async function testDashboard() {
     const kpi = { textContent: '' };
     ctx.document.getElementById = id => id === 'dashboardCustomers' ? kpi : null;
     let failOrders = false;
-    let appointments = [{ id: 'a1', customer_id: 'c1', pet_id: 'p1' }];
+    let appointments = [{ id: 'a1', customer_id: 'c1', pet_id: 'p1', items: [], scheduled_start_at: '2026-10-23T08:00:00+07:00' }];
     const client = {
+        async rpc() { return { data: { daily: [], totals: {} }, error: null }; },
         from(table) {
             const request = { table };
             const query = {
                 select(columns, options) { request.columns = columns; request.options = options; return this; },
-                order() { return this; }, limit() { return this; },
+                order() { return this; }, limit() { return this; }, range() { return this; },
                 in(column, ids) { request.filter = { column, ids: [...ids] }; return this; },
                 then(resolve, reject) {
                     requests.push(request);
@@ -126,7 +130,7 @@ async function testDashboard() {
     assert.equal(requests.at(-1).table, 'sales_order');
 
     handlers.appointment();
-    appointments = [{ id: 'a2', customer_id: 'c2', pet_id: 'p2' }];
+    appointments = [{ id: 'a2', customer_id: 'c2', pet_id: 'p2', items: [], scheduled_start_at: '2026-10-23T09:00:00+07:00' }];
     const beforeAppointment = requests.length;
     await dashboard.loadDashboardData();
     assert.equal(requests.length, beforeAppointment + 3, 'Appointment changes load appointments and only their two related profiles');

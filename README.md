@@ -1,5 +1,7 @@
 # 🐾 PawPal - Premium Pet Care Platform
 
+> Backend hiện tại: Supabase Cloud mới `cpzuvaplseielhgcnqrn`. Web local (`npm run dev`) và Vercel dùng Cloud; không cần chạy Supabase local hoặc tunnel. Công cụ SQL Cloud dùng container PostgreSQL CLI dùng một lần, không khởi động database local. Tài liệu trạng thái mới nhất: [nghiệm thu](PAWPAL_DICH_VU_V1_NGHIEM_THU.md). Các kế hoạch self-host cũ chỉ giữ làm lịch sử.
+
 [![Tech Stack](https://img.shields.io/badge/tech--stack-HTML%20%7C%20CSS%20%7C%20JS%20%7C%20Node.js%20%7C%20Supabase-blue.svg)](#)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-View_Website-success.svg)](https://pawpalgr3.vercel.app/)
 
@@ -181,7 +183,6 @@ Pawpal/
 |   |       |-- product-detail.css
 |   |       |-- product-detail.html
 |   |       |-- product-detail.js
-|   |       `-- product-reviews.js # Xử lý tính năng Đánh giá sản phẩm (Review)
 |   `-- user/                # Phân hệ Quản lý tài khoản 
 |       |-- dashboard-init.js # Khởi tạo dữ liệu cho luồng user dashboard
 |       |-- return-handler.js # Module xử lý đổi trả hàng hóa

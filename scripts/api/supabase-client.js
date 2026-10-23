@@ -6,12 +6,9 @@
     function readConfig() {
         const explicit = window['__PAWPAL_SUPABASE_CONFIG__'] || window['__SUPABASE_CONFIG__'] || {};
         if (explicit.required) return { url: explicit.url || '', anonKey: explicit.anonKey || '' };
-        const storedUrl = window.localStorage?.getItem?.('pawpal_supabase_url');
-        const storedAnonKey = window.localStorage?.getItem?.('pawpal_supabase_anon_key');
-
         return {
-            url: explicit.url || explicit.SUPABASE_URL || storedUrl || FALLBACK_URL,
-            anonKey: explicit.anonKey || explicit.SUPABASE_ANON_KEY || storedAnonKey || FALLBACK_ANON_KEY,
+            url: explicit.url || explicit.SUPABASE_URL || FALLBACK_URL,
+            anonKey: explicit.anonKey || explicit.SUPABASE_ANON_KEY || FALLBACK_ANON_KEY,
         };
     }
 

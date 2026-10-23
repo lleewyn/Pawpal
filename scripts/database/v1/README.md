@@ -1,4 +1,6 @@
-# Schema 3NF V1 trên Supabase self-host
+# Schema 3NF V1 — Cloud hiện tại và kiểm thử phục hồi
+
+> Cập nhật 23/10/2026: ứng dụng chạy với Cloud mới. Bộ tương thích self-host `001–004`, `deploy_local.cjs`, preview/tunnel và các test `self_host_*` đã đưa ra kho lưu trữ ngoài repo. Các lệnh liên quan ở phần lịch sử bên dưới không còn là hướng dẫn chạy hiện tại. Giữ migrations V1 và công cụ phục hồi còn được test dùng; `cloud_connection.cjs` chạy PostgreSQL CLI dùng một lần, không cần database Supabase local. Không xóa hoặc thay đổi database Cloud/local trong đợt dọn repo.
 
 Bộ này tạo đúng danh sách **105 bảng / 906 cột** tại mục 15 của [thiết kế V1](../../../PAWPAL_THIET_KE_DATABASE_3NF_V1.md). Khác với bộ `self-host/001–004` tương thích mã cũ. Các bảng Auth và Storage do Supabase quản lý được giữ nguyên, không tính vào 105 bảng.
 

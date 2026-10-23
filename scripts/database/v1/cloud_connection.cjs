@@ -1,4 +1,4 @@
-// Project-scoped migration transport. Password travels over stdin, overriding container PGPASSWORD.
+// Project-scoped Cloud transport. Disposable CLI only; no local database or volumes.
 const fs=require('node:fs'),path=require('node:path'),{spawnSync}=require('node:child_process');
 const infra='D:/Aboutme/Pawpal-infra/supabase-local';
 function settings(){
@@ -14,7 +14,7 @@ function cloud(command,args=[],input='',options={}){
  if(!['psql','pg_dump'].includes(command))throw Error('Unsupported migration command');
  const {config,uri}=settings();
  const connection=['-h',uri.hostname,'-p',uri.port,'-U',decodeURIComponent(uri.username),'-d','postgres'];
- const result=spawnSync('docker',['exec','-i','-e','PGSSLMODE=require','-e','PGCONNECT_TIMEOUT=15','supabase-db','sh','-c',
+ const result=spawnSync('docker',['run','--rm','-i','--entrypoint','sh','-e','PGSSLMODE=require','-e','PGCONNECT_TIMEOUT=15','supabase/postgres:17.6.1.136','-c',
   'IFS= read -r PGPASSWORD; export PGPASSWORD; exec "$@"','sh',command,...connection,...args],
   {input:config.DESTINATION_DATABASE_PASSWORD+'\n'+input,encoding:'utf8',maxBuffer:64*1024*1024,timeout:options.timeout||120000,windowsHide:true});
  if(result.status!==0){
