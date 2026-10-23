@@ -41,9 +41,14 @@ const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.ran
    {pet_id:pet,service_id:catGroom.id,scheduled_start_at:day+'T10:00:00+07:00',addon_ids:catGroom.addons.filter(a=>a.required).map(a=>a.id)});
   assert.equal(actual.error,undefined);assert.ok(Number.isFinite(Number(actual.data.total)));
   for(const svc of services){
-   await page.goto('https://pawpalgr3.vercel.app/booking');await page.locator('#bookingPet').waitFor({timeout:30000});
+   await page.goto('https://pawpalgr3.vercel.app/services?search='+encodeURIComponent(svc.name));
+   await page.locator(`.service-card[data-id="TEST-${svc.id}"] .service-card-link`).click();
+   await page.waitForFunction(name=>document.querySelector('#detailServiceTitle')?.textContent===name,svc.name);
+   await page.locator('#btnPanelBook').click();await page.waitForURL(/booking/);
+   assert.equal(new URL(page.url()).searchParams.has('price'),false);
+   await page.locator('#bookingPet').waitFor({timeout:30000});
    await page.locator('#bookingPet').fill('Booking form pet');await page.locator('#bookingPetOptions button').first().click();await page.locator('#step1Next').click();
-   await page.locator('#bookingService').fill(svc.name);await page.locator('#bookingServiceOptions button').first().click();
+   assert.equal(await page.locator('#bookingService').inputValue(),svc.name);
    assert.equal(await page.locator('.booking-addon:checked').count(),1);await page.locator('#step2Next').click();
    await page.locator('#step3Next').click();assert.ok((await page.locator('#bookingStartError').textContent()).length>0);
    await page.locator('#bookingStart').fill(day+'T10:00');
