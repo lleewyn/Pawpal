@@ -287,79 +287,7 @@
         return customerLoadPromise;
     };
 
-    async function readAllRows(builder) {
-        const data=[];
-        for(let offset=0;;offset+=1000){
-            const result=await builder().range(offset,offset+999);
-            if(result.error)return result;
-            data.push(...(result.data || []));
-            if(!result.data || result.data.length<1000)return {data,error:null};
-        }
-    }
-
-    async function loadCustomersModuleData({ force = false } = {}) {
-        try {
-            PawpalCustomers.state.listLoadStatus = 'loading';
-            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!client) {
-                throw new Error('Supabase client not initialized.');
-            }
-
-            // Sử dụng cache nếu dữ liệu còn mới và đã có ít nhất 1 khách hàng
-            if (!force && Date.now() - _custLastFetchedAt < CUST_CACHE_TTL_MS && Object.keys(PawpalCustomers.state.customerDatabase || {}).length > 0) {
-                console.log('[Customers] Dùng cache, bỏ qua fetch.');
-                PawpalCustomers.state.listLoadStatus = 'loaded';
-                return;
-            }
-
-            const fetchCustomersBase = async () => {
-                const [
-                    custRes,
-                    profRes,
-                    memRes,
-                    addrRes,
-                    petsRes,
-                    phonesRes,
-                    balancesRes,
-                    weightsRes,
-                    tiersRes,
-                    ticketsRes
-                ] = await Promise.all([
-                    readAllRows(() => client.from('customer').select('id, customer_code, contact_email, customer_status, note, created_at, updated_at').order('created_at', { ascending: false }).order('id')),
-                    readAllRows(() => client.from('customer_profile').select('customer_id, full_name, gender, date_of_birth').order('customer_id')),
-                    readAllRows(() => client.from('customer_membership').select('customer_id, membership_tier_id, membership_tier:membership_tier_id(tier_name)').order('customer_id')),
-                    readAllRows(() => client.from('customer_address').select('id, customer_id, receiver_name, receiver_phone, street_address, province, postal_code, is_default').order('id')),
-                    readAllRows(() => client.from('pet_profile').select('id, customer_id, pet_code, pet_name, updated_at, status, breed:breed_id(id, species_id, breed_name, species:species_id(id, species_name)), safety_note, allergy, routine, date_of_birth, avatar_url').order('id')),
-                    readAllRows(() => client.from('customer_phone').select('customer_id, phone_number').eq('is_primary', true).order('id')),
-                    readAllRows(() => client.from('customer_point_balance').select('customer_id, total_paw_points').order('customer_id')),
-                    readAllRows(() => client.from('pet_current_weight').select('pet_id, weight').order('pet_id')),
-                    readAllRows(() => client.from('membership_tier').select('id, tier_name, minimum_expenditure, discount_percent, description').eq('is_active', true).order('minimum_expenditure').order('id')),
-                    readAllRows(() => client.from('support_ticket').select('id, ticket_code, customer_id, subject, status, priority, created_at').order('id'))
-                ]);
-                for (const result of [custRes, profRes, memRes, addrRes, petsRes, phonesRes, balancesRes, weightsRes, tiersRes, ticketsRes]) {
-                    if (result.error) throw result.error;
-                }
-                return {
-                    custData: custRes.data || [],
-                    profData: profRes.data || [],
-                    memData: memRes.data || [],
-                    addrData: addrRes.data || [],
-                    petsData: petsRes.data || [],
-                    phonesData: phonesRes.data || [],
-                    balancesData: balancesRes.data || [],
-                    weightsData: weightsRes.data || [],
-                    tiersData: tiersRes.data || [],
-                    ticketsData: ticketsRes.data || []
-                };
-            };
-
-            const data = window.PawpalDataStore?.fetch
-                ? await window.PawpalDataStore.fetch('customers:list', fetchCustomersBase, {
-                    ttlMs: window.PawpalDataStore.TTL.LIST,
-                    force
-                })
-                : await fetchCustomersBase();
-
+    function hydrateCustomerPage(data){
             const profMap = {};
             (data.profData || []).forEach(p => { profMap[p.customer_id] = p; });
 
@@ -541,17 +469,73 @@
                 });
             }
 
-            PawpalCustomers.state.customerDatabase = freshDb;
+        return freshDb;
+    }
+
+    async function readAllRows(builder) {
+        const data=[];
+        for(let offset=0;;offset+=1000){
+            const result=await builder().range(offset,offset+999);
+            if(result.error)return result;
+            data.push(...(result.data || []));
+            if(!result.data || result.data.length<1000)return {data,error:null};
+        }
+    }
+
+    const directoryCache=new Map(),directoryRequests=new Map();
+    PawpalCustomers.serverCustomerPaging=true;
+    PawpalCustomers.readCustomerPage=async function(request={},options={}){
+        if(options.force)directoryCache.clear();
+        const key=JSON.stringify(request),cached=directoryCache.get(key);
+        if(!options.force&&cached&&Date.now()-cached.at<60000)return cached.data;
+        if(directoryRequests.has(key))return directoryRequests.get(key);
+        const task=(async()=>{const client=window.getSupabaseClient?.()||window.SupabaseClient;if(!client)throw Error('connection_unavailable');
+            const {data,error}=await client.rpc('admin_customer_page',{p_query:request.query||'',p_tier:request.tier||'ALL',p_status:request.status||'ALL',p_category:request.category||'ALL',p_page:request.page||1,p_size:request.size||10,p_lookup:request.lookup||''});if(error)throw error;
+            if(directoryCache.size>=20)directoryCache.delete(directoryCache.keys().next().value);directoryCache.set(key,{at:Date.now(),data});return data;
+        })().finally(()=>directoryRequests.delete(key));directoryRequests.set(key,task);return task;
+    };
+    PawpalCustomers.lookupCustomers=async function(query='',lookup=''){
+        const data=await PawpalCustomers.readCustomerPage({query,lookup,page:1,size:15});const customers=hydrateCustomerPage(data),ids=new Set(data.pageIds||[]);
+        Object.assign(PawpalCustomers.state.customerDatabase,customers);return Object.values(customers).filter(c=>ids.has(c.dbId));
+    };
+    PawpalCustomers.hydrateCustomerPage=hydrateCustomerPage;
+    async function loadCustomersModuleData({ force = false } = {}) {
+        try {
+            PawpalCustomers.state.listLoadStatus = 'loading';
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                throw new Error('Supabase client not initialized.');
+            }
+
+            // Sử dụng cache nếu dữ liệu còn mới và đã có ít nhất 1 khách hàng
+            if (!force && PawpalCustomers.state.customerPage?.key===JSON.stringify(PawpalCustomers.state.customerListRequest||{query:'',tier:'ALL',status:'ALL',category:'ALL',page:1,size:10}) && Date.now() - _custLastFetchedAt < CUST_CACHE_TTL_MS) {
+                console.log('[Customers] Dùng cache, bỏ qua fetch.');
+                PawpalCustomers.state.listLoadStatus = 'loaded';
+                return;
+            }
+
+            const request=PawpalCustomers.state.customerListRequest||{query:'',tier:'ALL',status:'ALL',category:'ALL',page:1,size:10};
+            const requestKey=JSON.stringify(request);
+            const data=await PawpalCustomers.readCustomerPage(request,{force});
+            const freshDb=hydrateCustomerPage(data);
+            const selectedKey=sessionStorage.getItem('pawpal_admin_customer_id');
+            if(force&&selectedKey&&!freshDb[selectedKey]){const selectedData=await PawpalCustomers.readCustomerPage({lookup:selectedKey,page:1,size:1},{force:true});Object.assign(freshDb,hydrateCustomerPage(selectedData));}
+            const previous=PawpalCustomers.state.customerDatabase||{};
+            PawpalCustomers.state.customerDatabase={...previous,...freshDb};
+            const pageIds=new Set(data.pageIds||[]);
+            PawpalCustomers.state.customerPage={key:requestKey,total:Number(data.total||0),page:Number(data.page||1),stats:data.stats,operations:data.operations||[],opsTotal:Number(data.opsTotal||0),keys:Object.values(freshDb).filter(c=>pageIds.has(c.dbId)).map(c=>c.id)};
+            const keep=new Set([...Object.keys(freshDb),sessionStorage.getItem('pawpal_admin_customer_id')]);
+            const cachedKeys=Object.keys(PawpalCustomers.state.customerDatabase);if(cachedKeys.length>200)for(const key of cachedKeys)if(!keep.has(key)&&Object.keys(PawpalCustomers.state.customerDatabase).length>200)delete PawpalCustomers.state.customerDatabase[key];
             PawpalCustomers.state.membershipTiers = data.tiersData || [];
 
             // PERF-03.C04: Lịch sử điểm Pawpoint nạp on-demand khi mở subtab Pawpoints
-            PawpalCustomers.state.pawpointHistory = [];
-            PawpalCustomers.state.pawpointLoadStatus = 'idle';
+            if(force){PawpalCustomers.state.pawpointHistory=[];PawpalCustomers.state.pawpointLoadStatus='idle';}
 
             PawpalCustomers.populateCustomerDatalists();
             _custLastFetchedAt = Date.now();
             PawpalCustomers.state.hasLoadedCustomers = true;
             PawpalCustomers.state.listLoadStatus = 'loaded';
+            PawpalCustomers.state.customerFailedKey=null;
 
             if (document.getElementById('subtab-tab-pawpoint')?.classList.contains('active')) {
                 PawpalCustomers.subtabs.pawpoint?.renderPawpointHistory?.();
@@ -566,6 +550,7 @@
             }
         } catch (err) {
             PawpalCustomers.state.listLoadStatus = 'error';
+            PawpalCustomers.state.customerFailedKey=JSON.stringify(PawpalCustomers.state.customerListRequest||{query:'',tier:'ALL',status:'ALL',category:'ALL',page:1,size:10});
             PawpalCustomers.state.hasLoadedCustomers = false;
             console.error('[Customers] Lỗi nạp dữ liệu từ Supabase:', err);
             PawpalCustomers.subtabs.list?.renderCustomersTable?.();
@@ -576,9 +561,18 @@
     }
 
     // Helper lazy-fetch hồ sơ 360° (Đơn hàng, Lịch hẹn, Khiếu nại) cho 1 khách hàng cụ thể (PERF-03.C03)
-    PawpalCustomers.fetchCustomerProfile360 = async function(cust, { force = false } = {}) {
+    const detailRequests=new Map();
+    PawpalCustomers.fetchCustomerProfile360 = function(cust,options={}){
+        if(!cust)return Promise.resolve(null);
+        const key=cust.dbId||cust.id;
+        if(detailRequests.has(key))return detailRequests.get(key);
+        const request=fetchCustomerProfile360(cust,options).finally(()=>detailRequests.delete(key));
+        detailRequests.set(key,request);return request;
+    };
+    const fetchCustomerProfile360 = async function(cust, { force = false, page = 1 } = {}) {
         if (!cust || !cust.dbId) return cust;
-        if (!force && cust._detailsLoaded) return cust;
+        page=Math.max(1,Math.floor(Number(page)||1));
+        if (!force && cust._detailsLoaded && cust._historyPage===page) return cust;
 
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!client) return cust;
@@ -586,20 +580,26 @@
         cust._detailsLoadStatus='loading';
         try {
             const fetchCust360 = async () => {
-                const [ordersRes,apptsRes,ticketsRes,paymentsRes]=await Promise.all([
-                    readAllRows(()=>client.from('sales_order').select('id,order_code,customer_id,order_status,created_at').eq('customer_id',cust.dbId).order('created_at',{ascending:false}).order('id')),
-                    readAllRows(()=>client.from('appointment').select('id,appointment_code,customer_id,scheduled_start_at,appointment_status,items:appointment_item(name_snapshot,status),staff:staff_id(full_name)').eq('customer_id',cust.dbId).order('scheduled_start_at',{ascending:false}).order('id')),
-                    readAllRows(()=>client.from('support_ticket').select('id,ticket_code,customer_id,subject,type,status,priority,created_at').eq('customer_id',cust.dbId).order('created_at',{ascending:false}).order('id')),
-                    readAllRows(()=>client.from('payment').select('id,order_id,amount,transaction_status,refunds:refund_transaction(refunded_amount,refund_status)').eq('customer_id',cust.dbId).order('id'))
+                const [ordersRes,apptsRes,ticketsRes]=await Promise.all([
+                    client.from('sales_order').select('id,order_code,customer_id,order_status,created_at',{count:'exact'}).eq('customer_id',cust.dbId).order('created_at',{ascending:false}).order('id').range((page-1)*10,page*10-1),
+                    client.from('appointment').select('id,appointment_code,customer_id,scheduled_start_at,appointment_status,items:appointment_item(name_snapshot,status),staff:staff_id(full_name)',{count:'exact'}).eq('customer_id',cust.dbId).order('scheduled_start_at',{ascending:false}).order('id').range((page-1)*10,page*10-1),
+                    client.from('support_ticket').select('id,ticket_code,customer_id,subject,type,status,priority,created_at',{count:'exact'}).eq('customer_id',cust.dbId).order('created_at',{ascending:false}).order('id').range((page-1)*10,page*10-1),
                 ]);
-                for (const result of [ordersRes, apptsRes, ticketsRes, paymentsRes]) if (result.error) throw result.error;
+                for (const result of [ordersRes, apptsRes, ticketsRes]) if (result.error) throw result.error;
+                const paymentsRes = { data: [] };
+                cust._historyCounts={orders:ordersRes.count||0,bookings:apptsRes.count||0,complaints:ticketsRes.count||0};
+                cust._historyPage=page;
                 let totals = [];
                 for (let offset = 0; offset < (ordersRes.data || []).length; offset += 100) {
                     const result = await client.from('sales_order_totals').select('order_id,total_amount').in('order_id',ordersRes.data.slice(offset,offset+100).map(o=>o.id)).order('order_id');
                     if (result.error) throw result.error;
                     totals.push(...(result.data || []));
+                    const payments = await readAllRows(()=>client.from('payment').select('id,order_id,amount,transaction_status,refunds:refund_transaction(refunded_amount,refund_status)').eq('customer_id',cust.dbId).in('order_id',ordersRes.data.slice(offset,offset+100).map(o=>o.id)).order('id'));
+                    if (payments.error) throw payments.error;
+                    paymentsRes.data.push(...(payments.data || []));
                 }
                 return {
+                    historyCounts: cust._historyCounts,
                     orders: (ordersRes.data || []).map(o => ({ ...o, total_amount: totals.find(t => t.order_id === o.id)?.total_amount })),
                     payments: paymentsRes.data || [],
                     appts: apptsRes.data || [],
@@ -608,12 +608,14 @@
             };
 
             const payload = window.PawpalDataStore?.fetch
-                ? await window.PawpalDataStore.fetch(`customers:360:${cust.dbId}`, fetchCust360, {
+                ? await window.PawpalDataStore.fetch(`customers:360:${cust.dbId}:${page}`, fetchCust360, {
                     ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
                     force
                 })
                 : await fetchCust360();
 
+            cust._historyCounts=payload.historyCounts;
+            cust._historyPage=page;
             // Map orders
             cust.orders = (payload.orders || []).map(o => {
                 const dateStr = o.created_at ? PawpalCustomers.formatDateTime(o.created_at) : '—';
@@ -690,67 +692,36 @@
     };
 
     // Helper lazy-fetch lịch sử điểm Pawpoint khi vào tab Pawpoints (PERF-03.C04)
-    PawpalCustomers.fetchPawpointLedger = async function({ force = false, limit = Infinity } = {}) {
-        const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!client) {
-            PawpalCustomers.state.pawpointLoadStatus = 'error';
-            return [];
-        }
-        PawpalCustomers.state.pawpointLoadStatus = 'loading';
-
-        const fetchLedger = async () => {
-            const rows = [];
-            for (let offset = 0; ; offset += 1000) {
-                const { data, error } = await client.from('paw_point_transaction')
-                    .select('id, customer_id, points, sequence_no, description, created_at')
-                    .order('customer_id').order('sequence_no').range(offset, offset + 999);
-                if (error) throw error;
-                rows.push(...(data || []));
-                if (!data || data.length < 1000) break;
-            }
-            return rows;
-        };
-
-        try {
-            const rows = window.PawpalDataStore?.fetch
-                ? await window.PawpalDataStore.fetch(`customers:pawpoints:${limit}`, fetchLedger, {
-                    ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
-                    force
-                })
-                : await fetchLedger();
-
-            const freshDb = PawpalCustomers.state.customerDatabase || {};
-            // V1 stores signed entries, so derive each historical balance in sequence order.
-            const runningBalances = new Map();
-            PawpalCustomers.state.pawpointHistory = rows.map(pt => {
-                const cObj = Object.values(freshDb).find(c => c.dbId === pt.customer_id) || {};
-                const tTime = pt.created_at ? PawpalCustomers.formatDateTime(pt.created_at) : '—';
-                const rawPoints = Number(pt.points ?? pt.point_amount ?? pt.amount ?? 0) || 0;
-                const isSubtraction = rawPoints < 0;
-                const ptsNum = Math.abs(rawPoints);
-                const balance = (runningBalances.get(pt.customer_id) || 0) + rawPoints;
-                runningBalances.set(pt.customer_id, balance);
-                return {
-                    id: `PWH-${pt.id.slice(0, 4)}`,
-                    rawId: pt.id,
-                    createdAt: pt.created_at,
-                    time: tTime,
-                    custId: cObj.id || '',
-                    custName: cObj.name || 'Khách hàng',
-                    phone: cObj.phone || '—',
-                    type: isSubtraction ? 'SUB' : 'ADD',
-                    points: ptsNum,
-                    balance,
-                    reason: pt.description || 'Giao dịch điểm Pawpoint'
-                };
-            }).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)) || b.rawId.localeCompare(a.rawId)).slice(0, limit);
-            PawpalCustomers.state.pawpointLoadStatus = 'loaded';
-            return PawpalCustomers.state.pawpointHistory;
-        } catch (err) {
-            PawpalCustomers.state.pawpointLoadStatus = 'error';
-            console.warn('[PawpalCustomers] Lỗi nạp lịch sử điểm Pawpoint:', err);
-            return [];
-        }
+    const ledgerPages=new Map(),ledgerRequests=new Map();
+    const ledgerKey=options=>JSON.stringify([options.query||'',options.kind||'ALL',options.page||1,options.size||10]);
+    PawpalCustomers.ledgerPageKey=ledgerKey;
+    PawpalCustomers.readPawpointPage=async function(options={}){
+        const key=ledgerKey(options),cached=ledgerPages.get(key);
+        if(!options.force&&cached&&Date.now()-cached.at<60000)return cached.data;
+        if(ledgerRequests.has(key))return ledgerRequests.get(key);
+        const task=(async()=>{
+            const client=window.getSupabaseClient?.()||window.SupabaseClient;
+            if(!client)throw Error('connection_unavailable');
+            const {data,error}=await client.rpc('admin_pawpoint_page',{p_query:options.query||'',p_kind:options.kind||'ALL',p_page:options.page||1,p_size:options.size||10});
+            if(error)throw error;
+            const result={...data,rows:(data.rows||[]).map(pt=>({id:pt.id,rawId:pt.id,custId:pt.customer_code||pt.customer_id,custName:pt.full_name||'Khách hàng',phone:pt.phone_number||'—',time:PawpalCustomers.formatDateTime(pt.created_at),createdAt:pt.created_at,type:Number(pt.points)<0?'SUB':'ADD',points:Math.abs(Number(pt.points)),balance:Number(pt.balance),reason:pt.description||'Giao dịch điểm Pawpoint'}))};
+            if(ledgerPages.size>=20)ledgerPages.delete(ledgerPages.keys().next().value);
+            ledgerPages.set(key,{at:Date.now(),data:result});return result;
+        })().finally(()=>ledgerRequests.delete(key));ledgerRequests.set(key,task);return task;
+    };
+    let ledgerVersion=0;
+    PawpalCustomers.fetchPawpointLedger=async function(options={}){
+        const request=options.query!==undefined?options:(PawpalCustomers.state.ledgerRequest||{});
+        const key=ledgerKey(request),version=++ledgerVersion;
+        PawpalCustomers.state.ledgerRequest={...request,force:false};
+        PawpalCustomers.state.ledgerRequestKey=key;
+        PawpalCustomers.state.pawpointLoadStatus='loading';
+        if(options.force)ledgerPages.clear();
+        try{
+            const result=await PawpalCustomers.readPawpointPage({...request,force:!!options.force});
+            if(version!==ledgerVersion)return [];
+            PawpalCustomers.state.ledgerPage=result;PawpalCustomers.state.pawpointHistory=result.rows;PawpalCustomers.state.pawpointLoadStatus='loaded';return result.rows;
+        }catch(error){if(version===ledgerVersion){PawpalCustomers.state.pawpointLoadStatus='error';PawpalCustomers.state.pawpointHistory=[];PawpalCustomers.state.ledgerPage=null;}return [];}
     };
 
     PawpalCustomers.getCustomer = function(idOrKey) {
@@ -811,6 +782,10 @@
             }
 
             const triggerCustSync = (invalidatePattern, refreshCallback) => {
+                directoryCache.clear();ledgerPages.clear();_custLastFetchedAt=0;
+                if (PawpalCustomers.state.customerPage) PawpalCustomers.state.customerPage.key = null;
+                PawpalCustomers.state.customerFailedKey = null;
+                PawpalCustomers.state.ledgerRequestKey = null;
                 if (window.PawpalDataStore?.handleRealtimeChange) {
                     window.PawpalDataStore.handleRealtimeChange({
                         moduleName: 'Khách hàng',
@@ -823,7 +798,7 @@
                             await PawpalCustomers.loadCustomersModuleData({ force: true });
                             if (openId && document.getElementById('subtab-tab-profile')?.classList.contains('active')) {
                                 PawpalCustomers.subtabs.profile?.renderDrawerCustomerProfile(openId);
-                                if (draft && note) { note.value = draft.value; note.dataset.version = draft.version; }
+                                if (draft && note) { note.value = draft.value; note.dataset.version = draft.version;const editor=document.getElementById('customerNoteEditor'),edit=document.getElementById('customerNoteEdit');if(editor)editor.hidden=false;if(edit)edit.hidden=true; }
                             }
                             if (typeof refreshCallback === 'function') {
                                 refreshCallback();
@@ -963,6 +938,7 @@
 
         const firstCustId = Object.keys(PawpalCustomers.state.customerDatabase)[0] || 'CUST-001';
         const savedCustId = sessionStorage.getItem('pawpal_admin_customer_id');
+        if(savedCustId&&!PawpalCustomers.getCustomer(savedCustId)){try{await PawpalCustomers.lookupCustomers('',savedCustId);}catch{PawpalCustomers.showToast('Chưa tải được hồ sơ đã chọn. Vui lòng thử lại.','warning');}}
         const resolvedCust = savedCustId ? PawpalCustomers.getCustomer(savedCustId) : null;
         const activeCustId = resolvedCust ? resolvedCust.id : (savedCustId || firstCustId);
         if (PawpalCustomers.subtabs.profile) {

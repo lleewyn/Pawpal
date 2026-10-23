@@ -20,11 +20,13 @@
         const drawerPanels = document.querySelectorAll('.drawer-tab-panel');
 
         drawerTabs.forEach(t => {
-            t.classList.toggle('active', t.getAttribute('data-drawertab') === targetPanelId);
+            const selected=t.getAttribute('data-drawertab')===targetPanelId;
+            t.classList.toggle('active',selected);t.setAttribute('role','tab');t.setAttribute('aria-selected',String(selected));t.tabIndex=selected?0:-1;t.id||='profile-tab-'+t.dataset.drawertab;t.setAttribute('aria-controls',t.dataset.drawertab);
         });
 
         drawerPanels.forEach(panel => {
             panel.classList.toggle('active', panel.id === targetPanelId);
+            panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby','profile-tab-'+panel.id);
         });
 
         sessionStorage.setItem('pawpal_admin_customer_drawertab', targetPanelId);
@@ -32,7 +34,8 @@
             const currentCustId = sessionStorage.getItem('pawpal_admin_customer_id');
             const cust = getCust(currentCustId);
             if (cust && typeof PawpalCustomers.fetchCustomerProfile360 === 'function') {
-                PawpalCustomers.fetchCustomerProfile360(cust, { force: true }).then(() => {
+                PawpalCustomers.fetchCustomerProfile360(cust).then(() => {
+                    if(sessionStorage.getItem('pawpal_admin_customer_id')!==currentCustId)return;
                     renderDrawerOrders(currentCustId);
                     renderDrawerBookings(currentCustId);
                     renderDrawerComplaints(currentCustId);
@@ -83,7 +86,7 @@
             <div class="pet-detail-card" data-pet-id="${esc(pet.id || ('PET-' + idx))}">
                 <div class="pet-card-head">
                     <div class="pet-card-head-left">
-                        <span class="pet-card-name">${esc(pet.name)} (Mã: ${esc(pet.id || ('PET-' + (idx+1)))})</span>
+                        <span class="pet-card-name">${esc(pet.name)}</span><span class="pet-profile-code">${esc(pet.id || 'Chưa có mã')}</span>
                         ${pet.status==='inactive'?'<span class="admin-badge badge-neutral">Ngừng theo dõi</span>':''}
                     </div>
                     <div class="pet-card-actions">
@@ -93,9 +96,9 @@
                     </div>
                 </div>
                 <div class="pet-card-body">
-                    <div><strong>Loài:</strong> ${esc(pet.species)} ${pet.breed ? '(' + esc(pet.breed) + ')' : ''}</div>
-                    <div><strong>Cân nặng:</strong> ${Number.isFinite(Number(pet.weight)) ? esc(pet.weight) + ' kg' : 'Chưa ghi nhận'}</div>
-                    <div><strong>Cảnh báo an toàn</strong> ${esc(pet.safetyNote || '—')}</div><div><strong>Dị ứng</strong> ${esc(pet.allergy || '—')}</div><div><strong>Tập tính</strong> ${esc(pet.routine || '—')}</div>
+                    <div><span>Loài và giống</span><span>${esc([pet.species,pet.breed].filter(Boolean).join(' · ') || 'Chưa ghi nhận')}</span></div>
+                    <div><span>Cân nặng</span><span>${Number(pet.weight)>0&&Number.isFinite(Number(pet.weight)) ? esc(pet.weight) + ' kg' : 'Chưa ghi nhận'}</span></div>
+                    <div><span>Cảnh báo an toàn</span><span>${esc(pet.safetyNote || '—')}</span></div><div><span>Dị ứng</span><span>${esc(pet.allergy || '—')}</span></div><div><span>Tập tính</span><span>${esc(pet.routine || '—')}</span></div>
                 </div>
             </div>
         `).join('');
@@ -140,14 +143,13 @@
         }));
     }
 
-    const historyPages=new Map();
     function historyPage(tbody,items,custId,rerender){
-        const key=tbody.id+':'+custId,total=Math.ceil(items.length/10),current=Math.min(historyPages.get(key) || 1,total || 1);
+        const cust=getCust(custId),kind=tbody.id.includes('Orders')?'orders':tbody.id.includes('Bookings')?'bookings':'complaints',total=Math.ceil((cust?._historyCounts?.[kind]??items.length)/10),current=cust?._historyPage||1;
         let pager=document.getElementById(tbody.id+'Pager');
         if(!pager){pager=document.createElement('div');pager.id=tbody.id+'Pager';pager.className='admin-pagination-bar';const table=tbody.closest('table');(table.closest('.table-responsive-wrapper') || table).after(pager);}
-        pager.innerHTML=total>1?`<div class="pagination-controls"><button type="button" class="pagination-btn" data-page="${current-1}" ${current===1?'disabled':''}>&lt;</button>${Array.from({length:total},(_,i)=>`<button type="button" class="pagination-btn ${i+1===current?'active':''}" data-page="${i+1}">${i+1}</button>`).join('')}<button type="button" class="pagination-btn" data-page="${current+1}" ${current===total?'disabled':''}>&gt;</button></div>`:'';
-        pager.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>{historyPages.set(key,Number(b.dataset.page));rerender(custId);}));
-        return items.slice((current-1)*10,current*10);
+        pager.innerHTML=total>1?`<div class="pagination-controls"><button type="button" class="pagination-btn" data-page="${current-1}" ${current===1?'disabled':''}>&lt;</button>${Array.from({length:Math.min(total,current+2)-Math.max(1,current-2)+1},(_,n)=>{const i=Math.max(1,current-2)+n-1;return `<button type="button" class="pagination-btn ${i+1===current?'active':''}" data-page="${i+1}">${i+1}</button>`;}).join('')}<button type="button" class="pagination-btn" data-page="${current+1}" ${current===total?'disabled':''}>&gt;</button></div>`:'';
+        pager.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>{PawpalCustomers.fetchCustomerProfile360(cust,{page:Number(b.dataset.page)}).then(()=>{if(sessionStorage.getItem('pawpal_admin_customer_id')===custId)rerender(custId);});rerender(custId);}));
+        return items;
     }
     function historyUnavailable(tbody,cust){
         if(cust?._detailsLoadStatus==='error' || cust?._detailsLoadStatus==='loading'){
@@ -349,6 +351,9 @@
         if (document.getElementById('profileValGender')) document.getElementById('profileValGender').textContent = displayOptional(data.gender);
         if (document.getElementById('profileValDob')) document.getElementById('profileValDob').textContent = data.dob || 'Chưa cập nhật';
         if (document.getElementById('drawerCustNote')) document.getElementById('drawerCustNote').value = data.note || '';
+        const noteRead=document.getElementById('customerNoteReadView');if(noteRead)noteRead.textContent=data.note||'Chưa có ghi chú';
+        const noteEditor=document.getElementById('customerNoteEditor');if(noteEditor)noteEditor.hidden=true;
+        const noteEdit=document.getElementById('customerNoteEdit');if(noteEdit)noteEdit.hidden=false;
         const authStatusEl = document.getElementById('profileValAuthStatus');
         if (authStatusEl) {
             const authBadgeClass = data.status === 'LOCKED' ? 'badge-danger' : (data.status === 'TEMP' ? 'badge-warning' : 'badge-success');
@@ -382,16 +387,16 @@
                 const bApp = document.getElementById('badgeCountBookings');
                 const bCmp = document.getElementById('badgeCountComplaints');
                 if (bOrd) {
-                    bOrd.textContent = (data.orders || []).length;
-                    bOrd.style.display = data.orders?.length > 0 ? 'inline-flex' : 'none';
+                    bOrd.textContent = (data._historyCounts?.orders??data.orders?.length??0);
+                    bOrd.style.display = (data._historyCounts?.orders??data.orders?.length)>0 ? 'inline-flex' : 'none';
                 }
                 if (bApp) {
-                    bApp.textContent = (data.bookings || []).length;
-                    bApp.style.display = data.bookings?.length > 0 ? 'inline-flex' : 'none';
+                    bApp.textContent = (data._historyCounts?.bookings??data.bookings?.length??0);
+                    bApp.style.display = (data._historyCounts?.bookings??data.bookings?.length)>0 ? 'inline-flex' : 'none';
                 }
                 if (bCmp) {
-                    bCmp.textContent = (data.complaints || []).length;
-                    bCmp.style.display = data.complaints?.length > 0 ? 'inline-flex' : 'none';
+                    bCmp.textContent = (data._historyCounts?.complaints??data.complaints?.length??0);
+                    bCmp.style.display = (data._historyCounts?.complaints??data.complaints?.length)>0 ? 'inline-flex' : 'none';
                 }
             });
         }
@@ -401,16 +406,16 @@
         const badgeBookings = document.getElementById('badgeCountBookings');
         const badgeComplaints = document.getElementById('badgeCountComplaints');
         if (badgeOrders) {
-            badgeOrders.textContent = (data.orders || []).length;
-            badgeOrders.style.display = data.orders?.length > 0 ? 'inline-flex' : 'none';
+            badgeOrders.textContent = (data._historyCounts?.orders??data.orders?.length??0);
+            badgeOrders.style.display = (data._historyCounts?.orders??data.orders?.length)>0 ? 'inline-flex' : 'none';
         }
         if (badgeBookings) {
-            badgeBookings.textContent = (data.bookings || []).length;
-            badgeBookings.style.display = data.bookings?.length > 0 ? 'inline-flex' : 'none';
+            badgeBookings.textContent = (data._historyCounts?.bookings??data.bookings?.length??0);
+            badgeBookings.style.display = (data._historyCounts?.bookings??data.bookings?.length)>0 ? 'inline-flex' : 'none';
         }
         if (badgeComplaints) {
-            badgeComplaints.textContent = (data.complaints || []).length;
-            badgeComplaints.style.display = data.complaints?.length > 0 ? 'inline-flex' : 'none';
+            badgeComplaints.textContent = (data._historyCounts?.complaints??data.complaints?.length??0);
+            badgeComplaints.style.display = (data._historyCounts?.complaints??data.complaints?.length)>0 ? 'inline-flex' : 'none';
         }
 
         PawpalCustomers.updateBreadcrumb(data.name);
@@ -518,12 +523,18 @@
     function initProfileTab() {
         // Drawer Subtabs switching
         const drawerTabs = document.querySelectorAll('.drawer-tab-btn');
+        document.querySelector('.drawer-subtabs-bar')?.setAttribute('role','tablist');
         drawerTabs.forEach(tab => {
+            tab.onkeydown=event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const tabs=[...drawerTabs],index=tabs.indexOf(tab),next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;switchDrawerTab(tabs[next].dataset.drawertab);tabs[next].focus();};
             tab.addEventListener('click', () => {
                 const targetPanelId = tab.getAttribute('data-drawertab');
                 switchDrawerTab(targetPanelId);
             });
         });
+        const selectedTab=[...drawerTabs].find(tab=>tab.classList.contains('active'))||drawerTabs[0];
+        if(selectedTab){drawerTabs.forEach(tab=>{tab.setAttribute('role','tab');tab.setAttribute('aria-selected',String(tab===selectedTab));tab.tabIndex=tab===selectedTab?0:-1;});}
+        const actions=document.querySelector('.drawer-action-buttons');
+        if(actions&&!document.getElementById('customerCopyPhone')){const copy=document.createElement('button');copy.type='button';copy.id='customerCopyPhone';copy.className='action-btn-pill';copy.textContent='Sao chép số';copy.onclick=async()=>{const id=document.getElementById('profileValCustId')?.textContent,cust=getCust(id);if(!cust?.phone)return PawpalCustomers.showToast('Khách chưa có số điện thoại.','warning');try{await navigator.clipboard.writeText(cust.phone);PawpalCustomers.showToast('Đã sao chép số điện thoại.','success');}catch{PawpalCustomers.showToast('Không thể sao chép. Vui lòng chọn số trong hồ sơ.','warning');}};actions.append(copy);}
 
         // Nút Sửa hồ sơ
         const btnOpenEdit = document.getElementById('btnOpenEditProfileModal');
@@ -684,19 +695,23 @@
 
         // Notes use the version displayed with the profile, not an inferred customer.
         const btnSaveNote=document.getElementById('btnSaveCustomerNote');
+        const editNote=document.getElementById('customerNoteEdit'),cancelNote=document.getElementById('customerNoteCancel'),noteEditor=document.getElementById('customerNoteEditor');
+        if(editNote)editNote.onclick=()=>{noteEditor.hidden=false;editNote.hidden=true;document.getElementById('drawerCustNote')?.focus();};
+        if(cancelNote)cancelNote.onclick=()=>{noteEditor.hidden=true;editNote.hidden=false;document.getElementById('drawerCustNote').value=document.getElementById('customerNoteReadView').textContent==='Chưa có ghi chú'?'':document.getElementById('customerNoteReadView').textContent;};
         btnSaveNote?.addEventListener('click',async()=>{
             if(btnSaveNote.disabled)return;
             const input=document.getElementById('drawerCustNote');
             const cust=getCust(document.getElementById('profileValCustId')?.textContent);
             if(!cust?.dbId)return;
             btnSaveNote.disabled=true;
+            input.readOnly=true;if(cancelNote)cancelNote.disabled=true;
             try{
                 const {error}=await window.getSupabaseClient().rpc('save_customer_note',{p_customer_id:cust.dbId,p_expected_updated_at:input.dataset.version,p_note:input.value});
                 if(error)throw error;
                 await PawpalCustomers.loadCustomersModuleData({force:true});renderDrawerCustomerProfile(cust.id);
                 PawpalCustomers.showToast('Đã lưu ghi chú khách hàng.','success');
             }catch(error){PawpalCustomers.showToast(error.code==='PT409'?'Hồ sơ đã thay đổi. Vui lòng làm mới trước khi lưu ghi chú.':'Không thể lưu ghi chú. Vui lòng thử lại.','warning');}
-            finally{btnSaveNote.disabled=false;}
+            finally{btnSaveNote.disabled=false;input.readOnly=false;if(cancelNote)cancelNote.disabled=false;}
         });
 
         // Điều hướng chéo

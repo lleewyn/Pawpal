@@ -1,0 +1,324 @@
+/* Admin V7 overrides. Superseded declarations with identical selectors removed. */
+.customers-module #subtab-tab-list { --text-heading: #275e49; --text-main: #24382f; --text-muted: #6f8176; --border-neutral: #e3e9e4; font-family: Inter, "Segoe UI", sans-serif; color: rgb(36, 56, 47); }
+.customers-module #subtab-tab-list .customers-kpi-grid { display: grid; grid-template-columns: repeat(5, minmax(0px, 1fr)); }
+.customers-module #subtab-tab-list .kpi-card { border-width: 0px 1px 0px 0px; border-style: none solid none none; border-color: currentcolor rgb(227, 233, 228) currentcolor currentcolor; border-image: none; border-radius: 0px; background: transparent; backdrop-filter: none; box-shadow: none; padding: 8px 24px; gap: 8px; }
+.customers-module #subtab-tab-list .kpi-card:first-child { padding-left: 0px; }
+.customers-module #subtab-tab-list .kpi-card.active .kpi-label { color: rgb(39, 94, 73); font-weight: 700; }
+.customers-module #subtab-tab-list .customer-master-card { box-shadow: none; backdrop-filter: none; }
+.customers-module #subtab-tab-list .table-toolbar-section { background: transparent; }
+.customers-module #subtab-tab-list .filter-row-top { gap: 20px; }
+.customers-module #subtab-tab-list .admin-input, .customers-module #subtab-tab-list .admin-select { background: rgb(255, 255, 255); border-width: 1px; border-style: solid; border-image: none; box-shadow: none; color: rgb(36, 56, 47); font-style: normal; font-variant: normal; font-size-adjust: none; font-language-override: normal; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-weight: normal; font-stretch: normal; line-height: normal; font-family: Inter, "Segoe UI", sans-serif; }
+.customers-module #subtab-tab-list .admin-btn { font-weight: 600; box-shadow: none; }
+.customers-module #subtab-tab-list .admin-btn-primary { background: rgb(39, 94, 73); border-color: rgb(39, 94, 73); color: rgb(255, 255, 255); }
+.customers-module #subtab-tab-list .admin-btn-secondary { background: rgb(255, 255, 255); color: rgb(82, 99, 89); border-color: rgb(220, 228, 221); }
+.customers-module #subtab-tab-list .table-responsive-wrapper { background: transparent; border: 0px; }
+.customers-module #customerDataTable { background: transparent; color: rgb(36, 56, 47); border: 0px; }
+.customers-module #customerDataTable th { text-transform: none; position: sticky; top: 0px; z-index: 1; }
+.customers-module #customerDataTable td { background: transparent; }
+.customers-module #customerDataTable tr:last-child td { border-bottom: 0px; }
+.customers-module #customerDataTable tbody tr:hover { background: rgb(248, 250, 248); }
+.customers-module #customerDataTable .admin-badge { display: inline; height: auto; min-height: 0px; border: 0px !important; border-radius: 0px !important; }
+.customers-module #customerDataTable .badge-danger { color: rgb(186, 71, 69); }
+.customers-module #customerDataTable .badge-warning { color: rgb(152, 115, 36); }
+.customers-module #customerDataTable td > strong { font-weight: 500; }
+.customers-module #subtab-tab-list .customer-complaint-strip { border-top: 0px; border-right: 0px; border-left: 0px; border-image: none; gap: 16px; }
+.customers-module #subtab-tab-list .complaint-strip-left { align-items: flex-start; flex-wrap: wrap; gap: 8px 16px; }
+.customers-module #subtab-tab-list .complaint-strip-items { display: flex; flex-wrap: wrap; overflow: visible; white-space: normal; gap: 8px 18px; animation: auto ease 0s 1 normal none running none; }
+.customers-module #subtab-tab-list .complaint-item-tag { border: 0px; border-radius: 0px; padding: 0px; font-size: 12px; animation: auto ease 0s 1 normal none running none; background: transparent !important; }
+.customers-module .customer-density-controls { display: flex; gap: 4px; margin-left: auto; }
+.customers-module .customer-density-controls button { border: 0px; background: transparent; color: rgb(111, 129, 118); font-style: normal; font-variant: normal; font-size-adjust: none; font-language-override: normal; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-weight: normal; font-stretch: normal; line-height: normal; font-family: Inter, sans-serif; cursor: pointer; }
+.customers-module .customer-density-controls button[aria-pressed="true"] { background: rgb(233, 241, 235); color: rgb(39, 94, 73); font-weight: 600; }
+@media (max-width: 1100px) {
+  .customers-module #subtab-tab-list .kpi-card { padding: 8px 14px; }
+  .customers-module #subtab-tab-list .kpi-val { font-size: 25px; }
+  .customers-module #customerDataTable { min-width: 960px; }
+}
+@media (max-width: 700px) {
+  .customers-module #subtab-tab-list .customers-kpi-grid { grid-template-columns: repeat(3, minmax(0px, 1fr)); row-gap: 16px; }
+  .customers-module #subtab-tab-list .kpi-card { padding: 4px 12px; }
+  .customers-module #subtab-tab-list .table-toolbar-section { padding: 16px; }
+  .customers-module .customer-density-controls { margin-left: 0px; }
+}
+.customers-module #subtab-tab-list { gap: 10px; --brand: #275e49; --ink: #24382f; --muted: #6f8176; --line: #e3e9e4; }
+.customers-module #subtab-tab-list .customers-kpi-grid { margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 1px solid rgb(220, 228, 222); border-radius: 0px; overflow: hidden; gap: 0px; }
+.customers-module #subtab-tab-list .kpi-card, .customers-module #subtab-tab-list .kpi-card:first-child { min-height: 62px; padding: 10px 14px; gap: 4px; background: rgb(255, 255, 255); border-right: 1px solid rgb(226, 232, 227); justify-content: flex-start; }
+.customers-module #subtab-tab-list .kpi-card:last-child { border-right: 0px; }
+.customers-module #subtab-tab-list .kpi-label { font-size: 11px; line-height: 1.2; font-weight: 500; color: rgb(89, 108, 94); }
+.customers-module #subtab-tab-list .kpi-val { font-size: 23px; font-weight: 650; line-height: 1.1; letter-spacing: -0.6px; color: rgb(38, 61, 49) !important; }
+.customers-module #subtab-tab-list .customer-master-card { border: 1px solid rgb(217, 224, 219); border-radius: 0px; overflow: visible; background: rgb(255, 255, 255); }
+.customers-module #subtab-tab-list .table-toolbar-section { padding: 0px; border: 0px; }
+.customers-module #subtab-tab-list .filter-row-top { padding: 10px 14px; margin: 0px; align-items: center; }
+.customers-module #subtab-tab-list .customer-workspace-title { font-size: 13px; letter-spacing: 0px; font-weight: 650; color: rgb(38, 61, 48); }
+.customers-module #subtab-tab-list .filter-actions-right { gap: 7px; margin-left: auto; }
+.customers-module #subtab-tab-list .filter-row-bottom { padding: 1px 14px 8px; gap: 9px; align-items: center; display: flex; flex-wrap: wrap; }
+.customers-module #subtab-tab-list .search-box-wrapper { flex: 1 1 0%; min-width: 205px; max-width: 385px; }
+.customers-module #subtab-tab-list .search-input { width: 100%; padding-left: 13px; }
+.customers-module #subtab-tab-list .filter-dropdown-group { display: flex; align-items: center; gap: 8px; flex-direction: row; }
+.customers-module #subtab-tab-list .filter-label { font-size: 11px; font-weight: 500; color: rgb(111, 129, 118); white-space: nowrap; margin: 0px; }
+.customers-module #subtab-tab-list .admin-input, .customers-module #subtab-tab-list .admin-select { height: 37px; min-height: 37px; border-radius: 4px; font-size: 12px; border-color: rgb(226, 232, 226); }
+.customers-module #subtab-tab-list .admin-select { max-width: 144px; min-width: 110px; }
+.customers-module #subtab-tab-list .admin-btn { min-height: 32px; border-radius: 4px; padding: 7px 11px; font-size: 12px; }
+.customers-module #subtab-tab-list .admin-btn-filter-toggle { height: 37px; border-radius: 4px; font-size: 12px; padding: 8px 11px; }
+.customers-module #subtab-tab-list .table-responsive-wrapper { border-radius: 0px; }
+.customers-module #customerDataTable th { border-bottom: 1px solid rgb(218, 226, 219); }
+.customers-module #customerDataTable td { border-bottom: 1px solid rgb(233, 238, 233); }
+.customers-module #customerDataTable th:first-child, .customers-module #customerDataTable td:first-child { padding-left: 14px; }
+.customers-module #subtab-tab-list .customer-complaint-strip { border-radius: 0px; background: rgb(255, 255, 255); border-bottom: 1px solid rgb(228, 234, 229); padding: 10px 14px; }
+.customers-module .customer-density-controls button { font-size: 11px; border-radius: 4px; padding: 6px 9px; }
+.customers-module .customer-operations { border: 1px solid rgb(222, 229, 223); background: rgb(255, 255, 255); border-radius: 0px; }
+.customers-module .customer-operations[hidden], .customers-module #custOpsDetails[hidden], .customers-module #custFilterContext[hidden], .customers-module #btnFilterComplaintOnly[hidden] { display: none !important; }
+.customers-module .customer-ops-head { display: flex; align-items: center; font-size: 11px; color: rgb(82, 99, 89); }
+.customers-module .customer-ops-head strong { white-space: nowrap; }
+.customers-module #custOpsSummary { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.customers-module #custToggleOps, .customers-module .customer-ops-toolbar button { border: 0px; background: transparent; color: rgb(39, 94, 73); text-decoration: underline; text-underline-offset: 2px; font: 11px Inter, sans-serif; cursor: pointer; white-space: nowrap; }
+.customers-module #custOpsDetails { border-top: 1px solid rgb(228, 234, 229); }
+.customers-module .customer-ops-toolbar { text-align: right; }
+.customers-module #custComplaintItemsContainer .complaint-item-tag { font-size: 11px; cursor: pointer; }
+.customers-module .customer-complaint-checkbox { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; color: rgb(82, 99, 89); white-space: nowrap; cursor: pointer; }
+.customers-module .customer-complaint-checkbox input { width: 13px; height: 13px; accent-color: rgb(39, 94, 73); }
+.customers-module #subtab-tab-list #btnCustClearFilters { display: inline-flex; font-size: 11px; font-weight: 500; color: rgb(39, 94, 73); background: transparent; border: 0px; padding: 7px 0px; }
+.customers-module #subtab-tab-list #btnCustClearFilters:disabled { opacity: 0.35; cursor: default; }
+.customers-module .customer-filter-context { padding: 6px 14px 8px; color: rgb(86, 107, 93); font-size: 11px; border-top: 1px solid rgb(239, 242, 239); }
+.customers-module .customer-table-meta { min-height: 35px; background: rgb(250, 251, 250); padding: 7px 14px; display: flex; justify-content: space-between; gap: 15px; color: rgb(105, 121, 110); font-size: 10.5px; border-top: 1px solid rgb(228, 233, 228); }
+.customers-module #subtab-tab-list .table-responsive-wrapper { max-height: min(64vh, 620px); min-height: 330px; overflow: auto; scrollbar-width: thin; overscroll-behavior: contain; }
+.customers-module #customerDataTable { min-width: 1050px; }
+.customers-module #customerDataTable th:nth-child(1) { min-width: 125px; width: 125px !important; }
+.customers-module #customerDataTable th:nth-child(2) { width: 200px; }
+.customers-module #customerDataTable th:nth-child(3) { width: 125px; }
+.customers-module #customerDataTable th:nth-child(4) { width: 165px; }
+.customers-module #customerDataTable th:nth-child(5) { width: 135px; }
+.customers-module #customerDataTable th:nth-child(6) { width: 180px; }
+.customers-module #customerDataTable th:nth-child(7) { width: 118px; }
+.customers-module #customerDataTable th:last-child { width: 90px !important; min-width: 90px !important; }
+.customers-module #customerDataTable .customer-code-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.customers-module #customerDataTable .points-val { display: inline; white-space: nowrap; }
+.customers-module #customerDataTable .btn-action-more { min-width: 0px; border-radius: 0px; }
+.customers-module #customerDataTable.customer-table-compact .user-sub-cell, .customers-module #customerDataTable.customer-table-compact .customer-pet-sub { display: none; }
+@media (max-width: 900px) {
+  .customers-module .customer-table-meta > span:last-child { display: none; }
+}
+.customers-module #custComplaintItemsContainer { scrollbar-width: thin; gap: 0px; min-width: 0px; }
+.customers-module #custComplaintItemsContainer .complaint-item-tag { grid-template-columns: 145px 190px minmax(0px, 1fr); gap: 16px; width: 100%; min-width: 0px; white-space: normal; line-height: 1.6; border-width: 1px 0px 0px; border-style: solid none none; border-color: rgb(237, 241, 237) currentcolor currentcolor; border-image: none; display: grid !important; padding: 11px 14px !important; background: transparent !important; }
+.customers-module #custComplaintItemsContainer .tag-ticket { display: block; min-width: 0px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgb(111, 129, 118); font-size: 11px; font-weight: 400; }
+.customers-module #custComplaintItemsContainer .tag-cust { display: block; min-width: 0px; overflow-wrap: anywhere; color: rgb(48, 72, 58); font-size: 12px; font-weight: 500; }
+.customers-module #custComplaintItemsContainer .tag-reason { display: block; min-width: 0px; white-space: normal; overflow-wrap: anywhere; color: rgb(82, 99, 89); font-size: 12px; font-weight: 400; }
+.customers-module #custComplaintItemsContainer .complaint-item-tag:hover { background: rgb(245, 248, 245) !important; }
+.customers-module #custToggleOps:focus-visible { outline: rgb(39, 94, 73) solid 2px; outline-offset: 4px; }
+@media (max-width: 1100px) {
+  .customers-module #custComplaintItemsContainer .complaint-item-tag { grid-template-columns: 115px 155px minmax(0px, 1fr); gap: 12px; }
+}
+@media (max-width: 700px) {
+  .customers-module #custComplaintItemsContainer .complaint-item-tag { grid-template-columns: 110px minmax(0px, 1fr); gap: 4px 12px; }
+  .customers-module #custComplaintItemsContainer .tag-reason { grid-column: 1 / -1; }
+  .customers-module #custOpsSummary { display: none; }
+}
+.customers-module #custComplaintItemsContainer { grid-auto-rows: max-content; align-content: start; }
+.customers-module #custComplaintItemsContainer .complaint-item-tag { height: auto; min-height: 44px; flex-shrink: 0; align-items: start; border-radius: 0px !important; }
+.customers-module #custComplaintItemsContainer .complaint-item-tag { box-sizing: border-box; }
+.customers-module #customerDataTable { table-layout: auto; font: 400 13px / 1.46 Inter, "Segoe UI", Arial, sans-serif; letter-spacing: normal; border-collapse: collapse; }
+.customers-module #customerDataTable th { font: 650 11px / 1.46 Inter, "Segoe UI", Arial, sans-serif; letter-spacing: normal; color: rgb(83, 106, 89); background: rgb(241, 244, 241); padding: 10px 11px; box-shadow: rgb(217, 226, 218) 0px 1px 0px; }
+.customers-module #customerDataTable td { font: 550 12px / 1.35 Inter, "Segoe UI", Arial, sans-serif; letter-spacing: -0.2px; color: rgb(48, 72, 58); padding: 10px 11px; white-space: nowrap; height: auto; vertical-align: middle; }
+.customers-module #customerDataTable td:first-child, .customers-module #customerDataTable th:first-child { padding-left: 15px; }
+.customers-module #customerDataTable .user-name-cell { font: inherit; letter-spacing: normal; min-width: 0px; }
+.customers-module #customerDataTable .user-name-link { display: block; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 650 12px / 1.35 Inter, "Segoe UI", Arial, sans-serif; letter-spacing: normal; color: rgb(38, 78, 56); }
+.customers-module #customerDataTable .customer-pet-cell { font: 580 12px / 1.35 Inter, "Segoe UI", Arial, sans-serif; letter-spacing: normal; color: rgb(50, 75, 62); white-space: nowrap; }
+.customers-module #customerDataTable .user-sub-cell, .customers-module #customerDataTable .customer-pet-sub { font: 400 10.5px / 1.35 Inter, "Segoe UI", Arial, sans-serif; letter-spacing: normal; color: rgb(114, 133, 121); margin-top: 3px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.customers-module #customerDataTable .customer-pet-more { font: 400 10.5px / 1.35 Inter, "Segoe UI", Arial, sans-serif; letter-spacing: normal; color: rgb(114, 133, 121); margin-left: 4px; }
+.customers-module #customerDataTable .customer-code-text { font: 500 11px / 1.35 Inter, "Segoe UI", Arial, sans-serif; letter-spacing: normal; color: rgb(121, 137, 127); max-width: 105px; }
+.customers-module #customerDataTable .admin-badge { font: 500 11.5px / 1.35 Inter, "Segoe UI", Arial, sans-serif; letter-spacing: normal; color: rgb(52, 93, 70); padding: 0px; background: transparent !important; }
+.customers-module #customerDataTable .points-val { font: 500 11px / 1.35 Inter, "Segoe UI", Arial, sans-serif; letter-spacing: normal; color: rgb(105, 119, 110); margin: 0px 0px 0px 6px; }
+.customers-module #customerDataTable .alert-indicator { display: block; max-width: 155px; min-width: 0px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; -webkit-line-clamp: unset; font: 600 11.5px / 1.35 Inter, "Segoe UI", Arial, sans-serif; letter-spacing: normal; color: rgb(165, 68, 61) !important; }
+.customers-module #customerDataTable .alert-indicator.text-warning { color: rgb(152, 115, 36) !important; }
+.customers-module #customerDataTable .btn-action-more { display: inline-block; font: 600 12px / 1.35 Inter, "Segoe UI", Arial, sans-serif; letter-spacing: normal; color: rgb(40, 94, 70); padding: 2px 0px; border: 0px; background: transparent; height: auto; min-height: 0px; width: auto; text-decoration: underline; text-underline-offset: 3px; box-shadow: none; }
+.customers-module #customerDataTable.customer-table-compact td { height: auto; padding-top: 6px; padding-bottom: 6px; }
+.customers-module .customer-ops-head { padding: 8px 14px; min-height: 38px; gap: 12px; border: 0px; }
+.customers-module .customer-ops-head strong { font-size: 12px; font-weight: 650; color: rgb(44, 68, 52); }
+.customers-module #custOpsCount { font-weight: 450; color: rgb(113, 128, 117); margin-left: 7px; font-size: 11px; }
+.customers-module #custOpsSummary { color: rgb(98, 115, 105); font-size: 11.5px; flex: 1 1 0%; min-width: 0px; }
+.customers-module #custToggleOps { padding: 4px 2px; font-size: 11.5px; font-weight: 600; color: rgb(36, 92, 66); text-underline-offset: 3px; }
+.customers-module .customer-ops-toolbar { padding: 4px 13px; border-bottom: 1px solid rgb(232, 236, 232); }
+.customers-module #custComplaintItemsContainer { display: block; max-height: 280px; overflow: auto; overscroll-behavior: contain; }
+.customers-module .customer-operation-row { display: flex; align-items: center; gap: 18px; padding: 8px 14px; border-top: 1px solid rgb(239, 242, 239); min-width: 0px; }
+.customers-module .customer-operation-row:first-child { border-top: 0px; }
+.customers-module .customer-operation-body { min-width: 0px; flex: 1 1 0%; }
+.customers-module .customer-operation-label { font: 600 11.5px / 1.5 Inter, sans-serif; color: rgb(70, 90, 75); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.customers-module .customer-operation-description { font: 400 11px / 1.5 Inter, sans-serif; color: rgb(123, 133, 125); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.customers-module .customer-operation-open { flex-shrink: 0; border: 1px solid rgb(217, 228, 218); background: rgb(255, 255, 255); border-radius: 2px; color: rgb(39, 94, 73); font: 550 11px / 1.5 Inter, sans-serif; padding: 7px 9px; cursor: pointer; }
+.customers-module .customer-operation-open:hover { background: rgb(243, 247, 243); }
+@media (max-width: 980px) {
+  .customers-module #custOpsSummary { display: none; }
+}
+#customerGlobalActionDropdown { min-width: 180px; max-width: calc(-20px + 100vw); max-height: calc(100dvh - 20px); overflow: auto; overscroll-behavior: contain; background: rgb(255, 255, 255); border: 1px solid rgb(220, 228, 222); border-radius: 3px; padding: 5px; box-shadow: rgba(36, 57, 44, 0.08) 0px 7px 20px; font-family: Inter, "Segoe UI", sans-serif; }
+#customerGlobalActionDropdown .dropdown-item { font: 500 12px / 1.5 Inter, "Segoe UI", sans-serif; letter-spacing: normal; display: block; padding: 9px 10px; background: transparent; border: 0px; border-radius: 2px; color: rgb(63, 86, 71); text-align: left; width: 100%; }
+#customerGlobalActionDropdown .dropdown-item:hover, #customerGlobalActionDropdown .dropdown-item:focus-visible { background: rgb(242, 247, 243); outline: none; }
+#customerGlobalActionDropdown .dropdown-item.text-danger { color: rgb(165, 68, 61) !important; }
+#customerGlobalActionDropdown .dropdown-item.text-danger:hover { background: rgb(255, 244, 242) !important; }
+#customerGlobalActionDropdown .dropdown-item.text-success { color: rgb(39, 94, 73) !important; }
+.customers-module #subtab-tab-profile, .customers-module #subtab-tab-pawpoint { --text-heading: #275e49; --text-main: #24382f; --text-muted: #6f8176; font: 13px / 1.48 Inter, "Segoe UI", sans-serif; color: rgb(36, 56, 47); }
+.customers-module #subtab-tab-profile .profile-drawer-container { padding: 0px; background: transparent; border: 0px; border-radius: 0px; box-shadow: none; backdrop-filter: none; }
+.customers-module #subtab-tab-profile .profile-quick-actions-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0px 15px; background: transparent; border-width: 0px 0px 1px; border-style: none none solid; border-color: currentcolor currentcolor rgb(227, 233, 228); border-image: none; border-radius: 0px; flex-wrap: wrap; }
+.customers-module #subtab-tab-profile .drawer-user-headline { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.customers-module #subtab-tab-profile .headline-name { font: 700 17px / 1.48 Inter, sans-serif; letter-spacing: -0.25px; color: rgb(38, 57, 47); }
+.customers-module #subtab-tab-profile .admin-badge { height: auto; padding: 0px; font: 500 12px / 1.5 Inter, sans-serif; color: rgb(105, 122, 112); background: transparent !important; border: 0px !important; border-radius: 0px !important; }
+.customers-module #subtab-tab-profile .drawer-action-buttons { gap: 8px; display: flex; align-items: center; flex-wrap: wrap; }
+.customers-module #subtab-tab-profile .action-btn-pill, .customers-module #subtab-tab-profile .admin-btn, .customers-module #subtab-tab-pawpoint .admin-btn { border: 1px solid rgb(214, 222, 216); background: rgb(255, 255, 255); color: rgb(40, 70, 55); padding: 8px 12px; border-radius: 4px; font: 600 13px / 1.3 Inter, sans-serif; min-height: 35px; box-shadow: none; text-decoration: none; }
+.customers-module #subtab-tab-profile .admin-btn-primary, .customers-module #subtab-tab-pawpoint .admin-btn-primary { background: rgb(39, 94, 73); color: rgb(255, 255, 255); border-color: rgb(39, 94, 73); }
+.customers-module #subtab-tab-profile .drawer-subtabs-bar { display: flex; gap: 24px; min-height: 49px; background: transparent; border-width: 0px 0px 1px; border-style: none none solid; border-color: currentcolor currentcolor rgb(220, 229, 222); border-image: none; padding: 0px; }
+.customers-module #subtab-tab-profile .drawer-tab-btn { background: transparent; border-width: 0px 0px 2px; border-style: none none solid; border-color: currentcolor currentcolor transparent; border-image: none; border-radius: 0px; color: rgb(97, 121, 108); font: 600 13px / 1.5 Inter, sans-serif; white-space: nowrap; padding: 15px 1px 12px; }
+.customers-module #subtab-tab-profile .drawer-tab-btn.active { color: rgb(39, 94, 73); border-bottom: 2px solid rgb(39, 94, 73); background: transparent; }
+.customers-module .v7-customer-profile-columns { display: grid; grid-template-columns: minmax(0px, 1.55fr) minmax(265px, 0.95fr); gap: 26px; padding-top: 22px; }
+.customers-module #subtab-tab-profile .drawer-tab-body { padding: 0px; min-width: 0px; }
+.customers-module #subtab-tab-profile .detail-grid-two-col { display: block; }
+.customers-module #subtab-tab-profile .detail-box { border-radius: 0px; padding: 0px; box-shadow: none; background: transparent !important; border: 0px !important; }
+.customers-module #subtab-tab-profile .detail-box-title { font: 700 14px / 1.5 Inter, sans-serif; color: rgb(39, 94, 73); margin: 0px 0px 17px; }
+.customers-module #subtab-tab-profile .data-pair-row { display: grid; grid-template-columns: 32% minmax(0px, 1fr); gap: 0px; align-items: start; border-width: 0px 0px 1px; border-style: none none solid; border-color: currentcolor currentcolor rgb(232, 236, 232); border-image: none; font-size: 13px; min-height: 0px; padding: 14px 7px !important; }
+.customers-module #subtab-tab-profile .data-key { width: auto; min-width: 0px; color: rgb(110, 132, 118); font-weight: 400; margin: 0px !important; }
+.customers-module #subtab-tab-profile .data-val { width: auto; min-width: 0px; color: rgb(45, 66, 55); font-weight: 550; overflow-wrap: anywhere; text-align: left; }
+.customers-module #subtab-tab-profile .v7-customer-notes { min-width: 0px; padding: 0px 0px 0px 23px; border: 0px; background: transparent; box-shadow: none; }
+.customers-module #subtab-tab-profile .textarea-note { width: 100%; height: auto; min-height: 150px; border: 1px solid rgb(215, 223, 217); border-radius: 4px; resize: vertical; padding: 11px; background: rgb(255, 255, 255); color: rgb(53, 75, 61); font: 13px / 1.7 Inter, sans-serif; }
+.customers-module #subtab-tab-profile .drawer-tab-panel .admin-table { font-size: 12px; background: rgb(255, 255, 255); border: 1px solid rgb(224, 230, 225); }
+.customers-module #subtab-tab-profile .admin-table th { background: rgb(238, 243, 239); font-size: 11px; font-weight: 650; color: rgb(65, 105, 83); padding: 12px; }
+.customers-module #subtab-tab-profile .admin-table td { padding: 14px 12px; border-bottom: 1px solid rgb(230, 236, 231); line-height: 1.6; }
+.customers-module #subtab-tab-profile .pet-cards-list { display: block; }
+.customers-module #subtab-tab-profile .pet-detail-card { background: transparent; border-width: 0px 0px 1px; border-style: none none solid; border-color: currentcolor currentcolor rgb(227, 233, 228); border-image: none; border-radius: 0px; padding: 16px 0px; box-shadow: none; }
+.customers-module #subtab-tab-pawpoint .pawpoint-grid-layout { display: flex; flex-direction: column; gap: 0px; }
+.customers-module #subtab-tab-pawpoint .v7-points-ledger { background: transparent; border: 0px; border-radius: 0px; box-shadow: none; backdrop-filter: none; overflow: visible; }
+.customers-module #subtab-tab-pawpoint .admin-card-header { padding: 4px 0px 15px; background: transparent; border-width: 0px 0px 1px; border-style: none none solid; border-color: currentcolor currentcolor rgb(227, 233, 228); border-image: none; border-radius: 0px; }
+.customers-module #subtab-tab-pawpoint .admin-card-title { font: 700 17px / 1.5 Inter, sans-serif; letter-spacing: -0.25px; color: rgb(38, 57, 47); }
+.customers-module #subtab-tab-pawpoint .pawpoint-toolbar { padding: 16px 0px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border: 0px; }
+.customers-module #subtab-tab-pawpoint .pawpoint-toolbar input, .customers-module #subtab-tab-pawpoint .pawpoint-toolbar select { height: 38px; border-radius: 4px; border: 1px solid rgb(214, 224, 217); background: rgb(255, 255, 255); padding: 7px 11px; color: rgb(53, 75, 61); font: 13px Inter, sans-serif; }
+.customers-module #subtab-tab-pawpoint .pawpoint-toolbar input { min-width: 245px; max-width: 320px; flex: 1 1 0%; }
+.customers-module #subtab-tab-pawpoint .pawpoint-toolbar label { font-size: 13px; color: rgb(93, 115, 101); }
+.customers-module #pawpointResultCount { font-size: 12px; color: rgb(117, 135, 121); }
+.customers-module .v7-points-scroll { overflow: auto; border: 1px solid rgb(224, 230, 225); background: rgb(255, 255, 255); max-height: calc(100dvh - 245px); overscroll-behavior: contain; }
+.customers-module #subtab-tab-pawpoint .admin-table { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 850px; font: 13px / 1.5 Inter, sans-serif; background: transparent; }
+.customers-module #subtab-tab-pawpoint .admin-table th { position: sticky; top: 0px; background: rgb(238, 243, 239); text-align: left; color: rgb(65, 105, 83); font-weight: 650; z-index: 1; padding: 14px; border-width: 0px 0px 1px; border-style: none none solid; border-color: currentcolor currentcolor rgb(230, 236, 231); border-image: none; }
+.customers-module #subtab-tab-pawpoint .admin-table td { border-bottom: 1px solid rgb(230, 236, 231); padding: 17px 14px; vertical-align: top; color: rgb(53, 72, 59); background: transparent; overflow-wrap: anywhere; }
+.customers-module #subtab-tab-pawpoint .admin-table th:nth-child(1) { width: 18%; }
+.customers-module #subtab-tab-pawpoint .admin-table th:nth-child(2) { width: 22%; }
+.customers-module #subtab-tab-pawpoint .admin-table th:nth-child(3) { width: 15%; }
+.customers-module #subtab-tab-pawpoint .admin-table th:nth-child(4) { width: 12%; }
+.customers-module #subtab-tab-pawpoint td .text-success { color: rgb(23, 116, 72) !important; }
+.customers-module #subtab-tab-pawpoint td .text-danger { color: rgb(177, 87, 67) !important; }
+.customers-module .v7-tier-policy { margin-top: 20px; color: rgb(105, 126, 109); font-size: 12px; }
+.customers-module .v7-tier-policy summary { cursor: pointer; padding: 8px 0px; color: rgb(39, 94, 73); }
+.customers-module #subtab-tab-pawpoint .v7-tier-policy .admin-card { background: transparent; border: 0px; box-shadow: none; padding: 14px 0px; }
+@media (max-width: 1000px) {
+  .customers-module .v7-customer-profile-columns { grid-template-columns: minmax(0px, 1.4fr) minmax(220px, 1fr); gap: 20px; }
+}
+@media (max-width: 850px) {
+  .customers-module .v7-customer-profile-columns { grid-template-columns: 1fr; }
+  .customers-module #subtab-tab-profile .v7-customer-notes { padding: 18px 0px 0px; }
+  .customers-module #subtab-tab-profile .drawer-tab-panel { overflow: auto; }
+}
+.customers-module #customerNoteEditor[hidden], .customers-module #customerNoteEdit[hidden] { display: none !important; }
+.customers-module .v7-note-read { font-size: 13px; line-height: 1.7; min-height: 110px; white-space: pre-wrap; margin: 0px; color: rgb(53, 75, 61); overflow-wrap: anywhere; }
+.customers-module .v7-note-edit { border: 0px; background: transparent; color: rgb(39, 94, 73); font: 650 13px / 1.5 Inter, sans-serif; text-decoration: underline; text-underline-offset: 3px; padding: 5px 0px; cursor: pointer; }
+.customers-module #subtab-tab-profile .detail-box { gap: 0px; }
+.customers-module #subtab-tab-profile .detail-box-title { border: 0px; padding: 0px; }
+.customers-module #subtab-tab-profile .detail-box-title::after { display: none; }
+.customers-module #subtab-tab-pawpoint .admin-table th { font-family: Inter, "Segoe UI", sans-serif; font-size: 13px; letter-spacing: normal; }
+.customers-module #subtab-tab-profile .drawer-tab-panel { min-width: 0px; max-width: 100%; overflow-x: auto; overscroll-behavior: contain; }
+.customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table { width: 100%; min-width: 980px; table-layout: fixed; border-collapse: collapse; }
+.customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table th, .customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table td { box-sizing: border-box; padding: 13px 14px; white-space: normal; overflow-wrap: anywhere; vertical-align: middle; text-align: left; line-height: 1.6; }
+.customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table th:nth-child(1) { width: 230px; }
+.customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table th:nth-child(2) { width: 145px; }
+.customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table th:nth-child(3) { width: 130px; }
+.customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table th:nth-child(4) { width: 175px; }
+.customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table th:nth-child(5) { width: 130px; }
+.customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table th:nth-child(6) { width: 170px; }
+.customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table .admin-badge { display: inline; white-space: normal; overflow-wrap: anywhere; height: auto; line-height: 1.6; }
+.customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table .user-name-link { display: block; max-width: 100%; white-space: normal; overflow-wrap: anywhere; font-size: 12px; }
+.customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table .admin-btn { white-space: nowrap; font-size: 12px; padding: 7px 10px; min-height: 32px; }
+.customers-module #subtab-tab-profile #dtab-complaints > .admin-table th:nth-child(3) { width: 230px; }
+.customers-module #subtab-tab-pawpoint .v7-points-scroll > .admin-table th { letter-spacing: normal; height: auto; min-height: 0px; white-space: normal; text-transform: none; border-left: 0px; border-top: 0px; border-right: 0px; box-shadow: none; }
+.customers-module #subtab-tab-pawpoint .v7-points-scroll { scrollbar-gutter: stable; }
+.customers-module #subtab-tab-profile .drawer-subtabs-bar { overflow: auto hidden; align-items: stretch; }
+.customers-module #subtab-tab-profile .drawer-tab-btn { position: relative; display: inline-flex; align-items: center; gap: 6px; overflow: visible; }
+.customers-module #subtab-tab-profile .drawer-tab-btn .tab-badge-count { position: static; top: auto; right: auto; flex-shrink: 0; min-width: 16px; height: 16px; padding: 0px 4px; border-radius: 4px; background: rgb(255, 240, 239); color: rgb(165, 68, 61); font: 600 10px / 16px Inter, "Segoe UI", sans-serif; text-align: center; margin: 0px; align-self: center; transform: none !important; }
+.customers-module .v7-customer-profile-columns:not(:has(#dtab-personal.active)) { grid-template-columns: minmax(0px, 1fr); }
+.customers-module .v7-customer-profile-columns:not(:has(#dtab-personal.active)) > .v7-customer-notes { display: none !important; }
+.customers-module #subtab-tab-profile .pet-card-head { display: flex; justify-content: space-between; align-items: start; gap: 20px; margin-bottom: 18px; padding: 0px; border: 0px; background: transparent; }
+.customers-module #subtab-tab-profile .pet-card-head-left { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0px; }
+.customers-module #subtab-tab-profile .pet-card-name { font: 650 14px / 1.5 Inter, sans-serif; color: rgb(39, 94, 73); overflow-wrap: anywhere; }
+.customers-module #subtab-tab-profile .pet-profile-code { font: 400 11px / 1.5 Inter, sans-serif; color: rgb(114, 133, 121); overflow-wrap: anywhere; }
+.customers-module #subtab-tab-profile .pet-card-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; flex-shrink: 0; }
+.customers-module #subtab-tab-profile .pet-card-actions .btn-pet-action { font: 550 12px / 1.5 Inter, sans-serif; color: rgb(40, 94, 70); padding: 3px 0px; height: auto; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; background: transparent !important; border: 0px !important; border-radius: 0px !important; }
+.customers-module #subtab-tab-profile .pet-card-actions .btn-pet-delete { color: rgb(165, 68, 61); }
+.customers-module #subtab-tab-profile .pet-card-body { display: grid; grid-template-columns: repeat(2, minmax(0px, 1fr)); gap: 0px 32px; max-width: 1000px; font: 13px / 1.6 Inter, sans-serif; }
+.customers-module #subtab-tab-profile .pet-card-body > div { display: grid; grid-template-columns: 140px minmax(0px, 1fr); gap: 12px; padding: 9px 0px; align-items: start; min-width: 0px; }
+.customers-module #subtab-tab-profile .pet-card-body > div > span:first-child { color: rgb(114, 133, 121); font-weight: 400; }
+.customers-module #subtab-tab-profile .pet-card-body > div > span:last-child { color: rgb(48, 72, 58); font-weight: 500; overflow-wrap: anywhere; }
+@media (max-width: 1000px) {
+  .customers-module #subtab-tab-profile .pet-card-body { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .customers-module #subtab-tab-profile .pet-card-head { flex-direction: column; gap: 12px; }
+  .customers-module #subtab-tab-profile .pet-card-actions { gap: 14px; }
+  .customers-module #subtab-tab-profile .pet-card-body > div { grid-template-columns: 120px minmax(0px, 1fr); }
+}
+.customers-module #subtab-tab-pawpoint .v7-points-scroll > .admin-table { font: 400 12px / 1.35 Inter, "Segoe UI", Arial, sans-serif; letter-spacing: normal; }
+.customers-module #subtab-tab-pawpoint .v7-points-scroll > .admin-table th { font: 650 11px / 1.46 Inter, "Segoe UI", Arial, sans-serif; padding: 10px 11px; background: rgb(241, 244, 241); color: rgb(83, 106, 89); border-bottom: 1px solid rgb(218, 226, 219); }
+.customers-module #subtab-tab-pawpoint .v7-points-scroll > .admin-table td { font: 500 12px / 1.35 Inter, "Segoe UI", Arial, sans-serif; padding: 10px 11px; vertical-align: middle; color: rgb(48, 72, 58); border-bottom: 1px solid rgb(233, 238, 233); overflow-wrap: anywhere; }
+.customers-module #subtab-tab-pawpoint .v7-points-scroll > .admin-table th:first-child, .customers-module #subtab-tab-pawpoint .v7-points-scroll > .admin-table td:first-child { padding-left: 15px; }
+.customers-module #subtab-tab-pawpoint .pawpoint-customer-name { display: block; font: 650 12px / 1.35 Inter, "Segoe UI", Arial, sans-serif; color: rgb(38, 78, 56); }
+.customers-module #subtab-tab-pawpoint .pawpoint-customer-phone { display: block; font: 400 10.5px / 1.35 Inter, "Segoe UI", Arial, sans-serif; color: rgb(114, 133, 121); margin-top: 3px; }
+.customers-module #subtab-tab-pawpoint .v7-points-scroll > .admin-table td:nth-child(3) strong { font-size: 12px; font-weight: 650; }
+.customers-module #subtab-tab-pawpoint .v7-points-scroll > .admin-table tbody tr:hover { background: rgb(248, 250, 248); }
+.customer-quick-overlay { position: fixed; inset: 0px; background: rgba(13, 31, 23, 0.3); z-index: 100000; display: flex; justify-content: flex-end; font: 13px / 1.5 Inter, "Segoe UI", sans-serif; color: rgb(53, 72, 59); }
+.customer-quick-drawer { width: min(530px, 95vw); height: 100dvh; background: rgb(255, 255, 255); display: flex; flex-direction: column; box-shadow: rgba(23, 61, 48, 0.08) -8px 0px 28px; outline: 0px; }
+.customer-quick-drawer header { display: flex; justify-content: space-between; align-items: start; gap: 16px; padding: 24px 28px; border-bottom: 1px solid rgb(227, 233, 228); }
+.customer-quick-drawer h2 { font-size: 20px; font-weight: 650; color: rgb(38, 57, 47); margin: 0px; }
+.customer-quick-drawer header p { font-size: 11px; color: rgb(125, 144, 131); overflow-wrap: anywhere; margin: 5px 0px 0px; }
+.customer-quick-drawer button { font: 550 12px / 1.5 Inter, sans-serif; padding: 7px 11px; border: 1px solid rgb(220, 228, 222); border-radius: 3px; background: rgb(255, 255, 255); color: rgb(39, 94, 73); cursor: pointer; }
+.customer-quick-drawer button:hover { background: rgb(242, 247, 243); }
+.customer-quick-drawer nav { display: flex; gap: 18px; padding: 0px 28px; border-bottom: 1px solid rgb(227, 233, 228); overflow: auto; flex-shrink: 0; }
+.customer-quick-drawer nav button { padding: 14px 0px; border-width: 0px 0px 2px; border-style: none none solid; border-color: currentcolor currentcolor transparent; border-image: none; border-radius: 0px; background: transparent; color: rgb(113, 133, 120); white-space: nowrap; }
+.customer-quick-drawer nav button[aria-selected="true"] { color: rgb(39, 94, 73); border-bottom-color: rgb(39, 94, 73); font-weight: 650; }
+#customerQuickBody { padding: 22px 28px; flex: 1 1 0%; overflow: auto; overscroll-behavior: contain; min-height: 0px; }
+#customerQuickBody h3 { font-size: 14px; font-weight: 650; color: rgb(39, 94, 73); margin: 0px 0px 17px; }
+#customerQuickBody table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; }
+#customerQuickBody td { padding: 10px 3px; border-bottom: 1px solid rgb(233, 238, 233); vertical-align: top; overflow-wrap: anywhere; }
+#customerQuickBody td:first-child { color: rgb(115, 132, 120); width: 39%; font-weight: 400; }
+#customerQuickBody td:last-child { font-weight: 550; color: rgb(41, 67, 52); }
+#customerQuickBody section { margin-bottom: 22px; }
+#customerQuickBody p { font-size: 12px; line-height: 1.7; color: rgb(105, 126, 109); }
+.customer-quick-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+.customer-quick-drawer footer { padding: 14px 28px; border-top: 1px solid rgb(227, 233, 228); }
+.customer-quick-drawer button:focus-visible { outline: rgb(39, 94, 73) solid 2px; outline-offset: 3px; }
+@media (max-width: 600px) {
+  .customer-quick-drawer header { padding: 20px; }
+  .customer-quick-drawer nav { padding: 0px 20px; gap: 16px; }
+  #customerQuickBody { padding: 20px; }
+  .customer-quick-drawer footer { padding: 14px 20px; }
+}
+#modalAddCustomer .admin-modal-card { padding: 26px 30px; background: rgb(255, 255, 255); border: 1px solid rgb(220, 228, 222); border-radius: 3px; box-shadow: rgba(23, 61, 48, 0.1) 0px 12px 40px; font: 13px / 1.5 Inter, "Segoe UI", sans-serif; max-height: 90dvh; overflow: auto; overscroll-behavior: contain; }
+#modalAddCustomer .admin-modal-header { border: 0px; background: transparent; gap: 16px; }
+#modalAddCustomer .admin-modal-title { font: 650 20px / 1.4 Inter, sans-serif; color: rgb(38, 57, 47); letter-spacing: -0.3px; }
+#modalAddCustomer .btn-modal-close { padding: 6px 10px; border: 1px solid rgb(220, 228, 222); border-radius: 3px; color: rgb(82, 109, 90); background: rgb(255, 255, 255); font: 500 12px / 1.5 Inter, sans-serif; }
+#modalAddCustomer .form-label { font: 550 12px / 1.5 Inter, sans-serif; color: rgb(82, 109, 89); margin-bottom: 7px; }
+#modalAddCustomer .admin-input { height: 40px; min-height: 40px; padding: 8px 11px; border: 1px solid rgb(215, 223, 217); border-radius: 4px; background: rgb(255, 255, 255); font: 13px Inter, sans-serif; color: rgb(53, 75, 61); box-shadow: none; }
+#modalAddCustomer .form-group { margin-bottom: 16px; }
+#modalAddCustomer .modal-actions-footer { border: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; display: flex; justify-content: flex-end; gap: 8px; background: transparent; }
+#modalAddCustomer .admin-btn { border-radius: 4px; box-shadow: none; font: 600 12px / 1.5 Inter, sans-serif; padding: 8px 12px; border: 1px solid rgb(214, 222, 216); background: rgb(255, 255, 255); color: rgb(40, 70, 55); }
+#modalAddCustomer .admin-btn-primary { background: rgb(39, 94, 73); border-color: rgb(39, 94, 73); color: rgb(255, 255, 255); }
+#modalAddCustomer .admin-input[aria-invalid="true"] { border-color: rgb(186, 71, 69); }
+@media (max-width: 600px) {
+  #modalAddCustomer .admin-modal-card { padding: 24px 20px; }
+}
+#modalAddCustomer .admin-modal-card { display: block; min-height: 0px; }
+#modalAddCustomer .admin-modal-header { display: flex; align-items: center; justify-content: space-between; min-height: 28px; margin: 0px 0px 22px; padding: 0px; flex-shrink: 0; }
+#modalAddCustomer #formAddCustomerQuick { display: grid; gap: 16px; padding: 0px; margin: 0px; }
+#modalAddCustomer #formAddCustomerQuick .form-group { display: block; min-width: 0px; margin: 0px !important; }
+#modalAddCustomer .form-row { display: grid; grid-template-columns: repeat(2, minmax(0px, 1fr)); gap: 16px; margin: 0px; }
+#modalAddCustomer .admin-input, #modalAddCustomer .pet-field-autocomplete-wrapper { width: 100%; max-width: 100%; box-sizing: border-box; }
+#modalAddCustomer .modal-actions-footer { margin: 0px; padding-top: 6px; }
+#customerQuickBody > table + p { margin: 18px 0px 14px; line-height: 1.7; }
+#customerQuickBody > [data-quick-points] { margin-top: 2px; }
+.customers-module #subtab-tab-list .filter-row-top { box-shadow: none; border: 0px !important; }
+.customers-module #subtab-tab-list .filter-row-bottom { box-shadow: none; border-top: 0px !important; }
+.customers-module #subtab-tab-list .filter-row-top::after, .customers-module #subtab-tab-list .filter-row-top::before { display: none !important; }
+.customer-data-state { text-align: center !important; padding: 42px 24px !important; color: rgb(105, 126, 109) !important; white-space: normal !important; }
+.customer-data-state strong { display: block; font-weight: 600; color: rgb(53, 75, 61); }
+.customer-data-state p { font-size: 12px; margin: 8px 0px 14px; }
+.customer-data-state button { border: 1px solid rgb(214, 222, 216); border-radius: 3px; background: rgb(255, 255, 255); color: rgb(39, 94, 73); padding: 7px 12px; font: 500 12px Inter, sans-serif; cursor: pointer; }

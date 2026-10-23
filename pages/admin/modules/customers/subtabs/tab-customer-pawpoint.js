@@ -11,6 +11,7 @@
     let selectedAdjustCustomer = null;
 
     function renderPawpointHistory() {
+        if(!document.getElementById('subtab-tab-pawpoint')?.classList.contains('active'))return;
         const policyBody = document.getElementById('membershipTierPolicyTbody');
         if (policyBody) {
             const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -18,61 +19,31 @@
         }
         const tbody = document.getElementById('pawpointHistoryTbody');
         if (!tbody) return;
-        if (!PawpalCustomers.state.hasLoadedCustomers) {
-            if (PawpalCustomers.state.listLoadStatus === 'error') {
-                delete tbody.dataset.loadingSkeleton;
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">Không thể tải lịch sử Pawpoint. Vui lòng tải lại trang.</td></tr>';
-            } else if (!tbody.querySelector('.skeleton-row')) {
-                window.PawpalAdmin?.renderTableSkeleton?.(tbody, { columns: 5 });
-            }
-            return;
+        const query=(document.getElementById('pawpointSearchInput')?.value||'').trim();
+        const filterType=document.getElementById('pawpointFilterType')?.value||'ALL';
+        const request={query,kind:filterType,page:pawpointCurrentPage,size:PAWPOINT_PAGE_SIZE};
+        const key=PawpalCustomers.ledgerPageKey(request),status=PawpalCustomers.state.pawpointLoadStatus;
+        if(key!==PawpalCustomers.state.ledgerRequestKey||!['loaded','error','loading'].includes(status)){
+            PawpalCustomers.fetchPawpointLedger(request).then(renderPawpointHistory);
         }
-
-        delete tbody.dataset.loadingSkeleton;
-
-        // Lazy fetch lịch sử Pawpoint nếu chưa nạp (PERF-03.C04)
-        if (PawpalCustomers.state.pawpointLoadStatus === 'error') {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">Không thể tải lịch sử Pawpoint. Vui lòng tải lại trang.</td></tr>';
-            return;
+        if(PawpalCustomers.state.pawpointLoadStatus==='loading'){
+            tbody.innerHTML='<tr><td colspan="5" class="customer-data-state">Đang tải lịch sử Pawpoint…</td></tr>';
+            document.getElementById('pawpointResultCount').textContent='Đang tải…';document.getElementById('pawpointPaginationControls')?.replaceChildren();return;
         }
-        if (PawpalCustomers.state.pawpointLoadStatus !== 'loaded' && typeof PawpalCustomers.fetchPawpointLedger === 'function' && !PawpalCustomers.state._pawpointsFetching) {
-            PawpalCustomers.state._pawpointsFetching = true;
-            if (!tbody.querySelector('.skeleton-row')) {
-                window.PawpalAdmin?.renderTableSkeleton?.(tbody, { columns: 5 });
-            }
-            PawpalCustomers.fetchPawpointLedger().then(() => {
-                PawpalCustomers.state._pawpointsFetching = false;
-                renderPawpointHistory();
-            }).catch(() => {
-                PawpalCustomers.state._pawpointsFetching = false;
-            });
-            return;
+        if(PawpalCustomers.state.pawpointLoadStatus==='error'){
+            tbody.innerHTML='<tr><td colspan="5" class="customer-data-state"><strong>Không thể tải lịch sử Pawpoint</strong><p>Dữ liệu chưa được xác nhận.</p><button type="button" id="pawpointRetryLoad">Thử lại</button></td></tr>';
+            document.getElementById('pawpointResultCount').textContent='Chưa tải được dữ liệu';document.getElementById('pawpointPaginationControls')?.replaceChildren();
+            document.getElementById('pawpointRetryLoad').onclick=async event=>{event.target.disabled=true;await PawpalCustomers.fetchPawpointLedger({...request,force:true});renderPawpointHistory();};return;
         }
-
-        const query = (document.getElementById('pawpointSearchInput')?.value || '').trim();
-        const filterType = document.getElementById('pawpointFilterType')?.value || 'ALL';
-        const historyData = PawpalCustomers.state.pawpointHistory || [];
-
-        const filtered = historyData.filter(item => {
-            let matchQuery = !query;
-            if (query) {
-                const qParts = query.includes(' - ') ? query.split(' - ').map(s => s.trim()) : [query];
-                matchQuery = qParts.some(part => 
-                    PawpalCustomers.matchSearch(item.custName, part) ||
-                    PawpalCustomers.matchSearch(item.phone, part) ||
-                    PawpalCustomers.matchSearch(item.reason, part)
-                );
-            }
-            const matchType = (filterType === 'ALL') || (item.type === filterType);
-            return matchQuery && matchType;
-        });
-
-        const totalPages = Math.max(1, Math.ceil(filtered.length / PAWPOINT_PAGE_SIZE));
+        const filtered=PawpalCustomers.state.pawpointHistory||[],total=Number(PawpalCustomers.state.ledgerPage?.total||0);
+        pawpointCurrentPage=Number(PawpalCustomers.state.ledgerPage?.page||pawpointCurrentPage);
+        const totalPages = Math.max(1, Math.ceil(total / PAWPOINT_PAGE_SIZE));
+        const resultCount=document.getElementById('pawpointResultCount');if(resultCount)resultCount.textContent=`${total.toLocaleString('vi-VN')} giao dịch`;
         pawpointCurrentPage = Math.min(pawpointCurrentPage, totalPages);
-        const pageItems = filtered.slice((pawpointCurrentPage - 1) * PAWPOINT_PAGE_SIZE, pawpointCurrentPage * PAWPOINT_PAGE_SIZE);
+        const pageItems = filtered;
         const pager = document.getElementById('pawpointPaginationControls');
         if (pager) {
-            pager.innerHTML = filtered.length > 0 ? `<button type="button" class="pagination-btn" ${pawpointCurrentPage === 1 ? 'disabled' : ''} data-pawpoint-page="prev">&lt;</button>${Array.from({length: totalPages}, (_, i) => `<button type="button" class="pagination-btn ${i + 1 === pawpointCurrentPage ? 'active' : ''}" data-pawpoint-page="${i + 1}">${i + 1}</button>`).join('')}<button type="button" class="pagination-btn" ${pawpointCurrentPage === totalPages ? 'disabled' : ''} data-pawpoint-page="next">&gt;</button>` : '';
+            pager.innerHTML = filtered.length > 0 ? `<button type="button" class="pagination-btn" ${pawpointCurrentPage === 1 ? 'disabled' : ''} data-pawpoint-page="prev">&lt;</button>${Array.from({length: Math.min(totalPages,pawpointCurrentPage+2)-Math.max(1,pawpointCurrentPage-2)+1}, (_, index) => { const i=Math.max(1,pawpointCurrentPage-2)+index-1;return `<button type="button" class="pagination-btn ${i + 1 === pawpointCurrentPage ? 'active' : ''}" data-pawpoint-page="${i + 1}">${i + 1}</button>`;}).join('')}<button type="button" class="pagination-btn" ${pawpointCurrentPage === totalPages ? 'disabled' : ''} data-pawpoint-page="next">&gt;</button>` : '';
             pager.querySelectorAll('[data-pawpoint-page]').forEach(btn => btn.addEventListener('click', () => {
                 const action = btn.dataset.pawpointPage;
                 if (action === 'prev') pawpointCurrentPage = Math.max(1, pawpointCurrentPage - 1);
@@ -94,7 +65,7 @@
             return `
                 <tr>
                     <td>${esc(item.time)}</td>
-                    <td><strong>${esc(item.custName)}</strong> <span style="color: var(--text-muted); font-size: 12px;">(${esc(item.phone)})</span></td>
+                    <td><strong class="pawpoint-customer-name">${esc(item.custName)}</strong><span class="pawpoint-customer-phone">${esc(item.phone || 'Chưa cập nhật số điện thoại')}</span></td>
                     <td><strong class="${colorClass}">${sign}${item.points} điểm</strong></td>
                     <td>${Number(item.balance).toLocaleString('vi-VN')} điểm</td>
                     <td>${esc(item.reason)}</td>
@@ -103,14 +74,21 @@
         }).join('');
     }
 
-    function exportPawpointHistoryToCSV() {
-        const query = (document.getElementById('pawpointSearchInput')?.value || '').trim();
-        const filterType = document.getElementById('pawpointFilterType')?.value || 'ALL';
-        const historyData = PawpalCustomers.state.pawpointHistory || [];
-        const filteredHistory = historyData.filter(item => {
-            const matchesQuery = !query || [item.custName, item.phone, item.reason].some(value => PawpalCustomers.matchSearch(value, query));
-            return matchesQuery && (filterType === 'ALL' || item.type === filterType);
-        });
+    async function exportPawpointHistoryToCSV() {
+        const button=document.getElementById('btnExportPawpointHistory');if(button.disabled)return;
+        const query=(document.getElementById('pawpointSearchInput')?.value||'').trim(),kind=document.getElementById('pawpointFilterType')?.value||'ALL';
+        button.disabled=true;let filteredHistory=[];
+        try{
+            const first=await PawpalCustomers.readPawpointPage({query,kind,page:1,size:100,force:true});
+            if(first.total>1000){PawpalCustomers.showToast('Có hơn 1.000 giao dịch. Hãy thu hẹp bộ lọc trước khi xuất.','warning');return;}
+            filteredHistory=first.rows;
+            for(let page=2;page<=Math.ceil(first.total/100);page++){
+                const next=await PawpalCustomers.readPawpointPage({query,kind,page,size:100,force:true});
+                if(next.total!==first.total)throw Error('ledger_changed');filteredHistory.push(...next.rows);
+            }
+            if(new Set(filteredHistory.map(row=>row.rawId)).size!==first.total)throw Error('ledger_changed');
+        }catch{PawpalCustomers.showToast('Chưa thể xuất lịch sử. Dữ liệu có thể đã thay đổi, vui lòng thử lại.','warning');return;}
+        finally{button.disabled=false;}
         if (filteredHistory.length === 0) {
             PawpalCustomers.showToast('Không có lịch sử điểm để xuất!', 'warning');
             return;
@@ -176,13 +154,18 @@
     const getAdjustPhoneCustomerHint = () => document.getElementById('adjustPhoneCustomerHint');
     const getAdjustReasonInput = () => document.getElementById('adjustReason');
 
-    function renderAdjustCustomerDropdown(filterText = '') {
+    let adjustLookupVersion=0,adjustLookupTimer;
+    async function renderAdjustCustomerDropdown(filterText = '') {
         const dropdown = getAdjustCustomerDropdown();
         if (!dropdown) return;
         const q = (filterText || '').toLowerCase().trim();
-        const allCustomers = Object.values(PawpalCustomers.state.customerDatabase || {});
+        const version=++adjustLookupVersion;
+        let allCustomers;
+        try{allCustomers=PawpalCustomers.lookupCustomers?await PawpalCustomers.lookupCustomers(filterText):Object.values(PawpalCustomers.state.customerDatabase||{});}
+        catch{dropdown.textContent='Không thể tìm khách hàng. Vui lòng thử lại.';dropdown.style.display='block';return;}
+        if(version!==adjustLookupVersion||!getAdjustModal()||getComputedStyle(getAdjustModal()).display==='none')return;
 
-        const matches = allCustomers.filter(c => {
+        const matches = PawpalCustomers.lookupCustomers?allCustomers:allCustomers.filter(c => {
             if (!q) return true;
             const name = (c.name || '').toLowerCase();
             const phone = (c.phone || '').replace(/[^0-9]/g, '');
@@ -368,7 +351,7 @@
         document.addEventListener('input', (e) => {
             if (e.target && e.target.id === 'adjustPhone') {
                 selectedAdjustCustomer = null;
-                renderAdjustCustomerDropdown(e.target.value);
+                clearTimeout(adjustLookupTimer);const query=e.target.value;adjustLookupTimer=setTimeout(()=>renderAdjustCustomerDropdown(query),350);
             }
         });
 
@@ -416,15 +399,16 @@
         });
 
         // Tìm kiếm và lọc bảng lịch sử Pawpoint
+        let ledgerSearchTimer;
         document.addEventListener('input', (e) => {
             if (e.target && e.target.id === 'pawpointSearchInput') {
-                renderPawpointHistory();
+                clearTimeout(ledgerSearchTimer);ledgerSearchTimer=setTimeout(()=>{pawpointCurrentPage=1;renderPawpointHistory();},350);
             }
         });
 
         document.addEventListener('change', (e) => {
             if (e.target && e.target.id === 'pawpointFilterType') {
-                renderPawpointHistory();
+                clearTimeout(ledgerSearchTimer);pawpointCurrentPage=1;renderPawpointHistory();
             }
         });
     }

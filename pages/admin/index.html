@@ -13,7 +13,8 @@
     <!-- CSS Quản Trị -->
     <link rel="stylesheet" href="/pages/admin/admin.css?v=43">
     <link rel="stylesheet" href="/pages/admin/modules/dashboard/dashboard.css?v=29">
-    <link rel="stylesheet" href="/pages/admin/modules/customers/customers.css?v=41">
+    <link rel="stylesheet" href="/pages/admin/modules/customers/customers.css?v=8.0">
+    <link rel="stylesheet" href="/pages/admin/modules/customers/customers-v7.css?v=8.0">
     <link rel="stylesheet" href="/pages/admin/modules/pets/pets.css?v=40">
     <link rel="stylesheet" href="/pages/admin/modules/orders/orders.css?v=42">
     <link rel="stylesheet" href="/pages/admin/modules/services/services.css?v=48">
@@ -21,6 +22,9 @@
     <link rel="stylesheet" href="/pages/admin/modules/complaints/complaints.css?v=5">
     <link rel="stylesheet" href="/pages/admin/modules/chatbot/chatbot.css?v=5">
     <link rel="stylesheet" href="/pages/admin/modules/settings/settings.css?v=4">
+    <link rel="stylesheet" href="/pages/admin/admin-shell-v7.css?v=1">
+    <link rel="stylesheet" href="/pages/admin/modules/customers/customer-modal-v7.css?v=1">
+    <script src="/pages/admin/modules/customers/customer-modal-v7.js?v=1" defer></script>
 </head>
 <body class="admin-body">
 
@@ -32,7 +36,7 @@
         <aside class="admin-sidebar" id="adminSidebar">
             <!-- LOGO VÀ TIÊU ĐỀ + NÚT THU GỌN SIDEBAR -->
             <div class="admin-sidebar-brand">
-                <div class="brand-title">Pawpal-er</div>
+                <div class="brand-title">PawPal Admin</div>
                 <button type="button" class="btn-sidebar-toggle" id="btnToggleSidebar" title="Thu gọn / Mở rộng menu" aria-label="Thu gọn hoặc mở rộng menu">
                     <span class="menu-icon toggle-icon-collapse"><i data-lucide="panel-left-close"></i></span>
                     <span class="menu-icon toggle-icon-expand"><i data-lucide="panel-left-open"></i></span>
@@ -41,6 +45,7 @@
 
             <!-- DANH SÁCH 9 MENU QUẢN TRỊ THEO THỨ TỰ YÊU CẦU -->
             <nav class="admin-sidebar-nav" id="sidebarNav">
+                <div class="admin-nav-group-label">Quản lý chung</div>
                 <button type="button" class="sidebar-menu-btn" data-title="Dashboard" title="Dashboard">
                     <span class="menu-icon"><i data-lucide="layout-dashboard"></i></span>
                     <span class="menu-text">Dashboard</span>
@@ -61,6 +66,7 @@
                     <span class="menu-icon"><i data-lucide="shopping-bag"></i></span>
                     <span class="menu-text">Bán hàng</span>
                 </button>
+                <div class="admin-nav-group-label admin-nav-group-divider">Vận hành</div>
                 <button type="button" class="sidebar-menu-btn" data-title="Nhân sự" title="Nhân sự">
                     <span class="menu-icon"><i data-lucide="id-card"></i></span>
                     <span class="menu-text">Nhân sự</span>

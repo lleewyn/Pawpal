@@ -140,3 +140,29 @@ body.admin-login-body {
 .login-footer-info a:hover {
     text-decoration: underline;
 }
+/* V7 Quiet Enterprise: restrained typography, solid surfaces, clear actions. */
+body.admin-login-body{--text-heading:#275e49;--text-main:#24382f;--text-muted:#6f8176;--border-neutral:#e3e9e4;background:#f5f7f5;min-height:100svh;padding:104px 24px 80px;position:relative;font:14px/1.5 Inter,'Segoe UI',sans-serif}
+.login-site-header{position:absolute;top:0;left:0;right:0;min-height:76px;padding:22px 40px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.login-brand{display:flex;align-items:baseline;gap:12px;color:#173d30;text-decoration:none;font-size:21px;font-weight:700;letter-spacing:-.5px}
+.login-brand span{font-size:12px;color:#6f8176;font-weight:500;letter-spacing:0}
+.login-home-link{font-size:12px;color:#6f8176;text-decoration:none}
+.login-home-link:hover{color:#275e49;text-decoration:underline}
+.admin-login-card{max-width:440px;background:#fff;border:1px solid #e3e9e4;border-radius:9px;box-shadow:none;backdrop-filter:none;padding:36px}
+.login-eyebrow{font-size:12px;color:#6f8176;font-weight:500;margin-bottom:10px}
+.login-title{font-family:Inter,'Segoe UI',sans-serif;font-size:25px;font-weight:650;line-height:1.35;letter-spacing:-.5px;color:#24382f;margin-bottom:30px}
+.login-label{font-size:12px;color:#526359;font-weight:600;margin-bottom:8px}
+.login-required{color:#ba4745}
+.admin-login-body .admin-input{height:44px;background:#fff;border:1px solid #dce4dd;border-radius:9px;font-size:13px;color:#24382f;padding:0 12px;box-shadow:none}
+.admin-login-body .admin-input::placeholder{color:#95a197}
+.admin-login-body .admin-input:focus{border-color:#275e49;box-shadow:0 0 0 3px #275e4910}
+.login-form-group{margin-bottom:20px}
+.admin-login-body .admin-btn-primary{background:#275e49!important;color:#fff;border:1px solid #275e49;border-radius:9px;box-shadow:none;font-family:inherit;font-weight:600;font-size:13px!important;height:44px!important}
+.admin-login-body .admin-btn-primary:hover{background:#173d30!important;border-color:#173d30}
+.admin-login-body .admin-btn-primary:disabled{opacity:.6;cursor:wait}
+.btn-toggle-view{font-family:inherit;color:#6f8176;font-weight:500}
+.login-footer-info{margin-top:26px;text-align:left;font-size:12px;line-height:1.9;color:#6f8176}
+.login-footer-info a{color:#275e49;font-weight:500}
+.login-site-footer{position:absolute;bottom:26px;left:24px;right:24px;text-align:center;font-size:11px;color:#8b998f}
+.admin-login-body button:focus-visible,.admin-login-body a:focus-visible{outline:3px solid #b7832260;outline-offset:3px}
+@media(max-width:540px){.login-site-header{padding:20px 22px}.login-brand{font-size:20px;gap:8px}.login-home-link{font-size:11px}.admin-login-card{padding:28px 24px}.login-title{font-size:23px}body.admin-login-body{padding-left:18px;padding-right:18px}.login-site-footer{font-size:10px}}
+@media(max-height:600px){body.admin-login-body{align-items:flex-start}.login-site-footer{position:static;margin-top:24px}.admin-login-body{flex-direction:column}.admin-login-card{margin:auto}}

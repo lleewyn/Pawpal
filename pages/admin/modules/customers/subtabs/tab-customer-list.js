@@ -76,11 +76,12 @@
         const complaintEl = document.getElementById('custStatComplaint');
 
         const allCusts = Object.values(PawpalCustomers.state.customerDatabase || {});
-        const totalCount = allCusts.length;
-        const memberCount = allCusts.filter(c => c.isMember).length;
-        const guestCount = allCusts.filter(c => c.status === 'TEMP').length;
-        const lockedCount = allCusts.filter(c => c.status === 'LOCKED').length;
-        const complaintCount = allCusts.filter(c => c.complaints?.some(tc => !tc.isClosed)).length;
+        const stats=PawpalCustomers.state.customerPage?.stats;
+        const totalCount = stats?.total??allCusts.length;
+        const memberCount = stats?.member??allCusts.filter(c => c.isMember).length;
+        const guestCount = stats?.guest??allCusts.filter(c => c.status === 'TEMP').length;
+        const lockedCount = stats?.locked??allCusts.filter(c => c.status === 'LOCKED').length;
+        const complaintCount = stats?.complaint??allCusts.filter(c => c.complaints?.some(tc => !tc.isClosed)).length;
 
         if (totalEl) totalEl.textContent = totalCount.toLocaleString('vi-VN');
         if (memberEl) memberEl.textContent = memberCount.toLocaleString('vi-VN');
@@ -104,7 +105,7 @@
         const prevDisabled = currentCustomerPage === 1 ? 'disabled' : '';
         html += `<button type="button" class="pagination-btn ${prevDisabled}" data-page="prev" title="Trang trước">&lt;</button>`;
 
-        for (let p = 1; p <= totalPages; p++) {
+        for (let p = Math.max(1,currentCustomerPage-2); p <= Math.min(totalPages,currentCustomerPage+2); p++) {
             const activeClass = p === currentCustomerPage ? 'active' : '';
             html += `<button type="button" class="pagination-btn ${activeClass}" data-page="${p}">${p}</button>`;
         }
@@ -163,10 +164,23 @@
     function renderCustomersTable() {
         const tbody = document.getElementById('customerTableTbody');
         if (!tbody) return;
+        if(PawpalCustomers.serverCustomerPaging){
+            const request={query:(document.getElementById('custSearchInput')?.value||'').trim(),tier:document.getElementById('custFilterTier')?.value||'ALL',status:document.getElementById('custFilterStatus')?.value||'ALL',category:currentCustomerFilter,page:currentCustomerPage,size:CUSTOMER_PAGE_SIZE};
+            const key=JSON.stringify(request);PawpalCustomers.state.customerListRequest=request;
+            if(PawpalCustomers.state.customerPage?.key!==key&&PawpalCustomers.state.customerFailedKey!==key){
+                if(PawpalCustomers.state.customerPendingKey!==key){PawpalCustomers.state.customerPendingKey=key;PawpalCustomers.loadCustomersModuleData().then(()=>{if(PawpalCustomers.state.customerPendingKey===key)PawpalCustomers.state.customerPendingKey=null;renderCustomersTable();});}
+                tbody.innerHTML='<tr><td colspan="8" class="customer-data-state">Đang tải danh sách khách hàng…</td></tr>';document.getElementById('custResultsCount').textContent='Đang tải…';return;
+            }
+        }
         if (!PawpalCustomers.state.hasLoadedCustomers) {
             if (PawpalCustomers.state.listLoadStatus === 'error') {
                 delete tbody.dataset.loadingSkeleton;
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">Không thể tải danh sách khách hàng. Vui lòng tải lại trang.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="customer-data-state"><strong>Không thể tải danh sách khách hàng</strong><p>Giữ nguyên bộ lọc và thử nạp lại dữ liệu.</p><button type="button" id="custRetryLoad">Thử lại</button></td></tr>';
+                const count=document.getElementById('custResultsCount');if(count)count.textContent='Chưa tải được dữ liệu';
+                document.getElementById('customerPaginationControls')?.replaceChildren();
+                document.getElementById('custRetryLoad').onclick=async event=>{event.target.disabled=true;await PawpalCustomers.loadCustomersModuleData({force:true});renderCustomersTable();updateCustomerKPIs();renderComplaintBar();};
+            }else{
+                const count=document.getElementById('custResultsCount');if(count)count.textContent='Đang tải danh sách khách hàng…';
             }
             return;
         }
@@ -184,25 +198,31 @@
             currentCustomerFilter !== 'ALL'
         );
         if (btnCustClearFilters) {
-            btnCustClearFilters.style.display = isAnyFilterActive ? 'inline-flex' : 'none';
+            btnCustClearFilters.style.display = 'inline-flex';btnCustClearFilters.disabled=!isAnyFilterActive;
         }
+        const complaintCheckbox=document.getElementById('custComplaintCheckbox');
+        if(complaintCheckbox)complaintCheckbox.checked=currentCustomerFilter==='COMPLAINT';
+        const context=document.getElementById('custFilterContext');
+        if(context){context.hidden=!isAnyFilterActive;context.textContent=[query?`Tìm kiếm: ${query}`:'',selectedTier!=='ALL'?`Hạng: ${document.getElementById('custFilterTier').selectedOptions[0].text}`:'',selectedStatus!=='ALL'?`Trạng thái: ${document.getElementById('custFilterStatus').selectedOptions[0].text}`:'',currentCustomerFilter==='COMPLAINT'?'Có khiếu nại':''].filter(Boolean).join(' · ');}
 
         const allCusts = Object.values(PawpalCustomers.state.customerDatabase || {});
 
         const filtered = getCustomersInCurrentFilter();
+        const total=PawpalCustomers.serverCustomerPaging?Number(PawpalCustomers.state.customerPage?.total||0):filtered.length;
+        const resultCount=document.getElementById('custResultsCount');if(resultCount)resultCount.textContent=`Có ${total.toLocaleString('vi-VN')} hồ sơ phù hợp`;
 
-        const totalPages = Math.ceil(filtered.length / CUSTOMER_PAGE_SIZE) || 1;
+        const totalPages = Math.ceil(total / CUSTOMER_PAGE_SIZE) || 1;
         if (currentCustomerPage > totalPages) currentCustomerPage = totalPages;
 
         const startIdx = (currentCustomerPage - 1) * CUSTOMER_PAGE_SIZE;
-        const pageItems = filtered.slice(startIdx, startIdx + CUSTOMER_PAGE_SIZE);
+        const pageItems = PawpalCustomers.serverCustomerPaging?filtered:filtered.slice(startIdx, startIdx + CUSTOMER_PAGE_SIZE);
 
         if (pageItems.length === 0) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px; font-size: 13.5px;">
-                        Không tìm thấy khách hàng nào phù hợp với bộ lọc hiện tại.
-                        <button type="button" id="btnResetCustomerFilters" style="background: none; border: none; color: #236B48; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 0 4px; font-size: 13.5px;">Xóa bộ lọc</button>
+                        ${allCusts.length?'Không tìm thấy khách hàng nào phù hợp với bộ lọc hiện tại.':'Chưa có khách hàng. Bấm Thêm khách để tạo hồ sơ đầu tiên.'}
+                        ${allCusts.length?'<button type="button" id="btnResetCustomerFilters" style="background:none;border:none;color:#275e49;text-decoration:underline;cursor:pointer">Xóa bộ lọc</button>':''}
                     </td>
                 </tr>
             `;
@@ -235,9 +255,9 @@
                 const ticket = activeComplaint || (c.complaints && c.complaints[0]);
                 const ticketId = esc(ticket?.id || '');
                 const ticketStatus = esc(ticket?.status || 'Chưa xử lý');
-                alertBadgeHtml = `<span class="alert-indicator text-danger">• ${ticketId} · ${ticketStatus}</span>`;
+                alertBadgeHtml = `<span class="alert-indicator text-danger" title="${ticketId} · ${ticketStatus}">• ${ticketId} · ${ticketStatus}</span>`;
             } else if (hasPetAlert && alertPet) {
-                alertBadgeHtml = `<span class="alert-indicator text-warning">• ${esc(alertPet.name)}: ${esc(alertPet.alertNote)}</span>`;
+                alertBadgeHtml = `<span class="alert-indicator text-warning" title="${esc(alertPet.name)}: ${esc(alertPet.alertNote)}">• ${esc(alertPet.name)}: ${esc(alertPet.alertNote)}</span>`;
             }
 
             let statusBadgeHtml = '<span class="admin-badge badge-success">Đang hoạt động</span>';
@@ -260,7 +280,7 @@
                     <td style="${firstTdBorder}"><strong class="customer-code-text" title="${esc(c.id)}">${esc(c.id)}</strong></td>
                     <td>
                         <div class="user-name-cell">
-                            <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="${esc(c.id)}">${esc(c.name)}</a>
+                            <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" title="${esc(c.name)}" data-id="${esc(c.id)}">${esc(c.name)}</a>
                         </div>
                         <div class="user-sub-cell">${subCellHtml}</div>
                     </td>
@@ -274,7 +294,7 @@
                     <td>${alertBadgeHtml}</td>
                     <td>${statusBadgeHtml}</td>
                     <td style="width: 70px; min-width: 70px; text-align: center; padding: 8px 10px;">
-                        <button type="button" class="btn-action-more" data-id="${esc(c.id)}" title="Tác vụ">•••</button>
+                        <button type="button" class="btn-action-more" data-id="${esc(c.id)}" title="Tác vụ">Thao tác</button>
                     </td>
                 </tr>
             `;
@@ -290,13 +310,15 @@
         if (!container) return;
 
         const activeComplaints = [];
-        Object.values(PawpalCustomers.state.customerDatabase || {}).forEach(cust => {
+        if(PawpalCustomers.serverCustomerPaging){for(const ticket of PawpalCustomers.state.customerPage?.operations||[]){const cust=Object.values(PawpalCustomers.state.customerDatabase||{}).find(c=>c.dbId===ticket.customer_id);if(cust)activeComplaints.push({id:cust.id,name:cust.name,ticket:ticket.ticket_code,status:window.PawpalEnum?.ticketStatus(ticket.status)?.label||ticket.status,reason:ticket.subject});}}
+        else Object.values(PawpalCustomers.state.customerDatabase || {}).forEach(cust => {
             if (cust.complaints && cust.complaints.length > 0) {
                 cust.complaints.filter(tc => !tc.isClosed).forEach(tc => {
                     activeComplaints.push({
                         id: cust.id,
                         name: cust.name,
                         ticket: tc.id,
+                        status: tc.status || 'Chưa xử lý',
                         reason: tc.issue
                     });
                 });
@@ -304,34 +326,70 @@
         });
 
         if (activeComplaints.length === 0) {
-            if (bar) bar.style.display = 'none';
+            if (bar) {bar.hidden=true;bar.style.display = 'none';}
             return;
         }
 
-        if (bar) bar.style.display = 'flex';
+        if (bar) {bar.hidden=false;bar.style.display = 'block';}
+        const opsTotal=PawpalCustomers.state.customerPage?.opsTotal??activeComplaints.length;
+        const count=document.getElementById('custOpsCount');if(count)count.textContent=`${opsTotal} việc${opsTotal>activeComplaints.length?' · hiển thị '+activeComplaints.length+' việc lâu nhất':''}`;
+        const summary=document.getElementById('custOpsSummary');if(summary)summary.textContent=activeComplaints.slice(0,2).map(item=>`${item.status}: ${item.reason||'Khiếu nại cần phản hồi'}`).join(' · ');
 
         container.innerHTML = activeComplaints.map(item => `
-            <div class="complaint-item-tag" data-id="${esc(item.id)}" title="Xem hồ sơ ${esc(item.name)} (${esc(item.ticket)})">
-                <span class="tag-ticket">${esc(item.ticket)}</span>
-                <span class="tag-cust">${esc(item.name)}</span>
-                <span class="tag-reason">(${esc(item.reason)})</span>
+            <div class="customer-operation-row">
+                <div class="customer-operation-body"><div class="customer-operation-label" title="${esc(item.status)} — ${esc(item.reason)}">${esc(item.status)} — ${esc(item.reason || 'Khiếu nại cần phản hồi')}</div><div class="customer-operation-description" title="${esc(item.name)} · ${esc(item.ticket)}">${esc(item.name)} · ${esc(item.ticket)}</div></div>
+                <button type="button" class="customer-operation-open" data-id="${esc(item.id)}">Mở hồ sơ</button>
             </div>
         `).join('');
 
-        container.querySelectorAll('.complaint-item-tag').forEach(tag => {
+        container.querySelectorAll('.customer-operation-open').forEach(tag => {
             tag.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const custId = tag.getAttribute('data-id');
-                sessionStorage.setItem('pawpal_admin_customer_id', custId);
-                sessionStorage.setItem('pawpal_admin_customer_name', PawpalCustomers.state.customerDatabase?.[custId]?.name || custId);
-                if (PawpalCustomers.subtabs.profile) {
-                    PawpalCustomers.subtabs.profile.renderDrawerCustomerProfile(custId);
-                }
-                PawpalCustomers.switchSubtab('tab-profile');
+                openQuickProfile(custId);
             });
         });
     }
 
+    let closeQuickProfile=null;
+    function openQuickProfile(id,initialTab='profile'){
+        const customer=PawpalCustomers.state.customerDatabase?.[id];if(!customer)return;
+        closeQuickProfile?.();closeGlobalDropdown();
+        const previous=document.activeElement,root=document.querySelector('.customers-module');
+        const overlay=document.createElement('div');overlay.className='customer-quick-overlay';
+        overlay.innerHTML=`<aside class="customer-quick-drawer" role="dialog" aria-modal="true" aria-labelledby="customerQuickName" tabindex="-1"><header><div><h2 id="customerQuickName">${esc(customer.name)}</h2><p>${esc(id)}</p></div><button type="button" data-quick-close>Đóng</button></header><nav role="tablist" aria-label="Hồ sơ nhanh">${[['profile','Hồ sơ'],['pets','Thú cưng'],['points','Pawpoint'],['cases','Khiếu nại']].map(([key,label])=>`<button type="button" role="tab" data-quick-tab="${key}" id="customerQuickTab-${key}" aria-controls="customerQuickBody">${label}</button>`).join('')}</nav><div id="customerQuickBody" role="tabpanel"></div><footer><button type="button" data-quick-full>Xem hồ sơ đầy đủ</button></footer></aside>`;
+        document.body.append(overlay);
+        const close=()=>{document.removeEventListener('keydown',key);observer.disconnect();overlay.remove();closeQuickProfile=null;if(previous?.isConnected)previous.focus();};
+        closeQuickProfile=close;
+        const observer=new MutationObserver(()=>{if(!root?.isConnected)close();});observer.observe(document.body,{childList:true,subtree:true});
+        const key=event=>{
+            if(event.key==='Escape'){event.preventDefault();close();return;}
+            if(event.key==='Tab'){const items=[...overlay.querySelectorAll('button:not(:disabled),a[href]')],first=items[0],last=items.at(-1);if(event.shiftKey&&(document.activeElement===first||document.activeElement===overlay.querySelector('aside'))){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}
+        };
+        document.addEventListener('keydown',key);
+        const pair=(label,value)=>`<tr><td>${esc(label)}</td><td>${esc(value??'Chưa cập nhật')}</td></tr>`;
+        const render=tab=>{
+            const c=PawpalCustomers.state.customerDatabase?.[id];if(!c){close();return;}
+            overlay.querySelectorAll('[data-quick-tab]').forEach(button=>{const selected=button.dataset.quickTab===tab;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;});
+            const body=overlay.querySelector('#customerQuickBody');body.setAttribute('aria-labelledby','customerQuickTab-'+tab);
+            let content='';
+            if(tab==='profile')content=`<h3>Thông tin khách hàng</h3><table>${pair('Mã KH',id)+pair('Số điện thoại',c.phone)+pair('Email',c.email||'Chưa cập nhật')+pair('Trạng thái',c.status==='LOCKED'?'Bị khóa':c.status==='TEMP'?'Vãng lai':'Đang hoạt động')+pair('Hạng',c.tierName||'Chưa có hạng')+pair('Pawpoint',Number(c.points||0).toLocaleString('vi-VN')+' điểm')}</table><div class="customer-quick-actions"><button type="button" data-quick-copy>Sao chép số</button><button type="button" data-quick-pets>Xem thú cưng</button></div>`;
+            if(tab==='pets')content='<h3>Thú cưng</h3>'+((c.pets||[]).map(p=>`<section><strong>${esc(p.name)}</strong><table>${pair('Mã bé',p.id)+pair('Loài và giống',[p.species,p.breed].filter(Boolean).join(' · '))+pair('Cân nặng',Number(p.weight)>0?p.weight+' kg':'Chưa ghi nhận')}</table></section>`).join('')||'<p>Khách hàng chưa có thú cưng.</p>');
+            if(tab==='points')content=`<h3>Pawpoint</h3><table>${pair('Hạng',c.tierName||'Chưa có hạng')+pair('Số dư hiện tại',Number(c.points||0).toLocaleString('vi-VN')+' điểm')}</table><p>Lịch sử và điều chỉnh điểm nằm trong phân hệ Pawpoint.</p><button type="button" data-quick-points>Mở Pawpoint</button>`;
+            if(tab==='cases')content='<h3>Khiếu nại và hỗ trợ</h3>'+((c.complaints||[]).map(t=>`<section><strong>${esc(t.issue||'Khiếu nại')}</strong><table>${pair('Mã phiếu',t.id)+pair('Trạng thái',t.status||'Chưa cập nhật')}</table></section>`).join('')||'<p>Chưa ghi nhận khiếu nại.</p>');
+            body.innerHTML=content;
+        };
+        overlay.onclick=async event=>{
+            if(event.target===overlay||event.target.closest('[data-quick-close]'))return close();
+            const tab=event.target.closest('[data-quick-tab]');if(tab)return render(tab.dataset.quickTab);
+            if(event.target.closest('[data-quick-pets]'))return render('pets');
+            if(event.target.closest('[data-quick-copy]')){try{await navigator.clipboard.writeText(customer.phone||'');PawpalCustomers.showToast('Đã sao chép số điện thoại.','success');}catch{PawpalCustomers.showToast('Không thể sao chép. Vui lòng chọn số trong hồ sơ.','warning');}}
+            if(event.target.closest('[data-quick-points]')){close();PawpalCustomers.switchSubtab('tab-pawpoint');}
+            if(event.target.closest('[data-quick-full]')){close();sessionStorage.setItem('pawpal_admin_customer_id',id);sessionStorage.setItem('pawpal_admin_customer_name',customer.name||id);PawpalCustomers.subtabs.profile?.renderDrawerCustomerProfile(id);PawpalCustomers.switchSubtab('tab-profile');}
+        };
+        overlay.querySelector('nav').onkeydown=event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const buttons=[...overlay.querySelectorAll('[data-quick-tab]')],index=buttons.indexOf(document.activeElement),next=event.key==='Home'?0:event.key==='End'?buttons.length-1:(index+(event.key==='ArrowRight'?1:-1)+buttons.length)%buttons.length;render(buttons[next].dataset.quickTab);buttons[next].focus();};
+        render(initialTab);overlay.querySelector('[data-quick-close]').focus();
+    }
     // Global Dropdown Tác vụ 3 chấm (Direct body portal)
     let globalActionDropdown = document.getElementById('customerGlobalActionDropdown');
     function ensureGlobalDropdown() {
@@ -343,8 +401,10 @@
                 globalActionDropdown.className = 'action-dropdown-menu';
                 globalActionDropdown.innerHTML = `
                     <button type="button" class="dropdown-item" data-action="profile">
-                        Xem hồ sơ 360°
+                        Xem hồ sơ
                     </button>
+                    <button type="button" class="dropdown-item" data-action="copy">Sao chép số điện thoại</button>
+                    <button type="button" class="dropdown-item" data-action="cases">Xem khiếu nại</button>
                     <button type="button" class="dropdown-item" data-action="edit">
                         Sửa hồ sơ
                     </button>
@@ -368,6 +428,7 @@
             dd.classList.remove('show');
         }
         if (activeMoreBtn) {
+            activeMoreBtn.setAttribute('aria-expanded','false');
             activeMoreBtn.classList.remove('active');
             activeMoreBtn = null;
         }
@@ -388,6 +449,7 @@
         closeGlobalDropdown();
         activeMoreBtn = btn;
         btn.classList.add('active');
+        btn.setAttribute('aria-expanded','true');btn.setAttribute('aria-controls','customerGlobalActionDropdown');
 
         dd.setAttribute('data-id', custId);
         const lockItem = dd.querySelector('[data-action="toggle-lock"]');
@@ -403,8 +465,9 @@
         }
 
         const rect = btn.getBoundingClientRect();
-        const menuWidth = 180;
-        const menuHeight = 160;
+        dd.style.display='flex';dd.style.visibility='hidden';
+        const menuWidth = dd.getBoundingClientRect().width;
+        const menuHeight = dd.getBoundingClientRect().height;
 
         let left = rect.right - menuWidth;
         if (left < 10) left = 10;
@@ -414,7 +477,7 @@
 
         let top = rect.bottom + 6;
         if (top + menuHeight > window.innerHeight - 10) {
-            top = rect.top - menuHeight - 6;
+            top = Math.max(10,rect.top - menuHeight - 6);
         }
 
         dd.style.position = 'fixed';
@@ -422,11 +485,13 @@
         dd.style.left = `${left}px`;
         dd.style.zIndex = '99999';
         dd.style.display = 'flex';
+        dd.style.visibility='visible';
         dd.classList.add('show');
     }
 
     // Xuất CSV danh sách khách hàng
     function getCustomersInCurrentFilter() {
+        if(PawpalCustomers.serverCustomerPaging)return(PawpalCustomers.state.customerPage?.keys||[]).map(key=>PawpalCustomers.state.customerDatabase[key]).filter(Boolean);
         const query = (document.getElementById('custSearchInput')?.value || '').trim();
         const selectedTier = document.getElementById('custFilterTier')?.value || 'ALL';
         const selectedStatus = document.getElementById('custFilterStatus')?.value || 'ALL';
@@ -466,8 +531,17 @@
 
     }
 
-    function exportCustomersToCSV() {
-        const allCusts = getCustomersInCurrentFilter();
+    async function exportCustomersToCSV() {
+        let allCusts = getCustomersInCurrentFilter();
+        if(PawpalCustomers.serverCustomerPaging){
+            const button=document.getElementById('btnExportCustomerReport');if(button.disabled)return;button.disabled=true;
+            const request={...PawpalCustomers.state.customerListRequest,size:100,page:1};
+            try{const first=await PawpalCustomers.readCustomerPage(request,{force:true});if(first.total>1000){PawpalCustomers.showToast('Có hơn 1.000 hồ sơ. Hãy thu hẹp bộ lọc trước khi xuất.','warning');return;}
+                allCusts=[];const collect=data=>{const db=PawpalCustomers.hydrateCustomerPage(data),ids=new Set(data.pageIds||[]);allCusts.push(...Object.values(db).filter(c=>ids.has(c.dbId)));};collect(first);
+                for(let page=2;page<=Math.ceil(first.total/100);page++){const next=await PawpalCustomers.readCustomerPage({...request,page},{force:true});if(next.total!==first.total)throw Error('directory_changed');collect(next);}
+                if(new Set(allCusts.map(c=>c.dbId)).size!==first.total)throw Error('directory_changed');
+            }catch{PawpalCustomers.showToast('Không thể xuất dữ liệu đã xác nhận. Vui lòng thử lại.','warning');return;}finally{button.disabled=false;}
+        }
         if (!allCusts || allCusts.length === 0) {
             PawpalCustomers.showToast('Không có dữ liệu khách hàng để xuất!', 'warning');
             return;
@@ -553,11 +627,13 @@
     const quickAddPhoneAlert = document.getElementById('quickAddPhoneAlert');
     const quickAddDupName = document.getElementById('quickAddDupName');
     const quickAddDupId = document.getElementById('quickAddDupId');
+    let addReturnFocus=null;
 
     function closeAddModal() {
         if (modalAdd) modalAdd.style.display = 'none';
         if (quickAddPhoneAlert) quickAddPhoneAlert.style.display = 'none';
         dupFoundCustId = null;
+        if(addReturnFocus?.isConnected)addReturnFocus.focus();
     }
 
     function initCustomerListTab() {
@@ -570,12 +646,19 @@
         if (btnOpenAdd && modalAdd) {
             btnOpenAdd.addEventListener('click', () => {
                 modalAdd.style.display = 'flex';
+                addReturnFocus=document.activeElement;
+                document.getElementById('quickAddName')?.focus();
                 if (quickAddPhoneAlert) quickAddPhoneAlert.style.display = 'none';
                 dupFoundCustId = null;
             });
         }
         if (btnCloseAdd) btnCloseAdd.addEventListener('click', closeAddModal);
         if (btnCancelAdd) btnCancelAdd.addEventListener('click', closeAddModal);
+        modalAdd?.addEventListener('click',event=>{if(event.target===modalAdd)closeAddModal();});
+        modalAdd?.addEventListener('keydown',event=>{
+            if(event.key==='Escape'){event.stopPropagation();closeAddModal();}
+            if(event.key==='Tab'){const items=[...modalAdd.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href]')].filter(item=>item.getClientRects().length);const first=items[0],last=items.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}
+        });
 
         // Taxonomy comes exclusively from the V1 catalog.
         let taxonomy = { species: [], breeds: [] };
@@ -732,12 +815,12 @@
             if (!custId || !PawpalCustomers.state.customerDatabase?.[custId]) return;
 
             if (action === 'profile') {
-                sessionStorage.setItem('pawpal_admin_customer_id', custId);
-                sessionStorage.setItem('pawpal_admin_customer_name', PawpalCustomers.state.customerDatabase[custId].name || custId);
-                if (PawpalCustomers.subtabs.profile) {
-                    PawpalCustomers.subtabs.profile.renderDrawerCustomerProfile(custId);
-                }
-                PawpalCustomers.switchSubtab('tab-profile');
+                openQuickProfile(custId);
+            } else if(action==='cases'){
+                openQuickProfile(custId,'cases');
+            } else if(action==='copy'){
+                if(!navigator.clipboard?.writeText)PawpalCustomers.showToast('Trình duyệt không hỗ trợ sao chép. Vui lòng mở hồ sơ để xem số.','warning');
+                else navigator.clipboard.writeText(PawpalCustomers.state.customerDatabase[custId].phone||'').then(()=>PawpalCustomers.showToast('Đã sao chép số điện thoại.','success')).catch(()=>PawpalCustomers.showToast('Không thể sao chép. Vui lòng mở hồ sơ để xem số.','warning'));
             } else if (action === 'edit') {
                 if (PawpalCustomers.subtabs.profile) {
                     PawpalCustomers.subtabs.profile.openEditCustomerModal(custId);
@@ -797,6 +880,7 @@
             }
         });
         window.addEventListener('resize', closeGlobalDropdown);
+        document.addEventListener('keydown',event=>{if(event.key==='Escape'&&activeMoreBtn){const trigger=activeMoreBtn;closeGlobalDropdown();trigger.focus();}});
         const scrollContainer = document.querySelector('.table-responsive-wrapper');
         if (scrollContainer) scrollContainer.addEventListener('scroll', closeGlobalDropdown);
 
@@ -815,13 +899,7 @@
                 if (userLink) {
                     e.stopPropagation();
                     const custId = userLink.getAttribute('data-id');
-                    sessionStorage.setItem('pawpal_admin_customer_id', custId);
-                    sessionStorage.setItem('pawpal_admin_customer_name', PawpalCustomers.state.customerDatabase?.[custId]?.name || '');
-                    if (PawpalCustomers.subtabs.profile) {
-                        PawpalCustomers.subtabs.profile.renderDrawerCustomerProfile(custId);
-                    }
-                    PawpalCustomers.switchSubtab('tab-profile');
-                    closeGlobalDropdown();
+                    openQuickProfile(custId);
                     return;
                 }
             });
@@ -835,9 +913,9 @@
         const searchInput = document.getElementById('custSearchInput');
 
         if (searchInput) {
+            let searchTimer;
             searchInput.addEventListener('input', () => {
-                currentCustomerPage = 1;
-                renderCustomersTable();
+                clearTimeout(searchTimer);searchTimer=setTimeout(()=>{currentCustomerPage=1;renderCustomersTable();},350);
             });
 
             searchInput.addEventListener('change', () => {
@@ -931,6 +1009,13 @@
         });
 
         document.getElementById('btnExportCustomerReport')?.addEventListener('click', exportCustomersToCSV);
+        const densityButton=document.getElementById('custDensityToggle');
+        const applyDensity=value=>{const compact=value==='compact';document.getElementById('customerDataTable')?.classList.toggle('customer-table-compact',compact);if(densityButton){densityButton.setAttribute('aria-pressed',String(compact));densityButton.textContent=compact?'Bảng thoáng':'Bảng gọn';}};
+        let density='comfortable';try{density=sessionStorage.getItem('pawpal_customer_density')||density;}catch{}
+        applyDensity(density);
+        if(densityButton)densityButton.onclick=()=>{density=densityButton.getAttribute('aria-pressed')==='true'?'comfortable':'compact';applyDensity(density);try{sessionStorage.setItem('pawpal_customer_density',density);}catch{}};
+        const checkbox=document.getElementById('custComplaintCheckbox');if(checkbox)checkbox.onchange=()=>document.getElementById('btnFilterComplaintOnly')?.click();
+        const opsToggle=document.getElementById('custToggleOps');if(opsToggle)opsToggle.onclick=()=>{const details=document.getElementById('custOpsDetails'),expanded=opsToggle.getAttribute('aria-expanded')!=='true';details.hidden=!expanded;opsToggle.setAttribute('aria-expanded',String(expanded));opsToggle.textContent=expanded?'Thu gọn':'Xem chi tiết';};
 
         renderCustomersTable();
         updateCustomerKPIs();
