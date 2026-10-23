@@ -253,7 +253,7 @@ async function loadProducts() {
         return products;
     } catch (error) {
         console.error('Error loading products from Supabase:', error);
-        return [];
+        throw error;
     }
 }
 

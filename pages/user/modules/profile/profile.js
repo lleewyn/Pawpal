@@ -298,6 +298,7 @@ async function loadMyPets(user) {
         pets = (allPets || []).filter(p => !p.isArchived && !p.archived);
     } catch (e) {
         console.warn('[Profile] Lỗi tải pet từ petService:', e);
+        throw e;
     }
 
     const petsCountEl = document.getElementById('statPetsCount');

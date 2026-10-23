@@ -50,7 +50,9 @@ function render(){
         add('detail-reorder','Mua lại',reorder);
         if(['completed','delivered','returned'].includes(o.orderStatus))add('detail-request-return','Yêu cầu đổi trả',()=>window.openRMADrawer(o.id));
         if(o.paymentStatus!=='paid'){
-            const note=document.createElement('p');note.textContent='Khoản thu chỉ được ghi nhận sau khi nhân viên xác nhận đã nhận tiền.';actions.append(note);
+            const note=document.createElement('p');note.className='order-payment-note';note.textContent='Thanh toán được cập nhật sau khi cửa hàng xác nhận đã nhận tiền.';
+            document.querySelector('.order-payment-note')?.remove();
+            document.getElementById('payment-status')?.parentElement.append(note);
         }
         if(o.note){const note=document.createElement('p');note.id='order-note';note.style.whiteSpace='pre-wrap';note.textContent='Ghi chú đơn hàng: '+o.note;actions.append(note);}
     }

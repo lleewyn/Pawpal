@@ -364,3 +364,23 @@ body.user-drawer-open .user-detail-drawer {
 .user-detail-header-button:hover { background: #DCEEE2; }
 .user-detail-header-button:focus-visible { outline: 2px solid #236B48; outline-offset: 2px; }
 .user-detail-header-button[hidden] { display: none; }
+/* Shared customer account shell follows the public design. */
+body.user-portal-body{--user-primary-green:#214939;--user-primary-hover:#315d46;--user-bg-neutral:#fff;--user-border-subtle:#dce5d8;--user-text-dark:#274b39;--user-text-muted:#637a69;--font-body:Inter,system-ui,sans-serif;--font-heading:Lora,Inter,serif;background:#fff;font-family:Inter,system-ui,sans-serif}
+.user-portal-body .user-portal-wrapper{padding:30px 0 60px}
+.user-portal-body .user-portal-wrapper>.container-xl{max-width:1600px;padding-left:40px;padding-right:40px}
+.user-portal-body .user-breadcrumb{font-family:Inter,system-ui,sans-serif;font-size:12px}
+.user-portal-body .dashboard-sidebar{background:#fff;border:1px solid #dce5d8;border-radius:9px;padding:22px 16px;box-shadow:none}
+.user-portal-body .sidebar-title{font-family:Lora,Inter,serif;color:#214939;font-size:21px;font-weight:600}
+.user-portal-body .sidebar-category{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#7a8b7d;letter-spacing:0;text-transform:none}
+.user-portal-body .sidebar-link{font-family:Inter,system-ui,sans-serif;font-size:13px;padding:11px 14px;border-radius:9px;color:#526d5b;transform:none;box-shadow:none}
+.user-portal-body .sidebar-link:hover{background:#f3f7ee;transform:none}
+.user-portal-body .sidebar-link.active{background:#eef4ed;color:#214939;font-weight:600}
+.user-portal-body .dashboard-sidebar-toggle{font-family:Inter,system-ui,sans-serif;font-size:13px;border-radius:9px;background:#f1f5ed;border:1px solid #d5e0d0;color:#31553f;box-shadow:none}
+@media(min-width:992px){.user-portal-body .user-portal-sidebar-col{width:260px}.user-portal-body .user-portal-main-col{width:calc(100% - 260px)}}
+@media(max-width:1000px){.user-portal-body .user-portal-wrapper>.container-xl{padding-left:24px;padding-right:24px}}
+@media(max-width:760px){.user-portal-body .user-portal-wrapper>.container-xl{padding-left:18px;padding-right:18px}.user-portal-body .user-portal-wrapper{padding-top:20px}}
+/* Align group labels with the left icon column. */
+.user-portal-body .dashboard-sidebar{--account-nav-gap:12px}
+.user-portal-body .sidebar-link{gap:var(--account-nav-gap)}
+.user-portal-body .sidebar-category{padding-left:14px;padding-right:14px}
+.user-portal-body #nav-support>span:first-child{display:inline-flex;align-items:center;gap:var(--account-nav-gap)}

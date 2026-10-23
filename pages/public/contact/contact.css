@@ -141,19 +141,19 @@
     font-weight: 600;
     font-size: var(--fs-body);
     cursor: pointer;
-    align-self: center; 
+    align-self: center;
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .btn-submit:hover {
-    background-color: #e6a83a; 
+    background-color: #e6a83a;
 }
 
 @media (max-width: 1024px) {
     .contact-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .form-row {
         grid-template-columns: 1fr;
     }
@@ -169,3 +169,30 @@
     border:0;
      border-radius: var(--card-border-radius);
 }
+
+/* Contact shares the public editorial palette and keeps the real support form. */
+body.contact-page-body{background:#fff;font-family:Inter,system-ui,sans-serif;color:#274b39}
+.contact-page-body main{background:#fff}
+.contact-page-body .container-xl{max-width:1500px!important;padding:0 40px}
+.contact-page-body .contact-hero{background:#fff;padding:24px 0 18px;border:0}
+.contact-page-body .contact-title{font-family:Inter,system-ui,sans-serif;font-size:12px;color:#718376;text-align:left;margin:0}
+.contact-page-body .contact-main{padding:26px 0 60px}
+.contact-page-body .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px}
+.contact-page-body .contact-kicker{font-size:11px!important;letter-spacing:.12em;color:#9c7125!important;font-weight:700;margin-bottom:18px}
+.contact-page-body h2{font-family:Lora,Inter,serif;color:#214939;font-size:clamp(30px,3.5vw,49px);line-height:1.2;margin-bottom:24px}
+.contact-page-body .contact-info>p{font-size:14px;line-height:1.8;color:#64796a;max-width:470px}
+.contact-page-body .contact-route{padding:23px 0;border-bottom:1px solid #e0e7dc}
+.contact-page-body .contact-route h3{font-family:Lora,Inter,serif;font-size:20px;color:#214939}
+.contact-page-body .contact-route a{color:#375f47;font-size:13px;text-underline-offset:5px}
+.contact-page-body .contact-auth-note{font-size:12px!important;margin-top:22px}
+.contact-page-body .contact-form-wrapper{background:#f8faf4;border:1px solid #dce5d8;border-radius:9px;box-shadow:none;padding:32px}
+.contact-page-body .contact-form h2{font-size:29px;margin:0 0 28px}
+.contact-page-body .contact-form label{font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;color:#31563f}
+.contact-page-body .contact-required{color:#c34242}
+.contact-page-body .contact-form :is(input,select,textarea){font-family:Inter,system-ui,sans-serif;background:white;border:1px solid #d4dfcf;border-radius:7px;font-size:13px;box-shadow:none;padding:12px}
+.contact-page-body .btn-submit{background:#214939;color:#fff;border:0;border-radius:6px;font-family:Inter,system-ui,sans-serif;font-size:13px;padding:13px 20px;box-shadow:none;transform:none}
+@media(max-width:760px){.contact-page-body .container-xl{padding:0 20px}.contact-page-body .contact-grid{grid-template-columns:1fr;gap:32px}.contact-page-body .contact-form-wrapper{padding:23px}.contact-page-body .form-row{grid-template-columns:1fr}}
+
+.contact-page-body .contact-main{background:#fff}
+.contact-page-body .contact-info{gap:16px}
+.contact-page-body .contact-form .form-row{gap:20px}

@@ -1359,7 +1359,7 @@ async function handleCheckout() {
         if(!response.success)throw response.error||new Error('Không thể tạo đơn hàng.');
         await finalizeCheckoutCart();
         localStorage.removeItem('pawpal_applied_voucher_code');localStorage.removeItem(PENDING_POINTS_KEY);
-        window.location.href='/user#orders';
+        window.location.href='/payment-success?orderId='+encodeURIComponent(response.orderId);
     } catch(error) {
         showToast(error.message||'Không thể đặt hàng. Vui lòng thử lại.','error');restoreBtn();
     }

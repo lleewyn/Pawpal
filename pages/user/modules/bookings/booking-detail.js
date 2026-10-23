@@ -19,6 +19,9 @@ function mapBookingStatus(status) {
         'vang_mat':       'cancelled',
         'pending':        'pending',
         'confirmed':      'confirmed',
+        'in_progress':    'in-progress',
+        'in-progress':    'in-progress',
+        'accepted':       'confirmed',
         'completed':      'completed',
         'cancelled':      'cancelled',
         'no_show':        'cancelled'
@@ -81,7 +84,7 @@ export async function init() {
         stopDetailRealtime?.();
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (currentBooking && loadingContainer?.isConnected) {
-            stopDetailRealtime = watchCustomerTables(db, currentBooking.userId, ['appointment','appointment_item','payment','review','hotel_booking','taxi_trip'], async () => {
+            stopDetailRealtime = watchCustomerTables(db, currentBooking.userId, ['appointment','appointment_item','payment','review','hotel_booking','taxi_trip','appointment_record','appointment_adjustment','care_log'], async () => {
                 if (!loadingContainer.isConnected) { stopDetailRealtime?.(); stopDetailRealtime = null; return; }
                 const dirty = [...loadingContainer.querySelectorAll('#serviceReviewForm textarea')].some(el => el.value.trim());
                 try { await loadBookingDetail(bookingId, dirty); } catch { showToast('Không thể cập nhật lịch hẹn. Vui lòng tải lại trang.', 'error'); }
@@ -146,6 +149,7 @@ async function loadBookingDetail(bookingId, preserveReview = false) {
     }
 
     renderBookingDetail(currentBooking);
+    await loadBookingExecution(db, currentBooking);
     if (!preserveReview) await renderServiceReviewSection(currentBooking);
     checkBookingModifiability(currentBooking);
     const cancelButton=document.getElementById('btnCancelBooking');
@@ -222,9 +226,9 @@ function renderBookingDetail(booking) {
     if (serviceLines) {
         serviceLines.replaceChildren();
         for (const item of booking.items || []) {
-            const row = document.createElement('p');
+            const row = document.createElement('div');row.className='booking-service-detail-row';
             const worker = booking.logistics?.item_staff?.find(w => w.item_id === item.id)?.staff_name;
-            row.textContent = `${item.name} — ${item.quantity} × ${formatPrice(item.unitPrice)}${Number(item.discount) ? `; giảm ${formatPrice(item.discount)}` : ''}${worker ? ` — ${worker}` : ''}`;
+            row.innerHTML=`<div><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.quantity)} × ${escapeHtml(formatPrice(item.unitPrice))}${worker?` · ${escapeHtml(worker)}`:''}${Number(item.discount)?` · Giảm ${escapeHtml(formatPrice(item.discount))}`:''}</span></div><b>${escapeHtml(formatPrice(Number(item.quantity)*Number(item.unitPrice)-Number(item.discount||0)))}</b>`;
             serviceLines.appendChild(row);
         }
     }
@@ -253,7 +257,7 @@ function renderBookingDetail(booking) {
             currentCareLog.currentSession ||
             (Array.isArray(currentCareLog.history) && currentCareLog.history.length > 0)
         );
-        careLogSection.classList.toggle('d-none', !(normalizedStatus === 'completed' && hasCareLog));
+        careLogSection.classList.toggle('d-none', !(['in-progress','accepted','completed'].includes(normalizedStatus) || hasCareLog));
     }
 
     const complaintSection = document.getElementById('serviceComplaintSection');
@@ -265,6 +269,46 @@ function renderBookingDetail(booking) {
             complaintLink.href = `#support-create?type=service&bookingId=${encodeURIComponent(booking.id)}`;
             complaintLink.onclick = () => window.scrollTo(0, 0);
         }
+    }
+}
+
+async function loadBookingExecution(db, booking) {
+    let section = document.getElementById('bookingExecutionDetails');
+    if (!section) {
+        section = document.createElement('section'); section.id = 'bookingExecutionDetails';
+        section.className = 'booking-detail-card mb-4';
+        document.getElementById('bookingServiceLines')?.closest('section')?.after(section);
+    }
+    const stamp = value => value ? new Date(value).toLocaleString('vi-VN', {timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}) : 'Chưa ghi nhận';
+    const status=resolveBookingStatus(booking);
+    // A pending/cancelled request has no active care session to follow.
+    section.hidden=['pending','cancelled'].includes(status);
+    if(section.hidden){section.replaceChildren();return;}
+    const money = value => Number(value || 0).toLocaleString('vi-VN') + 'đ';
+    try {
+        const result = await db.rpc('own_service_booking_execution', {p_booking:booking._supabaseId});
+        if (result.error) throw result.error;
+        const data = result.data || {};
+        if(!data.check_in_at&&!data.check_out_at&&!(data.records||[]).length&&!(data.updates||[]).length){
+            section.innerHTML='<h4 class="card-section-title">Tiếp nhận và chăm sóc</h4><p class="booking-execution-empty">Bé chưa được tiếp nhận. Nhật ký sẽ xuất hiện khi nhân viên bắt đầu chăm sóc và ghi cập nhật.</p>';
+        } else section.innerHTML = `<h4 class="card-section-title">Tiếp nhận và chăm sóc</h4>
+            <div class="booking-execution-times"><p>Tiếp nhận thực tế <strong>${escapeHtml(stamp(data.check_in_at))}</strong></p><p>Bàn giao thực tế <strong>${escapeHtml(stamp(data.check_out_at))}</strong></p></div>
+            ${(data.records || []).map(record=>`<article class="booking-execution-record"><h5>${record.record_type==='intake'?'Biên bản tiếp nhận':'Biên bản bàn giao'}</h5><span class="booking-execution-date">${escapeHtml(stamp(record.recorded_at))}</span><p>${escapeHtml(record.condition_note || 'Chưa có nội dung')}</p>${record.allergy_note_snapshot?`<p>Dị ứng: ${escapeHtml(record.allergy_note_snapshot)}</p>`:''}${record.safety_note_snapshot?`<p>Lưu ý an toàn: ${escapeHtml(record.safety_note_snapshot)}</p>`:''}<small>${record.customer_confirmation_status==='confirmed'?'Đã có xác nhận của chủ nuôi':'Chưa có xác nhận của chủ nuôi'}</small></article>`).join('') || '<p class="booking-execution-empty">Chưa có biên bản tiếp nhận hoặc bàn giao được ghi nhận.</p>'}
+            <h5 class="booking-execution-heading">Cập nhật chăm sóc gần nhất</h5>
+            ${(data.updates || []).map(log=>`<article class="booking-execution-update"><strong>${escapeHtml(log.action_name_snapshot)}</strong><span class="booking-execution-date">${escapeHtml(stamp(log.recorded_at))}</span><p>${escapeHtml(log.description || '')}</p>${log.observed_condition?`<p>${escapeHtml(log.observed_condition)}</p>`:''}</article>`).join('') || '<p class="booking-execution-empty">Nhân viên chưa ghi nhật ký chăm sóc cho ca này.</p>'}`;
+        let costs = document.getElementById('bookingCostBreakdown');
+        if (!costs) {
+            costs = document.createElement('div'); costs.id = 'bookingCostBreakdown';
+            document.getElementById('netPaidInfo')?.closest('.booking-specs-grid')?.append(costs);
+        }
+        const lineSubtotal = (booking.items || []).reduce((sum,item)=>sum+Number(item.quantity)*Number(item.unitPrice),0);
+        const discounts = (booking.items || []).reduce((sum,item)=>sum+Number(item.discount||0),0);
+        const row=(label,value)=>`<div class="booking-spec-row"><span class="spec-label">${escapeHtml(label)}</span><span class="spec-value">${escapeHtml(value)}</span></div>`;
+        costs.innerHTML=row('Giá các dịch vụ',money(lineSubtotal))+row('Giảm giá dịch vụ',money(discounts))+
+            (data.adjustments || []).map(a=>row(a.reason || 'Điều chỉnh đã duyệt',`${Number(a.amount_delta)>0?'+':''}${money(a.amount_delta)}${a.duration_delta_minutes?' · '+a.duration_delta_minutes+' phút':''}`)).join('')+
+            row('Còn cần thanh toán',money(Math.max(0,Number(booking.price)-Number(booking.netPaid||0))));
+    } catch {
+        section.innerHTML='<h4 class="card-section-title">Tiếp nhận và chăm sóc</h4><p role="alert">Chưa tải được thông tin tiếp nhận và nhật ký. Vui lòng tải lại trang.</p>';
     }
 }
 

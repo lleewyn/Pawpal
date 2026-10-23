@@ -23,10 +23,29 @@ function dialog(title,html){
  overlay.onclick=e=>{if(e.target===overlay || e.target.closest('[data-close-modal]'))close();};overlay.querySelector('button').focus();return {overlay,close};
 }
 function detail(v){dialog('Chi tiết ưu đãi',`<h4>${esc(v.voucher_name)}</h4><p>${esc(v.voucher_code)}</p><table class="voucher-detail-spec-table"><tbody><tr><td>Mức giảm</td><td>${esc(discount(v))}</td></tr><tr><td>Đơn tối thiểu</td><td>${num(v.minimum_order_amount)}đ</td></tr><tr><td>Phạm vi</td><td>${esc(scope(v))}</td></tr><tr><td>Hiệu lực</td><td>${day(v.start_date)} – ${day(v.end_date)}</td></tr><tr><td>Điểm quy đổi</td><td>${num(v.required_points)}</td></tr></tbody></table><p>${esc(v.description || '')}</p><p>Mã chỉ áp dụng khi đơn đáp ứng điều kiện. Đổi voucher không tự thanh toán đơn hoặc đặt lịch.</p>`);}
+function spendingProgress(snapshot){
+ const spend=Number(snapshot.eligible_spend);
+ if(!Number.isFinite(spend))return '<p>Chưa tải được tiến trình chi tiêu xét hạng.</p>';
+ const tiers=(snapshot.tiers||[]).filter(t=>Number.isFinite(Number(t.minimum_expenditure))).sort((a,b)=>Number(a.minimum_expenditure)-Number(b.minimum_expenditure));
+ const floor=Number(snapshot.tier?.minimum_expenditure)||0;
+ const next=tiers.find(t=>Number(t.minimum_expenditure)>Math.max(floor,spend));
+ const target=next?Number(next.minimum_expenditure):Number(tiers.at(-1)?.minimum_expenditure)||0;
+ const percent=target>0?Math.max(0,Math.min(100,spend/target*100)):100;
+ return `<div class="loyalty-spend-progress"><div class="loyalty-spend-heading"><span>Chi tiêu xét hạng</span><strong>${num(spend)}đ</strong></div><div class="loyalty-spend-track" role="progressbar" aria-label="Tiến trình chi tiêu xét hạng" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(percent)}"><span style="width:${percent}%"></span></div><div class="loyalty-spend-milestone">${next?`<span>Hạng ${esc(next.name)}</span><strong>${num(target)}đ</strong>`:'<span>Đã đạt mốc chi tiêu cao nhất hiện tại</span>'}</div>${next?`<p>Còn ${num(target-spend)}đ chi tiêu đủ điều kiện để đạt mốc hạng ${esc(next.name)}.</p>`:''}<small>Tính theo khoản thanh toán đủ điều kiện, sau khi trừ hoàn tiền.</small></div>`;
+}
 
 export async function initLoyalty(){
  dispose();const root=document.getElementById('loyalty-card-wrapper');if(!root)return;
- let active=true,snapshot,channel,historyPage=0;
+ let active=true,snapshot,channel,historyPage=0,walletPage=0,catalogPage=0;
+ const voucherPageSize=6;
+ function paginate(regionId,total,current,onPage){
+  const pages=Math.max(1,Math.ceil(total/voucherPageSize));
+  let nav=document.getElementById(regionId+'-pages');
+  if(!nav){nav=document.createElement('nav');nav.id=regionId+'-pages';nav.className='loyalty-voucher-pages';nav.setAttribute('aria-label',regionId==='vouchers-grid'?'Trang ?u ??i ??i ?i?m':'Trang voucher c?a t?i');document.getElementById(regionId).after(nav);}
+  nav.hidden=pages<=1;nav.innerHTML=pages<=1?'':`<button type="button" data-prev ${current===0?'disabled':''} aria-label="Trang tr??c">&lt;</button><span>${current+1} / ${pages}</span><button type="button" data-next ${current===pages-1?'disabled':''} aria-label="Trang sau">&gt;</button>`;
+  nav.querySelector('[data-prev]')?.addEventListener('click',()=>{onPage(current-1);render();document.getElementById(regionId).scrollIntoView({block:'start'});});
+  nav.querySelector('[data-next]')?.addEventListener('click',()=>{onPage(current+1);render();document.getElementById(regionId).scrollIntoView({block:'start'});});
+ }
  cleanup=()=>{active=false;if(channel)db()?.removeChannel(channel);document.querySelector('#loyalty-dialog [data-close-modal]')?.click();};
  async function refresh(){
   try{const data=await rpc('own_loyalty_snapshot');if(!active || !root.isConnected)return;snapshot=data;render();}
@@ -35,14 +54,19 @@ export async function initLoyalty(){
  function render(){
   const tier=snapshot.tier;
   root.innerHTML=`<div class="loyalty-top-flex"><div class="pawpass-card-wrapper"><div id="pawpassVirtualCard" class="pawpass-virtual-card tier-silver"><div class="card-header-brand"><span class="brand-name">PawPal PawPass</span></div><div class="card-body-info"><span id="virtualCardTier" class="card-tier-label">${esc(tier?.name || 'Chưa có hạng')}</span><div class="pet-owner-info"><span id="virtualCardOwner" class="owner-name">${esc(snapshot.name)}</span></div></div><div class="card-footer-metrics"><span>${tier?'Mức giảm theo hạng '+num(tier.discount_percent)+'%':'Chưa có chính sách hạng được gán'}</span></div></div></div><div class="loyalty-card-details-panel"><span>Điểm tích lũy hiện tại</span><strong id="current-points-display">${num(snapshot.points)} <span class="points-unit">Paw Points</span></strong><p>${esc(tier?.description || 'Hạng thành viên do cửa hàng quản lý. Không tự xét hạng hoặc cộng điểm từ trang này.')}</p></div></div>`;
+  root.querySelector('.loyalty-card-details-panel').insertAdjacentHTML('beforeend',spendingProgress(snapshot));
   const wallet=snapshot.wallet || [],now=Date.now();
   document.getElementById('myVouchersCountLabel').textContent=wallet.length+' voucher';
-  document.getElementById('my-vouchers-list').innerHTML=wallet.length?wallet.map(w=>{
+  walletPage=Math.min(walletPage,Math.max(0,Math.ceil(wallet.length/voucherPageSize)-1));
+  document.getElementById('my-vouchers-list').innerHTML=wallet.length?wallet.slice(walletPage*voucherPageSize,(walletPage+1)*voucherPageSize).map(w=>{
    const usable=w.status==='available' && w.voucher.is_active && new Date(w.voucher.start_date+'T00:00:00+07:00')<=now && (!w.expired_at || new Date(w.expired_at)>now) && new Date(w.voucher.end_date+'T23:59:59+07:00')>=now;
    return `<div class="my-voucher-ticket-card" data-wallet="${w.id}"><div class="my-ticket-stub"><span>${esc(discount(w.voucher))}</span></div><div class="my-ticket-body"><strong>${esc(w.voucher.voucher_name)}</strong><p>${esc(w.voucher.voucher_code)}</p><p>${usable?'Khả dụng':w.status==='used'?'Đã sử dụng':'Không khả dụng'} · Hạn ${walletEnd(w)}</p><button type="button" class="btn-modal-cancel" data-wallet-detail="${w.id}">Chi tiết</button></div><div class="my-ticket-action"><button type="button" class="btn-ticket-copy" data-copy="${esc(w.voucher.voucher_code)}" ${usable?'':'disabled'}>Sao chép mã</button></div></div>`;
   }).join(''):'<p>Bạn chưa có voucher nào.</p>';
   const catalog=snapshot.catalog || [];
-  document.getElementById('vouchers-grid').innerHTML=catalog.length?catalog.map(v=>`<div class="voucher-ticket-card" data-id="${v.id}"><div class="ticket-stub"><strong>${esc(discount(v))}</strong></div><div class="ticket-body"><h4>${esc(v.voucher_name)}</h4><p>${num(v.required_points)} điểm · Đơn từ ${num(v.minimum_order_amount)}đ</p><p>${esc(scope(v))} · Đến ${day(v.end_date)}</p><button type="button" class="btn-modal-cancel" data-detail="${v.id}">Chi tiết</button><button type="button" class="redeem-btn" data-redeem="${v.id}" ${snapshot.points<v.required_points?'disabled':''}>${snapshot.points<v.required_points?'Chưa đủ điểm':'Đổi '+num(v.required_points)+' điểm'}</button></div></div>`).join(''):'<p>Chưa có ưu đãi đổi điểm đang hiệu lực.</p>';
+  catalogPage=Math.min(catalogPage,Math.max(0,Math.ceil(catalog.length/voucherPageSize)-1));
+  document.getElementById('vouchers-grid').innerHTML=catalog.length?catalog.slice(catalogPage*voucherPageSize,(catalogPage+1)*voucherPageSize).map(v=>`<div class="voucher-ticket-card" data-id="${v.id}"><div class="ticket-stub"><strong>${esc(discount(v))}</strong></div><div class="ticket-body"><h4>${esc(v.voucher_name)}</h4><p>${num(v.required_points)} điểm · Đơn từ ${num(v.minimum_order_amount)}đ</p><p>${esc(scope(v))} · Đến ${day(v.end_date)}</p><button type="button" class="btn-modal-cancel" data-detail="${v.id}">Chi tiết</button><button type="button" class="redeem-btn" data-redeem="${v.id}" ${snapshot.points<v.required_points?'disabled':''}>${snapshot.points<v.required_points?'Chưa đủ điểm':'Đổi '+num(v.required_points)+' điểm'}</button></div></div>`).join(''):'<p>Chưa có ưu đãi đổi điểm đang hiệu lực.</p>';
+  paginate('my-vouchers-list',wallet.length,walletPage,value=>walletPage=value);
+  paginate('vouchers-grid',catalog.length,catalogPage,value=>catalogPage=value);
   for(const id of ['loyalty-card-wrapper','my-vouchers-list','vouchers-grid']){document.getElementById(id).setAttribute('aria-busy','false');document.getElementById(id).classList.add('loyalty-loaded');}
   document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>detail(catalog.find(v=>v.id===b.dataset.detail)));
   document.querySelectorAll('[data-wallet-detail]').forEach(b=>b.onclick=()=>detail(wallet.find(w=>w.id===b.dataset.walletDetail).voucher));
@@ -52,6 +76,9 @@ export async function initLoyalty(){
   const rows=snapshot.history || [],pages=Math.max(1,Math.ceil(rows.length/10));historyPage=Math.min(historyPage,pages-1);
   history.innerHTML=`<h3>Lịch sử điểm</h3><table class="voucher-detail-spec-table"><thead><tr><th>Thời điểm</th><th>Biến động</th><th>Nội dung</th></tr></thead><tbody>${rows.slice(historyPage*10,historyPage*10+10).map(r=>`<tr><td>${day(r.created_at)}</td><td>${r.points>0?'+':''}${num(r.points)}</td><td>${esc(r.description || '—')}</td></tr>`).join('') || '<tr><td colspan="3">Chưa có giao dịch điểm.</td></tr>'}</tbody></table><div style="display:flex;justify-content:center;gap:12px"><button type="button" id="pointsPrev" ${historyPage===0?'disabled':''}>&lt;</button><span>${historyPage+1} / ${pages}</span><button type="button" id="pointsNext" ${historyPage===pages-1?'disabled':''}>&gt;</button></div>`;
   history.querySelector('#pointsPrev').onclick=()=>{historyPage--;render();};history.querySelector('#pointsNext').onclick=()=>{historyPage++;render();};
+  const historyNavigation=history.querySelector('#pointsPrev').parentElement;
+  historyNavigation.hidden=pages<=1;
+  historyNavigation.style.display=pages<=1?'none':'flex';
  }
  function confirmRedeem(v){
   if(!snapshot)return;

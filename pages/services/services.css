@@ -322,11 +322,11 @@
 
 .service-asymmetric-grid {
     display: grid;
-    grid-template-columns: 1fr 1.86fr; 
+    grid-template-columns: 1fr 1.86fr;
 }
 
 .service-asymmetric-grid.inverted {
-    grid-template-columns: 1.86fr 1fr; 
+    grid-template-columns: 1.86fr 1fr;
 }
 
 .service-info-panel {
@@ -952,3 +952,129 @@
     justify-content: center;
     color: var(--color-text-light);
 }
+
+/* Public service catalogue: editorial layout, live business controls preserved. */
+body.services-page-body,body.services-page-body .services-main{background:#fff;color:#254936;font-family:Inter,system-ui,sans-serif}
+.services-page-body .services-main{padding:0 0 56px}
+.services-page-body .services-editorial-intro{max-width:1320px;margin:auto;padding:52px 32px 35px}
+.services-page-body .services-overline{font-size:11px;font-weight:700;letter-spacing:.14em;color:#9a6c25;margin:0 0 16px}
+.services-page-body .services-editorial-intro h1{font-family:Lora,Inter,serif;font-size:clamp(32px,3.6vw,54px);line-height:1.2;letter-spacing:-.035em;color:#214939;margin:0}
+.services-page-body .services-catalog-section{padding-top:8px}
+.services-page-body .services-catalog-section .container-xl{max-width:1320px!important;width:100%;padding:0 32px}
+.services-page-body .services-layout{gap:36px}
+.services-page-body .services-sidebar{background:#fff;border:0;border-radius:0;box-shadow:none}
+.services-page-body .sidebar-header{background:transparent;border-color:#dce5dc}
+.services-page-body .sidebar-title{color:#214939;font-family:Inter,system-ui,sans-serif;font-size:16px}
+.services-page-body .filter-title{font-family:Inter,system-ui,sans-serif;color:#315540;font-size:12px;letter-spacing:.04em}
+.services-page-body .filter-group{border-color:#e2e9e0}
+.services-page-body .filter-checkbox{color:#526c5d;font-size:13px}
+.services-page-body input[type=radio],.services-page-body input[type=checkbox]{accent-color:#28523d}
+.services-page-body .toolbar-search{border-radius:7px;border:1px solid #d8e3d7;box-shadow:none;font-size:13px;padding-top:12px;padding-bottom:12px}
+.services-page-body .services-toolbar{margin-bottom:24px!important}
+.services-page-body .services-grid-list{gap:22px}
+.services-page-body .service-card{background:#fff;border:1px solid #dfe8dd;border-radius:9px;box-shadow:none;overflow:hidden;transform:none!important}
+.services-page-body .service-card:hover{box-shadow:none;border-color:#b9cbb9;transform:none!important}
+.services-page-body .service-image-wrapper{border-radius:0;overflow:hidden;height:195px}
+.services-page-body .service-image{height:195px;width:100%;object-fit:cover;border-radius:0;transform:none!important}
+.services-page-body .service-category-badge{background:#f6f8f1;color:#385540;border:0;border-radius:4px;font-size:10px;font-weight:500}
+.services-page-body .service-card-info{padding:16px 17px;gap:10px}
+.services-page-body .service-card-id{font-size:10px;letter-spacing:.06em;color:#946923}
+.services-page-body .service-card-rating{font-size:10px;color:#526b5d}
+.services-page-body .service-card-title{font-family:Lora,Inter,serif;font-weight:600;font-size:20px;color:#214939;line-height:1.35;min-height:54px}
+.services-page-body .service-card-desc{font-family:Inter,system-ui,sans-serif;font-size:12px;line-height:20px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;height:40px;min-height:40px;max-height:40px;overflow:hidden;text-overflow:ellipsis;color:#5a7061}
+.services-page-body .service-card-meta{font-size:11px;color:#5a7061;gap:5px}
+.services-page-body .service-meta-item>span:first-child{display:none}
+.services-page-body .service-card-price-row{border-top:1px solid #e0e6db;padding-top:12px;gap:8px;flex-wrap:wrap}
+.services-page-body .price-label{display:none}
+.services-page-body .service-card-price{color:#986a19;font-size:14px;font-weight:700}
+.services-page-body .service-card-actions{padding:0 17px 17px}
+.services-page-body .service-btn-book{border-radius:6px;background:#214939;color:#fff;border:1px solid #214939;font-family:Inter,system-ui,sans-serif;font-size:12px;padding:10px 14px;box-shadow:none;transform:none}
+.services-page-body .service-btn-book:hover{background:#2d5943;color:#fff;transform:none}
+.services-page-body .service-wishlist-btn{width:34px;height:34px;top:12px;right:12px;background:#fff;color:#315540;box-shadow:0 2px 8px #183c2b12;border:0}
+.services-page-body .service-wishlist-btn.active{color:#b64352}
+.services-page-body .services-filter-toggle{border-radius:7px;box-shadow:none;background:#f5f8f1;color:#214939}
+.services-page-body .btn-clear-filters-full{background:#eef3e9;color:#315540;border:0;border-radius:6px;box-shadow:none}
+.services-page-body .pagination-wrapper{background:transparent;border:0}
+.services-page-body .page-number,.services-page-body .page-btn{box-shadow:none;border:0;background:transparent;border-radius:6px}
+.services-page-body .page-number.active{background:#214939;color:white}
+@media(min-width:1101px){.services-page-body .services-layout{grid-template-columns:235px minmax(0,1fr)}.services-page-body .services-sidebar{padding-left:0;padding-right:20px}}
+@media(max-width:760px){.services-page-body .services-editorial-intro{padding:30px 18px 24px}.services-page-body .services-catalog-section .container-xl{padding:0 18px}.services-page-body .services-grid-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.services-page-body .service-image-wrapper,.services-page-body .service-image{height:155px}.services-page-body .service-card-title{font-size:17px}.services-page-body .service-card-info{padding:13px}.services-page-body .service-card-actions{padding:0 13px 13px}}
+@media(max-width:550px){.services-page-body .services-grid-list{grid-template-columns:1fr}.services-page-body .service-image-wrapper,.services-page-body .service-image{height:220px}}
+
+.services-page-body .filter-title,.services-page-body .sidebar-title,.services-page-body .service-category-badge{text-transform:none;letter-spacing:0}
+.services-page-body .service-card-meta{border:0}
+
+/* Filter panel and breadcrumb approved from the reference. */
+.services-page-body .services-breadcrumb{display:flex;align-items:center;gap:13px;font-size:12px;color:#78877e;margin-bottom:25px}
+.services-page-body .services-breadcrumb a{color:#78877e;text-decoration:none}
+.services-page-body .services-breadcrumb [aria-current]{font-weight:600;color:#315941}
+.services-page-body .services-editorial-intro{padding-top:22px}
+.services-page-body .services-sidebar{border:1px solid #dae5dc;border-radius:7px;padding:0;overflow:hidden;background:#fff}
+.services-page-body .sidebar-header{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#214939;padding:18px;border:0;margin:0}
+.services-page-body .sidebar-title{margin:0;font-size:14px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.07em;line-height:1.2;max-width:120px}
+.services-page-body .sidebar-heading-note{font-size:11px;line-height:1.3;color:#cfdfd4;max-width:80px}
+.services-page-body .services-sidebar .filter-group{padding:20px 18px;margin:0;border-bottom:1px solid #dae5dc}
+.services-page-body .services-sidebar .filter-title{text-transform:uppercase;font-size:11px;letter-spacing:.08em;margin-bottom:14px}
+.services-page-body .services-sidebar .filter-checkbox{font-size:12px}
+.services-page-body .sidebar-close-btn{color:#fff}
+@media(max-width:1100px){.services-page-body .sidebar-heading-note{margin-left:auto}.services-page-body .services-sidebar{overflow-y:auto}.services-page-body .services-editorial-intro{padding-top:18px}}
+
+/* Wider catalogue; retain only the compact breadcrumb above it. */
+.services-page-body .services-editorial-intro{max-width:1800px;padding:22px 40px 16px}
+.services-page-body .services-breadcrumb{margin-bottom:0}
+.services-page-body .services-catalog-section .container-xl{max-width:1800px!important;padding-left:40px;padding-right:40px}
+@media(max-width:760px){.services-page-body .services-editorial-intro{padding:18px 18px 14px}.services-page-body .services-catalog-section .container-xl{padding-left:18px;padding-right:18px}}
+
+/* Single-line filter labels, with one shared layer of inner spacing. */
+@media(min-width:1101px){.services-page-body .services-layout{grid-template-columns:300px minmax(0,1fr)}}
+.services-page-body .services-sidebar .sidebar-scroll-body{padding:0;min-width:0}
+.services-page-body .services-sidebar .sidebar-header{gap:12px;padding:18px 16px;flex-shrink:0}
+.services-page-body .services-sidebar .sidebar-title{max-width:none;white-space:nowrap;font-size:13px;letter-spacing:.025em;flex-shrink:0}
+.services-page-body .sidebar-heading-note{max-width:none;white-space:nowrap;font-size:10px}
+.services-page-body .services-sidebar .filter-checkbox{gap:10px;white-space:nowrap}
+.services-page-body .services-sidebar .filter-checkbox span{white-space:nowrap}
+.services-page-body .services-sidebar .filter-group{padding:20px 18px}
+@media(max-width:1100px){.services-page-body .services-sidebar .sidebar-header{flex-wrap:wrap}.services-page-body .sidebar-heading-note{margin-left:0}.services-page-body .sidebar-close-btn{margin-left:auto}}
+
+/* Reference layout: flat editorial cards and category navigation. */
+@media(min-width:1101px){.services-page-body .services-layout{grid-template-columns:260px minmax(0,1fr);gap:32px}}
+.services-page-body .services-content{gap:0}
+.services-page-body .services-toolbar{display:flex;align-items:center;gap:16px;margin:0 0 18px!important}
+.services-page-body .services-toolbar .search-wrapper{flex:1;order:0;margin:0}
+.services-page-body .services-result-count{order:1;font-size:12px;color:#718476;white-space:nowrap}
+.services-page-body .services-category-tabs{display:flex;align-items:center;gap:28px;border-bottom:1px solid #dae5dc;margin:0 0 20px;flex-wrap:wrap}
+.services-page-body .services-category-tabs button{border:0;border-bottom:3px solid transparent;background:transparent;color:#647b6c;padding:7px 0 12px;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600}
+.services-page-body .services-category-tabs button[aria-pressed=true]{border-bottom-color:#e5a324;color:#214939}
+.services-page-body .service-card,.services-page-body .service-card:hover{border:0;border-bottom:1px solid #dae5dc;border-radius:0;box-shadow:none;background:transparent;position:relative;overflow:visible;padding-bottom:62px}
+.services-page-body .service-image-wrapper{border-radius:3px;height:230px;aspect-ratio:auto}
+.services-page-body .service-image{height:230px;border-radius:3px}
+.services-page-body .service-category-badge{top:auto;bottom:12px;left:10px;background:#28533f;color:#fff;border-radius:0;font-size:10px;padding:5px 9px;text-transform:uppercase}
+.services-page-body .service-card-info{padding:14px 0 0;gap:10px}
+.services-page-body .service-card-id{background:none;padding:0;font-size:10px;color:#8b9c8d}
+.services-page-body .service-card-rating{color:#a67722}
+.services-page-body .service-card-rating>span:first-child{display:none}
+.services-page-body .service-card-title{font-size:21px;min-height:56px;margin:0}
+.services-page-body .service-card-desc{margin:4px 0 0;line-height:20px;font-size:12px}
+.services-page-body .service-card-meta{border:0;padding:0;display:flex;flex-wrap:wrap;gap:7px;min-height:20px}
+.services-page-body .service-meta-item{font-size:10px}
+.services-page-body .service-card-price-row{border:0;padding:0;position:absolute;bottom:17px;left:0;right:110px;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.services-page-body .price-label{display:block;font-size:10px;color:#87988a}
+.services-page-body .service-card-price{font-size:12px;color:#315c45;font-weight:700}
+.services-page-body .service-card-actions{position:absolute;right:0;bottom:17px;padding:0}
+.services-page-body .service-btn-book{font-size:11px;padding:9px 18px;border-radius:3px}
+.services-page-body .service-wishlist-btn{top:10px;right:10px}
+@media(max-width:760px){.services-page-body .services-category-tabs{gap:20px}.services-page-body .services-toolbar{flex-wrap:wrap}.services-page-body .services-result-count{font-size:11px}.services-page-body .service-image-wrapper,.services-page-body .service-image{height:220px}}
+
+/* Trim excess filter width while keeping every option on one line. */
+@media(min-width:1101px){.services-page-body .services-layout{grid-template-columns:235px minmax(0,1fr)}}
+.services-page-body .services-sidebar .sidebar-header{padding-left:14px;padding-right:14px;gap:8px}
+.services-page-body .services-sidebar .sidebar-title{font-size:12px;letter-spacing:0}
+.services-page-body .sidebar-heading-note{font-size:9px}
+.services-page-body .services-sidebar .filter-group{padding-left:14px;padding-right:14px}
+
+/* Restore the subtle rounded card frame around the current catalogue layout. */
+.services-page-body .service-card,.services-page-body .service-card:hover{border:1px solid #dce6dc;border-radius:9px;background:#fff;overflow:hidden;box-shadow:none;padding-bottom:68px}
+.services-page-body .service-image-wrapper,.services-page-body .service-image{border-radius:0}
+.services-page-body .service-card-info{padding:16px 17px 0}
+.services-page-body .service-card-price-row{left:17px;right:122px;bottom:20px}
+.services-page-body .service-card-actions{right:17px;bottom:18px}

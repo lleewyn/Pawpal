@@ -705,3 +705,40 @@
 .form-control-custom[aria-invalid="true"] {
     border-color: #DC2626;
 }
+/* Account overview, with uncluttered surfaces and shared public typography. */
+.user-portal-body .profile-module-container{font-family:Inter,system-ui,sans-serif;color:#274b39}
+.user-portal-body .dashboard-welcome-banner{background:#f3f7ee;border:1px solid #dce5d8;border-radius:9px;padding:28px;box-shadow:none}
+.user-portal-body .welcome-title-custom{font-family:Lora,Inter,serif;color:#214939;font-size:30px;line-height:1.4;font-weight:600}
+.user-portal-body .welcome-stat-card{background:transparent;border:0;border-radius:0;box-shadow:none;padding:0}
+.user-portal-body .welcome-stat-value{font-family:Inter,system-ui,sans-serif;color:#315d46;font-size:24px;font-weight:600}
+.user-portal-body .welcome-stat-label{font-family:Inter,system-ui,sans-serif;color:#637a69;font-size:12px;letter-spacing:0;text-transform:none}
+.user-portal-body .section-title-custom,.user-portal-body .bottom-card-title-custom{font-family:Lora,Inter,serif;color:#214939;font-weight:600;font-size:23px;line-height:1.4}
+.user-portal-body .section-link-custom,.user-portal-body .btn-edit-link-custom{font-family:Inter,system-ui,sans-serif;color:#315d46;font-size:12px;font-weight:600}
+.user-portal-body .horizontal-scroll-card-custom{background:transparent;border:0;padding:0;box-shadow:none}
+.user-portal-body .dashboard-bottom-card{background:#fff;border:1px solid #dce5d8;border-radius:9px;padding:24px;box-shadow:none}
+.user-portal-body .bottom-card-header{border:0;margin-bottom:22px;padding-bottom:0;gap:16px;flex-wrap:wrap}
+.user-portal-body .info-row-custom{border:0;padding:10px 0;gap:18px}
+.user-portal-body .info-label-custom{font-size:13px;color:#637a69}
+.user-portal-body .info-value-custom{font-size:14px;color:#274b39;overflow-wrap:anywhere}
+.user-portal-body .upcoming-booking-card{background:#fff;border:1px solid #dce5d8;border-radius:9px;padding:20px;box-shadow:none}
+.user-portal-body .booking-service-title{font-family:Lora,Inter,serif;color:#214939;font-size:19px}
+.user-portal-body .btn-booking-detail-action{background:#f1f5ed;color:#31553f;border:1px solid #d5e0d0;border-radius:9px;font-family:Inter,system-ui,sans-serif;font-size:12px;box-shadow:none}
+.user-portal-body .order-item-card{background:transparent;border:0;border-radius:0;box-shadow:none;padding:14px 0}
+.user-portal-body .order-code-title{font-family:Inter,system-ui,sans-serif;color:#31553f;font-size:13px}
+.user-portal-body .order-price-text{color:#315d46;font-size:14px}
+.user-portal-body .order-status-badge{border:0;border-radius:9px;font-size:12px;padding:4px 9px}
+.user-portal-body .profile-overview-content .status-completed{background:#dceee2;color:#165335}
+.user-portal-body .profile-overview-content .status-pending{background:#f5e8d3;color:#734718}
+.user-portal-body .profile-overview-content .status-in-progress{background:#dceaf2;color:#20495e}
+.user-portal-body .pet-avatar-item:hover .pet-image-circle,.user-portal-body .order-item-card:hover{transform:none;box-shadow:none}
+@media(max-width:760px){.user-portal-body .dashboard-welcome-banner{padding:22px}.user-portal-body .welcome-title-custom{font-size:25px}.user-portal-body .dashboard-bottom-card{padding:22px 18px}.user-portal-body .section-title-custom,.user-portal-body .bottom-card-title-custom{font-size:21px}}
+.user-portal-body .dashboard-section-wrapper{background:#fff;border:1px solid #dce5d8;border-radius:9px;box-shadow:none;backdrop-filter:none;padding:24px}
+@media(max-width:760px){.user-portal-body .dashboard-section-wrapper{padding:22px 18px}}
+/* Emphasize the account overview with the brand's forest and warm gold. */
+.user-portal-body .dashboard-welcome-banner{background:#214939;border:1px solid #214939;padding:30px 28px;color:#fff}
+.user-portal-body .welcome-title-custom{color:#fff;margin-bottom:26px}
+.user-portal-body .welcome-banner-stats{gap:24px;justify-content:space-evenly}
+.user-portal-body .welcome-stat-value{font-size:34px;line-height:1.3;font-weight:600;color:#f0c76d}
+.user-portal-body .welcome-stat-label{font-size:12px;font-weight:500;color:#dae6db;margin-top:8px}
+@media(max-width:760px){.user-portal-body .dashboard-welcome-banner{padding:26px 20px}.user-portal-body .welcome-banner-stats{gap:22px 12px}.user-portal-body .welcome-stat-card{min-width:100px}.user-portal-body .welcome-stat-value{font-size:29px}.user-portal-body .welcome-stat-label{font-size:11px}}
+.user-portal-body .welcome-stat-value{font-family:Lora,Inter,serif;font-weight:600}

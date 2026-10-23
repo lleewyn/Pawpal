@@ -1028,3 +1028,67 @@
     background: #F8FAF9;
     border-color: #ECF2EE;
 }
+
+
+/* Magazine presentation using the existing published-article feed. */
+body.blog-page-body,.blog-page-body .blog-magazine-main{background:#fff;color:#274b39;font-family:Inter,system-ui,sans-serif}
+.blog-page-body .blog-page-wrapper{max-width:1700px;padding:0 40px}
+.blog-page-body .blog-hero-magazine{background:transparent;padding:30px 0;border:0;border-radius:0;box-shadow:none}
+.blog-page-body .hero-editorial-title{font-family:Lora,Inter,serif;font-size:clamp(30px,3.5vw,50px);color:#214939;line-height:1.2;font-weight:600;max-width:650px}
+.blog-page-body .hero-editorial-top{gap:45px;margin-bottom:30px}
+.blog-page-body .blog-search-form{background:#fff;border:1px solid #d6e1d2;border-radius:7px;box-shadow:none}
+.blog-page-body .blog-search-form input{font-family:Inter,system-ui,sans-serif;font-size:12px;background:transparent}
+.blog-page-body .btn-search-blog{background:#214939;color:#fff;border:0;border-radius:5px;box-shadow:none;font-size:12px}
+.blog-page-body .btn-keyword-chip,.blog-page-body .pet-chip-btn{border:0;background:#f1f5ec;color:#52705a;border-radius:5px;box-shadow:none;font-size:11px}
+.blog-page-body .hero-bento-grid{gap:22px}
+.blog-page-body .bento-hero-card,.blog-page-body .bento-mini-card{background:#fff;border:1px solid #dce5d8;border-radius:9px;box-shadow:none;transform:none!important}
+.blog-page-body .bento-hero-title{font-family:Lora,Inter,serif;color:#214939;font-size:30px;line-height:1.3}
+.blog-page-body .bento-hero-body{background:#fff;color:#214939}
+.blog-page-body .bento-hero-excerpt{font-size:13px;color:#64796a;line-height:1.7}
+.blog-page-body .bento-mini-title{font-family:Lora,Inter,serif;color:#214939;font-size:19px}
+.blog-page-body .blog-filter-section{background:white;box-shadow:none;border-top:1px solid #dce5d8;border-bottom:1px solid #dce5d8;border-radius:0;top:69px}
+.blog-page-body .filter-bar-container{background:white;box-shadow:none;border:0}
+.blog-page-body .cat-tab-btn{background:transparent;color:#617868;border:0;border-bottom:3px solid transparent;border-radius:0;font-size:12px;padding:12px 0;margin-right:22px;white-space:nowrap}
+.blog-page-body .cat-tab-btn.active{border-bottom-color:#e5a324;background:transparent;color:#214939;font-weight:700;box-shadow:none}
+.blog-page-body .magazine-article-card{background:#fff;border:1px solid #dce5d8;border-radius:9px;box-shadow:none;transform:none!important}
+.blog-page-body .article-card-body{padding:20px}
+.blog-page-body .article-card-title{font-family:Lora,Inter,serif;font-size:22px;color:#214939;line-height:1.35}
+.blog-page-body .article-card-excerpt{font-size:12px;line-height:20px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-height:40px;color:#64796a}
+.blog-page-body .magazine-sidebar{background:#f7f9f2;border-radius:7px;box-shadow:none}
+.blog-page-body .articles-header-bar{background:transparent;border:0}
+.blog-page-body .feed-count-title{font-size:13px;color:#617868}
+@media(max-width:760px){.blog-page-body .blog-page-wrapper{padding:0 18px}.blog-page-body .hero-editorial-top{display:block}.blog-page-body .hero-search-wrapper{margin-top:22px}.blog-page-body .hero-bento-grid{grid-template-columns:1fr}.blog-page-body .magazine-layout-grid{grid-template-columns:1fr}.blog-page-body .magazine-sidebar{display:none}.blog-page-body .articles-card-grid{grid-template-columns:1fr}.blog-page-body .category-tabs-row{flex-wrap:nowrap;overflow-x:auto}.blog-page-body .blog-filter-section{position:static}}
+
+.blog-page-body .hero-editorial-top{display:grid;grid-template-columns:1.1fr 1fr;align-items:end;text-align:left}
+.blog-page-body .hero-editorial-title{font-size:clamp(30px,3vw,46px);text-align:left;margin:0}
+.blog-page-body .hero-bento-grid{grid-template-columns:1.3fr 1fr;align-items:stretch}
+.blog-page-body .bento-hero-media{height:300px}
+.blog-page-body .bento-hero-media img{height:100%;width:100%;object-fit:cover}
+.blog-page-body .bento-stacked-cards{display:grid;grid-template-rows:1fr 1fr;gap:18px}
+.blog-page-body .bento-mini-media{width:38%;min-width:0;height:100%;max-height:235px;flex-shrink:0}
+.blog-page-body .bento-mini-media img{width:100%;height:100%;object-fit:cover}
+@media(max-width:760px){.blog-page-body .hero-editorial-top{grid-template-columns:1fr}.blog-page-body .hero-bento-grid{grid-template-columns:1fr}.blog-page-body .bento-mini-media{height:180px}.blog-page-body .bento-hero-media{height:250px}}
+
+/* Give the heading the full row and prevent nested image widths from shrinking twice. */
+.blog-page-body .hero-editorial-top{max-width:none;width:100%;grid-template-columns:minmax(0,1.45fr) minmax(320px,1fr);gap:40px}
+.blog-page-body .hero-editorial-title{max-width:none;font-size:clamp(30px,2.8vw,44px);text-wrap:balance}
+.blog-page-body .hero-search-wrapper{width:100%;max-width:none;min-width:0}
+.blog-page-body .bento-mini-card{grid-template-columns:35% minmax(0,1fr)}
+.blog-page-body .bento-mini-media{width:100%;height:100%;max-height:none}
+.blog-page-body .bento-mini-body{min-width:0}
+.blog-page-body .bento-mini-media img{width:100%;height:100%;object-fit:cover}
+@media(max-width:760px){.blog-page-body .hero-editorial-top{grid-template-columns:1fr;gap:0}.blog-page-body .hero-editorial-title{font-size:30px}.blog-page-body .bento-mini-card{grid-template-columns:35% minmax(0,1fr)}.blog-page-body .bento-mini-media{min-height:160px}}
+
+/* Forest-green featured article cards. */
+.blog-page-body .bento-hero-card,.blog-page-body .bento-mini-card{background:#eef4ed;border-color:#d8e3d5}
+.blog-page-body .bento-hero-body,.blog-page-body .bento-mini-body{background:#eef4ed;color:#315540}
+.blog-page-body .bento-hero-title,.blog-page-body .bento-mini-title{color:#214939}
+.blog-page-body .bento-hero-excerpt,.blog-page-body .bento-mini-excerpt{color:#526c59}
+.blog-page-body .bento-meta-row,.blog-page-body .bento-hero-footer,.blog-page-body .author-chip,.blog-page-body .read-more-text{color:#526c59}
+.blog-page-body .bento-hero-footer{border-color:#d6e1d2}
+.blog-page-body .bento-category-tag{background:#dce8d9;color:#214939}
+.blog-page-body .bento-mini-card:hover .bento-mini-title,.blog-page-body .bento-hero-card:hover .bento-hero-title{color:#214939}
+
+
+/* Align the title with the search field, independently of the suggestion row. */
+@media(min-width:761px){.blog-page-body .hero-editorial-top{align-items:start}.blog-page-body .hero-editorial-title{display:flex;align-items:center;min-height:48px;padding:0;line-height:1.2}.blog-page-body .hero-search-wrapper{margin:0;position:relative;padding-bottom:32px}.blog-page-body .blog-search-form{margin:0;min-height:48px}.blog-page-body .hero-trending-keywords{position:absolute;top:calc(48px + 10px);left:0;right:0;margin:0;justify-content:flex-start}}

@@ -396,6 +396,16 @@ window.applyFilters = function () {
 function renderServices() {
     const grid = document.getElementById('servicesGrid');
     if (!grid) return;
+    const resultCount=document.getElementById('servicesResultCount');
+    if(resultCount)resultCount.textContent=`${filteredServices.length} dịch vụ`;
+    const selectedCategory=document.querySelector('input[name="categoryFilter"]:checked')?.value || 'all';
+    document.querySelectorAll('[data-service-category]').forEach(button=>{
+        button.setAttribute('aria-pressed',String(button.dataset.serviceCategory===selectedCategory));
+        button.onclick=()=>{
+            const radio=document.querySelector(`input[name="categoryFilter"][value="${button.dataset.serviceCategory}"]`);
+            if(radio){radio.checked=true;radio.dispatchEvent(new Event('change',{bubbles:true}));}
+        };
+    });
 
     if (filteredServices.length === 0) {
         grid.innerHTML = `

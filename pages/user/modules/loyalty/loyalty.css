@@ -1185,3 +1185,92 @@
 @media (prefers-reduced-motion: reduce) {
     .loyalty-module-container .pawpal-skeleton, .loyalty-loaded { animation: none !important; }
 }
+/* Paw Points keeps the approved metallic PawPass card and updates its surroundings. */
+.user-portal-body .loyalty-module-container{font-family:Inter,system-ui,sans-serif;color:#274b39}
+.user-portal-body .loyalty-module-container .dashboard-content-panel{background:transparent;border:0;padding:0;box-shadow:none}
+.user-portal-body .loyalty-top-flex{gap:28px;align-items:stretch}
+.user-portal-body .loyalty-card-details-panel{background:#f3f7ee;border:1px solid #dce5d8;border-radius:9px;padding:26px;box-shadow:none;min-width:0}
+.user-portal-body .points-balance-summary .label{font-size:13px;color:#637a69}
+.user-portal-body .points-balance-summary #current-points-display{font-family:Lora,Inter,serif;font-size:38px;font-weight:600;color:#214939}
+.user-portal-body .points-unit,.user-portal-body .progress-upgrade-label,.user-portal-body .upgrade-remaining-desc{font-size:13px;line-height:1.8;color:#637a69}
+.user-portal-body .progress-bar-fill{background:#315d46}
+.user-portal-body .my-vouchers-title,.user-portal-body .loyalty-section-title,.user-portal-body .ticket-title{font-family:Lora,Inter,serif;font-weight:600;color:#214939;line-height:1.4}
+.user-portal-body .my-vouchers-title{font-size:25px}
+.user-portal-body .vouchers-count-label,.user-portal-body .progress-stats{font-size:12px;color:#718476}
+.user-portal-body .voucher-ticket-card,.user-portal-body .my-voucher-ticket-card{border:1px solid #dce5d8;border-radius:9px;background:#fff;box-shadow:none}
+.user-portal-body .ticket-title{font-size:21px}
+.user-portal-body .ticket-terms,.user-portal-body .my-ticket-meta{font-size:13px;line-height:1.8;color:#637a69}
+.user-portal-body .ticket-points-badge{background:#eef4ed;color:#315d46;border:0;border-radius:9px;font-size:12px}
+.user-portal-body .redeem-btn,.user-portal-body .btn-ticket-use{background:#214939;color:#fff;border:1px solid #214939;border-radius:9px;font-family:Inter,system-ui,sans-serif;font-size:13px;padding:10px 16px;box-shadow:none;transform:none}
+.user-portal-body .btn-ticket-copy{background:#f1f5ed;color:#31553f;border:1px solid #d5e0d0;border-radius:9px;font-family:Inter,system-ui,sans-serif;font-size:12px;padding:9px 14px;box-shadow:none}
+.user-portal-body .redeem-btn:disabled{background:#e2e9df;color:#637a69;border-color:#e2e9df;opacity:1}
+.user-portal-body .voucher-ticket-card:hover,.user-portal-body .my-voucher-ticket-card:hover,.user-portal-body .redeem-btn:hover{transform:none;box-shadow:none}
+.user-portal-body .pawpass-virtual-card .card-tier-label,.user-portal-body .pawpass-virtual-card .pet-name{font-family:Lora,Inter,serif}
+@media(max-width:760px){.user-portal-body .loyalty-top-flex{flex-direction:column;gap:22px}.user-portal-body .loyalty-card-details-panel{padding:22px 18px}.user-portal-body .my-vouchers-title{font-size:23px}}
+/* Compact PawPal tickets: forest stub, warm value, perforation and a faint paw. */
+.user-portal-body .loyalty-module-container .voucher-ticket-card{display:flex;min-height:150px;height:auto;overflow:hidden;position:relative;border:1px solid #dce5d8;border-radius:9px;background:#fff}
+.user-portal-body .loyalty-module-container .ticket-stub{flex:0 0 94px;width:94px;min-width:94px;max-width:94px;background:#214939;border-right:1px dashed #98ad97;padding:14px 7px;display:flex;align-items:center;justify-content:center;color:#f0c76d;position:relative;overflow:visible}
+.user-portal-body .loyalty-module-container .ticket-stub strong{font-family:Lora,Inter,serif;font-size:19px;font-weight:600;color:#f0c76d;line-height:1.4;position:relative;z-index:1;overflow-wrap:anywhere}
+.user-portal-body .loyalty-module-container .ticket-stub:before,.user-portal-body .loyalty-module-container .ticket-stub:after{background:#fff;width:16px;height:16px;right:-8px;border:0}
+.user-portal-body .loyalty-module-container .ticket-body{padding:16px 18px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 10px;align-content:center;position:relative;isolation:isolate}
+.user-portal-body .loyalty-module-container .ticket-body:after{content:'🐾';position:absolute;right:9px;top:0;font-size:70px;line-height:1.2;opacity:.035;transform:rotate(-18deg);z-index:-1;pointer-events:none}
+.user-portal-body .loyalty-module-container .ticket-body h4{grid-column:1/-1;font-family:Lora,Inter,serif;font-size:18px;line-height:1.4;font-weight:600;color:#214939;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.user-portal-body .loyalty-module-container .ticket-body p{grid-column:1/-1;font-family:Inter,system-ui,sans-serif;font-size:12px;line-height:1.6;color:#637a69;margin:0}
+.user-portal-body .loyalty-module-container .ticket-body .btn-modal-cancel{width:auto;margin:4px 0 0;padding:7px 10px;border:0;background:#f1f5ed;color:#526d5b;border-radius:9px;font-family:Inter,system-ui,sans-serif;font-size:12px;line-height:1.5}
+.user-portal-body .loyalty-module-container .ticket-body .redeem-btn{width:auto;justify-self:end;margin:4px 0 0;padding:7px 12px;font-size:12px;line-height:1.5;min-height:32px}
+.user-portal-body #loyalty-history{margin-top:32px;padding:24px;border:1px solid #dce5d8;border-radius:9px;background:#fff;overflow-x:auto}
+.user-portal-body #loyalty-history h3{font-family:Lora,Inter,serif;font-weight:600;color:#214939;font-size:24px;margin:0 0 22px}
+.user-portal-body #loyalty-history table{width:100%;border-collapse:collapse;font-family:Inter,system-ui,sans-serif;font-size:13px;line-height:1.8}
+.user-portal-body #loyalty-history th{padding:10px 14px;text-align:left;background:#f3f7ee;color:#31553f;font-weight:600;border:0;white-space:nowrap}
+.user-portal-body #loyalty-history td{padding:14px;color:#526d5b;border:0;border-bottom:1px solid #e7ede3;vertical-align:top;overflow-wrap:anywhere}
+.user-portal-body #loyalty-history th:first-child,.user-portal-body #loyalty-history td:first-child{width:125px;white-space:nowrap}
+.user-portal-body #loyalty-history td:nth-child(2){width:100px;color:#315d46;font-weight:600}
+.user-portal-body #loyalty-history button{border:0;border-radius:9px;background:transparent;color:#31553f;font-family:Inter,system-ui,sans-serif;padding:6px 12px;font-size:13px}
+@media(max-width:760px){.user-portal-body .loyalty-module-container .ticket-stub{flex-basis:82px;width:82px;min-width:82px;max-width:82px}.user-portal-body .loyalty-module-container .ticket-body{padding:14px 12px;gap:7px}.user-portal-body .loyalty-module-container .ticket-body h4{font-size:17px}.user-portal-body #loyalty-history{padding:22px 14px}.user-portal-body #loyalty-history th,.user-portal-body #loyalty-history td{padding:10px 8px}}
+.user-portal-body .loyalty-module-container .ticket-stub strong{font-size:16px;white-space:nowrap;overflow-wrap:normal;letter-spacing:-.4px}
+/* Compact tickets remain scannable when the catalog grows. */
+.user-portal-body .loyalty-module-container .voucher-ticket-card{min-height:116px}
+.user-portal-body .loyalty-module-container .ticket-body{padding:11px 14px;gap:4px 8px}
+.user-portal-body .loyalty-module-container .ticket-body h4{font-size:16px;line-height:1.4;-webkit-line-clamp:1}
+.user-portal-body .loyalty-module-container .ticket-body p{font-size:11px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-portal-body .loyalty-module-container .ticket-body .btn-modal-cancel,.user-portal-body .loyalty-module-container .ticket-body .redeem-btn{padding:5px 10px;min-height:28px;font-size:11px;margin-top:3px}
+.user-portal-body .loyalty-module-container .my-voucher-ticket-card{min-height:112px}
+.user-portal-body .loyalty-module-container .my-ticket-body{padding:12px 14px;gap:4px}
+.user-portal-body .loyalty-module-container .my-ticket-body p{font-size:12px;line-height:1.5;margin:0}
+.user-portal-body .loyalty-voucher-pages{display:flex;align-items:center;justify-content:center;gap:14px;margin:14px 0 24px;font-size:12px;color:#637a69}
+.user-portal-body .loyalty-voucher-pages[hidden]{display:none}
+.user-portal-body .loyalty-voucher-pages button{background:transparent;border:0;border-radius:9px;padding:6px 12px;color:#31553f;font-size:14px}
+.user-portal-body .loyalty-voucher-pages button:disabled{opacity:.35;cursor:default}
+.user-portal-body .loyalty-spend-progress{margin-top:22px;padding-top:18px;border-top:1px solid #dce5d8}
+.user-portal-body .loyalty-spend-heading,.user-portal-body .loyalty-spend-milestone{display:flex;justify-content:space-between;gap:14px;align-items:center;font-family:Inter,system-ui,sans-serif;font-size:13px;color:#526d5b}
+.user-portal-body .loyalty-spend-heading strong{font-family:Lora,Inter,serif;font-size:23px;font-weight:600;color:#214939}
+.user-portal-body .loyalty-spend-track{height:8px;border-radius:9px;overflow:hidden;background:#dfe8d9;margin:14px 0 10px}
+.user-portal-body .loyalty-spend-track>span{display:block;height:100%;background:#d8a437;border-radius:9px}
+.user-portal-body .loyalty-spend-progress p{font-size:13px;line-height:1.8;color:#526d5b;margin:12px 0 8px}
+.user-portal-body .loyalty-spend-progress small{font-size:11px;line-height:1.7;color:#718476}
+/* Match the spending panel to the PawPass card's 320 / 1.7 height. */
+.user-portal-body .loyalty-top-flex{align-items:flex-start}
+.user-portal-body .loyalty-card-details-panel{height:188px;padding:16px 20px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-content:start;align-items:center;gap:8px 14px}
+.user-portal-body .loyalty-card-details-panel>span{font-size:13px;color:#637a69}
+.user-portal-body .loyalty-card-details-panel>#current-points-display{font-family:Lora,Inter,serif;font-size:25px;color:#214939;font-weight:600;line-height:1.3}
+.user-portal-body .loyalty-card-details-panel>p{display:none}
+.user-portal-body .loyalty-card-details-panel .loyalty-spend-progress{grid-column:1/-1;margin-top:4px;padding-top:10px;border-top:1px solid #dce5d8}
+.user-portal-body .loyalty-spend-heading strong{font-size:20px}
+.user-portal-body .loyalty-spend-track{height:6px;margin:8px 0}
+.user-portal-body .loyalty-spend-milestone{font-size:11px}
+.user-portal-body .loyalty-spend-progress p{font-size:11px;line-height:1.5;margin:7px 0 0}
+.user-portal-body .loyalty-spend-progress small{display:none}
+@media(max-width:760px){.user-portal-body .loyalty-card-details-panel{height:auto;min-height:176px;width:100%;padding:16px 18px}}
+/* Equal-height PawPass and spending panels, without clipped content. */
+.user-portal-body .loyalty-top-flex{display:grid;grid-template-columns:minmax(240px,320px) minmax(0,1fr);gap:24px;align-items:stretch}
+.user-portal-body .pawpass-card-wrapper{width:100%;max-width:none;min-width:0}
+.user-portal-body .pawpass-virtual-card{height:100%;min-height:210px;aspect-ratio:auto;isolation:isolate}
+.user-portal-body .loyalty-card-details-panel{height:auto;min-height:210px;box-sizing:border-box;padding:16px 20px;gap:6px 12px}
+.user-portal-body .loyalty-spend-progress{min-width:0}
+.user-portal-body .loyalty-spend-progress p{overflow-wrap:anywhere}
+.user-portal-body .pawpass-virtual-card:before{content:'';position:absolute;inset:-50% -100%;background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.27) 50%,transparent 58%);transform:translateX(-60%);animation:pawpassAccountShine 6s ease-in-out infinite;pointer-events:none;z-index:2}
+.user-portal-body .pawpass-virtual-card:after{content:'';position:absolute;right:12px;top:27px;width:140px;height:140px;background:currentColor;opacity:.045;transform:rotate(-18deg);pointer-events:none;z-index:0;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cellipse cx='22' cy='34' rx='11' ry='16'/%3E%3Cellipse cx='42' cy='19' rx='11' ry='16'/%3E%3Cellipse cx='65' cy='21' rx='11' ry='16'/%3E%3Cellipse cx='83' cy='40' rx='11' ry='16'/%3E%3Cpath d='M22 77c-6-13 6-20 13-30 7-12 20-12 28 0 8 11 21 20 14 32-6 11-19 4-28 4-10 0-21 7-27-6Z'/%3E%3C/svg%3E") center/contain no-repeat}
+.user-portal-body .pawpass-virtual-card>.card-header-brand,.user-portal-body .pawpass-virtual-card>.card-body-info,.user-portal-body .pawpass-virtual-card>.card-footer-metrics{position:relative;z-index:1}
+@keyframes pawpassAccountShine{0%,18%{transform:translateX(-60%)}65%,100%{transform:translateX(60%)}}
+@media(prefers-reduced-motion:reduce){.user-portal-body .pawpass-virtual-card:before{animation:none;opacity:0}}
+@media(max-width:760px){.user-portal-body .loyalty-top-flex{grid-template-columns:1fr}.user-portal-body .pawpass-card-wrapper{max-width:360px}.user-portal-body .pawpass-virtual-card{height:210px}.user-portal-body .loyalty-card-details-panel{min-height:0;padding:18px}}

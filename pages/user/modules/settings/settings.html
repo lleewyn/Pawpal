@@ -18,7 +18,7 @@
                         <div class="form-group mb-3">
                             <label for="currentPassword" class="form-label-custom">Mật khẩu hiện tại <span class="required-star">*</span></label>
                             <div class="password-input-wrapper-custom">
-                                <input type="password" id="currentPassword" class="form-control-custom" placeholder="Nhập mật khẩu đang dùng" required>
+                                <input type="password" id="currentPassword" class="form-control-custom" placeholder="Nhập mật khẩu đang dùng" autocomplete="current-password" required>
                                 <button type="button" class="btn-toggle-password-text" data-target="currentPassword">Hiện</button>
                             </div>
                         </div>
@@ -26,10 +26,11 @@
                         <div class="form-group mb-3">
                             <label for="newPassword" class="form-label-custom">Mật khẩu mới <span class="required-star">*</span></label>
                             <div class="password-input-wrapper-custom">
-                                <input type="password" id="newPassword" class="form-control-custom" placeholder="Tối thiểu 8 ký tự" required>
+                                <input type="password" id="newPassword" class="form-control-custom" placeholder="Nhập mật khẩu mới" autocomplete="new-password" maxlength="128" aria-describedby="settingsPasswordHint" required>
                                 <button type="button" class="btn-toggle-password-text" data-target="newPassword">Hiện</button>
                             </div>
                             
+                            <p class="settings-password-hint" id="settingsPasswordHint">Mật khẩu cần 8–128 ký tự, có ít nhất một chữ số và một ký tự đặc biệt như !, @, #.</p>
                             <div class="strength-label-container mt-2">
                                 <span class="strength-title">Độ mạnh mật khẩu</span>
                                 <span class="strength-value-label" id="strengthLabel">Trống</span>
@@ -44,7 +45,7 @@
                         <div class="form-group mb-4">
                             <label for="confirmNewPassword" class="form-label-custom">Xác nhận mật khẩu mới <span class="required-star">*</span></label>
                             <div class="password-input-wrapper-custom">
-                                <input type="password" id="confirmNewPassword" class="form-control-custom" placeholder="Nhập lại mật khẩu mới" required>
+                                <input type="password" id="confirmNewPassword" class="form-control-custom" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password" maxlength="128" required>
                                 <button type="button" class="btn-toggle-password-text" data-target="confirmNewPassword">Hiện</button>
                             </div>
                             <div class="invalid-feedback" id="confirmPasswordError">Mật khẩu xác nhận chưa khớp</div>
@@ -66,14 +67,14 @@
             <div class="settings-card-custom">
                 <div class="settings-card-header-custom d-flex justify-content-between align-items-center">
                     <h3 class="settings-card-title-custom">Thông báo quan trọng</h3>
-                    <span class="auto-save-badge">Giả lập</span>
+                    <span class="auto-save-badge">Chưa hỗ trợ</span>
                 </div>
                 <div class="settings-card-body-custom">
                     <div class="notifications-list-custom">
                         <div class="notification-row-custom mb-3">
                             <div class="notification-text-custom">
                                 <span class="notification-type-title">Email</span>
-                                <span class="notification-type-desc">Chưa gửi email thật trong phạm vi hiện tại.</span>
+                                <span class="notification-type-desc">Thông báo qua email chưa được hỗ trợ.</span>
                             </div>
                             <label class="switch" aria-label="Bật tắt thông báo Email">
                                 <input type="checkbox" id="notifyEmail" disabled>
@@ -83,7 +84,7 @@
                         <div class="notification-row-custom">
                             <div class="notification-text-custom">
                                 <span class="notification-type-title">SMS</span>
-                                <span class="notification-type-desc">Chưa gửi SMS thật trong phạm vi hiện tại.</span>
+                                <span class="notification-type-desc">Thông báo qua tin nhắn chưa được hỗ trợ.</span>
                             </div>
                             <label class="switch" aria-label="Bật tắt thông báo SMS">
                                 <input type="checkbox" id="notifySMS" disabled>

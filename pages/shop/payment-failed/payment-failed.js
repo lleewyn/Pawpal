@@ -9,19 +9,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     resolveFailedPaymentInfo(orderId).then((orderData) => {
+        if (orderData?.payment?.status === 'succeeded') {
+            window.location.replace('/user#order-detail?id=' + encodeURIComponent(orderId));
+            return;
+        }
         displayErrorInfo(orderId, orderData);
     });
 
     const retryBtn = document.getElementById('btn-retry');
     if (retryBtn) {
         retryBtn.addEventListener('click', () => {
-            window.location.href = '/pages/shop/checkout/checkout.html';
+            window.location.href = '/user#order-detail?id=' + encodeURIComponent(orderId);
         });
     }
 });
 
 async function resolveFailedPaymentInfo(orderId) {
-    const fallbackOrder = JSON.parse(localStorage.getItem('pawpal_current_order') || 'null');
+    const fallbackOrder = null;
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db || !orderId) return fallbackOrder;
 
@@ -30,9 +34,10 @@ async function resolveFailedPaymentInfo(orderId) {
             .from('sales_order')
             .select(`
                 id, order_code, order_status, shipping_fee_snapshot, created_at,
-                payment ( id, payment_status, payment_method, amount )
+                payment ( id, transaction_status, amount, succeeded_at, created_at )
             `)
-            .or(`order_code.eq.${orderId},id.eq.${orderId}`)
+            .eq(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(orderId) ? 'id' : 'order_code', orderId)
+            .order('created_at', { referencedTable: 'payment', ascending: false })
             .limit(1);
 
         if (error || !data?.length) return fallbackOrder;
@@ -45,7 +50,9 @@ async function resolveFailedPaymentInfo(orderId) {
             orderStatus: row.order_status || fallbackOrder?.orderStatus || fallbackOrder?.status || '',
             payment: {
                 method: payRow.payment_method || fallbackOrder?.payment?.method || 'cod',
-                status: String(payRow.payment_status || fallbackOrder?.payment?.status || 'failed').toLowerCase(),
+                status: String(payRow.transaction_status || 'unknown').toLowerCase(),
+                transactionId: payRow.id || null,
+                recordedAt: payRow.created_at || null,
             },
             pricing: {
                 subtotal: fallbackOrder?.pricing?.subtotal || 0,
@@ -66,10 +73,9 @@ async function resolveFailedPaymentInfo(orderId) {
 function displayErrorInfo(orderId, orderData = null) {
     document.getElementById('order-id').textContent = orderData?.orderId || orderId;
 
-    const now = new Date();
-    document.getElementById('error-time').textContent = formatDateTime(now);
+    document.getElementById('error-time').textContent = orderData?.payment?.recordedAt ? formatDateTime(new Date(orderData.payment.recordedAt)) : 'Chưa xác định';
 
-    const transactionId = `TXN-${(orderData?.orderId || orderId)}-FAILED`;
+    const transactionId = orderData?.payment?.transactionId || 'Chưa xác định';
     document.getElementById('transaction-id').textContent = transactionId;
 
     const status = String(orderData?.payment?.status || '').toLowerCase();
@@ -83,7 +89,7 @@ function displayErrorInfo(orderId, orderData = null) {
         pending: 'Giao dịch đang chờ xử lý nhưng chưa hoàn tất.',
     };
 
-    let reason = reasonMap[status] || 'Giao dịch không thể hoàn tất.';
+    let reason = reasonMap[status] || 'Chưa xác định được kết quả thanh toán. Vui lòng kiểm tra trạng thái trong đơn hàng trước khi thanh toán lại.';
     if (!status && orderStatus === 'cancelled') {
         reason = 'Đơn hàng đã bị hủy trong quá trình thanh toán.';
     } else if (!status && amount > 0) {

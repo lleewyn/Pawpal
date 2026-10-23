@@ -1681,8 +1681,7 @@ body.landing-v218 #homePage .v210-rate,body.landing-v218 #homePage blockquote,bo
 
 
 /* Restore the original shared footer with its map; retain the two font families. */
-body.landing-v218 .main-footer{font-family:Inter,system-ui,sans-serif;background-color:#1d4031}
-body.landing-v218 .main-footer .map-badge{background-color:#1d4031}
+body.landing-v218 .main-footer{font-family:Inter,system-ui,sans-serif}
 body.landing-v218 .main-footer :is(h2,h3,h4){font-family:Lora,Inter,serif}
 
 

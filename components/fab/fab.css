@@ -1138,3 +1138,49 @@
 .fab-msg-time { font-size:11px; opacity:.75; margin-bottom:4px; }
 .fab-feedback-score,.fab-feedback-comment { width:100%; box-sizing:border-box; margin:5px 0; padding:8px; border:1px solid #ECF2EE; border-radius:9px; color:#203A2C; background:#fff; font:inherit; }
 .fab-chat-bubble--staff { border-left:0; }
+/* Public support chat: compact, readable and consistent with PawPal. */
+body:not(.admin-body) .fab-chatbot-panel{width:410px;height:560px;max-height:calc(100dvh - 48px);background:#fff;border:1px solid #dce5d8;border-radius:9px;box-shadow:0 14px 45px #21493926;backdrop-filter:none;transform:none;transition:opacity .15s ease;font-family:Inter,system-ui,sans-serif}
+body:not(.admin-body) .fab-chatbot-panel.expanded{width:680px;height:720px}
+body:not(.admin-body) .fab-chat-header{padding:18px 20px;gap:14px;background:#214939;display:grid;grid-template-columns:1fr auto;flex-shrink:0}
+body:not(.admin-body) .fab-chat-title{gap:5px;min-width:0}
+body:not(.admin-body) .fab-chat-title span:first-child{font-family:Lora,serif;font-size:20px;font-weight:600;line-height:1.4;color:#fff}
+body:not(.admin-body) .fab-chat-title span:last-child{font-family:Inter,system-ui,sans-serif;font-size:11px;font-weight:400;color:#d9e6d4;line-height:1.6}
+body:not(.admin-body) .fab-chat-header-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;max-width:170px}
+body:not(.admin-body) .fab-chat-handover-btn{flex-basis:100%;margin:0 0 4px;background:#e9efdf;color:#214939;border:0;border-radius:9px;padding:7px 10px;font:600 11px/1.5 Inter,system-ui,sans-serif;white-space:nowrap}
+body:not(.admin-body) .fab-chat-icon-btn{width:28px;height:28px;border-radius:9px;color:#eef4ed;background:transparent;border:0}
+body:not(.admin-body) .fab-chat-icon-btn:hover{background:#ffffff18}
+body:not(.admin-body) .fab-chat-main-view{min-height:0;flex:1}
+body:not(.admin-body) .fab-chat-messages{background:#fbfcf9;padding:20px;gap:14px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#d3dfce transparent}
+body:not(.admin-body) .fab-chat-welcome{padding:12px 0;color:#526d5b}
+body:not(.admin-body) .fab-welcome-label{font-size:12px;color:#718476}
+body:not(.admin-body) .fab-chat-welcome h3{font:600 25px/1.45 Lora,serif;color:#214939;margin:10px 0 12px}
+body:not(.admin-body) .fab-chat-welcome p{font-size:13px;line-height:1.8;margin:0 0 20px}
+body:not(.admin-body) .fab-welcome-prompts{display:grid;gap:9px;margin-bottom:20px}
+body:not(.admin-body) .fab-welcome-prompts button{background:#fff;border:1px solid #dce5d8;border-radius:9px;color:#31553f;padding:11px 13px;text-align:left;font:500 12px/1.6 Inter,system-ui,sans-serif;cursor:pointer}
+body:not(.admin-body) .fab-welcome-prompts button:hover{background:#eef4ed}
+body:not(.admin-body) .fab-chat-welcome small{display:block;color:#718476;font-size:11px;line-height:1.8}
+body:not(.admin-body) .fab-chat-bubble{font:13px/1.8 Inter,system-ui,sans-serif;padding:12px 14px;border-radius:9px;box-shadow:none;max-width:90%;overflow-wrap:anywhere}
+body:not(.admin-body) .fab-chat-bubble--bot,body:not(.admin-body) .fab-chat-bubble--staff{background:#eef4ed;color:#31553f;border:0}
+body:not(.admin-body) .fab-chat-bubble--user{background:#214939;color:#fff;border:0}
+body:not(.admin-body) .fab-chat-input-row{padding:14px 16px;gap:10px;background:#fff;border-top:1px solid #ecf2ee;align-items:center}
+body:not(.admin-body) .fab-chat-input{min-width:0;height:44px;border:1px solid #d1decf;border-radius:9px;padding:10px 12px;font:13px Inter,system-ui,sans-serif;color:#31553f;background:#fff}
+body:not(.admin-body) .fab-chat-input:focus{border-color:#315d46;box-shadow:0 0 0 3px #315d4612}
+body:not(.admin-body) .fab-chat-send{width:44px;height:44px;border-radius:9px;background:#214939;transform:none!important}
+body:not(.admin-body) .fab-chat-history-view{background:#fbfcf9;min-height:0}
+body:not(.admin-body) .fab-history-card{font-family:Inter,system-ui,sans-serif;border-radius:9px;box-shadow:none}
+@media(max-width:600px){body:not(.admin-body) .fab-chatbot-panel,body:not(.admin-body) .fab-chatbot-panel.expanded{right:12px;bottom:12px;width:calc(100vw - 24px);max-width:calc(100vw - 24px);height:620px;max-height:calc(100dvh - 24px)}body:not(.admin-body) .fab-chat-header{padding:16px;gap:8px}body:not(.admin-body) .fab-chat-messages{padding:16px}body:not(.admin-body) .fab-chat-title span:first-child{font-size:19px}}
+@media(max-width:600px){body:not(.admin-body) .fab-chatbot-panel,body:not(.admin-body) .fab-chatbot-panel.expanded{width:calc(100% - 24px);max-width:calc(100% - 24px)}}
+body:not(.admin-body) .fab-history-subbar{padding:14px 16px;gap:10px;border:0;background:#fff}
+body:not(.admin-body) .fab-history-title{font:600 13px/1.5 Inter,system-ui,sans-serif;color:#214939}
+body:not(.admin-body) .fab-history-back-btn{font:500 12px/1.5 Inter,system-ui,sans-serif;color:#526d5b;padding:7px 0;background:transparent;white-space:nowrap}
+body:not(.admin-body) .fab-history-new-btn{font:600 12px/1.5 Inter,system-ui,sans-serif;background:#214939;color:#fff;padding:8px 12px;border-radius:9px;white-space:nowrap}
+body:not(.admin-body) .fab-history-list{padding:4px 16px 18px;gap:10px;overscroll-behavior:contain}
+body:not(.admin-body) .fab-history-card{width:100%;text-align:left;padding:15px 14px;flex-shrink:0;border:1px solid #dce5d8;background:#fff;color:#31553f;border-radius:9px}
+body:not(.admin-body) .fab-history-card.active,body:not(.admin-body) .fab-history-card:hover{background:#eef4ed;border-color:#d1decf}
+body:not(.admin-body) .fab-history-card-title{font:600 14px/1.6 Inter,system-ui,sans-serif;color:#214939}
+body:not(.admin-body) .fab-history-card-meta{font:400 11px/1.7 Inter,system-ui,sans-serif;color:#718476}
+body:not(.admin-body) .fab-history-card-open{font-size:11px;color:#526d5b;white-space:nowrap}
+body:not(.admin-body) .fab-history-pagination{display:flex;align-items:center;justify-content:center;gap:14px;padding:8px 0;background:transparent;border:0}
+body:not(.admin-body) .fab-history-pagination button{width:30px;height:30px;border:0;background:transparent;color:#214939;border-radius:9px;font:500 15px Inter,system-ui,sans-serif;cursor:pointer}
+body:not(.admin-body) .fab-history-pagination button:disabled{opacity:.3;cursor:default}
+body:not(.admin-body) .fab-history-pagination span{display:grid;place-items:center;width:30px;height:30px;background:#214939;color:#fff;border-radius:9px;font-size:12px}

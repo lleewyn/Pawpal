@@ -14,12 +14,17 @@ function initFab(){
  function notify(text){$('fabChatStatus').textContent=text;}
  function setMode(){
   const labels={bot_handling:'Hỗ trợ tự động',waiting_agent:'Đang chờ nhân viên',agent_handling:'Nhân viên đang hỗ trợ',resolved:'Đã hoàn tất',closed:'Đã đóng',completed:'Đã hoàn tất'};
-  notify(labels[status]||'Đang xử lý');$('fabChatTitleText').textContent='Pawpal hỗ trợ';
+  notify(labels[status]||'Đang xử lý');$('fabChatTitleText').textContent='PawPal hỗ trợ';
   const button=$('fabHandoverBtn');if(button){button.textContent=status==='waiting_agent'?'Hỏi lại trợ lý':'Gặp chuyên viên';button.disabled=busy||['agent_handling','resolved','closed','completed'].includes(status);}
  }
  function remember(){if(active)sessionStorage.setItem('pawpal_chat_active_'+identity,active);}
  function render(){
-  messages.replaceChildren();if(!rows.length){const empty=document.createElement('p');empty.textContent='Bạn cần Pawpal hỗ trợ điều gì?';messages.append(empty);}
+  messages.replaceChildren();if(!rows.length){
+   const empty=document.createElement('div');empty.className='fab-chat-welcome';
+   empty.innerHTML='<span class="fab-welcome-label">Chào bạn, PawPal đây!</span><h3>Mình có thể giúp gì cho bé?</h3><p>Hỏi về dịch vụ, cách đặt lịch hoặc những điều cần chuẩn bị khi đưa bé đến PawPal.</p><div class="fab-welcome-prompts"></div><small>Trợ lý tự động hỗ trợ thông tin ban đầu. Bạn có thể chọn “Gặp chuyên viên” khi cần tư vấn trực tiếp.</small>';
+   for(const prompt of ['Tư vấn dịch vụ tắm và cắt tỉa','Cách đặt lịch cho bé','Cần chuẩn bị gì khi gửi bé?']){const button=document.createElement('button');button.type='button';button.textContent=prompt;button.onclick=()=>{input.value=prompt;input.focus();};empty.querySelector('.fab-welcome-prompts').append(button);}
+   messages.append(empty);
+  }
   if(more){const b=document.createElement('button');b.type='button';b.textContent='Tin nhắn trước';b.onclick=async()=>{b.disabled=true;try{const first=rows[0];const data=await api('public_read',{conversationId:active,beforeAt:first.created_at,beforeId:first.id});const old=data.messages.slice().reverse();more=old.length===30;rows=[...old,...rows];const height=messages.scrollHeight;render();messages.scrollTop=messages.scrollHeight-height;}catch(error){notify(error.message);b.disabled=false;}};messages.append(b);}
   for(const row of rows){
    const div=document.createElement('div');div.className='fab-chat-bubble '+(['customer','guest'].includes(row.sender_type)?'fab-chat-bubble--user':row.sender_type==='staff'?'fab-chat-bubble--staff':'fab-chat-bubble--bot');
@@ -56,12 +61,21 @@ function initFab(){
  async function history(){
   if(busy)return;const view=$('fabChatHistoryView'),list=$('fabHistoryList');view.style.display='flex';$('fabChatMainView').style.display='none';list.textContent='Đang tải...';
   try{const data=await api('public_list',{offset:historyPage*10});list.replaceChildren();if(!data.conversations.length)list.textContent='Chưa có hội thoại.';
-   for(const c of data.conversations){const button=document.createElement('button');button.type='button';button.className='fab-history-card';button.textContent=new Date(c.created_at).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});button.onclick=async()=>{active=c.id;rows=[];version=null;more=false;remember();view.style.display='none';$('fabChatMainView').style.display='flex';try{await read(true);}catch(error){notify(error.message);}};list.append(button);}
-   for(const [label,disabled,delta]of [['<',historyPage===0,-1],['>',data.conversations.length<10,1]]){const b=document.createElement('button');b.type='button';b.textContent=label;b.disabled=disabled;b.onclick=()=>{historyPage+=delta;history();};list.append(b);}
+   for(const c of data.conversations){const button=document.createElement('button');button.type='button';button.className='fab-history-card';button.classList.toggle('active',c.id===active);
+    const info=document.createElement('span');info.className='fab-history-card-info';
+    const title=document.createElement('span');title.className='fab-history-card-title';title.textContent=new Date(c.created_at).toLocaleDateString('vi-VN',{timeZone:'Asia/Bangkok',day:'2-digit',month:'2-digit',year:'numeric'});
+    const meta=document.createElement('span');meta.className='fab-history-card-meta';meta.textContent='Bắt đầu lúc '+new Date(c.created_at).toLocaleTimeString('vi-VN',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'});
+    info.append(title,meta);const action=document.createElement('span');action.className='fab-history-card-open';action.textContent='Xem lại';button.append(info,action);
+    button.onclick=async()=>{active=c.id;rows=[];version=null;more=false;remember();view.style.display='none';$('fabChatMainView').style.display='flex';try{await read(true);}catch(error){notify(error.message);}};list.append(button);}
+   if(historyPage>0||data.conversations.length===10){const pagination=document.createElement('nav');pagination.className='fab-history-pagination';pagination.setAttribute('aria-label','Trang lịch sử trò chuyện');
+    for(const [label,disabled,delta]of [['<',historyPage===0,-1],['>',data.conversations.length<10,1]]){const b=document.createElement('button');b.type='button';b.textContent=label;b.setAttribute('aria-label',delta<0?'Trang trước':'Trang sau');b.disabled=disabled;b.onclick=()=>{historyPage+=delta;history();};pagination.append(b);if(delta<0){const page=document.createElement('span');page.textContent=String(historyPage+1);page.setAttribute('aria-current','page');pagination.append(page);}}
+    list.append(pagination);
+   }
   }catch(error){list.textContent=error.message;}
  }
  $('fabAiBtn')?.addEventListener('click',()=>{panel.classList.toggle('open');if(panel.classList.contains('open')){input.focus();read().catch(e=>notify(e.message));}});
  $('fabChatClose')?.addEventListener('click',()=>panel.classList.remove('open'));
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&panel.classList.contains('open')){panel.classList.remove('open');$('fabAiBtn')?.focus();}});
  $('fabChatExpand')?.addEventListener('click',()=>panel.classList.toggle('expanded'));
  $('fabChatNewBtn')?.addEventListener('click',fresh);$('fabHistoryNewBtn')?.addEventListener('click',fresh);$('fabChatHistoryBtn')?.addEventListener('click',()=>{historyPage=0;history();});
  $('fabHistoryBackBtn')?.addEventListener('click',()=>{$('fabChatHistoryView').style.display='none';$('fabChatMainView').style.display='flex';});

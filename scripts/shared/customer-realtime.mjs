@@ -5,7 +5,7 @@ export function watchCustomerTables(client, customerId, tables, refresh) {
     for (const table of tables) {
         // Child tables derive ownership through order/line RLS; they have no
         // customer_id column. A filter on that missing column never refreshes.
-        const viaParent = ['return_request','return_request_detail','review','sales_order_detail','appointment_item','hotel_booking','taxi_trip'].includes(table);
+        const viaParent = ['return_request','return_request_detail','review','sales_order_detail','appointment_item','hotel_booking','taxi_trip','appointment_record','appointment_adjustment','care_log'].includes(table);
         channel.on('postgres_changes', { event: '*', schema: 'public', table, ...(viaParent?{}:{filter: `customer_id=eq.${customerId}`}) }, () => {
             clearTimeout(timer);
             timer = setTimeout(() => { if (!disposed) refresh(); }, 200);

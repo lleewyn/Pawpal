@@ -826,3 +826,56 @@
         text-align: right;
     }
 }
+/* Cart follows the shared public design, preserving checkout controls. */
+body.cart-public-page{background:#fff;color:#274b39;font-family:Inter,system-ui,sans-serif}
+.cart-public-page .cart-page-wrapper{background:#fff;padding:28px 0 60px}
+.cart-public-page .cart-container{max-width:1600px;padding-left:40px;padding-right:40px}
+.cart-public-page .cart-grid-layout{grid-template-columns:minmax(0,1fr) 340px;gap:28px;align-items:start}
+.cart-public-page .cart-main-title{font-family:Lora,Inter,serif;font-size:30px;font-weight:600;line-height:1.4;color:#214939;margin-bottom:24px}
+.cart-public-page .cart-section-title-small{font-family:Lora,Inter,serif;font-size:22px;font-weight:600;line-height:1.4;color:#214939}
+.cart-public-page .cart-card,.cart-public-page .cart-summary-footer-card{border:1px solid #dce5d8;border-radius:9px;background:#fff;box-shadow:none}
+.cart-public-page .cart-summary-footer-card{padding:24px;background:#f5f8f1}
+.cart-public-page .cart-card-header{background:#fff;border:0;padding:18px 20px}
+.cart-public-page .select-all-label{font-size:13px;color:#526d5b}
+.cart-public-page .btn-clear-cart-all{font-family:Inter,system-ui,sans-serif;font-size:12px;color:#8f4438;background:#f8eeea;border:1px solid #ead9d2;border-radius:9px;padding:8px 12px;box-shadow:none}
+.cart-public-page .cart-table-col-header{background:#f3f7ee;color:#637a69;font-size:12px;font-weight:500;border:0}
+.cart-public-page .cart-item-row{background:#fff;padding:22px 20px;border-color:#e7ede3;box-shadow:none}
+.cart-public-page .cart-item-row:hover{background:#fff;transform:none}
+.cart-public-page .cart-item-name{font-family:Lora,Inter,serif;font-size:17px;line-height:1.5;font-weight:600;color:#214939}
+.cart-public-page .cart-item-meta{font-size:12px;color:#718476;line-height:1.7}
+.cart-public-page .cart-item-img{border:1px solid #e4eadd;border-radius:9px;background:#f5f8f1;object-fit:contain}
+.cart-public-page .cart-item-price-unit{font-family:Inter,system-ui,sans-serif;font-size:13px;color:#526d5b}
+.cart-public-page .cart-item-total{font-family:Inter,system-ui,sans-serif;color:#315d46;font-size:15px;font-weight:600}
+.cart-public-page .cart-item-qty-actions{border:1px solid #d1decf;border-radius:9px;background:#fff}
+.cart-public-page .cart-item-qty-btn{background:#fff;color:#31553f;box-shadow:none}
+.cart-public-page .cart-item-qty-value{font-family:Inter,system-ui,sans-serif;font-size:13px;color:#274b39}
+.cart-public-page .btn-variant-toggle{font-family:Inter,system-ui,sans-serif;font-size:12px;background:#f1f5ed;color:#526d5b;border:1px solid #d5e0d0;border-radius:9px;box-shadow:none}
+.cart-public-page .summary-row{font-size:13px;line-height:1.7;color:#526d5b;border:0!important}
+.cart-public-page .summary-row.grand-total{background:transparent;border:0;padding-top:18px!important}
+.cart-public-page .summary-row.grand-total span:first-child{font-size:13px;text-transform:none;color:#31553f}
+.cart-public-page .summary-row.grand-total span:last-child{font-family:Inter,system-ui,sans-serif;font-size:23px;font-weight:600;color:#315d46!important}
+.cart-public-page .btn-to-checkout,.cart-public-page #cart-empty-state .btn-cta{min-height:46px;padding:12px 16px;background:#214939;border:1px solid #214939;border-radius:9px;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:14px;font-weight:600;box-shadow:none;transform:none}
+.cart-public-page .btn-to-checkout:hover{background:#315d46;border-color:#315d46;box-shadow:none;transform:none}
+.cart-public-page .btn-continue-shopping{font-family:Inter,system-ui,sans-serif;font-size:13px;color:#637a69}
+.cart-public-page .voucher-card-sidebar{padding:24px}
+.cart-public-page .voucher-input-wrapper .form-control{min-width:0;font-family:Inter,system-ui,sans-serif;font-size:13px;border:1px solid #d1decf;border-radius:9px;padding:10px 12px;background:#fff;color:#274b39}
+.cart-public-page .voucher-input-wrapper .btn-secondary{font-family:Inter,system-ui,sans-serif;font-size:12px;background:#f1f5ed;border:1px solid #d5e0d0;border-radius:9px;color:#31553f;white-space:nowrap;box-shadow:none}
+.cart-public-page .voucher-select-btn,.cart-public-page .my-voucher-btn{background:#fff;border:1px solid #dce5d8;border-radius:9px;color:#526d5b;box-shadow:none;padding:12px}
+.cart-public-page .voucher-select-btn.is-selected-voucher,.cart-public-page .my-voucher-btn.is-selected-voucher{background:#eef4ed;border-color:#315d46}
+.cart-public-page .form-check-input:checked{background-color:#315d46;border-color:#315d46}
+.cart-public-page .empty-cart-title{font-family:Lora,Inter,serif;font-size:28px;color:#214939}
+@media(max-width:1100px){.cart-public-page .cart-container{padding-left:24px;padding-right:24px}.cart-public-page .cart-grid-layout{grid-template-columns:minmax(0,1fr);gap:24px}}
+@media(max-width:760px){.cart-public-page .cart-container{padding-left:18px;padding-right:18px}.cart-public-page .cart-main-title{font-size:25px}.cart-public-page .cart-item-row{padding:20px 16px}.cart-public-page .cart-summary-footer-card,.cart-public-page .voucher-card-sidebar{padding:22px 18px}}
+/* Headers occupy the same seven grid tracks as each cart line. */
+@media(min-width:1025px){
+.cart-public-page .cart-table-col-header,.cart-public-page .cart-item-row{grid-template-columns:24px 64px minmax(0,1fr) 90px 104px 104px 28px;gap:12px;padding-left:20px;padding-right:20px;box-sizing:border-box}
+.cart-public-page .cart-table-col-header{border:1px solid transparent}
+.cart-public-page .col-head-product{grid-column:2 / 4;white-space:nowrap}
+.cart-public-page .col-head-price{grid-column:4;text-align:right;white-space:nowrap}
+.cart-public-page .col-head-qty{grid-column:5;text-align:center;white-space:nowrap}
+.cart-public-page .col-head-total{grid-column:6;text-align:right;white-space:nowrap}
+.cart-public-page .col-head-action{grid-column:7}
+.cart-public-page .cart-item-price-unit,.cart-public-page .cart-item-total-price{text-align:right;white-space:nowrap}
+.cart-public-page .cart-item-qty-actions{justify-self:center;margin:0}
+.cart-public-page .cart-item-img{width:64px;height:64px}
+}

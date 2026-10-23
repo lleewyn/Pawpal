@@ -99,7 +99,7 @@
     }
 
     function injectComponent(targetId, componentPath) {
-        if (targetId === 'site-header' || targetId === 'site-fab') {
+        if (targetId === 'site-header' || targetId === 'site-fab' || targetId === 'site-footer') {
             try {
                 sessionStorage.removeItem('pawpal_component_' + targetId);
                 localStorage.removeItem('pawpal_component_' + targetId);

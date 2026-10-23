@@ -1062,3 +1062,27 @@ body:not(.admin-body) .main-header .btn-signup{padding:8px 12px}
 body:not(.admin-body) .main-header .auth-actions{gap:12px}}
 body:not(.admin-body) .main-header a.btn-signup{background:#e8aa2f;border-color:#e8aa2f;color:#214939}
 body:not(.admin-body) .main-header a.btn-signup:hover{background:#dca025;border-color:#dca025;color:#214939}
+/* Public notification popover. */
+body:not(.admin-body) .main-header .notification-menu-wrapper{position:relative}
+body:not(.admin-body) .main-header .notification-btn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:0!important;border-radius:9px;color:#214939;box-shadow:none!important;outline-offset:3px}
+body:not(.admin-body) .main-header .notification-btn:hover{background:#eef4ed}
+body:not(.admin-body) .main-header .notification-badge{min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center;top:0;right:0;border:2px solid #fff;border-radius:50%;font:600 10px/1 Inter,system-ui,sans-serif;background:#bd4141;color:#fff}
+body:not(.admin-body) .main-header .notification-dropdown{width:370px;max-width:calc(100vw - 32px);margin-top:12px;border:1px solid #ecf2ee;border-radius:9px;background:#fff;box-shadow:0 12px 36px #2149391a;font-family:Inter,system-ui,sans-serif}
+body:not(.admin-body) .main-header .notification-dropdown-header{padding:18px 18px 14px;background:#fff;border:0;gap:18px}
+body:not(.admin-body) .main-header .notification-dropdown-header>span{font:600 20px/1.4 Lora,serif;color:#214939}
+body:not(.admin-body) .main-header .btn-mark-all-read{font:500 12px/1.5 Inter,system-ui,sans-serif;padding:6px 0;color:#526d5b;background:transparent;border:0;border-radius:9px}
+body:not(.admin-body) .main-header .notification-list{padding:0 8px 8px;max-height:360px;overscroll-behavior:contain}
+body:not(.admin-body) .main-header .notification-list>p{padding:20px 12px;margin:0;font-size:13px;color:#718476}
+body:not(.admin-body) .main-header .notification-item-dropdown{padding:14px 12px!important;background:#fff!important;border:0;border-radius:9px!important;position:relative;font-family:Inter,system-ui,sans-serif}
+body:not(.admin-body) .main-header .notification-item-dropdown.unread{background:#f3f7ee!important}
+body:not(.admin-body) .main-header .notification-item-dropdown.unread::after{content:'';position:absolute;right:12px;top:20px;width:6px;height:6px;background:#236b48;border-radius:50%}
+body:not(.admin-body) .main-header .notification-item-dropdown:hover{background:#eef4ed!important}
+body:not(.admin-body) .main-header .notification-item-dropdown .item-content{gap:6px;padding-right:14px}
+body:not(.admin-body) .main-header .notification-item-dropdown .item-title{font-size:13px;font-weight:500;line-height:1.6;color:#31553f}
+body:not(.admin-body) .main-header .notification-item-dropdown.unread .item-title{font-weight:700;color:#214939}
+body:not(.admin-body) .main-header .notification-item-dropdown .item-text{font-size:12px;line-height:1.7;color:#637a69;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body:not(.admin-body) .main-header .notification-item-dropdown .item-time{font-size:11px;font-weight:400;color:#718476;margin-top:2px}
+body:not(.admin-body) .main-header .notification-dropdown-footer{padding:8px 16px 14px;border:0;background:#fff}
+body:not(.admin-body) .main-header .notification-dropdown-footer a{padding:10px 14px;border-radius:9px;background:#eef4ed;color:#214939!important;font:600 12px/1.5 Inter,system-ui,sans-serif;text-decoration:none}
+@media(max-width:600px){body:not(.admin-body) .main-header .notification-dropdown{position:fixed;top:72px;right:16px;margin-top:0;width:calc(100vw - 32px)}}
+body:not(.admin-body) .main-header .notification-list .notification-item-dropdown{width:100%;text-align:left;margin:0 0 4px}

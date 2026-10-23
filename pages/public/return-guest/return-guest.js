@@ -2,6 +2,7 @@
 const BOOKING_STATUS = {
     upcoming:        { label: 'Đã xác nhận',    cls: 'rg-badge-confirmed' },
     confirmed:       { label: 'Đã xác nhận',    cls: 'rg-badge-confirmed' },
+    accepted:        { label: 'Đã tiếp nhận',   cls: 'rg-badge-confirmed' },
     pending:         { label: 'Chờ xác nhận',   cls: 'rg-badge-pending' },
     'in-progress':   { label: 'Đang thực hiện', cls: 'rg-badge-inprogress' },
     completed:       { label: 'Hoàn thành',     cls: 'rg-badge-completed' },
@@ -9,7 +10,7 @@ const BOOKING_STATUS = {
     // Enum tiếng Việt CSDL Supabase
     cho_xac_nhan:    { label: 'Chờ xác nhận',   cls: 'rg-badge-pending' },
     da_xac_nhan:     { label: 'Đã xác nhận',    cls: 'rg-badge-confirmed' },
-    da_check_in:     { label: 'Đã check-in',    cls: 'rg-badge-confirmed' },
+    da_check_in:     { label: 'Đã tiếp nhận',   cls: 'rg-badge-confirmed' },
     dang_thuc_hien:  { label: 'Đang thực hiện', cls: 'rg-badge-inprogress' },
     da_hoan_tat:     { label: 'Đã hoàn tất',    cls: 'rg-badge-completed' },
     da_huy:          { label: 'Đã hủy',         cls: 'rg-badge-cancelled' },
@@ -402,6 +403,8 @@ function mapSupabaseBookingRow(row) {
         date: d ? d.toLocaleDateString('vi-VN') : '',
         time: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
         timeStart: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
+        scheduledEndAt: row.scheduled_end_at || null,
+        serviceItems: (Array.isArray(row.appointment_item) ? row.appointment_item : row.appointment_item ? [row.appointment_item] : []).map(item => ({ name: item.name_snapshot, quantity: item.quantity })),
         status: normalizedBookingStatus,
         paymentStatus: 'pending',
         note: row.note || '',
@@ -567,15 +570,31 @@ function renderResults(bookings, orders) {
 }
 
 function badge(statusMap, status) {
-    const normalized = normalizeOrderStatus(status);
-    const s = statusMap[normalized] || { label: normalized, cls: 'rg-badge-pending' };
+    const raw = String(status || '').toLowerCase().trim();
+    const normalized = statusMap === ORDER_STATUS ? normalizeOrderStatus(raw) : raw;
+    const s = statusMap[raw] || statusMap[normalized] || { label: 'Chưa xác định', cls: 'rg-badge-pending' };
     return `<span class="rg-badge ${s.cls}">${s.label}</span>`;
 }
 
 function fmtDate(d) {
     if (!d) return '';
-    try { return new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
-    catch (_) { return d; }
+    const text=String(d).trim();
+    const local=text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if(local){
+        const [,day,month,year]=local, date=new Date(Number(year),Number(month)-1,Number(day));
+        if(date.getFullYear()!==Number(year)||date.getMonth()!==Number(month)-1||date.getDate()!==Number(day))return 'Chưa có ngày';
+        return `${day.padStart(2,'0')}/${month.padStart(2,'0')}/${year}`;
+    }
+    const date=new Date(d);
+    return Number.isNaN(date.getTime()) ? 'Chưa có ngày' : date.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+function guestVisibleBookingNote(value) {
+    // Structured operational records are not customer-facing notes. Preserve surrounding prose.
+    return String(value || '')
+        .replace(/\[Pawpal\s+(intake|handover)(?:\s+v\d+)?\][\s\S]*?\[\/Pawpal\s+\1\]/gi,' ')
+        .replace(/\[Pawpal\s+(?:intake|handover)(?:\s+v\d+)?\][\s\S]*$/gi,' ')
+        .replace(/[ \t]{2,}/g,' ').replace(/\n[ \t]*\n+/g,'\n').trim();
 }
 
 function resolveBookingStatus(booking) {
@@ -662,6 +681,10 @@ function buildBookingCard(b) {
     const time    = b.timeStart || b.time || b.schedule?.slot || '';
     const staff   = esc(b.staff || 'Chưa phân công');
     const branch  = esc(b.branch || '');
+    const endAt = b.scheduledEndAt ? new Date(b.scheduledEndAt) : null;
+    const endTime = endAt && !Number.isNaN(endAt.getTime()) ? `${endAt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} · ${fmtDate(b.scheduledEndAt)}` : '';
+    const serviceItems = (b.serviceItems || []).filter(item => item.name).map(item => `${esc(item.name)}${Number(item.quantity) > 1 ? ` × ${Number(item.quantity)}` : ''}`).join('<br>');
+    const visibleNote = guestVisibleBookingNote(b.note);
     const resolvedStatus = resolveBookingStatus(b);
     const cancelClass = resolvedStatus === 'cancelled' ? ' rg-item-cancelled' : '';
 
@@ -672,8 +695,6 @@ function buildBookingCard(b) {
                 <h4 class="rg-item-name">${service}</h4>
                 <div class="rg-item-meta">
                     <span>Mã: ${esc(b.id)}</span>
-                    <span>${date}${time ? ' · ' + time : ''}</span>
-                    <span>Bé: ${pet}</span>
                     ${branch ? `<span>${branch}</span>` : ''}
                 </div>
             </div>
@@ -683,14 +704,30 @@ function buildBookingCard(b) {
             </div>
         </div>
         <hr class="rg-divider">
-        <div class="rg-summary">
+        <div class="rg-summary rg-booking-summary">
+            <div>
+                <div class="rg-summary-label">Bé cưng</div>
+                <div class="rg-summary-value">${pet}</div>
+            </div>
+            <div>
+                <div class="rg-summary-label">Lịch hẹn</div>
+                <div class="rg-summary-value">${esc(date || 'Chưa có ngày')}${time ? ' · ' + esc(time) : ''}</div>
+            </div>
+            ${endTime ? `<div>
+                <div class="rg-summary-label">Kết thúc dự kiến</div>
+                <div class="rg-summary-value">${esc(endTime)}</div>
+            </div>` : ''}
             <div>
                 <div class="rg-summary-label">Nhân viên</div>
                 <div class="rg-summary-value">${staff}</div>
             </div>
-            ${b.note ? `<div>
+            ${serviceItems ? `<div class="rg-booking-services">
+                <div class="rg-summary-label">Dịch vụ đã đặt</div>
+                <div class="rg-summary-value">${serviceItems}</div>
+            </div>` : ''}
+            ${visibleNote ? `<div class="rg-summary-note rg-booking-note">
                 <div class="rg-summary-label">Ghi chú</div>
-                <div class="rg-summary-value">${esc(b.note)}</div>
+                <div class="rg-summary-value">${esc(visibleNote)}</div>
             </div>` : ''}
         </div>
         ${canModifyBooking(b) || canCancelBooking(b) || ['in-progress', 'completed'].includes(resolvedStatus) ? `
@@ -956,26 +993,28 @@ function showOTPModal(phone, onSuccess, purposeText = 'xác thực quyền truy 
 
     const el = document.createElement('div');
     el.id = 'rg-otp-modal';
-    el.className = 'modal fade';
+    el.className = 'modal fade rg-public-otp';
     el.tabIndex = -1;
+    el.setAttribute('aria-labelledby', 'rg-otp-title');
     el.innerHTML = `
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Xác thực số điện thoại</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title" id="rg-otp-title">Xác thực số điện thoại</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
                 <div class="modal-body text-center py-4">
-                    <p class="text-muted small mb-4">Mã OTP 6 số đã được gửi đến <strong>${esc(phone)}</strong> để ${purposeText}.<br><span class="text-muted rg-otp-hint">(Mã test: 555666)</span></p>
+                    <p class="rg-otp-description">Nhập mã gồm 6 chữ số để ${esc(purposeText)} cho số <strong>${esc(phone)}</strong>.</p>
+                    <p class="rg-otp-hint">Chế độ dùng thử · Mã xác thực: 555666</p>
                     <div class="otp-inputs-wrapper mb-3">
                         ${Array.from({length:6}, (_,i) =>
-                            `<input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric"${i>0?' disabled':''}>`
+                            `<input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" aria-label="Chữ số ${i + 1}"${i>0?' disabled':''}>`
                         ).join('')}
                     </div>
                     <div class="text-danger small d-none" id="rg-otp-error">Mã OTP không đúng, vui lòng thử lại.</div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Huỷ</button>
+                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Hủy</button>
                     <button type="button" class="btn-cta" id="rg-otp-confirm" disabled>Xác nhận</button>
                 </div>
             </div>
@@ -985,6 +1024,7 @@ function showOTPModal(phone, onSuccess, purposeText = 'xác thực quyền truy 
     const modal = new bootstrap.Modal(el);
     modal.show();
 
+    el.addEventListener('shown.bs.modal', () => el.querySelector('.otp-input')?.focus(), { once: true });
     el.addEventListener('hidden.bs.modal', () => {
         rgOtpFlowActive = false;
         el.remove();
@@ -1066,6 +1106,11 @@ window.handleGuestViewCareLog = async function(bookingId) {
     modal.show();
 
     try {
+        const { data: authData, error: authError } = await db.auth.getUser();
+        if (authError || !authData?.user) {
+            renderTimeline(`<div class="text-center p-4">Vui lòng đăng nhập tài khoản của chủ nuôi để xem nhật ký chăm sóc.<div class="mt-3"><a class="btn-green-outline" href="/login">Đăng nhập</a></div></div>`);
+            return;
+        }
         const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i.test(bookingId);
         if (!isUUID) {
             renderTimeline(`
@@ -1079,9 +1124,9 @@ window.handleGuestViewCareLog = async function(bookingId) {
             .select(`
                 id,
                 description,
-                health_status,
+                observed_condition,
+                action_name_snapshot,
                 recorded_at,
-                care_action ( action_name ),
                 care_log_media ( media_url )
             `)
             .eq('appointment_id', bookingId)
@@ -1101,11 +1146,12 @@ window.handleGuestViewCareLog = async function(bookingId) {
         }
 
         renderTimeline(data.map(log => {
-            const time = new Date(log.recorded_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-            const date = new Date(log.recorded_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const recordedAt = new Date(log.recorded_at);
+            const time = Number.isNaN(recordedAt.getTime()) ? '' : recordedAt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            const date = fmtDate(log.recorded_at);
             const mediaUrl = log.care_log_media?.[0]?.media_url;
             const staffName = 'Nhân viên PawPal';
-            const isUrgent = log.health_status !== 'Tốt' && log.health_status !== 'Bình thường' && log.health_status != null;
+            const isUrgent = false;
 
             return `
                 <div class="rg-timeline-item-flex timeline-item ${isUrgent ? 'timeline-item-urgent' : ''}">
@@ -1113,14 +1159,15 @@ window.handleGuestViewCareLog = async function(bookingId) {
                     <div class="rg-timeline-content">
                         <div class="rg-timeline-time">${time} - ${date}</div>
                         <h5 class="rg-timeline-title ${isUrgent ? 'rg-timeline-title-urgent' : ''}">
-                            ${esc(log.care_action?.action_name || 'Cập nhật')}
+                            ${esc(log.action_name_snapshot || 'Cập nhật')}
                         </h5>
                         <p class="mb-2">${esc(log.description)}</p>
+                        ${log.observed_condition ? `<p class="mb-2">${esc(log.observed_condition)}</p>` : ''}
                         <div class="rg-timeline-meta">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                             ${esc(staffName)}
                         </div>
-                        ${mediaUrl ? `<img src="${normalizeImageUrl(mediaUrl)}" alt="Photo" class="rg-timeline-img">` : ''}
+                        ${mediaUrl && /^https?:\/\//i.test(normalizeImageUrl(mediaUrl)) ? `<img src="${esc(normalizeImageUrl(mediaUrl))}" alt="Ảnh chăm sóc" class="rg-timeline-img">` : ''}
                     </div>
                 </div>
             `;
@@ -1776,4 +1823,3 @@ function showToast(msg, type = 'info') {
         setTimeout(() => t.remove(), 300);
     }, 4000);
 }
-

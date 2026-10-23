@@ -247,6 +247,10 @@ function createBookingCard(booking) {
     const petName = booking.petName || petObj?.name || petObj?.pet_name || booking.petInfo?.petName || booking.petId || 'Bé cưng';
     const serviceName = (booking.service || booking.serviceName || booking.selectedService?.name || 'Dịch vụ PawPal').replace(/\s*&\s*/g, ' và ');
     const dateTimeText = buildDateTimeText(booking);
+    const endAt = booking.scheduledEndAt ? new Date(booking.scheduledEndAt) : null;
+    const expectedEnd = endAt && !Number.isNaN(endAt.getTime()) ? endAt.toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+    const visibleNote = String(booking.note || '').replace(/\[Pawpal\s+(intake|handover)(?:\s+v\d+)?\][\s\S]*?\[\/Pawpal\s+\1\]/gi, ' ').replace(/\[Pawpal\s+(?:intake|handover)(?:\s+v\d+)?\][\s\S]*$/gi, '').trim();
+    const serviceItems = (booking.items || []).filter(item=>item.name).map(item=>`${escapeHtml(item.name)}${Number(item.quantity)>1?' × '+Number(item.quantity):''}`).join('<br>');
 
     const diaryQuery = petId ? `?id=${encodeURIComponent(petId)}&sessionId=${encodeURIComponent(bookingId)}` : '';
     const alreadyReviewed = normalizedStatus === 'completed' && hasServiceReview(booking);
@@ -352,6 +356,13 @@ function createBookingCard(booking) {
                 <span class="booking-badge-status status-${normalizedStatus}">${statusLabels[normalizedStatus] || normalizedStatus}</span>
                 <span class="booking-price-value">${formatPrice(booking.price || 0)}</span>
             </div>
+        </div>
+        <div class="booking-card-details">
+            <div><span class="booking-detail-label">Mã lịch hẹn</span><span class="booking-detail-value">${escapeHtml(bookingId)}</span></div>
+            ${expectedEnd ? `<div><span class="booking-detail-label">Kết thúc dự kiến</span><span class="booking-detail-value">${escapeHtml(expectedEnd)}</span></div>` : ''}
+            ${Number.isFinite(booking.netPaid) ? `<div><span class="booking-detail-label">Đã thanh toán sau hoàn</span><span class="booking-detail-value">${formatPrice(booking.netPaid)}</span></div>` : ''}
+            ${serviceItems ? `<div class="booking-details-wide"><span class="booking-detail-label">Dịch vụ đã đặt</span><span class="booking-detail-value">${serviceItems}</span></div>` : ''}
+            ${visibleNote ? `<div class="booking-details-wide"><span class="booking-detail-label">Ghi chú</span><span class="booking-detail-value booking-note-preview">${escapeHtml(visibleNote)}</span></div>` : ''}
         </div>
         ${actionButtonsHtml ? `
             <div class="booking-card-footer-actions">

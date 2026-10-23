@@ -158,4 +158,16 @@
     text-align: left;
     justify-content: flex-start;
   }
-}
+}body.payment-failed-public{background:#fff;font-family:Inter,system-ui,sans-serif;color:#274b39}
+.payment-failed-public .payment-result-page{background:#fff;padding:48px 18px}
+.payment-failed-public .result-title{font-family:Lora,Inter,serif;font-size:32px;font-weight:600;color:#214939;line-height:1.4}
+.payment-failed-public .result-subtitle{font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:1.8;color:#637a69}
+.payment-failed-public .error-icon{color:#a85a48;animation:none;width:72px;height:72px}
+.payment-failed-public .info-card{background:#fff;border:1px solid #dce5d8;border-radius:9px;box-shadow:none;padding:26px}
+.payment-failed-public .card-title{font-family:Lora,Inter,serif;font-size:23px;font-weight:600;color:#214939;border:0}
+.payment-failed-public .info-row{border:0;padding:12px 0;gap:18px;flex-wrap:wrap}
+.payment-failed-public .info-label{font-size:13px;color:#637a69}
+.payment-failed-public .info-value{font-size:14px;color:#31553f;overflow-wrap:anywhere}
+.payment-failed-public .status-failed{border:0;border-radius:9px;background:#f7dcdc;color:#8f2424;font-size:12px;padding:5px 9px}
+.payment-failed-public .btn-primary{background:#214939;border:1px solid #214939;border-radius:9px;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:14px;padding:12px 18px;box-shadow:none;transform:none}
+.payment-failed-public .btn-outline-primary{background:#f1f5ed;border:1px solid #d5e0d0;border-radius:9px;color:#31553f;font-family:Inter,system-ui,sans-serif;font-size:14px;padding:12px 18px;box-shadow:none}

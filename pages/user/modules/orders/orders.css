@@ -693,3 +693,26 @@
         text-align: center;
     }
 }
+/* Order filters match the approved booking filter navigation. */
+.user-portal-body .orders-module-container .order-filter-bar{background:transparent;border:0;padding:0;box-shadow:none}
+.user-portal-body .orders-module-container .order-filter-tabs{display:flex;flex-wrap:wrap;gap:12px 24px;border:0}
+.user-portal-body .orders-module-container .order-filter-tab{background:transparent;border:0;border-bottom:2px solid transparent;border-radius:0!important;padding:10px 0;font-family:Inter,system-ui,sans-serif;font-size:14px;font-weight:500;color:#637a69;white-space:nowrap;box-shadow:none}
+.user-portal-body .orders-module-container .order-filter-tab.active{color:#214939;font-weight:600;border-bottom-color:#214939;background:transparent}
+.user-portal-body .orders-module-container .order-filter-tabs .tab-separator{display:none}
+@media(max-width:760px){.user-portal-body .orders-module-container .order-filter-tabs{gap:8px 18px}}
+/* Consistent action hierarchy across account order cards. */
+.user-portal-body .orders-module-container .btn-order-action{font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;line-height:1.5;min-height:36px;padding:8px 13px;border:1px solid #d5e0d0;border-radius:9px;background:#f1f5ed;color:#31553f;box-shadow:none;transform:none}
+.user-portal-body .orders-module-container .btn-order-action.btn-action-primary,.user-portal-body .orders-module-container .btn-order-primary-cta{background:#214939;border:1px solid #214939;border-radius:9px;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:13px;box-shadow:none;transform:none}
+.user-portal-body .orders-module-container .btn-order-action.btn-action-primary:hover{background:#315d46;border-color:#315d46;color:#fff}
+.user-portal-body .orders-module-container .btn-order-action.btn-action-review,.user-portal-body .orders-module-container .btn-order-action.btn-action-complaint,.user-portal-body .orders-module-container .btn-order-action.btn-action-hotline,.user-portal-body .orders-module-container .btn-order-action.btn-action-modify{background:#f1f5ed;color:#31553f;border-color:#d5e0d0}
+.user-portal-body .orders-module-container .btn-order-action.btn-action-cancel{background:#fff;color:#8f2424;border-color:#eadad5}
+.user-portal-body .orders-module-container .btn-order-action:hover{background:#e7efe2;box-shadow:none;transform:none}
+.user-portal-body .orders-module-container .order-card-footer-actions{background:transparent;border:0}
+.user-portal-body .orders-module-container .order-card.status-cancelled,.user-portal-body .orders-module-container .order-card.status-cancelled:hover{opacity:.6}
+/* Distinguish secondary order actions with restrained semantic colors. */
+.user-portal-body .orders-module-container .btn-order-action.btn-action-complaint{background:#f8eeea;border-color:#ead9d2;color:#8f4438}
+.user-portal-body .orders-module-container .btn-order-action.btn-action-complaint:hover{background:#f1e2dc;color:#7c382d}
+.user-portal-body .orders-module-container .btn-order-action.btn-action-hotline{background:#fff;border-color:#d5e0d0;color:#526d5b}
+.user-portal-body .orders-module-container .btn-order-action.btn-action-hotline:hover{background:#f4f7f0;color:#31553f}
+.user-portal-body .orders-module-container .btn-order-action.btn-action-review{background:#e6efe2;border-color:#d2e1cc;color:#315d46}
+.user-portal-body .orders-module-container .btn-order-action.btn-action-review:hover{background:#dce9d6;color:#214939}

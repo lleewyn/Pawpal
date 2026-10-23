@@ -631,3 +631,24 @@
 .user-order-skeleton-panel { display: flex; flex-direction: column; gap: 18px; padding: 22px; margin-bottom: 24px; background: #fff; border-radius: 9px; }
 @media(max-width: 991px) { .user-order-skeleton-grid { grid-template-columns: 1fr; } }
 @media(prefers-reduced-motion: reduce) { .order-detail-module-container > * { transition: none; } .user-order-skeleton .pawpal-skeleton { animation: none !important; } }
+/* Order detail matches booking detail and separates payment notes from actions. */
+.user-portal-body .order-detail-module-container{font-family:Inter,system-ui,sans-serif;color:#274b39}
+.user-portal-body .order-detail-card{background:#fff;border:1px solid #dce5d8;border-radius:9px;padding:26px;box-shadow:none}
+.user-portal-body .order-detail-module-container .card-section-header{border:0;padding:0;gap:16px;margin-bottom:22px!important;flex-wrap:wrap}
+.user-portal-body .order-detail-module-container .card-section-title{font-family:Lora,Inter,serif;font-size:22px;font-weight:600;line-height:1.5;color:#214939;overflow-wrap:anywhere}
+.user-portal-body .order-detail-module-container .order-date-text{font-size:12px;color:#718476}
+.user-portal-body .order-detail-module-container .product-item-name{font-family:Lora,Inter,serif;font-size:19px;font-weight:600;line-height:1.5;color:#214939}
+.user-portal-body .order-detail-module-container .product-item-meta,.user-portal-body .order-detail-module-container .product-item-variant{font-size:13px;color:#637a69;line-height:1.7}
+.user-portal-body .order-detail-module-container .product-item-price{font-family:Inter,system-ui,sans-serif;font-size:16px;font-weight:600;color:#315d46}
+.user-portal-body .order-detail-module-container .order-summary-box{background:#f3f7ee;border:0;border-radius:9px;padding:20px}
+.user-portal-body .order-detail-module-container .summary-row{font-size:14px;line-height:1.8;color:#526d5b}
+.user-portal-body .order-detail-module-container .order-actions{background:transparent;border:0;padding:0;gap:10px;flex-wrap:wrap}
+.user-portal-body .order-detail-module-container .btn-detail-action,.user-portal-body .order-detail-module-container .btn-green-outline,.user-portal-body .order-detail-module-container .btn-action-neutral{font-family:Inter,system-ui,sans-serif;font-size:13px;padding:10px 15px;border:1px solid #d5e0d0;border-radius:9px;background:#f1f5ed;color:#31553f;box-shadow:none;transform:none;line-height:1.5}
+.user-portal-body .order-detail-module-container .btn-action-primary-green,.user-portal-body .order-detail-module-container .btn-cta{background:#214939;color:#fff;border-color:#214939;border-radius:9px;font-size:13px;padding:10px 15px;box-shadow:none}
+.user-portal-body .order-detail-module-container .btn-danger-outline{background:#fff;border:1px solid #eadad5;color:#8f4438;border-radius:9px;padding:10px 15px;font-family:Inter,system-ui,sans-serif;font-size:13px;box-shadow:none}
+.user-portal-body .order-detail-module-container .spec-label{font-size:12px;color:#718476}
+.user-portal-body .order-detail-module-container .spec-value{font-size:14px;color:#31553f;line-height:1.7}
+.user-portal-body .order-payment-note{font-size:12px;line-height:1.75;color:#718476;margin:7px 0 0;max-width:38em;text-align:left;font-weight:400}
+.user-portal-body .order-detail-module-container .timeline-title{font-family:Inter,system-ui,sans-serif;font-size:13px;font-weight:600;color:#31553f}
+.user-portal-body .order-detail-module-container .timeline-time{font-size:12px;color:#718476}
+@media(max-width:760px){.user-portal-body .order-detail-card{padding:22px 18px}.user-portal-body .order-detail-module-container .card-section-title{font-size:20px}}

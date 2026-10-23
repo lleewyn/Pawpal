@@ -979,3 +979,39 @@
         padding: 16px;
     }
 }
+/* Pet profiles follow the shared customer account design. */
+.user-portal-body .pets-module-container{font-family:Inter,system-ui,sans-serif;color:#274b39}
+.user-portal-body .pet-filter-bar{background:transparent;border:0;padding:0;box-shadow:none}
+.user-portal-body .pet-filter-tabs{gap:20px}
+.user-portal-body .pet-filter-tab{font-family:Inter,system-ui,sans-serif;font-size:14px;padding:10px 0;color:#637a69;border-radius:0;background:transparent;border:0;border-bottom:2px solid transparent}
+.user-portal-body .pet-filter-tab.active{color:#214939;font-weight:600;border-bottom-color:#d8a437}
+.user-portal-body .pet-filter-tabs .tab-separator{display:none}
+.user-portal-body .btn-pet-cta-add,.user-portal-body .btn-pet-primary-cta,.user-portal-body .btn-pet-action-save,.user-portal-body .btn-routine-cta{font-family:Inter,system-ui,sans-serif;font-size:13px;background:#214939;color:#fff;border:1px solid #214939;border-radius:9px;padding:11px 18px;box-shadow:none;transform:none}
+.user-portal-body .pet-cards-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.user-portal-body .pet-card{background:#fff;border:1px solid #dce5d8;border-radius:9px;padding:24px;box-shadow:none}
+.user-portal-body .pet-name,.user-portal-body .pet-screen-title,.user-portal-body .routine-card-title,.user-portal-body .diary-snippet-title,.user-portal-body .pet-section-divider-title{font-family:Lora,Inter,serif;font-weight:600;color:#214939;line-height:1.4}
+.user-portal-body .pet-name{font-size:24px}
+.user-portal-body .pet-screen-title{font-size:28px}
+.user-portal-body .pet-id,.user-portal-body .pet-meta{font-size:12px;color:#718476}
+.user-portal-body .pet-info-row{font-size:14px;line-height:1.7;gap:16px}
+.user-portal-body .pet-info-label{color:#637a69}
+.user-portal-body .pet-info-value{color:#274b39;overflow-wrap:anywhere}
+.user-portal-body .pet-card-actions{border:0;padding-top:20px;gap:10px;flex-wrap:wrap}
+.user-portal-body .btn-pet-card-action,.user-portal-body .btn-pet-action-cancel,.user-portal-body .btn-back-to-pets,.user-portal-body .pet-quick-action-btn{font-family:Inter,system-ui,sans-serif;font-size:12px;border:1px solid #d5e0d0;border-radius:9px;background:#f1f5ed;color:#31553f;padding:9px 13px;box-shadow:none;transform:none}
+.user-portal-body .btn-pet-card-action.btn-action-danger{color:#8f2424;background:#fff;border-color:#eadad5}
+.user-portal-body .pet-card-add-new{background:#f5f8f1;border:1px dashed #cbdcc7;border-radius:9px;box-shadow:none;min-height:210px}
+.user-portal-body .add-card-title{font-family:Lora,Inter,serif;color:#214939;font-size:22px}
+.user-portal-body .pet-routine-card,.user-portal-body .pet-diary-snippet-card,.user-portal-body .pet-detail-card-container{background:#fff;border:1px solid #dce5d8;border-radius:9px;padding:24px;box-shadow:none}
+.user-portal-body .routine-card-header,.user-portal-body .diary-snippet-header{border:0;padding-bottom:0;gap:16px;flex-wrap:wrap}
+.user-portal-body .routine-card-title,.user-portal-body .diary-snippet-title{font-size:21px}
+.user-portal-body .routine-item{background:transparent;border:0;padding:14px 0;gap:14px;flex-wrap:wrap}
+.user-portal-body .routine-name{font-size:14px;color:#31553f}
+.user-portal-body .routine-sub{font-size:12px;line-height:1.7;color:#637a69}
+.user-portal-body .routine-card-footer{background:transparent;border:0;padding:18px 0 0}
+.user-portal-body .pet-quick-links-card{background:transparent;border:0;padding:0;box-shadow:none}
+.user-portal-body .form-section-heading{font-family:Lora,Inter,serif;font-size:21px;color:#214939;border:0}
+.user-portal-body .pets-module-container .form-label-custom{font-family:Inter,system-ui,sans-serif;font-size:13px;color:#31553f}
+.user-portal-body .pets-module-container .form-control-custom,.user-portal-body .pets-module-container .form-textarea-custom{font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:1.6;background:#fff;border:1px solid #d1decf;border-radius:9px;padding:11px 14px;color:#274b39}
+.user-portal-body .pets-module-container .form-control-custom:focus,.user-portal-body .pets-module-container .form-textarea-custom:focus{border-color:#315d46;box-shadow:0 0 0 3px #315d4615}
+.user-portal-body .pet-card:hover,.user-portal-body .pet-card-add-new:hover,.user-portal-body .btn-pet-cta-add:hover{transform:none;box-shadow:none}
+@media(max-width:760px){.user-portal-body .pet-cards-grid{grid-template-columns:1fr;gap:18px}.user-portal-body .pet-card,.user-portal-body .pet-routine-card,.user-portal-body .pet-diary-snippet-card,.user-portal-body .pet-detail-card-container{padding:22px 18px}.user-portal-body .pet-screen-title{font-size:25px}}

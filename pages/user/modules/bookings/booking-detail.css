@@ -277,3 +277,42 @@
 .booking-detail-skeleton-panel { display: flex; flex-direction: column; gap: 18px; padding: 22px; margin-bottom: 24px; background: #fff; border-radius: 9px; }
 @media(max-width: 991px) { .booking-detail-skeleton-grid { grid-template-columns: 1fr; } }
 @media(prefers-reduced-motion: reduce) { .booking-detail-module-container > * { transition: none; } .booking-detail-skeleton .pawpal-skeleton { animation: none !important; } }
+/* Booking details share the account typography, palette and spacing. */
+.user-portal-body .booking-detail-module-container{font-family:Inter,system-ui,sans-serif;color:#274b39}
+.user-portal-body .booking-detail-card{background:#fff;border:1px solid #dce5d8;border-radius:9px;padding:26px;box-shadow:none}
+.user-portal-body .booking-detail-module-container .card-section-header{border:0;padding:0;gap:16px;flex-wrap:wrap;margin-bottom:22px!important}
+.user-portal-body .booking-detail-module-container .card-section-title{font-family:Lora,Inter,serif;font-size:23px;font-weight:600;color:#214939;line-height:1.4}
+.user-portal-body .booking-detail-module-container .booking-code-chip{background:#f1f5ed;border:0;border-radius:5px;color:#718476;font-size:11px;overflow-wrap:anywhere}
+.user-portal-body .booking-detail-module-container .booking-spec-row{padding:12px 0;border:0;gap:18px;font-size:14px;line-height:1.7}
+.user-portal-body .booking-detail-module-container .spec-label{color:#637a69;font-size:13px;font-weight:400}
+.user-portal-body .booking-detail-module-container .spec-value{color:#274b39;font-size:14px;overflow-wrap:anywhere}
+.user-portal-body .booking-detail-module-container .price-highlight{color:#315d46;font-family:Inter,system-ui,sans-serif;font-size:22px;font-weight:600}
+.user-portal-body .booking-detail-module-container .btn-back-link{font-family:Inter,system-ui,sans-serif;color:#315d46;font-size:13px;transform:none}
+.user-portal-body .booking-detail-module-container .btn-detail-action,.user-portal-body .booking-detail-module-container .user-detail-header-button{border:1px solid #d5e0d0;border-radius:9px;padding:10px 15px;background:#f1f5ed;color:#31553f;font-family:Inter,system-ui,sans-serif;font-size:13px;line-height:1.5;box-shadow:none;transform:none}
+.user-portal-body .booking-detail-module-container .btn-action-primary-green,.user-portal-body .booking-detail-module-container .btn-action-primary-amber{background:#214939!important;border-color:#214939!important;color:#fff!important;box-shadow:none}
+.user-portal-body .booking-detail-module-container .btn-action-cancel{background:#fff;color:#8f2424;border-color:#eadad5}
+.user-portal-body .booking-detail-module-container .admin-badge{font-family:Inter,system-ui,sans-serif;border:0!important;border-radius:9px;padding:5px 9px;font-size:12px;font-weight:500;line-height:1.4;height:auto}
+.user-portal-body .booking-detail-module-container .badge-pending{background:#f5e8d3;color:#734718}
+.user-portal-body .booking-detail-module-container .badge-confirmed,.user-portal-body .booking-detail-module-container .badge-upcoming,.user-portal-body .booking-detail-module-container .badge-in-progress{background:#dceaf2;color:#20495e}
+.user-portal-body .booking-detail-module-container .badge-completed{background:#dceee2;color:#165335}
+.user-portal-body .booking-detail-module-container .badge-cancelled{background:#f7dcdc;color:#8f2424}
+.user-portal-body .booking-detail-module-container .policy-card{background:#f5f8f1}
+.user-portal-body .booking-detail-module-container .policy-list{font-size:13px;line-height:1.9;color:#637a69}
+.user-portal-body .booking-detail-module-container .form-control,.user-portal-body .booking-detail-module-container .form-select{border:1px solid #d1decf;border-radius:9px;background:#fff;color:#274b39;font-family:Inter,system-ui,sans-serif;font-size:14px;padding:11px 14px}
+@media(max-width:760px){.user-portal-body .booking-detail-card{padding:22px 18px}.user-portal-body .booking-detail-module-container .card-section-title{font-size:21px}.user-portal-body .booking-detail-module-container .booking-spec-row{flex-wrap:wrap;gap:6px 16px}}
+.user-portal-body .booking-execution-times{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+.user-portal-body .booking-execution-times p{font-size:12px;color:#718476;line-height:1.7;margin:0}
+.user-portal-body .booking-execution-times strong{display:block;color:#31553f;font-size:13px;font-weight:500;margin-top:5px}
+.user-portal-body .booking-execution-record,.user-portal-body .booking-execution-update{margin:22px 0;background:transparent;border:0}
+.user-portal-body .booking-execution-record h5,.user-portal-body .booking-execution-heading{font-family:Lora,Inter,serif;color:#214939;font-weight:600;font-size:19px;margin:0 0 8px}
+.user-portal-body .booking-execution-date{display:block;font-size:11px;color:#718476;margin:5px 0 10px}
+.user-portal-body .booking-execution-record p,.user-portal-body .booking-execution-update p{font-size:13px;line-height:1.8;white-space:pre-line;color:#526d5b;margin:7px 0;overflow-wrap:anywhere}
+.user-portal-body .booking-execution-record small,.user-portal-body .booking-execution-empty{font-size:12px;line-height:1.8;color:#718476}
+.user-portal-body .booking-execution-update>strong{font-size:14px;font-weight:600;color:#31553f}
+@media(max-width:480px){.user-portal-body .booking-execution-times{grid-template-columns:1fr}}
+.booking-detail-module-container .booking-service-detail-row{display:flex;align-items:start;justify-content:space-between;gap:20px;padding:10px 0;color:#31553f}
+.booking-detail-module-container .booking-service-detail-row>div{min-width:0;display:grid;gap:5px}
+.booking-detail-module-container .booking-service-detail-row strong{font-family:Inter,system-ui,sans-serif;font-size:14px;font-weight:600;line-height:1.6}
+.booking-detail-module-container .booking-service-detail-row span{font-size:12px;color:#718476;line-height:1.7}
+.booking-detail-module-container .booking-service-detail-row>b{font-size:14px;font-weight:600;white-space:nowrap;padding-top:2px}
+.booking-detail-module-container #bookingExecutionDetails[hidden]{display:none!important}

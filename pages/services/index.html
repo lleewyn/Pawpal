@@ -6,7 +6,7 @@
     <title>PawPal - Dịch vụ chăm sóc thú cưng chuyên nghiệp</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/styles/style.css">
     <link rel="stylesheet" href="/pages/services/services.css">
@@ -64,7 +64,7 @@
                     <!-- Nav links — mx-auto căn giữa trong collapse -->
                     <ul class="navbar-nav mx-auto">
                         <li class="nav-item"><a href="/" class="nav-link">Trang chủ</a></li>
-                        
+
                         <li class="nav-item dropdown">
                             <a href="/services" class="nav-link dropdown-toggle active">Dịch vụ<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ui-spacing-3"><polyline points="6 9 12 15 18 9"></polyline></svg></a>
                             <ul class="dropdown-menu">
@@ -91,7 +91,7 @@
                         </li>
 
                         <li class="nav-item"><a href="/about" class="nav-link">Về chúng tôi</a></li>
-                        
+
                         <li class="nav-item dropdown">
                             <a href="/blog" class="nav-link dropdown-toggle">Cẩm nang<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ui-spacing-3"><polyline points="6 9 12 15 18 9"></polyline></svg></a>
                             <ul class="dropdown-menu">
@@ -104,12 +104,12 @@
                             </ul>
                         </li>
                         <li class="nav-item"><a href="/contact" class="nav-link">Liên hệ</a></li>
-                        
+
                         <!-- Chỉ Mobile - Chung -->
                         <li class="nav-item mobile-drawer-only mobile-cta-item">
                             <a href="/booking" class="nav-link nav-link-cta-mobile">Đặt lịch ngay</a>
                         </li>
-                        
+
                         <!-- Chỉ Mobile - Khách -->
                         <li class="nav-item mobile-drawer-only mobile-guest-only">
                             <a href="/return-guest" class="nav-link">Tra đơn hàng / lịch</a>
@@ -232,12 +232,15 @@
     </header>
 
     <main class="services-main">
+<section class="services-editorial-intro" aria-label="Dịch vụ PawPal">
+            <nav class="services-breadcrumb" aria-label="Đường dẫn"><a href="/">Trang chủ</a><span aria-hidden="true">›</span><span aria-current="page">Dịch vụ PawPal</span></nav>
+        </section>
         <section class="services-catalog-section">
             <div class="container-xl">
                 <div class="services-layout">
                     <aside class="services-sidebar" id="servicesSidebar" data-lenis-prevent>
                         <div class="sidebar-header">
-                            <h3 class="sidebar-title">Bộ lọc</h3>
+                            <h3 class="sidebar-title">Bộ lọc dịch vụ</h3><span class="sidebar-heading-note">Lựa chọn cho bé</span>
                             <button type="button" class="sidebar-close-btn" id="closeServicesSidebar" aria-label="Đóng bộ lọc">
                                 <span aria-hidden="true">×</span>
                             </button>
@@ -376,7 +379,7 @@
                     </aside>
 
                     <div class="services-content">
-                        <div class="services-toolbar mb-1">
+                        <div class="services-toolbar mb-1"><span class="services-result-count" id="servicesResultCount" role="status"></span>
                             <div class="services-toolbar-top">
                                 <button type="button" class="services-filter-toggle" id="openServicesSidebar">
                                     <span class="services-filter-toggle-icon" aria-hidden="true">≡</span>
@@ -393,7 +396,8 @@
                             </div>
                         </div>
 
-                        <div class="services-grid-list" id="servicesGrid">
+                        <nav class="services-category-tabs" aria-label="Nhóm dịch vụ"><button type="button" data-service-category="all">Tất cả</button><button type="button" data-service-category="hotel">Khách sạn</button><button type="button" data-service-category="spa">Spa và cắt tỉa</button><button type="button" data-service-category="taxi">Pet Taxi</button></nav>
+<div class="services-grid-list" id="servicesGrid">
                             <div class="service-card" style="background:#fff; border:1px solid #ECF2EE; border-radius:9px; overflow:hidden; padding:0;">
                                 <div class="pawpal-skeleton" style="width:100%; height:180px; border-radius:0 !important;"></div>
                                 <div style="padding:16px;">
@@ -493,7 +497,7 @@
     <div id="site-footer"></div>
 
     <div class="toast-container-custom" id="toastContainer"></div>
-    
+
     <div id="site-fab"></div>
 </body>
 </html>

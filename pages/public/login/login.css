@@ -584,4 +584,39 @@
     font-size:0.85rem;
     color:var(--color-text-light);
     margin-top:6px;
-}
+}/* Login and account steps follow the shared public palette and typography. */
+body.login-page-body{background:#fff;color:#274b39;font-family:Inter,system-ui,sans-serif}
+.login-page-body .login-main-container{background:#f5f8f1;min-height:calc(100svh - 160px);padding:48px 18px;align-items:center}
+.login-page-body .login-main-container>.container-md{padding:0!important;width:100%;max-width:520px}
+.login-page-body .login-main-container .row{margin:0;min-height:0}
+.login-page-body .login-main-container .row>div{width:100%;max-width:none;padding:0}
+.login-page-body .auth-card-wrapper{padding:36px 38px;background:#fff;border:1px solid #dce5d8;border-radius:9px;box-shadow:none;backdrop-filter:none;transition:none}
+.login-page-body .auth-card-wrapper:hover{box-shadow:none}
+.login-page-body .auth-tabs{gap:26px;border:0;margin:0 0 30px}
+.login-page-body .auth-tab-btn{font-family:Inter,system-ui,sans-serif;font-size:14px;font-weight:500;color:#637a69;padding:0 0 10px}
+.login-page-body .auth-tab-btn.active{color:#214939;font-weight:700}
+.login-page-body .auth-tab-btn::after{height:2px;background:#d8a437;bottom:0}
+.login-page-body .form-title{font-family:Lora,Inter,serif;font-size:28px;line-height:1.35;color:#214939;font-weight:600;margin-bottom:26px}
+.login-page-body .form-subtitle{font-size:14px;line-height:1.75;color:#637a69}
+.login-page-body .form-label{font-family:Inter,system-ui,sans-serif;font-size:13px;color:#31553f;font-weight:600;margin-bottom:9px}
+.login-page-body .form-control{min-height:46px;padding:12px 14px;border:1px solid #d1decf;border-radius:9px;background:#fff;font-family:Inter,system-ui,sans-serif;font-size:14px;color:#274b39}
+.login-page-body .form-control::placeholder{color:#879387;font-size:12px;opacity:1}
+.login-page-body .form-control:focus{border-color:#315d46;box-shadow:0 0 0 3px rgba(49,93,70,.1)}
+.login-page-body .password-input-wrapper .form-control{padding-right:46px}
+.login-page-body .auth-card-wrapper .btn-cta{min-height:44px;padding:12px 18px;border:1px solid #214939;border-radius:9px;background:#214939;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:14px;font-weight:600;line-height:1.4;box-shadow:none;transform:none;text-decoration:none}
+.login-page-body .auth-card-wrapper .btn-cta:hover{background:#315d46;border-color:#315d46;box-shadow:none;transform:none}
+.login-page-body .auth-card-wrapper .btn-cta:disabled{background:#e2e9df;border-color:#e2e9df;color:#526d5b!important;opacity:1}
+.login-page-body .auth-card-wrapper .btn-green-outline,.login-page-body #btnLogoutFromLogin{border:1px solid #d5e0d0;border-radius:9px!important;background:#f1f5ed;color:#31553f;min-height:42px;font-family:Inter,system-ui,sans-serif;font-size:13px;box-shadow:none}
+.login-page-body .btn-link,.login-page-body .forgot-pass-link,.login-page-body .btn-back-link,.login-page-body .terms-link{font-family:Inter,system-ui,sans-serif;color:#315d46;font-size:13px}
+.login-page-body .btn-back-link{border:0;background:transparent;padding:0}
+.login-page-body .login-phone-display{background:#f3f7ee;border:0;border-radius:9px;padding:12px 14px;color:#31553f;font-size:14px}
+.login-page-body .btn-change-phone{font-family:Inter,system-ui,sans-serif;font-size:12px;color:#31553f}
+.login-page-body .otp-inputs-wrapper{gap:9px;max-width:100%;justify-content:center}
+.login-page-body .otp-input{width:100%;max-width:54px;min-width:0;flex:1 1 0;height:54px;border:1px solid #d1decf;border-radius:9px;background:#fff;font-family:Inter,system-ui,sans-serif;font-size:22px;color:#214939}
+.login-page-body .otp-input:disabled{background:#f5f8f1}
+.login-page-body .otp-input:focus{border-color:#315d46;box-shadow:0 0 0 3px rgba(49,93,70,.1);outline:0}
+.login-page-body .timer-label,.login-page-body .redirect-hint,.login-page-body .form-check-label{font-size:13px;line-height:1.7;color:#637a69}
+.login-page-body .points-label{text-transform:none;font-size:13px}
+.login-page-body .form-check-input:checked{background-color:#315d46;border-color:#315d46}
+@media(max-width:576px){.login-page-body .login-main-container{padding:32px 18px;min-height:calc(100svh - 130px)}.login-page-body .auth-card-wrapper{padding:28px 22px}.login-page-body .form-title{font-size:25px}.login-page-body .otp-inputs-wrapper{gap:7px}.login-page-body .otp-input{height:48px;font-size:20px}}
+.login-page-body .password-rule-hint{font-family:Inter,system-ui,sans-serif;font-size:12px;line-height:1.7;color:#637a69;margin:9px 0 0}

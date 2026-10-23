@@ -260,3 +260,16 @@
 - Ảnh banner mới cần thiết kế theo kích thước này. Khung nội dung section rộng tối đa 1800px, chừa khoảng đệm ngang 40px mỗi bên trên màn hình lớn.
 - Khi màn hình nhỏ hơn, banner co theo chiều rộng khả dụng, không gây tràn ngang và không kéo méo ảnh. Chiều cao hiển thị trên màn hình lớn tối đa 540px.
 
+## 12. Giao diện public đã chốt — áp dụng khi làm trang Cửa hàng
+
+- Chỉ dùng hai font: **Lora cho tiêu đề**, **Inter cho nội dung, nút, nhãn và điều hướng**; hỗ trợ đầy đủ tiếng Việt.
+- Dùng header chung đã chỉnh: cao khoảng **69px**, logo và menu desktop trên một hàng, khoảng đệm nút gọn nhưng giữ cỡ chữ. Nút **Đặt lịch xanh rừng**, **Đăng ký vàng**. Giữ tìm kiếm, tra cứu, Auth, giỏ hàng và menu điện thoại hiện có; không áp sang Admin.
+- Dùng footer chung có **Map**, logo đã tăng kích thước; nền footer và nhãn Map **#1D4031**. Khối mời đặt lịch dùng bản mới **“Hẹn bé ở PawPal nhé!” nền vàng**; không khôi phục banner mời đặt lịch cũ hoặc số chỗ trống minh họa, không hiển thị trùng.
+- Trang danh mục dùng đường dẫn nhỏ như **Trang chủ › Cửa hàng PawPal**. Không thêm dòng tên phân hệ viết hoa hoặc tiêu đề lớn và phụ đề dài phía trên. Chừa chiều rộng nội dung thoáng, khung ngoài tối đa **1800px**, đệm desktop khoảng 40px mỗi bên, giảm hợp lý trên điện thoại.
+- Bộ lọc bên trái gọn khoảng **235px** trên desktop, đầu khung xanh rừng, viền nhẹ. Tránh khoảng đệm lồng nhiều lớp và vùng trống dư. Tiêu đề/lựa chọn không xuống hàng, không cắt chữ; kiểm tra menu lọc trên điện thoại.
+- Giữ **khung thẻ viền mảnh, bo góc 9px** như thẻ cũ; có khoảng đệm nội dung, giá và tác vụ để chữ không dính viền. Ảnh nằm sát khung. Phối thẻ với nền trắng, xanh rừng và vàng của trang.
+- Nút yêu thích dùng **trái tim tại góc trên bên phải ảnh**, không nằm cạnh tên hay đánh giá. Viền rỗng khi chưa lưu, tô màu sau máy chủ xác nhận lưu; giữ chức năng và quyền chủ sở hữu hiện có.
+- Mô tả dài tối đa **hai dòng trọn vẹn**, hiện **…** khi vượt quá; không để dòng thứ ba hoặc dấu tiếng Việt bị cắt ngang. Chừa khoảng cách rõ giữa mô tả, thông tin phụ, giá và nút.
+- Thanh tìm kiếm có số kết quả thật; thanh nhóm danh mục liên kết cùng trạng thái với bộ lọc. Không dựng số lượng, giá, giảm giá, tồn kho hay đánh giá mẫu. Chọn biến thể và thêm giỏ theo luồng CSDL hiện có.
+- Áp dụng từng phần theo ảnh/chỉnh sửa người dùng đã chốt, kiểm tra desktop và điện thoại, không tự đổi nghiệp vụ. **Chỉ push khi người dùng yêu cầu rõ ràng**, không coi yêu cầu sửa tiếp là yêu cầu push.
+

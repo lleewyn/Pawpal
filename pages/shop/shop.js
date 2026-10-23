@@ -389,15 +389,6 @@ async function initShop() {
         if (window.DataLoader && typeof window.DataLoader.loadProducts === 'function') {
             state.products = await window.DataLoader.loadProducts();
         }
-        if (!state.products || state.products.length === 0) {
-            try {
-                const res = await fetch('/data/products.json');
-                const pList = await res.json();
-                if (Array.isArray(pList)) state.products = pList;
-            } catch(e) {
-                console.warn('Fallback fetch products error:', e);
-            }
-        }
         console.log(` Loaded ${state.products.length} products`);
         state.isLoading = false;
         state.wishlist = [];
@@ -834,7 +825,7 @@ function renderProducts() {
     const endIndex = startIndex + state.itemsPerPage;
     const paginatedProducts = state.filteredProducts.slice(startIndex, endIndex);
     
-    resultCount.textContent = `Hiển thị ${paginatedProducts.length} sản phẩm`;
+    resultCount.textContent = `${state.filteredProducts.length} sản phẩm`;
     
     if (paginatedProducts.length === 0) {
         grid.classList.add('d-none');
@@ -855,7 +846,7 @@ function renderProducts() {
         });
         
         grid.querySelectorAll('.product-wishlist-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 e.preventDefault();
                 const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
@@ -863,8 +854,8 @@ function renderProducts() {
                     showToast('Vui lòng đăng nhập để sử dụng tính năng yêu thích', 'warning');
                     return; // KHÔNG đổi màu icon
                 }
-                toggleWishlist(btn.dataset.productId);
-                btn.classList.toggle('active');
+                if(btn.disabled)return;btn.disabled=true;
+                try{await toggleWishlist(btn.dataset.productId);}finally{btn.disabled=false;}
             });
         });
         
@@ -898,9 +889,11 @@ function renderProducts() {
 }
 
 function createProductCardHTML(product) {
+    const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    product = {...product,name:escape(product.name),brand:escape(product.brand),image:escape(product.image)};
     const isInWishlist = state.wishlist.includes(product.id);
     
-    const rating = product.rating || 5.0;
+    const rating = Number(product.rating) || 0;
     const reviewCount = product.reviewCount || 0;
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
@@ -942,8 +935,8 @@ function createProductCardHTML(product) {
                     <h3 class="product-name">${product.name}</h3>
                     
                     <div class="product-rating-wrapper">
-                        <div class="product-rating-stars">${starsHTML}</div>
-                        <span class="product-rating-count">(${reviewCount})</span>
+                        <div class="product-rating-stars">${reviewCount > 0 ? starsHTML : 'Chưa có đánh giá'}</div>
+                        <span class="product-rating-count">${reviewCount > 0 ? `(${reviewCount})` : ''}</span>
                     </div>
 
                     <div class="product-price-wrapper">

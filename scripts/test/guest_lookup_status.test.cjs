@@ -1,0 +1,6 @@
+﻿const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const source=fs.readFileSync('pages/public/return-guest/return-guest.js','utf8');const ctx={};vm.createContext(ctx);
+vm.runInContext(source.slice(0,source.indexOf('let rgOtpFlowActive'))+source.slice(source.indexOf('function badge('),source.indexOf('function fmtDate('))+source.slice(source.indexOf('function normalizeOrderStatus('),source.indexOf('function showChangeScheduleModal(')),ctx);
+function badge(map,status){return vm.runInContext(`badge(${map},${JSON.stringify(status)})`,ctx)}
+test('booking confirmation stays confirmed rather than order preparing',()=>{assert.match(badge('BOOKING_STATUS','confirmed'),/Đã xác nhận/);assert.match(badge('BOOKING_STATUS','accepted'),/Đã tiếp nhận/);assert.match(badge('BOOKING_STATUS','da_check_in'),/Đã tiếp nhận/)});
+test('order aliases are translated and unknown codes never leak',()=>{assert.match(badge('ORDER_STATUS','preparing'),/Chờ lấy hàng/);assert.match(badge('ORDER_STATUS','dang_chuan_bi'),/Chờ lấy hàng/);assert.match(badge('BOOKING_STATUS','future_code'),/Chưa xác định/);assert.doesNotMatch(badge('BOOKING_STATUS','future_code'),/future_code/)});

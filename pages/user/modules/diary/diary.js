@@ -667,7 +667,7 @@ function renderPetInfoCard(pet, currentSession) {
                 </div>
                 `}
                 <a href="/pages/services/booking/booking.html?petId=${encodeURIComponent(pet.id || '')}" class="btn-pet-new-booking" title="Đặt lịch hẹn spa/khám mới cho bé">
-                    <span>+ Đặt lịch mới</span>
+                    <span>Đặt lịch mới</span>
                 </a>
             </div>
         </div>

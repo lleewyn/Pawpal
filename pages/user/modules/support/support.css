@@ -1475,3 +1475,40 @@ body.ticket-modal-open {
     color: #236B48 !important;
     border-color: #236B48;
 }
+/* Support list and creation form follow the customer account design. */
+.user-portal-body .support-module-container,.user-portal-body .support-create-container{font-family:Inter,system-ui,sans-serif;color:#274b39}
+.user-portal-body .support-module-container>.dashboard-content-panel{background:transparent;border:0;padding:0;box-shadow:none}
+.user-portal-body .support-filter-tabs{display:flex;flex-wrap:wrap;gap:12px 24px;border:0}
+.user-portal-body .support-filter-tab{background:transparent;border:0;border-bottom:2px solid transparent;border-radius:0!important;padding:10px 0;font-family:Inter,system-ui,sans-serif;font-size:14px;color:#637a69;white-space:nowrap}
+.user-portal-body .support-filter-tab.active{background:transparent;color:#214939;font-weight:600;border-bottom-color:#214939}
+.user-portal-body .support-filter-tabs .tab-separator{display:none}
+.user-portal-body .btn-support-create,.user-portal-body .btn-support-submit{background:#214939;color:#fff;border:1px solid #214939;border-radius:9px;padding:11px 16px;font-family:Inter,system-ui,sans-serif;font-size:13px;line-height:1.5;box-shadow:none;transform:none}
+.user-portal-body .btn-support-create:hover,.user-portal-body .btn-support-submit:hover{background:#315d46;color:#fff;box-shadow:none;transform:none}
+.user-portal-body .tickets-table-wrapper{border:1px solid #dce5d8;border-radius:9px;background:#fff;box-shadow:none;overflow-x:auto}
+.user-portal-body .tickets-table{margin:0;font-family:Inter,system-ui,sans-serif;font-size:13px;min-width:650px}
+.user-portal-body .tickets-table thead th{background:#f3f7ee;color:#31553f;font-size:12px;font-weight:600;text-transform:none;padding:16px;border:0}
+.user-portal-body .tickets-table tbody td{padding:18px 16px;color:#526d5b;border-color:#e7ede3;font-size:13px;line-height:1.7}
+.user-portal-body .ticket-title-cell{color:#31553f;font-size:14px;font-weight:600}
+.user-portal-body .ticket-id-pill{background:#f1f5ed;color:#637a69;border:0;border-radius:5px;font-size:11px}
+.user-portal-body .btn-view-ticket,.user-portal-body .btn-cancel-link{background:#f1f5ed;color:#31553f;border:1px solid #d5e0d0;border-radius:9px;padding:9px 13px;font-family:Inter,system-ui,sans-serif;font-size:12px;box-shadow:none;transform:none;text-decoration:none}
+.user-portal-body .badge-status,.user-portal-body .badge-priority{border:0;border-radius:9px;font-size:12px;font-weight:500;padding:5px 9px}
+.user-portal-body .badge-status-pending{background:#f5e8d3;color:#734718}
+.user-portal-body .badge-status-processing{background:#dceaf2;color:#20495e}
+.user-portal-body .badge-status-completed{background:#dceee2;color:#165335}
+.user-portal-body .support-create-container>.dashboard-content-panel{background:#fff;border:1px solid #dce5d8;border-radius:9px;padding:28px;box-shadow:none}
+.user-portal-body .support-create-container .form-label{font-family:Inter,system-ui,sans-serif;font-size:13px;font-weight:600;color:#31553f;margin-bottom:9px}
+.user-portal-body .support-create-container .form-control,.user-portal-body .support-create-container .form-select{font-family:Inter,system-ui,sans-serif;font-size:14px;color:#274b39;background:#fff;border:1px solid #d1decf;border-radius:9px;padding:11px 14px;line-height:1.6}
+.user-portal-body .support-create-container .form-control:focus,.user-portal-body .support-create-container .form-select:focus{border-color:#315d46;box-shadow:0 0 0 3px #315d4615}
+@media(max-width:760px){.user-portal-body .support-filter-tabs{gap:8px 18px}.user-portal-body .support-create-container>.dashboard-content-panel{padding:22px 18px}}
+/* The ticket detail dialog is reviewed separately from the page surfaces. */
+.user-portal-body .ticket-modal-card{background:#fff;border:1px solid #dce5d8;border-radius:9px;font-family:Inter,system-ui,sans-serif;color:#274b39;box-shadow:0 18px 55px #21493918;max-width:760px}
+.user-portal-body .ticket-modal-header{padding:26px 30px 18px;border:0;gap:18px}
+.user-portal-body .detail-ticket-title{font-family:Lora,Inter,serif;font-size:24px;line-height:1.4;color:#214939;font-weight:600}
+.user-portal-body .ticket-modal-body{padding:0 30px 26px}
+.user-portal-body .thread-header-label{font-size:13px;font-weight:600;color:#637a69;text-transform:none}
+.user-portal-body .ticket-modal-card .form-control{font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:1.7;border:1px solid #d1decf;border-radius:9px;background:#fff;color:#274b39;padding:11px 14px}
+.user-portal-body .ticket-modal-card .btn-send-reply,.user-portal-body .ticket-modal-card .btn-submit-rating{background:#214939;border:1px solid #214939;color:#fff;border-radius:9px;padding:10px 16px;font-family:Inter,system-ui,sans-serif;font-size:13px;box-shadow:none;transform:none}
+.user-portal-body .ticket-modal-card .btn-close-detail,.user-portal-body .ticket-modal-card .btn-close-ticket{background:#f1f5ed;border:1px solid #d5e0d0;color:#31553f;border-radius:9px;padding:9px 13px;font-family:Inter,system-ui,sans-serif;font-size:12px;box-shadow:none}
+@media(max-width:760px){.user-portal-body .ticket-modal-header{padding:22px 18px 16px}.user-portal-body .ticket-modal-body{padding:0 18px 22px}.user-portal-body .detail-ticket-title{font-size:21px}}
+.user-portal-body .support-module-container,.user-portal-body .support-module-container>.dashboard-content-panel{min-width:0;max-width:100%;width:100%;box-sizing:border-box}
+.user-portal-body .tickets-table-wrapper{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box}

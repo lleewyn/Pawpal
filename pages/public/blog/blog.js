@@ -67,7 +67,7 @@ async function loadAndPrepareBlogs() {
             petLabel = 'Chó cưng';
         }
 
-        const readTime = b.readingTime || (b.content ? Math.max(3, Math.ceil(b.content.length / 900)) + ' phút đọc' : '4 phút đọc');
+        const readTime = b.readingTime || (b.content ? Math.max(1, Math.ceil(b.content.length / 900)) + ' phút đọc ước tính' : 'Bài viết');
         const viewCount = Math.max(0, Number(b.viewCount ?? b.view_count) || 0);
 
         return {
@@ -76,7 +76,7 @@ async function loadAndPrepareBlogs() {
             petTargetLabel: petLabel,
             readingTime: readTime,
             viewCount: viewCount,
-            author: b.author || 'Chuyên gia Pawpal'
+            author: b.author || 'PawPal'
         };
     });
 

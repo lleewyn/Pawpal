@@ -189,7 +189,7 @@ function populateServiceInfo() {
     const btnPanelBook = document.getElementById('btnPanelBook');
 
     if (btnPanelBook) {
-        btnPanelBook.href = `../booking/booking.html?service=${serviceData.serviceId}`;
+        btnPanelBook.href = `/booking?service=${encodeURIComponent(serviceData.serviceId)}`;
     }
 
     if (statusEl) {
@@ -380,7 +380,7 @@ function recalculatePrice() {
 
     const bookingParams = new URLSearchParams({service:serviceData.dbId});
 
-    const bookingUrl = `../booking/booking.html?${bookingParams.toString()}`;
+    const bookingUrl = `/booking?${bookingParams.toString()}`;
     const stickyBookAction = document.getElementById('btnStickyBookAction');
     if (stickyBookAction) {
         stickyBookAction.href = bookingUrl;
@@ -975,7 +975,7 @@ async function setupRelatedServices() {
 
         return `
             <div class="service-card" data-id="${service.serviceId}">
-                <a href="service-detail.html?id=${service.serviceId}" class="service-card-link">
+                <a href="/service-detail?id=${encodeURIComponent(service.serviceId)}" class="service-card-link">
                     <div class="service-image-wrapper">
                         <span class="service-category-badge">${displayCategory}</span>
                         <img src="${service.image}" alt="${sanitizedName}" class="service-image" loading="lazy" onerror="this.onerror=null; this.src='/assets/images/services/${service.category === 'hotel' ? 'hotel.png' : 'spa.png'}'">
@@ -1011,7 +1011,7 @@ async function setupRelatedServices() {
                     </div>
                 </a>
                 <div class="service-card-actions">
-                    <a href="../booking/booking.html?service=${service.serviceId}" class="service-btn-book">Đặt lịch ngay</a>
+                    <a href="/booking?service=${encodeURIComponent(service.serviceId)}" class="service-btn-book">Đặt lịch ngay</a>
                 </div>
             </div>
         `;

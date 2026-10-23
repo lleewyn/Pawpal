@@ -57,12 +57,12 @@ async function saveContactTicket(payload) {
     const serviceMap = {
         spa: 'Spa và Grooming',
         hotel: 'Khách sạn thú cưng',
-        clinic: 'Phòng khám thú y',
+        taxi: 'Pet Taxi',
         other: 'Khác'
     };
 
     const title = `Liên hệ từ ${payload.fullName}`;
-    const type = 'contact';
+    const type = 'other';
     const content = `Họ tên: ${payload.fullName}
 Số điện thoại: ${payload.phoneNumber}
 Dịch vụ quan tâm: ${serviceMap[payload.serviceInterest] || 'Không chọn'}
@@ -72,10 +72,11 @@ ${payload.message}`;
 
     if (window.PawPalSupport && window.PawPalSupport.createTicket) {
         const result = await window.PawPalSupport.createTicket(title, type, content);
-        return result ? result.id : `CT-${Date.now()}`;
+        if (!result?.id) throw Error('Chưa xác nhận được yêu cầu. Vui lòng thử lại.');
+        return result.id;
     }
 
-    return `CT-${Date.now()}`;
+    throw Error('Chưa kết nối được hỗ trợ. Vui lòng thử lại.');
 }
 
 async function handleSubmit(event) {
@@ -94,6 +95,7 @@ async function handleSubmit(event) {
         submitBtn.innerHTML = 'Đang gửi...';
     }
 
+    try {
     const ticketId = await saveContactTicket(payload);
     const form = document.getElementById('contactForm');
     if (form) form.reset();
@@ -108,6 +110,11 @@ async function handleSubmit(event) {
         'success',
         `PawPal đã nhận tin nhắn của bạn. Mã hỗ trợ: #${shortId}. Chúng tôi sẽ phản hồi sớm nhất.`
     );
+    } catch (error) {
+        showFeedback('error', error.message || 'Chưa gửi được tin nhắn. Vui lòng thử lại.');
+    } finally {
+        if (submitBtn) {submitBtn.disabled=false;submitBtn.textContent='Gửi tin nhắn';}
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -115,12 +122,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.querySelector('.btn-submit');
 
     if (form) {
+        if(form.dataset.contactReady)return;
+        form.dataset.contactReady='true';
         form.addEventListener('submit', handleSubmit);
     }
 
     if (submitBtn && form) {
         submitBtn.addEventListener('click', () => {
-            form.requestSubmit();
+            if(form.reportValidity())handleSubmit({preventDefault(){}});
         });
     }
 });

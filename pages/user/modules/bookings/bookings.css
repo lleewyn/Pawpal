@@ -565,3 +565,42 @@
         text-align: center;
     }
 }
+/* Booking list uses the shared customer account style. */
+.user-portal-body .bookings-module-container{font-family:Inter,system-ui,sans-serif;color:#274b39}
+.user-portal-body .booking-filter-bar{background:transparent;border:0;padding:0;box-shadow:none}
+.user-portal-body .booking-filter-tabs{display:flex;flex-wrap:wrap;gap:12px 24px;border:0}
+.user-portal-body .booking-filter-tab{background:transparent;border:0;border-bottom:2px solid transparent;border-radius:0;padding:10px 0;font-family:Inter,system-ui,sans-serif;font-size:13px;font-weight:500;color:#637a69;white-space:nowrap}
+.user-portal-body .booking-filter-tab.active{color:#214939;font-weight:600;border-bottom-color:#d8a437}
+.user-portal-body .booking-filter-tabs .tab-separator{display:none}
+.user-portal-body .booking-card{background:#fff;border:1px solid #dce5d8;border-radius:9px;padding:24px;box-shadow:none}
+.user-portal-body .booking-card:hover{transform:none;box-shadow:none;border-color:#cbdcc7}
+.user-portal-body .booking-pet-name{font-family:Lora,Inter,serif;font-size:23px;font-weight:600;color:#214939;line-height:1.4}
+.user-portal-body .booking-service-name{font-family:Lora,Inter,serif;font-size:20px;font-weight:500;color:#31553f;line-height:1.5}
+.user-portal-body .booking-meta-row{font-size:13px;line-height:1.8;color:#637a69;gap:8px 16px;flex-wrap:wrap}
+.user-portal-body .booking-price-value{font-family:Inter,system-ui,sans-serif;font-size:19px;font-weight:600;color:#315d46}
+.user-portal-body .booking-badge-status{font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:500;border:0;border-radius:9px;padding:5px 9px;line-height:1.4}
+.user-portal-body .booking-badge-status.status-pending{background:#f5e8d3;color:#734718}
+.user-portal-body .booking-badge-status.status-accepted,.user-portal-body .booking-badge-status.status-confirmed,.user-portal-body .booking-badge-status.status-in-progress{background:#dceaf2;color:#20495e}
+.user-portal-body .booking-badge-status.status-completed{background:#dceee2;color:#165335}
+.user-portal-body .booking-badge-status.status-cancelled{background:#f7dcdc;color:#8f2424}
+.user-portal-body .booking-card-footer-actions{background:transparent;border:0;padding-top:20px;margin-top:12px;gap:12px;flex-wrap:wrap}
+.user-portal-body .bookings-module-container .btn-booking-action{background:#f1f5ed;border:1px solid #d5e0d0;border-radius:9px;color:#31553f;padding:10px 14px;font-family:Inter,system-ui,sans-serif;font-size:12px;box-shadow:none;transform:none}
+.user-portal-body .bookings-module-container .btn-booking-action.btn-action-primary,.user-portal-body .bookings-module-container .btn-booking-primary-cta{background:#214939;border:1px solid #214939;border-radius:9px;color:#fff;font-family:Inter,system-ui,sans-serif;padding:11px 16px;font-size:13px;box-shadow:none;transform:none}
+.user-portal-body .bookings-module-container .btn-booking-action.btn-action-cancel{background:#fff;color:#8f2424;border-color:#eadad5}
+@media(max-width:760px){.user-portal-body .booking-card{padding:22px 18px}.user-portal-body .booking-filter-tabs{gap:8px 18px}.user-portal-body .booking-service-name{font-size:18px}}
+/* Clearer tabs and useful booking details, without empty action space. */
+.user-portal-body .booking-filter-tab{border-radius:0!important;font-size:14px}
+.user-portal-body .booking-filter-tab.active{border-bottom-color:#214939}
+.user-portal-body .booking-service-name{font-weight:600}
+.user-portal-body .booking-card-details{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 24px;margin-top:22px}
+.user-portal-body .booking-card-details>div{display:flex;flex-direction:column;min-width:0;gap:6px}
+.user-portal-body .booking-detail-label{font-size:12px;color:#718476;line-height:1.6}
+.user-portal-body .booking-detail-value{font-size:14px;color:#526d5b;line-height:1.7;overflow-wrap:anywhere}
+.user-portal-body .booking-details-wide{grid-column:span 3}
+.user-portal-body .booking-note-preview{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.user-portal-body .booking-card-footer-actions{padding-top:0;margin-top:20px}
+@media(max-width:760px){.user-portal-body .booking-card-details{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.user-portal-body .booking-details-wide{grid-column:span 2}}
+@media(max-width:480px){.user-portal-body .booking-card-details{grid-template-columns:1fr}.user-portal-body .booking-details-wide{grid-column:auto}}
+/* Cancelled appointments recede gently while remaining readable and clickable. */
+.user-portal-body .bookings-module-container .booking-card.status-cancelled{opacity:.6}
+.user-portal-body .bookings-module-container .booking-card.status-cancelled:hover{opacity:.6}

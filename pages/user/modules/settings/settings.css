@@ -533,3 +533,30 @@ input:checked + .slider:before {
 .toast-container-custom > * {
     pointer-events: auto;
 }
+/* Settings matches the customer account and public pages. */
+.user-portal-body .settings-module-container{font-family:Inter,system-ui,sans-serif;color:#274b39}
+.user-portal-body .settings-grid-custom{gap:24px;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.user-portal-body .settings-column{min-width:0;gap:24px}
+.user-portal-body .settings-card-custom{background:#fff;border:1px solid #dce5d8;border-radius:9px;padding:26px;box-shadow:none;backdrop-filter:none}
+.user-portal-body .settings-card-header-custom{border:0;padding:0;margin-bottom:26px;gap:14px;flex-wrap:wrap}
+.user-portal-body .settings-card-title-custom{font-family:Lora,Inter,serif;font-size:24px;font-weight:600;line-height:1.4;color:#214939}
+.user-portal-body .settings-module-container .form-label-custom{font-family:Inter,system-ui,sans-serif;font-size:13px;font-weight:600;color:#31553f;margin-bottom:9px}
+.user-portal-body .settings-module-container .form-control-custom{min-height:46px;border:1px solid #d1decf;border-radius:9px;background:#fff;padding:12px 60px 12px 14px;font-family:Inter,system-ui,sans-serif;font-size:14px;color:#274b39}
+.user-portal-body .settings-module-container .form-control-custom::placeholder{font-size:12px;color:#879387}
+.user-portal-body .settings-module-container .form-control-custom:focus{border-color:#315d46;box-shadow:0 0 0 3px rgba(49,93,70,.1)}
+.user-portal-body .settings-password-hint{font-size:12px;line-height:1.7;color:#637a69;margin:9px 0 12px}
+.user-portal-body .btn-toggle-password-text{font-family:Inter,system-ui,sans-serif;font-size:12px;color:#315d46}
+.user-portal-body .strength-title,.user-portal-body .strength-value-label{font-size:11px;color:#637a69}
+.user-portal-body .settings-action-row{gap:10px;flex-wrap:wrap;margin-top:24px}
+.user-portal-body .btn-submit-custom{background:#214939;color:white;border:1px solid #214939;border-radius:9px;padding:11px 18px;font-family:Inter,system-ui,sans-serif;font-size:13px;box-shadow:none;transform:none}
+.user-portal-body .btn-submit-custom:not(:disabled):hover{background:#315d46;box-shadow:none;transform:none}
+.user-portal-body .btn-submit-custom:disabled{background:#e2e9df;border-color:#e2e9df;color:#526d5b;opacity:1}
+.user-portal-body .btn-cancel-custom,.user-portal-body .btn-privacy-action{background:#f1f5ed;border:1px solid #d5e0d0;border-radius:9px;padding:11px 18px;font-family:Inter,system-ui,sans-serif;font-size:13px;color:#31553f;box-shadow:none;transform:none}
+.user-portal-body .auto-save-badge{background:#eef4ed;color:#637a69;font-size:11px;font-weight:500}
+.user-portal-body .notification-row-custom{border:0;background:transparent;padding:0;gap:20px}
+.user-portal-body .notification-type-title,.user-portal-body .privacy-item-title{font-size:14px;color:#31553f;font-weight:600}
+.user-portal-body .notification-type-desc,.user-portal-body .privacy-item-desc{font-size:13px;line-height:1.8;color:#637a69;margin-top:6px}
+.user-portal-body .privacy-action-item{background:transparent;border:0;padding:0;gap:18px;align-items:flex-start;flex-direction:column}
+.user-portal-body .settings-module-container .slider{background:#e2e9df}
+@media(max-width:1000px){.user-portal-body .settings-grid-custom{grid-template-columns:1fr}}
+@media(max-width:760px){.user-portal-body .settings-card-custom{padding:22px 18px}.user-portal-body .settings-card-title-custom{font-size:22px}.user-portal-body .settings-card-header-custom{margin-bottom:22px}}

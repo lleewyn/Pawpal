@@ -1493,3 +1493,61 @@
     :has(> .sd-loading-placeholder) > * { transition: none; }
     .sd-loading-placeholder .pawpal-skeleton { animation: none !important; }
 }
+/* Public detail follows the shared Lora / Inter editorial layout. */
+.service-detail-page-body{--sd-primary:#214939;--sd-primary-hover:#315d46;--sd-text-main:#274b39;--sd-text-muted:#637a69;--sd-border:#dce5d8;--sd-radius-lg:9px;--sd-shadow:none;background:#fff;font-family:Inter,system-ui,sans-serif}
+.service-detail-main .container-xl{max-width:1600px;padding-left:40px;padding-right:40px}
+.service-detail-page-body .service-breadcrumb-section{background:#fff;padding:22px 0 28px}
+.service-detail-page-body .service-breadcrumb{font-size:12px;line-height:1.7}
+.service-detail-page-body .btn-back-link{display:none}
+.service-detail-page-body .service-detail-layout{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:48px;align-items:start}
+.service-detail-page-body .service-images-column,.service-detail-page-body .service-info-column{min-width:0;height:auto}
+.service-detail-page-body .sd-gallery-card{padding:0;border:0;background:transparent;box-shadow:none;gap:16px;height:auto}
+.service-detail-page-body .service-main-image-wrapper{border-radius:9px;aspect-ratio:6/5;height:auto;overflow:hidden;background:#f1f5ed}
+.service-detail-page-body .service-main-image{width:100%;height:100%;object-fit:cover}
+.service-detail-page-body .service-thumbnails-row{gap:10px;overflow-x:auto;padding:0 0 4px}
+.service-detail-page-body .gallery-thumb{border-radius:7px;flex-shrink:0;box-shadow:none}
+.service-detail-page-body .sd-gallery-actions{padding:4px 0;border:0;flex-wrap:wrap;gap:12px}
+.service-detail-page-body .share-label,.service-detail-page-body .favorite-counter{font-size:12px}
+.service-detail-page-body .btn-share-service{background:#f1f5ed;border:0;border-radius:7px;font-size:12px;color:#31553f}
+.service-detail-page-body .service-wishlist-btn-large{top:16px;right:16px;width:42px;height:42px;border:1px solid #dce5d8;background:#fff;color:#31553f;box-shadow:0 2px 8px #21493912}
+.service-detail-page-body .service-wishlist-btn-large.liked svg{fill:#a43d38;stroke:#a43d38}
+.service-detail-page-body .sd-summary-card{padding:6px 0 0;border:0;border-radius:0;background:transparent;box-shadow:none;gap:22px}
+.service-detail-page-body .sd-top-header-row{gap:10px;flex-wrap:wrap}
+.service-detail-page-body .sd-service-id{background:#f1f5ed;color:#8b691f;border:0;border-radius:4px;font-size:11px;padding:4px 7px}
+.service-detail-page-body .service-category-tag,.service-detail-page-body .service-rating-badge .rating-text{font-size:12px;color:#637a69}
+.service-detail-page-body .service-title{font-family:Lora,Inter,serif;font-size:clamp(28px,3vw,42px);font-weight:600;line-height:1.3;color:#214939;margin:0}
+.service-detail-page-body .sd-compact-meta-row{gap:10px 16px;flex-wrap:wrap;font-size:13px;line-height:1.8;padding:0;background:transparent;border:0}
+.service-detail-page-body .variant-label{font-size:13px;color:#526d5b;margin-bottom:12px}
+.service-detail-page-body .config-pill-btn{border:1px solid #d1decf;border-radius:7px;background:#fff;color:#526d5b;font-family:Inter,system-ui,sans-serif;font-size:13px;padding:10px 16px;box-shadow:none}
+.service-detail-page-body .config-pill-btn.active{background:#eef4ed;border-color:#315d46;color:#214939}
+.service-detail-page-body .sd-summary-footer{margin-top:0;gap:18px}
+.service-detail-page-body .sd-price-row{background:#f3f7ee;border:0;border-radius:9px;padding:20px 22px}
+.service-detail-page-body .price-label-small{font-size:12px;font-weight:400}
+.service-detail-page-body .price-main{font-size:28px;color:#315d46;font-weight:600;line-height:1.4;margin-top:5px}
+.service-detail-page-body .btn-book-service-now{background:#214939;border-radius:9px;font-family:Inter,system-ui,sans-serif;font-size:14px;padding:14px 22px;box-shadow:none}
+.service-detail-page-body .sd-trust-perks{background:transparent;border:0;padding:0;gap:12px 18px}
+.service-detail-page-body .trust-perk-item{white-space:normal;font-size:12px;font-weight:400;line-height:1.6;color:#637a69}
+.service-detail-page-body .service-tabs-section{margin-top:48px!important}
+.service-detail-page-body .service-tabs-nav{border:0;gap:28px;padding:0;margin-bottom:24px}
+.service-detail-page-body .service-tabs-nav .tab-btn{padding:12px 0;margin:0;border-radius:0;font-size:14px;font-family:Inter,system-ui,sans-serif;background:transparent;box-shadow:none}
+.service-detail-page-body .service-tabs-nav .tab-btn.active{background:transparent;border-bottom-color:#d8a437}
+.service-detail-page-body .service-tabs-section .tab-content{border:1px solid #dce5d8;border-radius:9px;padding:30px;box-shadow:none}
+.service-detail-page-body .desc-meta-card{background:transparent;border:0;padding:0 0 24px;margin-bottom:24px;border-radius:0}
+.service-detail-page-body .sd-tab-title,.service-detail-page-body .sd-section-subtitle,.service-detail-page-body .safety-heading{font-family:Lora,Inter,serif;color:#214939;font-weight:600;line-height:1.4}
+.service-detail-page-body .sd-desc-text,.service-detail-page-body .safety-desc{font-size:14px;line-height:1.85;color:#526d5b}
+.service-detail-page-body .benefit-card{background:transparent;border:0;box-shadow:none;padding:12px 0}
+.service-detail-page-body .safety-assurance-callout{background:#f3f7ee;border:0;border-radius:9px;padding:24px}
+.service-detail-page-body .safety-badge{background:transparent;border:0;color:#637a69;padding:0;margin-bottom:10px;font-size:11px}
+.service-detail-page-body .service-card{border:1px solid #dce5d8;border-radius:9px;background:#fff;box-shadow:none;overflow:hidden}
+.service-detail-page-body .service-card-info{padding:18px}
+.service-detail-page-body .service-card-title{font-family:Lora,Inter,serif;color:#214939;line-height:1.4}
+.service-detail-page-body .service-card-desc{font-size:13px;line-height:21px;height:42px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.service-detail-page-body .service-card-actions{padding:0 18px 18px}
+.service-detail-page-body .service-btn-book{background:#214939;box-shadow:none}
+.service-detail-page-body .btn-book-service-now:hover,.service-detail-page-body .config-pill-btn:hover,.service-detail-page-body .gallery-thumb:hover,.service-detail-page-body .service-card:hover,.service-detail-page-body .service-wishlist-btn-large:hover{transform:none;box-shadow:none}
+@media(max-width:1000px){.service-detail-page-body .service-detail-layout{gap:28px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.service-detail-page-body .sd-trust-perks{grid-template-columns:1fr}.service-detail-main .container-xl{padding-left:24px;padding-right:24px}}
+@media(max-width:760px){.service-detail-main .container-xl{padding-left:18px;padding-right:18px}.service-detail-page-body .service-detail-layout{grid-template-columns:1fr;gap:26px}.service-detail-page-body .service-main-image-wrapper{aspect-ratio:4/3}.service-detail-page-body .service-tabs-nav{gap:22px}.service-detail-page-body .service-tabs-section .tab-content{padding:22px 18px}.service-detail-page-body .sd-trust-perks{grid-template-columns:repeat(2,minmax(0,1fr))}.service-detail-page-body .service-tabs-section{margin-top:30px!important}.service-detail-page-body .sd-summary-card{gap:20px}}
+.service-detail-page-body .gallery-thumb{width:88px;height:70px;flex:0 0 88px}
+.service-detail-page-body .service-category-tag{text-transform:none;letter-spacing:0}
+.service-detail-page-body .sd-nav-btn{width:36px;height:36px;box-shadow:none}
+.service-detail-page-body .related-services-section-card{border:0;border-radius:0;background:transparent;padding:24px 0;box-shadow:none}

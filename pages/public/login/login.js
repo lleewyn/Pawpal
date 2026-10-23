@@ -267,8 +267,22 @@
         on('triggerForgot', 'click', event => { event.preventDefault(); clearChallenge(); show('forgotPhoneSection'); byId('forgotPhone').value = value('loginPhone'); });
         on('forgotPhoneForm', 'submit', event => { event.preventDefault(); run(byId('forgotPhoneForm').querySelector('button[type=submit]'), () => sendOtp(value('forgotPhone'), 'reset')); });
         for (const id of ['btnForgotBackToLogin', 'btnForgotOtpBack']) on(id, 'click', () => { clearChallenge(); show(id === 'btnForgotOtpBack' ? 'forgotPhoneSection' : 'loginForm'); });
-        const validateReset = () => { byId('btnForgotNewPasswordSubmit').disabled = !(validPassword(password('forgotNewPassword')) && password('forgotNewPassword') === password('forgotConfirmNewPassword')); };
-        for (const id of ['forgotNewPassword', 'forgotConfirmNewPassword']) on(id, 'input', validateReset);
+        const validateReset = () => {
+            const pass = password('forgotNewPassword'), confirm = password('forgotConfirmNewPassword');
+            const invalidPass = pass.length > 0 && !validPassword(pass);
+            const mismatch = confirm.length > 0 && pass !== confirm;
+            byId('forgotPasswordFeedback').classList.toggle('d-block', invalidPass);
+            byId('forgotConfirmFeedback').classList.toggle('d-block', mismatch);
+            for (const [id, invalid] of [['forgotNewPassword', invalidPass], ['forgotConfirmNewPassword', mismatch]]) {
+                byId(id).classList.toggle('is-invalid', invalid);
+                byId(id).setAttribute('aria-invalid', String(invalid));
+            }
+            byId('btnForgotNewPasswordSubmit').disabled = !(validPassword(pass) && pass === confirm);
+        };
+        for (const id of ['forgotNewPassword', 'forgotConfirmNewPassword']) {
+            on(id, 'input', validateReset);
+            on(id, 'change', validateReset);
+        }
         on('forgotNewPasswordForm', 'submit', event => {
             event.preventDefault();
             run(byId('btnForgotNewPasswordSubmit'), async () => {

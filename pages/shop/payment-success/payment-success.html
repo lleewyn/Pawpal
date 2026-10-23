@@ -1,2 +1,29 @@
-<!doctype html>
-<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Thông tin đơn hàng</title><script src="/pages/shop/payment-success/payment-success.js" defer></script></head><body><p>Đang mở thông tin đơn hàng…</p><a href="/user#orders">Xem đơn hàng của tôi</a></body></html>
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kết quả đặt hàng - PawPal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/style.css"><link rel="stylesheet" href="/pages/shop/payment-success/payment-success.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/scripts/api/supabase-client.js"></script>
+<script src="/scripts/shared/components.js" defer></script>
+<script type="module" src="/pages/shop/payment-success/payment-success.js"></script>
+</head>
+<body class="payment-success-public">
+<header class="main-header" id="mainHeader"></header>
+<main class="payment-result-shell">
+<section class="payment-result-card" id="paymentResult" aria-busy="true" aria-live="polite">
+<div class="payment-result-mark" id="resultMark" data-state="pending" aria-hidden="true">…</div>
+<h1 id="resultTitle">Đang kiểm tra đơn hàng</h1>
+<p id="resultMessage">Vui lòng chờ trong khi PawPal xác nhận thông tin đơn hàng của bạn.</p>
+<dl id="resultDetails" hidden>
+<div><dt>Mã đơn hàng</dt><dd id="resultOrderCode"></dd></div>
+<div><dt>Tổng tiền đơn hàng</dt><dd id="resultAmount"></dd></div>
+<div><dt>Trạng thái đơn hàng</dt><dd id="resultOrderStatus"></dd></div>
+<div><dt>Thanh toán</dt><dd id="resultPaymentStatus"></dd></div>
+</dl>
+<div class="payment-result-actions"><a href="/user#orders" class="result-primary" id="resultViewOrder">Xem đơn hàng</a><button type="button" id="resultRetry" hidden>Kiểm tra lại</button><a href="/shop" class="result-secondary">Tiếp tục mua sắm</a></div>
+</section>
+</main><div id="site-footer"></div><div id="site-fab"></div>
+</body></html>

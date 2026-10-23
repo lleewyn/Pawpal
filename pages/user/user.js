@@ -126,6 +126,15 @@
 
     const { createLatestRenderer } = await import('/scripts/shared/latest-render.mjs');
     const moduleRenderer = createLatestRenderer();
+    // Session-only previews never cross an authenticated customer boundary.
+    const moduleHtmlCache = new Map();
+    const routePreviewCache = new Map();
+    let displayedRouteKey = null;
+    const assetVersion = 'account-20261023';
+    function routeCacheKey(routeKey) {
+        const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        return `${user?.id || ''}:${routeKey}:${window.location.hash.split('?')[1] || ''}`;
+    }
 
     // 2. Định nghĩa cấu hình Routing
     const ROUTE_CONFIG = {
@@ -279,7 +288,8 @@
             if (existingLink) existingLink.remove();
             return Promise.resolve();
         }
-        const fullHref = (cssHref.startsWith('/') ? cssHref : `/pages/user/${cssHref}`) + '?v=' + Date.now();
+        const fullHref = (cssHref.startsWith('/') ? cssHref : `/pages/user/${cssHref}`) + '?v=' + assetVersion;
+        if (existingLink?.getAttribute('href') === fullHref) return Promise.resolve();
         const link = document.createElement('link');
         link.id = 'dynamic-user-module-css-pending';
         link.rel = 'stylesheet';
@@ -305,7 +315,7 @@
         if (existingScript) existingScript.remove();
 
         if (!scriptSrc) return;
-        const fullSrc = (scriptSrc.startsWith('/') ? scriptSrc : `/pages/user/${scriptSrc}`) + '?v=' + Date.now();
+        const fullSrc = (scriptSrc.startsWith('/') ? scriptSrc : `/pages/user/${scriptSrc}`) + '?v=' + assetVersion;
         if (isModule) {
             try {
                 if (activeModuleDispose) await activeModuleDispose();
@@ -444,6 +454,27 @@
         const ticket = moduleRenderer.begin();
         const contentContainer = document.getElementById('userAppContent');
         if (!contentContainer) return;
+        if (displayedRouteKey && contentContainer.getAttribute('aria-busy') !== 'true') {
+            const view = contentContainer.querySelector('.user-module-view');
+            // Never retain passwords or an unfinished edit form in a preview.
+            if (view && !view.querySelector('input[type="password"], form')) {
+                routePreviewCache.set(displayedRouteKey, view.cloneNode(true));
+            }
+        }
+        const nextRouteKey = routeCacheKey(routeKey);
+        displayedRouteKey = nextRouteKey;
+        document.getElementById('userRoutePreview')?.remove();
+        const cachedPreview = routePreviewCache.get(nextRouteKey);
+        let preview;
+        if (cachedPreview) {
+            preview = cachedPreview.cloneNode(true);
+            preview.id = 'userRoutePreview';
+            preview.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+            preview.setAttribute('aria-hidden', 'true');
+            preview.inert = true;
+            preview.style.cssText = 'position:absolute;inset:0;z-index:2;background:white;pointer-events:none';
+            contentContainer.appendChild(preview);
+        }
 
         const config = ROUTE_CONFIG[routeKey] || ROUTE_CONFIG['profile'];
         updateBreadcrumb(routeKey);
@@ -454,18 +485,26 @@
             <div class="user-route-skeleton-stats">${Array.from({ length: 3 }, () => `<div class="user-route-skeleton-panel" aria-hidden="true"><div class="pawpal-skeleton" style="width:50%;height:24px"></div><div class="pawpal-skeleton" style="width:75%;height:14px"></div></div>`).join('')}</div>
             <div class="user-route-skeleton-panel" aria-hidden="true">${Array.from({ length: 5 }, () => `<div class="user-route-skeleton-row"><div class="pawpal-skeleton" style="width:65%;height:18px"></div><div class="pawpal-skeleton" style="width:20%;height:18px"></div></div>`).join('')}</div>
         </div>`;
+        if (preview) contentContainer.appendChild(preview);
 
         // Nạp trực tiếp module chuẩn từ modules/ để tránh hiện tượng tải 2 bước
         if (config.modulePath) {
             try {
-                const fullModuleUrl = (config.modulePath.startsWith('/') ? config.modulePath : `/pages/user/${config.modulePath}`) + `?v=${Date.now()}`;
-                const res = await fetch(fullModuleUrl);
-                if (res.ok) {
-                    const html = await res.text();
+                const fullModuleUrl = (config.modulePath.startsWith('/') ? config.modulePath : `/pages/user/${config.modulePath}`) + `?v=${assetVersion}`;
+                if (!moduleHtmlCache.has(fullModuleUrl)) {
+                    const pending = fetch(fullModuleUrl).then(res => {
+                        if (!res.ok) throw new Error('Không thể tải nội dung tài khoản.');
+                        return res.text();
+                    }).catch(error => { moduleHtmlCache.delete(fullModuleUrl); throw error; });
+                    moduleHtmlCache.set(fullModuleUrl, pending);
+                }
+                {
+                    const html = await moduleHtmlCache.get(fullModuleUrl);
                     if (config.moduleCss) await loadModuleCss(config.moduleCss);
                     if (!moduleRenderer.isCurrent(ticket)) return;
                     await moduleRenderer.commit(ticket, async () => {
                         contentContainer.innerHTML = `<div class="user-module-view">${html}</div>`;
+                        if (preview) contentContainer.appendChild(preview);
                         if (routeKey === 'pets') {
                             const petParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
                             const hasPetDeepLink = petParams.get('action') === 'create'
@@ -478,6 +517,7 @@
                         if (config.moduleScript) await loadModuleScript(config.moduleScript, true);
                         if (moduleRenderer.isCurrent(ticket)) {
                             contentContainer.setAttribute('aria-busy', 'false');
+                            preview?.remove();
                             contentContainer.querySelector('.user-module-view')?.classList.add('user-route-ready');
                             if (window.lucide) window.lucide.createIcons();
                         }
