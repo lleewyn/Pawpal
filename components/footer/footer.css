@@ -118,6 +118,13 @@
     font-size: 1.8rem;
 }
 
+.main-footer .footer-logo img {
+    height: 68px;
+    max-height: none;
+    width: auto;
+    max-width: 100%;
+}
+
 .brand-description {
     font-size: 0.85rem;
     line-height: 1.7;
