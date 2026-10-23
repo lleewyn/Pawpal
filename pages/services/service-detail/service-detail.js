@@ -868,37 +868,13 @@ function setupWishlistAndShare() {
     const shareBtn = document.getElementById('btnShareService');
     if (!likeBtn || !serviceData) return;
 
-    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    const phone = user ? user.phone : null;
-    const serviceKey = phone ? `pawpal_wishlist_services_${phone}` : 'pawpal_wishlist_services_guest';
-    const productKey = phone ? `pawpal_wishlist_${phone}` : 'pawpal_wishlist_guest';
-
-    const savedWishlist = JSON.parse(localStorage.getItem(serviceKey) || '[]');
-    currentLikedState = savedWishlist.includes(String(serviceData.dbId || serviceData.serviceId));
-
-    updateLikeButtonUI();
-
-    likeBtn.addEventListener('click', () => {
-        let list = JSON.parse(localStorage.getItem(serviceKey) || '[]');
-        const targetId = String(serviceData.dbId || serviceData.serviceId);
-        if (currentLikedState) {
-            list = list.filter(id => String(id) !== targetId);
-            currentLikedState = false;
-            showToast('Đã xóa dịch vụ khỏi danh sách yêu thích');
-        } else {
-            list.push(targetId);
-            currentLikedState = true;
-            showToast('Đã lưu dịch vụ vào danh sách yêu thích!');
-        }
-        
-        if (window.saveWishlist) {
-            const productIds = JSON.parse(localStorage.getItem(productKey) || '[]');
-            window.saveWishlist(productIds, list);
-        } else {
-            localStorage.setItem(serviceKey, JSON.stringify(list));
-        }
-        
-        updateLikeButtonUI();
+    const targetId=String(serviceData.dbId || serviceData.id);
+    let saving=false;
+    (async()=>{try{const user=JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');if(!user?.id)return;const {API}=await import('/scripts/api/api.js');const state=await API.getUserWishlist(user.id);currentLikedState=state.serviceIds.includes(targetId);updateLikeButtonUI();}catch{currentLikedState=false;updateLikeButtonUI();}})();
+    likeBtn.addEventListener('click',async()=>{
+        if(saving)return;saving=true;likeBtn.disabled=true;
+        try{const user=JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');if(!user?.id)throw Error('SIGN_IN_REQUIRED');const {API}=await import('/scripts/api/api.js');const result=await API.setWishlistItem(user.id,targetId,true,!currentLikedState);currentLikedState=result.action==='added';updateLikeButtonUI();showToast(currentLikedState?'Đã lưu yêu thích':'Đã bỏ yêu thích');}
+        catch{showToast('Chưa lưu được yêu thích. Vui lòng đăng nhập và thử lại.');}finally{saving=false;likeBtn.disabled=false;}
     });
 
     if (shareBtn) {

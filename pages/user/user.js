@@ -3,6 +3,9 @@
  */
 
 (async function () {
+    let pageLeaving=false;
+    window.addEventListener('pagehide',()=>{pageLeaving=true;});
+    window.addEventListener('beforeunload',()=>{pageLeaving=true;});
     let redirecting = false;
     function requireLogin() {
         if (redirecting) return false;
@@ -112,6 +115,7 @@
             if (!checkAuth()) return;
             await window.PawpalCustomerAuth.accept(result);
         } catch (err) {
+            if(pageLeaving)return;
             console.warn('[UserPortal] Không thể xác nhận phiên khách hàng:', err.message);
             localStorage.removeItem('pawpal_current_user');
             sessionStorage.removeItem('pawpal_current_user');

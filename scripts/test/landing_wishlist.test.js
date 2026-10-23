@@ -26,7 +26,7 @@ function fixture({ user = { id: 'customer-1', phone: '0911223344' }, toggle, loa
         document: { dispatchEvent() {}, addEventListener() {} },
         window: {
             showGlobalToast: (type, message) => notices.push({ type, message }),
-            API: { getUserWishlist: load, saveUserWishlist: async (...args) => {
+            API: { getUserWishlist: load, setWishlistItem: async (...args) => {
                 calls.push(JSON.parse(JSON.stringify(args)));
                 return toggle ? toggle(...args) : { success: true };
             } },
@@ -49,8 +49,8 @@ test('SP01 toggles on and off using persisted API results', async () => {
     await f.click();
     assert.ok(!f.states.has('active'));
     assert.equal(f.attributes['aria-pressed'], 'false');
-    assert.deepEqual(f.calls, [['customer-1', { productIds: ['SP01'] }], ['customer-1', { productIds: [] }]]);
-    assert.equal(f.stored.get('pawpal_wishlist_0911223344'), '[]');
+    assert.deepEqual(f.calls, [['customer-1', 'SP01', false, true], ['customer-1', 'SP01', false, false]]);
+    assert.equal(f.stored.has('pawpal_wishlist_0911223344'), false);
     assert.equal(f.stored.has('pawpal_wishlist_guest'), false);
 });
 

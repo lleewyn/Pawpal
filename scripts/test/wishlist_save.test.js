@@ -1,43 +1,12 @@
-const { test } = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const vm = require('node:vm');
-
-function fixture({ failRead = false, failInsert = false, failAuth = false } = {}) {
-    const rows = [{ id: 'old-product', product_id: 'SP02' }, { id: 'service', service_id: 'SV01' }];
-    const inserts = [], deletes = [];
-    const db = { from: () => ({
-        select: () => ({ eq: async () => ({ data: rows, error: failRead ? new Error('Read rejected') : null }) }),
-        insert: async items => { inserts.push(...items); return { error: failInsert ? new Error('Insert rejected') : null }; },
-        delete: () => ({ eq: () => ({ in: async (column, ids) => { deletes.push(...ids); return { error: null }; } }) }),
-    }) };
-    const source = fs.readFileSync('scripts/api/api.js', 'utf8');
-    const start = source.indexOf('    async saveUserWishlist(');
-    const end = source.indexOf('    async toggleWishlist(', start);
-    const context = {
-        window: { getSupabaseClient: () => db },
-        resolveCustomerId: async (client, id) => { if (failAuth) throw new Error('Unauthorized'); return id; },
-    };
-    vm.runInNewContext('globalThis.api = {' + source.slice(start, end) + '};', context);
-    context.api.getOrCreateWishlist = async () => ({ id: 'wishlist-1' });
-    return { save: ids => context.api.saveUserWishlist('customer-1', { productIds: ids }), inserts, deletes };
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+function fixture({failAuth=false,failRpc=false,foreign=false}={}){
+ const calls=[],events=[];
+ const db={auth:{getUser:async()=>({})},rpc:async(name,args)=>{calls.push({name,args});return {data:name==='own_wishlist_snapshot'?{customer_id:foreign?'other':'owner',productIds:[],serviceIds:[]}:args.p_saved,error:failRpc?Error('Rejected'):null};}};
+ const context={window:{getSupabaseClient:()=>db},document:{dispatchEvent:event=>events.push(event)},CustomEvent:class{},wishlistIntents:new Map(),resolveCustomerId:async()=>{if(failAuth)throw Error('Denied');return 'owner';}};
+ const source=fs.readFileSync('scripts/api/api.js','utf8');vm.runInNewContext('globalThis.api={'+source.slice(source.indexOf('    async getUserWishlist('),source.indexOf('    async getUserById('))+'};',context);
+ return {api:context.api,calls,events};
 }
-
-test('saveUserWishlist updates product entries and preserves service entries', async () => {
-    const f = fixture();
-    assert.equal((await f.save(['SP01', 'SP01'])).success, true);
-    assert.deepEqual(JSON.parse(JSON.stringify(f.inserts)), [{ wishlist_id: 'wishlist-1', product_id: 'SP01' }]);
-    assert.deepEqual(f.deletes, ['old-product']);
-});
-test('empty product list removes products only', async () => {
-    const f = fixture(); await f.save([]);
-    assert.deepEqual(f.inserts, []);
-    assert.deepEqual(f.deletes, ['old-product']);
-});
-for (const failure of ['failRead', 'failInsert', 'failAuth']) {
-    test(`${failure} prevents deletion of existing wishlist entries`, async () => {
-        const f = fixture({ [failure]: true });
-        await assert.rejects(f.save(['SP01']));
-        assert.deepEqual(f.deletes, []);
-    });
-}
+test('explicit save and remove pass authenticated owner and desired state to RPC',async()=>{const f=fixture();await f.api.setWishlistItem('owner','item',false,true);await f.api.setWishlistItem('owner','item',true,false);assert.deepEqual(JSON.parse(JSON.stringify(f.calls)),[{name:'set_own_wishlist_item',args:{p_kind:'product',p_item:'item',p_saved:true,p_expected_owner:'owner'}},{name:'set_own_wishlist_item',args:{p_kind:'service',p_item:'item',p_saved:false,p_expected_owner:'owner'}}]);assert.equal(f.events.length,2);});
+test('failed auth makes no mutation',async()=>{const f=fixture({failAuth:true});await assert.rejects(f.api.setWishlistItem('owner','item',false,true));assert.equal(f.calls.length,0);});
+test('failed RPC never publishes success',async()=>{const f=fixture({failRpc:true});await assert.rejects(f.api.setWishlistItem('owner','item',false,true));assert.equal(f.events.length,0);});
+test('snapshot for another owner is rejected',async()=>{const f=fixture({foreign:true});await assert.rejects(f.api.getUserWishlist('owner'));});

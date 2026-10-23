@@ -69,31 +69,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    function getWishlistStorageKey() {
-        const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-        return user && user.phone ? `pawpal_wishlist_${user.phone}` : 'pawpal_wishlist_guest';
-    }
-
-    function loadWishlistIds() {
-        try {
-            return JSON.parse(localStorage.getItem(getWishlistStorageKey()) || '[]');
-        } catch {
-            return [];
-        }
-    }
-
-    function saveWishlistIds(ids) {
-        const finalIds = Array.isArray(ids) ? ids : [];
-        if (window.saveWishlist) {
-            const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-            const phone = user ? user.phone : null;
-            const serviceKey = phone ? `pawpal_wishlist_services_${phone}` : 'pawpal_wishlist_services_guest';
-            const serviceIds = JSON.parse(localStorage.getItem(serviceKey) || '[]');
-            window.saveWishlist(finalIds, serviceIds);
-        } else {
-            localStorage.setItem(getWishlistStorageKey(), JSON.stringify(finalIds));
-        }
-    }
+    let wishlistIds=[];
+    let wishlistSaving=false;
+    function loadWishlistIds(){return wishlistIds;}
+    (async()=>{try{const user=JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');if(!user?.id)return;const {API}=await import('/scripts/api/api.js');const state=await API.getUserWishlist(user.id);wishlistIds=state.productIds;refreshProductWishlistButtons();document.querySelectorAll('.wishlist-btn').forEach(b=>updateWishlistButtonState(b,b.dataset.productId));}catch{wishlistIds=[];}})();
 
     function isProductInWishlist(productId) {
         const wishlist = loadWishlistIds();
@@ -114,22 +93,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    function toggleWishlistItem(productId) {
-        const currentWishlist = loadWishlistIds();
-        const idString = String(productId);
-        const filtered = currentWishlist.filter(item => {
-            if (item && typeof item === 'object' && item.id !== undefined) {
-                return String(item.id) !== idString;
-            }
-            return String(item) !== idString;
-        });
-
-        const added = filtered.length === currentWishlist.length;
-        if (added) {
-            filtered.push(productId);
-        }
-        saveWishlistIds(filtered);
-        return added;
+    async function toggleWishlistItem(productId){
+        if(wishlistSaving)return null;wishlistSaving=true;
+        try{const user=JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');if(!user?.id)throw Error('SIGN_IN_REQUIRED');const {API}=await import('/scripts/api/api.js');const result=await API.setWishlistItem(user.id,productId,false,!isProductInWishlist(productId));const added=result.action==='added';wishlistIds=wishlistIds.filter(id=>String(id)!==String(productId));if(added)wishlistIds.push(String(productId));return added;}
+        catch{showToast('Chưa lưu được yêu thích. Vui lòng đăng nhập và thử lại.','error');return null;}finally{wishlistSaving=false;}
     }
 
     function ensureWishlistButtons() {
@@ -137,7 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const productId = btn.dataset.productId;
             if (!productId) return;
             updateWishlistButtonState(btn, productId);
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
                 if (!user) {
@@ -145,7 +112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return;
                 }
 
-                const added = toggleWishlistItem(productId);
+                const added = await toggleWishlistItem(productId);if(added===null)return;
                 btn.classList.toggle('active', added);
                 showToast(added ? 'Đã thêm vào danh sách yêu thích' : 'Đã bỏ khỏi danh sách yêu thích', 'success');
             });
@@ -156,6 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const wishlistBtn = document.getElementById('wishlistBtn');
 
     function refreshProductWishlistButtons() {
+        const counter=document.getElementById('favoriteCounter');if(counter)counter.hidden=true;
         const productId = currentLoadedProduct?.id;
         if (!productId) return;
 
@@ -173,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             favoriteProductBtn.classList.add('active');
         }
 
-        favoriteProductBtn.addEventListener('click', (e) => {
+        favoriteProductBtn.addEventListener('click', async (e) => {
             e.preventDefault();
             const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
             if (!user) {
@@ -187,13 +155,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            const added = toggleWishlistItem(productId);
+            const added = await toggleWishlistItem(productId);if(added===null)return;
             refreshProductWishlistButtons();
-            const counter = document.getElementById('favoriteCounter');
-            if (counter) {
-                let current = parseInt(counter.textContent) || 120;
-                counter.textContent = added ? `${current + 1} lượt thích` : `${Math.max(0, current - 1)} lượt thích`;
-            }
             showToast(added ? 'Đã thêm vào danh sách yêu thích' : 'Đã bỏ khỏi danh sách yêu thích', 'success');
         });
     }
@@ -203,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             wishlistBtn.classList.add('active');
         }
 
-        wishlistBtn.addEventListener('click', (e) => {
+        wishlistBtn.addEventListener('click', async (e) => {
             e.preventDefault();
             const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
             if (!user) {
@@ -217,7 +180,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            const added = toggleWishlistItem(productId);
+            const added = await toggleWishlistItem(productId);if(added===null)return;
             refreshProductWishlistButtons();
             showToast(added ? 'Đã thêm vào danh sách yêu thích' : 'Đã bỏ khỏi danh sách yêu thích', 'success');
         });
@@ -650,14 +613,14 @@ async function bindRelatedProductCards() {
 
             const wishlist = card.querySelector('.wishlist-btn');
             if (wishlist) {
-                wishlist.addEventListener('click', (e) => {
+                wishlist.addEventListener('click', async (e) => {
                     e.preventDefault(); e.stopPropagation();
                     const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
                     if (!user) {
                         if(typeof showToast === 'function') showToast('Vui lòng đăng nhập để thêm vào danh sách yêu thích!', 'warning');
                         return;
                     }
-                    const added = typeof toggleWishlistItem === 'function' ? toggleWishlistItem(String(product.id)) : false;
+                    const added = typeof toggleWishlistItem === 'function' ? await toggleWishlistItem(String(product.id)) : null;if(added===null)return;
                     wishlist.classList.toggle('active', added);
                     if(typeof showToast === 'function') showToast(added ? 'Đã thêm vào danh sách yêu thích' : 'Đã bỏ khỏi danh sách yêu thích', 'success');
                 });

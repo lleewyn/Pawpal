@@ -514,7 +514,7 @@ function setupLandingProductWishlist(grid) {
         const requestVersion = ++version;
         currentContext = context.identity;
         let cached = [];
-        try { cached = JSON.parse(localStorage.getItem(context.key) || '[]'); } catch {}
+        try { if(!context.member)cached = JSON.parse(localStorage.getItem(context.key) || '[]'); } catch {}
         selectedIds.clear();
         if (Array.isArray(cached)) cached.forEach(id => selectedIds.add(String(id)));
         grid.syncLandingWishlist();
@@ -523,7 +523,7 @@ function setupLandingProductWishlist(grid) {
         const wishlist = await window.API.getUserWishlist(context.user.id, { strict: true });
         if (requestVersion !== version || contextFor().identity !== context.identity) return;
         const ids = (wishlist.productIds || []).map(String);
-        localStorage.setItem(context.key, JSON.stringify(ids));
+        // Authenticated wishlist is authoritative in Cloud.
         selectedIds.clear();
         ids.forEach(id => selectedIds.add(id));
         grid.syncLandingWishlist();
@@ -553,12 +553,12 @@ function setupLandingProductWishlist(grid) {
             if (active) nextIds.add(id);
             else nextIds.delete(id);
             if (context.member) {
-                if (!window.API?.saveUserWishlist) throw new Error('Wishlist unavailable');
-                const result = await window.API.saveUserWishlist(context.user.id, { productIds: [...nextIds] });
+                if (!window.API?.setWishlistItem) throw new Error('Wishlist unavailable');
+                const result = await window.API.setWishlistItem(context.user.id,id,false,active);
                 if (!result?.success) throw new Error('Wishlist save failed');
             }
             if (contextFor().identity !== context.identity) return;
-            localStorage.setItem(context.key, JSON.stringify([...nextIds]));
+            if(!context.member)localStorage.setItem(context.key, JSON.stringify([...nextIds]));
             setState(id, active);
             notify(active ? 'Đã thêm vào yêu thích' : 'Đã bỏ khỏi yêu thích');
             document.dispatchEvent(new CustomEvent('wishlist_updated'));
@@ -595,7 +595,7 @@ function setupLandingServiceWishlist(grid) {
                 const id = btn.dataset.serviceId;
                 if (serviceIds.includes(id)) btn.classList.add('active');
             });
-        });
+        }).catch(()=>{});
     }
 
     grid.querySelectorAll('.svc-wishlist-btn').forEach((btn) => {
@@ -608,7 +608,8 @@ function setupLandingServiceWishlist(grid) {
                 return;
             }
             const serviceId = String(btn.dataset.serviceId || '');
-            if (window.API && window.API.toggleWishlist) {
+            if(btn.disabled)return;btn.disabled=true;
+            try { if (window.API && window.API.toggleWishlist) {
                 const res = await window.API.toggleWishlist(u.id, serviceId, true);
                 if (res && res.success) {
                     if (res.action === 'added') {
@@ -619,7 +620,7 @@ function setupLandingServiceWishlist(grid) {
                         miniToast('Đã bỏ khỏi yêu thích');
                     }
                 }
-            }
+            }} catch { miniToast('Chưa lưu được yêu thích. Vui lòng thử lại.','warning'); } finally {btn.disabled=false;}
         });
     });
 }

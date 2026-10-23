@@ -2,6 +2,7 @@ import { normalizeOrderStatus } from '/scripts/shared/order-status.mjs';
 import { resolveAuthenticatedCustomerId } from '/scripts/shared/customer-identity.mjs';
 import { normalizeCartItems, publishCart } from '/scripts/shared/cart-state.mjs';
 
+const wishlistIntents = new Map();
 let cartWriteQueue = Promise.resolve();
 function queueCartWrite(task) {
     const result = cartWriteQueue.then(() => typeof navigator !== 'undefined' && navigator.locks
@@ -608,95 +609,29 @@ export const API = {
     async removeFromCart(userId,id) { return this.removeCartProduct(userId,id); },
     async clearCart(userId) { return queueCartWrite(()=>this.persistUserCart(userId,[])); },
 
-    async getUserWishlist(userId, { strict = false } = {}) {
-        if (!userId) return { productIds: [], serviceIds: [] };
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) {
-            if (strict) throw new Error('Chưa kết nối được dữ liệu yêu thích.');
-            return { productIds: [], serviceIds: [] };
-        }
-
-        try {
-            const { data: wl, error: readError } = await db.from('wishlist').select('id').eq('customer_id', userId).maybeSingle();
-            if (readError) throw readError;
-            if (wl && wl.id) {
-                const { data: items, error: itError } = await db.from('wishlist_item').select('product_id, service_id').eq('wishlist_id', wl.id);
-                if (itError) throw itError;
-                if (!itError && items) {
-                    return {
-                        productIds: items.map(i => i.product_id).filter(Boolean),
-                        serviceIds: items.map(i => i.service_id).filter(Boolean)
-                    };
-                }
-            }
-        } catch (err) {
-            if (strict) throw err;
-            console.warn('[API] getUserWishlist Supabase error:', err);
-        }
-        return { productIds: [], serviceIds: [] };
+    async getUserWishlist(userId) {
+        const db=window.getSupabaseClient?.() || window.SupabaseClient;
+        if(!db?.auth?.getUser)throw Error('Vui lòng đăng nhập để tải yêu thích.');
+        const owner=await resolveCustomerId(db,userId),result=await db.rpc('own_wishlist_snapshot');
+        if(result.error || result.data?.customer_id!==owner)throw Error('Không thể tải danh sách yêu thích của phiên hiện tại.');
+        return result.data;
     },
-
-    async getOrCreateWishlist(userId) {
-        if (!userId) return null;
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        
-        if (!db) throw new Error('Chưa kết nối được dữ liệu yêu thích.');
-        let { data: wl, error: readError } = await db.from('wishlist').select('id').eq('customer_id', userId).maybeSingle();
-        if (readError) throw readError;
-        if (!wl) {
-            const { data: newWl, error } = await db.from('wishlist').insert({ customer_id: userId }).select('id').single();
-            if (error) throw error;
-            wl = newWl;
-        }
-        return wl;
+    async setWishlistItem(userId,itemId,isService,saved) {
+        const db=window.getSupabaseClient?.() || window.SupabaseClient;
+        if(!db?.auth?.getUser)throw Error('Vui lòng đăng nhập để lưu yêu thích.');
+        const owner=await resolveCustomerId(db,userId);
+        const result=await db.rpc('set_own_wishlist_item',{p_kind:isService?'service':'product',p_item:itemId,p_saved:Boolean(saved),p_expected_owner:owner});
+        if(result.error || result.data!==Boolean(saved))throw Error('Chưa lưu được yêu thích. Vui lòng thử lại hoặc tải lại trang.');
+        document.dispatchEvent(new CustomEvent('wishlist_updated'));
+        return {success:true,action:saved?'added':'removed'};
     },
-
-    async saveUserWishlist(userId, { productIds } = {}) {
-        if (!Array.isArray(productIds)) throw new Error('Danh sách yêu thích không hợp lệ.');
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        const customerId = await resolveCustomerId(db, userId);
-        const wishlist = await this.getOrCreateWishlist(customerId);
-        if (!wishlist) throw new Error('Không thể tải danh sách yêu thích.');
-        const { data: existing, error: readError } = await db.from('wishlist_item')
-            .select('id, product_id, service_id').eq('wishlist_id', wishlist.id);
-        if (readError) throw readError;
-        const desired = new Set(productIds.map(String));
-        const current = new Set((existing || []).filter(item => item.product_id).map(item => String(item.product_id)));
-        const additions = [...desired].filter(id => !current.has(id))
-            .map(product_id => ({ wishlist_id: wishlist.id, product_id }));
-        if (additions.length) {
-            const { error } = await db.from('wishlist_item').insert(additions);
-            if (error) throw error;
+    async toggleWishlist(userId,itemId,isService=false) {
+        const key=String(userId)+':'+(isService?'service':'product')+':'+itemId;
+        if(!wishlistIntents.has(key)){
+            const state=await this.getUserWishlist(userId);
+            wishlistIntents.set(key,!(isService?state.serviceIds:state.productIds).includes(String(itemId)));
         }
-        // This operation saves products only; service wishlist entries remain intact.
-        const removals = (existing || []).filter(item => item.product_id && !desired.has(String(item.product_id))).map(item => item.id);
-        if (removals.length) {
-            const { error } = await db.from('wishlist_item').delete().eq('wishlist_id', wishlist.id).in('id', removals);
-            if (error) throw error;
-        }
-        return { success: true, productIds: [...desired] };
-    },
-
-    async toggleWishlist(userId, itemId, isService = false) {
-        if (!userId) return { success: false, error: 'User not logged in' };
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        const wl = await this.getOrCreateWishlist(userId);
-        if (!wl) return { success: false };
-
-        const column = isService ? 'service_id' : 'product_id';
-        const { data: existing, error: readError } = await db.from('wishlist_item')
-            .select('id').eq('wishlist_id', wl.id).eq(column, itemId).maybeSingle();
-        if (readError) throw readError;
-
-        if (existing) {
-            const { error } = await db.from('wishlist_item').delete().eq('id', existing.id);
-            return { success: !error, action: 'removed', error: error?.message };
-        } else {
-            const insertData = { wishlist_id: wl.id };
-            insertData[column] = itemId;
-            const { error } = await db.from('wishlist_item').insert(insertData);
-            return { success: !error, action: 'added', error: error?.message };
-        }
+        const result=await this.setWishlistItem(userId,itemId,isService,wishlistIntents.get(key));wishlistIntents.delete(key);return result;
     },
 
     async getUserById(userId) {

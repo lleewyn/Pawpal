@@ -6,7 +6,10 @@ import { API } from '/scripts/api/api.js';
 
 let currentFilter = 'all';
 let wishlistRenderVersion = 0;
-export function dispose() { ++wishlistRenderVersion; }
+let wishlistChannel=null;
+let wishlistChannelKey='';
+export function dispose() { ++wishlistRenderVersion; if(wishlistChannel)(window.getSupabaseClient?.() || window.SupabaseClient)?.removeChannel(wishlistChannel);wishlistChannel=null;wishlistChannelKey='';document.removeEventListener('wishlist_updated',renderWishlist);document.removeEventListener('auth_state_changed',renderWishlist); }
+function esc(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 function getCurrentUser() {
     if (typeof window.getCurrentUser === 'function') {
@@ -69,7 +72,7 @@ async function loadAllProductsSafely() {
             const data = await window.DataLoader.loadProducts();
             if (data && data.length) return data;
         } catch (e) {
-            console.warn('[wishlist] DataLoader.loadProducts error:', e);
+            throw e;
         }
     }
     return [];
@@ -81,48 +84,20 @@ async function loadAllServicesSafely() {
             const data = await window.DataLoader.loadServices();
             if (data && data.length) return data;
         } catch (e) {
-            console.warn('[wishlist] DataLoader.loadServices error:', e);
+            throw e;
         }
     }
     return [];
 }
 
-function getLocalWishlistIds() {
-    try {
-        const prodRaw = localStorage.getItem('pawpal_wishlist_products') || localStorage.getItem('pawpal_user_wishlist') || '[]';
-        const svcRaw = localStorage.getItem('pawpal_wishlist_services') || '[]';
-        const productIds = JSON.parse(prodRaw);
-        const serviceIds = JSON.parse(svcRaw);
-        return {
-            productIds: Array.isArray(productIds) ? productIds : [],
-            serviceIds: Array.isArray(serviceIds) ? serviceIds : []
-        };
-    } catch {
-        return { productIds: [], serviceIds: [] };
-    }
-}
-
 async function getWishlistItems() {
     const currentUser = getCurrentUser();
 
-    let finalProductIds = [];
-    let finalServiceIds = [];
-
-    if (currentUser && currentUser.id) {
-        try {
-            const serverWishlist = await API.getUserWishlist(currentUser.id);
-            finalProductIds = serverWishlist.productIds || [];
-            finalServiceIds = serverWishlist.serviceIds || [];
-        } catch (e) {
-            console.error('Failed to get wishlist from API:', e);
-        }
-    }
-
-    if (!currentUser && !finalProductIds.length && !finalServiceIds.length) {
-        const local = getLocalWishlistIds();
-        finalProductIds = local.productIds;
-        finalServiceIds = local.serviceIds;
-    }
+    if(!currentUser?.id)throw Error('Vui lòng đăng nhập để tải yêu thích.');
+    const serverWishlist=await API.getUserWishlist(currentUser.id);
+    syncWishlistChannel(currentUser.id,serverWishlist.id);
+    const finalProductIds=serverWishlist.products || [];
+    const finalServiceIds=serverWishlist.services || [];
 
     const allProducts = await loadAllProductsSafely();
     const allServices = await loadAllServicesSafely();
@@ -134,18 +109,19 @@ async function getWishlistItems() {
         seenProducts.add(productId);
         const product = allProducts.find((p) => String(p.id) === productId || String(p.dbId) === productId);
 
-        if (!product) return null;
+        if (!product && !item.name) return null;
+        const source=product || {name:item.name,status:item.status};
 
         return {
             type: 'product',
             id: productId,
             uniqueId: `product-${productId}`,
-            image: product.image || '/assets/images/shop/products/placeholder.webp',
-            title: product.name,
-            subtitle: product.brand || 'PAWPAL',
-            price: Number(product.price) || 0,
-            originalPrice: Number(product.originalPrice || product.oldPrice || 0) || null,
-            inStock: product.inStock !== false,
+            image: source.image || '/assets/images/shop/products/placeholder.webp',
+            title: source.name,
+            subtitle: source.brand || '',
+            price: product && Number.isFinite(Number(product.price)) ? Number(product.price) : null,
+            originalPrice: Number(source.originalPrice || source.oldPrice || 0) || null,
+            inStock: item.status==='active' && Boolean(product) && product.inStock !== false,
             addedAt: typeof item === 'object' && item?.addedAt ? item.addedAt : new Date().toISOString(),
             detailUrl: `/pages/shop/product-detail/product-detail.html?id=${productId}`,
             actionLabel: 'Thêm giỏ',
@@ -160,18 +136,19 @@ async function getWishlistItems() {
         if (seenServices.has(serviceId)) return null;
         seenServices.add(serviceId);
         const service = allServices.find((s) => String(s.serviceId) === serviceId || String(s.id) === serviceId || String(s.dbId) === serviceId);
-        if (!service) return null;
+        if (!service && !item.name) return null;
+        const source=service || {name:item.name,status:item.status};
 
         return {
             type: 'service',
             id: serviceId,
             uniqueId: `service-${serviceId}`,
-            image: service.image || '/assets/images/services/spa.png',
-            title: service.name,
-            subtitle: service.category === 'hotel' ? 'Khách sạn thú cưng' : service.category === 'taxi' ? 'Taxi thú cưng' : 'Spa và làm đẹp',
-            price: Number(service.price) || 0,
+            image: source.image || '/assets/images/services/spa.png',
+            title: source.name,
+            subtitle: source.category === 'hotel' ? 'Khách sạn thú cưng' : source.category === 'taxi' ? 'Taxi thú cưng' : 'Spa và làm đẹp',
+            price: service && Number(service.price)>0 ? Number(service.price) : null,
             originalPrice: null,
-            inStock: service.status === 'Đang phục vụ',
+            inStock: item.status === 'active',
             addedAt: typeof item === 'object' && item?.addedAt ? item.addedAt : new Date().toISOString(),
             detailUrl: `/pages/services/service-detail/service-detail.html?id=${serviceId}`,
             actionLabel: 'Đặt lịch',
@@ -183,46 +160,25 @@ async function getWishlistItems() {
     return [...products, ...services];
 }
 
+function syncWishlistChannel(owner,id){
+    const key=owner+':'+id;if(wishlistChannelKey===key)return;
+    const db=window.getSupabaseClient?.() || window.SupabaseClient;
+    if(wishlistChannel)db.removeChannel(wishlistChannel);
+    wishlistChannelKey=key;wishlistChannel=db.channel('wishlist-'+crypto.randomUUID());
+    wishlistChannel.on('postgres_changes',{event:'*',schema:'public',table:'wishlist',filter:'customer_id=eq.'+owner},renderWishlist);
+    if(id)for(const table of ['wishlist_product','wishlist_service'])wishlistChannel.on('postgres_changes',{event:'*',schema:'public',table,filter:'wishlist_id=eq.'+id},renderWishlist);
+    wishlistChannel.subscribe();
+}
+
 async function removeFromWishlist(type, id) {
     const currentUser = getCurrentUser();
     if (!currentUser || !currentUser.id) return;
 
     const isService = type === 'service';
-    const res = await API.toggleWishlist(currentUser.id, id, isService);
+    const res = await API.setWishlistItem(currentUser.id, id, isService, false);
     if (res && res.success) {
         renderWishlist();
         showNotification('Đã xóa khỏi danh sách yêu thích');
-    }
-}
-
-async function addProductToCart(product) {
-    const user = getCurrentUser();
-    if (!user || !user.id) {
-        showNotification('Vui lòng đăng nhập để thêm vào giỏ hàng');
-        return;
-    }
-
-    const productId = product.id || product.rawProduct?.id;
-    if (!productId) {
-        showNotification('Có lỗi xảy ra, vui lòng thử lại');
-        return;
-    }
-
-    try {
-        const res = await API.addToCart(user.id, productId, 1);
-        if (!res?.success) {
-            showNotification('Có lỗi xảy ra, vui lòng thử lại');
-            return;
-        }
-
-        showNotification('Đã thêm vào giỏ hàng');
-        document.dispatchEvent(new CustomEvent('cart_updated'));
-        if (typeof window.updateCartBadge === 'function') {
-            await window.updateCartBadge();
-        }
-    } catch (error) {
-        console.error('[wishlist] Failed to add product to cart:', error);
-        showNotification('Có lỗi xảy ra, vui lòng thử lại');
     }
 }
 
@@ -251,6 +207,7 @@ async function renderWishlist() {
         items = await getWishlistItems();
     } catch (error) {
         if (version !== wishlistRenderVersion || !container?.isConnected) return;
+        const count=document.getElementById('wishlistCount');if(count)count.textContent='0';
         console.error('[Wishlist] Không thể tải danh sách:', error);
         const grid = document.getElementById('wishlistGrid');
         if (grid) {
@@ -290,7 +247,7 @@ async function renderWishlist() {
             return `
                 <div class="wishlist-card pawpal-smooth-entrance" data-type="${item.type}" data-id="${item.id}">
                     <div class="wishlist-card-image-wrapper">
-                        <img src="${item.image || '/assets/images/publics/feed.jpg'}" alt="${item.title}" class="wishlist-card-image" onerror="this.onerror=null; this.src='/assets/images/publics/feed.jpg';">
+                        <img src="${esc(item.image || '/assets/images/publics/feed.jpg')}" alt="${esc(item.title)}" class="wishlist-card-image" onerror="this.onerror=null; this.src='/assets/images/publics/feed.jpg';">
                         <button class="wishlist-card-remove" data-type="${item.type}" data-id="${item.id}" aria-label="Xóa khỏi yêu thích">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor">
                                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -301,21 +258,15 @@ async function renderWishlist() {
                     </div>
                     <div class="wishlist-card-info">
                         <span class="wishlist-card-type">${typeLabel}</span>
-                        <div class="wishlist-card-brand">${item.subtitle}</div>
-                        <a href="${item.detailUrl}" class="wishlist-card-name">${item.title}</a>
+                        <div class="wishlist-card-brand">${esc(item.subtitle)}</div>
+                        <a href="${item.detailUrl}" class="wishlist-card-name">${esc(item.title)}</a>
                         <div class="wishlist-card-price-wrapper">
-                            <span class="wishlist-card-price">${formatPrice(item.price)}</span>
+                            <span class="wishlist-card-price">${item.price===null?'Xem giá khi chọn':formatPrice(item.price)}</span>
                             ${hasDiscount ? `<span class="wishlist-card-price-old">${formatPrice(item.originalPrice)}</span>` : ''}
                         </div>
                         <div class="wishlist-card-added-date">Đã thêm ${formatDate(item.addedAt)}</div>
                         <div class="wishlist-card-actions">
-                            ${item.type === 'product' ? `
-                                <button class="wishlist-card-add-to-cart" data-action="cart" data-id="${item.id}" ${!item.inStock ? 'disabled' : ''}>
-                                    ${item.inStock ? item.actionLabel : 'Hết hàng'}
-                                </button>
-                            ` : `
-                                <a href="${item.bookingUrl}" class="wishlist-card-add-to-cart">${item.actionLabel}</a>
-                            `}
+                            <a href="${item.type==='product'?item.detailUrl:item.bookingUrl}" class="wishlist-card-add-to-cart">${item.type==='product'?'Chọn sản phẩm':'Đặt lịch'}</a>
                             <a href="${item.detailUrl}" class="wishlist-card-view-detail">Chi tiết</a>
                         </div>
                     </div>
@@ -324,15 +275,10 @@ async function renderWishlist() {
         }).join('');
 
         grid.querySelectorAll('.wishlist-card-remove').forEach((button) => {
-            button.addEventListener('click', () => removeFromWishlist(button.dataset.type || 'product', button.dataset.id || ''));
+            button.addEventListener('click', async () => {if(button.disabled)return;button.disabled=true;try{await removeFromWishlist(button.dataset.type || 'product',button.dataset.id || '');}catch{showNotification('Không thể lưu thay đổi. Vui lòng thử lại.');}finally{button.disabled=false;}});
         });
 
-        grid.querySelectorAll('[data-action="cart"]').forEach((button) => {
-            button.addEventListener('click', () => {
-                const product = filteredItems.find((item) => item.type === 'product' && String(item.id) === String(button.dataset.id));
-                if (product) addProductToCart(product);
-            });
-        });
+
     }
 }
 
@@ -342,7 +288,7 @@ export function init() {
     if (isInitRunning) return;
     isInitRunning = true;
     try {
-        bindTabs();
+        dispose();currentFilter='all';bindTabs();document.addEventListener('wishlist_updated',renderWishlist);document.addEventListener('auth_state_changed',renderWishlist);
         renderWishlist();
     } finally {
         isInitRunning = false;

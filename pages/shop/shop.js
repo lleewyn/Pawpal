@@ -1152,6 +1152,7 @@ async function toggleWishlist(productId) {
         return;
     }
 
+    try {
     if (window.API && window.API.toggleWishlist) {
         const res = await window.API.toggleWishlist(user.id, productId);
         if (res && res.success) {
@@ -1165,6 +1166,7 @@ async function toggleWishlist(productId) {
             renderProducts();
         }
     }
+    } catch { showToast('Chưa lưu được yêu thích. Vui lòng thử lại.','error'); }
 }
 
 async function addToCart(productId) {
