@@ -1,6 +1,6 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 const {createClient}=require('@supabase/supabase-js'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {settings,infra}=require('../database/v1/cloud_connection.cjs');const{config}=settings();
+const {settings,infra,sql}=require('../database/v1/cloud_connection.cjs');const{config}=settings();
 const service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
 const ok=async task=>{const r=await task;if(r.error)throw Error(r.error.message);return r.data;};
 const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.randomBytes(20).toString('hex')+'!';
@@ -25,7 +25,7 @@ const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.ran
   }
   browser=await chromium.launch({channel:'chrome',headless:true});page=await browser.newPage({viewport:{width:1440,height:1100},locale:'vi-VN'});
   const errors=[],legacy=[];page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(new URL(r.url()).pathname.startsWith('/data/'))legacy.push(r.url());});
-  if(!process.argv.includes('--deployed'))for(const path of ['pages/services/booking/booking.js','pages/services/booking/booking.css','pages/services/booking-success/booking-success.html','pages/services/booking-success/booking-success.js'])await page.route('**/'+path+'*',route=>route.fulfill({contentType:path.endsWith('.html')?'text/html':path.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path,'utf8')}));
+  if(!process.argv.includes('--deployed'))for(const path of ['pages/services/booking/booking.js','pages/services/booking/booking.css','pages/services/booking-success/booking-success.html','pages/services/booking-success/booking-success.js','pages/user/modules/bookings/booking-detail.js','pages/user/modules/bookings/booking-detail.html','scripts/shared/customer-realtime.mjs'])await page.route('**/'+path+'*',route=>route.fulfill({contentType:path.endsWith('.html')?'text/html':path.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path,'utf8')}));
   await page.goto('https://pawpalgr3.vercel.app/login');await page.locator('#loginPhone').fill(phone);await page.locator('#btnLoginContinue').click();await page.locator('#loginPassword').fill(password);await page.locator('#btnLoginSubmit').click();
   await page.waitForURL(/\/user\/?/,{timeout:45000});await page.waitForFunction(()=>Boolean(window.API?.getUserBookings));
   const day=new Date(Date.now()+3*86400000).toISOString().slice(0,10),nextDay=new Date(Date.now()+4*86400000).toISOString().slice(0,10);
@@ -64,6 +64,7 @@ const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.ran
    await page.locator('#btnCancelBooking').waitFor();
    const saved=await ok(service.from('appointment').select('appointment_code,appointment_status,staff_id,scheduled_end_at').eq('id',args.p_id).single());
    await page.waitForFunction(code=>document.querySelector('#bookingCode')?.textContent===code,saved.appointment_code);
+   assert.ok((await page.locator('#netPaidInfo').textContent()).includes('0'));assert.equal((await page.locator('#netPaidInfo').textContent()).includes('Giá theo'),false);
    assert.equal(saved.appointment_status,'pending');assert.equal(saved.staff_id,null);assert.equal(Date.parse(saved.scheduled_end_at),Date.parse(quote.end_at));
    assert.equal((await ok(service.from('appointment_item').select('id').eq('appointment_id',args.p_id))).length,2);
    assert.equal((await ok(service.from('payment').select('id').eq('appointment_id',args.p_id))).length,0);
@@ -71,6 +72,30 @@ const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.ran
    if(svc.category==='grooming_spa')assert.equal(Number(quote.total),750);
    if(svc.category==='pet_hotel')assert.equal(Number(quote.total),650);
    if(svc.category==='pet_taxi')assert.equal(Number(quote.total),500050);
+   if(svc.category==='grooming_spa')assert.equal(await page.locator('#bookingLogisticsSection').isVisible(),false);
+   if(svc.category==='pet_hotel'){
+    await page.locator('#bookingLogisticsSection').waitFor();assert.ok((await page.locator('#bookingLogisticsInfo').textContent()).includes('TEST-'+room));
+    await ok(service.from('hotel_booking').update({care_notes:'Live hotel care note'}).eq('appointment_id',args.p_id));
+    await page.waitForFunction(()=>document.querySelector('#bookingLogisticsInfo')?.textContent.includes('Live hotel care note'),{timeout:20000});
+   }
+   if(svc.category==='pet_taxi'){
+    await page.locator('#bookingLogisticsSection').waitFor();assert.ok((await page.locator('#bookingLogisticsInfo').textContent()).includes('Verification pickup'));assert.ok((await page.locator('#bookingLogisticsInfo').textContent()).includes('Khứ hồi'));
+    await ok(service.from('taxi_trip').update({pickup_address:'Live taxi pickup <b>text</b>'}).eq('appointment_id',args.p_id));
+    await page.waitForFunction(()=>document.querySelector('#bookingLogisticsInfo')?.textContent.includes('Live taxi pickup <b>text</b>'),{timeout:20000});assert.equal(await page.locator('#bookingLogisticsInfo b').count(),0);
+   }
+   const assigned=(await ok(service.from('staff').select('id,full_name').eq('employment_status','active').eq('service_locked',false).limit(1)))[0];assert.ok(assigned);
+   for(const id of [assigned.id,args.p_id,cid])assert.match(id,/^[0-9a-f-]{36}$/i);
+   // Fixture-only setup through the private database connection: no grants changed for service_role.
+   sql(`UPDATE public.appointment SET staff_id='${assigned.id}' WHERE id='${args.p_id}' AND customer_id='${cid}'`);
+   await page.waitForFunction(name=>document.querySelector('#staffInfo')?.textContent===name,assigned.full_name,{timeout:20000});
+   await ok(service.from('appointment_item').update({staff_id:assigned.id}).eq('appointment_id',args.p_id));
+   await page.waitForFunction(name=>document.querySelector('#bookingServiceLines')?.textContent.includes(name),assigned.full_name,{timeout:20000});
+   const shown=await page.evaluate(async id=>(await getSupabaseClient().rpc('own_service_booking_logistics',{p_booking:id})).data,args.p_id);
+   if(svc.category==='pet_hotel')assert.equal(shown.hotel.status,'reserved');
+   if(svc.category==='pet_taxi')assert.equal(shown.taxi.status,'pending');
+   assert.equal((await page.locator('#bookingLogisticsInfo').textContent()).includes('Chưa xác định'),false);
+   await page.locator('#bookingLogisticsSection').isVisible().then(async visible=>{if(visible)await page.locator('#bookingLogisticsSection').scrollIntoViewIfNeeded();});
+   await page.screenshot({path:infra+'/verification/customer-booking-detail-'+svc.category+'.private.png'});
    if(svc.category==='grooming_spa'){
     await page.evaluate(({uid,id})=>sessionStorage.setItem('pawpal_booking_request:'+uid,id),{uid,id:args.p_id});
     await page.goto('https://pawpalgr3.vercel.app/booking');await page.locator('#bookingRecovered').waitFor();await page.locator('#bookingRecovered').click();

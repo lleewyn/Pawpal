@@ -1,6 +1,6 @@
 const fs=require('node:fs'),{spawnSync}=require('node:child_process');
 const {state}=require('./customer_completion_helpers.cjs');
-const ddl=['062_customer_sales_gateway.sql','066_customer_booking_cancel.sql','067_customer_booking_reschedule.sql','068_customer_booking_create.sql'].map(f=>fs.readFileSync('scripts/database/v1/'+f,'utf8').replace(/^BEGIN;|^COMMIT;|^NOTIFY.*$/gm,'')).join('\n');
+const ddl=['062_customer_sales_gateway.sql','066_customer_booking_cancel.sql','067_customer_booking_reschedule.sql','068_customer_booking_create.sql','071_customer_booking_logistics.sql'].map(f=>fs.readFileSync('scripts/database/v1/'+f,'utf8').replace(/^BEGIN;|^COMMIT;|^NOTIFY.*$/gm,'')).join('\n');
 const q=`BEGIN;${ddl}
 DO $$ DECLARE uid uuid:=gen_random_uuid(); cid uuid:=gen_random_uuid(); pet uuid:=gen_random_uuid(); breed uuid; species uuid;
  category text; svc uuid; cat uuid; aid uuid; request uuid; addon uuid; quote jsonb; details jsonb; rejected boolean;
@@ -38,6 +38,9 @@ BEGIN
   IF NOT rejected OR EXISTS(SELECT 1 FROM public.appointment WHERE id=aid) THEN RAISE EXCEPTION 'Stale quote inserted a partial booking';END IF;
   PERFORM public.create_own_service_booking(aid,quote->>'version',details);
   PERFORM public.create_own_service_booking(aid,quote->>'version',details);
+  IF category='pet_hotel' AND (public.own_service_booking_logistics(aid)->'hotel'->>'daily_price')::numeric<>300 THEN RAISE EXCEPTION 'Hotel detail incorrect';END IF;
+  IF category='pet_taxi' AND (public.own_service_booking_logistics(aid)->'taxi'->>'quoted_amount')::numeric<>300 THEN RAISE EXCEPTION 'Taxi detail incorrect';END IF;
+  IF category='grooming_spa' AND public.own_service_booking_logistics(aid)->'hotel'<>'null'::jsonb THEN RAISE EXCEPTION 'Unrelated hotel detail exposed';END IF;
   IF (SELECT appointment_status FROM public.appointment WHERE id=aid)<>'pending' OR (SELECT staff_id FROM public.appointment WHERE id=aid) IS NOT NULL THEN RAISE EXCEPTION 'Client assigned staff/status';END IF;
   PERFORM set_config('role','supabase_admin',true);
   IF (SELECT total_price FROM public.appointment_totals WHERE appointment_id=aid)<>expected OR (SELECT count(*) FROM public.appointment_item WHERE appointment_id=aid)<>2 THEN RAISE EXCEPTION 'Wrong committed lines or duplicate write';END IF;
@@ -51,6 +54,9 @@ BEGIN
   PERFORM set_config('request.jwt.claim.sub',foreign_uid::text,true);
   rejected:=false;BEGIN PERFORM public.quote_own_service_booking(details);EXCEPTION WHEN insufficient_privilege THEN rejected:=true;END;
   IF NOT rejected THEN RAISE EXCEPTION 'Foreign pet allowed';END IF;
+  rejected:=false;BEGIN PERFORM public.own_service_booking_logistics(aid);EXCEPTION WHEN insufficient_privilege THEN rejected:=true;END;
+  IF NOT rejected THEN RAISE EXCEPTION 'Foreign booking details exposed';END IF;
+  IF EXISTS(SELECT 1 FROM public.hotel_booking WHERE appointment_id=aid) OR EXISTS(SELECT 1 FROM public.taxi_trip WHERE appointment_id=aid) THEN RAISE EXCEPTION 'Foreign logistics rows exposed through RLS';END IF;
   PERFORM set_config('request.jwt.claim.sub',uid::text,true);PERFORM set_config('role','supabase_admin',true);
  END LOOP;
 END $$;ROLLBACK;`;

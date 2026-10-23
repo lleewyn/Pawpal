@@ -81,7 +81,7 @@ export async function init() {
         stopDetailRealtime?.();
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (currentBooking && loadingContainer?.isConnected) {
-            stopDetailRealtime = watchCustomerTables(db, currentBooking.userId, ['appointment','appointment_item','payment','review'], async () => {
+            stopDetailRealtime = watchCustomerTables(db, currentBooking.userId, ['appointment','appointment_item','payment','review','hotel_booking','taxi_trip'], async () => {
                 if (!loadingContainer.isConnected) { stopDetailRealtime?.(); stopDetailRealtime = null; return; }
                 const dirty = [...loadingContainer.querySelectorAll('#serviceReviewForm textarea')].some(el => el.value.trim());
                 try { await loadBookingDetail(bookingId, dirty); } catch { showToast('Không thể cập nhật lịch hẹn. Vui lòng tải lại trang.', 'error'); }
@@ -116,6 +116,10 @@ async function loadBookingDetail(bookingId, preserveReview = false) {
         showBookingLoadError('Không tìm thấy lịch hẹn này.');
         return;
     }
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    const logistics = await db.rpc('own_service_booking_logistics', {p_booking: currentBooking._supabaseId});
+    if (logistics.error) throw logistics.error;
+    currentBooking.logistics = logistics.data;
 
     if (typeof window.setUserSubBreadcrumb === 'function') {
         window.setUserSubBreadcrumb(currentBooking.code || currentBooking.id || 'Chi tiết', 'bookings');
@@ -134,7 +138,7 @@ async function loadBookingDetail(bookingId, preserveReview = false) {
                 showToast('Không tìm thấy mã bé cưng để mở nhật ký chăm sóc.', 'error');
                 return;
             }
-            const sessionId = currentBooking.id || '';
+            const sessionId = currentBooking._supabaseId || '';
             const query = `id=${encodeURIComponent(petId)}${sessionId ? `&sessionId=${encodeURIComponent(sessionId)}` : ''}`;
             window.scrollTo(0, 0);
             window.location.hash = `#diary?${query}`;
@@ -219,18 +223,20 @@ function renderBookingDetail(booking) {
         serviceLines.replaceChildren();
         for (const item of booking.items || []) {
             const row = document.createElement('p');
-            row.textContent = `${item.name} — ${item.quantity} × ${formatPrice(item.unitPrice)}${Number(item.discount) ? `; giảm ${formatPrice(item.discount)}` : ''}`;
+            const worker = booking.logistics?.item_staff?.find(w => w.item_id === item.id)?.staff_name;
+            row.textContent = `${item.name} — ${item.quantity} × ${formatPrice(item.unitPrice)}${Number(item.discount) ? `; giảm ${formatPrice(item.discount)}` : ''}${worker ? ` — ${worker}` : ''}`;
             serviceLines.appendChild(row);
         }
     }
 
     const staffEl = document.getElementById('staffInfo');
-    if (staffEl) staffEl.textContent = booking.staff || 'Chưa phân công';
+    if (staffEl) staffEl.textContent = booking.logistics?.staff_name || 'Chưa phân công';
+    renderBookingLogistics(booking.logistics);
 
     const priceEl = document.getElementById('priceInfo');
     if (priceEl) priceEl.textContent = formatPrice(booking.price || 0);
     const paidEl = document.getElementById('netPaidInfo');
-    if (paidEl) paidEl.textContent = formatPrice(booking.netPaid || 0);
+    if (paidEl) paidEl.textContent = new Intl.NumberFormat('vi-VN', {style:'currency',currency:'VND'}).format(Number(booking.netPaid || 0));
 
     const noteRow = document.getElementById('noteRow');
     const noteInfo = document.getElementById('noteInfo');
@@ -259,6 +265,40 @@ function renderBookingDetail(booking) {
             complaintLink.href = `#support-create?type=service&bookingId=${encodeURIComponent(booking.id)}`;
             complaintLink.onclick = () => window.scrollTo(0, 0);
         }
+    }
+}
+
+function renderBookingLogistics(data) {
+    const section = document.getElementById('bookingLogisticsSection');
+    const content = document.getElementById('bookingLogisticsInfo');
+    if (!section || !content) return;
+    section.classList.toggle('d-none', !data?.hotel && !data?.taxi);
+    content.replaceChildren();
+    const stamp = value => value ? new Date(value).toLocaleString('vi-VN', {hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}) : 'Chưa xác định';
+    const status = {pending:'Chờ xác nhận',reserved:'Đã giữ phòng',confirmed:'Đã xác nhận',checked_in:'Đang lưu trú',in_house:'Đang lưu trú',checked_out:'Đã trả phòng',closed:'Đã trả phòng',in_progress:'Đang thực hiện',completed:'Hoàn thành',cancelled:'Đã hủy',assigned:'Đã phân công',dispatched:'Đã điều xe',picked_up:'Đã đón',arrived:'Đã đến nơi',outbound:'Đang đi',returning:'Đang về'};
+    const row = (label, value) => {
+        const item = document.createElement('div'); item.className = 'booking-spec-row';
+        const name = document.createElement('span'); name.className = 'spec-label'; name.textContent = label;
+        const text = document.createElement('span'); text.className = 'spec-value'; text.style.whiteSpace = 'pre-wrap'; text.textContent = value ?? '—';
+        item.append(name, text); content.appendChild(item);
+    };
+    document.getElementById('bookingLogisticsTitle').textContent = data?.hotel ? 'Thông tin lưu trú' : 'Thông tin đưa đón';
+    if (data?.hotel) {
+        const h = data.hotel;
+        row('Mã lưu trú', h.booking_code); row('Phòng', h.room_number); row('Loại phòng', h.room_type);
+        row('Nhận phòng', stamp(h.check_in_at)); row('Trả phòng dự kiến', stamp(h.check_out_at));
+        row('Đơn giá mỗi 24 giờ', formatPrice(h.daily_price)); row('Trạng thái lưu trú', status[h.status] || 'Chưa xác định');
+        if (h.special_diet_notes) row('Chế độ dinh dưỡng', h.special_diet_notes);
+        if (h.care_notes) row('Lưu ý chăm sóc', h.care_notes);
+    }
+    if (data?.taxi) {
+        const t = data.taxi;
+        row('Địa chỉ đón', t.pickup_address); row('Địa chỉ trả', t.dropoff_address);
+        row('Quãng đường', `${Number(t.distance_km).toLocaleString('vi-VN')} km`);
+        row('Loại chuyến', t.trip_type === 'round_trip' ? 'Khứ hồi' : 'Một chiều');
+        row('Lượt đi', stamp(t.outbound_at)); if (t.trip_type === 'round_trip') row('Lượt về', stamp(t.return_at));
+        row('Nhân viên đưa đón', t.driver_name || 'Chưa phân công'); row('Giá chuyến đã chốt', formatPrice(t.quoted_amount));
+        row('Trạng thái chuyến', status[t.status] || 'Chưa xác định');
     }
 }
 
