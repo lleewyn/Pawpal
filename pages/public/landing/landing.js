@@ -104,15 +104,8 @@
                 if (!grid.isConnected) return;
                 const tone = name => ({bac:'silver',vang:'gold',kimcuong:'diamond'})[String(name).normalize('NFD').replace(/[\u0300-\u036f\s]/g,'').toLowerCase().replace(/^hang/,'')];
                 const tiers=data.filter(t=>tone(t.tier_name));
-                host.classList.add('home-pass-showcase');
-                host.innerHTML = tiers.length ? `<div class="home-pass-preview" aria-live="polite"></div><div class="home-pass-options" role="group" aria-label="Xem thẻ hạng thành viên">${tiers.map((tier,i)=>`<button type="button" class="home-pass-option" data-tier-index="${i}" aria-pressed="false"><span class="home-pass-option-top"><strong>${esc(tier.tier_name)}</strong><span>${esc(Number(tier.discount_percent)||0)}% mức giảm theo hạng</span></span><span class="home-pass-option-note">${esc(tier.description||'Áp dụng theo điều kiện giao dịch.')}</span></button>`).join('')}</div>` : '<p>Chưa có hạng thành viên được công bố.</p>';
-                function selectTier(index) {
-                    const tier=tiers[index];
-                    host.querySelector('.home-pass-preview').innerHTML=`<div class="home-member-card home-member-${tone(tier.tier_name)}"><div class="home-member-brand"><span>PawPal <b>PawPass</b></span><span class="home-member-chip" aria-hidden="true"></span></div><div><span class="home-member-label">THẺ THÀNH VIÊN</span><h3>${esc(tier.tier_name)}</h3></div><div class="home-member-bottom"><span>Mức giảm theo hạng</span><strong>${esc(Number(tier.discount_percent)||0)}<small>%</small></strong></div></div><p class="home-pass-caption">Thẻ giới thiệu quyền lợi · Hạng thực tế xem trong tài khoản</p>`;
-                    host.querySelectorAll('[data-tier-index]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.tierIndex)===index)));
-                }
-                host.querySelectorAll('[data-tier-index]').forEach(button=>button.addEventListener('click',()=>selectTier(Number(button.dataset.tierIndex))));
-                if(tiers.length)selectTier(Math.max(0,tiers.findIndex(t=>tone(t.tier_name)==='gold')));
+                host.classList.add('home-pass-row');
+                host.innerHTML = tiers.length ? tiers.map(tier=>`<article class="home-pass-tier" data-tier-name="${esc(tier.tier_name)}"><div class="home-member-card home-member-${tone(tier.tier_name)}"><div class="home-member-brand"><span>PawPal <b>PawPass</b></span><span class="home-member-chip" aria-hidden="true"></span></div><div><span class="home-member-label">THẺ THÀNH VIÊN</span><h3>${esc(tier.tier_name)}</h3></div><div class="home-member-bottom"><span>Mức giảm theo hạng</span><strong>${esc(Number(tier.discount_percent)||0)}<small>%</small></strong></div></div><p class="home-pass-caption">${esc(tier.description||'Áp dụng theo điều kiện giao dịch.')}</p></article>`).join('') : '<p>Chưa có hạng thành viên được công bố.</p>';
             } catch (_) { host.textContent = 'Chưa tải được quyền lợi thành viên. Bạn có thể xem lại trong tài khoản.'; }
         }
         async function loadBanners() {

@@ -11,18 +11,20 @@ const base=process.argv.includes('--deployed')?'https://pawpalgr3.vercel.app':'h
   page.on('pageerror',e=>errors.push(e.message));
   page.on('request',r=>{if(new URL(r.url()).pathname.startsWith('/data/'))dataFiles.push(r.url());if(r.url().includes('/rest/v1/'))queries.push(r.url());});
   await page.goto(base,{waitUntil:'networkidle'});
-  await page.waitForFunction(()=>document.querySelectorAll('#home-services article').length===5&&document.querySelectorAll('#home-tiers [data-tier-index]').length>0);
+  await page.waitForFunction(()=>document.querySelectorAll('#home-services article').length===5&&document.querySelectorAll('#home-tiers .home-pass-tier').length>0);
   const expected=await page.evaluate(async()=>{
    const db=window.getSupabaseClient();const [catalog,tiers]=await Promise.all([db.rpc('public_service_directory'),db.from('membership_tier').select('id,tier_name,discount_percent').eq('is_active',true)]);
    if(catalog.error||tiers.error)throw Error('Business data unavailable');return {catalog:catalog.data,tiers:tiers.data};
   });
   const shownTiers=expected.tiers.filter(t=>['bac','vang','kimcuong'].includes(t.tier_name.normalize('NFD').replace(/[\u0300-\u036f\s]/g,'').toLowerCase().replace(/^hang/,'')));
-  assert.equal(await page.locator('#home-tiers [data-tier-index]').count(),shownTiers.length);
+  assert.equal(await page.locator('#home-tiers .home-pass-tier').count(),shownTiers.length);
   for(const tier of shownTiers)assert.ok((await page.locator('#home-tiers').textContent()).includes(tier.tier_name));
-  for(let i=0;i<shownTiers.length;i++){
-   const button=page.locator('[data-tier-index]').nth(i);await button.click();assert.equal(await button.getAttribute('aria-pressed'),'true');
-   assert.ok((await page.locator('.home-member-bottom strong').textContent()).includes(String(Number(shownTiers[i].discount_percent))));
+  for(const tier of shownTiers){
+   const card=page.locator('.home-pass-tier').filter({has:page.getByRole('heading',{name:tier.tier_name,exact:true})});
+   assert.ok((await card.locator('.home-member-bottom strong').textContent()).includes(String(Number(tier.discount_percent))));
   }
+  const cardTops=await page.locator('.home-member-card').evaluateAll(cards=>cards.map(c=>Math.round(c.getBoundingClientRect().top)));
+  assert.equal(new Set(cardTops).size,1,'three membership cards share a desktop row');
   for(const category of ['spa','hotel','taxi','all']){
    await page.locator(`[data-category="${category}"]`).click();
    const ids=await page.locator('#home-services article').evaluateAll(rows=>rows.map(r=>r.dataset.serviceId));

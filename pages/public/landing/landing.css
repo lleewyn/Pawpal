@@ -1684,26 +1684,24 @@ body.landing-v218 .main-header,body.landing-v218 .main-header :is(a,button,input
 body.landing-v218 .main-footer{font-family:Inter,system-ui,sans-serif}
 body.landing-v218 .main-footer :is(h2,h3,h4){font-family:Lora,Inter,serif}
 
-/* PawPass: the original physical-card idea, paired with the editorial palette. */
-body.landing-v218 #home-tiers.home-pass-showcase{display:grid!important;grid-template-columns:minmax(280px,.95fr) minmax(320px,1.15fr)!important;gap:48px!important;align-items:center;background:transparent!important;border:0!important}
-.landing-v218 .home-member-card{aspect-ratio:1.65;max-width:440px;width:100%;padding:28px;border-radius:18px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;border:1px solid #c6d4c6;background:#e5ebe5;color:#244c3a}
+
+/* Three original-style membership cards, with live configured benefits. */
+body.landing-v218 #home-tiers.home-pass-row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:24px!important;align-items:start;background:transparent!important;border:0!important}
+.landing-v218 .home-pass-tier{min-width:0}
+.landing-v218 .home-member-card{aspect-ratio:1.65;width:100%;padding:25px;border-radius:18px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;border:1px solid #d3dbe4;color:#1e293b}
 .landing-v218 .home-member-card:after{content:'';position:absolute;width:270px;height:270px;border:1px solid currentColor;border-radius:50%;right:-140px;top:-90px;opacity:.15;pointer-events:none}
-.landing-v218 .home-member-gold{background:#e6b64f;color:#234636;border-color:#c99c3d}
-.landing-v218 .home-member-diamond{background:#244d3c;color:#f6efdc;border-color:#244d3c}
-.landing-v218 .home-member-brand,.landing-v218 .home-member-bottom{display:flex;align-items:center;justify-content:space-between;gap:16px}
-.landing-v218 .home-member-brand{font-size:15px;letter-spacing:.02em}
-.landing-v218 .home-member-chip{width:33px;height:26px;border:1px solid currentColor;border-radius:6px;opacity:.5;background:transparent}
-.landing-v218 .home-member-label{font-size:9px;letter-spacing:.17em;opacity:.75}
-body.landing-v218 #homePage .home-member-card h3{font-size:34px!important;color:inherit!important;margin:4px 0 0;line-height:1.2}
-.landing-v218 .home-member-bottom>span{font-size:11px;opacity:.85}
-.landing-v218 .home-member-bottom>strong{font-family:Lora,Inter,serif;font-size:32px;line-height:1}
-.landing-v218 .home-member-bottom small{font-size:18px;margin-left:2px}
-.landing-v218 .home-pass-caption{font-size:11px;color:#647868;margin:14px 0 0;max-width:440px;line-height:1.6}
-.landing-v218 .home-pass-options{display:grid;gap:12px}
-.landing-v218 .home-pass-option{text-align:left;background:#f8faf6;border:1px solid #dce4d8;border-radius:9px;padding:21px 24px;color:#284c3a;width:100%}
-.landing-v218 .home-pass-option[aria-pressed=true]{background:#f8edcf;border-color:#c9a24e}
-.landing-v218 .home-pass-option-top{display:flex;justify-content:space-between;align-items:center;gap:16px}
-.landing-v218 .home-pass-option-top>strong{font-family:Lora,Inter,serif;font-size:22px;font-weight:600}
-.landing-v218 .home-pass-option-top>span{font-size:12px;font-weight:600;text-align:right}
-.landing-v218 .home-pass-option-note{display:block;font-size:12px;line-height:1.6;color:#647868;margin-top:9px}
-@media(max-width:760px){body.landing-v218 #home-tiers.home-pass-showcase{grid-template-columns:1fr!important;gap:26px!important}.landing-v218 .home-pass-preview{max-width:440px;width:100%;margin:auto}.landing-v218 .home-member-card{padding:23px}.landing-v218 .home-pass-option{padding:18px}.landing-v218 .home-pass-option-top{gap:10px}.landing-v218 .home-pass-option-top>strong{font-size:20px}.landing-v218 .home-pass-option-top>span{font-size:11px}}
+.landing-v218 .home-member-silver{background:linear-gradient(135deg,#94a3b8 0%,#cbd5e1 45%,#f1f5f9 65%,#64748b 100%)}
+.landing-v218 .home-member-gold{background:linear-gradient(135deg,#d97706 0%,#fbbf24 45%,#fef08a 65%,#b45309 100%);border-color:#e8c36c}
+.landing-v218 .home-member-diamond{background:linear-gradient(135deg,#090d16 0%,#172554 50%,#030712 100%);color:#e1eaff;border-color:#365080}
+.landing-v218 .home-member-brand,.landing-v218 .home-member-bottom{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.landing-v218 .home-member-brand{font-size:14px;letter-spacing:.02em}
+.landing-v218 .home-member-chip{width:32px;height:25px;border:1px solid currentColor;border-radius:6px;opacity:.6;background:transparent}
+.landing-v218 .home-member-diamond .home-member-chip{background:#719dd8;border-color:#b6d6ff}
+.landing-v218 .home-member-label{font-size:9px;letter-spacing:.17em;opacity:.8}
+body.landing-v218 #homePage .home-member-card h3{font-size:31px!important;color:inherit!important;margin:4px 0 0;line-height:1.2}
+.landing-v218 .home-member-bottom>span{font-size:11px;opacity:.9}
+.landing-v218 .home-member-bottom>strong{font-family:Lora,Inter,serif;font-size:31px;line-height:1}
+.landing-v218 .home-member-bottom small{font-size:17px;margin-left:2px}
+.landing-v218 .home-pass-caption{font-size:12px;color:#647868;margin:16px 0 0;line-height:1.6}
+@media(min-width:761px) and (max-width:1050px){.landing-v218 .home-member-card{padding:18px;aspect-ratio:1.4}.landing-v218 .home-member-brand{font-size:12px}body.landing-v218 #homePage .home-member-card h3{font-size:25px!important}.landing-v218 .home-member-bottom>span{font-size:10px}}
+@media(max-width:760px){body.landing-v218 #home-tiers.home-pass-row{grid-template-columns:1fr!important;gap:28px!important}.landing-v218 .home-pass-tier{max-width:440px;width:100%;margin:auto}.landing-v218 .home-member-card{padding:24px}}
