@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="/pages/admin/modules/pets/pets.css?v=20261024_2" data-pawpal-module-stylesheet="pets">
 <div class="pets-module">
     <!-- ====================================================================
          SUB-TAB 1: THÚ CƯNG (DANH SÁCH VÀ BỘ LỌC CHUYÊN SÂU)
@@ -84,7 +85,7 @@
                     <button type="button" class="admin-btn-filter-toggle" id="btnFilterHotelOnly">Đang ở Hotel</button>
 
                     <button type="button" class="admin-btn-filter-toggle" id="btnFilterAlertOnly">Có cảnh báo</button>
-                    <button type="button" class="admin-btn-clear-filters" id="btnPetClearFilters" style="display: none;">Xóa bộ lọc</button>
+                    <button type="button" class="admin-btn-clear-filters pet-is-hidden" id="btnPetClearFilters">Xóa bộ lọc</button>
                 </div>
             </div>
 
@@ -93,49 +94,50 @@
                 <table class="admin-table" id="petDataTable">
                     <thead>
                         <tr>
-                            <th style="width: 52px; text-align: center;">Ảnh</th>
-                            <th style="width: 105px;">Mã bé</th>
+                            <th class="pet-col-photo">Ảnh</th>
+                            <th class="pet-u-w-105">Mã bé</th>
                             <th>Tên bé cưng</th>
                             <th>Loài và Giống</th>
                             <th>Cân nặng</th>
                             <th>Chủ sở hữu</th>
                             <th>Cảnh báo an toàn</th>
                             <th>Trạng thái</th>
-                            <th style="width: 70px; min-width: 70px; text-align: center;">Tác vụ</th>
+                            <th class="pet-col-actions">Tác vụ</th>
                         </tr>
+                    </thead>
                     <tbody id="petTableTbody">
                         <tr class="skeleton-row">
-                            <td style="text-align: center;"><span class="skeleton-avatar"></span></td>
-                            <td><span class="skeleton-text" style="width: 75px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 120px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 110px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 55px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 130px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 80px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 70px;"></span></td>
-                            <td style="text-align: center;"><span class="skeleton-text" style="width: 20px;"></span></td>
+                            <td class="pet-u-text-center"><span class="skeleton-avatar"></span></td>
+                            <td><span class="skeleton-text pet-u-w-75"></span></td>
+                            <td><span class="skeleton-text pet-u-w-120"></span></td>
+                            <td><span class="skeleton-text pet-u-w-110"></span></td>
+                            <td><span class="skeleton-text pet-u-w-55"></span></td>
+                            <td><span class="skeleton-text pet-u-w-130"></span></td>
+                            <td><span class="skeleton-text pet-u-w-80"></span></td>
+                            <td><span class="skeleton-text pet-u-w-70"></span></td>
+                            <td class="pet-u-text-center"><span class="skeleton-text pet-u-w-20"></span></td>
                         </tr>
                         <tr class="skeleton-row">
-                            <td style="text-align: center;"><span class="skeleton-avatar"></span></td>
-                            <td><span class="skeleton-text" style="width: 75px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 100px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 110px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 55px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 120px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 80px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 70px;"></span></td>
-                            <td style="text-align: center;"><span class="skeleton-text" style="width: 20px;"></span></td>
+                            <td class="pet-u-text-center"><span class="skeleton-avatar"></span></td>
+                            <td><span class="skeleton-text pet-u-w-75"></span></td>
+                            <td><span class="skeleton-text pet-u-w-100"></span></td>
+                            <td><span class="skeleton-text pet-u-w-110"></span></td>
+                            <td><span class="skeleton-text pet-u-w-55"></span></td>
+                            <td><span class="skeleton-text pet-u-w-120"></span></td>
+                            <td><span class="skeleton-text pet-u-w-80"></span></td>
+                            <td><span class="skeleton-text pet-u-w-70"></span></td>
+                            <td class="pet-u-text-center"><span class="skeleton-text pet-u-w-20"></span></td>
                         </tr>
                         <tr class="skeleton-row">
-                            <td style="text-align: center;"><span class="skeleton-avatar"></span></td>
-                            <td><span class="skeleton-text" style="width: 75px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 140px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 110px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 55px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 135px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 80px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 70px;"></span></td>
-                            <td style="text-align: center;"><span class="skeleton-text" style="width: 20px;"></span></td>
+                            <td class="pet-u-text-center"><span class="skeleton-avatar"></span></td>
+                            <td><span class="skeleton-text pet-u-w-75"></span></td>
+                            <td><span class="skeleton-text pet-u-w-140"></span></td>
+                            <td><span class="skeleton-text pet-u-w-110"></span></td>
+                            <td><span class="skeleton-text pet-u-w-55"></span></td>
+                            <td><span class="skeleton-text pet-u-w-135"></span></td>
+                            <td><span class="skeleton-text pet-u-w-80"></span></td>
+                            <td><span class="skeleton-text pet-u-w-70"></span></td>
+                            <td class="pet-u-text-center"><span class="skeleton-text pet-u-w-20"></span></td>
                         </tr>
                     </tbody>
                 </table>
@@ -146,7 +148,7 @@
         <div class="admin-pagination-bar" id="petPaginationBar">
             <div class="pagination-controls" id="petPaginationControls">
                 <button type="button" class="pagination-btn disabled" id="petPrevPageBtn" title="Trang trước">&lt;</button>
-                <div id="petPageNumbersContainer" style="display: flex; gap: 4px;"></div>
+                <div class="pet-inline-gap-4" id="petPageNumbersContainer"></div>
                 <button type="button" class="pagination-btn" id="petNextPageBtn" title="Trang sau">&gt;</button>
             </div>
         </div>
@@ -162,39 +164,39 @@
                 <div class="drawer-user-headline">
                     <img src="/assets/images/publics/dogcute3.jpg" class="drawer-pet-avatar" id="drawerPetAvatar" alt="Avatar">
                     <div>
-                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div class="pet-flex-wrap-gap-8">
                             <span class="headline-name" id="drawerPetName">Đang tải...</span>
-                            <span class="admin-badge badge-neutral" id="drawerPetCode">—</span>
-                            <span class="admin-badge badge-neutral" id="drawerPetSpeciesBreed">—</span>
+                            <span class="pet-profile-meta" id="drawerPetCode">—</span>
+                            <span class="pet-profile-meta" id="drawerPetSpeciesBreed">—</span>
                             <span class="admin-badge badge-neutral" id="drawerPetStatusBadge">—</span>
                         </div>
-                        <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
-                            Chủ sở hữu: <a href="javascript:void(0)" class="user-name-link btn-jump-customer" id="drawerPetOwnerLink" data-cust-id="">Đang tải...</a> • Cân nặng: <strong id="drawerPetWeightHeadline" style="color: var(--text-main);">—</strong>
+                        <div class="pet-meta-small">
+                            Chủ sở hữu: <a href="javascript:void(0)" class="user-name-link btn-jump-customer" id="drawerPetOwnerLink" data-cust-id="">Đang tải...</a> • Cân nặng: <strong class="pet-text-main" id="drawerPetWeightHeadline">—</strong>
                         </div>
                     </div>
                 </div>
 
                 <div class="drawer-action-buttons">
-                    <button type="button" class="action-btn-pill btn-primary-pill btn-quick-book-spa">Đặt lịch Spa hoặc Hotel</button>
-                    <button type="button" class="action-btn-pill btn-open-weigh-modal" id="btnDrawerWeighPet" data-id="">Cân bé và Thể trạng</button>
+                    <button type="button" class="action-btn-pill btn-primary-pill btn-quick-book-spa">Đặt lịch dịch vụ</button>
+                    <button type="button" class="action-btn-pill btn-open-weigh-modal" id="btnDrawerWeighPet" data-id="">Cân bé và thể trạng</button>
                     <button type="button" class="action-btn-pill btn-quick-carelog">Đăng ảnh nhật ký</button>
                     <button type="button" class="action-btn-pill btn-jump-customer" id="btnDrawerJumpCustomer" data-cust-id="" disabled>Xem chủ nuôi</button>
                 </div>
             </div>
 
             <!-- BANNER CẢNH BÁO AN TOÀN KHẨN CẤP (DÒNG CHỮ ĐỎ THUẦN) -->
-            <div class="emergency-alert-banner" id="drawerPetAlertBanner" style="display: none;">
+            <div class="emergency-alert-banner pet-is-hidden" id="drawerPetAlertBanner">
                 <span class="alert-text" id="drawerPetAlertText"></span>
             </div>
 
             <!-- 4 TAB CON CHI TIẾT BÊN TRONG HỒ SƠ VÀ TRẠNG THÁI -->
             <div class="drawer-subtabs-row">
                 <div class="drawer-subtabs-bar">
-                    <button type="button" class="drawer-tab-btn active" data-drawertab="ptab-traits">Thể trạng và Đặc tính</button>
+                    <button type="button" class="drawer-tab-btn active" data-drawertab="ptab-traits">Thể trạng và đặc tính</button>
 
                     <button type="button" class="drawer-tab-btn" data-drawertab="ptab-carelog">
                         <span>Nhật ký chăm sóc</span>
-                        <span class="tab-badge-count" style="display: none;">0</span>
+                        <span class="tab-badge-count pet-is-hidden">0</span>
                     </button>
                     <button type="button" class="drawer-tab-btn" data-drawertab="ptab-history">Lịch sử dịch vụ</button>
                 </div>
@@ -209,24 +211,24 @@
                 <div class="drawer-tab-panel active" id="ptab-traits">
                     <div class="detail-grid-two-col">
                         <div class="detail-box">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <h4 class="detail-box-title" style="margin-bottom: 0;">Thông tin thể trạng</h4>
+                            <div class="pet-row-between-mb-8">
+                                <h4 class="detail-box-title pet-u-mb-0">Thông tin thể trạng</h4>
                                 <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnOpenEditPetModal">Sửa hồ sơ</button>
                             </div>
-                            <div class="data-pair-row"><span class="data-key">Mã thú cưng:</span><span class="data-val" id="profilePetCode">—</span></div>
-                            <div class="data-pair-row"><span class="data-key">Tên bé cưng:</span><span class="data-val" id="profilePetName">—</span></div>
-                            <div class="data-pair-row"><span class="data-key">Loài và Giống:</span><span class="data-val" id="profilePetSpecies">—</span></div>
-                            <div class="data-pair-row"><span class="data-key">Giới tính:</span><span class="data-val" id="profilePetGender">—</span></div>
-                            <div class="data-pair-row"><span class="data-key">Cân nặng hiện tại:</span><span class="data-val"><strong id="profilePetWeight">—</strong></span></div>
-                            <div class="data-pair-row"><span class="data-key">Ngày sinh:</span><span class="data-val" id="profilePetDob">—</span></div>
-                            <div class="data-pair-row"><span class="data-key">Màu lông:</span><span class="data-val" id="profilePetColor">—</span></div>
-                            <div class="data-pair-row"><span class="data-key">Tiền sử dị ứng:</span><span class="data-val text-danger" id="profilePetAllergy">—</span></div>
-                            <div class="data-pair-row" style="border-bottom: none;"><span class="data-key">Tập tính và Lưu ý:</span><span class="data-val" id="profilePetNotes">—</span></div>
+                            <div class="pet-profile-duplicate data-pair-row"><span class="data-key">Mã thú cưng</span><span class="data-val" id="profilePetCode">—</span></div>
+                            <div class="pet-profile-duplicate data-pair-row"><span class="data-key">Tên bé cưng</span><span class="data-val" id="profilePetName">—</span></div>
+                            <div class="pet-profile-duplicate data-pair-row"><span class="data-key">Loài và giống</span><span class="data-val" id="profilePetSpecies">—</span></div>
+                            <div class="data-pair-row"><span class="data-key">Giới tính</span><span class="data-val" id="profilePetGender">—</span></div>
+                            <div class="pet-profile-duplicate data-pair-row"><span class="data-key">Cân nặng hiện tại</span><span class="data-val"><strong id="profilePetWeight">—</strong></span></div>
+                            <div class="data-pair-row"><span class="data-key">Ngày sinh</span><span class="data-val" id="profilePetDob">—</span></div>
+                            <div class="data-pair-row"><span class="data-key">Màu lông</span><span class="data-val" id="profilePetColor">—</span></div>
+                            <div class="data-pair-row"><span class="data-key">Tiền sử dị ứng</span><span class="data-val" id="profilePetAllergy">—</span></div>
+                            <div class="pet-profile-duplicate data-pair-row pet-border-bottom-none"><span class="data-key">Tập tính và lưu ý</span><span class="data-val" id="profilePetNotes">—</span></div>
                         </div>
 
                         <div class="detail-box">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <h4 class="detail-box-title" style="margin-bottom: 0;">Biến động cân nặng và Ma trận giá</h4>
+                            <div class="pet-row-between-mb-8">
+                                <h4 class="detail-box-title pet-u-mb-0">Biến động cân nặng</h4>
                                 <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-weigh-modal">Cân bé</button>
                             </div>
                             <!-- Danh sách mốc cân nặng theo ngày -->
@@ -236,24 +238,28 @@
                                         <tr>
                                             <th>Ngày đo</th>
                                             <th>Cân nặng</th>
-                                            <th>Phân khúc giá Spa/Hotel</th>
+                                            <th>Nhóm cân nặng</th>
                                             <th>Ghi nhận bởi</th>
                                         </tr>
                                     </thead>
                                     <tbody id="petWeightHistoryTbody" data-loading-skeleton="true">
-                                        <tr class="skeleton-row"><td><span class="skeleton-text" style="width: 80px;"></span></td><td><span class="skeleton-text" style="width: 60px;"></span></td><td><span class="skeleton-text" style="width: 100px;"></span></td><td><span class="skeleton-text" style="width: 120px;"></span></td></tr>
-                                        <tr class="skeleton-row"><td><span class="skeleton-text" style="width: 85px;"></span></td><td><span class="skeleton-text" style="width: 55px;"></span></td><td><span class="skeleton-text" style="width: 95px;"></span></td><td><span class="skeleton-text" style="width: 110px;"></span></td></tr>
-                                        <tr class="skeleton-row"><td><span class="skeleton-text" style="width: 75px;"></span></td><td><span class="skeleton-text" style="width: 65px;"></span></td><td><span class="skeleton-text" style="width: 105px;"></span></td><td><span class="skeleton-text" style="width: 130px;"></span></td></tr>
+                                        <tr class="skeleton-row"><td><span class="skeleton-text pet-u-w-80"></span></td><td><span class="skeleton-text pet-u-w-60"></span></td><td><span class="skeleton-text pet-u-w-100"></span></td><td><span class="skeleton-text pet-u-w-120"></span></td></tr>
+                                        <tr class="skeleton-row"><td><span class="skeleton-text pet-u-w-85"></span></td><td><span class="skeleton-text pet-u-w-55"></span></td><td><span class="skeleton-text pet-u-w-95"></span></td><td><span class="skeleton-text pet-u-w-110"></span></td></tr>
+                                        <tr class="skeleton-row"><td><span class="skeleton-text pet-u-w-75"></span></td><td><span class="skeleton-text pet-u-w-65"></span></td><td><span class="skeleton-text pet-u-w-105"></span></td><td><span class="skeleton-text pet-u-w-130"></span></td></tr>
                                     </tbody>
                                 </table>
                             </div>
 
-                            <div style="margin-top: 14px;">
-                                <h4 class="detail-box-title">Ghi chú kỹ thuật Groomer</h4>
-                                <textarea class="admin-input textarea-note" rows="3" id="petGroomerNotes"></textarea>
-                                <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+                            <div class="pet-u-mt-14">
+                                <h4 class="detail-box-title">Ghi chú kỹ thuật viên</h4>
+                                <p id="petGroomerNotesRead" class="pet-profile-note-read"></p>
+                                <details id="petGroomerNotesEditor" class="pet-profile-note-editor">
+                                    <summary>Sửa ghi chú</summary>
+                                    <textarea class="admin-input textarea-note" rows="3" id="petGroomerNotes"></textarea>
+                                <div class="pet-actions-right-mt-8">
                                     <button type="button" class="admin-btn admin-btn-primary btn-sm" id="btnSaveGroomerNotes">Lưu ghi chú</button>
                                 </div>
+                                </details>
                             </div>
                         </div>
                     </div>
@@ -270,10 +276,10 @@
                                 <tr>
                                     <th>Thời gian</th>
                                     <th>Dịch vụ và KTV</th>
-                                    <th style="width: 90px; text-align: center;">Ảnh trước và sau</th>
+                                    <th class="pet-u-w-90-center">Ảnh trước và sau</th>
                                     <th>Kiểm tra vệ sinh</th>
                                     <th>Trạng thái app</th>
-                                    <th style="width: 100px; text-align: right;">Thao tác</th>
+                                    <th class="pet-u-w-100-right">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="petCarelogTbody">
@@ -289,12 +295,12 @@
                         <table class="admin-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 130px;">Mã ca</th>
+                                    <th class="pet-u-w-130">Mã ca</th>
                                     <th>Dịch vụ</th>
-                                    <th style="width: 190px;">Thời gian</th>
-                                    <th style="width: 150px;">Cân nặng áp dụng</th>
-                                    <th style="width: 140px; text-align: right;">Tổng tiền</th>
-                                    <th style="width: 140px; text-align: center;">Trạng thái</th>
+                                    <th class="pet-u-w-190">Thời gian</th>
+                                    <th class="pet-u-w-150">Cân nặng áp dụng</th>
+                                    <th class="pet-u-w-140-right">Tổng tiền</th>
+                                    <th class="pet-u-w-140-center">Trạng thái</th>
                                 </tr>
                             </thead>
                             <tbody id="petHistoryTbody">
@@ -314,8 +320,8 @@
         <div class="admin-card customer-master-card">
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
-                    <h4 class="detail-box-title" style="margin-bottom: 0;">Nhật ký chăm sóc</h4>
-                    <input type="text" class="admin-input" id="petCarelogSearch" placeholder="Tìm bé cưng, chủ nuôi hoặc nội dung" autocomplete="off" style="max-width: 360px;">
+                    <h4 class="detail-box-title pet-u-mb-0">Nhật ký chăm sóc</h4>
+                    <input type="text" class="admin-input pet-u-max-w-360" id="petCarelogSearch" placeholder="Tìm bé cưng, chủ nuôi hoặc nội dung" autocomplete="off">
                 </div>
             </div>
             <div class="table-responsive-wrapper">
@@ -391,7 +397,7 @@
                             <th>Loại nhắc lịch</th>
                             <th>Ghi chú và lần gần nhất</th>
                             <th>Trạng thái tin nhắn</th>
-                            <th style="width: 170px; text-align: right;">Thao tác</th>
+                            <th class="pet-u-w-170-right">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="reminderTableTbody">
@@ -404,7 +410,7 @@
         <div class="admin-pagination-bar" id="remPaginationBar">
             <div class="pagination-controls" id="remPaginationControls">
                 <button type="button" class="pagination-btn disabled" id="remPrevPageBtn" title="Trang trước">&lt;</button>
-                <div id="remPageNumbersContainer" style="display: flex; gap: 4px;"></div>
+                <div class="pet-inline-gap-4" id="remPageNumbersContainer"></div>
                 <button type="button" class="pagination-btn" id="remNextPageBtn" title="Trang sau">&gt;</button>
             </div>
         </div>
@@ -414,7 +420,7 @@
          MODAL 1: THÊM BÉ CƯNG MỚI
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalAddPet">
-        <div class="admin-modal-card wide-modal" style="width: 760px; max-width: 95vw;">
+        <div class="admin-modal-card wide-modal pet-modal-w-760">
             <div class="admin-modal-header">
                 <span class="admin-modal-title">Thêm bé cưng</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalAddPet">Đóng</button>
@@ -423,25 +429,25 @@
             <form id="formAddPet" onsubmit="return false;">
                 <!-- CHỌN CHỦ NUÔI AUTOCOMPLETE THÔNG MINH -->
                 <div class="form-group">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <label class="form-label">Chủ sở hữu <span style="color: #DC2626;">*</span></label>
+                    <div class="pet-row-between">
+                        <label class="form-label">Chủ sở hữu <span class="pet-text-danger">*</span></label>
                         <button type="button" class="btn-text-action" id="btnOpenQuickAddOwnerModal">Thêm nhanh chủ nuôi</button>
                     </div>
                     <div class="pet-owner-autocomplete-wrapper">
                         <input type="text" class="admin-input" id="newPetOwnerInput" placeholder="Nhập số điện thoại hoặc họ tên để tìm nhanh..." autocomplete="off" required>
                         <input type="hidden" id="newPetOwner" value="">
-                        <div class="autocomplete-dropdown" id="newPetOwnerDropdown" style="display: none;"></div>
+                        <div class="autocomplete-dropdown pet-is-hidden" id="newPetOwnerDropdown"></div>
                     </div>
-                    <div id="newPetOwnerSelectedCard" class="adjust-customer-selected-card" style="display: none;"></div>
+                    <div id="newPetOwnerSelectedCard" class="adjust-customer-selected-card pet-is-hidden"></div>
                 </div>
 
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Tên bé cưng <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label">Tên bé cưng <span class="pet-text-danger">*</span></label>
                         <input type="text" class="admin-input" id="newPetName" placeholder="Ví dụ: Milu, Đậu Đậu..." required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Loài thú cưng <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label">Loài thú cưng <span class="pet-text-danger">*</span></label>
                         <select class="admin-select" id="newPetSpecies" required>
                             <option value="dog">Chó</option>
                             <option value="cat">Mèo</option>
@@ -453,10 +459,10 @@
 
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Giống loài <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label">Giống loài <span class="pet-text-danger">*</span></label>
                         <div class="pet-field-autocomplete-wrapper">
                             <input type="text" class="admin-input" id="newPetBreed" placeholder="Ví dụ: Corgi, Poodle, Mèo ALN..." required autocomplete="off">
-                            <div class="autocomplete-dropdown" id="newPetBreedDropdown" style="display: none;"></div>
+                            <div class="autocomplete-dropdown pet-is-hidden" id="newPetBreedDropdown"></div>
                         </div>
                     </div>
                     <div class="form-group">
@@ -470,7 +476,7 @@
 
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Cân nặng (kg) <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label">Cân nặng (kg) <span class="pet-text-danger">*</span></label>
                         <input type="number" min="0.1" step="0.1" class="admin-input" id="newPetWeight" placeholder="Ví dụ: 6.5" required>
                     </div>
                     <div class="form-group">
@@ -484,7 +490,7 @@
                         <label class="form-label">Màu lông</label>
                         <div class="pet-field-autocomplete-wrapper">
                             <input type="text" class="admin-input" id="newPetColor" placeholder="Ví dụ: Vàng trắng, Xám khói..." autocomplete="off">
-                            <div class="autocomplete-dropdown" id="newPetColorDropdown" style="display: none;"></div>
+                            <div class="autocomplete-dropdown pet-is-hidden" id="newPetColorDropdown"></div>
                         </div>
                     </div>
 
@@ -512,7 +518,7 @@
          MODAL 2: CÂN BÉ VÀ ÁP DỤNG MA TRẬN GIÁ DỊCH VỤ
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalWeighPet">
-        <div class="admin-modal-card" style="width: 540px; max-width: 92vw;">
+        <div class="admin-modal-card pet-modal-w-540">
             <div class="admin-modal-header">
                 <span class="admin-modal-title">Cân bé và áp dụng bảng giá</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalWeighPet">Đóng</button>
@@ -522,17 +528,17 @@
                 <div class="form-row-two-col">
                     <div class="form-group">
                         <label class="form-label">Tên bé cưng</label>
-                        <input type="text" class="admin-input" id="weighPetName" readonly style="background-color: #F1F5F3;">
+                        <input type="text" class="admin-input pet-bg-soft" id="weighPetName" readonly>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Cân nặng trước đó</label>
-                        <input type="text" class="admin-input" id="weighPetOldWeight" readonly style="background-color: #F1F5F3;">
+                        <input type="text" class="admin-input pet-bg-soft" id="weighPetOldWeight" readonly>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Cân nặng thực tế (kg) <span style="color: #DC2626;">*</span></label>
-                    <input type="number" min="0.1" step="0.1" class="admin-input" id="weighPetNewWeight" required style="font-size: 18px; font-weight: 700; color: #236B48;">
+                    <label class="form-label">Cân nặng thực tế (kg) <span class="pet-text-danger">*</span></label>
+                    <input type="number" min="0.1" step="0.1" class="admin-input pet-brand-emphasis" id="weighPetNewWeight" required>
                 </div>
 
                 <div class="form-group">
@@ -549,20 +555,20 @@
                 <!-- BẢNG MA TRẬN GIÁ DỊCH VỤ TỰ ĐỘNG NHẢY -->
                 <div class="form-group">
                     <label class="form-label">Bảng ma trận giá dịch vụ tương ứng</label>
-                    <div style="border: 1px solid var(--border-neutral); border-radius: var(--admin-radius); padding: 12px; background-color: transparent; font-size: 13px;">
-                        <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+                    <div class="pet-notes-field">
+                        <div class="pet-row-between-compact">
                             <span>Phân khúc cân nặng:</span>
-                            <strong id="weighTierResult" style="color: #236B48;">&mdash;</strong>
+                            <strong class="pet-text-brand" id="weighTierResult">&mdash;</strong>
                         </div>
-                        <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+                        <div class="pet-row-between-compact">
                             <span>Đơn giá gói Tắm sấy toàn diện:</span>
                             <strong id="weighSpaPriceResult">&mdash;</strong>
                         </div>
-                        <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+                        <div class="pet-row-between-compact">
                             <span>Đơn giá Cắt tỉa tạo kiểu:</span>
                             <strong id="weighGroomPriceResult">&mdash;</strong>
                         </div>
-                        <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+                        <div class="pet-row-between-compact">
                             <span>Đơn giá phòng Pet Hotel theo ngày:</span>
                             <strong id="weighHotelPriceResult">&mdash;</strong>
                         </div>
@@ -581,7 +587,7 @@
          MODAL 3: GỬI TIN NHẮN ZALO / SMS CHĂM SÓC ĐỊNH KỲ
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalSendReminder">
-        <div class="admin-modal-card" style="width: 540px; max-width: 92vw;">
+        <div class="admin-modal-card pet-modal-w-540">
             <div class="admin-modal-header">
                 <span class="admin-modal-title">Gửi tin nhắn chăm sóc định kỳ</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalSendReminder">Đóng</button>
@@ -591,11 +597,11 @@
                 <div class="form-row-two-col">
                     <div class="form-group">
                         <label class="form-label">Khách hàng nhận tin</label>
-                        <input type="text" class="admin-input" id="reminderModalOwner" readonly style="background-color: #F1F5F3;">
+                        <input type="text" class="admin-input pet-bg-soft" id="reminderModalOwner" readonly>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Bé cưng</label>
-                        <input type="text" class="admin-input" id="reminderModalPet" readonly style="background-color: #F1F5F3;">
+                        <input type="text" class="admin-input pet-bg-soft" id="reminderModalPet" readonly>
                     </div>
                 </div>
 
@@ -612,12 +618,12 @@
 
                 <div class="form-group">
                     <label class="form-label">Kênh gửi tin nhắn</label>
-                    <div style="display: flex; gap: 16px; font-size: 13px;">
-                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <div class="pet-inline-gap-16">
+                        <label class="pet-flex-align-gap-6-pointer">
                             <input type="radio" name="reminderChannel" value="ZALO" checked accent-color="#236B48">
                             <span>Zalo</span>
                         </label>
-                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <label class="pet-flex-align-gap-6-pointer">
                             <input type="radio" name="reminderChannel" value="PHONE" accent-color="#236B48">
                             <span>Điện thoại</span>
                         </label>
@@ -625,18 +631,18 @@
                 </div>
 
                 <div class="form-group">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <label class="form-label" style="margin-bottom: 0;">Nội dung tin nhắn gửi khách</label>
+                    <div class="pet-row-between-mb-6">
+                        <label class="form-label pet-u-mb-0">Nội dung tin nhắn gửi khách</label>
                         <button type="button" class="btn-text-action" id="btnCopyReminderText">Sao chép nội dung</button>
                     </div>
                     <textarea class="admin-input textarea-note" rows="4" id="reminderMessageContent"></textarea>
                 </div>
 
-                <div class="modal-actions-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="modal-actions-footer pet-row-between">
                     <div>
                         <a href="javascript:void(0)" class="admin-btn admin-btn-secondary" id="btnOpenZaloChat" target="_blank">Mở Zalo nhắn Sen</a>
                     </div>
-                    <div style="display: flex; gap: 8px;">
+                    <div class="pet-inline-gap-8">
                         <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalSendReminder">Hủy</button>
                         <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitSendReminder">Ghi nhận đã liên hệ</button>
                     </div>
@@ -649,14 +655,14 @@
          MODAL 4: CHI TIẾT NHẬT KÝ CHĂM SÓC (BEFORE / AFTER VÀ CHECKLIST)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalViewCareLogDetail">
-        <div class="admin-modal-card" style="width: 720px; max-width: 95vw;">
+        <div class="admin-modal-card pet-modal-w-720">
             <div class="admin-modal-header">
                 <span class="admin-modal-title" id="carelogModalTitle">Chi ti&#7871;t nh&#7853;t k&#253;</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalViewCareLogDetail">Đóng</button>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-                <div style="font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+            <div class="pet-stack-gap-16">
+                <div class="pet-meta-row">
                     <div>
                         <span id="carelogModalTime">&mdash;</span> • <span id="carelogModalGroomer">&mdash;</span>
                     </div>
@@ -664,15 +670,15 @@
                 </div>
 
                 <div>
-                    <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 8px;">Ảnh thực tế ca làm việc:</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                        <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Trước khi làm:</span>
-                            <img hidden id="carelogModalImgBefore" style="width: 100%; height: 220px; object-fit: cover; object-position: center; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);" alt="Trước khi làm">
+                    <div class="pet-section-label-mb-8">Ảnh thực tế ca làm việc:</div>
+                    <div class="pet-grid-two-col">
+                        <div class="pet-stack-gap-4">
+                            <span class="pet-label-muted-strong">Trước khi làm:</span>
+                            <img class="pet-preview-image" hidden id="carelogModalImgBefore" alt="Trước khi làm">
                         </div>
-                        <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Sau khi hoàn thiện:</span>
-                            <img hidden id="carelogModalImgAfter" style="width: 100%; height: 220px; object-fit: cover; object-position: center; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);" alt="Sau khi hoàn thiện">
+                        <div class="pet-stack-gap-4">
+                            <span class="pet-label-muted-strong">Sau khi hoàn thiện:</span>
+                            <img class="pet-preview-image" hidden id="carelogModalImgAfter" alt="Sau khi hoàn thiện">
                         </div>
                     </div>
                 </div>
@@ -683,8 +689,8 @@
                 </div>
 
                 <div>
-                    <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 6px;">Lời dặn dò gửi chủ nuôi:</div>
-                    <div id="carelogModalMessage" style="font-size: 13px; color: var(--text-main); line-height: 1.6;">&mdash;</div>
+                    <div class="pet-section-label-mb-6">Lời dặn dò gửi chủ nuôi:</div>
+                    <div class="pet-description" id="carelogModalMessage">&mdash;</div>
                 </div>
 
                 <div class="modal-actions-footer">
@@ -698,7 +704,7 @@
          MODAL 5: CHỈNH SỬA HỒ SƠ THÚ CƯNG (EDIT PET PROFILE)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalEditPetProfile">
-        <div class="admin-modal-card wide-modal" style="width: 760px; max-width: 95vw;">
+        <div class="admin-modal-card wide-modal pet-modal-w-760">
             <div class="admin-modal-header">
                 <span class="admin-modal-title">Chỉnh sửa hồ sơ bé cưng</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalEditPetProfile">Đóng</button>
@@ -712,18 +718,18 @@
                     <div class="pet-owner-autocomplete-wrapper">
                         <input type="text" class="admin-input" id="editPetOwnerInput" placeholder="Nhập số điện thoại hoặc họ tên để tìm nhanh..." autocomplete="off">
                         <input type="hidden" id="editPetOwner" value="">
-                        <div class="autocomplete-dropdown" id="editPetOwnerDropdown" style="display: none;"></div>
+                        <div class="autocomplete-dropdown pet-is-hidden" id="editPetOwnerDropdown"></div>
                     </div>
-                    <div id="editPetOwnerSelectedCard" class="adjust-customer-selected-card" style="display: none;"></div>
+                    <div id="editPetOwnerSelectedCard" class="adjust-customer-selected-card pet-is-hidden"></div>
                 </div>
 
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Tên bé cưng <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label">Tên bé cưng <span class="pet-text-danger">*</span></label>
                         <input type="text" class="admin-input" id="editPetName" placeholder="Tên bé cưng..." required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Loài thú cưng <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label">Loài thú cưng <span class="pet-text-danger">*</span></label>
                         <select class="admin-select" id="editPetSpecies" required>
                             <option value="dog">Chó</option>
                             <option value="cat">Mèo</option>
@@ -735,10 +741,10 @@
 
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Giống loài <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label">Giống loài <span class="pet-text-danger">*</span></label>
                         <div class="pet-field-autocomplete-wrapper">
                             <input type="text" class="admin-input" id="editPetBreed" placeholder="Ví dụ: Corgi, Poodle..." required autocomplete="off">
-                            <div class="autocomplete-dropdown" id="editPetBreedDropdown" style="display: none;"></div>
+                            <div class="autocomplete-dropdown pet-is-hidden" id="editPetBreedDropdown"></div>
                         </div>
                     </div>
                     <div class="form-group">
@@ -752,7 +758,7 @@
 
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Cân nặng (kg) <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label">Cân nặng (kg) <span class="pet-text-danger">*</span></label>
                         <input type="number" step="0.1" class="admin-input" id="editPetWeight" placeholder="Ví dụ: 8.5" required>
                     </div>
                     <div class="form-group">
@@ -766,7 +772,7 @@
                         <label class="form-label">Màu lông</label>
                         <div class="pet-field-autocomplete-wrapper">
                             <input type="text" class="admin-input" id="editPetColor" placeholder="Ví dụ: Vàng trắng, Xám tro..." autocomplete="off">
-                            <div class="autocomplete-dropdown" id="editPetColorDropdown" style="display: none;"></div>
+                            <div class="autocomplete-dropdown pet-is-hidden" id="editPetColorDropdown"></div>
                         </div>
                     </div>
                     <div class="form-group">
@@ -806,19 +812,19 @@
          MODAL 6: THÊM NHANH CHỦ NUÔI TẠI QUẦY TIẾP NHẬN
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalQuickAddOwner">
-        <div class="admin-modal-card" style="width: 500px; max-width: 92vw;">
+        <div class="admin-modal-card pet-modal-w-500">
             <div class="admin-modal-header">
                 <span class="admin-modal-title">Thêm nhanh chủ nuôi</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalQuickAddOwner">Đóng</button>
             </div>
             <form id="formQuickAddOwner" onsubmit="return false;">
                 <div class="form-group">
-                    <label class="form-label">Họ và tên khách hàng <span style="color: #DC2626;">*</span></label>
+                    <label class="form-label">Họ và tên khách hàng <span class="pet-text-danger">*</span></label>
                     <input type="text" class="admin-input" id="quickOwnerName" placeholder="Ví dụ: Hoàng Mai Ly" required>
                 </div>
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Số điện thoại <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label">Số điện thoại <span class="pet-text-danger">*</span></label>
                         <input type="tel" class="admin-input" id="quickOwnerPhone" placeholder="Ví dụ: 0988112233" required>
                     </div>
                 </div>
@@ -839,7 +845,7 @@
          MODAL 7: XEM TRƯỚC VÀ IN THẺ ĐEO CỔ / THẺ CHUỒNG (NHÃN NHIỆT 80MM)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalCollarTagPreview">
-        <div class="admin-modal-card" style="width: 480px; max-width: 92vw;">
+        <div class="admin-modal-card pet-modal-w-480">
             <div class="admin-modal-header">
                 <span class="admin-modal-title">Xem trước thẻ đeo cổ và thẻ chuồng</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalCollarTagPreview">Đóng</button>
@@ -870,7 +876,7 @@
                     </div>
                     <div class="thermal-tag-row">
                         <span>Số điện thoại:</span>
-                        <strong id="tagPreviewOwnerPhone" style="font-size: 15px; color: #236B48;">&mdash;</strong>
+                        <strong class="pet-brand-title" id="tagPreviewOwnerPhone">&mdash;</strong>
                     </div>
                     <div class="thermal-tag-row">
                         <span>Thời gian tiếp nhận:</span>
@@ -878,7 +884,7 @@
                     </div>
                 </div>
 
-                <div id="tagPreviewAlertWrapper" class="thermal-tag-alert-box" style="display: none;">
+                <div id="tagPreviewAlertWrapper" class="thermal-tag-alert-box pet-is-hidden">
                     <div class="thermal-alert-title">LƯU Ý AN TOÀN ĐẶC BIỆT:</div>
                     <div class="thermal-alert-text" id="tagPreviewAlertText">&mdash;</div>
                 </div>
@@ -896,7 +902,7 @@
                 </div>
             </div>
 
-            <div class="modal-actions-footer" style="margin-top: 20px;">
+            <div class="modal-actions-footer pet-u-mt-20">
                 <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalCollarTagPreview">Đóng</button>
                 <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmSendPrintCollar">In thẻ đeo cổ</button>
             </div>
@@ -915,7 +921,7 @@
          MODAL 9: XEM TRƯỚC GIAO DIỆN NHẬT KÝ KHÁCH HÀNG (PAWPAL USER DIARY)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalPreviewAppDiary">
-        <div class="admin-modal-card" style="width:720px;max-width:95vw">
+        <div class="admin-modal-card pet-modal-w-720">
             <div class="admin-modal-header"><span class="admin-modal-title">Xem tr&#432;&#7899;c nh&#7853;t k&#253;</span><button type="button" class="btn-modal-close" data-close-modal="modalPreviewAppDiary">&#272;&#243;ng</button></div>
             <div id="petDiaryPreviewContent">Ch&#432;a c&#243; nh&#7853;t k&#253; &#273;&#7875; hi&#7875;n th&#7883;.</div>
         </div>
@@ -925,7 +931,7 @@
          MODAL 10: THƯ VIỆN CHỌN ẢNH THỰC TẾ CA LÀM
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalSelectPhoto">
-        <div class="admin-modal-card" style="width: 540px; max-width: 92vw;">
+        <div class="admin-modal-card pet-modal-w-540">
             <div class="admin-modal-header">
                 <span class="admin-modal-title" id="selectPhotoModalTitle">Chọn ảnh thực tế</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalSelectPhoto">Đóng</button>
@@ -941,7 +947,7 @@
                 <span class="photo-picker-help">JPG, PNG, WEBP hoặc GIF; tối đa 5 MB.</span>
             </div>
 
-            <div class="modal-actions-footer" style="margin-top: 16px;">
+            <div class="modal-actions-footer pet-u-mt-16">
                 <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalSelectPhoto">Hủy</button>
             </div>
         </div>
@@ -951,12 +957,12 @@
          MODAL 11: XÁC NHẬN THAO TÁC THÚ CƯNG (CUSTOM CONFIRM DIALOG)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalConfirmPetAction">
-        <div class="admin-modal-card" style="width: 480px; max-width: 92vw;">
+        <div class="admin-modal-card pet-modal-w-480">
             <div class="admin-modal-header">
                 <span class="admin-modal-title" id="confirmPetActionTitle">Xác nhận thao tác</span>
                 <button type="button" class="btn-modal-close" id="btnCloseConfirmPetModal" data-close-modal="modalConfirmPetAction">Đóng</button>
             </div>
-            <div style="font-size: 13.5px; color: var(--text-main); line-height: 1.6; margin: 12px 0 20px 0;" id="confirmPetActionMessage">
+            <div class="pet-description-long" id="confirmPetActionMessage">
                 Bạn có chắc chắn muốn thực hiện thao tác này không?
             </div>
             <div class="modal-actions-footer">

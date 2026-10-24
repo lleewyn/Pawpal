@@ -30,15 +30,18 @@
         });
 
         sessionStorage.setItem('pawpal_admin_customer_drawertab', targetPanelId);
-        if (targetPanelId === 'dtab-bookings' || targetPanelId === 'dtab-orders' || targetPanelId === 'dtab-complaints') {
+        const kind = { 'dtab-orders': 'orders', 'dtab-bookings': 'bookings', 'dtab-complaints': 'complaints' }[targetPanelId];
+        if (kind && !document.hidden && (!sessionStorage.getItem('pawpal_admin_active_module') || sessionStorage.getItem('pawpal_admin_active_module') === 'Khách hàng') && document.getElementById('subtab-tab-profile')?.classList.contains('active')) {
             const currentCustId = sessionStorage.getItem('pawpal_admin_customer_id');
             const cust = getCust(currentCustId);
             if (cust && typeof PawpalCustomers.fetchCustomerProfile360 === 'function') {
-                PawpalCustomers.fetchCustomerProfile360(cust).then(() => {
-                    if(sessionStorage.getItem('pawpal_admin_customer_id')!==currentCustId)return;
-                    renderDrawerOrders(currentCustId);
-                    renderDrawerBookings(currentCustId);
-                    renderDrawerComplaints(currentCustId);
+                const render = { orders: renderDrawerOrders, bookings: renderDrawerBookings, complaints: renderDrawerComplaints }[kind];
+                const task = PawpalCustomers.fetchCustomerProfile360(cust, { kind, page: cust._historyPages?.[kind] || 1 });
+                render(currentCustId);
+                task.then(() => {
+                    if (sessionStorage.getItem('pawpal_admin_customer_id') !== currentCustId || getCust(currentCustId) !== cust) return;
+                    render(currentCustId);
+                    updateHistoryBadges(cust);
                 });
             }
         }
@@ -136,7 +139,7 @@
                 acceptText:restore?'Khôi phục':'Gỡ bé cưng',onAccept:async()=>{
                     try{
                         const {data,error}=await window.getSupabaseClient().rpc('remove_customer_pet',{p_customer_id:customer.dbId,p_pet_id:pet.dbId,p_expected_updated_at:pet.updatedAt,p_restore:restore});if(error)throw error;
-                        await PawpalCustomers.loadCustomersModuleData({force:true});renderDrawerPets(id);
+                        await PawpalCustomers.refreshCustomerData();renderDrawerPets(id);
                         PawpalCustomers.showToast(data.result==='deleted'?'Đã xóa hồ sơ chưa có lịch sử.':data.result==='restored'?'Đã khôi phục theo dõi bé cưng.':'Đã ngừng theo dõi bé cưng và giữ nguyên lịch sử.','success');
                     }catch(error){PawpalCustomers.showToast(error.code==='PT409'?'Hồ sơ bé cưng đã thay đổi. Vui lòng làm mới.':'Không thể gỡ hồ sơ bé cưng. Vui lòng thử lại.','warning');}
                 }});
@@ -144,21 +147,36 @@
     }
 
     function historyPage(tbody,items,custId,rerender){
-        const cust=getCust(custId),kind=tbody.id.includes('Orders')?'orders':tbody.id.includes('Bookings')?'bookings':'complaints',total=Math.ceil((cust?._historyCounts?.[kind]??items.length)/10),current=cust?._historyPage||1;
+        const cust=getCust(custId),kind=tbody.id.includes('Orders')?'orders':tbody.id.includes('Bookings')?'bookings':'complaints',total=Math.ceil((cust?._historyCounts?.[kind]??items.length)/10),current=cust?._historyPages?.[kind]||1;
         let pager=document.getElementById(tbody.id+'Pager');
         if(!pager){pager=document.createElement('div');pager.id=tbody.id+'Pager';pager.className='admin-pagination-bar';const table=tbody.closest('table');(table.closest('.table-responsive-wrapper') || table).after(pager);}
         pager.innerHTML=total>1?`<div class="pagination-controls"><button type="button" class="pagination-btn" data-page="${current-1}" ${current===1?'disabled':''}>&lt;</button>${Array.from({length:Math.min(total,current+2)-Math.max(1,current-2)+1},(_,n)=>{const i=Math.max(1,current-2)+n-1;return `<button type="button" class="pagination-btn ${i+1===current?'active':''}" data-page="${i+1}">${i+1}</button>`;}).join('')}<button type="button" class="pagination-btn" data-page="${current+1}" ${current===total?'disabled':''}>&gt;</button></div>`:'';
-        pager.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>{PawpalCustomers.fetchCustomerProfile360(cust,{page:Number(b.dataset.page)}).then(()=>{if(sessionStorage.getItem('pawpal_admin_customer_id')===custId)rerender(custId);});rerender(custId);}));
+        pager.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>{PawpalCustomers.fetchCustomerProfile360(cust,{kind,page:Number(b.dataset.page)}).then(()=>{if(sessionStorage.getItem('pawpal_admin_customer_id')===custId){rerender(custId);updateHistoryBadges(cust);}});rerender(custId);}));
         return items;
     }
-    function historyUnavailable(tbody,cust){
-        if(cust?._detailsLoadStatus==='error' || cust?._detailsLoadStatus==='loading'){
-            tbody.innerHTML=`<tr><td colspan="6">${cust._detailsLoadStatus==='error'?'Không tải được lịch sử. Vui lòng làm mới hồ sơ.':'Đang tải lịch sử...'}</td></tr>`;
-            const pager=document.getElementById(tbody.id+'Pager');if(pager)pager.innerHTML='';return true;
-        }return false;
+    function historyUnavailable(tbody, cust) {
+        const kind = tbody.id.includes('Orders') ? 'orders' : tbody.id.includes('Bookings') ? 'bookings' : 'complaints';
+        const status = cust?._historyStatus?.[kind] || 'idle';
+        if (status !== 'loaded') {
+            const message = status === 'error' ? 'Không tải được lịch sử. Vui lòng mở lại tab để thử lại.'
+                : status === 'loading' ? 'Đang tải lịch sử...' : 'Chọn tab để tải lịch sử.';
+            tbody.innerHTML = `<tr><td colspan="6">${message}</td></tr>`;
+            document.getElementById(tbody.id + 'Pager')?.replaceChildren();
+            return true;
+        }
+        return false;
     }
 
-    // Render Tab Đơn hàng
+    function updateHistoryBadges(cust) {
+        for (const [kind, id] of [['orders', 'badgeCountOrders'], ['bookings', 'badgeCountBookings'], ['complaints', 'badgeCountComplaints']]) {
+            const badge = document.getElementById(id);
+            if (!badge) continue;
+            const count = cust?._historyCounts?.[kind];
+            badge.textContent = count === undefined ? '' : String(count);
+            badge.style.display = Number(count) > 0 ? 'inline-flex' : 'none';
+        }
+    }
+
     function renderDrawerOrders(custId) {
         const tbody = document.getElementById('drawerOrdersTbody');
         if (!tbody) return;
@@ -377,45 +395,10 @@
         // Tab 5: Khiếu nại
         renderDrawerComplaints(custId);
 
-        // Lazy fetch hồ sơ 360° (Đơn hàng, Lịch hẹn, Khiếu nại)
-        if (typeof PawpalCustomers.fetchCustomerProfile360 === 'function') {
-            PawpalCustomers.fetchCustomerProfile360(data, { force: true }).then(() => {
-                renderDrawerOrders(custId);
-                renderDrawerBookings(custId);
-                renderDrawerComplaints(custId);
-                const bOrd = document.getElementById('badgeCountOrders');
-                const bApp = document.getElementById('badgeCountBookings');
-                const bCmp = document.getElementById('badgeCountComplaints');
-                if (bOrd) {
-                    bOrd.textContent = (data._historyCounts?.orders??data.orders?.length??0);
-                    bOrd.style.display = (data._historyCounts?.orders??data.orders?.length)>0 ? 'inline-flex' : 'none';
-                }
-                if (bApp) {
-                    bApp.textContent = (data._historyCounts?.bookings??data.bookings?.length??0);
-                    bApp.style.display = (data._historyCounts?.bookings??data.bookings?.length)>0 ? 'inline-flex' : 'none';
-                }
-                if (bCmp) {
-                    bCmp.textContent = (data._historyCounts?.complaints??data.complaints?.length??0);
-                    bCmp.style.display = (data._historyCounts?.complaints??data.complaints?.length)>0 ? 'inline-flex' : 'none';
-                }
-            });
-        }
-
-        // Cập nhật số đếm badge trên các tabs con
-        const badgeOrders = document.getElementById('badgeCountOrders');
-        const badgeBookings = document.getElementById('badgeCountBookings');
-        const badgeComplaints = document.getElementById('badgeCountComplaints');
-        if (badgeOrders) {
-            badgeOrders.textContent = (data._historyCounts?.orders??data.orders?.length??0);
-            badgeOrders.style.display = (data._historyCounts?.orders??data.orders?.length)>0 ? 'inline-flex' : 'none';
-        }
-        if (badgeBookings) {
-            badgeBookings.textContent = (data._historyCounts?.bookings??data.bookings?.length??0);
-            badgeBookings.style.display = (data._historyCounts?.bookings??data.bookings?.length)>0 ? 'inline-flex' : 'none';
-        }
-        if (badgeComplaints) {
-            badgeComplaints.textContent = (data._historyCounts?.complaints??data.complaints?.length??0);
-            badgeComplaints.style.display = (data._historyCounts?.complaints??data.complaints?.length)>0 ? 'inline-flex' : 'none';
+        // Only the visible history tab loads rows; personal details need no history request.
+        updateHistoryBadges(data);
+        if (document.getElementById('subtab-tab-profile')?.classList.contains('active')) {
+            switchDrawerTab(sessionStorage.getItem('pawpal_admin_customer_drawertab') || 'dtab-personal');
         }
 
         PawpalCustomers.updateBreadcrumb(data.name);
@@ -606,7 +589,7 @@
                         throw error;
                     }
                     const custId=editingCustomerSnapshot.id;
-                    closeEditModal();await PawpalCustomers.loadCustomersModuleData({force:true});
+                    closeEditModal();await PawpalCustomers.refreshCustomerData({ledger:true});
                     renderDrawerCustomerProfile(custId);
                     PawpalCustomers.showToast(PawpalCustomers.state.listLoadStatus==='error'?'Đã lưu hồ sơ nhưng chưa tải lại được danh sách.':'Đã cập nhật hồ sơ khách hàng.',PawpalCustomers.state.listLoadStatus==='error'?'warning':'success');
                 }catch(error){console.error('[Customers] V1 profile update failed:',error.code || 'connection');PawpalCustomers.showToast('Chưa thể lưu hồ sơ. Vui lòng kiểm tra kết nối và thử lại.','danger');}
@@ -648,7 +631,7 @@
             try{
                 const {error}=await window.getSupabaseClient().rpc('add_customer_pet',{...payload,p_pet_id:pending.id});if(error)throw error;
                 sessionStorage.removeItem('pawpal_customer_pet_request');closeAddPetModal();
-                const id=addingPetCustomer.id;await PawpalCustomers.loadCustomersModuleData({force:true});renderDrawerPets(id);
+                const id=addingPetCustomer.id;await PawpalCustomers.refreshCustomerData();renderDrawerPets(id);
                 PawpalCustomers.showToast('Đã lưu bé cưng vào hồ sơ khách hàng.','success');
             }catch(error){PawpalCustomers.showToast('Chưa xác nhận được lần lưu. Bạn có thể lưu lại cùng nội dung để kiểm tra, hệ thống không tạo trùng.','warning');}
             finally{petAdding=false;button.disabled=false;button.textContent='Lưu bé cưng';}
@@ -685,7 +668,7 @@
                     p_safety_note:value('Alert') || null,p_allergy:value('Allergy') || null,p_routine:value('Routine') || null
                 });
                 if(error)throw error;
-                closeEditPetModal();await PawpalCustomers.loadCustomersModuleData({force:true});renderDrawerPets(currentEditingPetCustId);
+                closeEditPetModal();await PawpalCustomers.refreshCustomerData();renderDrawerPets(currentEditingPetCustId);
                 PawpalCustomers.showToast('Đã cập nhật bé cưng.','success');
             }catch(error){PawpalCustomers.showToast(error.code==='PT409'?'Hồ sơ bé cưng đã thay đổi. Hãy đóng form và mở lại sau khi làm mới.':'Không thể lưu bé cưng. Vui lòng thử lại.','warning');}
             finally{petEditing=false;button.disabled=false;button.textContent='Lưu cập nhật';}
@@ -708,7 +691,7 @@
             try{
                 const {error}=await window.getSupabaseClient().rpc('save_customer_note',{p_customer_id:cust.dbId,p_expected_updated_at:input.dataset.version,p_note:input.value});
                 if(error)throw error;
-                await PawpalCustomers.loadCustomersModuleData({force:true});renderDrawerCustomerProfile(cust.id);
+                await PawpalCustomers.refreshCustomerData();renderDrawerCustomerProfile(cust.id);
                 PawpalCustomers.showToast('Đã lưu ghi chú khách hàng.','success');
             }catch(error){PawpalCustomers.showToast(error.code==='PT409'?'Hồ sơ đã thay đổi. Vui lòng làm mới trước khi lưu ghi chú.':'Không thể lưu ghi chú. Vui lòng thử lại.','warning');}
             finally{btnSaveNote.disabled=false;input.readOnly=false;if(cancelNote)cancelNote.disabled=false;}

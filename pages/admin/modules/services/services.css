@@ -7,6 +7,7 @@
 }
 
 /* HIỂN THỊ NỘI DUNG TỪNG SUBTAB CHO MODULE DỊCH VỤ */
+
 .services-module .subtab-content {
     display: none;
     flex-direction: column;
@@ -18,6 +19,7 @@
 }
 
 /* KHỐI THẺ CHÍNH DỊCH VỤ */
+
 .services-module .admin-card {
     background-color: var(--surface-white);
     border: 1px solid var(--border-neutral);
@@ -27,7 +29,8 @@
 }
 
 /* 0. KHU VỰC THÔNG BÁO LỊCH HẸN SẮP TỚI (DẠNG DẢI NGANG MỎNG, ALERT TONE, GỌN GÀNG) */
-.booking-upcoming-strip {
+
+.services-module .booking-upcoming-strip {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -38,7 +41,7 @@
     font-size: 13px;
 }
 
-.upcoming-strip-left {
+.services-module .upcoming-strip-left {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -47,21 +50,21 @@
     white-space: nowrap;
 }
 
-.upcoming-strip-badge {
+.services-module .upcoming-strip-badge {
     font-weight: 700;
     color: var(--text-heading);
     font-size: 12.5px;
     flex-shrink: 0;
 }
 
-.upcoming-strip-items {
+.services-module .upcoming-strip-items {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: nowrap;
 }
 
-.upcoming-item-tag {
+.services-module .upcoming-item-tag {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -74,41 +77,41 @@
     cursor: pointer;
 }
 
-.upcoming-item-tag:hover {
+.services-module .upcoming-item-tag:hover {
     background-color: #E2ECE5;
     border: none !important;
 }
 
-.upcoming-item-tag.urgent {
+.services-module .upcoming-item-tag.urgent {
     border: none !important;
     background-color: #F7DCDC;
     color: #8F2424;
 }
 
-.upcoming-item-tag .tag-time {
+.services-module .upcoming-item-tag .tag-time {
     font-weight: 700;
     color: var(--text-heading);
 }
 
-.upcoming-item-tag.urgent .tag-time {
+.services-module .upcoming-item-tag.urgent .tag-time {
     color: #DC2626;
 }
 
-.upcoming-item-tag .tag-cust {
+.services-module .upcoming-item-tag .tag-cust {
     font-weight: 600;
     color: var(--text-main);
 }
 
-.upcoming-item-tag .tag-pet {
+.services-module .upcoming-item-tag .tag-pet {
     color: var(--text-muted);
     font-size: 11.5px;
 }
 
-.upcoming-strip-right {
+.services-module .upcoming-strip-right {
     flex-shrink: 0;
 }
 
-.btn-strip-filter {
+.services-module .btn-strip-filter {
     background: transparent;
     border: none;
     color: var(--text-heading);
@@ -121,49 +124,52 @@
     text-underline-offset: 3px;
 }
 
-.btn-strip-filter:hover {
+.services-module .btn-strip-filter:hover {
     color: var(--admin-primary-hover);
 }
 
 /* 1. KHU VỰC THẺ THỐNG KÊ KPI NHANH */
-.services-kpi-grid {
+
+.services-module .services-kpi-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 12px;
 }
 
-.kpi-card-clickable {
+.services-module .kpi-card-clickable {
     cursor: pointer;
     user-select: none;
 }
 
-.kpi-card-clickable:hover {
+.services-module .kpi-card-clickable:hover {
     border-color: #C3DEC7;
     background-color: #F4FAF6;
 }
 
-.kpi-card-clickable.active {
+.services-module .kpi-card-clickable.active {
     border-color: #236B48;
     background-color: #EEF5F1;
 }
 
-.text-urgent-amber {
+.services-module .text-urgent-amber {
     color: #D97706 !important;
 }
 
 @media (max-width: 1400px) {
-    .services-kpi-grid {
+    .services-module .services-kpi-grid {
         grid-template-columns: repeat(3, 1fr);
     }
+
 }
 
 @media (max-width: 768px) {
-    .services-kpi-grid {
+    .services-module .services-kpi-grid {
         grid-template-columns: 1fr;
     }
+
 }
 
-.kpi-card {
+.services-module .kpi-card {
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -175,13 +181,13 @@
     -webkit-backdrop-filter: blur(10px);
 }
 
-.kpi-label {
+.services-module .kpi-label {
     font-size: 12.5px;
     color: var(--text-muted);
     font-weight: 500;
 }
 
-.kpi-val {
+.services-module .kpi-val {
     font-size: 24px;
     font-weight: 700;
     color: var(--text-heading);
@@ -189,19 +195,34 @@
     letter-spacing: -0.3px;
 }
 
-.text-success { color: #15803D !important; }
-.text-warning { color: #B45309 !important; }
-.text-danger { color: #DC2626 !important; }
-.text-info { color: #0284C7 !important; }
-.text-neutral { color: var(--text-muted) !important; }
+.services-module .text-success {
+    color: #15803D !important;
+}
+
+.services-module .text-warning {
+    color: #B45309 !important;
+}
+
+.services-module .text-danger {
+    color: #DC2626 !important;
+}
+
+.services-module .text-info {
+    color: #0284C7 !important;
+}
+
+.services-module .text-neutral {
+    color: var(--text-muted) !important;
+}
 
 /* 2. KHỐI BẢNG DỮ LIỆU THỐNG NHẤT (GOM KHỐI) */
-.service-master-card {
+
+.services-module .service-master-card {
     padding: 0;
     overflow: hidden;
 }
 
-.table-toolbar-section {
+.services-module .table-toolbar-section {
     padding: 16px 20px 12px 20px;
     display: flex;
     flex-direction: column;
@@ -209,14 +230,14 @@
     border-bottom: none;
 }
 
-.filter-row-top {
+.services-module .filter-row-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 16px;
 }
 
-.search-box-wrapper {
+.services-module .search-box-wrapper {
     position: relative;
     display: flex;
     align-items: center;
@@ -225,15 +246,15 @@
     height: 38px;
 }
 
-.search-box-wrapper .admin-input {
+.services-module .search-box-wrapper .admin-input {
     width: 100%;
     height: 100%;
     padding-right: 32px;
     box-sizing: border-box;
 }
 
-.btn-clear-search,
-.btn-search-clear-x {
+.services-module .btn-clear-search,
+.services-module .btn-search-clear-x {
     position: absolute;
     right: 8px;
     top: 0;
@@ -262,12 +283,12 @@
     z-index: 5;
 }
 
-.btn-clear-search:hover,
-.btn-clear-search:focus,
-.btn-clear-search:active,
-.btn-search-clear-x:hover,
-.btn-search-clear-x:focus,
-.btn-search-clear-x:active {
+.services-module .btn-clear-search:hover,
+.services-module .btn-clear-search:focus,
+.services-module .btn-clear-search:active,
+.services-module .btn-search-clear-x:hover,
+.services-module .btn-search-clear-x:focus,
+.services-module .btn-search-clear-x:active {
     background: transparent !important;
     background-color: transparent !important;
     color: var(--text-heading) !important;
@@ -276,7 +297,8 @@
     transform: none !important;
 }
 
-.admin-input, .admin-select {
+.services-module .admin-input,
+.services-module .admin-select {
     width: 100%;
     height: 38px;
     padding: 0 14px;
@@ -289,17 +311,18 @@
     outline: none;
 }
 
-.admin-input:focus, .admin-select:focus {
+.services-module .admin-input:focus,
+.services-module .admin-select:focus {
     border-color: #236B48;
 }
 
-.filter-actions-right {
+.services-module .filter-actions-right {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-.admin-btn {
+.services-module .admin-btn {
     height: 38px;
     padding: 0 16px;
     border-radius: var(--admin-radius);
@@ -313,53 +336,53 @@
     justify-content: center;
 }
 
-.admin-btn-primary {
+.services-module .admin-btn-primary {
     background-color: #236B48;
     color: #FFFFFF;
 }
 
-.admin-btn-primary:hover {
+.services-module .admin-btn-primary:hover {
     background-color: #1b5337;
 }
 
-.admin-btn-secondary {
+.services-module .admin-btn-secondary {
     background-color: #FFFFFF;
     border-color: var(--border-neutral);
     color: var(--text-main);
 }
 
-.admin-btn-secondary:hover {
+.services-module .admin-btn-secondary:hover {
     background-color: #F8FAF9;
 }
 
-.filter-row-bottom {
+.services-module .filter-row-bottom {
     display: flex;
     align-items: center;
     gap: 14px;
     flex-wrap: wrap;
 }
 
-.filter-dropdown-group {
+.services-module .filter-dropdown-group {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.filter-label {
+.services-module .filter-label {
     font-size: 12.5px;
     color: var(--table-header-text);
     font-weight: 600;
     white-space: nowrap;
 }
 
-.filter-dropdown-group .admin-select {
+.services-module .filter-dropdown-group .admin-select {
     width: auto;
     min-width: 135px;
     height: 34px;
     font-size: 13px;
 }
 
-.admin-btn-filter-toggle {
+.services-module .admin-btn-filter-toggle {
     height: 34px;
     padding: 0 14px;
     background-color: var(--surface-white);
@@ -372,12 +395,12 @@
     cursor: pointer;
 }
 
-.admin-btn-filter-toggle:hover {
+.services-module .admin-btn-filter-toggle:hover {
     border-color: #C3DEC7;
     color: var(--text-heading);
 }
 
-.admin-btn-filter-toggle.active {
+.services-module .admin-btn-filter-toggle.active {
     background-color: #EEF5F1;
     border: 1px solid #236B48 !important;
     color: #236B48;
@@ -385,24 +408,25 @@
 }
 
 /* BẢNG DỮ LIỆU - TRIỆT TIÊU HOÀN TOÀN XẾP LỚP NỀN (ANTI-OPACITY STACKING) */
-.table-responsive-wrapper {
+
+.services-module .table-responsive-wrapper {
     width: 100%;
     overflow-x: auto;
     background-color: transparent;
 }
 
-.admin-table {
+.services-module .admin-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
     background-color: transparent;
 }
 
-.admin-table thead tr {
+.services-module .admin-table thead tr {
     background-color: var(--table-header-bg);
 }
 
-.admin-table th {
+.services-module .admin-table th {
     padding: 12px 14px;
     text-align: left;
     font-size: 13px;
@@ -412,83 +436,86 @@
     white-space: nowrap;
 }
 
-.admin-table th:first-child {
+.services-module .admin-table th:first-child {
     border-left: 3px solid var(--table-header-bg);
 }
 
-.admin-table tbody tr {
+.services-module .admin-table tbody tr {
     background-color: transparent;
     border-bottom: 1px solid var(--border-neutral);
 }
 
-.admin-table td {
+.services-module .admin-table td {
     padding: 12px 14px;
     color: var(--text-main);
     vertical-align: middle;
     background-color: transparent;
 }
 
-.admin-table td:first-child {
+.services-module .admin-table td:first-child {
     border-left: 3px solid transparent;
 }
 
 /* VIỀN CẠNH MÉP TRÁI THẲNG TẮP KHÔNG BO CONG CHO DÒNG CẢNH BÁO */
-.admin-table tr.row-alert-danger td:first-child {
+
+.services-module .admin-table tr.row-alert-danger td:first-child {
     border-left: 3px solid #DC2626;
 }
 
-.admin-table tr.row-alert-warning td:first-child {
+.services-module .admin-table tr.row-alert-warning td:first-child {
     border-left: 3px solid #D97706;
 }
 
-.admin-table tr.row-locked {
+.services-module .admin-table tr.row-locked {
     opacity: 0.52;
 }
 
 /* LINK VÀ NÚT TEXT TRONG BẢNG */
-.bkg-code-link {
+
+.services-module .bkg-code-link {
     color: #236B48;
     font-weight: 600;
     cursor: pointer;
     text-decoration: none;
 }
 
-.bkg-code-link:hover {
+.services-module .bkg-code-link:hover {
     text-decoration: underline;
 }
 
-.user-name-link {
+.services-module .user-name-link {
     color: #236B48;
     font-weight: 600;
     cursor: pointer;
 }
 
-.user-name-link:hover {
+.services-module .user-name-link:hover {
     text-decoration: underline;
 }
 
-.pet-name-link {
+.services-module .pet-name-link {
     color: #236B48;
     font-weight: 600;
     cursor: pointer;
 }
 
-.pet-name-link:hover {
+.services-module .pet-name-link:hover {
     text-decoration: underline;
 }
 
-.sub-meta-text {
+.services-module .sub-meta-text {
     font-size: 11.5px;
     color: var(--text-muted);
 }
 
-.price-text-main {
+.services-module .price-text-main {
     font-weight: 700;
     color: var(--text-main);
 }
 
 /* HUY HIỆU TRẠNG THÁI TIỆP MÀU (MUTED PASTEL VÀ NO BORDER) */
-.admin-badge {
+
+.services-module .admin-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -502,43 +529,44 @@
     white-space: nowrap;
 }
 
-.badge-pending {
+.services-module .badge-pending {
     background-color: #F5E8D3;
     color: #734718;
 }
 
-.badge-confirmed {
+.services-module .badge-confirmed {
     background-color: #DCEAF2;
     color: #20495E;
 }
 
-.badge-in-progress {
+.services-module .badge-in-progress {
     background-color: #DCEAF2;
     color: #20495E;
 }
 
-.badge-completed {
+.services-module .badge-completed {
     background-color: #DCEEE2;
     color: #165335;
 }
 
-.badge-cancelled {
+.services-module .badge-cancelled {
     background-color: #F7DCDC;
     color: #8F2424;
 }
 
-.badge-alert {
+.services-module .badge-alert {
     background-color: #F7DCDC;
     color: #8F2424;
 }
 
-.badge-warning {
+.services-module .badge-warning {
     background-color: #F5E8D3;
     color: #734718;
 }
 
 /* THẺ PHÂN LOẠI DÒNG DỊCH VỤ (HOTEL / TAXI / SPA) */
-.service-pill-tag {
+
+.services-module .service-pill-tag {
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -550,22 +578,22 @@
     border: none !important;
 }
 
-.service-pill-tag.tag-hotel {
+.services-module .service-pill-tag.tag-hotel {
     background-color: #F5E8D3;
     color: #734718;
 }
 
-.service-pill-tag.tag-taxi {
+.services-module .service-pill-tag.tag-taxi {
     background-color: #DCEAF2;
     color: #20495E;
 }
 
-.service-pill-tag.tag-spa {
+.services-module .service-pill-tag.tag-spa {
     background-color: #DCEEE2;
     color: #165335;
 }
 
-.service-pill-mini {
+.services-module .service-pill-mini {
     display: inline-block;
     padding: 1px 6px;
     border-radius: 9px !important;
@@ -575,14 +603,15 @@
     font-weight: 500;
 }
 
-.special-service-fields-container {
+.services-module .special-service-fields-container {
     background-color: #F8FAF9;
     border-radius: var(--admin-radius);
     padding: 12px 14px;
 }
 
 /* NÚT THAO TÁC 3 CHẤM TEXT */
-.btn-action-trigger {
+
+.services-module .btn-action-trigger {
     width: 30px;
     height: 30px;
     border-radius: var(--admin-radius);
@@ -598,13 +627,14 @@
     letter-spacing: 1px;
 }
 
-.btn-action-trigger:hover {
+.services-module .btn-action-trigger:hover {
     background-color: #F0F5F2;
     color: #236B48;
 }
 
 /* ACTION DROPDOWN POPOVER */
-.action-dropdown-menu {
+
+#globalBookingActionDropdown {
     position: fixed;
     background-color: #FFFFFF;
     border: 1px solid var(--border-neutral);
@@ -617,11 +647,11 @@
     z-index: 1000;
 }
 
-.action-dropdown-menu.active {
+#globalBookingActionDropdown.active {
     display: flex;
 }
 
-.action-menu-item {
+.services-module .action-menu-item {
     padding: 8px 12px;
     font-size: 13px;
     font-weight: 500;
@@ -634,21 +664,22 @@
     width: 100%;
 }
 
-.action-menu-item:hover {
+.services-module .action-menu-item:hover {
     background-color: #F2F7F4;
     color: #236B48;
 }
 
-.action-menu-item.danger-item {
+.services-module .action-menu-item.danger-item {
     color: #DC2626;
 }
 
-.action-menu-item.danger-item:hover {
+.services-module .action-menu-item.danger-item:hover {
     background-color: #FEE2E2;
 }
 
 /* 3. THANH PHÂN TRANG NẰM NGOÀI BẢNG (KHÔNG NỀN, KHÔNG ĐÓNG KHUNG, CĂN GIỮA) */
-.admin-pagination-container {
+
+.services-module .admin-pagination-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -659,7 +690,7 @@
     border: none;
 }
 
-.btn-pagination {
+.services-module .btn-pagination {
     min-width: 32px;
     height: 32px;
     padding: 0 6px;
@@ -675,17 +706,17 @@
     justify-content: center;
 }
 
-.btn-pagination:hover {
+.services-module .btn-pagination:hover {
     background-color: rgba(35, 107, 72, 0.08);
     color: #236B48;
 }
 
-.btn-pagination.active {
+.services-module .btn-pagination.active {
     background-color: #236B48;
     color: #FFFFFF;
 }
 
-.btn-pagination:disabled {
+.services-module .btn-pagination:disabled {
     opacity: 0.3;
     cursor: not-allowed;
 }
@@ -694,35 +725,36 @@
    SUB-TAB 2: HỒ SƠ LỊCH HẸN (CHI TIẾT LỊCH HẸN VÀ NHẬT KÝ CHĂM SÓC)
    Quy tắc: Không hộp lồng hộp, không bọc border khối con, thoáng đãng
    ========================================================================== */
-.service-detail-card {
+
+.services-module .service-detail-card {
     padding: 24px;
 }
 
-.service-detail-header-bar {
+.services-module .service-detail-header-bar {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 20px;
 }
 
-.service-headline-group {
+.services-module .service-headline-group {
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
-.service-code-title {
+.services-module .service-code-title {
     font-size: 20px;
     font-weight: 700;
     color: var(--text-heading);
 }
 
-.service-datetime-text {
+.services-module .service-datetime-text {
     font-size: 13px;
     color: var(--text-muted);
 }
 
-.service-action-bar-top {
+.services-module .service-action-bar-top {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -730,7 +762,8 @@
 }
 
 /* CẢNH BÁO AN TOÀN THÚ CƯNG THUẦN CHỮ ĐỎ (KHÔNG KHUNG HỘP, KHÔNG NỀN) */
-.pet-safety-pure-alert {
+
+.services-module .pet-safety-pure-alert {
     padding: 0 0 14px 0;
     color: #DC2626;
     font-size: 13.5px;
@@ -740,56 +773,60 @@
     background: transparent;
 }
 
-.pet-safety-pure-alert.active {
+.services-module .pet-safety-pure-alert.active {
     display: block;
 }
 
-.service-detail-grid {
+.services-module .service-detail-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 24px;
 }
 
 @media (max-width: 1024px) {
-    .service-detail-grid {
+    .services-module .service-detail-grid {
         grid-template-columns: 1fr;
     }
+
 }
 
-.service-main-col {
+.services-module .service-main-col {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-.service-side-col {
+.services-module .service-side-col {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
 /* CỘT TRÁI VÀ CỘT PHẢI TRONG LƯỚI CHI TIẾT */
-.detail-column-left {
+
+.services-module .detail-column-left {
     display: flex;
     flex-direction: column;
     gap: 28px;
 }
 
-.detail-column-right {
+.services-module .detail-column-right {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
 /* NHÓM THÔNG TIN (KHÔNG HỘP, KHÔNG VIỀN BAO QUANH) */
-.detail-info-group {
+
+.services-module .detail-info-group {
     display: flex;
     flex-direction: column;
     gap: 0;
 }
 
 /* LƯỚI 2 CỘT CHO CÁC CẶP INFO LABEL / VALUE */
-.info-grid-2col {
+
+.services-module .info-grid-2col {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 14px 20px;
@@ -797,7 +834,8 @@
 }
 
 /* CẢNH BÁO AN TOÀN THÚ CƯNG THUẦN CHỮ ĐỎ (KHÔNG NỀN, KHÔNG VIỀN KHUNG) */
-.pet-safety-banner {
+
+.services-module .pet-safety-banner {
     color: #DC2626;
     font-size: 13.5px;
     font-weight: 600;
@@ -809,19 +847,21 @@
 }
 
 /* LINK TÊN KHÁCH HÀNG */
-.user-link-text {
+
+.services-module .user-link-text {
     color: #236B48;
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
 }
 
-.user-link-text:hover {
+.services-module .user-link-text:hover {
     text-decoration: underline;
 }
 
 /* GỢI Ý NHẬT KÝ CHĂM SÓC */
-.carelog-hint-text {
+
+.services-module .carelog-hint-text {
     font-size: 12.5px;
     color: var(--text-muted);
     margin-bottom: 14px;
@@ -829,7 +869,8 @@
 }
 
 /* THÔNG BÁO KHÓA GHI NHẬT KÝ THEO TRẠNG THÁI CA */
-.carelog-lock-notice {
+
+.services-module .carelog-lock-notice {
     padding: 12px 14px;
     background-color: #EEF5F1;
     border: 1px solid #C3DEC7;
@@ -840,12 +881,13 @@
     margin-top: 14px;
 }
 
-.carelog-lock-notice strong {
+.services-module .carelog-lock-notice strong {
     color: #236B48;
 }
 
 /* KHU VỰC THÊM BƯỚC NHẬT KÝ NHANH */
-.carelog-quick-add {
+
+.services-module .carelog-quick-add {
     margin-top: 16px;
     display: flex;
     flex-direction: column;
@@ -854,14 +896,15 @@
     border-top: 1px solid var(--border-neutral);
 }
 
-.carelog-add-title {
+.services-module .carelog-add-title {
     font-size: 13px;
     font-weight: 600;
     color: var(--text-main);
 }
 
 /* ĐƯỜNG KẺ NGANG CHỈ DÀI BẰNG CHỮ */
-.detail-section-title {
+
+.services-module .detail-section-title {
     font-size: 15px;
     font-weight: 700;
     color: var(--text-heading);
@@ -872,25 +915,26 @@
     padding-bottom: 4px;
 }
 
-.info-pair {
+.services-module .info-pair {
     display: flex;
     flex-direction: column;
     gap: 2px;
 }
 
-.info-label {
+.services-module .info-label {
     font-size: 12px;
     color: var(--text-muted);
     font-weight: 500;
 }
 
-.info-value {
+.services-module .info-value {
     color: var(--text-main);
     font-weight: 600;
 }
 
 /* BẢNG KÊ CHI PHÍ DỊCH VỤ */
-.btn-text-action {
+
+.services-module .btn-text-action {
     background: transparent;
     border: none;
     color: #236B48;
@@ -902,18 +946,18 @@
     padding: 2px 4px;
 }
 
-.btn-text-action:hover {
+.services-module .btn-text-action:hover {
     color: #1b5337;
 }
 
-.financial-summary-list {
+.services-module .financial-summary-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
     padding: 14px 0;
 }
 
-.summary-row {
+.services-module .summary-row {
     display: flex;
     justify-content: space-between;
     font-size: 13.5px;
@@ -921,7 +965,8 @@
 }
 
 /* DANH SÁCH GÓI DỊCH VỤ ĐI CÙNG GHÉP THÊM */
-.accompanying-services-list {
+
+.services-module .accompanying-services-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -930,7 +975,7 @@
     border: none;
 }
 
-.accompanying-item-row {
+.services-module .accompanying-item-row {
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -938,27 +983,27 @@
     padding: 3px 0;
 }
 
-.accompanying-item-title-row {
+.services-module .accompanying-item-title-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 8px;
 }
 
-.accompanying-item-name {
+.services-module .accompanying-item-name {
     font-weight: 600;
     color: var(--text-heading);
     font-size: 13px;
 }
 
-.accompanying-item-price {
+.services-module .accompanying-item-price {
     font-weight: 700;
     color: var(--text-heading);
     font-size: 13px;
     white-space: nowrap;
 }
 
-.accompanying-item-meta {
+.services-module .accompanying-item-meta {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -966,7 +1011,7 @@
     color: var(--text-muted);
 }
 
-.surcharge-itemized-list {
+.services-module .surcharge-itemized-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -975,7 +1020,7 @@
     border: none;
 }
 
-.surcharge-item-row {
+.services-module .surcharge-item-row {
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -983,46 +1028,46 @@
     padding: 3px 0;
 }
 
-.surcharge-item-main {
+.services-module .surcharge-item-main {
     display: flex;
     flex-direction: column;
     gap: 3px;
 }
 
-.surcharge-item-title-row {
+.services-module .surcharge-item-title-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 8px;
 }
 
-.surcharge-item-name {
+.services-module .surcharge-item-name {
     font-weight: 600;
     color: var(--text-main);
     font-size: 13px;
 }
 
-.surcharge-item-amount {
+.services-module .surcharge-item-amount {
     font-weight: 700;
     color: #B45309;
     font-size: 13px;
     white-space: nowrap;
 }
 
-.surcharge-item-desc {
+.services-module .surcharge-item-desc {
     font-size: 12px;
     color: var(--text-muted);
     line-height: 1.35;
 }
 
-.surcharge-item-meta {
+.services-module .surcharge-item-meta {
     display: flex;
     align-items: center;
     gap: 8px;
     margin-top: 2px;
 }
 
-.surcharge-tag-consent {
+.services-module .surcharge-tag-consent {
     display: inline-block;
     padding: 1px 6px;
     background-color: #EEF5F1;
@@ -1033,12 +1078,12 @@
     width: fit-content;
 }
 
-.surcharge-time-text {
+.services-module .surcharge-time-text {
     font-size: 11px;
     color: var(--text-muted);
 }
 
-.btn-del-surcharge {
+.services-module .btn-del-surcharge {
     background: transparent;
     border: none;
     color: #DC2626;
@@ -1049,11 +1094,11 @@
     padding: 0 4px;
 }
 
-.btn-del-surcharge:hover {
+.services-module .btn-del-surcharge:hover {
     color: #991B1B;
 }
 
-.summary-row.total-row {
+.services-module .summary-row.total-row {
     margin-top: 6px;
     padding-top: 10px;
     border-top: 1px solid var(--border-neutral);
@@ -1063,7 +1108,8 @@
 }
 
 /* TIMELINE NHẬT KÝ CHĂM SÓC THUẦN CHỮ */
-.carelog-timeline-list {
+
+.services-module .carelog-timeline-list {
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -1071,14 +1117,14 @@
     padding-left: 14px;
 }
 
-.timeline-step-item {
+.services-module .timeline-step-item {
     display: flex;
     flex-direction: column;
     gap: 3px;
     position: relative;
 }
 
-.timeline-step-item::before {
+.services-module .timeline-step-item::before {
     content: '';
     position: absolute;
     left: -14px;
@@ -1089,36 +1135,37 @@
     background-color: #236B48;
 }
 
-.timeline-step-item.future::before {
+.services-module .timeline-step-item.future::before {
     background-color: #C3DEC7;
 }
 
-.timeline-step-title {
+.services-module .timeline-step-title {
     font-weight: 600;
     color: var(--text-main);
     font-size: 13px;
 }
 
-.timeline-step-time {
+.services-module .timeline-step-time {
     font-size: 11.5px;
     color: var(--text-muted);
 }
 
-.timeline-step-desc {
+.services-module .timeline-step-desc {
     font-size: 12.5px;
     color: var(--text-muted);
     line-height: 1.4;
 }
 
 /* DẢI HÌNH ẢNH MINH CHỨNG THỰC TẾ THEO BƯỚC TIMELINE */
-.step-gallery-strip {
+
+.services-module .step-gallery-strip {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 6px;
 }
 
-.step-photo-thumb {
+.services-module .step-photo-thumb {
     width: 58px;
     height: 58px;
     border-radius: var(--admin-radius);
@@ -1129,19 +1176,20 @@
     transition: opacity 0.15s ease;
 }
 
-.step-photo-thumb:hover {
+.services-module .step-photo-thumb:hover {
     opacity: 0.85;
 }
 
 /* THANH THAO TÁC 1-CHẠM TRÊN BƯỚC TIMELINE */
-.step-action-bar {
+
+.services-module .step-action-bar {
     display: flex;
     align-items: center;
     gap: 8px;
     margin-top: 4px;
 }
 
-.btn-step-action {
+.services-module .btn-step-action {
     background: transparent;
     border: none;
     color: #236B48;
@@ -1152,36 +1200,37 @@
     padding: 0;
 }
 
-.btn-step-action:hover {
+.services-module .btn-step-action:hover {
     color: #1b5337;
 }
 
-.btn-step-action.complete-action {
+.services-module .btn-step-action.complete-action {
     color: #236B48;
 }
 
 /* KHU VỰC UPLOAD VÀ XEM TRƯỚC ẢNH TRONG FORM GHI BƯỚC */
-.carelog-image-upload-wrapper {
+
+.services-module .carelog-image-upload-wrapper {
     display: flex;
     flex-direction: column;
     gap: 6px;
     padding: 6px 0;
 }
 
-.carelog-image-preview-strip {
+.services-module .carelog-image-preview-strip {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 4px;
 }
 
-.carelog-preview-thumb-wrap {
+.services-module .carelog-preview-thumb-wrap {
     position: relative;
     width: 52px;
     height: 52px;
 }
 
-.carelog-preview-thumb {
+.services-module .carelog-preview-thumb {
     width: 100%;
     height: 100%;
     border-radius: var(--admin-radius);
@@ -1189,7 +1238,7 @@
     border: 1px solid var(--border-neutral);
 }
 
-.carelog-thumb-del-btn {
+.services-module .carelog-thumb-del-btn {
     position: absolute;
     top: -5px;
     right: -5px;
@@ -1210,14 +1259,15 @@
 /* ==========================================================================
    SUB-TAB 3: DANH MỤC DỊCH VỤ VÀ BẢNG GIÁ
    ========================================================================== */
-.catalog-nav-tabs {
+
+.services-module .catalog-nav-tabs {
     display: inline-flex;
     gap: 20px;
     border-bottom: none;
     margin-bottom: 4px;
 }
 
-.catalog-tab-btn {
+.services-module .catalog-tab-btn {
     background: transparent;
     border: none;
     border-bottom: 2px solid transparent;
@@ -1228,13 +1278,13 @@
     cursor: pointer;
 }
 
-.catalog-tab-btn.active {
+.services-module .catalog-tab-btn.active {
     color: var(--text-heading);
     font-weight: 700;
     border-bottom: 2px solid #236B48;
 }
 
-.service-thumb {
+.services-module .service-thumb {
     width: 44px;
     height: 44px;
     border-radius: var(--admin-radius);
@@ -1244,13 +1294,14 @@
 }
 
 /* MA TRẬN GIÁ CÂN NẶNG TRONG MODAL */
-.price-matrix-table {
+
+.services-module .price-matrix-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
 }
 
-.price-matrix-table th {
+.services-module .price-matrix-table th {
     padding: 8px 10px;
     background-color: var(--table-header-bg);
     color: var(--table-header-text);
@@ -1258,13 +1309,14 @@
     text-align: left;
 }
 
-.price-matrix-table td {
+.services-module .price-matrix-table td {
     padding: 8px 10px;
     border-bottom: 1px solid var(--border-neutral);
 }
 
 /* LINK XEM ĐÁNH GIÁ TRONG BẢNG DANH MỤC */
-.catalog-rating-link {
+
+.services-module .catalog-rating-link {
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -1280,27 +1332,28 @@
     transition: background-color 0.15s ease;
 }
 
-.catalog-rating-link:hover {
+.services-module .catalog-rating-link:hover {
     background-color: #EEF5F1;
 }
 
-.catalog-rating-link:hover .star-rating-pill {
+.services-module .catalog-rating-link:hover .star-rating-pill {
     text-decoration: underline;
 }
 
-.catalog-rating-link .star-rating-pill {
+.services-module .catalog-rating-link .star-rating-pill {
     font-size: 12.5px;
     font-weight: 700;
     color: #D97706;
 }
 
-.catalog-rating-link .reviews-count-text {
+.services-module .catalog-rating-link .reviews-count-text {
     font-size: 11.5px;
     color: var(--text-muted);
 }
 
 /* KHỐI CẤU HÌNH CÁC BƯỚC QUY TRÌNH DỊCH VỤ TRONG MODAL */
-.service-steps-config-box {
+
+.services-module .service-steps-config-box {
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -1312,7 +1365,7 @@
     border-radius: var(--admin-radius);
 }
 
-.service-step-item-tag {
+.services-module .service-step-item-tag {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1325,18 +1378,18 @@
     color: var(--text-main);
 }
 
-.service-step-item-tag .step-num {
+.services-module .service-step-item-tag .step-num {
     font-weight: 700;
     color: #236B48;
     font-size: 11.5px;
 }
 
-.service-step-item-tag .step-text {
+.services-module .service-step-item-tag .step-text {
     flex: 1;
     font-weight: 500;
 }
 
-.btn-remove-step {
+.services-module .btn-remove-step {
     background: transparent;
     border: none;
     color: #DC2626;
@@ -1347,22 +1400,22 @@
     line-height: 1;
 }
 
-.btn-remove-step:hover {
+.services-module .btn-remove-step:hover {
     color: #991B1B;
 }
-
 
 /* ==========================================================================
    SUB-TAB 4: ĐÁNH GIÁ VÀ PHẢN HỒI DỊCH VỤ
    ========================================================================== */
-.star-rating-text {
+
+.services-module .star-rating-text {
     color: #B45309;
     font-weight: 700;
     font-size: 13px;
     letter-spacing: 1px;
 }
 
-#servicesBookingTable .btn-booking-action-more {
+.services-module #servicesBookingTable .btn-booking-action-more {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1381,13 +1434,13 @@
     cursor: pointer;
 }
 
-#servicesBookingTable .btn-booking-action-more:hover,
-#servicesBookingTable .btn-booking-action-more:focus-visible {
+.services-module #servicesBookingTable .btn-booking-action-more:hover,
+.services-module #servicesBookingTable .btn-booking-action-more:focus-visible {
     background: #EEF5F1;
     color: #236B48;
 }
 
-#servicesReviewTable .service-review-content-cell {
+.services-module #servicesReviewTable .service-review-content-cell {
     width: 260px;
     min-width: 220px;
     white-space: normal;
@@ -1395,31 +1448,31 @@
     word-break: normal;
 }
 
-#servicesReviewTable .service-review-content-cell .review-comment-text {
+.services-module #servicesReviewTable .service-review-content-cell .review-comment-text {
     max-width: 260px;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
 
-#servicesReviewTable .service-review-content-cell .review-reply-box {
+.services-module #servicesReviewTable .service-review-content-cell .review-reply-box {
     max-width: 260px;
     white-space: normal;
     overflow-wrap: anywhere;
 }
 
-.review-comment-box {
+.services-module .review-comment-box {
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
-.review-comment-text {
+.services-module .review-comment-text {
     font-size: 13px;
     color: var(--text-main);
     line-height: 1.4;
 }
 
-.review-reply-preview {
+.services-module .review-reply-preview {
     margin-top: 6px;
     padding: 6px 10px;
     background-color: #F4FAF6;
@@ -1429,11 +1482,11 @@
     line-height: 1.4;
 }
 
-.review-reply-preview strong {
+.services-module .review-reply-preview strong {
     color: #1b5337;
 }
 
-.btn-reply-review-table {
+.services-module .btn-reply-review-table {
     padding: 4px 10px;
     background-color: #FFFFFF;
     border: 1px solid #C3DEC7;
@@ -1444,16 +1497,16 @@
     cursor: pointer;
 }
 
-.btn-reply-review-table:hover {
+.services-module .btn-reply-review-table:hover {
     background-color: #EEF5F1;
 }
-
 
 /* ==========================================================================
    MODAL DIALOG TIÊU CHUẨN THOÁNG ĐÃNG
    Quy tắc: 560px, padding 26px 30px, bo góc 9px, không kẻ ngang cắt xén
    ========================================================================== */
-.admin-modal-overlay {
+
+.services-module .admin-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -1469,14 +1522,21 @@
     overscroll-behavior: contain;
 }
 
-.admin-modal-overlay.active {
+.services-module .admin-modal-overlay.active {
     display: flex;
 }
-/* Keep the active class authoritative across global modal close handlers. */
-.services-module .admin-modal-overlay:not(.active) { display: none !important; }
-.services-module .admin-modal-overlay.active { display: flex !important; }
 
-.admin-modal-card {
+/* Keep the active class authoritative across global modal close handlers. */
+
+.services-module .admin-modal-overlay:not(.active) {
+    display: none !important;
+}
+
+.services-module .admin-modal-overlay.active {
+    display: flex !important;
+}
+
+.services-module .admin-modal-card {
     width: 560px;
     max-width: 94vw;
     background-color: #FFFFFF;
@@ -1491,23 +1551,23 @@
     overscroll-behavior: contain;
 }
 
-.admin-modal-card.wide-modal {
+.services-module .admin-modal-card.wide-modal {
     width: 720px;
 }
 
-.modal-header-clean {
+.services-module .modal-header-clean {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.modal-title-clean {
+.services-module .modal-title-clean {
     font-size: 17px;
     font-weight: 700;
     color: var(--text-heading);
 }
 
-.modal-btn-close-text {
+.services-module .modal-btn-close-text {
     background: transparent;
     border: none;
     font-size: 13.5px;
@@ -1516,35 +1576,35 @@
     cursor: pointer;
 }
 
-.modal-btn-close-text:hover {
+.services-module .modal-btn-close-text:hover {
     color: #DC2626;
 }
 
-.modal-body-clean {
+.services-module .modal-body-clean {
     display: flex;
     flex-direction: column;
     gap: 14px;
 }
 
-.form-group-item {
+.services-module .form-group-item {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
-.form-label-clean {
+.services-module .form-label-clean {
     font-size: 13px;
     font-weight: 600;
     color: var(--text-main);
 }
 
-.form-row-2col {
+.services-module .form-row-2col {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
 }
 
-.modal-footer-clean {
+.services-module .modal-footer-clean {
     display: flex;
     justify-content: flex-end;
     align-items: center;
@@ -1555,8 +1615,9 @@
 /* ==========================================================================
    ALERT PILLS VÀ SLA BADGES (MUTED PASTEL VÀ NO BORDER)
    ========================================================================== */
-.alert-badges-stack,
-.alert-text-stack {
+
+.services-module .alert-badges-stack,
+.services-module .alert-text-stack {
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
@@ -1567,7 +1628,7 @@
     white-space: normal;
 }
 
-.alert-indicator {
+.services-module .alert-indicator {
     display: inline-flex;
     align-items: center;
     font-size: 12px;
@@ -1577,18 +1638,20 @@
 }
 
 /* ĐỒNG BỘ VẠCH MÉP TRÁI CHO CẢ ROW-ALERT-DANGER VÀ ROW-ALERT-RED (CHỈ TRÊN TD:FIRST-CHILD) */
-.admin-table tr.row-alert-danger td:first-child,
-.admin-table tr.row-alert-red td:first-child {
+
+.services-module .admin-table tr.row-alert-danger td:first-child,
+.services-module .admin-table tr.row-alert-red td:first-child {
     border-left: 3px solid #DC2626 !important;
 }
 
-.admin-table tr.row-alert-warning td:first-child,
-.admin-table tr.row-alert-orange td:first-child {
+.services-module .admin-table tr.row-alert-warning td:first-child,
+.services-module .admin-table tr.row-alert-orange td:first-child {
     border-left: 3px solid #D97706 !important;
 }
 
 /* NÚT LỌC SLA QUÁ HẠN KHI ACTIVE */
-.admin-btn-filter-toggle.active {
+
+.services-module .admin-btn-filter-toggle.active {
     background-color: #EEF5F1;
     color: #236B48;
     border-color: #236B48;
@@ -1598,14 +1661,15 @@
 /* ==========================================================================
    KHỐI BIÊN BẢN TIẾP NHẬN AN TOÀN TRONG HỒ SƠ 360
    ========================================================================== */
-.intake-proof-grid {
+
+.services-module .intake-proof-grid {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
     margin-top: 4px;
 }
 
-.intake-proof-thumb {
+.services-module .intake-proof-thumb {
     width: 60px;
     height: 60px;
     border-radius: var(--admin-radius);
@@ -1616,14 +1680,15 @@
     transition: none;
 }
 
-.intake-proof-thumb:hover {
+.services-module .intake-proof-thumb:hover {
     border-color: #236B48;
 }
 
 /* ==========================================================================
    MODAL BIÊN BẢN TIẾP NHẬN BÉ VÀ KIỂM TRA AN TOÀN (ZERO-CLAIM)
    ========================================================================== */
-.intake-weight-alert {
+
+.services-module .intake-weight-alert {
     padding: 8px 12px;
     margin-bottom: 12px;
     background-color: #FFFBEB;
@@ -1634,39 +1699,39 @@
     line-height: 1.4;
 }
 
-.intake-weight-alert.danger {
+.services-module .intake-weight-alert.danger {
     background-color: #FEF2F2;
     color: #DC2626;
 }
 
-.intake-checklist-grid {
+.services-module .intake-checklist-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     margin-top: 4px;
 }
 
-.intake-check-section {
+.services-module .intake-check-section {
     padding: 10px 12px;
     background-color: #F8FAF9;
     border-radius: var(--admin-radius);
     border: 1px solid var(--border-neutral);
 }
 
-.intake-section-subhead {
+.services-module .intake-section-subhead {
     font-size: 12.5px;
     font-weight: 600;
     color: #236B48;
     margin-bottom: 6px;
 }
 
-.intake-check-options {
+.services-module .intake-check-options {
     display: flex;
     flex-direction: column;
     gap: 5px;
 }
 
-.intake-check-item {
+.services-module .intake-check-item {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -1676,13 +1741,13 @@
     user-select: none;
 }
 
-.intake-check-item input[type="checkbox"],
-.intake-check-item input[type="radio"] {
+.services-module .intake-check-item input[type="checkbox"],
+.services-module .intake-check-item input[type="radio"] {
     accent-color: #236B48;
     cursor: pointer;
 }
 
-.intake-proof-preview-container {
+.services-module .intake-proof-preview-container {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
@@ -1690,7 +1755,7 @@
     align-items: center;
 }
 
-.intake-proof-preview-item {
+.services-module .intake-proof-preview-item {
     position: relative;
     width: 64px;
     height: 64px;
@@ -1699,13 +1764,13 @@
     border: 1px solid var(--border-neutral);
 }
 
-.intake-proof-preview-item img {
+.services-module .intake-proof-preview-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.intake-proof-preview-item .btn-remove-proof {
+.services-module .intake-proof-preview-item .btn-remove-proof {
     position: absolute;
     top: 2px;
     right: 2px;
@@ -1724,13 +1789,14 @@
 }
 
 /* MODAL 11: SOP VIEWER VÀ FLOW */
-.sop-steps-flow-container {
+
+.services-module .sop-steps-flow-container {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.sop-flow-step-item {
+.services-module .sop-flow-step-item {
     display: flex;
     align-items: flex-start;
     gap: 12px;
@@ -1743,7 +1809,7 @@
     line-height: 1.4;
 }
 
-.sop-flow-step-badge {
+.services-module .sop-flow-step-badge {
     background: #EEF5F1;
     color: #236B48;
     font-weight: 700;
@@ -1754,18 +1820,18 @@
     flex-shrink: 0;
 }
 
-.sop-flow-step-content {
+.services-module .sop-flow-step-content {
     display: flex;
     flex-direction: column;
     gap: 2px;
 }
 
-.sop-flow-step-title {
+.services-module .sop-flow-step-title {
     font-weight: 600;
     color: var(--text-main);
 }
 
-.btn-view-sop-pill {
+.services-module .btn-view-sop-pill {
     background: #EEF5F1;
     color: #236B48;
     font-size: 11.5px;
@@ -1778,11 +1844,11 @@
     display: inline-block;
 }
 
-.btn-view-sop-pill:hover {
+.services-module .btn-view-sop-pill:hover {
     background: #DCEEE2;
 }
 
-.btn-table-action-sm {
+.services-module .btn-table-action-sm {
     background: transparent;
     color: #236B48;
     font-size: 12px;
@@ -1794,11 +1860,11 @@
     white-space: nowrap;
 }
 
-.btn-table-action-sm:hover {
+.services-module .btn-table-action-sm:hover {
     background: #EEF5F1;
 }
 
-.escalated-badge {
+.services-module .escalated-badge {
     background: #FEE2E2 !important;
     color: #DC2626 !important;
 }
@@ -1806,7 +1872,8 @@
 /* ====================================================================
    MODAL 12: PHIẾU TIẾP NHẬN & MIỄN TRỪ TRÁCH NHIỆM (PRINTABLE WAIVER)
    ==================================================================== */
-.waiver-receipt-card {
+
+.services-module .waiver-receipt-card {
     background-color: #FFFFFF;
     border: 1px solid #E2ECE5;
     border-radius: var(--admin-radius);
@@ -1815,7 +1882,7 @@
     font-family: inherit;
 }
 
-.waiver-print-header {
+.services-module .waiver-print-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -1824,36 +1891,36 @@
     margin-bottom: 14px;
 }
 
-.waiver-brand-name {
+.services-module .waiver-brand-name {
     font-size: 16px;
     font-weight: 800;
     color: #236B48;
     letter-spacing: 0.5px;
 }
 
-.waiver-brand-sub {
+.services-module .waiver-brand-sub {
     font-size: 11.5px;
     color: var(--text-muted);
     margin-top: 2px;
 }
 
-.waiver-meta-block {
+.services-module .waiver-meta-block {
     text-align: right;
 }
 
-.waiver-code {
+.services-module .waiver-code {
     font-size: 15px;
     font-weight: 700;
     color: #236B48;
 }
 
-.waiver-date {
+.services-module .waiver-date {
     font-size: 11.5px;
     color: var(--text-muted);
     margin-top: 2px;
 }
 
-.waiver-doc-title {
+.services-module .waiver-doc-title {
     text-align: center;
     font-size: 15px;
     font-weight: 700;
@@ -1862,7 +1929,7 @@
     letter-spacing: 0.3px;
 }
 
-.waiver-section-box {
+.services-module .waiver-section-box {
     margin-bottom: 12px;
     padding: 10px 14px;
     background-color: #F8FAF9;
@@ -1870,7 +1937,7 @@
     font-size: 12.5px;
 }
 
-.waiver-section-title {
+.services-module .waiver-section-title {
     font-size: 12.5px;
     font-weight: 700;
     color: #236B48;
@@ -1878,19 +1945,19 @@
     text-transform: uppercase;
 }
 
-.waiver-grid-2col {
+.services-module .waiver-grid-2col {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 6px 16px;
     line-height: 1.4;
 }
 
-.waiver-terms-box {
+.services-module .waiver-terms-box {
     background-color: #FAFCFB;
     border: 1px dashed #C3DEC7;
 }
 
-.waiver-terms-list {
+.services-module .waiver-terms-list {
     margin: 0;
     padding-left: 18px;
     font-size: 11.5px;
@@ -1898,40 +1965,40 @@
     line-height: 1.45;
 }
 
-.waiver-terms-list li {
+.services-module .waiver-terms-list li {
     margin-bottom: 4px;
 }
 
-.waiver-signature-row {
+.services-module .waiver-signature-row {
     display: flex;
     justify-content: space-between;
     margin-top: 18px;
     padding: 0 20px;
 }
 
-.waiver-sign-col {
+.services-module .waiver-sign-col {
     width: 220px;
     text-align: center;
 }
 
-.sign-title {
+.services-module .sign-title {
     font-size: 12px;
     font-weight: 700;
     color: #236B48;
 }
 
-.sign-sub {
+.services-module .sign-sub {
     font-size: 11px;
     color: var(--text-muted);
     font-style: italic;
     margin-top: 2px;
 }
 
-.sign-space {
+.services-module .sign-space {
     height: 60px;
 }
 
-.sign-name {
+.services-module .sign-name {
     font-size: 12px;
     font-weight: 600;
     border-top: 1px dashed #CBD5E1;
@@ -1940,15 +2007,18 @@
 }
 
 /* Print CSS */
+
 @media print {
-    body * {
+    .services-module * {
         visibility: hidden;
     }
-    #modalPrintIntakeWaiver,
-    #modalPrintIntakeWaiver * {
+
+    .services-module #modalPrintIntakeWaiver,
+    .services-module #modalPrintIntakeWaiver * {
         visibility: visible;
     }
-    #modalPrintIntakeWaiver {
+
+    .services-module #modalPrintIntakeWaiver {
         position: absolute;
         left: 0;
         top: 0;
@@ -1959,20 +2029,24 @@
         padding: 0;
         margin: 0;
     }
-    .no-print {
+
+    .services-module .no-print {
         display: none !important;
     }
-    .waiver-receipt-card {
+
+    .services-module .waiver-receipt-card {
         border: none !important;
         padding: 10px !important;
         width: 100% !important;
     }
+
 }
 
 /* ====================================================================
    MODAL 13: BÁO KHÁCH ĐÓN BÉ (PICKUP NOTIFICATION)
    ==================================================================== */
-.notify-summary-banner {
+
+.services-module .notify-summary-banner {
     background-color: #F4FAF6;
     border: 1px solid #C3DEC7;
     border-radius: var(--admin-radius);
@@ -1983,14 +2057,15 @@
 /* ====================================================================
    MODAL 14: LỊCH TRỰC VÀ ĐIỀU PHỐI KTV (STAFF SHIFT & WORKLOAD DISPATCHER)
    ==================================================================== */
-.staff-schedule-summary-strip {
+
+.services-module .staff-schedule-summary-strip {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 12px;
     margin-bottom: 16px;
 }
 
-.schedule-summary-item {
+.services-module .schedule-summary-item {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -2000,19 +2075,19 @@
     border-radius: var(--admin-radius);
 }
 
-.summary-item-label {
+.services-module .summary-item-label {
     font-size: 12px;
     color: var(--text-muted);
     font-weight: 500;
 }
 
-.summary-item-val {
+.services-module .summary-item-val {
     font-size: 18px;
     font-weight: 700;
     color: var(--text-heading);
 }
 
-.staff-shift-filter-row {
+.services-module .staff-shift-filter-row {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -2020,7 +2095,7 @@
     flex-wrap: wrap;
 }
 
-.staff-shift-tab-btn {
+.services-module .staff-shift-tab-btn {
     background: transparent;
     border: none;
     padding: 4px 0;
@@ -2033,32 +2108,34 @@
     transition: none;
 }
 
-.staff-shift-tab-btn:hover {
+.services-module .staff-shift-tab-btn:hover {
     color: var(--text-heading);
 }
 
-.staff-shift-tab-btn.active {
+.services-module .staff-shift-tab-btn.active {
     color: #236B48;
     font-weight: 700;
     border-bottom: 2px solid #236B48;
 }
 
-.staff-schedule-cards-grid {
+.services-module .staff-schedule-cards-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
 }
 
 @media (max-width: 768px) {
-    .staff-schedule-cards-grid {
+    .services-module .staff-schedule-cards-grid {
         grid-template-columns: 1fr;
     }
-    .staff-schedule-summary-strip {
+
+    .services-module .staff-schedule-summary-strip {
         grid-template-columns: repeat(2, 1fr);
     }
+
 }
 
-.staff-schedule-card {
+.services-module .staff-schedule-card {
     padding: 16px 18px;
     background-color: var(--surface-white);
     border: 1px solid var(--border-neutral);
@@ -2068,25 +2145,25 @@
     gap: 12px;
 }
 
-.staff-schedule-card.is-overloaded {
+.services-module .staff-schedule-card.is-overloaded {
     border-color: #F7DCDC;
     background-color: rgba(254, 242, 242, 0.45);
 }
 
-.staff-schedule-card-header {
+.services-module .staff-schedule-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 10px;
 }
 
-.staff-card-left {
+.services-module .staff-card-left {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-.staff-avatar-initials {
+.services-module .staff-avatar-initials {
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -2100,20 +2177,20 @@
     flex-shrink: 0;
 }
 
-.staff-meta-name {
+.services-module .staff-meta-name {
     font-size: 13.5px;
     font-weight: 700;
     color: var(--text-heading);
     line-height: 1.2;
 }
 
-.staff-meta-role {
+.services-module .staff-meta-role {
     font-size: 12px;
     color: var(--text-muted);
     margin-top: 2px;
 }
 
-.staff-workload-bar-wrap {
+.services-module .staff-workload-bar-wrap {
     width: 100%;
     height: 5px;
     background-color: #E2ECE5;
@@ -2122,20 +2199,20 @@
     margin-top: 5px;
 }
 
-.staff-workload-bar-fill {
+.services-module .staff-workload-bar-fill {
     height: 100%;
     border-radius: 9px;
     background-color: #236B48;
 }
 
-.staff-assigned-bookings-list {
+.services-module .staff-assigned-bookings-list {
     display: flex;
     flex-direction: column;
     max-height: 160px;
     overflow-y: auto;
 }
 
-.staff-assigned-booking-item {
+.services-module .staff-assigned-booking-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -2146,11 +2223,11 @@
     font-size: 12.5px;
 }
 
-.staff-assigned-booking-item:last-child {
+.services-module .staff-assigned-booking-item:last-child {
     border-bottom: none;
 }
 
-.staff-assigned-booking-link {
+.services-module .staff-assigned-booking-link {
     font-weight: 600;
     color: #236B48;
     cursor: pointer;
@@ -2162,25 +2239,25 @@
     font-size: 12.5px;
 }
 
-.staff-assigned-booking-link:hover {
+.services-module .staff-assigned-booking-link:hover {
     text-decoration: underline;
 }
 
-.staff-assigned-booking-link:hover {
+.services-module .staff-assigned-booking-link:hover {
     text-decoration: underline;
 }
 
-.staff-workload-hint-available {
+.services-module .staff-workload-hint-available {
     background-color: #DCEEE2 !important;
     color: #165335 !important;
 }
 
-.staff-workload-hint-warning {
+.services-module .staff-workload-hint-warning {
     background-color: #FEF3C7 !important;
     color: #92400E !important;
 }
 
-.staff-workload-hint-danger {
+.services-module .staff-workload-hint-danger {
     background-color: #FEE2E2 !important;
     color: #991B1B !important;
 }
@@ -2188,12 +2265,13 @@
 /* ==========================================================================
    CUSTOMER AUTOCOMPLETE POPOVER (CHUẨN HỆ THỐNG PAWPAL-ER)
    ========================================================================== */
-.customer-autocomplete-wrapper {
+
+.services-module .customer-autocomplete-wrapper {
     position: relative;
     width: 100%;
 }
 
-.customer-autocomplete-popover {
+.services-module .customer-autocomplete-popover {
     position: absolute;
     top: calc(100% + 4px);
     left: 0;
@@ -2208,7 +2286,7 @@
     overscroll-behavior: contain;
 }
 
-.customer-autocomplete-item {
+.services-module .customer-autocomplete-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -2218,22 +2296,22 @@
     transition: background 0.15s ease;
 }
 
-.customer-autocomplete-item:last-child {
+.services-module .customer-autocomplete-item:last-child {
     border-bottom: none;
 }
 
-.customer-autocomplete-item:hover,
-.customer-autocomplete-item.active {
+.services-module .customer-autocomplete-item:hover,
+.services-module .customer-autocomplete-item.active {
     background-color: #EEF5F1;
 }
 
-.customer-autocomplete-info {
+.services-module .customer-autocomplete-info {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-.customer-autocomplete-avatar {
+.services-module .customer-autocomplete-avatar {
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -2247,24 +2325,24 @@
     flex-shrink: 0;
 }
 
-.customer-autocomplete-meta {
+.services-module .customer-autocomplete-meta {
     display: flex;
     flex-direction: column;
     gap: 2px;
 }
 
-.customer-autocomplete-name {
+.services-module .customer-autocomplete-name {
     font-size: 13.5px;
     font-weight: 600;
     color: var(--text-main, #203A2C);
 }
 
-.customer-autocomplete-phone {
+.services-module .customer-autocomplete-phone {
     font-size: 12px;
     color: var(--text-muted, #4F7A65);
 }
 
-.customer-autocomplete-pets {
+.services-module .customer-autocomplete-pets {
     font-size: 11.5px;
     color: #236B48;
     background: #EEF5F1;
@@ -2277,7 +2355,7 @@
     text-overflow: ellipsis;
 }
 
-.customer-autocomplete-empty {
+.services-module .customer-autocomplete-empty {
     padding: 14px;
     text-align: center;
     font-size: 12.5px;
@@ -2285,13 +2363,14 @@
 }
 
 /* Trạng thái rỗng cho bảng dữ liệu Lịch hẹn */
-.empty-state-cell {
+
+.services-module .empty-state-cell {
     padding: 42px 20px !important;
     text-align: center;
     background-color: transparent !important;
 }
 
-.empty-state-wrapper {
+.services-module .empty-state-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2299,13 +2378,13 @@
     gap: 12px;
 }
 
-.empty-state-text {
+.services-module .empty-state-text {
     font-size: 13.5px;
     color: var(--text-muted, #4F7A65);
     font-weight: 500;
 }
 
-.btn-clear-booking-filters {
+.services-module .btn-clear-booking-filters {
     height: 32px;
     padding: 0 16px;
     font-size: 12.5px;
@@ -2318,24 +2397,25 @@
     transition: background-color 0.15s ease;
 }
 
-.btn-clear-booking-filters:hover {
+.services-module .btn-clear-booking-filters:hover {
     background-color: #E2ECE5;
 }
 
 /* Trạng thái lỗi viền đỏ và thông báo chữ đỏ cho Modal Lịch hẹn */
-.admin-input.input-error-border,
-.admin-select.input-error-border {
+
+.services-module .admin-input.input-error-border,
+.services-module .admin-select.input-error-border {
     border-color: #DC2626 !important;
     background-color: #FFF8F8 !important;
 }
 
-.admin-input.input-error-border:focus,
-.admin-select.input-error-border:focus {
+.services-module .admin-input.input-error-border:focus,
+.services-module .admin-select.input-error-border:focus {
     border-color: #DC2626 !important;
     outline: none !important;
 }
 
-.field-error-text {
+.services-module .field-error-text {
     color: #DC2626 !important;
     font-size: 12px !important;
     font-weight: 500 !important;
@@ -2344,14 +2424,15 @@
 }
 
 /* QUICK RECOMMENDATION CHIPS (.reason-quick-chip) & SELECTED ENTITY CARDS */
-.adjust-reason-quick-tags {
+
+.services-module .adjust-reason-quick-tags {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     margin-top: 6px;
 }
 
-.reason-quick-chip {
+.services-module .reason-quick-chip {
     background-color: #EEF5F1;
     border: none;
     border-radius: var(--admin-radius, 9px);
@@ -2364,11 +2445,11 @@
     line-height: 1.4;
 }
 
-.reason-quick-chip:hover {
+.services-module .reason-quick-chip:hover {
     background-color: #DCEEE2;
 }
 
-.adjust-customer-selected-card {
+.services-module .adjust-customer-selected-card {
     margin-top: 8px;
     padding: 8px 12px;
     background-color: #EEF5F1;
@@ -2383,14 +2464,15 @@
 /* ====================================================================
    MODAL 14: LỊCH TRỰC VÀ ĐIỀU PHỐI KỸ THUẬT VIÊN
    ==================================================================== */
-.staff-schedule-summary-strip {
+
+.services-module .staff-schedule-summary-strip {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 12px;
     margin-bottom: 16px;
 }
 
-.schedule-summary-item {
+.services-module .schedule-summary-item {
     background: #EEF5F1;
     border: 1px solid #C3DEC7;
     border-radius: var(--admin-radius, 9px);
@@ -2400,19 +2482,19 @@
     gap: 4px;
 }
 
-.schedule-summary-item .summary-item-label {
+.services-module .schedule-summary-item .summary-item-label {
     font-size: 11.5px;
     color: var(--text-muted, #4F7A65);
     font-weight: 500;
 }
 
-.schedule-summary-item .summary-item-val {
+.services-module .schedule-summary-item .summary-item-val {
     font-size: 17px;
     font-weight: 700;
     color: var(--text-heading, #236B48);
 }
 
-.staff-shift-filter-row {
+.services-module .staff-shift-filter-row {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -2421,7 +2503,7 @@
     border-bottom: 1px solid var(--border-neutral, #ECF2EE);
 }
 
-.staff-shift-tab-btn {
+.services-module .staff-shift-tab-btn {
     background: none;
     border: none;
     font-size: 13px;
@@ -2433,23 +2515,23 @@
     transition: color 0.15s ease;
 }
 
-.staff-shift-tab-btn:hover {
+.services-module .staff-shift-tab-btn:hover {
     color: var(--text-heading, #236B48);
 }
 
-.staff-shift-tab-btn.active {
+.services-module .staff-shift-tab-btn.active {
     color: var(--text-heading, #236B48);
     font-weight: 700;
     border-bottom: 2px solid var(--text-heading, #236B48);
 }
 
-.staff-schedule-cards-grid {
+.services-module .staff-schedule-cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
     gap: 14px;
 }
 
-.ktv-schedule-card {
+.services-module .ktv-schedule-card {
     background: #FAFCFA;
     border: 1px solid var(--border-neutral, #ECF2EE);
     border-radius: var(--admin-radius, 9px);
@@ -2459,16 +2541,18 @@
     gap: 10px;
 }
 
-.ktv-schedule-card-header {
+.services-module .ktv-schedule-card-header {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.ktv-schedule-avatar {
+.services-module .ktv-schedule-avatar {
     width: 42px;
     height: 42px;
-    border-radius: 50% !important; /* AGENTS.md: Avatar cá nhân luôn là hình tròn 50% */
+    border-radius: 50% !important;
+    /* AGENTS.md: Avatar cá nhân luôn là hình tròn 50% */
+
     background: #236B48;
     color: #FFFFFF;
     display: flex;
@@ -2479,23 +2563,23 @@
     flex-shrink: 0;
 }
 
-.ktv-schedule-info {
+.services-module .ktv-schedule-info {
     flex: 1;
 }
 
-.ktv-schedule-name {
+.services-module .ktv-schedule-name {
     font-size: 13.5px;
     font-weight: 600;
     color: var(--text-heading, #236B48);
 }
 
-.ktv-schedule-role {
+.services-module .ktv-schedule-role {
     font-size: 11.5px;
     color: var(--text-muted, #4F7A65);
     margin-top: 1px;
 }
 
-.ktv-workload-bar-wrap {
+.services-module .ktv-workload-bar-wrap {
     background: #EEF5F1;
     border-radius: var(--admin-radius, 9px);
     height: 6px;
@@ -2503,29 +2587,29 @@
     margin-top: 4px;
 }
 
-.ktv-workload-bar-fill {
+.services-module .ktv-workload-bar-fill {
     height: 100%;
     border-radius: var(--admin-radius, 9px);
     background: #236B48;
     transition: width 0.3s ease;
 }
 
-.ktv-workload-bar-fill.warning {
+.services-module .ktv-workload-bar-fill.warning {
     background: #D97706;
 }
 
-.ktv-workload-bar-fill.danger {
+.services-module .ktv-workload-bar-fill.danger {
     background: #DC2626;
 }
 
-.ktv-assigned-bookings-list {
+.services-module .ktv-assigned-bookings-list {
     display: flex;
     flex-direction: column;
     gap: 6px;
     font-size: 12px;
 }
 
-.ktv-assigned-booking-chip {
+.services-module .ktv-assigned-booking-chip {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -2533,4 +2617,1800 @@
     border: 1px solid #ECF2EE;
     border-radius: 6px;
     padding: 6px 10px;
-}
+}
+
+.services-module {
+    --text-heading: #275e49;
+    --text-main: #24382f;
+    --text-muted: #6f8176;
+    --border-neutral: #dce4de;
+    --service-table-head: #f1f4f1;
+    --service-row-hover: #f8faf8;
+    color: #24382f;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    min-width: 0;
+    gap: 10px;
+}
+
+.services-module .subtab-content {
+    gap: 10px;
+    min-width: 0;
+}
+
+.services-module .admin-card {
+    background: #ffffff;
+    border-color: #dce4de;
+    border-radius: 8px;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.services-module .admin-card:hover,
+.services-module .kpi-card:hover,
+.services-module .admin-btn:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* KPI: một dải thống kê liền mạch như các phân hệ Admin đã duyệt. */
+
+.services-module .services-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #dce4de;
+    border-radius: 8px;
+}
+
+.services-module .services-kpi-grid .kpi-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 4px;
+    min-width: 0;
+    min-height: 66px;
+    padding: 10px 13px;
+    background: #ffffff;
+    border: 0;
+    border-right: 1px solid #e2e8e3;
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    transition: background-color 0.12s ease;
+}
+
+.services-module .services-kpi-grid .kpi-card:last-child {
+    border-right: 0;
+}
+
+.services-module .services-kpi-grid .kpi-card:hover {
+    background: #f8faf8;
+}
+
+.services-module .services-kpi-grid .kpi-card.active {
+    background: #eef5f1;
+    box-shadow: inset 0 -2px 0 #275e49;
+}
+
+.services-module .kpi-label {
+    color: #596c5e;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+.services-module .kpi-val {
+    color: #263d31;
+    font-size: 23px;
+    font-weight: 650;
+    line-height: 1.12;
+    letter-spacing: -0.35px;
+}
+
+.services-module .kpi-val.text-success {
+    color: #15803d !important;
+}
+
+.services-module .kpi-val.text-warning {
+    color: #b45309 !important;
+}
+
+.services-module .kpi-val.text-danger {
+    color: #dc2626 !important;
+}
+
+.services-module .kpi-val.text-info {
+    color: #0369a1 !important;
+}
+
+.services-module .kpi-val.text-urgent-amber {
+    color: #b45309 !important;
+}
+
+/* Bề mặt lịch hẹn và bảng: một khung, một đường viền, không box lồng nhau. */
+
+.services-module .service-master-card {
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #d9e0db;
+    border-radius: 8px;
+    box-shadow: none;
+}
+
+.services-module .booking-upcoming-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+    padding: 9px 14px;
+    color: #6f8176;
+    background: #ffffff;
+    border: 0;
+    border-bottom: 1px solid #e7ece8;
+    border-radius: 0;
+    font-size: 12px;
+}
+
+.services-module .upcoming-strip-left {
+    min-width: 0;
+    gap: 10px;
+}
+
+.services-module .upcoming-strip-badge {
+    flex-shrink: 0;
+    color: #275e49;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.services-module .upcoming-strip-items {
+    gap: 10px;
+    min-width: 0;
+}
+
+.services-module .upcoming-item-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+    color: #526359;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.services-module .upcoming-item-tag:hover {
+    color: #275e49;
+    background: transparent;
+    border: 0;
+}
+
+.services-module .upcoming-item-tag.urgent {
+    color: #b42318;
+    background: transparent;
+    border: 0;
+}
+
+.services-module .upcoming-item-tag .tag-time {
+    color: #275e49;
+    font-weight: 650;
+}
+
+.services-module .upcoming-item-tag.urgent .tag-time {
+    color: #dc2626;
+}
+
+.services-module .upcoming-item-tag .tag-cust {
+    color: #30483a;
+    font-weight: 550;
+}
+
+.services-module .upcoming-item-tag .tag-pet {
+    color: #6f8176;
+    font-size: 11px;
+}
+
+.services-module .btn-strip-filter {
+    padding: 4px 0;
+    color: #275e49;
+    background: transparent;
+    border: 0;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.services-module .table-toolbar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    background: #ffffff;
+    border: 0;
+}
+
+.services-module .filter-row-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+    margin: 0;
+    padding: 10px 14px;
+    background: #ffffff;
+    border: 0;
+}
+
+.services-module .search-box-wrapper {
+    position: relative;
+    display: flex;
+    flex: 1 1 280px;
+    min-width: 200px;
+    max-width: 420px;
+    background: transparent;
+    border: 0;
+    transition: none;
+}
+
+.services-module .search-box-wrapper .admin-input {
+    width: 100%;
+    min-width: 0;
+    height: 38px;
+    min-height: 38px;
+    padding: 8px 36px 8px 13px;
+}
+
+.services-module .filter-actions-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-left: auto;
+}
+
+.services-module .filter-row-bottom {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    min-width: 0;
+    margin: 0;
+    padding: 0 14px 10px;
+    background: #ffffff;
+    border: 0;
+}
+
+.services-module .filter-dropdown-group {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 7px;
+    min-width: 0;
+}
+
+.services-module .filter-label {
+    margin: 0;
+    color: #6f8176;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.services-module .admin-input,
+.services-module .admin-select {
+    box-sizing: border-box;
+    max-width: 100%;
+    color: #24382f;
+    background: #ffffff;
+    border: 1px solid #dce4de;
+    border-radius: 8px;
+    box-shadow: none;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.services-module .admin-select {
+    min-width: 105px;
+    min-height: 36px;
+    padding: 7px 10px;
+}
+
+.services-module .admin-input:focus,
+.services-module .admin-select:focus {
+    outline: 2px solid rgba(39, 94, 73, 0.16);
+    outline-offset: 1px;
+    border-color: #9ab7a3;
+}
+
+.services-module .admin-btn,
+.services-module .admin-btn-filter-toggle,
+.services-module .btn-text-action,
+.services-module .modal-btn-close-text,
+.services-module .btn-modal-close {
+    min-height: 34px;
+    padding: 7px 11px;
+    color: #526359;
+    background: #ffffff;
+    border: 1px solid #dce4de;
+    border-radius: 8px;
+    box-shadow: none;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 550;
+    line-height: 1.35;
+    cursor: pointer;
+    transform: none;
+    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.services-module .admin-btn-primary {
+    color: #ffffff;
+    background: #275e49;
+    border-color: #275e49;
+    font-weight: 650;
+}
+
+.services-module .admin-btn-primary:hover {
+    color: #ffffff;
+    background: #214f3e;
+    border-color: #214f3e;
+}
+
+.services-module .admin-btn-secondary:hover,
+.services-module .admin-btn-filter-toggle:hover,
+.services-module .btn-text-action:hover,
+.services-module .modal-btn-close-text:hover,
+.services-module .btn-modal-close:hover {
+    color: #275e49;
+    background: #f8faf8;
+    border-color: #cbd8ce;
+}
+
+.services-module .admin-btn-filter-toggle {
+    font-weight: 500;
+}
+
+.services-module .admin-btn-filter-toggle.active,
+.services-module .admin-btn-filter-toggle[aria-pressed="true"] {
+    color: #275e49;
+    background: #eef5f1;
+    border-color: #b8cbbd;
+    font-weight: 650;
+}
+
+.services-module .admin-btn-clear-filters {
+    padding: 7px 0;
+    color: #275e49;
+    background: transparent;
+    border: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.services-module .admin-btn-clear-filters:hover {
+    color: #214f3e;
+    background: transparent;
+}
+
+/* Bảng dữ liệu: header xám xanh nhạt, đường kẻ mảnh, hover không làm nhảy layout. */
+
+.services-module .table-responsive-wrapper {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 320px;
+    max-height: min(64vh, 620px);
+    overflow: auto;
+    background: #ffffff;
+    border: 0;
+    border-radius: 0;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+}
+
+.services-module .admin-table {
+    width: 100%;
+    min-width: 1370px;
+    margin: 0;
+    color: #30483a;
+    background: #ffffff;
+    border: 0;
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0;
+    table-layout: auto;
+}
+
+.services-module .admin-table thead,
+.services-module .admin-table thead tr {
+    background: #f1f4f1;
+}
+
+.services-module .admin-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 10px 11px;
+    color: #536a59;
+    background: #f1f4f1;
+    border: 0;
+    border-bottom: 1px solid #d9e2da;
+    box-shadow: 0 1px 0 #d9e2da;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 650;
+    line-height: 1.45;
+    letter-spacing: 0;
+    text-align: left;
+    text-transform: none;
+    white-space: nowrap;
+}
+
+.services-module .admin-table td {
+    height: auto;
+    padding: 10px 11px;
+    color: #30483a;
+    background: #ffffff;
+    border: 0;
+    border-bottom: 1px solid #e7ece8;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: -0.1px;
+    vertical-align: middle;
+}
+
+.services-module .admin-table th:first-child,
+.services-module .admin-table td:first-child {
+    padding-left: 14px;
+}
+
+.services-module .admin-table tbody tr:hover,
+.services-module .admin-table tbody tr:hover td {
+    background: #f8faf8;
+}
+
+.services-module .admin-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.services-module .admin-table tr.row-alert-danger td:first-child,
+.services-module .admin-table tr.row-alert-red td:first-child {
+    border-left: 3px solid #dc2626 !important;
+}
+
+.services-module .admin-table tr.row-alert-warning td:first-child,
+.services-module .admin-table tr.row-alert-orange td:first-child {
+    border-left: 3px solid #d97706 !important;
+}
+
+.services-module .admin-table .admin-badge {
+    display: inline;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    color: inherit;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: normal;
+}
+
+.services-module .admin-table .badge-success {
+    color: #236b48;
+}
+
+.services-module .admin-table .badge-warning {
+    color: #b45309;
+}
+
+.services-module .admin-table .badge-danger {
+    color: #dc2626;
+}
+
+.services-module .admin-table .badge-info,
+.services-module .admin-table .badge-primary {
+    color: #0369a1;
+}
+
+.services-module .admin-table .badge-neutral {
+    color: #6f8176;
+}
+
+.services-module .admin-table .text-success {
+    color: #236b48 !important;
+}
+
+.services-module .admin-table .text-warning {
+    color: #b45309 !important;
+}
+
+.services-module .admin-table .text-danger {
+    color: #dc2626 !important;
+}
+
+.services-module .admin-table .text-info {
+    color: #0369a1 !important;
+}
+
+.services-module .admin-table .alert-text-stack,
+.services-module .admin-table .alert-badges-stack {
+    gap: 3px;
+    max-width: 190px;
+}
+
+.services-module .admin-table .alert-indicator {
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.services-module .admin-table .price-text-main {
+    color: #30483a;
+    font-weight: 650;
+}
+
+.services-module .admin-table .sub-meta-text {
+    display: block;
+    margin-top: 2px;
+    color: #6f8176;
+    font-size: 11px;
+    font-weight: 400;
+}
+
+.services-module .admin-table .btn-booking-action-more {
+    color: #47745e;
+    background: transparent;
+    border: 0;
+    border-radius: 5px;
+    font-size: 18px;
+}
+
+.services-module .admin-table .btn-booking-action-more:hover,
+.services-module .admin-table .btn-booking-action-more:focus-visible {
+    color: #275e49;
+    background: #eef5f1;
+}
+
+/* Phân trang và hồ sơ: giữ cấu trúc nghiệp vụ, bỏ nền trang trí thừa. */
+
+.services-module .admin-pagination-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 0;
+    padding: 12px 0 2px;
+    color: #6f8176;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+.services-module .admin-pagination-container button,
+.services-module .pagination-container button {
+    min-width: 30px;
+    min-height: 30px;
+    padding: 5px 9px;
+    color: #526359;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font: 500 12px/1.35 Inter, "Segoe UI", Arial, sans-serif;
+}
+
+.services-module .admin-pagination-container button:hover,
+.services-module .pagination-container button:hover {
+    color: #275e49;
+    background: #f8faf8;
+}
+
+.services-module .service-detail-card {
+    padding: 0;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #d9e0db;
+    border-radius: 8px;
+    box-shadow: none;
+}
+
+.services-module .service-detail-header-bar {
+    padding: 16px 18px;
+    background: #ffffff;
+    border-bottom: 1px solid #e7ece8;
+}
+
+.services-module .service-code-title {
+    color: #275e49;
+    font-size: 18px;
+    font-weight: 650;
+}
+
+.services-module .service-datetime-text {
+    margin-top: 3px;
+    color: #6f8176;
+    font-size: 11px;
+}
+
+.services-module .service-detail-grid > * {
+    min-width: 0;
+}
+
+.services-module .detail-section-title,
+.services-module .admin-card-title {
+    color: #275e49;
+    font-size: 14px;
+    font-weight: 650;
+    border-bottom: 0;
+}
+
+.services-module .detail-info-group,
+.services-module .service-finance-card,
+.services-module .service-pet-card,
+.services-module .service-customer-card {
+    background: #ffffff;
+    border-color: #e3e9e4;
+    box-shadow: none;
+}
+
+.services-module .pet-safety-banner {
+    color: #a12626;
+    background: #fff7f6;
+    border: 1px solid #f0d5d2;
+    border-radius: 6px;
+    box-shadow: none;
+}
+
+.services-module .booking-action-card,
+.services-module .service-detail-side-card {
+    background: #ffffff;
+    border: 1px solid #e3e9e4;
+    border-radius: 6px;
+    box-shadow: none;
+}
+
+/* Modal: bề mặt trắng, viền nhẹ, không Frosted Glass. */
+
+.services-module .admin-modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(24, 37, 30, 0.38);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    z-index: 2000;
+    overscroll-behavior: contain;
+}
+
+.services-module .admin-modal-overlay.active {
+    display: flex;
+}
+
+.services-module .admin-modal-overlay:not(.active) {
+    display: none !important;
+}
+
+.services-module .admin-modal-card {
+    box-sizing: border-box;
+    max-width: min(96vw, 980px);
+    max-height: 90dvh;
+    padding: 26px 30px;
+    overflow: auto;
+    color: #24382f;
+    background: #ffffff;
+    border: 1px solid #dce4de;
+    border-radius: 9px;
+    box-shadow: 0 12px 32px rgba(36, 57, 44, 0.08);
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    overscroll-behavior: contain;
+}
+
+.services-module .admin-modal-card.wide-modal {
+    width: min(860px, 96vw);
+}
+
+.services-module .modal-header-clean {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 0 20px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+}
+
+.services-module .modal-title-clean {
+    color: #275e49;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 20px;
+    font-weight: 650;
+    line-height: 1.4;
+}
+
+.services-module .modal-body-clean {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 0;
+}
+
+.services-module .form-label-clean,
+.services-module .form-label {
+    display: block;
+    margin-bottom: 7px;
+    color: #526d59;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 550;
+}
+
+.services-module .admin-modal-card .admin-input,
+.services-module .admin-modal-card .admin-select,
+.services-module .admin-modal-card .pet-field-autocomplete-wrapper,
+.services-module .admin-modal-card .customer-autocomplete-wrapper {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+}
+
+.services-module .admin-modal-card .form-row-two-col,
+.services-module .admin-modal-card .form-row-2col {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.services-module .admin-modal-card .form-row-two-col > .form-group:only-child,
+.services-module .admin-modal-card .form-row-2col > .form-group:only-child {
+    grid-column: 1 / -1;
+}
+
+.services-module .modal-footer-clean,
+.services-module .modal-actions-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 6px 0 0;
+    background: transparent;
+    border: 0;
+}
+
+.services-module .modal-btn-close-text,
+.services-module .btn-modal-close {
+    color: #526359;
+    background: #ffffff;
+    border: 1px solid #dce4de;
+    border-radius: 8px;
+}
+
+.services-module button:focus-visible,
+.services-module input:focus-visible,
+.services-module select:focus-visible,
+.services-module textarea:focus-visible {
+    outline: 2px solid #275e49;
+    outline-offset: 2px;
+}
+
+/* Dropdown hành động được JS đưa ra body nên được scope bằng ID riêng. */
+
+#globalBookingActionDropdown {
+    position: fixed;
+    z-index: 99999;
+    display: none;
+    flex-direction: column;
+    min-width: 185px;
+    padding: 5px;
+    background: #ffffff;
+    border: 1px solid #dce4de;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(36, 57, 44, 0.09);
+}
+
+#globalBookingActionDropdown.show {
+    display: flex;
+}
+
+#globalBookingActionDropdown .dropdown-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 9px 12px;
+    color: #24382f;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+}
+
+#globalBookingActionDropdown .dropdown-item:hover {
+    color: #275e49;
+    background: #eef5f1;
+}
+
+/* Responsive: ưu tiên cuộn ngang bảng thay vì ép hẹp cột dữ liệu. */
+
+@media (max-width: 1200px) {
+    .services-module .services-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .services-module .services-kpi-grid .kpi-card:nth-child(3) {
+        border-right: 0;
+    }
+
+    .services-module .services-kpi-grid .kpi-card:nth-child(n + 4) {
+        border-top: 1px solid #e2e8e3;
+    }
+
+    .services-module .filter-row-top {
+        flex-wrap: wrap;
+    }
+
+}
+
+@media (max-width: 800px) {
+    .services-module .filter-row-top {
+        flex-wrap: wrap;
+    }
+
+    .services-module .filter-actions-right {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .services-module .search-box-wrapper {
+        flex: 1 1 100%;
+        max-width: none;
+    }
+
+    .services-module .admin-modal-card {
+        padding: 22px 18px;
+    }
+
+}
+
+@media (max-width: 640px) {
+    .services-module .services-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .services-module .services-kpi-grid .kpi-card:nth-child(odd) {
+        border-right: 1px solid #e2e8e3;
+    }
+
+    .services-module .services-kpi-grid .kpi-card:nth-child(even) {
+        border-right: 0;
+    }
+
+    .services-module .services-kpi-grid .kpi-card:nth-child(n + 3) {
+        border-top: 1px solid #e2e8e3;
+    }
+
+    .services-module .filter-dropdown-group {
+        flex: 1 1 100%;
+    }
+
+    .services-module .filter-dropdown-group .admin-select {
+        flex: 1;
+        max-width: none;
+    }
+
+    .services-module .admin-modal-card .form-row-two-col,
+    .services-module .admin-modal-card .form-row-2col {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+}
+
+/* ==========================================================================
+   LEGACY INLINE PRESENTATION MOVED TO EXTERNAL CSS
+   Inline display states remain in HTML because existing JS reads/writes style.display.
+   ========================================================================== */
+
+.services-module .svc-inline-031a774a.svc-inline-031a774a.svc-inline-031a774a.svc-inline-031a774a,
+#reviewModalStaffMeta.svc-inline-031a774a {
+    font-size: 11.5px;
+    color: #4F7A65;
+    margin-top: 4px;
+}
+
+.services-module .svc-inline-03faeb93.svc-inline-03faeb93.svc-inline-03faeb93.svc-inline-03faeb93 {
+    width: 580px;
+    max-width: 95vw;
+}
+
+.services-module .svc-inline-0a79f374.svc-inline-0a79f374.svc-inline-0a79f374.svc-inline-0a79f374,
+#cashierReason.svc-inline-0a79f374,
+#serviceTicketDescription.svc-inline-0a79f374 {
+    height: auto;
+}
+
+.services-module .svc-inline-0d69e4b1.svc-inline-0d69e4b1.svc-inline-0d69e4b1.svc-inline-0d69e4b1,
+#quickReviewReplyChips.svc-inline-0d69e4b1 {
+    margin-top: 8px;
+}
+
+.services-module .svc-inline-10f8ecf8.svc-inline-10f8ecf8.svc-inline-10f8ecf8.svc-inline-10f8ecf8 {
+    padding: 3px 0;
+    color: #15803D;
+}
+
+.services-module .svc-inline-135fe3b4.svc-inline-135fe3b4.svc-inline-135fe3b4.svc-inline-135fe3b4,
+#waiverExtraItemsBlock.svc-inline-135fe3b4 {
+    margin-top: 6px;
+    font-size: 12px;
+}
+
+.services-module .svc-inline-148b84d6.svc-inline-148b84d6.svc-inline-148b84d6.svc-inline-148b84d6 {
+    width: 110px;
+}
+
+.services-module .svc-inline-1524bf2e.svc-inline-1524bf2e.svc-inline-1524bf2e.svc-inline-1524bf2e {
+    margin-top: 10px;
+    margin-bottom: 6px;
+}
+
+.services-module .svc-inline-1616ee57.svc-inline-1616ee57.svc-inline-1616ee57.svc-inline-1616ee57 {
+    width: 480px;
+    max-width: 92vw;
+}
+
+.services-module .svc-inline-165bb454.svc-inline-165bb454.svc-inline-165bb454.svc-inline-165bb454,
+#replyReviewText.svc-inline-165bb454 {
+    height: 100px;
+    padding: 10px 14px;
+    width: 100%;
+}
+
+.services-module .svc-inline-177d37eb.svc-inline-177d37eb.svc-inline-177d37eb.svc-inline-177d37eb {
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.services-module .svc-inline-1ee86b9d.svc-inline-1ee86b9d.svc-inline-1ee86b9d.svc-inline-1ee86b9d,
+#errorNewBookingCategory.svc-inline-1ee86b9d,
+#errorNewBookingCustomer.svc-inline-1ee86b9d,
+#errorNewBookingDate.svc-inline-1ee86b9d,
+#errorNewBookingHotelCheckOutDate.svc-inline-1ee86b9d,
+#errorNewBookingPetName.svc-inline-1ee86b9d,
+#errorNewBookingPhone.svc-inline-1ee86b9d,
+#errorNewBookingServiceSelect.svc-inline-1ee86b9d,
+#errorNewBookingTaxiPickup.svc-inline-1ee86b9d,
+#errorNewBookingTime.svc-inline-1ee86b9d {
+    color: #DC2626;
+    font-size: 12px;
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
+.services-module .svc-inline-2161d3d0.svc-inline-2161d3d0.svc-inline-2161d3d0.svc-inline-2161d3d0 {
+    align-items: center;
+    justify-content: space-between;
+}
+
+.services-module .svc-inline-21a1be8a.svc-inline-21a1be8a.svc-inline-21a1be8a.svc-inline-21a1be8a,
+#completePriceAccompanying.svc-inline-21a1be8a,
+#completePriceAddons.svc-inline-21a1be8a,
+#completePriceBase.svc-inline-21a1be8a,
+#completePriceDiscount.svc-inline-21a1be8a,
+#detailCostBase.svc-inline-21a1be8a {
+    font-weight: 600;
+}
+
+.services-module .svc-inline-21b27723.svc-inline-21b27723.svc-inline-21b27723.svc-inline-21b27723 {
+    width: 140px;
+}
+
+.services-module .svc-inline-224699c7.svc-inline-224699c7.svc-inline-224699c7.svc-inline-224699c7 {
+    text-align: center;
+    width: 90px;
+}
+
+.services-module .svc-inline-256b4ec1.svc-inline-256b4ec1.svc-inline-256b4ec1.svc-inline-256b4ec1,
+#completeBelongingsDesc.svc-inline-256b4ec1 {
+    padding: 8px 12px;
+    background: #F8FAF9;
+    border-radius: var(--admin-radius);
+    font-size: 12.5px;
+    color: var(--text-main);
+    margin-bottom: 6px;
+}
+
+.services-module .svc-inline-27652d97.svc-inline-27652d97.svc-inline-27652d97.svc-inline-27652d97 {
+    width: 130px;
+}
+
+.services-module .svc-inline-2771a134.svc-inline-2771a134.svc-inline-2771a134.svc-inline-2771a134,
+#intakeWeightAlertText.svc-inline-2771a134 {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.services-module .svc-inline-27cd5ddb.svc-inline-27cd5ddb.svc-inline-27cd5ddb.svc-inline-27cd5ddb {
+    max-height: 72vh;
+    overflow-y: auto;
+}
+
+.services-module .svc-inline-298f2333.svc-inline-298f2333.svc-inline-298f2333.svc-inline-298f2333,
+#previewPhotoModalImg.svc-inline-298f2333 {
+    max-width: 100%;
+    max-height: 480px;
+    object-fit: contain;
+    border-radius: var(--admin-radius);
+    border: 1px solid var(--border-neutral);
+    background-color: #F8FAF9;
+}
+
+.services-module .svc-inline-2c5f81cc.svc-inline-2c5f81cc.svc-inline-2c5f81cc.svc-inline-2c5f81cc,
+#serviceTicketHistory.svc-inline-2c5f81cc {
+    max-height: 160px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.services-module .svc-inline-2f428c90.svc-inline-2f428c90.svc-inline-2f428c90.svc-inline-2f428c90 {
+    width: 640px;
+    text-align: center;
+}
+
+.services-module .svc-inline-33dc41c8.svc-inline-33dc41c8.svc-inline-33dc41c8.svc-inline-33dc41c8 {
+    width: 820px;
+    max-width: 96vw;
+}
+
+.services-module .svc-inline-349adfce.svc-inline-349adfce.svc-inline-349adfce.svc-inline-349adfce {
+    width: 85px;
+}
+
+.services-module .svc-inline-34deaa9b.svc-inline-34deaa9b.svc-inline-34deaa9b.svc-inline-34deaa9b {
+    width: 90px;
+}
+
+.services-module .svc-inline-380c9111.svc-inline-380c9111.svc-inline-380c9111.svc-inline-380c9111,
+#intakeOriginalWeightLabel.svc-inline-380c9111 {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    font-weight: normal;
+    margin-left: 6px;
+}
+
+.services-module .svc-inline-39fba82d.svc-inline-39fba82d.svc-inline-39fba82d.svc-inline-39fba82d,
+#statInProgressBookings.svc-inline-39fba82d {
+    color: #0369A1;
+}
+
+.services-module .svc-inline-3ac737d0.svc-inline-3ac737d0.svc-inline-3ac737d0.svc-inline-3ac737d0 {
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.services-module .svc-inline-3cfc1826.svc-inline-3cfc1826.svc-inline-3cfc1826.svc-inline-3cfc1826 {
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.services-module .svc-inline-3ef0afb6.svc-inline-3ef0afb6.svc-inline-3ef0afb6.svc-inline-3ef0afb6 {
+    padding-top: 10px;
+    padding-bottom: 20px;
+}
+
+.services-module .svc-inline-43d0e609.svc-inline-43d0e609.svc-inline-43d0e609.svc-inline-43d0e609 {
+    max-height: 68vh;
+    overflow-y: auto;
+}
+
+.services-module .svc-inline-44ce5506.svc-inline-44ce5506.svc-inline-44ce5506.svc-inline-44ce5506,
+#createBookingHotelFields.svc-inline-44ce5506,
+#createBookingSpaFields.svc-inline-44ce5506,
+#createBookingTaxiFields.svc-inline-44ce5506 {
+    background: transparent;
+    padding: 4px 0;
+    margin-bottom: 12px;
+}
+
+.services-module .svc-inline-4668bbfc.svc-inline-4668bbfc.svc-inline-4668bbfc.svc-inline-4668bbfc {
+    width: 480px;
+    max-width: 95vw;
+}
+
+.services-module .svc-inline-4b3680e9.svc-inline-4b3680e9.svc-inline-4b3680e9.svc-inline-4b3680e9 {
+    border-top: 1px solid var(--border-neutral);
+    margin-top: 6px;
+    padding-top: 6px;
+}
+
+.services-module .svc-inline-4cefe411.svc-inline-4cefe411.svc-inline-4cefe411.svc-inline-4cefe411,
+#intakeExistingWoundNote.svc-inline-4cefe411 {
+    margin-top: 6px;
+    font-size: 12px;
+    height: 32px;
+}
+
+.services-module .svc-inline-4cfe0a4b.svc-inline-4cfe0a4b.svc-inline-4cfe0a4b.svc-inline-4cfe0a4b,
+#formServicePetTypeInput.svc-inline-4cfe0a4b {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    flex: 1;
+    min-width: 120px;
+    padding: 4px;
+    color: #203A2C;
+}
+
+.services-module .svc-inline-4ef2177e.svc-inline-4ef2177e.svc-inline-4ef2177e.svc-inline-4ef2177e {
+    width: 860px;
+    max-width: 96vw;
+}
+
+.services-module .svc-inline-50435ff2.svc-inline-50435ff2.svc-inline-50435ff2.svc-inline-50435ff2 {
+    margin-bottom: 0;
+}
+
+.services-module .svc-inline-5187b6fd.svc-inline-5187b6fd.svc-inline-5187b6fd.svc-inline-5187b6fd {
+    width: 120px;
+}
+
+.services-module .svc-inline-5320e2c7.svc-inline-5320e2c7.svc-inline-5320e2c7.svc-inline-5320e2c7 {
+    max-width: 360px;
+}
+
+.services-module .svc-inline-53f6dca2.svc-inline-53f6dca2.svc-inline-53f6dca2.svc-inline-53f6dca2 {
+    text-align: center;
+    width: 110px;
+}
+
+.services-module .svc-inline-55f4b7c7.svc-inline-55f4b7c7.svc-inline-55f4b7c7.svc-inline-55f4b7c7 {
+    color: #DC2626;
+}
+
+.services-module .svc-inline-58aaa0b2.svc-inline-58aaa0b2.svc-inline-58aaa0b2.svc-inline-58aaa0b2,
+#changeStaffWorkloadHint.svc-inline-58aaa0b2 {
+    margin-top: 6px;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: var(--admin-radius);
+}
+
+.services-module .svc-inline-5cad896c.svc-inline-5cad896c.svc-inline-5cad896c.svc-inline-5cad896c,
+#formServiceCashier.svc-inline-5cad896c {
+    max-height: 72vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.services-module .svc-inline-5cf0a9c3.svc-inline-5cf0a9c3.svc-inline-5cf0a9c3.svc-inline-5cf0a9c3,
+#btnAddStepToService.svc-inline-5cf0a9c3 {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.services-module .svc-inline-5db75d4d.svc-inline-5db75d4d.svc-inline-5db75d4d.svc-inline-5db75d4d,
+#completeEarnedPointsText.svc-inline-5db75d4d {
+    font-weight: 700;
+}
+
+.services-module .svc-inline-601eabd4.svc-inline-601eabd4.svc-inline-601eabd4.svc-inline-601eabd4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.services-module .svc-inline-65f9d5a3.svc-inline-65f9d5a3.svc-inline-65f9d5a3.svc-inline-65f9d5a3 {
+    text-align: center;
+}
+
+.services-module .svc-inline-6a8c410d.svc-inline-6a8c410d.svc-inline-6a8c410d.svc-inline-6a8c410d {
+    background: #F8FAF9;
+    padding: 10px 14px;
+    border-radius: var(--admin-radius);
+    font-size: 13px;
+}
+
+.services-module .svc-inline-6b1f0d97.svc-inline-6b1f0d97.svc-inline-6b1f0d97.svc-inline-6b1f0d97 {
+    margin-top: 4px;
+}
+
+.services-module .svc-inline-6e0fd9b8.svc-inline-6e0fd9b8.svc-inline-6e0fd9b8.svc-inline-6e0fd9b8 {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.services-module .svc-inline-6e1d9a51.svc-inline-6e1d9a51.svc-inline-6e1d9a51.svc-inline-6e1d9a51,
+#detailSpecialServiceFields.svc-inline-6e1d9a51 {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border-neutral);
+}
+
+.services-module .svc-inline-6e4709cb.svc-inline-6e4709cb.svc-inline-6e4709cb.svc-inline-6e4709cb,
+#reviewModalCustomerComment.svc-inline-6e4709cb {
+    font-size: 13px;
+    color: #203A2C;
+    margin-top: 4px;
+    line-height: 1.5;
+}
+
+.services-module .svc-inline-6f6e5b53.svc-inline-6f6e5b53.svc-inline-6f6e5b53.svc-inline-6f6e5b53,
+#surchargeCommissionEarned.svc-inline-6f6e5b53 {
+    font-weight: 700;
+    color: #236B48;
+    height: 38px;
+    align-items: center;
+    background: #EEF5F1;
+    padding: 0 12px;
+    border-radius: var(--admin-radius);
+    font-size: 13.5px;
+}
+
+.services-module .svc-inline-71090124.svc-inline-71090124.svc-inline-71090124.svc-inline-71090124,
+#newBookingStaffWorkloadHint.svc-inline-71090124 {
+    margin-top: 4px;
+    font-size: 11.5px;
+    padding: 4px 8px;
+    border-radius: var(--admin-radius);
+}
+
+.services-module .svc-inline-741c860c.svc-inline-741c860c.svc-inline-741c860c.svc-inline-741c860c,
+#reviewModalHeaderMeta.svc-inline-741c860c {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #236B48;
+}
+
+.services-module .svc-inline-76016d47.svc-inline-76016d47.svc-inline-76016d47.svc-inline-76016d47,
+#statAvgRating.svc-inline-76016d47 {
+    color: #B45309;
+}
+
+.services-module .svc-inline-7b9ef017.svc-inline-7b9ef017.svc-inline-7b9ef017.svc-inline-7b9ef017,
+#servicePetTypeDropdown.svc-inline-7b9ef017 {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #FFFFFF;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    box-shadow: 0 10px 28px rgba(35, 107, 72, 0.14);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 2500;
+}
+
+.services-module .svc-inline-7c5d6b42.svc-inline-7c5d6b42.svc-inline-7c5d6b42.svc-inline-7c5d6b42,
+#completePriceTotal.svc-inline-7c5d6b42 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #236B48;
+}
+
+.services-module .svc-inline-7c8ebd94.svc-inline-7c8ebd94.svc-inline-7c8ebd94.svc-inline-7c8ebd94,
+#detailBelongingsText.svc-inline-7c8ebd94,
+#detailBookingCustomerNote.svc-inline-7c8ebd94 {
+    font-weight: 400;
+}
+
+.services-module .svc-inline-7dab5feb.svc-inline-7dab5feb.svc-inline-7dab5feb.svc-inline-7dab5feb,
+#cashierError.svc-inline-7dab5feb,
+#notifyPickupError.svc-inline-7dab5feb,
+#serviceTicketError.svc-inline-7dab5feb {
+    color: #DC2626;
+    background: transparent;
+    border: none;
+    margin: 0;
+}
+
+.services-module .svc-inline-81595a98.svc-inline-81595a98.svc-inline-81595a98.svc-inline-81595a98 {
+    font-weight: 500;
+}
+
+.services-module .svc-inline-817a95c3.svc-inline-817a95c3.svc-inline-817a95c3.svc-inline-817a95c3 {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.services-module .svc-inline-8220adfd.svc-inline-8220adfd.svc-inline-8220adfd.svc-inline-8220adfd {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: #EEF5F1;
+    border: 1px solid #C3DEC7;
+    border-radius: var(--admin-radius);
+    font-size: 12.5px;
+    color: #236B48;
+    line-height: 1.45;
+}
+
+.services-module .svc-inline-82518573.svc-inline-82518573.svc-inline-82518573.svc-inline-82518573 {
+    width: 70px;
+}
+
+.services-module .svc-inline-82be718b.svc-inline-82be718b.svc-inline-82be718b.svc-inline-82be718b {
+    margin-top: 6px;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 700;
+    color: #236B48;
+}
+
+.services-module .svc-inline-82fbccc1.svc-inline-82fbccc1.svc-inline-82fbccc1.svc-inline-82fbccc1 {
+    width: 500px;
+    max-width: 92vw;
+}
+
+.services-module .svc-inline-83b8e7af.svc-inline-83b8e7af.svc-inline-83b8e7af.svc-inline-83b8e7af {
+    width: 20px;
+}
+
+.services-module .svc-inline-88bd17e7.svc-inline-88bd17e7.svc-inline-88bd17e7.svc-inline-88bd17e7,
+#intakeBelongingsInput.svc-inline-88bd17e7 {
+    height: 52px;
+    padding: 6px 12px;
+    font-size: 12.5px;
+}
+
+.services-module .svc-inline-89b5c6c5.svc-inline-89b5c6c5.svc-inline-89b5c6c5.svc-inline-89b5c6c5,
+#changeStaffCurrentName.svc-inline-89b5c6c5 {
+    font-weight: 600;
+    color: #236B48;
+    padding: 6px 12px;
+    background: #EEF5F1;
+    border-radius: var(--admin-radius);
+}
+
+.services-module .svc-inline-8cdb427f.svc-inline-8cdb427f.svc-inline-8cdb427f.svc-inline-8cdb427f,
+#formServiceDesc.svc-inline-8cdb427f {
+    height: 65px;
+    padding: 8px 14px;
+}
+
+.services-module .svc-inline-8d264184.svc-inline-8d264184.svc-inline-8d264184.svc-inline-8d264184 {
+    padding: 3px 0;
+}
+
+.services-module .svc-inline-8e7b6933.svc-inline-8e7b6933.svc-inline-8e7b6933.svc-inline-8e7b6933 {
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.services-module .svc-inline-8e7d1c7d.svc-inline-8e7d1c7d.svc-inline-8e7d1c7d.svc-inline-8e7d1c7d {
+    width: 95px;
+}
+
+.services-module .svc-inline-8f12ac90.svc-inline-8f12ac90.svc-inline-8f12ac90.svc-inline-8f12ac90,
+#notifyPickupTotalCost.svc-inline-8f12ac90 {
+    color: #236B48;
+}
+
+.services-module .svc-inline-90629753.svc-inline-90629753.svc-inline-90629753.svc-inline-90629753 {
+    align-items: center;
+    gap: 8px;
+}
+
+.services-module .svc-inline-90859860.svc-inline-90859860.svc-inline-90859860.svc-inline-90859860 {
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.services-module .svc-inline-91e52094.svc-inline-91e52094.svc-inline-91e52094.svc-inline-91e52094 {
+    background-color: #EEF5F1;
+    padding: 12px 16px;
+    border-radius: var(--admin-radius);
+}
+
+.services-module .svc-inline-92d1336b.svc-inline-92d1336b.svc-inline-92d1336b.svc-inline-92d1336b {
+    justify-content: space-between;
+    color: var(--text-muted);
+}
+
+.services-module .svc-inline-93665206.svc-inline-93665206.svc-inline-93665206.svc-inline-93665206 {
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.services-module .svc-inline-94bf79ad.svc-inline-94bf79ad.svc-inline-94bf79ad.svc-inline-94bf79ad {
+    width: 75px;
+}
+
+.services-module .svc-inline-94c2a973.svc-inline-94c2a973.svc-inline-94c2a973.svc-inline-94c2a973 {
+    width: 540px;
+    max-width: 95vw;
+}
+
+.services-module .svc-inline-957b2af2.svc-inline-957b2af2.svc-inline-957b2af2.svc-inline-957b2af2,
+#btnResetNotifyTemplate.svc-inline-957b2af2 {
+    font-size: 11.5px;
+}
+
+.services-module .svc-inline-976ab971.svc-inline-976ab971.svc-inline-976ab971.svc-inline-976ab971 {
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.services-module .svc-inline-98349fe0.svc-inline-98349fe0.svc-inline-98349fe0.svc-inline-98349fe0,
+#servicePetTypeTagsContainer.svc-inline-98349fe0 {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    min-height: 40px;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    background: #FFFFFF;
+    cursor: text;
+}
+
+.services-module .svc-inline-9864299d.svc-inline-9864299d.svc-inline-9864299d.svc-inline-9864299d {
+    position: relative;
+    width: 100%;
+}
+
+.services-module .svc-inline-98c7fedd.svc-inline-98c7fedd.svc-inline-98c7fedd.svc-inline-98c7fedd,
+#notifyPickupMessageText.svc-inline-98c7fedd {
+    height: auto;
+    padding: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.services-module .svc-inline-9a27cea0.svc-inline-9a27cea0.svc-inline-9a27cea0.svc-inline-9a27cea0 {
+    font-size: 12.5px;
+}
+
+.services-module .svc-inline-9c8d4b0b.svc-inline-9c8d4b0b.svc-inline-9c8d4b0b.svc-inline-9c8d4b0b,
+#confirmServiceActionMessage.svc-inline-9c8d4b0b {
+    font-size: 13.5px;
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+.services-module .svc-inline-9dcc6df3.svc-inline-9dcc6df3.svc-inline-9dcc6df3.svc-inline-9dcc6df3 {
+    width: 740px;
+    max-width: 95vw;
+}
+
+.services-module .svc-inline-a076b574.svc-inline-a076b574.svc-inline-a076b574.svc-inline-a076b574,
+#summaryAvgCapacity.svc-inline-a076b574 {
+    color: #165335;
+}
+
+.services-module .svc-inline-a17d2da4.svc-inline-a17d2da4.svc-inline-a17d2da4.svc-inline-a17d2da4 {
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.services-module .svc-inline-a182b20c.svc-inline-a182b20c.svc-inline-a182b20c.svc-inline-a182b20c,
+#serviceDetailState.svc-inline-a182b20c {
+    padding: 26px 30px;
+}
+
+.services-module .svc-inline-a24cb3b8.svc-inline-a24cb3b8.svc-inline-a24cb3b8.svc-inline-a24cb3b8 {
+    color: #1B5E20;
+}
+
+.services-module .svc-inline-a476c24d.svc-inline-a476c24d.svc-inline-a476c24d.svc-inline-a476c24d,
+#btnNotifyCustomerPickup.svc-inline-a476c24d {
+    color: #236B48;
+    font-weight: 600;
+}
+
+.services-module .svc-inline-a5595d11.svc-inline-a5595d11.svc-inline-a5595d11.svc-inline-a5595d11 {
+    margin-top: 6px;
+}
+
+.services-module .svc-inline-a8993bf7.svc-inline-a8993bf7.svc-inline-a8993bf7.svc-inline-a8993bf7 {
+    flex-direction: column;
+    gap: 6px;
+}
+
+.services-module .svc-inline-a8a90353.svc-inline-a8a90353.svc-inline-a8a90353.svc-inline-a8a90353,
+#servicePetTypeTagWrapper.svc-inline-a8a90353 {
+    position: relative;
+}
+
+.services-module .svc-inline-aabe0635.svc-inline-aabe0635.svc-inline-aabe0635.svc-inline-aabe0635,
+#intakeWeightAlertBox.svc-inline-aabe0635 {
+    margin-bottom: 12px;
+    background: transparent;
+    border: none;
+    font-size: 12.5px;
+    color: #DC2626;
+}
+
+.services-module .svc-inline-b5a0c66e.svc-inline-b5a0c66e.svc-inline-b5a0c66e.svc-inline-b5a0c66e {
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.services-module .svc-inline-b5fefd07.svc-inline-b5fefd07.svc-inline-b5fefd07.svc-inline-b5fefd07 {
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.services-module .svc-inline-b6542040.svc-inline-b6542040.svc-inline-b6542040.svc-inline-b6542040 {
+    width: 60px;
+}
+
+.services-module .svc-inline-bacbe7d7.svc-inline-bacbe7d7.svc-inline-bacbe7d7.svc-inline-bacbe7d7 {
+    width: 580px;
+    max-width: 94vw;
+}
+
+.services-module .svc-inline-bcef30ca.svc-inline-bcef30ca.svc-inline-bcef30ca.svc-inline-bcef30ca,
+#cashierMeta.svc-inline-bcef30ca,
+#serviceTicketMeta.svc-inline-bcef30ca {
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.services-module .svc-inline-bea9401f.svc-inline-bea9401f.svc-inline-bea9401f.svc-inline-bea9401f,
+#accompanyingNoteInput.svc-inline-bea9401f,
+#cancelBookingReasonDetail.svc-inline-bea9401f,
+#newBookingNotes.svc-inline-bea9401f,
+#surchargeReasonInput.svc-inline-bea9401f {
+    height: 60px;
+    padding: 8px 14px;
+}
+
+.services-module .svc-inline-c03085fa.svc-inline-c03085fa.svc-inline-c03085fa.svc-inline-c03085fa {
+    font-size: 11.5px;
+    color: #165335;
+    margin-top: 4px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.services-module .svc-inline-c3a5ba6f.svc-inline-c3a5ba6f.svc-inline-c3a5ba6f.svc-inline-c3a5ba6f {
+    font-size: 13.5px;
+    color: var(--text-main);
+}
+
+.services-module .svc-inline-c4b55617.svc-inline-c4b55617.svc-inline-c4b55617.svc-inline-c4b55617 {
+    width: 640px;
+    max-width: 95vw;
+}
+
+.services-module .svc-inline-c58b2e88.svc-inline-c58b2e88.svc-inline-c58b2e88.svc-inline-c58b2e88 {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.services-module .svc-inline-c8883f38.svc-inline-c8883f38.svc-inline-c8883f38.svc-inline-c8883f38,
+#bookingCustomerDropdown.svc-inline-c8883f38,
+#bookingPetDropdown.svc-inline-c8883f38,
+#bookingServiceDropdown.svc-inline-c8883f38 {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #FFFFFF;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    box-shadow: 0 10px 28px rgba(35, 107, 72, 0.14);
+    z-index: 2500;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.services-module .svc-inline-c9cdf489.svc-inline-c9cdf489.svc-inline-c9cdf489.svc-inline-c9cdf489 {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.services-module .svc-inline-cdb83ce1.svc-inline-cdb83ce1.svc-inline-cdb83ce1.svc-inline-cdb83ce1,
+#changeStaffBookingMeta.svc-inline-cdb83ce1,
+#completeBookingMeta.svc-inline-cdb83ce1,
+#editCarelogModalMeta.svc-inline-cdb83ce1,
+#intakePetSummary.svc-inline-cdb83ce1,
+#notifyPickupMeta.svc-inline-cdb83ce1,
+#sopViewerMeta.svc-inline-cdb83ce1,
+#surchargeBookingMeta.svc-inline-cdb83ce1 {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 3px;
+}
+
+.services-module .svc-inline-d1155473.svc-inline-d1155473.svc-inline-d1155473.svc-inline-d1155473 {
+    width: 720px;
+    max-width: 96vw;
+}
+
+.services-module .svc-inline-d23cc65f.svc-inline-d23cc65f.svc-inline-d23cc65f.svc-inline-d23cc65f,
+#previewPhotoModalCaption.svc-inline-d23cc65f {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 8px;
+}
+
+.services-module .svc-inline-d59bb54f.svc-inline-d59bb54f.svc-inline-d59bb54f.svc-inline-d59bb54f {
+    color: var(--text-muted);
+}
+
+.services-module .svc-inline-d8dc3f34.svc-inline-d8dc3f34.svc-inline-d8dc3f34.svc-inline-d8dc3f34 {
+    justify-content: space-between;
+    align-items: center;
+}
+
+.services-module .svc-inline-d8fe5cef.svc-inline-d8fe5cef.svc-inline-d8fe5cef.svc-inline-d8fe5cef {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #236B48;
+    margin-bottom: 8px;
+}
+
+.services-module .svc-inline-d95ae447.svc-inline-d95ae447.svc-inline-d95ae447.svc-inline-d95ae447,
+#formNotifyPickup.svc-inline-d95ae447 {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.services-module .svc-inline-d9d654c0.svc-inline-d9d654c0.svc-inline-d9d654c0.svc-inline-d9d654c0,
+#completeStepsProgressText.svc-inline-d9d654c0 {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #165335;
+}
+
+.services-module .svc-inline-da190a81.svc-inline-da190a81.svc-inline-da190a81.svc-inline-da190a81 {
+    width: 100px;
+}
+
+.services-module .svc-inline-dabaad57.svc-inline-dabaad57.svc-inline-dabaad57.svc-inline-dabaad57 {
+    width: 80px;
+}
+
+.services-module .svc-inline-db1957d4.svc-inline-db1957d4.svc-inline-db1957d4.svc-inline-db1957d4 {
+    text-align: right;
+    margin-top: 4px;
+}
+
+.services-module .svc-inline-dc89c438.svc-inline-dc89c438.svc-inline-dc89c438.svc-inline-dc89c438,
+#editCarelogStepDesc.svc-inline-dc89c438 {
+    height: 70px;
+    padding: 8px 14px;
+}
+
+.services-module .svc-inline-e13036f1.svc-inline-e13036f1.svc-inline-e13036f1.svc-inline-e13036f1 {
+    width: 115px;
+}
+
+.services-module .svc-inline-e1cc7b64.svc-inline-e1cc7b64.svc-inline-e1cc7b64.svc-inline-e1cc7b64,
+#summaryOverloadedCount.svc-inline-e1cc7b64 {
+    color: #734718;
+}
+
+.services-module .svc-inline-e375732d.svc-inline-e375732d.svc-inline-e375732d.svc-inline-e375732d,
+#formServiceTicket.svc-inline-e375732d {
+    max-height: 70vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.services-module .svc-inline-e3983d0b.svc-inline-e3983d0b.svc-inline-e3983d0b.svc-inline-e3983d0b,
+#detailIntakeEmptyNotice.svc-inline-e3983d0b {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 6px 0;
+}
+
+.services-module .svc-inline-e53ceb49.svc-inline-e53ceb49.svc-inline-e53ceb49.svc-inline-e53ceb49 {
+    width: 580px;
+    max-width: 94vw;
+    padding: 26px 30px;
+    overscroll-behavior: contain;
+}
+
+.services-module .svc-inline-e5a6d3c3.svc-inline-e5a6d3c3.svc-inline-e5a6d3c3.svc-inline-e5a6d3c3 {
+    margin-top: 10px;
+}
+
+.services-module .svc-inline-e7b13069.svc-inline-e7b13069.svc-inline-e7b13069.svc-inline-e7b13069,
+#changeStaffPresetReason.svc-inline-e7b13069 {
+    margin-bottom: 6px;
+}
+
+.services-module .svc-inline-f134e21c.svc-inline-f134e21c.svc-inline-f134e21c.svc-inline-f134e21c {
+    width: 45px;
+}
+
+.services-module .svc-inline-f17001c3.svc-inline-f17001c3.svc-inline-f17001c3.svc-inline-f17001c3 {
+    gap: 8px;
+}
+
+.services-module .svc-inline-f395affc.svc-inline-f395affc.svc-inline-f395affc.svc-inline-f395affc {
+    align-items: center;
+    padding: 10px 0;
+}
+
+.services-module .svc-inline-f6e5e75e.svc-inline-f6e5e75e.svc-inline-f6e5e75e.svc-inline-f6e5e75e {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: 12.5px;
+    margin-bottom: 12px;
+    color: var(--text-main);
+}
+
+.services-module .svc-inline-f7671901.svc-inline-f7671901.svc-inline-f7671901.svc-inline-f7671901,
+#cashierHistory.svc-inline-f7671901 {
+    max-height: 200px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.services-module .svc-inline-f9e06055.svc-inline-f9e06055.svc-inline-f9e06055.svc-inline-f9e06055,
+#replyPresetSelect.svc-inline-f9e06055 {
+    width: auto;
+    max-width: 270px;
+    font-size: 12px;
+    height: 30px;
+    padding: 2px 8px;
+}
+
+.services-module .svc-inline-fbbffe90.svc-inline-fbbffe90.svc-inline-fbbffe90.svc-inline-fbbffe90,
+#carelogImageCountText.svc-inline-fbbffe90 {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.services-module .svc-inline-fcef297f.svc-inline-fcef297f.svc-inline-fcef297f.svc-inline-fcef297f,
+#rowDiscountDisplay.svc-inline-fcef297f {
+    color: #15803D;
+}
+
+.services-module .svc-inline-fd01ccc1.svc-inline-fd01ccc1.svc-inline-fd01ccc1.svc-inline-fd01ccc1 {
+    width: 760px;
+    max-width: 95vw;
+    padding: 26px 30px;
+    overscroll-behavior: contain;
+}

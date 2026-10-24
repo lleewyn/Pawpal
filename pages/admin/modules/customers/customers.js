@@ -253,6 +253,11 @@
         }
 
         sessionStorage.setItem('pawpal_admin_customer_subtab', targetSubtab);
+        if (targetSubtab === 'tab-profile') {
+            PawpalCustomers.subtabs.profile?.switchDrawerTab(sessionStorage.getItem('pawpal_admin_customer_drawertab') || 'dtab-personal');
+        }
+        if (targetSubtab === 'tab-pawpoint') PawpalCustomers.subtabs.pawpoint?.renderPawpointHistory();
+        if (directoryDirty || ledgerDirty || profileDirty || historyDirty) scheduleCustomerSync();
         if (updateHistory) {
             if (window.location.hash !== '#' + targetSubtab) {
                 try {
@@ -469,6 +474,15 @@
                 });
             }
 
+        for (const [key, fresh] of Object.entries(freshDb)) {
+            const existing = PawpalCustomers.state.customerDatabase?.[key];
+            if (!existing) continue;
+            const histories = {};
+            for (const kind of ['orders', 'bookings', 'complaints']) {
+                if (existing._historyStatus?.[kind] === 'loaded') histories[kind] = existing[kind];
+            }
+            freshDb[key] = Object.assign(existing, fresh, histories);
+        }
         return freshDb;
     }
 
@@ -483,23 +497,26 @@
     }
 
     const directoryCache=new Map(),directoryRequests=new Map();
+    let directoryGeneration = 0;
     PawpalCustomers.serverCustomerPaging=true;
     PawpalCustomers.readCustomerPage=async function(request={},options={}){
-        if(options.force)directoryCache.clear();
+        if(options.force){directoryGeneration+=1;directoryCache.clear();}
         const key=JSON.stringify(request),cached=directoryCache.get(key);
         if(!options.force&&cached&&Date.now()-cached.at<60000)return cached.data;
-        if(directoryRequests.has(key))return directoryRequests.get(key);
+        const generation = directoryGeneration;
+        const requestKey = generation + ':' + key;
+        if(directoryRequests.has(requestKey))return directoryRequests.get(requestKey);
         const task=(async()=>{const client=window.getSupabaseClient?.()||window.SupabaseClient;if(!client)throw Error('connection_unavailable');
             const {data,error}=await client.rpc('admin_customer_page',{p_query:request.query||'',p_tier:request.tier||'ALL',p_status:request.status||'ALL',p_category:request.category||'ALL',p_page:request.page||1,p_size:request.size||10,p_lookup:request.lookup||''});if(error)throw error;
-            if(directoryCache.size>=20)directoryCache.delete(directoryCache.keys().next().value);directoryCache.set(key,{at:Date.now(),data});return data;
-        })().finally(()=>directoryRequests.delete(key));directoryRequests.set(key,task);return task;
+            if(generation===directoryGeneration){if(directoryCache.size>=20)directoryCache.delete(directoryCache.keys().next().value);directoryCache.set(key,{at:Date.now(),data});}return data;
+        })().finally(()=>directoryRequests.delete(requestKey));directoryRequests.set(requestKey,task);return task;
     };
     PawpalCustomers.lookupCustomers=async function(query='',lookup=''){
         const data=await PawpalCustomers.readCustomerPage({query,lookup,page:1,size:15});const customers=hydrateCustomerPage(data),ids=new Set(data.pageIds||[]);
         Object.assign(PawpalCustomers.state.customerDatabase,customers);return Object.values(customers).filter(c=>ids.has(c.dbId));
     };
     PawpalCustomers.hydrateCustomerPage=hydrateCustomerPage;
-    async function loadCustomersModuleData({ force = false } = {}) {
+    async function loadCustomersModuleData({ force = false, refreshSelected = force } = {}) {
         try {
             PawpalCustomers.state.listLoadStatus = 'loading';
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -508,7 +525,7 @@
             }
 
             // Sử dụng cache nếu dữ liệu còn mới và đã có ít nhất 1 khách hàng
-            if (!force && PawpalCustomers.state.customerPage?.key===JSON.stringify(PawpalCustomers.state.customerListRequest||{query:'',tier:'ALL',status:'ALL',category:'ALL',page:1,size:10}) && Date.now() - _custLastFetchedAt < CUST_CACHE_TTL_MS) {
+            if (!force && !refreshSelected && PawpalCustomers.state.customerPage?.key===JSON.stringify(PawpalCustomers.state.customerListRequest||{query:'',tier:'ALL',status:'ALL',category:'ALL',page:1,size:10}) && Date.now() - _custLastFetchedAt < CUST_CACHE_TTL_MS) {
                 console.log('[Customers] Dùng cache, bỏ qua fetch.');
                 PawpalCustomers.state.listLoadStatus = 'loaded';
                 return;
@@ -516,10 +533,13 @@
 
             const request=PawpalCustomers.state.customerListRequest||{query:'',tier:'ALL',status:'ALL',category:'ALL',page:1,size:10};
             const requestKey=JSON.stringify(request);
-            const data=await PawpalCustomers.readCustomerPage(request,{force});
+            const task=PawpalCustomers.readCustomerPage(request,{force});
+            const generation=directoryGeneration;
+            const data=await task;
+            if(generation!==directoryGeneration){PawpalCustomers.state.listLoadStatus='idle';return;}
             const freshDb=hydrateCustomerPage(data);
             const selectedKey=sessionStorage.getItem('pawpal_admin_customer_id');
-            if(force&&selectedKey&&!freshDb[selectedKey]){const selectedData=await PawpalCustomers.readCustomerPage({lookup:selectedKey,page:1,size:1},{force:true});Object.assign(freshDb,hydrateCustomerPage(selectedData));}
+            if(refreshSelected&&selectedKey&&!freshDb[selectedKey]){const selectedData=await PawpalCustomers.readCustomerPage({lookup:selectedKey,page:1,size:1});Object.assign(freshDb,hydrateCustomerPage(selectedData));}
             const previous=PawpalCustomers.state.customerDatabase||{};
             PawpalCustomers.state.customerDatabase={...previous,...freshDb};
             const pageIds=new Set(data.pageIds||[]);
@@ -529,7 +549,7 @@
             PawpalCustomers.state.membershipTiers = data.tiersData || [];
 
             // PERF-03.C04: Lịch sử điểm Pawpoint nạp on-demand khi mở subtab Pawpoints
-            if(force){PawpalCustomers.state.pawpointHistory=[];PawpalCustomers.state.pawpointLoadStatus='idle';}
+            // Directory refreshes do not invalidate the independent Pawpoint ledger.
 
             PawpalCustomers.populateCustomerDatalists();
             _custLastFetchedAt = Date.now();
@@ -561,34 +581,76 @@
     }
 
     // Helper lazy-fetch hồ sơ 360° (Đơn hàng, Lịch hẹn, Khiếu nại) cho 1 khách hàng cụ thể (PERF-03.C03)
-    const detailRequests=new Map();
-    PawpalCustomers.fetchCustomerProfile360 = function(cust,options={}){
-        if(!cust)return Promise.resolve(null);
-        const key=cust.dbId||cust.id;
-        if(detailRequests.has(key))return detailRequests.get(key);
-        const request=fetchCustomerProfile360(cust,options).finally(()=>detailRequests.delete(key));
-        detailRequests.set(key,request);return request;
+    const detailRequests = new Map();
+    const detailPages = new Map();
+    const detailVersions = new Map();
+    const historyKinds = ['orders', 'bookings', 'complaints'];
+
+    function historyVersion(customerId, kinds) {
+        return kinds.map(kind => `${detailVersions.get('*:' + kind) || 0}:${detailVersions.get(customerId + ':' + kind) || 0}`).join('|');
+    }
+
+    function invalidateHistory(kind, customerIds = []) {
+        for (const id of customerIds.length ? customerIds : ['*']) {
+            for (const item of kind ? [kind] : historyKinds) {
+                const key = id + ':' + item;
+                detailVersions.set(key, (detailVersions.get(key) || 0) + 1);
+            }
+        }
+        for (const [key, entry] of detailPages) {
+            if ((!kind || entry.kind === kind || entry.kind === 'all') && (!customerIds.length || customerIds.includes(entry.customerId))) {
+                detailPages.delete(key);
+            }
+        }
+        for (const cust of Object.values(PawpalCustomers.state.customerDatabase || {})) {
+            if (customerIds.length && !customerIds.includes(cust.dbId)) continue;
+            for (const item of kind ? [kind] : historyKinds) {
+                if (cust._historyStatus) cust._historyStatus[item] = 'idle';
+                if (cust._historyCounts) delete cust._historyCounts[item];
+            }
+            cust._detailsLoaded = false;
+        }
+    }
+
+    PawpalCustomers.fetchCustomerProfile360 = function(cust, options = {}) {
+        if (!cust) return Promise.resolve(null);
+        const kinds = historyKinds.includes(options.kind) ? [options.kind] : historyKinds;
+        const key = JSON.stringify([cust.dbId || cust.id, options.kind || 'all', options.page || 1, historyVersion(cust.dbId, kinds)]);
+        if (detailRequests.has(key)) {
+            return detailRequests.get(key).then(result => result === cust ? result : fetchCustomerProfile360(cust, options));
+        }
+        const request = fetchCustomerProfile360(cust, options).finally(() => detailRequests.delete(key));
+        detailRequests.set(key, request);
+        return request;
     };
-    const fetchCustomerProfile360 = async function(cust, { force = false, page = 1 } = {}) {
+    const fetchCustomerProfile360 = async function(cust, { force = false, page = 1, kind = 'all' } = {}) {
         if (!cust || !cust.dbId) return cust;
         page=Math.max(1,Math.floor(Number(page)||1));
-        if (!force && cust._detailsLoaded && cust._historyPage===page) return cust;
+        const kinds = historyKinds.includes(kind) ? [kind] : historyKinds;
+        const generation = historyVersion(cust.dbId, kinds);
+        const cacheKey = JSON.stringify([cust.dbId, kind, page]);
+        const cached = detailPages.get(cacheKey);
+        cust._historyStatus ||= {};
+        cust._historyPages ||= {};
+        cust._historyTokens ||= {};
+        const token = {};
+        for (const item of kinds) cust._historyTokens[item] = token;
+        for (const item of kinds) cust._historyStatus[item] = 'loading';
 
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!client) return cust;
-
         cust._detailsLoadStatus='loading';
         try {
+            if (!client) throw new Error('connection_unavailable');
             const fetchCust360 = async () => {
+                const empty = () => Promise.resolve({ data: [], count: 0 });
                 const [ordersRes,apptsRes,ticketsRes]=await Promise.all([
-                    client.from('sales_order').select('id,order_code,customer_id,order_status,created_at',{count:'exact'}).eq('customer_id',cust.dbId).order('created_at',{ascending:false}).order('id').range((page-1)*10,page*10-1),
-                    client.from('appointment').select('id,appointment_code,customer_id,scheduled_start_at,appointment_status,items:appointment_item(name_snapshot,status),staff:staff_id(full_name)',{count:'exact'}).eq('customer_id',cust.dbId).order('scheduled_start_at',{ascending:false}).order('id').range((page-1)*10,page*10-1),
-                    client.from('support_ticket').select('id,ticket_code,customer_id,subject,type,status,priority,created_at',{count:'exact'}).eq('customer_id',cust.dbId).order('created_at',{ascending:false}).order('id').range((page-1)*10,page*10-1),
+                    kinds.includes('orders') ? client.from('sales_order').select('id,order_code,customer_id,order_status,created_at',{count:'exact'}).eq('customer_id',cust.dbId).order('created_at',{ascending:false}).order('id').range((page-1)*10,page*10-1) : empty(),
+                    kinds.includes('bookings') ? client.from('appointment').select('id,appointment_code,customer_id,scheduled_start_at,appointment_status,items:appointment_item(name_snapshot,status),staff:staff_id(full_name)',{count:'exact'}).eq('customer_id',cust.dbId).order('scheduled_start_at',{ascending:false}).order('id').range((page-1)*10,page*10-1) : empty(),
+                    kinds.includes('complaints') ? client.from('support_ticket').select('id,ticket_code,customer_id,subject,type,status,priority,created_at',{count:'exact'}).eq('customer_id',cust.dbId).order('created_at',{ascending:false}).order('id').range((page-1)*10,page*10-1) : empty(),
                 ]);
                 for (const result of [ordersRes, apptsRes, ticketsRes]) if (result.error) throw result.error;
                 const paymentsRes = { data: [] };
-                cust._historyCounts={orders:ordersRes.count||0,bookings:apptsRes.count||0,complaints:ticketsRes.count||0};
-                cust._historyPage=page;
+                const counts = { orders: ordersRes.count || 0, bookings: apptsRes.count || 0, complaints: ticketsRes.count || 0 };
                 let totals = [];
                 for (let offset = 0; offset < (ordersRes.data || []).length; offset += 100) {
                     const result = await client.from('sales_order_totals').select('order_id,total_amount').in('order_id',ordersRes.data.slice(offset,offset+100).map(o=>o.id)).order('order_id');
@@ -599,7 +661,7 @@
                     paymentsRes.data.push(...(payments.data || []));
                 }
                 return {
-                    historyCounts: cust._historyCounts,
+                    historyCounts: Object.fromEntries(kinds.map(item => [item, counts[item]])),
                     orders: (ordersRes.data || []).map(o => ({ ...o, total_amount: totals.find(t => t.order_id === o.id)?.total_amount })),
                     payments: paymentsRes.data || [],
                     appts: apptsRes.data || [],
@@ -607,17 +669,18 @@
                 };
             };
 
-            const payload = window.PawpalDataStore?.fetch
-                ? await window.PawpalDataStore.fetch(`customers:360:${cust.dbId}:${page}`, fetchCust360, {
-                    ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
-                    force
-                })
+            const payload = !force && cached && Date.now() - cached.at < 60000
+                ? cached.payload
                 : await fetchCust360();
-
-            cust._historyCounts=payload.historyCounts;
-            cust._historyPage=page;
+            if (generation !== historyVersion(cust.dbId, kinds)) return cust;
+            if (detailPages.size >= 80) detailPages.delete(detailPages.keys().next().value);
+            detailPages.set(cacheKey, { at: cached?.payload === payload ? cached.at : Date.now(), payload, kind, customerId: cust.dbId });
+            if (kinds.some(item => cust._historyTokens[item] !== token)) return cust;
+            cust._historyCounts = { ...cust._historyCounts, ...payload.historyCounts };
+            cust._historyPage = page;
+            for (const item of kinds) cust._historyPages[item] = page;
             // Map orders
-            cust.orders = (payload.orders || []).map(o => {
+            if (kinds.includes('orders')) cust.orders = (payload.orders || []).map(o => {
                 const dateStr = o.created_at ? PawpalCustomers.formatDateTime(o.created_at) : '—';
                 const totalStr = o.total_amount ? Number(o.total_amount).toLocaleString('vi-VN') + ' đ' : '0 đ';
                 let st = window.PawpalEnum?.orderStatus(o.order_status)?.label || 'Chưa xác định';
@@ -645,7 +708,7 @@
             });
 
             // GĐ-03 & F-005: Map appts qua PawpalEnum nhận diện da_hoan_tat, da_check_in, vang_mat
-            cust.bookings = (payload.appts || []).map(a => {
+            if (kinds.includes('bookings')) cust.bookings = (payload.appts || []).map(a => {
                 const aDate = a.scheduled_start_at ? PawpalCustomers.formatDateTime(a.scheduled_start_at) : '—';
                 const apptMeta = (window.PawpalEnum?.appointmentStatus)
                     ? window.PawpalEnum.appointmentStatus(a.appointment_status)
@@ -662,7 +725,7 @@
             });
 
             // GĐ-03 & F-007: Map complaints qua PawpalEnum phân biệt tu_choi, da_dong, mo, khẩn cấp
-            cust.complaints = (payload.tickets || []).map(t => {
+            if (kinds.includes('complaints')) cust.complaints = (payload.tickets || []).map(t => {
                 const tDate = t.created_at ? PawpalCustomers.formatDateTime(t.created_at) : '—';
                 const ticketMeta = (window.PawpalEnum?.ticketStatus)
                     ? window.PawpalEnum.ticketStatus(t.status)
@@ -682,9 +745,14 @@
                 };
             });
 
-            cust._detailsLoaded = true;
+            for (const item of kinds) cust._historyStatus[item] = 'loaded';
+            cust._detailsLoaded = historyKinds.every(item => cust._historyStatus[item] === 'loaded');
             cust._detailsLoadStatus = 'loaded';
         } catch (e) {
+            if (generation !== historyVersion(cust.dbId, kinds)) return cust;
+            if (kinds.some(item => cust._historyTokens[item] !== token)) return cust;
+            detailPages.delete(cacheKey);
+            for (const item of kinds) cust._historyStatus[item] = 'error';
             cust._detailsLoadStatus = 'error';
             console.warn('[PawpalCustomers] Lỗi nạp 360:', e.code || 'connection');
         }
@@ -693,12 +761,15 @@
 
     // Helper lazy-fetch lịch sử điểm Pawpoint khi vào tab Pawpoints (PERF-03.C04)
     const ledgerPages=new Map(),ledgerRequests=new Map();
+    let ledgerGeneration = 0;
     const ledgerKey=options=>JSON.stringify([options.query||'',options.kind||'ALL',options.page||1,options.size||10]);
     PawpalCustomers.ledgerPageKey=ledgerKey;
     PawpalCustomers.readPawpointPage=async function(options={}){
         const key=ledgerKey(options),cached=ledgerPages.get(key);
         if(!options.force&&cached&&Date.now()-cached.at<60000)return cached.data;
-        if(ledgerRequests.has(key))return ledgerRequests.get(key);
+        const generation = ledgerGeneration;
+        const requestKey = generation + ':' + key;
+        if(ledgerRequests.has(requestKey))return ledgerRequests.get(requestKey);
         const task=(async()=>{
             const client=window.getSupabaseClient?.()||window.SupabaseClient;
             if(!client)throw Error('connection_unavailable');
@@ -706,8 +777,8 @@
             if(error)throw error;
             const result={...data,rows:(data.rows||[]).map(pt=>({id:pt.id,rawId:pt.id,custId:pt.customer_code||pt.customer_id,custName:pt.full_name||'Khách hàng',phone:pt.phone_number||'—',time:PawpalCustomers.formatDateTime(pt.created_at),createdAt:pt.created_at,type:Number(pt.points)<0?'SUB':'ADD',points:Math.abs(Number(pt.points)),balance:Number(pt.balance),reason:pt.description||'Giao dịch điểm Pawpoint'}))};
             if(ledgerPages.size>=20)ledgerPages.delete(ledgerPages.keys().next().value);
-            ledgerPages.set(key,{at:Date.now(),data:result});return result;
-        })().finally(()=>ledgerRequests.delete(key));ledgerRequests.set(key,task);return task;
+            if(generation===ledgerGeneration)ledgerPages.set(key,{at:Date.now(),data:result});return result;
+        })().finally(()=>ledgerRequests.delete(requestKey));ledgerRequests.set(requestKey,task);return task;
     };
     let ledgerVersion=0;
     PawpalCustomers.fetchPawpointLedger=async function(options={}){
@@ -716,7 +787,7 @@
         PawpalCustomers.state.ledgerRequest={...request,force:false};
         PawpalCustomers.state.ledgerRequestKey=key;
         PawpalCustomers.state.pawpointLoadStatus='loading';
-        if(options.force)ledgerPages.clear();
+        if(options.force){ledgerGeneration+=1;ledgerPages.clear();}
         try{
             const result=await PawpalCustomers.readPawpointPage({...request,force:!!options.force});
             if(version!==ledgerVersion)return [];
@@ -770,128 +841,171 @@
         if (petBreedDatalist) petBreedDatalist.innerHTML = commonBreeds.map(b => `<option value="${b}">`).join('');
     };
 
-    // 5. SUPABASE REALTIME SUBSCRIPTION
+    // 5. Coalesce mutations and Realtime updates; refresh only the visible resource.
+    let directoryDirty = false;
+    let ledgerDirty = false;
+    let profileDirty = false;
+    let historyDirty = false;
+    let syncTimer = null;
+    let syncRunning = null;
+    let syncWaiters = [];
+
+    function invalidateDirectory() {
+        directoryGeneration += 1;
+        directoryCache.clear();
+        _custLastFetchedAt = 0;
+        if (PawpalCustomers.state.customerPage) PawpalCustomers.state.customerPage.key = null;
+        PawpalCustomers.state.customerFailedKey = null;
+    }
+
+    function scheduleCustomerSync() {
+        clearTimeout(syncTimer);
+        return new Promise(resolve => {
+            syncWaiters.push(resolve);
+            syncTimer = setTimeout(flushCustomerSync, 300);
+        });
+    }
+
+    async function flushCustomerSync() {
+        if (syncRunning) {
+            await syncRunning;
+            return flushCustomerSync();
+        }
+        const waiters = syncWaiters;
+        syncWaiters = [];
+        syncRunning = (async () => {
+            if (document.hidden || sessionStorage.getItem('pawpal_admin_active_module') !== 'Kh\u00e1ch h\u00e0ng') return;
+            if (customerLoadPromise) await customerLoadPromise;
+            if (document.hidden || sessionStorage.getItem('pawpal_admin_active_module') !== 'Kh\u00e1ch h\u00e0ng') return;
+            const profileActive = document.getElementById('subtab-tab-profile')?.classList.contains('active');
+            const listActive = document.getElementById('subtab-tab-list')?.classList.contains('active');
+            const ledgerActive = document.getElementById('subtab-tab-pawpoint')?.classList.contains('active');
+            const openId = sessionStorage.getItem('pawpal_admin_customer_id');
+            const oldCustomer = PawpalCustomers.getCustomer(openId);
+            const note = document.getElementById('drawerCustNote');
+            const draft = profileActive && note && oldCustomer && note.value !== (oldCustomer.note || '')
+                ? { value: note.value, version: note.dataset.version } : null;
+            const refreshProfile = profileActive && profileDirty;
+            const refreshHistory = profileActive && historyDirty;
+            if (profileActive) historyDirty = false;
+            if (directoryDirty && listActive) {
+                directoryDirty = false;
+                await PawpalCustomers.loadCustomersModuleData();
+            }
+            if (refreshProfile && openId) {
+                profileDirty = false;
+                const generation = directoryGeneration;
+                try {
+                    const data = await PawpalCustomers.readCustomerPage({ lookup: openId, page: 1, size: 1 });
+                    if (generation !== directoryGeneration) {
+                        profileDirty = true;
+                        return;
+                    }
+                    Object.assign(PawpalCustomers.state.customerDatabase, hydrateCustomerPage(data));
+                    PawpalCustomers.state.membershipTiers = data.tiersData || [];
+                } catch (error) {
+                    profileDirty = true;
+                    PawpalCustomers.showToast('Ch\u01b0a t\u1ea3i l\u1ea1i \u0111\u01b0\u1ee3c h\u1ed3 s\u01a1. Vui l\u00f2ng th\u1eed l\u1ea1i.', 'warning');
+                    return;
+                }
+            }
+            if (refreshProfile && sessionStorage.getItem('pawpal_admin_customer_id') === openId) {
+                PawpalCustomers.subtabs.profile?.renderDrawerCustomerProfile(openId);
+                if (draft && note) {
+                    note.value = draft.value;
+                    note.dataset.version = draft.version;
+                    const editor = document.getElementById('customerNoteEditor');
+                    const edit = document.getElementById('customerNoteEdit');
+                    if (editor) editor.hidden = false;
+                    if (edit) edit.hidden = true;
+                }
+            } else if (refreshHistory) {
+                PawpalCustomers.subtabs.profile?.switchDrawerTab(sessionStorage.getItem('pawpal_admin_customer_drawertab') || 'dtab-personal');
+            }
+            if (ledgerActive && ledgerDirty) {
+                ledgerDirty = false;
+                await PawpalCustomers.fetchPawpointLedger();
+                PawpalCustomers.subtabs.pawpoint?.renderPawpointHistory();
+            }
+        })();
+        try {
+            await syncRunning;
+        } catch (error) {
+            console.warn('[Customers] Refresh failed:', error.code || 'connection');
+        } finally {
+            syncRunning = null;
+            waiters.forEach(resolve => resolve());
+        }
+    }
+
+    PawpalCustomers.refreshCustomerData = function({ directory = true, ledger = false, kind = null, customerIds = [] } = {}) {
+        const selected = PawpalCustomers.getCustomer(sessionStorage.getItem('pawpal_admin_customer_id'));
+        const affectsSelected = !customerIds.length || customerIds.includes(selected?.dbId);
+        if (directory) {
+            invalidateDirectory();
+            directoryDirty = true;
+            profileDirty ||= affectsSelected;
+        }
+        if (ledger) {
+            ledgerGeneration += 1;
+            ledgerPages.clear();
+            ledgerVersion += 1;
+            PawpalCustomers.state.ledgerRequestKey = null;
+            PawpalCustomers.state.pawpointLoadStatus = 'idle';
+            ledgerDirty = true;
+        }
+        if (kind) {
+            invalidateHistory(kind, customerIds);
+            historyDirty ||= affectsSelected;
+        }
+        return scheduleCustomerSync();
+    };
+
     function setupCustomersRealtimeSubscription() {
         try {
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (!client) return;
-
             if (window._custRealtimeChannel) {
                 client.removeChannel(window._custRealtimeChannel);
                 window.PawpalDataStore?.recordMetric?.('channel-remove', 'admin_customers_realtime');
             }
-
-            const triggerCustSync = (invalidatePattern, refreshCallback) => {
-                directoryCache.clear();ledgerPages.clear();_custLastFetchedAt=0;
-                if (PawpalCustomers.state.customerPage) PawpalCustomers.state.customerPage.key = null;
-                PawpalCustomers.state.customerFailedKey = null;
-                PawpalCustomers.state.ledgerRequestKey = null;
-                if (window.PawpalDataStore?.handleRealtimeChange) {
-                    window.PawpalDataStore.handleRealtimeChange({
-                        moduleName: 'Khách hàng',
-                        invalidatePattern: invalidatePattern || 'customers:*',
-                        onActiveRefresh: async () => {
-                            const openId = sessionStorage.getItem('pawpal_admin_customer_id');
-                            const note = document.getElementById('drawerCustNote');
-                            const oldCustomer = PawpalCustomers.getCustomer(openId);
-                            const draft = note && oldCustomer && note.value !== (oldCustomer.note || '') ? { value: note.value, version: note.dataset.version } : null;
-                            await PawpalCustomers.loadCustomersModuleData({ force: true });
-                            if (openId && document.getElementById('subtab-tab-profile')?.classList.contains('active')) {
-                                PawpalCustomers.subtabs.profile?.renderDrawerCustomerProfile(openId);
-                                if (draft && note) { note.value = draft.value; note.dataset.version = draft.version;const editor=document.getElementById('customerNoteEditor'),edit=document.getElementById('customerNoteEdit');if(editor)editor.hidden=false;if(edit)edit.hidden=true; }
-                            }
-                            if (typeof refreshCallback === 'function') {
-                                refreshCallback();
-                            } else if (PawpalCustomers.subtabs.list) {
-                                PawpalCustomers.subtabs.list.renderCustomersTable();
-                                PawpalCustomers.subtabs.list.updateCustomerKPIs();
-                            }
-                        },
-                        debounceMs: 300
-                    });
-                } else if (sessionStorage.getItem('pawpal_admin_active_module') === 'Khách hàng') {
-                    PawpalCustomers.loadCustomersModuleData({ force: true }).then(() => {
-                        if (refreshCallback) refreshCallback();
-                    });
-                }
+            const directoryTables = new Set([
+                'customer_phone', 'membership_tier', 'pet_weight_history', 'pet_breed', 'pet_species',
+                'customer', 'customer_profile', 'customer_membership', 'customer_address', 'pet_profile',
+                'support_ticket', 'paw_point_transaction'
+            ]);
+            const ledgerTables = new Set(['paw_point_transaction', 'customer', 'customer_profile', 'customer_phone']);
+            const kinds = {
+                sales_order: 'orders', sales_order_detail: 'orders', payment: 'orders', refund_transaction: 'orders',
+                voucher_redemption: 'orders', appointment: 'bookings', appointment_item: 'bookings', support_ticket: 'complaints'
             };
-
-            window._custRealtimeChannel = client.channel('admin_customers_realtime')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_phone' }, () => triggerCustSync('customers:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'membership_tier' }, () => triggerCustSync('customers:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_weight_history' }, () => triggerCustSync('customers:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_breed' }, () => triggerCustSync('customers:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_species' }, () => triggerCustSync('customers:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_order' }, () => triggerCustSync('customers:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_order_detail' }, () => triggerCustSync('customers:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment' }, () => triggerCustSync('customers:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment_item' }, () => triggerCustSync('customers:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'payment' }, () => triggerCustSync('customers:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'refund_transaction' }, () => triggerCustSync('customers:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'voucher_redemption' }, () => triggerCustSync('customers:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer' }, () => {
-                    triggerCustSync('customers:*', () => {
-                        if (PawpalCustomers.subtabs.list) {
-                            PawpalCustomers.subtabs.list.renderCustomersTable();
-                            PawpalCustomers.subtabs.list.updateCustomerKPIs();
-                        }
+            let channel = client.channel('admin_customers_realtime');
+            for (const table of new Set([...directoryTables, ...ledgerTables, ...Object.keys(kinds)])) {
+                channel = channel.on('postgres_changes', { event: '*', schema: 'public', table }, payload => {
+                    const rows = [payload?.new, payload?.old].filter(row => row && Object.keys(row).length);
+                    // DELETE payloads may contain only the primary key. In that case invalidate
+                    // this resource conservatively, without downloading unrelated histories.
+                    const ids = rows.map(row => table === 'customer' ? row.id : row.customer_id).filter(Boolean);
+                    const customerIds = rows.length && rows.every(row => table === 'customer' ? row.id : row.customer_id)
+                        ? [...new Set(ids)] : [];
+                    window.PawpalDataStore?.recordMetric?.('realtime');
+                    PawpalCustomers.refreshCustomerData({
+                        directory: directoryTables.has(table), ledger: ledgerTables.has(table),
+                        kind: kinds[table] || null, customerIds
                     });
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_profile' }, () => {
-                    triggerCustSync('customers:*', () => {
-                        if (PawpalCustomers.subtabs.list) PawpalCustomers.subtabs.list.renderCustomersTable();
-                    });
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_membership' }, () => {
-                    triggerCustSync('customers:*', () => {
-                        if (PawpalCustomers.subtabs.list) {
-                            PawpalCustomers.subtabs.list.renderCustomersTable();
-                            PawpalCustomers.subtabs.list.updateCustomerKPIs();
-                        }
-                    });
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_address' }, () => {
-                    triggerCustSync('customers:*', () => {
-                        const currentOpenId = sessionStorage.getItem('pawpal_admin_customer_id');
-                        if (currentOpenId && PawpalCustomers.subtabs.profile) {
-                            PawpalCustomers.subtabs.profile.renderDrawerAddresses(currentOpenId);
-                        }
-                    });
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_profile' }, () => {
-                    triggerCustSync('customers:*', () => {
-                        if (PawpalCustomers.subtabs.list) PawpalCustomers.subtabs.list.renderCustomersTable();
-                        const currentOpenId = sessionStorage.getItem('pawpal_admin_customer_id');
-                        if (currentOpenId && PawpalCustomers.subtabs.profile) {
-                            PawpalCustomers.subtabs.profile.renderDrawerPets(currentOpenId);
-                        }
-                    });
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, () => {
-                    triggerCustSync('customers:*', () => {
-                        if (PawpalCustomers.subtabs.list) {
-                            PawpalCustomers.subtabs.list.renderComplaintBar();
-                            PawpalCustomers.subtabs.list.renderCustomersTable();
-                            PawpalCustomers.subtabs.list.updateCustomerKPIs();
-                        }
-                    });
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'paw_point_transaction' }, () => {
-                    triggerCustSync('customers:*', () => {
-                        if (PawpalCustomers.subtabs.pawpoint) {
-                            PawpalCustomers.subtabs.pawpoint.renderPawpointHistory();
-                        }
-                    });
-                })
-                .subscribe();
-
+                });
+            }
+            window._custRealtimeChannel = channel.subscribe();
             window.PawpalDataStore?.recordMetric?.('channel-add', 'admin_customers_realtime');
-        } catch (err) {
-            console.warn('[Customers] Không thể thiết lập Supabase Realtime:', err);
+        } catch (error) {
+            console.warn('[Customers] Realtime unavailable:', error.code || 'connection');
         }
     }
 
-    // 6. KHỞI TẠO TOÀN BỘ PHÂN HỆ KHÁCH HÀNG
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && (directoryDirty || ledgerDirty || profileDirty || historyDirty)) scheduleCustomerSync();
+    });
+
     async function initCustomersModule() {
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const moduleTitleEl = document.getElementById('headerModuleTitle');
@@ -997,13 +1111,12 @@
     PawpalCustomers.init = initCustomersModule;
 
     window.addEventListener('admin:module-show', (e) => {
-        if (e.detail?.module === 'Khách hàng') {
-            if (PawpalCustomers.subtabs?.list?.renderCustomersTable) {
-                PawpalCustomers.subtabs.list.renderCustomersTable();
-                PawpalCustomers.subtabs.list.updateCustomerKPIs();
-                if (PawpalCustomers.subtabs.list.renderComplaintBar) {
-                    PawpalCustomers.subtabs.list.renderComplaintBar();
-                }
+        if (e.detail?.module === 'Kh\u00e1ch h\u00e0ng') {
+            if (directoryDirty || ledgerDirty || profileDirty || historyDirty) scheduleCustomerSync();
+            if (document.getElementById('subtab-tab-list')?.classList.contains('active')) {
+                PawpalCustomers.subtabs.list?.renderCustomersTable();
+                PawpalCustomers.subtabs.list?.updateCustomerKPIs();
+                PawpalCustomers.subtabs.list?.renderComplaintBar?.();
             }
         }
     });
@@ -1013,4 +1126,40 @@
     } else {
         initCustomersModule();
     }
+})();
+
+/* ===== Modal lifecycle helper (merged from customer-modal-v7.js) ===== */
+/* Shared interaction contract for the customer modals explicitly migrated to V7. */
+(()=>{
+ if(window.__customerModalV7)return;window.__customerModalV7=true;
+ const entries=new Map();let scheduled=false;
+ const visible=modal=>modal.isConnected&&getComputedStyle(modal).display!=='none';
+ const focusable=modal=>[...modal.querySelectorAll('button:not(:disabled),input:not(:disabled):not([type=hidden]),select:not(:disabled),textarea:not(:disabled),a[href],[tabindex="0"]')].filter(e=>e.getClientRects().length);
+ const busy=modal=>[...modal.querySelectorAll('.admin-btn-primary')].some(button=>button.disabled);
+ const close=modal=>{if(busy(modal))return;const button=modal.querySelector('[data-close-modal]');if(button)button.click();else modal.style.display='none';};
+ const sync=()=>{
+  scheduled=false;
+  document.querySelectorAll('.customer-modal-v7').forEach(modal=>{
+   if(visible(modal)&&!entries.has(modal)){
+    entries.set(modal,document.activeElement);
+    const card=modal.querySelector('.admin-modal-card');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');
+    const title=modal.querySelector('.admin-modal-title');if(title){title.id||=modal.id+'Title';card.setAttribute('aria-labelledby',title.id);}
+    modal.querySelectorAll('.form-group').forEach(group=>{const label=group.querySelector('label'),input=group.querySelector('input:not([type=hidden]),select,textarea');if(label&&input?.id)label.htmlFor=input.id;});
+    (focusable(modal).find(e=>e.matches('input:not([readonly]),select,textarea'))||focusable(modal)[0])?.focus();
+   }
+  });
+  for(const [modal,previous]of entries)if(!visible(modal)){entries.delete(modal);if(previous?.isConnected)previous.focus();}
+ };
+ new MutationObserver(()=>{if(!scheduled){scheduled=true;requestAnimationFrame(sync);}}).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
+ document.addEventListener('keydown',event=>{
+  const modal=[...entries.keys()].filter(visible).at(-1);if(!modal)return;
+  if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();close(modal);}
+  if(event.key==='Tab'){const items=focusable(modal),first=items[0],last=items.at(-1);if(!items.length)return;if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}
+ },true);
+ document.addEventListener('click',event=>{
+  const modal=event.target.closest('.customer-modal-v7');if(!modal)return;
+  const closing=event.target===modal||event.target.closest('[data-close-modal]');
+  if(closing&&busy(modal)){event.preventDefault();event.stopImmediatePropagation();return;}
+  if(event.target===modal)close(modal);
+ },true);
 })();

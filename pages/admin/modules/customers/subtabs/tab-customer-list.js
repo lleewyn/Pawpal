@@ -789,7 +789,7 @@
                     }
                     formAdd.reset(); resetSelection(speciesInput); resetSelection(breedInput);
                     closeAddModal();
-                    await PawpalCustomers.loadCustomersModuleData({ force: true });
+                    await PawpalCustomers.refreshCustomerData();
                     PawpalCustomers.showToast('Đã lưu hồ sơ khách hàng.', 'success');
                     if (PawpalCustomers.state.listLoadStatus === 'error') PawpalCustomers.showToast('Đã lưu khách nhưng chưa tải lại được danh sách. Vui lòng làm mới.', 'warning');
                 } catch (error) {
@@ -855,7 +855,7 @@
                                 PawpalCustomers.showToast(lockErr.code==='PT409'?'Hồ sơ đã thay đổi. Vui lòng làm mới rồi thử lại.':'Không thể cập nhật trạng thái hồ sơ.','warning');
                                 return;
                             }
-                            await PawpalCustomers.loadCustomersModuleData({ force: true });
+                            await PawpalCustomers.refreshCustomerData();
                             const refreshedCustomer = PawpalCustomers.state.customerDatabase?.[custId];
                             if (!refreshedCustomer || refreshedCustomer.status !== expectedUiStatus) {
                                 PawpalCustomers.showToast('Trạng thái chưa được đồng bộ. Vui lòng tải lại và thử lại.', 'danger');

@@ -63,59 +63,34 @@
         return toUnaccent(sourceText).includes(toUnaccent(searchTerm));
     }
 
-    // Helper: Toast Notification chuẩn AGENTS.md
+    // Helper: Toast Notification — styles live in pets.css.
     function showToast(message, type = 'info') {
         let container = document.getElementById('adminToastContainer');
+
         if (!container) {
             container = document.createElement('div');
             container.id = 'adminToastContainer';
-            container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 999999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;';
+            container.className = 'pet-toast-container';
             document.body.appendChild(container);
+        } else {
+            container.classList.add('pet-toast-container');
         }
 
+        const supportedTypes = ['success', 'warning', 'danger', 'info'];
+        const toastType = supportedTypes.includes(type) ? type : 'info';
         const toast = document.createElement('div');
-        const bgColors = {
-            success: '#DCEEE2',
-            warning: '#F5E8D3',
-            danger: '#F7DCDC',
-            info: '#DCEAF2'
-        };
-        const textColors = {
-            success: '#165335',
-            warning: '#734718',
-            danger: '#8F2424',
-            info: '#20495E'
-        };
 
-        const bg = bgColors[type] || bgColors.info;
-        const color = textColors[type] || textColors.info;
-
-        toast.style.cssText = `
-            background: ${bg};
-            color: ${color};
-            padding: 10px 16px;
-            border-radius: 9px;
-            font-size: 13px;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            pointer-events: auto;
-            opacity: 0;
-            transform: translateY(-8px);
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            max-width: 380px;
-            line-height: 1.4;
-        `;
+        toast.className = `pet-toast pet-toast--${toastType}`;
         toast.textContent = message;
         container.appendChild(toast);
 
         requestAnimationFrame(() => {
-            toast.style.opacity = '1';
-            toast.style.transform = 'translateY(0)';
+            toast.classList.add('is-visible');
         });
 
         setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(-8px)';
+            toast.classList.remove('is-visible');
+            toast.classList.add('is-leaving');
             setTimeout(() => toast.remove(), 200);
         }, 3000);
     }
@@ -201,232 +176,363 @@
         isLoaded: false,
         loadError: null,
         appointments: [],
-        careLogs: []
+        careLogs: [],
+        careLogsLoadStatus: 'idle',
+        remindersLoadStatus: 'idle'
     };
 
-    // Cache TTL 90 giây — không fetch lại khi chuyển phân hệ
+    // Catalogs and histories have independent caches and in-flight request deduplication.
+    const resourceCache = new Map();
+    const resourceRequests = new Map();
+    const resourceVersions = new Map();
+    const resourceVersion = key => resourceVersions.get(key) || 0;
+
+    function invalidateResources(prefix) {
+        for (const key of new Set([...resourceCache.keys(), ...resourceVersions.keys()])) {
+            if (!key.startsWith(prefix)) continue;
+            resourceCache.delete(key);
+            resourceVersions.set(key, resourceVersion(key) + 1);
+        }
+    }
+
+    async function readResource(key, fetcher, { force = false, ttl = 90000 } = {}) {
+        if (force) invalidateResources(key);
+        const cached = resourceCache.get(key);
+        if (cached && Date.now() - cached.at < ttl) return cached.data;
+        const version = resourceVersion(key);
+        resourceVersions.set(key, version);
+        const requestKey = JSON.stringify([key, version]);
+        if (resourceRequests.has(requestKey)) return resourceRequests.get(requestKey);
+        const task = (async () => {
+            const data = await fetcher();
+            if (version === resourceVersion(key)) {
+                if (resourceCache.size >= 80) resourceCache.delete(resourceCache.keys().next().value);
+                resourceCache.set(key, { at: Date.now(), data });
+            }
+            return data;
+        })().finally(() => resourceRequests.delete(requestKey));
+        resourceRequests.set(requestKey, task);
+        return task;
+    }
+
     let _petsLastFetchedAt = 0;
-    const PETS_CACHE_TTL_MS = 90_000;
+    const PETS_CACHE_TTL_MS = 90000;
     let _petsFetchPromise = null;
 
-    // Nạp dữ liệu 100% Supabase Live Database
-    async function loadPetsModuleData({ force = false } = {}) {
-        if (_petsFetchPromise) return _petsFetchPromise;
+    PawpalPets.serverPetPaging = true;
+    let pageGeneration = 0;
+    let catalogLoadedAt = 0;
+    const defaultPetRequest = () => ({query:'',species:'ALL',breed:'ALL',weight:'ALL',hotel:false,alert:false,page:1,size:10});
+    PawpalPets.petPageKey = request => JSON.stringify(request);
 
-        if (!force && Date.now() - _petsLastFetchedAt < PETS_CACHE_TTL_MS) {
-            return;
+    PawpalPets.readPetPage = async function(request = {}, {force=false} = {}) {
+        const key = 'page:' + JSON.stringify(request);
+        const catalog = !catalogLoadedAt || Date.now()-catalogLoadedAt>600000;
+        const includeCatalog = catalog && request.ownerQuery===undefined && !request.ids && !request.lookup;
+        return readResource(key, async () => {
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) throw new Error('connection_unavailable');
+            const {data,error} = await client.rpc('admin_pet_page', {
+                p_query:request.query || '', p_species:request.species || 'ALL', p_breed:request.breed || 'ALL',
+                p_weight:request.weight || 'ALL', p_hotel:!!request.hotel, p_alert:!!request.alert,
+                p_page:request.page || 1, p_size:request.size || 10,
+                p_lookup:request.lookup || '', p_ids:request.ids || null,
+                p_catalog:includeCatalog,
+                p_owner_query:request.ownerQuery === undefined ? null : request.ownerQuery
+            });
+            if (error) throw error;
+            if(!data || (!Array.isArray(data.pets) && !Array.isArray(data.owners)))throw new Error('invalid_pet_page_response');
+            return {...data,_fetchedAt:Date.now(),_catalogIncluded:includeCatalog};
+        }, {force,ttl:60000});
+    };
+
+    PawpalPets.isPetContextFresh = pet => !!pet && pet._contextGeneration===pageGeneration && Date.now()-(pet._contextAt||0)<60000;
+
+    PawpalPets.loadPetContext = async function(ids, attempt = 0) {
+        const unique = [...new Set(ids.filter(Boolean))].filter(id=>{const pet=PawpalPets.getPet(id);return !pet || pet._contextGeneration!==pageGeneration || Date.now()-(pet._contextAt||0)>=60000;}).sort();
+        const generation = pageGeneration;
+        for (let offset=0;offset<unique.length;offset+=100) {
+            const data = await PawpalPets.readPetPage({ids:unique.slice(offset,offset+100),page:1,size:100});
+            if (generation !== pageGeneration) {
+                if (attempt >= 2) throw new Error('pet_context_changed');
+                return PawpalPets.loadPetContext(ids, attempt+1);
+            }
+            applyPetPage(data,unique.slice(offset,offset+100));
         }
+    };
 
+    PawpalPets.lookupOwners = async function(query='', attempt=0) {
+        const generation = pageGeneration;
+        const data = await PawpalPets.readPetPage({ownerQuery:query.trim(),page:1,size:15});
+        if (generation !== pageGeneration) {
+            if (attempt>=2) throw new Error('owner_context_changed');
+            return PawpalPets.lookupOwners(query,attempt+1);
+        }
+        const owners = data.owners || [];
+        for (const owner of owners) PawpalPets.state.customersData[owner.id] = owner;
+        return owners;
+    };
+
+    async function loadPetsModuleData({force=false,petIds=[]}={}) {
+        if (_petsFetchPromise) return _petsFetchPromise;
+        const request = PawpalPets.state.listRequest || defaultPetRequest();
+        const requestKey = JSON.stringify(request);
+        if (!force && !petIds.length && PawpalPets.state.petPage?.key===requestKey && Date.now()-_petsLastFetchedAt<PETS_CACHE_TTL_MS) return;
         _petsFetchPromise = (async () => {
+            const generation = pageGeneration;
             try {
                 PawpalPets.state.loadError = null;
-                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                if (!client) throw new Error('Chưa kết nối được cơ sở dữ liệu.');
-
-                const fetchPetsList = async () => {
-                    const [custAccRes, custProfRes, petsRes, phoneRes, weightRes, breedRes] = await Promise.all([
-                        client.from('customer').select('id, contact_email, customer_status'),
-                        client.from('customer_profile').select('customer_id, full_name, gender'),
-                        client.from('pet_profile').select('*').order('created_at', { ascending: false }),
-                        client.from('customer_phone').select('customer_id,phone_number').eq('is_primary',true),
-                        client.from('pet_current_weight').select('pet_id,weight'),
-                        client.from('pet_breed').select('id,breed_name,is_active,species:species_id(id,species_name,is_active)')
-                    ]);
-                    for (const res of [custAccRes, custProfRes, petsRes, phoneRes, weightRes, breedRes]) {
-                        if (res.error) throw res.error;
-                    }
-                    return {
-                        custAcc: custAccRes.data || [],
-                        custProf: custProfRes.data || [],
-                        pets: petsRes.data || [], phones: phoneRes.data || [], weights: weightRes.data || [], breeds: breedRes.data || []
-                    };
-                };
-
-                const data = window.PawpalDataStore?.fetch
-                    ? await window.PawpalDataStore.fetch('pets:list', fetchPetsList, {
-                        ttlMs: window.PawpalDataStore.TTL.LIST,
-                        force
-                    })
-                    : await fetchPetsList();
-
-                const custAccData = data.custAcc || [];
-                const custProfData = data.custProf || [];
-                const speciesCode = name => ({'Chó':'dog','Mèo':'cat','Thỏ':'rabbit','Hamster':'hamster'}[name] || name || 'other');
-                PawpalPets.state.breeds = (data.breeds||[]).map(b=>({...b,speciesCode:speciesCode(b.species?.species_name)}));
-                const speciesOptions=[...new Map(PawpalPets.state.breeds.filter(b=>b.species?.is_active).map(b=>[b.speciesCode,b.species.species_name])).entries()];
-                for(const id of ['newPetSpecies','editPetSpecies','petFilterSpecies']){
-                    const select=document.getElementById(id);if(!select)continue;
-                    const signature=speciesOptions.map(([code,name])=>code+':'+name).join('|');if(select.dataset.catalog===signature)continue;
-                    const selected=select.value;select.replaceChildren();
-                    if(id==='petFilterSpecies')select.add(new Option('Tất cả','ALL'));
-                    for(const [code,name] of speciesOptions)select.add(new Option(name,code));
-                    if([...select.options].some(o=>o.value===selected))select.value=selected;
-                    select.dataset.catalog=signature;
+                if (petIds.length) {
+                    const data = await PawpalPets.readPetPage({ids:[...new Set(petIds)].sort(),page:1,size:100},{force});
+                    if (generation !== pageGeneration) return;
+                    applyPetPage(data,petIds);
+                } else {
+                    const data = await PawpalPets.readPetPage(request,{force});
+                    if (generation !== pageGeneration || requestKey!==JSON.stringify(PawpalPets.state.listRequest || defaultPetRequest())) return;
+                    const rows = applyPetPage(data);
+                    const pageIds = new Set(data.pageIds || []);
+                    const actualPage=Number(data.page||1);
+                    const canonicalRequest={...request,page:actualPage};
+                    const canonicalKey=JSON.stringify(canonicalRequest);
+                    if(actualPage!==request.page){PawpalPets.state.correctedPage={fromKey:requestKey,page:actualPage};PawpalPets.state.listRequest=canonicalRequest;resourceCache.set('page:'+canonicalKey,{at:data._fetchedAt || Date.now(),data});}
+                    PawpalPets.state.petPage = {key:canonicalKey,total:Number(data.total||0),page:actualPage,stats:data.stats,
+                        keys:Object.values(rows).filter(pet=>pageIds.has(pet.rawId)).map(pet=>pet.code)};
+                    if(data._catalogIncluded)catalogLoadedAt=data._fetchedAt || Date.now();
+                    _petsLastFetchedAt = data._fetchedAt || Date.now();
+                    // Bound directory navigation memory; context tabs load their own referenced pets.
+                    const keep = new Set([...PawpalPets.state.petPage.keys,sessionStorage.getItem('pawpal_admin_pet_id')]);
+                    const codes = Object.keys(PawpalPets.state.petsData);
+                    for (const code of codes) if (Object.keys(PawpalPets.state.petsData).length>200 && !keep.has(code)) delete PawpalPets.state.petsData[code];
                 }
-                const petsDataList = (data.pets || []).map(p=>{const breed=data.breeds.find(b=>b.id===p.breed_id);return {...p,species:speciesCode(breed?.species?.species_name),speciesName:breed?.species?.species_name,breed:breed?.breed_name,weight:data.weights.find(w=>w.pet_id===p.id)?.weight};});
-
-                PawpalPets.state.weightTimeout = false;
-                PawpalPets.state.weightLoadError = null;
-
-                const profiles = new Map(custProfData.map(profile => [profile.customer_id, profile]));
-                const custMap = Object.fromEntries(custAccData.map(customer => [customer.id, {
-                    id: customer.id,
-                    name: profiles.get(customer.id)?.full_name || 'Chưa cập nhật tên',
-                    phone: data.phones.find(p=>p.customer_id===customer.id)?.phone_number || '',
-                    email: customer.contact_email || ''
-                }]));
-
-                // Hồ sơ chủ nuôi có thể đọc được dù bảng tài khoản bị giới hạn bởi RLS.
-                // Giữ khóa customer_id chuẩn, không bỏ mất tên chỉ vì thiếu hàng customer trong response.
-                custProfData.forEach(profile => {
-                    if (!profile.customer_id || custMap[profile.customer_id]) return;
-                    custMap[profile.customer_id] = {
-                        id: profile.customer_id,
-                        name: profile.full_name || 'Chưa cập nhật tên',
-                        phone: '',
-                        email: ''
-                    };
-                });
-
-                // 3. Map hồ sơ pet_profile (chi tiết cân nặng, lịch hẹn, care logs sẽ tải on-demand)
-                const petsMap = {};
-                if (Array.isArray(petsDataList) && petsDataList.length > 0) {
-                    const speciesNameMap = { 'dog': 'Chó', 'cat': 'Mèo', 'rabbit': 'Thỏ', 'other': 'Khác' };
-
-                    petsDataList.forEach((p, idx) => {
-                        const code = p.pet_code || (p.id ? `PET-${p.id.replace(/-/g, '').slice(0, 8).toUpperCase()}` : `PET-${String(idx + 1).padStart(3, '0')}`);
-                        const spec = (p.species || 'other').toLowerCase();
-                        // Không đưa mã số/giá trị placeholder vào tên giống hiển thị.
-                        const rawBreed = String(p.breed || '').trim();
-                        const invalidBreed = !rawBreed || /^\d+$/.test(rawBreed) || /^(?:null|undefined|unknown|chưa rõ|chưa cập nhật)$/i.test(rawBreed);
-                        const br = invalidBreed ? 'Chưa cập nhật' : rawBreed;
-                        const specBreed = `${p.speciesName || speciesNameMap[spec] || ''} ${br}`.trim();
-                        const wNum = Number(p.weight);
-                        const allg = p.allergy && !/^(?:không|không có|không ghi nhận|chưa ghi nhận|none|no)$/i.test(p.allergy.trim()) ? p.allergy : '';
-                        const isArch = p.status === 'archived';
-                        
-                        const ownerObj = custMap[p.customer_id] || {};
-                        const ownerName = ownerObj.name || (p.customer_id ? 'Chưa tải được thông tin chủ nuôi' : 'Thiếu liên kết chủ nuôi');
-                        const routine = p.routine || '';
-                        const allergyText = allg ? `Dị ứng: ${allg}` : '';
-                        const routineAlert = routine.trim() && !/^(?:Tiếp nhận mới tại quầy\.|Hồ sơ tạo mới\.|Chưa có ghi chú đặc biệt\.|Không ghi nhận)$/i.test(routine.trim())
-                            ? (/^(?:lưu ý|cảnh báo|tập tính)\s*:/i.test(routine.trim())
-                                ? routine.trim()
-                                : `Lưu ý: ${routine.trim()}`)
-                            : '';
-                        const alertParts = [p.safety_note, routineAlert, allergyText].filter(Boolean);
-
-                        let statusStr = 'Đang nuôi';
-                        if (p.status === 'HOTEL') statusStr = 'Lưu trú Hotel';
-                        else if (isArch) statusStr = 'Lưu trữ';
-
-                        const dobFormatted = p.date_of_birth ? formatDate(p.date_of_birth) : 'Chưa cập nhật';
-
-                        const vaccinesList = [];
-
-                        petsMap[code] = {
-                            id: code,
-                            rawId: p.id, updatedAt: p.updated_at, breedId: p.breed_id, safetyNote: p.safety_note || '', statusRaw: p.status,
-                            code: code,
-                            name: p.pet_name || 'Bé cưng',
-                            species: spec,
-                            speciesBreed: specBreed,
-                            breed: br,
-                            gender: (p.gender === 'FEMALE' || p.gender === 'female' || p.gender === 'Cái' || p.gender === 'nu') ? 'Cái' : ((p.gender === 'MALE' || p.gender === 'male' || p.gender === 'Đực' || p.gender === 'nam') ? 'Đực' : 'Chưa rõ'),
-                            weight: Number.isFinite(wNum) && wNum > 0 ? `${wNum} kg` : 'Chưa cập nhật',
-                            weightNum: Number.isFinite(wNum) && wNum>0 ? wNum : null,
-                            dob: dobFormatted,
-                            dobRaw: p.date_of_birth || '',
-                            color: p.color || 'Chưa cập nhật',
-                            allergy: allg || 'Không ghi nhận',
-                            allergies: allg,
-                            notes: routine || '',
-                            groomerNotes: routine || '',
-                            alert: alertParts.join(' • '),
-                            ownerName: ownerName,
-                            ownerPhone: ownerObj.phone || '',
-                            custId: p.customer_id || '',
-                            avatar: p.avatar_url || (spec === 'cat' ? '/assets/images/publics/catcute5.jpg' : '/assets/images/publics/dogcute3.jpg'),
-                            status: statusStr,
-                            vaccinated: vaccinesList.some(v => /dại|rabies/i.test(v.title) && ['Đã tiêm đủ', 'Đã thực hiện', 'Đạt chuẩn'].includes(v.status)),
-                            isHotel: p.status === 'HOTEL',
-                            isArchived: isArch,
-                            weightHistory: [],
-                            vaccines: vaccinesList,
-                            carelogs: [],
-                            history: [],
-                            _detailsLoaded: false
-                        };
-                    });
-                }
-                PawpalPets.state.petsData = petsMap;
-                PawpalPets.state.customersData = custMap;
-                PawpalPets.state.appointments = [];
-                PawpalPets.state.careLogs = [];
-                PawpalPets.state.careLogsLoadStatus = 'idle';
-                PawpalPets.state.remindersLoadStatus = 'idle';
                 PawpalPets.state.isLoaded = true;
-                _petsLastFetchedAt = Date.now();
-            } catch (err) {
-                PawpalPets.state.loadError = 'Không thể tải dữ liệu thú cưng. Vui lòng tải lại trang.';
-                console.warn('[PawpalPets] Lỗi tải dữ liệu Supabase:', err);
+                PawpalPets.state.failedPageKey = null;
+            } catch (error) {
+                if (generation !== pageGeneration) return;
+                PawpalPets.state.loadError = 'Kh\u00f4ng th\u1ec3 t\u1ea3i d\u1eef li\u1ec7u th\u00fa c\u01b0ng. Vui l\u00f2ng th\u1eed l\u1ea1i.';
+                PawpalPets.state.failedPageKey = requestKey;
+                console.warn('[Pets] Directory read failed:',error.code || 'connection');
             } finally {
-                _petsFetchPromise = null;
                 window.dispatchEvent(new CustomEvent('pawpal:pets-data-loaded'));
             }
-        })();
-
+        })().finally(()=>{_petsFetchPromise=null;});
         return _petsFetchPromise;
     }
     PawpalPets.loadPetsModuleData = loadPetsModuleData;
+    PawpalPets.mapPetPageForExport = data => Object.values(applyPetPage(data, [], false));
+
+    function applyPetPage(data, replaceIds = [], commit = true) {
+        const breeds = new Map((data._catalogIncluded ? [] : PawpalPets.state.breeds || []).map(breed=>[breed.id,breed]));
+        (data.breeds || []).forEach(breed=>breeds.set(breed.id,breed));
+        data = { ...data, breeds:[...breeds.values()] };
+        const custAccData = data.custAcc || [];
+        const custProfData = data.custProf || [];
+        const speciesCode = name => ({'Chó':'dog','Mèo':'cat','Thỏ':'rabbit','Hamster':'hamster'}[name] || name || 'other');
+        if (commit) {
+            PawpalPets.state.breeds = (data.breeds||[]).map(b=>({...b,speciesCode:speciesCode(b.species?.species_name)}));
+            const speciesOptions=[...new Map(PawpalPets.state.breeds.filter(b=>b.species?.is_active).map(b=>[b.speciesCode,b.species.species_name])).entries()];
+            for(const id of ['newPetSpecies','editPetSpecies','petFilterSpecies']){
+                const select=document.getElementById(id);if(!select)continue;
+                const signature=speciesOptions.map(([code,name])=>code+':'+name).join('|');if(select.dataset.catalog===signature)continue;
+                const selected=select.value;select.replaceChildren();
+                if(id==='petFilterSpecies')select.add(new Option('Tất cả','ALL'));
+                for(const [code,name] of speciesOptions)select.add(new Option(name,code));
+                if([...select.options].some(o=>o.value===selected))select.value=selected;
+                select.dataset.catalog=signature;
+            }
+        }
+        const petsDataList = (data.pets || []).map(p=>{const breed=data.breeds.find(b=>b.id===p.breed_id);return {...p,species:speciesCode(breed?.species?.species_name),speciesName:breed?.species?.species_name,breed:breed?.breed_name,weight:data.weights.find(w=>w.pet_id===p.id)?.weight};});
+
+        if (commit) {PawpalPets.state.weightTimeout = false;PawpalPets.state.weightLoadError = null;}
+
+        const profiles = new Map(custProfData.map(profile => [profile.customer_id, profile]));
+        const custMap = Object.fromEntries(custAccData.map(customer => [customer.id, {
+            id: customer.id,
+            name: profiles.get(customer.id)?.full_name || 'Chưa cập nhật tên',
+            phone: data.phones.find(p=>p.customer_id===customer.id)?.phone_number || '',
+            email: customer.contact_email || ''
+        }]));
+
+        // Hồ sơ chủ nuôi có thể đọc được dù bảng tài khoản bị giới hạn bởi RLS.
+        // Giữ khóa customer_id chuẩn, không bỏ mất tên chỉ vì thiếu hàng customer trong response.
+        custProfData.forEach(profile => {
+            if (!profile.customer_id || custMap[profile.customer_id]) return;
+            custMap[profile.customer_id] = {
+                id: profile.customer_id,
+                name: profile.full_name || 'Chưa cập nhật tên',
+                phone: '',
+                email: ''
+            };
+        });
+
+        // 3. Map hồ sơ pet_profile (chi tiết cân nặng, lịch hẹn, care logs sẽ tải on-demand)
+        const petsMap = {};
+        if (Array.isArray(petsDataList) && petsDataList.length > 0) {
+            const speciesNameMap = { 'dog': 'Chó', 'cat': 'Mèo', 'rabbit': 'Thỏ', 'other': 'Khác' };
+
+            petsDataList.forEach((p, idx) => {
+                const code = p.pet_code || (p.id ? `PET-${p.id.replace(/-/g, '').slice(0, 8).toUpperCase()}` : `PET-${String(idx + 1).padStart(3, '0')}`);
+                const spec = (p.species || 'other').toLowerCase();
+                // Không đưa mã số/giá trị placeholder vào tên giống hiển thị.
+                const rawBreed = String(p.breed || '').trim();
+                const invalidBreed = !rawBreed || /^\d+$/.test(rawBreed) || /^(?:null|undefined|unknown|chưa rõ|chưa cập nhật)$/i.test(rawBreed);
+                const br = invalidBreed ? 'Chưa cập nhật' : rawBreed;
+                const speciesLabel = p.speciesName || speciesNameMap[spec] || '';
+                const speciesKey = toUnaccent(speciesLabel);
+                const breedKey = toUnaccent(br);
+                const specBreed = speciesKey && (breedKey === speciesKey || breedKey.startsWith(speciesKey + ' '))
+                    ? br
+                    : `${speciesLabel} ${br}`.trim();
+                const wNum = Number(p.weight);
+                const allg = p.allergy && !/^(?:không|không có|không ghi nhận|chưa ghi nhận|none|no)$/i.test(p.allergy.trim()) ? p.allergy : '';
+                const isArch = p.status === 'archived';
+
+                const ownerObj = custMap[p.customer_id] || PawpalPets.state.customersData[p.customer_id] || {};
+                const ownerName = ownerObj.name || (p.customer_id ? 'Chưa tải được thông tin chủ nuôi' : 'Thiếu liên kết chủ nuôi');
+                const routine = p.routine || '';
+                const allergyText = allg ? `Dị ứng: ${allg}` : '';
+                const routineAlert = routine.trim() && !/^(?:Tiếp nhận mới tại quầy\.|Hồ sơ tạo mới\.|Chưa có ghi chú đặc biệt\.|Không ghi nhận)$/i.test(routine.trim())
+                    ? (/^(?:lưu ý|cảnh báo|tập tính)\s*:/i.test(routine.trim())
+                        ? routine.trim()
+                        : `Lưu ý: ${routine.trim()}`)
+                    : '';
+                const alertParts = [p.safety_note, routineAlert, allergyText].filter(Boolean);
+
+                let statusStr = 'Đang nuôi';
+                if (p.status === 'HOTEL') statusStr = 'Lưu trú Hotel';
+                else if (isArch) statusStr = 'Lưu trữ';
+
+                const dobFormatted = p.date_of_birth ? formatDate(p.date_of_birth) : 'Chưa cập nhật';
+
+                const vaccinesList = [];
+
+                petsMap[code] = {
+                    id: code,
+                    rawId: p.id, updatedAt: p.updated_at, breedId: p.breed_id, safetyNote: p.safety_note || '', statusRaw: p.status,
+                    code: code,
+                    name: p.pet_name || 'Bé cưng',
+                    species: spec,
+                    speciesBreed: specBreed,
+                    breed: br,
+                    gender: (p.gender === 'FEMALE' || p.gender === 'female' || p.gender === 'Cái' || p.gender === 'nu') ? 'Cái' : ((p.gender === 'MALE' || p.gender === 'male' || p.gender === 'Đực' || p.gender === 'nam') ? 'Đực' : 'Chưa rõ'),
+                    weight: Number.isFinite(wNum) && wNum > 0 ? `${wNum} kg` : 'Chưa cập nhật',
+                    weightNum: Number.isFinite(wNum) && wNum>0 ? wNum : null,
+                    dob: dobFormatted,
+                    dobRaw: p.date_of_birth || '',
+                    color: p.color || 'Chưa cập nhật',
+                    allergy: allg || 'Không ghi nhận',
+                    allergies: allg,
+                    notes: routine || '',
+                    groomerNotes: routine || '',
+                    alert: alertParts.join(' • '),
+                    ownerName: ownerName,
+                    ownerPhone: ownerObj.phone || '',
+                    custId: p.customer_id || '',
+                    avatar: p.avatar_url || (spec === 'cat' ? '/assets/images/publics/catcute5.jpg' : '/assets/images/publics/dogcute3.jpg'),
+                    status: statusStr,
+                    vaccinated: vaccinesList.some(v => /dại|rabies/i.test(v.title) && ['Đã tiêm đủ', 'Đã thực hiện', 'Đạt chuẩn'].includes(v.status)),
+                    isHotel: p.status === 'HOTEL',
+                    isArchived: isArch,
+                    weightHistory: [],
+                    vaccines: vaccinesList,
+                    carelogs: [],
+                    history: [],
+                    _detailsLoaded: false
+                };
+            });
+        }
+        if (!commit) return petsMap;
+        for (const pet of Object.values(petsMap)) {pet._contextAt=data._fetchedAt || Date.now();pet._contextGeneration=pageGeneration;}
+        const previous = PawpalPets.state.petsData || {};
+        const byId = new Map(Object.values(previous).map(pet => [pet.rawId, pet]));
+        for (const [code, fresh] of Object.entries(petsMap)) {
+            const existing = byId.get(fresh.rawId);
+            if (!existing) continue;
+            const details = {};
+            for (const [kind, field] of [['weight', 'weightHistory'], ['carelog', 'carelogs'], ['history', 'history']]) {
+                if (existing._detailStatus?.[kind] === 'loaded') details[field] = existing[field];
+            }
+            const metadata = Object.fromEntries(Object.entries(existing).filter(([key]) => key.startsWith('_detail')));
+            petsMap[code] = Object.assign(existing, fresh, details, metadata);
+        }
+        if (replaceIds.length) {
+            for (const [code, pet] of Object.entries(previous)) {
+                if ((replaceIds.includes(pet.rawId) || replaceIds.includes(code)) && !petsMap[code]) delete previous[code];
+            }
+        }
+        PawpalPets.state.petsData = { ...previous, ...petsMap };
+        PawpalPets.state.customersData = { ...PawpalPets.state.customersData, ...custMap };
+        return petsMap;
+    }
+
+
 
     // Helper lazy-fetch chi tiết hồ sơ 1 thú cưng (Cân nặng, Care log, Lịch hẹn)
-    PawpalPets.fetchPetProfileDetails = async function(pet, { force = false } = {}) {
-        if (!pet || !pet.rawId) return pet;
-        if (!force && pet._detailsLoaded) return pet;
+    const detailRequests = new Map();
+    const detailKinds = ['weight', 'carelog', 'history'];
+    PawpalPets.fetchPetProfileDetails = function(pet, options = {}) {
+        if (!pet || !pet.rawId) return Promise.resolve(pet);
+        const resourceKey = `detail:${pet.rawId}:${options.kind || 'all'}:${options.page || 1}`;
+        const key = JSON.stringify([resourceKey, resourceVersion(resourceKey)]);
+        if (detailRequests.has(key)) return detailRequests.get(key);
+        const task = fetchPetDetails(pet, options).finally(() => detailRequests.delete(key));
+        detailRequests.set(key, task);
+        return task;
+    };
 
+    async function fetchPetDetails(pet, { force = false, kind = 'all', page = 1 } = {}) {
+        const kinds = detailKinds.includes(kind) ? [kind] : detailKinds;
+        page = Math.max(1, Math.floor(Number(page) || 1));
+        const size = kind === 'all' ? 30 : 10;
+        const key = `detail:${pet.rawId}:${kind}:${page}`;
+        if (force) invalidateResources(key);
+        const version = resourceVersion(key);
+        pet._detailStatus ||= {};
+        pet._detailPages ||= {};
+        pet._detailTokens ||= {};
+        const token = {};
+        for (const item of kinds) {
+            pet._detailStatus[item] = 'loading';
+            pet._detailTokens[item] = token;
+        }
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!client) return pet;
-
         try {
+            if (!client) throw new Error('connection_unavailable');
             const fetchDetails = async () => {
                 const [wRes, cRes, aRes] = await Promise.all([
-                    client.from('pet_weight_history')
-                        .select('id, pet_id, weight, measured_at, note, staff:recorded_by(full_name), created_at')
+                    kinds.includes('weight') ? client.from('pet_weight_history')
+                        .select('id, pet_id, weight, measured_at, note, staff:recorded_by(full_name), created_at', {count:'exact'})
                         .eq('pet_id', pet.rawId)
                         .order('measured_at', { ascending: false })
-                        .limit(30),
-                    client.from('care_log')
-                        .select('id, appointment_id, description, observed_condition, action_name_snapshot, staff:recorded_by(full_name), recorded_at, created_at, media:care_log_media(media_type,media_url), appointment:appointment_id!inner(pet_id)')
+                        .order('id').range((page-1)*size, page*size-1) : Promise.resolve({data:[],count:0}),
+                    kinds.includes('carelog') ? client.from('care_log')
+                        .select('id, appointment_id, description, observed_condition, action_name_snapshot, staff:recorded_by(full_name), recorded_at, created_at, media:care_log_media(media_type,media_url), appointment:appointment_id!inner(pet_id)', {count:'exact'})
                         .eq('appointment.pet_id', pet.rawId)
                         .order('recorded_at', { ascending: false })
-                        .limit(30),
-                    client.from('appointment')
-                        .select('id, appointment_code, customer_id, pet_id, scheduled_start_at, scheduled_end_at, appointment_status, items:appointment_item(name_snapshot,weight_snapshot,status), staff:staff_id(full_name)')
+                        .order('id').range((page-1)*size, page*size-1) : Promise.resolve({data:[],count:0}),
+                    kinds.includes('history') ? client.from('appointment')
+                        .select('id, appointment_code, customer_id, pet_id, scheduled_start_at, scheduled_end_at, appointment_status, items:appointment_item(name_snapshot,weight_snapshot,status), staff:staff_id(full_name)', {count:'exact'})
                         .eq('pet_id', pet.rawId)
                         .order('scheduled_start_at', { ascending: false })
-                        .limit(30)
+                        .order('id').range((page-1)*size, page*size-1) : Promise.resolve({data:[],count:0})
                 ]);
                 for(const response of [wRes,cRes,aRes])if(response.error)throw response.error;
                 const ids=(aRes.data||[]).map(a=>a.id);
                 const totals=ids.length?await client.from('appointment_totals').select('appointment_id,total_price').in('appointment_id',ids):{data:[]};
                 if(totals.error)throw totals.error;
+                const counts = {weight:wRes.count||0,carelog:cRes.count||0,history:aRes.count||0};
                 return {
+                    counts: Object.fromEntries(kinds.map(item=>[item,counts[item]])),
                     weight: wRes.data || [],
                     careLogs: (cRes.data || []).filter(c=>c.appointment?.pet_id===pet.rawId),
                     appts: (aRes.data || []).map(a=>({...a,total_price:totals.data.find(t=>t.appointment_id===a.id)?.total_price}))
                 };
             };
 
-            const details = window.PawpalDataStore?.fetch
-                ? await window.PawpalDataStore.fetch(`pets:details:${pet.rawId}`, fetchDetails, {
-                    ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
-                    force
-                })
-                : await fetchDetails();
-
-            // Map weight history
-            pet.weightHistory = (details.weight || []).map(record => {
+            const details = await readResource(key, fetchDetails);
+            if (version !== resourceVersion(key) || kinds.some(item => pet._detailTokens[item] !== token)) return pet;
+            pet._detailCounts = { ...pet._detailCounts, ...details.counts };
+            for (const item of kinds) pet._detailPages[item] = page;
+            if (kinds.includes('weight')) pet.weightHistory = (details.weight || []).map(record => {
                 const measuredAt = record.measured_at || record.created_at;
                 const measuredWeight = Number(record.weight);
                 return {
@@ -439,7 +545,7 @@
             });
 
             // Map care logs
-            pet.carelogs = (details.careLogs || []).map(cl => ({
+            if (kinds.includes('carelog')) pet.carelogs = (details.careLogs || []).map(cl => ({
                 time: cl.recorded_at ? formatDateTime(cl.recorded_at) : '',
                 service: cl.description || 'Chưa có ghi chú',
                 ktv: cl.staff?.full_name || 'Chưa ghi nhận nhân viên',
@@ -451,7 +557,7 @@
             }));
 
             // Map history appointments
-            pet.history = (details.appts || []).map(app => {
+            if (kinds.includes('history')) pet.history = (details.appts || []).map(app => {
                 const sName = (app.items||[]).map(i=>i.name_snapshot).join(', ') || 'Chưa ghi nhận dịch vụ';
                 const appDate = app.scheduled_start_at ? formatDate(app.scheduled_start_at) : '';
                 const appTime = app.scheduled_start_at ? formatTime(app.scheduled_start_at) : '';
@@ -474,8 +580,11 @@
                 };
             });
 
-            pet._detailsError = null; pet._detailsLoaded = true;
+            for (const item of kinds) pet._detailStatus[item] = 'loaded';
+            pet._detailsError = null; pet._detailsLoaded = detailKinds.every(item=>pet._detailStatus[item]==='loaded');
         } catch (e) {
+            if (version !== resourceVersion(key) || kinds.some(item => pet._detailTokens[item] !== token)) return pet;
+            for (const item of kinds) pet._detailStatus[item] = 'error';
             pet._detailsError = 'Không thể tải chi tiết hồ sơ. Vui lòng thử lại.'; pet._detailsLoaded=false; console.warn('[PawpalPets] Lỗi tải chi tiết bé cưng:', e);
         }
         return pet;
@@ -498,19 +607,21 @@
             };
         };
 
+        const key = `carelogs:${limit}`;
+        if (force) invalidateResources('carelogs:');
+        const version = resourceVersion(key);
         try {
-            const res = window.PawpalDataStore?.fetch
-                ? await window.PawpalDataStore.fetch(`pets:carelogs:recent:${limit}`, fetchLogs, {
-                    ttlMs: window.PawpalDataStore.TTL.LIST,
-                    force
-                })
-                : await fetchLogs();
+            const res = await readResource(key, fetchLogs);
+            if (version !== resourceVersion(key)) return [];
 
+            await PawpalPets.loadPetContext((res.logs || []).map(log=>log.pet_id));
+            if (version !== resourceVersion(key)) return [];
             PawpalPets.state.careLogs = res.logs || [];
             PawpalPets.state.careLogAppointments = res.appts || [];
             PawpalPets.state.careLogsLoadStatus = 'loaded';
             return PawpalPets.state.careLogs;
         } catch (error) {
+            if (version !== resourceVersion(key)) return [];
             PawpalPets.state.careLogsLoadStatus = 'error';
             throw error;
         }
@@ -528,14 +639,15 @@
             return result.data||{appointments:[],contacts:[]};
         };
 
+        const key = 'reminders';
+        if (force) invalidateResources(key);
+        const version = resourceVersion(key);
         try {
-            const source = window.PawpalDataStore?.fetch
-                ? await window.PawpalDataStore.fetch('pets:reminder-sources:v2', fetchAppts, {
-                    ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
-                    force
-                })
-                : await fetchAppts();
+            const source = await readResource(key, fetchAppts);
+            if (version !== resourceVersion(key)) return [];
 
+            await PawpalPets.loadPetContext((source.appointments || []).map(appointment=>appointment.pet_id));
+            if (version !== resourceVersion(key)) return [];
             PawpalPets.state.appointments = source.appointments||[];
             PawpalPets.state.reminderContacts={};
             for(const contact of source.contacts||[]){
@@ -545,6 +657,7 @@
             PawpalPets.state.remindersLoadStatus = 'loaded';
             return PawpalPets.state.appointments;
         } catch (error) {
+            if (version !== resourceVersion(key)) return [];
             PawpalPets.state.remindersLoadStatus = 'error';
             throw error;
         }
@@ -622,8 +735,8 @@
         });
 
         if (targetSubtab === 'tab-pet-profile') {
-            const currentName = sessionStorage.getItem('pawpal_admin_pet_name') || 
-                                document.getElementById('drawerPetName')?.textContent?.trim() || 
+            const currentName = sessionStorage.getItem('pawpal_admin_pet_name') ||
+                                document.getElementById('drawerPetName')?.textContent?.trim() ||
                                 'Milu';
             updateBreadcrumb(currentName);
         } else {
@@ -631,6 +744,10 @@
         }
 
         sessionStorage.setItem('pawpal_admin_pet_subtab', targetSubtab);
+        if (targetSubtab==='tab-pet-profile') {PawpalPets.subtabs.profile?.openPetProfile(sessionStorage.getItem('pawpal_admin_pet_id'),false);PawpalPets.subtabs.profile?.switchDrawerTab(sessionStorage.getItem('pawpal_admin_pet_drawertab') || 'ptab-traits');}
+        if (targetSubtab==='tab-pet-carelog') {PawpalPets.subtabs.carelog?.renderCarelogsTable();if(petsVisible())PawpalPets.fetchCareLogsTab().then(()=>PawpalPets.subtabs.carelog?.renderCarelogsTable()).catch(()=>PawpalPets.subtabs.carelog?.renderCarelogsTable());}
+        if (targetSubtab==='tab-pet-reminders') {PawpalPets.subtabs.reminders?.renderRemindersTable();PawpalPets.subtabs.reminders?.updateReminderKPIs();if(petsVisible())PawpalPets.fetchRemindersAppointments().then(()=>{PawpalPets.subtabs.reminders?.renderRemindersTable();PawpalPets.subtabs.reminders?.updateReminderKPIs();}).catch(()=>PawpalPets.subtabs.reminders?.renderRemindersTable());}
+        if (pendingAllPets || pendingPetIds.size || pendingDetails || pendingCarelogs || pendingReminders) schedulePetsRefresh();
         if (updateHistory) {
             if (window.location.hash !== '#' + targetSubtab) {
                 try {
@@ -660,6 +777,146 @@
             switchSubtab('tab-pet-profile');
         }
     }
+    let pendingAllPets = false;
+    const pendingPetIds = new Set();
+    let pendingDetails = false;
+    let pendingCarelogs = false;
+    let pendingReminders = false;
+    let refreshTimer = null;
+    let refreshRunning = null;
+    let refreshWaiters = [];
+
+    function petsVisible() {
+        return !document.hidden && sessionStorage.getItem('pawpal_admin_active_module') === 'Th\u00fa c\u01b0ng';
+    }
+
+    function schedulePetsRefresh() {
+        clearTimeout(refreshTimer);
+        return new Promise(resolve => {
+            refreshWaiters.push(resolve);
+            refreshTimer = setTimeout(flushPetsRefresh, 300);
+        });
+    }
+
+    async function flushPetsRefresh() {
+        if (refreshRunning) { await refreshRunning; return flushPetsRefresh(); }
+        const waiters = refreshWaiters;
+        refreshWaiters = [];
+        refreshRunning = (async () => {
+            if (!petsVisible()) return;
+            if (_petsFetchPromise) await _petsFetchPromise;
+            if (!petsVisible()) return;
+            const all = pendingAllPets, ids = [...pendingPetIds];
+            const details = pendingDetails;
+            pendingAllPets = false;
+            pendingPetIds.clear();
+            pendingDetails = false;
+            if (all || ids.length) {
+                const listActive = document.getElementById('subtab-tab-pet-list')?.classList.contains('active');
+                const selected = PawpalPets.getPet(sessionStorage.getItem('pawpal_admin_pet_id'));
+                const refreshIds = listActive ? [] : all ? (selected?[selected.rawId]:ids) : ids;
+                await loadPetsModuleData({force:all,petIds:refreshIds});
+                if (!petsVisible()) return;
+                PawpalPets.subtabs.list?.renderPetsTable();
+                PawpalPets.subtabs.list?.updatePetKPIs();
+            }
+            if (!petsVisible()) return;
+            if (document.getElementById('subtab-tab-pet-profile')?.classList.contains('active') && (all || ids.length || details)) {
+                PawpalPets.subtabs.profile?.openPetProfile(sessionStorage.getItem('pawpal_admin_pet_id'), false);
+            }
+            if (document.getElementById('subtab-tab-pet-carelog')?.classList.contains('active') && pendingCarelogs) {
+                pendingCarelogs = false;
+                await PawpalPets.fetchCareLogsTab();
+                PawpalPets.subtabs.carelog?.renderCarelogsTable();
+            }
+            if (document.getElementById('subtab-tab-pet-reminders')?.classList.contains('active') && pendingReminders) {
+                pendingReminders = false;
+                await PawpalPets.fetchRemindersAppointments();
+                PawpalPets.subtabs.reminders?.renderRemindersTable();
+                PawpalPets.subtabs.reminders?.updateReminderKPIs();
+            }
+        })();
+        try { await refreshRunning; }
+        catch (error) { console.warn('[Pets] Refresh failed:', error.code || 'connection'); }
+        finally { refreshRunning = null; waiters.forEach(resolve=>resolve()); }
+    }
+
+    PawpalPets.refreshPetsData = function({petIds=[],base=true,owners=false,breeds=false,kinds=[],carelogs=false,reminders=false}={}) {
+        petIds = [...new Set(petIds.filter(Boolean))];
+        if (base || owners || breeds) {
+            pageGeneration += 1;
+            invalidateResources('page:');
+            if (PawpalPets.state.petPage) PawpalPets.state.petPage.key = null;
+            PawpalPets.state.failedPageKey = null;
+        }
+        if (owners) invalidateResources('owners');
+        if (breeds) {invalidateResources('breeds');catalogLoadedAt=0;}
+        if (base) {
+            if (petIds.length) petIds.forEach(id=>pendingPetIds.add(id));
+            else pendingAllPets = true;
+        }
+        if (kinds.length) {
+            for (const key of resourceVersions.keys()) {
+                if (!key.startsWith('detail:')) continue;
+                const [,id,kind] = key.split(':');
+                if ((!petIds.length || petIds.includes(id)) && (kind==='all' || kinds.includes(kind))) invalidateResources(key);
+            }
+            for (const pet of Object.values(PawpalPets.state.petsData)) {
+                if (petIds.length && !petIds.includes(pet.rawId)) continue;
+                for (const kind of kinds) {
+                    if (pet._detailStatus) pet._detailStatus[kind] = 'idle';
+                    if (pet._detailCounts) delete pet._detailCounts[kind];
+                }
+                pet._detailsLoaded = false;
+            }
+            pendingDetails = true;
+        }
+        if (carelogs) {
+            invalidateResources('carelogs:');
+            PawpalPets.state.careLogsLoadStatus = 'idle';
+            pendingCarelogs = true;
+        }
+        if (reminders) {
+            invalidateResources('reminders');
+            PawpalPets.state.remindersLoadStatus = 'idle';
+            pendingReminders = true;
+        }
+        return schedulePetsRefresh();
+    };
+
+    function setupPetsRealtime(client) {
+        const channel = client.channel('admin-pets-live');
+        const tables = ['pet_profile','pet_breed','pet_species','customer','customer_profile','customer_phone','appointment','appointment_item','care_log','care_log_media','pet_weight_history','appointment_totals'];
+        for (const table of tables) channel.on('postgres_changes',{event:'*',schema:'public',table},payload=>{
+            const rows = [payload?.new,payload?.old].filter(row=>row && Object.keys(row).length);
+            const field = table==='pet_profile'?'id':'pet_id';
+            let ids = rows.length && rows.every(row=>row[field]) ? rows.map(row=>row[field]) : [];
+            const owners = ['customer','customer_profile','customer_phone'].includes(table);
+            if (owners) {
+                const field = table==='customer'?'id':'customer_id';
+                const ownerIds = rows.length && rows.every(row=>row[field]) ? rows.map(row=>row[field]) : [];
+                ids = ownerIds.length ? Object.values(PawpalPets.state.petsData).filter(pet=>ownerIds.includes(pet.custId)).map(pet=>pet.rawId) : [];
+            }
+            const breeds = ['pet_breed','pet_species'].includes(table);
+            const appointment = ['appointment','appointment_item','appointment_totals'].includes(table);
+            const carelog = ['care_log','care_log_media'].includes(table);
+            const kinds = table==='pet_weight_history'?['weight']:appointment?['history']:carelog?['carelog']:[];
+            PawpalPets.refreshPetsData({petIds:ids,owners,breeds,kinds,
+                base:table==='pet_profile'||table==='pet_weight_history'||owners||breeds,
+                carelogs:table==='care_log'||table==='appointment'||table==='appointment_item',
+                reminders:table==='appointment'||table==='appointment_item'});
+        });
+        channel.subscribe();
+        window.PawpalDataStore?.recordMetric?.('channel-add','admin-pets-live');
+    }
+
+    window.addEventListener('admin:module-show',event=>{
+        if (event.detail?.module==='Th\u00fa c\u01b0ng') schedulePetsRefresh();
+    });
+    document.addEventListener('visibilitychange',()=>{
+        if (!document.hidden) schedulePetsRefresh();
+    });
+
     let _isPetsInit = false;
 
     async function initPetsModule() {
@@ -686,43 +943,17 @@
             PawpalPets.subtabs.reminders.renderRemindersTable();
         }
         const savedPetId = sessionStorage.getItem('pawpal_admin_pet_id');
-        const petId = PawpalPets.state.petsData[savedPetId] ? savedPetId : Object.keys(PawpalPets.state.petsData)[0];
-        PawpalPets.subtabs.profile?.openPetProfile?.(petId, false);
+        const restoredSubtab=window.location.hash.replace('#','') || sessionStorage.getItem('pawpal_admin_pet_subtab');
+        const petId=savedPetId || Object.keys(PawpalPets.state.petsData)[0];
+        if(!savedPetId || PawpalPets.getPet(savedPetId) || restoredSubtab==='tab-pet-profile')PawpalPets.subtabs.profile?.openPetProfile?.(petId,false);
 
         if (_isPetsInit) return; // Đã gắn event listeners rồi, không gắn lặp lại
         _isPetsInit = true;
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (client?.channel) {
-            const channel = client.channel('admin-pets-live');
-            const refresh = () => {
-                if (window.PawpalDataStore?.handleRealtimeChange) {
-                    window.PawpalDataStore.handleRealtimeChange({
-                        moduleName: 'Thú cưng',
-                        invalidatePattern: 'pets:*',
-                        onActiveRefresh: async () => {
-                            await loadPetsModuleData({ force: true });
-                            PawpalPets.subtabs.list?.renderPetsTable?.();
-                            PawpalPets.subtabs.list?.updatePetKPIs?.();
-                            const selected = sessionStorage.getItem('pawpal_admin_pet_id');
-                            PawpalPets.subtabs.profile?.openPetProfile?.(PawpalPets.state.petsData[selected] ? selected : Object.keys(PawpalPets.state.petsData)[0], false);
-                        },
-                        debounceMs: 300
-                    });
-                } else if (sessionStorage.getItem('pawpal_admin_active_module') === 'Thú cưng') {
-                    loadPetsModuleData({ force: true }).then(() => {
-                        PawpalPets.subtabs.list?.renderPetsTable?.();
-                        PawpalPets.subtabs.list?.updatePetKPIs?.();
-                    });
-                }
-            };
-            ['pet_profile', 'pet_breed', 'pet_species', 'customer', 'customer_profile', 'customer_phone', 'appointment', 'appointment_item', 'care_log', 'pet_weight_history'].forEach(table => {
-                channel.on('postgres_changes', { event: '*', schema: 'public', table }, refresh);
-            });
-            channel.subscribe();
-            window.PawpalDataStore?.recordMetric?.('channel-add', 'admin-pets-live');
+            setupPetsRealtime(client);
         }
 
-        // Khôi phục subtab active từ URL hash hoặc sessionStorage
         const savedSubtab = sessionStorage.getItem('pawpal_admin_pet_subtab');
         const hashSubtab = window.location.hash ? window.location.hash.substring(1) : '';
         const validTabs = ['tab-pet-list', 'tab-pet-profile', 'tab-pet-carelog', 'tab-pet-reminders'];
@@ -780,4 +1011,48 @@
     if (!window._pawpalAdminLoaded && !document.querySelector('.admin-layout')) {
         initPetsModule();
     }
+})();
+
+    // Modal accessibility wrapper (merged from pet-modal-v8.js).
+/* Accessibility wrapper for existing pet modals; does not handle submit or persistence. */
+(()=>{
+ if(window.__petModalV8)return;window.__petModalV8=true;
+ const entries=new Map();let scheduled=false;
+ const visible=modal=>modal.isConnected&&getComputedStyle(modal).display!=='none'&&modal.getClientRects().length>0;
+ const focusable=modal=>[...modal.querySelectorAll('button:not(:disabled),input:not(:disabled):not([type=hidden]),select:not(:disabled),textarea:not(:disabled),a[href],[tabindex="0"]')].filter(e=>e.getClientRects().length);
+ const busy=modal=>modal.dataset.saving==='true';
+ const close=modal=>{if(busy(modal))return;const button=modal.querySelector('[data-close-modal]');if(button)button.click();else modal.style.display='none';};
+ const sync=()=>{
+  scheduled=false;
+  document.querySelectorAll('.pets-module .admin-modal-backdrop').forEach(modal=>{
+   if(visible(modal)&&!entries.has(modal)){
+    entries.set(modal,document.activeElement);
+    if(modal.id==='modalPreviewAppDiary'){
+        const body=document.getElementById('petDiaryPreviewContent'),pet=window.PawpalPets?.state?.petsData?.[sessionStorage.getItem('pawpal_admin_pet_id')];
+        if(body){body.replaceChildren();const title=document.createElement('strong');title.textContent=pet?.name||'Ch\u01b0a ch\u1ecdn b\u00e9 c\u01b0ng';body.append(title);
+        const logs=pet?.carelogs||[];
+        if(!logs.length){const empty=document.createElement('p');empty.textContent='Ch\u01b0a c\u00f3 nh\u1eadt k\u00fd \u0111\u01b0\u1ee3c t\u1ea3i cho b\u00e9.';body.append(empty);}
+        logs.forEach(log=>{const row=document.createElement('p');row.textContent=[log.time,log.ktv,log.service,log.checkText].filter(Boolean).join(' ? ');body.append(row);});}
+    }
+
+    const card=modal.querySelector('.admin-modal-card');if(!card)return;card.tabIndex=-1;card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');
+    const title=modal.querySelector('.admin-modal-title');if(title){title.id||=modal.id+'Title';card.setAttribute('aria-labelledby',title.id);}
+    modal.querySelectorAll('.form-group').forEach(group=>{const label=group.querySelector('label'),input=group.querySelector('input:not([type=hidden]),select,textarea');if(label&&input?.id)label.htmlFor=input.id;});
+    (focusable(modal).find(e=>e.matches('input:not([readonly]),select,textarea'))||focusable(modal)[0])?.focus();
+   }
+  });
+  for(const [modal,previous]of entries)if(!visible(modal)){entries.delete(modal);if(previous?.isConnected)previous.focus();}
+ };
+ new MutationObserver(()=>{if(!scheduled){scheduled=true;requestAnimationFrame(sync);}}).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
+ document.addEventListener('keydown',event=>{
+  const modal=[...entries.keys()].filter(visible).at(-1);if(!modal)return;
+  if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();close(modal);}
+  if(event.key==='Tab'){const items=focusable(modal),first=items[0],last=items.at(-1);if(!items.length){event.preventDefault();modal.querySelector('.admin-modal-card')?.focus();return;}if(event.shiftKey&&(document.activeElement===first||!modal.contains(document.activeElement))){event.preventDefault();last.focus();}else if(!event.shiftKey&&(document.activeElement===last||!modal.contains(document.activeElement))){event.preventDefault();first.focus();}}
+ },true);
+ document.addEventListener('click',event=>{
+  const modal=event.target.closest('.pets-module .admin-modal-backdrop');if(!modal)return;
+  const closing=event.target===modal||event.target.closest('[data-close-modal]');
+  if(closing&&busy(modal)){event.preventDefault();event.stopImmediatePropagation();return;}
+  if(event.target===modal)close(modal);
+ },true);
 })();

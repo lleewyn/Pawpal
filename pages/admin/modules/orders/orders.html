@@ -1,495 +1,931 @@
+<link rel="stylesheet" href="/pages/admin/modules/orders/orders.css?v=20261024_standardized">
 <div class="orders-module">
     <!-- ====================================================================
          SUB-TAB 1: ĐƠN HÀNG (DANH SÁCH VÀ TIẾP NHẬN ĐƠN HÀNG)
          ==================================================================== -->
-    <section class="subtab-content active admin-ui-standard" id="subtab-tab-order-list">
+    <section class="subtab-content active" id="subtab-tab-order-list">
+ <!-- KHU VỰC 2: 6 THẺ THỐNG KÊ KPI NHANH -->
+ <div class="orders-kpi-grid">
+  <div class="admin-card kpi-card">
+   <span class="kpi-label">
+    Tổng đơn hôm nay
+   </span>
+   <span class="kpi-val" id="statTotalOrders">
+    <span class="skeleton-kpi">
+    </span>
+   </span>
+  </div>
+  <div class="admin-card kpi-card">
+   <span class="kpi-label">
+    Chờ xác nhận
+   </span>
+   <span class="kpi-val text-warning" id="statPendingOrders">
+    <span class="skeleton-kpi">
+    </span>
+   </span>
+  </div>
+  <div class="admin-card kpi-card">
+   <span class="kpi-label">
+    Đang chuẩn bị
+   </span>
+   <span class="kpi-val orders-inline-3d8bac00" id="statPreparingOrders">
+    <span class="skeleton-kpi">
+    </span>
+   </span>
+  </div>
+  <div class="admin-card kpi-card">
+   <span class="kpi-label">
+    Đang giao hàng
+   </span>
+   <span class="kpi-val orders-inline-39fba82d" id="statShippingOrders">
+    <span class="skeleton-kpi">
+    </span>
+   </span>
+  </div>
+  <div class="admin-card kpi-card">
+   <span class="kpi-label">
+    Đã hoàn tất
+   </span>
+   <span class="kpi-val text-success" id="statCompletedOrders">
+    <span class="skeleton-kpi">
+    </span>
+   </span>
+  </div>
+  <div class="admin-card kpi-card">
+   <span class="kpi-label">
+    Đổi trả và Hủy
+   </span>
+   <span class="kpi-val text-danger" id="statCancelledOrders">
+    <span class="skeleton-kpi">
+    </span>
+   </span>
+  </div>
+ </div>
+ <!-- KHU VỰC 3: KHỐI QUẢN LÝ ĐƠN HÀNG THỐNG NHẤT (GOM KHỐI) -->
+ <div class="admin-card order-master-card">
+  <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
+  <div class="table-toolbar-section">
+   <div class="filter-row-top">
+    <div class="search-box-wrapper">
+     <label class="admin-visually-hidden" for="orderSearchInput">
+      Tìm kiếm đơn hàng
+     </label>
+     <input class="admin-input" id="orderSearchInput" placeholder="Tìm mã đơn ORD, tên khách, số điện thoại, mã vận đơn..." type="text"/>
+    </div>
+    <div class="filter-actions-right">
+     <button class="admin-btn admin-btn-secondary" id="btnExportOrderReport" type="button">
+      Xuất file
+     </button>
+     <button class="admin-btn admin-btn-primary" id="btnOpenCreateOrderModal" type="button">
+      Tạo đơn tại quầy
+     </button>
+    </div>
+   </div>
+   <div class="filter-row-bottom">
+    <div class="filter-dropdown-group">
+     <label class="filter-label" for="orderFilterStatus">
+      Trạng thái đơn
+     </label>
+     <select class="admin-select" id="orderFilterStatus">
+      <option value="ALL">
+       Tất cả
+      </option>
+      <option value="pending">
+       Chờ xác nhận
+      </option>
+      <option value="confirmed">
+       Đang chuẩn bị
+      </option>
+      <option value="shipping">
+       Đang giao
+      </option>
+      <option value="delivered">
+       Đã giao
+      </option>
+      <option value="completed">
+       Hoàn tất
+      </option>
+      <option value="cancelled">
+       Đã hủy
+      </option>
+      <option value="returned">
+       Đổi trả
+      </option>
+     </select>
+    </div>
+    <div class="filter-dropdown-group">
+     <label class="filter-label" for="orderFilterPayment">
+      Thanh toán
+     </label>
+     <select class="admin-select" id="orderFilterPayment">
+      <option value="ALL">
+       Tất cả
+      </option>
+      <option value="cod">
+       Tiền mặt COD
+      </option>
+      <option value="vnpay">
+       VNPay
+      </option>
+      <option value="momo">
+       MoMo
+      </option>
+      <option value="bank_transfer">
+       Chuyển khoản
+      </option>
+     </select>
+    </div>
+    <div class="filter-dropdown-group">
+     <label class="filter-label" for="orderFilterPayStatus">
+      Đối soát
+     </label>
+     <select class="admin-select" id="orderFilterPayStatus">
+      <option value="ALL">
+       Tất cả đối soát
+      </option>
+      <option value="paid">
+       Đã thanh toán và Đối soát
+      </option>
+      <option value="cod_pending">
+       Chờ bưu cục đối soát COD
+      </option>
+      <option value="unpaid">
+       Chưa thanh toán
+      </option>
+      <option value="refund_pending">
+       Chờ hoàn tiền
+      </option>
+      <option value="refunded">
+       Đã hoàn tiền
+      </option>
+      <option value="cancelled">
+       Đã hủy thanh toán
+      </option>
+     </select>
+    </div>
+    <button class="admin-btn-filter-toggle" id="btnFilterComplaintOrders" type="button">
+     Có khiếu nại
+    </button>
+    <button class="admin-btn-filter-toggle" id="btnFilterUrgentOrders" type="button">
+     Chờ xử lý gấp
+    </button>
+    <button class="admin-btn-filter-toggle" id="btnFilterSlaOverdue" type="button">
+     Quá hạn SLA (&gt;30p)
+    </button>
+    <button class="admin-btn-clear-filters" id="btnOrderClearFilters" style="display: none;" type="button">
+     Xóa bộ lọc
+    </button>
+   </div>
+   <!-- DẢI TỔNG HỢP ĐỐI SOÁT DÒNG TIỀN COD (GIAI ĐOẠN 1) -->
+   <div class="cod-reconcile-strip" id="codReconcileSummaryStrip" style="display: none;">
+    <div class="cod-strip-left">
+     <span class="cod-strip-title">
+      Đối soát COD bưu cục:
+     </span>
+     <span class="cod-strip-highlight" id="dispCodPendingCount">
+      0 đơn hàng
+     </span>
+     <span class="cod-strip-divider">
+      •
+     </span>
+     <span>
+      Tổng tiền thu hộ chờ về:
+      <strong class="text-heading" id="dispCodPendingAmount">
+       0 đ
+      </strong>
+     </span>
+    </div>
+    <div class="cod-strip-right">
+     <button class="btn-cod-quick-reconcile" id="btnQuickReconcileAllCod" type="button">
+      Thu tiền từng đơn
+     </button>
+    </div>
+   </div>
+   <!-- DẢI THAO TÁC HÀNG LOẠT (GIAI ĐOẠN 2: BATCH DISPATCH VÀ PACKING) -->
+   <div class="batch-action-toolbar" id="batchActionToolbar" style="display: none;">
+    <div class="batch-toolbar-left">
+     <span class="batch-selected-count">
+      Đã chọn
+      <strong class="" id="batchSelectedCount">
+       0
+      </strong>
+      đơn hàng
+     </span>
+     <span class="batch-divider">
+      •
+     </span>
+     <button class="admin-btn-text" id="btnBatchDeselectAll" type="button">
+      Bỏ chọn
+     </button>
+    </div>
+    <div class="batch-toolbar-right">
+     <button class="admin-btn admin-btn-secondary" id="btnBatchPrintPack" type="button">
+      In hàng loạt phiếu đóng gói
+     </button>
+     <button class="admin-btn admin-btn-primary" id="btnBatchDispatch" type="button">
+      Bàn giao vận chuyển hàng loạt
+     </button>
+     <button class="admin-btn admin-btn-secondary" id="btnBatchExportManifest" type="button">
+      Xuất bảng kê bàn giao
+     </button>
+    </div>
+   </div>
+  </div>
+  <!-- BẢNG DỮ LIỆU ĐƠN HÀNG -->
+  <div aria-label="Bảng đơn hàng" class="table-responsive-wrapper" role="region" tabindex="0">
+   <table class="admin-table" id="ordersTable">
+    <thead>
+     <tr>
+      <th class="orders-inline-02bdea4e" scope="col">
+       <input class="admin-checkbox" id="checkSelectAllOrders" title="Chọn tất cả" type="checkbox"/>
+      </th>
+      <th scope="col">
+       Mã đơn
+      </th>
+      <th scope="col">
+       Khách hàng
+      </th>
+      <th scope="col">
+       Sản phẩm và Số lượng
+      </th>
+      <th scope="col">
+       Tổng tiền
+      </th>
+      <th scope="col">
+       Thanh toán
+      </th>
+      <th scope="col">
+       Vận chuyển
+      </th>
+      <th scope="col">
+       Trạng thái
+      </th>
+      <th scope="col">
+       Cảnh báo và SLA
+      </th>
+      <th class="orders-inline-fe4fe4e2" scope="col">
+       Thao tác
+      </th>
+     </tr>
+    </thead>
+    <tbody class="" id="ordersTableBody">
+     <tr class="skeleton-row">
+      <td class="orders-inline-65f9d5a3">
+       <span class="skeleton-text orders-inline-c980933e">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-349adfce">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-5187b6fd">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-21b27723">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-34deaa9b">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-94bf79ad">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-dabaad57">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-82518573">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-2ac322a8">
+       </span>
+      </td>
+      <td class="orders-inline-65f9d5a3">
+       <span class="skeleton-text orders-inline-83b8e7af">
+       </span>
+      </td>
+     </tr>
+     <tr class="skeleton-row">
+      <td class="orders-inline-65f9d5a3">
+       <span class="skeleton-text orders-inline-c980933e">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-dabaad57">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-55391ce0">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-148b84d6">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-349adfce">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-94bf79ad">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-dabaad57">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-82518573">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-2ac322a8">
+       </span>
+      </td>
+      <td class="orders-inline-65f9d5a3">
+       <span class="skeleton-text orders-inline-83b8e7af">
+       </span>
+      </td>
+     </tr>
+     <tr class="skeleton-row">
+      <td class="orders-inline-65f9d5a3">
+       <span class="skeleton-text orders-inline-c980933e">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-34deaa9b">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-148b84d6">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-56cae747">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-8e7d1c7d">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-94bf79ad">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-dabaad57">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-82518573">
+       </span>
+      </td>
+      <td>
+       <span class="skeleton-text orders-inline-2ac322a8">
+       </span>
+      </td>
+      <td class="orders-inline-65f9d5a3">
+       <span class="skeleton-text orders-inline-83b8e7af">
+       </span>
+      </td>
+     </tr>
+    </tbody>
+   </table>
+  </div>
+ </div>
+ <!-- PHÂN TRANG NẰM NGOÀI BẢNG (KHÔNG NỀN, KHÔNG ĐÓNG KHUNG, CĂN GIỮA) -->
+ <div class="admin-pagination-container" id="ordersPagination">
+  <button class="btn-pagination" id="btnOrderPrev" type="button">
+   &lt;
+  </button>
+  <button class="btn-pagination active" type="button">
+   1
+  </button>
+  <button class="btn-pagination" type="button">
+   2
+  </button>
+  <button class="btn-pagination" type="button">
+   3
+  </button>
+  <button class="btn-pagination" id="btnOrderNext" type="button">
+   &gt;
+  </button>
+ </div>
+</section>
 
-
-        <!-- KHU VỰC 2: 6 THẺ THỐNG KÊ KPI NHANH -->
-        <div class="orders-kpi-grid">
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Tổng đơn hôm nay</span>
-                <span class="kpi-val" id="statTotalOrders"><span class="skeleton-kpi"></span></span>
-            </div>
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Chờ xác nhận</span>
-                <span class="kpi-val text-warning" id="statPendingOrders"><span class="skeleton-kpi"></span></span>
-            </div>
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Đang chuẩn bị</span>
-                <span class="kpi-val" id="statPreparingOrders" style="color: #3730A3;"><span class="skeleton-kpi"></span></span>
-            </div>
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Đang giao hàng</span>
-                <span class="kpi-val" id="statShippingOrders" style="color: #0369A1;"><span class="skeleton-kpi"></span></span>
-            </div>
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Đã hoàn tất</span>
-                <span class="kpi-val text-success" id="statCompletedOrders"><span class="skeleton-kpi"></span></span>
-            </div>
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Đổi trả và Hủy</span>
-                <span class="kpi-val text-danger" id="statCancelledOrders"><span class="skeleton-kpi"></span></span>
-            </div>
-        </div>
-
-        <!-- KHU VỰC 3: KHỐI QUẢN LÝ ĐƠN HÀNG THỐNG NHẤT (GOM KHỐI) -->
-        <div class="admin-card order-master-card">
-            <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
-            <div class="table-toolbar-section">
-                <div class="filter-row-top">
-                    <div class="search-box-wrapper">
-                        <label class="admin-visually-hidden" for="orderSearchInput">Tìm kiếm đơn hàng</label>
-                        <input type="text" class="admin-input" id="orderSearchInput" placeholder="Tìm mã đơn ORD, tên khách, số điện thoại, mã vận đơn...">
-                    </div>
-                    <div class="filter-actions-right">
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnExportOrderReport">Xuất file</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateOrderModal">Tạo đơn tại quầy</button>
-                    </div>
-                </div>
-
-                <div class="filter-row-bottom">
-                    <div class="filter-dropdown-group">
-                        <label class="filter-label" for="orderFilterStatus">Trạng thái đơn</label>
-                        <select class="admin-select" id="orderFilterStatus">
-                            <option value="ALL">Tất cả</option>
-                            <option value="pending">Chờ xác nhận</option>
-                            <option value="confirmed">Đang chuẩn bị</option>
-                            <option value="shipping">Đang giao</option>
-                            <option value="delivered">Đã giao</option>
-                            <option value="completed">Hoàn tất</option>
-                            <option value="cancelled">Đã hủy</option>
-                            <option value="returned">Đổi trả</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-dropdown-group">
-                        <label class="filter-label" for="orderFilterPayment">Thanh toán</label>
-                        <select class="admin-select" id="orderFilterPayment">
-                            <option value="ALL">Tất cả</option>
-                            <option value="cod">Tiền mặt COD</option>
-                            <option value="vnpay">VNPay</option>
-                            <option value="momo">MoMo</option>
-                            <option value="bank_transfer">Chuyển khoản</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-dropdown-group">
-                        <label class="filter-label" for="orderFilterPayStatus">Đối soát</label>
-                        <select class="admin-select" id="orderFilterPayStatus">
-                            <option value="ALL">Tất cả đối soát</option>
-                            <option value="paid">Đã thanh toán và Đối soát</option>
-                            <option value="cod_pending">Chờ bưu cục đối soát COD</option>
-                            <option value="unpaid">Chưa thanh toán</option>
-                            <option value="refund_pending">Chờ hoàn tiền</option>
-                            <option value="refunded">Đã hoàn tiền</option>
-                            <option value="cancelled">Đã hủy thanh toán</option>
-                        </select>
-                    </div>
-
-                    <button type="button" class="admin-btn-filter-toggle" id="btnFilterComplaintOrders">Có khiếu nại</button>
-                    <button type="button" class="admin-btn-filter-toggle" id="btnFilterUrgentOrders">Chờ xử lý gấp</button>
-                    <button type="button" class="admin-btn-filter-toggle" id="btnFilterSlaOverdue">Quá hạn SLA (&gt;30p)</button>
-                    <button type="button" class="admin-btn-clear-filters" id="btnOrderClearFilters" style="display: none;">Xóa bộ lọc</button>
-                </div>
-
-                <!-- DẢI TỔNG HỢP ĐỐI SOÁT DÒNG TIỀN COD (GIAI ĐOẠN 1) -->
-                <div class="cod-reconcile-strip" id="codReconcileSummaryStrip" style="display: none;">
-                    <div class="cod-strip-left">
-                        <span class="cod-strip-title">Đối soát COD bưu cục:</span>
-                        <span class="cod-strip-highlight" id="dispCodPendingCount">0 đơn hàng</span>
-                        <span class="cod-strip-divider">•</span>
-                        <span>Tổng tiền thu hộ chờ về: <strong id="dispCodPendingAmount" class="text-heading">0 đ</strong></span>
-                    </div>
-                    <div class="cod-strip-right">
-                        <button type="button" class="btn-cod-quick-reconcile" id="btnQuickReconcileAllCod">Thu tiền từng đơn</button>
-                    </div>
-                </div>
-
-                <!-- DẢI THAO TÁC HÀNG LOẠT (GIAI ĐOẠN 2: BATCH DISPATCH VÀ PACKING) -->
-                <div class="batch-action-toolbar" id="batchActionToolbar" style="display: none;">
-                    <div class="batch-toolbar-left">
-                        <span class="batch-selected-count">Đã chọn <strong id="batchSelectedCount">0</strong> đơn hàng</span>
-                        <span class="batch-divider">•</span>
-                        <button type="button" class="admin-btn-text" id="btnBatchDeselectAll">Bỏ chọn</button>
-                    </div>
-                    <div class="batch-toolbar-right">
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnBatchPrintPack">In hàng loạt phiếu đóng gói</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnBatchDispatch">Bàn giao vận chuyển hàng loạt</button>
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnBatchExportManifest">Xuất bảng kê bàn giao</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- BẢNG DỮ LIỆU ĐƠN HÀNG -->
-            <div class="table-responsive-wrapper" tabindex="0" role="region" aria-label="Bảng đơn hàng">
-                <table class="admin-table" id="ordersTable">
-                    <thead>
-                        <tr>
-                            <th scope="col" style="width: 42px; text-align: center;">
-                                <input type="checkbox" class="admin-checkbox" id="checkSelectAllOrders" title="Chọn tất cả">
-                            </th>
-                            <th scope="col">Mã đơn</th>
-                            <th scope="col">Khách hàng</th>
-                            <th scope="col">Sản phẩm và Số lượng</th>
-                            <th scope="col">Tổng tiền</th>
-                            <th scope="col">Thanh toán</th>
-                            <th scope="col">Vận chuyển</th>
-                            <th scope="col">Trạng thái</th>
-                            <th scope="col">Cảnh báo và SLA</th>
-                            <th scope="col" style="text-align: center; width: 60px;">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ordersTableBody">
-                        <tr class="skeleton-row">
-                            <td style="text-align: center;"><span class="skeleton-text" style="width: 16px; height: 16px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 85px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 120px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 140px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 90px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 75px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 80px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 70px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 50px;"></span></td>
-                            <td style="text-align: center;"><span class="skeleton-text" style="width: 20px;"></span></td>
-                        </tr>
-                        <tr class="skeleton-row">
-                            <td style="text-align: center;"><span class="skeleton-text" style="width: 16px; height: 16px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 80px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 135px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 110px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 85px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 75px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 80px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 70px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 50px;"></span></td>
-                            <td style="text-align: center;"><span class="skeleton-text" style="width: 20px;"></span></td>
-                        </tr>
-                        <tr class="skeleton-row">
-                            <td style="text-align: center;"><span class="skeleton-text" style="width: 16px; height: 16px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 90px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 110px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 160px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 95px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 75px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 80px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 70px;"></span></td>
-                            <td><span class="skeleton-text" style="width: 50px;"></span></td>
-                            <td style="text-align: center;"><span class="skeleton-text" style="width: 20px;"></span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- PHÂN TRANG NẰM NGOÀI BẢNG (KHÔNG NỀN, KHÔNG ĐÓNG KHUNG, CĂN GIỮA) -->
-        <div class="admin-pagination-container" id="ordersPagination">
-            <button type="button" class="btn-pagination" id="btnOrderPrev">&lt;</button>
-            <button type="button" class="btn-pagination active">1</button>
-            <button type="button" class="btn-pagination">2</button>
-            <button type="button" class="btn-pagination">3</button>
-            <button type="button" class="btn-pagination" id="btnOrderNext">&gt;</button>
-        </div>
-    </section>
 
     <!-- ====================================================================
          SUB-TAB 2: HỒ SƠ ĐƠN (CHI TIẾT ĐƠN HÀNG 360°)
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-order-detail">
-        <div id="orderDetailLoading" class="admin-card" style="padding:28px;"><span class="skeleton-text" style="width:180px;height:24px;"></span><div style="margin-top:20px;"><span class="skeleton-box" style="width:100%;height:160px;"></span></div></div>
-        <div id="orderDetailData" style="display:none;">
+ <div class="admin-card orders-inline-dc6b6e96" id="orderDetailLoading">
+  <span class="skeleton-text orders-inline-38503abb">
+  </span>
+  <div class="orders-inline-4f7f1ad5">
+   <span class="skeleton-box orders-inline-b64caf91">
+   </span>
+  </div>
+ </div>
+ <div class="" id="orderDetailData" style="display:none;">
+  <div class="admin-card order-detail-card">
+   <!-- THANH TIÊU ĐỀ CHI TIẾT ĐƠN HÀNG VÀ NÚT THAO TÁC 1-CHẠM -->
+   <div class="order-detail-header-bar">
+    <div class="order-headline-group">
+     <div class="order-code-title" id="detailOrderCode">
+      ORD-2026-001
+     </div>
+     <div class="order-datetime-text" id="detailOrderMeta">
+      Đặt lúc: 14:30 - 10/06/2026 | Kênh đặt: Website PawPal
+     </div>
+    </div>
+    <div class="order-action-bar-top" id="detailOrderActionButtons">
+     <!-- Nút thao tác một chạm theo trạng thái nạp động -->
+    </div>
+   </div>
+   <!-- NỘI DUNG CHI TIẾT 2 CỘT THOÁNG ĐÃNG -->
+   <div class="order-detail-grid">
+    <!-- CỘT CHÍNH (BÊN TRÁI): SẢN PHẨM VÀ BẢNG KÊ TÀI CHÍNH -->
+    <div class="order-main-col">
+     <!-- KHỐI LIÊN THÔNG ĐỔI TRẢ RMA (GIAI ĐOẠN 3) -->
+     <div class="" id="detailOrderRmaBannerContainer">
+     </div>
+     <div>
+      <div class="detail-section-title">
+       Danh sách sản phẩm
+      </div>
+      <table class="order-items-table">
+       <thead>
+        <tr>
+         <th scope="col">
+          Sản phẩm
+         </th>
+         <th scope="col">
+          Mã SKU
+         </th>
+         <th scope="col">
+          Đơn giá
+         </th>
+         <th class="orders-inline-65f9d5a3" scope="col">
+          Số lượng
+         </th>
+         <th class="orders-inline-30489cbd" scope="col">
+          Thành tiền
+         </th>
+        </tr>
+       </thead>
+       <tbody class="" id="detailOrderItemsBody">
+        <!-- Nạp động từ orders.js -->
+       </tbody>
+      </table>
+     </div>
+     <div>
+      <div class="detail-section-title">
+       Bảng kê thanh toán
+      </div>
+      <div class="financial-summary-list">
+       <div class="summary-row">
+        <span>
+         Tiền hàng tạm tính:
+        </span>
+        <span class="" id="detailSummarySubtotal">
+         850.000 đ
+        </span>
+       </div>
+       <div class="summary-row">
+        <span>
+         Phí vận chuyển:
+        </span>
+        <span class="" id="detailSummaryShipping">
+         30.000 đ
+        </span>
+       </div>
+       <div class="summary-row">
+        <span>
+         Mã giảm giá Voucher:
+        </span>
+        <span class="text-success" id="detailSummaryVoucher">
+         - 0 đ
+        </span>
+       </div>
+       <div class="summary-row">
+        <span>
+         Điểm thưởng Pawpoint đã đổi:
+        </span>
+        <span class="text-success" id="detailSummaryPoints">
+         - 0 đ
+        </span>
+       </div>
+       <div class="summary-row total-row">
+        <span>
+         Tổng tiền thanh toán:
+        </span>
+        <span class="" id="detailSummaryTotal">
+         880.000 đ
+        </span>
+       </div>
+      </div>
+     </div>
+     <div>
+      <div class="detail-section-title">
+       Ghi chú đơn hàng
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+       <div class="info-pair">
+        <span class="info-label">
+         Ghi chú của khách hàng:
+        </span>
+        <span class="info-value orders-inline-4e5b78aa" id="detailCustomerNote">
+         "Giao hàng giờ hành chính, gọi trước khi đến."
+        </span>
+       </div>
+       <div class="info-pair">
+        <span class="info-label">
+         Ghi chú nội bộ PawPal:
+        </span>
+        <span class="info-value orders-inline-7c8ebd94" id="detailInternalNote">
+         Đã xác nhận địa chỉ và kiểm tra hạn sử dụng của túi thức ăn còn trên 12 tháng.
+        </span>
+       </div>
+      </div>
+     </div>
+    </div>
+    <!-- CỘT PHỤ (BÊN PHẢI): GIAO NHẬN, VẬN CHUYỂN VÀ LỊCH TRÌNH -->
+    <div class="order-side-col">
+     <div>
+      <div class="detail-section-title">
+       Thông tin giao nhận
+      </div>
+      <div class="shipping-info-block">
+       <div class="info-pair">
+        <span class="info-label">
+         Người nhận hàng:
+        </span>
+        <span class="info-value">
+         <a class="user-link-text" href="javascript:void(0)" id="detailReceiverName">
+          Lê Lệ Quyên
+         </a>
+        </span>
+       </div>
+       <div class="info-pair">
+        <span class="info-label">
+         Số điện thoại:
+        </span>
+        <span class="info-value" id="detailReceiverPhone">
+         0901234567
+        </span>
+       </div>
+       <div class="info-pair">
+        <span class="info-label">
+         Địa chỉ giao hàng:
+        </span>
+        <span class="info-value" id="detailReceiverAddress">
+         123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh
+        </span>
+       </div>
+       <div class="info-pair">
+        <span class="info-label">
+         Phương thức thanh toán:
+        </span>
+        <span class="info-value" id="detailPaymentMethod">
+         Tiền mặt khi nhận hàng (COD)
+        </span>
+       </div>
+       <div class="info-pair">
+        <span class="info-label">
+         Trạng thái đối soát:
+        </span>
+        <span class="admin-badge badge-unpaid" id="detailPaymentBadge">
+         Chưa thanh toán
+        </span>
+       </div>
+      </div>
+     </div>
+     <div>
+      <div class="detail-section-title">
+       Đơn vị vận chuyển
+      </div>
+      <div class="shipping-info-block">
+       <div class="info-pair">
+        <span class="info-label">
+         Hãng giao vận:
+        </span>
+        <span class="info-value" id="detailShippingCarrier">
+         J và T Express
+        </span>
+       </div>
+       <div class="info-pair">
+        <span class="info-label">
+         Mã vận đơn bưu cục:
+        </span>
+        <span class="info-value orders-inline-8f3cb917" id="detailTrackingNumber" style="font-family: monospace; font-size: 14px; color: #236B48;">
+         JT123456789
+        </span>
+       </div>
+      </div>
+     </div>
+     <div>
+      <div class="detail-section-title">
+       Lịch trình đơn hàng
+      </div>
+      <div class="order-timeline-list" id="detailOrderTimeline">
+       <!-- Nạp động từ orders.js -->
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+ </div>
+</section>
 
-        <div class="admin-card order-detail-card">
-            <!-- THANH TIÊU ĐỀ CHI TIẾT ĐƠN HÀNG VÀ NÚT THAO TÁC 1-CHẠM -->
-            <div class="order-detail-header-bar">
-                <div class="order-headline-group">
-                    <div class="order-code-title" id="detailOrderCode">ORD-2026-001</div>
-                    <div class="order-datetime-text" id="detailOrderMeta">Đặt lúc: 14:30 - 10/06/2026 | Kênh đặt: Website PawPal</div>
-                </div>
-                <div class="order-action-bar-top" id="detailOrderActionButtons">
-                    <!-- Nút thao tác một chạm theo trạng thái nạp động -->
-                </div>
-            </div>
-
-            <!-- NỘI DUNG CHI TIẾT 2 CỘT THOÁNG ĐÃNG -->
-            <div class="order-detail-grid">
-                <!-- CỘT CHÍNH (BÊN TRÁI): SẢN PHẨM VÀ BẢNG KÊ TÀI CHÍNH -->
-                <div class="order-main-col">
-                    <!-- KHỐI LIÊN THÔNG ĐỔI TRẢ RMA (GIAI ĐOẠN 3) -->
-                    <div id="detailOrderRmaBannerContainer"></div>
-
-                    <div>
-                        <div class="detail-section-title">Danh sách sản phẩm</div>
-                        <table class="order-items-table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Sản phẩm</th>
-                                    <th scope="col">Mã SKU</th>
-                                    <th scope="col">Đơn giá</th>
-                                    <th scope="col" style="text-align: center;">Số lượng</th>
-                                    <th scope="col" style="text-align: right;">Thành tiền</th>
-                                </tr>
-                            </thead>
-                            <tbody id="detailOrderItemsBody">
-                                <!-- Nạp động từ orders.js -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div>
-                        <div class="detail-section-title">Bảng kê thanh toán</div>
-                        <div class="financial-summary-list">
-                            <div class="summary-row">
-                                <span>Tiền hàng tạm tính:</span>
-                                <span id="detailSummarySubtotal">850.000 đ</span>
-                            </div>
-                            <div class="summary-row">
-                                <span>Phí vận chuyển:</span>
-                                <span id="detailSummaryShipping">30.000 đ</span>
-                            </div>
-                            <div class="summary-row">
-                                <span>Mã giảm giá Voucher:</span>
-                                <span id="detailSummaryVoucher" class="text-success">- 0 đ</span>
-                            </div>
-                            <div class="summary-row">
-                                <span>Điểm thưởng Pawpoint đã đổi:</span>
-                                <span id="detailSummaryPoints" class="text-success">- 0 đ</span>
-                            </div>
-                            <div class="summary-row total-row">
-                                <span>Tổng tiền thanh toán:</span>
-                                <span id="detailSummaryTotal">880.000 đ</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="detail-section-title">Ghi chú đơn hàng</div>
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <div class="info-pair">
-                                <span class="info-label">Ghi chú của khách hàng:</span>
-                                <span class="info-value" id="detailCustomerNote" style="font-weight: 400; font-style: italic;">"Giao hàng giờ hành chính, gọi trước khi đến."</span>
-                            </div>
-                            <div class="info-pair">
-                                <span class="info-label">Ghi chú nội bộ PawPal:</span>
-                                <span class="info-value" id="detailInternalNote" style="font-weight: 400;">Đã xác nhận địa chỉ và kiểm tra hạn sử dụng của túi thức ăn còn trên 12 tháng.</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CỘT PHỤ (BÊN PHẢI): GIAO NHẬN, VẬN CHUYỂN VÀ LỊCH TRÌNH -->
-                <div class="order-side-col">
-                    <div>
-                        <div class="detail-section-title">Thông tin giao nhận</div>
-                        <div class="shipping-info-block">
-                            <div class="info-pair">
-                                <span class="info-label">Người nhận hàng:</span>
-                                <span class="info-value"><a href="javascript:void(0)" class="user-link-text" id="detailReceiverName">Lê Lệ Quyên</a></span>
-                            </div>
-                            <div class="info-pair">
-                                <span class="info-label">Số điện thoại:</span>
-                                <span class="info-value" id="detailReceiverPhone">0901234567</span>
-                            </div>
-                            <div class="info-pair">
-                                <span class="info-label">Địa chỉ giao hàng:</span>
-                                <span class="info-value" id="detailReceiverAddress">123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh</span>
-                            </div>
-                            <div class="info-pair">
-                                <span class="info-label">Phương thức thanh toán:</span>
-                                <span class="info-value" id="detailPaymentMethod">Tiền mặt khi nhận hàng (COD)</span>
-                            </div>
-                            <div class="info-pair">
-                                <span class="info-label">Trạng thái đối soát:</span>
-                                <span id="detailPaymentBadge" class="admin-badge badge-unpaid">Chưa thanh toán</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="detail-section-title">Đơn vị vận chuyển</div>
-                        <div class="shipping-info-block">
-                            <div class="info-pair">
-                                <span class="info-label">Hãng giao vận:</span>
-                                <span class="info-value" id="detailShippingCarrier">J và T Express</span>
-                            </div>
-                            <div class="info-pair">
-                                <span class="info-label">Mã vận đơn bưu cục:</span>
-                                <span class="info-value" id="detailTrackingNumber" style="font-family: monospace; font-size: 14px; color: #236B48;">JT123456789</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="detail-section-title">Lịch trình đơn hàng</div>
-                        <div class="order-timeline-list" id="detailOrderTimeline">
-                            <!-- Nạp động từ orders.js -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-            </div>
-    </section>
 
     <!-- ====================================================================
          SUB-TAB 3: SẢN PHẨM VÀ KHO
          ==================================================================== -->
-    <section class="subtab-content admin-ui-standard" id="subtab-tab-order-products">
-        <!-- 5 THẺ CHỈ SỐ KHO HÀNG (GIAI ĐOẠN 3) -->
-        <div class="orders-kpi-grid" style="grid-template-columns: repeat(5, 1fr);">
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Tổng mặt hàng</span>
-                <span class="kpi-val" id="statTotalProducts"><span class="skeleton-kpi"></span></span>
-            </div>
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Đang còn hàng</span>
-                <span class="kpi-val text-success" id="statInStockProducts"><span class="skeleton-kpi"></span></span>
-            </div>
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Sắp hết hàng</span>
-                <span class="kpi-val text-warning" id="statLowStockProducts"><span class="skeleton-kpi"></span></span>
-            </div>
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Đã hết hàng</span>
-                <span class="kpi-val text-danger" id="statOutStockProducts"><span class="skeleton-kpi"></span></span>
-            </div>
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Giá trị vốn tồn kho</span>
-                <span class="kpi-val" id="statTotalStockValue" style="color: #236B48; font-size: 16px;"><span class="skeleton-kpi"></span></span>
-            </div>
-        </div>
+    <section class="subtab-content" id="subtab-tab-order-products">
+ <!-- 5 THẺ CHỈ SỐ KHO HÀNG (GIAI ĐOẠN 3) -->
+ <div class="orders-kpi-grid orders-kpi-grid--products">
+  <div class="admin-card kpi-card">
+   <span class="kpi-label">
+    Tổng mặt hàng
+   </span>
+   <span class="kpi-val" id="statTotalProducts">
+    <span class="skeleton-kpi">
+    </span>
+   </span>
+  </div>
+  <div class="admin-card kpi-card">
+   <span class="kpi-label">
+    Đang còn hàng
+   </span>
+   <span class="kpi-val text-success" id="statInStockProducts">
+    <span class="skeleton-kpi">
+    </span>
+   </span>
+  </div>
+  <div class="admin-card kpi-card">
+   <span class="kpi-label">
+    Sắp hết hàng
+   </span>
+   <span class="kpi-val text-warning" id="statLowStockProducts">
+    <span class="skeleton-kpi">
+    </span>
+   </span>
+  </div>
+  <div class="admin-card kpi-card">
+   <span class="kpi-label">
+    Đã hết hàng
+   </span>
+   <span class="kpi-val text-danger" id="statOutStockProducts">
+    <span class="skeleton-kpi">
+    </span>
+   </span>
+  </div>
+  <div class="admin-card kpi-card">
+   <span class="kpi-label">
+    Giá trị vốn tồn kho
+   </span>
+   <span class="kpi-val orders-inline-188db40d" id="statTotalStockValue">
+    <span class="skeleton-kpi">
+    </span>
+   </span>
+  </div>
+ </div>
+ <!-- BẢNG DANH MỤC SẢN PHẨM VÀ TỒN KHO -->
+ <div class="admin-card product-master-card">
+  <div class="table-toolbar-section">
+   <div class="filter-row-top">
+    <div class="search-box-wrapper">
+     <label class="admin-visually-hidden" for="productSearchInput">
+      Tìm kiếm sản phẩm
+     </label>
+     <input class="admin-input" id="productSearchInput" maxlength="200" placeholder="Tìm tên sản phẩm, mã SKU, thương hiệu..." type="text"/>
+    </div>
+    <div class="filter-actions-right">
+     <button class="admin-btn admin-btn-secondary" id="btnOpenGoodsReceiptModal" type="button">
+      Nhập hàng NCC
+     </button>
+     <button class="admin-btn admin-btn-secondary" id="btnOpenStocktakeModal" type="button">
+      Kiểm kê kho
+     </button>
+     <button class="admin-btn admin-btn-secondary" id="btnExportProductStock" type="button">
+      Xuất file kho
+     </button>
+     <button class="admin-btn admin-btn-primary" id="btnOpenAddProductModal" onclick="PawpalOrdersModule.openAddProductModal()" type="button">
+      Thêm sản phẩm
+     </button>
+    </div>
+   </div>
+   <div class="filter-row-bottom">
+    <div class="filter-dropdown-group">
+     <label class="filter-label" for="productFilterCategory">
+      Danh mục
+     </label>
+     <select class="admin-select" id="productFilterCategory">
+      <option value="ALL">
+       Tất cả danh mục
+      </option>
+      <option value="Thực phẩm">
+       Thực phẩm
+      </option>
+      <option value="Đồ dùng">
+       Đồ dùng
+      </option>
+      <option value="Vệ sinh">
+       Vệ sinh
+      </option>
+      <option value="Phụ kiện">
+       Phụ kiện
+      </option>
+      <option value="Thức ăn khô">
+       Thức ăn khô
+      </option>
+      <option value="Thức ăn ướt">
+       Thức ăn ướt
+      </option>
+      <option value="Sức khỏe">
+       Sức khỏe và Dinh dưỡng
+      </option>
+      <option value="Bát ăn">
+       Bát ăn và Đồ dùng
+      </option>
+     </select>
+    </div>
+    <div class="filter-dropdown-group">
+     <label class="filter-label" for="productFilterStockStatus">
+      Tình trạng tồn
+     </label>
+     <select class="admin-select" id="productFilterStockStatus">
+      <option value="ALL">
+       Tất cả
+      </option>
+      <option value="LOW">
+       Sắp hết hàng
+      </option>
+      <option value="OUT">
+       Hết hàng
+      </option>
+      <option value="IN_STOCK">
+       Còn hàng
+      </option>
+     </select>
+    </div>
+   </div>
+  </div>
+  <div aria-label="Bảng sản phẩm" class="table-responsive-wrapper" role="region" tabindex="0">
+   <table class="admin-table" id="productsTable">
+    <thead>
+     <tr>
+      <th scope="col">
+       Mã SKU
+      </th>
+      <th scope="col">
+       Tên sản phẩm
+      </th>
+      <th scope="col">
+       Danh mục
+      </th>
+      <th scope="col">
+       Thương hiệu
+      </th>
+      <th scope="col">
+       Giá niêm yết
+      </th>
+      <th class="orders-inline-65f9d5a3" scope="col">
+       Đánh giá
+      </th>
+      <th class="orders-inline-65f9d5a3" scope="col">
+       Tổng tồn
+      </th>
+      <th class="orders-inline-65f9d5a3" scope="col">
+       Tạm giữ
+      </th>
+      <th class="orders-inline-65f9d5a3" scope="col">
+       Khả dụng
+      </th>
+      <th scope="col">
+       Cảnh báo tồn
+      </th>
+      <th scope="col">
+       Trạng thái
+      </th>
+      <th class="orders-inline-fe4fe4e2" scope="col">
+       Thao tác
+      </th>
+     </tr>
+    </thead>
+    <tbody class="" id="productsTableBody">
+     <!-- Nạp động từ orders.js -->
+    </tbody>
+   </table>
+  </div>
+ </div>
+ <div class="admin-pagination-container" id="productsPagination">
+  <!-- Nạp động qua orders.js -->
+ </div>
+</section>
 
-        <!-- BẢNG DANH MỤC SẢN PHẨM VÀ TỒN KHO -->
-        <div class="admin-card product-master-card">
-            <div class="table-toolbar-section">
-                <div class="filter-row-top">
-                    <div class="search-box-wrapper">
-                        <label class="admin-visually-hidden" for="productSearchInput">Tìm kiếm sản phẩm</label>
-                        <input type="text" class="admin-input" id="productSearchInput" maxlength="200" placeholder="Tìm tên sản phẩm, mã SKU, thương hiệu...">
-                    </div>
-                    <div class="filter-actions-right">
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenGoodsReceiptModal">Nhập hàng NCC</button>
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenStocktakeModal">Kiểm kê kho</button>
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnExportProductStock">Xuất file kho</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddProductModal" onclick="PawpalOrdersModule.openAddProductModal()">Thêm sản phẩm</button>
-                    </div>
-                </div>
-
-                <div class="filter-row-bottom">
-                    <div class="filter-dropdown-group">
-                        <label class="filter-label" for="productFilterCategory">Danh mục</label>
-                        <select class="admin-select" id="productFilterCategory">
-                            <option value="ALL">Tất cả danh mục</option>
-                            <option value="Thực phẩm">Thực phẩm</option>
-                            <option value="Đồ dùng">Đồ dùng</option>
-                            <option value="Vệ sinh">Vệ sinh</option>
-                            <option value="Phụ kiện">Phụ kiện</option>
-                            <option value="Thức ăn khô">Thức ăn khô</option>
-                            <option value="Thức ăn ướt">Thức ăn ướt</option>
-                            <option value="Sức khỏe">Sức khỏe và Dinh dưỡng</option>
-                            <option value="Bát ăn">Bát ăn và Đồ dùng</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-dropdown-group">
-                        <label class="filter-label" for="productFilterStockStatus">Tình trạng tồn</label>
-                        <select class="admin-select" id="productFilterStockStatus">
-                            <option value="ALL">Tất cả</option>
-                            <option value="LOW">Sắp hết hàng</option>
-                            <option value="OUT">Hết hàng</option>
-                            <option value="IN_STOCK">Còn hàng</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="table-responsive-wrapper" tabindex="0" role="region" aria-label="Bảng sản phẩm">
-                <table class="admin-table" id="productsTable">
-                    <thead>
-                        <tr>
-                            <th scope="col">Mã SKU</th>
-                            <th scope="col">Tên sản phẩm</th>
-                            <th scope="col">Danh mục</th>
-                            <th scope="col">Thương hiệu</th>
-                            <th scope="col">Giá niêm yết</th>
-                            <th scope="col" style="text-align: center;">Đánh giá</th>
-                            <th scope="col" style="text-align: center;">Tổng tồn</th>
-                            <th scope="col" style="text-align: center;">Tạm giữ</th>
-                            <th scope="col" style="text-align: center;">Khả dụng</th>
-                            <th scope="col">Cảnh báo tồn</th>
-                            <th scope="col">Trạng thái</th>
-                            <th scope="col" style="text-align: center; width: 60px;">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="productsTableBody">
-                        <!-- Nạp động từ orders.js -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="admin-pagination-container" id="productsPagination">
-            <!-- Nạp động qua orders.js -->
-        </div>
-    </section>
 
     <!-- ====================================================================
          SUB-TAB 4: KHUYẾN MÃI
          ==================================================================== -->
-    <section class="subtab-content admin-ui-standard" id="subtab-tab-order-promos">
-        <!-- 3 THẺ CHỈ SỐ KHUYẾN MÃI -->
-        <div class="orders-kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Voucher đang chạy</span>
-                <span class="kpi-val text-success" id="statActiveVouchers"><span class="skeleton-kpi"></span></span>
-            </div>
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Lượt đã dùng hôm nay</span>
-                <span class="kpi-val" id="statVoucherUsedToday" style="color: #236B48;"><span class="skeleton-kpi"></span></span>
-            </div>
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Voucher sắp hết hạn</span>
-                <span class="kpi-val text-warning" id="statExpiringVouchers"><span class="skeleton-kpi"></span></span>
-            </div>
-        </div>
+    <section class="subtab-content" id="subtab-tab-order-promos">
+ <!-- 3 THẺ CHỈ SỐ KHUYẾN MÃI -->
+ <div class="orders-kpi-grid orders-kpi-grid--promos">
+  <div class="admin-card kpi-card">
+   <span class="kpi-label">
+    Voucher đang chạy
+   </span>
+   <span class="kpi-val text-success" id="statActiveVouchers">
+    <span class="skeleton-kpi">
+    </span>
+   </span>
+  </div>
+  <div class="admin-card kpi-card">
+   <span class="kpi-label">
+    Lượt đã dùng hôm nay
+   </span>
+   <span class="kpi-val orders-inline-8f12ac90" id="statVoucherUsedToday">
+    <span class="skeleton-kpi">
+    </span>
+   </span>
+  </div>
+  <div class="admin-card kpi-card">
+   <span class="kpi-label">
+    Voucher sắp hết hạn
+   </span>
+   <span class="kpi-val text-warning" id="statExpiringVouchers">
+    <span class="skeleton-kpi">
+    </span>
+   </span>
+  </div>
+ </div>
+ <!-- BẢNG DANH SÁCH MÃ GIẢM GIÁ VOUCHER -->
+ <div class="admin-card promo-master-card">
+  <div class="table-toolbar-section">
+   <div class="filter-row-top">
+    <div class="search-box-wrapper">
+     <label class="admin-visually-hidden" for="promoSearchInput">
+      Tìm kiếm khuyến mãi
+     </label>
+     <input class="admin-input" id="promoSearchInput" placeholder="Tìm mã voucher, tên chương trình khuyến mãi..." type="text"/>
+    </div>
+    <div class="filter-actions-right">
+     <button class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.navigateToSettingsMarketing()" type="button">
+      Cấu hình Marketing và Banner
+     </button>
+     <button class="admin-btn admin-btn-primary" id="btnOpenCreateVoucherModal" type="button">
+      Tạo mã khuyến mãi
+     </button>
+    </div>
+   </div>
+  </div>
+  <div aria-label="Bảng khuyến mãi" class="table-responsive-wrapper" role="region" tabindex="0">
+   <table class="admin-table" id="vouchersTable">
+    <thead>
+     <tr>
+      <th scope="col">
+       Mã voucher
+      </th>
+      <th scope="col">
+       Tên chương trình
+      </th>
+      <th scope="col">
+       Mức giảm giá
+      </th>
+      <th scope="col">
+       Đơn tối thiểu
+      </th>
+      <th scope="col">
+       Điểm đổi
+      </th>
+      <th scope="col">
+       Thời hạn
+      </th>
+      <th scope="col">
+       Lượt đã dùng
+      </th>
+      <th scope="col">
+       Trạng thái
+      </th>
+      <th class="orders-inline-fe4fe4e2" scope="col">
+       Thao tác
+      </th>
+     </tr>
+    </thead>
+    <tbody class="" id="vouchersTableBody">
+     <!-- Nạp động từ orders.js -->
+    </tbody>
+   </table>
+  </div>
+ </div>
+</section>
 
-        <!-- BẢNG DANH SÁCH MÃ GIẢM GIÁ VOUCHER -->
-        <div class="admin-card promo-master-card">
-            <div class="table-toolbar-section">
-                <div class="filter-row-top">
-                    <div class="search-box-wrapper">
-                        <label class="admin-visually-hidden" for="promoSearchInput">Tìm kiếm khuyến mãi</label>
-                        <input type="text" class="admin-input" id="promoSearchInput" placeholder="Tìm mã voucher, tên chương trình khuyến mãi...">
-                    </div>
-                    <div class="filter-actions-right">
-                        <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.navigateToSettingsMarketing()">Cấu hình Marketing và Banner</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateVoucherModal">Tạo mã khuyến mãi</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="table-responsive-wrapper" tabindex="0" role="region" aria-label="Bảng khuyến mãi">
-                <table class="admin-table" id="vouchersTable">
-                    <thead>
-                        <tr>
-                            <th scope="col">Mã voucher</th>
-                            <th scope="col">Tên chương trình</th>
-                            <th scope="col">Mức giảm giá</th>
-                            <th scope="col">Đơn tối thiểu</th>
-                            <th scope="col">Điểm đổi</th>
-                            <th scope="col">Thời hạn</th>
-                            <th scope="col">Lượt đã dùng</th>
-                            <th scope="col">Trạng thái</th>
-                            <th scope="col" style="text-align: center; width: 60px;">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="vouchersTableBody">
-                        <!-- Nạp động từ orders.js -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
 
     <!-- ====================================================================
          POPOVER MENU TÁC VỤ THẢ XUỐNG 3 CHẤM (TEXT-ONLY)

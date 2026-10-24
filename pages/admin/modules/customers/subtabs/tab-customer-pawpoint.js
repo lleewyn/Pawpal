@@ -325,8 +325,8 @@
             }
             sessionStorage.removeItem('pawpal_customer_point_request');
             closeAdjustModal();document.getElementById('formAdjustPoints').reset();clearAdjustCustomerSelection();
-            await PawpalCustomers.loadCustomersModuleData({force:true});
-            await PawpalCustomers.fetchPawpointLedger({force:true});renderPawpointHistory();
+            await PawpalCustomers.refreshCustomerData({ledger:true,customerIds:[customer.dbId]});
+            renderPawpointHistory();
             PawpalCustomers.showToast(`Đã lưu điều chỉnh. Số dư sau giao dịch: ${Number(data.balance).toLocaleString('vi-VN')} điểm.`,'success');
         }catch(error){PawpalCustomers.showToast('Chưa xác nhận được điều chỉnh. Bạn có thể bấm lưu lại cùng nội dung để kiểm tra, hệ thống không ghi trùng.','warning');}
         finally{adjustmentSaving=false;button.disabled=false;button.textContent='Xác nhận điều chỉnh';}

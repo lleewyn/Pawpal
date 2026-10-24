@@ -22,12 +22,12 @@
         const today = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
         const todayTime = Date.parse(today + 'T00:00:00+07:00');
 
-        if (PawpalPets.state.remindersLoadStatus !== 'loaded' && PawpalPets.state.remindersLoadStatus !== 'error' && typeof PawpalPets.fetchRemindersAppointments === 'function' && !PawpalPets.state._remindersFetching) {
+        if ((!sessionStorage.getItem('pawpal_admin_active_module') || sessionStorage.getItem('pawpal_admin_active_module') === 'Th\u00fa c\u01b0ng') && !document.hidden && document.getElementById('subtab-tab-pet-reminders')?.classList.contains('active') && PawpalPets.state.remindersLoadStatus !== 'loaded' && PawpalPets.state.remindersLoadStatus !== 'error' && typeof PawpalPets.fetchRemindersAppointments === 'function' && !PawpalPets.state._remindersFetching) {
             PawpalPets.state._remindersFetching = true;
             PawpalPets.fetchRemindersAppointments().then(() => {
                 PawpalPets.state._remindersFetching = false;
                 renderRemindersTable();
-                updateRemindersKPIs();
+                updateReminderKPIs();
             }).catch(() => {
                 PawpalPets.state._remindersFetching = false;
                 renderRemindersTable();
@@ -188,7 +188,7 @@
 
         if (!reminderTableTbody) return;
         if (!PawpalPets.state.isLoaded || PawpalPets.state.loadError || PawpalPets.state.remindersLoadStatus === 'error') {
-            if (PawpalPets.state.loadError || PawpalPets.state.remindersLoadStatus === 'error') reminderTableTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;">Không thể tải nhắc lịch. Vui lòng tải lại trang.</td></tr>';
+            if (PawpalPets.state.loadError || PawpalPets.state.remindersLoadStatus === 'error') reminderTableTbody.innerHTML = '<tr><td class="pet-empty-state-reminders" colspan="6">Không thể tải nhắc lịch. Vui lòng tải lại trang.</td></tr>';
             else if (!reminderTableTbody.querySelector('.skeleton-row')) window.PawpalAdmin?.renderTableSkeleton?.(reminderTableTbody, {columns:6});
             return;
         }
@@ -222,7 +222,7 @@
         if (totalItems === 0) {
             reminderTableTbody.innerHTML = `
                 <tr>
-                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                    <td class="pet-empty-state-reminders-muted" colspan="6">
                         Không tìm thấy lịch nhắc chăm sóc nào phù hợp với bộ lọc.
                     </td>
                 </tr>
@@ -240,12 +240,12 @@
             return `
             <tr data-rem-id="${esc(item.id)}">
                 <td style="${borderStyle}">
-                    <strong style="color: var(--text-heading);">${esc(item.petName)}</strong>
-                    <div style="font-size: 12px; color: var(--text-muted);">${esc(item.speciesBreed)} • Mã: ${esc(item.petId)}</div>
+                    <strong class="pet-text-heading">${esc(item.petName)}</strong>
+                    <div class="pet-meta-xs">${esc(item.speciesBreed)} • Mã: ${esc(item.petId)}</div>
                 </td>
                 <td>
                     <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="${esc(item.custId)}">${esc(item.ownerName)}</a>
-                    <div style="font-size: 12px; color: var(--text-muted);">${esc(item.ownerPhone)}</div>
+                    <div class="pet-meta-xs">${esc(item.ownerPhone)}</div>
                 </td>
                 <td>
                     <span class="admin-badge ${esc(item.typeBadgeClass)}" ${item.typeBadgeStyle ? `style="${item.typeBadgeStyle}"` : ''}>
@@ -258,8 +258,8 @@
                         ${esc(item.statusText)}
                     </span>
                 </td>
-                <td style="text-align: right;">
-                    <div style="display: inline-flex; gap: 6px;">
+                <td class="pet-u-text-right">
+                    <div class="pet-inline-flex-gap-6">
                         <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-reminder-modal"
                             data-rem-id="${esc(item.id)}"
                             data-pet="${esc(item.petName)}"

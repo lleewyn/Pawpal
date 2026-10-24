@@ -9,12 +9,14 @@
     function renderCarelogsTable() {
         const tbody = document.getElementById('petCarelogsListTbody');
         const pager = document.getElementById('petCarelogsPagination');
-        if (!tbody) return;
+        const activeModule = sessionStorage.getItem('pawpal_admin_active_module');
+        if (activeModule && activeModule !== 'Th\u00fa c\u01b0ng') return;
+        if (!tbody || document.hidden || !document.getElementById('subtab-tab-pet-carelog')?.classList.contains('active')) return;
         if (PawpalPets.state.loadError || !PawpalPets.state.isLoaded) {
             if (pager) pager.innerHTML = '';
             if (PawpalPets.state.loadError) {
                 delete tbody.dataset.loadingSkeleton;
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--text-muted);">Không thể tải nhật ký chăm sóc. Vui lòng tải lại trang.</td></tr>';
+                tbody.innerHTML = '<tr><td class="pet-empty-state-carelog" colspan="5">Không thể tải nhật ký chăm sóc. Vui lòng tải lại trang.</td></tr>';
             } else if (!tbody.querySelector('.skeleton-row')) window.PawpalAdmin?.renderTableSkeleton?.(tbody, {columns:5});
             return;
         }
@@ -22,7 +24,7 @@
         // Lazy fetch care logs nếu chưa có
         if (PawpalPets.state.careLogsLoadStatus === 'error') {
             delete tbody.dataset.loadingSkeleton;
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--text-muted);">Không thể tải nhật ký chăm sóc. Vui lòng tải lại trang.</td></tr>';
+            tbody.innerHTML = '<tr><td class="pet-empty-state-carelog" colspan="5">Không thể tải nhật ký chăm sóc. Vui lòng tải lại trang.</td></tr>';
             if (pager) pager.innerHTML = '';
             return;
         }
@@ -60,16 +62,16 @@
         const pages = Math.max(1, Math.ceil(logs.length / pageSize));
         currentPage = Math.min(currentPage, pages);
         if (!logs.length) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--text-muted);">${query ? 'Không tìm thấy nhật ký phù hợp.' : 'Chưa có nhật ký chăm sóc được lưu.'}</td></tr>`;
+            tbody.innerHTML = `<tr><td class="pet-empty-state-carelog" colspan="5">${query ? 'Không tìm thấy nhật ký phù hợp.' : 'Chưa có nhật ký chăm sóc được lưu.'}</td></tr>`;
             if (pager) pager.innerHTML = '';
             return;
         }
         tbody.innerHTML = logs.slice((currentPage-1)*pageSize, currentPage*pageSize).map(({log,pet,owner}) => `<tr>
             <td>${escapeText(log.recorded_at || log.created_at ? PawpalPets.formatDateTime(log.recorded_at || log.created_at) : '—')}</td>
-            <td>${escapeText(pet?.name || 'Chưa có thông tin bé cưng')}<div style="font-size:11.5px;color:var(--text-muted);">${escapeText(pet?.code || '')}</div></td>
+            <td>${escapeText(pet?.name || 'Chưa có thông tin bé cưng')}<div class="pet-meta-11">${escapeText(pet?.code || '')}</div></td>
             <td>${escapeText(owner?.name || pet?.ownerName || 'Chưa có thông tin chủ nuôi')}</td>
-            <td style="white-space:pre-wrap;overflow-wrap:anywhere;">${escapeText(log.description || '—')}</td>
-            <td style="white-space:pre-wrap;overflow-wrap:anywhere;">${escapeText(log.observed_condition || log.health_status || '—')}</td>
+            <td class="pet-text-wrap">${escapeText(log.description || '—')}</td>
+            <td class="pet-text-wrap">${escapeText(log.observed_condition || log.health_status || '—')}</td>
         </tr>`).join('');
         if (pager) {
             pager.innerHTML = `<button type="button" class="btn-pagination" data-page="${currentPage-1}" ${currentPage===1?'disabled':''}>&lt;</button>` + Array.from({length:pages},(_,i)=>`<button type="button" class="btn-pagination ${i+1===currentPage?'active':''}" data-page="${i+1}">${i+1}</button>`).join('') + `<button type="button" class="btn-pagination" data-page="${currentPage+1}" ${currentPage===pages?'disabled':''}>&gt;</button>`;
