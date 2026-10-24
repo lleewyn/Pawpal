@@ -49,7 +49,7 @@
 
                 <div class="filter-row-bottom">
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Trạng thái đơn:</label>
+                        <label class="filter-label">Trạng thái đơn</label>
                         <select class="admin-select" id="orderFilterStatus">
                             <option value="ALL">Tất cả</option>
                             <option value="pending">Chờ xác nhận</option>
@@ -63,7 +63,7 @@
                     </div>
 
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Thanh toán:</label>
+                        <label class="filter-label">Thanh toán</label>
                         <select class="admin-select" id="orderFilterPayment">
                             <option value="ALL">Tất cả</option>
                             <option value="cod">Tiền mặt COD</option>
@@ -74,7 +74,7 @@
                     </div>
 
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Đối soát:</label>
+                        <label class="filter-label">Đối soát</label>
                         <select class="admin-select" id="orderFilterPayStatus">
                             <option value="ALL">Tất cả đối soát</option>
                             <option value="paid">Đã thanh toán và Đối soát</option>
@@ -375,7 +375,7 @@
 
                 <div class="filter-row-bottom">
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Danh mục:</label>
+                        <label class="filter-label">Danh mục</label>
                         <select class="admin-select" id="productFilterCategory">
                             <option value="ALL">Tất cả danh mục</option>
                             <option value="Thực phẩm">Thực phẩm</option>
@@ -390,7 +390,7 @@
                     </div>
 
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Tình trạng tồn:</label>
+                        <label class="filter-label">Tình trạng tồn</label>
                         <select class="admin-select" id="productFilterStockStatus">
                             <option value="ALL">Tất cả</option>
                             <option value="LOW">Sắp hết hàng</option>
@@ -754,7 +754,7 @@
             <form id="formShipOrder" class="modal-body-clean" novalidate onsubmit="return false;">
                 <div class="info-pair">
                     <span class="info-label">Đơn hàng đang xử lý</span>
-                    <span class="info-value" id="shipOrderTargetCode" style="color: #236B48; font-size: 15px;">ORD-2026-001</span>
+                    <span class="info-value" id="shipOrderTargetCode" style="color: #236B48; font-size: 15px;">&mdash;</span>
                 </div>
 
                 <div class="form-group-item">
@@ -795,7 +795,7 @@
             <form id="formCancelOrder" class="modal-body-clean" novalidate onsubmit="return false;">
                 <div class="info-pair">
                     <span class="info-label">Mã đơn hàng</span>
-                    <span class="info-value" id="cancelOrderTargetCode" style="color: #DC2626; font-size: 15px;">ORD-2026-004</span>
+                    <span class="info-value" id="cancelOrderTargetCode" style="color: #DC2626; font-size: 15px;">&mdash;</span>
                 </div>
                 <div class="info-pair" id="cancelOrderPaymentInfoRow">
                     <span class="info-label">Xử lý thanh toán</span>
@@ -932,15 +932,15 @@
                     <div class="rma-order-summary-box">
                         <div class="info-pair">
                             <span class="info-label">Mã đơn hàng</span>
-                            <span class="info-value text-heading" id="rmaOrderTargetCode" style="font-size: 15px; font-weight: 700;">ORD-2026-001</span>
+                            <span class="info-value text-heading" id="rmaOrderTargetCode" style="font-size: 15px; font-weight: 700;">&mdash;</span>
                         </div>
                         <div class="info-pair">
                             <span class="info-label">Khách hàng</span>
-                            <span class="info-value" id="rmaCustomerName">Lê Lệ Quyên (0901234567)</span>
+                            <span class="info-value" id="rmaCustomerName">&mdash;</span>
                         </div>
                         <div class="info-pair">
                             <span class="info-label">Tổng tiền đơn</span>
-                            <span class="info-value" id="rmaOrderTotal" style="font-weight: 600;">335.000 đ</span>
+                            <span class="info-value" id="rmaOrderTotal" style="font-weight: 600;">&mdash;</span>
                         </div>
                     </div>
 
@@ -1043,15 +1043,15 @@
                     <div class="rma-order-summary-box">
                         <div class="info-pair">
                             <span class="info-label">Mã SKU</span>
-                            <span class="info-value text-heading" id="adjustSkuCode" style="font-family: monospace; font-size: 15px; font-weight: 700;">TP-HAT-01</span>
+                            <span class="info-value text-heading" id="adjustSkuCode" style="font-family: monospace; font-size: 15px; font-weight: 700;">&mdash;</span>
                         </div>
                         <div class="info-pair">
                             <span class="info-label">Tên sản phẩm</span>
-                            <span class="info-value" id="adjustProdName" style="font-weight: 500;">Thức ăn hạt Royal Canin</span>
+                            <span class="info-value" id="adjustProdName" style="font-weight: 500;">&mdash;</span>
                         </div>
                         <div class="info-pair">
                             <span class="info-label">Tồn kho hiện tại</span>
-                            <span class="info-value text-heading" id="adjustCurrentStock" style="font-weight: 700; font-size: 15px;">45 gói</span>
+                            <span class="info-value text-heading" id="adjustCurrentStock" style="font-weight: 700; font-size: 15px;">&mdash;</span>
                         </div>
                     </div>
 
@@ -1801,7 +1801,6 @@
         <button type="button" class="action-menu-item" id="menuStockActionQuickGrn" onclick="PawpalOrdersModule.handleStockAction('grn')">Tạo phiếu nhập hàng nhanh</button>
         <button type="button" class="action-menu-item" id="menuStockActionToggleStatus" onclick="PawpalOrdersModule.handleStockAction('toggle')">Đổi trạng thái kinh doanh</button>
     </div>
-</div>
 
     <div class="admin-modal-overlay" id="modalSalesCashier">
         <div class="admin-modal-card" style="width:760px;max-width:95vw;padding:26px 30px;overscroll-behavior:contain;">
@@ -1827,3 +1826,5 @@
             </form>
         </div>
     </div>
+
+</div>

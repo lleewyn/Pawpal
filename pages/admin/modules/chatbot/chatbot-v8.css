@@ -1,0 +1,52 @@
+﻿/* Admin V8 live chat: presentation only; production IDs and handlers stay intact. */
+.chatbot-module-wrapper #subtab-tab-live-support {font:13px/1.5 Inter,'Segoe UI',Arial,sans-serif;color:#24382f;min-height:0}
+#subtab-tab-live-support .live-support-container {grid-template-columns:minmax(220px,260px) minmax(0,1fr) 235px;gap:0;background:#edf3ef;min-width:0}
+#subtab-tab-live-support .inbox-conversations-col,
+#subtab-tab-live-support .inbox-chat-col,
+#subtab-tab-live-support .inbox-customer-info-col {border:1px solid #e0e8e1;border-radius:0;background:#fff;box-shadow:none;backdrop-filter:none;min-width:0}
+#subtab-tab-live-support .inbox-conversations-col {padding:0;gap:0;border-right:0}
+#subtab-tab-live-support .inbox-search-box {padding:12px 12px 8px}
+#subtab-tab-live-support .inbox-search-box input {font:12px Inter,'Segoe UI',sans-serif;height:38px;border:1px solid #d6e0d9;border-radius:var(--admin-radius,9px);padding:7px 11px;background:#fff}
+#subtab-tab-live-support .inbox-tab-btn {font:600 12px/1.5 Inter,'Segoe UI',sans-serif;background:none;border-radius:0;border:0;border-bottom:2px solid transparent;padding:7px;color:#778a7d;box-shadow:none}
+#subtab-tab-live-support .inbox-tab-btn.active {color:#276347;border-bottom-color:#276347;background:none}
+#subtab-tab-live-support .tab-badge-pill,
+#subtab-tab-live-support .admin-badge {background:transparent!important;border:0!important;border-radius:0!important;padding:0 2px;height:auto;min-height:0;font-size:11px;line-height:1.5}
+#subtab-tab-live-support .conversation-item {border:0!important;border-bottom:1px solid #e6ebe6!important;border-radius:0;margin:0;padding:13px 12px;background:transparent!important;box-shadow:none}
+#subtab-tab-live-support .conversation-item.active {background:#EEF5F1!important}
+#subtab-tab-live-support .chat-header-single-row {min-height:62px;padding:12px 14px;border-bottom:1px solid #e5ece7;gap:10px}
+#subtab-tab-live-support .chat-target-name {font-size:14px;font-weight:650;color:#286045}
+#subtab-tab-live-support .chat-timeline-messages {padding:18px 14px;background:#fff}
+#subtab-tab-live-support .chat-bottom-toolbar {padding:9px 12px 11px;border-top:1px solid #e7ebe7;background:#fff}
+#subtab-tab-live-support .chat-composer-box {border:0;background:transparent;box-shadow:none;padding:0}
+#subtab-tab-live-support .chat-composer-textarea {min-width:0;max-width:100%;border:1px solid #e4ebe5;background:#f8faf8;border-radius:var(--admin-radius,9px);font:13px/1.5 Inter,'Segoe UI',sans-serif}
+#subtab-tab-live-support .chat-composer-footer {flex-wrap:wrap;gap:8px}
+#subtab-tab-live-support .inbox-customer-info-col {border-left:0;padding:20px 14px;font-size:13px;line-height:1.65}
+#subtab-tab-live-support .customer-profile-mini {border:0;background:transparent;box-shadow:none}
+#subtab-tab-live-support .admin-btn {font:600 12px/1.4 Inter,'Segoe UI',sans-serif;border-radius:var(--admin-radius,9px);box-shadow:none}
+@media(max-width:1280px){#subtab-tab-live-support .live-support-container{grid-template-columns:230px minmax(0,1fr)}}
+@media(max-width:800px){#subtab-tab-live-support .live-support-container{grid-template-columns:150px minmax(0,1fr)}#subtab-tab-live-support .chat-header-single-row{padding:10px}#subtab-tab-live-support .inbox-tab-btn{padding:6px 3px;font-size:10px}#subtab-tab-live-support .inbox-search-box{padding:8px}}
+/* V8 secondary tabs: keep production tools while sharing Quiet Enterprise surfaces. */
+.chatbot-module-wrapper #subtab-tab-ai-copilot,
+.chatbot-module-wrapper #subtab-tab-chatbot-rules {font:13px/1.5 Inter,'Segoe UI',Arial,sans-serif;color:#24382f;min-width:0}
+#subtab-tab-ai-copilot .copilot-layout-container {gap:0;grid-template-columns:250px minmax(0,1fr)}
+#subtab-tab-ai-copilot .copilot-sessions-sidebar,
+#subtab-tab-ai-copilot .copilot-container {background:#fff;box-shadow:none;border:1px solid #e0e8e1;border-radius:0;backdrop-filter:none;min-width:0}
+#subtab-tab-ai-copilot .copilot-sessions-sidebar {border-right:0}
+#subtab-tab-ai-copilot .copilot-header {padding:15px 18px;gap:12px;flex-wrap:wrap;background:#fff;border-bottom:1px solid #ECF2EE}
+#subtab-tab-ai-copilot .copilot-title-group {gap:10px;min-width:0}
+#subtab-tab-ai-copilot .copilot-msg-bubble {box-shadow:none;border:0;border-radius:var(--admin-radius,9px);background:#f5f8f5;font:13px/1.65 Inter,'Segoe UI',sans-serif}
+#subtab-tab-ai-copilot .copilot-quick-actions {flex-wrap:wrap;gap:8px}
+#subtab-tab-ai-copilot .copilot-prompt-suggestions {flex-wrap:wrap;gap:8px}
+#subtab-tab-ai-copilot .copilot-pill-btn {background:transparent;border:1px solid #ECF2EE;border-radius:var(--admin-radius,9px);font-size:12px;box-shadow:none}
+#subtab-tab-chatbot-rules .admin-card {background:#fff;border:1px solid #ECF2EE;border-radius:var(--admin-radius,9px);box-shadow:none;backdrop-filter:none}
+#subtab-tab-chatbot-rules .rules-hub-tab-btn {background:transparent;border:0;border-bottom:2px solid transparent;border-radius:0;font:500 12px/1.5 Inter,'Segoe UI',sans-serif;color:#6f8176}
+#subtab-tab-chatbot-rules .rules-hub-tab-btn.active {color:#275e49;border-bottom-color:#275e49;font-weight:650}
+.chatbot-module-wrapper .rules-tab-count,
+#subtab-tab-ai-copilot .admin-badge {background:none!important;border:0!important;border-radius:0!important;padding:0 3px;height:auto;min-height:0;font:500 11px/1.5 Inter,'Segoe UI',sans-serif}
+#subtab-tab-ai-copilot [hidden] {display:none!important}
+#subtab-tab-chatbot-rules table {border-collapse:collapse;background:transparent;font:12px/1.5 Inter,'Segoe UI',sans-serif}
+#subtab-tab-chatbot-rules th {font-size:11px;text-transform:none;color:#275e49;background:#EEF5F1;font-weight:650}
+#subtab-tab-chatbot-rules td {background:transparent;border-bottom:1px solid #ECF2EE}
+#subtab-tab-chatbot-rules .admin-badge {background:none!important;border:0!important;border-radius:0!important;height:auto;padding:0;font-size:12px}
+#subtab-tab-ai-copilot .admin-btn,#subtab-tab-chatbot-rules .admin-btn {font:600 12px/1.5 Inter,'Segoe UI',sans-serif;box-shadow:none;border-radius:var(--admin-radius,9px)}
+@media(max-width:800px){#subtab-tab-ai-copilot .copilot-layout-container{grid-template-columns:150px minmax(0,1fr)}#subtab-tab-ai-copilot .copilot-header{padding:10px}#subtab-tab-ai-copilot .copilot-title-group{flex-wrap:wrap}}

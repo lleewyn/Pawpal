@@ -1,0 +1,34 @@
+BEGIN;
+DO $$ DECLARE u uuid:=gen_random_uuid(); s uuid:=gen_random_uuid(); BEGIN
+INSERT INTO auth.users(id) VALUES(u);INSERT INTO public.staff(id,full_name,job_title,auth_user_id,employment_status,must_change_password) VALUES(s,'Service rollback verification','QA',u,'active',false);INSERT INTO public.staff_role(staff_id,role_code) VALUES(s,'ADMIN');INSERT INTO public.staff_schedule(staff_id,start_at,end_at,availability_status,schedule_status) VALUES(s,date_trunc('day',now()+interval '14 days')+interval '8 hours',date_trunc('day',now()+interval '14 days')+interval '13 hours','available','active');PERFORM set_config('request.jwt.claim.sub',u::text,true);END $$;
+SET LOCAL ROLE authenticated;
+DO $$ DECLARE c uuid; b uuid; species uuid; p uuid:=gen_random_uuid(); p2 uuid:=gen_random_uuid(); svc uuid:=gen_random_uuid(); booking uuid:=gen_random_uuid(); second_booking uuid:=gen_random_uuid(); actor uuid; stamp timestamptz; starts timestamptz:=date_trunc('day',now()+interval '14 days')+interval '9 hours'; details jsonb; context jsonb; method uuid; receipt uuid:=gen_random_uuid(); refund uuid:=gen_random_uuid(); money jsonb; BEGIN
+SELECT id INTO actor FROM public.staff WHERE auth_user_id=auth.uid();
+c:=public.create_customer_quick('Service rollback customer','09'||lpad(floor(random()*100000000)::text,8,'0'));
+SELECT pb.id,pb.species_id INTO b,species FROM public.pet_breed pb JOIN public.pet_species ps ON ps.id=pb.species_id WHERE pb.is_active AND ps.is_active ORDER BY pb.id LIMIT 1;
+PERFORM public.save_admin_pet(p,NULL,jsonb_build_object('customer_id',c,'breed_id',b,'pet_name','Service rollback pet','gender','unknown'),4.5);
+PERFORM public.save_admin_service_catalog(svc,NULL,jsonb_build_object('service_code','TEST-'||svc,'service_name','Service rollback care','category_code','grooming_spa','duration_minutes',30,'status','active','commission_rate',0,'species_ids',jsonb_build_array(species),'steps','[]'::jsonb),'[{"weight_from":0,"weight_to":5,"unit_price":100000},{"weight_from":5,"weight_to":null,"unit_price":200000}]'::jsonb);
+details:=jsonb_build_object('customer_id',c,'pet_id',p,'service_id',svc,'scheduled_start_at',starts);
+PERFORM public.create_admin_service_booking(booking,details);PERFORM public.create_admin_service_booking(booking,details);
+IF (SELECT count(*) FROM public.appointment_item WHERE appointment_id=booking)<>1 OR (SELECT total_price FROM public.appointment_totals WHERE appointment_id=booking)<>100000 THEN RAISE EXCEPTION 'booking idempotence or price mismatch';END IF;
+SELECT updated_at INTO stamp FROM public.appointment WHERE id=booking;
+PERFORM public.update_admin_service_booking(booking,stamp,'assign',actor::text,'Rollback assignment');
+BEGIN PERFORM public.create_admin_service_booking(gen_random_uuid(),details||jsonb_build_object('staff_id',actor));RAISE EXCEPTION 'overlapping staff booking accepted';EXCEPTION WHEN SQLSTATE 'PT409' THEN IF SQLERRM<>'staff_schedule_conflict' THEN RAISE; END IF;END;
+PERFORM public.save_admin_pet(p2,NULL,jsonb_build_object('customer_id',c,'breed_id',b,'pet_name','Boundary pet','gender','unknown'),5);
+PERFORM public.create_admin_service_booking(second_booking,details||jsonb_build_object('pet_id',p2,'scheduled_start_at',starts+interval '1 day'));
+IF (SELECT total_price FROM public.appointment_totals WHERE appointment_id=second_booking)<>200000 THEN RAISE EXCEPTION 'weight boundary price mismatch';END IF;
+SELECT id INTO method FROM public.payment_method_config WHERE available AND fee=0 AND name=U&'Ti\1EC1n m\1EB7t' LIMIT 1;
+IF method IS NULL THEN RAISE EXCEPTION 'cash payment method unavailable';END IF;
+context:=public.get_admin_service_cashier(booking);
+money:=jsonb_build_object('method_id',method,'amount',100000,'reason','Rollback collection','confirmed',false);
+BEGIN PERFORM public.post_admin_service_money(receipt,booking,context->>'version','collect',money);RAISE EXCEPTION 'unconfirmed collection accepted';EXCEPTION WHEN SQLSTATE '22023' THEN NULL;END;
+money:=money||jsonb_build_object('confirmed',true);
+PERFORM public.post_admin_service_money(receipt,booking,context->>'version','collect',money);PERFORM public.post_admin_service_money(receipt,booking,context->>'version','collect',money);
+context:=public.get_admin_service_cashier(booking);IF (context->>'collected')::numeric<>100000 OR (context->>'remaining')::numeric<>0 THEN RAISE EXCEPTION 'collection balance mismatch';END IF;
+BEGIN PERFORM public.post_admin_service_money(gen_random_uuid(),booking,context->>'version','collect',money);RAISE EXCEPTION 'over collection accepted';EXCEPTION WHEN SQLSTATE '22023' THEN NULL;END;
+PERFORM public.post_admin_service_money(refund,booking,context->>'version','refund',jsonb_build_object('method_id',method,'payment_id',receipt,'amount',40000,'reason','Rollback refund','confirmed',true));
+context:=public.get_admin_service_cashier(booking);IF (context->>'collected')::numeric<>60000 THEN RAISE EXCEPTION 'refund balance mismatch';END IF;
+PERFORM set_config('request.jwt.claim.sub',gen_random_uuid()::text,true);
+BEGIN PERFORM public.create_admin_service_booking(gen_random_uuid(),details);RAISE EXCEPTION 'unauthorized booking allowed';EXCEPTION WHEN insufficient_privilege THEN NULL;END;
+END $$;
+ROLLBACK;SELECT 'PASS booking/price boundary/idempotence/staff conflict, confirmed cash collection/refund/overcharge guard and permissions; all rolled back';

@@ -173,8 +173,7 @@
             };
         }
 
-        modal.classList.add('active');
-        modal.style.display = 'flex';
+        openModal('modalConfirmChatbotAction');
     }
     PawpalChatbot.showConfirmModal = showChatbotConfirmModal;
     PawpalChatbot.showChatbotConfirmModal = showChatbotConfirmModal;
@@ -246,6 +245,8 @@
     PawpalChatbot.invalidateCustomerCache = invalidateCustomerCache;
 
     // TIER 1: Tải tóm tắt danh sách hội thoại nhẹ (không join 8 bảng, không lấy raw_content)
+    const inboxPages=new Map(),inboxRequests=new Map();
+    let inboxVersion=0;
     async function loadInboxSummary(options = {}) {
         const limit = options.limit || 50;
 
@@ -257,10 +258,23 @@
             return;
         }
 
+        const version=++inboxVersion;
         try {
             // 1. Chỉ lấy các cột cần thiết từ chat_conversation (không join chat_message(*) toàn bộ)
-            const dbConvs=[];
-            for(let offset=0;;offset+=100){const {data,error}=await supabase.rpc('get_admin_chat_inbox',{p_limit:100,p_offset:offset});if(error)throw error;dbConvs.push(...data);if(data.length<100)break;}
+            const args={p_query:(document.getElementById('inboxSearchInput')?.value||'').trim(),p_filter:PawpalChatbot.state.currentFilterTab||'all',p_page:options.page||PawpalChatbot.state.inboxPage?.page||1};
+            const key=JSON.stringify(args);
+            if(!options.page)inboxPages.clear();
+            PawpalChatbot.state.liveLoaded=false;PawpalChatbot.state.liveLoadError=null;
+            PawpalChatbot.subtabs.live?.renderConversationsList?.();
+            let payload=inboxPages.get(key);
+            if(!payload || Date.now()-payload.at>30000){
+                if(!inboxRequests.has(key))inboxRequests.set(key,supabase.rpc('get_admin_chat_inbox_page',args).then(result=>{if(result.error)throw result.error;return result.data;}).finally(()=>inboxRequests.delete(key)));
+                payload={at:Date.now(),data:await inboxRequests.get(key)};
+                if(inboxPages.size>=20)inboxPages.delete(inboxPages.keys().next().value);inboxPages.set(key,payload);
+            }
+            if(version!==inboxVersion)return;
+            PawpalChatbot.state.inboxPage=payload.data;
+            const dbConvs=payload.data.rows||[];
             PawpalChatbot.state.liveLoadError = null;
 
             if (!dbConvs || dbConvs.length === 0) {
@@ -379,6 +393,7 @@
                 };
             });
 
+            if(version!==inboxVersion)return;
             PawpalChatbot.state.liveConversations = realConvList;
 
             // Đồng bộ conversation đang chọn
@@ -395,6 +410,7 @@
                 await loadConversationDetails(targetConv);
             }
 
+            if(version!==inboxVersion)return;
             updateFilterBadges();
             PawpalChatbot.state.liveLoaded = true;
             PawpalChatbot.subtabs.live?.renderConversationsList?.();
@@ -402,6 +418,7 @@
             updateDeepBreadcrumb();
 
         } catch (err) {
+            if(version!==inboxVersion)return;
             PawpalChatbot.state.liveLoadError = 'Không thể tải hội thoại. Vui lòng tải lại trang.';
             PawpalChatbot.subtabs.live?.renderConversationsList?.();
             PawpalChatbot.subtabs.live?.renderCurrentChat?.();
@@ -580,9 +597,9 @@
 
     function updateFilterBadges() {
         const convs = PawpalChatbot.state.liveConversations || [];
-        const urgentCount = convs.filter(c => c.isUrgent || c.sentimentLevel >= 4 || c.category === 'urgent').length;
-        const activeCount = convs.filter(c => c.isHandover || c.category === 'active').length;
-        const allCount = convs.length;
+        const urgentCount = PawpalChatbot.state.inboxPage?.counts?.urgent??convs.filter(c => c.category === 'urgent').length;
+        const activeCount = PawpalChatbot.state.inboxPage?.counts?.active??convs.filter(c => c.isHandover).length;
+        const allCount = PawpalChatbot.state.inboxPage?.counts?.all??convs.length;
 
         const elUrgent = document.getElementById('urgentBadgeCount');
         const elActive = document.getElementById('activeBadgeCount');
@@ -722,15 +739,19 @@
     // -------------------------------------------------------------
     // BỘ ĐIỀU KHIỂN VÀ QUẢN LÝ MODAL CHUẨN AGENTS.md (4 CÁCH ĐÓNG TỨC THÌ)
     // -------------------------------------------------------------
+    const modalOpeners=new Map();
     function openModal(modalId) {
         const modal = document.getElementById(modalId);
         if (!modal) return;
+        modalOpeners.set(modalId,document.activeElement);
+        const dialog=modal.firstElementChild;
+        if(dialog){dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.tabIndex=-1;const title=dialog.querySelector('h2,h3,.admin-modal-title');if(title){title.id||=modalId+'Title';dialog.setAttribute('aria-labelledby',title.id);}}
         modal.classList.add('active');
         modal.style.display = 'flex';
         // Focus vào input đầu tiên nếu có
         setTimeout(() => {
             const firstInput = modal.querySelector('input:not([type="hidden"]):not([readonly]), select, textarea');
-            firstInput?.focus();
+            (firstInput || dialog)?.focus();
         }, 50);
     }
 
@@ -739,6 +760,7 @@
         if (!modal) return;
         modal.classList.remove('active');
         modal.style.display = 'none';
+        const opener=modalOpeners.get(modalId);modalOpeners.delete(modalId);if(opener?.isConnected)opener.focus();
     }
 
     PawpalChatbot.openModal = openModal;
@@ -761,9 +783,17 @@
 
     // Đóng khi bấm phím Escape
     document.addEventListener('keydown', (e) => {
+        const open=Array.from(document.querySelectorAll('.admin-modal-overlay.active, .admin-modal-overlay[style*="display: flex"]')).filter(el=>el.getClientRects().length).at(-1);
+        if(e.key==='Tab'&&open){
+            const controls=Array.from(open.querySelectorAll('button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"],a[href]')).filter(el=>el.getClientRects().length);
+            const first=controls[0],last=controls.at(-1);
+            if(!first){e.preventDefault();open.firstElementChild?.focus();}
+            else if(e.shiftKey&&(document.activeElement===first||!open.contains(document.activeElement))){e.preventDefault();last.focus();}
+            else if(!e.shiftKey&&(document.activeElement===last||!open.contains(document.activeElement))){e.preventDefault();first.focus();}
+        }
         if (e.key === 'Escape' || e.keyCode === 27) {
             const activeOverlays = document.querySelectorAll('.admin-modal-overlay.active, .admin-modal-overlay[style*="display: flex"]');
-            activeOverlays.forEach(ol => closeModal(ol.id));
+            const top=Array.from(activeOverlays).filter(el=>el.getClientRects().length).at(-1);if(top){e.preventDefault();closeModal(top.id);}
         }
     });
 

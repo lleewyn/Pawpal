@@ -198,6 +198,8 @@
         const tbody = document.getElementById('servicesBookingTableBody');
         if (!tbody) return;
         if (PawpalServices.state.loadError || !PawpalServices.state.isLoaded) {
+            exportBookings=[];
+            renderBookingsPagination(0);
             if (PawpalServices.state.loadError) {
                 delete tbody.dataset.loadingSkeleton;
                 tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:28px;">Không thể tải dữ liệu dịch vụ. Vui lòng tải lại trang.</td></tr>';
@@ -417,7 +419,7 @@
         const prevDisabled = currentBookingPage === 1 ? 'disabled' : '';
         html += `<button type="button" class="btn-pagination ${prevDisabled}" data-page="prev" title="Trang trước" ${prevDisabled ? 'disabled' : ''}>&lt;</button>`;
 
-        for (let p = 1; p <= totalPages; p++) {
+        for (let p = Math.max(1,currentBookingPage-2); p <= Math.min(totalPages,currentBookingPage+2); p++) {
             const activeClass = p === currentBookingPage ? 'active' : '';
             html += `<button type="button" class="btn-pagination ${activeClass}" data-page="${p}">${p}</button>`;
         }

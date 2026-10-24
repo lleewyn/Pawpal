@@ -47,7 +47,7 @@
             if (pet.code) pets.set(String(pet.code), pet);
         });
         const customers = PawpalPets.state.customersData || {};
-        const appointments = new Map((PawpalPets.state.appointments || []).map(a => [a.id, a]));
+        const appointments = new Map((PawpalPets.state.careLogAppointments || []).map(a => [a.id, a]));
         const query = document.getElementById('petCarelogSearch')?.value.trim() || '';
         const logs = (PawpalPets.state.careLogs || []).map(log => {
             const appointment = appointments.get(log.appointment_id);
@@ -55,7 +55,7 @@
             const pet = pets.get(String(petRef || ''));
             const owner = customers[pet?.custId || appointment?.customer_id];
             return {log, pet, owner};
-        }).filter(({log,pet,owner}) => !query || [pet?.name,pet?.code,owner?.name,owner?.phone,log.description,log.health_status].some(value => PawpalPets.matchSearch(value || '', query)))
+        }).filter(({log,pet,owner}) => !query || [pet?.name,pet?.code,owner?.name,owner?.phone,log.description,log.observed_condition,log.health_status].some(value => PawpalPets.matchSearch(value || '', query)))
           .sort((a,b) => (Date.parse(b.log.recorded_at || b.log.created_at) || 0) - (Date.parse(a.log.recorded_at || a.log.created_at) || 0));
         const pages = Math.max(1, Math.ceil(logs.length / pageSize));
         currentPage = Math.min(currentPage, pages);
@@ -69,7 +69,7 @@
             <td>${escapeText(pet?.name || 'Chưa có thông tin bé cưng')}<div style="font-size:11.5px;color:var(--text-muted);">${escapeText(pet?.code || '')}</div></td>
             <td>${escapeText(owner?.name || pet?.ownerName || 'Chưa có thông tin chủ nuôi')}</td>
             <td style="white-space:pre-wrap;overflow-wrap:anywhere;">${escapeText(log.description || '—')}</td>
-            <td style="white-space:pre-wrap;overflow-wrap:anywhere;">${escapeText(log.health_status || '—')}</td>
+            <td style="white-space:pre-wrap;overflow-wrap:anywhere;">${escapeText(log.observed_condition || log.health_status || '—')}</td>
         </tr>`).join('');
         if (pager) {
             pager.innerHTML = `<button type="button" class="btn-pagination" data-page="${currentPage-1}" ${currentPage===1?'disabled':''}>&lt;</button>` + Array.from({length:pages},(_,i)=>`<button type="button" class="btn-pagination ${i+1===currentPage?'active':''}" data-page="${i+1}">${i+1}</button>`).join('') + `<button type="button" class="btn-pagination" data-page="${currentPage+1}" ${currentPage===pages?'disabled':''}>&gt;</button>`;

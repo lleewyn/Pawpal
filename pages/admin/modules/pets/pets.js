@@ -397,7 +397,7 @@
                         .order('measured_at', { ascending: false })
                         .limit(30),
                     client.from('care_log')
-                        .select('id, appointment_id, description, observed_condition, action_name_snapshot, staff:recorded_by(full_name), recorded_at, created_at, media:care_log_media(media_type,media_url), appointment:appointment_id(pet_id)')
+                        .select('id, appointment_id, description, observed_condition, action_name_snapshot, staff:recorded_by(full_name), recorded_at, created_at, media:care_log_media(media_type,media_url), appointment:appointment_id!inner(pet_id)')
                         .eq('appointment.pet_id', pet.rawId)
                         .order('recorded_at', { ascending: false })
                         .limit(30),
@@ -488,31 +488,13 @@
         PawpalPets.state.careLogsLoadStatus = 'loading';
 
         const fetchLogs = async () => {
-            const [logsRes, apptsRes] = await Promise.all([
-                client.from('care_log')
-                    .select('id, appointment_id, description, observed_condition, action_name_snapshot, staff:recorded_by(full_name), recorded_at, created_at, appointment:appointment_id(pet_id)')
-                    .order('recorded_at', { ascending: false })
-                    .limit(limit),
-                client.from('appointment')
-                    .select('id, customer_id, pet_id')
-                    .limit(500)
-            ]);
-
-            if (logsRes.error) {
-                console.warn('[PawpalPets] Cảnh báo nạp care_log từ Supabase:', logsRes.error);
-                PawpalPets.state.careLogsLoadError = logsRes.error;
-            } else {
-                delete PawpalPets.state.careLogsLoadError;
-            }
-
-            if (apptsRes.error) {
-                console.warn('[PawpalPets] Cảnh báo nạp appointment từ Supabase:', apptsRes.error);
-            }
-            if (logsRes.error || apptsRes.error) throw (logsRes.error || apptsRes.error);
-
+            const logsRes=await client.from('care_log')
+                .select('id, appointment_id, description, observed_condition, action_name_snapshot, staff:recorded_by(full_name), recorded_at, created_at, appointment:appointment_id!inner(id,customer_id,pet_id)')
+                .order('recorded_at',{ascending:false}).order('id').limit(limit);
+            if(logsRes.error)throw logsRes.error;
             return {
-                logs: (logsRes.data || []).map(l=>({...l,pet_id:l.appointment?.pet_id,health_status:l.observed_condition})),
-                appts: apptsRes.data || []
+                logs:(logsRes.data||[]).map(l=>({...l,pet_id:l.appointment?.pet_id,health_status:l.observed_condition})),
+                appts:[...new Map((logsRes.data||[]).filter(l=>l.appointment).map(l=>[l.appointment.id,l.appointment])).values()]
             };
         };
 
@@ -525,9 +507,7 @@
                 : await fetchLogs();
 
             PawpalPets.state.careLogs = res.logs || [];
-            if (res.appts?.length > 0) {
-                PawpalPets.state.appointments = res.appts;
-            }
+            PawpalPets.state.careLogAppointments = res.appts || [];
             PawpalPets.state.careLogsLoadStatus = 'loaded';
             return PawpalPets.state.careLogs;
         } catch (error) {
@@ -543,34 +523,27 @@
         PawpalPets.state.remindersLoadStatus = 'loading';
 
         const fetchAppts = async () => {
-            const { data, error } = await client.from('appointment')
-                .select('id, appointment_code, customer_id, pet_id, scheduled_start_at, appointment_status, items:appointment_item(name_snapshot,status)')
-                .eq('appointment_status', 'completed')
-                .order('scheduled_start_at', { ascending: false })
-                .limit(500);
-
-            if (error) {
-                console.warn('[PawpalPets] Lỗi nạp lịch hẹn hoàn tất nhắc nhở:', error);
-                throw error;
-            }
-            const contacts=await client.from('audit_log').select('entity_id,description,created_at').eq('action','PET_CONTACT').eq('entity_name','pet_profile').order('created_at',{ascending:false});
-            if(contacts.error)throw contacts.error;
-            PawpalPets.state.reminderContacts={};
-            for(const contact of contacts.data||[]){try{const detail=JSON.parse(contact.description);const key=`${contact.entity_id}:${detail.type}:${detail.appointment_id}`;if(!PawpalPets.state.reminderContacts[key])PawpalPets.state.reminderContacts[key]={sentAt:contact.created_at,channel:detail.channel};}catch{}}
-            return (data || []).map(a=>({...a,appointment_date:a.scheduled_start_at,service:{service_name:(a.items||[]).filter(i=>i.status==='completed').map(i=>i.name_snapshot).join(', ')}}));
+            const result=await client.rpc('get_admin_pet_reminder_sources');
+            if(result.error)throw result.error;
+            return result.data||{appointments:[],contacts:[]};
         };
 
         try {
-            const appts = window.PawpalDataStore?.fetch
-                ? await window.PawpalDataStore.fetch('pets:appointments:completed', fetchAppts, {
+            const source = window.PawpalDataStore?.fetch
+                ? await window.PawpalDataStore.fetch('pets:reminder-sources:v2', fetchAppts, {
                     ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
                     force
                 })
                 : await fetchAppts();
 
-            PawpalPets.state.appointments = appts;
+            PawpalPets.state.appointments = source.appointments||[];
+            PawpalPets.state.reminderContacts={};
+            for(const contact of source.contacts||[]){
+                try{const detail=JSON.parse(contact.description),key=`${contact.entity_id}:${detail.type}:${detail.appointment_id}`;
+                if(!PawpalPets.state.reminderContacts[key])PawpalPets.state.reminderContacts[key]={sentAt:contact.created_at,channel:detail.channel};}catch{}
+            }
             PawpalPets.state.remindersLoadStatus = 'loaded';
-            return appts;
+            return PawpalPets.state.appointments;
         } catch (error) {
             PawpalPets.state.remindersLoadStatus = 'error';
             throw error;

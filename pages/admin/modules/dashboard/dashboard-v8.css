@@ -1,0 +1,142 @@
+.dashboard-module.dash-page{padding:20px 25px 50px;color:#283d31;font:13px/1.5 Inter,'Segoe UI',Arial,sans-serif;max-width:1760px;margin:auto}
+.dashboard-module.dash-page button{font:inherit;cursor:pointer}
+.dashboard-module.dash-page button:focus-visible{outline:2px solid #c89532;outline-offset:2px}
+.dashboard-module .dash-kpis{border:1px solid #dce4df;border-radius:5px;background:white;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));overflow:hidden;margin-bottom:15px}
+.dashboard-module .dash-kpi{padding:12px 16px 14px;border-right:1px solid #e5eae6;display:flex;flex-direction:column;justify-content:space-between;gap:5px;min-height:78px;min-width:0}
+.dashboard-module .dash-kpi:last-child{border-right:0}.dashboard-module .dash-kpi span{font-size:12px;color:#62776a}.dashboard-module .dash-kpi strong{font-size:25px;line-height:1.14;letter-spacing:-.6px;font-weight:700;color:#285c43}.dashboard-module .dash-kpi strong.dash-attention{color:#9d651b}
+.dashboard-module .dash-priority{min-height:46px;display:flex;align-items:center;justify-content:space-between;gap:15px;padding:9px 2px;margin-bottom:12px;border-bottom:1px solid #dfe7e0}
+.dashboard-module .dash-priority-text{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.dashboard-module .dash-priority strong{font-weight:650;color:#ae3b38}.dashboard-module .dash-priority span{font-size:12px;color:#607267}
+.dashboard-module .dash-text-btn{border:0;background:none;color:#275c44;text-decoration:underline;text-underline-offset:3px;padding:4px 0;font-weight:650;white-space:nowrap}
+.dashboard-module .dash-tools{background:#fff;border:1px solid #dfe6df;border-radius:5px;padding:12px 17px;display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:16px}
+.dashboard-module .dash-tools>strong{font-weight:650;white-space:nowrap}.dashboard-module .dash-tools>div{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.dashboard-module .dash-button{border:1px solid #dae4dc;background:#fff;border-radius:4px;color:#385444;font-weight:600;padding:9px 12px;min-height:37px;white-space:nowrap}
+.dashboard-module .dash-button:hover{background:#f4f7f5}.dashboard-module .dash-button.dash-primary{background:#275f45;border-color:#275f45;color:#fff}.dashboard-module .dash-button.dash-primary:hover{background:#1b5038}
+.dashboard-module .dash-work{display:grid;grid-template-columns:minmax(285px,.75fr) minmax(0,1.75fr);gap:15px;align-items:stretch}
+.dashboard-module .dash-panel{background:#fff;border:1px solid #dfe6df;border-radius:5px;min-width:0}
+.dashboard-module .dash-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 17px 13px;border-bottom:1px solid #e6ece7;min-height:55px}
+.dashboard-module .dash-panel-heading h2{font-size:14px;font-weight:700;letter-spacing:0;margin:0;color:#28533e}.dashboard-module .dash-panel-heading>span{font-size:11px;color:#65776a;white-space:nowrap}
+.dashboard-module .dash-task-row{display:flex;justify-content:space-between;gap:16px;padding:15px 17px;border-bottom:1px solid #e9eeea}.dashboard-module .dash-task-row strong{font-size:13px;font-weight:650}.dashboard-module .dash-task-row p{font-size:11px;color:#728377;margin:3px 0 0}.dashboard-module .dash-value-btn{align-self:center;border:0;background:none;color:#286246;font-size:15px!important;font-weight:700!important;padding:5px 0 5px 10px;text-decoration:underline;text-underline-offset:3px}
+.dashboard-module .dash-value-btn.dash-urgent,.dashboard-module .dash-urgent{color:#b43f37!important}.dashboard-module .dash-warn{color:#ae741b}
+.dashboard-module .dash-task-subhead{padding:17px 17px 6px;color:#41684f;font-size:12px;font-weight:700}.dashboard-module .dash-stock-row{display:flex;justify-content:space-between;gap:14px;padding:12px 17px;border-bottom:1px solid #edf0ed;align-items:center}.dashboard-module .dash-stock-row>span{font-size:12px;max-width:78%;line-height:1.45}.dashboard-module .dash-stock-row small{display:block;font-size:10px;color:#839286;margin-top:4px}.dashboard-module .dash-stock-row strong{font-size:11px;white-space:nowrap;font-weight:700}
+.dashboard-module .dash-panel-foot{padding:14px 17px;color:#859388;font-size:10px;line-height:1.5}
+.dashboard-module .dash-schedule-head{flex-wrap:wrap}.dashboard-module .dash-schedule-head [role="tablist"]{display:flex;gap:14px}.dashboard-module .dash-view{border:0;background:none;color:#6a7d71;padding:4px 0;border-bottom:2px solid transparent;font-weight:550}.dashboard-module .dash-view.active{font-weight:700;color:#285b42;border-bottom-color:#285b42}
+.dashboard-module .dash-calendar-layout{display:grid;grid-template-columns:minmax(260px,.88fr) minmax(270px,1.12fr);gap:18px;padding:16px 17px 16px}
+.dashboard-module .dash-calendar{min-width:0}.dashboard-module .dash-calendar-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px}.dashboard-module .dash-calendar-head strong{font-size:13px;color:#305d45}.dashboard-module .dash-calendar-head>div{display:flex;align-items:center;gap:6px}.dashboard-module .dash-calendar-head button{border:1px solid #e1e7e2;border-radius:4px;background:#fff;padding:5px 8px;color:#3b5d49;font-size:11px}.dashboard-module .dash-calendar-head .dashboard-module .dash-today{color:#24573f}
+.dashboard-module .dash-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}.dashboard-module .dash-cal-weekday{font-size:10px;font-weight:650;color:#7d9183;text-align:center;padding:6px 0}.dashboard-module .dash-cal-spacer{min-height:35px}.dashboard-module .dash-date{width:100%;height:38px;border:1px solid transparent;border-radius:3px;background:none;color:#526657;font-size:12px;text-align:center;position:relative}.dashboard-module .dash-date:hover{background:#f0f6f0}.dashboard-module .dash-date.active{background:#286549;color:#fff;font-weight:700}.dashboard-module .dash-date.has-appt::after{content:'';display:block;position:absolute;bottom:5px;left:calc(50% - 2px);width:4px;height:4px;border-radius:50%;background:#286549}.dashboard-module .dash-date.active.has-appt::after{background:#fff}
+.dashboard-module .dash-calendar-help{font-size:10px;color:#819285;margin:13px 0 0}
+.dashboard-module .dash-appointments{border-left:1px solid #e5ebe6;padding-left:18px;min-height:350px}.dashboard-module .dash-appointments-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2px 0 13px;border-bottom:1px solid #e9eee9}.dashboard-module .dash-appointments-head strong{font-size:12px}.dashboard-module .dash-appointments-head span{color:#728477;font-size:11px}.dashboard-module .dash-appointment-row{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:start;gap:11px;padding:16px 0;border-bottom:1px solid #ebefeb}.dashboard-module .dash-appointment-row time{font-weight:700;color:#245b42}.dashboard-module .dash-appointment-row strong{font-weight:650;display:block}.dashboard-module .dash-appointment-row p{margin:4px 0 0;font-size:11px;color:#748678}.dashboard-module .dash-appointment-row span{color:#a26b23;white-space:nowrap;font-size:11px}.dashboard-module .dash-appointment-empty{padding:24px 0;color:#748678;font-size:12px;max-width:300px;line-height:1.6}
+.dashboard-module .dash-bottom{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px}.dashboard-module .dash-data-empty{padding:22px 17px 25px;min-height:117px}.dashboard-module .dash-data-empty strong{font-size:12px;font-weight:650}.dashboard-module .dash-data-empty p{color:#788a7e;line-height:1.6;font-size:11px;margin:7px 0 0;max-width:540px}
+.dashboard-module .dash-notice{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid #cbd9cf;box-shadow:0 6px 18px #19332220;padding:12px 17px;z-index:80;border-radius:4px;font-size:12px;max-width:min(440px,90vw)}
+@media(max-width:1430px){.dashboard-module .dash-work{grid-template-columns:minmax(280px,.8fr) minmax(0,1.6fr)}.dashboard-module .dash-calendar-layout{grid-template-columns:minmax(245px,.95fr) minmax(245px,1.05fr);gap:12px}.dashboard-module .dash-appointments{padding-left:12px}.dashboard-module .dash-appointment-row{grid-template-columns:42px minmax(0,1fr);gap:8px}.dashboard-module .dash-appointment-row span{grid-column:2}}
+@media(max-width:1260px){.dashboard-module.dash-page{padding:16px}.dashboard-module .dash-kpi{padding:12px}.dashboard-module .dash-kpi strong{font-size:23px}.dashboard-module .dash-work{grid-template-columns:1fr}.dashboard-module .dash-calendar-layout{grid-template-columns:1fr 1fr}.dashboard-module .dash-panel-foot{padding-bottom:15px}}
+@media(max-width:850px){.dashboard-module .dash-kpis{grid-template-columns:repeat(3,1fr)}.dashboard-module .dash-kpi{border-bottom:1px solid #e5eae6}.dashboard-module .dash-tools{align-items:flex-start;flex-direction:column}.dashboard-module .dash-tools>div{justify-content:flex-start}.dashboard-module .dash-calendar-layout,.dashboard-module .dash-bottom{grid-template-columns:1fr}.dashboard-module .dash-appointments{border-left:0;border-top:1px solid #e5ebe6;padding:15px 0 0;min-height:unset}}
+
+/* Per-page handoff: only sidebar uses icons */
+.nav-btn[href]{text-decoration:none} .nav-btn[disabled]{opacity:.65;cursor:not-allowed}
+.page-switcher{display:flex;align-items:center;flex-wrap:wrap;gap:12px;font-size:13px}
+.page-switcher a{color:#506f60;text-decoration:none;padding:5px 1px;border-bottom:1px solid transparent}
+.page-switcher a[aria-current="page"]{color:#205740;font-weight:700;border-color:#205740}
+.page-switcher .sep{color:#c8d4cd}
+.demo-note{font-size:12px;color:#617c6c}
+button[disabled]{cursor:not-allowed}
+
+.nav-btn[data-target="dashboard"]{background:#2c5c47;color:#fff;font-weight:600}
+
+.dashboard-module.dash-page {padding:0 0 30px;width:100%;gap:15px;}
+.dashboard-module .dash-panel {padding:0;box-shadow:none;}
+.dashboard-module .dash-panel-heading {margin:0;padding:15px 17px 13px;min-height:55px;}
+.dashboard-module .dash-panel-heading h2 {border:0;padding:0;}
+.dashboard-module .dash-kpis {margin:0;gap:0;}
+.dashboard-module .dash-kpi {background:transparent;box-shadow:none;border-radius:0;}
+.dashboard-module .dash-calendar-layout {margin:0;padding:16px 17px;}
+.dashboard-module .dash-bottom {margin:0;}
+.dashboard-module .dash-tools {margin:0;}
+.dashboard-module .dashboard-priority-list,.dashboard-module .dashboard-stock-list {padding:0 17px;}
+.dashboard-module .dashboard-priority-row {padding:15px 0;}
+.dashboard-module .dashboard-calendar-day {height:38px;aspect-ratio:auto;}
+.dashboard-module .dashboard-widget,.dashboard-module .admin-btn {border-radius:var(--admin-radius);}
+.dashboard-module .dash-panel-heading,.dashboard-module .dash-appointments {border:none;}
+.dashboard-module .dash-calendar-days {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+.dashboard-module .dashboard-calendar-day {height:38px;aspect-ratio:auto;font-size:12px}
+.dashboard-module .dashboard-calendar-day.is-selected {background:#286549;color:white;font-weight:700}
+.dashboard-module .dash-calendar-layout.is-week-view,.dashboard-module .dash-calendar-layout.is-day-view {grid-template-columns:minmax(0,1fr)}
+.dashboard-module .dash-value-btn {height:auto;border-radius:0;background:none}
+.dashboard-module .dashboard-stock-row {width:100%;border:0;border-bottom:1px solid #edf0ed;background:none;text-align:left}
+.dashboard-module .dash-panel .dashboard-revenue-chart {margin:0 17px 17px}
+.dashboard-module .dash-panel .dashboard-chatbot-chart-wrap {padding:16px 17px}
+.dashboard-module .dash-tools>div {min-width:0;max-width:100%}
+.dashboard-module .dash-calendar,.dashboard-module .dash-appointments,.dashboard-module .dash-panel-heading {min-width:0}
+.dashboard-module .dash-schedule-head {flex-wrap:wrap}
+.dashboard-module .dash-calendar-layout {min-width:0}
+@media(max-width:850px){
+.dashboard-module .dash-work,.dashboard-module .dash-bottom,.dashboard-module .dash-calendar-layout {grid-template-columns:minmax(0,1fr)}
+.dashboard-module .dash-tools {flex-direction:column;align-items:flex-start}
+.dashboard-module .dash-tools>div {justify-content:flex-start;flex-wrap:wrap}
+.dashboard-module .dash-panel-heading {flex-wrap:wrap}
+.dashboard-module .dash-panel-heading>div[role=tablist] {display:flex;gap:12px;flex-wrap:wrap}
+.dashboard-module .dash-appointments {padding-left:0}
+.dashboard-module .dash-kpis {grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+.dashboard-module .dash-panel .dashboard-revenue-chart {width:auto;min-width:0;max-width:calc(100% - 34px)}
+.dashboard-module #dashboardAlertBanner {min-height:46px;display:flex;align-items:center;justify-content:space-between;gap:15px;padding:9px 2px;margin:0 0 12px;background:transparent;border:0;border-bottom:1px solid #dfe7e0;border-radius:0;box-shadow:none}
+.dashboard-module #dashboardAlertText {display:flex;align-items:center;flex-wrap:wrap;gap:14px}
+.dashboard-module #dashboardAlertText strong {font-size:13px;font-weight:650;color:#ae3b38}
+.dashboard-module #dashboardAlertText span {font-size:12px;color:#607267}
+.dashboard-module #dashboardAlertAction {font-size:12px;color:#275c44;background:none;border:0;text-decoration:underline;text-underline-offset:3px;padding:4px 0;white-space:nowrap}
+/* Booking rows: keep status beside the booking; only wrap on narrow screens. */
+.dashboard-module .dash-appointment-row.dashboard-booking-row {
+ display:grid; grid-template-columns:46px minmax(0,1fr) auto; align-items:start; gap:11px;
+ width:100%; padding:16px 0; border:0; border-bottom:1px solid #ebefeb;
+ background:transparent; text-align:left; white-space:normal;
+}
+.dashboard-module .dash-appointment-row.dashboard-booking-row > .dashboard-booking-detail {
+ grid-column:2; min-width:0; color:#283d31; white-space:normal; font-size:12px;
+}
+.dashboard-module .dash-appointment-row.dashboard-booking-row > .dashboard-booking-detail strong {display:block;font-weight:650}
+.dashboard-module .dash-appointment-row.dashboard-booking-row > .dashboard-booking-detail small {display:block;margin-top:4px;color:#748678;font-size:11px;white-space:normal}
+.dashboard-module .dash-appointment-row.dashboard-booking-row > .admin-badge {
+ grid-column:3; grid-row:1; align-self:start; height:auto; min-height:0; padding:0;
+ background:transparent; border:0; color:#a26b23; font-size:11px; line-height:1.5; white-space:nowrap;
+}
+@media(max-width:600px){
+ .dashboard-module .dash-appointment-row.dashboard-booking-row {grid-template-columns:40px minmax(0,1fr)}
+ .dashboard-module .dash-appointment-row.dashboard-booking-row > .admin-badge {grid-column:2;grid-row:2;margin-top:-5px}
+}
+.dashboard-module .dashboard-booking-date {display:block;font-size:10px;font-weight:400;color:#748678;margin-top:4px;white-space:nowrap}
+.dashboard-module .dashboard-calendar-days.is-day-view {display:block;width:100%;min-width:0;overflow:hidden}
+.dashboard-module .dashboard-calendar-days.is-week-view {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));width:100%;gap:8px}
+.dashboard-module .dashboard-day-timeline-container {width:100%;min-width:0;overflow-x:hidden}
+.dashboard-module .dash-calendar-layout.is-week-view,.dashboard-module .dash-calendar-layout.is-day-view {grid-template-columns:minmax(0,1fr)}
+.dashboard-module .dashboard-day-timeline-hour {height:auto;aspect-ratio:auto}
+.dashboard-module #dashboardAlertBanner {border-bottom:none;}
+/* Keep the alert between KPI and tools compact; the page gap provides spacing. */
+.dashboard-module #dashboardAlertBanner {min-height:30px;padding:3px 2px;margin:0;gap:12px;}
+.dashboard-module #dashboardAlertText {gap:12px;}
+@media(max-width:600px){.dashboard-module #dashboardAlertBanner{align-items:flex-start;flex-wrap:wrap;row-gap:4px;}}
+/* Quiet Enterprise calendar: top-aligned week columns and restrained day events. */
+.dashboard-module .dashboard-calendar-weekdays.is-week-heading {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.dashboard-module .dashboard-week-heading-btn {display:flex;align-items:center;justify-content:space-between;gap:4px;width:100%;padding:8px 6px;border:none;border-radius:var(--admin-radius);background:transparent;color:#4F7A65;font-size:11px}
+.dashboard-module .dashboard-week-heading-btn strong {display:grid;place-items:center;width:26px;height:26px;border-radius:var(--admin-radius);font-size:12px}
+.dashboard-module .dashboard-week-heading-btn.is-selected strong {background:#236B48;color:white}
+.dashboard-module .dashboard-calendar-days.is-week-view {align-items:stretch;max-height:440px;overflow-y:auto;overscroll-behavior:contain;padding:1px;scrollbar-width:thin}
+.dashboard-module .dashboard-calendar-days.is-week-view .dashboard-week-day {display:flex;align-items:flex-start;justify-content:flex-start;min-height:190px;height:100%;padding:8px 6px;border:1px solid #ECF2EE;border-radius:var(--admin-radius);background:transparent;outline:none;box-sizing:border-box}
+.dashboard-module .dashboard-calendar-days.is-week-view .dashboard-week-day.is-selected {background:#F4FAF6;border-color:#C3DEC7;outline:none}
+.dashboard-module .dashboard-week-events {width:100%;gap:8px}
+.dashboard-module .dashboard-week-event {padding:8px 6px;gap:4px;background:#EEF5F1;border-radius:var(--admin-radius);font-size:11px;line-height:1.45;color:#203A2C;overflow-wrap:anywhere}
+.dashboard-module .dashboard-week-event time {font-size:11px;font-weight:600;color:#236B48}
+.dashboard-module .dashboard-week-empty {display:block;padding:8px 2px;color:#6f8176;font-size:10px}
+.dashboard-module .dashboard-day-timeline-container {max-height:480px;scrollbar-width:thin;padding:0 8px 0 0}
+.dashboard-module .dashboard-day-event {border:1px solid #C3DEC7;background:#EEF5F1;color:#203A2C;box-shadow:none;transform:none!important}
+.dashboard-module .dashboard-day-event.status-pending {background:#F8F3E9;border-color:#EBDFC7;color:#734718}
+.dashboard-module .dashboard-day-event.status-cancelled {background:#F7EEEE;border-color:#EEDDDD;color:#8F2424}
+.dashboard-module .dashboard-day-event strong {font-size:12px;font-weight:600;line-height:1.4}
+.dashboard-module .dashboard-day-timeline-hour>time {font-size:11px;font-weight:500;color:#6f8176}
+@media(max-width:600px){
+.dashboard-module .dashboard-week-heading-btn {flex-direction:column;padding:6px 1px;font-size:10px}
+.dashboard-module .dashboard-calendar-days.is-week-view,.dashboard-module .dashboard-calendar-weekdays.is-week-heading {gap:4px}
+.dashboard-module .dashboard-calendar-days.is-week-view .dashboard-week-day {padding:4px 2px}
+.dashboard-module .dashboard-week-event {padding:6px 2px;font-size:10px}
+}
+/* Week/day already show bookings in the calendar; omit the duplicate agenda. */
+.dashboard-module .dashboard-calendar-agenda.is-week-view .dashboard-calendar-agenda-panel,
+.dashboard-module .dashboard-calendar-agenda.is-day-view .dashboard-calendar-agenda-panel {display:none!important;}

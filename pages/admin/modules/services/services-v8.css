@@ -1,0 +1,45 @@
+﻿/* PawPal Services V8: scoped presentation, preserving production fields and events. */
+.services-module {--text-heading:#275e49;--text-main:#24382f;--text-muted:#6f8176;--border-neutral:#ECF2EE;font:13px/1.5 Inter,'Segoe UI',Arial,sans-serif;color:#24382f;min-width:0}
+.services-module .services-kpi-grid {gap:0;border:1px solid #e3e9e4;border-radius:var(--admin-radius,9px);overflow:hidden;background:#fff}
+.services-module .services-kpi-grid .kpi-card {padding:12px 16px;min-height:78px;background:transparent;border:0;border-right:1px solid #e3e9e4;border-radius:0;box-shadow:none;backdrop-filter:none}
+.services-module .services-kpi-grid .kpi-card:last-child {border-right:0}
+.services-module .kpi-label {font-size:12px;font-weight:500;color:#6f8176}
+.services-module .kpi-val {font-size:25px;line-height:1.15;font-weight:700}
+.services-module .admin-card {box-shadow:none;backdrop-filter:none;background:#fff;border-color:#e3e9e4}
+.services-module .table-toolbar-section {background:transparent}
+.services-module .filter-row-top {border:0;gap:14px;padding:12px 14px}
+.services-module .filter-row-bottom {border:0;gap:10px;padding:0 14px 12px;flex-wrap:wrap;align-items:center}
+.services-module .filter-dropdown-group {gap:8px}
+.services-module .filter-label {font-size:11px;font-weight:500;color:#6f8176}
+.services-module .admin-input,.services-module .admin-select {font:12px/1.5 Inter,'Segoe UI',sans-serif;border-color:#e3e9e4;border-radius:var(--admin-radius,9px);background:#fff;box-shadow:none}
+.services-module .admin-btn {font:600 12px/1.5 Inter,'Segoe UI',sans-serif;border-radius:var(--admin-radius,9px);box-shadow:none}
+.services-module .table-responsive-wrapper,.services-module .admin-table,.services-module .admin-table tbody,.services-module .admin-table tr,.services-module .admin-table td {background:transparent}
+.services-module .table-responsive-wrapper {max-width:100%;overscroll-behavior:contain}
+.services-module .admin-table {border-collapse:collapse;font:12px/1.45 Inter,'Segoe UI',sans-serif}
+.services-module .admin-table th {font:650 11px/1.5 Inter,'Segoe UI',sans-serif;color:#275e49;background:#EEF5F1;text-transform:none;padding:11px 12px}
+.services-module .admin-table td {padding:12px;border-bottom:1px solid #ECF2EE;vertical-align:middle}
+.services-module .admin-badge {background:none!important;border:0!important;border-radius:0!important;padding:0;height:auto;min-height:0;font:500 12px/1.5 Inter,'Segoe UI',sans-serif}
+.services-module .service-detail-card {border:none;background:transparent;box-shadow:none}
+.services-module .detail-section-title,.services-module .admin-card-title {font-size:14px;font-weight:650;color:#275e49;border-bottom:none}
+.services-module .booking-upcoming-strip {background:transparent;border:0;padding:10px 14px;font-size:12px;color:#6f8176}
+.services-module .upcoming-strip-badge {background:none;border:0;padding:0;font-weight:650;color:#275e49}
+.services-module .upcoming-item-tag {background:transparent;border:0;border-radius:0;font-size:12px;padding:0}
+.services-module .service-detail-grid > * {min-width:0}
+.services-module .admin-modal-card {font:13px/1.5 Inter,'Segoe UI',Arial,sans-serif;padding:26px 30px;border:1px solid #ECF2EE;border-radius:var(--admin-radius,9px);background:#fff;box-shadow:0 12px 36px rgba(36,57,44,.10);max-height:90dvh;overflow:auto;overscroll-behavior:contain}
+.services-module .admin-modal-header {padding:0;margin:0 0 22px;border:none;background:transparent;gap:16px}
+.services-module .admin-modal-title {font:650 20px/1.4 Inter,'Segoe UI',sans-serif;color:#275e49}
+.services-module .modal-actions-footer {padding:6px 0 0;margin-top:16px;border:none;background:transparent;gap:8px;flex-wrap:wrap}
+.services-module .form-label {font:550 12px/1.5 Inter,'Segoe UI',sans-serif;color:#526d59}
+.services-module .admin-modal-card .admin-input,.services-module .admin-modal-card .admin-select,.services-module .pet-field-autocomplete-wrapper,.services-module .customer-autocomplete-wrapper {width:100%;max-width:100%;box-sizing:border-box}
+.services-module .admin-modal-card .form-row-two-col {gap:16px}
+.services-module .admin-modal-card .form-row-two-col > .form-group:only-child {grid-column:1 / -1}
+.services-module .btn-modal-close {font:500 12px/1.5 Inter,'Segoe UI',sans-serif;border:1px solid #ECF2EE;border-radius:var(--admin-radius,9px);padding:6px 10px;background:#fff;color:#526d5a}
+@media(max-width:800px){.services-module .filter-row-top{flex-wrap:wrap}.services-module .filter-actions-right{flex-wrap:wrap;gap:8px}}
+@media(max-width:600px){.services-module .admin-modal-card{padding:22px 18px}.services-module .admin-modal-card .form-row-two-col{grid-template-columns:1fr}.services-module .service-detail-grid{grid-template-columns:minmax(0,1fr)}}
+.services-module .modal-header-clean {padding:0;margin:0 0 22px;border:none;background:transparent;gap:16px}
+.services-module .modal-title-clean {font:650 20px/1.4 Inter,'Segoe UI',sans-serif;color:#275e49}
+.services-module .modal-btn-close-text {font:500 12px/1.5 Inter,'Segoe UI',sans-serif;border:1px solid #ECF2EE;border-radius:var(--admin-radius,9px);padding:6px 10px;background:#fff;color:#526d5a}
+.services-module .modal-body-clean {padding:0}
+.services-module .form-label-clean {font:550 12px/1.5 Inter,'Segoe UI',sans-serif;color:#526d59}
+.services-module .admin-card:hover,.services-module .admin-btn:hover,.services-module .kpi-card:hover {transform:none!important;box-shadow:none}
+.services-module button:focus-visible,.services-module input:focus-visible,.services-module select:focus-visible,.services-module textarea:focus-visible {outline:2px solid #275e49;outline-offset:2px}

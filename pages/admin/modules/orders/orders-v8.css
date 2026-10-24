@@ -1,0 +1,51 @@
+﻿/* Orders V8: visual layer only; production workflows and IDs retained. */
+.orders-module {--text-heading:#236B48;--text-main:#203A2C;--text-muted:#4F7A65;--border-neutral:#ECF2EE;font:13px/1.5 Inter,'Segoe UI',Arial,sans-serif;color:#203A2C;min-width:0}
+.orders-module .orders-kpi-grid {gap:0;background:#fff;border:1px solid #ECF2EE;border-radius:var(--admin-radius,9px);overflow:hidden}
+.orders-module .orders-kpi-grid .kpi-card {padding:12px 16px;min-height:78px;border:0;border-right:1px solid #ECF2EE;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none}
+.orders-module .orders-kpi-grid .kpi-card:last-child {border-right:0}
+.orders-module .kpi-label {font-size:12px;font-weight:500;color:#4F7A65}
+.orders-module .kpi-val {font-size:25px;font-weight:700;line-height:1.15}
+.orders-module .admin-card {box-shadow:none;backdrop-filter:none;border-color:#ECF2EE;background:#fff}
+.orders-module .filter-row-top {padding:12px 14px;border:0;gap:14px}
+.orders-module .filter-row-bottom {padding:0 14px 12px;border:0;gap:10px;flex-wrap:wrap;align-items:center}
+.orders-module .filter-label {font-size:11px;font-weight:500;color:#4F7A65}
+.orders-module .admin-input,.orders-module .admin-select {font:12px/1.5 Inter,'Segoe UI',sans-serif;background:#fff;border-color:#ECF2EE;box-shadow:none;border-radius:var(--admin-radius,9px)}
+.orders-module .admin-btn {font:600 12px/1.5 Inter,'Segoe UI',sans-serif;box-shadow:none;border-radius:var(--admin-radius,9px)}
+.orders-module .table-responsive-wrapper {max-width:100%;overscroll-behavior:contain}
+.orders-module .admin-table {font:12px/1.45 Inter,'Segoe UI',sans-serif;border-collapse:collapse}
+.orders-module .admin-table,.orders-module .admin-table tbody,.orders-module .admin-table tr,.orders-module .admin-table td,.orders-module .table-responsive-wrapper {background:transparent}
+.orders-module .admin-table th {font:650 11px/1.5 Inter,'Segoe UI',sans-serif;text-transform:none;background:#EEF5F1;color:#236B48;padding:11px 12px}
+.orders-module .admin-table td {padding:12px;border-bottom:1px solid #ECF2EE;vertical-align:middle}
+.orders-module .admin-badge {background:none!important;border:0!important;border-radius:0!important;padding:0;height:auto;min-height:0;font:500 12px/1.5 Inter,'Segoe UI',sans-serif}
+.orders-module .admin-card-title {font-size:14px;font-weight:650;border-bottom:none;color:#236B48}
+.orders-module .order-detail-grid > * {min-width:0}
+.orders-module button:focus-visible,.orders-module input:focus-visible,.orders-module select:focus-visible {outline:2px solid #236B48;outline-offset:2px}
+@media(max-width:800px){.orders-module .filter-row-top{flex-wrap:wrap}.orders-module .filter-actions-right{gap:8px;flex-wrap:wrap}}
+@media(max-width:600px){.orders-module .order-detail-grid{grid-template-columns:minmax(0,1fr)}}
+.orders-module .admin-modal-card {font:13px/1.5 Inter,'Segoe UI',Arial,sans-serif;padding:26px 30px;border:1px solid #ECF2EE;border-radius:var(--admin-radius,9px);background:#fff;box-shadow:0 12px 36px rgba(36,57,44,.10);max-height:90dvh;overflow:auto;overscroll-behavior:contain}
+.orders-module .modal-header-clean {padding:0;margin:0 0 22px;border:0;background:transparent;gap:16px}
+.orders-module .modal-title-clean {font:650 20px/1.4 Inter,'Segoe UI',sans-serif;color:#236B48}
+.orders-module .modal-btn-close-text {font:500 12px/1.5 Inter,'Segoe UI',sans-serif;border:1px solid #ECF2EE;border-radius:var(--admin-radius,9px);padding:6px 10px;background:#fff;color:#526d5a}
+.orders-module .modal-footer-clean {padding:12px 0 0;margin-top:12px;border:0;background:transparent;gap:8px;flex-wrap:wrap}
+.orders-module .form-label-clean {font:550 12px/1.5 Inter,'Segoe UI',sans-serif;color:#526d59}
+.orders-module .admin-modal-card .admin-input,.orders-module .admin-modal-card .admin-select {max-width:100%;box-sizing:border-box}
+.orders-module .admin-modal-card .form-row-two-col {gap:16px}
+@media(max-width:600px){.orders-module .admin-modal-card{padding:22px 18px}.orders-module .admin-modal-card .form-row-two-col{grid-template-columns:1fr}}
+.orders-module #btnPosQuickCustomer {min-height:32px;height:auto;padding:6px 12px;width:auto;align-self:flex-start}
+.orders-module .admin-card:hover,.orders-module .admin-btn:hover,.orders-module .kpi-card:hover {transform:none!important;box-shadow:none}
+.orders-module .modal-title-clean {letter-spacing:normal}
+
+/* Shared Admin standards: translucent outer surfaces, transparent table interiors. */
+.orders-module .admin-card,.orders-module .orders-kpi-grid,.orders-module .admin-modal-card {background:rgba(255,255,255,.70);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.orders-module .orders-kpi-grid .kpi-card {background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none}
+.orders-module .admin-table th {background:rgba(238,245,241,.75);color:#236B48}
+.orders-module .admin-badge {display:inline-flex;align-items:center;height:24px;min-height:24px;padding:0 9px;border-radius:9px!important;border:none!important;font-size:12px;font-weight:500;line-height:1;background:#E2ECE5!important;color:#2D483B}
+.orders-module .admin-badge:is(.badge-success,.badge-paid,.badge-completed,.badge-delivered) {background:#DCEEE2!important;color:#165335}
+.orders-module .admin-badge:is(.badge-warning,.badge-pending,.badge-unpaid) {background:#F5E8D3!important;color:#734718}
+.orders-module .admin-badge:is(.badge-danger,.badge-cancelled,.badge-alert) {background:#F7DCDC!important;color:#8F2424}
+.orders-module .admin-badge:is(.badge-info,.badge-shipping,.badge-confirmed) {background:#DCEAF2!important;color:#20495E}
+.orders-module .admin-pagination-container {justify-content:center;background:transparent;border:0;padding:2px 0;margin-top:-6px;gap:6px;flex-wrap:wrap}
+.orders-module .btn-pagination {background:transparent;border:0;box-shadow:none;border-radius:9px;color:#236B48}
+.orders-module .btn-pagination.active {background:#236B48;color:#fff}
+.orders-module .btn-pagination:disabled {opacity:.35;cursor:default}
+.orders-module .detail-box {background:transparent;border:0;box-shadow:none}

@@ -9,6 +9,7 @@
     let isAlertOnly = false;
     let petCurrentPage = 1;
     const PETS_PER_PAGE = 10;
+    let lastFilteredPets=[];
     let currentWeighingPetId = 'PET-001';
     const esc = (s) => (PawpalPets.escapeHtml ? PawpalPets.escapeHtml(s) : String(s || ''));
 
@@ -270,6 +271,7 @@
             return true;
         });
 
+        lastFilteredPets=filteredPets;
         const totalItems = filteredPets.length;
         const totalPages = Math.ceil(totalItems / PETS_PER_PAGE) || 1;
         if (petCurrentPage > totalPages) petCurrentPage = totalPages;
@@ -424,10 +426,10 @@
         const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} ngày ${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()}`;
 
         if (nameEl) nameEl.textContent = (pet.name || 'BÉ CƯNG').toUpperCase();
-        if (infoEl) infoEl.textContent = `${pet.speciesBreed || pet.breed || 'Chó'} • ${pet.weight || '5.0 kg'} • ${pet.gender || 'Đực'}`;
+        if (infoEl) infoEl.textContent = `${pet.speciesBreed || pet.breed || 'Chó'} • ${pet.weight || 'Ch\u01b0a ghi nh\u1eadn c\u00e2n n\u1eb7ng'} • ${pet.gender || 'Đực'}`;
         if (codeEl) codeEl.textContent = pet.code || 'PET-NEW';
         if (ownerNameEl) ownerNameEl.textContent = pet.ownerName || 'Chủ nuôi';
-        if (ownerPhoneEl) ownerPhoneEl.textContent = pet.ownerPhone || '0900000000';
+        if (ownerPhoneEl) ownerPhoneEl.textContent = pet.ownerPhone || 'Ch\u01b0a c\u00f3 s\u1ed1 \u0111i\u1ec7n tho\u1ea1i';
         if (intakeTimeEl) intakeTimeEl.textContent = timeStr;
         if (barcodeNumEl) barcodeNumEl.textContent = `*${pet.code || 'PET-NEW'}*`;
 
@@ -643,21 +645,11 @@
         const btnExportPetReport = document.getElementById('btnExportPetReport');
         if (btnExportPetReport) {
             btnExportPetReport.addEventListener('click', () => {
-                const petsData = PawpalPets.state?.petsData || {};
-                const petsList = Object.values(petsData);
+                if(!PawpalPets.state.isLoaded||PawpalPets.state.loadError){PawpalPets.showToast('Ch\u01b0a th\u1ec3 xu\u1ea5t d\u1eef li\u1ec7u. H\u00e3y t\u1ea3i l\u1ea1i danh s\u00e1ch.','warning');return;}
+                const petsList=lastFilteredPets;
                 const headers = ['Mã bé cưng', 'Tên bé cưng', 'Loài và giống', 'Giới tính', 'Cân nặng', 'Ngày sinh', 'Chủ sở hữu', 'Số điện thoại', 'Cảnh báo an toàn', 'Trạng thái'];
-                const rows = petsList.map(p => [
-                    `"${p.code || ''}"`,
-                    `"${p.name || ''}"`,
-                    `"${p.speciesBreed || p.breed || ''}"`,
-                    `"${p.gender || ''}"`,
-                    `"${p.weight || ''}"`,
-                    `"${p.dob || ''}"`,
-                    `"${p.ownerName || ''}"`,
-                    `"${p.ownerPhone || ''}"`,
-                    `"${(p.alert || 'Bình thường').replace(/"/g, '""')}"`,
-                    `"${p.status || 'Đang nuôi'}"`
-                ]);
+                const csvCell=value=>{let text=String(value??'');if(/^[\s]*[=+@-]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"';};
+                const rows=petsList.map(p=>[p.code,p.name,p.speciesBreed||p.breed,p.gender,p.weight,p.dob,p.ownerName,p.ownerPhone,p.alert||'',p.status].map(csvCell));
 
                 const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -752,7 +744,7 @@
                 // Tính tổng số lượng bé cưng thuộc từng chủ nuôi từ CSDL
                 const custPetCounts = {};
                 Object.values(petsData).forEach(p => {
-                    if (p.customerId) custPetCounts[p.customerId] = (custPetCounts[p.customerId] || 0) + 1;
+                    if (p.custId || p.customerId) {const ownerId=p.custId||p.customerId;custPetCounts[ownerId]=(custPetCounts[ownerId]||0)+1;}
                     if (p.ownerName) custPetCounts[p.ownerName] = (custPetCounts[p.ownerName] || 0) + 1;
                 });
 
@@ -990,16 +982,21 @@
         if (btnSubmitQuickAddOwner) {
             btnSubmitQuickAddOwner.addEventListener('click', async (e) => {
                 if (e) e.preventDefault();
+                if(btnSubmitQuickAddOwner.disabled)return;
                 const name = document.getElementById('quickOwnerName')?.value.trim();
                 const phone = document.getElementById('quickOwnerPhone')?.value.trim();
                 const tier = document.getElementById('quickOwnerTier')?.value || 'Khách mới';
                 const address = document.getElementById('quickOwnerAddress')?.value.trim();
+                const province=document.getElementById('quickOwnerProvince')?.value.trim();
+                if(Boolean(address)!==Boolean(province)){PawpalPets.showToast('Vui l\u00f2ng nh\u1eadp c\u1ea3 \u0111\u1ecba ch\u1ec9 v\u00e0 t\u1ec9nh/th\u00e0nh.','warning');return;}
 
+                if(name?.length<2 || !/^0[0-9]{9}$/.test(phone||'')){PawpalPets.showToast('Nh\u1eadp h\u1ecd t\u00ean v\u00e0 s\u1ed1 \u0111i\u1ec7n tho\u1ea1i 10 s\u1ed1 h\u1ee3p l\u1ec7.','warning');return;}
                 if (!name || !phone) {
                     PawpalPets.showToast('Vui lòng nhập đầy đủ họ tên và số điện thoại của chủ nuôi!', 'warning');
                     return;
                 }
 
+                btnSubmitQuickAddOwner.disabled=true;
                 try {
                     const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                     if (!client) {
@@ -1007,7 +1004,7 @@
                         return;
                     }
 
-                    const {data: customerId,error: customerError}=await client.rpc('create_customer_quick',{p_full_name:name,p_phone:phone,p_address:address||null});
+                    const {data: customerId,error: customerError}=await client.rpc('create_customer_quick',{p_full_name:name,p_phone:phone,p_address:address||null,p_province:province||null});
                     if(customerError)throw customerError;
                     const newCust={id:customerId};
                     if (!PawpalPets.state.customersData) PawpalPets.state.customersData = {};
@@ -1024,9 +1021,9 @@
 
                     if (newPetOwnerSelectedCard) {
                         newPetOwnerSelectedCard.innerHTML = `
-                            <span>Chủ sở hữu: <strong>${name}</strong> (${phone})</span>
+                            <span>Chủ sở hữu: <strong>${esc(name)}</strong> (${esc(phone)})</span>
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <span>Hạng: <strong>${tier}</strong></span>
+                                <span>Hạng: <strong>${esc(tier)}</strong></span>
                                 <button type="button" class="btn-clear-selected-new-owner" style="background: none; border: none; color: #DC2626; font-size: 11.5px; cursor: pointer; padding: 0 4px; font-weight: 600;">✕ Bỏ chọn</button>
                             </div>
                         `;
@@ -1051,7 +1048,7 @@
                 } catch (err) {
                     console.error('Create quick owner exception:', err);
                     PawpalPets.showToast('Lỗi khi lưu chủ nuôi vào CSDL: ' + err.message, 'danger');
-                }
+                } finally {btnSubmitQuickAddOwner.disabled=false;}
             });
         }
 
@@ -1066,7 +1063,7 @@
                 }
                 const customersData = PawpalPets.state?.customersData || {};
                 const ownerCustId = newPetOwnerHidden?.value;
-                const cust = customersData[ownerCustId] || { name: 'Khách hàng', phone: '0900000000' };
+                const cust = customersData[ownerCustId] || { name: 'Khách hàng', phone: '' };
                 const species = document.getElementById('newPetSpecies')?.value || 'dog';
                 const breed = document.getElementById('newPetBreed')?.value || 'Corgi';
                 const gender = document.getElementById('newPetGender')?.value === 'female' ? 'Cái' : 'Đực';

@@ -161,15 +161,17 @@
 
         let html = '';
         const prevDisabled = ordersCurrentPage === 1 ? 'disabled' : '';
-        html += `<button type="button" class="btn-pagination ${prevDisabled}" data-page="prev" title="Trang trước">&lt;</button>`;
+        html += `<button type="button" class="btn-pagination ${prevDisabled}" ${prevDisabled} data-page="prev" title="Trang trước">&lt;</button>`;
 
-        for (let p = 1; p <= totalPages; p++) {
+        const firstPage = Math.max(1, Math.min(ordersCurrentPage - 2, totalPages - 4));
+        const lastPage = Math.min(totalPages, firstPage + 4);
+        for (let p = firstPage; p <= lastPage; p++) {
             const activeClass = p === ordersCurrentPage ? 'active' : '';
             html += `<button type="button" class="btn-pagination ${activeClass}" data-page="${p}">${p}</button>`;
         }
 
         const nextDisabled = ordersCurrentPage === totalPages ? 'disabled' : '';
-        html += `<button type="button" class="btn-pagination ${nextDisabled}" data-page="next" title="Trang sau">&gt;</button>`;
+        html += `<button type="button" class="btn-pagination ${nextDisabled}" ${nextDisabled} data-page="next" title="Trang sau">&gt;</button>`;
 
         pagContainer.innerHTML = html;
 
@@ -242,6 +244,13 @@
         const tbody = document.getElementById('ordersTableBody');
         if (!tbody) return;
         if (state.ordersError) {
+            renderOrdersPagination(0);
+            for (const id of ['batchActionToolbar', 'codReconcileSummaryStrip']) {
+                const element = document.getElementById(id);
+                if (element) element.style.display = 'none';
+            }
+            const selectAll = document.getElementById('checkSelectAllOrders');
+            if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
             delete tbody.dataset.loadingSkeleton;
             tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:28px;color:var(--text-muted);">Không thể tải dữ liệu. Vui lòng tải lại trang.</td></tr>';
             return;
@@ -364,6 +373,11 @@
 
         const startIdx = (ordersCurrentPage - 1) * ORDERS_PER_PAGE;
         const pagedOrders = filtered.slice(startIdx, startIdx + ORDERS_PER_PAGE);
+        if (checkAllEl) {
+            const selectedOnPage = pagedOrders.filter(o => selectedBatchOrderIds.includes(o.id)).length;
+            checkAllEl.checked = pagedOrders.length > 0 && selectedOnPage === pagedOrders.length;
+            checkAllEl.indeterminate = selectedOnPage > 0 && selectedOnPage < pagedOrders.length;
+        }
 
         if (pagedOrders.length === 0) {
             tbody.innerHTML = `
@@ -684,12 +698,13 @@
 
         // Checkbox chọn tất cả
         document.getElementById('checkSelectAllOrders')?.addEventListener('change', function(e) {
-            const ordersList = state.orders || [];
-            if (e.target.checked) {
-                state.selectedBatchOrderIds = ordersList.map(o => o.id);
-            } else {
-                state.selectedBatchOrderIds = [];
+            const pageIds = [...document.querySelectorAll('#ordersTableBody .order-row-checkbox')].map(input => input.dataset.id);
+            const selected = new Set(state.selectedBatchOrderIds || []);
+            for (const id of pageIds) {
+                if (e.target.checked) selected.add(id);
+                else selected.delete(id);
             }
+            state.selectedBatchOrderIds = [...selected];
             renderOrdersTable();
         });
 

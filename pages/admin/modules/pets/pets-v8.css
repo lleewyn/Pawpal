@@ -1,0 +1,49 @@
+﻿/* PawPal Pets V8: presentation layer, preserving existing production controls. */
+.pets-module {--text-heading:#275e49;--text-main:#24382f;--text-muted:#6f8176;--border-neutral:#ECF2EE;font:13px/1.5 Inter,'Segoe UI',Arial,sans-serif;color:#24382f}
+.pets-module .pets-kpi-grid,.pets-module .reminder-kpi-grid {gap:0;border:1px solid #e3e9e4;border-radius:var(--admin-radius,9px);background:#fff;overflow:hidden}
+.pets-module .pets-kpi-grid .kpi-card,.pets-module .reminder-kpi-grid .kpi-card {border:0;border-right:1px solid #e3e9e4;border-radius:0;background:transparent;padding:12px 16px;min-height:78px;box-shadow:none;backdrop-filter:none}
+.pets-module .kpi-card:last-child {border-right:0}
+.pets-module .kpi-label {font-size:12px;font-weight:500;color:#6f8176}
+.pets-module .kpi-val {font-size:25px;line-height:1.15;font-weight:700}
+.pets-module .admin-card {box-shadow:none;backdrop-filter:none;background:#fff;border-color:#e3e9e4}
+.pets-module .pet-workspace-title {font-size:13px;font-weight:650;color:#275e49}
+.pets-module .filter-row-top {border:none;padding:12px 14px;gap:14px}
+.pets-module .filter-row-bottom {gap:10px;flex-wrap:wrap;align-items:center;padding:0 14px 12px;border:none}
+.pets-module .filter-row-bottom .search-box-wrapper {flex:1 1 260px;max-width:385px;min-width:180px}
+.pets-module .filter-dropdown-group {gap:8px}
+.pets-module .filter-label {font-size:11px;font-weight:500;color:#6f8176}
+.pets-module .admin-input,.pets-module .admin-select {font:12px/1.5 Inter,'Segoe UI',sans-serif;border-color:#e3e9e4;border-radius:var(--admin-radius,9px);background:#fff;box-shadow:none}
+.pets-module .admin-btn {font:600 12px/1.5 Inter,'Segoe UI',sans-serif;border-radius:var(--admin-radius,9px);box-shadow:none}
+.pets-module .table-responsive-wrapper,.pets-module .admin-table,.pets-module .admin-table tbody,.pets-module .admin-table tr,.pets-module .admin-table td {background:transparent}
+.pets-module .admin-table {font:12px/1.45 Inter,'Segoe UI',sans-serif;border-collapse:collapse}
+.pets-module .admin-table th {background:#EEF5F1;color:#275e49;font:650 11px/1.5 Inter,'Segoe UI',sans-serif;text-transform:none;padding:11px 12px}
+.pets-module .admin-table td {padding:12px;border-bottom:1px solid #ECF2EE;vertical-align:middle}
+.pets-module .admin-table .admin-badge {display:inline;background:none!important;border:0!important;border-radius:0!important;padding:0;height:auto;min-height:0;font:500 12px/1.5 Inter,'Segoe UI',sans-serif}
+.pets-module .profile-drawer-container,.pets-module .detail-box,.pets-module .pet-detail-card {background:transparent;border:none;box-shadow:none;backdrop-filter:none}
+.pets-module .drawer-tab-btn {background:transparent;border-radius:0;border:0;border-bottom:2px solid transparent;font-size:13px;color:#6f8176}
+.pets-module .drawer-tab-btn.active {background:transparent;color:#275e49;border-bottom-color:#275e49}
+.pets-module .admin-card-title,.pets-module .drawer-section-title {font-size:14px;font-weight:650;color:#275e49;border-bottom:none}
+.pets-module .table-responsive-wrapper,.pets-module .drawer-tab-panel {overscroll-behavior:contain}
+@media(max-width:800px){.pets-module .filter-row-bottom .search-box-wrapper{flex-basis:100%;max-width:none}.pets-module .filter-actions-right{flex-wrap:wrap;gap:8px}}
+.pets-module #modalAddPet .admin-modal-card {width:760px;max-width:95vw;padding:26px 30px;max-height:90dvh;overflow:auto;overscroll-behavior:contain;background:#fff;border:1px solid #ECF2EE;box-shadow:0 12px 36px rgba(36,57,44,.10)}
+.pets-module #modalAddPet .admin-modal-header {padding:0;margin:0 0 22px;border:0;background:transparent;gap:16px}
+.pets-module #modalAddPet .admin-modal-title {font:650 20px/1.4 Inter,'Segoe UI',sans-serif;color:#275e49}
+.pets-module #modalAddPet .modal-actions-footer {padding:6px 0 0;border:0;background:transparent}
+@media(max-width:600px){.pets-module #modalAddPet .admin-modal-card{padding:22px 18px}.pets-module #modalAddPet .form-row-two-col{grid-template-columns:1fr}}
+.pets-module #modalAddPet .pet-field-autocomplete-wrapper,
+.pets-module #modalAddPet .customer-autocomplete-wrapper,
+.pets-module #modalAddPet .admin-input,
+.pets-module #modalAddPet .admin-select {width:100%;max-width:100%;box-sizing:border-box}
+/* Pet modal surfaces: preserve each production modal width and its form fields. */
+.pets-module .admin-modal-card {font:13px/1.5 Inter,'Segoe UI',Arial,sans-serif;padding:26px 30px;border:1px solid #ECF2EE;border-radius:var(--admin-radius,9px);background:#fff;box-shadow:0 12px 36px rgba(36,57,44,.10);overscroll-behavior:contain;max-height:90dvh;overflow:auto}
+.pets-module .admin-modal-header {padding:0;margin:0 0 22px;border:none;background:transparent;gap:16px}
+.pets-module .admin-modal-title {font:650 20px/1.4 Inter,'Segoe UI',Arial,sans-serif;color:#275e49}
+.pets-module .modal-actions-footer {padding:6px 0 0;margin-top:16px;border:none;background:transparent;gap:8px;flex-wrap:wrap}
+.pets-module .btn-modal-close {font:500 12px/1.5 Inter,'Segoe UI',sans-serif;color:#526d5a;border:1px solid #ECF2EE;border-radius:var(--admin-radius,9px);padding:6px 10px;background:#fff}
+.pets-module .admin-modal-card .form-label {font:550 12px/1.5 Inter,'Segoe UI',sans-serif;color:#526d59;margin-bottom:7px}
+.pets-module .admin-modal-card .admin-input,.pets-module .admin-modal-card .admin-select,.pets-module .admin-modal-card .pet-field-autocomplete-wrapper,.pets-module .admin-modal-card .customer-autocomplete-wrapper {width:100%;max-width:100%;box-sizing:border-box}
+.pets-module .admin-modal-card .form-row-two-col {gap:16px}
+.pets-module .admin-modal-card .admin-badge {border:none!important;background:transparent!important;border-radius:0!important;padding:0;height:auto;min-height:0}
+@media(max-width:600px){.pets-module .admin-modal-card{padding:22px 18px}.pets-module .admin-modal-card .form-row-two-col{grid-template-columns:1fr}}
+.pets-module #formWeighPet .form-group > div[style*="border: 1px"] {border:none!important;padding:0!important}
+.pets-module .admin-modal-card .form-row-two-col > .form-group:only-child {grid-column:1 / -1}

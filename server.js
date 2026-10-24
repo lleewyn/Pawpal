@@ -5,7 +5,7 @@ const chatApi = require('./scripts/api/chat.js');
 const vnpayApi = require('./scripts/api/vnpay.js');
 
 const app = express();
-const port = 3000;
+const port = Number(process.env.PORT) || 3000;
 
 // Cho phép parse body JSON
 app.use(express.json());

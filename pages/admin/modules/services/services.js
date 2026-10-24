@@ -1109,7 +1109,14 @@
                         moduleName: 'Dịch vụ',
                         invalidatePattern: invalidatePattern || 'services:*',
                         onActiveRefresh: async () => {
-                            await Promise.all([loadServicesData({ force: true }),loadCatalogData({force:true}),loadReviewsData({force:true})]);
+                            const pattern=invalidatePattern||'services:*';
+                            const jobs=[];
+                            if(pattern==='services:*'||pattern.startsWith('services:bookings'))jobs.push(loadServicesData({force:true}));
+                            if(pattern==='services:*'||pattern.startsWith('services:catalog'))jobs.push(loadCatalogData({force:true}));
+                            if(pattern==='services:*'||pattern.startsWith('services:reviews'))jobs.push(loadReviewsData({force:true}));
+                            await Promise.all(jobs);
+                            if(pattern==='services:*'||pattern.startsWith('services:catalog'))PawpalServices.subtabs.catalog?.renderCatalogTable?.();
+                            if(pattern==='services:*'||pattern.startsWith('services:reviews')){PawpalServices.subtabs.reviews?.renderReviewsTable?.();PawpalServices.subtabs.reviews?.updateReviewKPIs?.();}
                             PawpalServices.refreshStaffSchedule?.();
                             if (typeof refreshFn === 'function') {
                                 refreshFn();

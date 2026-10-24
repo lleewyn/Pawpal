@@ -11,6 +11,8 @@
     const { helpers, state } = PawpalOrders;
     const { formatVND, showToast, getSharedVouchersList, persistSharedVouchersData, matchSearch } = helpers;
 
+    const escapeText = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+
     // Render bảng danh sách voucher
     function renderVouchersTable() {
         const tbody = document.getElementById('vouchersTableBody');
@@ -68,22 +70,22 @@
             return `
                 <tr>
                     <td>
-                        <span class="voucher-code-badge">${v.code}</span>
+                        <span class="voucher-code-badge">${escapeText(v.code)}</span>
                     </td>
                     <td>
-                        <div style="font-weight: 600; color: var(--text-heading);">${v.title || v.name}</div>
-                        <div class="sub-meta-text">Áp dụng: ${v.target || 'Toàn bộ Shop'}</div>
+                        <div style="font-weight: 600; color: var(--text-heading);">${escapeText(v.title || v.name)}</div>
+                        <div class="sub-meta-text">Áp dụng: ${escapeText(v.target || 'Toàn bộ Shop')}</div>
                     </td>
                     <td>
-                        <div style="font-weight: 700; color: #B45309;">${v.discount || (v.type === 'percent' ? v.value + '%' : formatVND(v.value))}</div>
+                        <div style="font-weight: 700; color: #B45309;">${escapeText(v.discount || (v.type === 'percent' ? v.value + '%' : formatVND(v.value)))}</div>
 
                     </td>
                     <td>${formatVND(Number(v.minOrder)||0)}</td>
                     <td>${Number(v.points)||0}</td>
-                    <td>${v.validDate || v.expiry || "Không giới hạn"}</td>
+                    <td>${escapeText(v.validDate || v.expiry || "Không giới hạn")}</td>
                     <td>
                         <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
-                            <span>${usedVal} / ${limitVal}</span>
+                            <span>${escapeText(usedVal)} / ${escapeText(limitVal)}</span>
                             <span style="font-weight: 600;">${pct}%</span>
                         </div>
                         <div style="width: 100%; height: 6px; background-color: #ECF2EE; border-radius: 9px; overflow: hidden;">
@@ -93,11 +95,14 @@
 
                     <td>${statusBadge}</td>
                     <td style="text-align: center;">
-                        <button type="button" class="btn-action-trigger" onclick="PawpalOrdersModule.openVoucherActionModal('${v.code}')">•••</button>
+                        <button type="button" class="btn-action-trigger" data-voucher-code="${escapeText(v.code)}">•••</button>
                     </td>
                 </tr>
             `;
         }).join('');
+        tbody.querySelectorAll('[data-voucher-code]').forEach(button => {
+            button.addEventListener('click', () => window.PawpalOrdersModule.openVoucherActionModal(button.dataset.voucherCode));
+        });
     }
 
     // Đăng ký controller với Core

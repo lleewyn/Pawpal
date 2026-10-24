@@ -64,7 +64,7 @@
                         <label class="filter-label">Trạng thái</label>
                         <select class="admin-select" id="custFilterStatus">
                             <option value="ALL">Tất cả</option>
-                            <option value="ACTIVE">Thành viên</option>
+                            <option value="ACTIVE">Đang hoạt động</option>
                             <option value="TEMP">Vãng lai</option>
                             <option value="LOCKED">Bị khóa</option>
                         </select>
@@ -79,7 +79,7 @@
             <div id="custFilterContext" class="customer-filter-context" hidden aria-live="polite"></div>
             <div class="customer-table-meta"><span id="custResultsCount" aria-live="polite">Đang tải danh sách khách hàng…</span><span>Có thể cuộn ngang bảng</span></div>
             <!-- BẢNG DANH SÁCH DỮ LIỆU KHÁCH HÀNG -->
-            <div class="table-responsive-wrapper">
+            <div class="table-responsive-wrapper" role="region" tabindex="0" aria-label="Bảng khách hàng có cuộn">
             <table class="admin-table" id="customerDataTable">
                 <thead>
                     <tr>
@@ -333,7 +333,7 @@
 <option value="SUB">Trừ điểm</option>
 </select>
 <span aria-live="polite" id="pawpointResultCount"></span></div>
-<div class="v7-points-scroll"><table class="admin-table">
+<div class="v7-points-scroll" role="region" tabindex="0" aria-label="Lịch sử Pawpoint có cuộn"><table class="admin-table">
 <thead>
 <tr>
 <th>Thời gian</th>

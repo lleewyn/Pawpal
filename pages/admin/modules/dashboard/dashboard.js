@@ -38,6 +38,9 @@
     function getTodayDateString() { return toDateKey(new Date()); }
     function shiftDay(day,offset) { const d=new Date(day+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+offset);return d.toISOString().slice(0,10); }
     function financialPeriod() { const today=getTodayDateString(),d=new Date(today+'T00:00:00Z');return {from:shiftDay(today,-((d.getUTCDay()+6)%7)-7),to:today}; }
+    function calendarMonthRange(day){const d=new Date(day+'T00:00:00Z');return {from:new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),1)).toISOString().slice(0,10),to:new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1)).toISOString().slice(0,10)};}
+    let calendarRange=calendarMonthRange(getTodayDateString());
+    let loadedCalendarRange=null,todayAppointmentsCount=0,calendarAllTotal=0;
     let cashflow = null, cashflowError = null;
     async function loadCashflow(client,force) {
         const period=financialPeriod();
@@ -54,7 +57,7 @@
     let liveTickets = [];
     let liveProducts = [];
     let liveStaffList = [];
-    let liveChatConversations = [];
+    let liveChatCounts = {total:0,handover:0};
     let liveCustomersCount = 0;
     let livePetsCount = 0;
     let liveProfilesMap = new Map();
@@ -94,11 +97,12 @@
         }
 
         // Bỏ qua nếu dữ liệu còn trong TTL và không force
-        if (!force && !_dashLoadError && Date.now() - _dashLastFetchedAt < DASH_CACHE_TTL_MS) {
+        if (!force && !_dashLoadError && loadedCalendarRange===JSON.stringify(calendarRange) && Date.now() - _dashLastFetchedAt < DASH_CACHE_TTL_MS) {
             return;
         }
 
         const loadVersion = _dashInvalidationVersion;
+        const requestedRange=calendarRange?{...calendarRange}:null;
         _dashFetchPromise = Promise.resolve().then(async () => {
             try {
                 const client = getSupabaseClient();
@@ -107,9 +111,18 @@
                 }
 
                 const store = window.PawpalDataStore;
+                let runningReads=0;
+                const readQueue=[];
+                const withReadSlot=async job=>{
+                    if(runningReads>=3)await new Promise(resolve=>readQueue.push(resolve));
+                    else runningReads++;
+                    try{return await job();}
+                    finally{const next=readQueue.shift();if(next)next();else runningReads--;}
+                };
+
                 const read = (resource, query, ttlMs = DASH_CACHE_TTL_MS, params = {}) => {
                     const fetcher = async () => {
-                        const result = await query();
+                        const result = await withReadSlot(query);
                         if (result.error) throw result.error;
                         return result;
                     };
@@ -117,15 +130,15 @@
                         ? store.fetch(dashboardKey(resource, params), fetcher, { ttlMs, force, backgroundRevalidate: false })
                         : fetcher();
                 };
-                const readAll = async (table,columns,key='id') => {
+                const readAll = async (table,columns,key='id',configure=query=>query) => {
                     const data=[];
                     for(let offset=0;;offset+=500){
-                        const result=await client.from(table).select(columns).order(key).range(offset,offset+499);
+                        const result=await configure(client.from(table).select(columns)).order(key).range(offset,offset+499);
                         if(result.error)throw result.error;data.push(...result.data);
                         if(result.data.length<500)return {data};
                     }
                 };
-                const fetchProducts = () => readAll('product','id,product_name,status,product_variant(id,sku_variant,status,inventory(quantity_in_stock,minimum_stock))');
+                const fetchProducts = async () => {const result=await client.rpc('get_admin_dashboard_low_stock');if(result.error)throw result.error;return {data:result.data||[]};};
                 const fetchDashboardPayload = async () => {
                     const [
                         ordersRes,
@@ -134,19 +147,24 @@
                         productsRes,
                         custCountRes,
                         petCountRes,
-                        staffRes,
-                        servicesRes,
+                        todayCountRes,
                         chatsRes
                     ] = await Promise.all([
-                        read('orders', () => readAll('sales_order','id,order_status,created_at')),
-                        read('appointments', () => readAll('appointment','id,appointment_code,customer_id,pet_id,staff_id,scheduled_start_at,scheduled_end_at,appointment_status,note,items:appointment_item(id,service_id,name_snapshot,is_primary,staff_id,status)')),
-                        read('tickets', () => readAll('support_ticket','id,status,subject,priority,created_at')),
+                        read('orders', () => readAll('sales_order','id,order_status','id',query=>query.in('order_status',['pending','confirmed','processing','cho_xac_nhan','dang_xu_ly','PENDING','CONFIRMED','PROCESSING','CHO_XAC_NHAN','DANG_XU_LY']))),
+                        read('appointments', () => requestedRange?.all ? client.from('appointment').select('id,appointment_code,customer_id,pet_id,staff_id,scheduled_start_at,scheduled_end_at,appointment_status,note,items:appointment_item(id,service_id,name_snapshot,is_primary,staff_id,status)',{count:'exact'}).order('scheduled_start_at',{ascending:false}).order('id').range((requestedRange.page-1)*10,requestedRange.page*10-1) : readAll('appointment','id,appointment_code,customer_id,pet_id,staff_id,scheduled_start_at,scheduled_end_at,appointment_status,note,items:appointment_item(id,service_id,name_snapshot,is_primary,staff_id,status)','id',q=>q.gte('scheduled_start_at',requestedRange.from+'T00:00:00+07:00').lt('scheduled_start_at',requestedRange.to+'T00:00:00+07:00')),DASH_CACHE_TTL_MS,requestedRange),
+                        read('tickets', () => readAll('support_ticket','id,ticket_code,status,subject,priority,created_at','id',query=>query.not('status','in','(resolved,completed,closed,rejected,da_dong,da_giai_quyet,RESOLVED,COMPLETED,CLOSED,REJECTED,DA_DONG,DA_GIAI_QUYET)'))),
                         read('products', fetchProducts),
                         read('customer-count', () => client.from('customer').select('id', { count: 'exact', head: true }), store?.TTL.LIST || 120_000),
                         read('pet-count', () => client.from('pet_profile').select('id', { count: 'exact', head: true }), store?.TTL.LIST || 120_000),
-                        read('staff', () => readAll('staff','id,full_name,job_title,employment_status'), store?.TTL.LIST || 120_000),
-                        read('services', () => readAll('service','id,service_name'), store?.TTL.CATALOG || 300_000),
-                        read('chats', () => readAll('chat_conversation','id,status,assigned_staff_id'))
+                        read('today-appointments',()=>client.from('appointment').select('id',{count:'exact',head:true}).gte('scheduled_start_at',getTodayDateString()+'T00:00:00+07:00').lt('scheduled_start_at',shiftDay(getTodayDateString(),1)+'T00:00:00+07:00').not('appointment_status','in','(cancelled,da_huy,CANCELLED,DA_HUY)'),DASH_CACHE_TTL_MS,{day:getTodayDateString()}),
+                        read('chats', async () => {
+                            const [total,handover]=await Promise.all([
+                                client.from('chat_conversation').select('id',{count:'exact',head:true}),
+                                client.from('chat_conversation').select('id',{count:'exact',head:true}).or('assigned_staff_id.not.is.null,status.ilike.escalated,status.ilike.handover,status.ilike.agent\\_handover,status.ilike.agent\\_handling,status.ilike.human\\_agent')
+                            ]);
+                            if(total.error)throw total.error;if(handover.error)throw handover.error;
+                            return {data:{total:total.count||0,handover:handover.count||0}};
+                        })
                     ]);
 
                     // Chỉ lấy tên chủ nuôi và bé có trong lịch, không tải cả hai bảng hồ sơ.
@@ -161,22 +179,28 @@
                         }
                         return pages;
                     };
-                    const [profiles, pets] = await Promise.all([
+                    const staffIds=[...new Set((apptsRes.data||[]).flatMap(a=>[a.staff_id,...(a.items||[]).map(i=>i.staff_id)]).filter(Boolean))].sort();
+                    const serviceIds=[...new Set((apptsRes.data||[]).flatMap(a=>(a.items||[]).map(i=>i.service_id)).filter(Boolean))].sort();
+                    const [profiles, pets, staff, services] = await Promise.all([
                         readRelated('profiles', 'customer_profile', 'customer_id', 'customer_id, full_name', customerIds),
-                        readRelated('pets', 'pet_profile', 'id', 'id, pet_name', petIds)
+                        readRelated('pets', 'pet_profile', 'id', 'id, pet_name', petIds),
+                        readRelated('staff', 'staff', 'id', 'id,full_name,employment_status', staffIds),
+                        readRelated('services', 'service', 'id', 'id,service_name', serviceIds)
                     ]);
 
                     return {
+                        appointmentTotal:apptsRes.count||0,
+                        todayCount:todayCountRes.count||0,
                         orders: ordersRes.data || [],
-                        appts: (apptsRes.data || []).map(a=>({...a,service_id:(a.items.find(i=>i.is_primary)||a.items[0])?.service_id,service_name:(a.items.find(i=>i.is_primary)||a.items[0])?.name_snapshot,appointment_date:toDateKey(a.scheduled_start_at),appointment_time:new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(a.scheduled_start_at))})),
+                        appts: (apptsRes.data || []).map(a=>({...a,service_id:((a.items||[]).find(i=>i.is_primary)||(a.items||[])[0])?.service_id,service_name:((a.items||[]).find(i=>i.is_primary)||(a.items||[])[0])?.name_snapshot,appointment_date:toDateKey(a.scheduled_start_at),appointment_time:new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(a.scheduled_start_at))})),
                         tickets: (ticketsRes.data || []).map(t=>({...t,title:t.subject})),
                         products: productsRes.data || [],
                         custCount: custCountRes.count,
                         petCount: petCountRes.count,
                         profiles,
                         pets,
-                        staff: staffRes.data || [],
-                        services: servicesRes.data || [],
+                        staff,
+                        services,
                         chats: chatsRes.data || []
                     };
                 };
@@ -186,6 +210,9 @@
                 _dashLastFetchedAt = loadVersion === _dashInvalidationVersion ? Date.now() : 0;
                 liveSalesOrders = data.orders || [];
                 liveAppointments = data.appts || [];
+                loadedCalendarRange=JSON.stringify(requestedRange);
+                calendarAllTotal=data.appointmentTotal;
+                todayAppointmentsCount=data.todayCount;
                 liveTickets = data.tickets || [];
                 liveProducts = data.products || [];
 
@@ -195,7 +222,7 @@
                 })));
 
                 liveStaffList = data.staff || [];
-                liveChatConversations = data.chats || [];
+                liveChatCounts = data.chats || {total:0,handover:0};
                 const profiles = data.profiles || [];
                 liveCustomersCount = data.custCount ?? 0;
                 livePetsCount = data.petCount !== null && data.petCount !== undefined ? data.petCount : 0;
@@ -224,7 +251,7 @@
                 });
                 _dashLoadError = null;
             } catch (err) {
-                liveSalesOrders=[];liveAppointments=[];liveTickets=[];liveProducts=[];liveStaffList=[];liveChatConversations=[];
+                liveSalesOrders=[];liveAppointments=[];liveTickets=[];liveProducts=[];liveStaffList=[];liveChatCounts={total:0,handover:0};
                 liveProfilesMap.clear();livePetsMap.clear();cashflow=null;
                 console.error('[Dashboard] Lỗi nạp dữ liệu từ Supabase:', err);
                 _dashLoadError = err.message || 'Lỗi kết nối cơ sở dữ liệu';
@@ -271,7 +298,7 @@
         }
 
         const elBookings = document.getElementById('dashboardBookings');
-        if (elBookings) elBookings.textContent = _dashLoadError ? '—' : todayBookingsCount;
+        if (elBookings) elBookings.textContent = _dashLoadError ? '—' : todayAppointmentsCount;
 
         const elOrders = document.getElementById('dashboardOrders');
         if (elOrders) elOrders.textContent = _dashLoadError ? '—' : pendingOrders.length;
@@ -293,7 +320,7 @@
         const elComplaintsBadge = document.getElementById('dashboardComplaintsBadge');
         if (elComplaintsBadge) {
             elComplaintsBadge.textContent = _dashLoadError ? '—' : pendingTickets.length;
-            elComplaintsBadge.className = `admin-badge ${pendingTickets.length > 0 ? 'badge-danger' : 'badge-neutral'}`;
+            elComplaintsBadge.className = 'dash-value-btn dash-urgent';
         }
 
         const elComplaintsSub = document.getElementById('dashboardComplaintsSub');
@@ -308,7 +335,7 @@
         const elOrdersBadge = document.getElementById('dashboardOrdersBadge');
         if (elOrdersBadge) {
             elOrdersBadge.textContent = _dashLoadError ? '—' : pendingOrders.length;
-            elOrdersBadge.className = `admin-badge ${pendingOrders.length > 0 ? 'badge-warning' : 'badge-neutral'}`;
+            elOrdersBadge.className = 'dash-value-btn';
         }
 
         const elOrdersSub = document.getElementById('dashboardOrdersSub');
@@ -334,22 +361,29 @@
                 alertText.textContent = `Cảnh báo hệ thống: ${_dashLoadError}. Đang tạm dừng hiển thị số liệu đồng bộ.`;
                 alertBtn.textContent = 'Thử lại';
                 alertBtn.onclick = () => window.PawpalDashboard?.refresh();
-            } else if (urgentTicket) {
+            } else if (pendingTickets.length) {
                 alertBanner.style.display = 'flex';
-                alertBtn.textContent = 'Xử lý ngay';
-                const ticketCode = (urgentTicket.id || '').slice(0, 8).toUpperCase();
-                const ticketTitle = urgentTicket.title || 'Khiếu nại khách hàng';
-                const createdTime = urgentTicket.created_at ? new Date(urgentTicket.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '';
-                const timeText = createdTime ? ` lúc ${createdTime}` : '';
-                alertText.textContent = `Khiếu nại khẩn cấp #${ticketCode}: ${ticketTitle}${timeText}. Tổng ${pendingTickets.length} khiếu nại đang chờ.`;
-                alertBtn.onclick = () => {
-                    sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-detail');
-                    sessionStorage.setItem('pawpal_admin_complaint_selected_id', urgentTicket.id);
-                    sessionStorage.setItem('pawpal_admin_complaint_filter_status', 'pending');
-                    const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
-                        .find(b => b.getAttribute('data-title') === 'Khiếu nại');
-                    if (target) target.click();
+                alertText.replaceChildren();
+                const count=document.createElement('strong');
+                count.textContent=`${pendingTickets.length} khi\u1ebfu n\u1ea1i \u0111ang ch\u1edd`;
+                const detail=document.createElement('span');
+                const ticket=urgentTicket || pendingTickets[0];
+                const code=ticket.ticket_code || (ticket.id||'').slice(0,8).toUpperCase();
+                detail.textContent=`${ticket.title || 'Khi\u1ebfu n\u1ea1i c\u1ea7n ti\u1ebfp nh\u1eadn'}${code?' #'+code:''}.`;
+                alertText.append(count,detail);
+                alertBtn.textContent='Xem vi\u1ec7c c\u1ea7n x\u1eed l\u00fd';
+                alertBtn.onclick=()=>{
+                    sessionStorage.setItem('pawpal_admin_complaint_active_subtab','tab-complaint-detail');
+                    sessionStorage.setItem('pawpal_admin_complaint_selected_id',ticket.id);
+                    if(window.PawpalComplaints?.state){
+                        window.PawpalComplaints.state.currentTicketId=ticket.id;
+                        window.PawpalComplaints.state.currentActiveTicket=null;
+                    }
+
+                    const target=Array.from(document.querySelectorAll('.sidebar-menu-btn')).find(b=>b.getAttribute('data-title')==='Khi\u1ebfu n\u1ea1i');
+                    if(target)target.click();
                 };
+
             } else {
                 alertBanner.style.display = 'none';
             }
@@ -447,7 +481,7 @@
             const safeName = escapeHtml(prod.name);
 
             return `
-                <button type="button" class="dashboard-stock-row" data-sku="${safeSku}" data-dashboard-module="Bán hàng">
+                <button type="button" class="dashboard-stock-row dash-stock-row" data-sku="${safeSku}" data-dashboard-module="Bán hàng">
                     <span><strong>${safeName}</strong><small>SKU: ${safeSku}</small></span>
                     <span class="dashboard-stock-count ${badgeClass}">${badgeText}</span>
                 </button>
@@ -500,6 +534,7 @@
         let shownMonth = new Date(today.getFullYear(), today.getMonth(), 1);
         let selectedDate = new Date(today);
         let calendarView = 'month';
+        let allPage=1;
 
         // Biến đổi các record liveAppointments 100% thực tế
         function getMappedBookings() {
@@ -565,13 +600,30 @@
         }
 
         function renderAgenda(date) {
-            const dayBookings = bookingsOnDate(date);
+            const weekStart=new Date(date);weekStart.setDate(weekStart.getDate()-(weekStart.getDay()+6)%7);
+            const weekEnd=new Date(weekStart);weekEnd.setDate(weekEnd.getDate()+6);
+            const dayBookings=(calendarView==='all'?getMappedBookings():calendarView==='week'?getMappedBookings().filter(b=>b.date>=calendarKey(weekStart)&&b.date<=calendarKey(weekEnd)):bookingsOnDate(date)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
             const isToday = calendarKey(date) === calendarKey(today);
             const dateFormatted = new Intl.DateTimeFormat('vi-VN', {
                 weekday: 'long', day: 'numeric', month: 'long'
             }).format(date);
             agendaTitle.textContent = isToday ? `${dateFormatted} · Hôm nay` : dateFormatted;
 
+            if(calendarView==='week')agendaTitle.textContent=new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit'}).format(weekStart)+' \u2013 '+new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(weekEnd);
+            let pager=document.getElementById('dashboardAllCalendarPager');
+            if(!pager){pager=document.createElement('div');pager.id='dashboardAllCalendarPager';pager.className='admin-pagination-bar';bookingList.after(pager);}
+            pager.replaceChildren();
+            if(calendarView==='all'&&!_dashLoadError){
+                const pages=Math.max(1,Math.ceil(calendarAllTotal/10));
+                for(const [label,target,disabled] of [['<',allPage-1,allPage<=1],[String(allPage)+' / '+pages,allPage,true],['>',allPage+1,allPage>=pages]]){
+                    const btn=document.createElement('button');btn.type='button';btn.className='pagination-btn';btn.textContent=label;btn.disabled=disabled;btn.onclick=()=>{allPage=target;renderCalendar();};pager.append(btn);
+                }
+            }
+            const count=document.getElementById('dashAppointmentCount');
+            if(count)count.textContent=_dashLoadError?'\u2014':`${calendarView==='all'?calendarAllTotal:dayBookings.length} l\u1ecbch h\u1eb9n`;
+            if(_dashLoadError){bookingList.textContent='Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c l\u1ecbch h\u1eb9n. Vui l\u00f2ng l\u00e0m m\u1edbi.';return;}
+            if(calendarView==='all')agendaTitle.textContent='T\u1ea5t c\u1ea3 l\u1ecbch h\u1eb9n';
+            if (!dayBookings.length && calendarView==='week') {bookingList.textContent='Tu\u1ea7n n\u00e0y ch\u01b0a c\u00f3 l\u1ecbch h\u1eb9n.';return;}
             if (!dayBookings.length) {
                 bookingList.innerHTML = '<p class="dashboard-agenda-empty">Ngày này chưa có lịch hẹn.</p>';
                 return;
@@ -586,8 +638,8 @@
                 const safeBadge = escapeHtml(booking.badge || 'badge-neutral');
 
                 return `
-                <button type="button" class="dashboard-booking-row" data-booking-idx="${idx}">
-                    <time>${safeTime}</time>
+                <button type="button" class="dashboard-booking-row dash-appointment-row" data-booking-idx="${idx}">
+                    <time>${safeTime}${calendarView==='week'||calendarView==='all'?`<small class="dashboard-booking-date">${escapeHtml(new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit'}).format(dateFromKey(booking.date)))}</small>`:''}</time>
                     <span class="dashboard-booking-detail"><strong>${safePet} · ${safeCustomer}</strong><small>${safeService}</small></span>
                     <span class="admin-badge ${safeBadge}">${safeStatus}</span>
                 </button>`;
@@ -604,6 +656,14 @@
         }
 
         function renderCalendar() {
+            const desired=calendarView==='all'?{all:true,page:allPage}:calendarView==='week'?(()=>{const start=new Date(selectedDate);start.setDate(start.getDate()-(start.getDay()+6)%7);const end=new Date(start);end.setDate(end.getDate()+7);return {from:calendarKey(start),to:calendarKey(end)};})():calendarView==='day'?{from:calendarKey(selectedDate),to:calendarKey(new Date(selectedDate.getFullYear(),selectedDate.getMonth(),selectedDate.getDate()+1))}:calendarMonthRange(calendarKey(shownMonth));
+            calendarRange=desired;
+            if(getSupabaseClient() && loadedCalendarRange!==JSON.stringify(desired) && !_dashLoadError){
+                bookingList.textContent='\u0110ang t\u1ea3i l\u1ecbch...';
+                loadDashboardData().then(()=>{if(document.getElementById('dashboardCalendarDays')===daysGrid)renderCalendar();});
+                return;
+            }
+
             const year = shownMonth.getFullYear();
             const month = shownMonth.getMonth();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -623,7 +683,7 @@
             const bookedDateKeys = new Set(allBookings.map(b => b.date).filter(Boolean));
 
             const calendarDates = [];
-            if (calendarView === 'month') {
+            if (calendarView === 'month' || calendarView === 'all') {
                 for (let blank = 0; blank < mondayFirstOffset; blank += 1) calendarDates.push(null);
                 for (let day = 1; day <= daysInMonth; day += 1) calendarDates.push(new Date(year, month, day));
                 while (calendarDates.length % 7 !== 0) calendarDates.push(null);
@@ -796,11 +856,12 @@
 
             document.querySelectorAll('[data-calendar-view]').forEach((button) => {
                 const active = button.dataset.calendarView === calendarView;
-                button.classList.toggle('is-active', active);
+                button.classList.toggle('is-active', active);button.classList.toggle('active',active);
                 button.setAttribute('aria-selected', String(active));
             });
             calendarAgenda?.classList.toggle('is-week-view', calendarView === 'week');
             calendarAgenda?.classList.toggle('is-day-view', calendarView === 'day');
+            ['dashboardCalendarPrev','dashboardCalendarNext'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=calendarView==='all';});
             renderAgenda(selectedDate);
 
             daysGrid.querySelectorAll('[data-calendar-date]').forEach((button) => {
@@ -858,6 +919,7 @@
         document.querySelectorAll('[data-calendar-view]').forEach((button) => {
             button.addEventListener('click', () => {
                 calendarView = button.dataset.calendarView;
+                if(calendarView==='all')allPage=1;
                 shownMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
                 renderCalendar();
             });
@@ -874,11 +936,8 @@
         const todayStr = getTodayDateString();
 
         // 1. Chỉ số Chatbot
-        const totalSessions = liveChatConversations.length;
-        const handoverSessions = liveChatConversations.filter(c => {
-            const s = (c.status || '').toUpperCase();
-            return Boolean(c.assigned_staff_id) || ['ESCALATED','HANDOVER','AGENT_HANDOVER','AGENT_HANDLING','HUMAN_AGENT'].includes(s);
-        }).length;
+        const totalSessions = liveChatCounts.total;
+        const handoverSessions = liveChatCounts.handover;
         const aiSessions = Math.max(0, totalSessions - handoverSessions);
         // D-05: 0 phiên hiển thị '—' thay vì 100%
         const aiPercent = totalSessions > 0 ? Math.round((aiSessions / totalSessions) * 100) : 0;
@@ -902,6 +961,15 @@
         const elHandoverSessions = document.getElementById('dashboardHandoverSessionsCount');
         if (elHandoverSessions) elHandoverSessions.textContent = `${handoverSessions} phiên`;
 
+        const chatWrap=document.querySelector('.dashboard-chatbot-chart-wrap');
+        if(chatWrap){
+            let empty=document.getElementById('dashboardChatEmpty');
+            if(!empty){empty=document.createElement('p');empty.id='dashboardChatEmpty';empty.className='dashboard-data-empty';empty.setAttribute('role','status');chatWrap.after(empty);}
+            const unavailable=_dashLoadError || totalSessions===0;
+            chatWrap.hidden=!!unavailable;
+            empty.hidden=!unavailable;
+            empty.textContent=_dashLoadError?'Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c d\u1eef li\u1ec7u h\u1ed9i tho\u1ea1i.':'Ch\u01b0a c\u00f3 d\u1eef li\u1ec7u h\u1ed9i tho\u1ea1i.';
+        }
         const elTotalChat = document.getElementById('dashboardTotalChatSessions');
         if (elTotalChat) elTotalChat.textContent = `${totalSessions} phiên trò chuyện`;
 
@@ -946,6 +1014,13 @@
         root.querySelectorAll('[data-dashboard-module]').forEach((control) => {
             if (control.dataset.dashboardBound === 'true') return;
             control.dataset.dashboardBound = 'true';
+            if (control.tagName !== 'BUTTON' && control.tagName !== 'A') {
+                control.setAttribute('role', 'button');
+                control.tabIndex = 0;
+                control.addEventListener('keydown', event => {
+                    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); control.click(); }
+                });
+            }
             control.addEventListener('click', () => {
                 const moduleName = control.getAttribute('data-dashboard-module');
                 const action = control.getAttribute('data-action');
@@ -996,11 +1071,12 @@
                 .find(button => button.getAttribute('data-title') === moduleName);
             if (!target) return;
 
-            window.addEventListener('admin:module-show', (event) => {
-                if (event.detail?.module === moduleName) {
-                    document.getElementById(buttonId)?.click();
-                }
-            }, { once: true });
+            const onModuleShow = (event) => {
+                if (event.detail?.module !== moduleName) return;
+                window.removeEventListener('admin:module-show', onModuleShow);
+                document.getElementById(buttonId)?.click();
+            };
+            window.addEventListener('admin:module-show', onModuleShow);
             target.click();
         };
 
@@ -1136,7 +1212,7 @@
     let dashboardRealtimeSub = null;
     const dashboardTableResources = {
         sales_order: ['orders'],
-        appointment: ['appointments'],
+        appointment: ['today-appointments','appointments'],
         appointment_item: ['appointments'],
         payment: ['cashflow'],
         refund_transaction: ['cashflow'],

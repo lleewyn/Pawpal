@@ -15,3 +15,9 @@
 .customer-modal-v7 .admin-input[aria-invalid=true]{border-color:#ba4745}
 .customer-modal-v7 .admin-badge{background:transparent!important;border:0!important;padding:0;color:#526359;height:auto;font-size:12px}
 @media(max-width:600px){.customer-modal-v7 .admin-modal-card{padding:24px 20px}.customer-modal-v7 .form-row-two-col{grid-template-columns:1fr}}
+/* Shared customer forms follow the repository's 9px control standard. */
+.customer-modal-v7 .admin-modal-card,
+.customer-modal-v7 .admin-input,
+.customer-modal-v7 .admin-select,
+.customer-modal-v7 .admin-btn,
+.customer-modal-v7 .btn-modal-close {border-radius:var(--admin-radius,9px);font-family:Inter,'Segoe UI',Arial,sans-serif}

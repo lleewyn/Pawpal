@@ -321,8 +321,9 @@
     function renderConversationsList() {
         const container = document.getElementById('conversationsListContainer');
         if (!container) return;
-        if (PawpalChatbot.state.liveLoadError) { container.textContent=PawpalChatbot.state.liveLoadError; return; }
+        if (PawpalChatbot.state.liveLoadError) { container.textContent=PawpalChatbot.state.liveLoadError;document.getElementById('chatInboxPager')?.replaceChildren(); return; }
         if (!PawpalChatbot.state.liveLoaded) {
+            document.getElementById('chatInboxPager')?.replaceChildren();
             if (!container.querySelector('.skeleton-text')) container.innerHTML=Array.from({length:3},()=>'<div style="padding:16px;"><span class="skeleton-text" style="width:65%;"></span><span class="skeleton-text" style="width:90%;margin-top:10px;"></span></div>').join('');
             return;
         }
@@ -333,19 +334,11 @@
         const currentConversation = PawpalChatbot.state?.currentConversation;
         const searchKeyword = (document.getElementById('inboxSearchInput')?.value || '').toLowerCase().trim();
 
-        const filtered = liveConversations.filter(c => {
-            if (currentFilterTab === 'urgent' && c.category !== 'urgent') return false;
-            if (currentFilterTab === 'active' && !c.isHandover) return false;
-            if (searchKeyword) {
-                return c.customerName.toLowerCase().includes(searchKeyword) || c.phone.includes(searchKeyword);
-            }
-            return true;
-        });
-
-        const urgentCount = liveConversations.filter(c => c.category === 'urgent').length;
-        const activeCount = liveConversations.filter(c => c.isHandover).length;
-        const allCount = liveConversations.length;
-
+        const filtered = liveConversations;
+        const meta=PawpalChatbot.state.inboxPage;
+        inboxPage=meta?.page||1;
+        const urgentCount=meta?.counts?.urgent||0,activeCount=meta?.counts?.active||0,allCount=meta?.counts?.all||0;
+        document.getElementById('chatInboxPager')?.replaceChildren();
         const countBadge = document.getElementById('urgentBadgeCount');
         if (countBadge) countBadge.textContent = urgentCount;
 
@@ -374,13 +367,13 @@
         }
 
         container.innerHTML = '';
-        const pages=Math.max(1,Math.ceil(filtered.length/10));inboxPage=Math.min(inboxPage,pages);
+        const pages=Math.max(1,Math.ceil((meta?.total||0)/10));inboxPage=Math.min(inboxPage,pages);
         const pager=document.getElementById('chatInboxPager');pager?.replaceChildren();
         for(const [text,disabled,delta] of [['<',inboxPage===1,-1],[String(inboxPage),true,0],['>',inboxPage===pages,1]]){
             const b=document.createElement('button');b.type='button';b.className='admin-btn admin-btn-secondary';b.textContent=text;b.disabled=disabled;
-            b.onclick=()=>{inboxPage+=delta;sessionStorage.setItem('pawpal_chat_inbox_page',inboxPage);renderConversationsList();};pager?.append(b);
+            b.onclick=()=>{inboxPage+=delta;sessionStorage.setItem('pawpal_chat_inbox_page',inboxPage);PawpalChatbot.loadInboxSummary({page:inboxPage});};pager?.append(b);
         }
-        filtered.slice((inboxPage-1)*10,inboxPage*10).forEach(conv => {
+        filtered.forEach(conv => {
             const isActive = currentConversation && currentConversation.id === conv.id;
             const lastMsg = (conv.messages && conv.messages.length > 0) ? conv.messages[conv.messages.length - 1] : null;
             const snippet = lastMsg ? (lastMsg.isToxic ? '[Nội dung đã được che mờ]' : formatSnippetPreview(lastMsg.text)) : '...';
@@ -1023,7 +1016,7 @@
                 sessionStorage.setItem('pawpal_admin_chatbot_filter_tab', filter);
                 document.querySelectorAll('.inbox-tab-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                renderConversationsList();
+                PawpalChatbot.loadInboxSummary({page:1});
             });
         });
 
@@ -1032,7 +1025,7 @@
         document.getElementById('inboxSearchInput')?.addEventListener('input', () => {
             clearTimeout(inboxSearchTimer);
             inboxSearchTimer = setTimeout(() => {
-                renderConversationsList();
+                PawpalChatbot.loadInboxSummary({page:1});
             }, 300);
         });
 

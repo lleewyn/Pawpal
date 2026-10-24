@@ -1245,3 +1245,68 @@
     padding: 0;
     margin-top: 6px;
 }
+/* V7: shared metrics strip and restrained workspace typography. */
+.dashboard-module .dashboard-kpi-grid {
+    gap: 0;
+    background: var(--surface-white);
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    overflow: hidden;
+}
+.dashboard-module .dashboard-kpi-card {
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border-neutral);
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    min-height: 78px;
+    padding: 12px 16px;
+}
+.dashboard-module .dashboard-kpi-card:last-child { border-right: none; }
+.dashboard-module .dashboard-widget-title { border-bottom: none; padding-bottom: 0; font-size: 14px; }
+.dashboard-module .quick-info-desc { display: none; }
+.dashboard-module .dashboard-widget { box-shadow: none; }
+.dashboard-module .admin-badge { background: transparent; padding: 0; }
+.dashboard-module .dashboard-kpi-link:focus-visible { outline: 2px solid #236B48; outline-offset: -3px; }
+@media (max-width: 700px) {
+    .dashboard-module .dashboard-kpi-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .dashboard-module .dashboard-kpi-card { border-bottom: 1px solid var(--border-neutral); }
+    .dashboard-module .dashboard-kpi-card:nth-child(2n) { border-right: none; }
+    .dashboard-module .dashboard-kpi-card:last-child { border-bottom: none; }
+}
+/* Dashboard V8: quiet enterprise workspace, preserving live data components. */
+.dashboard-module { gap: 15px; color: #283d31; font-size: 13px; }
+.dashboard-module .dashboard-kpi-grid { margin-bottom: 0; }
+.dashboard-module .kpi-label { font-size: 12px; color: #62776a; }
+.dashboard-module .kpi-val { font-size: 25px; line-height: 1.14; letter-spacing: -.6px; font-weight: 700; }
+.dashboard-module .dashboard-main-grid { grid-template-columns: minmax(285px,.75fr) minmax(0,1.75fr); gap: 15px; align-items: stretch; }
+.dashboard-module .dashboard-widget { padding: 16px 17px; }
+.dashboard-module .dashboard-widget-header { gap: 10px; margin-bottom: 14px; }
+.dashboard-module .dashboard-widget-title { font-size: 14px; font-weight: 700; letter-spacing: 0; margin: 0; color: #28533e; }
+.dashboard-module .dashboard-text-link { font-size: 12px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.dashboard-module .dashboard-priority-row { padding: 15px 0; font-size: 13px; }
+.dashboard-module .dashboard-priority-row small { font-size: 11px; color: #728377; margin-top: 3px; }
+.dashboard-module .dashboard-stock-row { padding: 12px 0; }
+.dashboard-module .dashboard-stock-count { background: transparent; border: none; font-size: 11px; }
+.dashboard-module .dashboard-quick-actions-bar { padding: 12px 17px; gap: 14px; }
+.dashboard-module .quick-info-title { font-size: 13px; font-weight: 600; }
+.dashboard-module .dashboard-calendar-agenda { grid-template-columns: minmax(260px,.88fr) minmax(270px,1.12fr); gap: 18px; }
+.dashboard-module .dashboard-analytics-grid { grid-template-columns: 1fr 1fr; gap: 15px; }
+.dashboard-module .dashboard-chart-legend { flex-wrap: wrap; justify-content: flex-end; }
+.dashboard-module .dashboard-chatbot-chart-wrap { flex-wrap: wrap; }
+.dashboard-module .dashboard-calendar-agenda.is-week-view,
+.dashboard-module .dashboard-calendar-agenda.is-day-view { grid-template-columns: minmax(0,1fr); }
+@media(max-width:1260px) {
+ .dashboard-module .dashboard-main-grid { grid-template-columns: 1fr; }
+ .dashboard-module .dashboard-calendar-agenda { grid-template-columns: 1fr 1fr; }
+}
+@media(max-width:850px) {
+ .dashboard-module .dashboard-calendar-agenda,
+ .dashboard-module .dashboard-analytics-grid { grid-template-columns: 1fr; }
+ .dashboard-module .dashboard-quick-actions-bar { align-items: flex-start; flex-direction: column; }
+}
+.dashboard-module { font-family: Inter, 'Segoe UI', Arial, sans-serif; }
+.dashboard-module .dashboard-chatbot-chart-wrap[hidden], .dashboard-module .dashboard-data-empty[hidden] { display: none !important; }
+.dashboard-module .dashboard-data-empty { padding: 22px 0; min-height: 117px; color: var(--text-muted); font-size: 12px; }

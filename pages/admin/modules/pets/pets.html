@@ -32,9 +32,7 @@
             <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
-                    <div class="search-box-wrapper">
-                        <input type="text" class="admin-input search-input" id="petSearchInput" placeholder="Tìm tên bé, Mã PET, giống loài, tên chủ, SĐT...">
-                    </div>
+                    <div class="pet-workspace-title">Danh s&#225;ch th&#250; c&#432;ng</div>
 
                     <div class="filter-actions-right">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportPetReport">Xuất file</button>
@@ -43,6 +41,9 @@
                 </div>
 
                 <div class="filter-row-bottom">
+<div class="search-box-wrapper">
+                        <input type="text" class="admin-input search-input" id="petSearchInput" placeholder="Tìm tên bé, Mã PET, giống loài, tên chủ, SĐT...">
+                    </div>
                     <div class="filter-dropdown-group">
                         <label class="filter-label">Loài</label>
                         <select class="admin-select" id="petFilterSpecies">
@@ -521,17 +522,17 @@
                 <div class="form-row-two-col">
                     <div class="form-group">
                         <label class="form-label">Tên bé cưng</label>
-                        <input type="text" class="admin-input" id="weighPetName" value="Milu" readonly style="background-color: #F1F5F3;">
+                        <input type="text" class="admin-input" id="weighPetName" readonly style="background-color: #F1F5F3;">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Cân nặng trước đó</label>
-                        <input type="text" class="admin-input" id="weighPetOldWeight" value="8.5 kg" readonly style="background-color: #F1F5F3;">
+                        <input type="text" class="admin-input" id="weighPetOldWeight" readonly style="background-color: #F1F5F3;">
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Cân nặng thực tế (kg) <span style="color: #DC2626;">*</span></label>
-                    <input type="number" min="0.1" step="0.1" class="admin-input" id="weighPetNewWeight" value="8.6" required style="font-size: 18px; font-weight: 700; color: #236B48;">
+                    <input type="number" min="0.1" step="0.1" class="admin-input" id="weighPetNewWeight" required style="font-size: 18px; font-weight: 700; color: #236B48;">
                 </div>
 
                 <div class="form-group">
@@ -551,19 +552,19 @@
                     <div style="border: 1px solid var(--border-neutral); border-radius: var(--admin-radius); padding: 12px; background-color: transparent; font-size: 13px;">
                         <div style="display: flex; justify-content: space-between; padding: 4px 0;">
                             <span>Phân khúc cân nặng:</span>
-                            <strong id="weighTierResult" style="color: #236B48;">5 - 10 kg</strong>
+                            <strong id="weighTierResult" style="color: #236B48;">&mdash;</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 4px 0;">
                             <span>Đơn giá gói Tắm sấy toàn diện:</span>
-                            <strong id="weighSpaPriceResult">250.000đ</strong>
+                            <strong id="weighSpaPriceResult">&mdash;</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 4px 0;">
                             <span>Đơn giá Cắt tỉa tạo kiểu:</span>
-                            <strong id="weighGroomPriceResult">350.000đ</strong>
+                            <strong id="weighGroomPriceResult">&mdash;</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 4px 0;">
                             <span>Đơn giá phòng Pet Hotel theo ngày:</span>
-                            <strong id="weighHotelPriceResult">300.000đ</strong>
+                            <strong id="weighHotelPriceResult">&mdash;</strong>
                         </div>
                     </div>
                 </div>
@@ -590,22 +591,22 @@
                 <div class="form-row-two-col">
                     <div class="form-group">
                         <label class="form-label">Khách hàng nhận tin</label>
-                        <input type="text" class="admin-input" id="reminderModalOwner" value="Nguyễn Văn An" readonly style="background-color: #F1F5F3;">
+                        <input type="text" class="admin-input" id="reminderModalOwner" readonly style="background-color: #F1F5F3;">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Bé cưng</label>
-                        <input type="text" class="admin-input" id="reminderModalPet" value="Milu" readonly style="background-color: #F1F5F3;">
+                        <input type="text" class="admin-input" id="reminderModalPet" readonly style="background-color: #F1F5F3;">
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Chọn mẫu tin nhắn chăm sóc</label>
                     <select class="admin-select" id="reminderTemplateSelect">
-                        <option value="SPA_BATH">Mẫu 1: Nhắc tắm sấy và vệ sinh định kỳ (Tặng voucher 10% Spa)</option>
-                        <option value="GROOM">Mẫu 2: Nhắc cắt tỉa tạo kiểu lông (Chải lông xả rối và cắt móng)</option>
-                        <option value="HOTEL">Mẫu 3: Mời đặt trước phòng Pet Hotel cuối tuần và dịp nghỉ lễ</option>
+                        <option value="SPA_BATH">Nhắc tắm sấy định kỳ</option>
+                        <option value="GROOM">Nhắc cắt tỉa</option>
+                        <option value="HOTEL">Nhắc đặt phòng thú cưng</option>
 
-                        <option value="SHOP">Mẫu 5: Nhắc mua lại thức ăn hạt dinh dưỡng và Cát vệ sinh</option>
+                        <option value="SHOP">Nhắc mua thức ăn và cát vệ sinh</option>
                     </select>
                 </div>
 
@@ -614,11 +615,11 @@
                     <div style="display: flex; gap: 16px; font-size: 13px;">
                         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                             <input type="radio" name="reminderChannel" value="ZALO" checked accent-color="#236B48">
-                            <span>Zalo ZNS và Official Account</span>
+                            <span>Zalo</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                            <input type="radio" name="reminderChannel" value="SMS" accent-color="#236B48">
-                            <span>SMS Brandname PawPal</span>
+                            <input type="radio" name="reminderChannel" value="PHONE" accent-color="#236B48">
+                            <span>Điện thoại</span>
                         </label>
                     </div>
                 </div>
@@ -628,7 +629,7 @@
                         <label class="form-label" style="margin-bottom: 0;">Nội dung tin nhắn gửi khách</label>
                         <button type="button" class="btn-text-action" id="btnCopyReminderText">Sao chép nội dung</button>
                     </div>
-                    <textarea class="admin-input textarea-note" rows="4" id="reminderMessageContent">PawPal mến chào Sen Nguyễn Văn An! Bé Milu đã hơn 2 tuần chưa ghé spa làm đẹp rồi đó ạ. PawPal gửi tặng bé voucher ưu đãi 10% dịch vụ Spa trong tuần này. Sen đặt lịch ngay cho bé nhé!</textarea>
+                    <textarea class="admin-input textarea-note" rows="4" id="reminderMessageContent"></textarea>
                 </div>
 
                 <div class="modal-actions-footer" style="display: flex; justify-content: space-between; align-items: center;">
@@ -650,16 +651,16 @@
     <div class="admin-modal-backdrop" id="modalViewCareLogDetail">
         <div class="admin-modal-card" style="width: 720px; max-width: 95vw;">
             <div class="admin-modal-header">
-                <span class="admin-modal-title" id="carelogModalTitle">Chi tiết ca làm: Tắm sấy dưỡng ẩm và Cắt mài móng</span>
+                <span class="admin-modal-title" id="carelogModalTitle">Chi ti&#7871;t nh&#7853;t k&#253;</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalViewCareLogDetail">Đóng</button>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 16px;">
                 <div style="font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <span id="carelogModalTime">Thời gian: 25/09/2026 14:30</span> • <span id="carelogModalGroomer">KTV: Hoàng Tuấn</span>
+                        <span id="carelogModalTime">&mdash;</span> • <span id="carelogModalGroomer">&mdash;</span>
                     </div>
-                    <span class="admin-badge badge-success" id="carelogModalBadge">Đã gửi app cho chủ</span>
+                    <span class="admin-badge badge-success" id="carelogModalBadge">&mdash;</span>
                 </div>
 
                 <div>
@@ -667,57 +668,23 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <div style="display: flex; flex-direction: column; gap: 4px;">
                             <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Trước khi làm:</span>
-                            <img src="/assets/images/publics/dogcute3.jpg" id="carelogModalImgBefore" style="width: 100%; height: 220px; object-fit: cover; object-position: center; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);" alt="Trước khi làm">
+                            <img hidden id="carelogModalImgBefore" style="width: 100%; height: 220px; object-fit: cover; object-position: center; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);" alt="Trước khi làm">
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 4px;">
                             <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Sau khi hoàn thiện:</span>
-                            <img src="/assets/images/publics/dogcute1.jpg" id="carelogModalImgAfter" style="width: 100%; height: 220px; object-fit: cover; object-position: center; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);" alt="Sau khi hoàn thiện">
+                            <img hidden id="carelogModalImgAfter" style="width: 100%; height: 220px; object-fit: cover; object-position: center; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);" alt="Sau khi hoàn thiện">
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 8px;">Kết quả kiểm tra 4 mục vệ sinh kèm ảnh chứng minh:</div>
-                    <div class="modal-checklist-grid">
-                        <div class="modal-checklist-item">
-                            <img src="/assets/images/publics/cat5.jpg" id="modalChkImgEar" class="modal-chk-img" alt="Ảnh tai">
-                            <div class="modal-chk-info">
-                                <span class="modal-chk-title">1. Tai sạch sẽ, không viêm</span>
-                                <span class="modal-chk-status-text">Đã vệ sinh sạch bóng</span>
-                            </div>
-                        </div>
-
-                        <div class="modal-checklist-item">
-                            <img src="/assets/images/publics/handpaw.jpg" id="modalChkImgNail" class="modal-chk-img" alt="Ảnh móng">
-                            <div class="modal-chk-info">
-                                <span class="modal-chk-title">2. Móng mài tròn nhẵn</span>
-                                <span class="modal-chk-status-text">Đã mài tròn, không sắc nhọn</span>
-                            </div>
-                        </div>
-
-                        <div class="modal-checklist-item">
-                            <img src="/assets/images/publics/spa.jpg" id="modalChkImgAnal" class="modal-chk-img" alt="Ảnh tuyến hôi">
-                            <div class="modal-chk-info">
-                                <span class="modal-chk-title">3. Tuyến hôi sạch sẽ</span>
-                                <span class="modal-chk-status-text">Đã vắt sạch, khử mùi tốt</span>
-                            </div>
-                        </div>
-
-                        <div class="modal-checklist-item">
-                            <img src="/assets/images/publics/pet2.jpg" id="modalChkImgSkin" class="modal-chk-img" alt="Ảnh da lông">
-                            <div class="modal-chk-info">
-                                <span class="modal-chk-title">4. Da lông thông thoáng</span>
-                                <span class="modal-chk-status-text">Không có bọ ve hoặc nấm</span>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="drawer-section-title">T&#236;nh tr&#7841;ng ghi nh&#7853;n</div>
+                    <p id="carelogModalCondition">&mdash;</p>
                 </div>
 
                 <div>
                     <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 6px;">Lời dặn dò gửi chủ nuôi:</div>
-                    <div id="carelogModalMessage" style="font-size: 13px; color: var(--text-main); line-height: 1.6;">
-                        Lông vùng tai bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.
-                    </div>
+                    <div id="carelogModalMessage" style="font-size: 13px; color: var(--text-main); line-height: 1.6;">&mdash;</div>
                 </div>
 
                 <div class="modal-actions-footer">
@@ -738,7 +705,7 @@
             </div>
 
             <form id="formEditPetProfile" onsubmit="return false;">
-                <input type="hidden" id="editPetCode" value="PET-001">
+                <input type="hidden" id="editPetCode">
 
                 <div class="form-group">
                     <label class="form-label">Chủ sở hữu</label>
@@ -858,6 +825,7 @@
                 <div class="form-group">
                     <label class="form-label">Địa chỉ liên hệ</label>
                     <input type="text" class="admin-input" id="quickOwnerAddress" placeholder="Ví dụ: 45 Lê Duẩn, Bến Nghé, Quận 1">
+                </div><div class="form-group"><label class="form-label" for="quickOwnerProvince">T&#7881;nh ho&#7863;c th&#224;nh ph&#7889;</label><input type="text" class="admin-input" id="quickOwnerProvince" placeholder="Nh&#7853;p khi c&#243; &#273;&#7883;a ch&#7881;">
                 </div>
                 <div class="modal-actions-footer">
                     <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalQuickAddOwner">Hủy</button>
@@ -885,8 +853,8 @@
                 </div>
 
                 <div class="thermal-tag-pet-hero">
-                    <div class="thermal-pet-name" id="tagPreviewPetName">MILU</div>
-                    <div class="thermal-pet-info" id="tagPreviewPetInfo">Chó Corgi • 8.5 kg • Đực</div>
+                    <div class="thermal-pet-name" id="tagPreviewPetName">&mdash;</div>
+                    <div class="thermal-pet-info" id="tagPreviewPetInfo">&mdash;</div>
                 </div>
 
                 <div class="thermal-tag-divider"></div>
@@ -894,32 +862,32 @@
                 <div class="thermal-tag-details">
                     <div class="thermal-tag-row">
                         <span>Mã thú cưng:</span>
-                        <strong id="tagPreviewPetCode">PET-001</strong>
+                        <strong id="tagPreviewPetCode">&mdash;</strong>
                     </div>
                     <div class="thermal-tag-row">
                         <span>Chủ sở hữu:</span>
-                        <strong id="tagPreviewOwnerName">Nguyễn Văn An</strong>
+                        <strong id="tagPreviewOwnerName">&mdash;</strong>
                     </div>
                     <div class="thermal-tag-row">
                         <span>Số điện thoại:</span>
-                        <strong id="tagPreviewOwnerPhone" style="font-size: 15px; color: #236B48;">0912345678</strong>
+                        <strong id="tagPreviewOwnerPhone" style="font-size: 15px; color: #236B48;">&mdash;</strong>
                     </div>
                     <div class="thermal-tag-row">
                         <span>Thời gian tiếp nhận:</span>
-                        <span id="tagPreviewIntakeTime">29/09/2026 21:30</span>
+                        <span id="tagPreviewIntakeTime">&mdash;</span>
                     </div>
                 </div>
 
                 <div id="tagPreviewAlertWrapper" class="thermal-tag-alert-box" style="display: none;">
                     <div class="thermal-alert-title">LƯU Ý AN TOÀN ĐẶC BIỆT:</div>
-                    <div class="thermal-alert-text" id="tagPreviewAlertText">Cắn khi chạm đuôi!</div>
+                    <div class="thermal-alert-text" id="tagPreviewAlertText">&mdash;</div>
                 </div>
 
                 <div class="thermal-tag-barcode-zone">
                     <div class="thermal-barcode-mock">
                         ||| | |||| | ||| || |||| | || ||| |||| | |||
                     </div>
-                    <div class="thermal-barcode-num" id="tagPreviewBarcodeNum">*PET-001*</div>
+                    <div class="thermal-barcode-num" id="tagPreviewBarcodeNum">&mdash;</div>
                 </div>
 
                 <div class="thermal-tag-footer">
@@ -947,293 +915,9 @@
          MODAL 9: XEM TRƯỚC GIAO DIỆN NHẬT KÝ KHÁCH HÀNG (PAWPAL USER DIARY)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalPreviewAppDiary">
-        <div class="admin-modal-card preview-user-diary-modal-card" style="width: 720px; max-width: 95vw; padding: 0; overflow: hidden; background: #F4FAF7;">
-            <!-- MODAL HEADER -->
-            <div style="padding: 16px 22px; border-bottom: 1px solid var(--border-neutral); display: flex; justify-content: space-between; align-items: center; background: #FFFFFF;">
-                <span class="admin-modal-title">Xem trước giao diện nhật ký khách hàng</span>
-                <button type="button" class="btn-modal-close" data-close-modal="modalPreviewAppDiary">Đóng</button>
-            </div>
-
-            <!-- MODAL SCROLLABLE CONTENT (ĐỒNG BỘ 100% VỚI DIARY CỦA USER APP) -->
-            <div class="preview-diary-scroll-area">
-                <!-- 1. THẺ THÔNG TIN BÉ CƯNG -->
-                <div class="preview-pet-info-card">
-                    <div style="display: flex; align-items: center; gap: 14px;">
-                        <div class="preview-avatar-wrapper avatar-in-spa" id="appDiaryAvatarWrap">
-                            <img src="/assets/images/publics/dogcute1.jpg" id="appDiaryPetAvatar" class="preview-pet-avatar" alt="Avatar">
-                            <span class="preview-avatar-live-indicator" id="appDiaryAvatarLiveDot" title="Bé đang được chăm sóc tại Spa"></span>
-                        </div>
-                        <div class="preview-pet-details">
-                            <div class="preview-pet-title-row">
-                                <h3 class="preview-pet-title-name" id="appDiaryPetName">Bé Milu</h3>
-                                <span class="preview-pet-code-pill" id="appDiaryPetCode">PET-001</span>
-                            </div>
-                            <div class="preview-pet-tags" id="appDiaryPetMeta">
-                                <span class="preview-pet-meta-tag">Chó • Corgi</span>
-                                <span class="preview-pet-meta-tag">5.2 kg</span>
-                                <span class="preview-pet-meta-tag">2 tuổi</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="preview-pet-info-right">
-                        <div class="preview-status-live-banner" id="appDiaryLiveBanner">
-                            <span class="preview-live-pulse-dot" id="appDiaryLivePulseDot"></span>
-                            <span id="appDiaryLiveText">Đang làm Spa</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. THANH TIẾN TRÌNH DỊCH VỤ TRỰC TIẾP (LIVE SERVICE STEPPER) -->
-                <div class="preview-service-stepper-card">
-                    <div class="preview-stepper-header">
-                        <div class="preview-stepper-title-group">
-                            <div class="preview-stepper-service-name">
-                                <h4 id="appDiaryServiceName">Tắm sấy và Cắt tỉa tạo kiểu</h4>
-                            </div>
-                            <span class="preview-stepper-time-badge" id="appDiaryServiceDate">10/10/2026</span>
-                        </div>
-                        <div class="preview-stepper-status-badge" id="appDiaryStepperBadge">
-                            Tiến trình trực tiếp
-                        </div>
-                    </div>
-
-                    <div class="preview-stepper-track-wrap">
-                        <div class="preview-stepper-progress-bar" id="appDiaryProgressBar" style="width: 56%;"></div>
-                        <div class="preview-stepper-steps">
-                            <div class="preview-stepper-step done" id="appDiaryStep1">
-                                <div class="preview-step-circle"><span>✓</span></div>
-                                <div class="preview-step-content">
-                                    <span class="preview-step-name">Tiếp nhận</span>
-                                    <span class="preview-step-desc">Khám và Check-in</span>
-                                </div>
-                            </div>
-                            <div class="preview-stepper-step done" id="appDiaryStep2">
-                                <div class="preview-step-circle"><span>✓</span></div>
-                                <div class="preview-step-content">
-                                    <span class="preview-step-name">Tắm và Sấy</span>
-                                    <span class="preview-step-desc">Thư giãn dịu nhẹ</span>
-                                </div>
-                            </div>
-                            <div class="preview-stepper-step active" id="appDiaryStep3">
-                                <div class="preview-step-circle"><span>3</span></div>
-                                <div class="preview-step-content">
-                                    <span class="preview-step-name">Cắt tỉa</span>
-                                    <span class="preview-step-desc">Tạo kiểu xinh xắn</span>
-                                </div>
-                            </div>
-                            <div class="preview-stepper-step pending" id="appDiaryStep4">
-                                <div class="preview-step-circle"><span>4</span></div>
-                                <div class="preview-step-content">
-                                    <span class="preview-step-name">Hoàn tất</span>
-                                    <span class="preview-step-desc">Sẵn sàng đón bé</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2.5. DÒNG THỜI GIAN CÁC BƯỚC CÓ ẢNH MINH CHỨNG (TIMELINE CHUẨN USER DIARY) -->
-                <div class="preview-timeline-section">
-                    <div class="preview-timeline-header">
-                        <h4 class="preview-timeline-title">Dòng thời gian</h4>
-                    </div>
-                    <div class="preview-timeline-wrapper" id="appDiaryTimelineWrapper">
-                        <!-- Mốc 1: Tiếp nhận và Check-in -->
-                        <div class="preview-story-card">
-                            <div class="preview-node-icon stage-receive" title="Tiếp nhận và Thăm khám">
-                                <span>01</span>
-                            </div>
-                            <div class="preview-story-body">
-                                <div class="preview-story-header">
-                                    <div class="preview-story-stage-info">
-                                        <span class="preview-story-stage-badge" style="background: #EEF5F1; color: #236B48;">Tiếp nhận và Thăm khám</span>
-                                        <span class="preview-story-timestamp">09:15</span>
-                                    </div>
-                                    <div class="preview-story-staff-tag">
-                                        <span id="appDiaryStep1Staff">Chăm sóc: KTV Hoàng Tuấn</span>
-                                    </div>
-                                </div>
-                                <h4 class="preview-story-title">Tiếp nhận và kiểm tra sức khỏe ban đầu</h4>
-                                <p class="preview-story-desc">Bé được cân đo, thăm khám tổng quát da lông và vệ sinh tai trước khi đưa vào phòng Spa.</p>
-                                <div class="preview-story-mood-pill">
-                                    <span style="font-weight: 600;">Tâm trạng bé:</span>
-                                    <span>Bé đã vào phòng chờ, tinh thần thoải mái và vui vẻ hợp tác.</span>
-                                </div>
-                                <div class="preview-story-photo-wrap">
-                                    <img src="/assets/images/services/spa/process/process_chai_long_chai_long.jpg" id="appDiaryStep1Img" class="preview-story-photo-img" alt="Tiếp nhận và thăm khám">
-                                    <div class="preview-story-photo-overlay">
-                                        <span>Phóng to</span>
-                                    </div>
-                                </div>
-                                <div class="preview-story-footer">
-                                    <button type="button" class="preview-btn-story-like">
-                                        <span>Yêu thích</span>
-                                        <span>(1)</span>
-                                    </button>
-                                    <button type="button" class="preview-btn-story-message">
-                                        <span>Nhắn dặn dò</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Mốc 2: Tắm và Sấy -->
-                        <div class="preview-story-card">
-                            <div class="preview-node-icon stage-bath" title="Tắm sạch và Sấy ấm">
-                                <span>02</span>
-                            </div>
-                            <div class="preview-story-body">
-                                <div class="preview-story-header">
-                                    <div class="preview-story-stage-info">
-                                        <span class="preview-story-stage-badge" style="background: #E0F2FE; color: #0369A1;">Tắm sạch và Sấy ấm</span>
-                                        <span class="preview-story-timestamp">09:45</span>
-                                    </div>
-                                    <div class="preview-story-staff-tag">
-                                        <span id="appDiaryStep2Staff">Chăm sóc: KTV Hoàng Tuấn</span>
-                                    </div>
-                                </div>
-                                <h4 class="preview-story-title">Tắm sạch dưỡng lông và sấy ấm thư giãn</h4>
-                                <p class="preview-story-desc">Sử dụng sữa tắm thảo dược dịu nhẹ an toàn, xoa bóp massage toàn thân và sấy khô kỹ vùng kẽ chân.</p>
-                                <div class="preview-story-mood-pill">
-                                    <span style="font-weight: 600;">Tâm trạng bé:</span>
-                                    <span>Bé rất sảng khoái với bọt sữa tắm thơm dịu và thích được sấy ấm.</span>
-                                </div>
-                                <div class="preview-story-photo-wrap">
-                                    <img src="/assets/images/services/spa/process/tam_cho1.jpg" id="appDiaryStep2Img" class="preview-story-photo-img" alt="Tắm sạch và sấy ấm">
-                                    <div class="preview-story-photo-overlay">
-                                        <span>Phóng to</span>
-                                    </div>
-                                </div>
-                                <div class="preview-story-footer">
-                                    <button type="button" class="preview-btn-story-like">
-                                        <span>Yêu thích</span>
-                                        <span>(2)</span>
-                                    </button>
-                                    <button type="button" class="preview-btn-story-message">
-                                        <span>Nhắn dặn dò</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Mốc 3: Cắt tỉa và Tạo kiểu -->
-                        <div class="preview-story-card">
-                            <div class="preview-node-icon stage-trim" title="Cắt tỉa và Tạo kiểu">
-                                <span>03</span>
-                            </div>
-                            <div class="preview-story-body">
-                                <div class="preview-story-header">
-                                    <div class="preview-story-stage-info">
-                                        <span class="preview-story-stage-badge" style="background: #FCE7F3; color: #BE185D;">Cắt tỉa và Tạo kiểu</span>
-                                        <span class="preview-story-timestamp">10:30</span>
-                                    </div>
-                                    <div class="preview-story-staff-tag">
-                                        <span id="appDiaryStep3Staff">Chăm sóc: KTV Hoàng Tuấn</span>
-                                    </div>
-                                </div>
-                                <h4 class="preview-story-title">Cắt tỉa tạo kiểu theo yêu cầu</h4>
-                                <p class="preview-story-desc">Tạo phom tròn xoe xinh xắn, bấm tỉa gọn gàng lông vùng đệm chân và vệ sinh tuyến hôi an toàn.</p>
-                                <div class="preview-story-mood-pill">
-                                    <span style="font-weight: 600;">Tâm trạng bé:</span>
-                                    <span>Ngoan ngoãn đứng yên cho chuyên viên cắt tỉa và chải chuốt.</span>
-                                </div>
-                                <div class="preview-story-photo-wrap">
-                                    <img src="/assets/images/services/spa/process/process_cat_long_cat_long.jpg" id="appDiaryStep3Img" class="preview-story-photo-img" alt="Cắt tỉa và tạo kiểu">
-                                    <div class="preview-story-photo-overlay">
-                                        <span>Phóng to</span>
-                                    </div>
-                                </div>
-                                <div class="preview-story-footer">
-                                    <button type="button" class="preview-btn-story-like">
-                                        <span>Yêu thích</span>
-                                        <span>(3)</span>
-                                    </button>
-                                    <button type="button" class="preview-btn-story-message">
-                                        <span>Nhắn dặn dò</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. THẺ TỔNG KẾT DỊCH VỤ VÀ BÀN GIAO BÉ (CARELOG SHOWCASE CARD) -->
-                <div class="preview-showcase-card">
-                    <div class="preview-showcase-header">
-                        <h4 class="preview-showcase-title">Tổng kết dịch vụ và Bàn giao bé</h4>
-                        <span class="preview-showcase-badge-success">Đã nghiệm thu</span>
-                    </div>
-
-                    <!-- LƯỚI ẢNH BEFORE & AFTER -->
-                    <div class="preview-before-after-grid">
-                        <div class="preview-photo-col">
-                            <span class="preview-photo-tag preview-tag-before">Trước khi làm</span>
-                            <img src="/assets/images/publics/dogcute3.jpg" id="appDiaryImgBefore" class="preview-photo-img" alt="Trước khi làm">
-                            <span class="preview-photo-overlay">Phóng to</span>
-                        </div>
-                        <div class="preview-photo-col">
-                            <span class="preview-photo-tag preview-tag-after">Sau khi hoàn thiện</span>
-                            <img src="/assets/images/publics/dogcute1.jpg" id="appDiaryImgAfter" class="preview-photo-img" alt="Sau khi làm">
-                            <span class="preview-photo-overlay">Phóng to</span>
-                        </div>
-                    </div>
-
-                    <!-- CHỨNG THỰC VỆ SINH 4 MỤC TIÊU CHUẨN -->
-                    <div class="preview-hygiene-section">
-                        <div class="preview-hygiene-title">
-                            <span>Chứng thực vệ sinh 4 mục tiêu chuẩn</span>
-                            <span id="appDiaryHygieneScore" style="font-size: 11px; font-weight: 600; color: #165335;">4/4 mục đạt chuẩn</span>
-                        </div>
-                        <div class="preview-hygiene-grid">
-                            <div class="preview-hygiene-item">
-                                <span id="appDiaryCheckEar" class="preview-hygiene-item-check">✓</span>
-                                <span id="appDiaryItemEar">Vệ sinh tai sạch sẽ</span>
-                            </div>
-                            <div class="preview-hygiene-item">
-                                <span id="appDiaryCheckNail" class="preview-hygiene-item-check">✓</span>
-                                <span id="appDiaryItemNail">Cắt và mài móng an toàn</span>
-                            </div>
-                            <div class="preview-hygiene-item">
-                                <span id="appDiaryCheckAnal" class="preview-hygiene-item-check">✓</span>
-                                <span id="appDiaryItemAnal">Vắt tuyến hôi sạch sẽ</span>
-                            </div>
-                            <div class="preview-hygiene-item">
-                                <span id="appDiaryCheckSkin" class="preview-hygiene-item-check">✓</span>
-                                <span id="appDiaryItemSkin">Chăm sóc và dưỡng da lông</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- LỜI DẶN DÒ TỪ CHUYÊN VIÊN -->
-                    <div class="preview-technician-box">
-                        <div class="preview-technician-title" id="appDiaryTechnicianTitle">Lời dặn dò từ chuyên viên (KTV Hoàng Tuấn):</div>
-                        <p class="preview-technician-desc" id="appDiaryMessage">
-                            Lông vùng tai bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.
-                        </p>
-                    </div>
-
-                    <!-- ĐÁNH GIÁ CHẤT LƯỢNG DỊCH VỤ 5 SAO -->
-                    <div class="preview-review-box">
-                        <div class="preview-review-header">
-                            <h5 class="preview-review-title">Đánh giá chất lượng dịch vụ</h5>
-                            <div class="preview-star-rating">
-                                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-                            </div>
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <textarea class="preview-review-textarea" placeholder="Chia sẻ cảm nhận của bạn về trải nghiệm của bé tại PawPal..." readonly></textarea>
-                            <div style="display: flex; justify-content: flex-end;">
-                                <button type="button" class="preview-btn-submit-review">Gửi đánh giá</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MODAL FOOTER -->
-            <div style="padding: 12px 20px; background: #FFFFFF; border-top: 1px solid var(--border-neutral); display: flex; justify-content: flex-end;">
-                <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalPreviewAppDiary">Đóng</button>
-            </div>
+        <div class="admin-modal-card" style="width:720px;max-width:95vw">
+            <div class="admin-modal-header"><span class="admin-modal-title">Xem tr&#432;&#7899;c nh&#7853;t k&#253;</span><button type="button" class="btn-modal-close" data-close-modal="modalPreviewAppDiary">&#272;&#243;ng</button></div>
+            <div id="petDiaryPreviewContent">Ch&#432;a c&#243; nh&#7853;t k&#253; &#273;&#7875; hi&#7875;n th&#7883;.</div>
         </div>
     </div>
 

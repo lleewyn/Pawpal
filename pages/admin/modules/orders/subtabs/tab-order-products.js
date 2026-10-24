@@ -56,9 +56,8 @@
             categoryInput.addEventListener('blur', () => setTimeout(() => dropdown.style.display = 'none', 150));
         }
 
-        select.innerHTML = '<option value="ALL">Tất cả danh mục</option>' + distinctCats.map(name => `
-            <option value="${name}">${name}</option>
-        `).join('');
+        const defaultOption = new Option('Tất cả danh mục', 'ALL');
+        select.replaceChildren(defaultOption, ...distinctCats.map(name => new Option(name, name)));
 
         if (distinctCats.includes(currentVal)) {
             select.value = currentVal;
@@ -72,6 +71,7 @@
         const tbody = document.getElementById('productsTableBody');
         if (!tbody) return;
         if (state.productsError) {
+            renderProductsPagination(0);
             delete tbody.dataset.loadingSkeleton;
             tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:28px;color:var(--text-muted);">Không thể tải dữ liệu. Vui lòng tải lại trang.</td></tr>';
             return;
@@ -225,15 +225,17 @@
 
         let html = '';
         const prevDisabled = productsCurrentPage === 1 ? 'disabled' : '';
-        html += `<button type="button" class="btn-pagination ${prevDisabled}" data-page="prev" title="Trang trước">&lt;</button>`;
+        html += `<button type="button" class="btn-pagination ${prevDisabled}" ${prevDisabled} data-page="prev" title="Trang trước">&lt;</button>`;
 
-        for (let p = 1; p <= totalPages; p++) {
+        const firstPage = Math.max(1, Math.min(productsCurrentPage - 2, totalPages - 4));
+        const lastPage = Math.min(totalPages, firstPage + 4);
+        for (let p = firstPage; p <= lastPage; p++) {
             const activeClass = p === productsCurrentPage ? 'active' : '';
             html += `<button type="button" class="btn-pagination ${activeClass}" data-page="${p}">${p}</button>`;
         }
 
         const nextDisabled = productsCurrentPage === totalPages ? 'disabled' : '';
-        html += `<button type="button" class="btn-pagination ${nextDisabled}" data-page="next" title="Trang sau">&gt;</button>`;
+        html += `<button type="button" class="btn-pagination ${nextDisabled}" ${nextDisabled} data-page="next" title="Trang sau">&gt;</button>`;
 
         pagContainer.innerHTML = html;
 

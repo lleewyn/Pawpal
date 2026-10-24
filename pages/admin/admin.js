@@ -1281,6 +1281,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnToggleSidebar = document.getElementById('btnToggleSidebar');
     const btnMobileMenuToggle = document.getElementById('btnMobileMenuToggle');
     const adminSidebarOverlay = document.getElementById('adminSidebarOverlay');
+    // Reflect existing shell state without changing navigation or access checks.
+    const syncSidebarAccessibility = () => {
+        if (!adminLayout) return;
+        const mobile = window.innerWidth <= 768;
+        const expanded = mobile ? adminLayout.classList.contains('mobile-sidebar-open') : !adminLayout.classList.contains('sidebar-collapsed');
+        [btnToggleSidebar, btnMobileMenuToggle].forEach(button => {
+            if (!button) return;
+            button.setAttribute('aria-controls', 'adminSidebar');
+            button.setAttribute('aria-expanded', String(expanded));
+        });
+    };
+    if (adminLayout) new MutationObserver(syncSidebarAccessibility).observe(adminLayout, {attributes:true,attributeFilter:['class']});
+    window.addEventListener('resize', syncSidebarAccessibility);
+    syncSidebarAccessibility();
+
 
     // Nút mở Menu trên Mobile
     if (btnMobileMenuToggle && adminLayout) {

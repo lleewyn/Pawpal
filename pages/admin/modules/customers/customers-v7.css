@@ -322,3 +322,46 @@
 .customer-data-state strong { display: block; font-weight: 600; color: rgb(53, 75, 61); }
 .customer-data-state p { font-size: 12px; margin: 8px 0px 14px; }
 .customer-data-state button { border: 1px solid rgb(214, 222, 216); border-radius: 3px; background: rgb(255, 255, 255); color: rgb(39, 94, 73); padding: 7px 12px; font: 500 12px Inter, sans-serif; cursor: pointer; }
+/* V8 directory: visual mapping only; all IDs and API handlers remain intact. */
+.customers-module #subtab-tab-list .filter-row-bottom {gap:10px;align-items:center;flex-wrap:wrap}
+.customers-module #subtab-tab-list .filter-dropdown-group {gap:8px}
+.customers-module #subtab-tab-list .filter-label {font-size:11px;font-weight:500;color:#6f8176;white-space:nowrap}
+.customers-module #subtab-tab-list .filter-actions-right {gap:8px}
+.customers-module #customerDataTable {table-layout:fixed;width:100%;min-width:1050px}
+.customers-module #customerDataTable th:nth-child(1) {width:11%}
+.customers-module #customerDataTable th:nth-child(2) {width:19%}
+.customers-module #customerDataTable th:nth-child(3) {width:12%}
+.customers-module #customerDataTable th:nth-child(4) {width:16%}
+.customers-module #customerDataTable th:nth-child(5) {width:13%}
+.customers-module #customerDataTable th:nth-child(6) {width:12%}
+.customers-module #customerDataTable th:nth-child(7) {width:9%}
+.customers-module #customerDataTable th:nth-child(8) {width:8%}
+.customers-module #subtab-tab-list .table-responsive-wrapper:focus-visible {outline:2px solid #275e49;outline-offset:2px}
+/* V8 completion: customer presentation only, preserving existing business selectors. */
+.customers-module .customer-operations,
+.customers-module .customer-master-card,
+.customers-module .customer-operation-open,
+.customers-module #subtab-tab-list .admin-input,
+.customers-module #subtab-tab-list .admin-select,
+.customers-module #subtab-tab-list .admin-btn,
+.customers-module #subtab-tab-profile .action-btn-pill,
+.customers-module #subtab-tab-profile .admin-btn,
+.customers-module #subtab-tab-profile .textarea-note,
+.customers-module #subtab-tab-pawpoint .admin-btn,
+.customers-module #subtab-tab-pawpoint .admin-input,
+.customers-module #subtab-tab-pawpoint .admin-select {border-radius:var(--admin-radius,9px)}
+#customerGlobalActionDropdown {border:1px solid #ECF2EE;border-radius:var(--admin-radius,9px);background:#fff;box-shadow:0 8px 24px rgba(36,57,44,.09);padding:5px;max-width:calc(100vw - 24px);overscroll-behavior:contain}
+#customerGlobalActionDropdown .dropdown-item {font:500 12px/1.5 Inter,'Segoe UI',sans-serif;padding:9px 12px;border:0;border-radius:var(--admin-radius,9px);color:#24382f;background:transparent;text-align:left}
+#customerGlobalActionDropdown .dropdown-item:hover,#customerGlobalActionDropdown .dropdown-item:focus-visible {background:#EEF5F1;color:#275e49}
+.customers-module #subtab-tab-profile .admin-badge {background:transparent!important;border:none!important;border-radius:0!important;min-height:0;height:auto;padding:0;font-size:12px;line-height:1.5;white-space:normal}
+.customers-module #subtab-tab-profile .detail-box,.customers-module #subtab-tab-profile .pet-detail-card {background:transparent;border:none;box-shadow:none}
+.customers-module .v7-points-scroll,.customers-module .drawer-tab-panel {overscroll-behavior:contain}
+.customers-module #subtab-tab-profile .drawer-tab-btn:focus-visible {outline:2px solid #275e49;outline-offset:3px}
+.customers-module .customer-ops-head {flex-wrap:wrap;row-gap:6px}
+.customers-module #custOpsSummary {min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:600px){
+ .customers-module #custOpsSummary {flex-basis:100%;order:3;white-space:normal}
+ .customers-module .customer-operation-row {align-items:flex-start;gap:10px}
+ .customers-module .customer-operation-description {white-space:normal;overflow-wrap:anywhere}
+ .customers-module #subtab-tab-pawpoint .pawpoint-toolbar input {min-width:0;width:100%;max-width:100%;flex-basis:100%}
+}

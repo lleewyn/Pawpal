@@ -197,6 +197,7 @@
 
         if (typeof PawpalPets.fetchPetProfileDetails === 'function' && !pet._detailsLoaded) {
             PawpalPets.fetchPetProfileDetails(pet).then(() => {
+                if(sessionStorage.getItem('pawpal_admin_pet_id')!==pet.code)return;
                 renderPetSubtabs(pet);
                 const clc = document.querySelector('[data-drawertab="ptab-carelog"] .tab-badge-count');
                 if (clc) {
@@ -408,6 +409,7 @@
                 if (badgeEl) badgeEl.textContent = careItem.appStatus;
                 if (beforeImg) beforeImg.src = careItem.imgBefore;
                 if (afterImg) afterImg.src = careItem.imgAfter;
+                const condition=document.getElementById('carelogModalCondition');if(condition)condition.textContent=careItem.checkText||'Ch\u01b0a ghi nh\u1eadn';
                 if (messageEl) messageEl.textContent = careItem.service || 'Chưa có ghi chú.';
                 if(beforeImg)beforeImg.hidden=!careItem.imgBefore;
                 if(afterImg)afterImg.hidden=!careItem.imgAfter;
@@ -573,7 +575,7 @@
 
                 const custPetCounts = {};
                 Object.values(petsData).forEach(p => {
-                    if (p.customerId) custPetCounts[p.customerId] = (custPetCounts[p.customerId] || 0) + 1;
+                    if (p.custId || p.customerId) {const ownerId=p.custId||p.customerId;custPetCounts[ownerId]=(custPetCounts[ownerId]||0)+1;}
                     if (p.ownerName) custPetCounts[p.ownerName] = (custPetCounts[p.ownerName] || 0) + 1;
                 });
 
@@ -613,7 +615,7 @@
                     const custTier = item.getAttribute('data-tier');
 
                     if (editPetOwnerHidden) editPetOwnerHidden.value = custId;
-                    editPetOwnerInput.value = `${esc(custName)} - ${esc(custPhone)}`;
+                    editPetOwnerInput.value = `${custName} - ${custPhone}`;
                     if (editPetOwnerCard) {
                         editPetOwnerCard.innerHTML = `
                             <span>Chủ sở hữu: <strong>${esc(custName)}</strong>${custPhone ? ` (${esc(custPhone)})` : ''}</span>
